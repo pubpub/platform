@@ -1,0 +1,25 @@
+.switcher {
+	display: flex;
+	align-items: center;
+	border-radius: 4px;
+	padding: 8px;
+	margin: -8px;
+	margin-bottom: 42px;
+}
+.switcher:hover {
+	background: rgba(0, 0, 0, 0.05);
+	cursor: pointer;
+}
+.logo {
+	width: 36px;
+	border-radius: 8px;
+	border: 1px solid #ccc;
+	margin-right: 8px;
+}
+.text {
+	flex: 1 1 auto;
+	font-size: 16px;
+	font-weight: bold;
+}
+.icon {
+}

@@ -23,3 +23,16 @@ model User {
   @@map(name: "users")
 }
 
+// model Pub {
+//   id        String   @id @default(uuid())
+//   createdAt DateTime @default(now()) @map(name: "created_at")
+//   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+//   @@map(name: "pubs")
+// }
+
+// Member
+// MemberGroup
+// Workflow
+// Integration
+// Community
