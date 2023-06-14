@@ -8,7 +8,7 @@
 		"format": "prettier --write '*.{ts,tsx,js,jsx,scss,json}'",
 		"prebuild": "prisma generate",
 		"start": "next start",
-		"reset": "prisma migrate reset --preview-feature",
+		"reset": "dotenv -e .env.local prisma migrate reset --preview-feature",
 		"type-check": "tsc",
 		"type-check-watch": "tsc --watch"
 	},
@@ -49,6 +49,7 @@
 		"@types/node": "20.3.1",
 		"@types/react": "18.2.12",
 		"@types/react-dom": "18.2.5",
+		"dotenv-cli": "^7.2.1",
 		"lint-staged": "^13.2.2",
 		"prettier": "^2.8.8",
 		"prisma": "^4.15.0",
