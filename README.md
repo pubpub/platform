@@ -12,7 +12,7 @@ npx supabase db reset
 cp .env.template .env.local
 ```
 
-Copy the values output from `supabase start` into `.env.local`.
+Copy the relevant values output from `supabase start` into `.env.local`.
 
 Populate the database by running:
 
@@ -75,7 +75,7 @@ To use NextJS's app directory (which uses server and client components), we foll
 
 ## Supabase
 
-To speed development, we run Supabase locally. [These instructions](https://supabase.com/docs/guides/getting-started/local-development) were followed to get an initial config in place. Please review them so you understand the how it's working.
+To speed development, we run Supabase locally. [These instructions](https://supabase.com/docs/guides/getting-started/local-development) were followed to get an initial config in place. Please review them so you understand how it's working.
 
 After running `npx supabase start` the Supabase dashboard is accessible at `http://localhost:54323`
 
@@ -83,12 +83,11 @@ After running `npx supabase start` the Supabase dashboard is accessible at `http
 
 The Prisma [Quickstart guide](https://www.prisma.io/docs/getting-started/quickstart) is how our prisma folder was initially created. That set of instructions has useful pointers for doing things like db migrations.
 
-The `db/seed.ts` file will initiate the database with a set of data. This seed is run using `npm run reset`. You will have to run this each time you stop and start supabase, as doing so clears the database.
+The `db/seed.ts` file will initiate the database with a set of data. This seed is run using `npm run reset`. You will have to run this each time you stop and start supabase since doing so clears the database.
 
 Explore with `npx prisma studio`.
 
 ## Folder structure
-
 -   `/app` The Next.JS [app directory](https://nextjs.org/docs/app/building-your-application/routing).
 -   `/lib` Functions that are re-used in multiple locations throughout the codebase. Akin to a `/utils` folder.
 -   `/prisma` Config and functions for using Prisma
@@ -96,13 +95,12 @@ Explore with `npx prisma studio`.
 -   `/supabase` Files generated for use when running Supabase locally. Likely won't have to touch anything in here, with the exception of `seed.sql` which has been edited to support our Authentication setup, as described below.
 
 ## Authentication
-
 We use Supabase as our authentication provider. This gives us easy access to SSO providers (e.g. Github, Google, etc) and helpful functions (e.g. send invite email, reset password, etc).
 
-Supabase manages users in a separate schema to manage authentication. We don't want to be messing with the supabase-managed schema, so we create a parallel `Users` table on the `public` (i.e. default) schema. This `Users` table does not store any password, hash, or other auth-specific information. It only stores data that we may need on the application side (e.g. name and avatar for display, or email address so that we can send notifications). Likewise, we don't want any application-specific information being stored on the `auth` schema or managed by supabase. Supabase offers to provide this with a `metadata` object they'll track and return to you, but that would then require us to go through supabase auth everytime we want any user data (e.g. searching for users to add as a Member).
+Supabase manages users in a separate authentication postgres schema. We don't want to be messing with the supabase-managed schema, so we create a parallel `Users` table on the `public` (i.e. default) postgres schema. This `public.Users` table does not store any password, hash, or other auth-specific information. It only stores data that we may need on the application side (e.g. name and avatar for display, or email address so that we can send notifications). Likewise, we don't want any application-specific information being stored on the `auth` schema or managed by supabase. Supabase offers to provide this with a `metadata` object they'll track and return to you, but that would then require us to go through supabase auth everytime we want any user data (e.g. searching for users to add as a Member).
 
 However, we do need our Users table to remain in sync with any data added or edited in the `auth` schema - specifically, the user's email address. On signup we take this email address from the form and submit it both to Supabase auth and to our Users table. However, the user can edit this email through Supabase-only functions that our backend wouldn't know about. To handle this scenario, we create a [Function and Trigger](https://supabase.com/docs/guides/database/functions) (stored in `/supabase/seed.sql`). Note, this is a just a plain Postgres SQL function, not a Supabase Edge Function.
 
 The `/supabase/seed.sql` file has been edited to specify a function and trigger. After running `npx supabase db reset`, you should be able use the Dashboard to navigate to the Database > Functions or Database > Triggers tab and see `handle_updated_user` and `on_user_update` respectively.
 
-These instructions hold for using email signup (where their email is entered directly into a form). For 3rd party SSO signup, we may need an additional function and trigger to handle user_created events.
+These instructions hold for using email signup (where their email is entered directly into a form). For 3rd party SSO signup, we will probably need an additional function and trigger to handle user_created events.
