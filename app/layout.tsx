@@ -1,4 +1,4 @@
-import './globals.css'
+import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata = {
@@ -6,11 +6,23 @@ export const metadata = {
 	description: "Just a demo to show the models and structure.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+	children,
+	home,
+	community,
+}: {
+	children: React.ReactNode;
+	home: React.ReactNode;
+	community: React.ReactNode;
+}) {
+	const loggedIn = true;
 	return (
 		<html lang="en">
 			<body>
-				<Providers>{children}</Providers>
+				<Providers>
+					{children}
+					{loggedIn ? community : home}
+				</Providers>
 			</body>
 		</html>
 	);

@@ -1,8 +1,10 @@
 # Quick Install
 
-Be sure to have Docker Desktop running
+Built using node v `18.16.0`. Use [nvm] to ensure you're using at least `18.16.0` before installing to avoid inconsistencies at the node level. 
 
-In a terminal, running the following commands:
+Local development requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) to be installed and running on your machine.
+
+Begin by making sure sure Docker Desktop is running. Then, run the following commands:
 
 ```
 npm install
