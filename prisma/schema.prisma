@@ -23,16 +23,85 @@ model User {
   @@map(name: "users")
 }
 
-// model Pub {
-//   id        String   @id @default(uuid())
-//   createdAt DateTime @default(now()) @map(name: "created_at")
-//   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+model Pub {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-//   @@map(name: "pubs")
-// }
+  @@map(name: "pubs")
+}
 
-// Member
-// MemberGroup
-// Workflow
-// Integration
-// Community
+model PubType {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "pub_types")
+}
+
+model Metadata {
+  id        String   @id @default(uuid())
+  type      String
+  value     String
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "metadata")
+}
+
+model Workflow {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "workflows")
+}
+
+model Stage {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "stages")
+}
+
+model Members {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  //    Permissions can be scoped to whole community or a selection of pubs
+  @@map(name: "members")
+}
+
+model MemberGroup {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "member_groups")
+}
+
+model Integration {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "integrations")
+}
+
+model Community {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "communities")
+}
+
+model Pin {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "pins")
+}
