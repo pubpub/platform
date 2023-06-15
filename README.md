@@ -1,10 +1,10 @@
 # Quick Install
 
-Built using node v `18.16.0`. Use [nvm] to ensure you're using at least `18.16.0` before installing to avoid inconsistencies at the node level. 
+Built using node `v18.16.0`. Use [nvm](https://github.com/nvm-sh/nvm) to ensure you're using at least `18.16.0` before installing to avoid inconsistencies at the node level. 
 
 Local development requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) to be installed and running on your machine.
 
-Begin by making sure sure Docker Desktop is running. Then, run the following commands:
+Begin by making sure Docker Desktop is running. Then, `cd` to this repo in your terminal and run the following commands. A few of them have interactive prompts you'll need to act on, so I suggest running them one-by-one.
 
 ```
 npm install
@@ -53,8 +53,8 @@ npx supabase stop
 Stopping supabase will erase the database. You will need to re-seed the database each time you run `npx supabase start` by running:
 
 ```
-npx supabase db reset
-npm run reset
+npx supabase db reset // Rebuilds the postgres DB with necessary functions and triggers.
+npm run reset // Rebuils and applies the prisma schema and creates seed content.
 ```
 
 If you wish to avoid this, you can preserve the database until next time by instead using
