@@ -28,6 +28,13 @@ export default {
 					
 				],
 			},
+			{
+				text: "Integrations",
+				items: [
+					{ text: "Overview", link: "/integrations" },
+					
+				],
+			},
 		],
 		socialLinks: [{ icon: "github", link: "https://github.com/pubpub/pubpub" }],
 	},
