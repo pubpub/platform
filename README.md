@@ -1,6 +1,6 @@
 # Quick Install
 
-Built using node `v18.16.0`. Use [nvm](https://github.com/nvm-sh/nvm) to ensure you're using at least `18.16.0` before installing to avoid inconsistencies at the node level. 
+Built using node `v18.16.0` (captured in `/.nvmrc`). Use [nvm](https://github.com/nvm-sh/nvm) to ensure you're using at least `18.16.0` before installing to avoid inconsistencies at the node level. 
 
 Local development requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) to be installed and running on your machine.
 
