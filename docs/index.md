@@ -1,4 +1,4 @@
-# PubPub Technical Reference
+# Introduction
 
 PubPub is ...
 

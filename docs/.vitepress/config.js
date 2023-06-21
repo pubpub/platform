@@ -1,5 +1,5 @@
 export default {
-	title: "Technical Reference",
+	title: "PubPub Technical Reference",
 	description: "Technical Reference for building and maintaining PubPub.",
 	cleanUrls: "without-subfolders",
 	head: [["link", { rel: "icon", href: "/icon.svg" }]],
