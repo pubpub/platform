@@ -87,7 +87,7 @@ The Prisma [Quickstart guide](https://www.prisma.io/docs/getting-started/quickst
 
 The `db/seed.ts` file will initiate the database with a set of data. This seed is run using `npm run reset`. You will have to run this each time you stop and start supabase since doing so clears the database.
 
-Explore with `npx prisma studio`.
+Explore with `npm run prisma studio`.
 
 ## Folder structure
 -   `/app` The Next.JS [app directory](https://nextjs.org/docs/app/building-your-application/routing).
