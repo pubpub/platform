@@ -54,8 +54,8 @@ model Pub {
   children       Pub[]           @relation("parent_child")
   metadataValues MetadataValue[]
   stages         Stage[]
-  ActionClaim    ActionClaim[]
-  ActionMove     ActionMove[]
+  claims         ActionClaim[]
+  moves          ActionMove[]
 
   @@map(name: "pubs")
 }
