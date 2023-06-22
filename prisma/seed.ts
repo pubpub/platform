@@ -14,6 +14,7 @@ async function main() {
 	});
 	const communityUUID = uuidv4();
 	const frankensteinUUID = uuidv4();
+	const workflowUUID = uuidv4();
 	const fieldIDs = [...Array(6)].map((x) => uuidv4());
 	const community = await prisma.community.create({
 		data: {
@@ -122,6 +123,59 @@ async function main() {
 								{ name: "title" },
 								{ name: "publisher" },
 								{ name: "publicationDate" },
+							],
+						},
+					},
+				],
+			},
+			workflows: {
+				create: [
+					{
+						id: workflowUUID,
+						name: "Our great review workflow",
+						stages: {
+							create: [
+								{
+									name: "Drafting",
+									order: "aa",
+									moveConstraints: {
+										create: [
+											{
+												destination: {
+													create: {
+														name: "Ready for Review",
+														order: "bb",
+														workflowId: workflowUUID,
+														moveConstraints: {
+															create: [
+																{
+																	destination: {
+																		create: {
+																			name: "Completed",
+																			order: "cc",
+																			workflowId:
+																				workflowUUID,
+																		},
+																	},
+																},
+																{
+																	destination: {
+																		create: {
+																			name: "Discarded",
+																			order: "dd",
+																			workflowId:
+																				workflowUUID,
+																		},
+																	},
+																},
+															],
+														},
+													},
+												},
+											},
+										],
+									},
+								},
 							],
 						},
 					},
