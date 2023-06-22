@@ -23,18 +23,45 @@ model User {
   @@map(name: "users")
 }
 
-model Pub {
+model Community {
   id        String   @id @default(uuid())
+  name      String
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  pubTypes PubType[]
+  pubs     Pub[]
+
+  @@map(name: "communities")
+}
+
+model Pub {
+  id          String    @id @default(uuid())
+  parent      Pub?      @relation("parent_child", fields: [parentId], references: [id])
+  parentId    String?   @map(name: "parent_id")
+  pubType     PubType   @relation(fields: [pubTypeId], references: [id])
+  pubTypeId   String    @map(name: "pub_type_id")
+  community   Community @relation(fields: [communityId], references: [id])
+  communityId String    @map(name: "community_id")
+  createdAt   DateTime  @default(now()) @map(name: "created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+
+  children Pub[]      @relation("parent_child")
+  metadata Metadata[]
 
   @@map(name: "pubs")
 }
 
 model PubType {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  id          String    @id @default(uuid())
+  name        String
+  fields      Json
+  community   Community @relation(fields: [communityId], references: [id])
+  communityId String    @map(name: "community_id")
+  createdAt   DateTime  @default(now()) @map(name: "created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+
+  pubs Pub[]
 
   @@map(name: "pub_types")
 }
@@ -42,7 +69,9 @@ model PubType {
 model Metadata {
   id        String   @id @default(uuid())
   type      String
-  value     String
+  value     Json
+  pub       Pub      @relation(fields: [pubId], references: [id])
+  pubId     String   @map(name: "pub_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
@@ -88,14 +117,6 @@ model Integration {
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
   @@map(name: "integrations")
-}
-
-model Community {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
-
-  @@map(name: "communities")
 }
 
 model Pin {
