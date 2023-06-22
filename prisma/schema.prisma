@@ -36,18 +36,19 @@ model Community {
 }
 
 model Pub {
-  id          String    @id @default(uuid())
-  parent      Pub?      @relation("parent_child", fields: [parentId], references: [id])
-  parentId    String?   @map(name: "parent_id")
-  pubType     PubType   @relation(fields: [pubTypeId], references: [id])
-  pubTypeId   String    @map(name: "pub_type_id")
-  community   Community @relation(fields: [communityId], references: [id])
-  communityId String    @map(name: "community_id")
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  id           String    @id @default(uuid())
+  metadataBlob Json?
+  parent       Pub?      @relation("parent_child", fields: [parentId], references: [id])
+  parentId     String?   @map(name: "parent_id")
+  pubType      PubType   @relation(fields: [pubTypeId], references: [id])
+  pubTypeId    String    @map(name: "pub_type_id")
+  community    Community @relation(fields: [communityId], references: [id])
+  communityId  String    @map(name: "community_id")
+  createdAt    DateTime  @default(now()) @map(name: "created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  children Pub[]      @relation("parent_child")
-  metadata Metadata[]
+  children       Pub[]           @relation("parent_child")
+  metadataValues MetadataValue[]
 
   @@map(name: "pubs")
 }
@@ -55,27 +56,41 @@ model Pub {
 model PubType {
   id          String    @id @default(uuid())
   name        String
-  fields      Json
   community   Community @relation(fields: [communityId], references: [id])
   communityId String    @map(name: "community_id")
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubs Pub[]
+  pubs           Pub[]
+  metadataFields MetadataField[]
 
   @@map(name: "pub_types")
 }
 
-model Metadata {
+model MetadataField {
   id        String   @id @default(uuid())
-  type      String
-  value     Json
-  pub       Pub      @relation(fields: [pubId], references: [id])
-  pubId     String   @map(name: "pub_id")
+  name      String
+  pubType   PubType  @relation(fields: [pubTypeId], references: [id])
+  pubTypeId String   @map(name: "pub_type_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  @@map(name: "metadata")
+  values MetadataValue[]
+
+  @@map(name: "metadata_fields")
+}
+
+model MetadataValue {
+  id        String        @id @default(uuid())
+  field     MetadataField @relation(fields: [fieldId], references: [id])
+  fieldId   String        @map(name: "field_id")
+  value     Json
+  pub       Pub           @relation(fields: [pubId], references: [id])
+  pubId     String        @map(name: "pub_id")
+  createdAt DateTime      @default(now()) @map(name: "created_at")
+  updatedAt DateTime      @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "metadata_values")
 }
 
 model Workflow {
