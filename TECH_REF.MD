@@ -1,13 +1,22 @@
 # Technical Reference
 
 ## For Next Time
-- Review and confirm our workflow terminology:
-  - Workflow actions: do not modify Pub metadata
-  - Internal side effects: modify Pub metadata, but directly in the app
-  - External side effects: modify Pub metadata, but via an integration
-- How do we handle internal and external side effects?
+### Review
+- Let's "build" our first integration
 
-## Thursday, June 22, 2023
+## Monday Jun 26, 2023
+
+### Integration
+- Interface for an external system that creates a side effect.
+
+### Review
+- Reviews are a "first-party" integration, meaning built by us (there may be other review integrations).
+
+### Automation
+- We're gonna need this at some point.
+- We don't think integrations themselves should handle them.
+
+## Thursday June 22, 2023
 
 ### Pub Tables
 - Existence of a field on a pub is sufficient validation for PubTypes for the MVP -- both for integrations and stages.
@@ -19,7 +28,7 @@
 - Anything that modifies a Pub's relationship with the workflow is an action.
   - Actions shouldn't change Pub metadata — Pub metadata should be directly edited or changed via integrations.
 
-## Wednesday, June 21, 2023
+## Wednesday June 21, 2023
 
 ### Pub Types
 - Pub types have flexible definitions, which should be editable by users — even if user is just us at the beginning.
