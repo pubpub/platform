@@ -15,7 +15,9 @@
 
 ### Workflows
 - Integrations can be connected to any workflow stage.
-- Workflow stage actions shouldn't change Pub metadata — Pub metadata should be directly edited or changed via integrations.
+  - An integration doesn't know anything about the workflow or stage. Either modifies pub metadata or performs a side effect.
+- Anything that modifies a Pub's relationship with the workflow is an action.
+  - Actions shouldn't change Pub metadata — Pub metadata should be directly edited or changed via integrations.
 
 ## Wednesday, June 21, 2023
 
