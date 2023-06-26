@@ -14,8 +14,8 @@
 - EAV vs. JSONB: going to maintain both for now so we can look into performance as we build.
 
 ### Workflows
-- Integrations can be connected to any stage.
-- Workflow stage actions generally shouldn't change Pub metadata — Pub metadata should be changed in side effects or integrations.
+- Integrations can be connected to any workflow stage.
+- Workflow stage actions shouldn't change Pub metadata — Pub metadata should be directly edited or changed via integrations.
 
 ## Wednesday, June 21, 2023
 
