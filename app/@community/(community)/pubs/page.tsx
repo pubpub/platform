@@ -8,15 +8,21 @@ export default async function Page() {
 	}
 	const pubs = await prisma.pub.findMany({
 		where: { communityId: onlyCommunity.id, parentId: null },
-		select: {
-			id: true,
-			pubType: { select: { name: true, fields: true } },
-			metadata: { select: { type: true, value: true } },
+		include: {
+			pubType: {
+				include: {
+					metadataFields: true,
+				},
+			},
+			metadataValues: true,
 			children: {
-				select: {
-					id: true,
-					pubType: { select: { name: true, fields: true } },
-					metadata: { select: { type: true, value: true } },
+				include: {
+					pubType: {
+						include: {
+							metadataFields: true,
+						},
+					},
+					metadataValues: true,
 				},
 			},
 		},

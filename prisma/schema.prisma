@@ -20,6 +20,9 @@ model User {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
+  claims ActionClaim[]
+  moves  ActionMove[]
+
   @@map(name: "users")
 }
 
@@ -29,25 +32,30 @@ model Community {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubTypes PubType[]
-  pubs     Pub[]
+  pubTypes  PubType[]
+  pubs      Pub[]
+  workflows Workflow[]
 
   @@map(name: "communities")
 }
 
 model Pub {
-  id          String    @id @default(uuid())
-  parent      Pub?      @relation("parent_child", fields: [parentId], references: [id])
-  parentId    String?   @map(name: "parent_id")
-  pubType     PubType   @relation(fields: [pubTypeId], references: [id])
-  pubTypeId   String    @map(name: "pub_type_id")
-  community   Community @relation(fields: [communityId], references: [id])
-  communityId String    @map(name: "community_id")
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  id           String    @id @default(uuid())
+  metadataBlob Json?
+  parent       Pub?      @relation("parent_child", fields: [parentId], references: [id])
+  parentId     String?   @map(name: "parent_id")
+  pubType      PubType   @relation(fields: [pubTypeId], references: [id])
+  pubTypeId    String    @map(name: "pub_type_id")
+  community    Community @relation(fields: [communityId], references: [id])
+  communityId  String    @map(name: "community_id")
+  createdAt    DateTime  @default(now()) @map(name: "created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  children Pub[]      @relation("parent_child")
-  metadata Metadata[]
+  children       Pub[]           @relation("parent_child")
+  metadataValues MetadataValue[]
+  stages         Stage[]
+  claims         ActionClaim[]
+  moves          ActionMove[]
 
   @@map(name: "pubs")
 }
@@ -55,43 +63,119 @@ model Pub {
 model PubType {
   id          String    @id @default(uuid())
   name        String
-  fields      Json
   community   Community @relation(fields: [communityId], references: [id])
   communityId String    @map(name: "community_id")
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubs Pub[]
+  pubs           Pub[]
+  metadataFields MetadataField[]
 
   @@map(name: "pub_types")
 }
 
-model Metadata {
+model MetadataField {
   id        String   @id @default(uuid())
-  type      String
-  value     Json
-  pub       Pub      @relation(fields: [pubId], references: [id])
-  pubId     String   @map(name: "pub_id")
+  name      String
+  pubType   PubType  @relation(fields: [pubTypeId], references: [id])
+  pubTypeId String   @map(name: "pub_type_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  @@map(name: "metadata")
+  values MetadataValue[]
+
+  @@map(name: "metadata_fields")
+}
+
+model MetadataValue {
+  id        String        @id @default(uuid())
+  field     MetadataField @relation(fields: [fieldId], references: [id])
+  fieldId   String        @map(name: "field_id")
+  value     Json
+  pub       Pub           @relation(fields: [pubId], references: [id])
+  pubId     String        @map(name: "pub_id")
+  createdAt DateTime      @default(now()) @map(name: "created_at")
+  updatedAt DateTime      @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "metadata_values")
 }
 
 model Workflow {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  id          String    @id @default(uuid())
+  name        String
+  community   Community @relation(fields: [communityId], references: [id])
+  communityId String    @map(name: "community_id")
+  createdAt   DateTime  @default(now()) @map(name: "created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+
+  stages Stage[]
 
   @@map(name: "workflows")
 }
 
 model Stage {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  id         String   @id @default(uuid())
+  name       String
+  order      String
+  workflow   Workflow @relation(fields: [workflowId], references: [id])
+  workflowId String   @map(name: "workflow_id")
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  pubs                  Pub[]
+  moveConstraints       MoveConstraint[] @relation("move_constraint")
+  moveConstraintSources MoveConstraint[] @relation("move_constraint_destination")
+  claims                ActionClaim[]
+  movesFrom             ActionMove[]     @relation("move_source_stage")
+  movesTo               ActionMove[]     @relation("move_destination_stage")
 
   @@map(name: "stages")
+}
+
+// Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
+
+model MoveConstraint {
+  id            String   @id @default(uuid())
+  stage         Stage    @relation("move_constraint", fields: [stageId], references: [id])
+  stageId       String   @map(name: "stage_id")
+  destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id])
+  destinationId String   @map(name: "destination_id")
+  createdAt     DateTime @default(now()) @map(name: "created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "move_constraint")
+}
+
+model ActionClaim {
+  id         String    @id @default(uuid())
+  stage      Stage     @relation(fields: [stageId], references: [id])
+  stageId    String    @map(name: "stage_id")
+  pub        Pub       @relation(fields: [pubId], references: [id])
+  pubId      String    @map(name: "pub_id")
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String    @map(name: "user_id")
+  releasedAt DateTime?
+  createdAt  DateTime  @default(now()) @map(name: "created_at")
+  updatedAt  DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "action_claim")
+}
+
+model ActionMove {
+  id                 String   @id @default(uuid())
+  sourceStage        Stage    @relation("move_source_stage", fields: [sourceStageId], references: [id])
+  sourceStageId      String   @map(name: "source_stage_id")
+  destinationStage   Stage    @relation("move_destination_stage", fields: [destinationStageId], references: [id])
+  destinationStageId String   @map(name: "destination_stage_id")
+  pub                Pub      @relation(fields: [pubId], references: [id])
+  pubId              String   @map(name: "pub_id")
+  user               User     @relation(fields: [userId], references: [id])
+  userId             String   @map(name: "user_id")
+  note               String
+  createdAt          DateTime @default(now()) @map(name: "created_at")
+  updatedAt          DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "action_move")
 }
 
 model Members {
@@ -99,7 +183,7 @@ model Members {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  //    Permissions can be scoped to whole community or a selection of pubs
+  // Permissions can be scoped to whole community or a selection of pubs
   @@map(name: "members")
 }
 

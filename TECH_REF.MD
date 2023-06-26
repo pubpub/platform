@@ -1,5 +1,24 @@
 # Technical Reference
 
+## For Next Time
+- Review and confirm our workflow terminology:
+  - Workflow actions: do not modify Pub metadata
+  - Internal side effects: modify Pub metadata, but directly in the app
+  - External side effects: modify Pub metadata, but via an integration
+- How do we handle internal and external side effects?
+
+## Thursday, June 22, 2023
+
+### Pub Tables
+- Existence of a field on a pub is sufficient validation for PubTypes for the MVP -- both for integrations and stages.
+- EAV vs. JSONB: going to maintain both for now so we can look into performance as we build.
+
+### Workflows
+- Integrations can be connected to any workflow stage.
+  - An integration doesn't know anything about the workflow or stage. Either modifies pub metadata or performs a side effect.
+- Anything that modifies a Pub's relationship with the workflow is an action.
+  - Actions shouldn't change Pub metadata — Pub metadata should be directly edited or changed via integrations.
+
 ## Wednesday, June 21, 2023
 
 ### Pub Types
