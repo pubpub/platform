@@ -19,14 +19,23 @@
 	- If user is known by PubPub via email or ORCID or name, they are suggested to editor
 		- Service uses autocomplete endpoint
 - Editor clicks send out for review.
-	- If user is not known by PubPub, it creates the user (POST to /user?)
-- Email gets sent to reviewer.
-- A label on Pub changes to "review invitation sent."
-- Reviewer clicks link in email.
+	- Integration posts users (including all fields) to /email endpoint
+	- TODO: consider a framework for tasks/activities rather than a generic email endpoint
+	- TODO: consider creating an empty "review" on the pub at this point
+	- If user is not known by PubPub, it creates "temporary" users
+- Email gets sent to reviewer by PubPub.
+	- TBD where the template is defined/compiled
+- Integration updates pub status within the workflow to indicate review(s) sent
+	- This is stored on the integration instance or as a new kind of metadata on the pub
+- Reviewer clicks link to integration service (reviews.pubpub.org/review/pub123/?secret=12345) in email.
 - Reviewer has option to accept or decline invitation.
 	- Reviewer declines.
-		- Editor is notified.
-		- A label on Review inteface changes to "review invitation declined"
+		- Integration queries for users and then posts to emails endpoint OR
+		- Integration uses dedicated endpoint to tell pubpub to update editors OR
+		- Integration updates metadata, and automatically subscribed users are notified by pubpub when that field changes OR
+			- Integration manifest defines which statuses pubpub should broadcast changes to
+		- PubPub notifies editor.
+		- A label on Review interface changes to "review invitation declined"
 	- Reviewer accepts	
 		- A label on Review interface changes to "review invitation 
 		- Reviewer fills out form and submits it.
