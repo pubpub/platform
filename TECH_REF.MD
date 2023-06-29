@@ -1,6 +1,24 @@
 # Technical Reference
 
 ## For Next Time
+- Layout API endpoints
+  - Mostly just receiving pubIds and sending metadata updates to speciffic pubIds
+
+## Thursday June 29
+- Proposal: Integrations act on pubs.
+  - They can act on 1) specific pubs, 2) all pubs in a given stage(s) over time.
+- When creating a new Pub Type, we could provide a "wizard"/helper UI that suggests the fields you'll need based on the integations you want based (e.g. Crossref, Squarespace site builder, Portico deposit).
+  - We will have a list of all fields that integrations will need declared in the integration's manifest.
+  - A low-fidelity version is just using that list of fields declared in integration manifests to warn users if they input a field that's not used by any integration.
+
+
+Do we have Axioms?
+- Could be ones like:
+  - We know a pub's type at its moment of creation
+  - Pub Type's declare a minimum set of expected fields for a Pub.
+
+
+
 
 ## Wednesday June 28
 - Reviews (via Google Forms)
