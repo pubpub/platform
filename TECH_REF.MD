@@ -1,21 +1,47 @@
 # Technical Reference
 
 ## For Next Time
+
+## Wednesday June 28
 - Reviews (via Google Forms)
-```
-#### Minimal definition: automating sending people a link to a form with some instructions -- could even be just upload word document -- getting back notification it's been sent back with the contents.
+
+#### Minimal definition: automating sending people a link to a form with some instructions, which they then accept or reject. If they accept and fill out the form, editor receives a notification that the form has been sent back.
 
 ##### Events
-- Editor clicks "request review" button.
-- Separate page opens that allows editor to specify reviewer details and instructions (default set in settings).
+- Editor clicks "invite reviewers" button.
+	- Link to a base URL provided by integration in manifest + PubPub-added query params (in new tab)
+		- URL: https://reviews.pubpub.org/review?pubId=123&instanceId=avcd
+- Interface opens in new tab, where editor can specify reviewer details, form link, and email template (with a default set by community in integration instance settings.
+	- Lives on a new service, e.g. reviews.pubpub.org.
+	- Service uses `instancedId` from query params to grab default email from PubPub API
+	- Service uses `pubId` from query params to pull needed Pub metadata (e.g. title, files to download, etc.)
+- Editor starts adding reviewer details: name, email, institution, orcid
+	- If user is known by PubPub via email or ORCID or name, they are suggested to editor
+		- Service uses autocomplete endpoint
 - Editor clicks send out for review.
-- Email gets sent to reviewer.
-- A label on Pub changes to "review invitation sent."
-- Reviewer clicks link in email.
-- Reviewer fills out form and submits it.
-- A label on Pub changes to "review submitted."
-- Admin gets email notification that reviewer has submitted form.
-```
+	- Integration posts users (including all fields) to /email endpoint
+	- TODO: consider a framework for tasks/activities rather than a generic email endpoint
+	- TODO: consider creating an empty "review" on the pub at this point
+	- If user is not known by PubPub, it creates "temporary" users
+- Email gets sent to reviewer by PubPub.
+	- TBD where the template is defined/compiled
+- Integration updates pub status within the workflow to indicate review(s) sent
+	- This is stored on the integration instance or as a new kind of metadata on the pub
+- Reviewer clicks link to integration service (reviews.pubpub.org/review/pub123/?secret=12345) in email.
+- Reviewer has option to accept or decline invitation.
+	- Reviewer declines.
+		- Integration queries for users and then posts to emails endpoint OR
+		- Integration uses dedicated endpoint to tell pubpub to update editors OR
+		- Integration updates metadata, and automatically subscribed users are notified by pubpub when that field changes OR
+			- Integration manifest defines which statuses pubpub should broadcast changes to
+		- PubPub notifies editor.
+		- A label on Review interface changes to "review invitation declined"
+	- Reviewer accepts	
+		- A label on Review interface changes to "review invitation 
+		- Reviewer fills out form and submits it.
+		- A label on Review interface changes to "review submitted."
+		- Admin gets email notification that reviewer has submitted form.
+
 - How are integration front-ends/settings interfaces defined?
 
 ## Tuesday June 27, 2023
