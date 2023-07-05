@@ -1,5 +1,80 @@
 # Technical Reference
 
+
+## Synthesis for July 5
+
+**Types and Fields**
+Fields are really the ground-truth (as opposed to Types). The fields are consistent and re-used, and the types are just collections of Fields, called a certain name (e.g. Book or Journal). We could let people clone types, but you wouldn't want to exactly re-use the same literal one. Types are really about having control over the type's fields and name on a community-by-community basis. But, the fields being consistent across communities and types means integrations can be simpler.
+
+We will provide a set of base fields (though I can't tell if base fields should be declared somewhere (e.g. a yaml file in code) - or we should have a base type that we create in the UI). I think to start, let's just define them in code. We can introduce the idea of namespacing fields in the future. Ya - for now, we're all just referencing this file when trying to build new types, but in the future it could be more of a 'marketplace' of fields to use and type templates to duplicate.
+
+Fields, Type Templates are what can be shared.
+Types are community-owned and community-specific. (We don't want some other community updating a type and having that impact all the other communities). If a template gets updated, maybe we can notify - but that's way down the line. 
+
+Custom fields can be created by just adding them to a community's type? But I'd imagine those custom fields don't show up in an autocomplete - they're local to the community.
+
+**Pubs**
+The above is suggesting that all metadata on a pub uses a field described somewhere. They could use the base fields, or it could be a field defined by an integration. Or an integration can add a base field that is not included on the pub's type.
+
+**Workflows and Stages**
+Move and Claim are actions that only make sense in the context of Workflows and Stages - they have no bearing on pub metadata. We call them "Workflow Actions"
+
+**Integrations**
+Integrations act by reading and writing metadata to pubs. The types of metadata it wants to read and write are declared in its manifest, using known or custom fieldIds. Most integrations will introduce a namespaced metadata field: `reviews-integration/status`. The field can carry an integrationId so that we can know who's status that is, and render it along with buttons, etc provided by the integration.
+
+The integration manifest can provide actions, we call them "Integration Actions". To begin, Integration Actions are exclusively links to another page.
+
+Integrations can be "attached" to a pub, stage, (workflow, or community) — though, they always act on Pubs, not on stages or workflows, etc. The integration doesn't "know" about the pubs beforehand, instead PubPub will render buttons on pubs that, when clicked, send a request to the integration with pubId, instanceId, etc, and the integration can then act on that pub. 
+  - PubPub knows when to 'activate'/render a button/integration for a pub in a given stage because it looks up the pub's stage and the integrations 'attached' to that stage. 
+  - PubPub can do permissioning by the same means. Look at the pubId the integration is trying to act on, look at whether the integration has been attached to a pub, or any of the stages it is in. Extends trivially for doing the same if we allow attaching to workflows, community, etc.
+  - Integrations can provide default status, so that button text/links can be rendered before any integration metadata is set by the integration.
+*Proposed idea*: There are no "webhooks" or automatic integrations to begin. Everything is click-based. We can get into auto-clicking (e.g. Triggers) in the future. Integrations don't "listen" - they just respond to requests to specific URLs they declare in the manifest.
+  - In a future where there are Triggers, I think this could remain true. PubPub is just responsible for doing the 'clicking' automatically based on stage movement/cron/etc, but the integration doesn't know or care about the difference.
+  - One way to think about this is that Integrations are essentially 'functions' (they could have state, so I don't want to say 'functional'), they are explicitly called, and produce some side effect: metadata change (aka internal side effect) or external side effect.
+  
+**API endpoints**
+- read and write pub metadata
+- read pubpub users
+- send transactional email to user (we want this to go through PubPub so we don't have to reveal user emails to 3rd parties)
+
+- Endpoints I don't think we need
+  - read stage/workflow information
+    - Is that right? Is there any reason an integration would need to know about a pub's current stage? I think not...
+  - trigger workflow actions (i.e. Move, Claim)
+
+Workflow action clicks will send along `pubId` and `instanceId` (and maybe a `accessHash` if we want to do permissioning that way? Eh - we could validate directly more easily I think, then no risk of stale accessHashes/leaks). This allows the integration to persist settings per-instance and query/write pub metadata.
+
+**Core PubPub**
+With the description of Integrations, there is a concept of 'Core PubPub' - which is just the minimal set of functionality PubPub provides and clear boundaries about when something should be handled by an Integration.
+
+Core PubPub could essentially be: Fields + Types, Pubs + Metadata, Workflows + Stages, Integrations API.
+
+The appeal of this is keeping a relatively simple codebase and stack with a very specific set of functionality that does not need to expand into overwhelming complexity over time (as happened in v6). New, bespoke needs are handling by building new Integrations.
+
+
+### Glossary
+**Community** - The top level organizational unit. Allows people to group Pubs, Members, Workflows, Integrations, and Types within a single permissions structure. Typically will be scoped to a single "billing department" (i.e. an organization or person would not need multiple communities like they do in v6).
+**Pub** - A collection of metadata that represents a conceptual work — i.e. A book may have multiple formats, files, cover arts, etc but it's still the same book conceptually. 
+**Metadata** - A key-value pair that describes a certain aspect of a Pub.
+**Metadata Field (aka Field)** - The key of a metadata key-value pair.
+**Metadata Value (aka Value)** - The value of a metadata key-value pair.
+**Pub Type (aka Type)** - A list of Fields that a Pub could have. 
+**Pub Type template [Not part of MVP]** - A list of Fields that you may want to repeatedly use in the creation of multiple different Pub Types.
+**Workflow** - A set of unordered stages that help for the Members of a Community organize and describe the process used to to modify the Metadata of Pubs.
+**Stage** - A step in a Workflow, typically understood to be focused around a specific group of people modifying a specific set of Metadata Values on specific Pubs. 
+**Integration** - A web UI/process that aids in the modification of a Pub's Metadata, or in the creation of external processes based on Pub Metadata.
+**Integration manifest (aka manifest)** - A file in our codebase that registers an Integration's set of Fields, Integration Actions, and other static configuration.
+**Integration instance (aka instance)** - A particular invocation of an Instance in a given Community for a given set of Pubs. Multiple instances of the same Integration may be used in the same Community if a configuration with different settings or set of Pubs is desired (e.g. building two websites from two different Pubs, or having two different Crossref memberships that they wish to use).
+**Integration status** - Metadata set by an Integration on a Pub that communicates the status of that Integration for that given Pub. Will be set on a namespaced Metadata Field (e.g. `reviews-v1-integration/status`).
+**Side-effect** - The result of an Integration's action - could be Internal or External.
+**Internal side-effect** - The change of Metadata Values by an Integration.
+**External side-effect** - Some off-platform event produced by an Integration, e.g. a built website, a tweet, or a printed book.
+**Action** - The buttons rendered on a Pub that allow Members of a Community to act on it.
+**Workflow action** - Actions (buttons) that effect a Pub's location and status in a Workflow. Hardcoded, at the moment just `Move` (between Stages) and `Claim`.
+**Integration action** - Actions (buttons) that are dynamically available on a Pub based on the Integrations configured within a Community. For example, 'Review', 'Publish Site', 'Issue DOI'.
+**Trigger [Not part of MVP]** - Processes that automatically 'click' Integration Actions based on some set of conditions configured by the Community. For example, automatically registering a DOI when a Pub arrives at a certain stage, automatically building a website every 24 hours, etc, automatically issuing Review emails when a Pub has a non-null title and a PDF file.
+
+
 ## For Next Time
 - Layout API endpoints
   - Mostly just receiving pubIds and sending metadata updates to speciffic pubIds
