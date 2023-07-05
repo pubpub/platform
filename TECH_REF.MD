@@ -1,5 +1,48 @@
+
 # Technical Reference
 
+## 2023-07-05
+- 'Global fields', rather than "Base fields"?
+- Or maybe we just scope to community, and allow everyone to use all, but 
+
+
+- HDSR Pub [Build Site]
+
+- Review Workflow for HDSR articles
+  - Submitted [Ready for Review, Rejected] [[Connect Integration]]
+  - Ready for Review [Constraint: Rejected, Ready for Copyediting] [Steve] [[Connect Integration]]
+    - Pub 0 [community-wide Integration button]
+  - Ready for Copyediting [Constraint: Completed, Rejected] [Jane and Mike] [[Connect Integration]]
+    - Pub 1  [community-wide Integration button] [Integration button 1] [Integration button 2]
+    - Pub 2* [community-wide Integration button] [Integration button 1] [Integration button 2] [Button from Integration attached specifically to this pub]
+  - Completed [[Connect Integration]]
+  - Rejected [[Connect Integration]]
+
+- Review Workflows for HDSR editorials
+  - Completed
+
+- Open Encyclopedia of Cognitive Sciences
+  - Submitted
+  - [Everything review-wise happens in Janeway]
+  - Ready to publish
+
+- Community X
+  - Submitted
+  - Review
+  - Copyedited
+  - Reviewed again
+  - [Gatsby]
+
+
+
+- Notifications
+  - Transactional emails
+    - send email to these UUIDs, and these emails that aren't users
+  - Notifications
+    - Integration sets event metadata (`review-integration/events: [{"Everyone declined"}]`)
+    - 
+
+Pub Metadata should maybe just be called pub data. PubFields, PubValues.
 
 ## Synthesis for July 5
 
