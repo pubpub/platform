@@ -53,26 +53,26 @@ The appeal of this is keeping a relatively simple codebase and stack with a very
 
 
 ### Glossary
-**Community** - The top level organizational unit. Allows people to group Pubs, Members, Workflows, Integrations, and Types within a single permissions structure. Typically will be scoped to a single "billing department" (i.e. an organization or person would not need multiple communities like they do in v6).
-**Pub** - A collection of metadata that represents a conceptual work — i.e. A book may have multiple formats, files, cover arts, etc but it's still the same book conceptually. 
-**Metadata** - A key-value pair that describes a certain aspect of a Pub.
-**Metadata Field (aka Field)** - The key of a metadata key-value pair.
-**Metadata Value (aka Value)** - The value of a metadata key-value pair.
-**Pub Type (aka Type)** - A list of Fields that a Pub could have. 
-**Pub Type template [Not part of MVP]** - A list of Fields that you may want to repeatedly use in the creation of multiple different Pub Types.
-**Workflow** - A set of unordered stages that help for the Members of a Community organize and describe the process used to to modify the Metadata of Pubs.
-**Stage** - A step in a Workflow, typically understood to be focused around a specific group of people modifying a specific set of Metadata Values on specific Pubs. 
-**Integration** - A web UI/process that aids in the modification of a Pub's Metadata, or in the creation of external processes based on Pub Metadata.
-**Integration manifest (aka manifest)** - A file in our codebase that registers an Integration's set of Fields, Integration Actions, and other static configuration.
-**Integration instance (aka instance)** - A particular invocation of an Instance in a given Community for a given set of Pubs. Multiple instances of the same Integration may be used in the same Community if a configuration with different settings or set of Pubs is desired (e.g. building two websites from two different Pubs, or having two different Crossref memberships that they wish to use).
-**Integration status** - Metadata set by an Integration on a Pub that communicates the status of that Integration for that given Pub. Will be set on a namespaced Metadata Field (e.g. `reviews-v1-integration/status`).
-**Side-effect** - The result of an Integration's action - could be Internal or External.
-**Internal side-effect** - The change of Metadata Values by an Integration.
-**External side-effect** - Some off-platform event produced by an Integration, e.g. a built website, a tweet, or a printed book.
-**Action** - The buttons rendered on a Pub that allow Members of a Community to act on it.
-**Workflow action** - Actions (buttons) that effect a Pub's location and status in a Workflow. Hardcoded, at the moment just `Move` (between Stages) and `Claim`.
-**Integration action** - Actions (buttons) that are dynamically available on a Pub based on the Integrations configured within a Community. For example, 'Review', 'Publish Site', 'Issue DOI'.
-**Trigger [Not part of MVP]** - Processes that automatically 'click' Integration Actions based on some set of conditions configured by the Community. For example, automatically registering a DOI when a Pub arrives at a certain stage, automatically building a website every 24 hours, etc, automatically issuing Review emails when a Pub has a non-null title and a PDF file.
+- **Community** - The top level organizational unit. Allows people to group Pubs, Members, Workflows, Integrations, and Types within a single permissions structure. Typically will be scoped to a single "billing department" (i.e. an organization or person would not need multiple communities like they do in v6).
+- **Pub** - A collection of metadata that represents a conceptual work — i.e. A book may have multiple formats, files, cover arts, etc but it's still the same book conceptually. 
+- **Metadata** - A key-value pair that describes a certain aspect of a Pub.
+- **Metadata Field (aka Field)** - The key of a metadata key-value pair.
+- **Metadata Value (aka Value)** - The value of a metadata key-value pair.
+- **Pub Type (aka Type)** - A list of Fields that a Pub could have. 
+- **Pub Type template [Not part of MVP]** - A list of Fields that you may want to repeatedly use in the creation of multiple different Pub Types.
+- **Workflow** - A set of unordered stages that help for the Members of a Community organize and describe the process used to to modify the Metadata of Pubs.
+- **Stage** - A step in a Workflow, typically understood to be focused around a specific group of people modifying a specific set of Metadata Values on specific Pubs. 
+- **Integration** - A web UI/process that aids in the modification of a Pub's Metadata, or in the creation of external processes based on Pub Metadata.
+- **Integration manifest (aka manifest)** - A file in our codebase that registers an Integration's set of Fields, Integration Actions, and other static configuration.
+- **Integration instance (aka instance)** - A particular invocation of an Instance in a given Community for a given set of Pubs. Multiple instances of the same Integration may be used in the same Community if a configuration with different settings or set of Pubs is desired (e.g. building two websites from two different Pubs, or having two different Crossref memberships that they wish to use).
+- **Integration status** - Metadata set by an Integration on a Pub that communicates the status of that Integration for that given Pub. Will be set on a namespaced Metadata Field (e.g. `reviews-v1-integration/status`).
+- **Side-effect** - The result of an Integration's action - could be Internal or External.
+- **Internal side-effect** - The change of Metadata Values by an Integration.
+- **External side-effect** - Some off-platform event produced by an Integration, e.g. a built website, a tweet, or a printed book.
+- **Action** - The buttons rendered on a Pub that allow Members of a Community to act on it.
+- **Workflow action** - Actions (buttons) that effect a Pub's location and status in a Workflow. Hardcoded, at the moment just `Move` (between Stages) and `Claim`.
+- **Integration action** - Actions (buttons) that are dynamically available on a Pub based on the Integrations configured within a Community. For example, 'Review', 'Publish Site', 'Issue DOI'.
+- **Trigger [Not part of MVP]** - Processes that automatically 'click' Integration Actions based on some set of conditions configured by the Community. For example, automatically registering a DOI when a Pub arrives at a certain stage, automatically building a website every 24 hours, etc, automatically issuing Review emails when a Pub has a non-null title and a PDF file.
 
 
 ## For Next Time
