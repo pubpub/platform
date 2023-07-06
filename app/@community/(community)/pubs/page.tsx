@@ -1,36 +1,35 @@
+import { Prisma } from "@prisma/client";
 import prisma from "prisma/db";
+import PubList from "./PubList";
 
-export default async function Page() {
+export type PubsData = Prisma.PromiseReturnType<typeof getCommunityPubs>;
+
+const getCommunityPubs = async () => {
 	/* Normally, we would get the community based on the url or logged in user session */
 	const onlyCommunity = await prisma.community.findFirst();
 	if (!onlyCommunity) {
 		return null;
 	}
-	const pubs = await prisma.pub.findMany({
-		where: { communityId: onlyCommunity.id, parentId: null },
+	return await prisma.pub.findMany({
+		where: { communityId: onlyCommunity.id },
 		include: {
-			pubType: {
-				include: {
-					metadataFields: true,
-				},
-			},
-			metadataValues: true,
-			children: {
-				include: {
-					pubType: {
-						include: {
-							metadataFields: true,
-						},
-					},
-					metadataValues: true,
-				},
-			},
+			pubType: true,
+			values: { include: { field: true } },
+			stages: { include: { integrationInstances: { include: { integration: true } } } },
+			integrationInstances: { include: { integration: true } },
 		},
 	});
+};
+
+export default async function Page() {
+	const pubs = await getCommunityPubs();
+	if (!pubs) {
+		return null;
+	}
 	return (
 		<>
-			<h1>Pubs</h1>
-			<pre>{JSON.stringify(pubs, null, 4)}</pre>
+			<h1 style={{marginBottom: "2em"}}>Pubs</h1>
+			<PubList pubs={pubs} top={true} />
 		</>
 	);
 }
