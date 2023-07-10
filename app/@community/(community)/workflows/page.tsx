@@ -42,7 +42,7 @@ export default async function Page() {
 	return (
 		<>
 			<h1 style={{ marginBottom: "2em" }}>Workflows</h1>
-			{/* <WorkflowList workflows={workflows}/> */}
+			<WorkflowList workflows={workflows}/>
 		</>
 	);
 }

@@ -32,9 +32,10 @@ model Community {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubTypes  PubType[]
-  pubs      Pub[]
-  workflows Workflow[]
+  pubTypes             PubType[]
+  pubs                 Pub[]
+  workflows            Workflow[]
+  integrationInstances IntegrationInstance[]
 
   @@map(name: "communities")
 }
@@ -204,7 +205,7 @@ model Integration {
   updatedAt   DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
   instances IntegrationInstance[]
-  pubFields  PubField[]
+  pubFields PubField[]
 
   @@map(name: "integrations")
 }
@@ -214,6 +215,8 @@ model IntegrationInstance {
   name          String
   integration   Integration @relation(fields: [integrationId], references: [id])
   integrationId String      @map(name: "integration_id")
+  community     Community   @relation(fields: [communityId], references: [id])
+  communityId   String      @map(name: "community_id")
   createdAt     DateTime    @default(now()) @map(name: "created_at")
   updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updated_at")
 

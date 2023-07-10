@@ -1,12 +1,13 @@
 "use client";
-import { Box, Button, Flex, IconButton } from "@chakra-ui/react";
+import { Box, Button, Divider, Flex, Heading, IconButton } from "@chakra-ui/react";
 // import styles from "./PubList.module.css";
 // import PubRow from "./PubRow";
 import { WorkflowsData } from "./page";
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useState } from "react";
+import StageRow from "./StageRow";
 
-type Props = { pubs: NonNullable<WorkflowsData>};
+type Props = { workflows: NonNullable<WorkflowsData> };
 
 // const getParent = (pub: Props["pubs"][number]) => {
 // 	return pub.values.find((value) => {
@@ -23,16 +24,22 @@ type Props = { pubs: NonNullable<WorkflowsData>};
 // 		return getParent(pub)?.value === parentId;
 // 	});
 // };
-const WorkflowList: React.FC<Props> = function ({ pubs, topPubs }) {
-	const pubsToRender = topPubs || getTopPubs(pubs);
-	const [jankyExpandState, setJankyExpandState] = useState({});
+const WorkflowList: React.FC<Props> = function ({ workflows }) {
 	return (
 		<div>
-			{pubsToRender.map((pub) => {
-				const children = getChildren(pubs, pub.id);
+			{workflows.map((workflow) => {
 				return (
-					<div key={pub.id}>
-						<Flex
+					<div key={workflow.id}>
+						<Box mb="20">
+							<Heading as="h3" size="sm">
+								{workflow.name}
+							</Heading>
+							<Divider />
+							{workflow.stages.map((stage) => {
+								return <StageRow key={stage.id} stage={stage} />;
+							})}
+						</Box>
+						{/* <Flex
 							align="center"
 							mt="-1px"
 							borderTop={"1px solid #ddd"}
@@ -69,7 +76,7 @@ const WorkflowList: React.FC<Props> = function ({ pubs, topPubs }) {
 							<div style={{ marginLeft: "25px" }}>
 								<PubList pubs={pubs} topPubs={children} />
 							</div>
-						)}
+						)} */}
 					</div>
 				);
 			})}

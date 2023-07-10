@@ -399,6 +399,7 @@ async function main() {
 		data: {
 			name: "MIT Press review process",
 			integrationId: reviewIntegration.id,
+			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[1] }, { id: stageIds[7] }],
 			},
@@ -409,6 +410,7 @@ async function main() {
 		data: {
 			name: "Crossref DOI",
 			integrationId: doiIntegration.id,
+			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[3] }],
 			},
@@ -418,6 +420,7 @@ async function main() {
 		data: {
 			name: "HDSR Archive",
 			integrationId: archiveIntegration.id,
+			communityId: communityUUID,
 			pubs: {
 				connect: [{ id: hdsr.id }],
 			},
@@ -427,6 +430,7 @@ async function main() {
 		data: {
 			name: "hdsr.mitpress.mit.edu",
 			integrationId: siteIntegration.id,
+			communityId: communityUUID,
 			pubs: {
 				connect: [{ id: hdsr.id }],
 			},
@@ -436,6 +440,7 @@ async function main() {
 		data: {
 			name: "frankenbook.org",
 			integrationId: siteIntegration.id,
+			communityId: communityUUID,
 			pubs: {
 				connect: [{ id: frankenstein.id }],
 			},
