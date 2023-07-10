@@ -83,6 +83,8 @@ model PubValue {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
+	// Add userId and integrationId to track who created the value
+
   @@map(name: "pub_values")
 }
 

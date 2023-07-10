@@ -1,6 +1,33 @@
 
 # Technical Reference
 
+## 2023-07-10
+- What's in an integration manifest?
+  - name of the integration
+  - actions: URL, Button Text
+  - integrationFields
+    - review/status
+      - Red: Site build failed
+    - review/otherDataTheIntegrationOwns
+    - review/events
+      - Build failed: link to take the action to fix
+  - fieldsIntegrationWantsToEdit
+    - title [123-1255-123451-12455] -> titre [2431-1255-21356-12361236]
+    - files
+    - license
+  - fieldsToRead
+    - title
+    - authors
+    - license
+    - files
+
+
+## To discuss this week
+- Infra: Logging & monitoring, testing, oauth logins,
+- Could begin building out some API endpoints for integrations to use.
+- Explore further how Integration Instance settings are configured (and whether field mapping is part of that or separate)
+
+
 ## 2023-07-05
 - 'Global fields', rather than "Base fields"?
 - Or maybe we just scope to community, and allow everyone to use all, but 

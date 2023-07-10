@@ -82,7 +82,7 @@ const IntegrationList: React.FC<Props> = function ({ instances }) {
 										{instance.stages.map((stage) => {
 											return (
 												<Text fontSize="sm">
-													Attached to all Pubs in workflow stage:{" "}
+													Attached to all pubs in workflow stage:{" "}
 													<Text as="span" fontWeight="bold">
 														{stage.workflow.name}/{stage.name}
 													</Text>

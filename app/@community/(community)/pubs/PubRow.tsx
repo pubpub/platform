@@ -5,6 +5,13 @@ import {
 	Divider,
 	Flex,
 	Heading,
+	Modal,
+	ModalBody,
+	ModalCloseButton,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+	ModalOverlay,
 	Popover,
 	PopoverBody,
 	PopoverContent,
@@ -17,6 +24,7 @@ import {
 import NextLink from "next/link";
 import styles from "./PubRow.module.css";
 import { PubsData } from "./page";
+import { useState } from "react";
 
 type Props = { pub: NonNullable<PubsData>[number] };
 
@@ -64,6 +72,10 @@ const getButtons = (pub: Props["pub"]) => {
 const PubRow: React.FC<Props> = function ({ pub }) {
 	const instances = getInstances(pub);
 	const buttons = getButtons(pub);
+	const [modalTitle, setModalTitle] = useState("");
+	const onClose = () => {
+		setModalTitle("");
+	};
 	return (
 		<Box pt={2} pb={2}>
 			<Flex align="center">
@@ -144,7 +156,9 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 															</Button>
 														</NextLink>
 													</Flex>
-													{index < instances.length - 1 && <Divider mt={3} mb={3} />}
+													{index < instances.length - 1 && (
+														<Divider mt={3} mb={3} />
+													)}
 												</div>
 											);
 										})}
@@ -174,12 +188,22 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 					<Button size="xs" variant="outline" ml={2}>
 						Claim
 					</Button>
+					<Button size="xs" variant="outline" ml={2}>
+						Email Members
+					</Button>
 					{buttons.map((button) => {
 						return (
 							<Box key={button.actions[0].href} ml={2}>
 								{/* @ts-ignore */}
 								<NextLink href={button.actions[0].href} passHref legacyBehavior>
 									<Button as="a" size="xs" variant="outline">
+										{/* <Button
+									size="xs"
+									variant="outline"
+									onClick={() => {
+										setModalTitle(button.actions[0].text);
+									}}
+								> */}
 										<Flex align="center">
 											{button.actions[0].text}
 											<Box
@@ -194,6 +218,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 										</Flex>
 									</Button>
 								</NextLink>
+
 								{/* <Flex align="center">
 									<Box
 										style={{
@@ -211,6 +236,17 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 					})}
 				</Flex>
 			</Flex>
+			<Modal onClose={onClose} size="full" isOpen={!!modalTitle}>
+				<ModalOverlay />
+				<ModalContent>
+					<ModalHeader>{modalTitle}</ModalHeader>
+					<ModalCloseButton />
+					<ModalBody></ModalBody>
+					<ModalFooter>
+						<Button onClick={onClose}>Close</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
 		</Box>
 	);
 };
