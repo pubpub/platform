@@ -1,0 +1,12 @@
+{
+	"name": "word-counter",
+	"fields": {
+		"register": {
+			"word-counter/word-count": {
+				"type": "number",
+				"default": 0
+			}
+		},
+		"read": ["pubpub/content"]
+	}
+}
