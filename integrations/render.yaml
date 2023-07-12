@@ -9,8 +9,8 @@ services:
     region: ohio
     runtime: node
     rootDir: templates/word-counter
-    buildCommand: pnpm i
-    startCommand: pnpm start
+    buildCommand: npm i
+    startCommand: npm run start
     buildFilter:
       paths:
         - templates/word-counter/**
