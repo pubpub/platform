@@ -1,6 +1,7 @@
 {
 	"name": "word-counter-serverless",
 	"version": "0.0.1",
+	"private": true,
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"description": "",
 	"main": "index.js",

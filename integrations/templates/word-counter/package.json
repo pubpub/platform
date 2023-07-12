@@ -1,6 +1,7 @@
 {
 	"name": "word-counter",
 	"type": "module",
+	"private": true,
 	"version": "0.0.1",
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"description": "",
