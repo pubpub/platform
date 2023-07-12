@@ -195,15 +195,15 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 						return (
 							<Box key={button.actions[0].href} ml={2}>
 								{/* @ts-ignore */}
-								<NextLink href={button.actions[0].href} passHref legacyBehavior>
-									<Button as="a" size="xs" variant="outline">
-										{/* <Button
+								{/* <NextLink href={button.actions[0].href} passHref legacyBehavior> */}
+									{/* <Button as="a" size="xs" variant="outline"> */}
+										<Button
 									size="xs"
 									variant="outline"
 									onClick={() => {
 										setModalTitle(button.actions[0].text);
 									}}
-								> */}
+								>
 										<Flex align="center">
 											{button.actions[0].text}
 											<Box
@@ -217,7 +217,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 											/>
 										</Flex>
 									</Button>
-								</NextLink>
+								{/* </NextLink> */}
 
 								{/* <Flex align="center">
 									<Box
