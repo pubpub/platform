@@ -2,15 +2,14 @@
 	"name": "word-counter",
 	"type": "module",
 	"version": "0.0.1",
+	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
 		"start": "tsx index.tsx",
 		"dev": "tsx watch index.tsx"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
+	"license": "GPL-2.0+",
 	"dependencies": {
 		"@types/body-parser": "^1.19.2",
 		"alfaaz": "^1.1.0",
