@@ -7,7 +7,9 @@ import { Instance, NotFound, Process, ProcessComplete, jsx } from "./pages";
 import { Metric } from "./types";
 import { updateWordCount } from "./pubpub";
 
-const db = redis.createClient();
+const db = redis.createClient({
+	url: process.env.REDIS_URL,
+});
 const app = express();
 const router = express.Router();
 

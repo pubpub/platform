@@ -1,0 +1,22 @@
+services:
+  # integration-word-counter
+  - type: redis
+    name: integration-word-counter-redis
+    region: ohio
+    ipAllowList: [] # only allow internal connections
+  - type: web
+    name: integration-word-counter
+    region: ohio
+    runtime: node
+    rootDir: templates/word-counter
+    buildCommand: pnpm i
+    startCommand: pnpm start
+    buildFilter:
+      paths:
+        - templates/word-counter/**
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: integration-word-counter-redis
+          property: connectionString
