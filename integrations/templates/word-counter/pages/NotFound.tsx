@@ -9,7 +9,7 @@ export const NotFound = (props: Props) => {
 				<title>Word Count - Not Found</title>
 			</head>
 			<body>
-				<h1>Not Found</h1>
+				<h1>Not Found?!</h1>
 			</body>
 		</html>
 	);
