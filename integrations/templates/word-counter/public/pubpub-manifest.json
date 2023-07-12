@@ -1,16 +1,14 @@
 {
 	"name": "word-counter",
-	"fields": {
-		"register": {
-			"word-counter/word-count": {
-				"type": "number",
-				"default": 0
-			},
-			"word-counter/line-count": {
-				"type": "number",
-				"default": 0
-			}
+	"register": {
+		"word-counter/word-count": {
+			"type": "number",
+			"default": 0
 		},
-		"read": ["pubpub/content"]
-	}
+		"word-counter/line-count": {
+			"type": "number",
+			"default": 0
+		}
+	},
+	"read": ["pubpub/content"]
 }
