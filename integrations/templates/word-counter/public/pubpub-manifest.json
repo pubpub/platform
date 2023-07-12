@@ -5,6 +5,10 @@
 			"word-counter/word-count": {
 				"type": "number",
 				"default": 0
+			},
+			"word-counter/line-count": {
+				"type": "number",
+				"default": 0
 			}
 		},
 		"read": ["pubpub/content"]
