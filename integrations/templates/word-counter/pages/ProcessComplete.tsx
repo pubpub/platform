@@ -12,7 +12,7 @@ export const ProcessComplete = (props: Props) => {
 				<title>Word Count - Process Complete</title>
 			</head>
 			<body>
-				<p>Word count complete!</p>
+				<h1>Process complete</h1>
 				<dl>
 					{"wordCount" in props && (
 						<>

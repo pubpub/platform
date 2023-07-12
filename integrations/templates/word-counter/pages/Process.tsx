@@ -11,7 +11,7 @@ export const Process = (props: Props) => {
 			<body>
 				<h1>Process</h1>
 				<form method="POST">
-					<button type="submit">Process</button>
+					<button type="submit">Update word counts</button>
 				</form>
 			</body>
 		</html>

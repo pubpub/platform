@@ -21,6 +21,7 @@ export const Instance = ({ error, metric, updated, processPubId }: Props) => {
 			<body>
 				{error && <p>{error}</p>}
 				{!error && updated && <p>Configuration updated</p>}
+				<h1>Configure</h1>
 				<form method="POST" action={processPubId && `?processPubId=${processPubId}`}>
 					<fieldset name="configure">
 						<legend>Select Counting Metric</legend>
