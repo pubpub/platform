@@ -22,6 +22,7 @@ model User {
 
   claims ActionClaim[]
   moves  ActionMove[]
+  pins   Pin[]
 
   @@map(name: "users")
 }
@@ -29,6 +30,7 @@ model User {
 model Community {
   id        String   @id @default(uuid())
   name      String
+  avatar    String?
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
@@ -55,6 +57,7 @@ model Pub {
   claims               ActionClaim[]
   moves                ActionMove[]
   integrationInstances IntegrationInstance[]
+  pins                 Pin[]
 
   @@map(name: "pubs")
 }
@@ -83,7 +86,7 @@ model PubValue {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-	// Add userId and integrationId to track who created the value
+  // Add userId and integrationId to track who created the value
 
   @@map(name: "pub_values")
 }
@@ -111,6 +114,7 @@ model Workflow {
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
   stages Stage[]
+  pins   Pin[]
 
   @@map(name: "workflows")
 }
@@ -224,14 +228,23 @@ model IntegrationInstance {
 
   pubs   Pub[]
   stages Stage[]
+  pins   Pin[]
 
   @@map(name: "integration_instances")
 }
 
 model Pin {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  id         String               @id @default(uuid())
+  user       User                 @relation(fields: [userId], references: [id])
+  userId     String               @map(name: "user_id")
+  pub        Pub?                 @relation(fields: [pubId], references: [id])
+  pubId      String?              @map(name: "pub_id")
+  workflow   Workflow?            @relation(fields: [workflowId], references: [id])
+  workflowId String?              @map(name: "workflow_id")
+  instance   IntegrationInstance? @relation(fields: [instanceId], references: [id])
+  instanceId String?              @map(name: "instance_id")
+  createdAt  DateTime             @default(now()) @map(name: "created_at")
+  updatedAt  DateTime             @default(now()) @updatedAt @map(name: "updated_at")
 
   @@map(name: "pins")
 }

@@ -16,8 +16,8 @@ async function main() {
 	const community = await prisma.community.create({
 		data: {
 			id: communityUUID,
-			name: "Arcadia Science",
-			avatar: "/logos/arcadia.png",
+			name: "MIT Press",
+			avatar: "/logos/mitp.jpg",
 		},
 	});
 	const fieldIds = [...Array(7)].map((x) => uuidv4());
@@ -39,7 +39,7 @@ async function main() {
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[0],
-			name: "Project",
+			name: "Book",
 			communityId: communityUUID,
 			fields: {
 				connect: [
@@ -55,7 +55,7 @@ async function main() {
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[1],
-			name: "Resource",
+			name: "Chapter",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[4] }],
@@ -65,7 +65,7 @@ async function main() {
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[2],
-			name: "Data set",
+			name: "Journal",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
@@ -75,29 +75,29 @@ async function main() {
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[3],
-			name: "Method",
+			name: "Issue",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[3] }],
 			},
 		},
 	});
-	// await prisma.pubType.create({
-	// 	data: {
-	// 		id: typeIds[4],
-	// 		name: "Article",
-	// 		communityId: communityUUID,
-	// 		fields: {
-	// 			connect: [
-	// 				{ id: fieldIds[0] },
-	// 				{ id: fieldIds[2] },
-	// 				{ id: fieldIds[3] },
-	// 				{ id: fieldIds[4] },
-	// 				{ id: fieldIds[5] },
-	// 			],
-	// 		},
-	// 	},
-	// });
+	await prisma.pubType.create({
+		data: {
+			id: typeIds[4],
+			name: "Article",
+			communityId: communityUUID,
+			fields: {
+				connect: [
+					{ id: fieldIds[0] },
+					{ id: fieldIds[2] },
+					{ id: fieldIds[3] },
+					{ id: fieldIds[4] },
+					{ id: fieldIds[5] },
+				],
+			},
+		},
+	});
 	/* ------------- */
 	const topPub1 = await prisma.pub.create({
 		data: {
@@ -105,19 +105,19 @@ async function main() {
 			communityId: communityUUID,
 			values: {
 				createMany: {
-					data: [{ fieldId: fieldIds[0], value: "Ticks as treasure troves: Molecular discovery in new organisms" }],
+					data: [{ fieldId: fieldIds[0], value: "Frankenstein" }],
 				},
 			},
 		},
 	});
 	const chapter1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Robust long-read saliva transcriptome and proteome from the lone star tick, Amblyomma americanum" },
+						{ fieldId: fieldIds[0], value: "Chapter 1" },
 						{ fieldId: fieldIds[4], value: "chapter1.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -127,12 +127,12 @@ async function main() {
 	});
 	const chapter2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "De novo assembly of a long-read Amblyomma americanum tick genome" },
+						{ fieldId: fieldIds[0], value: "Chapter 2" },
 						{ fieldId: fieldIds[4], value: "chapter2.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -142,12 +142,12 @@ async function main() {
 	});
 	const chapter3 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Performing mass spectrometry-based proteomics in organisms with minimal reference protein databases" },
+						{ fieldId: fieldIds[0], value: "Chapter 3" },
 						{ fieldId: fieldIds[4], value: "chapter3.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -159,12 +159,12 @@ async function main() {
 	/* Top Pub 2 */
 	const topPub2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: typeIds[2],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Genetics: Decoding evolutionary drivers across biology" },
+						{ fieldId: fieldIds[0], value: "Harvard Data Science Review" },
 						{ fieldId: fieldIds[1], value: "123-156612-3521" },
 					],
 				},
@@ -178,7 +178,7 @@ async function main() {
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Distinct spatiotemporal movement properties reveal sub-modalities in crawling cell types" },
+						{ fieldId: fieldIds[0], value: "Issue 1" },
 						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
@@ -187,12 +187,12 @@ async function main() {
 	});
 	const issue2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: typeIds[3],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Raman spectra reflect complex phylogenetic relationships" },
+						{ fieldId: fieldIds[0], value: "Issue 2" },
 						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
@@ -201,15 +201,15 @@ async function main() {
 	});
 	const article1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Phenotypic differences between interfertile Chlamydomonas species" },
-						// { fieldId: fieldIds[5], value: "Xiao-Li Meng" },
+						{ fieldId: fieldIds[0], value: "Article 1" },
+						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article1.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue1.id },
 					],
 				},
 			},
@@ -217,15 +217,15 @@ async function main() {
 	});
 	const article2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Designing genome-wide MERFISH probes for understudied species" },
+						{ fieldId: fieldIds[0], value: "Article 2" },
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue1.id },
 					],
 				},
 			},
@@ -233,15 +233,15 @@ async function main() {
 	});
 	const article3 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "A workflow to isolate phage DNA and identify nucleosides by HPLC and mass spectrometry" },
-						// { fieldId: fieldIds[5], value: "Xiao-Li Meng" },
+						{ fieldId: fieldIds[0], value: "Article 3" },
+						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article3.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue2.id },
 					],
 				},
 			},
@@ -249,15 +249,15 @@ async function main() {
 	});
 	const article4 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Distinct spatiotemporal movement properties reveal sub-modalities in crawling cell types" },
-						// { fieldId: fieldIds[5], value: "Xiao-Li Meng" },
+						{ fieldId: fieldIds[0], value: "Article 4" },
+						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article4.html" },
-						{ fieldId: fieldIds[6], value: topPub1.id },
+						{ fieldId: fieldIds[6], value: issue2.id },
 					],
 				},
 			},
@@ -265,15 +265,15 @@ async function main() {
 	});
 	const article5 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Microchamber slide design for cell confinement during imaging" },
-						// { fieldId: fieldIds[5], value: "Xiao-Li Meng" },
+						{ fieldId: fieldIds[0], value: "Article 5" },
+						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article5.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue2.id },
 					],
 				},
 			},
@@ -283,7 +283,7 @@ async function main() {
 	const stageIds = [...Array(12)].map((x) => uuidv4());
 	const workflow1 = await prisma.workflow.create({
 		data: {
-			name: "Arcadia Team Review Process",
+			name: "HDSR Review Process",
 			communityId: communityUUID,
 			stages: {
 				createMany: {
@@ -321,7 +321,7 @@ async function main() {
 
 	const workflow2 = await prisma.workflow.create({
 		data: {
-			name: "Community Annotation Workflow",
+			name: "Frankenstein Community Annotation",
 			communityId: communityUUID,
 			stages: {
 				createMany: {
@@ -397,7 +397,7 @@ async function main() {
 
 	const reviewInstances = await prisma.integrationInstance.create({
 		data: {
-			name: "Arcadia review form",
+			name: "MIT Press review process",
 			integrationId: reviewIntegration.id,
 			communityId: communityUUID,
 			stages: {
@@ -418,7 +418,7 @@ async function main() {
 	});
 	const archiveInstance1 = await prisma.integrationInstance.create({
 		data: {
-			name: "PMC Archive",
+			name: "HDSR Archive",
 			integrationId: archiveIntegration.id,
 			communityId: communityUUID,
 			pubs: {
@@ -428,7 +428,7 @@ async function main() {
 	});
 	const siteInstance1 = await prisma.integrationInstance.create({
 		data: {
-			name: "research.arcadiascience.com",
+			name: "hdsr.mitpress.mit.edu",
 			integrationId: siteIntegration.id,
 			communityId: communityUUID,
 			pubs: {
@@ -438,7 +438,7 @@ async function main() {
 	});
 	const siteInstance2 = await prisma.integrationInstance.create({
 		data: {
-			name: "ticks.arcadiascience.org",
+			name: "frankenbook.org",
 			integrationId: siteIntegration.id,
 			communityId: communityUUID,
 			pubs: {

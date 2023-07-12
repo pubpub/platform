@@ -5,11 +5,25 @@ import CommunitySwitcher from "./CommunitySwitcher";
 import PinnedLink from "./PinnedLink";
 import LoginSwitcher from "./LoginSwitcher";
 
-export default function SideNav() {
+import { CommunityData, PinsData } from "./layout";
+
+type Props = { community: NonNullable<CommunityData>; pins: NonNullable<PinsData> };
+
+const getTitle = (pub: Props["pins"][number]["pub"]) => {
+	if (!pub) {
+		return "";
+	}
+	const titleValue = pub.values.find((value) => {
+		return value.field.name === "Title";
+	});
+	return titleValue?.value as string;
+};
+
+const SideNav: React.FC<Props> = function ({ community, pins }) {
 	return (
 		<div className={styles.side}>
 			<div className={styles.links}>
-				<CommunitySwitcher />
+				<CommunitySwitcher community={community} />
 				<NavLink href="/search" text={"Search"} icon={<img src="/icons/search.svg" />} />
 				<NavLink
 					href="/"
@@ -37,13 +51,33 @@ export default function SideNav() {
 				/>
 				<div className={styles.divider} />
 				<NavLink href="" text={"Pinned Items"} icon={<img src="/icons/pin.svg" />} />
-				<PinnedLink text="Harvard Data Science Review" href="/pubs/hdsr" />
-				<PinnedLink text="Frankenbook" href="/pubs/frankenbook" />
-				<PinnedLink text="Journal Peer Review" href="/workflows/journal-asd12" />
+				{pins.map((pin) => {
+					if (pin.pub) {
+						return <PinnedLink text={getTitle(pin.pub)} href={`/pubs/${pin.pub.id}`} />;
+					}
+					if (pin.workflow) {
+						return (
+							<PinnedLink
+								text={pin.workflow.name}
+								href={`/workflows/${pin.workflow.id}`}
+							/>
+						);
+					}
+					if (pin.instance) {
+						return (
+							<PinnedLink
+								text={pin.instance.name}
+								href={`/integrations/${pin.instance.id}`}
+							/>
+						);
+					}
+				})}
 			</div>
 			<div>
 				<LoginSwitcher />
 			</div>
 		</div>
 	);
-}
+};
+
+export default SideNav;

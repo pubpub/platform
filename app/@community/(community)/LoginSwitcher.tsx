@@ -5,11 +5,11 @@ export default function LoginSwitcher() {
 	return (
 		<div className={styles.switcher}>
 			<div className={styles.avatar}>
-				<img src="/avatars/dumpster.png" />
+				<img src="/avatars/person.png" />
 			</div>
 			<div className={styles.details}>
-				<div className={styles.name}>Alex Quintero</div>
-				<div className={styles.email}>alex@email.com</div>
+				<div className={styles.name}>Stevie Barnett</div>
+				<div className={styles.email}>stevie@email.com</div>
 			</div>
 
 			<div>
