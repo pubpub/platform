@@ -79,7 +79,7 @@ router.get("/:instanceId/process/:pubId", async (req, res) => {
 router.post("/:instanceId/process/:pubId", async (req, res) => {
 	const metric = await findMetricByInstanceId(req.params.instanceId);
 	if (metric) {
-		const counts = await updateWordCount(req.params.pubId, metric);
+		const counts = await updateWordCount(req.params.instanceId, req.params.pubId, metric);
 		res.setHeader("Content-Type", "text/html").send(<ProcessComplete {...counts} />);
 	} else {
 		res.redirect(`/instance/${req.params.instanceId}?processPubId=${req.params.pubId}`);
