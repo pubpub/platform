@@ -2,16 +2,11 @@ import { ok as assert } from "node:assert";
 import process from "node:process";
 import express from "express";
 import redis from "redis";
-import bodyParser from "body-parser";
-import { Configure, Apply } from "./pages";
 import { InstanceConfig } from "./types";
 import { updateWordCount } from "./pubpub";
-import { NotConfigured } from "./pages/NotConfigured";
 
 const db = redis.createClient({ url: process.env.REDIS_URL });
 const app = express();
-const api = express.Router();
-const integration = express.Router();
 
 const makeDefaultInstanceConfig = (): InstanceConfig => ({ words: false, lines: false });
 
@@ -28,31 +23,44 @@ const findConfigByInstanceId = (instanceId: string) =>
 		InstanceConfig | undefined
 	>;
 
-app.use(bodyParser.json());
+app.set("view engine", "pug");
+app.use(express.json());
 app.use(express.static("public"));
 
-integration.get("/configure", async (req, res) => {
+// pubpub integration routes
+
+app.get("/configure", async (req, res) => {
 	const { instanceId } = req.query;
 	assert(typeof instanceId === "string");
 	const instanceConfig = await findConfigByInstanceId(instanceId);
 	const instance = { id: instanceId, config: instanceConfig ?? makeDefaultInstanceConfig() };
-	res.send(<Configure instance={instance} />);
+	res.render("configure", { instance, instanceId, title: "configure" });
 });
 
-integration.get("/apply", async (req, res) => {
+app.get("/apply", async (req, res) => {
 	const { instanceId, pubId } = req.query;
 	assert(typeof instanceId === "string");
 	assert(typeof pubId === "string");
 	const instanceConfig = await findConfigByInstanceId(instanceId);
 	if (instanceConfig) {
 		const instance = { id: instanceId, config: instanceConfig };
-		res.send(<Apply instance={instance} pubId={pubId} />);
+		res.render("apply", { instance, pubId, title: "apply" });
 	} else {
-		res.status(400).send(<NotConfigured />);
+		res.status(400).send("not configured");
 	}
 });
 
-integration.post("/apply", async (req, res, next) => {
+// internal routes
+
+app.put("/configure", async (req, res) => {
+	const { instanceId } = req.query;
+	const config = req.body;
+	assert(typeof instanceId === "string");
+	await db.set(instanceId, JSON.stringify(config));
+	res.send(config);
+});
+
+app.post("/apply", async (req, res, next) => {
 	const { instanceId, pubId } = req.query;
 	assert(typeof instanceId === "string");
 	assert(typeof pubId === "string");
@@ -64,16 +72,6 @@ integration.post("/apply", async (req, res, next) => {
 		res.status(400).json({ error: "instance not configured" });
 	}
 });
-
-api.put("/instance/:instanceId", async (req, res) => {
-	const { instanceId } = req.params;
-	const config = req.body;
-	await db.set(instanceId, JSON.stringify(config));
-	res.send(config);
-});
-
-app.use("/api", api);
-app.use(integration);
 
 app.listen(process.env.PORT, () => {
 	console.log(`server is running on port ${process.env.PORT}`);

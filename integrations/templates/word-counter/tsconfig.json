@@ -1,8 +1,6 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"outDir": "./dist",
-		"jsx": "react-jsx",
-		"jsxImportSource": "jsx-runtime-html"
+		"outDir": "./dist"
 	}
 }

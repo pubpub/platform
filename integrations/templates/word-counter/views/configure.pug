@@ -1,0 +1,46 @@
+extends layout.pug
+
+block main
+	div(x-data="configure")
+		p Select one or more counting metric(s) to apply to Pub content.
+		fieldset.checkbox-group
+			label.checkbox(for="words")
+				input#words(type="checkbox" @click="toggle('words')" x-bind:checked="words")
+				span Words
+			label.checkbox(for="lines")
+				input#lines(type="checkbox" @click="toggle('lines')" x-bind:checked="lines")
+				span Lines
+		p(x-show="updated" x-transition="") Updated config!
+
+block scripts
+	script.
+		document.addEventListener("alpine:init", () => {
+			Alpine.data("configure", () => ({
+				lines: !{instance.config.lines},
+				words: !{instance.config.words},
+				updated: false,
+				async fetch() {
+					const response = await fetch(`/instance/!{instance.id}`, {
+						method: "PUT",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ words: this.words, lines: this.lines }),
+					});
+					if (response.ok) {
+						this.updated = true;
+					}
+					return response.json();
+				},
+				toggle(kind) {
+					return event => {
+						const other = kind === "words" ? "lines" : "words";
+						if (this[kind] && !this[other]) {
+							event.preventDefault();
+						} else {
+							this[kind] = !this[kind];
+							this.fetch()
+						}
+					}
+				}
+			}));
+		});
+

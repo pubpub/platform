@@ -1,0 +1,31 @@
+extends layout.pug
+
+block main
+	div(x-data="apply")
+		button(@click="fetch") Update word counts
+		dl
+			dt Words
+			dd(x-text="words")
+			dt Lines
+			dd(x-text="lines")
+		p(x-show="updated" x-transition="") Updated Pub!
+
+block scripts
+	script.
+		document.addEventListener("alpine:init", () => {
+			Alpine.data("apply", () => ({
+				words: 0,
+				lines: 0,
+				updated: false,
+				async fetch() {
+					const params = new URLSearchParams({ instanceId: !{instance.id}, pubId: !{pubId} });
+					const response = await fetch(`/apply?${params}`, { method: "POST" });
+					if (response.ok) {
+						const { words, lines } = await response.json();
+						this.words = words;
+						this.lines = lines;
+						this.updated = true;
+					}
+				},
+			}));
+		});
