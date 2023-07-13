@@ -1,17 +1,18 @@
-import assert from "node:assert";
+import { ok as assert } from "node:assert";
 import process from "node:process";
 import express from "express";
 import redis from "redis";
 import bodyParser from "body-parser";
-import { Instance, NotFound, Process, ProcessComplete, jsx } from "./pages";
-import { Metric } from "./types";
+import { Configure, Apply } from "./pages";
+import { InstanceConfig } from "./types";
 import { updateWordCount } from "./pubpub";
 
-const db = redis.createClient({
-	url: process.env.REDIS_URL,
-});
+const db = redis.createClient({ url: process.env.REDIS_URL });
 const app = express();
-const router = express.Router();
+const api = express.Router();
+const integration = express.Router();
+
+const makeDefaultInstanceConfig = (): InstanceConfig => ({ words: false, lines: false });
 
 try {
 	await db.connect();
@@ -21,76 +22,66 @@ try {
 	process.exit(1);
 }
 
-const findMetricByInstanceId = (instanceId: string) => db.get(instanceId) as Promise<Metric | null>;
+const findConfigByInstanceId = (instanceId: string) =>
+	db.get(instanceId).then((value) => (value ? JSON.parse(value) : undefined)) as Promise<
+		InstanceConfig | undefined
+	>;
 
-const makeMetricFromConfig = (config: Metric[] | null) => {
-	const configHasWords = config?.includes("words");
-	const configHasLines = config?.includes("lines");
-	if (configHasWords && configHasLines) return "words-and-lines";
-	if (configHasWords) return "words";
-	if (configHasLines) return "lines";
-	return undefined;
-};
-
-app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
 app.use(express.static("public"));
 
-router.get("/:instanceId", async (req, res) => {
-	const metric = (await findMetricByInstanceId(req.params.instanceId)) ?? undefined;
-	const processPubId = req.query.processPubId;
-	if (processPubId) assert.ok(typeof processPubId === "string");
-	res
-		.setHeader("Content-Type", "text/html")
-		.send(
-			<Instance
-				metric={metric}
-				processPubId={processPubId}
-				error={
-					processPubId && "The integration instance must be configured before processing this Pub"
-				}
-			/>
-		);
+// integration
+
+integration.get("/configure", async (req, res) => {
+	const { instanceId } = req.query;
+	assert(typeof instanceId === "string");
+	const instanceConfig = await findConfigByInstanceId(instanceId);
+	const instance = { id: instanceId, config: instanceConfig ?? makeDefaultInstanceConfig() };
+	res.send(<Configure instance={instance} />);
 });
 
-router.post("/:instanceId", async (req, res) => {
-	const metric = makeMetricFromConfig(req.body.metric);
+integration.get("/apply", async (req, res) => {
+	const { instanceId, pubId } = req.query;
+	assert(typeof instanceId === "string");
+	assert(typeof pubId === "string");
+	const config = await findConfigByInstanceId(instanceId);
+	if (!config) {
+		res.status(400);
+	}
+	res.send(<Apply instanceId={instanceId} config={config} />);
+});
+
+integration.post("/apply", async (req, res, next) => {
+	const { instanceId, pubId } = req.query;
+	assert(typeof instanceId === "string");
+	assert(typeof pubId === "string");
+	next();
+});
+
+// implementation
+
+api.put("/instance/:instanceId", async (req, res) => {
+	const { instanceId } = req.params;
+	const config = req.body;
 	res.setHeader("Content-Type", "text/html");
-	if (metric) {
-		await db.set(req.params.instanceId, metric);
-		if (req.query.processPubId) {
-			res.redirect(`/instance/${req.params.instanceId}/process/${req.query.processPubId}`);
-		} else {
-			res.send(<Instance metric={metric} updated />);
-		}
+	await db.set(instanceId, JSON.stringify(config));
+	res.send(config);
+});
+
+api.post("/instance/:instanceId/process/:pubId", async (req, res) => {
+	const config = await findConfigByInstanceId(req.params.instanceId);
+	if (config) {
+		const metrics = await updateWordCount(req.params.instanceId, req.params.pubId, config);
+		res.status(200);
+		res.json({ success: true, metrics });
 	} else {
-		res.send(<Instance metric={metric} error="At least one counting metric must be selected" />);
+		res.status(400);
+		res.json({ error: "instance not configured" });
 	}
 });
 
-router.get("/:instanceId/process/:pubId", async (req, res) => {
-	const metric = await findMetricByInstanceId(req.params.instanceId);
-	if (metric) {
-		res.setHeader("Content-Type", "text/html").send(<Process />);
-	} else {
-		res.redirect(`/instance/${req.params.instanceId}?processPubId=${req.params.pubId}`);
-	}
-});
-
-router.post("/:instanceId/process/:pubId", async (req, res) => {
-	const metric = await findMetricByInstanceId(req.params.instanceId);
-	if (metric) {
-		const counts = await updateWordCount(req.params.instanceId, req.params.pubId, metric);
-		res.setHeader("Content-Type", "text/html").send(<ProcessComplete {...counts} />);
-	} else {
-		res.redirect(`/instance/${req.params.instanceId}?processPubId=${req.params.pubId}`);
-	}
-});
-
-app.use("/instance", router);
-
-app.all("*", (_, res) => {
-	res.status(404).send(<NotFound />);
-});
+app.use("/api", api);
+app.use(integration);
 
 app.listen(process.env.PORT, () => {
 	console.log(`server is running on port ${process.env.PORT}`);

@@ -2,8 +2,7 @@
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
 		"outDir": "./dist",
-		"jsx": "react",
-		"jsxFactory": "jsx",
-		"jsxFragmentFactory": "null"
+		"jsx": "react-jsx",
+		"jsxImportSource": "jsx-runtime-html"
 	}
 }

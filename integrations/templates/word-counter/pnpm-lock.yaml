@@ -6,6 +6,7 @@ specifiers:
   alfaaz: ^1.1.0
   body-parser: ^1.20.2
   express: ^4.18.2
+  jsx-runtime-html: ^0.0.4
   redis: ^4.6.7
   tsx: ^3.12.7
   typescript: ^5.1.6
@@ -15,6 +16,7 @@ dependencies:
   alfaaz: 1.1.0
   body-parser: 1.20.2
   express: 4.18.2
+  jsx-runtime-html: 0.0.4
   redis: 4.6.7
 
 devDependencies:
@@ -664,6 +666,12 @@ packages:
   /ipaddr.js/1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
     engines: {node: '>= 0.10'}
+    dev: false
+
+  /jsx-runtime-html/0.0.4:
+    resolution: {integrity: sha512-XViS7AbYyKpEu9fTFw6Im24ias6I9/GIYhI370y1Q4sRM6lyB7b8v1RPTE2VcffgrzhWEb8/cag6aDr4Hpv3kQ==}
+    dependencies:
+      escape-html: 1.0.3
     dev: false
 
   /media-typer/0.3.0:

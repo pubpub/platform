@@ -1,0 +1,68 @@
+:root {
+	font-family: "Inter", sans-serif;
+}
+
+@supports (font-variation-settings: normal) {
+	:root {
+		font-family: "Inter var", sans-serif;
+	}
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background-color: #fff8f1;
+	color: #0b0b0a;
+	-webkit-font-smoothing: antialiased;
+	-moz-osxfont-smoothing: grayscale;
+}
+
+header {
+	display: flex;
+	align-items: center;
+	height: 40px;
+}
+
+header > h1 {
+	margin: 0 1rem;
+	font-size: 1.1rem;
+	font-weight: 300;
+	text-transform: uppercase;
+	background-image: linear-gradient(currentColor, currentColor);
+	background-repeat: no-repeat;
+	background-size: 100% 1px;
+	background-position: 0 100%;
+}
+
+main {
+	padding: 0.5rem 1rem;
+}
+
+.checkbox-group {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+.checkbox-group > .checkbox {
+	display: flex;
+	height: 3rem;
+	cursor: pointer;
+	align-items: center;
+	padding: 0 1rem;
+}
+
+.checkbox-group > .checkbox:hover {
+	background: linear-gradient(
+		90deg,
+		rgba(236, 197, 158, 1) 0%,
+		rgba(193, 131, 69, 0.13911502100840334) 70%
+	);
+}
+
+.checkbox-group > .checkbox > input[type="checkbox"] {
+	margin: 0 1rem 0 0;
+	cursor: pointer;
+}
