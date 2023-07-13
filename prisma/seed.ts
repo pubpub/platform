@@ -40,6 +40,7 @@ async function main() {
 		data: {
 			id: typeIds[0],
 			name: "Project",
+			description: "Top level pub for all major project endeavors.",
 			communityId: communityUUID,
 			fields: {
 				connect: [
@@ -56,6 +57,7 @@ async function main() {
 		data: {
 			id: typeIds[1],
 			name: "Resource",
+			description: "Content for community re-use and distribution.",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[4] }],
@@ -66,6 +68,7 @@ async function main() {
 		data: {
 			id: typeIds[2],
 			name: "Data set",
+			description: "Published data made publicly available.",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
@@ -76,6 +79,7 @@ async function main() {
 		data: {
 			id: typeIds[3],
 			name: "Method",
+			description: "Method paper used to describe specific process in detail.",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[3] }],

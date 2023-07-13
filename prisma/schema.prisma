@@ -94,6 +94,7 @@ model PubValue {
 model PubType {
   id          String    @id @default(uuid())
   name        String
+  description String?
   community   Community @relation(fields: [communityId], references: [id])
   communityId String    @map(name: "community_id")
   createdAt   DateTime  @default(now()) @map(name: "created_at")

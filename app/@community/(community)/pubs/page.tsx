@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "prisma/db";
 import PubList from "./PubList";
+import PubHeader from "./PubHeader";
 
 export type PubsData = Prisma.PromiseReturnType<typeof getCommunityPubs>;
 
@@ -28,7 +29,8 @@ export default async function Page() {
 	}
 	return (
 		<>
-			<h1 style={{marginBottom: "2em"}}>Pubs</h1>
+			<PubHeader />
+
 			<PubList pubs={pubs} top={true} />
 		</>
 	);
