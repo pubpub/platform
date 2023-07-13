@@ -6,6 +6,7 @@ import bodyParser from "body-parser";
 import { Configure, Apply } from "./pages";
 import { InstanceConfig } from "./types";
 import { updateWordCount } from "./pubpub";
+import { NotConfigured } from "./pages/NotConfigured";
 
 const db = redis.createClient({ url: process.env.REDIS_URL });
 const app = express();
@@ -30,8 +31,6 @@ const findConfigByInstanceId = (instanceId: string) =>
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
-// integration
-
 integration.get("/configure", async (req, res) => {
 	const { instanceId } = req.query;
 	assert(typeof instanceId === "string");
@@ -44,40 +43,33 @@ integration.get("/apply", async (req, res) => {
 	const { instanceId, pubId } = req.query;
 	assert(typeof instanceId === "string");
 	assert(typeof pubId === "string");
-	const config = await findConfigByInstanceId(instanceId);
-	if (!config) {
-		res.status(400);
+	const instanceConfig = await findConfigByInstanceId(instanceId);
+	if (instanceConfig) {
+		const instance = { id: instanceId, config: instanceConfig };
+		res.send(<Apply instance={instance} pubId={pubId} />);
+	} else {
+		res.status(400).send(<NotConfigured />);
 	}
-	res.send(<Apply instanceId={instanceId} config={config} />);
 });
 
 integration.post("/apply", async (req, res, next) => {
 	const { instanceId, pubId } = req.query;
 	assert(typeof instanceId === "string");
 	assert(typeof pubId === "string");
-	next();
+	const instanceConfig = await findConfigByInstanceId(instanceId);
+	if (instanceConfig) {
+		const counts = await updateWordCount(instanceId, pubId, instanceConfig);
+		res.json(counts);
+	} else {
+		res.status(400).json({ error: "instance not configured" });
+	}
 });
-
-// implementation
 
 api.put("/instance/:instanceId", async (req, res) => {
 	const { instanceId } = req.params;
 	const config = req.body;
-	res.setHeader("Content-Type", "text/html");
 	await db.set(instanceId, JSON.stringify(config));
 	res.send(config);
-});
-
-api.post("/instance/:instanceId/process/:pubId", async (req, res) => {
-	const config = await findConfigByInstanceId(req.params.instanceId);
-	if (config) {
-		const metrics = await updateWordCount(req.params.instanceId, req.params.pubId, config);
-		res.status(200);
-		res.json({ success: true, metrics });
-	} else {
-		res.status(400);
-		res.json({ error: "instance not configured" });
-	}
 });
 
 app.use("/api", api);

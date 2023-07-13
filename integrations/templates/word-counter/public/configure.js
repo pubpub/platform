@@ -2,7 +2,7 @@
  *
  * @this {import("../types").Config}
  */
-async function updateConfig() {
+async function configure() {
 	const instance = window.Alpine.store("instance");
 	const response = await fetch(`/api/instance/${instance.id}`, {
 		method: "PUT",
@@ -28,7 +28,7 @@ function toggleLines(event) {
 	} else {
 		this.lines = !this.lines;
 	}
-	updateConfig.call(this);
+	configure.call(this);
 }
 
 /**
@@ -41,5 +41,5 @@ function toggleWords(event) {
 	} else {
 		this.words = !this.words;
 	}
-	updateConfig.call(this);
+	configure.call(this);
 }

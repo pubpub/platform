@@ -33,13 +33,13 @@ export const updateWordCount = async (
 	// });
 	const content =
 		"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.";
-	const wordCount = countWords(content);
-	const lineCount = countLines(content);
+	const words = countWords(content);
+	const lines = countLines(content);
 	if (config.words) {
-		await updatePubWordCount(instanceId, pubId, wordCount);
+		await updatePubWordCount(instanceId, pubId, words);
 	}
 	if (config.lines) {
-		await updatePubLineCount(instanceId, pubId, lineCount);
+		await updatePubLineCount(instanceId, pubId, lines);
 	}
-	return { wordCount, lineCount };
+	return { words, lines };
 };

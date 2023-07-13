@@ -4,13 +4,14 @@ type Props = {
 	children: string | string[];
 	title: string;
 	instance?: Instance;
+	pubId?: string;
 	[key: string]: any;
 };
 
 export const Page = (props: Props) => {
 	const { title, children, ...rest } = props;
 	return (
-		<html>
+		<html x-init={props.pubId ? `$store.pubId = "${props.pubId}"` : undefined}>
 			<head>
 				<title>{props.title}</title>
 				<link rel="preconnect" href="https://rsms.me/" />
