@@ -32,8 +32,8 @@ app.use(express.static("public"));
 app.get("/configure", async (req, res) => {
 	const { instanceId } = req.query;
 	assert(typeof instanceId === "string");
-	const instanceConfig = await findConfigByInstanceId(instanceId);
-	const instance = { id: instanceId, config: instanceConfig ?? makeDefaultInstanceConfig() };
+	const config = await findConfigByInstanceId(instanceId);
+	const instance = { id: instanceId, config: config ?? makeDefaultInstanceConfig() };
 	res.render("configure", { instance, instanceId, title: "configure" });
 });
 
@@ -41,9 +41,9 @@ app.get("/apply", async (req, res) => {
 	const { instanceId, pubId } = req.query;
 	assert(typeof instanceId === "string");
 	assert(typeof pubId === "string");
-	const instanceConfig = await findConfigByInstanceId(instanceId);
-	if (instanceConfig) {
-		const instance = { id: instanceId, config: instanceConfig };
+	const config = await findConfigByInstanceId(instanceId);
+	if (config) {
+		const instance = { id: instanceId, config: config };
 		res.render("apply", { instance, pubId, title: "apply" });
 	} else {
 		res.status(400).send("not configured");
@@ -64,9 +64,9 @@ app.post("/apply", async (req, res, next) => {
 	const { instanceId, pubId } = req.query;
 	assert(typeof instanceId === "string");
 	assert(typeof pubId === "string");
-	const instanceConfig = await findConfigByInstanceId(instanceId);
-	if (instanceConfig) {
-		const counts = await updateWordCount(instanceId, pubId, instanceConfig);
+	const config = await findConfigByInstanceId(instanceId);
+	if (config) {
+		const counts = await updateWordCount(instanceId, pubId, config);
 		res.json(counts);
 	} else {
 		res.status(400).json({ error: "instance not configured" });

@@ -12,7 +12,7 @@ body {
 	margin: 0;
 	padding: 0;
 	background-color: #fff8f1;
-	color: #0b0b0a;
+	color: #11110f;
 	-webkit-font-smoothing: antialiased;
 	-moz-osxfont-smoothing: grayscale;
 }
@@ -25,17 +25,13 @@ header {
 
 header > h1 {
 	margin: 0 1rem;
-	font-size: 1.1rem;
-	font-weight: 300;
+	font-size: 1.3rem;
+	font-weight: 500;
 	text-transform: uppercase;
-	background-image: linear-gradient(currentColor, currentColor);
-	background-repeat: no-repeat;
-	background-size: 100% 1px;
-	background-position: 0 100%;
 }
 
 main {
-	padding: 0.5rem 1rem;
+	padding: 0.75rem 1rem;
 }
 
 .checkbox-group {
@@ -43,26 +39,83 @@ main {
 	flex-direction: column;
 	margin: 0;
 	padding: 0;
-	border: none;
+	border: 1px solid #11110f;
 }
 
 .checkbox-group > .checkbox {
 	display: flex;
-	height: 3rem;
 	cursor: pointer;
 	align-items: center;
-	padding: 0 1rem;
+	padding: 0.75rem 1rem;
+	font-size: 0.9rem;
+	position: relative;
+	z-index: 9;
 }
 
 .checkbox-group > .checkbox:hover {
-	background: linear-gradient(
-		90deg,
-		rgba(236, 197, 158, 1) 0%,
-		rgba(193, 131, 69, 0.13911502100840334) 70%
-	);
+	background: rgba(0, 0, 0, 0.1);
 }
 
 .checkbox-group > .checkbox > input[type="checkbox"] {
 	margin: 0 1rem 0 0;
 	cursor: pointer;
+}
+
+.checkbox-group > .checkbox > input:checked + span {
+	font-weight: 600;
+}
+
+button {
+	border: 1px solid #11110f;
+	background-color: transparent;
+	padding: 0.75rem 1rem;
+	cursor: pointer;
+}
+
+button:hover {
+	background: rgba(0, 0, 0, 0.1);
+}
+
+.metadata {
+	display: flex;
+}
+
+.metadata > dl {
+	display: flex;
+	flex: 1;
+	flex-flow: row wrap;
+	border: solid #11110f;
+	border-width: 1px 1px 0 0;
+	margin: 0;
+}
+
+.metadata > dl > dt {
+	flex-basis: 20%;
+	padding: 2px 4px;
+	background: #11110f;
+	max-width: 200px;
+	text-align: right;
+	color: #fff;
+	font-family: "IBM Plex Mono", "Courier New", Courier, monospace;
+	font-size: 0.9rem;
+}
+
+.metadata > dl > dd {
+	flex-basis: 70%;
+	flex-grow: 1;
+	margin: 0;
+	padding: 2px 4px;
+	border-bottom: 1px solid #11110f;
+}
+
+p:first-child {
+	margin-top: 0;
+}
+
+.alert.success {
+	padding: 0.75rem 1rem;
+	color: green;
+	border: 1px solid green;
+	background-color: rgba(0, 255, 0, 0.1);
+	font-size: 0.8rem;
 }

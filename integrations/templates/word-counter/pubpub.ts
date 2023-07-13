@@ -1,5 +1,8 @@
-import { countWords, countLines } from "alfaaz";
+import { countLines, countWords } from "alfaaz";
 import { InstanceConfig } from "./types";
+
+const content =
+	"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.";
 
 const updatePubWordCount = async (instanceId: string, pubId: string, wordCount?: number) => {
 	console.log(
@@ -22,24 +25,16 @@ export const updateWordCount = async (
 	pubId: string,
 	config: InstanceConfig
 ) => {
-	// const { "pubpub/content": content } = await fetch(`https://v7.pubpub.org/instances/getMetadata`, {
-	// 	method: "POST",
-	// 	headers: { "Content-Type": "application/json" },
-	// 	body: JSON.stringify({
-	//    "pubId": pubId,
-	//    "instanceId": instanceId,
-	// 		"fields": ["pubpub/content"],
-	// 	}),
-	// });
-	const content =
-		"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.";
-	const words = countWords(content);
-	const lines = countLines(content);
+	const counts: { words?: number; lines?: number } = {};
 	if (config.words) {
+		const words = countWords(content);
 		await updatePubWordCount(instanceId, pubId, words);
+		counts.words = words;
 	}
 	if (config.lines) {
+		const lines = countLines(content);
 		await updatePubLineCount(instanceId, pubId, lines);
+		counts.lines = lines;
 	}
-	return { words, lines };
+	return counts;
 };

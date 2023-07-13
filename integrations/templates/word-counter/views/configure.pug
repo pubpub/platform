@@ -10,7 +10,7 @@ block main
 			label.checkbox(for="lines")
 				input#lines(type="checkbox" @click="toggle('lines')" x-bind:checked="lines")
 				span Lines
-		p(x-show="updated" x-transition="") Updated config!
+		p.alert.success(x-show="updated" x-transition) Instance configured!
 
 block scripts
 	script.
@@ -20,7 +20,7 @@ block scripts
 				words: !{instance.config.words},
 				updated: false,
 				async fetch() {
-					const response = await fetch(`/instance/!{instance.id}`, {
+					const response = await fetch(`/configure?instanceId=!{instance.id}`, {
 						method: "PUT",
 						headers: { "Content-Type": "application/json" },
 						body: JSON.stringify({ words: this.words, lines: this.lines }),
