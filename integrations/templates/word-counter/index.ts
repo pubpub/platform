@@ -3,7 +3,8 @@ import express from "express";
 import { ok as assert } from "node:assert";
 import process from "node:process";
 import { makeInstanceConfig, findInstanceConfig, updateInstanceConfig } from "./config";
-import { updatePubFields } from "./pubpub";
+import { makeWordCountPatch } from "./counts";
+import { UpdatePubError, updatePub } from "./pubpub";
 
 const app = express();
 const eta = new Eta({ views: "views", cache: true });
@@ -47,8 +48,9 @@ app.post("/apply", async (req, res, next) => {
 		assert(typeof pubId === "string");
 		const instanceConfig = await findInstanceConfig(instanceId);
 		if (instanceConfig) {
-			const counts = await updatePubFields(instanceId, instanceConfig, pubId);
-			res.json(counts);
+			const patch = await makeWordCountPatch(instanceConfig);
+			await updatePub(instanceId, pubId, patch);
+			res.json(patch);
 		} else {
 			res.status(400).json({ error: "instance not configured" });
 		}
@@ -69,6 +71,15 @@ app.put("/configure", async (req, res, next) => {
 	} catch (error) {
 		next(error);
 	}
+});
+
+app.use((error: any, _: any, res: any, next: any) => {
+	switch (error.constructor) {
+		case UpdatePubError:
+			res.status(400).json({ error: error.message });
+			break;
+	}
+	next(error);
 });
 
 app.listen(process.env.PORT, () => {

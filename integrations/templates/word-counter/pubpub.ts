@@ -1,40 +1,59 @@
-import { countLines, countWords } from "alfaaz";
-import { InstanceConfig } from "./config";
+import { ok as assert } from "node:assert";
+import manifest from "./pubpub-manifest.json";
 
-const content =
-	"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.";
+export class UpdatePubError extends Error {
+	constructor(reason: string) {
+		super(`failed to update pub field: ${reason}`);
+	}
+}
 
-const updatePubWordCount = async (instanceId: string, pubId: string, wordCount?: number) => {
-	console.log(
-		`instanceId=${instanceId}`,
-		`pubId=${pubId}`,
-		wordCount ? `word-counter/word-count=${wordCount}` : ""
+type Manifest = {
+	read?: { [key: string]: { id: string } };
+	write?: { [key: string]: { id: string } };
+	register?: { [key: string]: { id: string } };
+};
+
+type Patch = {
+	[key: string]: unknown;
+};
+
+const resolvePubFieldId = (alias: string) => {
+	return (
+		(manifest as Manifest).read?.[alias]?.id ??
+		(manifest as Manifest).write?.[alias]?.id ??
+		(manifest as Manifest).register?.[alias]?.id
 	);
 };
 
-const updatePubLineCount = async (instanceId: string, pubId: string, lineCount?: number) => {
-	console.log(
-		`instanceId=${instanceId}`,
-		`pubId=${pubId}`,
-		lineCount ? `word-counter/line-count=${lineCount}` : ""
-	);
-};
-
-export const updatePubFields = async (
-	instanceId: string,
-	instanceConfig: InstanceConfig,
-	pubId: string
-) => {
-	const counts: { words?: number; lines?: number } = {};
-	if (instanceConfig.words) {
-		const words = countWords(content);
-		await updatePubWordCount(instanceId, pubId, words);
-		counts.words = words;
+export const updatePub = async (integrationId: string, pubId: string, patch: Patch) => {
+	const fields: Patch = {};
+	for (const alias in patch) {
+		const fieldId = resolvePubFieldId(alias);
+		assert(fieldId, `could not resolve pub field id for alias "${alias}"`);
+		fields[fieldId] = patch[alias];
 	}
-	if (instanceConfig.lines) {
-		const lines = countLines(content);
-		await updatePubLineCount(instanceId, pubId, lines);
-		counts.lines = lines;
+	let res: Response;
+	try {
+		res = await fetch(
+			`${process.env.PUBPUB_URL}/api/v7/integration/${integrationId}/pubs/${pubId}`,
+			{
+				method: "PUT",
+				signal: AbortSignal.timeout(5000),
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ fields }),
+			}
+		);
+	} catch (error) {
+		throw new UpdatePubError(`request timed out after 5 seconds`);
 	}
-	return counts;
+	if (res.ok) {
+		return res.json();
+	}
+	switch (res.status) {
+		case 403:
+			throw new UpdatePubError("invalid credentials");
+	}
+	throw new UpdatePubError(`unexpected response: ${res.status} ${res.statusText}`);
 };

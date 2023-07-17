@@ -1,49 +1,59 @@
-import { InstanceConfig } from "./config";
+import { ok as assert } from "node:assert";
+import manifest from "./pubpub-manifest.json";
 
-export class CreateDoiFailureError extends Error {
+export class UpdatePubError extends Error {
 	constructor(reason: string) {
-		super(`failed to create DOI: ${reason}`);
+		super(`failed to update pub field: ${reason}`);
 	}
 }
 
-const encodeCredentials = (accountId: string, password: string) =>
-	Buffer.from(`${accountId}:${password}`).toString("base64");
-
-const createDoi = async (instanceConfig: InstanceConfig) => {
-	const req = await fetch(`https://api.test.datacite.org/dois`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/vnd.api+json",
-			Authorization: `Basic ${encodeCredentials(
-				instanceConfig.accountId,
-				instanceConfig.password
-			)}`,
-		},
-		body: JSON.stringify({
-			data: {
-				type: "dois",
-				attributes: {
-					prefix: instanceConfig.doiPrefix,
-				},
-			},
-		}),
-	});
-	if (req.ok) {
-		const res = await req.json();
-		return res.data.attributes.doi;
-	}
-	console.log(await req.text());
-	if (req.status === 404) {
-		throw new CreateDoiFailureError("invalid credentials or DOI prefix");
-	}
+type Manifest = {
+	read?: { [key: string]: { id: string } };
+	write?: { [key: string]: { id: string } };
+	register?: { [key: string]: { id: string } };
 };
 
-export const updatePubFields = async (
-	instanceId: string,
-	instanceConfig: InstanceConfig,
-	pubId: string
-) => {
-	const doi = await createDoi(instanceConfig);
-	console.log(`instanceId=${instanceId}`, `pubId=${pubId}`, doi);
-	return doi;
+type Patch = {
+	[key: string]: unknown;
+};
+
+const resolvePubFieldId = (alias: string) => {
+	return (
+		(manifest as Manifest).read?.[alias]?.id ??
+		(manifest as Manifest).write?.[alias]?.id ??
+		(manifest as Manifest).register?.[alias]?.id
+	);
+};
+
+export const updatePub = async (integrationId: string, pubId: string, patch: Patch) => {
+	const fields: Patch = {};
+	for (const alias in patch) {
+		const fieldId = resolvePubFieldId(alias);
+		assert(fieldId, `could not resolve pub field id for alias "${alias}"`);
+		fields[fieldId] = patch[alias];
+	}
+	let res: Response;
+	try {
+		res = await fetch(
+			`${process.env.PUBPUB_URL}/api/v7/integration/${integrationId}/pubs/${pubId}`,
+			{
+				method: "PUT",
+				signal: AbortSignal.timeout(5000),
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ fields }),
+			}
+		);
+	} catch (error) {
+		throw new UpdatePubError(`request timed out after 5 seconds`);
+	}
+	if (res.ok) {
+		return res.json();
+	}
+	switch (res.status) {
+		case 403:
+			throw new UpdatePubError("invalid credentials");
+	}
+	throw new UpdatePubError(`unexpected response: ${res.status} ${res.statusText}`);
 };

@@ -1,0 +1,13 @@
+{
+	"name": "word-counter",
+	"read": {
+		"pubpub/authors": {
+			"id": "4e31d2ca-a7eb-46fe-851c-2c244a0c9f40"
+		}
+	},
+	"write": {
+		"pubpub/doi": {
+			"id": "15312b88-9e76-4f40-aa67-921b0b7a35b1"
+		}
+	}
+}

@@ -12,6 +12,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "esnext",
+		"resolveJsonModule": true,
 		"useDefineForClassFields": true
 	}
 }

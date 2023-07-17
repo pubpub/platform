@@ -1,5 +1,0 @@
-{
-	"name": "word-counter",
-	"read": ["pubpub/authors"],
-	"write": ["pubpub/doi"]
-}

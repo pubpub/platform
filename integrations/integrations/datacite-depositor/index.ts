@@ -2,14 +2,16 @@ import { Eta } from "eta";
 import express from "express";
 import { ok as assert } from "node:assert";
 import process from "node:process";
-import { CreateDoiFailureError, updatePubFields } from "./pubpub";
+import { CreateDoiError, createDoi } from "./datacite";
 import { findInstanceConfig, makeInstanceConfig, updateInstanceConfig } from "./config";
+import { UpdatePubError, updatePub } from "./pubpub";
 
 const app = express();
 const eta = new Eta({ views: "views" });
 
 app.use(express.json());
 app.use(express.static("public"));
+app.use("/pubpub-manifest.json", express.static(process.cwd() + "/pubpub-manifest.json"));
 
 // pubpub integration routes
 
@@ -48,7 +50,8 @@ app.post("/apply", async (req, res, next) => {
 		assert(typeof pubId === "string");
 		const instanceConfig = await findInstanceConfig(instanceId);
 		if (instanceConfig) {
-			const doi = await updatePubFields(instanceId, instanceConfig, pubId);
+			const doi = await createDoi(instanceConfig);
+			await updatePub(instanceId, pubId, { doi });
 			res.json({ doi });
 		} else {
 			res.status(400).json({ error: "instance not configured" });
@@ -74,7 +77,8 @@ app.put("/configure", async (req, res, next) => {
 
 app.use((error: any, _: any, res: any, next: any) => {
 	switch (error.constructor) {
-		case CreateDoiFailureError:
+		case CreateDoiError:
+		case UpdatePubError:
 			res.status(400).json({ error: error.message });
 			break;
 	}
