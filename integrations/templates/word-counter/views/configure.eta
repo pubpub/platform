@@ -1,0 +1,56 @@
+<% layout("./layout") %>
+
+<div x-data="page">
+	<p>Select one or more counting metric(s) to apply to Pub content.</p>
+	<fieldset class="checkbox-group">
+		<label class="checkbox" for="words">
+			<input id="words" type="checkbox" x-model="words" @click="toggle('words')" />
+			<span>Words</span>
+		</label>
+		<label class="checkbox" for="lines">
+			<input id="lines" type="checkbox" x-model="lines" @click="toggle('lines')" />
+			<span>Lines</span>
+		</label>
+	</fieldset>
+	<p class="alert success" x-show="updated" x-transition>Instance configured!</p>
+</div>
+
+<script>
+	document.addEventListener("alpine:init", () => {
+		function toggle(kind) {
+			return event => {
+				const other = kind === "words" ? "lines" : "words";
+				if (this[kind] && !this[other]) {
+					event.preventDefault();
+				} else {
+					this[kind] = !this[kind];
+					this.update()
+				}
+			}
+		}
+
+		async function update() {
+			const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ words: this.words, lines: this.lines }),
+			});
+			if (req.ok) {
+				this.updated = true;
+			}
+			return req.json();
+		}
+
+		function page() {
+		  return {
+				lines: <%= it.config.lines %>,
+				words: <%= it.config.words %>,
+				updated: false,
+				update,
+				toggle,
+			};
+		}
+		
+		Alpine.data("page", page);
+	});
+</script>

@@ -13,8 +13,8 @@
 	"license": "GPL-2.0+",
 	"dependencies": {
 		"alfaaz": "^1.1.0",
+		"eta": "^3.0.3",
 		"express": "^4.18.2",
-		"pug": "^3.0.2",
 		"redis": "^4.6.7"
 	},
 	"devDependencies": {

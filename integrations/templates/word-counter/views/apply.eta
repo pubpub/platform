@@ -1,0 +1,37 @@
+<% layout("./layout") %>
+
+<div x-data="page">
+	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
+	<button @click="update">Update word counts</button>
+	<p class="alert success" x-show="updated" x-transition>Updated Pub!</p>
+	<div class="metadata" x-show="words || lines" x-transition>
+		<dl>
+			<dt x-show="words" x-transition>word-counter/word-count</dt>
+			<dd x-show="words" x-text="words" x-transition></dd>
+			<dt x-show="lines" x-transition>word-counter/line-count</dt>
+			<dd x-show="lines" x-text="lines" x-transition></dd>
+		</dl>
+	</div>
+</div>
+
+<script>
+  async function update() {
+		const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
+			method: "POST",
+		});
+		if (req.ok) {
+			const res = await req.json();
+			this.words = res.words;
+			this.lines = res.lines;
+			this.updated = true;
+		}
+	}
+
+	function page() {
+	  return { words: 0, lines: 0, updated: false, update };
+	}
+
+	document.addEventListener("alpine:init", () => {
+		Alpine.data("page", page);
+	});
+</script>

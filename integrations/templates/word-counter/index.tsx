@@ -2,11 +2,13 @@ import { ok as assert } from "node:assert";
 import process from "node:process";
 import express from "express";
 import redis from "redis";
+import { Eta } from "eta";
 import { InstanceConfig } from "./types";
 import { updateWordCount } from "./pubpub";
 
 const db = redis.createClient({ url: process.env.REDIS_URL });
 const app = express();
+const eta = new Eta({ views: "views", cache: true });
 
 const makeDefaultInstanceConfig = (): InstanceConfig => ({ words: false, lines: false });
 
@@ -23,7 +25,6 @@ const findConfigByInstanceId = (instanceId: string) =>
 		InstanceConfig | undefined
 	>;
 
-app.set("view engine", "pug");
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -34,7 +35,13 @@ app.get("/configure", async (req, res) => {
 	assert(typeof instanceId === "string");
 	const config = await findConfigByInstanceId(instanceId);
 	const instance = { id: instanceId, config: config ?? makeDefaultInstanceConfig() };
-	res.render("configure", { instance, instanceId, title: "configure" });
+	res.send(
+		eta.render("configure", {
+			config: instance.config,
+			instanceId: instance.id,
+			title: "configure",
+		})
+	);
 });
 
 app.get("/apply", async (req, res) => {
@@ -44,7 +51,14 @@ app.get("/apply", async (req, res) => {
 	const config = await findConfigByInstanceId(instanceId);
 	if (config) {
 		const instance = { id: instanceId, config: config };
-		res.render("apply", { instance, pubId, title: "apply" });
+		res.send(
+			eta.render("apply", {
+				instanceId: instance.id,
+				config: instance.config,
+				pubId,
+				title: "configure",
+			})
+		);
 	} else {
 		res.status(400).send("not configured");
 	}
