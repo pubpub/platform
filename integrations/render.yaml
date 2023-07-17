@@ -1,9 +1,10 @@
 services:
-  # integration-word-counter
+  # integration-configs-redis
   - type: redis
-    name: integration-word-counter-redis
+    name: integration-configs-redis
     region: ohio
     ipAllowList: [] # only allow internal connections
+  # integration-word-counter
   - type: web
     name: integration-word-counter
     region: ohio
@@ -18,5 +19,22 @@ services:
       - key: REDIS_URL
         fromService:
           type: redis
-          name: integration-word-counter-redis
+          name: integration-configs-redis
+          property: connectionString
+  # integration-datacite-depositor
+  - type: web
+    name: integration-datacite-depositor
+    region: ohio
+    runtime: node
+    rootDir: integrations/datacite-depositor
+    buildCommand: npm i
+    startCommand: npm run start
+    buildFilter:
+      paths:
+        - templates/datacite-depositor/**
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: integration-configs-redis
           property: connectionString

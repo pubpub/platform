@@ -2,19 +2,17 @@
 
 <div x-data="page">
 	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
-	<button @click="update">Update word counts</button>
+	<button @click="update">Assign DOI</button>
 	<p class="alert success" x-show="updated" x-transition>Pub updated!</p>
-	<table class="metadata" x-show="words || lines" x-transition>
+	<table class="metadata" x-show="doi" x-transition>
 		<thead>
 			<tr>
-				<th x-show="words" x-transition>word-counter/word-count</th>
-				<th x-show="lines" x-transition>word-counter/line-count</th>
+				<th x-show="doi" x-transition>pubpub/doi</th>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
-				<td x-show="words" x-transition x-text="words"></td>
-				<td x-show="lines" x-transition x-text="lines"></td>
+				<td x-show="doi" x-transition x-text="doi"></td>
 			</tr>
 		</tbody>
 	</table>
@@ -27,14 +25,13 @@
 		});
 		if (req.ok) {
 			const res = await req.json();
-			this.words = res.words;
-			this.lines = res.lines;
+			this.doi = res.doi;
 			this.updated = true;
 		}
 	}
 
 	function page() {
-	  return { words: 0, lines: 0, updated: false, update };
+	  return { doi: "", updated: false, update };
 	}
 
 	document.addEventListener("alpine:init", () => {

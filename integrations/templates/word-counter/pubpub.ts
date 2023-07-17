@@ -20,18 +20,18 @@ const updatePubLineCount = async (instanceId: string, pubId: string, lineCount?:
 	);
 };
 
-export const updateWordCount = async (
+export const updatePubFields = async (
 	instanceId: string,
-	pubId: string,
-	config: InstanceConfig
+	instanceConfig: InstanceConfig,
+	pubId: string
 ) => {
 	const counts: { words?: number; lines?: number } = {};
-	if (config.words) {
+	if (instanceConfig.words) {
 		const words = countWords(content);
 		await updatePubWordCount(instanceId, pubId, words);
 		counts.words = words;
 	}
-	if (config.lines) {
+	if (instanceConfig.lines) {
 		const lines = countLines(content);
 		await updatePubLineCount(instanceId, pubId, lines);
 		counts.lines = lines;
