@@ -30,45 +30,62 @@ app.use(express.static("public"));
 
 // pubpub integration routes
 
-app.get("/configure", async (req, res) => {
-	const { instanceId } = req.query;
-	assert(typeof instanceId === "string");
-	const instanceConfig = (await findConfigByInstanceId(instanceId)) ?? makeDefaultInstanceConfig();
-	res.send(eta.render("configure", { title: "configure", instanceConfig, instanceId }));
+app.get("/configure", async (req, res, next) => {
+	try {
+		const { instanceId } = req.query;
+		assert(typeof instanceId === "string");
+		const instanceConfig =
+			(await findConfigByInstanceId(instanceId)) ?? makeDefaultInstanceConfig();
+		res.send(eta.render("configure", { title: "configure", instanceConfig, instanceId }));
+	} catch (error) {
+		next(error);
+	}
 });
 
-app.get("/apply", async (req, res) => {
-	const { instanceId, pubId } = req.query;
-	assert(typeof instanceId === "string");
-	assert(typeof pubId === "string");
-	const instanceConfig = await findConfigByInstanceId(instanceId);
-	if (instanceConfig) {
-		res.send(eta.render("apply", { title: "apply", instanceId, instanceConfig, pubId }));
-	} else {
-		res.status(400).send("not configured");
+app.get("/apply", async (req, res, next) => {
+	try {
+		const { instanceId, pubId } = req.query;
+		assert(typeof instanceId === "string");
+		assert(typeof pubId === "string");
+		const instanceConfig = await findConfigByInstanceId(instanceId);
+		if (instanceConfig) {
+			res.send(eta.render("apply", { title: "apply", instanceId, instanceConfig, pubId }));
+		} else {
+			res.status(400).send("not configured");
+		}
+	} catch (error) {
+		next(error);
 	}
 });
 
 // internal routes
 
-app.put("/configure", async (req, res) => {
-	const { instanceId } = req.query;
-	const instanceConfig = req.body;
-	assert(typeof instanceId === "string");
-	await db.set(instanceId, JSON.stringify(instanceConfig));
-	res.send(instanceConfig);
+app.put("/configure", async (req, res, next) => {
+	try {
+		const { instanceId } = req.query;
+		const instanceConfig = req.body;
+		assert(typeof instanceId === "string");
+		await db.set(instanceId, JSON.stringify(instanceConfig));
+		res.send(instanceConfig);
+	} catch (error) {
+		next(error);
+	}
 });
 
-app.post("/apply", async (req, res) => {
-	const { instanceId, pubId } = req.query;
-	assert(typeof instanceId === "string");
-	assert(typeof pubId === "string");
-	const instanceConfig = await findConfigByInstanceId(instanceId);
-	if (instanceConfig) {
-		const counts = await updatePubFields(instanceId, instanceConfig, pubId);
-		res.json(counts);
-	} else {
-		res.status(400).json({ error: "instance not configured" });
+app.post("/apply", async (req, res, next) => {
+	try {
+		const { instanceId, pubId } = req.query;
+		assert(typeof instanceId === "string");
+		assert(typeof pubId === "string");
+		const instanceConfig = await findConfigByInstanceId(instanceId);
+		if (instanceConfig) {
+			const counts = await updatePubFields(instanceId, instanceConfig, pubId);
+			res.json(counts);
+		} else {
+			res.status(400).json({ error: "instance not configured" });
+		}
+	} catch (error) {
+		next(error);
 	}
 });
 
