@@ -1,7 +1,7 @@
 <% layout("./layout") %>
 
 <div x-data="page">
-	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
+	<p>Click the button below to assign a DOI to the Pub.</p>
 	<button @click="update">Assign DOI</button>
 	<p class="alert success" x-show="updated" x-transition>Pub updated!</p>
 	<table class="metadata" x-show="doi" x-transition>
