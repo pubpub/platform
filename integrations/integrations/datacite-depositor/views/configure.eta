@@ -1,0 +1,53 @@
+<% layout("./layout") %>
+
+<div x-data="page">
+	<p>Enter your DataCite account ID, password, and DOI prefix.</p>
+	<fieldset class="input-group">
+		<label class="input" for="account-id">
+			<span>Account ID</span>
+			<input id="account-id" type="input" x-model="accountId" />
+		</label>
+		<label class="input" for="password">
+		  <span>Password</span>
+			<input id="password" type="password" x-model="password" />
+		</label>
+		<label class="input" for="words">
+		  <span>DOI Prefix</span>
+			<input id="doi-prefix" type="input" x-model="doiPrefix" />
+		</label>
+	</fieldset>
+	<button class="button" x-on:click="update">Configure instance</button>
+	<p class="alert success" x-show="updated" x-transition>Instance configured!</p>
+</div>
+
+<script>
+	document.addEventListener("alpine:init", () => {
+		async function update() {
+			const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					accountId: this.accountId,
+					password: this.password,
+					doiPrefix: this.doiPrefix,
+				}),
+			});
+			if (req.ok) {
+				this.updated = true;
+			}
+			return req.json();
+		}
+
+		function page() {
+		  return {
+				accountId: "<%= it.instanceConfig.accountId %>",
+				password: "<%= it.instanceConfig.password %>",
+				doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
+				updated: false,
+				update,
+			};
+		}
+		
+		Alpine.data("page", page);
+	});
+</script>

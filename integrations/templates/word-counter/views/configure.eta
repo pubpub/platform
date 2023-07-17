@@ -43,8 +43,8 @@
 
 		function page() {
 		  return {
-				lines: <%= it.config.lines %>,
-				words: <%= it.config.words %>,
+				lines: <%= it.instanceConfig.lines %>,
+				words: <%= it.instanceConfig.words %>,
 				updated: false,
 				update,
 				toggle,

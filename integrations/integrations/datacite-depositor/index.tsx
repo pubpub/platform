@@ -8,9 +8,13 @@ import { updatePubFields } from "./pubpub";
 
 const db = redis.createClient({ url: process.env.REDIS_URL });
 const app = express();
-const eta = new Eta({ views: "views", cache: true });
+const eta = new Eta({ views: "views" });
 
-const makeDefaultInstanceConfig = (): InstanceConfig => ({ words: false, lines: false });
+const makeDefaultInstanceConfig = (): InstanceConfig => ({
+	accountId: "",
+	password: "",
+	doiPrefix: "",
+});
 
 try {
 	await db.connect();
@@ -65,8 +69,8 @@ app.post("/apply", async (req, res) => {
 	assert(typeof pubId === "string");
 	const instanceConfig = await findConfigByInstanceId(instanceId);
 	if (instanceConfig) {
-		const counts = await updatePubFields(instanceId, instanceConfig, pubId);
-		res.json(counts);
+		const doi = await updatePubFields(instanceId, instanceConfig, pubId);
+		res.json({ doi });
 	} else {
 		res.status(400).json({ error: "instance not configured" });
 	}
