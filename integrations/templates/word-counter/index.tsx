@@ -33,15 +33,8 @@ app.use(express.static("public"));
 app.get("/configure", async (req, res) => {
 	const { instanceId } = req.query;
 	assert(typeof instanceId === "string");
-	const config = await findConfigByInstanceId(instanceId);
-	const instance = { id: instanceId, config: config ?? makeDefaultInstanceConfig() };
-	res.send(
-		eta.render("configure", {
-			config: instance.config,
-			instanceId: instance.id,
-			title: "configure",
-		})
-	);
+	const config = (await findConfigByInstanceId(instanceId)) ?? makeDefaultInstanceConfig();
+	res.send(eta.render("configure", { title: "configure", config, instanceId }));
 });
 
 app.get("/apply", async (req, res) => {
@@ -50,15 +43,7 @@ app.get("/apply", async (req, res) => {
 	assert(typeof pubId === "string");
 	const config = await findConfigByInstanceId(instanceId);
 	if (config) {
-		const instance = { id: instanceId, config: config };
-		res.send(
-			eta.render("apply", {
-				instanceId: instance.id,
-				config: instance.config,
-				pubId,
-				title: "configure",
-			})
-		);
+		res.send(eta.render("apply", { title: "apply", instanceId, config, pubId }));
 	} else {
 		res.status(400).send("not configured");
 	}
