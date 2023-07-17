@@ -100,6 +100,16 @@ button {
 	cursor: pointer;
 }
 
+button[disabled] {
+	color: #8e8e80;
+	border-color: #8e8e80;
+	cursor: not-allowed;
+}
+
+button[disabled]:hover {
+	background: transparent;
+}
+
 button:hover {
 	background: rgba(0, 0, 0, 0.1);
 }
@@ -125,10 +135,22 @@ p:first-child {
 	margin-top: 0;
 }
 
+.alert {
+	padding: 0.75rem 1rem;
+	font-size: 0.8rem;
+}
+
 .alert.success {
 	padding: 0.75rem 1rem;
 	color: green;
 	border: 1px solid green;
 	background-color: rgba(0, 255, 0, 0.1);
+	font-size: 0.8rem;
+}
+
+.alert.failure {
+	color: red;
+	border: 1px solid red;
+	background-color: rgba(255, 0, 0, 0.1);
 	font-size: 0.8rem;
 }

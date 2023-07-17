@@ -1,10 +1,10 @@
 import { ok as assert } from "node:assert";
 import process from "node:process";
-import express from "express";
+import express, { Request } from "express";
 import redis from "redis";
 import { Eta } from "eta";
 import { InstanceConfig } from "./types";
-import { updatePubFields } from "./pubpub";
+import { CreateDoiFailureError, updatePubFields } from "./pubpub";
 
 const db = redis.createClient({ url: process.env.REDIS_URL });
 const app = express();
@@ -38,6 +38,7 @@ app.get("/configure", async (req, res) => {
 	const { instanceId } = req.query;
 	assert(typeof instanceId === "string");
 	const instanceConfig = (await findConfigByInstanceId(instanceId)) ?? makeDefaultInstanceConfig();
+	instanceConfig.password = "";
 	res.send(eta.render("configure", { title: "configure", instanceConfig, instanceId }));
 });
 
@@ -53,6 +54,23 @@ app.get("/apply", async (req, res) => {
 	}
 });
 
+app.post("/apply", async (req, res, next) => {
+	try {
+		const { instanceId, pubId } = req.query;
+		assert(typeof instanceId === "string");
+		assert(typeof pubId === "string");
+		const instanceConfig = await findConfigByInstanceId(instanceId);
+		if (instanceConfig) {
+			const doi = await updatePubFields(instanceId, instanceConfig, pubId);
+			res.json({ doi });
+		} else {
+			res.status(400).json({ error: "instance not configured" });
+		}
+	} catch (error) {
+		next(error);
+	}
+});
+
 // internal routes
 
 app.put("/configure", async (req, res) => {
@@ -63,17 +81,13 @@ app.put("/configure", async (req, res) => {
 	res.send(instanceConfig);
 });
 
-app.post("/apply", async (req, res) => {
-	const { instanceId, pubId } = req.query;
-	assert(typeof instanceId === "string");
-	assert(typeof pubId === "string");
-	const instanceConfig = await findConfigByInstanceId(instanceId);
-	if (instanceConfig) {
-		const doi = await updatePubFields(instanceId, instanceConfig, pubId);
-		res.json({ doi });
-	} else {
-		res.status(400).json({ error: "instance not configured" });
+app.use((error: any, _: any, res: any, next: any) => {
+	switch (error.constructor) {
+		case CreateDoiFailureError:
+			res.status(400).json({ error: error.message });
+			break;
 	}
+	next(error);
 });
 
 app.listen(process.env.PORT, () => {

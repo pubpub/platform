@@ -16,7 +16,7 @@
 			<input id="doi-prefix" type="input" x-model="doiPrefix" />
 		</label>
 	</fieldset>
-	<button class="button" x-on:click="update">Configure instance</button>
+	<button class="button" x-on:click="update" x-bind:disabled="!(accountId && password && doiPrefix)">Configure instance</button>
 	<p class="alert success" x-show="updated" x-transition>Instance configured!</p>
 </div>
 
