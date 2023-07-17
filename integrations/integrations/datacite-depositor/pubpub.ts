@@ -1,4 +1,4 @@
-import { InstanceConfig } from "./types";
+import { InstanceConfig } from "./config";
 
 export class CreateDoiFailureError extends Error {
 	constructor(reason: string) {

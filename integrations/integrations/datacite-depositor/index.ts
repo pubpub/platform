@@ -1,33 +1,12 @@
+import { Eta } from "eta";
+import express from "express";
 import { ok as assert } from "node:assert";
 import process from "node:process";
-import express, { Request } from "express";
-import redis from "redis";
-import { Eta } from "eta";
-import { InstanceConfig } from "./types";
 import { CreateDoiFailureError, updatePubFields } from "./pubpub";
+import { findInstanceConfig, makeInstanceConfig, updateInstanceConfig } from "./config";
 
-const db = redis.createClient({ url: process.env.REDIS_URL });
 const app = express();
 const eta = new Eta({ views: "views" });
-
-const makeDefaultInstanceConfig = (): InstanceConfig => ({
-	accountId: "",
-	password: "",
-	doiPrefix: "",
-});
-
-try {
-	await db.connect();
-} catch (error) {
-	console.log("failed to connect to redis");
-	console.error(error);
-	process.exit(1);
-}
-
-const findConfigByInstanceId = (instanceId: string) =>
-	db.get(instanceId).then((value) => (value ? JSON.parse(value) : undefined)) as Promise<
-		InstanceConfig | undefined
-	>;
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -38,8 +17,7 @@ app.get("/configure", async (req, res, next) => {
 	try {
 		const { instanceId } = req.query;
 		assert(typeof instanceId === "string");
-		const instanceConfig =
-			(await findConfigByInstanceId(instanceId)) ?? makeDefaultInstanceConfig();
+		const instanceConfig = (await findInstanceConfig(instanceId)) ?? makeInstanceConfig();
 		instanceConfig.password = "";
 		res.send(eta.render("configure", { title: "configure", instanceConfig, instanceId }));
 	} catch (error) {
@@ -52,7 +30,7 @@ app.get("/apply", async (req, res, next) => {
 		const { instanceId, pubId } = req.query;
 		assert(typeof instanceId === "string");
 		assert(typeof pubId === "string");
-		const instanceConfig = await findConfigByInstanceId(instanceId);
+		const instanceConfig = await findInstanceConfig(instanceId);
 		if (instanceConfig) {
 			res.send(eta.render("apply", { title: "apply", instanceId, instanceConfig, pubId }));
 		} else {
@@ -68,7 +46,7 @@ app.post("/apply", async (req, res, next) => {
 		const { instanceId, pubId } = req.query;
 		assert(typeof instanceId === "string");
 		assert(typeof pubId === "string");
-		const instanceConfig = await findConfigByInstanceId(instanceId);
+		const instanceConfig = await findInstanceConfig(instanceId);
 		if (instanceConfig) {
 			const doi = await updatePubFields(instanceId, instanceConfig, pubId);
 			res.json({ doi });
@@ -87,7 +65,7 @@ app.put("/configure", async (req, res, next) => {
 		const { instanceId } = req.query;
 		const instanceConfig = req.body;
 		assert(typeof instanceId === "string");
-		await db.set(instanceId, JSON.stringify(instanceConfig));
+		await updateInstanceConfig(instanceId, instanceConfig);
 		res.send(instanceConfig);
 	} catch (error) {
 		next(error);
