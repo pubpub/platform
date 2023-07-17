@@ -54,6 +54,7 @@ export async function PUT(request: NextRequest, { params }: { params: { pub_id: 
 		}
 	});
 
+	//TODO: only return the latest fields in this response too
 	const updatedPub = await prisma.pub.update({
 		where: { id: params.pub_id },
 		include: {
