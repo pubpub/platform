@@ -129,7 +129,7 @@ app.post("/apply", async (req, res, next) => {
 // `PUT /configure` is called by the configuration form rendered by
 // `GET /configure` to save the instance configuration.
 //
-// This is a local API route and not part of the PubPup integration interface.
+// This is a local API route and not part of the PubPub integration interface.
 app.put("/configure", async (req, res, next) => {
 	try {
 		const { instanceId } = req.query

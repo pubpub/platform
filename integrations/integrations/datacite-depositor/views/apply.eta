@@ -4,15 +4,16 @@
 	<p>Click the button below to assign a DOI to the Pub.</p>
 	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
 	<!-- Alerts -->
-	<div class="alert success" x-show="success" x-transition>
-		<p>Pub updated!</p>
+	<div class="alert success" x-show="success" x-cloak x-transition>
+		<strong>Success!</strong>
+		<p>Pub metadata updated</p>
 	</div>
-	<div id="error" class="alert failure" x-show="error" x-transition>
+	<div id="error" class="alert failure" x-show="error" x-cloak x-transition>
 		<strong x-text="error?.message"></strong>
 		<p x-text="error?.cause"></p>
 	</div>
 	<!-- Metadata -->
-	<table class="metadata" x-show="doi" x-transition>
+	<table class="metadata" x-show="doi" x-cloak x-transition>
 		<thead>
 			<tr>
 				<th x-show="doi" x-transition>pubpub/doi</th>
@@ -44,17 +45,13 @@
 		}
 	}
 
-	function page() {
-	  return {
+	document.addEventListener("alpine:init", () => {
+		Alpine.data("page", () => ({
 			doi: "",
 			error: null,
 			loading: false,
 			success: false,
 			update,
-		}
-	}
-
-	document.addEventListener("alpine:init", () => {
-		Alpine.data("page", page)
+		}))
 	})
 </script>

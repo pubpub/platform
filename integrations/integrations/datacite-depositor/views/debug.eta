@@ -1,6 +1,6 @@
 <% layout("./layout") %>
 
-<div x-data="page">
+<div x-data='{ instanceIds: <%~ JSON.stringify(it.instanceIds) %> }'>
   <ul>
     <template x-for="instanceId in instanceIds">
       <li>
@@ -9,15 +9,3 @@
     </template>
   </ul>
 </div>
-
-<script>
-	document.addEventListener("alpine:init", () => {
-		function page() {
-		  return {
-				instanceIds: <%~ JSON.stringify(it.instanceIds) %>,
-			}
-		}
-		
-		Alpine.data("page", page)
-	})
-</script>

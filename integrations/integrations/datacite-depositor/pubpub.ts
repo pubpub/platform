@@ -81,17 +81,21 @@ export const updatePub = async (
 ) => {
 	try {
 		const timeoutSignal = AbortSignal.timeout(5000)
-		const fields: PubPatch = {}
-		for (const alias in pubPatch) {
-			const fieldId = resolvePubFieldId(alias)
-			assert(
-				fieldId,
-				`Failed to resolve alias "${alias}". Either the manifest is invalid or the alias was misspelled`
-			)
-			fields[fieldId] = pubPatch[alias]
-		}
+		// const fields: PubPatch = {}
+		// for (const alias in pubPatch) {
+		// 	const fieldId = resolvePubFieldId(alias)
+		// 	assert(
+		// 		fieldId,
+		// 		`Failed to resolve alias "${alias}". Either the manifest is invalid or the alias was misspelled`
+		// 	)
+		// 	fields[fieldId] = pubPatch[alias]
+		// }
+		const fields = pubPatch
+		console.log(
+			`${process.env.PUBPUB_URL}/api/v7/integrations/${integrationId}/pubs/${pubId}`
+		)
 		const res = await fetch(
-			`${process.env.PUBPUB_URL}/api/v7/integration/${integrationId}/pubs/${pubId}`,
+			`${process.env.PUBPUB_URL}/api/v7/integrations/${integrationId}/pubs/${pubId}`,
 			{
 				method: "PUT",
 				signal: timeoutSignal,
@@ -104,6 +108,7 @@ export const updatePub = async (
 		if (res.ok) {
 			return res.json()
 		}
+		console.log(res.status)
 		switch (res.status) {
 			case 404:
 				throw new ResponseError(res, "Integration or Pub not found")

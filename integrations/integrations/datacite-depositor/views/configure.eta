@@ -11,17 +11,18 @@
 		  <span>Password</span>
 			<input id="password" type="password" x-model="password" />
 		</label>
-		<label class="input" for="words">
+		<label class="input" for="doi-prefix">
 		  <span>DOI Prefix</span>
 			<input id="doi-prefix" type="input" x-model="doiPrefix" />
 		</label>
 	</fieldset>
-	<button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure instance</button>
+	<button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure Instance</button>
 	<!-- Alerts -->
-	<div class="alert success" x-show="success" x-transition>
-		<p>Instance configured!</p>
+	<div class="alert success" x-show="success" x-cloak x-transition>
+		<strong>Success!</strong>
+		<p>Instance configured</p>
 	</div>
-	<div id="error" class="alert failure" x-show="error" x-transition>
+	<div id="error" class="alert failure" x-show="error" x-cloak x-transition>
 		<strong x-text="error?.message"></strong>
 		<p x-text="error?.cause"></p>
 	</div>
@@ -50,19 +51,15 @@
 				this.error = await req.json()
 			}
 		}
-
-		function page() {
-		  return {
-				accountId: "<%= it.instanceConfig.accountId %>",
-				password: "<%= it.instanceConfig.password %>",
-				doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
-				error: false,
-				loading: false,
-				success: false,
-				update,
-			}
-		}
 		
-		Alpine.data("page", page)
+		Alpine.data("page", () => ({
+			accountId: "<%= it.instanceConfig.accountId %>",
+			password: "<%= it.instanceConfig.password %>",
+			doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
+			error: false,
+			loading: false,
+			success: false,
+			update,
+		}))
 	})
 </script>

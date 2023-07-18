@@ -70,7 +70,7 @@ app.post("/apply", async (req, res, next) => {
 		if (instanceConfig) {
 			const doi = await createDoi(instanceConfig)
 			try {
-				await updatePub(instanceId, pubId, { "pubpub/doi": doi })
+				await updatePub(instanceId, pubId, { DOI: doi })
 			} catch (error) {
 				await deleteDoi(instanceConfig, doi)
 				throw error

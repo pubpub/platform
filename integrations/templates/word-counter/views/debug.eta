@@ -12,12 +12,8 @@
 
 <script>
 	document.addEventListener("alpine:init", () => {
-		function page() {
-		  return {
-				instanceIds: <%~ JSON.stringify(it.instanceIds) %>,
-			}
-		}
-		
-		Alpine.data("page", page)
+		Alpine.data("page", () => ({
+			instanceIds: <%~ JSON.stringify(it.instanceIds) %>,
+		}))
 	})
 </script>

@@ -2,17 +2,18 @@
 
 <div x-data="page">
 	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
-	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Update word counts</button>
+	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Update Word Counts</button>
 	<!-- Alerts -->
-	<div class="alert success" x-show="success" x-transition>
-		<p>Pub updated!</p>
+	<div class="alert success" x-show="success" x-cloak x-transition>
+		<strong>Success!</strong>
+		<p>Pub metadata updated</p>
 	</div>
-	<div id="error" class="alert failure" x-show="error" x-transition>
+	<div id="error" class="alert failure" x-show="error" x-cloak x-transition>
 		<strong x-text="error?.message"></strong>
 		<p x-text="error?.cause"></p>
 	</div>
 	<!-- Metadata -->
-	<table class="metadata" x-show="words || lines" x-transition>
+	<table class="metadata" x-show="words || lines" x-cloak x-transition>
 		<thead>
 			<tr>
 				<th x-show="words" x-transition>word-counter/word-count</th>
@@ -46,18 +47,14 @@
 		}
 	}
 
-	function page() {
-	  return {
+	document.addEventListener("alpine:init", () => {
+		Alpine.data("page", () => ({
 			words: 0,
 			lines: 0,
 			error: undefined,
 			loading: false,
 			success: false,
 			update,
-		}
-	}
-
-	document.addEventListener("alpine:init", () => {
-		Alpine.data("page", page)
+		}))
 	})
 </script>
