@@ -26,7 +26,7 @@
   async function update() {
 	  this.loading = true;
 		this.success = false;
-		this.error = undefined;
+		this.error = null;
 		const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
 			method: "POST",
 		});
@@ -43,7 +43,7 @@
 	function page() {
 	  return {
 			doi: "",
-			error: undefined,
+			error: null,
 			loading: false,
 			success: false,
 			update,

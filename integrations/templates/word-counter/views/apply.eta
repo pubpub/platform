@@ -2,8 +2,14 @@
 
 <div x-data="page">
 	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
-	<button @click="update">Update word counts</button>
-	<p class="alert success" x-show="success" x-transition>Pub success!</p>
+	<button @click="update" :class="{ loading }">Update word counts</button>
+	<div class="alert success" x-show="success" x-transition>
+		<p>Pub updated!</p>
+	</div>
+	<div id="error" class="alert failure" x-show="error" x-transition>
+		<strong x-text="error?.message"></strong>
+		<p x-text="error?.cause"></p>
+	</div>
 	<table class="metadata" x-show="words || lines" x-transition>
 		<thead>
 			<tr>
@@ -22,19 +28,31 @@
 
 <script>
   async function update() {
+		this.error = null;
+		this.loading = true;
 		const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
 			method: "POST",
 		});
+		this.loading = false;
+		const res = await req.json();
 		if (req.ok) {
-			const res = await req.json();
 			this.words = res.words;
 			this.lines = res.lines;
 			this.success = true;
+		} else {
+			this.error = res ?? { message: "an unexpected error occurred" };
 		}
 	}
 
 	function page() {
-	  return { words: 0, lines: 0, success: false, update };
+	  return {
+			words: 0,
+			lines: 0,
+			error: undefined,
+			loading: false,
+			success: false,
+			update,
+		};
 	}
 
 	document.addEventListener("alpine:init", () => {

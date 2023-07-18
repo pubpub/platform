@@ -1,11 +1,15 @@
 import { ok as assert } from "node:assert";
 import manifest from "./pubpub-manifest.json";
 
-export class UpdatePubError extends Error {
-	constructor(reason: string) {
-		super(`failed to update pub field: ${reason}`);
-	}
-}
+// @ts-expect-error
+Error.prototype.toJSON = function toJSON() {
+	return {
+		message: this.message,
+		cause: this.cause?.toString(),
+	};
+};
+
+export class UpdatePubError extends Error {}
 
 type Manifest = {
 	read?: { [key: string]: { id: string } };
@@ -26,34 +30,36 @@ const resolvePubFieldId = (alias: string) => {
 };
 
 export const updatePub = async (integrationId: string, pubId: string, patch: Patch) => {
-	const fields: Patch = {};
-	for (const alias in patch) {
-		const fieldId = resolvePubFieldId(alias);
-		assert(fieldId, `could not resolve pub field id for alias "${alias}"`);
-		fields[fieldId] = patch[alias];
-	}
-	let res: Response;
 	try {
-		res = await fetch(
+		const signal = AbortSignal.timeout(5000);
+		const fields: Patch = {};
+		for (const alias in patch) {
+			const fieldId = resolvePubFieldId(alias);
+			assert(fieldId, `Could not resolve Pub field id for alias "${alias}"`);
+			fields[fieldId] = patch[alias];
+		}
+		const res = await fetch(
 			`${process.env.PUBPUB_URL}/api/v7/integration/${integrationId}/pubs/${pubId}`,
 			{
 				method: "PUT",
-				signal: AbortSignal.timeout(5000),
+				signal,
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({ fields }),
 			}
 		);
+		if (res.ok) {
+			return res.json();
+		}
+		switch (res.status) {
+			case 404:
+				throw new Error("Integration or pub not found");
+			case 403:
+				throw new Error("Invalid credentials");
+		}
+		throw new Error(`Unexpected response: ${res.status} ${res.statusText}`);
 	} catch (error) {
-		throw new UpdatePubError(`request timed out after 5 seconds`);
+		throw new UpdatePubError("Failed to update Pub", { cause: error });
 	}
-	if (res.ok) {
-		return res.json();
-	}
-	switch (res.status) {
-		case 403:
-			throw new UpdatePubError("invalid credentials");
-	}
-	throw new UpdatePubError(`unexpected response: ${res.status} ${res.statusText}`);
 };

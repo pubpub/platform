@@ -7,7 +7,7 @@ import { makeWordCountPatch } from "./counts";
 import { UpdatePubError, updatePub } from "./pubpub";
 
 const app = express();
-const eta = new Eta({ views: "views", cache: true });
+const eta = new Eta({ views: "views" });
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -76,7 +76,7 @@ app.put("/configure", async (req, res, next) => {
 app.use((error: any, _: any, res: any, next: any) => {
 	switch (error.constructor) {
 		case UpdatePubError:
-			res.status(400).json({ error: error.message });
+			res.status(400).json(error);
 			break;
 	}
 	next(error);
