@@ -39,7 +39,7 @@ app.get("/apply", async (req, res, next) => {
 		if (instanceConfig) {
 			res.send(eta.render("apply", { title: "apply", instanceId, instanceConfig, pubId }));
 		} else {
-			res.status(400).send("not configured");
+			throw new ResponseError(400, "Instance not configured");
 		}
 	} catch (error) {
 		next(error);
@@ -57,7 +57,7 @@ app.post("/apply", async (req, res, next) => {
 			await updatePub(instanceId, pubId, patch);
 			res.json(patch);
 		} else {
-			res.status(400).json({ error: "instance not configured" });
+			throw new ResponseError(400, "Instance not configured");
 		}
 	} catch (error) {
 		next(error);
@@ -88,12 +88,15 @@ app.get("/debug", async (_, res, next) => {
 });
 
 app.use((error: any, _: any, res: any, next: any) => {
-	const { cause } = error;
-	switch (error.constructor) {
+	const { cause: errorCause, constructor: errorType } = error;
+	switch (errorType) {
+		case ResponseError:
+			res.status(error.cause.status).json(error);
+			return;
 		case UpdatePubError:
-			// Use PubPub error status if available
-			res.status(cause instanceof ResponseError ? cause.cause.status : 500).json(error);
-			break;
+			// Use 502 for all PubPub errors
+			res.status(errorCause instanceof ResponseError ? 502 : 500).json(error);
+			return;
 	}
 	next(error);
 });

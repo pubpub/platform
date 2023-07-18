@@ -1,6 +1,26 @@
 import { ok as assert } from "node:assert";
 import manifest from "./pubpub-manifest.json";
 
+const StatusText = {
+	100: "Continue",
+	101: "Switching Protocols",
+	200: "OK",
+	201: "Created",
+	202: "Accepted",
+	400: "Bad Request",
+	401: "Unauthorized",
+	403: "Forbidden",
+	404: "Not Found",
+	405: "Method Not Allowed",
+	408: "Request Timeout",
+	409: "Conflict",
+	500: "Internal Server Error",
+	501: "Not Implemented",
+	502: "Bad Gateway",
+	503: "Service Unavailable",
+	504: "Gateway Time-out",
+};
+
 export class IntegrationError extends Error {
 	toJSON() {
 		if (this.cause) {
@@ -12,8 +32,16 @@ export class IntegrationError extends Error {
 
 export class ResponseError extends IntegrationError {
 	declare cause: Response;
-	constructor(response: Response, message: string = "Unexpected error") {
-		super(message + ` (${response.status} ${response.statusText})`, { cause: response });
+
+	constructor(cause: Response | keyof typeof StatusText, message: string = "Unexpected error") {
+		if (typeof cause === "number") {
+			cause = new Response(null, { status: cause, statusText: StatusText[cause] });
+		}
+		super(`${message} (${cause.statusText})`, { cause });
+	}
+
+	toJSON() {
+		return { message: this.message };
 	}
 }
 
@@ -65,11 +93,11 @@ export const updatePub = async (integrationId: string, pubId: string, pubPatch: 
 		}
 		switch (res.status) {
 			case 404:
-				throw new ResponseError(res, "Integration or pub not found");
+				throw new ResponseError(res, "Integration or Pub not found");
 			case 403:
-				throw new ResponseError(res, "Invalid credentials");
+				throw new ResponseError(res, "Failed to authorize integration");
 		}
-		throw new ResponseError(res, "PubPub service not available");
+		throw new ResponseError(res, "Failed to connect to PubPub");
 	} catch (cause) {
 		throw new UpdatePubError("Failed to update Pub", { cause });
 	}

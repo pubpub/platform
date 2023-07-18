@@ -41,7 +41,7 @@ app.get("/apply", async (req, res, next) => {
 		if (instanceConfig) {
 			res.send(eta.render("apply", { title: "apply", instanceId, instanceConfig, pubId }));
 		} else {
-			res.status(400).send("not configured");
+			throw new ResponseError(400, "Instance not configured");
 		}
 	} catch (error) {
 		next(error);
@@ -57,14 +57,14 @@ app.post("/apply", async (req, res, next) => {
 		if (instanceConfig) {
 			const doi = await createDoi(instanceConfig);
 			try {
-				await updatePub(instanceId, pubId, { "pubpub/doid": doi });
+				await updatePub(instanceId, pubId, { "pubpub/doi": doi });
 			} catch (error) {
 				await deleteDoi(instanceConfig, doi);
 				throw error;
 			}
 			res.json({ doi });
 		} else {
-			res.status(400).json({ error: "Instance not configured" });
+			throw new ResponseError(400, "Instance not configured");
 		}
 	} catch (error) {
 		next(error);
@@ -95,11 +95,14 @@ app.get("/debug", async (_, res, next) => {
 });
 
 app.use((error: any, _: any, res: any, next: any) => {
-	const { cause, constructor } = error;
-	switch (constructor) {
+	const { cause: errorCause, constructor: errorType } = error;
+	switch (errorType) {
+		case ResponseError:
+			res.status(error.cause.status).json(error);
+			return;
 		case DataciteError:
-			if (cause instanceof ResponseError) {
-				switch (cause.cause.status) {
+			if (errorCause instanceof ResponseError) {
+				switch (errorCause.cause.status) {
 					// DataCite returns:
 					// - 404 if credentials are invalid
 					// - 500 if credentials are malformatted
@@ -107,17 +110,17 @@ app.use((error: any, _: any, res: any, next: any) => {
 					case 404:
 					case 500:
 						res.status(403).json(error);
-						break;
+						return;
 					// Fall back to 502 (Bad Gateway) for other DataCite errors
 					default:
 						res.status(502).json(error);
-						break;
+						return;
 				}
 			}
 		case UpdatePubError:
-			// Use PubPub error status if available
-			res.status(cause instanceof ResponseError ? cause.cause.status : 500).json(error);
-			break;
+			// Use 502 for all PubPub errors
+			res.status(errorCause instanceof ResponseError ? 502 : 500).json(error);
+			return;
 	}
 	next(error);
 });
