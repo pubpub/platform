@@ -1,5 +1,5 @@
 {
-	"name": "word-counter",
+	"name": "datacite-depositor",
 	"read": {
 		"pubpub/authors": {
 			"id": "4e31d2ca-a7eb-46fe-851c-2c244a0c9f40"
