@@ -3,7 +3,7 @@
 <div x-data="page">
 	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
 	<button @click="update">Update word counts</button>
-	<p class="alert success" x-show="updated" x-transition>Pub updated!</p>
+	<p class="alert success" x-show="success" x-transition>Pub success!</p>
 	<table class="metadata" x-show="words || lines" x-transition>
 		<thead>
 			<tr>
@@ -29,12 +29,12 @@
 			const res = await req.json();
 			this.words = res.words;
 			this.lines = res.lines;
-			this.updated = true;
+			this.success = true;
 		}
 	}
 
 	function page() {
-	  return { words: 0, lines: 0, updated: false, update };
+	  return { words: 0, lines: 0, success: false, update };
 	}
 
 	document.addEventListener("alpine:init", () => {

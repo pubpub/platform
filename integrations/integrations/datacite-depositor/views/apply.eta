@@ -2,9 +2,12 @@
 
 <div x-data="page">
 	<p>Click the button below to assign a DOI to the Pub.</p>
-	<button @click="update">Assign DOI</button>
-	<p class="alert success" x-show="updated" x-transition>Pub updated!</p>
-	<p class="alert failure" x-show="error" x-transition>Error: <span x-text="error"></span></p>
+	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
+	<p class="alert success" x-show="success" x-transition>Pub updated!</p>
+	<div id="error" class="alert failure" x-show="error" x-transition>
+		<strong x-text="error?.message"></strong>
+		<p x-text="error?.cause"></p>
+	</div>
 	<table class="metadata" x-show="doi" x-transition>
 		<thead>
 			<tr>
@@ -21,22 +24,30 @@
 
 <script>
   async function update() {
-		this.updated = false;
+	  this.loading = true;
+		this.success = false;
 		this.error = undefined;
 		const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
 			method: "POST",
 		});
+		this.loading = false;
 		const res = await req.json();
 		if (req.ok) {
 			this.doi = res.doi;
-			this.updated = true;
+			this.success = true;
 		} else {
-		  this.error = res.error ?? "an unexpected error occurred";
+		  this.error = res ?? { message: "an unexpected error occurred" };
 		}
 	}
 
 	function page() {
-	  return { doi: "", error: undefined, updated: false, update };
+	  return {
+			doi: "",
+			error: undefined,
+			loading: false,
+			success: false,
+			update,
+		};
 	}
 
 	document.addEventListener("alpine:init", () => {

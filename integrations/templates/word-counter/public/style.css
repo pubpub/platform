@@ -1,11 +1,31 @@
 :root {
 	font-family: "Inter", sans-serif;
+	font-size: 14px;
 }
 
 @supports (font-variation-settings: normal) {
 	:root {
 		font-family: "Inter var", sans-serif;
 	}
+}
+
+@keyframes spinner {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+button.loading::after {
+	content: "";
+	display: inline-block;
+	width: 0.75em;
+	height: 0.75em;
+	vertical-align: middle;
+	border: 1.5px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: spinner 0.75s linear infinite;
+	margin-left: 0.75em;
 }
 
 body {
@@ -32,6 +52,10 @@ header > h1 {
 
 main {
 	padding: 0.75rem 1rem;
+}
+
+main > div > p:first-child {
+	margin-top: 0;
 }
 
 .input-group {
@@ -131,26 +155,22 @@ button:hover {
 	font-size: 0.9rem;
 }
 
-p:first-child {
-	margin-top: 0;
-}
-
 .alert {
+	border: 1px solid currentColor;
 	padding: 0.75rem 1rem;
-	font-size: 0.8rem;
+	margin: 0.75rem 0;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	font-size: 0.9rem;
 }
 
 .alert.success {
-	padding: 0.75rem 1rem;
 	color: green;
-	border: 1px solid green;
-	background-color: rgba(0, 255, 0, 0.1);
-	font-size: 0.8rem;
 }
 
 .alert.failure {
 	color: red;
-	border: 1px solid red;
-	background-color: rgba(255, 0, 0, 0.1);
-	font-size: 0.8rem;
+}
+
+.alert > p {
+	margin-bottom: 0;
 }

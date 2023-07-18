@@ -16,13 +16,14 @@
 			<input id="doi-prefix" type="input" x-model="doiPrefix" />
 		</label>
 	</fieldset>
-	<button class="button" x-on:click="update" x-bind:disabled="!(accountId && password && doiPrefix)">Configure instance</button>
-	<p class="alert success" x-show="updated" x-transition>Instance configured!</p>
+	<button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure instance</button>
+	<p class="alert success" x-show="success" x-transition>Instance configured!</p>
 </div>
 
 <script>
 	document.addEventListener("alpine:init", () => {
 		async function update() {
+			this.loading = true
 			const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
@@ -32,8 +33,9 @@
 					doiPrefix: this.doiPrefix,
 				}),
 			});
+			this.loading = false;
 			if (req.ok) {
-				this.updated = true;
+				this.success = true;
 			}
 			return req.json();
 		}
@@ -43,7 +45,8 @@
 				accountId: "<%= it.instanceConfig.accountId %>",
 				password: "<%= it.instanceConfig.password %>",
 				doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
-				updated: false,
+				loading: false,
+				success: false,
 				update,
 			};
 		}

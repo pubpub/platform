@@ -12,7 +12,7 @@
 			<span>Lines</span>
 		</label>
 	</fieldset>
-	<p class="alert success" x-show="updated" x-transition>Instance configured!</p>
+	<p class="alert success" x-show="success" x-transition>Instance configured!</p>
 </div>
 
 <script>
@@ -36,7 +36,7 @@
 				body: JSON.stringify({ words: this.words, lines: this.lines }),
 			});
 			if (req.ok) {
-				this.updated = true;
+				this.success = true;
 			}
 			return req.json();
 		}
@@ -45,7 +45,7 @@
 		  return {
 				lines: <%= it.instanceConfig.lines %>,
 				words: <%= it.instanceConfig.words %>,
-				updated: false,
+				success: false,
 				update,
 				toggle,
 			};
