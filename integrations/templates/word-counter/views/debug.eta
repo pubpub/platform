@@ -1,0 +1,23 @@
+<% layout("./layout") %>
+
+<div x-data="page">
+  <ul>
+    <template x-for="instanceId in instanceIds">
+      <li>
+        <a :href="`/configure?instanceId=${instanceId}`" x-text="instanceId"></a>
+      </li>
+    </template>
+  </ul>
+</div>
+
+<script>
+	document.addEventListener("alpine:init", () => {
+		function page() {
+		  return {
+				instanceIds: <%~ JSON.stringify(it.instanceIds) %>,
+			};
+		}
+		
+		Alpine.data("page", page);
+	});
+</script>

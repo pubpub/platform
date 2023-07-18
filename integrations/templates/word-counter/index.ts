@@ -2,7 +2,12 @@ import { Eta } from "eta";
 import express from "express";
 import { ok as assert } from "node:assert";
 import process from "node:process";
-import { makeInstanceConfig, findInstanceConfig, updateInstanceConfig } from "./config";
+import {
+	makeInstanceConfig,
+	findInstanceConfig,
+	updateInstanceConfig,
+	getAllInstanceIds,
+} from "./config";
 import { makeWordCountPatch } from "./counts";
 import { UpdatePubError, updatePub } from "./pubpub";
 
@@ -68,6 +73,15 @@ app.put("/configure", async (req, res, next) => {
 		assert(typeof instanceId === "string");
 		await updateInstanceConfig(instanceId, instanceConfig);
 		res.send(instanceConfig);
+	} catch (error) {
+		next(error);
+	}
+});
+
+app.get("/debug", async (_, res, next) => {
+	try {
+		const instanceIds = await getAllInstanceIds();
+		res.send(eta.render("debug", { title: "debug", instanceIds }));
 	} catch (error) {
 		next(error);
 	}

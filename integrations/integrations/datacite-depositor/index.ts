@@ -3,7 +3,12 @@ import express from "express";
 import { ok as assert } from "node:assert";
 import process from "node:process";
 import { CreateDoiError, DeleteDoiError, createDoi, deleteDoi } from "./datacite";
-import { findInstanceConfig, makeInstanceConfig, updateInstanceConfig } from "./config";
+import {
+	findInstanceConfig,
+	getAllInstanceIds,
+	makeInstanceConfig,
+	updateInstanceConfig,
+} from "./config";
 import { UpdatePubError, updatePub } from "./pubpub";
 
 const app = express();
@@ -75,6 +80,15 @@ app.put("/configure", async (req, res, next) => {
 		assert(typeof instanceId === "string");
 		await updateInstanceConfig(instanceId, instanceConfig);
 		res.send(instanceConfig);
+	} catch (error) {
+		next(error);
+	}
+});
+
+app.get("/debug", async (_, res, next) => {
+	try {
+		const instanceIds = await getAllInstanceIds();
+		res.send(eta.render("debug", { title: "debug", instanceIds }));
 	} catch (error) {
 		next(error);
 	}

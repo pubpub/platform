@@ -1,4 +1,5 @@
 import redis from "redis";
+import manifest from "./pubpub-manifest.json";
 
 export type InstanceConfig = { words: boolean; lines: boolean };
 
@@ -15,9 +16,13 @@ try {
 export const makeInstanceConfig = (): InstanceConfig => ({ words: false, lines: false });
 
 export const findInstanceConfig = (instanceId: string) =>
-	db.get(instanceId).then((value) => (value ? JSON.parse(value) : undefined)) as Promise<
+	db
+		.get(`${manifest.name}:${instanceId}`)
+		.then((value) => (value ? JSON.parse(value) : undefined)) as Promise<
 		InstanceConfig | undefined
 	>;
 
 export const updateInstanceConfig = (instanceId: string, instanceConfig: InstanceConfig) =>
-	db.set(instanceId, JSON.stringify(instanceConfig));
+	db.set(`${manifest.name}:${instanceId}`, JSON.stringify(instanceConfig));
+
+export const getAllInstanceIds = () => db.keys(`${manifest.name}:*`);
