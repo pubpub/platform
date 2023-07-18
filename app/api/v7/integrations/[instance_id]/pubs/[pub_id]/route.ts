@@ -23,11 +23,37 @@ const getPubFields = async (pub_id: string) => {
 	}, {});
 };
 
+/**
+ * @swagger
+ * /api/v7/integrations/{instanceId}/pubs/{pubId}:
+ *   get:
+ *     description: Returns an Pub by ID and its Instance ID
+ *     responses:
+ *       200:
+ *         description: A pub
+ *       400:
+ *          Invalid ID
+ *       404:
+ *          Pub not found
+ */
 export async function GET(request: NextRequest, { params }: { params: { pub_id: string } }) {
 	const pub = await getPubFields(params.pub_id);
 	return NextResponse.json(pub);
 }
 
+/**
+ * @swagger
+ * /api/v7/integrations/{instanceId}/pubs/{pubId}:
+ *   put:
+ *     description: Updates a Pub by ID and its Instance ID
+ *     responses:
+ *       200:
+ *         description: A Pub with its updated fields
+ *       400:
+ *          Invalid ID
+ *       404:
+ *          Pub not found
+ */
 export async function PUT(request: NextRequest, { params }: { params: { pub_id: string } }) {
 	const { fields } = await request.json();
 
