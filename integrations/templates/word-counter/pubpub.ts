@@ -1,15 +1,23 @@
 import { ok as assert } from "node:assert";
 import manifest from "./pubpub-manifest.json";
 
-// @ts-expect-error
-Error.prototype.toJSON = function toJSON() {
-	return {
-		message: this.message,
-		cause: this.cause?.toString(),
-	};
-};
+export class IntegrationError extends Error {
+	toJSON() {
+		if (this.cause) {
+			return { message: this.message, cause: this.cause.toString() };
+		}
+		return { message: this.message };
+	}
+}
 
-export class UpdatePubError extends Error {}
+export class ResponseError extends IntegrationError {
+	declare cause: Response;
+	constructor(response: Response, message: string = "Unexpected error") {
+		super(message + ` (${response.status} ${response.statusText})`, { cause: response });
+	}
+}
+
+export class UpdatePubError extends IntegrationError {}
 
 type Manifest = {
 	read?: { [key: string]: { id: string } };
@@ -17,7 +25,7 @@ type Manifest = {
 	register?: { [key: string]: { id: string } };
 };
 
-type Patch = {
+type PubPatch = {
 	[key: string]: unknown;
 };
 
@@ -29,20 +37,23 @@ const resolvePubFieldId = (alias: string) => {
 	);
 };
 
-export const updatePub = async (integrationId: string, pubId: string, patch: Patch) => {
+export const updatePub = async (integrationId: string, pubId: string, pubPatch: PubPatch) => {
 	try {
-		const signal = AbortSignal.timeout(5000);
-		const fields: Patch = {};
-		for (const alias in patch) {
+		const timeoutSignal = AbortSignal.timeout(5000);
+		const fields: PubPatch = {};
+		for (const alias in pubPatch) {
 			const fieldId = resolvePubFieldId(alias);
-			assert(fieldId, `Could not resolve Pub field id for alias "${alias}"`);
-			fields[fieldId] = patch[alias];
+			assert(
+				fieldId,
+				`Failed to resolve alias "${alias}". Either the manifest is invalid or the alias was misspelled`
+			);
+			fields[fieldId] = pubPatch[alias];
 		}
 		const res = await fetch(
 			`${process.env.PUBPUB_URL}/api/v7/integration/${integrationId}/pubs/${pubId}`,
 			{
 				method: "PUT",
-				signal,
+				signal: timeoutSignal,
 				headers: {
 					"Content-Type": "application/json",
 				},
@@ -54,12 +65,12 @@ export const updatePub = async (integrationId: string, pubId: string, patch: Pat
 		}
 		switch (res.status) {
 			case 404:
-				throw new Error("Integration or pub not found");
+				throw new ResponseError(res, "Integration or pub not found");
 			case 403:
-				throw new Error("Invalid credentials");
+				throw new ResponseError(res, "Invalid credentials");
 		}
-		throw new Error(`Unexpected response: ${res.status} ${res.statusText}`);
-	} catch (error) {
-		throw new UpdatePubError("Failed to update Pub", { cause: error });
+		throw new ResponseError(res, "PubPub service not available");
+	} catch (cause) {
+		throw new UpdatePubError("Failed to update Pub", { cause });
 	}
 };

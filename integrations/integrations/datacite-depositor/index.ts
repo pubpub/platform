@@ -2,14 +2,14 @@ import { Eta } from "eta";
 import express from "express";
 import { ok as assert } from "node:assert";
 import process from "node:process";
-import { CreateDoiError, DeleteDoiError, createDoi, deleteDoi } from "./datacite";
 import {
 	findInstanceConfig,
 	getAllInstanceIds,
 	makeInstanceConfig,
 	updateInstanceConfig,
 } from "./config";
-import { UpdatePubError, updatePub } from "./pubpub";
+import { DataciteError, createDoi, deleteDoi } from "./datacite";
+import { ResponseError, UpdatePubError, updatePub } from "./pubpub";
 
 const app = express();
 const eta = new Eta({ views: "views" });
@@ -57,7 +57,7 @@ app.post("/apply", async (req, res, next) => {
 		if (instanceConfig) {
 			const doi = await createDoi(instanceConfig);
 			try {
-				await updatePub(instanceId, pubId, { "pubpub/doi": doi });
+				await updatePub(instanceId, pubId, { "pubpub/doid": doi });
 			} catch (error) {
 				await deleteDoi(instanceConfig, doi);
 				throw error;
@@ -95,11 +95,28 @@ app.get("/debug", async (_, res, next) => {
 });
 
 app.use((error: any, _: any, res: any, next: any) => {
-	switch (error.constructor) {
-		case CreateDoiError:
-		case DeleteDoiError:
+	const { cause, constructor } = error;
+	switch (constructor) {
+		case DataciteError:
+			if (cause instanceof ResponseError) {
+				switch (cause.cause.status) {
+					// DataCite returns:
+					// - 404 if credentials are invalid
+					// - 500 if credentials are malformatted
+					case 403:
+					case 404:
+					case 500:
+						res.status(403).json(error);
+						break;
+					// Fall back to 502 (Bad Gateway) for other DataCite errors
+					default:
+						res.status(502).json(error);
+						break;
+				}
+			}
 		case UpdatePubError:
-			res.status(400).json(error);
+			// Use PubPub error status if available
+			res.status(cause instanceof ResponseError ? cause.cause.status : 500).json(error);
 			break;
 	}
 	next(error);

@@ -1,22 +1,36 @@
 import { InstanceConfig } from "./config";
+import { ResponseError, IntegrationError } from "./pubpub";
 
-export class CreateDoiError extends Error {}
-export class DeleteDoiError extends Error {}
+export class DataciteError extends IntegrationError {}
 
 const encodeCredentials = (accountId: string, password: string) =>
 	Buffer.from(`${accountId}:${password}`).toString("base64");
 
+const makeDataciteHeaders = (instanceConfig: InstanceConfig) => ({
+	"Content-Type": "application/vnd.api+json",
+	Authorization: `Basic ${encodeCredentials(instanceConfig.accountId, instanceConfig.password)}`,
+});
+
+const fetchDatacite = async (path: string, options: RequestInit) => {
+	const res = await fetch(`${process.env.DATACITE_URL}/${path}`, options);
+	if (res.ok) {
+		return res;
+	}
+	if (
+		res.status === 404 || // DataCite returns a 404 if credentials are invalid
+		res.status === 403 || // DataCite doesn't return a 403, but we should handle it anyway
+		res.status === 500 // DataCite returns a 500 if credentials are malformatted
+	) {
+		throw new ResponseError(res, "Invalid DataCite credentials or DOI prefix");
+	}
+	throw new ResponseError(res, `Could not connect to DataCite (${res.status} ${res.statusText})`);
+};
+
 export const createDoi = async (instanceConfig: InstanceConfig) => {
 	try {
-		const req = await fetch(`https://api.test.datacite.org/dois`, {
+		const res = await fetchDatacite("dois", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/vnd.api+json",
-				Authorization: `Basic ${encodeCredentials(
-					instanceConfig.accountId,
-					instanceConfig.password
-				)}`,
-			},
+			headers: makeDataciteHeaders(instanceConfig),
 			body: JSON.stringify({
 				data: {
 					type: "dois",
@@ -26,36 +40,19 @@ export const createDoi = async (instanceConfig: InstanceConfig) => {
 				},
 			}),
 		});
-		if (req.ok) {
-			const res = await req.json();
-			return res.data.attributes.doi;
-		}
-		if (req.status === 404 || req.status === 403 || req.status === 500) {
-			throw new Error("Invalid credentials or DOI prefix");
-		}
-		throw new Error("Unexpected error");
+		return (await res.json()).data.id;
 	} catch (cause) {
-		throw new CreateDoiError("Failed to create DOI", { cause });
+		throw new DataciteError("Failed to create DOI", { cause });
 	}
 };
 
 export const deleteDoi = async (instanceConfig: InstanceConfig, doi: string) => {
 	try {
-		const req = await fetch(`https://api.test.datacite.org/dois/${doi}`, {
+		await fetchDatacite(`dois/${doi}`, {
 			method: "DELETE",
-			headers: {
-				"Content-Type": "application/vnd.api+json",
-				Authorization: `Basic ${encodeCredentials(
-					instanceConfig.accountId,
-					instanceConfig.password
-				)}`,
-			},
+			headers: makeDataciteHeaders(instanceConfig),
 		});
-		if (req.status === 404 || req.status === 403 || req.status === 500) {
-			throw new Error("Invalid credentials or DOI prefix");
-		}
-		throw new Error("Unexpected error");
 	} catch (cause) {
-		throw new DeleteDoiError("Failed to delete DOI", { cause });
+		throw new DataciteError("Failed to delete DOI", { cause });
 	}
 };

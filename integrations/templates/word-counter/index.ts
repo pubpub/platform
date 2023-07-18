@@ -9,7 +9,7 @@ import {
 	getAllInstanceIds,
 } from "./config";
 import { makeWordCountPatch } from "./counts";
-import { UpdatePubError, updatePub } from "./pubpub";
+import { ResponseError, UpdatePubError, updatePub } from "./pubpub";
 
 const app = express();
 const eta = new Eta({ views: "views" });
@@ -88,9 +88,11 @@ app.get("/debug", async (_, res, next) => {
 });
 
 app.use((error: any, _: any, res: any, next: any) => {
+	const { cause } = error;
 	switch (error.constructor) {
 		case UpdatePubError:
-			res.status(400).json(error);
+			// Use PubPub error status if available
+			res.status(cause instanceof ResponseError ? cause.cause.status : 500).json(error);
 			break;
 	}
 	next(error);
