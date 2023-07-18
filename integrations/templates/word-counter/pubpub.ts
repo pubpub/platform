@@ -56,13 +56,13 @@ export class ResponseError extends IntegrationError {
 
 export class UpdatePubError extends IntegrationError {}
 
-type Manifest = {
+export type Manifest = {
 	read?: { [key: string]: { id: string } }
 	write?: { [key: string]: { id: string } }
 	register?: { [key: string]: { id: string } }
 }
 
-type PubPatch = {
+export type PubPatch = {
 	[key: string]: unknown
 }
 

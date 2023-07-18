@@ -8,7 +8,7 @@ const db = redis.createClient({ url: process.env.REDIS_URL })
 try {
 	await db.connect()
 } catch (error) {
-	console.log("failed to connect to redis")
+	console.log("Failed to connect to Redis")
 	console.error(error)
 	process.exit(1)
 }
