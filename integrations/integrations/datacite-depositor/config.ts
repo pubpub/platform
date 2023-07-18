@@ -29,4 +29,5 @@ export const findInstanceConfig = (instanceId: string) =>
 export const updateInstanceConfig = (instanceId: string, instanceConfig: InstanceConfig) =>
 	db.set(`${manifest.name}:${instanceId}`, JSON.stringify(instanceConfig));
 
-export const getAllInstanceIds = () => db.keys(`${manifest.name}:*`);
+export const getAllInstanceIds = async () =>
+	(await db.keys(`${manifest.name}:*`))?.map((key) => key.split(":")[1]);
