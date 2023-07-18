@@ -1,5 +1,5 @@
 import { ok as assert } from "node:assert"
-import manifest from "./pubpub-manifest.json"
+import manifest from "./public/pubpub-manifest.json"
 
 const StatusText = {
 	100: "Continue",

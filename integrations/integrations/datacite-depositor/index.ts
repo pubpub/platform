@@ -16,10 +16,6 @@ const eta = new Eta({ views: "views" })
 
 app.use(express.json())
 app.use(express.static("public"))
-app.use(
-	"/pubpub-manifest.json",
-	express.static(process.cwd() + "/pubpub-manifest.json")
-)
 
 // pubpub integration routes
 

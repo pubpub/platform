@@ -1,5 +1,5 @@
 import redis from "redis"
-import manifest from "./pubpub-manifest.json"
+import manifest from "./public/pubpub-manifest.json"
 
 export type InstanceConfig = {
 	accountId: string
