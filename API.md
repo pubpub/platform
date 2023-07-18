@@ -6,9 +6,9 @@ Response Headers:
 
 Endpoints:
 
-base: /api/v7/integration/<instance_id>
-    GET /public-key
-        returns JWK compliant keyset for integrations to verify the JWT that gets passed to them to authenticate users. TODO: should this be PASETO instead?
+base: /api/v7/integrations/<instance_id>
+    POST /auth
+        Endpoint for integrations to send a "user token" for authentication and authorization
 	GET /pubs
 		returns all fields requested by integration in all pubs in that stage
 		optionally can be filtered to specific fields (or just ids)
@@ -47,7 +47,7 @@ base: /api/v7/integration/<instance_id>
 			- 401 invalid api key; jwt expired; jwt signature bad
 			- 403 user (from jwt) does not have access to pub; integration does not have access to pub
 
-	POST /pubs/<pub_id>
+	PUT /pubs/<pub_id>
 		write some data to pub fields
 
 		params:
@@ -59,7 +59,7 @@ base: /api/v7/integration/<instance_id>
 			200 OK
 			{id: E366F3B3-FCAC-4D84-A681-27BA712ECE18, title: pub1, field1: foo, field2: bar}
 
-	GET /autocomplete/allusers
+	GET /members/autocomplete
 		returns candidates for autocompleting a form with suggestions from the pubpub user database
 		likely needs different rate limit config than other endpoints
 
