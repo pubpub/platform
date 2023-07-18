@@ -2,7 +2,7 @@
 
 <div x-data="page">
 	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
-	<button @click="update" :class="{ loading }">Update word counts</button>
+	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Update word counts</button>
 	<div class="alert success" x-show="success" x-transition>
 		<p>Pub updated!</p>
 	</div>

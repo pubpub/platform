@@ -30,9 +30,10 @@ export const createDoi = async (instanceConfig: InstanceConfig) => {
 			const res = await req.json();
 			return res.data.attributes.doi;
 		}
-		if (req.status === 404) {
-			throw new Error("invalid credentials or DOI prefix");
+		if (req.status === 404 || req.status === 403 || req.status === 500) {
+			throw new Error("Invalid credentials or DOI prefix");
 		}
+		throw new Error("Unexpected error");
 	} catch (cause) {
 		throw new CreateDoiError("Failed to create DOI", { cause });
 	}
@@ -50,9 +51,10 @@ export const deleteDoi = async (instanceConfig: InstanceConfig, doi: string) => 
 				)}`,
 			},
 		});
-		if (req.status === 404) {
+		if (req.status === 404 || req.status === 403 || req.status === 500) {
 			throw new Error("Invalid credentials or DOI prefix");
 		}
+		throw new Error("Unexpected error");
 	} catch (cause) {
 		throw new DeleteDoiError("Failed to delete DOI", { cause });
 	}

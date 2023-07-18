@@ -59,7 +59,7 @@ app.post("/apply", async (req, res, next) => {
 			}
 			res.json({ doi });
 		} else {
-			res.status(400).json({ error: "instance not configured" });
+			res.status(400).json({ error: "Instance not configured" });
 		}
 	} catch (error) {
 		next(error);
