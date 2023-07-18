@@ -15,9 +15,9 @@
 		function page() {
 		  return {
 				instanceIds: <%~ JSON.stringify(it.instanceIds) %>,
-			};
+			}
 		}
 		
-		Alpine.data("page", page);
-	});
+		Alpine.data("page", page)
+	})
 </script>

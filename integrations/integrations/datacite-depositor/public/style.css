@@ -172,5 +172,10 @@ button:hover {
 }
 
 .alert > p {
-	margin-bottom: 0;
+	margin: 0;
+}
+
+.alert > strong {
+	display: block;
+	margin-bottom: 0.5rem;
 }

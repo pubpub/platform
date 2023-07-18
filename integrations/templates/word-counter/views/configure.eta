@@ -12,45 +12,57 @@
 			<span>Lines</span>
 		</label>
 	</fieldset>
-	<p class="alert success" x-show="success" x-transition>Instance configured!</p>
+	<!-- Alerts -->
+	<div class="alert success" x-show="success" x-transition>
+		<p>Instance configured!</p>
+	</div>
+	<div id="error" class="alert failure" x-show="error" x-transition>
+		<strong x-text="error?.message"></strong>
+		<p x-text="error?.cause"></p>
+	</div>
 </div>
 
 <script>
 	document.addEventListener("alpine:init", () => {
 		function toggle(kind) {
 			return event => {
-				const other = kind === "words" ? "lines" : "words";
+				const other = kind === "words" ? "lines" : "words"
 				if (this[kind] && !this[other]) {
-					event.preventDefault();
+					event.preventDefault()
 				} else {
-					this[kind] = !this[kind];
+					this[kind] = !this[kind]
 					this.update()
 				}
 			}
 		}
 
 		async function update() {
+			this.error = false
+			this.success = false
 			const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ words: this.words, lines: this.lines }),
-			});
+			})
 			if (req.ok) {
-				this.success = true;
+				this.success = true
+				return req.json()
+			} else {
+				this.error = await req.json()
 			}
-			return req.json();
 		}
 
 		function page() {
 		  return {
 				lines: <%= it.instanceConfig.lines %>,
 				words: <%= it.instanceConfig.words %>,
+				error: false,
 				success: false,
 				update,
 				toggle,
-			};
+			}
 		}
 		
-		Alpine.data("page", page);
-	});
+		Alpine.data("page", page)
+	})
 </script>

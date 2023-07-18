@@ -3,6 +3,7 @@
 <div x-data="page">
 	<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
 	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Update word counts</button>
+	<!-- Alerts -->
 	<div class="alert success" x-show="success" x-transition>
 		<p>Pub updated!</p>
 	</div>
@@ -10,6 +11,7 @@
 		<strong x-text="error?.message"></strong>
 		<p x-text="error?.cause"></p>
 	</div>
+	<!-- Metadata -->
 	<table class="metadata" x-show="words || lines" x-transition>
 		<thead>
 			<tr>
@@ -28,19 +30,19 @@
 
 <script>
   async function update() {
-		this.error = null;
-		this.loading = true;
+		this.error = null
+		this.loading = true
 		const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
 			method: "POST",
-		});
-		this.loading = false;
-		const res = await req.json();
+		})
+		this.loading = false
+		const res = await req.json()
 		if (req.ok) {
-			this.words = res.words;
-			this.lines = res.lines;
-			this.success = true;
+			this.words = res.words
+			this.lines = res.lines
+			this.success = true
 		} else {
-			this.error = res ?? { message: "an unexpected error occurred" };
+			this.error = res ?? { message: "an unexpected error occurred" }
 		}
 	}
 
@@ -52,10 +54,10 @@
 			loading: false,
 			success: false,
 			update,
-		};
+		}
 	}
 
 	document.addEventListener("alpine:init", () => {
-		Alpine.data("page", page);
-	});
+		Alpine.data("page", page)
+	})
 </script>

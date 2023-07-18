@@ -17,12 +17,21 @@
 		</label>
 	</fieldset>
 	<button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure instance</button>
-	<p class="alert success" x-show="success" x-transition>Instance configured!</p>
+	<!-- Alerts -->
+	<div class="alert success" x-show="success" x-transition>
+		<p>Instance configured!</p>
+	</div>
+	<div id="error" class="alert failure" x-show="error" x-transition>
+		<strong x-text="error?.message"></strong>
+		<p x-text="error?.cause"></p>
+	</div>
 </div>
 
 <script>
 	document.addEventListener("alpine:init", () => {
 		async function update() {
+			this.error = false
+			this.success = false
 			this.loading = true
 			const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
 				method: "PUT",
@@ -32,12 +41,14 @@
 					password: this.password,
 					doiPrefix: this.doiPrefix,
 				}),
-			});
-			this.loading = false;
+			})
+			this.loading = false
 			if (req.ok) {
-				this.success = true;
+				this.success = true
+				return req.json()
+			} else {
+				this.error = await req.json()
 			}
-			return req.json();
 		}
 
 		function page() {
@@ -45,12 +56,13 @@
 				accountId: "<%= it.instanceConfig.accountId %>",
 				password: "<%= it.instanceConfig.password %>",
 				doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
+				error: false,
 				loading: false,
 				success: false,
 				update,
-			};
+			}
 		}
 		
-		Alpine.data("page", page);
-	});
+		Alpine.data("page", page)
+	})
 </script>

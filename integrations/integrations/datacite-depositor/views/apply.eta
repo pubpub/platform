@@ -3,11 +3,15 @@
 <div x-data="page">
 	<p>Click the button below to assign a DOI to the Pub.</p>
 	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
-	<p class="alert success" x-show="success" x-transition>Pub updated!</p>
+	<!-- Alerts -->
+	<div class="alert success" x-show="success" x-transition>
+		<p>Pub updated!</p>
+	</div>
 	<div id="error" class="alert failure" x-show="error" x-transition>
 		<strong x-text="error?.message"></strong>
 		<p x-text="error?.cause"></p>
 	</div>
+	<!-- Metadata -->
 	<table class="metadata" x-show="doi" x-transition>
 		<thead>
 			<tr>
@@ -24,17 +28,17 @@
 
 <script>
   async function update() {
-	  this.loading = true;
-		this.success = false;
-		this.error = null;
+	  this.loading = true
+		this.success = false
+		this.error = null
 		const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
 			method: "POST",
-		});
-		this.loading = false;
-		const res = await req.json();
+		})
+		this.loading = false
+		const res = await req.json()
 		if (req.ok) {
-			this.doi = res.doi;
-			this.success = true;
+			this.doi = res.doi
+			this.success = true
 		} else {
 		  this.error = res ?? { message: "an unexpected error occurred" };
 		}
@@ -47,10 +51,10 @@
 			loading: false,
 			success: false,
 			update,
-		};
+		}
 	}
 
 	document.addEventListener("alpine:init", () => {
-		Alpine.data("page", page);
-	});
+		Alpine.data("page", page)
+	})
 </script>
