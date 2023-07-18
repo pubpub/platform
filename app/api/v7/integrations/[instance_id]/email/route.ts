@@ -7,9 +7,9 @@
  *       200:
  *         description: Identity tokens of of newly created users
  *       400:
- *          Invalid ID
+ *          description: Invalid ID
  *       404:
- *          User(s) not found
+ *          description: User(s) not found
  */
 export async function POST(request: Request) {
 	// TODO: is this too much power for integrations? should we approve templates? a malicious

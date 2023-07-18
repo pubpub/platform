@@ -7,9 +7,9 @@
  *       200:
  *         description: A pub
  *       400:
- *          Invalid ID
+ *         description: Invalid ID
  *       404:
- *          Pub not found
+*          description: Pub not found
  */
 export async function GET(request: Request) {
 	// Return all pubs in scope for this instance
