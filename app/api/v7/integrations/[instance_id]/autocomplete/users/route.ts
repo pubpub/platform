@@ -1,4 +1,13 @@
+/**
+ * @swagger
+ * /api/autocomplete/users:
+ *   get:
+ *     description: Returns a suggested user that is queried by name or email
+ *     responses:
+ *       200:
+ *         description: Username and ID
+ */
 export async function GET(request: Request) {
-    // return candidates for autocompleting a form with suggestions from the pubpub user database
-    // should search by name and email, but probably only return name and id
+	// return candidates for autocompleting a form with suggestions from the pubpub user database
+	// should search by name and email, but probably only return name and id
 }
