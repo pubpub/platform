@@ -4,6 +4,7 @@ services:
     name: integration-configs-redis
     region: ohio
     ipAllowList: [] # only allow internal connections
+    maxmemoryPolicy: noeviction
   # integration-word-counter
   - type: web
     name: integration-word-counter
