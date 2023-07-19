@@ -18,7 +18,7 @@ services:
         - templates/word-counts/**
     envVars:
       - fromGroup: pubpub-integration-env
-      - key: SETTINGS_CONNECTION_STRING
+      - key: REDIS_CONNECTION_STRING
         fromService:
           type: redis
           name: pubpub-integration-settings
@@ -36,7 +36,7 @@ services:
         - templates/datacite/**
     envVars:
       - fromGroup: pubpub-integration-env
-      - key: SETTINGS_CONNECTION_STRING
+      - key: REDIS_CONNECTION_STRING
         fromService:
           type: redis
           name: pubpub-integration-settings
