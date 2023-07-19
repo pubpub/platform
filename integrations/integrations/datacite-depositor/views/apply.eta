@@ -2,9 +2,23 @@
 
 <div x-data="page">
 	<p>Click the button below to assign a DOI to the Pub.</p>
+	<!-- Fields -->
 	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
 	<!-- Alerts -->
 	<div class="alert success" x-show="success" x-cloak x-transition>
+		<!-- Metadata -->
+		<table class="metadata" x-show="doi" x-cloak x-transition>
+			<thead>
+				<tr>
+					<th x-show="doi" x-transition>pubpub/doi</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td x-show="doi" x-transition x-text="doi"></td>
+				</tr>
+			</tbody>
+		</table>
 		<strong>Success!</strong>
 		<p>Pub metadata updated</p>
 	</div>
@@ -12,19 +26,6 @@
 		<strong x-text="error?.message"></strong>
 		<p x-text="error?.cause"></p>
 	</div>
-	<!-- Metadata -->
-	<table class="metadata" x-show="doi" x-cloak x-transition>
-		<thead>
-			<tr>
-				<th x-show="doi" x-transition>pubpub/doi</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td x-show="doi" x-transition x-text="doi"></td>
-			</tr>
-		</tbody>
-	</table>
 </div>
 
 <script>

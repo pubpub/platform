@@ -2,6 +2,7 @@
 
 <div x-data="page">
 	<p>Enter your DataCite account ID, password, and DOI prefix.</p>
+	<!-- Fields -->
 	<fieldset class="input-group">
 		<label class="input" for="account-id">
 			<span>Account ID</span>

@@ -1,6 +1,3 @@
-import { ok as assert } from "node:assert"
-import manifest from "./public/pubpub-manifest.json"
-
 const StatusText = {
 	100: "Continue",
 	101: "Switching Protocols",
@@ -54,7 +51,7 @@ export class ResponseError extends IntegrationError {
 	}
 }
 
-export class UpdatePubError extends IntegrationError {}
+export class PubPubError extends IntegrationError {}
 
 export type Manifest = {
 	read?: { [key: string]: { id: string } }
@@ -66,12 +63,30 @@ export type PubPatch = {
 	[key: string]: unknown
 }
 
-const resolvePubFieldId = (alias: string) => {
-	return (
-		(manifest as Manifest).read?.[alias]?.id ??
-		(manifest as Manifest).write?.[alias]?.id ??
-		(manifest as Manifest).register?.[alias]?.id
-	)
+export const getPub = async (integrationId: string, pubId: string) => {
+	const signal = AbortSignal.timeout(5000)
+	try {
+		const response = await fetch(
+			`${process.env.PUBPUB_URL}/api/v7/integrations/${integrationId}/pubs/${pubId}`,
+			{
+				method: "GET",
+				signal,
+				headers: { "Content-Type": "application/json" },
+			}
+		)
+		if (response.ok) {
+			return response.json()
+		}
+		switch (response.status) {
+			case 404:
+				throw new ResponseError(response, "Integration or Pub not found")
+			case 403:
+				throw new ResponseError(response, "Failed to authorize integration")
+		}
+		throw new ResponseError(response, "Failed to connect to PubPub")
+	} catch (cause) {
+		throw new PubPubError("Failed to get Pub", { cause })
+	}
 }
 
 export const updatePub = async (
@@ -80,38 +95,27 @@ export const updatePub = async (
 	pubPatch: PubPatch
 ) => {
 	try {
-		const timeoutSignal = AbortSignal.timeout(5000)
-		const fields: PubPatch = {}
-		for (const alias in pubPatch) {
-			const fieldId = resolvePubFieldId(alias)
-			assert(
-				fieldId,
-				`Failed to resolve alias "${alias}". Either the manifest is invalid or the alias was misspelled`
-			)
-			fields[fieldId] = pubPatch[alias]
-		}
-		const res = await fetch(
-			`${process.env.PUBPUB_URL}/api/v7/integration/${integrationId}/pubs/${pubId}`,
+		const signal = AbortSignal.timeout(5000)
+		const response = await fetch(
+			`${process.env.PUBPUB_URL}/api/v7/integrations/${integrationId}/pubs/${pubId}`,
 			{
 				method: "PUT",
-				signal: timeoutSignal,
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ fields }),
+				signal,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ fields: pubPatch }),
 			}
 		)
-		if (res.ok) {
-			return res.json()
+		if (response.ok) {
+			return response.json()
 		}
-		switch (res.status) {
+		switch (response.status) {
 			case 404:
-				throw new ResponseError(res, "Integration or Pub not found")
+				throw new ResponseError(response, "Integration or Pub not found")
 			case 403:
-				throw new ResponseError(res, "Failed to authorize integration")
+				throw new ResponseError(response, "Failed to authorize integration")
 		}
-		throw new ResponseError(res, "Failed to connect to PubPub")
+		throw new ResponseError(response, "Failed to connect to PubPub")
 	} catch (cause) {
-		throw new UpdatePubError("Failed to update Pub", { cause })
+		throw new PubPubError("Failed to update Pub", { cause })
 	}
 }

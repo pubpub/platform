@@ -9,7 +9,7 @@ import {
 	updateInstanceConfig,
 } from "./config"
 import { DataciteError, createDoi, deleteDoi } from "./datacite"
-import { ResponseError, UpdatePubError, updatePub } from "./pubpub"
+import { ResponseError, PubPubError, updatePub, getPub } from "./pubpub"
 
 const app = express()
 const eta = new Eta({ views: "views" })
@@ -68,9 +68,12 @@ app.post("/apply", async (req, res, next) => {
 		assert(typeof pubId === "string")
 		const instanceConfig = await findInstanceConfig(instanceId)
 		if (instanceConfig) {
-			const doi = await createDoi(instanceConfig)
+			let { "pubpub/doi": doi } = await getPub(instanceId, pubId)
+			// Using || instead of ?? because PubPub returns an empty string for
+			// null JSON values
+			doi ||= await createDoi(instanceConfig)
 			try {
-				await updatePub(instanceId, pubId, { DOI: doi })
+				await updatePub(instanceId, pubId, { "pubpub/doi": doi })
 			} catch (error) {
 				await deleteDoi(instanceConfig, doi)
 				throw error
@@ -130,7 +133,7 @@ app.use((error: any, _: any, res: any, next: any) => {
 						return
 				}
 			}
-		case UpdatePubError:
+		case PubPubError:
 			// Use 502 for all PubPub errors
 			res.status(errorCause instanceof ResponseError ? 502 : 500).json(error)
 			return
