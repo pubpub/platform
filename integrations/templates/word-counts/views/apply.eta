@@ -10,8 +10,8 @@
 		<table class="metadata" x-show="words || lines" x-cloak x-transition>
 			<thead>
 				<tr>
-					<th x-show="words" x-transition>word-counter/word-count</th>
-					<th x-show="lines" x-transition>word-counter/line-count</th>
+					<th x-show="words" x-transition>word-counts/word-count</th>
+					<th x-show="lines" x-transition>word-counts/line-count</th>
 				</tr>
 			</thead>
 			<tbody>

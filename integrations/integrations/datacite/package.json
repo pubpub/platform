@@ -1,5 +1,5 @@
 {
-	"name": "datacite-depositor",
+	"name": "pubpub-datacite-integration",
 	"type": "module",
 	"private": true,
 	"version": "0.0.1",

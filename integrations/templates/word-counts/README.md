@@ -1,0 +1,1 @@
+# PubPub Integration Template

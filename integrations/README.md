@@ -9,7 +9,7 @@
 
 ## For discussion
 
-- User inputs "https://integrations.pubpub.org/word-counter" as the integration service URL and we resolve manifest by appending "/pubpub-manifest.json"
+- User inputs "https://word-counts.integrations.pubpub.org" as the integration service URL and we resolve manifest by appending "/pubpub-manifest.json"
 - Registration fails if manifest is not found at SERVICE_URL/pubpub-manifest.json
 - Should all integrations require configuration (e.g. GET SERVICE_URL/configure) to keep things consistent? Or should manifest have a `"configurable"` field?
 - Integration instances are configured lazily. When instance is created, PubPub will open /configure in a new tab (or iframe). But the integration does not tell PubPub whether or not integration was configured successfully.

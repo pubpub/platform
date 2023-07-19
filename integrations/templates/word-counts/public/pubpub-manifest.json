@@ -1,13 +1,13 @@
 {
-	"name": "word-counter",
+	"name": "word-counts",
 	"register": {
-		"word-counter/word-count": {
+		"word-counts/word-count": {
 			"id": "dc6b5a42-b7bb-47a1-b883-dd25d1e13221",
 			"label": "Word Count",
 			"type": "number",
 			"default": 0
 		},
-		"word-counter/line-count": {
+		"word-counts/line-count": {
 			"id": "85ef85ec-ddcb-4f1a-8b3d-e3007d6ca85e",
 			"label": "Line Count",
 			"type": "number",

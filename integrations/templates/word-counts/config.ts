@@ -3,7 +3,7 @@ import manifest from "./public/pubpub-manifest.json"
 
 export type InstanceConfig = { words: boolean; lines: boolean }
 
-const db = redis.createClient({ url: process.env.REDIS_URL })
+const db = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING })
 
 try {
 	await db.connect()

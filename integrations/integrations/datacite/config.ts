@@ -7,7 +7,7 @@ export type InstanceConfig = {
 	doiPrefix: string
 }
 
-const db = redis.createClient({ url: process.env.REDIS_URL })
+const db = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING })
 
 try {
 	await db.connect()

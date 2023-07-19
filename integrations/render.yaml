@@ -1,43 +1,43 @@
 services:
-  # integration-configs-redis
+  # pubpub-integration-settings
   - type: redis
-    name: integration-configs-redis
+    name: pubpub-integration-settings
     region: ohio
     ipAllowList: [] # only allow internal connections
     maxmemoryPolicy: noeviction
-  # integration-word-counter
+  # pubpub-integration-word-counts
   - type: web
-    name: integration-word-counter
+    name: pubpub-integration-word-counts
     region: ohio
     runtime: node
-    rootDir: templates/word-counter
+    rootDir: templates/word-counts
     buildCommand: npm i
     startCommand: npm run start
     buildFilter:
       paths:
-        - templates/word-counter/**
+        - templates/word-counts/**
     envVars:
-      - fromGroup: v7-integrations-env
-      - key: REDIS_URL
+      - fromGroup: pubpub-integration-env
+      - key: SETTINGS_CONNECTION_STRING
         fromService:
           type: redis
-          name: integration-configs-redis
+          name: pubpub-integration-settings
           property: connectionString
-  # integration-datacite-depositor
+  # pubpub-integration-datacite
   - type: web
-    name: integration-datacite-depositor
+    name: pubpub-integration-datacite
     region: ohio
     runtime: node
-    rootDir: integrations/datacite-depositor
+    rootDir: integrations/datacite
     buildCommand: npm i
     startCommand: npm run start
     buildFilter:
       paths:
-        - templates/datacite-depositor/**
+        - templates/datacite/**
     envVars:
-      - fromGroup: v7-integrations-env
-      - key: REDIS_URL
+      - fromGroup: pubpub-integration-env
+      - key: SETTINGS_CONNECTION_STRING
         fromService:
           type: redis
-          name: integration-configs-redis
+          name: pubpub-integration-settings
           property: connectionString

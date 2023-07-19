@@ -8,10 +8,10 @@ const content =
 export const makeWordCountPatch = (instanceConfig: InstanceConfig) => {
 	const patch: PubPatch = {}
 	if (instanceConfig.words) {
-		patch["word-counter/word-count"] = countWords(content)
+		patch["word-counts/word-count"] = countWords(content)
 	}
 	if (instanceConfig.lines) {
-		patch["word-counter/line-count"] = countLines(content)
+		patch["word-counts/line-count"] = countLines(content)
 	}
 	return patch
 }

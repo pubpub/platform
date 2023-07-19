@@ -9,7 +9,7 @@ import {
 	getAllInstanceIds,
 } from "./config"
 import { makeWordCountPatch } from "./counts"
-import { ResponseError, UpdatePubError, updatePub } from "./pubpub"
+import { ResponseError, PubPubError, updatePub } from "./pubpub"
 
 const app = express()
 const eta = new Eta({ views: "views" })
@@ -160,7 +160,7 @@ app.use((error: any, _: any, res: any, next: any) => {
 		case ResponseError:
 			res.status(error.cause.status).json(error)
 			return
-		case UpdatePubError:
+		case PubPubError:
 			// Use 502 for all PubPub errors
 			res.status(errorCause instanceof ResponseError ? 502 : 500).json(error)
 			return
