@@ -20,7 +20,7 @@
 	"scripts": {
 		"build": "pnpm build:lib && pnpm build:css",
 		"build:lib": "tsup src/lib/index.ts --format esm,cjs --dts",
-		"build:css": "tsup src/css/style.css --outDir .",
+		"build:css": "tsup src/css/style.css --outDir . --minify",
 		"prepare": "pnpm build"
 	},
 	"keywords": [
@@ -31,6 +31,12 @@
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
 	"devDependencies": {
+		"autoprefixer": "^10.4.14",
+		"postcss": "^8.4.26",
+		"postcss-import": "^15.1.0",
+		"postcss-minify": "^1.1.0",
+		"postcss-mixins": "^9.0.4",
+		"postcss-nested": "^6.0.1",
 		"tsup": "^7.1.0"
 	}
 }

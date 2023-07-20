@@ -1,0 +1,30 @@
+body {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 0;
+	background-color: var(--color-white);
+	color: var(--color-black);
+	-webkit-font-smoothing: antialiased;
+	-moz-osxfont-smoothing: grayscale;
+}
+
+header {
+	display: flex;
+	align-items: center;
+	height: var(--height-header);
+}
+
+header > h1 {
+	margin: 0 1rem;
+	font-size: var(--font-size-lg);
+	font-weight: var(--font-weight-bold);
+	text-transform: uppercase;
+}
+
+main {
+	padding: var(--space-sm) 1rem;
+}
+
+main > div > p:first-child {
+	margin-top: 0;
+}

@@ -1,0 +1,92 @@
+@import url("./mixins.css");
+
+input,
+button {
+	border-radius: var(--border-radius-box);
+}
+
+.input-group {
+	display: table;
+	margin: 0;
+	padding: 0;
+	margin: var(--space-sm) 0;
+	border: none;
+}
+
+.input-group > .input {
+	display: table-row;
+}
+
+.input-group > .input > span {
+	padding: var(--space-sm) var(--space-md);
+	font-size: var(--font-size-sm);
+}
+
+.input-group > .input > input {
+	background-color: transparent;
+	border: 1px solid var(--color-black);
+	padding: 4px;
+}
+
+.input-group > .input > span,
+.input-group > .input > input {
+	display: table-cell;
+}
+
+.checkbox-group {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+.checkbox-group > .checkbox {
+	display: flex;
+	cursor: pointer;
+	align-items: center;
+	padding: var(--space-sm) var(--space-md);
+	font-size: var(--font-size-sm);
+	transition: var(--transition-input-hover);
+}
+
+.checkbox-group > .checkbox:hover {
+	background: var(--color-input-hover);
+}
+
+.checkbox-group > .checkbox > input[type="checkbox"] {
+	margin: 0 var(--space-md) 0 0;
+	cursor: pointer;
+}
+
+.checkbox-group > .checkbox > input:checked + span {
+	font-weight: var(--font-weight-bold);
+}
+
+button {
+	border: 1px solid currentColor;
+	background-color: transparent;
+	padding: var(--space-xs) var(--space-sm);
+	cursor: pointer;
+	transition: var(--transition-input-hover);
+}
+
+button[disabled] {
+	color: var(--color-gray);
+	border-color: currentColor;
+	cursor: not-allowed;
+}
+
+button[disabled]:hover {
+	background: transparent;
+}
+
+button:hover {
+	background: var(--color-input-hover);
+}
+
+button.loading::after {
+	content: "";
+	margin-left: var(--space-sm);
+	@mixin spinner;
+}
