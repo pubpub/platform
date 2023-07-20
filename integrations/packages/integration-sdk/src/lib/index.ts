@@ -59,38 +59,36 @@ export type Manifest = {
 	register?: { [key: string]: { id: string } }
 }
 
-export type PubPatch = { [key: string]: unknown }
+export type Put<T extends Manifest> = Record<
+	Extract<Extract<keyof T["register"] | keyof T["write"], string>, string>,
+	unknown
+>
 
-type PutFields<T extends Manifest> = Extract<keyof T["write"], string>[]
-
-type GetFields<T extends Manifest> = (
+export type Get<T extends Manifest> = (
+	| Extract<keyof T["register"], string>
 	| Extract<keyof T["write"], string>
 	| Extract<keyof T["read"], string>
 )[]
 
-type GetResponse<T extends string[]> = {
+export type GetResponse<T extends string[]> = {
 	// TODO(3mcd): value types should be inferred from manifest
 	[K in T[number]]: unknown
 }
 
-type PutResponse<T extends string[]> = {
-	[K in T[number]]: unknown
-}
-
-type Patch<T extends string[]> = {
+export type PutResponse<T extends string[]> = {
 	[K in T[number]]: unknown
 }
 
 export type Client<T extends Manifest> = {
-	get<U extends GetFields<T>>(
+	get<U extends Get<T>>(
 		instanceId: string,
 		pubId: string,
 		...fields: U
 	): Promise<GetResponse<U>>
-	put<U extends PutFields<T>>(
+	put<U extends string[]>(
 		instanceId: string,
 		pubId: string,
-		patch: Patch<U>
+		patch: Put<T>
 	): Promise<PutResponse<U>>
 }
 

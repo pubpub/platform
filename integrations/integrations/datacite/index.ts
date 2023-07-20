@@ -125,6 +125,12 @@ app.use((error: any, _: any, res: any, next: any) => {
 		case sdk.ResponseError:
 			res.status(error.cause.status).json(error)
 			return
+		case sdk.PubPubError:
+			// Use 502 for all PubPub errors
+			res
+				.status(errorCause instanceof sdk.ResponseError ? 502 : 500)
+				.json(error)
+			return
 		case DataciteError:
 			if (errorCause instanceof sdk.ResponseError) {
 				switch (errorCause.cause.status) {
@@ -142,12 +148,6 @@ app.use((error: any, _: any, res: any, next: any) => {
 						return
 				}
 			}
-		case sdk.PubPubError:
-			// Use 502 for all PubPub errors
-			res
-				.status(errorCause instanceof sdk.ResponseError ? 502 : 500)
-				.json(error)
-			return
 	}
 	res
 		.status(500)
