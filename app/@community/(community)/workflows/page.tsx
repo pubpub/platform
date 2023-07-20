@@ -10,6 +10,7 @@ const getCommunityWorkflows = async () => {
 	if (!onlyCommunity) {
 		return null;
 	}
+	// When trying to render the workflows a member can see. We look at the pubs they can see, get the workflows associated, and then show all those.  
 	return await prisma.workflow.findMany({
 		where: { communityId: onlyCommunity.id },
 		include: {
