@@ -24,22 +24,16 @@ export const getApiDocs = async () => {
 			},
 			servers: [
 				{
-					url: "https://localhost:{port}",
+					url: "https://pubpub/v7/dev:3000",
 					description: "The development API server",
-					variables: {
-						port: {
-							default: "3000",
-						},
-					},
 				},
 				{
-					url: "https://pubpub:{port}",
+					url: "https://pubpub/v7/staging:3000",
+					description: "The staging API server",
+				},
+				{
+					url: "https://pubpub/v7:3000",
 					description: "The production API server",
-					variables: {
-						port: {
-							default: "3000",
-						},
-					},
 				},
 			],
 			security: [],
