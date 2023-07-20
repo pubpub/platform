@@ -1,7 +1,10 @@
 /**
  * @swagger
- * /api/integration/{instanceId}/autocomplete/users:
+ * /api/integration/{instanceId}/autocomplete/user:
  *   get:
+ *     tags:
+ *       - Autocomplete
+ *     summary: Finds a user by name or email
  *     description: Returns a suggested user that is queried by name or email
  *     responses:
  *       200:

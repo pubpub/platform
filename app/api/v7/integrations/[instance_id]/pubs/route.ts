@@ -2,6 +2,9 @@
  * @swagger
  * /api/integration/{instanceId}/pubs:
  *   get:
+ *     tags:
+ *       - Pubs
+ *     summary: Finds all Pubs in an instance
  *     description: Returns all Pubs in an instance by Pubs
  *     responses:
  *       200:

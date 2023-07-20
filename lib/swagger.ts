@@ -41,6 +41,12 @@ export const getApiDocs = async () => {
 					PubFields: {
 						type: "object",
 					},
+					InvalidInstanceId: {
+						type: "string",
+					},
+					PubNotFound: {
+						type: "string",
+					},
 				},
 			},
 			security: [],

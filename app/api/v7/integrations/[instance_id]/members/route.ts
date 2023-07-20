@@ -2,6 +2,9 @@
  * @swagger
  * /api/integration/{instanceId}/members:
  *   get:
+ *     tags:
+ *       - Members
+ *     summary: Finds members and roles
  *     description: Returns members for this instances stage
  *     responses:
  *       200:

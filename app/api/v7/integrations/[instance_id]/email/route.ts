@@ -2,6 +2,9 @@
  * @swagger
  * /api/integration/{instanceId}/email:
  *   post:
+ *     tags:
+ *       - Email
+ *     summary: Creates an email
  *     description: Proxies server with list of users for to send emails to
  *     responses:
  *       200:
