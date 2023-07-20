@@ -10,12 +10,17 @@ import {
 	updateInstanceConfig,
 } from "./config"
 import { DataciteError, createDoi, deleteDoi } from "./datacite"
+import manifest from "./pubpub-manifest.json"
 
 const app = express()
 const eta = new Eta({ views: "views" })
+const client = sdk.makeClient(manifest)
 
 app.use(express.json())
-app.use(express.static("public"))
+app.use(
+	"/pubpub-manifest.json",
+	express.static(process.cwd() + "/pubpub-manifest.json")
+)
 
 // pubpub integration routes
 
@@ -68,13 +73,17 @@ app.post("/apply", async (req, res, next) => {
 		assert(typeof pubId === "string")
 		const instanceConfig = await findInstanceConfig(instanceId)
 		if (instanceConfig) {
-			let { "pubpub/doi": doi } = await sdk.getPub(instanceId, pubId)
-			// Using || instead of ?? because PubPub returns an empty string for
-			// null JSON values
+			let { "pubpub/doi": doi } = await client.get(
+				instanceId,
+				pubId,
+				"pubpub/doi"
+			)
 			doi ||= await createDoi(instanceConfig)
 			try {
-				await sdk.updatePub(instanceId, pubId, { "pubpub/doi": doi })
+				await client.put(instanceId, pubId, { "pubpub/doi": doi })
 			} catch (error) {
+				// TODO(3mcd): type of DOI should be inferred from manifest
+				assert(typeof doi === "string")
 				await deleteDoi(instanceConfig, doi)
 				throw error
 			}

@@ -10,12 +10,17 @@ import {
 	getAllInstanceIds,
 } from "./config"
 import { makeWordCountPatch } from "./counts"
+import manifest from "./pubpub-manifest.json"
 
 const app = express()
 const eta = new Eta({ views: "views" })
+const client = sdk.makeClient(manifest)
 
 app.use(express.json())
-app.use(express.static("public"))
+app.use(
+	"/pubpub-manifest.json",
+	express.static(process.cwd() + "/pubpub-manifest.json")
+)
 
 /*
  * Integration Routes
@@ -111,7 +116,7 @@ app.post("/apply", async (req, res, next) => {
 		// Update the Pub metadata.
 		if (instanceConfig) {
 			const patch = makeWordCountPatch(instanceConfig)
-			await sdk.updatePub(instanceId, pubId, patch)
+			await client.put(instanceId, pubId, patch)
 			res.json(patch)
 		} else {
 			// Respond with a 400 if the integration instance is not configured.
