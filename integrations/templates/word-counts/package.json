@@ -12,7 +12,7 @@
 	},
 	"license": "GPL-2.0+",
 	"dependencies": {
-		"@pubpub/integration-sdk": "^0.0.1",
+		"@pubpub/integration-sdk": "^0.0.2",
 		"alfaaz": "^1.1.0",
 		"eta": "^3.0.3",
 		"express": "^4.18.2",
