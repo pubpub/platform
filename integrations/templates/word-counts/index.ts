@@ -172,7 +172,9 @@ app.use((error: any, _: any, res: any, next: any) => {
 				.json(error)
 			return
 	}
-	next(error)
+	res
+		.status(500)
+		.json(new sdk.IntegrationError("Internal Server Error", { cause: error }))
 })
 
 app.listen(process.env.PORT, () => {
