@@ -36,6 +36,13 @@ export const getApiDocs = async () => {
 					description: "The production API server",
 				},
 			],
+			components: {
+				schemas: {
+					PubFields: {
+						type: "object",
+					},
+				},
+			},
 			security: [],
 		},
 	});
