@@ -1,3 +1,4 @@
+import * as sdk from "@pubpub/integration-sdk"
 import { Eta } from "eta"
 import express from "express"
 import { ok as assert } from "node:assert"
@@ -9,7 +10,6 @@ import {
 	updateInstanceConfig,
 } from "./config"
 import { DataciteError, createDoi, deleteDoi } from "./datacite"
-import { ResponseError, PubPubError, updatePub, getPub } from "./pubpub"
 
 const app = express()
 const eta = new Eta({ views: "views" })
@@ -54,7 +54,7 @@ app.get("/apply", async (req, res, next) => {
 				})
 			)
 		} else {
-			throw new ResponseError(400, "Instance not configured")
+			throw new sdk.ResponseError(400, "Instance not configured")
 		}
 	} catch (error) {
 		next(error)
@@ -68,19 +68,19 @@ app.post("/apply", async (req, res, next) => {
 		assert(typeof pubId === "string")
 		const instanceConfig = await findInstanceConfig(instanceId)
 		if (instanceConfig) {
-			let { "pubpub/doi": doi } = await getPub(instanceId, pubId)
+			let { "pubpub/doi": doi } = await sdk.getPub(instanceId, pubId)
 			// Using || instead of ?? because PubPub returns an empty string for
 			// null JSON values
 			doi ||= await createDoi(instanceConfig)
 			try {
-				await updatePub(instanceId, pubId, { "pubpub/doi": doi })
+				await sdk.updatePub(instanceId, pubId, { "pubpub/doi": doi })
 			} catch (error) {
 				await deleteDoi(instanceConfig, doi)
 				throw error
 			}
 			res.json({ doi })
 		} else {
-			throw new ResponseError(400, "Instance not configured")
+			throw new sdk.ResponseError(400, "Instance not configured")
 		}
 	} catch (error) {
 		next(error)
@@ -113,11 +113,11 @@ app.get("/debug", async (_, res, next) => {
 app.use((error: any, _: any, res: any, next: any) => {
 	const { cause: errorCause, constructor: errorType } = error
 	switch (errorType) {
-		case ResponseError:
+		case sdk.ResponseError:
 			res.status(error.cause.status).json(error)
 			return
 		case DataciteError:
-			if (errorCause instanceof ResponseError) {
+			if (errorCause instanceof sdk.ResponseError) {
 				switch (errorCause.cause.status) {
 					// DataCite returns:
 					// - 404 if credentials are invalid
@@ -133,9 +133,11 @@ app.use((error: any, _: any, res: any, next: any) => {
 						return
 				}
 			}
-		case PubPubError:
+		case sdk.PubPubError:
 			// Use 502 for all PubPub errors
-			res.status(errorCause instanceof ResponseError ? 502 : 500).json(error)
+			res
+				.status(errorCause instanceof sdk.ResponseError ? 502 : 500)
+				.json(error)
 			return
 	}
 	next(error)

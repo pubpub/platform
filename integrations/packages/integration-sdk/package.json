@@ -1,0 +1,36 @@
+{
+	"name": "@pubpub/integration-sdk",
+	"type": "module",
+	"version": "0.0.1",
+	"description": "",
+	"main": "dist/index.js",
+	"files": [
+		"dist",
+		"style.css"
+	],
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs",
+			"types": "./dist/index.d.ts"
+		},
+		"./style.css": "./css/style.css"
+	},
+	"scripts": {
+		"build": "pnpm build:lib && pnpm build:css",
+		"build:lib": "tsup src/lib/index.ts --format esm,cjs --dts",
+		"build:css": "tsup src/css/style.css --outDir .",
+		"prepare": "pnpm build"
+	},
+	"keywords": [
+		"pubpub",
+		"integration",
+		"sdk"
+	],
+	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
+	"license": "GPL-2.0+",
+	"devDependencies": {
+		"tsup": "^7.1.0"
+	}
+}

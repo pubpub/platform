@@ -1,3 +1,4 @@
+import * as sdk from "@pubpub/integration-sdk"
 import { Eta } from "eta"
 import express from "express"
 import { ok as assert } from "node:assert"
@@ -9,7 +10,6 @@ import {
 	getAllInstanceIds,
 } from "./config"
 import { makeWordCountPatch } from "./counts"
-import { ResponseError, PubPubError, updatePub } from "./pubpub"
 
 const app = express()
 const eta = new Eta({ views: "views" })
@@ -84,7 +84,7 @@ app.get("/apply", async (req, res, next) => {
 			)
 		} else {
 			// Respond with a 400 if the integration instance is not configured.
-			throw new ResponseError(400, "Instance not configured")
+			throw new sdk.ResponseError(400, "Instance not configured")
 		}
 	} catch (error) {
 		next(error)
@@ -111,11 +111,11 @@ app.post("/apply", async (req, res, next) => {
 		// Update the Pub metadata.
 		if (instanceConfig) {
 			const patch = makeWordCountPatch(instanceConfig)
-			await updatePub(instanceId, pubId, patch)
+			await sdk.updatePub(instanceId, pubId, patch)
 			res.json(patch)
 		} else {
 			// Respond with a 400 if the integration instance is not configured.
-			throw new ResponseError(400, "Instance not configured")
+			throw new sdk.ResponseError(400, "Instance not configured")
 		}
 	} catch (error) {
 		next(error)
@@ -157,12 +157,14 @@ app.get("/debug", async (_, res, next) => {
 app.use((error: any, _: any, res: any, next: any) => {
 	const { cause: errorCause, constructor: errorType } = error
 	switch (errorType) {
-		case ResponseError:
+		case sdk.ResponseError:
 			res.status(error.cause.status).json(error)
 			return
-		case PubPubError:
+		case sdk.PubPubError:
 			// Use 502 for all PubPub errors
-			res.status(errorCause instanceof ResponseError ? 502 : 500).json(error)
+			res
+				.status(errorCause instanceof sdk.ResponseError ? 502 : 500)
+				.json(error)
 			return
 	}
 	next(error)

@@ -1,7 +1,7 @@
 import { InstanceConfig } from "./config"
-import { ResponseError, IntegrationError } from "./pubpub"
+import * as sdk from "@pubpub/integration-sdk"
 
-export class DataciteError extends IntegrationError {}
+export class DataciteError extends sdk.IntegrationError {}
 
 const encodeCredentials = (accountId: string, password: string) =>
 	Buffer.from(`${accountId}:${password}`).toString("base64")
@@ -24,9 +24,12 @@ const fetchDatacite = async (path: string, options: RequestInit) => {
 		res.status === 403 || // DataCite doesn't return a 403, but we should handle it anyway
 		res.status === 500 // DataCite returns a 500 if credentials are malformatted
 	) {
-		throw new ResponseError(res, "Invalid DataCite credentials or DOI prefix")
+		throw new sdk.ResponseError(
+			res,
+			"Invalid DataCite credentials or DOI prefix"
+		)
 	}
-	throw new ResponseError(
+	throw new sdk.ResponseError(
 		res,
 		`Could not connect to DataCite (${res.status} ${res.statusText})`
 	)
