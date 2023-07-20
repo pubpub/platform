@@ -1,5 +1,5 @@
 {
-	"name": "pubpub-word-counts-integration",
+	"name": "pubpub-integration-word-counts",
 	"type": "module",
 	"private": true,
 	"version": "0.0.1",
