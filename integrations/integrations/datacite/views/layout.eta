@@ -3,11 +3,12 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title><%= it.title %></title>
-	<link rel="preconnect" href="https://rsms.me" />
-	<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+	<link rel="preconnect" href="https://unpkg.com" />
+	<link rel="preconnect" href="https://fonts.cdnfonts.com" />
+	<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/inter">
 	<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/ibm-plex-mono" />
 	<link rel="stylesheet" href="https://unpkg.com/@pubpub/integration-sdk/style.css" />
-	<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.3/dist/cdn.min.js"></script>
+	<script defer src="https://unpkg.com/alpinejs@3.12.3/dist/cdn.min.js"></script>
 </head>
 <body>
 	<header>
