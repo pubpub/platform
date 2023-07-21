@@ -38,6 +38,20 @@ export const getApiDocs = async () => {
 			],
 			components: {
 				schemas: {
+					User: {
+						type: "object",
+						properties: {
+							id: {
+								type: "string",
+							},
+							name: {
+								type: "string",
+							},
+							email: {
+								type: "string",
+							},
+						},
+					},
 					PubFields: {
 						type: "object",
 					},
@@ -46,6 +60,47 @@ export const getApiDocs = async () => {
 					},
 					PubNotFound: {
 						type: "string",
+					},
+					ApiKey: {
+						type: "string",
+					},
+					AccessToken: {
+						type: "string",
+					},
+					InvalidApiKey: {
+						type: "string",
+					},
+				},
+				parameters: {
+					instanceId: {
+						name: "instanceId",
+						in: "path",
+						description: "used to query an instance for the integration",
+						required: true,
+						schema: {
+							type: "string",
+						},
+					},
+					pubId: {
+						name: "pubId",
+						in: "path",
+						description: "used to query a pub",
+						required: true,
+						schema: {
+							type: "string",
+						},
+					},
+				},
+				securitySchemes: {
+					ApiKeyAuth: {
+						type: "apiKey",
+						in: "header",
+						name: "x-pubpub-api-key",
+					},
+					AccessTokenAuth: {
+						type: "http",
+						scheme: "bearer",
+						bearerFormat: "JWT",
 					},
 				},
 			},
