@@ -45,7 +45,7 @@
       </label>
     </div>
   </fieldset>
-  <button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure Integration</button>
+  <button class="button" @click="submit" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure Integration</button>
   <!-- Alerts -->
   <div class="alert success" x-show="success" x-cloak x-transition>
     <strong>Success!</strong>
