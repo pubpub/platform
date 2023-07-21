@@ -5,7 +5,10 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"build": "pnpm run -r build"
+		"build": "pnpm run -r build",
+		"publish": "pnpm publish -r",
+		"ci:version": "pnpm changelog && pnpx changeset version && pnpm install --no-frozen-lockfile && git add .",
+		"ci:publish": "pnpm build && pnpm publish -r && pnpm changeset tag"
 	},
 	"keywords": [],
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",

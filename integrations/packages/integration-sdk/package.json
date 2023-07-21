@@ -21,8 +21,7 @@
 		"dev": "vite",
 		"build": "pnpm build:lib && pnpm build:css",
 		"build:lib": "tsup src/lib/index.ts --format esm,cjs --dts",
-		"build:css": "tsup src/css/style.css --outDir . --minify",
-		"prepare": "pnpm build"
+		"build:css": "tsup src/css/style.css --outDir . --minify"
 	},
 	"keywords": [
 		"pubpub",
