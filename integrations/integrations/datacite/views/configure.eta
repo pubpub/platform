@@ -7,7 +7,7 @@
   DOIs for Pubs using the DataCite API.
 </p>
 
-<form x-data="form">
+<form x-data="form" @submit.prevent>
   <!-- Fields -->
   <fieldset>
     <strong>Authentication</strong>
@@ -18,30 +18,30 @@
     <div class="input-group">
       <label for="account-id">
         <span>Account ID</span>
-        <input id="account-id" type="text" x-model="accountId" placeholder="ABCD.EFGHIJ" />
+        <input id="account-id" x-model="accountId" />
+      </label>
+      <label for="password">
+        <span>Password</span>
+        <input id="password" type="password" x-model="password" />
       </label>
     </div>
-    <label for="password">
-      <span>Password</span>
-      <input id="password" type="password" x-model="password" />
-    </label>
   </fieldset>
   <fieldset>
     <strong>Identifiers</strong>
     <legend>
       Pubs will automatically be assigned
-      <a href="https://support.datacite.org/docs/doi-states#draft-record">draft DOIs</a>
+      <a href="https://support.datacite.org/docs/doi-states#draft-record" target="_blank">draft DOIs</a>
       using your prefix. Check "Finalize DOIs" if you also want to confirm
       those DOIs and submit Pub information to DataCite.
     </legend>
     <div class="input-group">
       <label for="doi-prefix">
         <span>DOI Prefix</span>
-        <input id="doi-prefix" type="text" x-model="doiPrefix" placeholder="10.11111" />
+        <input id="doi-prefix" x-model="doiPrefix" />
       </label>
       <label for="should-deposit">
-        <input id="should-deposit" type="checkbox" x-model="shouldDeposit" />
         <span>Finalize DOIs</span>
+        <input id="should-deposit" type="checkbox" x-model="shouldDeposit" />
       </label>
     </div>
   </fieldset>
@@ -59,7 +59,7 @@
 
 <script>
   document.addEventListener("alpine:init", () => {
-    async function update() {
+    async function submit() {
       this.error = false
       this.success = false
       this.loading = true
@@ -91,7 +91,7 @@
       error: false,
       loading: false,
       success: false,
-      update,
+      submit,
     }))
   })
 </script>

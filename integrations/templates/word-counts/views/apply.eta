@@ -2,7 +2,7 @@
 
 <p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
 
-<form x-data="form">
+<form x-data="form" @submit.prevent>
   <!-- Fields -->
   <button @click="submit" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Update Word Counts</button>
   <!-- Alerts -->

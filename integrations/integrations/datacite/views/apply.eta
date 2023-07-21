@@ -2,9 +2,9 @@
 
 <p>Click the button below to assign a DOI to the Pub.</p>
 
-<form x-data="form">
+<form x-data="form" @submit.prevent>
   <!-- Fields -->
-  <button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
+  <button @click="submit" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
   <!-- Alerts -->
   <div class="alert success" x-show="success" x-cloak x-transition>
     <!-- Metadata -->
@@ -30,7 +30,7 @@
 </form>
 
 <script>
-  async function update() {
+  async function submit() {
     this.loading = true
     this.success = false
     this.error = null
@@ -55,7 +55,7 @@
       error: null,
       loading: false,
       success: false,
-      update,
+      submit,
     }))
   })
 </script>

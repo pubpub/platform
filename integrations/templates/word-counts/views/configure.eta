@@ -2,7 +2,7 @@
 
 <p>This integration counts the number of words and/or lines in your Pub content.</p>
 
-<form x-data="form">
+<form x-data="form" @submit.prevent>
   <!-- Fields -->
   <fieldset>
     <strong>Metrics</strong>

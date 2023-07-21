@@ -33,7 +33,7 @@ app.get("/configure", async (req, res, next) => {
 		instanceConfig.password = ""
 		res.send(
 			eta.render("configure", {
-				title: "configure",
+				title: "Configure DataCite Integration",
 				instanceConfig,
 				instanceId,
 			})
@@ -52,7 +52,7 @@ app.get("/apply", async (req, res, next) => {
 		if (instanceConfig) {
 			res.send(
 				eta.render("apply", {
-					title: "apply",
+					title: "Assign DOI",
 					instanceId,
 					instanceConfig,
 					pubId,

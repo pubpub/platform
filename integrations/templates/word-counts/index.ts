@@ -48,7 +48,7 @@ app.get("/configure", async (req, res, next) => {
 		// Render the configuration form
 		res.send(
 			eta.render("configure", {
-				title: "configure",
+				title: "Configure Word Counts",
 				instanceConfig,
 				instanceId,
 			})
@@ -81,7 +81,7 @@ app.get("/apply", async (req, res, next) => {
 		if (instanceConfig) {
 			res.send(
 				eta.render("apply", {
-					title: "apply",
+					title: "Update Word Counts",
 					instanceId,
 					instanceConfig,
 					pubId,
