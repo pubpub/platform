@@ -1,58 +1,61 @@
 <% layout("./layout") %>
 
-<div x-data="page">
-	<p>Click the button below to assign a DOI to the Pub.</p>
-	<!-- Fields -->
-	<button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
-	<!-- Alerts -->
-	<div class="alert success" x-show="success" x-cloak x-transition>
-		<!-- Metadata -->
-		<table class="metadata" x-show="doi" x-cloak x-transition>
-			<thead>
-				<tr>
-					<th x-show="doi" x-transition>pubpub/doi</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td x-show="doi" x-transition x-text="doi"></td>
-				</tr>
-			</tbody>
-		</table>
-		<strong>Success!</strong>
-		<p>Pub metadata updated</p>
-	</div>
-	<div id="error" class="alert failure" x-show="error" x-cloak x-transition>
-		<strong x-text="error?.message"></strong>
-		<p x-text="error?.cause"></p>
-	</div>
-</div>
+<p>Click the button below to assign a DOI to the Pub.</p>
+
+<form x-data="form">
+  <!-- Fields -->
+  <button @click="update" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Assign DOI</button>
+  <!-- Alerts -->
+  <div class="alert success" x-show="success" x-cloak x-transition>
+    <!-- Metadata -->
+    <table class="metadata" x-show="doi" x-cloak x-transition>
+      <thead>
+        <tr>
+          <th x-show="doi" x-transition>pubpub/doi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td x-show="doi" x-transition x-text="doi"></td>
+        </tr>
+      </tbody>
+    </table>
+    <strong>Success!</strong>
+    <p>Pub metadata updated</p>
+  </div>
+  <div class="alert failure" x-show="error" x-cloak x-transition id="error">
+    <strong x-text="error?.message"></strong>
+    <p x-text="error?.cause"></p>
+  </div>
+</form>
 
 <script>
   async function update() {
-	  this.loading = true
-		this.success = false
-		this.error = null
-		const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
-			method: "POST",
-		})
-		this.loading = false
-		const res = await req.json()
-		if (req.ok) {
-			this.doi = res.doi
-			this.success = true
-		} else {
-		  this.error = res ?? { message: "an unexpected error occurred" };
-		}
-	}
+    this.loading = true
+    this.success = false
+    this.error = null
+    const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
+      method: "POST",
+    })
+    this.loading = false
+    const res = await req.json()
+    if (req.ok) {
+      this.doi = res.doi
+      this.success = true
+    } else {
+      this.error = res ?? {
+        message: "an unexpected error occurred"
+      };
+    }
+  }
 
-	document.addEventListener("alpine:init", () => {
-		Alpine.data("page", () => ({
-			doi: "",
-			error: null,
-			loading: false,
-			success: false,
-			update,
-		}))
-	})
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("form", () => ({
+      doi: "",
+      error: null,
+      loading: false,
+      success: false,
+      update,
+    }))
+  })
 </script>

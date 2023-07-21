@@ -16,8 +16,8 @@ header {
 }
 
 header::before {
-	content: "";
 	@mixin icon "plug";
+	content: "";
 	margin-right: var(--space-sm);
 }
 

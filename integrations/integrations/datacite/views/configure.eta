@@ -1,74 +1,97 @@
 <% layout("./layout") %>
 
-<div x-data="page">
-	<p>Enter your DataCite account ID, password, and DOI prefix.</p>
-	<!-- Fields -->
-	<fieldset class="input-group">
-		<label class="input" for="account-id">
-			<span>Account ID</span>
-			<input id="account-id" type="text" x-model="accountId" placeholder="ABCD.EFGHIJ" />
-		</label>
-		<label class="input" for="password">
-		  <span>Password</span>
-			<input id="password" type="password" x-model="password" />
-		</label>
-		<label class="input" for="doi-prefix">
-		  <span>DOI Prefix</span>
-			<input id="doi-prefix" type="text" x-model="doiPrefix" placeholder="10.11111" />
-		</label>
-	</fieldset>
-	<p>This integration creates draft DOIs by default. Check the box below if you also want to deposit metadata to DataCite.</p>
-	<fieldset class="checkbox-group">
-		<label class="checkbox" for="should-deposit">
-			<input id="should-deposit" type="checkbox" x-model="shouldDeposit" />
-			<span>Deposit Metadata</span>
-		</label>
-	</fieldset>
-	<button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure Instance</button>
-	<!-- Alerts -->
-	<div class="alert success" x-show="success" x-cloak x-transition>
-		<strong>Success!</strong>
-		<p>Instance configured</p>
-	</div>
-	<div id="error" class="alert failure" x-show="error" x-cloak x-transition>
-		<strong x-text="error?.message"></strong>
-		<p x-text="error?.cause"></p>
-	</div>
-</div>
+<p>
+  <strong>DataCite</strong> is a leading global non-profit organization
+  that provides persistent identifiers (DOIs) for research data and other
+  research outputs. This PubPub integration provides the means to mint
+  DOIs for Pubs using the DataCite API.
+</p>
+
+<form x-data="form">
+  <!-- Fields -->
+  <fieldset>
+    <strong>Authentication</strong>
+    <legend>
+      Please provide your DataCite account ID and password; we'll use them
+      to communicate with DataCite on your behalf:
+    </legend>
+    <div class="input-group">
+      <label for="account-id">
+        <span>Account ID</span>
+        <input id="account-id" type="text" x-model="accountId" placeholder="ABCD.EFGHIJ" />
+      </label>
+    </div>
+    <label for="password">
+      <span>Password</span>
+      <input id="password" type="password" x-model="password" />
+    </label>
+  </fieldset>
+  <fieldset>
+    <strong>Identifiers</strong>
+    <legend>
+      Pubs will automatically be assigned
+      <a href="https://support.datacite.org/docs/doi-states#draft-record">draft DOIs</a>
+      using your prefix. Check "Finalize DOIs" if you also want to confirm
+      those DOIs and submit Pub information to DataCite.
+    </legend>
+    <div class="input-group">
+      <label for="doi-prefix">
+        <span>DOI Prefix</span>
+        <input id="doi-prefix" type="text" x-model="doiPrefix" placeholder="10.11111" />
+      </label>
+      <label for="should-deposit">
+        <input id="should-deposit" type="checkbox" x-model="shouldDeposit" />
+        <span>Finalize DOIs</span>
+      </label>
+    </div>
+  </fieldset>
+  <button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure Integration</button>
+  <!-- Alerts -->
+  <div class="alert success" x-show="success" x-cloak x-transition>
+    <strong>Success!</strong>
+    <p>Instance configured</p>
+  </div>
+  <div class="alert failure" x-show="error" x-cloak x-transition id="error">
+    <strong x-text="error?.message"></strong>
+    <p x-text="error?.cause"></p>
+  </div>
+</form>
 
 <script>
-	document.addEventListener("alpine:init", () => {
-		async function update() {
-			this.error = false
-			this.success = false
-			this.loading = true
-			const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					accountId: this.accountId,
-					password: this.password,
-					doiPrefix: this.doiPrefix,
-				}),
-			})
-			this.loading = false
-			if (req.ok) {
-				this.success = true
-				return req.json()
-			} else {
-				this.error = await req.json()
-			}
-		}
-		
-		Alpine.data("page", () => ({
-			accountId: "<%= it.instanceConfig.accountId %>",
-			password: "<%= it.instanceConfig.password %>",
-			doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
-			shouldDeposit: false,
-			error: false,
-			loading: false,
-			success: false,
-			update,
-		}))
-	})
+  document.addEventListener("alpine:init", () => {
+    async function update() {
+      this.error = false
+      this.success = false
+      this.loading = true
+      const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          accountId: this.accountId,
+          password: this.password,
+          doiPrefix: this.doiPrefix,
+        }),
+      })
+      this.loading = false
+      if (req.ok) {
+        this.success = true
+        return req.json()
+      } else {
+        this.error = await req.json()
+      }
+    }
+
+    Alpine.data("form", () => ({
+      accountId: "<%= it.instanceConfig.accountId %>",
+      password: "<%= it.instanceConfig.password %>",
+      doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
+      shouldDeposit: false,
+      error: false,
+      loading: false,
+      success: false,
+      update,
+    }))
+  })
 </script>
