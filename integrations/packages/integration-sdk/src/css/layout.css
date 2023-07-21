@@ -38,6 +38,4 @@ main {
 main > p {
 	padding: 0 var(--space-xs);
 	margin: var(--space-xs) 0 var(--space-lg) 0;
-	color: var(--color-gray-dark);
-	font-style: italic;
 }

@@ -155,5 +155,5 @@ app.use((error: any, _: any, res: any, next: any) => {
 })
 
 app.listen(process.env.PORT, () => {
-	console.log(`server is running on port ${process.env.PORT}`)
+	console.log(`DataCite integration is up (port=${process.env.PORT})`)
 })
