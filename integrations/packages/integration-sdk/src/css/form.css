@@ -4,22 +4,22 @@ input::placeholder {
 	color: var(--color-gray);
 }
 
-input:focus {
-	outline: 1px solid rgb(79, 101, 241);
-	border: 1px solid transparent !important;
+input,
+button {
+	border-radius: var(--border-radius-box);
 }
 
+input:focus,
 button:focus {
 	outline: 1px solid rgb(79, 101, 241);
 }
 
-input:focus::placeholder {
-	color: transparent;
+input:focus {
+	border: 1px solid transparent !important;
 }
 
-input,
-button {
-	border-radius: var(--border-radius-box);
+input:focus::placeholder {
+	color: transparent;
 }
 
 button {
@@ -37,22 +37,15 @@ button {
 	color: var(--color-white);
 }
 
-button[disabled] {
+button:disabled {
 	color: var(--color-gray-light);
-	border-color: currentColor;
+	border: none;
 	cursor: not-allowed;
-	background-image: linear-gradient(
-		59deg,
-		rgb(192, 192, 192),
-		rgb(158, 158, 158)
-	);
+	background-image: none;
+	background-color: var(--color-gray-lighter);
 }
 
-button[disabled]:hover {
-	background: transparent;
-}
-
-button:hover {
+button:not(:disabled):hover {
 	background-image: none;
 }
 
@@ -97,6 +90,7 @@ fieldset {
 .input-group {
 	display: flex;
 	gap: var(--space-md);
+	flex-wrap: wrap;
 }
 
 .input-group > label > span {
