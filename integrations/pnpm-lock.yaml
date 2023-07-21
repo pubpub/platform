@@ -15,7 +15,7 @@ importers:
   integrations/datacite:
     dependencies:
       '@pubpub/integration-sdk':
-        specifier: ^0.0.5
+        specifier: ^0.0.6
         version: link:../../packages/integration-sdk
       eta:
         specifier: ^3.0.3
@@ -76,7 +76,7 @@ importers:
   templates/word-counts:
     dependencies:
       '@pubpub/integration-sdk':
-        specifier: ^0.0.5
+        specifier: ^0.0.6
         version: link:../../packages/integration-sdk
       alfaaz:
         specifier: ^1.1.0

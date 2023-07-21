@@ -7,6 +7,7 @@
 	"scripts": {
 		"build": "pnpm run -r build",
 		"publish": "pnpm publish -r",
+		"ci:version": "pnpx changeset version && pnpm install && git add .",
 		"ci:publish": "pnpm publish -r && pnpm changeset tag"
 	},
 	"keywords": [],
