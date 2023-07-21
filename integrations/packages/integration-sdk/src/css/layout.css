@@ -12,19 +12,32 @@ header {
 	display: flex;
 	align-items: center;
 	height: var(--height-header);
+	margin: 0 var(--space-lg);
+}
+
+header::before {
+	content: "";
+	@mixin icon "plug";
+	margin-right: var(--space-sm);
+}
+
+header > .icon {
+	margin-right: var(--space-xs);
 }
 
 header > h1 {
-	margin: 0 1rem;
-	font-size: var(--font-size-lg);
-	font-weight: var(--font-weight-bold);
+	font-size: var(--font-size-sm);
 	text-transform: uppercase;
+	font-weight: 400;
 }
 
 main {
-	padding: var(--space-sm) 1rem;
+	padding: 0 var(--space-md);
 }
 
-main > div > p:first-child {
-	margin-top: 0;
+main > p {
+	padding: 0 var(--space-xs);
+	margin: var(--space-xs) 0 var(--space-lg) 0;
+	color: var(--color-gray-dark);
+	font-style: italic;
 }

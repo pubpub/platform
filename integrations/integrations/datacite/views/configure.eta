@@ -6,7 +6,7 @@
 	<fieldset class="input-group">
 		<label class="input" for="account-id">
 			<span>Account ID</span>
-			<input id="account-id" type="input" x-model="accountId" />
+			<input id="account-id" type="text" x-model="accountId" placeholder="ABCD.EFGHIJ" />
 		</label>
 		<label class="input" for="password">
 		  <span>Password</span>
@@ -14,7 +14,14 @@
 		</label>
 		<label class="input" for="doi-prefix">
 		  <span>DOI Prefix</span>
-			<input id="doi-prefix" type="input" x-model="doiPrefix" />
+			<input id="doi-prefix" type="text" x-model="doiPrefix" placeholder="10.11111" />
+		</label>
+	</fieldset>
+	<p>This integration creates draft DOIs by default. Check the box below if you also want to deposit metadata to DataCite.</p>
+	<fieldset class="checkbox-group">
+		<label class="checkbox" for="should-deposit">
+			<input id="should-deposit" type="checkbox" x-model="shouldDeposit" />
+			<span>Deposit Metadata</span>
 		</label>
 	</fieldset>
 	<button class="button" @click="update" :disabled="!(accountId && password && doiPrefix)" :class="{ loading }">Configure Instance</button>
@@ -57,6 +64,7 @@
 			accountId: "<%= it.instanceConfig.accountId %>",
 			password: "<%= it.instanceConfig.password %>",
 			doiPrefix: "<%= it.instanceConfig.doiPrefix %>",
+			shouldDeposit: false,
 			error: false,
 			loading: false,
 			success: false,

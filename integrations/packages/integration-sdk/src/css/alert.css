@@ -1,5 +1,5 @@
 .alert {
-	border: 1px solid currentColor;
+	border: 1px solid color-mix(in srgb, currentColor 50%, transparent);
 	padding: var(--space-sm) var(--space-md);
 	margin: var(--space-sm) 0;
 	background: color-mix(in srgb, currentColor 10%, transparent);

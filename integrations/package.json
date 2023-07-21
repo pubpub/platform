@@ -1,13 +1,13 @@
 {
-  "name": "v7-integrations",
-  "private": true,
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "pnpm run -r build"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT"
+	"name": "v7-integrations",
+	"private": true,
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"build": "pnpm run -r build"
+	},
+	"keywords": [],
+	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
+	"license": "GPL-2.0+"
 }
