@@ -39,6 +39,9 @@ importers:
 
   packages/integration-sdk:
     devDependencies:
+      '@types/node':
+        specifier: ^20.4.2
+        version: 20.4.2
       autoprefixer:
         specifier: ^10.4.14
         version: 10.4.14(postcss@8.4.26)
@@ -68,7 +71,7 @@ importers:
         version: 7.1.0(postcss@8.4.26)
       vite:
         specifier: ^4.4.5
-        version: 4.4.5
+        version: 4.4.5(@types/node@20.4.2)
 
   templates/word-counts:
     dependencies:
@@ -3475,7 +3478,7 @@ packages:
     engines: {node: '>= 0.8'}
     dev: false
 
-  /vite@4.4.5:
+  /vite@4.4.5(@types/node@20.4.2):
     resolution: {integrity: sha512-4m5kEtAWHYr0O1Fu7rZp64CfO1PsRGZlD3TAB32UmQlpd7qg15VF7ROqGN5CyqN7HFuwr7ICNM2+fDWRqFEKaA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -3503,6 +3506,7 @@ packages:
       terser:
         optional: true
     dependencies:
+      '@types/node': 20.4.2
       esbuild: 0.18.14
       postcss: 8.4.26
       rollup: 3.26.3
