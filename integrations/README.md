@@ -6,11 +6,11 @@ The home for all first-party PubPub integrations, along with templates and packa
 
 Below is the list of official integrations currently available on PubPub.
 
-| Name                                                 | Description                                          |
-|------------------------------------------------------|------------------------------------------------------|
-| [pubpub-integration-datacite](integrations/datacite) | Create DOIs for Pubs using the DataCite API          |
-| [pubpub-integration-editor](./)                      | (WIP) Draft and edit Pub content in Rich Text format |
-| [pubpub-integration-review](./)                      | (WIP) Solicit structured feedback on Pubs            |
+| Name                              | Description                                          |
+| --------------------------------- | ---------------------------------------------------- |
+| [datacite](integrations/datacite) | Create DOIs for Pubs using the DataCite API          |
+| [editor](./)                      | (WIP) Draft and edit Pub content in Rich Text format |
+| [review](./)                      | (WIP) Solicit structured feedback on Pubs            |
 
 ## Packages
 
@@ -21,13 +21,15 @@ JavaScript (Node and browser) utilities that make building PubPub integrations e
 ## Templates
 
 Each template in this repo uses:
+
 - [@pubpub/integration-sdk](packages/integration-sdk) for styles and PubPub utilities
 - [Express](https://expressjs.com) for static files, pages, and API endpoints
 
-### [word-counts](templates/word-counts)
+### [alpine](templates/alpine)
 
-A fast and lean integration template with minimal development overhead. Build your integration with with declarative, reactive HTML.
+A lean integration template. Build your integration with with declarative, reactive HTML. No framework or build step required.
 
 Dependencies:
+
 - [Eta](https://eta.js.org) for HTML templating
 - [Alpine](https://alpinejs.dev) for UI interactivity

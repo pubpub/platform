@@ -16,7 +16,7 @@ importers:
     dependencies:
       '@pubpub/integration-sdk':
         specifier: ^0.0.6
-        version: link:../../packages/integration-sdk
+        version: link:../../packages/sdk
       eta:
         specifier: ^3.0.3
         version: 3.0.3
@@ -37,7 +37,7 @@ importers:
         specifier: ^5.1.6
         version: 5.1.6
 
-  packages/integration-sdk:
+  packages/sdk:
     devDependencies:
       '@types/node':
         specifier: ^20.4.2
@@ -73,11 +73,11 @@ importers:
         specifier: ^4.4.5
         version: 4.4.5(@types/node@20.4.2)
 
-  templates/word-counts:
+  templates/alpine:
     dependencies:
       '@pubpub/integration-sdk':
         specifier: ^0.0.6
-        version: link:../../packages/integration-sdk
+        version: link:../../packages/sdk
       alfaaz:
         specifier: ^1.1.0
         version: 1.1.0

@@ -1,4 +1,4 @@
-# pubpub-integration-word-counts
+# pubpub-integration-template-alpine
 
 ## 0.0.2
 

@@ -5,24 +5,6 @@ services:
     region: ohio
     ipAllowList: [] # only allow internal connections
     maxmemoryPolicy: noeviction
-  # pubpub-integration-word-counts
-  - type: web
-    name: pubpub-integration-word-counts
-    region: ohio
-    runtime: node
-    rootDir: templates/word-counts
-    buildCommand: npm i
-    startCommand: npm run start
-    buildFilter:
-      paths:
-        - templates/word-counts/**
-    envVars:
-      - fromGroup: pubpub-integration-env
-      - key: REDIS_CONNECTION_STRING
-        fromService:
-          type: redis
-          name: pubpub-integration-settings
-          property: connectionString
   # pubpub-integration-datacite
   - type: web
     name: pubpub-integration-datacite
