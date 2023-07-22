@@ -14,7 +14,7 @@ Below is the list of official integrations currently available on PubPub.
 
 ## Packages
 
-### [@pubpub/integration-sdk](packages/integration-sdk)
+### [@pubpub/integration-sdk](packages/sdk)
 
 JavaScript (Node and browser) utilities that make building PubPub integrations easier.
 
