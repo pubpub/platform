@@ -22,7 +22,7 @@ JavaScript (Node and browser) utilities that make building PubPub integrations e
 
 Each template in this repo uses:
 
-- [@pubpub/integration-sdk](packages/integration-sdk) for styles and PubPub utilities
+- [@pubpub/integration-sdk](packages/sdk) for styles and PubPub utilities
 - [Express](https://expressjs.com) for static files, pages, and API endpoints
 
 ### [alpine](templates/alpine)
