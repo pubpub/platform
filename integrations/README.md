@@ -24,9 +24,9 @@ Each template in this repo uses:
 - [@pubpub/integration-sdk](packages/integration-sdk) for styles and PubPub utilities
 - [Express](https://expressjs.com) for static files, pages, and API endpoints
 
-### [word-counts](packages/word-counts)
+### [word-counts](templates/word-counts)
 
-A fast and lean integration template. Write HTML templates with a Vue-like syntax and minimal development overhead.
+A fast and lean integration template with minimal development overhead. Build your integration with with declarative, reactive HTML.
 
 Dependencies:
 - [Eta](https://eta.js.org) for HTML templating
