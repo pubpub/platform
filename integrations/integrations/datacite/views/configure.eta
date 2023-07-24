@@ -1,11 +1,6 @@
 <% layout("./layout") %>
 
-<p>
-  <strong>DataCite</strong> is a leading global non-profit organization
-  that provides persistent identifiers (DOIs) for research data and other
-  research outputs. This PubPub integration provides the means to mint
-  DOIs for Pubs using the DataCite API.
-</p>
+<p>DataCite is a leading global non-profit organization that provides persistent identifiers (DOIs) for research data and other research outputs. This PubPub integration provides the means to mint DOIs for Pubs using the DataCite API.</p>
 
 <form x-data="form" @submit.prevent>
   <!-- Fields -->
