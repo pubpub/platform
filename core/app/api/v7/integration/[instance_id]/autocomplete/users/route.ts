@@ -4,12 +4,12 @@ import { NextResponse, NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
 	// return candidates for autocompleting a form with suggestions from the pubpub user database
 	// should search by name and email, but probably only return name and id
-	console.log(request);
+
 	try {
-		const namesStartingWithSt = await prisma.user.findMany({
+		const namesStartingWith = await prisma.user.findMany({
 			where: {
 				name: {
-					startsWith: `${"request.body"}`,
+					startsWith: `${request.nextUrl.searchParams.get("name")}`,
 				},
 			},
 			take: 10,
@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
 				name: true,
 			},
 		});
-
-		return NextResponse.json({ suggestion: namesStartingWithSt });
+		console.log("Response", namesStartingWith);
+		return NextResponse.json({ suggestion: "namesStartingWith" });
 	} catch (error) {
 		console.error(error);
 		throw error;
