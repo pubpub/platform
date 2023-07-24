@@ -1,3 +1,4 @@
 export async function GET(request: Request) {
-    // Return all members in this instance's stage? TODO: clarify the use cases for this endpoint
+    // Search by email or name and return name and ID?
+    // return name and ID
 }
