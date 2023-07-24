@@ -13,7 +13,7 @@ import { DataciteError, createDoi, deleteDoi } from "./datacite"
 import manifest from "./pubpub-manifest.json"
 
 const app = express()
-const eta = new Eta({ views: "views" })
+const eta = new Eta({ views: "views", cache: true })
 const client = sdk.makeClient(manifest)
 
 app.use(express.json())
