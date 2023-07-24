@@ -21,7 +21,7 @@
  *               email:
  *                 type: string
  *             example:
- *               name: Mugiwara
+ *               name: Mugi
  *
  *     responses:
  *       200:
