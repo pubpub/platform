@@ -16,13 +16,20 @@
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/User' 
- *       400:
+ *                 $ref: '#/components/schemas/User'
+ *       401:
  *         description: Invalid Instance ID
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/InvalidInstanceId'
+ *               example: Invalid Instance ID
+ *       403:
+ *         description: You dont have access to do this
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InvalidAccessToken'
  *               example: Invalid Instance ID
  */
 export async function GET(request: Request) {

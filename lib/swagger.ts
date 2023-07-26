@@ -24,7 +24,7 @@ export const getApiDocs = async () => {
 			},
 			servers: [
 				{
-					url: "https://pubpub/v7/dev:3000",
+					url: "https://localhost/v7/dev:3000",
 					description: "The development API server",
 				},
 				{
@@ -52,11 +52,14 @@ export const getApiDocs = async () => {
 							},
 						},
 					},
+					Users: {
+						type: "array",
+						items: {
+							$ref: "#/components/schemas/User",
+						},
+					},
 					PubFields: {
 						type: "object",
-					},
-					InvalidInstanceId: {
-						type: "string",
 					},
 					PubNotFound: {
 						type: "string",
@@ -67,7 +70,16 @@ export const getApiDocs = async () => {
 					AccessToken: {
 						type: "string",
 					},
+					InvalidInstanceId: {
+						type: "string",
+					},
+					InstanceNotFound: {
+						type: "string",
+					},
 					InvalidApiKey: {
+						type: "string",
+					},
+					InvalidAccessToken: {
 						type: "string",
 					},
 				},
@@ -88,6 +100,27 @@ export const getApiDocs = async () => {
 						required: true,
 						schema: {
 							type: "string",
+						},
+					},
+					input: {
+						name: "input",
+						in: "query",
+						description:
+							"takes a partial name or full email to query for a user. if email doesnt exist a minimal user will be created",
+						required: true,
+						schema: {
+							type: "string",
+						},
+						example: "Mugi",
+						examples: {
+							"suggest-user-by-name": {
+								value: "Mugi",
+								summary: "A partial name",
+							},
+							"suggest-user-by-email": {
+								value: "goingmerry@gone.pir",
+								summary: "A full email",
+							},
 						},
 					},
 				},
