@@ -32,7 +32,7 @@
 		]
 	},
 	"prisma": {
-		"seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seedMITP.ts"
+		"seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seedBiorxiv.ts"
 	},
 	"dependencies": {
 		"@chakra-ui/icons": "^2.0.19",

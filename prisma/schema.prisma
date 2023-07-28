@@ -118,8 +118,9 @@ model Workflow {
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  stages Stage[]
-  pins   Pin[]
+  stages      Stage[]
+  pins        Pin[]
+  permissions Permission[]
 
   @@map(name: "workflows")
 }
@@ -223,12 +224,12 @@ model MemberGroup {
 model Permission {
   // This is essentially a 'role' - we just don't allow you to name it and repeatedly
   // use it across different members and groups. Wouldn't be too hard to adapt to that
-	// in the future though.
+  // in the future though.
   id            String       @id @default(uuid())
   // Specific permission options here
-	// fields - if empty array, all fields
-	// integrations - if empty array, all integrations
-	// workflow actions? - can they move and claim?
+  // fields - if empty array, all fields
+  // integrations - if empty array, all integrations
+  // workflow actions? - can they move and claim?
   member        Member?      @relation(fields: [memberId], references: [id])
   memberId      String?      @map(name: "member_id")
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id])
@@ -240,8 +241,9 @@ model Permission {
   // access to some parent pub whose children are the contents of a workflow. If that winds up being
   // a bad assumption, wouldn't be too hard to add a `workflows Workflow[]` value below. 
 
-  pubs   Pub[]
-  stages Stage[]
+  pubs      Pub[]
+  stages    Stage[]
+  workflows Workflow[]
 
   @@map(name: "permissions")
 }
