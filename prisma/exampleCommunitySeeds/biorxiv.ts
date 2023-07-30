@@ -1,23 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
-const prisma = new PrismaClient();
-async function main() {
-	const mainUserId = "a9a09993-8eb1-4122-abbf-b999d5c8afe3";
-	const data = await prisma.user.create({
-		data: {
-			id: mainUserId,
-			slug: "testing",
-			email: "test@testing.com",
-			name: "Atta Test",
-		},
-	});
-	const communityUUID = uuidv4();
+export default async function main(prisma: PrismaClient, communityUUID: string) {
 	const community = await prisma.community.create({
 		data: {
 			id: communityUUID,
-			name: "MIT Press",
-			avatar: "/logos/mitp.jpg",
+			name: "BioRxiv",
+			avatar: "/logos/biorxiv.ico",
 		},
 	});
 	const fieldIds = [...Array(7)].map((x) => uuidv4());
@@ -39,7 +28,7 @@ async function main() {
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[0],
-			name: "Book",
+			name: "Subject Area",
 			communityId: communityUUID,
 			fields: {
 				connect: [
@@ -55,7 +44,7 @@ async function main() {
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[1],
-			name: "Chapter",
+			name: "Preprint",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[4] }],
@@ -105,7 +94,7 @@ async function main() {
 			communityId: communityUUID,
 			values: {
 				createMany: {
-					data: [{ fieldId: fieldIds[0], value: "Frankenstein" }],
+					data: [{ fieldId: fieldIds[0], value: "Biochemistry" }],
 				},
 			},
 		},
@@ -117,7 +106,10 @@ async function main() {
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Chapter 1" },
+						{
+							fieldId: fieldIds[0],
+							value: "Structure-function relationships underpin disulfide loop cleavage-dependent activation of Legionella pneumophila lysophosholipase A PlaA",
+						},
 						{ fieldId: fieldIds[4], value: "chapter1.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -132,7 +124,10 @@ async function main() {
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Chapter 2" },
+						{
+							fieldId: fieldIds[0],
+							value: "Noncanonical usage of stop codons in ciliates expands proteins with structurally flexible Q-rich motifs",
+						},
 						{ fieldId: fieldIds[4], value: "chapter2.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -147,7 +142,10 @@ async function main() {
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Chapter 3" },
+						{
+							fieldId: fieldIds[0],
+							value: "Increased levels of eIF2A inhibit translation by sequestering 40S ribosomal subunits",
+						},
 						{ fieldId: fieldIds[4], value: "chapter3.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -159,12 +157,12 @@ async function main() {
 	/* Top Pub 2 */
 	const topPub2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: typeIds[0],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Harvard Data Science Review" },
+						{ fieldId: fieldIds[0], value: "Neuroscience" },
 						{ fieldId: fieldIds[1], value: "123-156612-3521" },
 					],
 				},
@@ -173,12 +171,12 @@ async function main() {
 	});
 	const issue1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Issue 1" },
+						{ fieldId: fieldIds[0], value: "Bimodal inference in humans and mice" },
 						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
@@ -187,12 +185,15 @@ async function main() {
 	});
 	const issue2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Issue 2" },
+						{
+							fieldId: fieldIds[0],
+							value: "Determinants of Astrocytic Pathology in Stem Cell Models of Primary Tauopathies",
+						},
 						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
@@ -201,15 +202,18 @@ async function main() {
 	});
 	const article1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[4],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Article 1" },
+						{
+							fieldId: fieldIds[0],
+							value: "Human Adult Neurogenesis Loss Underlies Cognitive Decline During Epilepsy Progression",
+						},
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article1.html" },
-						{ fieldId: fieldIds[6], value: issue1.id },
+						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
 			},
@@ -217,15 +221,18 @@ async function main() {
 	});
 	const article2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[4],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Article 2" },
+						{
+							fieldId: fieldIds[0],
+							value: "Modulation of dorsal premotor cortex disrupts neuroplasticity of primary motor cortex in young and older adults",
+						},
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article.html" },
-						{ fieldId: fieldIds[6], value: issue1.id },
+						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
 			},
@@ -233,15 +240,18 @@ async function main() {
 	});
 	const article3 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[4],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Article 3" },
+						{
+							fieldId: fieldIds[0],
+							value: "Microprism-based two-photon imaging of the lateral cortex of the mouse inferior colliculus reveals novel organizational principles of the auditory midbrain",
+						},
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article3.html" },
-						{ fieldId: fieldIds[6], value: issue2.id },
+						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
 			},
@@ -249,15 +259,18 @@ async function main() {
 	});
 	const article4 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[4],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Article 4" },
+						{
+							fieldId: fieldIds[0],
+							value: "Sodium channel endocytosis drives axon initial segment plasticity",
+						},
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article4.html" },
-						{ fieldId: fieldIds[6], value: issue2.id },
+						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
 			},
@@ -265,15 +278,18 @@ async function main() {
 	});
 	const article5 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[4],
+			pubTypeId: typeIds[1],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Article 5" },
+						{
+							fieldId: fieldIds[0],
+							value: "Synaptic and dendritic architecture of two types of hippocampal somatostatin interneurons",
+						},
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article5.html" },
-						{ fieldId: fieldIds[6], value: issue2.id },
+						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
 			},
@@ -281,23 +297,31 @@ async function main() {
 	});
 
 	const stageIds = [...Array(12)].map((x) => uuidv4());
-	const workflow1 = await prisma.workflow.create({
-		data: {
-			name: "HDSR Review Process",
-			communityId: communityUUID,
-			stages: {
-				createMany: {
-					data: [
-						{ id: stageIds[0], name: "Submitted", order: "aa" },
-						{ id: stageIds[1], name: "Ready for Review", order: "bb" },
-						{ id: stageIds[2], name: "Ready for Copyedit", order: "cc" },
-						{ id: stageIds[3], name: "Ready for Registration", order: "dd" },
-						{ id: stageIds[4], name: "Completed", order: "ee" },
-					],
-				},
+	await prisma.stage.createMany({
+		data: [
+			{
+				id: stageIds[0],
+				communityId: communityUUID,
+				name: "Submissions/Revisions in Progress",
+				order: "aa",
 			},
-		},
+			{ id: stageIds[1], communityId: communityUUID, name: "Under Conversion", order: "bb" },
+			{
+				id: stageIds[2],
+				communityId: communityUUID,
+				name: "Ready to Proof",
+				order: "cc",
+			},
+			{
+				id: stageIds[3],
+				communityId: communityUUID,
+				name: "Ready for Registration",
+				order: "dd",
+			},
+			{ id: stageIds[4], communityId: communityUUID, name: "Completed Papers", order: "ee" },
+		],
 	});
+
 	await prisma.pub.update({
 		where: { id: article1.id },
 		data: { stages: { connect: { id: stageIds[1] } } },
@@ -319,22 +343,35 @@ async function main() {
 		data: { stages: { connect: { id: stageIds[4] } } },
 	});
 
-	const workflow2 = await prisma.workflow.create({
-		data: {
-			name: "Frankenstein Community Annotation",
-			communityId: communityUUID,
-			stages: {
-				createMany: {
-					data: [
-						{ id: stageIds[5], name: "Chapter Initialize", order: "aa" },
-						{ id: stageIds[6], name: "Layout and Editing", order: "bb" },
-						{ id: stageIds[7], name: "Invited Annotations", order: "bb" },
-						{ id: stageIds[8], name: "Community Annotation", order: "dd" },
-					],
-				},
+	await prisma.stage.createMany({
+		data: [
+			{
+				id: stageIds[5],
+				communityId: communityUUID,
+				name: "Paper Initialize",
+				order: "aa",
 			},
-		},
+			{
+				id: stageIds[6],
+				communityId: communityUUID,
+				name: "Layout and Editing",
+				order: "bb",
+			},
+			{
+				id: stageIds[7],
+				communityId: communityUUID,
+				name: "Invited Annotations",
+				order: "bb",
+			},
+			{
+				id: stageIds[8],
+				communityId: communityUUID,
+				name: "Community Annotation",
+				order: "dd",
+			},
+		],
 	});
+
 	await prisma.pub.update({
 		where: { id: chapter1.id },
 		data: { stages: { connect: { id: stageIds[6] } } },
@@ -397,7 +434,7 @@ async function main() {
 
 	const reviewInstances = await prisma.integrationInstance.create({
 		data: {
-			name: "MIT Press review process",
+			name: "BioRxiv Staff review process",
 			integrationId: reviewIntegration.id,
 			communityId: communityUUID,
 			stages: {
@@ -418,7 +455,7 @@ async function main() {
 	});
 	const archiveInstance1 = await prisma.integrationInstance.create({
 		data: {
-			name: "HDSR Archive",
+			name: "Neuroscience Archive",
 			integrationId: archiveIntegration.id,
 			communityId: communityUUID,
 			pubs: {
@@ -428,7 +465,7 @@ async function main() {
 	});
 	const siteInstance1 = await prisma.integrationInstance.create({
 		data: {
-			name: "hdsr.mitpress.mit.edu",
+			name: "biorxiv.org",
 			integrationId: siteIntegration.id,
 			communityId: communityUUID,
 			pubs: {
@@ -436,16 +473,16 @@ async function main() {
 			},
 		},
 	});
-	const siteInstance2 = await prisma.integrationInstance.create({
-		data: {
-			name: "frankenbook.org",
-			integrationId: siteIntegration.id,
-			communityId: communityUUID,
-			pubs: {
-				connect: [{ id: topPub1.id }],
-			},
-		},
-	});
+	// const siteInstance2 = await prisma.integrationInstance.create({
+	// 	data: {
+	// 		name: "frankenbook.org",
+	// 		integrationId: siteIntegration.id,
+	// 		communityId: communityUUID,
+	// 		pubs: {
+	// 			connect: [{ id: topPub1.id }],
+	// 		},
+	// 	},
+	// });
 
 	const integrationFieldIds = [...Array(4)].map((x) => uuidv4());
 	await prisma.pubField.createMany({
@@ -518,21 +555,4 @@ async function main() {
 			},
 		],
 	});
-
-	const pins = await prisma.pin.createMany({
-		data: [
-			{ userId: mainUserId, pubId: topPub2.id },
-			{ userId: mainUserId, pubId: topPub1.id },
-			{ userId: mainUserId, workflowId: workflow1.id },
-		],
-	});
 }
-main()
-	.then(async () => {
-		await prisma.$disconnect();
-	})
-	.catch(async (e) => {
-		console.error(e);
-		await prisma.$disconnect();
-		process.exit(1);
-	});

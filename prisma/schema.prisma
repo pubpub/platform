@@ -20,10 +20,10 @@ model User {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  claims      ActionClaim[]
-  moves       ActionMove[]
-  pins        Pin[]
-  memberships Member[]
+  claims       ActionClaim[]
+  moves        ActionMove[]
+  memberships  Member[]
+  memberGroups MemberGroup[]
 
   @@map(name: "users")
 }
@@ -37,10 +37,10 @@ model Community {
 
   pubTypes             PubType[]
   pubs                 Pub[]
-  workflows            Workflow[]
   integrationInstances IntegrationInstance[]
   members              Member[]
   memberGroups         MemberGroup[]
+  stages               Stage[]
 
   @@map(name: "communities")
 }
@@ -60,7 +60,6 @@ model Pub {
   claims               ActionClaim[]
   moves                ActionMove[]
   integrationInstances IntegrationInstance[]
-  pins                 Pin[]
   permissions          Permission[]
 
   @@map(name: "pubs")
@@ -110,29 +109,14 @@ model PubType {
   @@map(name: "pub_types")
 }
 
-model Workflow {
+model Stage {
   id          String    @id @default(uuid())
   name        String
+  order       String
   community   Community @relation(fields: [communityId], references: [id])
   communityId String    @map(name: "community_id")
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
-
-  stages      Stage[]
-  pins        Pin[]
-  permissions Permission[]
-
-  @@map(name: "workflows")
-}
-
-model Stage {
-  id         String   @id @default(uuid())
-  name       String
-  order      String
-  workflow   Workflow @relation(fields: [workflowId], references: [id])
-  workflowId String   @map(name: "workflow_id")
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
   pubs                  Pub[] // Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
@@ -217,6 +201,7 @@ model MemberGroup {
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
   permissions Permission[]
+  users       User[]
 
   @@map(name: "member_groups")
 }
@@ -241,9 +226,8 @@ model Permission {
   // access to some parent pub whose children are the contents of a workflow. If that winds up being
   // a bad assumption, wouldn't be too hard to add a `workflows Workflow[]` value below. 
 
-  pubs      Pub[]
-  stages    Stage[]
-  workflows Workflow[]
+  pubs   Pub[]
+  stages Stage[]
 
   @@map(name: "permissions")
 }
@@ -274,23 +258,6 @@ model IntegrationInstance {
 
   pubs   Pub[]
   stages Stage[]
-  pins   Pin[]
 
   @@map(name: "integration_instances")
-}
-
-model Pin {
-  id         String               @id @default(uuid())
-  user       User                 @relation(fields: [userId], references: [id])
-  userId     String               @map(name: "user_id")
-  pub        Pub?                 @relation(fields: [pubId], references: [id])
-  pubId      String?              @map(name: "pub_id")
-  workflow   Workflow?            @relation(fields: [workflowId], references: [id])
-  workflowId String?              @map(name: "workflow_id")
-  instance   IntegrationInstance? @relation(fields: [instanceId], references: [id])
-  instanceId String?              @map(name: "instance_id")
-  createdAt  DateTime             @default(now()) @map(name: "created_at")
-  updatedAt  DateTime             @default(now()) @updatedAt @map(name: "updated_at")
-
-  @@map(name: "pins")
 }
