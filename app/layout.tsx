@@ -1,5 +1,4 @@
 import "./globals.css";
-import { Providers } from "./providers";
 
 export const metadata = {
 	title: "PubPub v7 Mockup Demo",
@@ -19,10 +18,8 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body>
-				<Providers>
-					{children}
-					{loggedIn ? community : home}
-				</Providers>
+				{children}
+				{loggedIn ? community : home}
 			</body>
 		</html>
 	);
