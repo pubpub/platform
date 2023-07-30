@@ -30,8 +30,7 @@ export default async function Page() {
 	return (
 		<>
 			<PubHeader />
-
-			<PubList pubs={pubs} top={true} />
+			<PubList pubs={pubs} />
 		</>
 	);
 }

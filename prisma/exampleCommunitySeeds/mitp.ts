@@ -1,18 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
-const prisma = new PrismaClient();
-async function main() {
-	const mainUserId = "a9a09993-8eb1-4122-abbf-b999d5c8afe3";
-	const data = await prisma.user.create({
-		data: {
-			id: mainUserId,
-			slug: "testing",
-			email: "test@testing.com",
-			name: "Atta Test",
-		},
-	});
-	const communityUUID = uuidv4();
+export default async function main(prisma: PrismaClient, communityUUID: string) {
 	const community = await prisma.community.create({
 		data: {
 			id: communityUUID,
@@ -281,22 +270,24 @@ async function main() {
 	});
 
 	const stageIds = [...Array(12)].map((x) => uuidv4());
-	const workflow1 = await prisma.workflow.create({
-		data: {
-			name: "HDSR Review Process",
-			communityId: communityUUID,
-			stages: {
-				createMany: {
-					data: [
-						{ id: stageIds[0], name: "Submitted", order: "aa" },
-						{ id: stageIds[1], name: "Ready for Review", order: "bb" },
-						{ id: stageIds[2], name: "Ready for Copyedit", order: "cc" },
-						{ id: stageIds[3], name: "Ready for Registration", order: "dd" },
-						{ id: stageIds[4], name: "Completed", order: "ee" },
-					],
-				},
+	await prisma.stage.createMany({
+		data: [
+			{ id: stageIds[0], communityId: communityUUID, name: "Submitted", order: "aa" },
+			{ id: stageIds[1], communityId: communityUUID, name: "Ready for Review", order: "bb" },
+			{
+				id: stageIds[2],
+				communityId: communityUUID,
+				name: "Ready for Copyedit",
+				order: "cc",
 			},
-		},
+			{
+				id: stageIds[3],
+				communityId: communityUUID,
+				name: "Ready for Registration",
+				order: "dd",
+			},
+			{ id: stageIds[4], communityId: communityUUID, name: "Completed", order: "ee" },
+		],
 	});
 	await prisma.pub.update({
 		where: { id: article1.id },
@@ -319,21 +310,33 @@ async function main() {
 		data: { stages: { connect: { id: stageIds[4] } } },
 	});
 
-	const workflow2 = await prisma.workflow.create({
-		data: {
-			name: "Frankenstein Community Annotation",
-			communityId: communityUUID,
-			stages: {
-				createMany: {
-					data: [
-						{ id: stageIds[5], name: "Chapter Initialize", order: "aa" },
-						{ id: stageIds[6], name: "Layout and Editing", order: "bb" },
-						{ id: stageIds[7], name: "Invited Annotations", order: "bb" },
-						{ id: stageIds[8], name: "Community Annotation", order: "dd" },
-					],
-				},
+	await prisma.stage.createMany({
+		data: [
+			{
+				id: stageIds[5],
+				communityId: communityUUID,
+				name: "Chapter Initialize",
+				order: "aa",
 			},
-		},
+			{
+				id: stageIds[6],
+				communityId: communityUUID,
+				name: "Layout and Editing",
+				order: "bb",
+			},
+			{
+				id: stageIds[7],
+				communityId: communityUUID,
+				name: "Invited Annotations",
+				order: "bb",
+			},
+			{
+				id: stageIds[8],
+				communityId: communityUUID,
+				name: "Community Annotation",
+				order: "dd",
+			},
+		],
 	});
 	await prisma.pub.update({
 		where: { id: chapter1.id },
@@ -518,21 +521,4 @@ async function main() {
 			},
 		],
 	});
-
-	const pins = await prisma.pin.createMany({
-		data: [
-			{ userId: mainUserId, pubId: topPub2.id },
-			{ userId: mainUserId, pubId: topPub1.id },
-			{ userId: mainUserId, workflowId: workflow1.id },
-		],
-	});
 }
-main()
-	.then(async () => {
-		await prisma.$disconnect();
-	})
-	.catch(async (e) => {
-		console.error(e);
-		await prisma.$disconnect();
-		process.exit(1);
-	});

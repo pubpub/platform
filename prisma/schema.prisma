@@ -20,9 +20,10 @@ model User {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  claims ActionClaim[]
-  moves  ActionMove[]
-  pins   Pin[]
+  claims       ActionClaim[]
+  moves        ActionMove[]
+  memberships  Member[]
+  memberGroups MemberGroup[]
 
   @@map(name: "users")
 }
@@ -36,8 +37,10 @@ model Community {
 
   pubTypes             PubType[]
   pubs                 Pub[]
-  workflows            Workflow[]
   integrationInstances IntegrationInstance[]
+  members              Member[]
+  memberGroups         MemberGroup[]
+  stages               Stage[]
 
   @@map(name: "communities")
 }
@@ -57,7 +60,7 @@ model Pub {
   claims               ActionClaim[]
   moves                ActionMove[]
   integrationInstances IntegrationInstance[]
-  pins                 Pin[]
+  permissions          Permission[]
 
   @@map(name: "pubs")
 }
@@ -106,41 +109,26 @@ model PubType {
   @@map(name: "pub_types")
 }
 
-model Workflow {
+model Stage {
   id          String    @id @default(uuid())
   name        String
+  order       String
   community   Community @relation(fields: [communityId], references: [id])
   communityId String    @map(name: "community_id")
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  stages Stage[]
-  pins   Pin[]
-
-  @@map(name: "workflows")
-}
-
-model Stage {
-  id         String   @id @default(uuid())
-  name       String
-  order      String
-  workflow   Workflow @relation(fields: [workflowId], references: [id])
-  workflowId String   @map(name: "workflow_id")
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @default(now()) @updatedAt @map(name: "updated_at")
-
-  pubs                  Pub[]
+  pubs                  Pub[] // Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
   claims                ActionClaim[]
   movesFrom             ActionMove[]          @relation("move_source_stage")
   movesTo               ActionMove[]          @relation("move_destination_stage")
   integrationInstances  IntegrationInstance[]
+  permissions           Permission[]
 
   @@map(name: "stages")
 }
-
-// Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
 
 model MoveConstraint {
   id            String   @id @default(uuid())
@@ -186,21 +174,62 @@ model ActionMove {
   @@map(name: "action_move")
 }
 
-model Members {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+model Member {
+  id          String    @id @default(uuid())
+  canAdmin    Boolean // Community-wide administrator
+  // If admin, the permissions are irrelevant because they have acccess to everything, but we 
+  // may want to keep the permissions around (though grayed our and with a note?) in case their
+  // admin status is ever removed.
+  community   Community @relation(fields: [communityId], references: [id])
+  communityId String    @map(name: "community_id")
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String    @map(name: "user_id")
+  createdAt   DateTime  @default(now()) @map(name: "created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  // Permissions can be scoped to whole community or a selection of pubs
+  permissions Permission[]
+
   @@map(name: "members")
 }
 
 model MemberGroup {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  id          String    @id @default(uuid())
+  canAdmin    Boolean // Community-wide administrator
+  community   Community @relation(fields: [communityId], references: [id])
+  communityId String    @map(name: "community_id")
+  createdAt   DateTime  @default(now()) @map(name: "created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+
+  permissions Permission[]
+  users       User[]
 
   @@map(name: "member_groups")
+}
+
+model Permission {
+  // This is essentially a 'role' - we just don't allow you to name it and repeatedly
+  // use it across different members and groups. Wouldn't be too hard to adapt to that
+  // in the future though.
+  id            String       @id @default(uuid())
+  // Specific permission options here
+  // fields - if empty array, all fields
+  // integrations - if empty array, all integrations
+  // workflow actions? - can they move and claim?
+  member        Member?      @relation(fields: [memberId], references: [id])
+  memberId      String?      @map(name: "member_id")
+  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id])
+  memberGroupId String?      @map(name: "member_group_id")
+  createdAt     DateTime     @default(now()) @map(name: "created_at")
+  updatedAt     DateTime     @default(now()) @updatedAt @map(name: "updated_at")
+  // We don't have a way in this right now to say 'All pubs in a community' or 'all pubs in a workflow'.
+  // Our assumption is that the former should just be a community admin, and the latter should just have
+  // access to some parent pub whose children are the contents of a workflow. If that winds up being
+  // a bad assumption, wouldn't be too hard to add a `workflows Workflow[]` value below. 
+
+  pubs   Pub[]
+  stages Stage[]
+
+  @@map(name: "permissions")
 }
 
 model Integration {
@@ -229,23 +258,6 @@ model IntegrationInstance {
 
   pubs   Pub[]
   stages Stage[]
-  pins   Pin[]
 
   @@map(name: "integration_instances")
-}
-
-model Pin {
-  id         String               @id @default(uuid())
-  user       User                 @relation(fields: [userId], references: [id])
-  userId     String               @map(name: "user_id")
-  pub        Pub?                 @relation(fields: [pubId], references: [id])
-  pubId      String?              @map(name: "pub_id")
-  workflow   Workflow?            @relation(fields: [workflowId], references: [id])
-  workflowId String?              @map(name: "workflow_id")
-  instance   IntegrationInstance? @relation(fields: [instanceId], references: [id])
-  instanceId String?              @map(name: "instance_id")
-  createdAt  DateTime             @default(now()) @map(name: "created_at")
-  updatedAt  DateTime             @default(now()) @updatedAt @map(name: "updated_at")
-
-  @@map(name: "pins")
 }
