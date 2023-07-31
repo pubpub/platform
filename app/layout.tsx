@@ -5,22 +5,10 @@ export const metadata = {
 	description: "Just a demo to show the models and structure.",
 };
 
-export default function RootLayout({
-	children,
-	home,
-	community,
-}: {
-	children: React.ReactNode;
-	home: React.ReactNode;
-	community: React.ReactNode;
-}) {
-	const loggedIn = true;
+export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
-			<body>
-				{children}
-				{loggedIn ? community : home}
-			</body>
+			<body>{children}</body>
 		</html>
 	);
 }

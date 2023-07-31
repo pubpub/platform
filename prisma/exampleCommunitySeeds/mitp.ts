@@ -6,6 +6,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			id: communityUUID,
 			name: "MIT Press",
+			slug: "mitp",
 			avatar: "/demo/mitp.jpg",
 		},
 	});

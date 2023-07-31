@@ -106,3 +106,6 @@ However, we do need our Users table to remain in sync with any data added or edi
 The `/supabase/seed.sql` file has been edited to specify a function and trigger. After running `npx supabase db reset`, you should be able use the Dashboard to navigate to the Database > Functions or Database > Triggers tab and see `handle_updated_user` and `on_user_update` respectively.
 
 These instructions hold for using email signup (where their email is entered directly into a form). For 3rd party SSO signup, we will probably need an additional function and trigger to handle user_created events.
+
+## Note on `encoding`
+An irrelevant warning is thrown (sometimes multiple times) on every page load in dev due to [this bug](https://github.com/supabase/supabase-js/issues/612). Installing `npm i -D encoding` resolves the issue for now, but once that issue above is fixed, we can uninstall that package from our top-level dev dependencies.

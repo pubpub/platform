@@ -6,6 +6,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			id: communityUUID,
 			name: "BioRxiv",
+			slug: "biorxiv",
 			avatar: "/demo/biorxiv.ico",
 		},
 	});
