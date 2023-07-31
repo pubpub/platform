@@ -14,7 +14,7 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 		<div className={styles.side}>
 			<div className={styles.links}>
 				<CommunitySwitcher community={community} availableCommunities={availableCommunities} />
-				{/* <NavLink href={`${prefix}/search`} text={"Search"} icon={<img src="/icons/search.svg" />} />
+				<NavLink href={`${prefix}/search`} text={"Search"} icon={<img src="/icons/search.svg" />} />
 				<NavLink
 					href="/"
 					text={"Dashboard"}
@@ -40,7 +40,7 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					icon={<img src="/icons/settings.svg" />}
 				/>
 				<div className={styles.divider} />
-				<NavLink href="" text={"Recent Items"} icon={<img src="/icons/pin.svg" />} /> */}
+				<NavLink href="" text={"Recent Items"} icon={<img src="/icons/pin.svg" />} />
 			</div>
 			<div>
 				<LoginSwitcher />
