@@ -1,20 +1,16 @@
-"use client";
-import { Box, Button, Flex, IconButton, Spacer } from "@chakra-ui/react";
-import NextLink from "next/link";
+import Link from "next/link";
+import { Button } from "@/components/Button";
 
 type Props = {};
 
 const PubHeader: React.FC<Props> = function ({}) {
 	return (
-		<Flex mb="4em">
-			<h1>Pubs</h1>
-			<Spacer />
-			<NextLink href="/types" passHref legacyBehavior>
-				<Button as="a" size="sm" variant="outline">
-					Manage Types
-				</Button>
-			</NextLink>
-		</Flex>
+		<div className="flex mb-16 justify-between items-center">
+			<h1 className="font-bold text-xl">Pubs</h1>
+			<Button variant="outline" size="sm" asChild>
+				<Link href="/types">Manage Types</Link>
+			</Button>
+		</div>
 	);
 };
 export default PubHeader;

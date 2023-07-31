@@ -1,9 +1,9 @@
 "use client";
-import { Box, Button, Flex, IconButton } from "@chakra-ui/react";
+// import { Box, Button, Flex, IconButton } from "@chakra-ui/react";
 import styles from "./PubList.module.css";
 import PubRow from "./PubRow";
 import { PubsData } from "./page";
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
+// import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 
 type Props = { pubs: NonNullable<PubsData>; topPubs?: NonNullable<PubsData> };
@@ -32,7 +32,7 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs }) {
 				const children = getChildren(pubs, pub.id);
 				return (
 					<div key={pub.id}>
-						<Flex
+						{/* <Flex
 							align="center"
 							mt="-1px"
 							borderTop={"1px solid #ddd"}
@@ -69,7 +69,7 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs }) {
 							<div style={{ marginLeft: "25px" }}>
 								<PubList pubs={pubs} topPubs={children} />
 							</div>
-						)}
+						)} */}
 					</div>
 				);
 			})}

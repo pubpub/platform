@@ -1,21 +1,21 @@
 "use client";
-import {
-	Box,
-	Button,
-	Card,
-	CardBody,
-	Divider,
-	Flex,
-	Heading,
-	IconButton,
-	Spacer,
-	Text,
-} from "@chakra-ui/react";
+// import {
+// 	Box,
+// 	Button,
+// 	Card,
+// 	CardBody,
+// 	Divider,
+// 	Flex,
+// 	Heading,
+// 	IconButton,
+// 	Spacer,
+// 	Text,
+// } from "@chakra-ui/react";
 // import styles from "./PubList.module.css";
 // import PubRow from "./PubRow";
 import NextLink from "next/link";
 import { IntegrationData } from "./page";
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
+// import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 // import IntegrationRow from "./IntegrationRow";
 
@@ -45,7 +45,7 @@ const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
 const IntegrationList: React.FC<Props> = function ({ instances }) {
 	return (
 		<div>
-			<Card mb={10} variant="outline" backgroundColor="#f0f0f0">
+			{/* <Card mb={10} variant="outline" backgroundColor="#f0f0f0">
 				<CardBody>
 					<Heading as="h3" size="sm" mb={5}>
 						Add Integrations
@@ -105,7 +105,7 @@ const IntegrationList: React.FC<Props> = function ({ instances }) {
 						</CardBody>
 					</Card>
 				);
-			})}
+			})} */}
 		</div>
 	);
 };
