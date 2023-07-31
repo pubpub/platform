@@ -7,6 +7,7 @@
 		"build": "next build",
 		"format": "prettier --write '*.{ts,tsx,js,jsx,scss,json}'",
 		"migrate-dev": "dotenv -e .env.local prisma migrate dev",
+		"migrate-deploy": "dotenv -e .env.local prisma migrate deploy",
 		"prisma-studio": "dotenv -e .env.local prisma studio",
 		"prebuild": "prisma generate",
 		"start": "next start",
