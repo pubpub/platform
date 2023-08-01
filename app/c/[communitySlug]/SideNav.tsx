@@ -25,7 +25,7 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					icon={<img src="/icons/search.svg" />}
 				/>
 				<NavLink
-					href="/"
+					href={`${prefix}/`}
 					text={"Dashboard"}
 					icon={<img src="/icons/dashboard.svg" />}
 					count={8}
