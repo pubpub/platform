@@ -1,9 +1,0 @@
-.panel {
-	display: flex;
-	min-height: 100vh;
-}
-.main {
-	flex: 1 1 auto;
-	padding: 1em 3em;
-	margin-left: 250px;
-}

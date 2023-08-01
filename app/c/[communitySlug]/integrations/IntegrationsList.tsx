@@ -1,0 +1,73 @@
+"use client";
+
+import NextLink from "next/link";
+import { Card, CardContent, CardHeader } from "@/components/Card";
+import { Button } from "@/components/Button";
+import { IntegrationData } from "./page";
+
+type Props = { instances: NonNullable<IntegrationData> };
+
+const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
+	const titleValue = pub.values.find((value) => {
+		return value.field.name === "Title";
+	});
+	return titleValue?.value as string;
+};
+
+const IntegrationList: React.FC<Props> = function ({ instances }) {
+	return (
+		<div>
+			<Card className="mb-10 bg-gray-50">
+				<CardHeader>Add Integrations</CardHeader>
+				<CardContent>
+					<div className="flex">
+						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
+						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
+						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
+						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
+					</div>
+				</CardContent>
+			</Card>
+			{instances.map((instance) => {
+				return (
+					<Card className="mb-10">
+						<CardContent>
+							<div className="flex justify-between">
+								<div>
+									<div className="text-sm">{instance.integration.name}</div>
+									<div>{instance.name}</div>
+									<div className="mt-4">
+										{instance.pubs.map((pub) => {
+											return (
+												<div className="text-sm">
+													Attached to pub:{" "}
+													<span className="font-bold">
+														{getTitle(pub)}
+													</span>
+												</div>
+											);
+										})}
+										{instance.stages.map((stage) => {
+											return (
+												<div className="text-sm">
+													Attached to all pubs in stage:{" "}
+													<span className="font-bold">{stage.name}</span>
+												</div>
+											);
+										})}
+									</div>
+								</div>
+								<Button variant="outline" asChild>
+									<NextLink href={instance.integration.settingsUrl}>
+										Configure
+									</NextLink>
+								</Button>
+							</div>
+						</CardContent>
+					</Card>
+				);
+			})}
+		</div>
+	);
+};
+export default IntegrationList;

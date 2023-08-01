@@ -12,8 +12,9 @@ async function main() {
 		data: {
 			id: mainUserId,
 			slug: "testing",
-			email: "test@testing.com",
-			name: "Atta Test",
+			email: "stevie@email.com",
+			name: "Stevie Barnett",
+			avatar: "/demo/person.png",
 		},
 	});
 	const communityIds = [...Array(7)].map((x) => uuidv4());

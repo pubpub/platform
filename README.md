@@ -71,6 +71,13 @@ I've found much more success using prettier than ESLint on teams. Don't bring yo
 
 Really nice to bind `Format Document` to a familiar keyboard shortcut so you can format the doc as you go (similar to format-on-save and then saving frequently).
 
+## Git Hooks
+Two hooks are defined in the package.json `gitHooks` field, which are executed by `yorkie`.
+- The first runs Prettier on commit
+- The second runs a type-check before pushing. Since our deployment setup builds on each push, the intent here is to not trigger a build with known type errors.
+
+Sometimes you want to push up changes even though there is a type error. To do so, include `--no-verify` at the end of your command. For example: `git push origin main --no-verify`.
+
 ## Chakra
 
 To use NextJS's app directory (which uses server and client components), we follow the instructions on [Chakra's NextJS Guide](https://chakra-ui.com/getting-started/nextjs-guide#app-directory-setup). I don't actually use Chakra in this mockup so far, but I got it setup to make sure it would work.
@@ -106,3 +113,6 @@ However, we do need our Users table to remain in sync with any data added or edi
 The `/supabase/seed.sql` file has been edited to specify a function and trigger. After running `npx supabase db reset`, you should be able use the Dashboard to navigate to the Database > Functions or Database > Triggers tab and see `handle_updated_user` and `on_user_update` respectively.
 
 These instructions hold for using email signup (where their email is entered directly into a form). For 3rd party SSO signup, we will probably need an additional function and trigger to handle user_created events.
+
+## Note on `encoding`
+An irrelevant warning is thrown (sometimes multiple times) on every page load in dev due to [this bug](https://github.com/supabase/supabase-js/issues/612). Installing `npm i -D encoding` resolves the issue for now, but once that issue above is fixed, we can uninstall that package from our top-level dev dependencies.
