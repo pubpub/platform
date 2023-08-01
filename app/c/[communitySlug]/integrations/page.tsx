@@ -4,18 +4,19 @@ import IntegrationsList from "./IntegrationsList";
 
 export type IntegrationData = Prisma.PromiseReturnType<typeof getCommunityIntegrations>;
 
-const getCommunityIntegrations = async () => {
-	/* Normally, we would get the community based on the url or logged in user session */
-	const onlyCommunity = await prisma.community.findFirst();
-	if (!onlyCommunity) {
+const getCommunityIntegrations = async (communitySlug: string) => {
+	const community = await prisma.community.findUnique({
+		where: { slug: communitySlug },
+	});
+	if (!community) {
 		return null;
 	}
 	return await prisma.integrationInstance.findMany({
-		where: { communityId: onlyCommunity.id },
+		where: { communityId: community.id },
 		include: {
 			integration: true,
 			pubs: { include: { values: { include: { field: true } } } },
-			stages: { include: { workflow: true } },
+			stages: true,
 			// stages: {
 			// 	include: {
 			// 		pubs: {
@@ -37,8 +38,10 @@ const getCommunityIntegrations = async () => {
 	});
 };
 
-export default async function Page() {
-	const integrations = await getCommunityIntegrations();
+type Props = { params: { communitySlug: string } };
+
+export default async function Page({ params }: Props) {
+	const integrations = await getCommunityIntegrations(params.communitySlug);
 	if (!integrations) {
 		return null;
 	}

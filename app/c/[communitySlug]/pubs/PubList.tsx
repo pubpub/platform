@@ -1,10 +1,8 @@
 "use client";
-// import { Box, Button, Flex, IconButton } from "@chakra-ui/react";
-import styles from "./PubList.module.css";
+import { useState } from "react";
+import { Button } from "@/components/Button";
 import PubRow from "./PubRow";
 import { PubsData } from "./page";
-// import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { useState } from "react";
 
 type Props = { pubs: NonNullable<PubsData>; topPubs?: NonNullable<PubsData> };
 
@@ -32,44 +30,37 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs }) {
 				const children = getChildren(pubs, pub.id);
 				return (
 					<div key={pub.id}>
-						{/* <Flex
-							align="center"
-							mt="-1px"
-							borderTop={"1px solid #ddd"}
-							borderBottom={"1px solid #ddd"}
-						>
+						<div className="flex items-center mt-[-1px] border-t border-b border-gray-100">
 							{children.length ? (
-								<IconButton
+								<Button
 									variant="ghost"
-									width="15px"
+									size="icon"
 									aria-label="Expand"
-									icon={
-										jankyExpandState[pub.id] ? (
-											<ChevronDownIcon />
-										) : (
-											<ChevronRightIcon />
-										)
-									}
 									onClick={() => {
 										setJankyExpandState({
 											...jankyExpandState,
+											/* @ts-ignore */
 											[pub.id]: !jankyExpandState[pub.id],
 										});
 									}}
-								/>
+								>
+									{/* @ts-ignore */}
+									{jankyExpandState[pub.id] ? "<" : ">"}
+								</Button>
 							) : (
-								<Box w="40px" />
+								<div className="w-[40px]" />
 							)}
-							<Box flex="1">
+							<div className="flex-1">
 								<PubRow pub={pub} />
-							</Box>
-						</Flex>
+							</div>
+						</div>
 
+						{/* @ts-ignore */}
 						{!!children.length && jankyExpandState[pub.id] && (
-							<div style={{ marginLeft: "25px" }}>
+							<div className="ml-6">
 								<PubList pubs={pubs} topPubs={children} />
 							</div>
-						)} */}
+						)}
 					</div>
 				);
 			})}

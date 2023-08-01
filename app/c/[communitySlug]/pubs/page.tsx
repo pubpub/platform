@@ -5,14 +5,15 @@ import PubHeader from "./PubHeader";
 
 export type PubsData = Prisma.PromiseReturnType<typeof getCommunityPubs>;
 
-const getCommunityPubs = async () => {
-	/* Normally, we would get the community based on the url or logged in user session */
-	const onlyCommunity = await prisma.community.findFirst();
-	if (!onlyCommunity) {
+const getCommunityPubs = async (communitySlug: string) => {
+	const community = await prisma.community.findUnique({
+		where: { slug: communitySlug },
+	});
+	if (!community) {
 		return null;
 	}
 	return await prisma.pub.findMany({
-		where: { communityId: onlyCommunity.id },
+		where: { communityId: community.id },
 		include: {
 			pubType: true,
 			values: { include: { field: true } },
@@ -22,8 +23,10 @@ const getCommunityPubs = async () => {
 	});
 };
 
-export default async function Page() {
-	const pubs = await getCommunityPubs();
+type Props = { params: { communitySlug: string } };
+
+export default async function Page({ params }: Props) {
+	const pubs = await getCommunityPubs(params.communitySlug);
 	if (!pubs) {
 		return null;
 	}

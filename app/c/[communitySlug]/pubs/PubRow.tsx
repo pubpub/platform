@@ -1,30 +1,8 @@
 "use client";
-import {
-	Box,
-	Button,
-	Divider,
-	Flex,
-	Heading,
-	Modal,
-	ModalBody,
-	ModalCloseButton,
-	ModalContent,
-	ModalFooter,
-	ModalHeader,
-	ModalOverlay,
-	Popover,
-	PopoverBody,
-	PopoverContent,
-	PopoverHeader,
-	PopoverTrigger,
-	Portal,
-	Spacer,
-	Text,
-} from "@chakra-ui/react";
-import NextLink from "next/link";
-import styles from "./PubRow.module.css";
-import { PubsData } from "./page";
 import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
+import { Button } from "@/components/Button";
+import { PubsData } from "./page";
 
 type Props = { pub: NonNullable<PubsData>[number] };
 
@@ -39,7 +17,7 @@ const getStatus = (pub: Props["pub"], integrationId: string) => {
 	const statusValue = pub.values.find((value) => {
 		return value.field.integrationId === integrationId;
 	});
-	return statusValue?.value as string;
+	return statusValue?.value as { text: string; color: string };
 };
 
 const getInstances = (pub: Props["pub"]) => {
@@ -77,48 +55,32 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 		setModalTitle("");
 	};
 	return (
-		<Box pt={2} pb={2}>
-			<Flex align="center">
-				<Text fontSize="xs">{pub.pubType.name}</Text>
-				<Spacer />
-				<Flex align="center" textColor="#888">
-					{!!buttons.length && (
-						<Popover size="lg">
-							<PopoverTrigger>
-								<Button
-									variant="ghost"
-									size="xs"
-									textColor="#888"
-									fontWeight="normal"
-								>
-									<Box>
-										<img src="/icons/integration.svg" />
-									</Box>
-
-									<Flex align="baseline">
-										<Text fontSize="xs" whiteSpace="nowrap" ml={1}>
-											{buttons.length} Integration
-											{buttons.length > 1 ? "s" : ""}
-										</Text>
-										{buttons.map((button) => {
-											return (
-												<Box
-													style={{
-														width: "8px",
-														height: "8px",
-														borderRadius: "8px",
-														background: button.status.color,
-													}}
-													ml={1}
-												/>
-											);
-										})}
-									</Flex>
-								</Button>
-							</PopoverTrigger>
-							<Portal>
-								<PopoverContent>
-									<PopoverHeader>Integrations</PopoverHeader>
+		<div className="pt-2 pb-2">
+			<div className="flex items-center justify-between">
+				<div className="text-sm">{pub.pubType.name}</div>
+				<div className="flex items-center text-gray-600">
+					<Popover>
+						<PopoverTrigger>
+							<Button variant="ghost" size="sm">
+								<img src="/icons/integration.svg" />
+								<div className="flex items-baseline">
+									<div className="text-sm whitespace-nowrap ml-1">
+										{buttons.length} Integration
+										{buttons.length > 1 ? "s" : ""}
+									</div>
+									{buttons.map((button) => {
+										return (
+											<div
+												className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
+											/>
+										);
+									})}
+								</div>
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent>
+							Fix
+							{/* <PopoverHeader>Integrations</PopoverHeader>
 									<PopoverBody>
 										{instances.map((instance, index) => {
 											const status = getStatus(pub, instance.integration.id);
@@ -162,61 +124,46 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 												</div>
 											);
 										})}
-									</PopoverBody>
-								</PopoverContent>
-							</Portal>
-						</Popover>
-					)}
-
-					<Box ml={5}>
-						<img src="/icons/members.svg" />
-					</Box>
-					<Text fontSize="xs" whiteSpace="nowrap" ml={1}>
-						3 Members
-					</Text>
-				</Flex>
-			</Flex>
-			<Flex mt={0} align="flex-start">
-				<Heading as="h3" size="sm">
-					{getTitle(pub)}
-				</Heading>
-				<Spacer />
-				<Flex alignItems="baseline">
-					<Button size="xs" variant="outline" ml={2}>
+									</PopoverBody> */}
+						</PopoverContent>
+					</Popover>
+				</div>
+			</div>
+			<div className="mt-0 items-start flex justify-between">
+				<h3 className="text-md">{getTitle(pub)}</h3>
+				<div className="flex items-baseline">
+					<Button size="sm" variant="outline" className="ml-1">
 						Move
 					</Button>
-					<Button size="xs" variant="outline" ml={2}>
+					<Button size="sm" variant="outline" className="ml-1">
 						Claim
 					</Button>
-					<Button size="xs" variant="outline" ml={2}>
+					<Button size="sm" variant="outline" className="ml-1">
 						Email Members
 					</Button>
 					{buttons.map((button) => {
 						return (
-							<Box key={button.actions[0].href} ml={2}>
+							/* @ts-ignore */
+							<div key={button.actions[0].href} className="ml-2">
 								{/* @ts-ignore */}
 								{/* <NextLink href={button.actions[0].href} passHref legacyBehavior> */}
-									{/* <Button as="a" size="xs" variant="outline"> */}
-										<Button
-									size="xs"
+								{/* <Button as="a" size="xs" variant="outline"> */}
+								<Button
+									size="sm"
 									variant="outline"
 									onClick={() => {
+										/* @ts-ignore */
 										setModalTitle(button.actions[0].text);
 									}}
 								>
-										<Flex align="center">
-											{button.actions[0].text}
-											<Box
-												style={{
-													width: "8px",
-													height: "8px",
-													borderRadius: "8px",
-													background: button.status.color,
-												}}
-												ml={1}
-											/>
-										</Flex>
-									</Button>
+									<div className="flex items-center">
+										{/* @ts-ignore */}
+										{button.actions[0].text}
+										<div
+											className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
+										/>
+									</div>
+								</Button>
 								{/* </NextLink> */}
 
 								{/* <Flex align="center">
@@ -231,23 +178,138 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 									/>
 									<Text fontSize="xs">{button.status.text}</Text>
 								</Flex> */}
-							</Box>
+							</div>
 						);
 					})}
-				</Flex>
-			</Flex>
-			<Modal onClose={onClose} size="full" isOpen={!!modalTitle}>
-				<ModalOverlay />
-				<ModalContent>
-					<ModalHeader>{modalTitle}</ModalHeader>
-					<ModalCloseButton />
-					<ModalBody></ModalBody>
-					<ModalFooter>
-						<Button onClick={onClose}>Close</Button>
-					</ModalFooter>
-				</ModalContent>
-			</Modal>
-		</Box>
+				</div>
+			</div>
+		</div>
+
+		// <Box pt={2} pb={2}>
+		// 	<Flex align="center">
+		// 		<Text fontSize="xs">{pub.pubType.name}</Text>
+		// 		<Spacer />
+		// 		<Flex align="center" textColor="#888">
+		// 			{!!buttons.length && (
+		// 				<Popover size="lg">
+		// 					{/* <PopoverTrigger>
+		// 						<Button
+		// 							variant="ghost"
+		// 							size="xs"
+		// 							textColor="#888"
+		// 							fontWeight="normal"
+		// 						>
+		// 							<Box>
+		// 								<img src="/icons/integration.svg" />
+		// 							</Box>
+
+		// 							<Flex align="baseline">
+		// 								<Text fontSize="xs" whiteSpace="nowrap" ml={1}>
+		// 									{buttons.length} Integration
+		// 									{buttons.length > 1 ? "s" : ""}
+		// 								</Text>
+		// 								{buttons.map((button) => {
+		// 									return (
+		// 										<Box
+		// 											style={{
+		// 												width: "8px",
+		// 												height: "8px",
+		// 												borderRadius: "8px",
+		// 												background: button.status.color,
+		// 											}}
+		// 											ml={1}
+		// 										/>
+		// 									);
+		// 								})}
+		// 							</Flex>
+		// 						</Button>
+		// 					</PopoverTrigger> */}
+		// 					<Portal>
+
+		// 					</Portal>
+		// 				</Popover>
+		// 			)}
+
+		// 			<Box ml={5}>
+		// 				<img src="/icons/members.svg" />
+		// 			</Box>
+		// 			<Text fontSize="xs" whiteSpace="nowrap" ml={1}>
+		// 				3 Members
+		// 			</Text>
+		// 		</Flex>
+		// 	</Flex>
+		// 	<Flex mt={0} align="flex-start">
+		// 		<Heading as="h3" size="sm">
+		// 			{getTitle(pub)}
+		// 		</Heading>
+		// 		<Spacer />
+		// 		<Flex alignItems="baseline">
+		// 			<Button size="xs" variant="outline" ml={2}>
+		// 				Move
+		// 			</Button>
+		// 			<Button size="xs" variant="outline" ml={2}>
+		// 				Claim
+		// 			</Button>
+		// 			<Button size="xs" variant="outline" ml={2}>
+		// 				Email Members
+		// 			</Button>
+		// 			{buttons.map((button) => {
+		// 				return (
+		// 					<Box key={button.actions[0].href} ml={2}>
+		// 						{/* @ts-ignore */}
+		// 						{/* <NextLink href={button.actions[0].href} passHref legacyBehavior> */}
+		// 							{/* <Button as="a" size="xs" variant="outline"> */}
+		// 								<Button
+		// 							size="xs"
+		// 							variant="outline"
+		// 							onClick={() => {
+		// 								setModalTitle(button.actions[0].text);
+		// 							}}
+		// 						>
+		// 								<Flex align="center">
+		// 									{button.actions[0].text}
+		// 									<Box
+		// 										style={{
+		// 											width: "8px",
+		// 											height: "8px",
+		// 											borderRadius: "8px",
+		// 											background: button.status.color,
+		// 										}}
+		// 										ml={1}
+		// 									/>
+		// 								</Flex>
+		// 							</Button>
+		// 						{/* </NextLink> */}
+
+		// 						{/* <Flex align="center">
+		// 							<Box
+		// 								style={{
+		// 									width: "8px",
+		// 									height: "8px",
+		// 									borderRadius: "8px",
+		// 									background: button.status.color,
+		// 								}}
+		// 								mr={1}
+		// 							/>
+		// 							<Text fontSize="xs">{button.status.text}</Text>
+		// 						</Flex> */}
+		// 					</Box>
+		// 				);
+		// 			})}
+		// 		</Flex>
+		// 	</Flex>
+		// 	<Modal onClose={onClose} size="full" isOpen={!!modalTitle}>
+		// 		<ModalOverlay />
+		// 		<ModalContent>
+		// 			<ModalHeader>{modalTitle}</ModalHeader>
+		// 			<ModalCloseButton />
+		// 			<ModalBody></ModalBody>
+		// 			<ModalFooter>
+		// 				<Button onClick={onClose}>Close</Button>
+		// 			</ModalFooter>
+		// 		</ModalContent>
+		// 	</Modal>
+		// </Box>
 	);
 };
 export default PubRow;
