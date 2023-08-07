@@ -20,19 +20,19 @@
  *                 example:
  *                   - attack: Gomu-Gomu no Jet Pistol
  *                     level: 1
- *                     id: 123
+ *                     id: "123"
  *                   - attack: Gomu-Gomu no Jet Gattling Gun
  *                     level: 2
- *                     id: 456
+ *                     id: "456"
  *                   - attack: Gumu-Gumu no Jet Bazooka
  *                     level: 3
- *                     id: 789
+ *                     id: "789"
  *                   - attack: Gumu-Gumu no Jet Gattling Bazooka
  *                     level: 4
- *                     id: 101112
+ *                     id: "101112"
  *                   - attack: Gumu-Gumu no Red Hawk
  *                     level: 5
- *                     id: 131415
+ *                     id: "131415"
  *       400:
  *         description: Instance not found
  *         content:

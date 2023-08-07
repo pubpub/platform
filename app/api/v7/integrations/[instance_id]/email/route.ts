@@ -23,19 +23,19 @@
  *               cc: youcanccme@johncena.com
  *               bcc: youcantcme@johncena.com
  *               recipients:
- *                 - id: 123
+ *                 - id: "123"
  *                   name: Luffy
  *                   email: eatmoremeat@pk.jb
- *                 - id: 456
+ *                 - id: "456"
  *                   name: Zoro
  *                   email: gottabeatmihawk@sword.com
- *                 - id: 789
+ *                 - id: "789"
  *                   name: Nami
  *                   email: gettintothemoney@money.mo
- *                 - id: 101112
+ *                 - id: "101112"
  *                   name: Usopp
  *                   email: goingmerry@gone.pir
- *                 - id: 131415
+ *                 - id: "131415"
  *                   name: Sanji
  *                   email: allbluedreams@baratie.com
  *                 - name: Chopper
