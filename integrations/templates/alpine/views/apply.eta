@@ -1,0 +1,64 @@
+<% layout("./layout") %>
+
+<p>Click the button below to update the Pub with the number words and/or lines in its content.</p>
+
+<form x-data="form" @submit.prevent>
+  <!-- Fields -->
+  <button @click="submit" :aria-invalid="!!error" :class="{ loading }" aria-errormessage="error">Update Word Counts</button>
+  <!-- Alerts -->
+  <div class="alert success" x-show="success" x-cloak x-transition>
+    <!-- Metadata -->
+    <table class="metadata" x-show="words || lines" x-cloak x-transition>
+      <thead>
+        <tr>
+          <th x-show="words" x-transition>word-counts/word-count</th>
+          <th x-show="lines" x-transition>word-counts/line-count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td x-show="words" x-transition x-text="words"></td>
+          <td x-show="lines" x-transition x-text="lines"></td>
+        </tr>
+      </tbody>
+    </table>
+    <strong>Success!</strong>
+    <p>Pub metadata updated</p>
+  </div>
+  <div class="alert failure" x-show="error" x-cloak x-transition id="error">
+    <strong x-text="error?.message"></strong>
+    <p x-text="error?.cause"></p>
+  </div>
+</form>
+
+<script>
+  async function submit() {
+    this.error = null
+    this.loading = true
+    const req = await fetch(`/apply?instanceId=<%= it.instanceId %>&pubId=<%= it.pubId %>`, {
+      method: "POST",
+    })
+    this.loading = false
+    const res = await req.json()
+    if (req.ok) {
+      this.words = res.words
+      this.lines = res.lines
+      this.success = true
+    } else {
+      this.error = res ?? {
+        message: "an unexpected error occurred"
+      }
+    }
+  }
+
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("form", () => ({
+      words: 0,
+      lines: 0,
+      error: undefined,
+      loading: false,
+      success: false,
+      submit,
+    }))
+  })
+</script>

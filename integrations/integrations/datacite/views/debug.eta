@@ -1,0 +1,11 @@
+<% layout("./layout") %>
+
+<div x-data='{ instanceIds: <%~ JSON.stringify(it.instanceIds) %> }'>
+  <ul>
+    <template x-for="instanceId in instanceIds">
+      <li>
+        <a :href="`/configure?instanceId=${instanceId}`" x-text="instanceId"></a>
+      </li>
+    </template>
+  </ul>
+</div>

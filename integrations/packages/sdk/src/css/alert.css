@@ -1,0 +1,37 @@
+.alert {
+	border: 1px solid color-mix(in srgb, currentColor 50%, transparent);
+	padding: var(--space-sm) var(--space-md);
+	margin: var(--space-sm) 0;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	border-radius: var(--border-radius-box);
+	overflow: hidden;
+}
+
+.alert.success {
+	color: var(--color-green);
+}
+
+.alert.failure {
+	color: var(--color-red);
+}
+
+.alert > p {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	font-family: var(--font-family-mono);
+}
+
+.alert > strong {
+	display: block;
+	margin-bottom: var(--space-xs);
+	font-size: var(--font-size-md);
+	font-weight: var(--font-weight-bold);
+}
+
+.alert .metadata {
+	float: right;
+}
+
+.alert.success .metadata th {
+	background: var(--color-green);
+}

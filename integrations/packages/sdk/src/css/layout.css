@@ -1,0 +1,41 @@
+body {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 0;
+	background-color: var(--color-white);
+	color: var(--color-black);
+	-webkit-font-smoothing: antialiased;
+	-moz-osxfont-smoothing: grayscale;
+}
+
+header {
+	display: flex;
+	align-items: center;
+	height: var(--height-header);
+	margin: 0 var(--space-lg);
+}
+
+header::before {
+	@mixin icon "plug";
+	content: "";
+	margin-right: var(--space-sm);
+}
+
+header > .icon {
+	margin-right: var(--space-xs);
+}
+
+header > h1 {
+	font-size: var(--font-size-sm);
+	text-transform: uppercase;
+	font-weight: 400;
+}
+
+main {
+	padding: 0 var(--space-md);
+}
+
+main > p {
+	padding: 0 var(--space-xs);
+	margin: var(--space-xs) 0 var(--space-lg) 0;
+}

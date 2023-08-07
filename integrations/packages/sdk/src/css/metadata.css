@@ -1,0 +1,16 @@
+.metadata {
+	font-family: var(--font-family-mono);
+	font-size: var(--font-size-sm);
+}
+
+.metadata th {
+	padding: 4px 0;
+	max-width: 200px;
+	background-color: var(--color-black);
+	color: #fff;
+	border-radius: var(--border-radius-box);
+}
+
+.metadata td {
+	padding: 4px;
+}

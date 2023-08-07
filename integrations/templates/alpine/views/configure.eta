@@ -1,0 +1,76 @@
+<% layout("./layout") %>
+
+<p>This integration counts the number of words and/or lines in your Pub content.</p>
+
+<form x-data="form" @submit.prevent>
+  <!-- Fields -->
+  <fieldset>
+    <strong>Metrics</strong>
+    <legend>Select one or more counting metric(s) to apply to Pub content.</legend>
+    <div class="input-group">
+      <label for="words">
+        <span>Words</span>
+        <input id="words" type="checkbox" x-model="words" @click="toggle('words')" />
+      </label>
+      <label for="lines">
+        <span>Lines</span>
+        <input id="lines" type="checkbox" x-model="lines" @click="toggle('lines')" />
+      </label>
+    </div>
+  </fieldset>
+  <!-- Alerts -->
+  <div class="alert success" x-show="success" x-cloak x-transition>
+    <strong>Success!</strong>
+    <p>Instance configured</p>
+  </div>
+  <div class="alert failure" x-show="error" x-cloak x-transition id="error">
+    <strong x-text="error?.message"></strong>
+    <p x-text="error?.cause"></p>
+  </div>
+</form>
+
+<script>
+  function toggle(kind) {
+    return event => {
+      const other = kind === "words" ? "lines" : "words"
+      if (this[kind] && !this[other]) {
+        event.preventDefault()
+      } else {
+        this[kind] = !this[kind]
+        this.submit()
+      }
+    }
+  }
+
+  async function submit() {
+    this.error = false
+    this.success = false
+    const req = await fetch(`/configure?instanceId=<%= it.instanceId %>`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        words: this.words,
+        lines: this.lines
+      }),
+    })
+    if (req.ok) {
+      this.success = true
+      return req.json()
+    } else {
+      this.error = await req.json()
+    }
+  }
+
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("form", () => ({
+      lines: <%= it.instanceConfig.lines %>,
+      words: <%= it.instanceConfig.words %>,
+      error: false,
+      success: false,
+      submit,
+      toggle,
+    }))
+  })
+</script>
