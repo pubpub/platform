@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import prisma from "@/prisma/db";
+import prisma from "~/prisma/db";
 import StageList from "./StageList";
 
 export type StagesData = Prisma.PromiseReturnType<typeof getCommunityStages>;

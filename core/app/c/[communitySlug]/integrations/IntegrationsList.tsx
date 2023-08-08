@@ -1,8 +1,7 @@
 "use client";
 
 import NextLink from "next/link";
-import { Card, CardContent, CardHeader } from "@/packages/ui/src/Card";
-import { Button } from "@/packages/ui/src/Button";
+import { Button, Card, CardContent, CardHeader } from "ui";
 import { IntegrationData } from "./page";
 
 type Props = { instances: NonNullable<IntegrationData> };

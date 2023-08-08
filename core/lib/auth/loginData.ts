@@ -1,9 +1,9 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import prisma from "@/prisma/db";
-import { REFRESH_NAME, TOKEN_NAME } from "@/lib/auth/cookies";
-import { getIdFromJWT } from "@/lib/auth/loginId";
+import prisma from "~/prisma/db";
+import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
+import { getIdFromJWT } from "~/lib/auth/loginId";
 
 /* This is only called from Server Component functions */
 /* When in the API, use getLoginId from loginId.ts */

@@ -11,6 +11,6 @@
   },
   "aliases": {
     "components": "packages/ui/src",
-    "utils": "../../utils"
+    "utils": "utils/classnames"
   }
 }

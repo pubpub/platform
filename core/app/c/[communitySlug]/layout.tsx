@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
-import prisma from "@/prisma/db";
-import { getLoginData } from "@/lib/auth/loginData";
+import prisma from "~/prisma/db";
+import { getLoginData } from "~/lib/auth/loginData";
 import SideNav from "./SideNav";
 
 export type CommunityData = Prisma.PromiseReturnType<typeof getCommunity>;

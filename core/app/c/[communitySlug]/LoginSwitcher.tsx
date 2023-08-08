@@ -1,5 +1,5 @@
-import { getLoginData } from "@/lib/auth/loginData";
-import { Avatar, AvatarFallback, AvatarImage } from "@/packages/ui/src/Avatar";
+import { getLoginData } from "~/lib/auth/loginData";
+import { Avatar, AvatarFallback, AvatarImage } from "ui";
 
 export default async function LoginSwitcher() {
 	const loginData = await getLoginData();

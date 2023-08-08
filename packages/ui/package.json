@@ -23,7 +23,8 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "tailwind-merge": "^1.14.0",
-    "tailwindcss-animate": "^1.0.6"
+    "tailwindcss-animate": "^1.0.6",
+	"utils": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.2.0"
@@ -34,7 +35,7 @@
     "react": "^18.2.0",
     "tailwind-config": "workspace:*",
     "tsconfig": "workspace:*",
-    "tsup": "^6.1.3",
+    "tsup": "^7.2.0",
     "typescript": "^4.9.4"
   }
 }
