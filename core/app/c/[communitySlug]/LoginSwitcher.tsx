@@ -1,4 +1,4 @@
-import { getLoginData } from "@/core/lib/auth/loginData";
+import { getLoginData } from "@/lib/auth/loginData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/packages/ui/src/Avatar";
 
 export default async function LoginSwitcher() {

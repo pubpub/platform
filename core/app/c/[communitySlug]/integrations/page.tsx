@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import prisma from "@/core/prisma/db";
+import prisma from "@/prisma/db";
 import IntegrationsList from "./IntegrationsList";
 
 export type IntegrationData = Prisma.PromiseReturnType<typeof getCommunityIntegrations>;

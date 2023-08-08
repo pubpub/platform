@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getLoginData } from "@/core/lib/auth/loginData";
+import { getLoginData } from "@/lib/auth/loginData";
 
 export default async function Page() {
 	return (

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import prisma from "@/core/prisma/db";
+import prisma from "@/prisma/db";
 import TypeList from "./TypeList";
 
 export type TypesData = Prisma.PromiseReturnType<typeof getTypes>;

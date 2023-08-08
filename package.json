@@ -5,14 +5,13 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "clean": "turbo clean",
-    "start:web": "turbo run start --filter=web",
+    "dev:core": "turbo run dev --filter=core",
+	"start:core": "turbo run start --filter=core",
     "start:docs": "turbo run start --filter=docs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
-	"eslint": "^7.32.0",
-    "eslint-config-custom": "workspace:*",
     "prettier": "^2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.11",
     "turbo": "latest"
