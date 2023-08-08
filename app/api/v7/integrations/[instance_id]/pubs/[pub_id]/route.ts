@@ -21,8 +21,8 @@ export async function GET(request: NextRequest, { params }: { params: { pub_id: 
 	//
 	// const fields: any[] = await prisma.$queryRaw`SELECT DISTINCT ON (field_id) pub_values.value, pub_fields.name, MAX(pub_values.created_at) FROM pub_values JOIN pub_fields ON pub_fields.id = pub_values.field_id WHERE pub_id = ${params.pub_id} GROUP BY field_id, pub_values.id, name`
 
-	const pub = fields.reduce((prev: any, cur) => {
-		prev[cur.field.name] = cur.value
+	const pub = fields.reduce((prev: any, curr) => {
+		prev[curr.field.name] = curr.value
 		return prev
 	}, {})
 	return NextResponse.json(pub);
@@ -31,9 +31,9 @@ export async function GET(request: NextRequest, { params }: { params: { pub_id: 
 
 // TODO: integrations will send field ids, not names
 export async function PUT(request: NextRequest, { params }: { params: { pub_id: string } }) {
-	const { fields: fieldData } = await request.json();
+	const { fields } = await request.json();
 
-	const fieldNames = Object.keys(fieldData)
+	const fieldNames = Object.keys(fields)
 
 	const fieldIds = await prisma.pubField.findMany({
 		where: {
@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: { params: { pub_id: 
 	const newValues = fieldIds.map((field) => {
 		return {
 			fieldId: field.id,
-			value: fieldData[field.name],
+			value: fields[field.name],
 		}
 	});
 
