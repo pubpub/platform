@@ -1,0 +1,14 @@
+previewsEnabled: true
+services:
+- type: web
+  name: core
+  runtime: node
+  rootDir: .
+  buildCommand: pnpm install; pnpm run build
+  startCommand: pnpm run start:core
+- type: web
+  name: datacite
+  runtime: node
+  rootDir: .
+  buildCommand: pnpm install; pnpm run build
+  startCommand: pnpm run start:datacite

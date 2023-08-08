@@ -1,5 +1,5 @@
 import * as React from "react";
-import cn from "@/lib/cn";
+import cn from "@/core/lib/cn";
 
 /* Originally from https://ui.shadcn.com/docs/components/card */
 

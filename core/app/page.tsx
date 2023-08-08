@@ -1,6 +1,6 @@
 import prisma from "@/core/prisma/db";
 import { redirect } from "next/navigation";
-import { getLoginData } from "lib/auth/loginData";
+import { getLoginData } from "@/core/lib/auth/loginData";
 
 export default async function Page() {
 	const loginData = await getLoginData();

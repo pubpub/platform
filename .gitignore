@@ -43,3 +43,6 @@ next-env.d.ts
 /docs/.vitepress/cache
 
 dump.rdb
+
+# turbo
+.turbo

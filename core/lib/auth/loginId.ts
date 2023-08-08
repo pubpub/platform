@@ -1,8 +1,8 @@
 import { NextApiRequest } from "next";
 import jwt from "jsonwebtoken";
 
-import { getRefreshCookie, getTokenCookie } from "lib/auth/cookies";
-import { getServerSupabase } from "lib/supabaseServer";
+import { getRefreshCookie, getTokenCookie } from "@/core/lib/auth/cookies";
+import { getServerSupabase } from "@/core/lib/supabaseServer";
 
 const JWT_SECRET: string = process.env.JWT_SECRET || "";
 const DATABASE_URL: string = process.env.DATABASE_URL || "";
