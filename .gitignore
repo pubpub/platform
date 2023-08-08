@@ -6,7 +6,7 @@
 
 # dependencies
 node_modules
-/.pnp
+.pnp
 .pnp.js
 
 
@@ -14,11 +14,12 @@ node_modules
 /coverage
 
 # next.js
-/.next/
-/out/
+*/.next/*
+out
+dist
 
 # production
-/build
+build
 
 # misc
 .DS_Store

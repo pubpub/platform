@@ -1,5 +1,6 @@
 import Link from "next/link";
 // import { Button } from "ui";
+// import {Button} from "ui/Bu"
 // import {Button} from "ui/ui/button";
 
 type Props = {};
@@ -11,6 +12,7 @@ const PubHeader: React.FC<Props> = function ({}) {
 			<Button variant="outline" size="sm" asChild>
 				<Link href="types">Manage Types</Link>
 			</Button>
+			
 		</div>
 	);
 };
