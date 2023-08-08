@@ -93,6 +93,15 @@ export const getApiDocs = async () => {
 							type: "string",
 						},
 					},
+					apikey: {
+						name: "apikey",
+						in: "header",
+						description: "An API key issued for the integration",
+						required: true,
+						schema: {
+							type: "string",
+						},
+					},
 					pubId: {
 						name: "pubId",
 						in: "path",

@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /api/integration/{instanceId}/email:
+ * /api/v7/integrations/{instanceId}/email:
  *   post:
  *     tags:
  *       - SendEmail

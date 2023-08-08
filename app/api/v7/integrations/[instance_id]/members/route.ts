@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /api/integration/{instanceId}/members:
+ * /api/v7/integrations/{instanceId}/members:
  *   get:
  *     tags:
  *       - Members

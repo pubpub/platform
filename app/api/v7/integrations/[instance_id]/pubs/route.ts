@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /api/integration/{instanceId}/pubs:
+ * /api/v7/integrations/{instanceId}/pubs:
  *   get:
  *     tags:
  *       - Pubs
