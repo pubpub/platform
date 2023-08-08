@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import prisma from "prisma/db";
+import prisma from "@/core/prisma/db";
 import { REFRESH_NAME, TOKEN_NAME } from "lib/auth/cookies";
 import { getIdFromJWT } from "lib/auth/loginId";
 

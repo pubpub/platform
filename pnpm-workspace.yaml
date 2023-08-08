@@ -1,4 +1,5 @@
 packages:
-  - "templates/*"
+  - "core"
   - "integrations/*"
+  - "integrations/templates/*"
   - "packages/*"

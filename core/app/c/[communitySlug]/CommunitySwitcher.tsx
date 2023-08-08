@@ -4,8 +4,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
-} from "@/components/DropdownMenu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/Avatar";
+} from "@/packages/ui/src/DropdownMenu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/packages/ui/src/Avatar";
 import { CommunityData } from "./layout";
 
 type Props = {

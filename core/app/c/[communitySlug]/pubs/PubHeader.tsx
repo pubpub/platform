@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/Button";
+import { Button } from "@/packages/ui/src/Button";
 
 type Props = {};
 

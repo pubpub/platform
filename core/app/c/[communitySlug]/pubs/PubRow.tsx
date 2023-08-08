@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
-import { Button } from "@/components/Button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/packages/ui/src/Popover";
+import { Button } from "@/packages/ui/src/Button";
 import { PubsData } from "./page";
 
 type Props = { pub: NonNullable<PubsData>[number] };

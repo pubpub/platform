@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent } from "@/components/Card";
+import { Card, CardContent } from "@/packages/ui/src/Card";
 import PubRow from "../pubs/PubRow";
 import { StagesData } from "./page";
 

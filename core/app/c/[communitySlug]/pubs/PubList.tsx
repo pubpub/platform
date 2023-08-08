@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/Button";
+import { Button } from "@/packages/ui/src/Button";
 import PubRow from "./PubRow";
 import { PubsData } from "./page";
 

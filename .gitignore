@@ -1,9 +1,14 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# ci
+.npmrc
+.pnpm-store
+
 # dependencies
 /node_modules
 /.pnp
 .pnp.js
+
 
 # testing
 /coverage
@@ -36,3 +41,5 @@ next-env.d.ts
 
 # vitepress
 /docs/.vitepress/cache
+
+dump.rdb

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import prisma from "@/prisma/db";
+import prisma from "@/core/prisma/db";
 import { getLoginData } from "@/lib/auth/loginData";
 import SideNav from "./SideNav";
 

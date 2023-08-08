@@ -1,4 +1,4 @@
-import prisma from "prisma/db";
+import prisma from "@/core/prisma/db";
 import { redirect } from "next/navigation";
 import { getLoginData } from "lib/auth/loginData";
 
