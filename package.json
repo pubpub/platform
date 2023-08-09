@@ -17,18 +17,12 @@
 		"prettier-plugin-tailwindcss": "^0.1.11",
 		"turbo": "latest"
 	},
-	"husky": {
-		"hooks": {
-			"pre-commit": "lint-staged",
-			"pre-push": "pnpm run type-check"
-		}
-	},
 	"lint-staged": {
 		"*.{ts,tsx,js,jsx,scss,json}": [
 			"prettier --write"
 		],
 		"schema.prisma": [
-"npx prisma format"
+			"npx prisma format"
 		]
 	},
 	"packageManager": "pnpm@8.6.10"
