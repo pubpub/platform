@@ -4,8 +4,8 @@ services:
   name: core
   runtime: node
   rootDir: .
-  buildCommand: pnpm install; pnpm run build
-  startCommand: pnpm run start:core
+  buildCommand: pnpm install; pnpm run build --filter core...
+  startCommand: pnpm run start --filter core
 - type: web
   name: datacite
   runtime: node

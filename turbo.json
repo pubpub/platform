@@ -12,6 +12,7 @@
 		"lint": {},
 		"check-types": {},
 		"dev": {
+			"dependsOn": ["utils#build", "ui#build"],
 			"cache": false,
 			"persistent": true
 		},
