@@ -24,15 +24,15 @@ export const getApiDocs = async () => {
 			},
 			servers: [
 				{
-					url: "https://localhost/v7/dev:3000",
+					url: "https://localhost:3000",
 					description: "The development API server",
 				},
 				{
-					url: "https://pubpub/v7/staging:3000",
+					url: "https://pubpub/staging:3000",
 					description: "The staging API server",
 				},
 				{
-					url: "https://pubpub/v7:3000",
+					url: "https://pubpub:3000",
 					description: "The production API server",
 				},
 			],
