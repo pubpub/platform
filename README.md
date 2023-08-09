@@ -34,3 +34,12 @@ Use filters to select specific packages
 pnpm dev --filter core    // Runs just the `core` packages dev script
 pnpm dev --filter core... // Runs just the `core` package and its dependencies dev scripts
 ```
+
+### Turborepo race conditions
+
+We currently have a race condition where dev will sometimes fail because we can't specify the order of dependency builds. Tied to the fact that we clean out the dist folder on build, but upstream packages are watching dist.
+
+-   https://github.com/vercel/turbo/discussions/1299?sort=top?sort=top
+-   https://github.com/vercel/turbo/issues/460
+
+`core` depends on `ui` which depends on `utils`. `utils` often takes longer to build than it does for `ui` to start building, which causes an error to be thrown because `utils` d.ts file has been cleared out during its build and hasn't been replaced yet. This generates an error, but is quick to resolve, so doesn't break actual dev work from beginning. It does make the console output messier though.
