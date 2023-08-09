@@ -6,7 +6,7 @@
 		"lint": "turbo lint",
 		"clean": "turbo clean",
 		"start": "turbo start",
-		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
+		"format": "prettier --write \"**/*.{ts,tsx,js,jsx,scss,json,md}\"",
 		"type-check": "turbo type-check"
 	},
 	"devDependencies": {
@@ -18,7 +18,7 @@
 		"turbo": "latest"
 	},
 	"lint-staged": {
-		"*.{ts,tsx,js,jsx,scss,json}": [
+		"*.{ts,tsx,js,jsx,scss,json,md}": [
 			"prettier --write"
 		],
 		"schema.prisma": [
