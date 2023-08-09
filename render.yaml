@@ -1,7 +1,7 @@
 previewsEnabled: true
 services:
 - type: web
-  name: pubpub-v7-core
+  name: core
   runtime: node
   rootDir: .
   buildCommand: pnpm install; pnpm run build --filter core...
