@@ -9,7 +9,6 @@ export default defineConfig((options: Options) => ({
 	minify: true,
 	clean: true,
 	external: ["react"],
-	sourcemap: true,
 	esbuildOptions(options) {
 		options.banner = {
 			js: '"use client"',
