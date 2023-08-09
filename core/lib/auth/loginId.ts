@@ -16,7 +16,8 @@ export async function getLoginId(req: NextApiRequest): Promise<string> {
 }
 
 export async function getIdFromJWT(sessionJWT?: string, refreshToken?: string): Promise<string> {
-	if (DATABASE_URL.includes("localhost")) {
+	// if (DATABASE_URL.includes("localhost")) {
+	if (true) {
 		/* This helps us do local testing by automatically "logging in" a default user. */
 		/* It's not a real login as it doesn't his Supabase Auth, just returns the DB User */
 		return "a9a09993-8eb1-4122-abbf-b999d5c8afe3";
