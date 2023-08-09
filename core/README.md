@@ -1,13 +1,11 @@
 # Quick Install
 
-Built using node `v18.16.0` (captured in `/.nvmrc`). Use [nvm](https://github.com/nvm-sh/nvm) to ensure you're using at least `18.16.0` before installing to avoid inconsistencies at the node level. 
-
 Local development requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) to be installed and running on your machine.
 
 Begin by making sure Docker Desktop is running. Then, `cd` to this repo in your terminal and run the following commands. A few of them have interactive prompts you'll need to act on, so I suggest running them one-by-one.
 
 ```
-npm install
+pnpm install (should already be done at root level)
 npx supabase login
 npx supabase start
 npx supabase db reset
@@ -19,7 +17,7 @@ Copy the relevant values output from `supabase start` into `.env.local`.
 Populate the database by running:
 
 ```
-npm run reset
+pnpm run reset
 ```
 
 Choose yes on prompted questions.
@@ -27,7 +25,7 @@ Choose yes on prompted questions.
 Start the dev server with
 
 ```
-npm run dev
+pnpm run dev
 ```
 
 # Running
@@ -35,7 +33,7 @@ npm run dev
 After install you can start the dev server with
 
 ```
-npm run dev
+pnpm run dev
 ```
 
 If Supabase isn't running, be sure to run
@@ -54,7 +52,7 @@ Stopping supabase will erase the database. You will need to re-seed the database
 
 ```
 npx supabase db reset // Rebuilds the postgres DB with necessary functions and triggers.
-npm run reset // Rebuils and applies the prisma schema and creates seed content.
+pnpm run reset // Rebuils and applies the prisma schema and creates seed content.
 ```
 
 If you wish to avoid this, you can preserve the database until next time by instead using
@@ -77,10 +75,6 @@ Two hooks are defined in the package.json `gitHooks` field, which are executed b
 - The second runs a type-check before pushing. Since our deployment setup builds on each push, the intent here is to not trigger a build with known type errors.
 
 Sometimes you want to push up changes even though there is a type error. To do so, include `--no-verify` at the end of your command. For example: `git push origin main --no-verify`.
-
-## Chakra
-
-To use NextJS's app directory (which uses server and client components), we follow the instructions on [Chakra's NextJS Guide](https://chakra-ui.com/getting-started/nextjs-guide#app-directory-setup). I don't actually use Chakra in this mockup so far, but I got it setup to make sure it would work.
 
 ## Supabase
 
