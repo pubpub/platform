@@ -1,1 +1,0 @@
-# pubpub-integration-template-alpine
