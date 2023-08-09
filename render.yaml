@@ -7,4 +7,4 @@ services:
   buildCommand: pnpm install; pnpm run build --filter core...
   startCommand: pnpm run start --filter core
   envVars:
-    fromGroup: pubpub-core-env
+    - fromGroup: pubpub-core-env
