@@ -9,5 +9,3 @@ services:
   envVars:
     - fromGroup: pubpub-core-prod-env
       previewValue: pubpub-core-preview-env
-    - key: fake
-      value: other
