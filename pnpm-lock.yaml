@@ -7,14 +7,13 @@ settings:
 importers:
 
   .:
-    dependencies:
-      husky:
-        specifier: ^8.0.3
-        version: 8.0.3
     devDependencies:
       '@changesets/cli':
         specifier: ^2.26.2
         version: 2.26.2
+      husky:
+        specifier: ^8.0.3
+        version: 8.0.3
       lint-staged:
         specifier: ^13.2.2
         version: 13.2.2
@@ -2686,7 +2685,7 @@ packages:
     resolution: {integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==}
     engines: {node: '>=14'}
     hasBin: true
-    dev: false
+    dev: true
 
   /iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
