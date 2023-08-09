@@ -6,9 +6,3 @@ services:
   rootDir: .
   buildCommand: pnpm install; pnpm run build --filter core...
   startCommand: pnpm run start --filter core
-- type: web
-  name: datacite
-  runtime: node
-  rootDir: .
-  buildCommand: pnpm install; pnpm run build
-  startCommand: pnpm run start:datacite
