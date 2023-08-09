@@ -1,12 +1,13 @@
-// tailwind config is required for editor support
+/** @type {import('tailwindcss').Config} */
 
-const sharedConfig = require("tailwind-config/tailwind.config.js");
+const sharedConfig = require("ui/tailwind.config.js");
 
 module.exports = {
-	content: [
-		"app/**/*.{ts,tsx}",
-		// include packages if not transpiling
-		// "../../packages/**/*.{js,ts,jsx,tsx}",
-	],
 	presets: [sharedConfig],
+	prefix: "",
+	content: [
+		"./app/**/*.{ts,tsx}",
+		// "../packages/**/*.{js,ts,jsx,tsx}"
+		"./node_modules/ui/**/*.{js,ts,jsx,tsx}"
+	],
 };

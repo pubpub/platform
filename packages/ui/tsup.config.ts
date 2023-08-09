@@ -17,7 +17,5 @@ export default defineConfig((options: Options) => ({
 	...options,
 }));
 
-// https://github.com/egoist/tsup/issues/929
-
 // Treeshaking enabled is breaking "use client"
 // https://github.com/egoist/tsup/issues/835

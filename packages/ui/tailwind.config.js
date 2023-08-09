@@ -1,11 +1,9 @@
 /** @type {import('tailwindcss').Config} */
-const sharedConfig = require("tailwind-config/tailwind.config.js");
 
 module.exports = {
 	prefix: "ui-",
-	presets: [sharedConfig],
 	darkMode: ["class"],
-	content: ["./src/**/*.{ts,tsx}"],
+	content: ["./src/*.{js,jsx,ts,tsx}"],
 	theme: {
 		container: {
 			center: true,

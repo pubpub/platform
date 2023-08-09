@@ -4,11 +4,11 @@
 	"sideEffects": [
 		"**/*.css"
 	],
-	"types": "./dist/index.d.ts",
-	"type": "module",
+	"types": "./dist/index.d.mts",
 	"exports": {
 		".": "./dist",
-		"./styles.css": "./dist/index.css"
+		"./styles.css": "./dist/index.css",
+		"./tailwind.config.js": "./tailwind.config.js"
 	},
 	"scripts": {
 		"build": "tsup",
@@ -35,7 +35,6 @@
 		"@types/react": "^18.2.5",
 		"postcss": "^8.4.20",
 		"react": "^18.2.0",
-		"tailwind-config": "workspace:*",
 		"tsconfig": "workspace:*",
 		"tsup": "^7.2.0",
 		"typescript": "^4.9.4"
