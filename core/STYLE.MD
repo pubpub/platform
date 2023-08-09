@@ -1,5 +1,4 @@
 # Styling
-
 In the past, PubPub has stuck pretty close to the style system offered by the off-the-shelf component library we've used (primarily BlueprintJS). This is convenient because it allowed us to move quickly early on, but has become a liability over time as our design needs to deviate from the Blueprint design, and as the Blueprint library introduces breaking changes.
 
 In v7, we find ourselves with an additional styling objective, which is to allow integrations (both 1st and 3rd party) to easily adopt the styles and design of `pubpub-core`. Further, we hope to do this without requiring every integration to use the exact same technical stack as `pubpub-core`.
