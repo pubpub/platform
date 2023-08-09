@@ -7,6 +7,5 @@ services:
   buildCommand: pnpm install; pnpm run build --filter core...
   startCommand: pnpm run start --filter core
   envVars:
-    - fromGroup: pubpub-core-preview-env
     - fromGroup: pubpub-core-prod-env
-      sync: false
+      previewValue: pubpub-core-preview-env
