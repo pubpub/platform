@@ -59,7 +59,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 				<div className="text-sm">{pub.pubType.name}</div>
 				<div className="flex items-center text-gray-600">
 					<Popover>
-						<PopoverTrigger>
+						<PopoverTrigger asChild>
 							<Button variant="ghost" size="sm">
 								<img src="/icons/integration.svg" />
 								<div className="flex items-baseline">
@@ -70,7 +70,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 									{buttons.map((button) => {
 										return (
 											<div
-												key={button.actions[0]}
+												key={button.actions[0].text}
 												className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
 											/>
 										);

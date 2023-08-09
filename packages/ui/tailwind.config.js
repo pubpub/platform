@@ -1,7 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 
+/* We likely want to export a tailwind plugin, rather than
+using `preset` in consuming apps. Explanation here: 
+https://stackoverflow.com/questions/72388980/consuming-a-component-library-that-uses-tailwindcss
+*/
+
 module.exports = {
-	prefix: "ui-",
 	darkMode: ["class"],
 	content: ["./src/*.{js,jsx,ts,tsx}"],
 	theme: {
