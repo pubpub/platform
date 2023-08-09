@@ -1,8 +1,10 @@
 previewsEnabled: true
 services:
-- type: web
-  name: core
-  runtime: node
-  rootDir: .
-  buildCommand: pnpm install; pnpm run build --filter core...
-  startCommand: pnpm run start --filter core
+    - type: web
+      name: core
+      runtime: node
+      rootDir: .
+      buildCommand: pnpm install; pnpm run build --filter core...
+      startCommand: pnpm run start --filter core
+      envVars:
+          fromGroup: pubpub-core-env
