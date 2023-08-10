@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import buildArcadia from "./exampleCommunitySeeds/arcadia";
 import buildMITP from "./exampleCommunitySeeds/mitp";
 import buildBiorxiv from "./exampleCommunitySeeds/biorxiv";
+import buildBrown from "./exampleCommunitySeeds/brown";
 
 const prisma = new PrismaClient();
 async function main() {
@@ -21,12 +22,14 @@ async function main() {
 	await buildArcadia(prisma, communityIds[0]);
 	await buildMITP(prisma, communityIds[1]);
 	await buildBiorxiv(prisma, communityIds[2]);
+	await buildBrown(prisma, communityIds[3]);
 
 	await prisma.member.createMany({
 		data: [
 			{ userId: mainUserId, communityId: communityIds[0], canAdmin: true },
 			{ userId: mainUserId, communityId: communityIds[1], canAdmin: true },
 			{ userId: mainUserId, communityId: communityIds[2], canAdmin: true },
+			{ userId: mainUserId, communityId: communityIds[3], canAdmin: true },
 		],
 	});
 }

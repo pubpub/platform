@@ -65,13 +65,14 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 								<div className="flex items-baseline">
 									<div className="text-sm whitespace-nowrap ml-1">
 										{buttons.length} Integration
-										{buttons.length > 1 ? "s" : ""}
+										{buttons.length !== 1 ? "s" : ""}
 									</div>
 									{buttons.map((button) => {
 										return (
 											<div
 												key={button.actions[0].text}
-												className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
+												// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
+												className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
 											/>
 										);
 									})}
@@ -130,7 +131,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 				</div>
 			</div>
 			<div className="mt-0 items-start flex justify-between">
-				<h3 className="text-md">{getTitle(pub)}</h3>
+				<h3 className="text-md font-bold">{getTitle(pub)}</h3>
 				<div className="flex items-baseline">
 					<Button size="sm" variant="outline" className="ml-1">
 						Move
@@ -160,7 +161,8 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 										{/* @ts-ignore */}
 										{button.actions[0].text}
 										<div
-											className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
+											// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
+											className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
 										/>
 									</div>
 								</Button>

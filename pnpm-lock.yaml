@@ -59,6 +59,9 @@ importers:
       ui:
         specifier: workspace:*
         version: link:../packages/ui
+      utils:
+        specifier: workspace:*
+        version: link:../packages/utils
       uuid:
         specifier: ^9.0.0
         version: 9.0.0

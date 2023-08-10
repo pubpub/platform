@@ -28,6 +28,7 @@
 		"react-dom": "18.2.0",
 		"tailwind-merge": "^1.14.0",
 		"ui": "workspace:*",
+		"utils": "workspace:*",
 		"uuid": "^9.0.0"
 	},
 	"devDependencies": {

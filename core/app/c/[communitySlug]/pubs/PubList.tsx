@@ -45,7 +45,8 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs }) {
 									}}
 								>
 									{/* @ts-ignore */}
-									{jankyExpandState[pub.id] ? "<" : ">"}
+									{/* {jankyExpandState[pub.id] ? "<" : ">"} */}
+									<img src="/icons/chevron-vertical.svg" />
 								</Button>
 							) : (
 								<div className="w-[40px]" />

@@ -9,7 +9,7 @@ const TypeBlock: React.FC<Props> = function ({ type }) {
 	const [expanded, setExpanded] = useState(false);
 	return (
 		<Card>
-			<CardContent>
+			<CardContent className="py-2 px-6">
 				<div className="flex items-center justify-between">
 					<div className="font-bold">{type.name}</div>
 					<Button
@@ -20,7 +20,7 @@ const TypeBlock: React.FC<Props> = function ({ type }) {
 							setExpanded(!expanded);
 						}}
 					>
-						{expanded ? ">" : "<"}
+						<img src="/icons/chevron-vertical.svg" />
 					</Button>
 				</div>
 				<div className="text-sm">{type.description}</div>
