@@ -8,3 +8,5 @@ services:
   startCommand: pnpm start --filter core
   envVars:
     - fromGroup: pubpub-core-prod-env
+    - key: NODE_ENV
+      value: production
