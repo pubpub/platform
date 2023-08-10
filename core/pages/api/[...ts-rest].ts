@@ -1,5 +1,5 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
-import { pubsApi } from "../../contract";
+import { api } from "../../contract";
 import prisma from "~/prisma/db";
 
 const getPubFields = async (pub_id: string) => {
@@ -24,9 +24,9 @@ const getPubFields = async (pub_id: string) => {
 	}, {});
 };
 
-const router = createNextRoute(pubsApi, {
-	pubs: {
-		getPubFields: async ({params}) => {
+const router = createNextRoute(api, {
+	pubApi: {
+		getPubFields: async ({ params }) => {
 			const pubFieldValuePairs = await getPubFields(params.pub_id);
 			return {
 				status: 200,
@@ -34,7 +34,6 @@ const router = createNextRoute(pubsApi, {
 			};
 		},
 		putPubFields: async (body) => {
-			// const body = await CreatePost.instance.execute();
 			return {
 				status: 200,
 				body: {
@@ -47,4 +46,4 @@ const router = createNextRoute(pubsApi, {
 	},
 });
 
-export default createNextRouter(pubsApi, router);
+export default createNextRouter(api, router);
