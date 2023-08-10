@@ -4,8 +4,8 @@ services:
   name: core
   runtime: node
   rootDir: .
-  buildCommand: pnpm install; pnpm build --filter core...
-  startCommand: pnpm start --filter core
+  buildCommand: pnpm install
+  startCommand: pnpm start --filter core...
   envVars:
     - fromGroup: pubpub-core-prod-env
     - key: NODE_ENV
