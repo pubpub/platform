@@ -1,0 +1,14 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "path-to-regexp": "^6.2.1",
+    "vitepress": "1.0.0-beta.7"
+  }
+}
