@@ -35,6 +35,12 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.25.0
         version: 2.25.0(encoding@0.1.13)
+      '@ts-rest/core':
+        specifier: ^3.28.0
+        version: 3.28.0(zod@3.21.4)
+      '@ts-rest/next':
+        specifier: ^3.28.0
+        version: 3.28.0(@ts-rest/core@3.28.0)(next@13.4.5)(zod@3.21.4)
       clsx:
         specifier: ^2.0.0
         version: 2.0.0
@@ -65,6 +71,9 @@ importers:
       uuid:
         specifier: ^9.0.0
         version: 9.0.0
+      zod:
+        specifier: ^3.21.4
+        version: 3.21.4
     devDependencies:
       '@types/diacritics':
         specifier: ^1.3.1
@@ -1434,6 +1443,32 @@ packages:
     resolution: {integrity: sha512-sJ902EfIzn1Fa+qYmjdQqh8tPsoxyBz+8yBKC2HKUxyezKJFwPGOn7pv4WY6QuQW//ySQi5lJjA/ZT9sNWWNTg==}
     dependencies:
       tslib: 2.6.1
+    dev: false
+
+  /@ts-rest/core@3.28.0(zod@3.21.4):
+    resolution: {integrity: sha512-m0Wn2DgO3O57dsGT5fqxvF/WNFPx/8/dxbqLMV9TYXwLBgaJG4vDgR7qXVIYss/c5vlHTQ0oB9X+PwxhI3ksMg==}
+    peerDependencies:
+      zod: ^3.21.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+    dependencies:
+      zod: 3.21.4
+    dev: false
+
+  /@ts-rest/next@3.28.0(@ts-rest/core@3.28.0)(next@13.4.5)(zod@3.21.4):
+    resolution: {integrity: sha512-Ao9UyxuboVgpFDBAYOASPe47IYXpVO6KpMMZ/c/hJVE6KN66Re/CeIjz3sqetG5G36HoqxyhpkUBr6p22xYLSw==}
+    peerDependencies:
+      '@ts-rest/core': 3.28.0
+      next: ^12.0.0 || ^13.0.0
+      zod: ^3.21.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+    dependencies:
+      '@ts-rest/core': 3.28.0(zod@3.21.4)
+      next: 13.4.5(react-dom@18.2.0)(react@18.2.0)
+      zod: 3.21.4
     dev: false
 
   /@tsconfig/node10@1.0.9:
