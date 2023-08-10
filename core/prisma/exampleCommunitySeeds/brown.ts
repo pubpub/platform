@@ -5,9 +5,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	const community = await prisma.community.create({
 		data: {
 			id: communityUUID,
-			name: "BioRxiv",
-			slug: "biorxiv",
-			avatar: "/demo/biorxiv.png",
+			name: "BUDP",
+			slug: "brownlib",
+			avatar: "/demo/brown.png",
 		},
 	});
 	const fieldIds = [...Array(7)].map((x) => uuidv4());
@@ -29,7 +29,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[0],
-			name: "Subject Area",
+			name: "Book",
 			communityId: communityUUID,
 			fields: {
 				connect: [
@@ -45,7 +45,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[1],
-			name: "Preprint",
+			name: "Chapter",
 			communityId: communityUUID,
 			fields: {
 				connect: [{ id: fieldIds[0] }, { id: fieldIds[4] }],
@@ -95,7 +95,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			communityId: communityUUID,
 			values: {
 				createMany: {
-					data: [{ fieldId: fieldIds[0], value: "Biochemistry" }],
+					data: [{ fieldId: fieldIds[0], value: "Furnace and Fugue" }],
 				},
 			},
 		},
@@ -107,10 +107,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Structure-function relationships underpin disulfide loop cleavage-dependent activation of Legionella pneumophila lysophosholipase A PlaA",
-						},
+						{ fieldId: fieldIds[0], value: "Emblem 1" },
 						{ fieldId: fieldIds[4], value: "chapter1.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -125,10 +122,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Noncanonical usage of stop codons in ciliates expands proteins with structurally flexible Q-rich motifs",
-						},
+						{ fieldId: fieldIds[0], value: "Emblem 2" },
 						{ fieldId: fieldIds[4], value: "chapter2.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -143,10 +137,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Increased levels of eIF2A inhibit translation by sequestering 40S ribosomal subunits",
-						},
+						{ fieldId: fieldIds[0], value: "Emblem 3" },
 						{ fieldId: fieldIds[4], value: "chapter3.html" },
 						{ fieldId: fieldIds[6], value: topPub1.id },
 					],
@@ -158,12 +149,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	/* Top Pub 2 */
 	const topPub2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: typeIds[2],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Neuroscience" },
+						{ fieldId: fieldIds[0], value: "Shadow Plays" },
 						{ fieldId: fieldIds[1], value: "123-156612-3521" },
 					],
 				},
@@ -172,12 +163,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const issue1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[3],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{ fieldId: fieldIds[0], value: "Bimodal inference in humans and mice" },
+						{ fieldId: fieldIds[0], value: "Journey into the New World: Tiepolo's Cosmorama" },
 						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
@@ -186,15 +177,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const issue2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[3],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Determinants of Astrocytic Pathology in Stem Cell Models of Primary Tauopathies",
-						},
+						{ fieldId: fieldIds[0], value: "Inside the Casotto: Domenico Selva's Camera Obscura" },
 						{ fieldId: fieldIds[6], value: topPub2.id },
 					],
 				},
@@ -203,18 +191,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const article1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Human Adult Neurogenesis Loss Underlies Cognitive Decline During Epilepsy Progression",
-						},
+						{ fieldId: fieldIds[0], value: "Venetian Perspectives" },
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article1.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue1.id },
 					],
 				},
 			},
@@ -222,18 +207,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const article2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Modulation of dorsal premotor cortex disrupts neuroplasticity of primary motor cortex in young and older adults",
-						},
+						{ fieldId: fieldIds[0], value: "Theater of the World" },
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue1.id },
 					],
 				},
 			},
@@ -241,18 +223,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const article3 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Microprism-based two-photon imaging of the lateral cortex of the mouse inferior colliculus reveals novel organizational principles of the auditory midbrain",
-						},
+						{ fieldId: fieldIds[0], value: "A Peculiar Casotto" },
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article3.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue2.id },
 					],
 				},
 			},
@@ -260,18 +239,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const article4 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Sodium channel endocytosis drives axon initial segment plasticity",
-						},
+						{ fieldId: fieldIds[0], value: "Animating the View" },
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article4.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue2.id },
 					],
 				},
 			},
@@ -279,18 +255,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const article5 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: typeIds[4],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Synaptic and dendritic architecture of two types of hippocampal somatostatin interneurons",
-						},
+						{ fieldId: fieldIds[0], value: "Virtual City" },
 						{ fieldId: fieldIds[5], value: "Xiao-Li Meng" },
 						{ fieldId: fieldIds[4], value: "article5.html" },
-						{ fieldId: fieldIds[6], value: topPub2.id },
+						{ fieldId: fieldIds[6], value: issue2.id },
 					],
 				},
 			},
@@ -300,17 +273,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	const stageIds = [...Array(12)].map((x) => uuidv4());
 	await prisma.stage.createMany({
 		data: [
-			{
-				id: stageIds[0],
-				communityId: communityUUID,
-				name: "Submissions/Revisions in Progress",
-				order: "aa",
-			},
-			{ id: stageIds[1], communityId: communityUUID, name: "Under Conversion", order: "bb" },
+			{ id: stageIds[0], communityId: communityUUID, name: "Submitted", order: "aa" },
+			{ id: stageIds[1], communityId: communityUUID, name: "Ready for Review", order: "bb" },
 			{
 				id: stageIds[2],
 				communityId: communityUUID,
-				name: "Ready to Proof",
+				name: "Ready for Copyedit",
 				order: "cc",
 			},
 			{
@@ -319,10 +287,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				name: "Ready for Registration",
 				order: "dd",
 			},
-			{ id: stageIds[4], communityId: communityUUID, name: "Completed Papers", order: "ee" },
+			{ id: stageIds[4], communityId: communityUUID, name: "Completed", order: "ee" },
 		],
 	});
-
 	await prisma.pub.update({
 		where: { id: article1.id },
 		data: { stages: { connect: { id: stageIds[1] } } },
@@ -349,7 +316,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			{
 				id: stageIds[5],
 				communityId: communityUUID,
-				name: "Paper Initialize",
+				name: "Chapter Initialize",
 				order: "aa",
 			},
 			{
@@ -372,7 +339,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		],
 	});
-
 	await prisma.pub.update({
 		where: { id: chapter1.id },
 		data: { stages: { connect: { id: stageIds[6] } } },
@@ -435,7 +401,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const reviewInstances = await prisma.integrationInstance.create({
 		data: {
-			name: "BioRxiv Staff review process",
+			name: "Brown University Library Press review process",
 			integrationId: reviewIntegration.id,
 			communityId: communityUUID,
 			stages: {
@@ -456,7 +422,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const archiveInstance1 = await prisma.integrationInstance.create({
 		data: {
-			name: "Neuroscience Archive",
+			name: "FuranceFugue Archive",
 			integrationId: archiveIntegration.id,
 			communityId: communityUUID,
 			pubs: {
@@ -466,7 +432,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const siteInstance1 = await prisma.integrationInstance.create({
 		data: {
-			name: "biorxiv.org",
+			name: "furnaceandfugue.org/",
 			integrationId: siteIntegration.id,
 			communityId: communityUUID,
 			pubs: {
@@ -474,16 +440,16 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 	});
-	// const siteInstance2 = await prisma.integrationInstance.create({
-	// 	data: {
-	// 		name: "frankenbook.org",
-	// 		integrationId: siteIntegration.id,
-	// 		communityId: communityUUID,
-	// 		pubs: {
-	// 			connect: [{ id: topPub1.id }],
-	// 		},
-	// 	},
-	// });
+	const siteInstance2 = await prisma.integrationInstance.create({
+		data: {
+			name: "shadow-plays.supdigital.org",
+			integrationId: siteIntegration.id,
+			communityId: communityUUID,
+			pubs: {
+				connect: [{ id: topPub1.id }],
+			},
+		},
+	});
 
 	const integrationFieldIds = [...Array(4)].map((x) => uuidv4());
 	await prisma.pubField.createMany({

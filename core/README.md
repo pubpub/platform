@@ -17,7 +17,7 @@ Copy the relevant values output from `supabase start` into `.env.local`.
 Populate the database by running:
 
 ```
-pnpm run reset
+pnpm --filter core reset
 ```
 
 Choose yes on prompted questions.
@@ -60,23 +60,6 @@ If you wish to avoid this, you can preserve the database until next time by inst
 ```
 supabase stop --backup
 ```
-
-# Code Setup
-
-## Prettier
-
-I've found success simply using prettier before adding complex ESLint configs. Just auto-format (either on save, or on commit), and let the simple .prettierrc hold the small subset of decisions.
-
-Really nice to bind `Format Document` to a familiar keyboard shortcut so you can format the doc as you go (similar to format-on-save and then saving frequently).
-
-## Git Hooks
-
-Two hooks are defined in the package.json `gitHooks` field, which are executed by `yorkie`.
-
--   The first runs Prettier on commit
--   The second runs a type-check before pushing. Since our deployment setup builds on each push, the intent here is to not trigger a build with known type errors.
-
-Sometimes you want to push up changes even though there is a type error. To do so, include `--no-verify` at the end of your command. For example: `git push origin main --no-verify`.
 
 ## Supabase
 
