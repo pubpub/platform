@@ -65,7 +65,7 @@ For a nicer DX, bind `Format Document` to a familiar keyboard shortcut so you ca
 
 ## Git Hooks
 
-Two hooks are defined in the package.json `gitHooks` field, which are executed by `yorkie`.
+Two hooks are defined using `husky` and stored in `.husky`.
 
 -   The first runs Prettier on commit
 -   The second runs a type-check before pushing. Since our deployment setup builds on each push, the intent here is to not trigger a build with known type errors.
