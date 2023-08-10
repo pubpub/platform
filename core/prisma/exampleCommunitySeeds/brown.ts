@@ -5,7 +5,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	const community = await prisma.community.create({
 		data: {
 			id: communityUUID,
-			name: "Brown Univ Library",
+			name: "BUDP",
 			slug: "brownlib",
 			avatar: "/demo/brown.png",
 		},

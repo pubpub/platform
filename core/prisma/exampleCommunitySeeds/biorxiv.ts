@@ -7,7 +7,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			id: communityUUID,
 			name: "BioRxiv",
 			slug: "biorxiv",
-			avatar: "/demo/biorxiv.ico",
+			avatar: "/demo/biorxiv.png",
 		},
 	});
 	const fieldIds = [...Array(7)].map((x) => uuidv4());
