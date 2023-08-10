@@ -10,8 +10,6 @@ const PostSchema = z.object({
 	body: z.string(),
 });
 
-const PubFieldsResponseSchema = z.any();
-
 export type Post = z.infer<typeof PostSchema>;
 
 export const posts = c.router({

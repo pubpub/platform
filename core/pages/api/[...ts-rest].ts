@@ -1,20 +1,39 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
-import { api } from "../../contract";
+import { pubsApi } from "../../contract";
+import prisma from "~/prisma/db";
 
-const router = createNextRoute(api, {
-	posts: {
-		getPosts: async () => {
-			// const body = await GetPosts.instance.execute();
+const getPubFields = async (pub_id: string) => {
+	const fields = await prisma.pubValue.findMany({
+		where: { pubId: pub_id },
+		distinct: ["fieldId"],
+		orderBy: {
+			createdAt: "desc",
+		},
+		include: {
+			field: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+
+	return fields.reduce((prev: any, curr) => {
+		prev[curr.field.name] = curr.value;
+		return prev;
+	}, {});
+};
+
+const router = createNextRoute(pubsApi, {
+	pubs: {
+		getPubFields: async ({params}) => {
+			const pubFieldValuePairs = await getPubFields(params.pub_id);
 			return {
 				status: 200,
-				body: [{
-					id: "qea",
-					title: "Watch One Piece",
-					body: "Just get to water 7. if you dont like it chill, watch sometyhing welse",
-				}],
+				body: pubFieldValuePairs,
 			};
 		},
-		createPost: async (body) => {
+		putPubFields: async (body) => {
 			// const body = await CreatePost.instance.execute();
 			return {
 				status: 200,
@@ -24,8 +43,8 @@ const router = createNextRoute(api, {
 					body: "Just get to water 7. if you dont like it chill, watch sometyhing welse",
 				},
 			};
-		}
+		},
 	},
 });
 
-export default createNextRouter(api, router);
+export default createNextRouter(pubsApi, router);
