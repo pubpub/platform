@@ -8,4 +8,3 @@ services:
   startCommand: pnpm run start --filter core
   envVars:
     - fromGroup: pubpub-core-prod-env
-      previewValue: pubpub-core-preview-env
