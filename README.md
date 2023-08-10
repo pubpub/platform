@@ -1,4 +1,4 @@
-<img src="./core/app/icon.svg" width="24px" style="float: left; margin-right: 1em; position: relative; top: 4px;">
+<img src="./core/app/icon.svg" width="32px">
 
 # PubPub
 
