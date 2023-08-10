@@ -7,20 +7,23 @@ hero:
   tagline: Sane defaults for knowledge production, extensible to an integrated knowledge ecosystem.
   actions:
     - theme: brand
-      text: Get Started
-      link: /integrations/README
+      text: Visit PubPub
+      link: https://www.pubpub.org/
     - theme: alt
-      text: View on Github
-      link: https://github.com/pubpub/pubpub
+      text: View source Github
+      link: https://github.com/pubpub/v7
 
 features:
-  - icon: 🐡
-    title: Codify Your Workflow
-    details: Clearly define the stages and actions necessary for publication, and coordinate contributor participation.
-  - icon: 🐳
-    title: Collect Peer Reviews
-    details: Solicit and coordinate reviews for datasets, articles, videos, or any other medium.
-  - icon: 🐙
-    title: Publish to Any Platform
-    details: Send your articles to a website, a zine, or a journal.
+  - icon: 🔌
+    title: Integrations
+    details: Operate on and respond to changes in metadata
+    link: integrations/get_started
+  - icon: 🤝
+    title: API
+    details: Read and write to PubPub Core
+    link: api/overview
+  - icon: 🌐
+    title: Core
+    details: How the sausage is made
+    link: core/overview
 ---

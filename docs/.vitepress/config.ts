@@ -18,15 +18,18 @@ export default defineConfig({
 	title: 'PubPub Documentation',
 	description: 'Documentation for PubPub Core API, Integrations, Packages',
 	cleanUrls: true,
-	vite: { build: { rollupOptions: { external: ['vue/server-renderer', 'vue'] } }, }, // this fantastically suspect line allows setting srcDir as parent directory
+	vite: { build: { rollupOptions: { external: ['vue/server-renderer', 'vue'] } }, }, // allows setting srcDir to parent directory
 	srcDir: '..',
 	themeConfig: {
 		nav: [
 			{ text: 'Home', link: '/' },
-			{ text: 'Dev Docs', link: '/docs/' },
-			{ text: 'Changelog', link: '/changelog/' },
+			{ text: 'Integrations', link: '/integrations/get_started' },
+			{ text: 'Changelog', link: '/docs/changelog' },
 		],
 		sidebar: sidebarDirTrees,
+		search: {
+			provider: 'local'
+		},
 		outlineTitle: 'On this page',
 		outline: 2,
 		socialLinks: [

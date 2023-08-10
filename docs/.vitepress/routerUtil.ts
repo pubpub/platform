@@ -11,7 +11,7 @@ import { match, compile } from 'path-to-regexp';
 
 export const rewrites = {
 	'{:name}_docs.md': 'index.md', // rewrite root-level `[name]_docs.md`
-	':path(.*)/{:name}_index.md': ':path/index.md', // `/datacite/datacite_docs_index.md` => `/datacite/index.hmtl`
+	':path(.*)/{:name}_docs.md': ':path/:name.md', // `/datacite/datacite_oauth_docs.md` => `/datacite/oauth.hmtl`
 	':path(.*)/{:nameSpace}_{:name}_docs.md': ':path/:name.md', // `/datacite/datacite_oauth_docs.md` => `/datacite/oauth.hmtl`
 };
 
@@ -56,11 +56,11 @@ const exclusions = [
 ];
 
 // do: beautify text for links
-// by: take basename of path, replace _ with spaces and drop `docs/index`
-// eg: oauth_docs_index.md => oauth
+// by: take basename of path, replace _ with spaces
+// eg: integration_oauth_docs.md => integration oauth
 const getText = (filename: string) => path
 	.basename(filename)
-	.replace(/_(docs|index)/g, '')
+	.replace(/_(docs)/g, '')
 	.replace('_', ' ')
 	.replace(fileExtensions, '');
 
@@ -76,27 +76,16 @@ export const dirTree = (filename: string): NodeInfo => {
 
 	if (isDirectory && !isExcluded) {
 		const node = {
-			link: rewritePath(path.join(filename, '/index.md')),
 			text: getText(filename),
 			collapsed: false,
 		}
-		const children = fs.readdirSync(filename).reduce((items: NodeInfo[], child: string) => {
+		const items = fs.readdirSync(filename).reduce((items: NodeInfo[], child: string) => {
 			const childTree = dirTree(path.join(filename, child));
 			return childTree ? [...items, childTree] : items; // if child tree null, don't add to items
 		}, []);
-		const indexFile = children.find((item) => item?.link === node.link);
-		const items = children.filter((item) => item?.link !== node.link);
-		if (inty) console.log({
-			children,
-			items,
-			node,
-			indexFile,
-		});
-		return (!indexFile && !items.length)
-			? null
-			: (indexFile)
-				? node
-				: { ...node, items }
+		return (items.length)
+			? { ...node, items }
+			: null;
 	} else if (isMatchedName && isMatchedExtension) {
 		return {
 			link: rewritePath(filename),
