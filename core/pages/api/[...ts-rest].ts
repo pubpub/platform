@@ -1,32 +1,10 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "../../contract";
-import prisma from "~/prisma/db";
-
-const getPubFields = async (pub_id: string) => {
-	const fields = await prisma.pubValue.findMany({
-		where: { pubId: pub_id },
-		distinct: ["fieldId"],
-		orderBy: {
-			createdAt: "desc",
-		},
-		include: {
-			field: {
-				select: {
-					name: true,
-				},
-			},
-		},
-	});
-
-	return fields.reduce((prev: any, curr) => {
-		prev[curr.field.name] = curr.value;
-		return prev;
-	}, {});
-};
+import { pubQueries, memberQueries } from "server";
 
 const pubRouter = createNextRoute(api.pubs, {
 	getPubFields: async ({ params }) => {
-		const pubFieldValuePairs = await getPubFields(params.pub_id);
+		const pubFieldValuePairs = await pubQueries.get(params.pub_id);
 		return {
 			status: 200,
 			body: pubFieldValuePairs,
@@ -44,8 +22,19 @@ const pubRouter = createNextRoute(api.pubs, {
 	},
 });
 
+const memberRouter = createNextRoute(api.members, {
+	suggestMember: async ({ params }) => {
+		const member = await memberQueries.get(params.name);
+		return {
+			status: 200,
+			body: member,
+		};
+	},
+});
+
 const router = {
 	pubs: pubRouter,
+	members: memberRouter,
 };
 
 export default createNextRouter(api, router);
