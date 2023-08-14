@@ -13,9 +13,9 @@ export const pubApi = c.router({
 		path: "/pubs/:pub_id",
 		summary: "Get all pubs",
 		description: "A way to get every pub for an integration instance",
-        pathParams: z.object({
-            pub_id: z.string(),
-        }),
+		pathParams: z.object({
+			pub_id: z.string(),
+		}),
 		responses: {
 			200: z.array(PubFieldsSchema),
 		},
