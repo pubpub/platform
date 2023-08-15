@@ -10,13 +10,12 @@ export type MemberFieldsResponse = z.infer<typeof MemberFieldsSchema>;
 export const memberApi = c.router({
 	suggestMember: {
 		method: "GET",
-		path: "/members/suggest/:name",
+		path: "/members/suggest/:input",
 		summary: "suggest member",
 		description:
-			"A way to suggest members so that integrations users can find users in their community or verify they exist",
+			"A way to suggest members so that integrations users can find users or verify they exist",
 		pathParams: z.object({
-			name: z.string().optional(),
-			email: z.string().optional(),
+			input: z.string(),
 		}),
 		responses: {
 			200: MemberFieldsSchema,

@@ -24,7 +24,7 @@ const pubRouter = createNextRoute(api.pubs, {
 
 const memberRouter = createNextRoute(api.members, {
 	suggestMember: async ({ params }) => {
-		const member = await memberQueries.get(params.name);
+		const member = await memberQueries.get(params.input);
 		return {
 			status: 200,
 			body: member,
