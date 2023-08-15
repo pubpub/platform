@@ -13,7 +13,7 @@ export const memberApi = c.router({
 		path: "/members/suggest/:input",
 		summary: "suggest member",
 		description:
-			"A way to suggest members so that integrations users can find users or verify they exist",
+			"A way to suggest members so that integrations users can find users or verify they exist" ,
 		pathParams: z.object({
 			input: z.string(),
 		}),
