@@ -1,5 +1,5 @@
 import ReactSwagger from "./SwaggerUi";
-import { openApiDocument } from "../../lib/swagger/swaggerSpec";
+import { openApiDocument } from "lib/swagger/swaggerSpec";
 
 export default async function IndexPage() {
 	return (
