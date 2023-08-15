@@ -1,10 +1,8 @@
 import prisma from "~/prisma/db";
-import { Prisma } from "@prisma/client";
 import { SuggestedMember } from "~/contract/resources/members";
 
 const getMembers = async (input: string): Promise<SuggestedMember[]> => {
-	// return candidates for autocompleting a form with suggestions from the pubpub user database
-	// should search by name and email, but probably only return name and id
+	// TODO: ask why this doesnt throw a type err
 	const membersStartingWithName = await prisma.user.findMany({
 		where: {
 			name: {
