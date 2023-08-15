@@ -1,6 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "../../contract";
 import { pubQueries, memberQueries } from "server";
+import { SuggestedMember } from "~/contract/resources/members";
 
 const pubRouter = createNextRoute(api.pubs, {
 	getPubFields: async ({ params }) => {
@@ -25,6 +26,7 @@ const pubRouter = createNextRoute(api.pubs, {
 const memberRouter = createNextRoute(api.members, {
 	suggestMember: async ({ params }) => {
 		const member = await memberQueries.get(params.input);
+
 		return {
 			status: 200,
 			body: member,

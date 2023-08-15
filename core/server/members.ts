@@ -1,6 +1,8 @@
 import prisma from "~/prisma/db";
+import { Prisma } from "@prisma/client";
+import { SuggestedMember } from "~/contract/resources/members";
 
-const getMembers = async (input: string | undefined) => {
+const getMembers = async (input: string): Promise<SuggestedMember[]> => {
 	// return candidates for autocompleting a form with suggestions from the pubpub user database
 	// should search by name and email, but probably only return name and id
 	const membersStartingWithName = await prisma.user.findMany({
@@ -16,7 +18,9 @@ const getMembers = async (input: string | undefined) => {
 		},
 		take: 10,
 		select: {
+			id: true,
 			name: true,
+			email: true,
 		},
 	});
 

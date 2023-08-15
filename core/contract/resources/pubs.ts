@@ -5,8 +5,6 @@ const c = initContract();
 
 const PubFieldsSchema = z.any();
 
-export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
-
 export const pubApi = c.router({
 	getPubFields: {
 		method: "GET",
