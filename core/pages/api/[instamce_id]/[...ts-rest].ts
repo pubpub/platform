@@ -1,11 +1,11 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
-import { api } from "../../contract";
-import { pubQueries, memberQueries } from "server";
-import { SuggestedMember } from "~/contract/resources/members";
+import { api } from "~/lib/contract";
+import { pubQueries, autosuggestionQueries } from "~/lib/server";
+import { SuggestedMember } from "~/lib/contract/resources/autosuggestion";
 
-const pubRouter = createNextRoute(api.pubs, {
+const pubRouter = createNextRoute(api.pub, {
 	getPubFields: async ({ params }) => {
-		const pubFieldValuePairs = await pubQueries.get(params.pub_id);
+		const pubFieldValuePairs = await pubQueries.getPubFields(params.pub_id);
 		return {
 			status: 200,
 			body: pubFieldValuePairs,
@@ -23,9 +23,9 @@ const pubRouter = createNextRoute(api.pubs, {
 	},
 });
 
-const memberRouter = createNextRoute(api.members, {
+const autosuggestRouter = createNextRoute(api.autosuggest, {
 	suggestMember: async ({ params }) => {
-		const member: SuggestedMember[] = await memberQueries.get(params.input);
+		const member: SuggestedMember[] = await autosuggestionQueries.getMembers(params.input);
 
 		return {
 			status: 200,
@@ -35,8 +35,8 @@ const memberRouter = createNextRoute(api.members, {
 });
 
 const router = {
-	pubs: pubRouter,
-	members: memberRouter,
+	pub: pubRouter,
+	autosuggest: autosuggestRouter,
 };
 
 export default createNextRouter(api, router);

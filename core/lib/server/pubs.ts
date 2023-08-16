@@ -22,4 +22,4 @@ const getPubFields = async (pub_id: string) => {
 	}, {});
 };
 
-export const pubQueries = {get: getPubFields}
+export const pubQueries = { getPubFields };
