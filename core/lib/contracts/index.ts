@@ -1,7 +1,7 @@
 import { initContract } from "@ts-rest/core";
 
 import { pubApi } from "./resources/pub";
-import { autosuggestionApi } from "./resources/autosuggestion";
+import { autosuggestApi } from "./resources/autosuggest";
 
 const c = initContract();
 
@@ -13,5 +13,5 @@ export const api = c.router({
 	/**
 	 * Members API
 	 */
-	autosuggestion: autosuggestionApi,
+	autosuggest: autosuggestApi,
 });

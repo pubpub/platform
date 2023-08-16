@@ -1,4 +1,4 @@
 import { pubQueries } from "./pubs";
-import { autosuggestionQueries } from "./autosuggestion";
+import { autosuggestQueries } from "./autosuggest";
 
-export { pubQueries, autosuggestionQueries };
+export { pubQueries, autosuggestQueries };
