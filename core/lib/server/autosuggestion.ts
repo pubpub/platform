@@ -1,5 +1,5 @@
 import prisma from "~/prisma/db";
-import { SuggestedMember } from "~/lib/contract/resources/autosuggestion";
+import { SuggestedMember } from "~/lib/contracts/resources/autosuggestion";
 
 const getMembers = async (input: string): Promise<SuggestedMember[]> => {
 	const membersStartingWithName = await prisma.user.findMany({

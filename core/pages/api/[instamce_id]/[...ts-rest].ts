@@ -1,7 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
-import { api } from "~/lib/contract";
+import { api } from "~/lib/contracts";
 import { pubQueries, autosuggestionQueries } from "~/lib/server";
-import { SuggestedMember } from "~/lib/contract/resources/autosuggestion";
+import { SuggestedMember } from "~/lib/contracts/resources/autosuggestion";
 
 const pubRouter = createNextRoute(api.pub, {
 	getPubFields: async ({ params }) => {
@@ -23,7 +23,7 @@ const pubRouter = createNextRoute(api.pub, {
 	},
 });
 
-const autosuggestRouter = createNextRoute(api.autosuggest, {
+const autosuggestionRouter = createNextRoute(api.autosuggestion, {
 	suggestMember: async ({ params }) => {
 		const member: SuggestedMember[] = await autosuggestionQueries.getMembers(params.input);
 
@@ -36,7 +36,7 @@ const autosuggestRouter = createNextRoute(api.autosuggest, {
 
 const router = {
 	pub: pubRouter,
-	autosuggest: autosuggestRouter,
+	autosuggestion: autosuggestionRouter,
 };
 
 export default createNextRouter(api, router);
