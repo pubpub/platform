@@ -32,6 +32,7 @@ async function main() {
 			{ userId: mainUserId, communityId: communityIds[1], canAdmin: true },
 			{ userId: mainUserId, communityId: communityIds[2], canAdmin: true },
 			{ userId: mainUserId, communityId: communityIds[3], canAdmin: true },
+			{ userId: mainUserId, communityId: communityIds[4], canAdmin: true },
 		],
 	});
 }

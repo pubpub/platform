@@ -7,7 +7,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			id: communityUUID,
 			name: "Unjournal",
 			slug: "unjournal",
-			avatar: "/demo/unjournal.jpg",
+			avatar: "/demo/unjournal.png",
 		},
 	});
 
