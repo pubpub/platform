@@ -5,6 +5,7 @@ import buildArcadia from "./exampleCommunitySeeds/arcadia";
 import buildMITP from "./exampleCommunitySeeds/mitp";
 import buildBiorxiv from "./exampleCommunitySeeds/biorxiv";
 import buildBrown from "./exampleCommunitySeeds/brown";
+import buildUnjournal from "./exampleCommunitySeeds/unjournal";
 
 const prisma = new PrismaClient();
 async function main() {
@@ -23,6 +24,7 @@ async function main() {
 	await buildMITP(prisma, communityIds[1]);
 	await buildBiorxiv(prisma, communityIds[2]);
 	await buildBrown(prisma, communityIds[3]);
+	await buildUnjournal(prisma, communityIds[4]);
 
 	await prisma.member.createMany({
 		data: [
