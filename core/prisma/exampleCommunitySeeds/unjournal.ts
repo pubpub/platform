@@ -11,25 +11,29 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(4)].map((x) => uuidv4());
+	const fieldIds = [...Array(7)].map((x) => uuidv4());
+
 	await prisma.pubField.createMany({
 		data: [
 			{ id: fieldIds[0], name: "Title" },
 			{ id: fieldIds[1], name: "Description" },
 			{ id: fieldIds[2], name: "Manager's Notes" },
 			{ id: fieldIds[3], name: "Parent" },
+			{ id: fieldIds[4], name: "Children" },
+			{ id: fieldIds[5], name: "Content" },
+			{ id: fieldIds[6], name: "Evaluated Paper" },
+			{ id: fieldIds[7], name: "Tags" },
 		],
 	});
 
 	const typeIds = [...Array(4)].map((x) => uuidv4());
-
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[0],
-			name: "Collection",
+			name: "Submission",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }],
 			},
 		},
 	});
@@ -53,6 +57,16 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.pubType.create({
 		data: {
 			id: typeIds[2],
+			name: "Author Response",
+			communityId: communityUUID,
+			fields: {
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
+			},
+		},
+	});
+	await prisma.pubType.create({
+		data: {
+			id: typeIds[3],
 			name: "Evaluation",
 			communityId: communityUUID,
 			fields: {
@@ -61,87 +75,130 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	await prisma.pubType.create({
-		data: {
-			id: typeIds[3],
-			name: "Author Response",
-			communityId: communityUUID,
-			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
-			},
-		},
-	});
-
-	/*--Top level pub---*/
-	const parentPub1 = await prisma.pub.create({
+	const submission1 = await prisma.pub.create({
 		data: {
 			pubTypeId: typeIds[0],
-			communityId: communityUUID,
-			values: {
-				createMany: {
-					data: [{ fieldId: fieldIds[0], value: "Evaluation's in Progress" }],
-				},
-			},
-		},
-	});
-
-	const evaluation1 = await prisma.pub.create({
-		data: {
-			pubTypeId: typeIds[2],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
 						{
 							fieldId: fieldIds[0],
-							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
+							value: "Advance Market Commitments: Insights from Theory and Experience",
 						},
 						{
 							fieldId: fieldIds[1],
-							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
+							value: `Ten years ago, donors committed $1.5 billion to a pilot Advance Market Commitment (AMC) to help purchase pneumococcal vaccine for low-income countries. The AMC aimed to encourage the development of such vaccines, ensure distribution to children in low-income countries, and pilot the AMC mechanism for possible future use. Three vaccines have been developed and more than 150 million children immunized, saving an estimated 700,000 lives. This paper reviews the economic logic behind AMCs, the experience with the pilot, and key issues for future AMCs.`,
 						},
-						{ fieldId: fieldIds[3], value: parentPub1.id },
 					],
 				},
 			},
 		},
 	});
 
-	const evaluation2 = await prisma.pub.create({
+	const toAskForConsent = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: typeIds[0],
 			communityId: communityUUID,
 			values: {
 				createMany: {
 					data: [
 						{
 							fieldId: fieldIds[0],
-							value: "Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell",
+							value: "The Governance of Non-Profits and their Social Impact: Evidence from a Randomized Program in Healthcare in the Democratic Republic of Congo",
 						},
 						{
 							fieldId: fieldIds[1],
-							value: `Philip Trammell's Evaluation 2 of “Artificial Intelligence and Economic Growth” for Unjournal`,
+							value: "Substantial funding is provided to the healthcare systems of low-income countries. However, an important challenge is to ensure that this funding be used efficiently. This challenge is complicated by the fact that a large share of healthcare services in low-income countries is provided by non-profit health centers that often lack i) effective governance structures and ii) organizational know-how and adequate training. In this paper, we argue that the bundling of performance-based incentives with auditing and feedback (A&F) is a potential way to overcome these obstacles. First, the combination of feedback and performance-based incentives—that is, feedback joint with incentives to act on this feedback and achieve specific health outcomes—helps address the knowledge gap that may otherwise undermine performance-based incentives. Second, coupling feedback with auditing helps ensure that the information underlying the feedback is reliable—a prerequisite for effective feedback. To examine the effectiveness of this bundle, we use data from a randomized governance program conducted in the Democratic Republic of Congo. Within the program, a set of health centers were randomly assigned to a “governance treatment” that consisted of performance-based incentives combined with A&F, while others were not. Consistent with our prediction, we find that the governance treatment led to i) higher operating efficiency and ii) improvements in health outcomes. Furthermore, we find that funding is not a substitute for the governance treatment—health centers that only receive funding increase their scale, but do not show improvements in operating efficiency nor health outcomes.",
 						},
-						{ fieldId: fieldIds[3], value: parentPub1.id },
 					],
 				},
 			},
 		},
 	});
 
-	/*--Top level pub---*/
-	const parentPub2 = await prisma.pub.create({
+	const toEvaluate = await prisma.pub.create({
 		data: {
 			pubTypeId: typeIds[0],
 			communityId: communityUUID,
 			values: {
 				createMany: {
-					data: [{ fieldId: fieldIds[0], value: "Evaluation Summaries and Metrics" }],
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "ADVANCE MARKET COMMITMENTS: INSIGHTS FROM THEORY AND EXPERIENCE",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `Ten years ago, donors committed $1.5 billion to a pilot Advance Market Commitment (AMC) to help purchase pneumococcal vaccine for low-income countries. The AMC aimed to encourage the development of such vaccines, ensure distribution to children in low-income countries, and pilot the AMC mechanism for possible future use. Three vaccines have been developed and more than 150 million children immunized, saving an estimated 700,000 lives. This paper reviews the economic logic behind AMCs, the experience with the pilot, and key issues for future AMCs.`,
+						},
+					],
 				},
 			},
 		},
 	});
 
+	const evaluating1 = await prisma.pub.create({
+		data: {
+			pubTypeId: typeIds[0],
+			communityId: communityUUID,
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: 'Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
+						},
+						{
+							fieldId: fieldIds[1],
+							value: 'This will be evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
+						},
+					],
+				},
+			},
+		},
+	});
+
+	const evaluating2 = await prisma.pub.create({
+		data: {
+			pubTypeId: typeIds[0],
+			communityId: communityUUID,
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "Artificial Intelligence and Economic Growth”: Philip Trammell",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `An evaluation of “Artificial Intelligence and Economic Growth” for Unjournal`,
+						},
+					],
+				},
+			},
+		},
+	});
+	const authorRejection = await prisma.pub.create({
+		data: {
+			pubTypeId: typeIds[0],
+			communityId: communityUUID,
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "Do Celebrity Endorsements Matter? A Twitter Experiment Promoting Vaccination In Indonesia",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `You haver to reject me. Pleseeee. Reject meeeeeeee`,
+						},
+					],
+				},
+			},
+		},
+	});
 	const evaluationSummary1 = await prisma.pub.create({
 		data: {
 			pubTypeId: typeIds[1],
@@ -161,7 +218,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 							fieldId: fieldIds[2],
 							value: "Ive never seen a squeaky wheel effect climate change",
 						},
-						{ fieldId: fieldIds[3], value: parentPub2.id },
 					],
 				},
 			},
@@ -187,21 +243,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 							fieldId: fieldIds[2],
 							value: "Ive never seen an 'AI'. Prove it.",
 						},
-						{ fieldId: fieldIds[3], value: parentPub2.id },
 					],
-				},
-			},
-		},
-	});
-
-	/*--Top level pub---*/
-	const parentPub3 = await prisma.pub.create({
-		data: {
-			pubTypeId: typeIds[0],
-			communityId: communityUUID,
-			values: {
-				createMany: {
-					data: [{ fieldId: fieldIds[0], value: "Author Responses" }],
 				},
 			},
 		},
@@ -209,7 +251,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const authorsResponse = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: typeIds[2],
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -222,7 +264,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 							fieldId: fieldIds[1],
 							value: `Wealth. Fame. Power. The man who had acquired everything in this world, the Pirate King, Gol D. Roger. The final words that were said at his execution, sent people to the seas. "My wealth and treasures? If you want it, I'll let you have it. Look for it, I left it all at that place." Ever since, pirates from all over the world set sail for the Grand Line, searching for One Piece, the treasure that would make their dreams come true.`,
 						},
-						{ fieldId: fieldIds[3], value: parentPub3.id },
 					],
 				},
 			},
@@ -231,7 +272,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const authorsResponse2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: typeIds[2],
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -244,7 +285,47 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 							fieldId: fieldIds[1],
 							value: `You can beleive it or not, but i am telling you right now, that, that AI back there is is not real!`,
 						},
-						{ fieldId: fieldIds[3], value: parentPub3.id },
+					],
+				},
+			},
+		},
+	});
+	const evaluation1 = await prisma.pub.create({
+		data: {
+			pubTypeId: typeIds[3],
+			communityId: communityUUID,
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
+						},
+						{
+							fieldId: fieldIds[1],
+							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
+						},
+					],
+				},
+			},
+		},
+	});
+
+	const evaluation2 = await prisma.pub.create({
+		data: {
+			pubTypeId: typeIds[3],
+			communityId: communityUUID,
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `Philip Trammell's Evaluation 2 of “Artificial Intelligence and Economic Growth” for Unjournal`,
+						},
 					],
 				},
 			},
@@ -293,12 +374,25 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		],
 	});
+
 	await prisma.pub.update({
-		where: { id: evaluation1.id },
+		where: { id: submission1.id },
+		data: { stages: { connect: { id: stageIds[0] } } },
+	});
+	await prisma.pub.update({
+		where: { id: toAskForConsent.id },
+		data: { stages: { connect: { id: stageIds[1] } } },
+	});
+	await prisma.pub.update({
+		where: { id: toEvaluate.id },
+		data: { stages: { connect: { id: stageIds[2] } } },
+	});
+	await prisma.pub.update({
+		where: { id: evaluating1.id },
 		data: { stages: { connect: { id: stageIds[3] } } },
 	});
 	await prisma.pub.update({
-		where: { id: evaluation2.id },
+		where: { id: evaluating2.id },
 		data: { stages: { connect: { id: stageIds[3] } } },
 	});
 	await prisma.pub.update({
@@ -317,17 +411,81 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		where: { id: authorsResponse2.id },
 		data: { stages: { connect: { id: stageIds[4] } } },
 	});
+	await prisma.pub.update({
+		where: { id: evaluation1.id },
+		data: { stages: { connect: { id: stageIds[5] } } },
+	});
+	await prisma.pub.update({
+		where: { id: evaluation2.id },
+		data: { stages: { connect: { id: stageIds[5] } } },
+	});
+	await prisma.pub.update({
+		where: { id: authorRejection.id },
+		data: { stages: { connect: { id: stageIds[6] } } },
+	});
 
-	const siteIntegration = await prisma.integration.create({
+	const semanticScholarIntegration = await prisma.integration.create({
 		data: {
-			name: "Site Builder",
+			name: "Semantic Scholar",
 			actions: [
 				{
-					text: "Manage Site",
-					href: "https://integrations.pubpub.org/sitebuilder/manage",
+					text: "Add paper from Semantic Scholar",
+					href: "https://integrations.pubpub.org/semanticscholar/manage",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/sitebuilder/settings",
+			settingsUrl: "https://integrations.pubpub.org/semanticscholar/settings",
+		},
+	});
+
+	const openAlexIntegration = await prisma.integration.create({
+		data: {
+			name: "OpenAlex",
+			actions: [
+				{
+					text: "Add work from OpenAlex",
+					href: "https://integrations.pubpub.org/semanticscholar/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/semanticscholar/settings",
+		},
+	});
+
+	const crossrefIntegration = await prisma.integration.create({
+		data: {
+			name: "Crossref",
+			actions: [
+				{
+					text: "Add work from Crossref",
+					href: "https://integrations.pubpub.org/semanticscholar/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/semanticscholar/settings",
+		},
+	});
+
+	const openCitationsInegration = await prisma.integration.create({
+		data: {
+			name: "Open Citations",
+			actions: [
+				{
+					text: "Add work from open citation",
+					href: "https://integrations.pubpub.org/opencitation/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/opencitation/settings",
+		},
+	});
+
+	const keywordExtractionIntegration = await prisma.integration.create({
+		data: {
+			name: "Keyword Extraction",
+			actions: [
+				{
+					text: "Extract Keywords",
+					href: "https://integrations.pubpub.org/keyword/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/keyword/settings",
 		},
 	});
 
@@ -341,6 +499,18 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			],
 			settingsUrl: "https://integrations.pubpub.org/evaluation/settings",
+		},
+	});
+	const siteIntegration = await prisma.integration.create({
+		data: {
+			name: "Site Builder",
+			actions: [
+				{
+					text: "Manage Site",
+					href: "https://integrations.pubpub.org/sitebuilder/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/sitebuilder/settings",
 		},
 	});
 
@@ -365,13 +535,95 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const archiveIntegration = await prisma.integration.create({
+		data: {
+			name: "Portico Archiver",
+			actions: [
+				{
+					text: "Manage Archive",
+					href: "https://integrations.pubpub.org/portico/manage",
+				},
+				{
+					text: "Archive",
+					href: "https://integrations.pubpub.org/portico/archive",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/portico/settings",
+		},
+	});
+
+	const assignmentIntegration = await prisma.integration.create({
+		data: {
+			name: "Assignment Manager",
+			actions: [
+				{
+					text: "Manage Assignments",
+					href: "https://integrations.pubpub.org/assignment/manage",
+				},
+				{
+					text: "Assign",
+					href: "https://integrations.pubpub.org/assignment/assign",
+				},
+				{
+					text: "(Un)Assign",
+					href: "https://integrations.pubpub.org/assignment/assign",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/assignment/settings",
+		},
+	});
+
 	await prisma.integrationInstance.create({
 		data: {
-			name: "unjournal.evaluations.org",
-			integrationId: siteIntegration.id,
+			name: "Semantic Scholar",
+			integrationId: semanticScholarIntegration.id,
 			communityId: communityUUID,
 			stages: {
-				connect: [{ id: stageIds[5] }],
+				connect: [{ id: stageIds[0] }],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "OpenAlex",
+			integrationId: openAlexIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[0] }],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "Crossref",
+			integrationId: crossrefIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[0] }],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "Open Citations",
+			integrationId: openCitationsInegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[0] }],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "Keyword Extraction",
+			integrationId: keywordExtractionIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[0] }],
 			},
 		},
 	});
@@ -382,15 +634,18 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			integrationId: evaluationIntegration.id,
 			communityId: communityUUID,
 			stages: {
-				connect: [
-					{ id: stageIds[0] },
-					{ id: stageIds[1] },
-					{ id: stageIds[2] },
-					{ id: stageIds[3] },
-					{ id: stageIds[4] },
-					{ id: stageIds[5] },
-					{ id: stageIds[6] },
-				],
+				connect: [{ id: stageIds[3] }],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "unjournal.evaluations.org",
+			integrationId: siteIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[5] }],
 			},
 		},
 	});
@@ -417,50 +672,73 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const integrationFieldIds = [...Array(2)].map((x) => uuidv4());
-	await prisma.pubField.createMany({
-		data: [
-			{
-				id: integrationFieldIds[0],
-				name: "sitebuilder/status",
-				integrationId: siteIntegration.id,
+	await prisma.integrationInstance.create({
+		data: {
+			name: "Unjournal Archive",
+			integrationId: archiveIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[1] }, { id: stageIds[6] }],
 			},
-			{
-				id: integrationFieldIds[1],
-				name: "evaluation/status",
-				integrationId: evaluationIntegration.id,
-			},
-		],
+		},
 	});
 
-	await prisma.pubValue.createMany({
-		data: [
-			{
-				pubId: parentPub2.id,
-				fieldId: integrationFieldIds[0],
-				value: { color: "#72BE47", text: "unjournal summaries and metrics site built" },
+	await prisma.integrationInstance.create({
+		data: {
+			name: "Unjournal Assignment Manager",
+			integrationId: assignmentIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[2] }, { id: stageIds[6] }],
 			},
-			{
-				pubId: parentPub2.id,
-				fieldId: integrationFieldIds[0],
-				value: { color: "#72BE47", text: "Author's Responses to evaluations site built" },
-			},
-			{
-				pubId: evaluation1.id,
-				fieldId: integrationFieldIds[1],
-				value: {
-					color: "#E1C04C",
-					text: "Collecting responses, summaries, and statistics",
-				},
-			},
-			{
-				pubId: evaluation2.id,
-				fieldId: integrationFieldIds[1],
-				value: {
-					color: "#E1C04C",
-					text: "Collecting responses, summaries, and statistics",
-				},
-			},
-		],
+		},
 	});
+
+	/**I have not thought about how these fields are used well enough */
+	// const integrationFieldIds = [...Array(2)].map((x) => uuidv4());
+	// await prisma.pubField.createMany({
+	// 	data: [
+	// 		{
+	// 			id: integrationFieldIds[0],
+	// 			name: "sitebuilder/status",
+	// 			integrationId: siteIntegration.id,
+	// 		},
+	// 		{
+	// 			id: integrationFieldIds[1],
+	// 			name: "evaluation/status",
+	// 			integrationId: evaluationIntegration.id,
+	// 		},
+	// 	],
+	// });
+
+	// await prisma.pubValue.createMany({
+	// 	data: [
+	// 		{
+	// 			pubId: parentPub2.id,
+	// 			fieldId: integrationFieldIds[0],
+	// 			value: { color: "#72BE47", text: "unjournal summaries and metrics site built" },
+	// 		},
+	// 		{
+	// 			pubId: parentPub2.id,
+	// 			fieldId: integrationFieldIds[0],
+	// 			value: { color: "#72BE47", text: "Author's Responses to evaluations site built" },
+	// 		},
+	// 		{
+	// 			pubId: evaluation1.id,
+	// 			fieldId: integrationFieldIds[1],
+	// 			value: {
+	// 				color: "#E1C04C",
+	// 				text: "Collecting responses, summaries, and statistics",
+	// 			},
+	// 		},
+	// 		{
+	// 			pubId: evaluation2.id,
+	// 			fieldId: integrationFieldIds[1],
+	// 			value: {
+	// 				color: "#E1C04C",
+	// 				text: "Collecting responses, summaries, and statistics",
+	// 			},
+	// 		},
+	// 	],
+	// });
 }
