@@ -79,7 +79,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			communityId: communityUUID,
 			values: {
 				createMany: {
-					data: [{ fieldId: fieldIds[0], value: "Completed Evaluation's" }],
+					data: [{ fieldId: fieldIds[0], value: "Evaluation's in Progress" }],
 				},
 			},
 		},
@@ -258,7 +258,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			{
 				id: stageIds[1],
 				communityId: communityUUID,
-				name: "Ask Author dor Consent",
+				name: "Ask Author for Consent",
 				order: "bb",
 			},
 			{
@@ -316,5 +316,151 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.pub.update({
 		where: { id: authorsResponse2.id },
 		data: { stages: { connect: { id: stageIds[4] } } },
+	});
+
+	const siteIntegration = await prisma.integration.create({
+		data: {
+			name: "Site Builder",
+			actions: [
+				{
+					text: "Manage Site",
+					href: "https://integrations.pubpub.org/sitebuilder/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/sitebuilder/settings",
+		},
+	});
+
+	const evaluationIntegration = await prisma.integration.create({
+		data: {
+			name: "Evaluation Manager",
+			actions: [
+				{
+					text: "Manage Evaluation",
+					href: "https://integrations.pubpub.org/evaluation/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/evaluation/settings",
+		},
+	});
+
+	const doiIntegration = await prisma.integration.create({
+		data: {
+			name: "DOI Registration",
+			actions: [{ text: "Register DOI", href: "https://integrations.pubpub.org/doi/manage" }],
+			settingsUrl: "https://integrations.pubpub.org/doi/settings",
+		},
+	});
+
+	const socialMediaIntegration = await prisma.integration.create({
+		data: {
+			name: "Share",
+			actions: [
+				{
+					text: "Share on social media",
+					href: "https://integrations.pubpub.org/share/manage",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/share/settings",
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "unjournal.evaluations.org",
+			integrationId: siteIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[5] }],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "The Unjournal evaluation process manager",
+			integrationId: evaluationIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [
+					{ id: stageIds[0] },
+					{ id: stageIds[1] },
+					{ id: stageIds[2] },
+					{ id: stageIds[3] },
+					{ id: stageIds[4] },
+					{ id: stageIds[5] },
+					{ id: stageIds[6] },
+				],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "Crossref DOI",
+			integrationId: doiIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[5] }],
+			},
+		},
+	});
+
+	await prisma.integrationInstance.create({
+		data: {
+			name: "Share on Social Media",
+			integrationId: socialMediaIntegration.id,
+			communityId: communityUUID,
+			stages: {
+				connect: [{ id: stageIds[5] }],
+			},
+		},
+	});
+
+	const integrationFieldIds = [...Array(2)].map((x) => uuidv4());
+	await prisma.pubField.createMany({
+		data: [
+			{
+				id: integrationFieldIds[0],
+				name: "sitebuilder/status",
+				integrationId: siteIntegration.id,
+			},
+			{
+				id: integrationFieldIds[1],
+				name: "evaluation/status",
+				integrationId: evaluationIntegration.id,
+			},
+		],
+	});
+
+	await prisma.pubValue.createMany({
+		data: [
+			{
+				pubId: parentPub2.id,
+				fieldId: integrationFieldIds[0],
+				value: { color: "#72BE47", text: "unjournal summaries and metrics site built" },
+			},
+			{
+				pubId: parentPub2.id,
+				fieldId: integrationFieldIds[0],
+				value: { color: "#72BE47", text: "Author's Responses to evaluations site built" },
+			},
+			{
+				pubId: evaluation1.id,
+				fieldId: integrationFieldIds[1],
+				value: {
+					color: "#E1C04C",
+					text: "Collecting responses, summaries, and statistics",
+				},
+			},
+			{
+				pubId: evaluation2.id,
+				fieldId: integrationFieldIds[1],
+				value: {
+					color: "#E1C04C",
+					text: "Collecting responses, summaries, and statistics",
+				},
+			},
+		],
 	});
 }
