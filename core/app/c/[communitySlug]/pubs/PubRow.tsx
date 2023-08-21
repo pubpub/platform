@@ -143,45 +143,24 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 						Email Members
 					</Button>
 					{buttons.map((button) => {
-						return (
-							/* @ts-ignore */
-							<div key={button.actions[0].href} className="ml-2">
-								{/* @ts-ignore */}
-								{/* <NextLink href={button.actions[0].href} passHref legacyBehavior> */}
-								{/* <Button as="a" size="xs" variant="outline"> */}
+						button.actions.map((action) => {
+							return (
 								<Button
+									key={action.text}
 									size="sm"
 									variant="outline"
+									className="ml-1"
 									onClick={() => {
-										/* @ts-ignore */
-										setModalTitle(button.actions[0].text);
+										setModalTitle(action.text);
 									}}
 								>
 									<div className="flex items-center">
-										{/* @ts-ignore */}
-										{button.actions[0].text}
-										<div
-											// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
-											className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
-										/>
+										{action.text}
+										<div className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`} />
 									</div>
 								</Button>
-								{/* </NextLink> */}
-
-								{/* <Flex align="center">
-									<Box
-										style={{
-											width: "8px",
-											height: "8px",
-											borderRadius: "8px",
-											background: button.status.color,
-										}}
-										mr={1}
-									/>
-									<Text fontSize="xs">{button.status.text}</Text>
-								</Flex> */}
-							</div>
-						);
+							);
+						});
 					})}
 				</div>
 			</div>
