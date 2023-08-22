@@ -3,22 +3,23 @@ import { api } from "~/lib/contracts";
 import { getPub, getMembers, updatePub } from "~/lib/server";
 import { SuggestedMember } from "~/lib/contracts/resources/autosuggest";
 
+// TODOD: verify pub belongs to integrationInstance
 const pubRouter = createNextRoute(api.pub, {
 	getPubFields: async ({ params }) => {
-		console.log("params", params);
-		const pubFieldValuePairs = await getPub(params.pub_id);
+		const pubFieldValuePairs = await getPub(params.pubId);
 		return {
 			status: 200,
 			body: pubFieldValuePairs,
 		};
 	},
-	// putPubFields: async ({ params, body }) => {
-	// 	const updatedPub = await updatePub(params.pubId, body);
-	// 	return {
-	// 		status: 200,
-	// 		body: updatedPub,
-	// 	};
-	// },
+	putPubFields: async ({ params, body }) => {
+		console.log("body", body);
+		const updatedPub = await updatePub(params.pubId, body);
+		return {
+			status: 200,
+			body: updatedPub,
+		};
+	},
 });
 
 const autosuggestRouter = createNextRoute(api.autosuggest, {

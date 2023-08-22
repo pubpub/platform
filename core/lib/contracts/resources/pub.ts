@@ -10,27 +10,29 @@ export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 export const pubApi = c.router({
 	getPubFields: {
 		method: "GET",
-		path: "/pubs/:pub_id",
+		path: "/:instanceId/pub/:pubId",
 		summary: "Get all pubs",
-		description: "A way to get every pub for an integration instance",
+		description: "A way to get a pubs fields for an integration instance",
 		pathParams: z.object({
-			pub_id: z.string(),
+			pubId: z.string(),
+			instanceId: z.string(),
 		}),
 		responses: {
 			200: z.array(PubFieldsSchema),
 		},
 	},
-	// putPubFields: {
-	// 	method: "PUT",
-	// 	path: "/pubs",
-	// 	summary: "Adds field(s) to a pub",
-	// 	description: "A way to add a field to an existing pub",
-	// 	body: PubFieldsSchema,
-	// 	pathParams: z.object({
-	// 		pub_id: z.string(),
-	// 	}),
-	// 	responses: {
-	// 		200: PubFieldsSchema,
-	// 	},
-	// },
+	putPubFields: {
+		method: "PUT",
+		path: "/:instanceId/pub/:pubId",
+		summary: "Adds field(s) to a pub",
+		description: "A way to add a field to an existing pub",
+		body: PubFieldsSchema,
+		pathParams: z.object({
+			pubId: z.string(),
+			instanceId: z.string(),
+		}),
+		responses: {
+			200: PubFieldsSchema,
+		},
+	},
 });
