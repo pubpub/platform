@@ -10,7 +10,7 @@ export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 export const pubApi = contract.router({
 	getPubFields: {
 		method: "GET",
-		path: ":instanceId/pubs/:pubId",
+		path: "pubs/:instanceId/:pubId",
 		summary: "Get all pubs",
 		description: "A way to get every pub for an integration instance",
 		pathParams: z.object({
@@ -23,7 +23,7 @@ export const pubApi = contract.router({
 	},
 	putPubFields: {
 		method: "PUT",
-		path: ":instanceId/pubs",
+		path: "pubs/:instanceId",
 		summary: "Adds field(s) to a pub",
 		description: "A way to add a field to an existing pub",
 		body: PubFieldsSchema,
