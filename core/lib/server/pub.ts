@@ -1,8 +1,8 @@
 import prisma from "~/prisma/db";
 
-const getPubFields = async (pub_id: string) => {
+export const getPubFields = async (pubId: string) => {
 	const fields = await prisma.pubValue.findMany({
-		where: { pubId: pub_id },
+		where: { pubId },
 		distinct: ["fieldId"],
 		orderBy: {
 			createdAt: "desc",
@@ -22,4 +22,11 @@ const getPubFields = async (pub_id: string) => {
 	}, {});
 };
 
-export const pubQueries = { getPubFields };
+export const getPub = async (pubId: string) => {
+	const pub = await getPubFields(pubId);
+	return pub;
+};
+
+export const updatePub = async () => {
+	
+}

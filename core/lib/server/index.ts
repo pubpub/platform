@@ -1,4 +1,4 @@
-import { pubQueries } from "./pubs";
-import { autosuggestQueries } from "./autosuggest";
+import { getPubFields } from "./pub";
+import { getMembers } from "./autosuggest";
 
-export { pubQueries, autosuggestQueries };
+export { getPubFields, getMembers };

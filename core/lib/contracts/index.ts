@@ -3,9 +3,9 @@ import { initContract } from "@ts-rest/core";
 import { pubApi } from "./resources/pub";
 import { autosuggestApi } from "./resources/autosuggest";
 
-const c = initContract();
+const contract = initContract();
 
-export const api = c.router({
+export const api = contract.router({
 	/**
 	 * Pub API
 	 */
