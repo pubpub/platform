@@ -16,7 +16,6 @@ export const getMembers = async (input: string) => {
 		select: {
 			id: true,
 			name: true,
-			email: true,
 		},
 	});
 
