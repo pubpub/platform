@@ -7,20 +7,18 @@ import { getLoginId } from "lib/auth/loginId";
 
 export type UserPostBody = {
 	name: string;
-	avatarColor: string;
 	email: string;
 	password: string;
 };
 
 export type UserPutBody = {
 	name: string;
-	avatarColor: string;
 };
 
 export default nextConnect<NextApiRequest, NextApiResponse>()
 	.post(async (req, res) => {
 		const submittedData: UserPostBody = req.body;
-		const { name, avatarColor, email, password } = submittedData;
+		const { name, email, password } = submittedData;
 		const supabase = getServerSupabase();
 		const { data, error } = await supabase.auth.signUp({
 			email,
@@ -57,28 +55,7 @@ export default nextConnect<NextApiRequest, NextApiResponse>()
 				id: data.user.id,
 				slug: `${slugifyString(name)}-${generateHash(4, "0123456789")}`,
 				name,
-				avatarColor,
 				email,
-				cookbookMemberships: {
-					create: [
-						{
-							isAdmin: true,
-							cookbook: {
-								create: {
-									slug: generateHash(8),
-									accessHash: generateHash(12),
-									isDefault: true,
-									versions: {
-										create: {
-											title: "Personal Recipes ☆",
-											userId: data.user.id,
-										},
-									},
-								},
-							},
-						},
-					],
-				},
 			},
 		});
 
@@ -90,7 +67,7 @@ export default nextConnect<NextApiRequest, NextApiResponse>()
 			return res.status(401).json({ ok: false });
 		}
 		const submittedData: UserPutBody = req.body;
-		const { name, avatarColor } = submittedData;
+		const { name } = submittedData;
 		const currentData = await prisma.user.findUnique({
 			where: { id: loginId },
 		});
@@ -105,7 +82,6 @@ export default nextConnect<NextApiRequest, NextApiResponse>()
 			data: {
 				slug: `${slugifyString(name)}-${slugSuffix}`,
 				name,
-				avatarColor,
 			},
 		});
 		return res.status(200).json({ ok: true });

@@ -11,19 +11,12 @@ import { getSlugSuffix, slugifyString } from "lib/string";
 type Props = {
 	name: string;
 	email: string;
-	avatarColor: string;
 	slug: string;
 };
 
-export default function SettingsForm({
-	name: initName,
-	email: initEmail,
-	avatarColor: initAvatarColor,
-	slug,
-}: Props) {
+export default function SettingsForm({ name: initName, email: initEmail, slug }: Props) {
 	const [name, setName] = useState(initName);
 	const [email, setEmail] = useState(initEmail);
-	const [avatarColor, setAvatarColor] = useState(initAvatarColor);
 	const [isLoading, setIsLoading] = useState(false);
 	const [resetIsLoading, setResetIsLoading] = useState(false);
 	const [resetSuccess, setResetSuccess] = useState(false);
@@ -38,7 +31,6 @@ export default function SettingsForm({
 		setIsLoading(true);
 		const putBody: UserPutBody = {
 			name,
-			avatarColor,
 		};
 		if (emailChanged) {
 			const { error } = await supabase.auth.updateUser({ email });
@@ -99,13 +91,6 @@ export default function SettingsForm({
 							email address.
 						</div>
 					)}
-					<AvatarSelector
-						name={name}
-						color={avatarColor}
-						onChange={(color) => {
-							setAvatarColor(color);
-						}}
-					/>
 					<Button
 						className="mt-4"
 						type="submit"

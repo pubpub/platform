@@ -13,7 +13,6 @@ export default async function Page() {
 			<Head title="Settings · PubPub" triggers={[]} />
 			<SettingsForm
 				name={loginData.name}
-				avatarColor={loginData.avatarColor}
 				email={loginData.email}
 				slug={loginData.slug}
 			/>

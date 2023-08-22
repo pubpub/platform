@@ -12,7 +12,6 @@ export default function SignupForm() {
 	const [name, setName] = useState("");
 	const [password, setPassword] = useState("");
 	const [email, setEmail] = useState("");
-	const [avatarColor, setAvatarColor] = useState("#D4CBB3");
 	const [isLoading, setIsLoading] = useState(false);
 	const [signupComplete, setSignupComplete] = useState(false);
 
@@ -24,7 +23,6 @@ export default function SignupForm() {
 			name,
 			password: SHA3(password).toString(encHex),
 			email,
-			avatarColor,
 		};
 		const response = await fetch("/api/user", {
 			method: "POST",
@@ -63,13 +61,6 @@ export default function SignupForm() {
 								value={password}
 								type="password"
 								onChange={(evt) => setPassword(evt.target.value)}
-							/>
-							<AvatarSelector
-								name={name}
-								color={avatarColor}
-								onChange={(color) => {
-									setAvatarColor(color);
-								}}
 							/>
 							<Button
 								className="mt-4"
