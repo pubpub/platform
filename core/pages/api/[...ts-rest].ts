@@ -5,19 +5,20 @@ import { SuggestedMember } from "~/lib/contracts/resources/autosuggest";
 
 const pubRouter = createNextRoute(api.pub, {
 	getPubFields: async ({ params }) => {
-		const pubFieldValuePairs = await getPub(params.pubId);
+		console.log("params", params);
+		const pubFieldValuePairs = await getPub(params.pub_id);
 		return {
 			status: 200,
 			body: pubFieldValuePairs,
 		};
 	},
-	putPubFields: async ({ params, body }) => {
-		const updatedPub = await updatePub(params.pubId, body);
-		return {
-			status: 200,
-			body: updatedPub,
-		};
-	},
+	// putPubFields: async ({ params, body }) => {
+	// 	const updatedPub = await updatePub(params.pubId, body);
+	// 	return {
+	// 		status: 200,
+	// 		body: updatedPub,
+	// 	};
+	// },
 });
 
 const autosuggestRouter = createNextRoute(api.autosuggest, {
