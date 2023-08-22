@@ -1,7 +1,6 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "~/lib/contracts";
 import { getPub, getMembers, updatePub } from "~/lib/server";
-import { SuggestedMember } from "~/lib/contracts/resources/autosuggest";
 
 // TODOD: verify pub belongs to integrationInstance
 const pubRouter = createNextRoute(api.pub, {
@@ -13,7 +12,7 @@ const pubRouter = createNextRoute(api.pub, {
 		};
 	},
 	putPubFields: async ({ params, body }) => {
-		console.log("body", body);
+		console.log("body", body, Object.keys(body));
 		const updatedPub = await updatePub(params.pubId, body);
 		return {
 			status: 200,

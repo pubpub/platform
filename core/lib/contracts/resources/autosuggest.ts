@@ -13,7 +13,7 @@ export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 export const autosuggestApi = c.router({
 	suggestMember: {
 		method: "GET",
-		path: "/autosuggest/:instanceId/members/:input",
+		path: ":instanceId/autosuggest/members/:input",
 		summary: "autosuggest member",
 		description:
 			"A way to autosuggest members so that integrations users can find users or verify they exist. Will return a name for ",

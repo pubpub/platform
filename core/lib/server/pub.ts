@@ -41,30 +41,32 @@ export const updatePub = async (pubId: string, body: any) => {
 			name: true,
 		},
 	});
+	console.log("fieldIds", fieldIds);
 
 	const newValues = fieldIds.map((field) => {
 		return {
 			fieldId: field.id,
-			value: body.name,
+			value: body.Title,
 		};
 	});
+	console.log("newValues", newValues);
 
-	await prisma.pub.update({
-		where: { id: pubId },
-		include: {
-			values: true,
-		},
-		data: {
-			values: {
-				createMany: {
-					data: newValues,
-				},
-			},
-		},
-	});
+	// await prisma.pub.update({
+	// 	where: { id: pubId },
+	// 	include: {
+	// 		values: true,
+	// 	},
+	// 	data: {
+	// 		values: {
+	// 			createMany: {
+	// 				data: newValues,
+	// 			},
+	// 		},
+	// 	},
+	// });
 
-	//TODO: we shouldn't query the db twice for this
-	const updatedFields = await getPubFields(pubId);
+	// //TODO: we shouldn't query the db twice for this
+	// const updatedFields = await getPubFields(pubId);
 
-	return updatedFields;
+	return "updatedFields";
 };
