@@ -3,7 +3,10 @@ import { initContract } from "@ts-rest/core";
 
 const c = initContract();
 
-const SuggestedMembersSchema = z.object({ id: z.string(), name: z.string() });
+const SuggestedMembersSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+});
 
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 

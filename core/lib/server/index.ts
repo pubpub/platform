@@ -1,4 +1,4 @@
-import { getPubFields } from "./pub";
+import { getPub, updatePub } from "./pub";
 import { getMembers } from "./autosuggest";
 
-export { getPubFields, getMembers };
+export { getPub, updatePub,  getMembers };

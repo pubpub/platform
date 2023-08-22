@@ -1,7 +1,6 @@
 import prisma from "~/prisma/db";
-import { SuggestedMember } from "~/lib/contracts/resources/autosuggest";
 
-export const getMembers = async (input: string): Promise<SuggestedMember[]> => {
+export const getMembers = async (input: string) => {
 	const membersStartingWithName = await prisma.user.findMany({
 		where: {
 			name: {
@@ -23,4 +22,3 @@ export const getMembers = async (input: string): Promise<SuggestedMember[]> => {
 
 	return membersStartingWithName;
 };
-
