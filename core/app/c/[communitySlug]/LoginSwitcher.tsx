@@ -1,11 +1,16 @@
 import { getLoginData } from "~/lib/auth/loginData";
 import { Avatar, AvatarFallback, AvatarImage } from "ui";
+import { supabase } from "~/lib/supabase";
 
 export default async function LoginSwitcher() {
 	const loginData = await getLoginData();
 	if (!loginData) {
 		return null;
 	}
+	const handleSignout = async () => {
+		await supabase.auth.signOut();
+		window.location.href = "/";
+	};
 	return (
 		<div className="bg-white border border-gray-100 rounded-lg flex p-2">
 			<Avatar className="w-9 h-9 mr-2">

@@ -1,11 +1,11 @@
 import Head from "components/Head";
-import LoginForm from "./LoginForm";
+import ResetForm from "./ResetForm";
 
 export default async function Page() {
 	return (
 		<div className="max-w-lg m-auto">
-			<Head title="Login · PubPub" triggers={[]} />
-			<LoginForm />
+			<Head title="Reset Password · PubPub" triggers={[]} />
+			<ResetForm />
 		</div>
 	);
 }
