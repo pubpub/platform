@@ -41,7 +41,6 @@ export const updatePub = async (pubId: string, fields: any) => {
 			name: true,
 		},
 	});
-	console.log("fieldIds", fieldIds);
 
 	const newValues = fieldIds.map((field) => {
 		return {
@@ -49,7 +48,6 @@ export const updatePub = async (pubId: string, fields: any) => {
 			value: fields[field.name],
 		};
 	});
-	console.log("newValues", newValues);
 
 	await prisma.pub.update({
 		where: { id: pubId },

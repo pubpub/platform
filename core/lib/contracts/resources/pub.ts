@@ -22,7 +22,7 @@ export const pubApi = c.router({
 		},
 	},
 	putPubFields: {
-		method: "PUT",
+		method: "PATCH",
 		path: "/:instanceId/pub/:pubId",
 		summary: "Adds field(s) to a pub",
 		description: "A way to add a field to an existing pub",
