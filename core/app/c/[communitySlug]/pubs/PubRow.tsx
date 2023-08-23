@@ -82,7 +82,11 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 						<PopoverContent>
 							{buttons.map((button) => {
 								return (
-									<Button variant="ghost" size="sm">
+									<Button
+										variant="ghost"
+										size="sm"
+										key={button.actions?.[0].text}
+									>
 										<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
 										<span>{button.actions?.[0].text}</span>
 									</Button>
@@ -138,7 +142,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 				</div>
 			</div>
 			<div className="mt-0 items-stretch flex justify-between">
-				<h3 className="text-md font-bold">{getTitle(pub)}</h3>
+				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
 				<div className="flex items-end shrink-0">
 					<Button size="sm" variant="outline" className="ml-1">
 						Move
