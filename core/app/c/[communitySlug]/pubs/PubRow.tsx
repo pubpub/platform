@@ -70,7 +70,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 									{buttons.map((button) => {
 										return (
 											<div
-												key={button.actions[0].text}
+												key={button.actions![0].text}
 												// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
 												className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
 											/>

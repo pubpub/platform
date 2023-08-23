@@ -1,9 +1,8 @@
-import prisma from "prisma/db";
-import { NextResponse, NextRequest } from "next/server";
+import prisma from "~/prisma/db";
 
-const getPubFields = async (pub_id: string) => {
+export const getPubFields = async (pubId: string) => {
 	const fields = await prisma.pubValue.findMany({
-		where: { pubId: pub_id },
+		where: { pubId },
 		distinct: ["fieldId"],
 		orderBy: {
 			createdAt: "desc",
@@ -23,14 +22,12 @@ const getPubFields = async (pub_id: string) => {
 	}, {});
 };
 
-export async function GET(request: NextRequest, { params }: { params: { pub_id: string } }) {
-	const pub = await getPubFields(params.pub_id);
-	return NextResponse.json(pub);
-}
+export const getPub = async (pubId: string) => {
+	const pub = await getPubFields(pubId);
+	return pub;
+};
 
-export async function PUT(request: NextRequest, { params }: { params: { pub_id: string } }) {
-	const { fields } = await request.json();
-
+export const updatePub = async (pubId: string, fields: any) => {
 	const fieldNames = Object.keys(fields);
 
 	const fieldIds = await prisma.pubField.findMany({
@@ -53,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: { params: { pub_id: 
 	});
 
 	await prisma.pub.update({
-		where: { id: params.pub_id },
+		where: { id: pubId },
 		include: {
 			values: true,
 		},
@@ -67,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: { params: { pub_id: 
 	});
 
 	//TODO: we shouldn't query the db twice for this
-	const updatedFields = await getPubFields(params.pub_id);
+	const updatedFields = await getPubFields(pubId);
 
-	return NextResponse.json(updatedFields);
-}
+	return updatedFields;
+};

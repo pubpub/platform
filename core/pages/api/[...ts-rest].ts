@@ -1,49 +1,38 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
-import { api } from "../../contract";
-import prisma from "~/prisma/db";
+import { api } from "~/lib/contracts";
+import { getPub, getMembers, updatePub } from "~/lib/server";
 
-const getPubFields = async (pub_id: string) => {
-	const fields = await prisma.pubValue.findMany({
-		where: { pubId: pub_id },
-		distinct: ["fieldId"],
-		orderBy: {
-			createdAt: "desc",
-		},
-		include: {
-			field: {
-				select: {
-					name: true,
-				},
-			},
-		},
-	});
-
-	return fields.reduce((prev: any, curr) => {
-		prev[curr.field.name] = curr.value;
-		return prev;
-	}, {});
-};
-
-const router = createNextRoute(api, {
-	pubApi: {
-		getPubFields: async ({ params }) => {
-			const pubFieldValuePairs = await getPubFields(params.pub_id);
-			return {
-				status: 200,
-				body: pubFieldValuePairs,
-			};
-		},
-		putPubFields: async (body) => {
-			return {
-				status: 200,
-				body: {
-					id: "qea",
-					title: "Watch One Piece",
-					body: "Just get to water 7. if you dont like it chill, watch sometyhing welse",
-				},
-			};
-		},
+// TODOD: verify pub belongs to integrationInstance
+const pubRouter = createNextRoute(api.pub, {
+	getPubFields: async ({ params }) => {
+		const pubFieldValuePairs = await getPub(params.pubId);
+		return {
+			status: 200,
+			body: pubFieldValuePairs,
+		};
+	},
+	putPubFields: async ({ params, body }) => {
+		const updatedPub = await updatePub(params.pubId, body);
+		return {
+			status: 200,
+			body: updatedPub,
+		};
 	},
 });
+
+const autosuggestRouter = createNextRoute(api.autosuggest, {
+	suggestMember: async ({ params }) => {
+		const member = await getMembers(params.input);
+		return {
+			status: 200,
+			body: member,
+		};
+	},
+});
+
+const router = {
+	pub: pubRouter,
+	autosuggest: autosuggestRouter,
+};
 
 export default createNextRouter(api, router);
