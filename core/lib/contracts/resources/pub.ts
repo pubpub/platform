@@ -4,9 +4,10 @@ import { initContract } from "@ts-rest/core";
 const contract = initContract();
 
 const PubFieldsSchema = z.any();
+
 const PubPostSchema = z.object({
-	pubTypeName: z.string(),
-	pubFieldValues: PubFieldsSchema,
+	pubTypeId: z.string(),
+	pubFields: PubFieldsSchema,
 });
 
 export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
@@ -39,11 +40,11 @@ export const pubApi = contract.router({
 			200: z.array(PubFieldsSchema),
 		},
 	},
-	putPubFields: {
+	patchPubFields: {
 		method: "PATCH",
 		path: "/:instanceId/pub/:pubId",
 		summary: "Adds field(s) to a pub",
-		description: "A way to add a field to an existing pub",
+		description: "A way to update a field for an existing pub",
 		body: PubFieldsSchema,
 		pathParams: z.object({
 			pubId: z.string(),

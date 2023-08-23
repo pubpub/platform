@@ -18,7 +18,7 @@ const pubRouter = createNextRoute(api.pub, {
 			body: pubFieldValuePairs,
 		};
 	},
-	putPubFields: async ({ params, body }) => {
+	patchPubFields: async ({ params, body }) => {
 		const updatedPub = await updatePub(params.pubId, body);
 		return {
 			status: 200,
