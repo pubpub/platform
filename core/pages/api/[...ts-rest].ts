@@ -1,9 +1,16 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "~/lib/contracts";
-import { getPub, getMembers, updatePub } from "~/lib/server";
+import { getPub, getMembers, updatePub, createPub } from "~/lib/server";
 
 // TODOD: verify pub belongs to integrationInstance
 const pubRouter = createNextRoute(api.pub, {
+	createPubFields: async ({ params }) => {
+		const pub = await createPub(params.instanceId);
+		return {
+			status: 200,
+			body: pub,
+		};
+	},
 	getPubFields: async ({ params }) => {
 		const pubFieldValuePairs = await getPub(params.pubId);
 		return {

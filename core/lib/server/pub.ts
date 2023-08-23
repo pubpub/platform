@@ -22,6 +22,19 @@ export const getPubFields = async (pubId: string) => {
 	}, {});
 };
 
+export const createPub = async (fields: any) => {
+	const pub = await prisma.pub.create({
+		data: {
+			values: {
+				createMany: {
+					data: fields,
+				},
+			},
+		},
+	});
+	return pub;
+};
+
 export const getPub = async (pubId: string) => {
 	const pub = await getPubFields(pubId);
 	return pub;
