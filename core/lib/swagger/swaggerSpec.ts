@@ -35,41 +35,4 @@ export const openApiDocument: OpenAPIObject = generateOpenApi(api, {
 			description: "The production API server",
 		},
 	],
-	components: {
-		schemas: {
-			User: {
-				type: "object",
-				properties: {
-					id: {
-						type: "string",
-					},
-					name: {
-						type: "string",
-					},
-				},
-			},
-			Users: {
-				type: "array",
-				items: {
-					$ref: "#/components/schemas/User",
-				},
-			},
-			PubFields: {
-				type: "object",
-			},
-		},
-		securitySchemes: {
-			ApiKeyAuth: {
-				type: "apiKey",
-				in: "header",
-				name: "x-pubpub-api-key",
-			},
-			AccessTokenAuth: {
-				type: "http",
-				scheme: "bearer",
-				bearerFormat: "JWT",
-			},
-		},
-	},
-	security: [],
 });
