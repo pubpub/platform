@@ -96,7 +96,6 @@ export const getPub = async (pubId: string) => {
 };
 
 export const updatePub = async (pubId: string, pubFields: any) => {
-	console.log("pubFields", pubFields);
 	const newValues = await getPubValues(pubFields);
 
 	await prisma.pub.update({
