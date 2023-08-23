@@ -4,8 +4,8 @@ import { getPub, getMembers, updatePub, createPub } from "~/lib/server";
 
 // TODOD: verify pub belongs to integrationInstance
 const pubRouter = createNextRoute(api.pub, {
-	createPubFields: async ({ params }) => {
-		const pub = await createPub(params.instanceId);
+	createPubFields: async ({ params, body }) => {
+		const pub = await createPub(params.instanceId, body);
 		return {
 			status: 200,
 			body: pub,

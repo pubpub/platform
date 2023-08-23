@@ -4,8 +4,13 @@ import { initContract } from "@ts-rest/core";
 const contract = initContract();
 
 const PubFieldsSchema = z.any();
+const PubPostSchema = z.object({
+	pubTypeName: z.string(),
+	pubFieldValues: PubFieldsSchema,
+});
 
 export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
+export type PubPostBody = z.infer<typeof PubPostSchema>;
 
 export const pubApi = contract.router({
 	createPubFields: {
@@ -13,7 +18,7 @@ export const pubApi = contract.router({
 		path: "/:instanceId/pub",
 		summary: "Creates a new pub",
 		description: "A way to create a new pub",
-		body: PubFieldsSchema,
+		body: PubPostSchema,
 		pathParams: z.object({
 			instanceId: z.string(),
 		}),
