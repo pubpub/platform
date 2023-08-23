@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { initContract } from "@ts-rest/core";
 
-const c = initContract();
+const contract = initContract();
 
 const PubFieldsSchema = z.any();
 
 export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 
-export const pubApi = c.router({
+export const pubApi = contract.router({
 	getPubFields: {
 		method: "GET",
 		path: "/:instanceId/pub/:pubId",

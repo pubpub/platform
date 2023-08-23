@@ -22,7 +22,7 @@ const pubRouter = createNextRoute(api.pub, {
 
 const autosuggestRouter = createNextRoute(api.autosuggest, {
 	suggestMember: async ({ params }) => {
-		const member = await getMembers(params.input);
+		const member = await getMembers(params.memberCandidateString);
 		return {
 			status: 200,
 			body: member,
