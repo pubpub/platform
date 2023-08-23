@@ -1,14 +1,14 @@
 import prisma from "~/prisma/db";
 
-export const getMembers = async (input: string) => {
+export const getMembers = async (memberCandidateString: string) => {
 	const membersStartingWithName = await prisma.user.findMany({
 		where: {
 			name: {
-				startsWith: input,
+				startsWith: memberCandidateString,
 				mode: "insensitive",
 			},
 			email: {
-				startsWith: input,
+				startsWith: memberCandidateString,
 				mode: "insensitive",
 			},
 		},
