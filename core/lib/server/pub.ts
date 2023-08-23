@@ -23,7 +23,7 @@ export const getPubFields = async (pubId: string) => {
 };
 
 export const createPub = async (fields: any) => {
-	const pub = await prisma.pub.create({
+	const pub =` await prisma.pub.create({
 		data: {
 			values: {
 				createMany: {
@@ -31,7 +31,7 @@ export const createPub = async (fields: any) => {
 				},
 			},
 		},
-	});
+	});`
 	return pub;
 };
 
