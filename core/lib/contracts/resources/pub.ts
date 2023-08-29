@@ -14,7 +14,7 @@ export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 export type PubPostBody = z.infer<typeof PubPostSchema>;
 
 export const pubApi = contract.router({
-	createPubFields: {
+	createPub: {
 		method: "POST",
 		path: "/:instanceId/pub",
 		summary: "Creates a new pub",
@@ -25,9 +25,10 @@ export const pubApi = contract.router({
 		}),
 		responses: {
 			200: PubFieldsSchema,
+			404: z.object({ message: z.string() }),
 		},
 	},
-	getPubFields: {
+	getPub: {
 		method: "GET",
 		path: "/:instanceId/pub/:pubId",
 		summary: "Get all pubs",
@@ -40,7 +41,7 @@ export const pubApi = contract.router({
 			200: z.array(PubFieldsSchema),
 		},
 	},
-	patchPubFields: {
+	updatePub: {
 		method: "PATCH",
 		path: "/:instanceId/pub/:pubId",
 		summary: "Adds field(s) to a pub",
