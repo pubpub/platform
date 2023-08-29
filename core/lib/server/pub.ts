@@ -23,32 +23,28 @@ export const getPubFields = async (pubId: string) => {
 	}, {});
 };
 
-// 404 errors
-const InstanceNotFoundError = new Error("Integration instance not found");
-const PubTypeNotFoundError = new Error("PubType not found");
-const PubNotFoundError = new Error("Pub not found");
-const PubFieldNamesNotFoundError = new Error("Pub fields not found");
+export class NotFoundError extends Error {}
+
+const InstanceNotFoundError = new NotFoundError("Integration instance not found");
+const PubTypeNotFoundError = new NotFoundError("PubType not found");
+const PubNotFoundError = new NotFoundError("Pub not found");
+const PubFieldNamesNotFoundError = new NotFoundError("Pub fields not found");
 
 const getPubValues = async (pubFields: any, pubTypeId?: string) => {
 	const fieldNames = Object.keys(pubFields);
 
-	let fieldIds;
-	try {
-		fieldIds = await prisma.pubField.findMany({
-			where: {
-				name: {
-					in: fieldNames,
-				},
-				pubTypes: {
-					some: {
-						id: pubTypeId,
-					},
+	const fieldIds = await prisma.pubField.findMany({
+		where: {
+			name: {
+				in: fieldNames,
+			},
+			pubTypes: {
+				some: {
+					id: pubTypeId,
 				},
 			},
-		});
-	} catch (error) {
-		throw error;
-	}
+		},
+	});
 
 	if (!fieldIds) {
 		throw PubFieldNamesNotFoundError;
@@ -67,26 +63,17 @@ const getPubValues = async (pubFields: any, pubTypeId?: string) => {
 export const createPub = async (instanceId: string, body: PubPostBody) => {
 	const { pubTypeId, pubFields } = body;
 
-	let instance;
-	let pubType;
-	try {
-		instance = await prisma.integrationInstance.findUnique({
+	const [instance, pubType] = await Promise.all([
+		prisma.integrationInstance.findUnique({
 			where: { id: instanceId },
-		});
-	} catch (error) {
-		throw error;
-	}
+		}),
+		prisma.pubType.findUnique({
+			where: { id: pubTypeId },
+		}),
+	]);
 
 	if (!instance) {
 		throw InstanceNotFoundError;
-	}
-
-	try {
-		pubType = await prisma.pubType.findUnique({
-			where: { id: pubTypeId },
-		});
-	} catch (error) {
-		throw error;
 	}
 
 	if (!pubType) {
@@ -95,22 +82,17 @@ export const createPub = async (instanceId: string, body: PubPostBody) => {
 
 	const pubValues = await getPubValues(pubFields, pubType.id);
 
-	let pub;
-	try {
-		pub = await prisma.pub.create({
-			data: {
-				pubTypeId: pubType.id,
-				communityId: instance.communityId,
-				values: {
-					createMany: {
-						data: pubValues,
-					},
+	const pub = await prisma.pub.create({
+		data: {
+			pubTypeId: pubType.id,
+			communityId: instance.communityId,
+			values: {
+				createMany: {
+					data: pubValues,
 				},
 			},
-		});
-	} catch (error) {
-		throw error;
-	}
+		},
+	});
 
 	if (!pub) {
 		throw PubNotFoundError;
