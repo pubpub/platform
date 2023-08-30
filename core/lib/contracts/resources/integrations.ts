@@ -18,7 +18,22 @@ export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 export type PubPostBody = z.infer<typeof PubPostSchema>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
+
 export const integrationsApi = contract.router({
+	auth: {
+		body: z.any(),
+		method: "POST",
+		path: "integrations/:instanceId/auth",
+		summary: "",
+		description:
+			"",
+		pathParams: z.object({
+			instanceId: z.string(),
+		}),
+		responses: {
+			200: z.any(),
+		},
+	},
 	createPub: {
 		method: "POST",
 		path: "/integrations/:instanceId/pubs",

@@ -1,6 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "~/lib/contracts";
 import { getPub, getMembers, updatePub, createPub, NotFoundError } from "~/lib/server";
+import { validateToken } from "~/lib/server/token";
 
 // TODO: verify pub belongs to integrationInstance probably in some middleware
 // TODO: verify token in header
@@ -49,6 +50,23 @@ const integrationsRouter = createNextRoute(api.integrations, {
 			body: member,
 		};
 	},
+	auth: async ({ headers, body, params }) => {
+		try {
+			const user = await validateToken(body.token);
+
+			return {
+				status: 200,
+				body: user,
+			}
+		} catch (err) {
+			return {
+				status: 403,
+				body: {
+					error: err.message
+				}
+			}
+		}
+	}
 });
 
 const router = {
