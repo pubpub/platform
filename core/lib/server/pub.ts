@@ -1,5 +1,5 @@
 import prisma from "~/prisma/db";
-import { PubPostBody } from "~/lib/contracts/resources/pub";
+import { PubPostBody } from "~/lib/contracts/resources/pubs";
 
 export const getPubFields = async (pubId: string) => {
 	const fields = await prisma.pubValue.findMany({

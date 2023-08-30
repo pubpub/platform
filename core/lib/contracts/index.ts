@@ -1,17 +1,11 @@
 import { initContract } from "@ts-rest/core";
-
-import { pubApi } from "./resources/pub";
-import { autosuggestApi } from "./resources/autosuggest";
+import { integrationsApi } from "./resources/integrations";
 
 const contract = initContract();
 
 export const api = contract.router({
 	/**
-	 * Pub API
+	 * integrations API
 	 */
-	pub: pubApi,
-	/**
-	 * Members API
-	 */
-	autosuggest: autosuggestApi,
+	integrations: integrationsApi,
 });

@@ -2,8 +2,9 @@ import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "~/lib/contracts";
 import { getPub, getMembers, updatePub, createPub, NotFoundError } from "~/lib/server";
 
-// TODO: verify pub belongs to integrationInstance
-const pubRouter = createNextRoute(api.pub, {
+// TODO: verify pub belongs to integrationInstance probably in some middleware
+// TODO: verify token in header
+const integrationsRouter = createNextRoute(api.integrations, {
 	createPub: async ({ params, body }) => {
 		try {
 			const pub = await createPub(params.instanceId, body);
@@ -28,6 +29,12 @@ const pubRouter = createNextRoute(api.pub, {
 			body: pubFieldValuePairs,
 		};
 	},
+	getAllPubs: async ({ params }) => {
+		return {
+			status: 200,
+			body: [{ message: "This is not implemented" }],
+		};
+	},
 	updatePub: async ({ params, body }) => {
 		const updatedPub = await updatePub(params.pubId, body);
 		return {
@@ -35,10 +42,7 @@ const pubRouter = createNextRoute(api.pub, {
 			body: updatedPub,
 		};
 	},
-});
-
-const autosuggestRouter = createNextRoute(api.autosuggest, {
-	suggestMember: async ({ params }) => {
+	getSuggestedMembers: async ({ params }) => {
 		const member = await getMembers(params.memberCandidateString);
 		return {
 			status: 200,
@@ -48,8 +52,7 @@ const autosuggestRouter = createNextRoute(api.autosuggest, {
 });
 
 const router = {
-	pub: pubRouter,
-	autosuggest: autosuggestRouter,
+	integrations: integrationsRouter,
 };
 
 export default createNextRouter(api, router);
