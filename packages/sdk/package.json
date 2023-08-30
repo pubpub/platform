@@ -16,9 +16,9 @@
 		}
 	},
 	"scripts": {
-		"dev": "vite",
-		"build": "tsup src/lib/index.ts --format esm,cjs --dts",
-		"prepare": "pnpm build"
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"type-check": "tsc"
 	},
 	"keywords": [
 		"pubpub",
@@ -29,6 +29,7 @@
 	"license": "GPL-2.0+",
 	"devDependencies": {
 		"@types/node": "^20.4.2",
+		"tsconfig": "workspace:*",
 		"tsup": "^7.1.0",
 		"vite": "^4.4.5"
 	}
