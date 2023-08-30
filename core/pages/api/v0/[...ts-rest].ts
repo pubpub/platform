@@ -2,7 +2,8 @@ import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "~/lib/contracts";
 import { getPub, getMembers, updatePub, createPub, NotFoundError } from "~/lib/server";
 
-// TODO: verify pub belongs to integrationInstance
+// TODO: verify pub belongs to integrationInstance probably in some middleware
+// TODO: verify token in header
 const integrationsRouter = createNextRoute(api.integrations, {
 	createPub: async ({ params, body }) => {
 		try {
@@ -41,7 +42,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 			body: updatedPub,
 		};
 	},
-	suggestMember: async ({ params }) => {
+	getSuggestedMembers: async ({ params }) => {
 		const member = await getMembers(params.memberCandidateString);
 		return {
 			status: 200,
@@ -51,8 +52,6 @@ const integrationsRouter = createNextRoute(api.integrations, {
 });
 
 const router = {
-	// pub: pubRouter,
-	// autosuggest: autosuggestRouter,
 	integrations: integrationsRouter,
 };
 

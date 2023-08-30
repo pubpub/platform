@@ -72,7 +72,7 @@ export const integrationsApi = contract.router({
 			200: PubFieldsSchema,
 		},
 	},
-	suggestMember: {
+	getSuggestedMembers: {
 		method: "GET",
 		path: "integrations/:instanceId/autosuggest/members/:memberCandidateString",
 		summary: "autosuggest member",
@@ -86,4 +86,50 @@ export const integrationsApi = contract.router({
 			200: z.array(SuggestedMembersSchema),
 		},
 	},
+	// TODO implement these endpoints
+	// authorizeIntegration: {
+	// 	method: "POST",
+	// 	path: "integrations/:instanceId/authorize",
+	// 	summary: "authorize integration",
+	// 	description: "A way to authorize an integration",
+	// 	body: z.object({
+	// 		userId: z.string(),
+	// 	}),
+	// 	pathParams: z.object({
+	// 		instanceId: z.string(),
+	// 	}),
+	// 	responses: {
+	// 		200: z.any(),
+	// 	},
+	// },
+	// getAllMembers: {
+	// 	method: "GET",
+	// 	path: "integrations/:instanceId/members",
+	// 	summary: "Gets all members for this instance",
+	// 	description: "A way to get all members for an integration instance",
+	// 	pathParams: z.object({
+	// 		instanceId: z.string(),
+	// 	}),
+	// 	responses: {
+	// 		200: z.array(SuggestedMembersSchema),
+	// 	},
+	// },
+	// postEmail: {
+	// 	method: "POST",
+	// 	path: "integrations/:instanceId/email",
+	// 	summary: "Send email",
+	// 	description: "A way to send email",
+	// 	body: z.object({
+	// 		userId: z.string(),
+	// 		subject: z.string(),
+	// 		body: z.string(),
+	// 		recipients: z.array(z.string()),
+	// 	}),
+	// 	pathParams: z.object({
+	// 		instanceId: z.string(),
+	// 	}),
+	// 	responses: {
+	// 		200: z.any(),
+	// 	},
+	// },
 });
