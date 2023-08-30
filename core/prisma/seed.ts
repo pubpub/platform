@@ -5,33 +5,55 @@ import buildArcadia from "./exampleCommunitySeeds/arcadia";
 import buildMITP from "./exampleCommunitySeeds/mitp";
 import buildBiorxiv from "./exampleCommunitySeeds/biorxiv";
 import buildBrown from "./exampleCommunitySeeds/brown";
+import { SupabaseClient } from "@supabase/supabase-js";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const prisma = new PrismaClient();
-async function main() {
-	const mainUserId = "a9a09993-8eb1-4122-abbf-b999d5c8afe3";
+const supabase = new SupabaseClient(supabaseUrl!, supabaseKey!);
+
+async function createUserMembers(email, password, slug, name, prismaCommunityIds) {
+	const { data, error } = await supabase.auth.signUp({
+		email: email,
+		password: password,
+	});
+	if (error) {
+		console.log(error);
+		return error;
+	}
+	const { user } = data;
 	await prisma.user.create({
 		data: {
-			id: mainUserId,
-			slug: "testing",
-			email: "stevie@email.com",
-			name: "Stevie Barnett",
+			id: user!.id,
+			slug: slug,
+			email: user!.email!,
+			name: name,
 			avatar: "/demo/person.png",
+			memberships: { createMany: { data: prismaCommunityIds } },
 		},
 	});
+}
+
+async function main() {
 	const communityIds = [...Array(7)].map((x) => uuidv4());
 	await buildArcadia(prisma, communityIds[0]);
 	await buildMITP(prisma, communityIds[1]);
 	await buildBiorxiv(prisma, communityIds[2]);
 	await buildBrown(prisma, communityIds[3]);
-
-	await prisma.member.createMany({
-		data: [
-			{ userId: mainUserId, communityId: communityIds[0], canAdmin: true },
-			{ userId: mainUserId, communityId: communityIds[1], canAdmin: true },
-			{ userId: mainUserId, communityId: communityIds[2], canAdmin: true },
-			{ userId: mainUserId, communityId: communityIds[3], canAdmin: true },
-		],
+	const prismaCommunityIds = communityIds.slice(0, 4).map((communityId) => {
+		return { communityId: communityId, canAdmin: true };
 	});
+	try {
+		await createUserMembers(
+			"all@pubpub.org",
+			"pubpub-all",
+			"all",
+			"Jill Admin",
+			prismaCommunityIds
+		);
+	} catch (error) {
+		console.log(error);
+	}
 }
 main()
 	.then(async () => {
