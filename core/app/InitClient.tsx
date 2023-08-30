@@ -11,7 +11,7 @@ export default function InitClient() {
 		const securityValue = isLocalhost ? "secure" : "";
 		createBrowserSupabase();
 		supabase.auth.onAuthStateChange(async (event, session) => {
-			if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+			if (event === "SIGNED_OUT") {
 				// delete cookies on sign out
 				const expires = new Date(0).toUTCString();
 				document.cookie = `${TOKEN_NAME}=; path=/; expires=${expires}; SameSite=Lax; ${securityValue}`;

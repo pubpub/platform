@@ -1,10 +1,7 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import Button from "components/Button";
+import { Button } from "ui";
 import { UserPutBody } from "pages/api/user";
-import Input from "components/Input";
-import SectionHeader from "components/SectionHeader";
-import AvatarSelector from "components/AvatarSelector";
 import { supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 import { getSlugSuffix, slugifyString } from "lib/string";
@@ -22,7 +19,7 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 	const [resetSuccess, setResetSuccess] = useState(false);
 	const emailChanged = initEmail !== email;
 	const router = useRouter();
-	const valuesChanged = emailChanged || name !== initName || avatarColor !== initAvatarColor;
+	const valuesChanged = emailChanged || name !== initName;
 	const slugSuffix = getSlugSuffix(slug);
 
 	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
@@ -69,19 +66,16 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 
 	return (
 		<>
-			<SectionHeader text="User Details" />
 			<div className="my-10">
 				<form onSubmit={handleSubmit}>
-					<Input
-						label="Name"
-						value={name}
-						onChange={(evt) => setName(evt.target.value)}
-					/>
+					<label htmlFor="name">Name</label>
+					<input name="name" value={name} onChange={(evt) => setName(evt.target.value)} />
 					<div className="text-gray-500 text-sm leading-tight -mt-3">
 						Username: {slugifyString(name)}-{slugSuffix}
 					</div>
-					<Input
-						label="Email"
+					<label htmlFor="email">Email</label>
+					<input
+						name="email"
 						value={email}
 						onChange={(evt) => setEmail(evt.target.value)}
 					/>
@@ -94,25 +88,16 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 					<Button
 						className="mt-4"
 						type="submit"
-						text="Save Changes"
-						primary
-						isLoading={isLoading}
 						disabled={!valuesChanged || !name || !email}
-					/>
+					>
+						Save Changes
+					</Button>
 				</form>
-				<SectionHeader
-					className="mt-12 pt-12 border-t border-t-stone-400"
-					text="Reset Password"
-				/>
 				<p className="my-4">
 					Click below to receive an email with a secure link for reseting yor password.
 				</p>
 				{!resetSuccess && (
-					<Button
-						onClick={resetPassword}
-						text={"Send password reset email"}
-						isLoading={resetIsLoading}
-					/>
+					<Button onClick={resetPassword}> Send password reset email</Button>
 				)}
 				{resetSuccess && (
 					<div className="text-green-700">

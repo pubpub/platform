@@ -2,9 +2,7 @@
 import React, { useState, FormEvent } from "react";
 import SHA3 from "crypto-js/sha3";
 import encHex from "crypto-js/enc-hex";
-import Button from "components/Button";
-import Input from "components/Input";
-import SectionHeader from "components/SectionHeader";
+import { Button } from "ui";
 import { supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -37,23 +35,19 @@ export default function ResetForm() {
 
 	return (
 		<>
-			<SectionHeader text="Reset Password" />
 			{!success && (
 				<div className="my-10">
 					<form onSubmit={handleSubmit}>
-						<Input
-							label="Password"
+						<label htmlFor="password">Password</label>
+						<input
+							name="password"
 							value={password}
 							type="password"
 							onChange={(evt) => setPassword(evt.target.value)}
 						/>
-						<Button
-							type="submit"
-							text="Set new password"
-							primary
-							isLoading={isLoading}
-							disabled={!password}
-						/>
+						<Button variant="outline" type="submit" disabled={!password}>
+							Set new password
+						</Button>
 						{failure && (
 							<div className={"text-red-700 my-4"}>Error reseting password</div>
 						)}

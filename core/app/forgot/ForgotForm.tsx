@@ -1,8 +1,6 @@
 "use client";
 import React, { FormEvent, useState } from "react";
-import Button from "components/Button";
-import Input from "components/Input";
-import SectionHeader from "components/SectionHeader";
+import { Button } from "ui";
 import { supabase } from "lib/supabase";
 
 export default function ForgotForm() {
@@ -29,8 +27,6 @@ export default function ForgotForm() {
 
 	return (
 		<>
-			<SectionHeader text="Forgot Password" />
-
 			{!success && (
 				<>
 					<p className="my-4">
@@ -38,18 +34,14 @@ export default function ForgotForm() {
 					</p>
 					<div className="my-4">
 						<form onSubmit={resetPassword}>
-							<Input
+							<input
 								value={email}
 								onChange={(evt) => setEmail(evt.target.value)}
 								placeholder="example@mail.com"
 							/>
-							<Button
-								type="submit"
-								text={"Send password reset email"}
-								primary
-								isLoading={isLoading}
-								disabled={!email}
-							/>
+							<Button variant="outline" type="submit" disabled={!email}>
+								Send password reset email
+							</Button>
 							{failure && (
 								<div className={"text-red-700 my-4"}>Error reseting password</div>
 							)}

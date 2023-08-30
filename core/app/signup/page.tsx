@@ -1,4 +1,3 @@
-import Head from "components/Head";
 import SignupForm from "./SignupForm";
 import { getLoginData } from "lib/auth/loginData";
 
@@ -10,7 +9,6 @@ export default async function Page() {
 	}
 	return (
 		<div className="max-w-lg m-auto">
-			<Head title="Signup · PubPub" triggers={[]} />
 			<SignupForm />
 		</div>
 	);

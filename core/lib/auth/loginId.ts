@@ -19,10 +19,9 @@ export async function getIdFromJWT(sessionJWT?: string, refreshToken?: string): 
 	// if (DATABASE_URL.includes("localhost")) {
 	if (DATABASE_URL.includes("//")) {
 		/* TODO: `//` if only temporary for testing deploys before we build out login UI */
-
 		/* This helps us do local testing by automatically "logging in" a default user. */
 		/* It's not a real login as it doesn't his Supabase Auth, just returns the DB User */
-		return "a9a09993-8eb1-4122-abbf-b999d5c8afe3";
+		// return "a9a09993-8eb1-4122-abbf-b999d5c8afe3";
 	}
 	if (!sessionJWT) {
 		return "";

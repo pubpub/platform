@@ -2,9 +2,7 @@
 import React, { useState, FormEvent } from "react";
 import SHA3 from "crypto-js/sha3";
 import encHex from "crypto-js/enc-hex";
-import Button from "components/Button";
-import Input from "components/Input";
-import SectionHeader from "components/SectionHeader";
+import { Button } from "ui";
 import { supabase } from "lib/supabase";
 import Link from "next/link";
 
@@ -32,29 +30,27 @@ export default function LoginForm() {
 
 	return (
 		<>
-			<SectionHeader text="Login" />
+			<h1>Login</h1>
 			<div className="my-10">
 				<form onSubmit={handleSubmit}>
-					<Input
-						label="Email"
+					<label htmlFor="email">Email</label>
+					<input
+						name="email"
 						value={email}
 						onChange={(evt) => setEmail(evt.target.value)}
 					/>
-					<Input
-						label="Password"
+					<label htmlFor="password">Password</label>
+					<input
+						name="password"
 						value={password}
 						type="password"
 						onChange={(evt) => setPassword(evt.target.value)}
 					/>
 
 					<div className="my-6 flex space-x-8 items-center">
-						<Button
-							type="submit"
-							text="Login"
-							primary
-							isLoading={isLoading}
-							disabled={!email || !password}
-						/>
+						<Button variant="outline" type="submit" disabled={!email || !password}>
+							Login
+						</Button>
 						<Link href="/forgot" className="text-sm text-gray-600 hover:underline">
 							Forgot Password
 						</Link>

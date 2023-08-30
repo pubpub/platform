@@ -2,11 +2,8 @@
 import React, { useState, FormEvent } from "react";
 import SHA3 from "crypto-js/sha3";
 import encHex from "crypto-js/enc-hex";
-import Button from "components/Button";
+import { Button } from "ui";
 import { UserPostBody } from "pages/api/user";
-import Input from "components/Input";
-import SectionHeader from "components/SectionHeader";
-import AvatarSelector from "components/AvatarSelector";
 
 export default function SignupForm() {
 	const [name, setName] = useState("");
@@ -43,33 +40,36 @@ export default function SignupForm() {
 		<>
 			{!signupComplete && (
 				<>
-					<SectionHeader text="Signup" />
+					<h1>Signup</h1>
 					<div className="my-10">
 						<form onSubmit={handleSubmit}>
-							<Input
-								label="Name"
+							<label htmlFor="name">Name</label>
+							<input
+								name="name"
 								value={name}
 								onChange={(evt) => setName(evt.target.value)}
 							/>
-							<Input
-								label="Email"
+							<label htmlFor="email">Email</label>
+							<input
+								name="email"
 								value={email}
 								onChange={(evt) => setEmail(evt.target.value)}
 							/>
-							<Input
-								label="Password"
+							<label htmlFor="password">Password</label>
+							<input
+								name="Password"
 								value={password}
 								type="password"
 								onChange={(evt) => setPassword(evt.target.value)}
 							/>
 							<Button
+								variant="outline"
 								className="mt-4"
 								type="submit"
-								text="Create Account"
-								primary
-								isLoading={isLoading}
 								disabled={!name || !email || !password}
-							/>
+							>
+								Create Account
+							</Button>
 						</form>
 					</div>
 				</>
