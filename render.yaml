@@ -21,8 +21,8 @@ services:
       region: ohio
       runtime: node
       rootDir: .
-      buildCommand: pnpm install; pnpm build --filter integrations-evaluations...
-      startCommand: pnpm start --filter integrations-evaluations
+      buildCommand: pnpm install; pnpm build --filter integration-evaluations...
+      startCommand: pnpm start --filter integration-evaluations
       envVars:
           - fromGroup: pubpub-integration-prod-env
           - key: REDIS_CONNECTION_STRING
