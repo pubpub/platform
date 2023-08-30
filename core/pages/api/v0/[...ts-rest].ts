@@ -28,6 +28,12 @@ const pubRouter = createNextRoute(api.pub, {
 			body: pubFieldValuePairs,
 		};
 	},
+	getAllPubs: async ({ params }) => {
+		return {
+			status: 200,
+			body: [{ message: "This is not implemented" }],
+		};
+	},
 	updatePub: async ({ params, body }) => {
 		const updatedPub = await updatePub(params.pubId, body);
 		return {

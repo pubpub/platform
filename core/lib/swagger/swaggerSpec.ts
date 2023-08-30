@@ -23,15 +23,15 @@ export const openApiDocument: OpenAPIObject = generateOpenApi(api, {
 	},
 	servers: [
 		{
-			url: "https://localhost:3000/api",
+			url: "https://localhost:3000/api/v0",
 			description: "The development API server",
 		},
 		{
-			url: "https://pubpub.com/staging/api",
+			url: "https://pubpub.com/staging/api/v0",
 			description: "The staging API server",
 		},
 		{
-			url: "https://pubpub.com/api",
+			url: "https://pubpub.com/api/v0",
 			description: "The production API server",
 		},
 	],
