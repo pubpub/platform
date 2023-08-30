@@ -7,11 +7,7 @@ const contract = initContract();
 
 export const api = contract.router({
 	/**
-	 * Pub API
+	 * integrations API
 	 */
-	pub: pubApi,
-	/**
-	 * Members API
-	 */
-	autosuggest: autosuggestApi,
+	integrations: { ...pubApi, ...autosuggestApi },
 });

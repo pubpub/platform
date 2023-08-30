@@ -3,7 +3,7 @@ import { api } from "~/lib/contracts";
 import { getPub, getMembers, updatePub, createPub, NotFoundError } from "~/lib/server";
 
 // TODO: verify pub belongs to integrationInstance
-const pubRouter = createNextRoute(api.pub, {
+const integrationsRouter = createNextRoute(api.integrations, {
 	createPub: async ({ params, body }) => {
 		try {
 			const pub = await createPub(params.instanceId, body);
@@ -41,9 +41,6 @@ const pubRouter = createNextRoute(api.pub, {
 			body: updatedPub,
 		};
 	},
-});
-
-const autosuggestRouter = createNextRoute(api.autosuggest, {
 	suggestMember: async ({ params }) => {
 		const member = await getMembers(params.memberCandidateString);
 		return {
@@ -54,8 +51,9 @@ const autosuggestRouter = createNextRoute(api.autosuggest, {
 });
 
 const router = {
-	pub: pubRouter,
-	autosuggest: autosuggestRouter,
+	// pub: pubRouter,
+	// autosuggest: autosuggestRouter,
+	integrations: integrationsRouter,
 };
 
 export default createNextRouter(api, router);
