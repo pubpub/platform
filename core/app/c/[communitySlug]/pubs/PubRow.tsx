@@ -36,10 +36,11 @@ const getInstances = (pub: Props["pub"]) => {
 	return instances;
 };
 
-const appendQueryParams = (instanceId: string) => {
+const appendQueryParams = (instanceId: string, pubId: string) => {
 	return (action: IntegrationAction) => {
 		const url = new URL(action.href);
 		url.searchParams.set('instanceId', instanceId);
+		url.searchParams.set('pubId', pubId)
 		return {
 			...action,
 			href: url.toString(),
@@ -54,7 +55,7 @@ const getButtons = (pub: Props["pub"]) => {
 		const status = getStatus(pub, integration.id);
 		const actions: IntegrationAction[] =
 			(Array.isArray(integration.actions) ? integration.actions : []).
-				map(appendQueryParams(integration.id));
+				map(appendQueryParams(integration.id, pub.id));
 		return { status, actions };
 	});
 
