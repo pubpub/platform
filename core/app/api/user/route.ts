@@ -1,3 +1,4 @@
+import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "prisma/db";
 import { getServerSupabase } from "lib/supabaseServer";
