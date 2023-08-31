@@ -3,7 +3,7 @@ import React, { useState, FormEvent } from "react";
 import SHA3 from "crypto-js/sha3";
 import encHex from "crypto-js/enc-hex";
 import { Button } from "ui";
-import { UserPostBody } from "pages/api/user";
+import { UserPostBody } from "app/api/user/route";
 
 export default function SignupForm() {
 	const [name, setName] = useState("");
