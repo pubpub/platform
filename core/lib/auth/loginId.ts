@@ -1,4 +1,4 @@
-import { NextApiRequest } from "next";
+import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 
 import { getRefreshCookie, getTokenCookie } from "~/lib/auth/cookies";
@@ -9,7 +9,7 @@ const DATABASE_URL: string = process.env.DATABASE_URL || "";
 
 /* This is only called from API calls */
 /* When rendering server components, use getLoginData from loginData.ts */
-export async function getLoginId(req: NextApiRequest): Promise<string> {
+export async function getLoginId(req: NextRequest): Promise<string> {
 	const sessionJWT = getTokenCookie(req);
 	const refreshToken = getRefreshCookie(req);
 	return await getIdFromJWT(sessionJWT, refreshToken);

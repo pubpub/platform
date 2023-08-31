@@ -1,5 +1,4 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { createRouter } from "next-connect";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "prisma/db";
 import { getServerSupabase } from "lib/supabaseServer";
 import { generateHash, getSlugSuffix, slugifyString } from "lib/string";
@@ -15,10 +14,8 @@ export type UserPutBody = {
 	name: string;
 };
 
-const router = createRouter<NextApiRequest, NextApiResponse>();
-
-router.post(async (req, res) => {
-	const submittedData: UserPostBody = req.body;
+export async function POST(req: NextRequest) {
+	const submittedData: UserPostBody = await req.json();
 	const { name, email, password } = submittedData;
 	console.log("SUBMITTED", submittedData);
 	const supabase = getServerSupabase();
@@ -50,7 +47,7 @@ router.post(async (req, res) => {
 	if (error || !data.user) {
 		console.error("Supabase createUser error:");
 		console.error(error);
-		return res.status(500).json("Supabase createUser error");
+		return NextResponse.json({ message: "Supabase createUser error" }, { status: 500 });
 	}
 	await prisma.user.create({
 		data: {
@@ -61,21 +58,21 @@ router.post(async (req, res) => {
 		},
 	});
 
-	return res.status(200).json({ ok: true });
-});
+	return NextResponse.json({ ok: true }, { status: 200 });
+}
 
-router.put(async (req, res) => {
+export async function PUT(req: NextRequest) {
 	const loginId = await getLoginId(req);
 	if (!loginId) {
-		return res.status(401).json({ ok: false });
+		return NextResponse.json({ ok: false }, { status: 401 });
 	}
-	const submittedData: UserPutBody = req.body;
+	const submittedData: UserPutBody = await req.json();
 	const { name } = submittedData;
 	const currentData = await prisma.user.findUnique({
 		where: { id: loginId },
 	});
 	if (!currentData) {
-		return res.status(401).json({ ok: false });
+		return NextResponse.json({ ok: false }, { status: 401 });
 	}
 	const slugSuffix = getSlugSuffix(currentData.slug);
 	await prisma.user.update({
@@ -87,12 +84,5 @@ router.put(async (req, res) => {
 			name,
 		},
 	});
-	return res.status(200).json({ ok: true });
-});
-
-export default router.handler({
-	onError: (err, req, res) => {
-		console.error(err);
-		res.status(500).end(err);
-	},
-});
+	return NextResponse.json({ ok: true }, { status: 200 });
+}
