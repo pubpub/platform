@@ -26,10 +26,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		],
 	});
 
-	const typeIds = [...Array(4)].map((x) => uuidv4());
+	const submissionTypeId = 'e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225';
 	await prisma.pubType.create({
 		data: {
-			id: typeIds[0],
+			id: submissionTypeId,
 			name: "Submission",
 			communityId: communityUUID,
 			fields: {
@@ -37,10 +37,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 	});
-
+	const evaluationSummaryTypeId = '2981e8ca-dabe-416f-bce0-fcc418036529';
 	await prisma.pubType.create({
 		data: {
-			id: typeIds[1],
+			id: evaluationSummaryTypeId,
 			name: "Evaluation Summary",
 			communityId: communityUUID,
 			fields: {
@@ -54,9 +54,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const authorResponseTypeId = 'd2ad1f23-f310-4974-8d45-3c55a3dc0638';
 	await prisma.pubType.create({
 		data: {
-			id: typeIds[2],
+			id: authorResponseTypeId,
 			name: "Author Response",
 			communityId: communityUUID,
 			fields: {
@@ -64,9 +65,11 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 	});
+
+	const evaluationTypeId = '81d18691-3ac4-42c1-b55b-d3b2c065b9ad';
 	await prisma.pubType.create({
 		data: {
-			id: typeIds[3],
+			id: evaluationTypeId,
 			name: "Evaluation",
 			communityId: communityUUID,
 			fields: {
@@ -77,7 +80,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const submission1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -98,7 +101,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const toAskForConsent = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -119,7 +122,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const toEvaluate = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -140,7 +143,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const evaluating1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -161,7 +164,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const evaluating2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -181,7 +184,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const authorRejection = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[0],
+			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -201,7 +204,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const evaluationSummary1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: evaluationSummaryTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -226,7 +229,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const evaluationSummary2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[1],
+			pubTypeId: evaluationSummaryTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -251,7 +254,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const authorsResponse = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: authorResponseTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -272,7 +275,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const authorsResponse2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[2],
+			pubTypeId: authorResponseTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -292,7 +295,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 	const evaluation1 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: evaluationTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -313,7 +316,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const evaluation2 = await prisma.pub.create({
 		data: {
-			pubTypeId: typeIds[3],
+			pubTypeId: evaluationTypeId,
 			communityId: communityUUID,
 			values: {
 				createMany: {
@@ -573,126 +576,105 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	await prisma.integrationInstance.create({
-		data: {
+	const integrationInstances = [
+		{
+			id: '708c6434-37c1-49f7-8fe6-f7e005b865cd',
 			name: "Semantic Scholar",
 			integrationId: semanticScholarIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: '4bad1706-1aac-44d9-8e0a-a93737313123',
 			name: "OpenAlex",
 			integrationId: openAlexIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: '1458b8d3-5be1-446e-aa52-135cef9f3901',
 			name: "Crossref",
 			integrationId: crossrefIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: 'a11f99e7-2177-4666-a11e-7d0c009dd602',
 			name: "Open Citations",
 			integrationId: openCitationsInegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: 'a22b4a6c-1343-4f40-8ce9-64a5cd1e232f',
 			name: "Keyword Extraction",
 			integrationId: keywordExtractionIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: 'd6177ad1-ae7d-43b7-9c12-dcd31a38f255',
 			name: "The Unjournal evaluation process manager",
 			integrationId: evaluationIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[3] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: '2a89db5c-ae5e-429f-bf65-70fc670f5b32',
 			name: "unjournal.evaluations.org",
 			integrationId: siteIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[5] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: 'faf829c3-23e1-4ccc-91af-fa43c70fbef6',
 			name: "Crossref DOI",
 			integrationId: doiIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[5] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: '74b1f89a-8ee9-4bb2-aa1f-b99699c3646e',
 			name: "Share on Social Media",
 			integrationId: socialMediaIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[5] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: '96250f80-bf1f-4056-9aa4-87bb68b831b7',
 			name: "Unjournal Archive",
 			integrationId: archiveIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[1] }, { id: stageIds[6] }],
 			},
 		},
-	});
-
-	await prisma.integrationInstance.create({
-		data: {
+		{
+			id: 'e210a926-8e8a-4c0f-b43c-063133e3e951',
 			name: "Unjournal Assignment Manager",
 			integrationId: assignmentIntegration.id,
-			communityId: communityUUID,
 			stages: {
 				connect: [{ id: stageIds[2] }, { id: stageIds[6] }],
 			},
 		},
-	});
+	]
+
+	Promise.all(integrationInstances.map((instanceData) => {
+		return prisma.integrationInstance.create({
+			data: {
+				communityId: communityUUID,
+				...instanceData
+			}
+		})
+	}))
 
 	/**I have not thought about how these fields are used well enough */
 	// const integrationFieldIds = [...Array(2)].map((x) => uuidv4());
