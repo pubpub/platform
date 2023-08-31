@@ -13,10 +13,10 @@ const db = async () => {
 
 export const makeInstance = (): Instance => ({});
 
-export const findInstance = async (instanceId: string) =>
-	(await db())
-		.get(`${manifest.name}:${instanceId}`)
-		.then((value) => (value ? JSON.parse(value) : undefined)) as Promise<Instance | undefined>;
+export const findInstance = async (instanceId: string) => {
+	const instance = await (await db()).get(`${manifest.name}:${instanceId}`);
+	return instance ? (JSON.parse(instance) as Instance) : undefined;
+};
 
 export const updateInstance = async (instanceId: string, instance: Instance) =>
 	(await db()).set(`${manifest.name}:${instanceId}`, JSON.stringify(instance));
