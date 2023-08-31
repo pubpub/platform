@@ -21,7 +21,7 @@ export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 export const integrationsApi = contract.router({
 	createPub: {
 		method: "POST",
-		path: "integrations/:instanceId/pubs",
+		path: "/integrations/:instanceId/pubs",
 		summary: "Creates a new pub",
 		description: "A way to create a new pub",
 		body: PubPostSchema,
@@ -35,7 +35,7 @@ export const integrationsApi = contract.router({
 	},
 	getPub: {
 		method: "GET",
-		path: "integrations/:instanceId/pubs/:pubId",
+		path: "/integrations/:instanceId/pubs/:pubId",
 		summary: "Gets a pub",
 		description: "A way to get pubs fields for an integration instance",
 		pathParams: z.object({
@@ -48,7 +48,7 @@ export const integrationsApi = contract.router({
 	},
 	getAllPubs: {
 		method: "GET",
-		path: "integrations/:instanceId/pubs",
+		path: "/integrations/:instanceId/pubs",
 		summary: "Gets all pubs for this instance",
 		description: "A way to get all pubs for an integration instance",
 		pathParams: z.object({
@@ -60,7 +60,7 @@ export const integrationsApi = contract.router({
 	},
 	updatePub: {
 		method: "PATCH",
-		path: "integrations/:instanceId/pubs/:pubId",
+		path: "/integrations/:instanceId/pubs/:pubId",
 		summary: "Adds field(s) to a pub",
 		description: "A way to update a field for an existing pub",
 		body: PubFieldsSchema,
@@ -74,7 +74,7 @@ export const integrationsApi = contract.router({
 	},
 	getSuggestedMembers: {
 		method: "GET",
-		path: "integrations/:instanceId/autosuggest/members/:memberCandidateString",
+		path: "/integrations/:instanceId/autosuggest/members/:memberCandidateString",
 		summary: "autosuggest member",
 		description:
 			"A way to autosuggest members so that integrations users can find users or verify they exist. Will return a name for ",

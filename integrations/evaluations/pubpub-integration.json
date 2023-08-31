@@ -1,5 +1,9 @@
 {
 	"name": "evaluations",
-	"read": {},
+	"read": {
+		"title": {
+			"id": "aa63cab5-3729-4a12-813b-eae316eceb69"
+		}
+	},
 	"write": {}
 }

@@ -29,7 +29,7 @@ const IntegrationList: React.FC<Props> = function ({ instances }) {
 			</Card>
 			{instances.map((instance) => {
 				return (
-					<Card className="mb-10">
+					<Card className="mb-10" key={instance.id}>
 						<CardContent>
 							<div className="flex justify-between">
 								<div>

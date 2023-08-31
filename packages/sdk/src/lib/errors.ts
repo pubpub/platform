@@ -49,3 +49,5 @@ export class ResponseError extends IntegrationError {
 }
 
 export class PubPubError extends IntegrationError {}
+
+export class InvalidFieldError extends IntegrationError {}
