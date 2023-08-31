@@ -6,7 +6,7 @@ export default async function Page(props: Props) {
 	const instance = (await findInstance(props.searchParams.instanceId)) ?? makeInstance();
 	return (
 		<>
-			<h1>Configure</h1>
+			<h2>Configure</h2>
 			<pre>
 				<code>{JSON.stringify(instance)}</code>
 			</pre>
