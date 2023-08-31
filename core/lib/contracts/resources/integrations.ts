@@ -23,10 +23,10 @@ export const integrationsApi = contract.router({
 	auth: {
 		body: z.any(),
 		method: "POST",
-		path: "integrations/:instanceId/auth",
-		summary: "",
+		path: "/integrations/:instanceId/auth",
+		summary: "Authenticate a user and receive basic information about them",
 		description:
-			"",
+			"Integrations can use this endpoint to exchange a PubPub community member's auth token for information about them.",
 		pathParams: z.object({
 			instanceId: z.string(),
 		}),
