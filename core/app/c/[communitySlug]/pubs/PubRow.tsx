@@ -14,7 +14,7 @@ import {
 	DialogTrigger,
 	Tooltip,
 	TooltipTrigger,
-	TooltipContent,
+	// TooltipContent,
 } from "ui";
 import { PubsData } from "./page";
 import { StagesData } from "../stages/page";
