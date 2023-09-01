@@ -19,6 +19,7 @@
 	},
 	"dependencies": {
 		"@prisma/client": "^5.2.0",
+		"@faker-js/faker": "^8.0.2",
 		"@supabase/supabase-js": "^2.25.0",
 		"@ts-rest/core": "^3.28.0",
 		"@ts-rest/next": "^3.28.0",

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { faker } from "@faker-js/faker";
 
 import buildArcadia from "./exampleCommunitySeeds/arcadia";
 import buildMITP from "./exampleCommunitySeeds/mitp";
@@ -52,10 +53,46 @@ async function main() {
 	await buildBiorxiv(prisma, communityIds[2]);
 	await buildBrown(prisma, communityIds[3]);
 	await buildUnjournal(prisma, unJournalId);
+
 	const prismaCommunityIds = communityIds.slice(0, 4).map((communityId) => {
 		return { communityId: communityId, canAdmin: true };
 	});
 	prismaCommunityIds.push({ communityId: unJournalId, canAdmin: true });
+
+	const admin = await prisma.user.create({
+		data: {
+			id: faker.string.uuid(),
+			slug: "testing",
+			email: "stevie@email.com",
+			name: "Stevie Barnett",
+			avatar: "/demo/person.png",
+		},
+	});
+
+	const user1 = await prisma.user.create({
+		data: {
+			id: faker.string.uuid(),
+			slug: faker.lorem.slug(),
+			email: faker.internet.email(),
+			name: faker.person.fullName(),
+			avatar: faker.image.avatar(),
+		},
+	});
+
+	await prisma.member.createMany({
+		data: [
+			{ userId: admin.id, communityId: communityIds[0], canAdmin: true },
+			{ userId: admin.id, communityId: communityIds[1], canAdmin: true },
+			{ userId: admin.id, communityId: communityIds[2], canAdmin: true },
+			{ userId: admin.id, communityId: communityIds[3], canAdmin: true },
+			{ userId: admin.id, communityId: communityIds[4], canAdmin: true },
+			{ userId: user1.id, communityId: communityIds[0], canAdmin: false },
+			{ userId: user1.id, communityId: communityIds[1], canAdmin: false },
+			{ userId: user1.id, communityId: communityIds[2], canAdmin: false },
+			{ userId: user1.id, communityId: communityIds[3], canAdmin: false },
+			{ userId: user1.id, communityId: communityIds[4], canAdmin: false },
+		],
+	});
 
 	try {
 		await createUserMembers(

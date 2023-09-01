@@ -27,9 +27,17 @@ const getCommunityStages = async (communitySlug: string) => {
 						},
 					},
 					integrationInstances: { include: { integration: true } },
+					community: {
+						include: {
+							members: {
+								include: {
+									user: true,
+								},
+							},
+						},
+					},
 				},
 			},
-			integrationInstances: { include: { integration: true } },
 		},
 	});
 };
@@ -40,7 +48,7 @@ export default async function Page({ params }: Props) {
 	const loginData = await getLoginData();
 	let token;
 	if (loginData) {
-		token = await createToken(loginData.id)
+		token = await createToken(loginData.id);
 	}
 	const stages = await getCommunityStages(params.communitySlug);
 	if (!stages) {

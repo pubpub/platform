@@ -21,6 +21,15 @@ const getCommunityPubs = async (communitySlug: string) => {
 			values: { include: { field: true } },
 			stages: { include: { integrationInstances: { include: { integration: true } } } },
 			integrationInstances: { include: { integration: true } },
+			community: {
+				include: {
+					members: {
+						include: {
+							user: true,
+						},
+					},
+				},
+			},
 		},
 	});
 };
@@ -31,7 +40,7 @@ export default async function Page({ params }: Props) {
 	const loginData = await getLoginData();
 	let token;
 	if (loginData) {
-		token = await createToken(loginData.id)
+		token = await createToken(loginData.id);
 	}
 	const pubs = await getCommunityPubs(params.communitySlug);
 	if (!pubs) {
@@ -40,7 +49,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<PubHeader />
-			<PubList pubs={pubs} token={token}/>
+			<PubList pubs={pubs} token={token} />
 		</>
 	);
 }
