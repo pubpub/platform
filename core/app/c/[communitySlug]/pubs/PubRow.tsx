@@ -174,7 +174,6 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 							<Button variant="secondary" className="mb-5">
 								Claim
 							</Button>
-
 							{members &&
 								members.map((member) => {
 									return (
