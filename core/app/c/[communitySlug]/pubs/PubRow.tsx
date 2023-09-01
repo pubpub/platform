@@ -12,6 +12,9 @@ import {
 	Dialog,
 	DialogContent,
 	DialogTrigger,
+	Tooltip,
+	TooltipTrigger,
+	TooltipContent,
 } from "ui";
 import { PubsData } from "./page";
 import { StagesData } from "../stages/page";
@@ -173,9 +176,14 @@ const PubRow: React.FC<Props> = function ({ pub, community, token }) {
 							</Button>
 						</PopoverTrigger>
 						<PopoverContent className="flex flex-col">
-							<Button variant="secondary" className="mb-5">
-								Claim
-							</Button>
+							<Tooltip>
+								<TooltipTrigger>
+									<Button variant="secondary" className="mb-5">
+										Claim
+									</Button>
+								</TooltipTrigger>
+								{/* <TooltipContent>Assign this pub to yourself</TooltipContent> */}
+							</Tooltip>
 							{members &&
 								members.map((member) => {
 									return (
