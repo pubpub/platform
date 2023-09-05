@@ -1,5 +1,6 @@
 import { getLoginData } from "~/lib/auth/loginData";
 import { Avatar, AvatarFallback, AvatarImage } from "ui";
+import LogoutButton from "./LogoutButton";
 
 export default async function LoginSwitcher() {
 	const loginData = await getLoginData();
@@ -16,7 +17,7 @@ export default async function LoginSwitcher() {
 				<div className="text-xs">{loginData.name}</div>
 				<div className="text-xs text-gray-400">{loginData.email}</div>
 			</div>
-
+			<LogoutButton />
 			<div>
 				<img className="mt-2" src="/icons/ellipsis.svg" />
 			</div>

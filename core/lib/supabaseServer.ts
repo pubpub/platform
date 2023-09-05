@@ -7,5 +7,10 @@ export const getServerSupabase = () => {
 	if (!url || !key) {
 		throw new Error("Missing Supabase parameters");
 	}
-	return createClient(url, key);
+	return createClient(url, key, {
+		auth: {
+			autoRefreshToken: true,
+			persistSession: true /* Persisting session is necessary for autoRefresh to function */,
+		},
+	});
 };

@@ -1,9 +1,9 @@
-import LoginForm from "./LoginForm";
+import ForgotForm from "./ForgotForm";
 
 export default async function Page() {
 	return (
 		<div className="max-w-lg m-auto">
-			<LoginForm />
+			<ForgotForm />
 		</div>
 	);
 }

@@ -1,5 +1,6 @@
 import "ui/styles.css";
 import "./globals.css";
+import InitClient from "./InitClient";
 
 export const metadata = {
 	title: "PubPub v7 Mockup Demo",
@@ -9,7 +10,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
-			<body>{children}</body>
+			<body>
+				<InitClient />
+				{children}
+			</body>
 		</html>
 	);
 }
