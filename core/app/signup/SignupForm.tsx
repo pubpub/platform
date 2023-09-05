@@ -1,7 +1,5 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import SHA3 from "crypto-js/sha3";
-import encHex from "crypto-js/enc-hex";
 import { Button } from "ui";
 import { UserPostBody } from "app/api/user/route";
 
@@ -18,7 +16,7 @@ export default function SignupForm() {
 		setIsLoading(true);
 		const postBody: UserPostBody = {
 			name,
-			password: SHA3(password).toString(encHex),
+			password,
 			email,
 		};
 		const response = await fetch("/api/user", {

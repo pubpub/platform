@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import SHA3 from "crypto-js/sha3";
-import encHex from "crypto-js/enc-hex";
 
 import buildArcadia from "./exampleCommunitySeeds/arcadia";
 import buildMITP from "./exampleCommunitySeeds/mitp";
@@ -17,8 +15,8 @@ const supabase = new SupabaseClient(supabaseUrl!, supabaseKey!);
 
 async function createUserMembers(email, password, slug, name, prismaCommunityIds) {
 	const { data, error } = await supabase.auth.signUp({
-		email: email,
-		password: SHA3(password).toString(encHex),
+		email,
+		password,
 	});
 	if (error) {
 		console.log(error);
