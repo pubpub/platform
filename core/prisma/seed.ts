@@ -14,9 +14,10 @@ const prisma = new PrismaClient();
 const supabase = new SupabaseClient(supabaseUrl!, supabaseKey!);
 
 async function createUserMembers(email, password, slug, name, prismaCommunityIds) {
-	const { data, error } = await supabase.auth.signUp({
+	const { data, error } = await supabase.auth.admin.createUser({
 		email,
 		password,
+		email_confirm: true,
 	});
 	if (error) {
 		console.log(error);
