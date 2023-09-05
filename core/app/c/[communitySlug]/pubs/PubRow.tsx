@@ -70,7 +70,7 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 									{buttons.map((button) => {
 										return (
 											<div
-												key={button.actions[0].text}
+												key={button.actions![0].text}
 												// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
 												className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
 											/>
@@ -80,7 +80,18 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 							</Button>
 						</PopoverTrigger>
 						<PopoverContent>
-							Fix
+							{buttons.map((button) => {
+								return (
+									<Button
+										variant="ghost"
+										size="sm"
+										key={button.actions?.[0].text}
+									>
+										<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
+										<span>{button.actions?.[0].text}</span>
+									</Button>
+								);
+							})}
 							{/* <PopoverHeader>Integrations</PopoverHeader>
 									<PopoverBody>
 										{instances.map((instance, index) => {
@@ -130,9 +141,9 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 					</Popover>
 				</div>
 			</div>
-			<div className="mt-0 items-start flex justify-between">
-				<h3 className="text-md font-bold">{getTitle(pub)}</h3>
-				<div className="flex items-baseline">
+			<div className="mt-0 items-stretch flex justify-between">
+				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
+				<div className="flex items-end shrink-0">
 					<Button size="sm" variant="outline" className="ml-1">
 						Move
 					</Button>
@@ -142,47 +153,6 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 					<Button size="sm" variant="outline" className="ml-1">
 						Email Members
 					</Button>
-					{buttons.map((button) => {
-						return (
-							/* @ts-ignore */
-							<div key={button.actions[0].href} className="ml-2">
-								{/* @ts-ignore */}
-								{/* <NextLink href={button.actions[0].href} passHref legacyBehavior> */}
-								{/* <Button as="a" size="xs" variant="outline"> */}
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={() => {
-										/* @ts-ignore */
-										setModalTitle(button.actions[0].text);
-									}}
-								>
-									<div className="flex items-center">
-										{/* @ts-ignore */}
-										{button.actions[0].text}
-										<div
-											// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
-											className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
-										/>
-									</div>
-								</Button>
-								{/* </NextLink> */}
-
-								{/* <Flex align="center">
-									<Box
-										style={{
-											width: "8px",
-											height: "8px",
-											borderRadius: "8px",
-											background: button.status.color,
-										}}
-										mr={1}
-									/>
-									<Text fontSize="xs">{button.status.text}</Text>
-								</Flex> */}
-							</div>
-						);
-					})}
 				</div>
 			</div>
 		</div>

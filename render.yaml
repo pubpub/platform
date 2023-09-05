@@ -1,10 +1,47 @@
 previewsEnabled: true
 services:
-- type: web
-  name: core
-  runtime: node
-  rootDir: .
-  buildCommand: pnpm install; pnpm build --filter core...
-  startCommand: pnpm start --filter core
-  envVars:
-    - fromGroup: pubpub-core-prod-env
+    # core
+    - type: web
+      name: core
+      runtime: node
+      rootDir: .
+      buildCommand: pnpm install; pnpm build --filter core...
+      startCommand: pnpm start --filter core
+      envVars:
+          - fromGroup: pubpub-core-prod-env
+    # integration-instances
+    - type: redis
+      name: integration-instances
+      region: ohio
+      ipAllowList: [] # only allow internal connections
+      maxmemoryPolicy: noeviction
+    # integration-evaluations
+    - type: web
+      name: integration-evaluations
+      region: ohio
+      runtime: node
+      rootDir: .
+      buildCommand: pnpm install; pnpm build --filter integration-evaluations...
+      startCommand: pnpm start --filter integration-evaluations
+      envVars:
+          - fromGroup: pubpub-integration-prod-env
+          - key: REDIS_CONNECTION_STRING
+            fromService:
+                type: redis
+                name: integration-instances
+                property: connectionString
+    # integration-submissions
+    - type: web
+      name: integration-submissions
+      region: ohio
+      runtime: node
+      rootDir: .
+      buildCommand: pnpm install; pnpm build --filter integration-submissions...
+      startCommand: pnpm start --filter integration-submissions
+      envVars:
+          - fromGroup: pubpub-integration-prod-env
+          - key: REDIS_CONNECTION_STRING
+            fromService:
+                type: redis
+                name: integration-instances
+                property: connectionString

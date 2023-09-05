@@ -16,39 +16,38 @@ const StatusText = {
 	502: "Bad Gateway",
 	503: "Service Unavailable",
 	504: "Gateway Time-out",
-}
+};
 
 export class IntegrationError extends Error {
 	toJSON() {
 		if (this.cause) {
-			return { message: this.message, cause: this.cause.toString() }
+			return { message: this.message, cause: this.cause.toString() };
 		}
-		return { message: this.message }
+		return { message: this.message };
 	}
 }
 
 export class ResponseError extends IntegrationError {
-	declare cause: Response
+	declare cause: Response;
 
-	constructor(
-		cause: Response | keyof typeof StatusText,
-		message: string = "Unexpected error"
-	) {
+	constructor(cause: Response | keyof typeof StatusText, message: string = "Unexpected error") {
 		if (typeof cause === "number") {
 			cause = new Response(null, {
 				status: cause,
 				statusText: StatusText[cause],
-			})
+			});
 		}
-		super(`${message}`, { cause })
+		super(`${message}`, { cause });
 	}
 
 	toJSON() {
 		return {
 			message: this.message,
 			cause: `The server responded with ${this.cause.status} (${this.cause.statusText})`,
-		}
+		};
 	}
 }
 
 export class PubPubError extends IntegrationError {}
+
+export class InvalidFieldError extends IntegrationError {}

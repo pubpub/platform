@@ -1,1 +1,1 @@
-# @pubpub/integration-sdk
+# @pubpub/sdk
