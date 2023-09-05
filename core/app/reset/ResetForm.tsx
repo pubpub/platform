@@ -1,7 +1,5 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import SHA3 from "crypto-js/sha3";
-import encHex from "crypto-js/enc-hex";
 import { Button } from "ui";
 import { supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
@@ -18,7 +16,7 @@ export default function ResetForm() {
 		setFailure(false);
 		evt.preventDefault();
 		const { data, error } = await supabase.auth.updateUser({
-			password: SHA3(password).toString(encHex),
+			password,
 		});
 		if (error) {
 			setIsLoading(false);
