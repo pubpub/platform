@@ -1,5 +1,6 @@
 import prisma from "~/prisma/db";
 import { PubPostBody } from "~/lib/contracts/resources/integrations";
+import { NotFoundError } from "./errors";
 
 export const getPubFields = async (pubId: string) => {
 	const fields = await prisma.pubValue.findMany({
@@ -22,8 +23,6 @@ export const getPubFields = async (pubId: string) => {
 		return prev;
 	}, {});
 };
-
-export class NotFoundError extends Error {}
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubTypeNotFoundError = new NotFoundError("PubType not found");
