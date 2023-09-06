@@ -33,7 +33,7 @@ model AuthToken {
   id        String   @id @default(cuid())
   hash      String
   createdAt DateTime @default(now()) @map(name: "created_at")
-  expiresAt DateTime @default(dbgenerated("CURRENT_TIME + interval '1 week'")) // Tokens expire within 1 week...
+  expiresAt DateTime // Tokens expire within 1 week...
   isUsed    Boolean  @default(false) // ...or after one use
   user      User     @relation(fields: [userId], references: [id])
   userId    String   @map(name: "user_id")
