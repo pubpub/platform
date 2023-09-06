@@ -21,14 +21,13 @@ async function createUserMembers(email, password, slug, name, prismaCommunityIds
 	});
 	if (error) {
 		console.log(error);
-		return error;
 	}
 	const { user } = data;
 	await prisma.user.create({
 		data: {
-			id: user!.id,
+			id: user ? user.id : undefined,
 			slug: slug,
-			email: user!.email!,
+			email: user ? user.email : email,
 			name: name,
 			avatar: "/demo/person.png",
 			memberships: { createMany: { data: prismaCommunityIds } },
