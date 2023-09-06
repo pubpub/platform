@@ -1,6 +1,8 @@
 import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
 import IntegrationsList from "./IntegrationsList";
+import { getLoginData } from "~/lib/auth/loginData";
+import { createToken } from "~/lib/server/token";
 
 export type IntegrationData = Prisma.PromiseReturnType<typeof getCommunityIntegrations>;
 
@@ -45,10 +47,21 @@ export default async function Page({ params }: Props) {
 	if (!integrations) {
 		return null;
 	}
+
+	const loginData = await getLoginData();
+	let token;
+	if (loginData) {
+		token = await createToken(loginData.id)
+	} else {
+		const user = await prisma.user.findFirst()
+		if (user) {
+			token = await createToken(user.id);
+		}
+	}
 	return (
 		<>
 			<h1 style={{ marginBottom: "2em" }}>Integrations</h1>
-			<IntegrationsList instances={integrations} />
+			<IntegrationsList instances={integrations} token={token} />
 		</>
 	);
 }

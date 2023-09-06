@@ -4,7 +4,7 @@ import { Button } from "ui";
 import PubRow from "./PubRow";
 import { PubsData } from "./page";
 
-type Props = { pubs: NonNullable<PubsData>; topPubs?: NonNullable<PubsData> };
+type Props = { pubs: NonNullable<PubsData>; topPubs?: NonNullable<PubsData>; token: string };
 
 const getParent = (pub: Props["pubs"][number]) => {
 	return pub.values.find((value) => {
@@ -21,7 +21,7 @@ const getChildren = (pubs: Props["pubs"], parentId: string) => {
 		return getParent(pub)?.value === parentId;
 	});
 };
-const PubList: React.FC<Props> = function ({ pubs, topPubs }) {
+const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
 	const pubsToRender = topPubs || getTopPubs(pubs);
 	const [jankyExpandState, setJankyExpandState] = useState({});
 	return (
@@ -52,14 +52,14 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs }) {
 								<div className="w-[40px]" />
 							)}
 							<div className="flex-1">
-								<PubRow pub={pub} />
+								<PubRow pub={pub} token={token} />
 							</div>
 						</div>
 
 						{/* @ts-ignore */}
 						{!!children.length && jankyExpandState[pub.id] && (
 							<div className="ml-6">
-								<PubList pubs={pubs} topPubs={children} />
+								<PubList pubs={pubs} topPubs={children} token={token} />
 							</div>
 						)}
 					</div>

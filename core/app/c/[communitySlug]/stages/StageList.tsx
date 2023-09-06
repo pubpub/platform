@@ -3,9 +3,9 @@ import { Card, CardContent } from "ui";
 import PubRow from "../pubs/PubRow";
 import { StagesData } from "./page";
 
-type Props = { stages: NonNullable<StagesData> };
+type Props = { stages: NonNullable<StagesData>, token: string};
 
-const StageList: React.FC<Props> = function ({ stages }) {
+const StageList: React.FC<Props> = function ({ stages, token }) {
 	return (
 		<div>
 			{stages.map((stage) => {
@@ -16,7 +16,7 @@ const StageList: React.FC<Props> = function ({ stages }) {
 							<CardContent className="pt-4">
 								{stage.pubs.map((pub, index, list) => {
 									return <>
-										<PubRow key={pub.id} pub={pub} />
+										<PubRow key={pub.id} pub={pub} token={token} />
 										{index < list.length -1 && <hr />}
 									</>
 								})}

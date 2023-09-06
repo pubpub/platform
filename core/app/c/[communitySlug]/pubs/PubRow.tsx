@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "ui";
 import { PubsData } from "./page";
 
-type Props = { pub: NonNullable<PubsData>[number] };
+type Props = { pub: NonNullable<PubsData>[number], token: string };
 type IntegrationAction = { text: string, href: string };
 
 const getTitle = (pub: Props["pub"]) => {
@@ -36,11 +36,12 @@ const getInstances = (pub: Props["pub"]) => {
 	return instances;
 };
 
-const appendQueryParams = (instanceId: string, pubId: string) => {
+const appendQueryParams = (instanceId: string, pubId: string, token: string) => {
 	return (action: IntegrationAction) => {
 		const url = new URL(action.href);
 		url.searchParams.set('instanceId', instanceId);
 		url.searchParams.set('pubId', pubId)
+		url.searchParams.set('token', token)
 		return {
 			...action,
 			href: url.toString(),
@@ -48,23 +49,23 @@ const appendQueryParams = (instanceId: string, pubId: string) => {
 	}
 }
 
-const getButtons = (pub: Props["pub"]) => {
+const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 	const instances = getInstances(pub);
 	const buttons = instances.map((instance) => {
 		const integration = instance.integration;
 		const status = getStatus(pub, integration.id);
 		const actions: IntegrationAction[] =
 			(Array.isArray(integration.actions) ? integration.actions : []).
-				map(appendQueryParams(integration.id, pub.id));
+				map(appendQueryParams(integration.id, pub.id, token));
 		return { status, actions };
 	});
 
 	return buttons;
 };
 
-const PubRow: React.FC<Props> = function ({ pub }) {
+const PubRow: React.FC<Props> = function ({ pub, token }) {
 	const instances = getInstances(pub);
-	const buttons = getButtons(pub);
+	const buttons = getButtons(pub, token);
 	const [modalTitle, setModalTitle] = useState("");
 	const onClose = () => {
 		setModalTitle("");
