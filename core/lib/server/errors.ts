@@ -7,10 +7,6 @@ export class HTTPStatusError <Status extends ErrorHttpStatusCode> extends Error 
 		super(`HTTP Error ${status}${message ? ': ' + message : ''}`);
 		this.status = status;
 	}
-
-	inRange(codeRange) {
-		return this.status >= codeRange && this.status <= codeRange + 99;
-	}
 }
 
 export class BadRequestError extends HTTPStatusError<400> {
