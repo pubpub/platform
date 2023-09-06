@@ -18,16 +18,7 @@ const StatusText = {
 	504: "Gateway Time-out",
 };
 
-export class IntegrationError extends Error {
-	toJSON() {
-		if (this.cause) {
-			return { message: this.message, cause: this.cause.toString() };
-		}
-		return { message: this.message };
-	}
-}
-
-export class ResponseError extends IntegrationError {
+export class ResponseError extends Error {
 	declare cause: Response;
 
 	constructor(cause: Response | keyof typeof StatusText, message: string = "Unexpected error") {
@@ -48,6 +39,21 @@ export class ResponseError extends IntegrationError {
 	}
 }
 
-export class PubPubError extends IntegrationError {}
+export class PubPubError extends Error {}
 
-export class InvalidFieldError extends IntegrationError {}
+export class InvalidFieldError extends Error {}
+
+export class ZodError extends Error {
+	declare cause: object[];
+
+	constructor(error: { issues: object[] }) {
+		super("Validation failed", { cause: error.issues });
+	}
+
+	toJSON() {
+		return {
+			message: this.message,
+			cause: this.cause,
+		};
+	}
+}
