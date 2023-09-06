@@ -21,6 +21,12 @@ const getChildren = (pubs: Props["pubs"], parentId: string) => {
 		return getParent(pub)?.value === parentId;
 	});
 };
+const stageNames = (stages: Props["pubs"][number]["stages"]) => {
+	return stages.map((stage) => {
+		return stage.name;
+	});
+};
+
 const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
 	const pubsToRender = topPubs || getTopPubs(pubs);
 	const [jankyExpandState, setJankyExpandState] = useState({});
