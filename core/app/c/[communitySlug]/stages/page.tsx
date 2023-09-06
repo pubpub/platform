@@ -1,6 +1,8 @@
 import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
 import StageList from "./StageList";
+import { getLoginData } from "~/lib/auth/loginData";
+import { createToken } from "~/lib/server/token";
 
 export type StagesData = Prisma.PromiseReturnType<typeof getCommunityStages>;
 
@@ -35,6 +37,16 @@ const getCommunityStages = async (communitySlug: string) => {
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
+	const loginData = await getLoginData();
+	let token;
+	if (loginData) {
+		token = await createToken(loginData.id)
+	} else {
+		const user = await prisma.user.findFirst()
+		if (user) {
+			token = await createToken(user.id);
+		}
+	}
 	const stages = await getCommunityStages(params.communitySlug);
 	if (!stages) {
 		return null;
@@ -42,7 +54,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<h1 style={{ marginBottom: "2em" }}>Stages</h1>
-			<StageList stages={stages} />
+			<StageList stages={stages} token={token} />
 		</>
 	);
 }
