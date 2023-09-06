@@ -11,7 +11,7 @@ export async function submit(form: FormData) {
 		const { "instance-id": instanceId, ...pubFields } = Object.fromEntries(form);
 		const instance = await findInstance(instanceId as string);
 		await client.create(instanceId as string, pubFields as any, instance!.pubTypeId);
-		return { message: "Success!" };
+		return { message: "Pub submitted!" };
 	} catch (e) {
 		return { message: e.message, cause: e.cause };
 	}
