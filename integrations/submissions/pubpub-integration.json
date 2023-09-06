@@ -2,7 +2,7 @@
 	"name": "submissions",
 	"read": {},
 	"write": {
-		"title": {
+		"Title": {
 			"id": "aa63cab5-3729-4a12-813b-eae316eceb69"
 		}
 	}

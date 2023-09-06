@@ -1,7 +1,9 @@
 import * as redis from "redis";
 import manifest from "../pubpub-integration.json";
 
-export type Instance = {};
+export type Instance = {
+	pubTypeId: string;
+};
 
 const client = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING });
 const connect = client.connect();
@@ -11,7 +13,9 @@ const db = async () => {
 	return client;
 };
 
-export const makeInstance = (): Instance => ({});
+export const makeInstance = (): Instance => ({
+	pubTypeId: "",
+});
 
 export const findInstance = async (instanceId: string) => {
 	const instance = await (await db()).get(`${manifest.name}:${instanceId}`);

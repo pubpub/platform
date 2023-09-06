@@ -26,7 +26,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		],
 	});
 
-	const submissionTypeId = 'e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225';
+	const submissionTypeId = "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225";
 	await prisma.pubType.create({
 		data: {
 			id: submissionTypeId,
@@ -37,7 +37,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 	});
-	const evaluationSummaryTypeId = '2981e8ca-dabe-416f-bce0-fcc418036529';
+	const evaluationSummaryTypeId = "2981e8ca-dabe-416f-bce0-fcc418036529";
 	await prisma.pubType.create({
 		data: {
 			id: evaluationSummaryTypeId,
@@ -54,7 +54,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const authorResponseTypeId = 'd2ad1f23-f310-4974-8d45-3c55a3dc0638';
+	const authorResponseTypeId = "d2ad1f23-f310-4974-8d45-3c55a3dc0638";
 	await prisma.pubType.create({
 		data: {
 			id: authorResponseTypeId,
@@ -66,7 +66,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const evaluationTypeId = '81d18691-3ac4-42c1-b55b-d3b2c065b9ad';
+	const evaluationTypeId = "81d18691-3ac4-42c1-b55b-d3b2c065b9ad";
 	await prisma.pubType.create({
 		data: {
 			id: evaluationTypeId,
@@ -492,6 +492,19 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const submissionsIntegration = await prisma.integration.create({
+		data: {
+			name: "Submission Manager",
+			actions: [
+				{
+					text: "Submit Pub",
+					href: "https://integrations.pubpub.org/submissions/submit",
+				},
+			],
+			settingsUrl: "https://integrations.pubpub.org/submissions/settings",
+		},
+	});
+
 	const evaluationIntegration = await prisma.integration.create({
 		data: {
 			name: "Evaluation Manager",
@@ -504,6 +517,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			settingsUrl: "https://integration-evaluations.onrender.com/configure",
 		},
 	});
+
 	const siteIntegration = await prisma.integration.create({
 		data: {
 			name: "Site Builder",
@@ -578,7 +592,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const integrationInstances = [
 		{
-			id: '708c6434-37c1-49f7-8fe6-f7e005b865cd',
+			id: "708c6434-37c1-49f7-8fe6-f7e005b865cd",
 			name: "Semantic Scholar",
 			integrationId: semanticScholarIntegration.id,
 			stages: {
@@ -586,7 +600,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: '4bad1706-1aac-44d9-8e0a-a93737313123',
+			id: "4bad1706-1aac-44d9-8e0a-a93737313123",
 			name: "OpenAlex",
 			integrationId: openAlexIntegration.id,
 			stages: {
@@ -594,7 +608,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: '1458b8d3-5be1-446e-aa52-135cef9f3901',
+			id: "1458b8d3-5be1-446e-aa52-135cef9f3901",
 			name: "Crossref",
 			integrationId: crossrefIntegration.id,
 			stages: {
@@ -602,7 +616,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: 'a11f99e7-2177-4666-a11e-7d0c009dd602',
+			id: "a11f99e7-2177-4666-a11e-7d0c009dd602",
 			name: "Open Citations",
 			integrationId: openCitationsInegration.id,
 			stages: {
@@ -610,7 +624,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: 'a22b4a6c-1343-4f40-8ce9-64a5cd1e232f',
+			id: "a22b4a6c-1343-4f40-8ce9-64a5cd1e232f",
 			name: "Keyword Extraction",
 			integrationId: keywordExtractionIntegration.id,
 			stages: {
@@ -618,7 +632,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: 'd6177ad1-ae7d-43b7-9c12-dcd31a38f255',
+			id: "af837db6-9a1f-4b38-878f-f84fde8a0b50",
+			name: "The Unjournal submissions manager",
+			integrationId: submissionsIntegration.id,
+			stages: {
+				connect: [{ id: stageIds[0] }],
+			},
+		},
+		{
+			id: "d6177ad1-ae7d-43b7-9c12-dcd31a38f255",
 			name: "The Unjournal evaluation process manager",
 			integrationId: evaluationIntegration.id,
 			stages: {
@@ -626,7 +648,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: '2a89db5c-ae5e-429f-bf65-70fc670f5b32',
+			id: "2a89db5c-ae5e-429f-bf65-70fc670f5b32",
 			name: "unjournal.evaluations.org",
 			integrationId: siteIntegration.id,
 			stages: {
@@ -634,7 +656,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: 'faf829c3-23e1-4ccc-91af-fa43c70fbef6',
+			id: "faf829c3-23e1-4ccc-91af-fa43c70fbef6",
 			name: "Crossref DOI",
 			integrationId: doiIntegration.id,
 			stages: {
@@ -642,7 +664,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: '74b1f89a-8ee9-4bb2-aa1f-b99699c3646e',
+			id: "74b1f89a-8ee9-4bb2-aa1f-b99699c3646e",
 			name: "Share on Social Media",
 			integrationId: socialMediaIntegration.id,
 			stages: {
@@ -650,7 +672,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: '96250f80-bf1f-4056-9aa4-87bb68b831b7',
+			id: "96250f80-bf1f-4056-9aa4-87bb68b831b7",
 			name: "Unjournal Archive",
 			integrationId: archiveIntegration.id,
 			stages: {
@@ -658,23 +680,25 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 		{
-			id: 'e210a926-8e8a-4c0f-b43c-063133e3e951',
+			id: "e210a926-8e8a-4c0f-b43c-063133e3e951",
 			name: "Unjournal Assignment Manager",
 			integrationId: assignmentIntegration.id,
 			stages: {
 				connect: [{ id: stageIds[2] }, { id: stageIds[6] }],
 			},
 		},
-	]
+	];
 
-	Promise.all(integrationInstances.map((instanceData) => {
-		return prisma.integrationInstance.create({
-			data: {
-				communityId: communityUUID,
-				...instanceData
-			}
+	Promise.all(
+		integrationInstances.map((instanceData) => {
+			return prisma.integrationInstance.create({
+				data: {
+					communityId: communityUUID,
+					...instanceData,
+				},
+			});
 		})
-	}))
+	);
 
 	/**I have not thought about how these fields are used well enough */
 	// const integrationFieldIds = [...Array(2)].map((x) => uuidv4());
