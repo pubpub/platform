@@ -1,27 +1,25 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
+import { type NextApiRequest, type NextApiResponse } from "next/types";
 import { api } from "~/lib/contracts";
-import { getPub, getMembers, updatePub, createPub, NotFoundError } from "~/lib/server";
+import { getPub, getMembers, updatePub, createPub, HTTPStatusError } from "~/lib/server";
 import { validateToken } from "~/lib/server/token";
+
+const handleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse) => {
+	if (error instanceof HTTPStatusError) {
+		return res.status(error.status).json({ message: error.message });
+	}
+	if (error instanceof Error) {
+		console.error(error.message);
+	}
+	return res.status(500).json({ message: "Internal Server Error" });
+};
 
 // TODO: verify pub belongs to integrationInstance probably in some middleware
 // TODO: verify token in header
 const integrationsRouter = createNextRoute(api.integrations, {
 	createPub: async ({ params, body }) => {
-		try {
-			const pub = await createPub(params.instanceId, body);
-			return { status: 200, body: pub };
-		} catch (error) {
-			if (error instanceof NotFoundError) {
-				return {
-					status: 404,
-					body: { message: error.message },
-				};
-			}
-			return {
-				status: 500,
-				body: { message: "Internal Server Error" },
-			};
-		}
+		const pub = await createPub(params.instanceId, body);
+		return { status: 200, body: pub };
 	},
 	getPub: async ({ params }) => {
 		const pubFieldValuePairs = await getPub(params.pubId);
@@ -51,26 +49,18 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		};
 	},
 	auth: async ({ headers, body, params }) => {
-		try {
-			const user = await validateToken(body.token);
-
-			return {
-				status: 200,
-				body: user,
-			}
-		} catch (err) {
-			return {
-				status: 403,
-				body: {
-					error: err.message
-				}
-			}
-		}
-	}
+		const user = await validateToken(body.token);
+		return {
+			status: 200,
+			body: user,
+		};
+	},
 });
 
 const router = {
 	integrations: integrationsRouter,
 };
 
-export default createNextRouter(api, router);
+export default createNextRouter(api, router, {
+	errorHandler: handleErrors,
+});
