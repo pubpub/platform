@@ -52,11 +52,6 @@ export default async function Page({ params }: Props) {
 	let token;
 	if (loginData) {
 		token = await createToken(loginData.id)
-	} else {
-		const user = await prisma.user.findFirst()
-		if (user) {
-			token = await createToken(user.id);
-		}
 	}
 	return (
 		<>
