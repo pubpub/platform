@@ -1,9 +1,10 @@
 "use client";
+import { Prisma } from "@prisma/client";
 import { useState } from "react";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "ui";
-import { PubsData } from "./page";
+import { commonPubQuery } from "~/lib/server";
 
-type Props = { pub: NonNullable<PubsData>[number] };
+type Props = { pub: Prisma.PubGetPayload<typeof commonPubQuery> };
 
 const getTitle = (pub: Props["pub"]) => {
 	const titleValue = pub.values.find((value) => {

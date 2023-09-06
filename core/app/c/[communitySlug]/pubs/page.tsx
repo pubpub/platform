@@ -2,6 +2,8 @@ import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
 import PubList from "./PubList";
 import PubHeader from "./PubHeader";
+import { commonPubQuery } from "~/lib/server/pub";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export type PubsData = Prisma.PromiseReturnType<typeof getCommunityPubs>;
 
@@ -14,14 +16,11 @@ const getCommunityPubs = async (communitySlug: string) => {
 	}
 	return await prisma.pub.findMany({
 		where: { communityId: community.id },
-		include: {
-			pubType: true,
-			values: { include: { field: true } },
-			stages: { include: { integrationInstances: { include: { integration: true } } } },
-			integrationInstances: { include: { integration: true } },
-		},
+		...commonPubQuery,
 	});
 };
+
+type X = Prisma.PubInclude<DefaultArgs>;
 
 type Props = { params: { communitySlug: string } };
 

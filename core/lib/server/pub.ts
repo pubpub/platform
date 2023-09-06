@@ -1,5 +1,19 @@
 import prisma from "~/prisma/db";
 import { PubPostBody } from "~/lib/contracts/resources/integrations";
+import { Prisma } from "@prisma/client";
+
+// schemas
+
+export const commonPubQuery = Prisma.validator<Prisma.PubDefaultArgs>()({
+	include: {
+		pubType: true,
+		values: { include: { field: true } },
+		stages: { include: { integrationInstances: { include: { integration: true } } } },
+		integrationInstances: { include: { integration: true } },
+	},
+});
+
+//
 
 export const getPubFields = async (pubId: string) => {
 	const fields = await prisma.pubValue.findMany({
