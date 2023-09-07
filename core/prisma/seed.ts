@@ -21,8 +21,8 @@ async function createUserMembers(email, password, slug, name, prismaCommunityIds
 		email_confirm: true,
 	});
 	if (error) {
-		const { data, error } = await supabase.auth.admin.getUserById('d86c5427-2600-4991-a675-7526ec4b9d2f')
-		user = data.user
+		const { data, error } = await supabase.auth.admin.listUsers()
+		user = data.users[0]
 	} else {
 		user = data.user;
 	}
