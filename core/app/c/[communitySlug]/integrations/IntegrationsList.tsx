@@ -20,7 +20,7 @@ const getSettingsUrl = (instance: Props["instances"][number], token) => {
 	return url.toString()
 }
 
-const IntegrationList: React.FC<Props> = function ({ instances, token}) {
+const IntegrationList: React.FC<Props> = function ({ instances, token }) {
 	return (
 		<div>
 			<Card className="mb-10 bg-gray-50">
@@ -53,14 +53,12 @@ const IntegrationList: React.FC<Props> = function ({ instances, token}) {
 												</div>
 											);
 										})}
-										{instance.stages.map((stage) => {
-											return (
-												<div className="text-sm">
-													Attached to all pubs in stage:{" "}
-													<span className="font-bold">{stage.name}</span>
-												</div>
-											);
-										})}
+										{instance.stage &&
+											<div className="text-sm">
+												Attached to all pubs in stage:{" "}
+												<span className="font-bold">{instance.stage.name}</span>
+											</div>
+										}
 									</div>
 								</div>
 								<Button variant="outline" asChild>

@@ -18,7 +18,7 @@ const getCommunityIntegrations = async (communitySlug: string) => {
 		include: {
 			integration: true,
 			pubs: { include: { values: { include: { field: true } } } },
-			stages: true,
+			stage: true
 			// stages: {
 			// 	include: {
 			// 		pubs: {
