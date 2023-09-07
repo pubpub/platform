@@ -33,11 +33,12 @@ const getCommunityStages = async (communitySlug: string) => {
 								include: {
 									user: true,
 								},
-							}
+							},
 						},
 					},
 				},
 			},
+			integrationInstances: { include: { integration: true } },
 		},
 	});
 };
