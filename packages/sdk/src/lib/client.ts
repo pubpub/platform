@@ -86,8 +86,10 @@ const makeRequest = async (
 				}
 			}
 			break;
+		case 401:
+			throw new ResponseError(response, "Failed to authenticate user or integration");
 		case 403:
-			throw new ResponseError(response, "Failed to authorize integration");
+			throw new ResponseError(response, "Failed to authorize user or integration");
 		case 404:
 			throw new ResponseError(response, "Integration not found");
 	}
