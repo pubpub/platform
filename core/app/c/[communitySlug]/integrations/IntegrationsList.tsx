@@ -13,8 +13,8 @@ const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
 	return titleValue?.value as string;
 };
 
-const getSettingsUrl = (instance: Props["instances"][number]["integration"], token) => {
-	const url = new URL(instance.settingsUrl)
+const getSettingsUrl = (instance: Props["instances"][number], token) => {
+	const url = new URL(instance.integration.settingsUrl)
 	url.searchParams.set('instanceId', instance.id)
 	url.searchParams.set('token', token)
 	return url.toString()
@@ -64,7 +64,7 @@ const IntegrationList: React.FC<Props> = function ({ instances, token}) {
 									</div>
 								</div>
 								<Button variant="outline" asChild>
-									<NextLink href={getSettingsUrl(instance.integration, token)}>
+									<NextLink href={getSettingsUrl(instance, token)}>
 										Configure
 									</NextLink>
 								</Button>
