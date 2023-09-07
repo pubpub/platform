@@ -1,29 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { configure } from "./actions";
-import { experimental_useFormStatus } from "react-dom";
 
 type Props = {
 	instanceId: string;
-	pubTypeId: string;
+	pubTypeId?: string;
 };
 
 export function Configure(props: Props) {
-	const form = experimental_useFormStatus();
 	const [message, setMessage] = useState<string>("");
+	const [isPending, startTransition] = useTransition();
 
 	async function onConfigure(form: FormData) {
-		const { message } = await configure(props.instanceId, form.get("pub-type-id") as string);
-		setMessage(message);
+		const response = await configure(form);
+		setMessage("error" in response ? response.error : "Instance configured!");
 	}
 
 	return (
-		<form action={onConfigure}>
+		<form action={(form) => startTransition(() => onConfigure(form))}>
 			<input type="text" name="pub-type-id" defaultValue={props.pubTypeId} />
+			<input type="hidden" name="instance-id" value={props.instanceId} />
 			<button type="submit">Configure</button>
-			{form.pending && <p>Loading</p>}
-			{message && <p>{message}</p>}
+			<p>{isPending ? "Configuring instance..." : message}</p>
 		</form>
 	);
 }

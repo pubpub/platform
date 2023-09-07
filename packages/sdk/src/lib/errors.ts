@@ -41,7 +41,7 @@ export class ResponseError extends Error {
 
 export class PubPubError extends Error {}
 
-export class InvalidFieldError extends Error {}
+export class ValidationError extends Error {}
 
 export class ZodError extends Error {
 	declare cause: object[];

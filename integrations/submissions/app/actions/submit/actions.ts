@@ -1,6 +1,7 @@
 "use server";
 
-import { makeClient } from "@pubpub/sdk";
+import { Pub, makeClient } from "@pubpub/sdk";
+import { assert, expect } from "utils";
 import manifest from "pubpub-integration.json";
 import { findInstance } from "~/lib/instance";
 
@@ -8,11 +9,11 @@ const client = makeClient(manifest);
 
 export async function submit(form: FormData) {
 	try {
-		const { "instance-id": instanceId, ...pubFields } = Object.fromEntries(form);
-		const instance = await findInstance(instanceId as string);
-		await client.create(instanceId as string, pubFields as any, instance!.pubTypeId);
-		return { message: "Pub submitted!" };
-	} catch (e) {
-		return { message: e.message, cause: e.cause };
+		const { "instance-id": instanceId, ...pub } = Object.fromEntries(form);
+		assert(typeof instanceId === "string");
+		const instance = expect(await findInstance(instanceId));
+		return client.create(instanceId, pub as Pub<typeof manifest>, instance.pubTypeId);
+	} catch (error) {
+		return { error: error.message };
 	}
 }

@@ -22,8 +22,10 @@ export const findInstance = async (instanceId: string) => {
 	return instance ? (JSON.parse(instance) as Instance) : undefined;
 };
 
-export const updateInstance = async (instanceId: string, instance: Instance) =>
+export const updateInstance = async (instanceId: string, instance: Instance): Promise<Instance> => {
 	(await db()).set(`${manifest.name}:${instanceId}`, JSON.stringify(instance));
+	return instance;
+};
 
 export const getAllInstanceIds = async () =>
 	(await (await db()).keys(`${manifest.name}:*`))?.map((key) => key.split(":")[1]);
