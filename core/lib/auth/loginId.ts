@@ -29,7 +29,7 @@ export async function getIdFromJWT(sessionJWT?: string, refreshToken?: string): 
 	try {
 		const { sub: userId } = await jwt.verify(sessionJWT, JWT_SECRET);
 		if (typeof userId !== "string") {
-			throw "userId is not a string";
+			throw new Error("userId is not a string");
 		}
 		return userId;
 	} catch (jwtError) {
@@ -41,7 +41,11 @@ export async function getIdFromJWT(sessionJWT?: string, refreshToken?: string): 
 		const { data, error } = await supabase.auth.refreshSession({
 			refresh_token: refreshToken || "",
 		});
-		if (error || !data?.user?.id) {
+		if (error) {
+			console.error("Error refreshing session:", error.message)
+			return "";
+		}
+		if (!data?.user?.id) {
 			return "";
 		}
 		return data.user.id;

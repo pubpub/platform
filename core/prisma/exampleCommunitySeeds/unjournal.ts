@@ -433,10 +433,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Add paper from Semantic Scholar",
-					href: "https://integrations.pubpub.org/semanticscholar/manage",
+					href: "https://integration-evaluations.onrender.com/run",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/semanticscholar/settings",
+			settingsUrl: "https://integration-evaluations.onrender.com/configure",
 		},
 	});
 
@@ -446,10 +446,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Add work from OpenAlex",
-					href: "https://integrations.pubpub.org/semanticscholar/manage",
+					href: "https://integration-evaluations.onrender.com/run",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/semanticscholar/settings",
+			settingsUrl: "https://integration-evaluations.onrender.com/configure",
 		},
 	});
 
@@ -459,10 +459,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Add work from Crossref",
-					href: "https://integrations.pubpub.org/semanticscholar/manage",
+					href: "https://integration-evaluations.onrender.com/run",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/semanticscholar/settings",
+			settingsUrl: "https://integration-evaluations.onrender.com/configure",
 		},
 	});
 
@@ -472,10 +472,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Add work from open citation",
-					href: "https://integrations.pubpub.org/opencitation/manage",
+					href: "https://integration-submissions.onrender.com/run",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/opencitation/settings",
+			settingsUrl: "https://integration-submissions.onrender.com/configure",
 		},
 	});
 
@@ -485,10 +485,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Extract Keywords",
-					href: "https://integrations.pubpub.org/keyword/manage",
+					href: "https://integration-submissions.onrender.com/run",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/keyword/settings",
+			settingsUrl: "https://integration-submissions.onrender.com/configure",
 		},
 	});
 
@@ -498,10 +498,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Manage Evaluation",
-					href: "https://integrations.pubpub.org/evaluation/manage",
+					href: "https://integration-evaluations.onrender.com/run",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/evaluation/settings",
+			settingsUrl: "https://integration-evaluations.onrender.com/configure",
 		},
 	});
 	const siteIntegration = await prisma.integration.create({
@@ -510,10 +510,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Manage Site",
-					href: "https://integrations.pubpub.org/sitebuilder/manage",
+					href: "https://integration-submissions.onrender.com/run",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/sitebuilder/settings",
+			settingsUrl: "https://integration-submissions.onrender.com/configure",
 		},
 	});
 

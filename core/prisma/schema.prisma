@@ -24,8 +24,21 @@ model User {
   moves        ActionMove[]
   memberships  Member[]
   memberGroups MemberGroup[]
+  AuthToken    AuthToken[]
 
   @@map(name: "users")
+}
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  hash      String
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  expiresAt DateTime // Tokens expire within 1 week...
+  isUsed    Boolean  @default(false) // ...or after one use
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @map(name: "user_id")
+
+  @@map(name: "auth_tokens")
 }
 
 model Community {

@@ -14,21 +14,23 @@ const prisma = new PrismaClient();
 const supabase = new SupabaseClient(supabaseUrl!, supabaseKey!);
 
 async function createUserMembers(email, password, slug, name, prismaCommunityIds) {
+	let user;
 	const { data, error } = await supabase.auth.admin.createUser({
 		email,
 		password,
 		email_confirm: true,
 	});
 	if (error) {
-		console.log(error);
-		return error;
+		const { data, error } = await supabase.auth.admin.getUserById('d86c5427-2600-4991-a675-7526ec4b9d2f')
+		user = data.user
+	} else {
+		user = data.user;
 	}
-	const { user } = data;
 	await prisma.user.create({
 		data: {
-			id: user!.id,
+			id: user ? user.id : undefined,
 			slug: slug,
-			email: user!.email!,
+			email: user ? user.email : email,
 			name: name,
 			avatar: "/demo/person.png",
 			memberships: { createMany: { data: prismaCommunityIds } },

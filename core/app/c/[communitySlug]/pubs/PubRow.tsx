@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "ui";
 import { PubsData } from "./page";
 
-type Props = { pub: NonNullable<PubsData>[number] };
+type Props = { pub: NonNullable<PubsData>[number], token: string };
+type IntegrationAction = { text: string, href: string };
 
 const getTitle = (pub: Props["pub"]) => {
 	const titleValue = pub.values.find((value) => {
@@ -34,21 +35,37 @@ const getInstances = (pub: Props["pub"]) => {
 	const instances = [...pubInstances, ...stageInstances];
 	return instances;
 };
-const getButtons = (pub: Props["pub"]) => {
+
+const appendQueryParams = (instanceId: string, pubId: string, token: string) => {
+	return (action: IntegrationAction) => {
+		const url = new URL(action.href);
+		url.searchParams.set('instanceId', instanceId);
+		url.searchParams.set('pubId', pubId)
+		url.searchParams.set('token', token)
+		return {
+			...action,
+			href: url.toString(),
+		}
+	}
+}
+
+const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 	const instances = getInstances(pub);
 	const buttons = instances.map((instance) => {
 		const integration = instance.integration;
 		const status = getStatus(pub, integration.id);
-		const actions = integration.actions;
+		const actions: IntegrationAction[] =
+			(Array.isArray(integration.actions) ? integration.actions : []).
+				map(appendQueryParams(integration.id, pub.id, token));
 		return { status, actions };
 	});
 
 	return buttons;
 };
 
-const PubRow: React.FC<Props> = function ({ pub }) {
+const PubRow: React.FC<Props> = function ({ pub, token }) {
 	const instances = getInstances(pub);
-	const buttons = getButtons(pub);
+	const buttons = getButtons(pub, token);
 	const [modalTitle, setModalTitle] = useState("");
 	const onClose = () => {
 		setModalTitle("");
@@ -81,16 +98,24 @@ const PubRow: React.FC<Props> = function ({ pub }) {
 						</PopoverTrigger>
 						<PopoverContent>
 							{buttons.map((button) => {
-								return (
-									<Button
-										variant="ghost"
-										size="sm"
-										key={button.actions?.[0].text}
-									>
-										<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
-										<span>{button.actions?.[0].text}</span>
-									</Button>
-								);
+								if (!Array.isArray(button.actions)) {
+									return null;
+								}
+								return button.actions.map((action: IntegrationAction) => {
+									if (!(action.text && action.href)) {
+										return null;
+									}
+									return (
+										<Button
+											variant="ghost"
+											size="sm"
+											key={action.text}
+										>
+											<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
+											<a href={action.href}>{action.text}</a>
+										</Button>
+									)
+								})
 							})}
 							{/* <PopoverHeader>Integrations</PopoverHeader>
 									<PopoverBody>

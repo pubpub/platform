@@ -4,7 +4,7 @@ import NextLink from "next/link";
 import { Button, Card, CardContent, CardHeader } from "ui";
 import { IntegrationData } from "./page";
 
-type Props = { instances: NonNullable<IntegrationData> };
+type Props = { instances: NonNullable<IntegrationData>, token: string };
 
 const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
 	const titleValue = pub.values.find((value) => {
@@ -13,7 +13,14 @@ const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
 	return titleValue?.value as string;
 };
 
-const IntegrationList: React.FC<Props> = function ({ instances }) {
+const getSettingsUrl = (instance: Props["instances"][number]["integration"], token) => {
+	const url = new URL(instance.settingsUrl)
+	url.searchParams.set('instanceId', instance.id)
+	url.searchParams.set('token', token)
+	return url.toString()
+}
+
+const IntegrationList: React.FC<Props> = function ({ instances, token}) {
 	return (
 		<div>
 			<Card className="mb-10 bg-gray-50">
@@ -57,7 +64,7 @@ const IntegrationList: React.FC<Props> = function ({ instances }) {
 									</div>
 								</div>
 								<Button variant="outline" asChild>
-									<NextLink href={instance.integration.settingsUrl}>
+									<NextLink href={getSettingsUrl(instance.integration, token)}>
 										Configure
 									</NextLink>
 								</Button>

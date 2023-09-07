@@ -14,11 +14,38 @@ const SuggestedMembersSchema = z.object({
 	name: z.string(),
 });
 
+const UserSchema = z.object({
+	id: z.string(),
+	slug: z.string(),
+	email: z.string(),
+	name: z.string(),
+	avatar: z.string().nullable(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+})
+
 export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 export type PubPostBody = z.infer<typeof PubPostSchema>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
+
 export const integrationsApi = contract.router({
+	auth: {
+		body: z.object({
+			token: z.string(),
+		}),
+		method: "POST",
+		path: "/integrations/:instanceId/auth",
+		summary: "Authenticate a user and receive basic information about them",
+		description:
+			"Integrations can use this endpoint to exchange a PubPub community member's auth token for information about them.",
+		pathParams: z.object({
+			instanceId: z.string(),
+		}),
+		responses: {
+			200: UserSchema,
+		},
+	},
 	createPub: {
 		method: "POST",
 		path: "/integrations/:instanceId/pubs",
