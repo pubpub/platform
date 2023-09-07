@@ -14,6 +14,16 @@ const SuggestedMembersSchema = z.object({
 	name: z.string(),
 });
 
+const UserSchema = z.object({
+	id: z.string(),
+	slug: z.string(),
+	email: z.string(),
+	name: z.string(),
+	avatar: z.string().optional(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+})
+
 export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 export type PubPostBody = z.infer<typeof PubPostSchema>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
@@ -21,7 +31,9 @@ export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
 export const integrationsApi = contract.router({
 	auth: {
-		body: z.any(),
+		body: z.object({
+			token: z.string(),
+		}),
 		method: "POST",
 		path: "/integrations/:instanceId/auth",
 		summary: "Authenticate a user and receive basic information about them",
@@ -31,7 +43,7 @@ export const integrationsApi = contract.router({
 			instanceId: z.string(),
 		}),
 		responses: {
-			200: z.any(),
+			200: UserSchema,
 		},
 	},
 	createPub: {
