@@ -1,27 +1,15 @@
-"use client";
+import { client } from "~/lib/pubpub";
+import { Submit } from "./submit";
 
-import { useState, useTransition } from "react";
-import { submit } from "./actions";
-
-export default function Page(props: { searchParams: { instanceId: string; token: string } }) {
+export default async function Page(props: { searchParams: { instanceId: string; token: string } }) {
 	const { instanceId, token } = props.searchParams;
-	const [message, setMessage] = useState<string>("");
-	const [isPending, startTransition] = useTransition();
-
-	async function onSubmit(form: FormData) {
-		const response = await submit(form, token);
-		setMessage("error" in response ? response.error : "Pub submitted!");
-	}
+	const user = await client.auth(instanceId, token);
 
 	return (
-		<form action={(form) => startTransition(() => onSubmit(form))}>
-			<label>
-				<span>Title</span>
-				<input type="text" name="Title" />
-			</label>
-			<input type="hidden" name="instance-id" value={instanceId} />
-			<button type="submit">Submit</button>
-			<p>{isPending ? "Submitting Pub..." : message}</p>
-		</form>
+		<main>
+			<p>Hello {user.name}</p>
+			<img src={`${process.env.PUBPUB_URL}/${user.avatar}`} />
+			<Submit instanceId={instanceId} token={token} />
+		</main>
 	);
 }
