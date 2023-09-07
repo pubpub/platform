@@ -33,8 +33,7 @@ export const integrationsApi = contract.router({
 		headers: z.object({
 			authorization: z.string(),
 		}),
-		body: z.any(),
-		method: "POST",
+		method: "GET",
 		path: "/integrations/:instanceId/auth",
 		summary: "Authenticate a user and receive basic information about them",
 		description:
