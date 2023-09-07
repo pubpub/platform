@@ -54,6 +54,11 @@ export const validateToken = async (token: string) => {
 	// Finally, hash the token string input and do a constant time comparison between this value and the hash retrieved from the database
 	const inputHash = createHash(tokenString).digest()
 	const dbHash = Buffer.from(hash, encoding)
+
+	// This comparison isn't actually constant time if the two items are of different lengths,
+	// because timingSafeEqual throws an error in that case, which could leak the length of the key.
+	// We aren't worried about that because we're hashing the values first (so they're constant
+	// length) and because our tokens are all the same length anyways, unlike a password.
 	if (!crypto.timingSafeEqual(dbHash, inputHash)) {
 		throw new UnauthorizedError('Invalid token')
 	}
