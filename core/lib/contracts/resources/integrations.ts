@@ -19,7 +19,7 @@ const UserSchema = z.object({
 	slug: z.string(),
 	email: z.string(),
 	name: z.string(),
-	avatar: z.string().optional(),
+	avatar: z.string().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 })
