@@ -119,7 +119,7 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 	return {
 		async auth(instanceId, token) {
 			try {
-				const userRaw = await makeRequest(instanceId, token, "POST", "auth", null);
+				const userRaw = await makeRequest(instanceId, token, "GET", "auth");
 				const user = {
 					...userRaw,
 					createdAt: new Date(userRaw.createdAt),
