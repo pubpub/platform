@@ -1,7 +1,14 @@
 import { client } from "~/lib/pubpub";
 import { Submit } from "./submit";
 
-export default async function Page(props: { searchParams: { instanceId: string; token: string } }) {
+type Props = {
+	searchParams: {
+		instanceId: string;
+		token: string;
+	};
+};
+
+export default async function Page(props: Props) {
 	const { instanceId, token } = props.searchParams;
 	const user = await client.auth(instanceId, token);
 
