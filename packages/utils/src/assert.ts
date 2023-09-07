@@ -1,14 +1,8 @@
-export class AssertionError<T> extends Error {
-	readonly cause;
-	constructor(message: string, cause: T) {
-		super(message, { cause });
-		this.cause = cause;
-	}
-}
+export class AssertionError extends Error {}
 
 export function assert<T>(value: unknown, cause?: T): asserts value {
 	if (value === false || value === null || value === undefined) {
-		throw new AssertionError("Assertion failed", cause);
+		throw new AssertionError("Assertion failed", { cause });
 	}
 }
 

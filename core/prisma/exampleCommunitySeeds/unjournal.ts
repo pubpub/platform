@@ -492,17 +492,21 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const submissionsIntegrationUrl =
+		process.env.NODE_ENV === "production"
+			? "https://integration-submissions.onrender.com"
+			: "http://localhost:3002";
 	const submissionsIntegration = await prisma.integration.create({
 		data: {
 			name: "Submission Manager",
 			actions: [
 				{
 					text: "Submit Pub",
-					href: "https://integration-submissions.onrender.com/actions/submit",
+					href: `${submissionsIntegrationUrl}/actions/submit`,
 					kind: "stage",
 				},
 			],
-			settingsUrl: "https://integration-submissions.onrender.com/configure",
+			settingsUrl: `${submissionsIntegrationUrl}/configure`,
 		},
 	});
 
