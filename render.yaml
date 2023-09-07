@@ -5,7 +5,7 @@ services:
       name: core
       runtime: node
       rootDir: .
-      buildCommand: pnpm install; pnpm build --filter core...
+      buildCommand: ./bin/render-build.sh core
       startCommand: pnpm start --filter core
       envVars:
           - fromGroup: pubpub-core-prod-env
@@ -21,7 +21,7 @@ services:
       region: ohio
       runtime: node
       rootDir: .
-      buildCommand: pnpm install; pnpm build --filter integration-evaluations...
+      buildCommand: ./bin/render-build.sh integration-evaluations
       startCommand: pnpm start --filter integration-evaluations
       envVars:
           - fromGroup: pubpub-integration-prod-env
@@ -36,7 +36,7 @@ services:
       region: ohio
       runtime: node
       rootDir: .
-      buildCommand: pnpm install; pnpm build --filter integration-submissions...
+      buildCommand: ./bin/render-build.sh integration-submissions
       startCommand: pnpm start --filter integration-submissions
       envVars:
           - fromGroup: pubpub-integration-prod-env
