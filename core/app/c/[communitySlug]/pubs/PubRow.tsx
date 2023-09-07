@@ -56,9 +56,10 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 		const status = getStatus(pub, integration.id);
 		const actions: IntegrationAction[] =
 			(Array.isArray(integration.actions) ? integration.actions : []).
-				map(appendQueryParams(instance.id, pub.id, token));
+				filter((action: IntegrationAction) => action.kind !== "stage")
+				.map(appendQueryParams(instance.id, pub.id, token));
 		return { status, actions };
-	});
+	}).filter((instance) => instance && instance.actions.length);
 
 	return buttons;
 };
@@ -87,7 +88,7 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 									{buttons.map((button) => {
 										return (
 											<div
-												key={button.actions![0].text}
+												key={button.actions[0].text}
 												// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
 												className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
 											/>
