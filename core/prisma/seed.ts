@@ -21,8 +21,13 @@ async function createUserMembers(email, password, slug, name, prismaCommunityIds
 		email_confirm: true,
 	});
 	if (error) {
-		const { data, error } = await supabase.auth.admin.listUsers()
-		user = data.users[0]
+		console.log("Error creating user", error)
+		console.log("Looking up existing supabase user")
+		const { data, error: newError } = await supabase.auth.admin.listUsers()
+		if (newError) {
+			console.log(error)
+		}
+		user = data.users.find((user) => user.email === email);
 	} else {
 		user = data.user;
 	}
