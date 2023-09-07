@@ -52,7 +52,7 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
 								<div className="w-[40px]" />
 							)}
 							<div className="flex-1">
-								<PubRow pub={pub} token={token} />
+								<PubRow pub={pub} token={token} community={pub.community} />
 							</div>
 						</div>
 
