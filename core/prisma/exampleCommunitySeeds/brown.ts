@@ -404,9 +404,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Brown University Library Press review process",
 			integrationId: reviewIntegration.id,
 			communityId: communityUUID,
-			stages: {
-				connect: [{ id: stageIds[1] }, { id: stageIds[7] }],
-			},
+			stageId: stageIds[7],
 		},
 	});
 
@@ -415,9 +413,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Crossref DOI",
 			integrationId: doiIntegration.id,
 			communityId: communityUUID,
-			stages: {
-				connect: [{ id: stageIds[3] }],
-			},
+			stageId: stageIds[3],
 		},
 	});
 	const archiveInstance1 = await prisma.integrationInstance.create({
