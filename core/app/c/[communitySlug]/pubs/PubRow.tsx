@@ -56,7 +56,7 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 		const status = getStatus(pub, integration.id);
 		const actions: IntegrationAction[] =
 			(Array.isArray(integration.actions) ? integration.actions : []).
-				map(appendQueryParams(integration.id, pub.id, token));
+				map(appendQueryParams(instance.id, pub.id, token));
 		return { status, actions };
 	});
 
