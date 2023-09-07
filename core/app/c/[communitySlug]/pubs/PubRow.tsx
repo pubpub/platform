@@ -4,7 +4,7 @@ import { Button, Popover, PopoverContent, PopoverTrigger } from "ui";
 import { PubsData } from "./page";
 
 type Props = { pub: NonNullable<PubsData>[number], token: string };
-type IntegrationAction = { text: string, href: string };
+type IntegrationAction = { text: string, href: string, kind?: "stage" };
 
 const getTitle = (pub: Props["pub"]) => {
 	const titleValue = pub.values.find((value) => {
@@ -103,6 +103,10 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 								}
 								return button.actions.map((action: IntegrationAction) => {
 									if (!(action.text && action.href)) {
+										return null;
+									}
+									// Don't render "stage" only actions in the pub row
+									if (action.kind === "stage") {
 										return null;
 									}
 									return (
