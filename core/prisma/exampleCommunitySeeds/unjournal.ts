@@ -499,6 +499,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				{
 					text: "Submit Pub",
 					href: "https://integration-submissions.onrender.com/actions/submit",
+					kind: "stage",
 				},
 			],
 			settingsUrl: "https://integration-submissions.onrender.com/configure",
