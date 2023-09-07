@@ -448,9 +448,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Arcadia review form",
 			integrationId: reviewIntegration.id,
 			communityId: communityUUID,
-			stages: {
-				connect: [{ id: stageIds[1] }, { id: stageIds[7] }],
-			},
+			stageId: stageIds[1],
 		},
 	});
 
@@ -459,9 +457,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Crossref DOI",
 			integrationId: doiIntegration.id,
 			communityId: communityUUID,
-			stages: {
-				connect: [{ id: stageIds[3] }],
-			},
+			stageId: stageIds[3],
 		},
 	});
 	const archiveInstance1 = await prisma.integrationInstance.create({

@@ -269,9 +269,10 @@ model IntegrationInstance {
   communityId   String      @map(name: "community_id")
   createdAt     DateTime    @default(now()) @map(name: "created_at")
   updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updated_at")
+  stage         Stage?       @relation(fields: [stageId], references: [id])
+  stageId       String?      @map(name: "stage_id")
 
-  pubs   Pub[]
-  stages Stage[]
+  pubs Pub[]
 
   @@map(name: "integration_instances")
 }
