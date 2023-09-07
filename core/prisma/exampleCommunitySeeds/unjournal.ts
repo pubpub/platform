@@ -510,16 +510,20 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const evaluationIntegrationUrl =
+		process.env.NODE_ENV === "production"
+			? "https://integration-evaluations.onrender.com"
+			: "http://localhost:3001";
 	const evaluationIntegration = await prisma.integration.create({
 		data: {
 			name: "Evaluation Manager",
 			actions: [
 				{
 					text: "Manage Evaluation",
-					href: "https://integration-evaluations.onrender.com/run",
+					href: `${evaluationIntegrationUrl}/actions/manage`,
 				},
 			],
-			settingsUrl: "https://integration-evaluations.onrender.com/configure",
+			settingsUrl: `${evaluationIntegrationUrl}/configure`,
 		},
 	});
 
