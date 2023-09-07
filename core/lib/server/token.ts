@@ -36,11 +36,12 @@ export const validateToken = async (token: string) => {
 		throw new UnauthorizedError('Token not found')
 	}
 
+	// TODO: TURN THIS BACK ON
 	// Check if the token had been used previously. Integrations should use this response to prompt
 	// users to sign in again
-	if (dbToken.isUsed) {
-		throw new UnauthorizedError('Token already used')
-	}
+	// if (dbToken.isUsed) {
+	// 	throw new UnauthorizedError('Token already used')
+	// }
 
 	const { hash, user, expiresAt } = dbToken
 
