@@ -41,25 +41,34 @@ export default function SignupForm() {
 					<h1>Signup</h1>
 					<div className="my-10">
 						<form onSubmit={handleSubmit}>
-							<label htmlFor="name">Name</label>
-							<input
-								name="name"
-								value={name}
-								onChange={(evt) => setName(evt.target.value)}
-							/>
-							<label htmlFor="email">Email</label>
-							<input
-								name="email"
-								value={email}
-								onChange={(evt) => setEmail(evt.target.value)}
-							/>
-							<label htmlFor="password">Password</label>
-							<input
-								name="Password"
-								value={password}
-								type="password"
-								onChange={(evt) => setPassword(evt.target.value)}
-							/>
+							<p>
+								<label htmlFor="name">Name</label>
+								<input
+									id="name"
+									name="name"
+									value={name}
+									onChange={(evt) => setName(evt.target.value)}
+								/>
+							</p>
+							<p>
+								<label htmlFor="email">Email</label>
+								<input
+									id="email"
+									name="email"
+									value={email}
+									onChange={(evt) => setEmail(evt.target.value)}
+								/>
+							</p>
+							<p>
+								<label htmlFor="password">Password</label>
+								<input
+									id="password"
+									name="Password"
+									value={password}
+									type="password"
+									onChange={(evt) => setPassword(evt.target.value)}
+								/>
+							</p>
 							<Button
 								variant="outline"
 								className="mt-4"
