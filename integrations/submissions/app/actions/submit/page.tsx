@@ -3,13 +3,13 @@
 import { useState, useTransition } from "react";
 import { submit } from "./actions";
 
-export default function Page(props: { searchParams: { instanceId: string } }) {
-	const { instanceId } = props.searchParams;
+export default function Page(props: { searchParams: { instanceId: string; token: string } }) {
+	const { instanceId, token } = props.searchParams;
 	const [message, setMessage] = useState<string>("");
 	const [isPending, startTransition] = useTransition();
 
 	async function onSubmit(form: FormData) {
-		const response = await submit(form);
+		const response = await submit(form, token);
 		setMessage("error" in response ? response.error : "Pub submitted!");
 	}
 

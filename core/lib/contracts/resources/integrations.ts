@@ -22,18 +22,18 @@ const UserSchema = z.object({
 	avatar: z.string().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-})
+});
 
 export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
 export type PubPostBody = z.infer<typeof PubPostSchema>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
-
 export const integrationsApi = contract.router({
 	auth: {
-		body: z.object({
-			token: z.string(),
+		headers: z.object({
+			authorization: z.string(),
 		}),
+		body: z.any(),
 		method: "POST",
 		path: "/integrations/:instanceId/auth",
 		summary: "Authenticate a user and receive basic information about them",
