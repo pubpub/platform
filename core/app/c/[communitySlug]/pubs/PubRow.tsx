@@ -17,7 +17,6 @@ import {
 	// TooltipContent,
 } from "ui";
 import { PubsData } from "./page";
-import { StagesData } from "../stages/page";
 import Image from "next/image";
 
 type Props = {
