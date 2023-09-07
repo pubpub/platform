@@ -3,7 +3,7 @@
 import { Pub } from "@pubpub/sdk";
 import manifest from "pubpub-integration.json";
 import { assert, expect } from "utils";
-import { client } from "~/lib/client";
+import { client } from "~/lib/pubpub";
 import { findInstance } from "~/lib/instance";
 
 export async function submit(form: FormData, token: string) {

@@ -1,4 +1,4 @@
-import { client } from "~/lib/client";
+import { client } from "~/lib/pubpub";
 import { findInstance } from "~/lib/instance";
 import { Configure } from "./configure";
 

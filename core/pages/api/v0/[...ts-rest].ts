@@ -49,7 +49,8 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		};
 	},
 	auth: async ({ headers }) => {
-		const user = await validateToken(headers.authorization.split("Bearer ")[1]);
+		const token = headers.authorization.split("Bearer ")[1];
+		const user = await validateToken(token);
 		return {
 			status: 200,
 			body: user,
