@@ -31,19 +31,25 @@ export default function LoginForm() {
 			<h1>Login</h1>
 			<div className="my-10">
 				<form onSubmit={handleSubmit}>
-					<label htmlFor="email">Email</label>
-					<input
-						name="email"
-						value={email}
-						onChange={(evt) => setEmail(evt.target.value)}
-					/>
-					<label htmlFor="password">Password</label>
-					<input
-						name="password"
-						value={password}
-						type="password"
-						onChange={(evt) => setPassword(evt.target.value)}
-					/>
+					<p>
+						<label htmlFor="email">Email</label>
+						<input
+							id="email"
+							name="email"
+							value={email}
+							onChange={(evt) => setEmail(evt.target.value)}
+						/>
+					</p>
+					<p>
+						<label htmlFor="password">Password</label>
+						<input
+							id="password"
+							name="password"
+							value={password}
+							type="password"
+							onChange={(evt) => setPassword(evt.target.value)}
+						/>
+					</p>
 
 					<div className="my-6 flex space-x-8 items-center">
 						<Button variant="outline" type="submit" disabled={!email || !password}>
