@@ -65,13 +65,6 @@ export const createPub = async (instanceId: string, body: PubPostBody) => {
 	const [instance, pubType] = await Promise.all([
 		prisma.integrationInstance.findUnique({
 			where: { id: instanceId },
-			include: {
-				stage: {
-					select: {
-						id: true
-					}
-				}
-			}
 		}),
 		prisma.pubType.findUnique({
 			where: { id: pubTypeId },
