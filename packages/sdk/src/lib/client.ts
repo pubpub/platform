@@ -70,17 +70,17 @@ const makeRequest = async (
 	switch (response.status) {
 		// 400 errors are expected to be JSON.
 		case 400:
-			let json: object;
+			let json: unknown;
 			try {
 				json = await response.json();
 			} catch (error) {
 				// Did not get a JSON response.
 				break;
 			}
-			if ("name" in json && "issues" in json) {
+			if (typeof json === "object" && json !== null && "name" in json && "issues" in json) {
 				switch (json.name) {
 					case "ZodError":
-						throw new ZodError(json as any);
+						throw new ZodError(json as { issues: object[] });
 					default:
 						throw new ResponseError(response, "Invalid request");
 				}
