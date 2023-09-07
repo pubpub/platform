@@ -33,7 +33,7 @@ const getCommunityStages = async (communitySlug: string) => {
 								include: {
 									user: true,
 								},
-							},
+							}
 						},
 					},
 				},
