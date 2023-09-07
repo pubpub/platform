@@ -1,4 +1,4 @@
-import { InvalidFieldError, PubPubError, ResponseError, ZodError } from "./errors";
+import { ValidationError, PubPubError, ResponseError, ZodError } from "./errors";
 import { Manifest } from "./types";
 
 export type Get<T extends Manifest> = (
@@ -7,10 +7,14 @@ export type Get<T extends Manifest> = (
 	| Extract<keyof T["read"], string>
 )[];
 
-export type Patch<T extends Manifest> = Record<
+export type Pub<T extends Manifest> = Record<
 	Extract<Extract<keyof T["register"] | keyof T["write"], string>, string>,
 	unknown
 >;
+
+export type Patch<T extends Manifest> = {
+	[K in keyof Pub<T>]?: unknown;
+};
 
 export type CreateResponse<T extends string[]> = {
 	[K in T[number]]: unknown;
@@ -28,7 +32,7 @@ export type UpdateResponse<T extends string[]> = {
 export type Client<T extends Manifest> = {
 	create<U extends string[]>(
 		instanceId: string,
-		pub: Patch<T>,
+		pub: Pub<T>,
 		pubTypeId: string
 	): Promise<UpdateResponse<U>>;
 	read<U extends Get<T>>(
@@ -94,26 +98,26 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 	const write = new Set(manifest.write ? Object.keys(manifest.write) : null);
 	const read = new Set(manifest.read ? [write.values(), ...Object.keys(manifest.read)] : write);
 	return {
-		async create(instanceId, pubFields, pubTypeId) {
-			for (let pubField in pubFields) {
-				if (!write.has(pubField)) {
-					throw new InvalidFieldError(`Field ${pubField} is not writeable`);
+		async create(instanceId, pub, pubTypeId) {
+			for (let field in pub) {
+				if (!write.has(field)) {
+					throw new ValidationError(`Field ${field} is not writeable`);
 				}
 			}
 			try {
 				return makeRequest(instanceId, "POST", "pubs", {
 					pubTypeId,
-					pubFields: pubFields,
+					pubFields: pub,
 				});
 			} catch (cause) {
 				throw new PubPubError("Failed to create Pub", { cause });
 			}
 		},
-		async read(instanceId, pubId, ...pubFields) {
+		async read(instanceId, pubId, ...fields) {
 			try {
-				for (let i = 0; i < pubFields.length; i++) {
-					if (!read.has(pubFields[i])) {
-						throw new InvalidFieldError(`Field ${pubFields[i]} is not readable`);
+				for (let i = 0; i < fields.length; i++) {
+					if (!read.has(fields[i])) {
+						throw new ValidationError(`Field ${fields[i]} is not readable`);
 					}
 				}
 				return makeRequest(instanceId, "GET", "pubs", pubId);
@@ -121,14 +125,14 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new PubPubError("Failed to get Pub", { cause });
 			}
 		},
-		async update(instanceId, pubId, pubPatch) {
+		async update(instanceId, pubId, patch) {
 			try {
-				for (const pubField in pubPatch) {
-					if (!write.has(pubField)) {
-						throw new InvalidFieldError(`Field ${pubField} is not writeable`);
+				for (const field in patch) {
+					if (!write.has(field)) {
+						throw new ValidationError(`Field ${field} is not writeable`);
 					}
 				}
-				return makeRequest(instanceId, "PATCH", `pubs/${pubId}`, pubPatch);
+				return makeRequest(instanceId, "PATCH", `pubs/${pubId}`, patch);
 			} catch (cause) {
 				throw new PubPubError("Failed to update Pub", { cause });
 			}

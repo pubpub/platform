@@ -1,12 +1,16 @@
 "use server";
 
+import { assert } from "utils";
 import { updateInstance } from "~/lib/instance";
 
-export const configure = async (instanceId: string, pubTypeId: string) => {
+export const configure = (form: FormData) => {
+	const instanceId = form.get("instance-id");
+	const pubTypeId = form.get("pub-type-id");
+	assert(typeof instanceId === "string");
+	assert(typeof pubTypeId === "string");
 	try {
-		await updateInstance(instanceId, { pubTypeId });
-		return { message: "Instance configured!" };
+		return updateInstance(instanceId, { pubTypeId });
 	} catch (error) {
-		return { message: "Failed to configure instance", cause: error.message };
+		return { error: error.message };
 	}
 };
