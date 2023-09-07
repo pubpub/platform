@@ -498,10 +498,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			actions: [
 				{
 					text: "Submit Pub",
-					href: "https://integrations.pubpub.org/submissions/submit",
+					href: "https://https://integration-submissions.onrender.com/actions/submit",
 				},
 			],
-			settingsUrl: "https://integrations.pubpub.org/submissions/settings",
+			settingsUrl: "https://https://integration-submissions.onrender.com/configure",
 		},
 	});
 
