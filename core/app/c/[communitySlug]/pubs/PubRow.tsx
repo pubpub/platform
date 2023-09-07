@@ -4,7 +4,7 @@ import { Button, Popover, PopoverContent, PopoverTrigger } from "ui";
 import { PubsData } from "./page";
 
 type Props = { pub: NonNullable<PubsData>[number], token: string };
-type IntegrationAction = { text: string, href: string };
+type IntegrationAction = { text: string, href: string, kind?: "stage" };
 
 const getTitle = (pub: Props["pub"]) => {
 	const titleValue = pub.values.find((value) => {
@@ -56,9 +56,10 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 		const status = getStatus(pub, integration.id);
 		const actions: IntegrationAction[] =
 			(Array.isArray(integration.actions) ? integration.actions : []).
-				map(appendQueryParams(integration.id, pub.id, token));
+				filter((action: IntegrationAction) => action.kind !== "stage")
+				.map(appendQueryParams(instance.id, pub.id, token));
 		return { status, actions };
-	});
+	}).filter((instance) => instance && instance.actions.length);
 
 	return buttons;
 };
@@ -87,7 +88,7 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 									{buttons.map((button) => {
 										return (
 											<div
-												key={button.actions![0].text}
+												key={button.actions[0].text}
 												// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
 												className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
 											/>
@@ -103,6 +104,10 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 								}
 								return button.actions.map((action: IntegrationAction) => {
 									if (!(action.text && action.href)) {
+										return null;
+									}
+									// Don't render "stage" only actions in the pub row
+									if (action.kind === "stage") {
 										return null;
 									}
 									return (
