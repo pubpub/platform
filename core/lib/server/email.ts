@@ -1,117 +1,109 @@
-import { smtpclient } from './mailgun';
-import prisma from '~/prisma/db';
-import { BadRequestError, NotFoundError } from './errors';
-import { slugifyString } from '../string';
-import type { User } from '@prisma/client';
-import { createToken } from './token';
+import type { User } from "@prisma/client";
+import { Eta } from "eta";
+import prisma from "~/prisma/db";
+import { slugifyString } from "../string";
+import { BadRequestError, NotFoundError } from "./errors";
+import { smtpclient } from "./mailgun";
+import { createToken } from "./token";
 
+type To = { email: string; name: string } | { userId: string };
+type Node = string | { t: string; val: string };
 
+const tokens = new Set(["user.token", "user.id", "user.name", "instance.id"]);
 
-type Context = {
-    user: {
-        id: string,
-        name?: string,
-    }
-    // pubId: string,
-    instanceId: string,
-}
+const plugin = {
+	processAST(nodes: Node[]) {
+		const next: unknown[] = [];
+		for (let i = 0; i < nodes.length; i++) {
+			const node = nodes[i];
+			if (typeof node === "string") {
+				// Accept any string
+				next.push(node);
+			} else if (node.t === "i") {
+				// Accept valid tokens
+				if (!tokens.has(node.val)) {
+					throw new BadRequestError(`Invalid token ${node.val}`);
+				}
+				// Await async tokens
+				next.push(node.val === "user.token" ? { t: "i", val: "await user.token" } : node);
+			} else {
+				// Disable code execution and raw expressions
+				throw new BadRequestError("Invalid message syntax");
+			}
+		}
+		return next;
+	},
+};
 
-const interpolate = async (message: string, context: Context) => {
-    let user: User | null;
-    const getUserField = (field) => {
-        return async () => {
-            if (user) {
-                return user[field]
-            } else {
-                user = await prisma.user.findUnique({
-                    where: {
-                        id: context.user.id
-                    }
-                })
-                if (!user) {
-                    throw new Error(`User ${context.user.id} not found`)
-                }
-                return user[field]
-            }
-        }
-    }
+const eta = new Eta({
+	functionHeader: "const user=it.user,instance=it.instance",
+	// <%= token %> becomes {{= token }}
+	tags: ["{{", "}}"],
+	// {{= token }} becomes {{ token }}
+	parse: { exec: ".", interpolate: "", raw: "." },
+	// Register a plugin that disables unsafe features and desugars async tokens
+	plugins: [plugin],
+	// TODO: enable caching for static and/or hot messages
+	cache: false,
+});
 
-    const varRegex = /\{\{\s*([^} ]*)\s*\}\}/g
+const makeTemplateApi = (instanceId: string, user: User) => {
+	return {
+		instance: { id: instanceId },
+		user: {
+			id: user.id,
+			name: user.name,
+			get token() {
+				return createToken(user.id);
+			},
+		},
+	};
+};
 
-    const supportedVars = {
-        'user.token': async () => {
-            return await createToken(context.user.id)
-        },
-        'user.name': context.user?.name || getUserField('name'),
-        'user.id': context.user.id,
-        'instance.id': context.instanceId,
-    }
+export const emailUser = async (
+	to: Readonly<To>,
+	subject: string,
+	message: string,
+	instanceId: string
+) => {
+	let user: User;
+	let email: string;
+	if ("userId" in to) {
+		// Requester is sending an email to existing user
+		const dbUser = await prisma.user.findUnique({ where: { id: to.userId } });
+		if (!dbUser) {
+			throw new NotFoundError(`User ${to.userId} not found`);
+		}
+		user = dbUser;
+		email = dbUser.email;
+	} else {
+		// Requester wishes to find or create user from an email address
+		const dbUser = await prisma.user.findUnique({ where: { email: to.email } });
+		if (dbUser) {
+			user = dbUser;
+		} else {
+			try {
+				user = await prisma.user.create({
+					data: {
+						email: to.email,
+						slug: slugifyString(email!),
+						name: to.name,
+					},
+				});
+			} catch (cause) {
+				throw new Error(`Unable to create user for ${to.email}`, { cause });
+			}
+		}
+		email = user.email;
+	}
 
-    const usedVars = Array.from(message.matchAll(varRegex));
-    const vars = {}
-    for (const [_, varName] of usedVars) {
-        const getter = supportedVars[varName];
-        if (!getter) {
-            throw new BadRequestError(`Variable ${varName} not supported in email templates`)
-        }
-        if (typeof getter === 'function') {
-            vars[varName] = await getter();
-        } else {
-            vars[varName] = getter;
-        }
-    }
+	const html = await eta.renderStringAsync(message, makeTemplateApi(instanceId, user));
 
-    const interpolatedMessage = message.replaceAll(varRegex, (_, varName) => {
-        return vars[varName]
-    });
-
-    return interpolatedMessage;
-}
-
-export const emailUser = async ({ email, name, userId }: { email?: string, name?: string, userId?: string }, subject: string, message: string, instanceId: string) => {
-    let user: User | null;
-    if (!(email || userId)) {
-        throw new BadRequestError(`One of email or userId must be supplied`)
-    }
-    if (userId) {
-        user = await prisma.user.findUnique({ where: { id: userId } })
-        if (!user) {
-            throw new NotFoundError(`User ${userId} not found`)
-        }
-        email = user.email
-    } else {
-        user = await prisma.user.findUnique({ where: { email } })
-        if (!user) {
-            if (!name) {
-                throw new BadRequestError(`Name must be included for ${email}`)
-            }
-            user = await prisma.user.create({
-                data: {
-                    email: email!,
-                    slug: slugifyString(email!),
-                    name: name
-                }
-            })
-
-            if (!user) {
-                throw new Error(`Unable to create user for ${email}`)
-            }
-        }
-    }
-
-    const html = await interpolate(message, {
-        user: {
-            id: user.id,
-            name: user.name,
-        },
-        instanceId
-    });
-
-    await smtpclient.sendMail({
-        from: 'PubPub Team <hello@mg.pubpub.org>',
-        to: email,
-        replyTo: 'hello@pubpub.org',
-        html,
-        subject
-    })
-}
+	await smtpclient.sendMail({
+		from: "PubPub Team <hello@mg.pubpub.org>",
+		to: email,
+		replyTo: "hello@pubpub.org",
+		html,
+		subject,
+	});
+};
