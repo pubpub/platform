@@ -1,14 +1,10 @@
 "use server";
 
-import { assert } from "utils";
 import { updateInstance } from "~/lib/instance";
 
-export const configure = (form: FormData) => {
-	const instanceId = form.get("instance-id");
-	const pubTypeId = form.get("pub-type-id");
-	assert(typeof instanceId === "string");
-	assert(typeof pubTypeId === "string");
+export const configure = (instanceId: string, pubTypeId: string) => {
 	try {
+		// return { error: "We couldn't update the instance." };
 		return updateInstance(instanceId, { pubTypeId });
 	} catch (error) {
 		return { error: error.message };
