@@ -1,7 +1,16 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { type NextApiRequest, type NextApiResponse } from "next/types";
+import crypto from "node:crypto";
 import { api } from "~/lib/contracts";
-import { getPub, getMembers, updatePub, createPub, HTTPStatusError } from "~/lib/server";
+import {
+	BadRequestError,
+	HTTPStatusError,
+	UnauthorizedError,
+	createPub,
+	getMembers,
+	getPub,
+	updatePub,
+} from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { validateToken } from "~/lib/server/token";
 
@@ -15,34 +24,63 @@ const handleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse)
 	return res.status(500).json({ message: "Internal Server Error" });
 };
 
+const getBearerToken = (authHeader: string) => {
+	const parts = authHeader.split("Bearer ");
+	if (parts.length !== 2) {
+		throw new BadRequestError("Unable to parse authorization header");
+	}
+	return parts[1];
+};
+
+const checkApiKey = (apiKey: string) => {
+	const serverKey = process.env.API_KEY;
+	if (!serverKey) {
+		return;
+	}
+	if (
+		serverKey &&
+		serverKey.length === apiKey.length &&
+		crypto.timingSafeEqual(Buffer.from(serverKey), Buffer.from(apiKey))
+	) {
+		return;
+	}
+
+	throw new UnauthorizedError("Invalid API key");
+};
+
 // TODO: verify pub belongs to integrationInstance probably in some middleware
 // TODO: verify token in header
 const integrationsRouter = createNextRoute(api.integrations, {
-	createPub: async ({ params, body }) => {
+	createPub: async ({ headers, params, body }) => {
+		checkApiKey(getBearerToken(headers.authorization));
 		const pub = await createPub(params.instanceId, body);
 		return { status: 200, body: pub };
 	},
-	getPub: async ({ params }) => {
+	getPub: async ({ headers, params }) => {
+		checkApiKey(getBearerToken(headers.authorization));
 		const pubFieldValuePairs = await getPub(params.pubId);
 		return {
 			status: 200,
 			body: pubFieldValuePairs,
 		};
 	},
-	getAllPubs: async ({ params }) => {
+	getAllPubs: async ({ headers }) => {
+		checkApiKey(getBearerToken(headers.authorization));
 		return {
 			status: 200,
 			body: [{ message: "This is not implemented" }],
 		};
 	},
-	updatePub: async ({ params, body }) => {
+	updatePub: async ({ headers, params, body }) => {
+		checkApiKey(getBearerToken(headers.authorization));
 		const updatedPub = await updatePub(params.pubId, body);
 		return {
 			status: 200,
 			body: updatedPub,
 		};
 	},
-	getSuggestedMembers: async ({ params }) => {
+	getSuggestedMembers: async ({ headers, params }) => {
+		checkApiKey(getBearerToken(headers.authorization));
 		const member = await getMembers(params.memberCandidateString);
 		return {
 			status: 200,
@@ -50,7 +88,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		};
 	},
 	auth: async ({ headers }) => {
-		const token = headers.authorization.split("Bearer ")[1];
+		const token = getBearerToken(headers.authorization);
 		const user = await validateToken(token);
 		return {
 			status: 200,
