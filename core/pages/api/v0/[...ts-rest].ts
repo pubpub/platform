@@ -95,7 +95,8 @@ const integrationsRouter = createNextRoute(api.integrations, {
 			body: user,
 		};
 	},
-	sendEmail: async ({ params, body }) => {
+	sendEmail: async ({ headers, params, body }) => {
+		checkApiKey(getBearerToken(headers.authorization));
 		await emailUser(body.to, body.subject, body.message, params.instanceId);
 		return {
 			status: 200,
