@@ -1,6 +1,7 @@
 import { client } from "~/lib/pubpub";
 import { findInstance } from "~/lib/instance";
 import { Configure } from "./configure";
+import { Avatar, AvatarFallback, AvatarImage } from "ui";
 
 type Props = {
 	searchParams: {
@@ -14,10 +15,12 @@ export default async function Page(props: Props) {
 	const user = await client.auth(instanceId, token);
 	const instance = await findInstance(instanceId);
 	return (
-		<main>
-			<p>Hello {user.name}</p>
-			<img src={`${process.env.PUBPUB_URL}/${user.avatar}`} />
+		<>
+			<Avatar>
+				<AvatarImage src={`${process.env.PUBPUB_URL}/${user.avatar}`} />
+				<AvatarFallback>{user.name[0]}</AvatarFallback>
+			</Avatar>
 			<Configure instanceId={instanceId} pubTypeId={instance?.pubTypeId} />
-		</main>
+		</>
 	);
 }

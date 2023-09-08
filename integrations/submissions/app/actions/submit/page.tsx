@@ -1,5 +1,6 @@
 import { client } from "~/lib/pubpub";
 import { Submit } from "./submit";
+import { Avatar, AvatarFallback, AvatarImage } from "ui";
 
 type Props = {
 	searchParams: {
@@ -13,10 +14,12 @@ export default async function Page(props: Props) {
 	const user = await client.auth(instanceId, token);
 
 	return (
-		<main>
-			<p>Hello {user.name}</p>
-			<img src={`${process.env.PUBPUB_URL}/${user.avatar}`} />
+		<>
+			<Avatar>
+				<AvatarImage src={`${process.env.PUBPUB_URL}/${user.avatar}`} />
+				<AvatarFallback>{user.name[0]}</AvatarFallback>
+			</Avatar>
 			<Submit instanceId={instanceId} />
-		</main>
+		</>
 	);
 }

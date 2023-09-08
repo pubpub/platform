@@ -1,6 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import {
+	Button,
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+	Icon,
+	Input,
+	useToast,
+} from "ui";
+import * as z from "zod";
 import { configure } from "./actions";
 
 type Props = {
@@ -8,21 +23,66 @@ type Props = {
 	pubTypeId?: string;
 };
 
-export function Configure(props: Props) {
-	const [message, setMessage] = useState<string>("");
-	const [isPending, startTransition] = useTransition();
+const schema = z.object({
+	pubTypeId: z.string().length(36),
+	instanceId: z.string(),
+});
 
-	async function onConfigure(form: FormData) {
-		const response = await configure(form);
-		setMessage("error" in response ? response.error : "Instance configured!");
+export function Configure(props: Props) {
+	const { toast } = useToast();
+	const form = useForm<z.infer<typeof schema>>({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			pubTypeId: props.pubTypeId,
+			instanceId: props.instanceId,
+		},
+	});
+
+	async function onSubmit(values: z.infer<typeof schema>) {
+		const result = await configure(values.instanceId, values.pubTypeId);
+		if ("error" in result) {
+			toast({
+				title: "Error",
+				description: result.error,
+				variant: "destructive",
+			});
+		} else {
+			toast({
+				title: "Success",
+				description: "The instance was updated successfully.",
+			});
+		}
 	}
 
 	return (
-		<form action={(form) => startTransition(() => onConfigure(form))}>
-			<input type="text" name="pub-type-id" defaultValue={props.pubTypeId} />
-			<input type="hidden" name="instance-id" value={props.instanceId} />
-			<button type="submit">Configure</button>
-			<p>{isPending ? "Configuring instance..." : message}</p>
-		</form>
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(onSubmit)}>
+				<FormField
+					control={form.control}
+					name="pubTypeId"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>PubType Id</FormLabel>
+							<FormControl>
+								<Input {...field} />
+							</FormControl>
+							<FormDescription>Submitted pubs will be of this type.</FormDescription>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<Input type="hidden" name="instanceId" value={props.instanceId} />
+				<Button variant="outline" onClick={() => window.history.back()}>
+					Go back
+				</Button>
+				<Button variant="outline" type="submit">
+					Configure
+					{form.formState.isSubmitting && (
+						<Icon.Spinner className="h-4 w-4 animate-spin" />
+					)}
+				</Button>
+			</form>
+			<FormMessage />
+		</Form>
 	);
 }
