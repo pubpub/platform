@@ -59,41 +59,6 @@ async function main() {
 	});
 	prismaCommunityIds.push({ communityId: unJournalId, canAdmin: true });
 
-	// const admin = await prisma.user.create({
-	// 	data: {
-	// 		id: faker.string.uuid(),
-	// 		slug: "testing",
-	// 		email: "stevie@email.com",
-	// 		name: "Stevie Barnett",
-	// 		avatar: "/demo/person.png",
-	// 	},
-	// });
-
-	// const user1 = await prisma.user.create({
-	// 	data: {
-	// 		id: faker.string.uuid(),
-	// 		slug: faker.lorem.slug(),
-	// 		email: faker.internet.email(),
-	// 		name: faker.person.fullName(),
-	// 		avatar: faker.image.avatar(),
-	// 	},
-	// });
-
-	// await prisma.member.createMany({
-	// 	data: [
-	// 		{ userId: admin.id, communityId: communityIds[0], canAdmin: true },
-	// 		{ userId: admin.id, communityId: communityIds[1], canAdmin: true },
-	// 		{ userId: admin.id, communityId: communityIds[2], canAdmin: true },
-	// 		{ userId: admin.id, communityId: communityIds[3], canAdmin: true },
-	// 		{ userId: admin.id, communityId: communityIds[4], canAdmin: true },
-	// 		{ userId: user1.id, communityId: communityIds[0], canAdmin: false },
-	// 		{ userId: user1.id, communityId: communityIds[1], canAdmin: false },
-	// 		{ userId: user1.id, communityId: communityIds[2], canAdmin: false },
-	// 		{ userId: user1.id, communityId: communityIds[3], canAdmin: false },
-	// 		{ userId: user1.id, communityId: communityIds[4], canAdmin: false },
-	// 	],
-	// });
-
 	try {
 		await createUserMembers(
 			"all@pubpub.org",
