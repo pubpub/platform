@@ -26,15 +26,19 @@ export default function ForgotForm() {
 	};
 
 	return (
-		<>
+		<div className="border p-4">
 			{!success && (
 				<>
 					<p className="my-4">
 						Enter your email below to receive a secure link for reseting yor password.
 					</p>
-					<div className="my-4">
-						<form onSubmit={resetPassword}>
+					<div className="text-center">
+						<form
+							onSubmit={resetPassword}
+							className="flex justify-between items-center"
+						>
 							<input
+								className="w-1/2 mr-4"
 								value={email}
 								onChange={(evt) => setEmail(evt.target.value)}
 								placeholder="example@mail.com"
@@ -54,6 +58,6 @@ export default function ForgotForm() {
 					Password reset email sent! Please check your inbox.
 				</div>
 			)}
-		</>
+		</div>
 	);
 }
