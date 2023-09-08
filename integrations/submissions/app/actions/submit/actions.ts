@@ -6,12 +6,12 @@ import { assert, expect } from "utils";
 import { client } from "~/lib/pubpub";
 import { findInstance } from "~/lib/instance";
 
-export async function submit(form: FormData, token: string) {
+export async function submit(form: FormData) {
 	try {
 		const { "instance-id": instanceId, ...pub } = Object.fromEntries(form);
 		assert(typeof instanceId === "string");
 		const instance = expect(await findInstance(instanceId));
-		return client.create(instanceId, token, pub as Pub<typeof manifest>, instance.pubTypeId);
+		return client.create(instanceId, pub as Pub<typeof manifest>, instance.pubTypeId);
 	} catch (error) {
 		return { error: error.message };
 	}
