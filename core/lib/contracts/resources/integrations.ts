@@ -116,13 +116,18 @@ export const integrationsApi = contract.router({
 		method: "POST",
 		path: "/integrations/:instanceId/email",
 		summary: "Send an email from PubPub to a new or existing PubPub user",
-		description: "Recipient can be an existing pubpub user identified by ID, or a new user who must be identified by email and name.",
+		description:
+			"Recipient can be an existing pubpub user identified by ID, or a new user who must be identified by email and name.",
 		body: z.object({
-			to: z.object({
-				userId: z.string().optional(),
-				email: z.string().optional(),
-				name: z.string().optional(),
-			}),
+			to: z.union([
+				z.object({
+					userId: z.string(),
+				}),
+				z.object({
+					email: z.string(),
+					name: z.string(),
+				}),
+			]),
 			subject: z.string(),
 			message: z.string(),
 		}),

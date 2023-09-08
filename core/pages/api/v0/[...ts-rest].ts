@@ -58,12 +58,12 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		};
 	},
 	sendEmail: async ({ params, body }) => {
-		await emailUser({...body.to}, body.subject, body.message, params.instanceId)
+		await emailUser(body.to, body.subject, body.message, params.instanceId);
 		return {
 			status: 200,
-			body: undefined
-		}
-	}
+			body: undefined,
+		};
+	},
 });
 
 const router = {
