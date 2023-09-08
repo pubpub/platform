@@ -2,6 +2,7 @@ import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { type NextApiRequest, type NextApiResponse } from "next/types";
 import { api } from "~/lib/contracts";
 import { getPub, getMembers, updatePub, createPub, HTTPStatusError } from "~/lib/server";
+import { emailUser } from "~/lib/server/email";
 import { validateToken } from "~/lib/server/token";
 
 const handleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse) => {
@@ -56,6 +57,13 @@ const integrationsRouter = createNextRoute(api.integrations, {
 			body: user,
 		};
 	},
+	sendEmail: async ({ params, body }) => {
+		await emailUser({...body.to}, body.subject, body.message, params.instanceId)
+		return {
+			status: 200,
+			body: undefined
+		}
+	}
 });
 
 const router = {
