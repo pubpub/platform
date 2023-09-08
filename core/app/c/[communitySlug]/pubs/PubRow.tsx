@@ -12,9 +12,6 @@ import {
 	Dialog,
 	DialogContent,
 	DialogTrigger,
-	Tooltip,
-	TooltipTrigger,
-	TooltipContent,
 } from "ui";
 import Image from "next/image";
 import { PubPayload, StagePayload } from "~/lib/types";
