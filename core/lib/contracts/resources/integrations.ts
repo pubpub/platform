@@ -112,22 +112,28 @@ export const integrationsApi = contract.router({
 			200: z.array(SuggestedMembersSchema),
 		},
 	},
+	sendEmail: {
+		method: "POST",
+		path: "/integrations/:instanceId/email",
+		summary: "Send an email from PubPub to a new or existing PubPub user",
+		description: "Recipient can be an existing pubpub user identified by ID, or a new user who must be identified by email and name.",
+		body: z.object({
+			to: z.object({
+				userId: z.string().optional(),
+				email: z.string().optional(),
+				name: z.string().optional(),
+			}),
+			subject: z.string(),
+			message: z.string(),
+		}),
+		pathParams: z.object({
+			instanceId: z.string(),
+		}),
+		responses: {
+			200: z.undefined(),
+		},
+	},
 	// TODO implement these endpoints
-	// authorizeIntegration: {
-	// 	method: "POST",
-	// 	path: "integrations/:instanceId/authorize",
-	// 	summary: "authorize integration",
-	// 	description: "A way to authorize an integration",
-	// 	body: z.object({
-	// 		userId: z.string(),
-	// 	}),
-	// 	pathParams: z.object({
-	// 		instanceId: z.string(),
-	// 	}),
-	// 	responses: {
-	// 		200: z.any(),
-	// 	},
-	// },
 	// getAllMembers: {
 	// 	method: "GET",
 	// 	path: "integrations/:instanceId/members",
@@ -138,24 +144,6 @@ export const integrationsApi = contract.router({
 	// 	}),
 	// 	responses: {
 	// 		200: z.array(SuggestedMembersSchema),
-	// 	},
-	// },
-	// postEmail: {
-	// 	method: "POST",
-	// 	path: "integrations/:instanceId/email",
-	// 	summary: "Send email",
-	// 	description: "A way to send email",
-	// 	body: z.object({
-	// 		userId: z.string(),
-	// 		subject: z.string(),
-	// 		body: z.string(),
-	// 		recipients: z.array(z.string()),
-	// 	}),
-	// 	pathParams: z.object({
-	// 		instanceId: z.string(),
-	// 	}),
-	// 	responses: {
-	// 		200: z.any(),
 	// 	},
 	// },
 });
