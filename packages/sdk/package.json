@@ -3,16 +3,21 @@
 	"type": "module",
 	"version": "0.0.6",
 	"description": "",
-	"main": "dist/index.js",
+	"main": "dist/lib/index.js",
 	"files": [
 		"dist"
 	],
-	"types": "./dist/index.d.ts",
+	"types": "./dist/lib/index.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/index.cjs",
-			"types": "./dist/index.d.ts"
+			"import": "./dist/lib/index.js",
+			"require": "./dist/lib/index.cjs",
+			"types": "./dist/lib/index.d.ts"
+		},
+		"./react": {
+			"import": "./dist/react/index.js",
+			"require": "./dist/react/index.cjs",
+			"types": "./dist/react/index.d.ts"
 		}
 	},
 	"scripts": {
@@ -27,10 +32,19 @@
 	],
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
+	"dependencies": {
+		"utils": "workspace:*"
+	},
+	"peerDependencies": {
+		"ui": "workspace:*",
+		"react": "^18.2.0"
+	},
 	"devDependencies": {
 		"@types/node": "^20.4.2",
+		"@types/react": "^18.2.5",
 		"tsconfig": "workspace:*",
 		"tsup": "^7.1.0",
+		"ui": "workspace:*",
 		"vite": "^4.4.5"
 	}
 }
