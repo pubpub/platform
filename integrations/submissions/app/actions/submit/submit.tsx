@@ -30,7 +30,7 @@ type Props = {
 };
 
 const schema = z.object({
-	Title: z.string(),
+	Title: z.string().min(1),
 	instanceId: z.string(),
 });
 
