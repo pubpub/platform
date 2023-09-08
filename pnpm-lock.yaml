@@ -53,6 +53,9 @@ importers:
       diacritics:
         specifier: ^1.3.0
         version: 1.3.0
+      eta:
+        specifier: ^3.1.1
+        version: 3.1.1
       jsonwebtoken:
         specifier: ^9.0.0
         version: 9.0.0
@@ -3125,6 +3128,11 @@ packages:
   /esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
+    dev: false
+
+  /eta@3.1.1:
+    resolution: {integrity: sha512-GVKq8BhYjvGiwKAnvPOnTwAHach3uHglvW0nG9gjEmo8ZIe8HR1aCLdQ97jlxXPcCWhB6E3rDWOk2fahFKG5Cw==}
+    engines: {node: '>=6.0.0'}
     dev: false
 
   /execa@5.1.1:
