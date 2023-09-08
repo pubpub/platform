@@ -5,7 +5,6 @@ import { submit } from "./actions";
 
 type Props = {
 	instanceId: string;
-	token: string;
 };
 
 export function Submit(props: Props) {
@@ -13,7 +12,7 @@ export function Submit(props: Props) {
 	const [isPending, startTransition] = useTransition();
 
 	async function onSubmit(form: FormData) {
-		const response = await submit(form, props.token);
+		const response = await submit(form);
 		setMessage("error" in response ? response.error : "Pub submitted!");
 	}
 

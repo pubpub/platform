@@ -16,7 +16,7 @@ export default async function Page(props: Props) {
 		<main>
 			<p>Hello {user.name}</p>
 			<img src={`${process.env.PUBPUB_URL}/${user.avatar}`} />
-			<Submit instanceId={instanceId} token={token} />
+			<Submit instanceId={instanceId} />
 		</main>
 	);
 }

@@ -44,19 +44,16 @@ export type Client<T extends Manifest> = {
 	auth(instanceId: string, token: string): Promise<User>;
 	create<U extends string[]>(
 		instanceId: string,
-		token: string,
 		pub: Pub<T>,
 		pubTypeId: string
 	): Promise<UpdateResponse<U>>;
 	read<U extends Get<T>>(
 		instanceId: string,
-		token: string,
 		pubId: string,
 		...fields: U
 	): Promise<ReadResponse<U>>;
 	update<U extends string[]>(
 		instanceId: string,
-		token: string,
 		pubId: string,
 		patch: Patch<T>
 	): Promise<UpdateResponse<U>>;
@@ -113,7 +110,7 @@ const makeRequest = async (
 	throw new ResponseError(response, "Failed to connect to PubPub");
 };
 
-export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
+export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Client<T> => {
 	const write = new Set(manifest.write ? Object.keys(manifest.write) : null);
 	const read = new Set(manifest.read ? [write.values(), ...Object.keys(manifest.read)] : write);
 	return {
@@ -130,14 +127,14 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new PubPubError("Failed to authenticate user or integration", { cause });
 			}
 		},
-		async create(instanceId, token, pub, pubTypeId) {
+		async create(instanceId, pub, pubTypeId) {
 			for (let field in pub) {
 				if (!write.has(field)) {
 					throw new ValidationError(`Field ${field} is not writeable`);
 				}
 			}
 			try {
-				return makeRequest(instanceId, token, "POST", "pubs", {
+				return makeRequest(instanceId, apiKey, "POST", "pubs", {
 					pubTypeId,
 					pubFields: pub,
 				});
@@ -145,26 +142,26 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new PubPubError("Failed to create Pub", { cause });
 			}
 		},
-		async read(instanceId, token, pubId, ...fields) {
+		async read(instanceId, pubId, ...fields) {
 			try {
 				for (let i = 0; i < fields.length; i++) {
 					if (!read.has(fields[i])) {
 						throw new ValidationError(`Field ${fields[i]} is not readable`);
 					}
 				}
-				return makeRequest(instanceId, token, "GET", "pubs", pubId);
+				return makeRequest(instanceId, apiKey, "GET", "pubs", pubId);
 			} catch (cause) {
 				throw new PubPubError("Failed to get Pub", { cause });
 			}
 		},
-		async update(instanceId, token, pubId, patch) {
+		async update(instanceId, pubId, patch) {
 			try {
 				for (const field in patch) {
 					if (!write.has(field)) {
 						throw new ValidationError(`Field ${field} is not writeable`);
 					}
 				}
-				return makeRequest(instanceId, token, "PATCH", `pubs/${pubId}`, patch);
+				return makeRequest(instanceId, apiKey, "PATCH", `pubs/${pubId}`, patch);
 			} catch (cause) {
 				throw new PubPubError("Failed to update Pub", { cause });
 			}
