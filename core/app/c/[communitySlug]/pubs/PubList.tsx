@@ -4,7 +4,7 @@ import { Button } from "ui";
 import PubRow from "./PubRow";
 import { PubPayload } from "~/lib/types";
 
-type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string };
+type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string; stageNames: any[] };
 
 const getParent = (pub: Props["pubs"][number]) => {
 	return pub.values.find((value) => {
@@ -27,7 +27,7 @@ const stageNames = (stages: Props["pubs"][number]["stages"]) => {
 	});
 };
 
-const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
+const PubList: React.FC<Props> = function ({ pubs, topPubs, token, stageNames }) {
 	const pubsToRender = topPubs || getTopPubs(pubs);
 	const [jankyExpandState, setJankyExpandState] = useState({});
 	return (
@@ -65,7 +65,12 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
 						{/* @ts-ignore */}
 						{!!children.length && jankyExpandState[pub.id] && (
 							<div className="ml-6">
-								<PubList pubs={pubs} topPubs={children} token={token} />
+								<PubList
+									pubs={pubs}
+									topPubs={children}
+									token={token}
+									stageNames={stageNames}
+								/>
 							</div>
 						)}
 					</div>
