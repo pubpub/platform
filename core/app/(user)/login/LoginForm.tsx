@@ -28,7 +28,7 @@ export default function LoginForm() {
 
 	return (
 		<div className="border p-4">
-			<h1 className="text-3xl text-center">Login</h1>
+			<h1 className="text-2xl text-center">Login</h1>
 			<div className="my-10">
 				<form onSubmit={handleSubmit}>
 					<div>

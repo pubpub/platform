@@ -35,48 +35,58 @@ export default function SignupForm() {
 	};
 
 	return (
-		<>
+		<div className="border p-4">
 			{!signupComplete && (
 				<>
-					<h1>Signup</h1>
+					<h1 className="text-2xl text-center">Signup</h1>
 					<div className="my-10">
 						<form onSubmit={handleSubmit}>
-							<p>
+							<div>
 								<label htmlFor="name">Name</label>
+							</div>
+							<div>
 								<input
 									id="name"
+									className="w-full"
 									name="name"
 									value={name}
 									onChange={(evt) => setName(evt.target.value)}
 								/>
-							</p>
-							<p>
+							</div>
+							<div className="mt-2">
 								<label htmlFor="email">Email</label>
+							</div>
+							<div>
 								<input
 									id="email"
+									className="w-full"
 									name="email"
 									value={email}
 									onChange={(evt) => setEmail(evt.target.value)}
 								/>
-							</p>
-							<p>
+							</div>
+							<div className="mt-2">
 								<label htmlFor="password">Password</label>
+							</div>
+							<div>
 								<input
 									id="password"
+									className="w-full"
 									name="Password"
 									value={password}
 									type="password"
 									onChange={(evt) => setPassword(evt.target.value)}
 								/>
-							</p>
-							<Button
-								variant="outline"
-								className="mt-4"
-								type="submit"
-								disabled={!name || !email || !password}
-							>
-								Create Account
-							</Button>
+							</div>
+							<div className="mt-4 text-center">
+								<Button
+									variant="outline"
+									type="submit"
+									disabled={!name || !email || !password}
+								>
+									Create Account
+								</Button>
+							</div>
 						</form>
 					</div>
 				</>
@@ -90,6 +100,6 @@ export default function SignupForm() {
 					</div>
 				</div>
 			)}
-		</>
+		</div>
 	);
 }
