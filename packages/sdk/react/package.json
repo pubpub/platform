@@ -1,0 +1,11 @@
+{
+	"main": "../dist/react/index.js",
+	"types": "../dist/react/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./../dist/react/index.js",
+			"require": "./../dist/react/index.cjs",
+			"types": "./../dist/react/index.d.ts"
+		}
+	}
+}

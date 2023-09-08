@@ -14,7 +14,14 @@ import {
 	Icon,
 	Input,
 	useToast,
+	Card,
+	CardHeader,
+	CardFooter,
+	CardContent,
+	CardTitle,
+	CardDescription,
 } from "ui";
+import { cn } from "utils";
 import * as z from "zod";
 import { configure } from "./actions";
 
@@ -57,32 +64,53 @@ export function Configure(props: Props) {
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<FormField
-					control={form.control}
-					name="pubTypeId"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>PubType Id</FormLabel>
-							<FormControl>
-								<Input {...field} />
-							</FormControl>
-							<FormDescription>Submitted pubs will be of this type.</FormDescription>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<Input type="hidden" name="instanceId" value={props.instanceId} />
-				<Button variant="outline" onClick={() => window.history.back()}>
-					Go back
-				</Button>
-				<Button variant="outline" type="submit">
-					Configure
-					{form.formState.isSubmitting && (
-						<Icon.Spinner className="h-4 w-4 animate-spin" />
-					)}
-				</Button>
+				<Card>
+					<CardHeader>
+						<CardTitle>Submission Settings</CardTitle>
+						<CardDescription>
+							This form contains fields used to configure an instance of the
+							submissions integration.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<Input type="hidden" name="instanceId" value={props.instanceId} />
+						<FormField
+							control={form.control}
+							name="pubTypeId"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Pub Type</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										The pub type determines the fields available on the
+										submission form.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</CardContent>
+					<CardFooter className={cn("flex justify-between")}>
+						<Button
+							variant="outline"
+							onClick={(e) => {
+								e.preventDefault();
+								window.history.back();
+							}}
+						>
+							Go Back
+						</Button>
+						<Button type="submit" disabled={!form.formState.isValid}>
+							Configure
+							{form.formState.isSubmitting && (
+								<Icon.Spinner className="h-4 w-4 ml-4 animate-spin" />
+							)}
+						</Button>
+					</CardFooter>
+				</Card>
 			</form>
-			<FormMessage />
 		</Form>
 	);
 }

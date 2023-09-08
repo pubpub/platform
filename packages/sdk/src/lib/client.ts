@@ -1,16 +1,5 @@
 import { ValidationError, PubPubError, ResponseError, ZodError } from "./errors";
-import { Manifest } from "./types";
-
-// TODO: derive this type from core API contract
-export type User = {
-	id: string;
-	slug: string;
-	email: string;
-	name: string;
-	avatar?: string | null;
-	createdAt: Date;
-	updatedAt: Date;
-};
+import { Manifest, User } from "./types";
 
 export type Get<T extends Manifest> = (
 	| Extract<keyof T["register"], string>
