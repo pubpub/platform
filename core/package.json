@@ -20,7 +20,7 @@
 	"dependencies": {
 		"@faker-js/faker": "^8.0.2",
 		"@prisma/client": "^5.2.0",
-		"@supabase/supabase-js": "^2.25.0",
+		"@supabase/supabase-js": "^2.33.2",
 		"@ts-rest/core": "^3.28.0",
 		"@ts-rest/next": "^3.28.0",
 		"@ts-rest/open-api": "^3.28.0",
@@ -55,7 +55,6 @@
 		"@types/uuid": "^9.0.2",
 		"autoprefixer": "^10.4.14",
 		"dotenv-cli": "^7.2.1",
-		"encoding": "^0.1.13",
 		"postcss": "^8.4.27",
 		"prisma": "^5.2.0",
 		"supabase": "^1.68.6",
