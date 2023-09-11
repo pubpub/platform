@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm, useFormContext } from "react-hook-form";
 import {
 	Button,
@@ -27,8 +27,9 @@ import {
 	TooltipTrigger,
 	useFormField,
 	useToast,
+	useLocalStorage,
 } from "ui";
-import { DOI_REGEX, URL_REGEX, cn, normalizeDoi } from "utils";
+import { DOI_REGEX, URL_REGEX, cn, isDoi, normalizeDoi } from "utils";
 import * as z from "zod";
 import { fetchMetadataUsingIdentifier, submit } from "./actions";
 
@@ -42,7 +43,6 @@ const schema = z.object({
 	Title: z.string().min(1, "Title is required"),
 	URL: z.string().regex(URL_REGEX, "Invalid URL"),
 	"Manager's Notes": z.string(),
-	instanceId: z.string(),
 });
 
 type LoadMetadataProps = {
@@ -120,27 +120,25 @@ const FetchMetadataButton = (props: LoadMetadataProps) => {
 
 export function Submit(props: Props) {
 	const { toast } = useToast();
-
+	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		resolver: zodResolver(schema),
 		defaultValues: {
+			"Manager's Notes": "",
+			Title: "",
 			Description: "",
 			DOI: "",
-			Title: "",
 			URL: "",
-			"Manager's Notes": "",
-			instanceId: props.instanceId,
 		},
 	});
 
-	const onSubmit = async (values: z.infer<typeof schema>) => {
-		const { instanceId, ...pub } = values;
+	const onSubmit = async (pub: z.infer<typeof schema>) => {
 		if ("DOI" in pub) {
 			pub.DOI = normalizeDoi(pub.DOI);
 		}
-		const result = await submit(instanceId, pub);
+		const result = await submit(props.instanceId, pub);
 		if ("error" in result) {
 			toast({
 				title: "Error",
@@ -156,6 +154,16 @@ export function Submit(props: Props) {
 		}
 	};
 
+	const values = form.watch();
+	useEffect(() => {
+		persist(values);
+	}, [values]);
+
+	const { reset } = form;
+	useEffect(() => {
+		reset(persistedValues, { keepDefaultValues: true });
+	}, [reset]);
+
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -165,7 +173,6 @@ export function Submit(props: Props) {
 						<CardDescription>Create a new submission.</CardDescription>
 					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>
-						<Input type="hidden" name="instanceId" value={props.instanceId} />
 						<FormField
 							control={form.control}
 							name="Title"
@@ -207,7 +214,6 @@ export function Submit(props: Props) {
 								control={form.control}
 								name="DOI"
 								render={({ field }) => {
-									const { isDirty, invalid } = form.getFieldState(field.name);
 									return (
 										<FormItem className={cn("flex-1")}>
 											<FormLabel>DOI</FormLabel>
@@ -216,9 +222,9 @@ export function Submit(props: Props) {
 													<Input {...field} />
 													<FetchMetadataButton
 														value={
-															!isDirty || invalid
-																? ""
-																: normalizeDoi(field.value)
+															isDoi(field.value)
+																? normalizeDoi(field.value)
+																: ""
 														}
 													/>
 												</div>
