@@ -15,12 +15,15 @@ import {
 } from "ui";
 import Image from "next/image";
 import { PubPayload, StagePayload } from "~/lib/types";
+import { move, claim } from "../stages/actions";
 
 type Props = {
 	pub: PubPayload;
 	token: string;
 	stages?: StagePayload[];
+	stage?: StagePayload;
 };
+
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 const getTitle = (pub: Props["pub"]) => {
@@ -90,6 +93,7 @@ const getUsers = (community: PubPayload["community"]) => {
 		community.members.map((member) => {
 			return {
 				id: member.id,
+				userId: member.userId,
 				name: member.user.name,
 				email: member.user.email,
 				avatar: member.user.avatar,
@@ -103,10 +107,12 @@ const getUsers = (community: PubPayload["community"]) => {
 	);
 };
 
-const PubRow: React.FC<Props> = function ({ pub, token, stages }) {
+const PubRow: React.FC<Props> = function (props) {
+	const { pub, token, stages, stage } = props;
 	const buttons = getButtons(pub, token);
 	const members = getUsers(pub.community);
 	const [open, setOpen] = React.useState(false);
+
 	return (
 		<div className="pt-2 pb-2">
 			<div className="flex items-center justify-between">
@@ -162,29 +168,37 @@ const PubRow: React.FC<Props> = function ({ pub, token, stages }) {
 				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
 				<div className="flex items-end shrink-0">
 					{/* TODO: if no assigned members, don't show move button to non admin */}
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button size="sm" variant="outline" className="ml-1">
-								Move
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent>
-							<div className="flex flex-col">
-								<div className="mb-4">
-									<b>Move this pub to:</b>
+					{stage && (
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button size="sm" variant="outline" className="ml-1">
+									Move
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent>
+								<div className="flex flex-col">
+									<div className="mb-4">
+										<b>Move this pub to:</b>
+									</div>
+									{stages
+										? stages.map((s) => {
+												return s.id === stage.id ? null : (
+													<Button
+														variant="ghost"
+														key={s.name}
+														onClick={async () =>
+															await move(pub.id, stage.id, s.id)
+														}
+													>
+														{s.name}
+													</Button>
+												);
+										  })
+										: "No stages are present in your community"}
 								</div>
-								{stages
-									? stages.map((stage) => {
-											return (
-												<Button variant="ghost" key={stage.name}>
-													{stage.name}
-												</Button>
-											);
-									  })
-									: "No stages are present in your community"}
-							</div>
-						</PopoverContent>
-					</Popover>
+							</PopoverContent>
+						</Popover>
+					)}
 					<Popover>
 						<PopoverTrigger asChild>
 							<Button size="sm" variant="outline" className="ml-1">
@@ -223,7 +237,22 @@ const PubRow: React.FC<Props> = function ({ pub, token, stages }) {
 														have been assigned to this Pub.
 													</CardContent>
 													<CardFooter className="flex flex-row">
-														<Button variant="default">Assign</Button>
+														{stage ? (
+															<Button
+																variant="default"
+																onClick={async () =>
+																	await claim(
+																		pub.id,
+																		member.userId,
+																		stage.id
+																	)
+																}
+															>
+																Assign
+															</Button>
+														) : (
+															"This pub isnt on a stage yet."
+														)}
 														<Button
 															className="mx-3"
 															variant="secondary"

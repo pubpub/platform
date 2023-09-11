@@ -56,6 +56,7 @@ const StageList: React.FC<Props> = function ({ stages, token }) {
 												pub={pub}
 												token={token}
 												stages={stages}
+												stage={stage}
 											/>
 											{index < list.length - 1 && <hr />}
 										</Fragment>
