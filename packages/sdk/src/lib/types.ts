@@ -1,6 +1,6 @@
 export type Manifest = {
-	read?: { [key: string]: { id: string } } | "*";
-	write?: { [key: string]: { id: string } } | "*";
+	read?: { [key: string]: { id: string } } | string;
+	write?: { [key: string]: { id: string } } | string;
 	register?: { [key: string]: { id: string } };
 };
 

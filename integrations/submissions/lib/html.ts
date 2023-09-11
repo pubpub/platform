@@ -101,10 +101,11 @@ export const makeExtract = <T extends TagMappings>(...tagMappings: T) => {
 			parser.on("startTag", onStartTag);
 			get(url, (res) => {
 				// Follow redirects.
-				if (res.statusCode === 302) {
+				if (res.statusCode === 301 || res.statusCode === 302) {
 					return resolve(extract(expect(res.headers.location)));
 				}
 				res.on("data", (chunk) => {
+					console.log(chunk.toString());
 					parser.write(chunk.toString());
 				});
 				res.on("end", () => {

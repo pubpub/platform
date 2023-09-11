@@ -31,7 +31,7 @@ import {
 } from "ui";
 import { DOI_REGEX, URL_REGEX, cn, isDoi, normalizeDoi } from "utils";
 import * as z from "zod";
-import { fetchMetadataUsingIdentifier, submit } from "./actions";
+import { resolveMetadata, submit } from "./actions";
 
 type Props = {
 	instanceId: string;
@@ -59,39 +59,37 @@ const FetchMetadataButton = (props: LoadMetadataProps) => {
 
 	const onFetchMetadata = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 		event.preventDefault();
-		const update = await fetchMetadataUsingIdentifier(identifierKind, identifierValue);
+		const update = await resolveMetadata(identifierKind, identifierValue);
 		if ("error" in update) {
 			toast({
 				title: "Error",
 				description: (update as { error: string }).error,
 				variant: "destructive",
 			});
-		} else {
-			const values = form.getValues();
-			const updateEntries = Object.entries(update).filter(
-				([key, value]) => Boolean(value) && key in values
-			);
-			const updateFields = updateEntries.map(([key]) => key);
-			if (updateEntries.length === 0) {
-				toast({
-					title: "Error",
-					description: `We couldn't find any information about that ${identifierKind}`,
-					variant: "destructive",
-				});
-			} else {
-				for (const [field, value] of updateEntries) {
-					form.setValue(field, value, { shouldDirty: true });
-				}
-				form.trigger(updateFields);
-				toast({
-					title: "Success",
-					description: `Filled ${updateFields.join(", ")} using the ${identifierKind}`,
-				});
-			}
+			return;
 		}
+		const values = form.getValues();
+		const updated = Object.keys(update);
+		if (updated.length === 0) {
+			toast({
+				title: "Error",
+				description: `We couldn't find any information about that ${identifierKind}`,
+				variant: "destructive",
+			});
+			return;
+		}
+		for (const field in values) {
+			form.setValue(field, update[field] ?? "", {
+				shouldDirty: true,
+				shouldValidate: field in update,
+			});
+		}
+		const fields = updated.join(", ");
+		toast({
+			title: "Success",
+			description: `Filled ${fields} using the ${identifierKind}`,
+		});
 	};
-
-	const disabled = !state.isDirty || state.invalid;
 
 	return (
 		<TooltipProvider>
@@ -101,7 +99,7 @@ const FetchMetadataButton = (props: LoadMetadataProps) => {
 						variant="ghost"
 						className={cn("px-0 ml-2")}
 						onClick={(event) => startTransition(() => onFetchMetadata(event))}
-						disabled={disabled}
+						disabled={!state.isDirty || state.invalid}
 					>
 						{pending ? (
 							<Icon.Loader2 height={18} className="animate-spin" />
@@ -188,7 +186,6 @@ export function Submit(props: Props) {
 									<FormDescription>
 										The title of the work being submitted.
 									</FormDescription>
-
 									<FormMessage />
 								</FormItem>
 							)}
