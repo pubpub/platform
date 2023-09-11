@@ -34,6 +34,9 @@ module.exports = {
 				"muted-foreground": "hsl(var(--muted-foreground))",
 				accent: "hsl(var(--accent))",
 				"accent-foreground": "hsl(var(--accent-foreground))",
+				input: "hsl(var(--input))",
+				border: "hsl(var(--border))",
+				ring: "hsl(var(--ring))",
 			},
 			keyframes: {
 				"accordion-down": {

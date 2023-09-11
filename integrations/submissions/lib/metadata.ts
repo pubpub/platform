@@ -1,7 +1,6 @@
-import { SAXParser } from "parse5-sax-parser";
-import { get } from "node:https";
-import { isDoi, expect } from "utils";
+import { isDoi } from "utils";
 import { normalizeDoi } from "../../../packages/utils/dist";
+import { makeExtract } from "./html";
 
 export const makePubFromTitle = async (title: string) => {
 	const response = await fetch(
@@ -39,6 +38,86 @@ export const makePubFromCrossrefDoi = async (doi: string) => {
 	return extractFieldsFromCrossrefWork(work);
 };
 
+const extract = makeExtract(
+	{
+		mapTo: "Title",
+		rank: 0,
+		tagName: "meta",
+		tagTypeAttr: "name",
+		tagTypeAttrValue: "og:title",
+		tagValueAttr: "content",
+	},
+	{
+		mapTo: "Title",
+		rank: 1,
+		tagName: "meta",
+		tagTypeAttr: "name",
+		tagTypeAttrValue: "dc.title",
+		tagValueAttr: "content",
+	},
+	{
+		mapTo: "Description",
+		rank: 0,
+		tagName: "meta",
+		tagTypeAttr: "name",
+		tagTypeAttrValue: "og:description",
+		tagValueAttr: "content",
+	},
+	{
+		mapTo: "Description",
+		rank: 1,
+		tagName: "meta",
+		tagTypeAttr: "name",
+		tagTypeAttrValue: "description",
+		tagValueAttr: "content",
+	},
+	{
+		mapTo: "DOI",
+		rank: 0,
+		tagName: "meta",
+		tagTypeAttr: "name",
+		tagTypeAttrValue: "citation_doi",
+		tagValueAttr: "content",
+	},
+	{
+		mapTo: "DOI",
+		rank: 1,
+		tagName: "meta",
+		tagTypeAttr: "name",
+		tagTypeAttrValue: "dc.identifier",
+		tagValueAttr: "content",
+	},
+	{
+		mapTo: "URL",
+		rank: 0,
+		tagName: "meta",
+		tagTypeAttr: "property",
+		tagTypeAttrValue: "og:url",
+		tagValueAttr: "content",
+	},
+	{
+		mapTo: "URL",
+		rank: 1,
+		tagName: "link",
+		tagTypeAttr: "rel",
+		tagTypeAttrValue: "canonical",
+		tagValueAttr: "href",
+	}
+);
+
+const HTML_ENTITIES = /&(nbsp|amp|quot|lt|gt);/g;
+const HTML_ENTITIES_MAP = {
+	nbsp: " ",
+	amp: "&",
+	quot: '"',
+	lt: "<",
+	gt: ">",
+};
+
+const replaceHtmlEntites = (string: string) => {
+	return string.replace(HTML_ENTITIES, (_, entity) => HTML_ENTITIES_MAP[entity]);
+};
+
 export const makePubFromUrl = async (url: string) => {
 	// If the URL contains a DOI, try to fetch metadata from crossref.
 	if (isDoi(url)) {
@@ -51,80 +130,12 @@ export const makePubFromUrl = async (url: string) => {
 		// from the URL.
 	}
 	// We use a SAX parser to avoid loading the entire HTML document into memory.
-	const parser = new SAXParser();
-	const metadata = {};
-	parser.on("startTag", (tag) => {
-		if (tag.tagName === "link") {
-			let href: string | undefined;
-			for (let i = 0; i < tag.attrs.length; i++) {
-				const attr = tag.attrs[i];
-				if (attr.name === "rel") {
-					if (attr.value !== "canonical") {
-						return;
-					}
-				} else if (attr.name === "href") {
-					href = attr.value;
-				}
-			}
-			if (!href) {
-				return;
-			}
-			metadata["URL"] = href;
-		} else if (tag.tagName === "meta") {
-			let name: string | undefined;
-			let content: string | undefined;
-			for (let i = 0; i < tag.attrs.length; i++) {
-				const attr = tag.attrs[i];
-				if (attr.name === "name") {
-					name = attr.value;
-				} else if (attr.name === "content") {
-					content = attr.value;
-				}
-			}
-			if (!name || !content) {
-				return;
-			}
-			switch (name.toLowerCase()) {
-				case "dc.identifier":
-				case "citation_doi":
-				case "prism.doi":
-					metadata["DOI"] ??= normalizeDoi(content);
-					break;
-				case "og:description":
-				case "citation_abstract":
-					metadata["Description"] ??= content;
-					break;
-				case "og:title":
-				case "citation_title":
-					metadata["Title"] ??= content;
-					break;
-				case "citation_public_url":
-					metadata["URL"] ??= content;
-					break;
-				default:
-					return;
-			}
-		} else if (tag.tagName === "body") {
-			// We've reached the body tag, so we can stop parsing page metadata.
-			parser.stop();
-		}
-	});
-	return new Promise((resolve, reject) => {
-		get(url, (res) => {
-			// Follow redirects.
-			if (res.statusCode === 302) {
-				return resolve(makePubFromUrl(expect(res.headers.location)));
-			}
-			res.on("data", (chunk) => {
-				parser.write(chunk.toString());
-			});
-			res.on("end", () => {
-				parser.end();
-				resolve(metadata);
-			});
-			res.on("error", (error) => {
-				reject(error);
-			});
-		});
-	});
+	const metadata = await extract(url);
+	if ("DOI" in metadata) {
+		metadata.DOI = normalizeDoi(metadata.DOI);
+	}
+	if ("Description" in metadata) {
+		metadata.Description = replaceHtmlEntites(metadata.Description);
+	}
+	return metadata;
 };
