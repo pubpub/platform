@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { Button } from "ui";
 import PubRow from "./PubRow";
-import { PubPayload } from "~/lib/types";
+import { PubPayload, StagePayload } from "~/lib/types";
 
-type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string; stages: any[] };
+type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string; stages: StagePayload[] };
 
 const getParent = (pub: Props["pubs"][number]) => {
 	return pub.values.find((value) => {
