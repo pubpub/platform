@@ -51,12 +51,7 @@ const StageList: React.FC<Props> = function ({ stages, token }) {
 								{stage.pubs.map((pub, index, list) => {
 									return (
 										<Fragment key={pub.id}>
-											<PubRow
-												key={pub.id}
-												pub={pub}
-												community={pub.community}
-												token={token}
-											/>
+											<PubRow key={pub.id} pub={pub} token={token} />
 											{index < list.length - 1 && <hr />}
 										</Fragment>
 									);
