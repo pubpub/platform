@@ -105,7 +105,7 @@ export function Configure(props: Props) {
 						<Button type="submit" disabled={!form.formState.isValid}>
 							Configure
 							{form.formState.isSubmitting && (
-								<Icon.Spinner className="h-4 w-4 ml-4 animate-spin" />
+								<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
 							)}
 						</Button>
 					</CardFooter>

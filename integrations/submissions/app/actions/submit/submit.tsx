@@ -283,7 +283,7 @@ export function Submit(props: Props) {
 						</Button>
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
-								<Icon.Spinner className="h-4 w-4 mr-2 animate-spin" />
+								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
 							)}
 							Submit Pub
 						</Button>
