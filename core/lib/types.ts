@@ -21,3 +21,10 @@ export const pubInclude = {
 } satisfies Prisma.PubInclude;
 
 export type PubPayload = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
+
+export const stageInclude = {
+	pubs: { include: pubInclude },
+	integrationInstances: { include: { integration: true } },
+} satisfies Prisma.StageInclude;
+
+export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;

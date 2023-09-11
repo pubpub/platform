@@ -1,11 +1,8 @@
-import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
 import StageList from "./StageList";
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
-import { pubInclude } from "~/lib/types";
-
-export type StagesData = Prisma.PromiseReturnType<typeof getCommunityStages>;
+import { stageInclude } from "~/lib/types";
 
 const getCommunityStages = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({
@@ -17,10 +14,7 @@ const getCommunityStages = async (communitySlug: string) => {
 	// When trying to render the workflows a member can see. We look at the pubs they can see, get the workflows associated, and then show all those.
 	return await prisma.stage.findMany({
 		where: { communityId: community.id },
-		include: {
-			pubs: { include: pubInclude },
-			integrationInstances: { include: { integration: true } },
-		},
+		include: stageInclude,
 	});
 };
 

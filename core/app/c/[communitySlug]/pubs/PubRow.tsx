@@ -14,11 +14,12 @@ import {
 	DialogTrigger,
 } from "ui";
 import Image from "next/image";
-import { PubPayload } from "~/lib/types";
+import { PubPayload, StagePayload } from "~/lib/types";
 
 type Props = {
 	pub: PubPayload;
 	token: string;
+	stages?: StagePayload[];
 };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
@@ -102,7 +103,7 @@ const getUsers = (community: PubPayload["community"]) => {
 	);
 };
 
-const PubRow: React.FC<Props> = function ({ pub, token }) {
+const PubRow: React.FC<Props> = function ({ pub, token, stages }) {
 	const buttons = getButtons(pub, token);
 	const members = getUsers(pub.community);
 	const [open, setOpen] = React.useState(false);
@@ -172,11 +173,11 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 								<div className="mb-4">
 									<b>Move this pub to:</b>
 								</div>
-								{stageNames
-									? stageNames.map((name) => {
+								{stages
+									? stages.map((stage) => {
 											return (
-												<Button variant="ghost" key={name}>
-													{name}
+												<Button variant="ghost" key={stage.name}>
+													{stage.name}
 												</Button>
 											);
 									  })
