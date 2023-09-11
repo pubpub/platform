@@ -15,12 +15,21 @@ export const makePubFromTitle = async (title: string) => {
 		},
 	} = await response.json();
 	if (work !== undefined) {
-		return extractFieldsFromCrossrefWork(work);
+		return derivePubFromCrossrefWork(work);
 	}
 	return null;
 };
 
-const extractFieldsFromCrossrefWork = (work: any) => {
+const derivePubFromCSL = (csl: any) => {
+	return {
+		Description: csl.abstract,
+		DOI: csl.DOI,
+		Title: csl.title,
+		URL: csl.URL,
+	};
+};
+
+const derivePubFromCrossrefWork = (work: any) => {
 	return {
 		Description: work.abstract,
 		DOI: work.DOI,
@@ -29,13 +38,17 @@ const extractFieldsFromCrossrefWork = (work: any) => {
 	};
 };
 
-export const makePubFromCrossrefDoi = async (doi: string) => {
-	const response = await fetch(`https://api.crossref.org/works/${doi}`);
+export const makePubFromDoi = async (doi: string) => {
+	const response = await fetch(`https://doi.org/${doi}`, {
+		headers: {
+			Accept: "application/vnd.citationstyles.csl+json",
+		},
+	});
 	if (!response.ok) {
 		return null;
 	}
-	const { message: work } = await response.json();
-	return extractFieldsFromCrossrefWork(work);
+	const csl = await response.json();
+	return derivePubFromCSL(csl);
 };
 
 const extract = makeExtract(
@@ -119,22 +132,14 @@ const replaceHtmlEntites = (string: string) => {
 };
 
 export const makePubFromUrl = async (url: string) => {
-	// If the URL contains a DOI, try to fetch metadata from crossref.
-	if (isDoi(url)) {
-		const pub = await makePubFromCrossrefDoi(normalizeDoi(url));
-		// Crossref returned metadata for this DOI.
-		if (pub !== null) {
-			return pub;
-		}
-		// Crossref doesn't have metadata for this DOI, so try to scrape metadata
-		// from the URL.
-	}
 	// We use a SAX parser to avoid loading the entire HTML document into memory.
 	const metadata = await extract(url);
-	if ("DOI" in metadata) {
+	if (typeof metadata.DOI === "string") {
 		metadata.DOI = normalizeDoi(metadata.DOI);
+		// If a DOI was found in the HTML, try to fetch metadata from doi.org.
+		Object.assign(metadata, await makePubFromDoi(metadata.DOI));
 	}
-	if ("Description" in metadata) {
+	if (typeof metadata.Description === "string") {
 		metadata.Description = replaceHtmlEntites(metadata.Description);
 	}
 	return metadata;

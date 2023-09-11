@@ -8,7 +8,13 @@ export type Get<T extends Manifest> = (
 )[];
 
 export type Pub<T extends Manifest> = Record<
-	Extract<Extract<keyof T["register"] | keyof T["write"], string>, string>,
+	Extract<
+		Extract<
+			keyof T["register"] | (T["write"] extends string ? string : keyof T["write"]),
+			string
+		>,
+		string
+	>,
 	unknown
 >;
 
@@ -104,13 +110,17 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 	// const read = new Set(manifest.read ? [write.values(), ...Object.keys(manifest.read)] : write);
 	const canWrite = (field: string) => {
 		if (manifest.write === undefined) return false;
-		if (manifest.write === "*") return true;
+		if (typeof manifest.write === "string") {
+			return manifest.write === "*";
+		}
 		return field in manifest.write;
 	};
 	const canRead = (field: string) => {
 		if (canWrite(field)) return true;
 		if (manifest.read === undefined) return false;
-		if (manifest.read === "*") return true;
+		if (typeof manifest.read === "string") {
+			return manifest.read === "*";
+		}
 		return field in manifest.read;
 	};
 	return {
