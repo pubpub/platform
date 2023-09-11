@@ -100,8 +100,19 @@ const makeRequest = async (
 };
 
 export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Client<T> => {
-	const write = new Set(manifest.write ? Object.keys(manifest.write) : null);
-	const read = new Set(manifest.read ? [write.values(), ...Object.keys(manifest.read)] : write);
+	// const write = new Set(manifest.write ? Object.keys(manifest.write) : null);
+	// const read = new Set(manifest.read ? [write.values(), ...Object.keys(manifest.read)] : write);
+	const canWrite = (field: string) => {
+		if (manifest.write === undefined) return false;
+		if (manifest.write === "*") return true;
+		return field in manifest.write;
+	};
+	const canRead = (field: string) => {
+		if (canWrite(field)) return true;
+		if (manifest.read === undefined) return false;
+		if (manifest.read === "*") return true;
+		return field in manifest.read;
+	};
 	return {
 		async auth(instanceId, token) {
 			try {
@@ -118,12 +129,12 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 		},
 		async create(instanceId, pub, pubTypeId) {
 			for (let field in pub) {
-				if (!write.has(field)) {
+				if (!canWrite(field)) {
 					throw new ValidationError(`${field} is not writable`);
 				}
 			}
 			try {
-				return makeRequest(instanceId, apiKey, "POST", "pubs", {
+				return await makeRequest(instanceId, apiKey, "POST", "pubs", {
 					pubTypeId,
 					pubFields: pub,
 				});
@@ -134,11 +145,12 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 		async read(instanceId, pubId, ...fields) {
 			try {
 				for (let i = 0; i < fields.length; i++) {
-					if (!read.has(fields[i])) {
-						throw new ValidationError(`${fields[i]} is not readable`);
+					const field = fields[i];
+					if (!canRead(field)) {
+						throw new ValidationError(`${field} is not readable`);
 					}
 				}
-				return makeRequest(instanceId, apiKey, "GET", "pubs", pubId);
+				return await makeRequest(instanceId, apiKey, "GET", "pubs", pubId);
 			} catch (cause) {
 				throw new PubPubError("Failed to get Pub", { cause });
 			}
@@ -146,11 +158,11 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 		async update(instanceId, pubId, patch) {
 			try {
 				for (const field in patch) {
-					if (!write.has(field)) {
+					if (!canWrite(field)) {
 						throw new ValidationError(`${field} is not writable`);
 					}
 				}
-				return makeRequest(instanceId, apiKey, "PATCH", `pubs/${pubId}`, patch);
+				return await makeRequest(instanceId, apiKey, "PATCH", `pubs/${pubId}`, patch);
 			} catch (cause) {
 				throw new PubPubError("Failed to update Pub", { cause });
 			}

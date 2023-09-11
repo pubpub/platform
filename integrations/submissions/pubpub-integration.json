@@ -1,9 +1,4 @@
 {
 	"name": "submissions",
-	"read": {},
-	"write": {
-		"Title": {
-			"id": "aa63cab5-3729-4a12-813b-eae316eceb69"
-		}
-	}
+	"write": "*"
 }
