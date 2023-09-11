@@ -4,11 +4,7 @@ import { Button } from "ui";
 import PubRow from "./PubRow";
 import { PubPayload, StagePayload } from "~/lib/types";
 
-<<<<<<< HEAD
 type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string; stages: StagePayload[] };
-=======
-type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string; stageNames: any[] };
->>>>>>> 360b7f7 (make stage names in pages)
 
 const getParent = (pub: Props["pubs"][number]) => {
 	return pub.values.find((value) => {
@@ -26,11 +22,7 @@ const getChildren = (pubs: Props["pubs"], parentId: string) => {
 	});
 };
 
-<<<<<<< HEAD
 const PubList: React.FC<Props> = function ({ pubs, topPubs, token, stages }) {
-=======
-const PubList: React.FC<Props> = function ({ pubs, topPubs, token, stageNames }) {
->>>>>>> 360b7f7 (make stage names in pages)
 	const pubsToRender = topPubs || getTopPubs(pubs);
 	const [jankyExpandState, setJankyExpandState] = useState({});
 	return (

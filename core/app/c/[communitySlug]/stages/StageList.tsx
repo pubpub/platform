@@ -10,12 +10,6 @@ type Props = { stages: StagePayload[]; token: string };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 const StageList: React.FC<Props> = function ({ stages, token }) {
-	const stageNames = (stages: Props["stages"]) => {
-		return stages.map((stage) => {
-			return stage.name;
-		});
-	};
-
 	return (
 		<div>
 			{stages.map((stage) => {
