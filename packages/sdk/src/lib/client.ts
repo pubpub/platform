@@ -119,7 +119,7 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 		async create(instanceId, pub, pubTypeId) {
 			for (let field in pub) {
 				if (!write.has(field)) {
-					throw new ValidationError(`Field ${field} is not writeable`);
+					throw new ValidationError(`${field} is not writable`);
 				}
 			}
 			try {
@@ -135,7 +135,7 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 			try {
 				for (let i = 0; i < fields.length; i++) {
 					if (!read.has(fields[i])) {
-						throw new ValidationError(`Field ${fields[i]} is not readable`);
+						throw new ValidationError(`${fields[i]} is not readable`);
 					}
 				}
 				return makeRequest(instanceId, apiKey, "GET", "pubs", pubId);
@@ -147,7 +147,7 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 			try {
 				for (const field in patch) {
 					if (!write.has(field)) {
-						throw new ValidationError(`Field ${field} is not writeable`);
+						throw new ValidationError(`${field} is not writable`);
 					}
 				}
 				return makeRequest(instanceId, apiKey, "PATCH", `pubs/${pubId}`, patch);
