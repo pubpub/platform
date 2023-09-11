@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { Button } from "ui";
 import PubRow from "./PubRow";
-import { PubsData } from "./page";
+import { PubPayload } from "~/lib/types";
 
-type Props = { pubs: NonNullable<PubsData>; topPubs?: NonNullable<PubsData>; token: string };
+type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string };
 
 const getParent = (pub: Props["pubs"][number]) => {
 	return pub.values.find((value) => {
@@ -52,7 +52,7 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
 								<div className="w-[40px]" />
 							)}
 							<div className="flex-1">
-								<PubRow pub={pub} token={token} community={pub.community} />
+								<PubRow pub={pub} token={token} />
 							</div>
 						</div>
 

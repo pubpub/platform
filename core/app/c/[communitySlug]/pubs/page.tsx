@@ -4,8 +4,7 @@ import { getLoginData } from "~/lib/auth/loginData";
 import PubList from "./PubList";
 import PubHeader from "./PubHeader";
 import { createToken } from "~/lib/server/token";
-
-export type PubsData = Prisma.PromiseReturnType<typeof getCommunityPubs>;
+import { pubInclude } from "~/lib/types";
 
 const getCommunityPubs = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({
@@ -17,19 +16,7 @@ const getCommunityPubs = async (communitySlug: string) => {
 	return await prisma.pub.findMany({
 		where: { communityId: community.id },
 		include: {
-			pubType: true,
-			values: { include: { field: true } },
-			stages: { include: { integrationInstances: { include: { integration: true } } } },
-			integrationInstances: { include: { integration: true } },
-			community: {
-				include: {
-					members: {
-						include: {
-							user: true,
-						},
-					},
-				},
-			},
+			...pubInclude,
 		},
 	});
 };

@@ -3,6 +3,7 @@ import prisma from "~/prisma/db";
 import StageList from "./StageList";
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
+import { pubInclude } from "~/lib/types";
 
 export type StagesData = Prisma.PromiseReturnType<typeof getCommunityStages>;
 
@@ -17,27 +18,7 @@ const getCommunityStages = async (communitySlug: string) => {
 	return await prisma.stage.findMany({
 		where: { communityId: community.id },
 		include: {
-			pubs: {
-				include: {
-					pubType: true,
-					values: { include: { field: true } },
-					stages: {
-						include: {
-							integrationInstances: { include: { integration: true } },
-						},
-					},
-					integrationInstances: { include: { integration: true } },
-					community: {
-						include: {
-							members: {
-								include: {
-									user: true,
-								},
-							},
-						},
-					},
-				},
-			},
+			pubs: { include: pubInclude },
 			integrationInstances: { include: { integration: true } },
 		},
 	});

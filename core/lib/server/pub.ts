@@ -90,11 +90,13 @@ export const createPub = async (instanceId: string, body: PubPostBody) => {
 					data: pubValues,
 				},
 			},
-			stages: instance.stageId ? {
-				connect: {
-					id: instance.stageId
-				}
-			} : undefined,
+			stages: instance.stageId
+				? {
+						connect: {
+							id: instance.stageId,
+						},
+				  }
+				: undefined,
 		},
 	});
 

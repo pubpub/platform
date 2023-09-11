@@ -13,13 +13,12 @@ import {
 	DialogContent,
 	DialogTrigger,
 } from "ui";
-import { PubsData } from "./page";
 import Image from "next/image";
+import { PubPayload } from "~/lib/types";
 
 type Props = {
-	pub: NonNullable<PubsData>[number];
+	pub: PubPayload;
 	token: string;
-	community?: NonNullable<PubsData>[number]["community"];
 };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
@@ -84,7 +83,7 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 	return buttons;
 };
 
-const getUsers = (community: Props["community"]) => {
+const getUsers = (community: PubPayload["community"]) => {
 	return (
 		community &&
 		community.members.map((member) => {
@@ -103,9 +102,9 @@ const getUsers = (community: Props["community"]) => {
 	);
 };
 
-const PubRow: React.FC<Props> = function ({ pub, community, token }) {
+const PubRow: React.FC<Props> = function ({ pub, token }) {
 	const buttons = getButtons(pub, token);
-	const members = getUsers(community);
+	const members = getUsers(pub.community);
 	const [open, setOpen] = React.useState(false);
 
 	return (
