@@ -11,7 +11,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(7)].map((x) => uuidv4());
+	const fieldIds = [...Array(8)].map(uuidv4);
 
 	await prisma.pubField.createMany({
 		data: [
@@ -23,6 +23,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			{ id: fieldIds[5], name: "Content" },
 			{ id: fieldIds[6], name: "Evaluated Paper" },
 			{ id: fieldIds[7], name: "Tags" },
+			{ id: fieldIds[8], name: "DOI" },
 		],
 	});
 
