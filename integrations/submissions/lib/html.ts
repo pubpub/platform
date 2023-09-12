@@ -1,4 +1,5 @@
-import { get } from "https";
+import * as https from "https";
+import * as http from "http";
 import { SAXParser, StartTag } from "parse5-sax-parser";
 import { expect } from "utils";
 
@@ -93,9 +94,13 @@ const makeExtractState = (tagMappings: TagMappings): ExtractState => {
 	return extractState;
 };
 
-export const makeExtract = <T extends TagMappings>(...tagMappings: T) => {
+const isHttpsUrl = (url: string) => {
+	return url.startsWith("https://");
+};
+
+export const makeExtractPageMetadata = <T extends TagMappings>(...tagMappings: T) => {
 	const normalizedTagMappings = normalizeMappings(tagMappings);
-	const extract = async (url: string): Promise<ExtractResult<T>> => {
+	const extract = async (url: string, depth = 0): Promise<ExtractResult<T>> => {
 		return new Promise((resolve, reject) => {
 			// Use a SAX parser to extract metadata from an HTML document without
 			// having to load the entire document into memory. This parser yields
@@ -161,10 +166,14 @@ export const makeExtract = <T extends TagMappings>(...tagMappings: T) => {
 				}
 			};
 			parser.on("startTag", onStartTag);
-			get(url, (res) => {
+			(isHttpsUrl(url) ? https.get : http.get)(url, (res) => {
 				// Follow redirects.
 				if (res.statusCode === 301 || res.statusCode === 302) {
-					return resolve(extract(expect(res.headers.location)));
+					if (depth > 2) {
+						parser.end();
+						return reject(new Error("Too many redirects"));
+					}
+					return resolve(extract(expect(res.headers.location), depth + 1));
 				}
 				res.on("data", (chunk) => {
 					parser.write(chunk.toString());
@@ -174,6 +183,7 @@ export const makeExtract = <T extends TagMappings>(...tagMappings: T) => {
 					resolve(extractResult);
 				});
 				res.on("error", (error) => {
+					parser.end();
 					reject(error);
 				});
 			});
