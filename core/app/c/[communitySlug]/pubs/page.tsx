@@ -21,6 +21,19 @@ const getCommunityPubs = async (communitySlug: string) => {
 	});
 };
 
+const getStages = async (communitySlug: string) => {
+	const community = await prisma.community.findUnique({
+		where: { slug: communitySlug },
+	});
+	if (!community) {
+		return null;
+	}
+	// When trying to render the workflows a member can see. We look at the pubs they can see, get the workflows associated, and then show all those.
+	return await prisma.stage.findMany({
+		where: { communityId: community.id },
+	});
+};
+
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
@@ -33,10 +46,14 @@ export default async function Page({ params }: Props) {
 	if (!pubs) {
 		return null;
 	}
+	const stages = await getStages(params.communitySlug);
+	if (!stages) {
+		return null;
+	}
 	return (
 		<>
 			<PubHeader />
-			<PubList pubs={pubs} token={token} />
+			<PubList pubs={pubs} token={token} stages={stages} />
 		</>
 	);
 }

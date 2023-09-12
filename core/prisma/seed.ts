@@ -22,11 +22,11 @@ async function createUserMembers(email, password, slug, name, prismaCommunityIds
 		email_confirm: true,
 	});
 	if (error) {
-		console.log("Error creating user", error)
-		console.log("Looking up existing supabase user")
-		const { data, error: newError } = await supabase.auth.admin.listUsers()
+		console.log("Error creating user", error);
+		console.log("Looking up existing supabase user");
+		const { data, error: newError } = await supabase.auth.admin.listUsers();
 		if (newError || !data.users) {
-			console.log("Error finding existing user", error)
+			console.log("Error finding existing user", error);
 		} else {
 			user = data.users.find((user) => user.email === email);
 		}
@@ -58,41 +58,6 @@ async function main() {
 		return { communityId: communityId, canAdmin: true };
 	});
 	prismaCommunityIds.push({ communityId: unJournalId, canAdmin: true });
-
-	const admin = await prisma.user.create({
-		data: {
-			id: faker.string.uuid(),
-			slug: "testing",
-			email: "stevie@email.com",
-			name: "Stevie Barnett",
-			avatar: "/demo/person.png",
-		},
-	});
-
-	const user1 = await prisma.user.create({
-		data: {
-			id: faker.string.uuid(),
-			slug: faker.lorem.slug(),
-			email: faker.internet.email(),
-			name: faker.person.fullName(),
-			avatar: faker.image.avatar(),
-		},
-	});
-
-	await prisma.member.createMany({
-		data: [
-			{ userId: admin.id, communityId: communityIds[0], canAdmin: true },
-			{ userId: admin.id, communityId: communityIds[1], canAdmin: true },
-			{ userId: admin.id, communityId: communityIds[2], canAdmin: true },
-			{ userId: admin.id, communityId: communityIds[3], canAdmin: true },
-			{ userId: admin.id, communityId: communityIds[4], canAdmin: true },
-			{ userId: user1.id, communityId: communityIds[0], canAdmin: false },
-			{ userId: user1.id, communityId: communityIds[1], canAdmin: false },
-			{ userId: user1.id, communityId: communityIds[2], canAdmin: false },
-			{ userId: user1.id, communityId: communityIds[3], canAdmin: false },
-			{ userId: user1.id, communityId: communityIds[4], canAdmin: false },
-		],
-	});
 
 	try {
 		await createUserMembers(

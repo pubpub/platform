@@ -1,12 +1,12 @@
 "use client";
 import { Card, CardContent } from "ui";
 import PubRow from "../pubs/PubRow";
-import { StagesData } from "./page";
 import { Button } from "ui";
 import Link from "next/link";
 import { Fragment } from "react";
+import { StagePayload } from "~/lib/types";
 
-type Props = { stages: NonNullable<StagesData>; token: string };
+type Props = { stages: StagePayload[]; token: string };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 const StageList: React.FC<Props> = function ({ stages, token }) {
@@ -51,7 +51,12 @@ const StageList: React.FC<Props> = function ({ stages, token }) {
 								{stage.pubs.map((pub, index, list) => {
 									return (
 										<Fragment key={pub.id}>
-											<PubRow key={pub.id} pub={pub} token={token} />
+											<PubRow
+												key={pub.id}
+												pub={pub}
+												token={token}
+												stages={stages}
+											/>
 											{index < list.length - 1 && <hr />}
 										</Fragment>
 									);

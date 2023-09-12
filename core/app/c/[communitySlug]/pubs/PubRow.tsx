@@ -14,11 +14,12 @@ import {
 	DialogTrigger,
 } from "ui";
 import Image from "next/image";
-import { PubPayload } from "~/lib/types";
+import { PubPayload, StagePayload } from "~/lib/types";
 
 type Props = {
 	pub: PubPayload;
 	token: string;
+	stages?: StagePayload[];
 };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
@@ -102,11 +103,10 @@ const getUsers = (community: PubPayload["community"]) => {
 	);
 };
 
-const PubRow: React.FC<Props> = function ({ pub, token }) {
+const PubRow: React.FC<Props> = function ({ pub, token, stages }) {
 	const buttons = getButtons(pub, token);
 	const members = getUsers(pub.community);
 	const [open, setOpen] = React.useState(false);
-
 	return (
 		<div className="pt-2 pb-2">
 			<div className="flex items-center justify-between">
@@ -161,9 +161,30 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 			<div className="mt-0 items-stretch flex justify-between">
 				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
 				<div className="flex items-end shrink-0">
-					<Button size="sm" variant="outline" className="ml-1">
-						Move
-					</Button>
+					{/* TODO: if no assigned members, don't show move button to non admin */}
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button size="sm" variant="outline" className="ml-1">
+								Move
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent>
+							<div className="flex flex-col">
+								<div className="mb-4">
+									<b>Move this pub to:</b>
+								</div>
+								{stages
+									? stages.map((stage) => {
+											return (
+												<Button variant="ghost" key={stage.name}>
+													{stage.name}
+												</Button>
+											);
+									  })
+									: "No stages are present in your community"}
+							</div>
+						</PopoverContent>
+					</Popover>
 					<Popover>
 						<PopoverTrigger asChild>
 							<Button size="sm" variant="outline" className="ml-1">
@@ -174,7 +195,6 @@ const PubRow: React.FC<Props> = function ({ pub, token }) {
 							<Button variant="secondary" className="mb-5">
 								Claim
 							</Button>
-
 							{members &&
 								members.map((member) => {
 									return (

@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { Button } from "ui";
 import PubRow from "./PubRow";
-import { PubPayload } from "~/lib/types";
+import { PubPayload, StagePayload } from "~/lib/types";
 
-type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string };
+type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string; stages: StagePayload[] };
 
 const getParent = (pub: Props["pubs"][number]) => {
 	return pub.values.find((value) => {
@@ -21,9 +21,11 @@ const getChildren = (pubs: Props["pubs"], parentId: string) => {
 		return getParent(pub)?.value === parentId;
 	});
 };
-const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
+
+const PubList: React.FC<Props> = function ({ pubs, topPubs, token, stages }) {
 	const pubsToRender = topPubs || getTopPubs(pubs);
 	const [jankyExpandState, setJankyExpandState] = useState({});
+	console.log(stages);
 	return (
 		<div>
 			{pubsToRender.map((pub) => {
@@ -52,14 +54,19 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
 								<div className="w-[40px]" />
 							)}
 							<div className="flex-1">
-								<PubRow pub={pub} token={token} />
+								<PubRow pub={pub} token={token} stages={stages} />
 							</div>
 						</div>
 
 						{/* @ts-ignore */}
 						{!!children.length && jankyExpandState[pub.id] && (
 							<div className="ml-6">
-								<PubList pubs={pubs} topPubs={children} token={token} />
+								<PubList
+									pubs={pubs}
+									topPubs={children}
+									token={token}
+									stages={stages}
+								/>
 							</div>
 						)}
 					</div>
