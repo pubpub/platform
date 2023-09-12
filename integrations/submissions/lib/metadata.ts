@@ -9,7 +9,7 @@ const derivePubFromCsl = (csl: any) => {
 		Description: csl.abstract,
 		DOI: csl.DOI,
 		Title: csl.title,
-		URL: csl.URL,
+		URL: csl.resource?.primary?.URL ?? csl.URL,
 	};
 };
 
@@ -21,7 +21,7 @@ const derivePubFromCrossrefWork = (work: any) => {
 		Description: work.abstract,
 		DOI: work.DOI,
 		Title: Array.isArray(work.title) ? work.title[0] : work.title,
-		URL: work.URL,
+		URL: work.resource?.primary?.URL ?? work.URL,
 	};
 };
 
@@ -61,7 +61,6 @@ export const makePubFromDoi = async (doi: string) => {
 		return null;
 	}
 	const csl = await response.json();
-	console.log(csl);
 	return derivePubFromCsl(csl);
 };
 
@@ -70,6 +69,11 @@ const extractPageMetadata = makeExtractPageMetadata(
 	{
 		mapTo: "Title",
 		rank: 0,
+		tagName: "title",
+	},
+	{
+		mapTo: "Title",
+		rank: 1,
 		tagName: "meta",
 		tagTypeAttr: "name",
 		tagTypeAttrValue: "og:title",
@@ -77,7 +81,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 	},
 	{
 		mapTo: "Title",
-		rank: 1,
+		rank: 2,
 		tagName: "meta",
 		tagTypeAttr: "name",
 		tagTypeAttrValue: "dc.title",
@@ -154,14 +158,18 @@ const replaceHtmlEntites = (string: string) => {
  * Derive a pub from the HTML of a webpage.
  */
 export const makePubFromUrl = async (url: string) => {
-	// // If the URL contains a DOI, try to fetch metadata from doi.org.
-	// if (isDoi(url)) {
-	// 	const pub = await makePubFromDoi(normalizeDoi(url));
-	// 	if (pub !== null) {
-	// 		return pub;
-	// 	}
-	// }
+	// If the URL contains a DOI, try to fetch metadata from doi.org.
+	if (isDoi(url)) {
+		const pub = await makePubFromDoi(normalizeDoi(url));
+		if (pub !== null) {
+			return pub;
+		}
+	}
+	// Extract metadata directly from the page's HTML.
 	const pub = await extractPageMetadata(url);
+	if (typeof pub.URL === "undefined") {
+		pub.URL = url;
+	}
 	if (typeof pub.DOI === "string") {
 		pub.DOI = normalizeDoi(pub.DOI);
 		// If a DOI was found in the HTML, try to fetch pub from doi.org.
