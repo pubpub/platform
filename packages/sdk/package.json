@@ -40,7 +40,6 @@
 		"ui": "workspace:*"
 	},
 	"devDependencies": {
-		"@rollup/plugin-typescript": "^11.1.3",
 		"@types/node": "^20.4.2",
 		"@types/react": "^18.2.5",
 		"tsconfig": "workspace:*",

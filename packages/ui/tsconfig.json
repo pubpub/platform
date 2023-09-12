@@ -3,7 +3,8 @@
 	"compilerOptions": {
 		"emitDeclarationOnly": true,
 		"declarationMap": true,
-		"outDir": "dist"
+		"outDir": "dist",
+		"allowArbitraryExtensions": true
 	},
 	"include": ["./src"],
 	"exclude": ["dist", "build", "node_modules"]

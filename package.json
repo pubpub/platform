@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"scripts": {
-		"build": "turbo build",
+		"build": "NODE_ENV=production turbo build",
 		"dev": "turbo dev",
 		"lint": "turbo lint",
 		"clean": "turbo clean",

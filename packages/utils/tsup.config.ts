@@ -5,10 +5,10 @@ export default defineConfig((options: Options) => ({
 	splitting: true,
 	entry: ["src/**/*.ts"],
 	format: ["esm"],
-	dts: true,
 	minify: true,
 	clean: true,
 	external: ["react"],
-	onSuccess: "pnpm exec tsc",
+	dts: process.env.NODE_ENV === "production",
+	onSuccess: process.env.NODE_ENV !== "production" ? "pnpm exec tsc" : undefined,
 	...options,
 }));
