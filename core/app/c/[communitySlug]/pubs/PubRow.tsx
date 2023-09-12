@@ -1,40 +1,15 @@
 "use client";
-import Image from "next/image";
 import React from "react";
-import {
-	Button,
-	Card,
-	CardContent,
-	CardFooter,
-	CardTitle,
-	Dialog,
-	DialogContent,
-	DialogTrigger,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-	useToast,
-} from "ui";
-import { expect } from "utils";
-import { PubPayload, StagePayload, User } from "~/lib/types";
-import { assign, move } from "./actions";
+import { Button, Popover, PopoverContent, PopoverTrigger } from "ui";
+import { PubPayload } from "~/lib/types";
 
 type Props = {
 	pub: PubPayload;
 	token: string;
-	stages?: StagePayload[];
-	stage?: StagePayload;
-	loginData?: User;
+	actions?: React.ReactNode;
 };
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
-
-const getTitle = (pub: Props["pub"]) => {
-	const titleValue = pub.values.find((value) => {
-		return value.field.name === "Title";
-	});
-	return titleValue?.value as string;
-};
 
 const getStatus = (pub: Props["pub"], integrationId: string) => {
 	const statusValue = pub.values.find((value) => {
@@ -90,66 +65,8 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 	return buttons;
 };
 
-const getUsers = (community: PubPayload["community"]) => {
-	return (
-		community &&
-		community.members.map((member) => {
-			return {
-				userId: member.userId,
-				name: member.user.name,
-				email: member.user.email,
-				avatar: member.user.avatar,
-				initials: member.user.name
-					.split(" ")
-					.map((name) => name[0])
-					.join("")
-					.toUpperCase(),
-			};
-		})
-	);
-};
-
-const PubRow: React.FC<Props> = function (props) {
-	const { pub, token, stages, stage, loginData } = props;
+const PubRow: React.FC<Props> = function ({ pub, token, actions }) {
 	const buttons = getButtons(pub, token);
-	const members = getUsers(pub.community);
-	const { toast } = useToast();
-	const [open, setOpen] = React.useState(false);
-
-	const onAssign = async (pubId: string, userId: string, stageId: string) => {
-		const err = await assign(pubId, userId, stageId);
-		if (err) {
-			toast({
-				title: "Error",
-				description: err.message,
-				variant: "destructive",
-			});
-			return;
-		}
-		setOpen(false);
-		toast({
-			title: "Success",
-			description: "User was succesfully assigned.",
-			variant: "default",
-		});
-	};
-
-	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
-		const err = await move(pubId, sourceStageId, destStageId);
-		if (err) {
-			toast({
-				title: "Error",
-				description: err.message,
-				variant: "destructive",
-			});
-			return;
-		}
-		toast({
-			title: "Success",
-			description: "Pub was successfully moved",
-			variant: "default",
-		});
-	};
 
 	return (
 		<div className="pt-2 pb-2">
@@ -202,130 +119,7 @@ const PubRow: React.FC<Props> = function (props) {
 					</Popover>
 				</div>
 			</div>
-			<div className="mt-0 items-stretch flex justify-between">
-				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
-				<div className="flex items-end shrink-0">
-					{/* TODO: if no assigned members, don't show move button to non admin */}
-					{stage && (
-						<div>
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button size="sm" variant="outline" className="ml-1">
-										Move
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent>
-									<div className="flex flex-col">
-										<div className="mb-4">
-											<b>Move this pub to:</b>
-										</div>
-										{stages
-											? stages.map((s) => {
-													return s.id === stage.id ? null : (
-														<Button
-															variant="ghost"
-															key={s.name}
-															onClick={() =>
-																onMove(pub.id, stage.id, s.id)
-															}
-														>
-															{s.name}
-														</Button>
-													);
-											  })
-											: "No stages are present in your community"}
-									</div>
-								</PopoverContent>
-							</Popover>
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button size="sm" variant="outline" className="ml-1">
-										Assign
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="flex flex-col">
-									<Button
-										variant="secondary"
-										className="mb-5"
-										onClick={() =>
-											// we will not need this expect when the permissions branch that broke up this component is merged
-											onAssign(pub.id, expect(loginData).id, stage.id)
-										}
-									>
-										Claim
-									</Button>
-									{members &&
-										members.map((member) => {
-											return (
-												<Dialog open={open} onOpenChange={setOpen}>
-													<DialogTrigger>
-														<Button
-															size="sm"
-															variant="ghost"
-															key={member.userId}
-														>
-															<div className="mr-4">
-																<Image
-																	src={
-																		member.avatar ??
-																		member.initials
-																	}
-																	alt={member.initials}
-																	width={20}
-																	height={20}
-																/>
-															</div>
-															<span>{member.name}</span>
-														</Button>
-													</DialogTrigger>
-													<DialogContent>
-														<Card>
-															<CardTitle className="space-y-1.5 p-6">
-																Assign <i>{getTitle(pub)}</i> to{" "}
-																{member.name}?
-															</CardTitle>
-															<CardContent>
-																{member.name} will be notified that
-																they have been assigned to this Pub.
-															</CardContent>
-															<CardFooter className="flex flex-row">
-																{stage ? (
-																	<Button
-																		onClick={() =>
-																			onAssign(
-																				pub.id,
-																				member.userId,
-																				stage.id
-																			)
-																		}
-																	>
-																		Assign
-																	</Button>
-																) : (
-																	"This pub isnt on a stage yet."
-																)}
-																<Button
-																	className="mx-3"
-																	variant="secondary"
-																	onClick={() => setOpen(false)}
-																>
-																	Cancel
-																</Button>
-															</CardFooter>
-														</Card>
-													</DialogContent>
-												</Dialog>
-											);
-										})}
-								</PopoverContent>
-							</Popover>
-						</div>
-					)}
-					<Button size="sm" variant="outline" className="ml-1">
-						Email Members
-					</Button>
-				</div>
-			</div>
+			{actions}
 		</div>
 	);
 };

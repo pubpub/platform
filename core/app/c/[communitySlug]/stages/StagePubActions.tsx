@@ -1,0 +1,184 @@
+import React from "react";
+import {
+	Button,
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+	Dialog,
+	DialogTrigger,
+	DialogContent,
+	Card,
+	CardTitle,
+	CardContent,
+	CardFooter,
+	useToast,
+} from "ui";
+import { PermissionPayloadUser, PubPayload, StagePayload, User } from "~/lib/types";
+// import Image from "next/image";
+import { assign, move } from "../pubs/actions";
+
+type Props = {
+	users: PermissionPayloadUser[];
+	pub: PubPayload;
+	stages: StagePayload[];
+	stage: StagePayload;
+	loginData: User;
+};
+
+const getTitle = (pub: Props["pub"]) => {
+	const titleValue = pub.values.find((value) => {
+		return value.field.name === "Title";
+	});
+	return titleValue?.value as string;
+};
+
+export const StagePubActions = (props: Props) => {
+	const { users, pub, stage, loginData, stages } = props;
+	const [open, setOpen] = React.useState(false);
+	const { toast } = useToast();
+
+	const onAssign = async (pubId: string, userId: string, stageId: string) => {
+		const err = await assign(pubId, userId, stageId);
+		if (err) {
+			toast({
+				title: "Error",
+				description: err.message,
+				variant: "destructive",
+			});
+			return;
+		}
+		setOpen(false);
+		toast({
+			title: "Success",
+			description: "User was succesfully assigned.",
+			variant: "default",
+		});
+	};
+
+	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
+		const err = await move(pubId, sourceStageId, destStageId);
+		if (err) {
+			toast({
+				title: "Error",
+				description: err.message,
+				variant: "destructive",
+			});
+			return;
+		}
+		toast({
+			title: "Success",
+			description: "Pub was successfully moved",
+			variant: "default",
+		});
+	};
+
+	return (
+		<div className="mt-0 items-stretch flex justify-between">
+			<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
+			<div className="flex items-end shrink-0">
+				<div>
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button size="sm" variant="outline" className="ml-1">
+								Move
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent>
+							<div className="flex flex-col">
+								<div className="mb-4">
+									<b>Move this pub to:</b>
+								</div>
+								{stages
+									? stages.map((s) => {
+											return s.id === stage.id ? null : (
+												<Button
+													variant="ghost"
+													key={s.name}
+													onClick={() => onMove(pub.id, stage.id, s.id)}
+												>
+													{s.name}
+												</Button>
+											);
+									  })
+									: "No stages are present in your community"}
+							</div>
+						</PopoverContent>
+					</Popover>
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button size="sm" variant="outline" className="ml-1">
+								Assign
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent className="flex flex-col">
+							<Button
+								variant="secondary"
+								className="mb-5"
+								onClick={() =>
+									// we will not need this  when the permissions branch that broke up this component is merged
+									onAssign(pub.id, loginData.id, stage.id)
+								}
+							>
+								Claim
+							</Button>
+
+							{users &&
+								users.map((user) => {
+									return (
+										<Dialog open={open} onOpenChange={setOpen}>
+											<DialogTrigger>
+												<Button size="sm" variant="ghost" key={user.id}>
+													{/* <div className="mr-4">
+													<Image
+														src={user.avatar ?? "user.initials"}
+														alt={"user.initials"}
+														width={20}
+														height={20}
+													/>
+												</div> */}
+													<span>{user.name}</span>
+												</Button>
+											</DialogTrigger>
+											<DialogContent>
+												<Card>
+													<CardTitle>
+														Assign <i>{getTitle(pub)}</i> to {user.name}
+														?
+													</CardTitle>
+													<CardContent>
+														{user.name} will be notified that they have
+														been assigned to this Pub.
+													</CardContent>
+													<CardFooter className="flex flex-row">
+														<Button
+															variant="default"
+															onClick={() =>
+																onAssign(pub.id, user.id, stage.id)
+															}
+														>
+															Assign
+														</Button>
+														<Button
+															className="mx-3"
+															variant="secondary"
+															onClick={() => setOpen(false)}
+														>
+															Cancel
+														</Button>
+													</CardFooter>
+												</Card>
+											</DialogContent>
+										</Dialog>
+									);
+								})}
+						</PopoverContent>
+					</Popover>
+				</div>
+
+				<Button size="sm" variant="outline" className="ml-1">
+					Email Members
+				</Button>
+			</div>
+		</div>
+	);
+};

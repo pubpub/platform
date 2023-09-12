@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { faker } from "@faker-js/faker";
 
 export default async function main(prisma: PrismaClient, communityUUID: string) {
 	await prisma.community.create({
@@ -79,10 +80,51 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const user1 = await prisma.user.create({
+		data: {
+			slug: faker.lorem.slug(),
+			email: faker.internet.email(),
+			name: faker.person.fullName(),
+			avatar: faker.image.avatar(),
+		},
+	});
+
+	const user2 = await prisma.user.create({
+		data: {
+			slug: faker.lorem.slug(),
+			email: faker.internet.email(),
+			name: faker.person.fullName(),
+			avatar: faker.image.avatar(),
+		},
+	});
+
+	const member = await prisma.member.create({
+		data: {
+			userId: user1.id,
+			communityId: communityUUID,
+			canAdmin: true,
+		},
+	});
+
+	const memberGroup = await prisma.memberGroup.create({
+		data: {
+			canAdmin: false,
+			communityId: communityUUID,
+			users: {
+				connect: [{ id: user2.id }],
+			},
+		},
+	});
+
 	const stageIds = [...Array(7)].map((x) => uuidv4());
 	await prisma.stage.createMany({
 		data: [
-			{ id: stageIds[0], communityId: communityUUID, name: "Submitted", order: "aa" },
+			{
+				id: stageIds[0],
+				communityId: communityUUID,
+				name: "Submitted",
+				order: "aa",
+			},
 			{
 				id: stageIds[1],
 				communityId: communityUUID,

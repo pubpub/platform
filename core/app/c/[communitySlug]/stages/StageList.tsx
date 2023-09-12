@@ -1,9 +1,10 @@
 "use client";
-import { Card, CardContent } from "ui";
-import PubRow from "../pubs/PubRow";
-import { Button } from "ui";
 import Link from "next/link";
 import { Fragment } from "react";
+import { Button, Card, CardContent } from "ui";
+import PubRow from "../pubs/PubRow";
+import { StagePubActions } from "./StagePubActions";
+import { getPubUsers } from "~/lib/permissions";
 import { StagePayload, User } from "~/lib/types";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
@@ -13,6 +14,7 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 	return (
 		<div>
 			{stages.map((stage) => {
+				const users = getPubUsers(stage.permissions);
 				return (
 					<div key={stage.id} className="mb-20">
 						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>
@@ -55,9 +57,15 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 												key={pub.id}
 												pub={pub}
 												token={token}
-												stages={stages}
-												stage={stage}
-												loginData={loginData}
+												actions={
+													<StagePubActions
+														pub={pub}
+														stage={stage}
+														users={users}
+														loginData={loginData}
+														stages={stages}
+													/>
+												}
 											/>
 											{index < list.length - 1 && <hr />}
 										</Fragment>
