@@ -37,6 +37,7 @@ type Props = {
 	instanceId: string;
 };
 
+// TODO: generate fields using instance's configured PubType
 const schema = z.object({
 	Description: z.string().min(1, "Description is required"),
 	DOI: z.string().regex(DOI_REGEX, "Invalid DOI"),
@@ -49,45 +50,49 @@ type LoadMetadataProps = {
 	value?: string;
 };
 
+// A button used to load metadata using the value of a field.
 const FetchMetadataButton = (props: LoadMetadataProps) => {
 	const { toast } = useToast();
 	const form = useFormContext();
-	const { name: identifierKind } = useFormField();
-	const state = form.getFieldState(identifierKind);
+	const { name: identifierName } = useFormField();
+	const state = form.getFieldState(identifierName);
 	const [pending, startTransition] = useTransition();
-	const identifierValue = props.value ?? form.getValues()[identifierKind];
+	const identifierValue = props.value ?? form.getValues()[identifierName];
 
 	const onFetchMetadata = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 		event.preventDefault();
-		const update = await resolveMetadata(identifierKind, identifierValue);
-		if ("error" in update) {
+		const fill = await resolveMetadata(identifierName, identifierValue);
+		if ("error" in fill && typeof fill.error === "string") {
 			toast({
 				title: "Error",
-				description: (update as { error: string }).error,
+				description: fill.error,
 				variant: "destructive",
 			});
 			return;
 		}
 		const values = form.getValues();
-		const updated = Object.keys(update);
-		if (updated.length === 0) {
+		const filled = Object.keys(fill);
+		if (filled.length === 0) {
 			toast({
 				title: "Error",
-				description: `We couldn't find any information about that ${identifierKind}`,
+				description: `We couldn't find any information about that ${identifierName}`,
 				variant: "destructive",
 			});
 			return;
 		}
 		for (const field in values) {
-			form.setValue(field, update[field] ?? "", {
+			// Update the form with the new values and reset old values.
+			form.setValue(field, fill[field] ?? "", {
+				// Mark updated fields as dirty. This re-renders the auto-fill
+				// buttons but does not trigger validation.
 				shouldDirty: true,
-				shouldValidate: field in update,
+				// Do not trigger validation for fields that were not updated.
+				shouldValidate: field in fill,
 			});
 		}
-		const fields = updated.join(", ");
 		toast({
 			title: "Success",
-			description: `Filled ${fields} using the ${identifierKind}`,
+			description: `Filled ${filled.join(", ")} using the ${identifierName}`,
 		});
 	};
 
@@ -118,10 +123,10 @@ const FetchMetadataButton = (props: LoadMetadataProps) => {
 
 export function Submit(props: Props) {
 	const { toast } = useToast();
-	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
+		// TODO: generate fields using instance's configured PubType
 		resolver: zodResolver(schema),
 		defaultValues: {
 			"Manager's Notes": "",
@@ -131,13 +136,17 @@ export function Submit(props: Props) {
 			URL: "",
 		},
 	});
+	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
 	const onSubmit = async (pub: z.infer<typeof schema>) => {
+		// The DOI field may contain either a DOI or a URL that contains a DOI.
+		// If the value is a URL, we convert it into a valid DOI before sending
+		// it to core PubPub.
 		if ("DOI" in pub) {
 			pub.DOI = normalizeDoi(pub.DOI);
 		}
 		const result = await submit(props.instanceId, pub);
-		if ("error" in result) {
+		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
 				description: result.error,
@@ -152,15 +161,20 @@ export function Submit(props: Props) {
 		}
 	};
 
+	// Load the persisted values.
+	const { reset } = form;
+	useEffect(() => {
+		// `keepDefaultValues` is set to true to prevent the form from
+		// validating fields that were not filled during the previous session.
+		reset(persistedValues, { keepDefaultValues: true });
+	}, [reset]);
+
+	// Persist form values to local storage. This operation is debounced by
+	// the timeout passed to <LocalStorageProvider>.
 	const values = form.watch();
 	useEffect(() => {
 		persist(values);
 	}, [values]);
-
-	const { reset } = form;
-	useEffect(() => {
-		reset(persistedValues, { keepDefaultValues: true });
-	}, [reset]);
 
 	return (
 		<Form {...form}>
@@ -211,19 +225,19 @@ export function Submit(props: Props) {
 								control={form.control}
 								name="DOI"
 								render={({ field }) => {
+									// If a user inputs a URL containing a DOI, or a DOI with a specifier
+									// like doi:10.1234, send only DOI with the request to auto-fill
+									// metadata.
+									const normalizedDoi = isDoi(field.value)
+										? normalizeDoi(field.value)
+										: "";
 									return (
 										<FormItem className={cn("flex-1")}>
 											<FormLabel>DOI</FormLabel>
 											<FormControl>
 												<div className={cn("flex items-center")}>
 													<Input {...field} />
-													<FetchMetadataButton
-														value={
-															isDoi(field.value)
-																? normalizeDoi(field.value)
-																: ""
-														}
-													/>
+													<FetchMetadataButton value={normalizedDoi} />
 												</div>
 											</FormControl>
 											<FormDescription
@@ -261,6 +275,8 @@ export function Submit(props: Props) {
 							/>
 						</div>
 						<FormField
+							// TODO: This field is not working, probably because
+							// the name contains a space.
 							control={form.control}
 							name="Manager's Notes"
 							render={({ field }) => (

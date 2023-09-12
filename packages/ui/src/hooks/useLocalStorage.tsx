@@ -15,39 +15,41 @@ export const LocalStorageProvider = (props: React.PropsWithChildren<LocalStorage
 };
 
 export const useLocalStorage = <T,>(key: string): [T | undefined, (value: T) => void] => {
-	const timestamp = React.useRef(performance.now());
 	const { prefix, timeout } = React.useContext(LocalStorageContext);
 	key = React.useMemo(() => prefix + key, []);
+	const timestamp = React.useRef(performance.now());
 	const value = React.useMemo<T | undefined>(() => {
+		if (typeof localStorage === "undefined") {
+			return undefined;
+		}
 		const item = localStorage.getItem(key);
 		if (item) {
 			return JSON.parse(item);
 		}
 		return undefined;
 	}, []);
-	const tail = React.useRef<() => void>();
+	const tail = React.useRef<T>();
 	const tailTimer = React.useRef<ReturnType<typeof setTimeout>>();
 	const setValue = React.useCallback(
 		(value: T) => {
 			const now = performance.now();
-			const write = () => {
-				timestamp.current = now;
-				localStorage.setItem(key, JSON.stringify(value));
-			};
 			if (tailTimer.current) {
 				clearTimeout(tailTimer.current);
 			}
 			if (!timeout || now - timestamp.current < timeout) {
-				write();
+				timestamp.current = now;
+				localStorage.setItem(key, JSON.stringify(value));
 			} else {
-				tail.current = write;
+				tail.current = value;
 				tailTimer.current = setTimeout(() => {
-					tail.current?.();
+					timestamp.current = now;
 					tailTimer.current = undefined;
+					localStorage.setItem(key, JSON.stringify(value));
 				}, timeout);
 			}
 		},
 		[key, timeout]
 	);
+
 	return [value, setValue];
 };
