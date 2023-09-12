@@ -1,7 +1,34 @@
-import { isDoi } from "utils";
 import { normalizeDoi } from "../../../packages/utils/dist";
 import { makeExtract } from "./html";
 
+/**
+ * Derive a pub from CSL-JSON.
+ */
+const derivePubFromCsl = (csl: any) => {
+	return {
+		Description: csl.abstract,
+		DOI: csl.DOI,
+		Title: csl.title,
+		URL: csl.URL,
+	};
+};
+
+/**
+ * Derive a pub from a work returned by the Crossref API.
+ */
+const derivePubFromCrossrefWork = (work: any) => {
+	return {
+		Description: work.abstract,
+		DOI: work.DOI,
+		Title: Array.isArray(work.title) ? work.title[0] : work.title,
+		URL: work.URL,
+	};
+};
+
+/**
+ * Derive the best guess of a pub by performing a reverse lookup of a
+ * publication title using the Crossref API.
+ */
 export const makePubFromTitle = async (title: string) => {
 	const response = await fetch(
 		`https://api.crossref.org/works?rows=5&query.title=${encodeURIComponent(title)}`
@@ -20,24 +47,9 @@ export const makePubFromTitle = async (title: string) => {
 	return null;
 };
 
-const derivePubFromCSL = (csl: any) => {
-	return {
-		Description: csl.abstract,
-		DOI: csl.DOI,
-		Title: csl.title,
-		URL: csl.URL,
-	};
-};
-
-const derivePubFromCrossrefWork = (work: any) => {
-	return {
-		Description: work.abstract,
-		DOI: work.DOI,
-		Title: Array.isArray(work.title) ? work.title[0] : work.title,
-		URL: work.URL,
-	};
-};
-
+/**
+ * Derive a pub from a DOI using doi.org.
+ */
 export const makePubFromDoi = async (doi: string) => {
 	const response = await fetch(`https://doi.org/${doi}`, {
 		headers: {
@@ -48,9 +60,10 @@ export const makePubFromDoi = async (doi: string) => {
 		return null;
 	}
 	const csl = await response.json();
-	return derivePubFromCSL(csl);
+	return derivePubFromCsl(csl);
 };
 
+// Extraction rules for HTML metadata.
 const extract = makeExtract(
 	{
 		mapTo: "Title",
@@ -119,7 +132,7 @@ const extract = makeExtract(
 );
 
 const HTML_ENTITIES = /&(nbsp|amp|quot|lt|gt);/g;
-const HTML_ENTITIES_MAP = {
+const HTML_ENTITIES_TO_CHAR = {
 	nbsp: " ",
 	amp: "&",
 	quot: '"',
@@ -127,12 +140,18 @@ const HTML_ENTITIES_MAP = {
 	gt: ">",
 };
 
+/**
+ * Replace HTML entities ("&nbsp;", "&amp;", etc.) with their corresponding
+ * plaintext characters.
+ */
 const replaceHtmlEntites = (string: string) => {
-	return string.replace(HTML_ENTITIES, (_, entity) => HTML_ENTITIES_MAP[entity]);
+	return string.replace(HTML_ENTITIES, (_, entity) => HTML_ENTITIES_TO_CHAR[entity]);
 };
 
+/**
+ * Derive a pub from the HTML of a webpage.
+ */
 export const makePubFromUrl = async (url: string) => {
-	// We use a SAX parser to avoid loading the entire HTML document into memory.
 	const metadata = await extract(url);
 	if (typeof metadata.DOI === "string") {
 		metadata.DOI = normalizeDoi(metadata.DOI);

@@ -1,59 +1,110 @@
-import { ValidationError, PubPubError, ResponseError, ZodError } from "./errors";
-import { Manifest, User } from "./types";
+import { IntegrationApiError } from "./errors";
+import { Manifest, ManifestJson, User } from "./types";
 
-export type Get<T extends Manifest> = (
-	| Extract<keyof T["register"], string>
-	| Extract<keyof T["write"], string>
-	| Extract<keyof T["read"], string>
-)[];
+/**
+ * Derive a union of readable keys from a manifest.
+ */
+export type ReadableKey<T extends Manifest> =
+	| WritableKey<T>
+	| Extract<T["read"] extends "*" ? string : keyof T["read"], string>;
 
-export type Pub<T extends Manifest> = Record<
+/**
+ * Derive a union of writable keys from a manifest.
+ */
+export type WritableKey<T extends Manifest> = Extract<
 	Extract<
-		Extract<
-			keyof T["register"] | (T["write"] extends string ? string : keyof T["write"]),
-			string
-		>,
+		| keyof T["register"]
+		// If `write` is `"*"`, then all fields are writable, so any field name is
+		// valid.
+		| (T["write"] extends "*" ? string : keyof T["write"]),
 		string
 	>,
-	unknown
+	string
 >;
 
-export type Patch<T extends Manifest> = {
-	[K in keyof Pub<T>]?: unknown;
+/**
+ * TypeScript infers the type of `"*"` as `string` when importing from a
+ * JSON module. This is a utility type that converts `string` back to `"*"`,
+ * since that is the only case a string would be used as the value of `write`
+ * or `read`.
+ */
+export type Parse<T extends ManifestJson> = {
+	[K in Extract<keyof T, "read" | "write">]: T[K] extends string ? "*" : T[K];
+} & { [K in Extract<keyof T, "register">]: T[K] };
+
+/**
+ * Payload used to create a pub.
+ */
+export type CreatePayload<T extends Manifest> = {
+	[K in WritableKey<T>]: unknown;
 };
 
-export type CreateResponse<T extends string[]> = {
-	[K in T[number]]: unknown;
-};
+/**
+ * Expected response from creating a pub.
+ */
+export type CreateResponse<T extends Manifest> = CreatePayload<T>;
 
+/**
+ * Payload used to get part of a pub.
+ */
+export type ReadPayload<T extends Manifest> = ReadableKey<T>[];
+
+/**
+ * Expected response from getting part of a pub.
+ */
 export type ReadResponse<T extends string[]> = {
 	// TODO(3mcd): value types should be inferred from manifest
 	[K in T[number]]: unknown;
 };
 
-export type UpdateResponse<T extends string[]> = {
-	[K in T[number]]: unknown;
+/**
+ * Payload used to update part of a pub.
+ */
+export type UpdatePayload<T extends Manifest> = {
+	[K in WritableKey<T>]?: unknown;
+};
+
+/**
+ * Expected response from updating part of a pub.
+ */
+export type UpdateResponse<U extends UpdatePayload<Manifest>> = {
+	[K in keyof U]: unknown;
 };
 
 export type Client<T extends Manifest> = {
+	/**
+	 * Authenticate a user, returning their profile.
+	 */
 	auth(instanceId: string, token: string): Promise<User>;
-	create<U extends string[]>(
+	/**
+	 * Create a pub using the given pub type id and fields.
+	 */
+	create(
 		instanceId: string,
-		pub: Pub<T>,
+		pub: CreatePayload<T>,
 		pubTypeId: string
-	): Promise<UpdateResponse<U>>;
-	read<U extends Get<T>>(
+	): Promise<CreateResponse<T>>;
+	/**
+	 * Get part of a pub.
+	 */
+	read<U extends ReadPayload<T>>(
 		instanceId: string,
 		pubId: string,
 		...fields: U
 	): Promise<ReadResponse<U>>;
-	update<U extends string[]>(
+	/**
+	 * Update part of a pub.
+	 */
+	update<U extends UpdatePayload<T>>(
 		instanceId: string,
 		pubId: string,
-		patch: Patch<T>
+		patch: U
 	): Promise<UpdateResponse<U>>;
 };
 
+/**
+ * Make an HTTP request to the PubPub API.
+ */
 const makeRequest = async (
 	instanceId: string,
 	token: string,
@@ -65,64 +116,72 @@ const makeRequest = async (
 		path ? `/${path}` : ""
 	}`;
 	const signal = AbortSignal.timeout(5000);
-	const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
-	const response = await fetch(url, {
-		method,
-		headers,
-		signal,
-		body: body ? JSON.stringify(body) : undefined,
-		cache: "no-store",
-	});
+	const headers = {
+		"Content-Type": "application/json",
+		Authorization: `Bearer ${token}`,
+	};
+	let response: Response;
+	try {
+		response = await fetch(url, {
+			method,
+			headers,
+			signal,
+			body: body ? JSON.stringify(body) : undefined,
+			cache: "no-store",
+		});
+	} catch (error) {
+		if (error instanceof Error && error.name === "TimeoutError") {
+			throw new Error("Failed to reach PubPub within 5 seconds");
+		}
+		// Some other type of network error occurred.
+		throw error;
+	}
 	if (response.ok) {
 		return response.json();
 	}
+	let message = "Request to PubPub failed";
 	switch (response.status) {
-		// 400 errors are expected to be JSON.
+		// 400 responses are expected to be Zod validation errors.
 		case 400:
 			let json: unknown;
 			try {
 				json = await response.json();
 			} catch (error) {
-				// Did not get a JSON response.
+				message = "Expected JSON response";
 				break;
 			}
 			if (typeof json === "object" && json !== null && "name" in json && "issues" in json) {
 				switch (json.name) {
 					case "ZodError":
-						throw new ZodError(json as { issues: object[] });
+						throw new IntegrationApiError("Request contained invalid fields", {
+							cause: {
+								status: 400,
+								issues: json.issues,
+							},
+						});
 					default:
-						throw new ResponseError(response, "Invalid request");
+						message = "Invalid request";
+						break;
 				}
 			}
 			break;
 		case 401:
-			throw new ResponseError(response, "Failed to authenticate user or integration");
+			message = "User or integration not authenticated";
+			break;
 		case 403:
-			throw new ResponseError(response, "Failed to authorize user or integration");
+			message = "User or integration not authorized";
+			break;
 		case 404:
-			throw new ResponseError(response, "Integration not found");
+			message = "Integration not found";
+			break;
 	}
-	throw new ResponseError(response, "Failed to connect to PubPub");
+	throw new IntegrationApiError(message, { cause: { status: response.status } });
 };
 
+/**
+ * Create a client for the PubPub API.
+ */
 export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Client<T> => {
-	// const write = new Set(manifest.write ? Object.keys(manifest.write) : null);
-	// const read = new Set(manifest.read ? [write.values(), ...Object.keys(manifest.read)] : write);
-	const canWrite = (field: string) => {
-		if (manifest.write === undefined) return false;
-		if (typeof manifest.write === "string") {
-			return manifest.write === "*";
-		}
-		return field in manifest.write;
-	};
-	const canRead = (field: string) => {
-		if (canWrite(field)) return true;
-		if (manifest.read === undefined) return false;
-		if (typeof manifest.read === "string") {
-			return manifest.read === "*";
-		}
-		return field in manifest.read;
-	};
 	return {
 		async auth(instanceId, token) {
 			try {
@@ -134,47 +193,31 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 				};
 				return user;
 			} catch (cause) {
-				throw new PubPubError("Failed to authenticate user or integration", { cause });
+				throw new Error("Failed to authenticate user or integration", { cause });
 			}
 		},
 		async create(instanceId, pub, pubTypeId) {
-			for (let field in pub) {
-				if (!canWrite(field)) {
-					throw new ValidationError(`${field} is not writable`);
-				}
-			}
 			try {
 				return await makeRequest(instanceId, apiKey, "POST", "pubs", {
 					pubTypeId,
 					pubFields: pub,
 				});
 			} catch (cause) {
-				throw new PubPubError("Failed to create Pub", { cause });
+				throw new Error("Failed to create pub", { cause });
 			}
 		},
 		async read(instanceId, pubId, ...fields) {
 			try {
-				for (let i = 0; i < fields.length; i++) {
-					const field = fields[i];
-					if (!canRead(field)) {
-						throw new ValidationError(`${field} is not readable`);
-					}
-				}
 				return await makeRequest(instanceId, apiKey, "GET", "pubs", pubId);
 			} catch (cause) {
-				throw new PubPubError("Failed to get Pub", { cause });
+				throw new Error("Failed to get pub", { cause });
 			}
 		},
 		async update(instanceId, pubId, patch) {
 			try {
-				for (const field in patch) {
-					if (!canWrite(field)) {
-						throw new ValidationError(`${field} is not writable`);
-					}
-				}
 				return await makeRequest(instanceId, apiKey, "PATCH", `pubs/${pubId}`, patch);
 			} catch (cause) {
-				throw new PubPubError("Failed to update Pub", { cause });
+				throw new Error("Failed to update pub", { cause });
 			}
 		},
 	};

@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { LocalStorageProvider } from "ui";
 import { IntegrationLayout } from "./IntegrationLayout";
