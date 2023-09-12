@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useTransition } from "react";
-import { useForm, useFormContext } from "react-hook-form";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import {
 	Button,
 	Card,
@@ -21,17 +21,13 @@ import {
 	Icon,
 	Input,
 	Textarea,
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-	useFormField,
-	useToast,
 	useLocalStorage,
+	useToast,
 } from "ui";
 import { DOI_REGEX, URL_REGEX, cn, isDoi, normalizeDoi } from "utils";
 import * as z from "zod";
-import { resolveMetadata, submit } from "./actions";
+import { FetchMetadataButton } from "./FetchMetadataButton";
+import { submit } from "./actions";
 
 type Props = {
 	instanceId: string;
@@ -45,81 +41,6 @@ const schema = z.object({
 	URL: z.string().regex(URL_REGEX, "Invalid URL"),
 	"Manager's Notes": z.string(),
 });
-
-type LoadMetadataProps = {
-	value?: string;
-};
-
-// A button used to load metadata using the value of a field.
-const FetchMetadataButton = (props: LoadMetadataProps) => {
-	const { toast } = useToast();
-	const form = useFormContext();
-	const { name: identifierName } = useFormField();
-	const state = form.getFieldState(identifierName);
-	const [pending, startTransition] = useTransition();
-	const identifierValue = props.value ?? form.getValues()[identifierName];
-
-	const onFetchMetadata = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-		event.preventDefault();
-		const fill = await resolveMetadata(identifierName, identifierValue);
-		if ("error" in fill && typeof fill.error === "string") {
-			toast({
-				title: "Error",
-				description: fill.error,
-				variant: "destructive",
-			});
-			return;
-		}
-		const values = form.getValues();
-		const filled = Object.keys(fill);
-		if (filled.length === 0) {
-			toast({
-				title: "Error",
-				description: `We couldn't find any information about that ${identifierName}`,
-				variant: "destructive",
-			});
-			return;
-		}
-		for (const field in values) {
-			// Update the form with the new values and reset old values.
-			form.setValue(field, fill[field] ?? "", {
-				// Mark updated fields as dirty. This re-renders the auto-fill
-				// buttons but does not trigger validation.
-				shouldDirty: true,
-				// Do not trigger validation for fields that were not updated.
-				shouldValidate: field in fill,
-			});
-		}
-		toast({
-			title: "Success",
-			description: `Filled ${filled.join(", ")} using the ${identifierName}`,
-		});
-	};
-
-	return (
-		<TooltipProvider>
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<Button
-						variant="ghost"
-						className={cn("px-0 ml-2")}
-						onClick={(event) => startTransition(() => onFetchMetadata(event))}
-						disabled={!state.isDirty || state.invalid}
-					>
-						{pending ? (
-							<Icon.Loader2 height={18} className="animate-spin" />
-						) : (
-							<Icon.Wand2 height={18} color="currentColor" />
-						)}
-					</Button>
-				</TooltipTrigger>
-				<TooltipContent>
-					<p>Auto-fill submission</p>
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
-	);
-};
 
 export function Submit(props: Props) {
 	const { toast } = useToast();
