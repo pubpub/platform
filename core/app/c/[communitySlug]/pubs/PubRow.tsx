@@ -144,7 +144,6 @@ const PubRow: React.FC<Props> = function (props) {
 				variant: "destructive",
 			});
 		}
-		setOpen(false);
 		toast({
 			title: "Success",
 			description: "Pub was successfully moved",
@@ -245,7 +244,6 @@ const PubRow: React.FC<Props> = function (props) {
 									</Button>
 								</PopoverTrigger>
 								<PopoverContent className="flex flex-col">
-									To assign someone to a pub you need a stage to be present.
 									<Button
 										variant="secondary"
 										className="mb-5"

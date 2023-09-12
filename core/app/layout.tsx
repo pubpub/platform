@@ -1,6 +1,7 @@
 import "ui/styles.css";
 import "./globals.css";
 import InitClient from "./InitClient";
+import { Toaster } from "ui";
 
 export const metadata = {
 	title: "PubPub v7 Mockup Demo",
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			<body>
 				<InitClient />
 				{children}
+				<Toaster />
 			</body>
 		</html>
 	);
