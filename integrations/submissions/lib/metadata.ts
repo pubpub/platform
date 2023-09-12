@@ -1,5 +1,5 @@
-import { normalizeDoi } from "../../../packages/utils/dist";
-import { makeExtract } from "./html";
+import { normalizeDoi, isDoi } from "utils";
+import { makeExtractPageMetadata } from "./html";
 
 /**
  * Derive a pub from CSL-JSON.
@@ -53,6 +53,7 @@ export const makePubFromTitle = async (title: string) => {
 export const makePubFromDoi = async (doi: string) => {
 	const response = await fetch(`https://doi.org/${doi}`, {
 		headers: {
+			// Use DOI Content Negotiation to get CSL-JSON.
 			Accept: "application/vnd.citationstyles.csl+json",
 		},
 	});
@@ -60,11 +61,12 @@ export const makePubFromDoi = async (doi: string) => {
 		return null;
 	}
 	const csl = await response.json();
+	console.log(csl);
 	return derivePubFromCsl(csl);
 };
 
 // Extraction rules for HTML metadata.
-const extract = makeExtract(
+const extractPageMetadata = makeExtractPageMetadata(
 	{
 		mapTo: "Title",
 		rank: 0,
@@ -152,14 +154,21 @@ const replaceHtmlEntites = (string: string) => {
  * Derive a pub from the HTML of a webpage.
  */
 export const makePubFromUrl = async (url: string) => {
-	const metadata = await extract(url);
-	if (typeof metadata.DOI === "string") {
-		metadata.DOI = normalizeDoi(metadata.DOI);
-		// If a DOI was found in the HTML, try to fetch metadata from doi.org.
-		Object.assign(metadata, await makePubFromDoi(metadata.DOI));
+	// // If the URL contains a DOI, try to fetch metadata from doi.org.
+	// if (isDoi(url)) {
+	// 	const pub = await makePubFromDoi(normalizeDoi(url));
+	// 	if (pub !== null) {
+	// 		return pub;
+	// 	}
+	// }
+	const pub = await extractPageMetadata(url);
+	if (typeof pub.DOI === "string") {
+		pub.DOI = normalizeDoi(pub.DOI);
+		// If a DOI was found in the HTML, try to fetch pub from doi.org.
+		Object.assign(pub, await makePubFromDoi(pub.DOI));
 	}
-	if (typeof metadata.Description === "string") {
-		metadata.Description = replaceHtmlEntites(metadata.Description);
+	if (typeof pub.Description === "string") {
+		pub.Description = replaceHtmlEntites(pub.Description);
 	}
-	return metadata;
+	return pub;
 };
