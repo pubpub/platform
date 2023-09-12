@@ -15,7 +15,7 @@ import {
 } from "ui";
 import Image from "next/image";
 import { PubPayload, StagePayload } from "~/lib/types";
-import { move, claim } from "../stages/actions";
+import { move, assign } from "../stages/actions";
 
 type Props = {
 	pub: PubPayload;
@@ -241,7 +241,7 @@ const PubRow: React.FC<Props> = function (props) {
 															<Button
 																variant="default"
 																onClick={async () =>
-																	await claim(
+																	await assign(
 																		pub.id,
 																		member.userId,
 																		stage.id

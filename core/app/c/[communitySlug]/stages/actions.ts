@@ -13,12 +13,13 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 				},
 			},
 		});
+		return { success: "Moved Pub successfully" };
 	} catch {
 		return { error: "Something went wrong" };
 	}
 }
 
-export async function claim(pubId: string, userId: string, stageId: string) {
+export async function assign(pubId: string, userId: string, stageId: string) {
 	try {
 		await prisma.pub.update({
 			where: { id: pubId },
@@ -32,6 +33,8 @@ export async function claim(pubId: string, userId: string, stageId: string) {
 				},
 			},
 		});
+
+		return { success: "Assigned Pub successfully" };
 	} catch {
 		return { error: "Something went wrong" };
 	}
