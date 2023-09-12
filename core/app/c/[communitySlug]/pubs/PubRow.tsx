@@ -16,7 +16,7 @@ import {
 } from "ui";
 import Image from "next/image";
 import { PubPayload, StagePayload } from "~/lib/types";
-import { move, assign } from "../stages/actions";
+import { move, assign } from "./actions";
 
 type Props = {
 	pub: PubPayload;
@@ -140,14 +140,14 @@ const PubRow: React.FC<Props> = function (props) {
 			console.error(err);
 			toast({
 				title: "Error",
-				description: err,
+				description: err.message,
 				variant: "destructive",
 			});
 		}
 		setOpen(false);
 		toast({
 			title: "Success",
-			description: "User was succesfully assigned.",
+			description: "Pub was successfully moved",
 			variant: "default",
 		});
 	};
@@ -292,7 +292,6 @@ const PubRow: React.FC<Props> = function (props) {
 															<CardFooter className="flex flex-row">
 																{stage ? (
 																	<Button
-																		variant="default"
 																		onClick={async () =>
 																			await onAssign(
 																				pub.id,

@@ -14,7 +14,7 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 			},
 		});
 	} catch {
-		return { error: "Something went wrong" };
+		return { message: "Something went wrong" };
 	}
 }
 
@@ -25,7 +25,7 @@ export async function assign(pubId: string, userId: string, stageId: string) {
 			include: { claims: true },
 		});
 		if (pub!.claims.find((claim) => claim.userId === userId)) {
-			return { error: "User already assigned" };
+			return { message: "User already assigned" };
 		}
 		await prisma.pub.update({
 			where: { id: pubId },
@@ -40,6 +40,6 @@ export async function assign(pubId: string, userId: string, stageId: string) {
 			},
 		});
 	} catch {
-		return { error: "Something went wrong" };
+		return { message: "Something went wrong" };
 	}
 }
