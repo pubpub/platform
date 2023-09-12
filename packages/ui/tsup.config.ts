@@ -1,11 +1,10 @@
 import { defineConfig, Options } from "tsup";
 
-export default defineConfig((options: Options) => ({
+export default defineConfig((options) => ({
 	// treeshake: true,
 	splitting: true,
 	entry: ["src/**/*.tsx"],
 	format: ["esm"],
-	dts: true,
 	minify: true,
 	clean: true,
 	external: ["react"],
@@ -14,6 +13,8 @@ export default defineConfig((options: Options) => ({
 			js: '"use client"',
 		};
 	},
+	dts: process.env.NODE_ENV === "production",
+	onSuccess: process.env.NODE_ENV !== "production" ? "pnpm exec tsc" : undefined,
 	...options,
 }));
 

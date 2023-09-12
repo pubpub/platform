@@ -4,10 +4,10 @@
 	"sideEffects": [
 		"**/*.css"
 	],
-	"main": "./dist/index.mjs",
-	"types": "./dist/index.d.mts",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
-		".": "./dist/index.mjs",
+		".": "./dist/index.js",
 		"./styles.css": "./dist/index.css",
 		"./tailwind.config.js": "./tailwind.config.js"
 	},

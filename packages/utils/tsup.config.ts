@@ -9,5 +9,6 @@ export default defineConfig((options: Options) => ({
 	minify: true,
 	clean: true,
 	external: ["react"],
+	onSuccess: "pnpm exec tsc",
 	...options,
 }));
