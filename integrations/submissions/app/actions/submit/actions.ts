@@ -1,17 +1,38 @@
 "use server";
 
-import { Pub } from "@pubpub/sdk";
-import manifest from "pubpub-integration.json";
+import { Create, Update } from "@pubpub/sdk";
 import { assert, expect } from "utils";
-import { client } from "~/lib/pubpub";
 import { findInstance } from "~/lib/instance";
+import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
+import { client } from "~/lib/pubpub";
 
-export async function submit(instanceId: string, pub: Pub<typeof manifest>) {
+export const submit = async (instanceId: string, pub: Create<typeof client>) => {
 	try {
 		assert(typeof instanceId === "string");
 		const instance = expect(await findInstance(instanceId));
-		return client.create(instanceId, pub as Pub<typeof manifest>, instance.pubTypeId);
+		const response = await client.create(instanceId, pub, instance.pubTypeId);
+		return response;
 	} catch (error) {
 		return { error: error.message };
 	}
-}
+};
+
+const metadataResolvers = {
+	DOI: makePubFromDoi,
+	URL: makePubFromUrl,
+	Title: makePubFromTitle,
+};
+
+export const resolveMetadata = async (
+	identifierName: string,
+	identifierValue: string
+): Promise<Update<typeof client> | { error: string }> => {
+	const resolve = metadataResolvers[identifierName];
+	if (resolve !== undefined) {
+		const pub = await resolve(identifierValue);
+		if (pub !== null) {
+			return pub;
+		}
+	}
+	return { error: "Unable to fetch metadata" };
+};

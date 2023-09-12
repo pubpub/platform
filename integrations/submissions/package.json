@@ -13,6 +13,7 @@
 		"@pubpub/sdk": "workspace:*",
 		"clsx": "^2.0.0",
 		"next": "13.4.5",
+		"parse5-sax-parser": "^7.0.0",
 		"react": "18.2.0",
 		"react-dom": "18.2.0",
 		"react-hook-form": "^7.46.1",

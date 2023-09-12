@@ -1,7 +1,1 @@
-import { Loader2, Terminal, Check } from "lucide-react";
-
-export const Icon = {
-	Spinner: Loader2,
-	Terminal,
-	Check,
-};
+export { Loader2, Terminal, Check, Download, Wand2 } from "lucide-react";
