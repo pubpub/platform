@@ -20,6 +20,13 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 
 export async function assign(pubId: string, userId: string, stageId: string) {
 	try {
+		const pub = await prisma.pub.findUnique({
+			where: { id: pubId },
+			include: { claims: true },
+		});
+		if (pub!.claims.find((claim) => claim.userId === userId)) {
+			return { error: "User already assigned" };
+		}
 		await prisma.pub.update({
 			where: { id: pubId },
 			include: { claims: true },

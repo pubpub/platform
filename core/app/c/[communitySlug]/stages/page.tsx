@@ -33,7 +33,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<h1 style={{ marginBottom: "2em" }}>Stages</h1>
-			<StageList stages={stages} token={token} />
+			<StageList stages={stages} token={token} loginData={loginData} />
 		</>
 	);
 }

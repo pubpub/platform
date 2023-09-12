@@ -6,10 +6,10 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { StagePayload } from "~/lib/types";
 
-type Props = { stages: StagePayload[]; token: string };
+type Props = { stages: StagePayload[]; token: string; loginData: any };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
-const StageList: React.FC<Props> = function ({ stages, token }) {
+const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 	return (
 		<div>
 			{stages.map((stage) => {
@@ -57,6 +57,7 @@ const StageList: React.FC<Props> = function ({ stages, token }) {
 												token={token}
 												stages={stages}
 												stage={stage}
+												loginData={loginData}
 											/>
 											{index < list.length - 1 && <hr />}
 										</Fragment>

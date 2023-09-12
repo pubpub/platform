@@ -12,6 +12,7 @@ import {
 	Dialog,
 	DialogContent,
 	DialogTrigger,
+	useToast,
 } from "ui";
 import Image from "next/image";
 import { PubPayload, StagePayload } from "~/lib/types";
@@ -22,6 +23,7 @@ type Props = {
 	token: string;
 	stages?: StagePayload[];
 	stage?: StagePayload;
+	loginData?: any;
 };
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
@@ -108,10 +110,47 @@ const getUsers = (community: PubPayload["community"]) => {
 };
 
 const PubRow: React.FC<Props> = function (props) {
-	const { pub, token, stages, stage } = props;
+	const { pub, token, stages, stage, loginData } = props;
 	const buttons = getButtons(pub, token);
 	const members = getUsers(pub.community);
+	const { toast } = useToast();
 	const [open, setOpen] = React.useState(false);
+
+	const onAssign = async (pubId: string, userId: string, stageId: string) => {
+		const err = await assign(pubId, userId, stageId);
+		if (err) {
+			console.error(err);
+			toast({
+				title: "Error",
+				description: err,
+				variant: "destructive",
+			});
+		}
+		setOpen(false);
+		toast({
+			title: "Success",
+			description: "User was succesfully assigned.",
+			variant: "default",
+		});
+	};
+
+	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
+		const err = await move(pubId, sourceStageId, destStageId);
+		if (err) {
+			console.error(err);
+			toast({
+				title: "Error",
+				description: err,
+				variant: "destructive",
+			});
+		}
+		setOpen(false);
+		toast({
+			title: "Success",
+			description: "User was succesfully assigned.",
+			variant: "default",
+		});
+	};
 
 	return (
 		<div className="pt-2 pb-2">
@@ -169,105 +208,121 @@ const PubRow: React.FC<Props> = function (props) {
 				<div className="flex items-end shrink-0">
 					{/* TODO: if no assigned members, don't show move button to non admin */}
 					{stage && (
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button size="sm" variant="outline" className="ml-1">
-									Move
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent>
-								<div className="flex flex-col">
-									<div className="mb-4">
-										<b>Move this pub to:</b>
-									</div>
-									{stages
-										? stages.map((s) => {
-												return s.id === stage.id ? null : (
-													<Button
-														variant="ghost"
-														key={s.name}
-														onClick={async () =>
-															await move(pub.id, stage.id, s.id)
-														}
-													>
-														{s.name}
-													</Button>
-												);
-										  })
-										: "No stages are present in your community"}
-								</div>
-							</PopoverContent>
-						</Popover>
-					)}
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button size="sm" variant="outline" className="ml-1">
-								Assign
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent className="flex flex-col">
-							<Button variant="secondary" className="mb-5">
-								Claim
-							</Button>
-							{members &&
-								members.map((member) => {
-									return (
-										<Dialog open={open} onOpenChange={setOpen}>
-											<DialogTrigger>
-												<Button size="sm" variant="ghost" key={member.id}>
-													<div className="mr-4">
-														<Image
-															src={member.avatar ?? member.initials}
-															alt={member.initials}
-															width={20}
-															height={20}
-														/>
-													</div>
-													<span>{member.name}</span>
-												</Button>
-											</DialogTrigger>
-											<DialogContent>
-												<Card>
-													<CardTitle>
-														Assign <i>{getTitle(pub)}</i> to{" "}
-														{member.name}?
-													</CardTitle>
-													<CardContent>
-														{member.name} will be notified that they
-														have been assigned to this Pub.
-													</CardContent>
-													<CardFooter className="flex flex-row">
-														{stage ? (
-															<Button
-																variant="default"
-																onClick={async () =>
-																	await assign(
-																		pub.id,
-																		member.userId,
-																		stage.id
-																	)
-																}
-															>
-																Assign
-															</Button>
-														) : (
-															"This pub isnt on a stage yet."
-														)}
+						<div>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button size="sm" variant="outline" className="ml-1">
+										Move
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent>
+									<div className="flex flex-col">
+										<div className="mb-4">
+											<b>Move this pub to:</b>
+										</div>
+										{stages
+											? stages.map((s) => {
+													return s.id === stage.id ? null : (
 														<Button
-															className="mx-3"
-															variant="secondary"
-															onClick={() => setOpen(false)}
+															variant="ghost"
+															key={s.name}
+															onClick={async () =>
+																await onMove(pub.id, stage.id, s.id)
+															}
 														>
-															Cancel
+															{s.name}
 														</Button>
-													</CardFooter>
-												</Card>
-											</DialogContent>
-										</Dialog>
-									);
-								})}
-						</PopoverContent>
-					</Popover>
+													);
+											  })
+											: "No stages are present in your community"}
+									</div>
+								</PopoverContent>
+							</Popover>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button size="sm" variant="outline" className="ml-1">
+										Assign
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="flex flex-col">
+									To assign someone to a pub you need a stage to be present.
+									<Button
+										variant="secondary"
+										className="mb-5"
+										onClick={async () =>
+											await onAssign(pub.id, loginData.id, stage.id)
+										}
+									>
+										Claim
+									</Button>
+									{members &&
+										members.map((member) => {
+											return (
+												<Dialog open={open} onOpenChange={setOpen}>
+													<DialogTrigger>
+														<Button
+															size="sm"
+															variant="ghost"
+															key={member.id}
+														>
+															<div className="mr-4">
+																<Image
+																	src={
+																		member.avatar ??
+																		member.initials
+																	}
+																	alt={member.initials}
+																	width={20}
+																	height={20}
+																/>
+															</div>
+															<span>{member.name}</span>
+														</Button>
+													</DialogTrigger>
+													<DialogContent>
+														<Card>
+															<CardTitle className="space-y-1.5 p-6">
+																Assign <i>{getTitle(pub)}</i> to{" "}
+																{member.name}?
+															</CardTitle>
+															<CardContent>
+																{member.name} will be notified that
+																they have been assigned to this Pub.
+															</CardContent>
+															<CardFooter className="flex flex-row">
+																{stage ? (
+																	<Button
+																		variant="default"
+																		onClick={async () =>
+																			await onAssign(
+																				pub.id,
+																				member.userId,
+																				stage.id
+																			)
+																		}
+																	>
+																		Assign
+																	</Button>
+																) : (
+																	"This pub isnt on a stage yet."
+																)}
+																<Button
+																	className="mx-3"
+																	variant="secondary"
+																	onClick={() => setOpen(false)}
+																>
+																	Cancel
+																</Button>
+															</CardFooter>
+														</Card>
+													</DialogContent>
+												</Dialog>
+											);
+										})}
+								</PopoverContent>
+							</Popover>
+						</div>
+					)}
 					<Button size="sm" variant="outline" className="ml-1">
 						Email Members
 					</Button>
