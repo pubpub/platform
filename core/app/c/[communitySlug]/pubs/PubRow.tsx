@@ -122,7 +122,7 @@ const PubRow: React.FC<Props> = function (props) {
 			console.error(err);
 			toast({
 				title: "Error",
-				description: err,
+				description: err.message,
 				variant: "destructive",
 			});
 		}
@@ -265,6 +265,7 @@ const PubRow: React.FC<Props> = function (props) {
 															variant="ghost"
 															key={member.id}
 														>
+															file{" "}
 															<div className="mr-4">
 																<Image
 																	src={
