@@ -6,13 +6,13 @@ import { expect } from "utils";
 const $indiscriminate = Symbol("indiscriminate");
 
 /**
- * A mapping from a tag in an HTML document to a PubPub metadata field. The
- * `rank` property is used to determine which mapping should take priority when
- * multiple mappings match the same tag.
+ * A mapping from a tag in an HTML document to a metadata field. The `rank`
+ * property is used to determine which mapping should take priority when
+ * multiple mappings match the same metadata field.
  */
 export type TagMapping<T extends string = string> = {
 	/**
-	 * The PubPub metadata field to which the extracted value should be mapped.
+	 * The metadata field to which the extracted value should be mapped.
 	 */
 	mapTo: T;
 	/**
@@ -37,7 +37,9 @@ export type TagMapping<T extends string = string> = {
 	 */
 	tagTypeAttrValue?: string;
 	/**
-	 * The name of the attribute from which to extract the value.
+	 * The name of the attribute from which to extract the value. If this
+	 * property is not supplied, the value will be extracted from the element's
+	 * text content.
 	 */
 	tagValueAttr?: string;
 };
