@@ -40,7 +40,7 @@ export function Configure(props: Props) {
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
-			pubTypeId: props.pubTypeId,
+			pubTypeId: props.pubTypeId ?? "",
 			instanceId: props.instanceId,
 		},
 	});

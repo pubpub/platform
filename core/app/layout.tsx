@@ -1,4 +1,4 @@
-// import "ui/styles.css";
+import "ui/styles.css";
 import "./globals.css";
 import InitClient from "./InitClient";
 

@@ -3,6 +3,10 @@
 	"version": "0.0.0",
 	"main": "dist/ui.cjs.js",
 	"module": "dist/ui.esm.js",
+	"files": [
+		"dist",
+		"styles.css"
+	],
 	"scripts": {
 		"type-check": "tsc"
 	},

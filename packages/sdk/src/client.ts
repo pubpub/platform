@@ -203,6 +203,7 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 					pubFields: pub,
 				});
 			} catch (cause) {
+				console.error(cause);
 				throw new Error("Failed to create pub", { cause });
 			}
 		},
