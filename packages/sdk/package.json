@@ -1,28 +1,14 @@
 {
 	"name": "@pubpub/sdk",
-	"type": "module",
 	"version": "0.0.6",
 	"description": "",
-	"main": "dist/lib/index.js",
+	"main": "dist/pubpub-sdk.cjs.js",
+	"module": "dist/pubpub-sdk.esm.js",
 	"files": [
-		"dist"
+		"dist",
+		"react"
 	],
-	"types": "./dist/lib/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/lib/index.js",
-			"require": "./dist/lib/index.cjs",
-			"types": "./dist/lib/index.d.ts"
-		},
-		"./react": {
-			"import": "./dist/react/index.js",
-			"require": "./dist/react/index.cjs",
-			"types": "./dist/react/index.d.ts"
-		}
-	},
 	"scripts": {
-		"build": "tsup",
-		"dev": "tsup --watch",
 		"type-check": "tsc"
 	},
 	"keywords": [
@@ -46,5 +32,11 @@
 		"tsup": "^7.1.0",
 		"ui": "workspace:*",
 		"vite": "^4.4.5"
+	},
+	"preconstruct": {
+		"entrypoints": [
+			"index.ts",
+			"react/index.tsx"
+		]
 	}
 }
