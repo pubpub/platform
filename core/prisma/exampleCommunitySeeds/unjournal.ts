@@ -11,7 +11,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(8)].map(() => uuidv4());
+	const fieldIds = [...Array(9)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
 		data: [
@@ -34,7 +34,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Submission",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[8] }],
 			},
 		},
 	});
@@ -223,71 +223,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});*/
 
-	const semanticScholarIntegration = await prisma.integration.create({
-		data: {
-			name: "Semantic Scholar",
-			actions: [
-				{
-					text: "Add paper from Semantic Scholar",
-					href: "https://integration-evaluations.onrender.com/run",
-				},
-			],
-			settingsUrl: "https://integration-evaluations.onrender.com/configure",
-		},
-	});
-
-	const openAlexIntegration = await prisma.integration.create({
-		data: {
-			name: "OpenAlex",
-			actions: [
-				{
-					text: "Add work from OpenAlex",
-					href: "https://integration-evaluations.onrender.com/run",
-				},
-			],
-			settingsUrl: "https://integration-evaluations.onrender.com/configure",
-		},
-	});
-
-	const crossrefIntegration = await prisma.integration.create({
-		data: {
-			name: "Crossref",
-			actions: [
-				{
-					text: "Add work from Crossref",
-					href: "https://integration-evaluations.onrender.com/run",
-				},
-			],
-			settingsUrl: "https://integration-evaluations.onrender.com/configure",
-		},
-	});
-
-	const openCitationsInegration = await prisma.integration.create({
-		data: {
-			name: "Open Citations",
-			actions: [
-				{
-					text: "Add work from open citation",
-					href: "https://integration-submissions.onrender.com/run",
-				},
-			],
-			settingsUrl: "https://integration-submissions.onrender.com/configure",
-		},
-	});
-
-	const keywordExtractionIntegration = await prisma.integration.create({
-		data: {
-			name: "Keyword Extraction",
-			actions: [
-				{
-					text: "Extract Keywords",
-					href: "https://integration-submissions.onrender.com/run",
-				},
-			],
-			settingsUrl: "https://integration-submissions.onrender.com/configure",
-		},
-	});
-
 	const submissionsIntegrationUrl =
 		process.env.NODE_ENV === "production"
 			? "https://integration-submissions.onrender.com"
@@ -349,51 +284,30 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		})
 	);
 
-	/**I have not thought about how these fields are used well enough */
-	// const integrationFieldIds = [...Array(2)].map((x) => uuidv4());
-	// await prisma.pubField.createMany({
-	// 	data: [
-	// 		{
-	// 			id: integrationFieldIds[0],
-	// 			name: "sitebuilder/status",
-	// 			integrationId: siteIntegration.id,
-	// 		},
-	// 		{
-	// 			id: integrationFieldIds[1],
-	// 			name: "evaluation/status",
-	// 			integrationId: evaluationIntegration.id,
-	// 		},
-	// 	],
-	// });
-
-	// await prisma.pubValue.createMany({
-	// 	data: [
-	// 		{
-	// 			pubId: parentPub2.id,
-	// 			fieldId: integrationFieldIds[0],
-	// 			value: { color: "#72BE47", text: "unjournal summaries and metrics site built" },
-	// 		},
-	// 		{
-	// 			pubId: parentPub2.id,
-	// 			fieldId: integrationFieldIds[0],
-	// 			value: { color: "#72BE47", text: "Author's Responses to evaluations site built" },
-	// 		},
-	// 		{
-	// 			pubId: evaluation1.id,
-	// 			fieldId: integrationFieldIds[1],
-	// 			value: {
-	// 				color: "#E1C04C",
-	// 				text: "Collecting responses, summaries, and statistics",
-	// 			},
-	// 		},
-	// 		{
-	// 			pubId: evaluation2.id,
-	// 			fieldId: integrationFieldIds[1],
-	// 			value: {
-	// 				color: "#E1C04C",
-	// 				text: "Collecting responses, summaries, and statistics",
-	// 			},
-	// 		},
-	// 	],
-	// });
+	const pubIds = [...Array(7)].map((x) => uuidv4());
+	const submissionToEvaluate = await prisma.pub.create({
+		data: {
+			pubTypeId: submissionTypeId,
+			communityId: communityUUID,
+			stages: { connect: { id: stageIds[3] } },
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: "Celebrity endorsements are often sought to influence public opinion. We ask whether celebrity endorsement per se has an effect beyond the fact that their statements are seen by many, and whether on net their statements actually lead people to change their beliefs. To do so, we conducted a nationwide Twitter experiment in Indonesia with 46 high-profile celebrities and organizations, with a total of 7.8 million followers, who agreed to let us randomly tweet or retweet content promoting immunization from their accounts. Our design exploits the structure of what information is passed on along a retweet chain on Twitter to parse reach versus endorsement effects. Endorsements matter: tweets that users can identify as being originated by a celebrity are far more likely to be liked or retweeted by users than similar tweets seen by the same users but without the celebrities' imprimatur. By contrast, explicitly citing sources in the tweets actually reduces diffusion. By randomizing which celebrities tweeted when, we find suggestive evidence that overall exposure to the campaign may influence beliefs about vaccination and knowledge of immunization-seeking behavior by one's network. Taken together, the findings suggest an important role for celebrity endorsement.",
+						},
+						{
+							fieldId: fieldIds[8],
+							value: "10.3386/w25589",
+						},
+					],
+				},
+			},
+		},
+	});
 }
