@@ -119,7 +119,6 @@ const PubRow: React.FC<Props> = function (props) {
 	const onAssign = async (pubId: string, userId: string, stageId: string) => {
 		const err = await assign(pubId, userId, stageId);
 		if (err) {
-			console.error(err);
 			toast({
 				title: "Error",
 				description: err.message,
