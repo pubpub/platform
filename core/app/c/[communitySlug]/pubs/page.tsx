@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
 import { getLoginData } from "~/lib/auth/loginData";
 import PubList from "./PubList";
