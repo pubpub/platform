@@ -94,7 +94,6 @@ const getUsers = (community: PubPayload["community"]) => {
 		community &&
 		community.members.map((member) => {
 			return {
-				id: member.id,
 				userId: member.userId,
 				name: member.user.name,
 				email: member.user.email,
@@ -260,7 +259,7 @@ const PubRow: React.FC<Props> = function (props) {
 														<Button
 															size="sm"
 															variant="ghost"
-															key={member.id}
+															key={member.userId}
 														>
 															<div className="mr-4">
 																<Image
