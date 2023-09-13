@@ -15,7 +15,8 @@ import {
 	PopoverTrigger,
 	useToast,
 } from "ui";
-import { PubPayload, StagePayload } from "~/lib/types";
+import { expect } from "utils";
+import { PubPayload, StagePayload, User } from "~/lib/types";
 import { assign, move } from "./actions";
 
 type Props = {
@@ -23,7 +24,7 @@ type Props = {
 	token: string;
 	stages?: StagePayload[];
 	stage?: StagePayload;
-	loginData?: any;
+	loginData?: User;
 };
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
@@ -247,7 +248,10 @@ const PubRow: React.FC<Props> = function (props) {
 									<Button
 										variant="secondary"
 										className="mb-5"
-										onClick={() => onAssign(pub.id, loginData.id, stage.id)}
+										onClick={() =>
+											// we will not need this expect when the permissions branch that broke up this component is merged
+											onAssign(pub.id, expect(loginData).id, stage.id)
+										}
 									>
 										Claim
 									</Button>

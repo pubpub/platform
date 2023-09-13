@@ -3,6 +3,7 @@ import StageList from "./StageList";
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import { stageInclude } from "~/lib/types";
+import { expect } from "utils";
 
 const getCommunityStages = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({
@@ -33,7 +34,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<h1 style={{ marginBottom: "2em" }}>Stages</h1>
-			<StageList stages={stages} token={token} loginData={loginData} />
+			<StageList stages={stages} token={token} loginData={expect(loginData)} />
 		</>
 	);
 }

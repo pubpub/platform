@@ -4,9 +4,9 @@ import PubRow from "../pubs/PubRow";
 import { Button } from "ui";
 import Link from "next/link";
 import { Fragment } from "react";
-import { StagePayload } from "~/lib/types";
+import { StagePayload, User } from "~/lib/types";
 
-type Props = { stages: StagePayload[]; token: string; loginData: any };
+type Props = { stages: StagePayload[]; token: string; loginData: User };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
