@@ -66,10 +66,10 @@ export function Configure(props: Props) {
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
 					<CardHeader>
-						<CardTitle>Submission Settings</CardTitle>
+						<CardTitle>Evaluation Settings</CardTitle>
 						<CardDescription>
 							This form contains fields used to configure an instance of the
-							submissions integration.
+							evaluations integration.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
