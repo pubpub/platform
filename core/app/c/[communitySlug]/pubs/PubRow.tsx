@@ -22,7 +22,7 @@ import { assign, move } from "./actions";
 type Props = {
 	pub: PubPayload;
 	token: string;
-	stages?: StagePayload[];
+	stages: StagePayload[];
 	stage?: StagePayload;
 	loginData?: User;
 };
