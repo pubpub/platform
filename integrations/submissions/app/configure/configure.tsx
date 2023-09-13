@@ -73,7 +73,6 @@ export function Configure(props: Props) {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Input type="hidden" name="instanceId" value={props.instanceId} />
 						<FormField
 							control={form.control}
 							name="pubTypeId"
