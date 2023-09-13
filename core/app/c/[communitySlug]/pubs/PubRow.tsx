@@ -22,7 +22,7 @@ import { assign, move } from "./actions";
 type Props = {
 	pub: PubPayload;
 	token: string;
-	stages: StagePayload[];
+	stages?: StagePayload[];
 	stage?: StagePayload;
 	loginData?: User;
 };
@@ -225,8 +225,8 @@ const PubRow: React.FC<Props> = function (props) {
 														<Button
 															variant="ghost"
 															key={s.name}
-															onClick={async () =>
-																await onMove(pub.id, stage.id, s.id)
+															onClick={() =>
+																onMove(pub.id, stage.id, s.id)
 															}
 														>
 															{s.name}

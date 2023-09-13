@@ -53,7 +53,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<PubHeader />
-			<PubList pubs={pubs} token={token} stages={stages} />
+			<PubList pubs={pubs} token={token} />
 		</>
 	);
 }
