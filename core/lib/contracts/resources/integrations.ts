@@ -1,14 +1,26 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-const contract = initContract();
+const Literal = z.union([z.string(), z.number(), z.boolean()]);
+type Literal = z.infer<typeof Literal>;
+type Json = Literal | { [key: string]: Json } | Json[];
+const Json: z.ZodType<Json> = z.lazy(() => z.union([Literal, z.array(Json), z.record(Json)]));
 
-const PubFieldsSchema = z.any();
+const PubValuesSchema = z.record(Json);
 
-const PubPostSchema = z.object({
+const BaseCreatePubBody = z.object({
 	pubTypeId: z.string(),
-	pubFields: PubFieldsSchema,
+	values: PubValuesSchema,
 });
+
+export type CreatePubBody = z.infer<typeof BaseCreatePubBody> & {
+	children?: CreatePubBody[];
+};
+
+export const CreatePubBody: z.ZodType<CreatePubBody> = BaseCreatePubBody.extend({
+	children: z.lazy(() => CreatePubBody.array().optional()),
+});
+
 const SuggestedMembersSchema = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -24,9 +36,11 @@ const UserSchema = z.object({
 	updatedAt: z.date(),
 });
 
-export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
-export type PubPostBody = z.infer<typeof PubPostSchema>;
+export type PubFieldsResponse = z.infer<typeof PubValuesSchema>;
+export type PubPostBody = z.infer<typeof CreatePubBody>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
+
+const contract = initContract();
 
 export const integrationsApi = contract.router(
 	{
@@ -48,12 +62,12 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs",
 			summary: "Creates a new pub",
 			description: "A way to create a new pub",
-			body: PubPostSchema,
+			body: CreatePubBody,
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubFieldsSchema,
+				200: z.any(),
 				404: z.object({ message: z.string() }),
 			},
 		},
@@ -67,7 +81,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubFieldsSchema),
+				200: z.array(PubValuesSchema),
 			},
 		},
 		getAllPubs: {
@@ -79,7 +93,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubFieldsSchema),
+				200: z.array(PubValuesSchema),
 			},
 		},
 		updatePub: {
@@ -87,13 +101,13 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs/:pubId",
 			summary: "Adds field(s) to a pub",
 			description: "A way to update a field for an existing pub",
-			body: PubFieldsSchema,
+			body: PubValuesSchema,
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubFieldsSchema,
+				200: PubValuesSchema,
 			},
 		},
 		getSuggestedMembers: {

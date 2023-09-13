@@ -3,7 +3,7 @@ import { PubPostBody } from "~/lib/contracts/resources/integrations";
 import { NotFoundError } from "./errors";
 
 export const getPubFields = async (pubId: string) => {
-	const fields = await prisma.pubValue.findMany({
+	const pubValues = await prisma.pubValue.findMany({
 		where: { pubId },
 		distinct: ["fieldId"],
 		orderBy: {
@@ -18,7 +18,7 @@ export const getPubFields = async (pubId: string) => {
 		},
 	});
 
-	return fields.reduce((prev: any, curr) => {
+	return pubValues.reduce((prev: any, curr) => {
 		prev[curr.field.name] = curr.value;
 		return prev;
 	}, {});
@@ -29,13 +29,12 @@ const PubTypeNotFoundError = new NotFoundError("PubType not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldNamesNotFoundError = new NotFoundError("Pub fields not found");
 
-const getPubValues = async (pubFields: any, pubTypeId?: string) => {
-	const fieldNames = Object.keys(pubFields);
-
-	const fieldIds = await prisma.pubField.findMany({
+const normalizePubValues = async (values: PubPostBody["values"], pubTypeId?: string) => {
+	const pubFieldNames = Object.keys(values);
+	const pubFieldIds = await prisma.pubField.findMany({
 		where: {
 			name: {
-				in: fieldNames,
+				in: pubFieldNames,
 			},
 			pubTypes: {
 				some: {
@@ -45,51 +44,94 @@ const getPubValues = async (pubFields: any, pubTypeId?: string) => {
 		},
 	});
 
-	if (!fieldIds) {
+	if (!pubFieldIds) {
 		throw PubFieldNamesNotFoundError;
 	}
 
-	const values = fieldIds.map((field) => {
+	const normalizedValues = pubFieldIds.map((field) => {
 		return {
 			fieldId: field.id,
-			value: pubFields[field.name],
+			value: values[field.name],
 		};
 	});
 
-	return values;
+	return normalizedValues;
+};
+
+type DeepCreateOptions = {
+	communityId: string;
+	pubTypeId: string;
+	values: {
+		createMany: {
+			data: { fieldId: string; value: any }[];
+		};
+	};
+	children: {
+		create?: DeepCreateOptions[];
+	};
+};
+
+const getCreateDepth = (body: PubPostBody, depth = 0) => {
+	if (body.children) {
+		for (const child of body.children) {
+			depth = Math.max(getCreateDepth(child, depth), depth);
+		}
+		depth += 1;
+	}
+	return depth;
+};
+
+const makePubCreateOptions = async (
+	body: PubPostBody,
+	communityId: string
+): Promise<DeepCreateOptions> => {
+	return {
+		communityId,
+		pubTypeId: body.pubTypeId,
+		values: {
+			createMany: {
+				data: await normalizePubValues(body.values),
+			},
+		},
+		children: {
+			create: body.children
+				? await Promise.all(
+						body.children.map((child) => makePubCreateOptions(child, communityId))
+				  )
+				: undefined,
+		},
+	};
+};
+
+const recursiveInclude = <T extends string>(key: T, depth: number) => {
+	if (depth === 0) {
+		return {
+			include: {
+				[key]: true,
+			},
+		};
+	}
+	return {
+		include: {
+			[key]: recursiveInclude(key, depth - 1),
+		},
+	};
 };
 
 export const createPub = async (instanceId: string, body: PubPostBody) => {
-	const { pubTypeId, pubFields } = body;
-
-	const [instance, pubType] = await Promise.all([
-		prisma.integrationInstance.findUnique({
-			where: { id: instanceId },
-		}),
-		prisma.pubType.findUnique({
-			where: { id: pubTypeId },
-		}),
-	]);
+	const instance = await prisma.integrationInstance.findUnique({
+		where: { id: instanceId },
+	});
 
 	if (!instance) {
 		throw InstanceNotFoundError;
 	}
 
-	if (!pubType) {
-		throw PubTypeNotFoundError;
-	}
-
-	const pubValues = await getPubValues(pubFields, pubType.id);
-
+	const pubCreateDepth = getCreateDepth(body);
+	const pubCreateOptions = await makePubCreateOptions(body, instance.communityId);
 	const pub = await prisma.pub.create({
 		data: {
-			pubTypeId: pubType.id,
-			communityId: instance.communityId,
-			values: {
-				createMany: {
-					data: pubValues,
-				},
-			},
+			...pubCreateOptions,
 			stages: instance.stageId
 				? {
 						connect: {
@@ -98,6 +140,7 @@ export const createPub = async (instanceId: string, body: PubPostBody) => {
 				  }
 				: undefined,
 		},
+		...recursiveInclude("children", pubCreateDepth),
 	});
 
 	if (!pub) {
@@ -113,7 +156,7 @@ export const getPub = async (pubId: string) => {
 };
 
 export const updatePub = async (pubId: string, pubFields: any) => {
-	const newValues = await getPubValues(pubFields);
+	const newValues = await normalizePubValues(pubFields);
 
 	await prisma.pub.update({
 		where: { id: pubId },
