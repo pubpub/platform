@@ -1,8 +1,8 @@
 {
 	"private": true,
 	"scripts": {
-		"build": "turbo build",
-		"dev": "turbo dev",
+		"build": "pnpm p:build && turbo build",
+		"dev": "pnpm p:dev && turbo dev",
 		"lint": "turbo lint",
 		"clean": "turbo clean",
 		"start": "turbo start",

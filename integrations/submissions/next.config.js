@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const withPreconstruct = require("@preconstruct/next");
+
 const nextConfig = {
 	reactStrictMode: true,
 	experimental: {
@@ -6,4 +8,4 @@ const nextConfig = {
 	},
 };
 
-module.exports = nextConfig;
+module.exports = withPreconstruct(nextConfig);

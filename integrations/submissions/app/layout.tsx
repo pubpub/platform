@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import { Toaster } from "ui";
-import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";
 import { Instance, findInstance } from "~/lib/instance";

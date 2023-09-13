@@ -3,9 +3,6 @@
 	"version": "0.0.0",
 	"main": "dist/ui.cjs.js",
 	"module": "dist/ui.esm.js",
-	"exports": {
-		"./tailwind.config.js": "./tailwind.config.js"
-	},
 	"scripts": {
 		"type-check": "tsc"
 	},
