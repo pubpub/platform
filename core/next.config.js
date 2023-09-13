@@ -13,6 +13,9 @@ const nextConfig = {
 			},
 		],
 	},
+	experimental: {
+		serverActions: true,
+	},
 };
 
 module.exports = withPreconstruct(nextConfig);

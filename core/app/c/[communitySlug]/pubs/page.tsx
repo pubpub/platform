@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
 import { getLoginData } from "~/lib/auth/loginData";
 import PubList from "./PubList";
@@ -54,7 +53,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<PubHeader />
-			<PubList pubs={pubs} token={token} stages={stages} />
+			<PubList pubs={pubs} token={token} />
 		</>
 	);
 }

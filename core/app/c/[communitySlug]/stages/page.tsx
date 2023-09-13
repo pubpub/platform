@@ -22,10 +22,11 @@ type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
 	const loginData = await getLoginData();
-	let token;
-	if (loginData) {
-		token = await createToken(loginData.id);
+	if (!loginData) {
+		return null;
 	}
+	let token;
+	token = await createToken(loginData.id);
 	const stages = await getCommunityStages(params.communitySlug);
 	if (!stages) {
 		return null;
@@ -33,7 +34,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<h1 style={{ marginBottom: "2em" }}>Stages</h1>
-			<StageList stages={stages} token={token} />
+			<StageList stages={stages} token={token} loginData={loginData} />
 		</>
 	);
 }
