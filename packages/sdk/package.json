@@ -29,9 +29,7 @@
 		"@types/node": "^20.4.2",
 		"@types/react": "^18.2.5",
 		"tsconfig": "workspace:*",
-		"tsup": "^7.1.0",
-		"ui": "workspace:*",
-		"vite": "^4.4.5"
+		"ui": "workspace:*"
 	},
 	"preconstruct": {
 		"entrypoints": [
