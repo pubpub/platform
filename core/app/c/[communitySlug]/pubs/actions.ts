@@ -1,5 +1,6 @@
 "use server";
 import prisma from "~/prisma/db";
+import { expect } from "utils";
 
 export async function move(pubId: string, sourceStageId: string, destinationStageId: string) {
 	try {
@@ -14,7 +15,7 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 			},
 		});
 	} catch {
-		return { message: "Something went wrong" };
+		return { message: "The Pub was not successully moved" };
 	}
 }
 
@@ -24,7 +25,7 @@ export async function assign(pubId: string, userId: string, stageId: string) {
 			where: { id: pubId },
 			include: { claims: true },
 		});
-		if (pub!.claims.find((claim) => claim.userId === userId)) {
+		if (expect(pub).claims.find((claim) => claim.userId === userId)) {
 			return { message: "User already assigned" };
 		}
 		await prisma.pub.update({
@@ -40,6 +41,6 @@ export async function assign(pubId: string, userId: string, stageId: string) {
 			},
 		});
 	} catch {
-		return { message: "Something went wrong" };
+		return { message: "The Pub was not successully assigned" };
 	}
 }

@@ -1,22 +1,22 @@
 "use client";
+import Image from "next/image";
 import React from "react";
 import {
 	Button,
 	Card,
 	CardContent,
-	CardTitle,
 	CardFooter,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
+	CardTitle,
 	Dialog,
 	DialogContent,
 	DialogTrigger,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
 	useToast,
 } from "ui";
-import Image from "next/image";
 import { PubPayload, StagePayload } from "~/lib/types";
-import { move, assign } from "./actions";
+import { assign, move } from "./actions";
 
 type Props = {
 	pub: PubPayload;
@@ -125,6 +125,7 @@ const PubRow: React.FC<Props> = function (props) {
 				description: err.message,
 				variant: "destructive",
 			});
+			return;
 		}
 		setOpen(false);
 		toast({
@@ -137,12 +138,12 @@ const PubRow: React.FC<Props> = function (props) {
 	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
 		const err = await move(pubId, sourceStageId, destStageId);
 		if (err) {
-			console.error(err);
 			toast({
 				title: "Error",
 				description: err.message,
 				variant: "destructive",
 			});
+			return;
 		}
 		toast({
 			title: "Success",
@@ -247,9 +248,7 @@ const PubRow: React.FC<Props> = function (props) {
 									<Button
 										variant="secondary"
 										className="mb-5"
-										onClick={async () =>
-											await onAssign(pub.id, loginData.id, stage.id)
-										}
+										onClick={() => onAssign(pub.id, loginData.id, stage.id)}
 									>
 										Claim
 									</Button>
@@ -263,7 +262,6 @@ const PubRow: React.FC<Props> = function (props) {
 															variant="ghost"
 															key={member.id}
 														>
-															file{" "}
 															<div className="mr-4">
 																<Image
 																	src={
@@ -291,8 +289,8 @@ const PubRow: React.FC<Props> = function (props) {
 															<CardFooter className="flex flex-row">
 																{stage ? (
 																	<Button
-																		onClick={async () =>
-																			await onAssign(
+																		onClick={() =>
+																			onAssign(
 																				pub.id,
 																				member.userId,
 																				stage.id
