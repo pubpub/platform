@@ -18,7 +18,6 @@ export type UserPutBody = {
 export async function POST(req: NextRequest) {
 	const submittedData: UserPostBody = await req.json();
 	const { name, email, password } = submittedData;
-	console.log("SUBMITTED", submittedData);
 	const supabase = getServerSupabase();
 	const { data, error } = await supabase.auth.signUp({
 		email,

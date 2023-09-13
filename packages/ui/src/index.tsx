@@ -1,6 +1,3 @@
-/* Styles */
-// import "./styles.css";
-
 /* Components */
 export * as Icon from "./icon";
 export * from "./alert";
