@@ -147,7 +147,7 @@ const PubRow: React.FC<Props> = function ({ pub, token, stages }) {
 										return null;
 									}
 									return (
-										<Button variant="ghost" size="sm" key={action.text}>
+										<Button variant="ghost" size="sm" key={action.href}>
 											<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
 											<a href={action.href}>{action.text}</a>
 										</Button>

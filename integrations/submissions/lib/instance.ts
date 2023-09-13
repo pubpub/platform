@@ -5,11 +5,18 @@ export type Instance = {
 	pubTypeId: string;
 };
 
-const client = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING });
-const connect = client.connect();
+// const client = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING });
+// const connect = client.connect();
+
+let client: redis.RedisClientType;
+let clientConnect: Promise<void>;
 
 const db = async () => {
-	await connect;
+	if (!client) {
+		client = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING });
+		clientConnect = client.connect();
+	}
+	await clientConnect;
 	return client;
 };
 

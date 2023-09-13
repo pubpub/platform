@@ -1,11 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 const path = require("path");
-
 const sharedConfig = require("ui/tailwind.config.js");
-const resolve = (packageName) =>
-	path.join(path.dirname(require.resolve(packageName)), "**/*.{js,cjs,mjs}");
+const packagePath = (id) => path.dirname(require.resolve(`${id}/package.json`));
+const packageSource = (id) => path.join(packagePath(id), "src", "**/*.{ts,tsx}");
 
 module.exports = {
 	presets: [sharedConfig],
-	content: ["./app/**/*.{ts,tsx}", resolve("@pubpub/sdk/react"), resolve("ui")],
+	plugins: [require("@tailwindcss/forms")],
+	content: ["./app/**/*.{ts,tsx}", packageSource("ui"), packageSource("@pubpub/sdk")],
 };

@@ -1,11 +1,4 @@
 {
-	"main": "../dist/react/index.js",
-	"types": "../dist/react/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./../dist/react/index.js",
-			"require": "./../dist/react/index.cjs",
-			"types": "./../dist/react/index.d.ts"
-		}
-	}
+	"main": "dist/pubpub-sdk-react.cjs.js",
+	"module": "dist/pubpub-sdk-react.esm.js"
 }

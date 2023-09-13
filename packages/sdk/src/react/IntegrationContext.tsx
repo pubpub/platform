@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { User } from "../lib";
+import { User } from "../types";
 
 export type IntegrationContext = {
 	name: string;

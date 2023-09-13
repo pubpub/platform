@@ -1,3 +1,4 @@
+import { expect } from "utils";
 import { IntegrationApiError } from "./errors";
 import { Manifest, ManifestJson, User } from "./types";
 
@@ -181,7 +182,7 @@ const makeRequest = async (
 /**
  * Create a client for the PubPub API.
  */
-export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Client<T> => {
+export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 	return {
 		async auth(instanceId, token) {
 			try {
@@ -198,24 +199,37 @@ export const makeClient = <T extends Manifest>(manifest: T, apiKey: string): Cli
 		},
 		async create(instanceId, pub, pubTypeId) {
 			try {
-				return await makeRequest(instanceId, apiKey, "POST", "pubs", {
+				return await makeRequest(instanceId, expect(process.env.API_KEY), "POST", "pubs", {
 					pubTypeId,
 					pubFields: pub,
 				});
 			} catch (cause) {
+				console.error(cause);
 				throw new Error("Failed to create pub", { cause });
 			}
 		},
 		async read(instanceId, pubId, ...fields) {
 			try {
-				return await makeRequest(instanceId, apiKey, "GET", "pubs", pubId);
+				return await makeRequest(
+					instanceId,
+					expect(process.env.API_KEY),
+					"GET",
+					"pubs",
+					pubId
+				);
 			} catch (cause) {
 				throw new Error("Failed to get pub", { cause });
 			}
 		},
 		async update(instanceId, pubId, patch) {
 			try {
-				return await makeRequest(instanceId, apiKey, "PATCH", `pubs/${pubId}`, patch);
+				return await makeRequest(
+					instanceId,
+					expect(process.env.API_KEY),
+					"PATCH",
+					`pubs/${pubId}`,
+					patch
+				);
 			} catch (cause) {
 				throw new Error("Failed to update pub", { cause });
 			}

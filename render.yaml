@@ -15,21 +15,6 @@ services:
       region: ohio
       ipAllowList: [] # only allow internal connections
       maxmemoryPolicy: noeviction
-    # integration-evaluations
-    - type: web
-      name: integration-evaluations
-      region: ohio
-      runtime: node
-      rootDir: .
-      buildCommand: ./bin/render-build.sh integration-evaluations
-      startCommand: pnpm start --filter integration-evaluations
-      envVars:
-          - fromGroup: pubpub-integration-prod-env
-          - key: REDIS_CONNECTION_STRING
-            fromService:
-                type: redis
-                name: integration-instances
-                property: connectionString
     # integration-submissions
     - type: web
       name: integration-submissions

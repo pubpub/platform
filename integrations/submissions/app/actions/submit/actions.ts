@@ -1,7 +1,7 @@
 "use server";
 
 import { Create, Update } from "@pubpub/sdk";
-import { assert, expect } from "utils";
+import { assert } from "utils";
 import { findInstance } from "~/lib/instance";
 import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
 import { client } from "~/lib/pubpub";
@@ -9,7 +9,10 @@ import { client } from "~/lib/pubpub";
 export const submit = async (instanceId: string, pub: Create<typeof client>) => {
 	try {
 		assert(typeof instanceId === "string");
-		const instance = expect(await findInstance(instanceId));
+		const instance = await findInstance(instanceId);
+		if (instance === undefined) {
+			return { error: "Instance not configured" };
+		}
 		const response = await client.create(instanceId, pub, instance.pubTypeId);
 		return response;
 	} catch (error) {
