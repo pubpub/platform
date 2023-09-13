@@ -1,6 +1,7 @@
 "use server";
 import prisma from "~/prisma/db";
 import { expect } from "utils";
+import { revalidatePath } from "next/cache";
 
 export async function move(pubId: string, sourceStageId: string, destinationStageId: string) {
 	try {
@@ -14,6 +15,7 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 				},
 			},
 		});
+		revalidatePath(`/`);
 	} catch {
 		return { message: "The Pub was not successully moved" };
 	}
@@ -31,8 +33,8 @@ export async function assign(pubId: string, userId: string, stageId: string) {
 		await prisma.pub.update({
 			where: { id: pubId },
 			include: { claims: true },
-			data: {
-				claims: {
+				data: {
+					claims: {
 					create: {
 						stageId: stageId,
 						userId: userId,
