@@ -379,6 +379,107 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		],
 	});
 
+	// Submitted --> Consent, To Evaluate, Under Evaluation, Shelved
+	await prisma.stage.update({
+		where: { id: stageIds[0] },
+		data: {
+			moveConstraints: {
+				createMany: {
+					data: [
+						{ destinationId: stageIds[1] },
+						{ destinationId: stageIds[2] },
+						{ destinationId: stageIds[3] },
+						{ destinationId: stageIds[6] },
+					],
+				},
+			},
+		},
+	});
+
+	// Consent --> To Evaluate, Under Evaluation, Shelved
+	await prisma.stage.update({
+		where: { id: stageIds[1] },
+		data: {
+			moveConstraints: {
+				createMany: {
+					data: [
+						{ destinationId: stageIds[2] },
+						{ destinationId: stageIds[3] },
+						{ destinationId: stageIds[6] },
+					],
+				},
+			},
+		},
+	});
+
+	// To Evaluate --> Under Evaluation, Shelved
+	await prisma.stage.update({
+		where: { id: stageIds[2] },
+		data: {
+			moveConstraints: {
+				createMany: {
+					data: [{ destinationId: stageIds[3] }, { destinationId: stageIds[6] }],
+				},
+			},
+		},
+	});
+
+	// Under Evaluation --> In Production, Shelved
+	await prisma.stage.update({
+		where: { id: stageIds[3] },
+		data: {
+			moveConstraints: {
+				createMany: {
+					data: [{ destinationId: stageIds[4] }, { destinationId: stageIds[6] }],
+				},
+			},
+		},
+	});
+
+	// Production --> Evaluation, Published, Shelved
+	await prisma.stage.update({
+		where: { id: stageIds[4] },
+		data: {
+			moveConstraints: {
+				createMany: {
+					data: [
+						{ destinationId: stageIds[3] },
+						{ destinationId: stageIds[5] },
+						{ destinationId: stageIds[6] },
+					],
+				},
+			},
+		},
+	});
+
+	// Published --> Evaluation, Production, Shelved
+	await prisma.stage.update({
+		where: { id: stageIds[5] },
+		data: {
+			moveConstraints: {
+				createMany: {
+					data: [
+						{ destinationId: stageIds[3] },
+						{ destinationId: stageIds[4] },
+						{ destinationId: stageIds[6] },
+					],
+				},
+			},
+		},
+	});
+
+	// Shelved --> No Constraints?
+	/* await prisma.stage.update({
+		where: { id: stageIds[6] },
+		data: {
+			moveConstraints: {
+				createMany: {
+					data: [],
+				},
+			},
+		},
+	});*/
+
 	await prisma.pub.update({
 		where: { id: submission1.id },
 		data: { stages: { connect: { id: stageIds[0] } } },
