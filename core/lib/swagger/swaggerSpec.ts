@@ -23,7 +23,7 @@ export const openApiDocument: OpenAPIObject = generateOpenApi(api, {
 	},
 	servers: [
 		{
-			url: "https://localhost:3000/api/v0",
+			url: "http://localhost:3000/api/v0",
 			description: "The development API server",
 		},
 		{

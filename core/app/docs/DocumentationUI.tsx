@@ -7,11 +7,7 @@ type Props = {
 };
 
 function DocumentationUI({ spec }: Props) {
-	return (
-		<>
-			<API apiDescriptionDocument={spec} />
-		</>
-	);
+	return <API apiDescriptionDocument={spec} />;
 }
 
 export default DocumentationUI;
