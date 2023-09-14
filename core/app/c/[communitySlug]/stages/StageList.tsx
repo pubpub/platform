@@ -2,10 +2,10 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { Button, Card, CardContent } from "ui";
+import { getPubUsers, getStageMoveConstraints } from "~/lib/permissions";
+import { StagePayload, StagePayloadMoveConstraintDestination, User } from "~/lib/types";
 import PubRow from "../pubs/PubRow";
 import { StagePubActions } from "./StagePubActions";
-import { getPubUsers, getStageMoveConstraints } from "~/lib/permissions";
-import { StagePayload, User, StagePayloadMoveConstraintDestination } from "~/lib/types";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
