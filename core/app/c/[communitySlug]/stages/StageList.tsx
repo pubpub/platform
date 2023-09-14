@@ -16,7 +16,8 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 		<div>
 			{stages.map((stage) => {
 				const users = getPubUsers(stage.permissions);
-				console.log(stage.moveConstraints);
+				console.log("constraints", stage.moveConstraints);
+				console.log("users", users);
 				return (
 					<div key={stage.id} className="mb-20">
 						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>

@@ -134,7 +134,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					],
 				},
 			},
-			permissions: { create: { memberGroupId: memberGroup.id } },
 		},
 	});
 
