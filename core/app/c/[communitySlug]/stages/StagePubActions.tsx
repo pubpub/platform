@@ -20,7 +20,7 @@ import {
 	StagePayloadMoveConstraintDestination,
 	User,
 } from "~/lib/types";
-// import Image from "next/image";
+import Image from "next/image";
 import { assign, move } from "./actions";
 
 type Props = {
@@ -41,6 +41,7 @@ const getTitle = (pub: Props["pub"]) => {
 export const StagePubActions = (props: Props) => {
 	const { users, pub, stage, loginData, stages } = props;
 	const [open, setOpen] = React.useState(false);
+	const [selectedUserId, setSelectedUserid] = React.useState("");
 	const { toast } = useToast();
 
 	const onAssign = async (pubId: string, userId: string, stageId: string) => {
@@ -116,29 +117,30 @@ export const StagePubActions = (props: Props) => {
 						<Button
 							variant="secondary"
 							className="mb-5"
-							onClick={() =>
-								// we will not need this  when the permissions branch that broke up this component is merged
-								onAssign(pub.id, loginData.id, stage.id)
-							}
+							onClick={() => onAssign(pub.id, loginData.id, stage.id)}
 						>
 							Claim
 						</Button>
 						{users.map((user) => {
-							{
-								/* setting open on the dialog makes the <DialogContent /> render with the same user.  */
-							}
 							return (
-								<Dialog open={open} onOpenChange={setOpen} key={user.id}>
+								<Dialog
+									open={open && selectedUserId === user.id}
+									onOpenChange={setOpen}
+									key={user.id}
+								>
 									<DialogTrigger>
-										<Button variant="ghost">
-											{/* <div className="mr-4">
-													<Image
-														src={user.avatar ?? "user.initials"}
-														alt={"user.initials"}
-														width={20}
-														height={20}
-													/>
-												</div> */}
+										<Button
+											variant="ghost"
+											onClick={() => setSelectedUserid(user.id)}
+										>
+											<div className="mr-4">
+												<Image
+													src={user.avatar ?? "user.initials"}
+													alt={"user.initials"}
+													width={20}
+													height={20}
+												/>
+											</div>
 											<span>{user.name}</span>
 										</Button>
 									</DialogTrigger>
