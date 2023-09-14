@@ -13,14 +13,20 @@ import {
 	CardFooter,
 	useToast,
 } from "ui";
-import { PermissionPayloadUser, PubPayload, StagePayload, User } from "~/lib/types";
+import {
+	PermissionPayloadUser,
+	PubPayload,
+	StagePayload,
+	User,
+	StagePayloadMoveConstraintDestination,
+} from "~/lib/types";
 // import Image from "next/image";
 import { assign, move } from "./actions";
 
 type Props = {
 	users: PermissionPayloadUser[];
 	pub: PubPayload;
-	stages: StagePayload[];
+	stages: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
 	loginData: User;
 };
@@ -88,19 +94,17 @@ export const StagePubActions = (props: Props) => {
 								<div className="mb-4">
 									<b>Move this pub to:</b>
 								</div>
-								{stages
-									? stages.map((s) => {
-											return s.id === stage.id ? null : (
-												<Button
-													variant="ghost"
-													key={s.name}
-													onClick={() => onMove(pub.id, stage.id, s.id)}
-												>
-													{s.name}
-												</Button>
-											);
-									  })
-									: "No stages are present in your community"}
+								{stages.map((s) => {
+									return s.id === stage.id ? null : (
+										<Button
+											variant="ghost"
+											key={s.name}
+											onClick={() => onMove(pub.id, stage.id, s.id)}
+										>
+											{s.name}
+										</Button>
+									);
+								})}
 							</div>
 						</PopoverContent>
 					</Popover>
@@ -141,7 +145,7 @@ export const StagePubActions = (props: Props) => {
 											</DialogTrigger>
 											<DialogContent>
 												<Card>
-													<CardTitle>
+													<CardTitle className="space-y-1.5 p-6">
 														Assign <i>{getTitle(pub)}</i> to {user.name}
 														?
 													</CardTitle>

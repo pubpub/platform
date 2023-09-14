@@ -424,6 +424,28 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		],
 	});
 
+	await prisma.permission.create({
+		data: {
+			member: {
+				connect: { id: member.id },
+			},
+			stages: {
+				connect: [{ id: stageIds[0] }],
+			},
+		},
+	});
+
+	await prisma.permission.create({
+		data: {
+			memberGroup: {
+				connect: { id: memberGroup.id },
+			},
+			stages: {
+				connect: [{ id: stageIds[0] }],
+			},
+		},
+	});
+
 	// Submitted --> Consent, To Evaluate, Under Evaluation, Shelved
 	await prisma.stage.update({
 		where: { id: stageIds[0] },

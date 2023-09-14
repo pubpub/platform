@@ -1,4 +1,4 @@
-import { PermissionPayload, PermissionPayloadUser, StagePayload } from "./types";
+import { PermissionPayload, PermissionPayloadUser, StagePayloadMoveConstraint } from "./types";
 
 export const getPubUsers = (permissions: PermissionPayload[]) => {
 	const users: PermissionPayloadUser[] = [];
@@ -16,7 +16,6 @@ export const getPubUsers = (permissions: PermissionPayload[]) => {
 	return users;
 };
 
-export const getStageMoveConstraints = (stage: StagePayload[]) => {
-	const constraints: string[] = [];
-	console.log(stage);
+export const getStageMoveConstraints = (stageMoveConstraints: StagePayloadMoveConstraint) => {
+	return stageMoveConstraints.map((ting) => ting.destination);
 };

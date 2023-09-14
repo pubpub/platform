@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { type } from "os";
 
 export const pubInclude = {
 	pubType: true,
@@ -66,7 +67,10 @@ export const stageInclude = {
 	pubs: { include: pubInclude },
 	integrationInstances: { include: { integration: true } },
 	permissions: { include: permissionInclude },
-	moveConstraints: true,
+	moveConstraints: { include: { destination: true } },
 } satisfies Prisma.StageInclude;
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
+
+export type StagePayloadMoveConstraint = NonNullable<StagePayload["moveConstraints"]>;
+export type StagePayloadMoveConstraintDestination = NonNullable<StagePayloadMoveConstraint>[number]["destination"];
