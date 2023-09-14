@@ -31,7 +31,7 @@ import { evaluate } from "./actions";
 
 type Props = {
 	instanceId: string;
-	pubData: ReadResponse<[]>;
+	pubData: any;
 };
 
 // TODO: generate fields using instance's configured PubType
@@ -40,7 +40,7 @@ const schema = z.object({
 });
 
 export function Evaluate(props: Props) {
-	console.log(props.pubData);
+	const { pubData } = props;
 	const { toast } = useToast();
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
@@ -93,8 +93,8 @@ export function Evaluate(props: Props) {
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
 					<CardHeader>
-						<CardTitle>Submit Your Evaluation</CardTitle>
-						<CardDescription>Evaluate your Pub.</CardDescription>
+						<CardTitle>{pubData.Title}</CardTitle>
+						<CardDescription>Submit Your Evaluation</CardDescription>
 					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>
 						<FormField
@@ -102,7 +102,7 @@ export function Evaluate(props: Props) {
 							name="Description"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Abstract</FormLabel>
+									<FormLabel>Evaluation</FormLabel>
 									<FormControl>
 										<Textarea {...field} />
 									</FormControl>
