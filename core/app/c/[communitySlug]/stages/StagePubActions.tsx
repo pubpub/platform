@@ -53,7 +53,6 @@ export const StagePubActions = (props: Props) => {
 			});
 			return;
 		}
-		setOpen(false);
 		toast({
 			title: "Success",
 			description: "User was succesfully assigned.",
@@ -82,57 +81,57 @@ export const StagePubActions = (props: Props) => {
 		<div className="mt-0 items-stretch flex justify-between">
 			<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
 			<div className="flex items-end shrink-0">
-				<div>
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button size="sm" variant="outline" className="ml-1">
-								Move
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent>
-							<div className="flex flex-col">
-								<div className="mb-4">
-									<b>Move this pub to:</b>
-								</div>
-								{stages.map((s) => {
-									return s.id === stage.id ? null : (
-										<Button
-											variant="ghost"
-											key={s.name}
-											onClick={() => onMove(pub.id, stage.id, s.id)}
-										>
-											{s.name}
-										</Button>
-									);
-								})}
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button size="sm" variant="outline" className="ml-1">
+							Move
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent>
+						<div className="flex flex-col">
+							<div className="mb-4">
+								<b>Move this pub to:</b>
 							</div>
-						</PopoverContent>
-					</Popover>
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button size="sm" variant="outline" className="ml-1">
-								Assign
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent className="flex flex-col">
-							<Button
-								variant="secondary"
-								className="mb-5"
-								onClick={() =>
-									// we will not need this  when the permissions branch that broke up this component is merged
-									onAssign(pub.id, loginData.id, stage.id)
-								}
-							>
-								Claim
-							</Button>
-
-							{users &&
-								users.map((user) => {
-									return (
-										<Dialog open={open} onOpenChange={setOpen}>
-											<DialogTrigger>
-												<Button size="sm" variant="ghost" key={user.id}>
-													{/* <div className="mr-4">
+							{stages.map((s) => {
+								return s.id === stage.id ? null : (
+									<Button
+										variant="ghost"
+										key={s.name}
+										onClick={() => onMove(pub.id, stage.id, s.id)}
+									>
+										{s.name}
+									</Button>
+								);
+							})}
+						</div>
+					</PopoverContent>
+				</Popover>
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button size="sm" variant="outline" className="ml-1">
+							Assign
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="flex flex-col">
+						<Button
+							variant="secondary"
+							className="mb-5"
+							onClick={() =>
+								// we will not need this  when the permissions branch that broke up this component is merged
+								onAssign(pub.id, loginData.id, stage.id)
+							}
+						>
+							Claim
+						</Button>
+						{users.map((user) => {
+							{
+								/* setting open on the dialog makes the <DialogContent /> render with the same user.  */
+							}
+							return (
+								<Dialog open={open} onOpenChange={setOpen} key={user.id}>
+									<DialogTrigger>
+										<Button variant="ghost">
+											{/* <div className="mr-4">
 													<Image
 														src={user.avatar ?? "user.initials"}
 														alt={"user.initials"}
@@ -140,44 +139,45 @@ export const StagePubActions = (props: Props) => {
 														height={20}
 													/>
 												</div> */}
-													<span>{user.name}</span>
+											<span>{user.name}</span>
+										</Button>
+									</DialogTrigger>
+									<DialogContent>
+										<Card>
+											<CardTitle className="space-y-1.5 p-6">
+												Assign <i>{getTitle(pub)}</i> to {user.name}?
+											</CardTitle>
+											<CardContent>
+												{user.name} will be notified that they have been
+												assigned to this Pub.
+											</CardContent>
+											<CardFooter className="flex flex-row">
+												<Button
+													variant="default"
+													onClick={(event) => {
+														onAssign(pub.id, user.id, stage.id).then(
+															() => setOpen(false)
+														);
+														event.preventDefault();
+													}}
+												>
+													Assign
 												</Button>
-											</DialogTrigger>
-											<DialogContent>
-												<Card>
-													<CardTitle className="space-y-1.5 p-6">
-														Assign <i>{getTitle(pub)}</i> to {user.name}
-														?
-													</CardTitle>
-													<CardContent>
-														{user.name} will be notified that they have
-														been assigned to this Pub.
-													</CardContent>
-													<CardFooter className="flex flex-row">
-														<Button
-															variant="default"
-															onClick={() =>
-																onAssign(pub.id, user.id, stage.id)
-															}
-														>
-															Assign
-														</Button>
-														<Button
-															className="mx-3"
-															variant="secondary"
-															onClick={() => setOpen(false)}
-														>
-															Cancel
-														</Button>
-													</CardFooter>
-												</Card>
-											</DialogContent>
-										</Dialog>
-									);
-								})}
-						</PopoverContent>
-					</Popover>
-				</div>
+												<Button
+													className="mx-3"
+													variant="secondary"
+													onClick={() => setOpen(false)}
+												>
+													Cancel
+												</Button>
+											</CardFooter>
+										</Card>
+									</DialogContent>
+								</Dialog>
+							);
+						})}
+					</PopoverContent>
+				</Popover>
 
 				<Button size="sm" variant="outline" className="ml-1">
 					Email Members
