@@ -1,5 +1,6 @@
+import { ReadResponse } from "@pubpub/sdk";
 import { Evaluate } from "./evaluate";
-import { Client } from "@pubpub/sdk";
+import { client } from "~/lib/pubpub";
 
 type Props = {
 	searchParams: {
@@ -10,5 +11,7 @@ type Props = {
 
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
-	return <Evaluate instanceId={instanceId} pubId={pubId} />;
+	const pubData = await client.read(instanceId, pubId);
+
+	return <Evaluate instanceId={instanceId} pubData={pubData} />;
 }

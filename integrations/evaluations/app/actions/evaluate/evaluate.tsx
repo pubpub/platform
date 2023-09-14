@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { ReadResponse } from "@pubpub/sdk";
 import {
 	Button,
 	Card,
@@ -30,7 +31,7 @@ import { evaluate } from "./actions";
 
 type Props = {
 	instanceId: string;
-	pubId: string;
+	pubData: ReadResponse<[]>;
 };
 
 // TODO: generate fields using instance's configured PubType
@@ -39,6 +40,7 @@ const schema = z.object({
 });
 
 export function Evaluate(props: Props) {
+	console.log(props.pubData);
 	const { toast } = useToast();
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
