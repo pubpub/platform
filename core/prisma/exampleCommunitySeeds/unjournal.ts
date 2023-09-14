@@ -253,6 +253,11 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					text: "Manage Evaluation",
 					href: `${evaluationIntegrationUrl}/actions/manage`,
 				},
+				/* Adding this temporarily for testing -- eventually this will be done in the app via invites */
+				{
+					text: "Evaluate",
+					href: `${evaluationIntegrationUrl}/actions/evaluate`,
+				},
 			],
 			settingsUrl: `${evaluationIntegrationUrl}/configure`,
 		},
