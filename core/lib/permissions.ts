@@ -1,7 +1,6 @@
-import { PermissionPayload, PermissionPayloadUser } from "./types";
+import { PermissionPayload, PermissionPayloadUser, StagePayload } from "./types";
 
 export const getPubUsers = (permissions: PermissionPayload[]) => {
-	// get all members from permissions
 	const users: PermissionPayloadUser[] = [];
 	for (const permission of permissions) {
 		if (permission.member) {
@@ -17,4 +16,7 @@ export const getPubUsers = (permissions: PermissionPayload[]) => {
 	return users;
 };
 
-const getStageMoveConstraints = () => {}
+export const getStageMoveConstraints = (stage: StagePayload[]) => {
+	const constraints: string[] = [];
+	console.log(stage);
+};

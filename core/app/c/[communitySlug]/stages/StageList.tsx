@@ -4,17 +4,19 @@ import { Fragment } from "react";
 import { Button, Card, CardContent } from "ui";
 import PubRow from "../pubs/PubRow";
 import { StagePubActions } from "./StagePubActions";
-import { getPubUsers } from "~/lib/permissions";
+import { getPubUsers, getStageMoveConstraints } from "~/lib/permissions";
 import { StagePayload, User } from "~/lib/types";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
+	// getStageMoveConstraints(stages);
 	return (
 		<div>
 			{stages.map((stage) => {
 				const users = getPubUsers(stage.permissions);
+				console.log(stage.moveConstraints);
 				return (
 					<div key={stage.id} className="mb-20">
 						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>

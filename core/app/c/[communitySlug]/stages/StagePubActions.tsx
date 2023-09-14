@@ -15,7 +15,7 @@ import {
 } from "ui";
 import { PermissionPayloadUser, PubPayload, StagePayload, User } from "~/lib/types";
 // import Image from "next/image";
-import { assign, move } from "../pubs/actions";
+import { assign, move } from "./actions";
 
 type Props = {
 	users: PermissionPayloadUser[];

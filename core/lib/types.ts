@@ -66,6 +66,7 @@ export const stageInclude = {
 	pubs: { include: pubInclude },
 	integrationInstances: { include: { integration: true } },
 	permissions: { include: permissionInclude },
+	moveConstraints: true,
 } satisfies Prisma.StageInclude;
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
