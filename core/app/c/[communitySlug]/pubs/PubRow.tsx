@@ -56,10 +56,10 @@ const getTitle = (values: Props["pub"]["values"]) => {
 };
 
 const getStatus = (pub: Props["pub"], integrationId: string) => {
-	const statusValue = pub.values.find((value) => {
+	const status = pub.values.find((value) => {
 		return value.field.integrationId === integrationId;
 	});
-	return statusValue?.value as { text: string; color: string };
+	return status?.value as { text: string; color: string };
 };
 
 const getInstances = (pub: Props["pub"]) => {
@@ -345,39 +345,51 @@ const PubRow: React.FC<Props> = function (props) {
 					</Button>
 				</div>
 			</div>
-			<Collapsible>
-				<CollapsibleTrigger>
-					<div>
-						<span>Contents:</span>{" "}
-						{groupPubChildrenByPubType(pub.children).map((group) => (
-							<em key={group.pubType.id} className={cn("mr-2")}>
-								{group.pubType.name} ({group.pubs.length})
-							</em>
-						))}
-					</div>
-				</CollapsibleTrigger>
-				<CollapsibleContent>
-					<dl className={cn("ml-4")}>
-						{groupPubChildrenByPubType(pub.children).map((group) => (
-							<Fragment key={group.pubType.id}>
-								<dt key={group.pubType.id}>
-									<strong>{group.pubType.name}</strong>
-								</dt>
-								<dd>
-									<ul>
-										{group.pubs.map((child) => (
-											<li key={child.id} className={cn("ml-4")}>
-												{getTitle(child.values)}
-											</li>
-										))}
-									</ul>
-								</dd>
-							</Fragment>
-						))}
-					</dl>
-				</CollapsibleContent>
-			</Collapsible>
+			{pub.children.length > 0 && (
+				<Collapsible>
+					<CollapsibleTrigger>
+						<div>
+							<span>Contents:</span>{" "}
+							{groupPubChildrenByPubType(pub.children).map((group) => (
+								<em key={group.pubType.id} className={cn("mr-2")}>
+									{group.pubType.name} ({group.pubs.length})
+								</em>
+							))}
+						</div>
+					</CollapsibleTrigger>
+					<CollapsibleContent>
+						<ChildHierarchy pub={pub} />
+					</CollapsibleContent>
+				</Collapsible>
+			)}
 		</div>
 	);
 };
+
+const ChildHierarchy = ({ pub }: { pub: PubPayload }) => {
+	return (
+		<dl className={cn("ml-4")}>
+			{groupPubChildrenByPubType(pub.children).map((group) => (
+				<Fragment key={group.pubType.id}>
+					<dt key={group.pubType.id}>
+						<strong>{group.pubType.name}</strong>
+					</dt>
+					<dd>
+						<ul>
+							{group.pubs.map((child) => (
+								<li key={child.id} className={cn("ml-4")}>
+									{/* @ts-ignore */}
+									<div>{getTitle(child.values)}</div>
+									{/* @ts-ignore */}
+									{pub.children?.length > 0 && <ChildHierarchy pub={child} />}
+								</li>
+							))}
+						</ul>
+					</dd>
+				</Fragment>
+			))}
+		</dl>
+	);
+};
+
 export default PubRow;

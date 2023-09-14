@@ -1,5 +1,4 @@
 "use client";
-import { Card, CardContent } from "ui";
 import PubRow from "../pubs/PubRow";
 import { Button } from "ui";
 import Link from "next/link";
@@ -46,25 +45,21 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 								</Fragment>
 							);
 						})}
-						<Card>
-							<CardContent className="pt-4">
-								{stage.pubs.map((pub, index, list) => {
-									return (
-										<Fragment key={pub.id}>
-											<PubRow
-												key={pub.id}
-												pub={pub}
-												token={token}
-												stages={stages}
-												stage={stage}
-												loginData={loginData}
-											/>
-											{index < list.length - 1 && <hr />}
-										</Fragment>
-									);
-								})}
-							</CardContent>
-						</Card>
+						{stage.pubs.map((pub, index, list) => {
+							return (
+								<Fragment key={pub.id}>
+									<PubRow
+										key={pub.id}
+										pub={pub}
+										token={token}
+										stages={stages}
+										stage={stage}
+										loginData={loginData}
+									/>
+									{index < list.length - 1 && <hr />}
+								</Fragment>
+							);
+						})}
 					</div>
 				);
 			})}

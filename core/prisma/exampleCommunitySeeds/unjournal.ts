@@ -284,30 +284,30 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		})
 	);
 
-	const pubIds = [...Array(7)].map((x) => uuidv4());
-	const submissionToEvaluate = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
-			stages: { connect: { id: stageIds[3] } },
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: "Celebrity endorsements are often sought to influence public opinion. We ask whether celebrity endorsement per se has an effect beyond the fact that their statements are seen by many, and whether on net their statements actually lead people to change their beliefs. To do so, we conducted a nationwide Twitter experiment in Indonesia with 46 high-profile celebrities and organizations, with a total of 7.8 million followers, who agreed to let us randomly tweet or retweet content promoting immunization from their accounts. Our design exploits the structure of what information is passed on along a retweet chain on Twitter to parse reach versus endorsement effects. Endorsements matter: tweets that users can identify as being originated by a celebrity are far more likely to be liked or retweeted by users than similar tweets seen by the same users but without the celebrities' imprimatur. By contrast, explicitly citing sources in the tweets actually reduces diffusion. By randomizing which celebrities tweeted when, we find suggestive evidence that overall exposure to the campaign may influence beliefs about vaccination and knowledge of immunization-seeking behavior by one's network. Taken together, the findings suggest an important role for celebrity endorsement.",
-						},
-						{
-							fieldId: fieldIds[8],
-							value: "10.3386/w25589",
-						},
-					],
-				},
-			},
-		},
-	});
+	// const pubIds = [...Array(7)].map((x) => uuidv4());
+	// const submissionToEvaluate = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
+	// 		stages: { connect: { id: stageIds[3] } },
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: "Celebrity endorsements are often sought to influence public opinion. We ask whether celebrity endorsement per se has an effect beyond the fact that their statements are seen by many, and whether on net their statements actually lead people to change their beliefs. To do so, we conducted a nationwide Twitter experiment in Indonesia with 46 high-profile celebrities and organizations, with a total of 7.8 million followers, who agreed to let us randomly tweet or retweet content promoting immunization from their accounts. Our design exploits the structure of what information is passed on along a retweet chain on Twitter to parse reach versus endorsement effects. Endorsements matter: tweets that users can identify as being originated by a celebrity are far more likely to be liked or retweeted by users than similar tweets seen by the same users but without the celebrities' imprimatur. By contrast, explicitly citing sources in the tweets actually reduces diffusion. By randomizing which celebrities tweeted when, we find suggestive evidence that overall exposure to the campaign may influence beliefs about vaccination and knowledge of immunization-seeking behavior by one's network. Taken together, the findings suggest an important role for celebrity endorsement.",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[8],
+	// 						value: "10.3386/w25589",
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 }

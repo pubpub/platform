@@ -9,6 +9,8 @@ const Json: z.ZodType<Json> = z.lazy(() => z.union([Literal, z.array(Json), z.re
 const PubValuesSchema = z.record(Json);
 
 const BaseCreatePubBody = z.object({
+	id: z.string().optional(),
+	parentId: z.string().optional(),
 	pubTypeId: z.string(),
 	values: PubValuesSchema,
 });
@@ -37,7 +39,6 @@ const UserSchema = z.object({
 });
 
 export type PubFieldsResponse = z.infer<typeof PubValuesSchema>;
-export type PubPostBody = z.infer<typeof CreatePubBody>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
 const contract = initContract();
