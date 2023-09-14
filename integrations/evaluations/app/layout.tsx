@@ -28,7 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 		<html lang="en">
 			<body>
 				<Integration
-					name="Submissions"
+					name="Evaluations"
 					user={{ ...user, avatar: `${process.env.PUBPUB_URL}/${user.avatar}` }}
 					instance={instance}
 				>
