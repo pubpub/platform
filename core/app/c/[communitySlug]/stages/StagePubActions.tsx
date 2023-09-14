@@ -79,111 +79,109 @@ export const StagePubActions = (props: Props) => {
 	};
 
 	return (
-		<div className="mt-0 items-stretch flex justify-between">
-			<div className="flex items-end shrink-0">
-				<Popover>
-					<PopoverTrigger asChild>
-						<Button size="sm" variant="outline" className="ml-1">
-							Move
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent>
-						<div className="flex flex-col">
-							<div className="mb-4">
-								<b>Move this pub to:</b>
-							</div>
-							{stages.map((s) => {
-								return s.id === stage.id ? null : (
-									<Button
-										variant="ghost"
-										key={s.name}
-										onClick={() => onMove(pub.id, stage.id, s.id)}
-									>
-										{s.name}
-									</Button>
-								);
-							})}
+		<div className="flex items-end shrink-0">
+			<Popover>
+				<PopoverTrigger asChild>
+					<Button size="sm" variant="outline" className="ml-1">
+						Move
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent>
+					<div className="flex flex-col">
+						<div className="mb-4">
+							<b>Move this pub to:</b>
 						</div>
-					</PopoverContent>
-				</Popover>
-				<Popover>
-					<PopoverTrigger asChild>
-						<Button size="sm" variant="outline" className="ml-1">
-							Assign
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent className="flex flex-col">
-						<Button
-							variant="secondary"
-							className="mb-5"
-							onClick={() => onAssign(pub.id, loginData.id, stage.id)}
-						>
-							Claim
-						</Button>
-						{users.map((user) => {
-							return (
-								<Dialog
-									open={open && selectedUserId === user.id}
-									onOpenChange={setOpen}
-									key={user.id}
+						{stages.map((s) => {
+							return s.id === stage.id ? null : (
+								<Button
+									variant="ghost"
+									key={s.name}
+									onClick={() => onMove(pub.id, stage.id, s.id)}
 								>
-									<DialogTrigger>
-										<Button
-											variant="ghost"
-											onClick={() => setSelectedUserid(user.id)}
-										>
-											<div className="mr-4">
-												<Image
-													src={user.avatar ?? "user.initials"}
-													alt={"user.initials"}
-													width={20}
-													height={20}
-												/>
-											</div>
-											<span>{user.name}</span>
-										</Button>
-									</DialogTrigger>
-									<DialogContent>
-										<Card>
-											<CardTitle className="space-y-1.5 p-6">
-												Assign <i>{getTitle(pub)}</i> to {user.name}?
-											</CardTitle>
-											<CardContent>
-												{user.name} will be notified that they have been
-												assigned to this Pub.
-											</CardContent>
-											<CardFooter className="flex flex-row">
-												<Button
-													variant="default"
-													onClick={(event) => {
-														onAssign(pub.id, user.id, stage.id).then(
-															() => setOpen(false)
-														);
-														event.preventDefault();
-													}}
-												>
-													Assign
-												</Button>
-												<Button
-													className="mx-3"
-													variant="secondary"
-													onClick={() => setOpen(false)}
-												>
-													Cancel
-												</Button>
-											</CardFooter>
-										</Card>
-									</DialogContent>
-								</Dialog>
+									{s.name}
+								</Button>
 							);
 						})}
-					</PopoverContent>
-				</Popover>
+					</div>
+				</PopoverContent>
+			</Popover>
+			<Popover>
+				<PopoverTrigger asChild>
+					<Button size="sm" variant="outline" className="ml-1">
+						Assign
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent className="flex flex-col">
+					<Button
+						variant="secondary"
+						className="mb-5"
+						onClick={() => onAssign(pub.id, loginData.id, stage.id)}
+					>
+						Claim
+					</Button>
+					{users.map((user) => {
+						return (
+							<Dialog
+								open={open && selectedUserId === user.id}
+								onOpenChange={setOpen}
+								key={user.id}
+							>
+								<DialogTrigger>
+									<Button
+										variant="ghost"
+										onClick={() => setSelectedUserid(user.id)}
+									>
+										<div className="mr-4">
+											<Image
+												src={user.avatar ?? "user.initials"}
+												alt={"user.initials"}
+												width={20}
+												height={20}
+											/>
+										</div>
+										<span>{user.name}</span>
+									</Button>
+								</DialogTrigger>
+								<DialogContent>
+									<Card>
+										<CardTitle className="space-y-1.5 p-6">
+											Assign <i>{getTitle(pub)}</i> to {user.name}?
+										</CardTitle>
+										<CardContent>
+											{user.name} will be notified that they have been
+											assigned to this Pub.
+										</CardContent>
+										<CardFooter className="flex flex-row">
+											<Button
+												variant="default"
+												onClick={(event) => {
+													onAssign(pub.id, user.id, stage.id).then(() =>
+														setOpen(false)
+													);
+													event.preventDefault();
+												}}
+											>
+												Assign
+											</Button>
+											<Button
+												className="mx-3"
+												variant="secondary"
+												onClick={() => setOpen(false)}
+											>
+												Cancel
+											</Button>
+										</CardFooter>
+									</Card>
+								</DialogContent>
+							</Dialog>
+						);
+					})}
+				</PopoverContent>
+			</Popover>
 
-				<Button size="sm" variant="outline" className="ml-1">
-					Email Members
-				</Button>
-			</div>
+			<Button size="sm" variant="outline" className="ml-1">
+				Email Members
+			</Button>
 		</div>
 	);
 };

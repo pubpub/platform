@@ -77,7 +77,6 @@ const PubRow: React.FC<Props> = function ({ pub, token, actions }) {
 
 	return (
 		<div className="pt-2 pb-2">
-			<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
 			<div className="flex items-center justify-between">
 				<div className="text-sm">{pub.pubType.name}</div>
 				<div className="flex items-center text-gray-600">
@@ -127,7 +126,10 @@ const PubRow: React.FC<Props> = function ({ pub, token, actions }) {
 					</Popover>
 				</div>
 			</div>
-			{actions}
+			<div className="mt-0 items-stretch flex justify-between">
+				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
+				{actions}
+			</div>
 		</div>
 	);
 };
