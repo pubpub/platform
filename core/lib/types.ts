@@ -21,6 +21,7 @@ export const pubInclude = {
 	children: {
 		select: {
 			id: true,
+			pubType: true,
 			values: { include: { field: true } },
 		},
 	},

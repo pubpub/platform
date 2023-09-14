@@ -1,12 +1,15 @@
 "use client";
 import Image from "next/image";
-import React from "react";
+import React, { Fragment } from "react";
 import {
 	Button,
 	Card,
 	CardContent,
 	CardFooter,
 	CardTitle,
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
 	Dialog,
 	DialogContent,
 	DialogTrigger,
@@ -18,6 +21,7 @@ import {
 import { expect } from "utils";
 import { PubPayload, StagePayload, User } from "~/lib/types";
 import { assign, move } from "./actions";
+import cn from "~/lib/cn";
 
 type Props = {
 	pub: PubPayload;
@@ -28,6 +32,21 @@ type Props = {
 };
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
+
+const groupPubChildrenByPubType = (pubs: PubPayload["children"]) => {
+	const pubTypes = pubs.reduce((prev, curr) => {
+		const pubType = curr.pubType;
+		if (!prev[pubType.id]) {
+			prev[pubType.id] = {
+				pubType,
+				pubs: [],
+			};
+		}
+		prev[pubType.id].pubs.push(curr);
+		return prev;
+	}, {} as { [key: string]: { pubType: PubPayload["pubType"]; pubs: PubPayload["children"] } });
+	return Object.values(pubTypes);
+};
 
 const getTitle = (values: Props["pub"]["values"]) => {
 	const title = values.find((value) => {
@@ -326,11 +345,38 @@ const PubRow: React.FC<Props> = function (props) {
 					</Button>
 				</div>
 			</div>
-			<div>
-				{pub.children.map((child) => (
-					<div key={child.id}>{getTitle(child.values)}</div>
-				))}
-			</div>
+			<Collapsible>
+				<CollapsibleTrigger>
+					<div>
+						<span>Contents:</span>{" "}
+						{groupPubChildrenByPubType(pub.children).map((group) => (
+							<em key={group.pubType.id} className={cn("mr-2")}>
+								{group.pubType.name} ({group.pubs.length})
+							</em>
+						))}
+					</div>
+				</CollapsibleTrigger>
+				<CollapsibleContent>
+					<dl className={cn("ml-4")}>
+						{groupPubChildrenByPubType(pub.children).map((group) => (
+							<Fragment key={group.pubType.id}>
+								<dt key={group.pubType.id}>
+									<strong>{group.pubType.name}</strong>
+								</dt>
+								<dd>
+									<ul>
+										{group.pubs.map((child) => (
+											<li key={child.id} className={cn("ml-4")}>
+												{getTitle(child.values)}
+											</li>
+										))}
+									</ul>
+								</dd>
+							</Fragment>
+						))}
+					</dl>
+				</CollapsibleContent>
+			</Collapsible>
 		</div>
 	);
 };

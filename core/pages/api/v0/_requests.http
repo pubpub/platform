@@ -6,6 +6,7 @@
 @submissionsIntegrationId = af837db6-9a1f-4b38-878f-f84fde8a0b50
 @submissionPubTypeId = e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225
 @evaluationSummaryPubTypeId = 2981e8ca-dabe-416f-bce0-fcc418036529
+@evaluationPubTypeId = 81d18691-3ac4-42c1-b55b-d3b2c065b9ad
 
 # Create a submission with an evaluation summary
 POST http://{{host}}/api/v0/integrations/{{submissionsIntegrationId}}/pubs HTTP/1.1
@@ -27,6 +28,20 @@ authorization: Bearer {{token}}
                 "Title": "Evaluation Summary of \"A Paper\"",
                 "Description": "",
                 "Manager's Notes": "hi"
+            }
+        },
+        {
+            "pubTypeId": "{{evaluationPubTypeId}}",
+            "values": {
+                "Title": "Evaluation of \"A Paper\"",
+                "Description": "Evaluation A"
+            }
+        },
+        {
+            "pubTypeId": "{{evaluationPubTypeId}}",
+            "values": {
+                "Title": "Evaluation of \"A Paper\"",
+                "Description": "Evaluation B"
             }
         }
     ]
