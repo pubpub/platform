@@ -80,7 +80,6 @@ export const StagePubActions = (props: Props) => {
 
 	return (
 		<div className="mt-0 items-stretch flex justify-between">
-			<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
 			<div className="flex items-end shrink-0">
 				<Popover>
 					<PopoverTrigger asChild>

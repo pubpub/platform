@@ -65,11 +65,19 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 	return buttons;
 };
 
+const getTitle = (pub: Props["pub"]) => {
+	const titleValue = pub.values.find((value) => {
+		return value.field.name === "Title";
+	});
+	return titleValue?.value as string;
+};
+
 const PubRow: React.FC<Props> = function ({ pub, token, actions }) {
 	const buttons = getButtons(pub, token);
 
 	return (
 		<div className="pt-2 pb-2">
+			<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
 			<div className="flex items-center justify-between">
 				<div className="text-sm">{pub.pubType.name}</div>
 				<div className="flex items-center text-gray-600">
