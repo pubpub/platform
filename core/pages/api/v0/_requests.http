@@ -1,0 +1,34 @@
+@hostname = localhost
+@port = 3000
+@host = {{hostname}}:{{port}}
+@contentType = application/json
+@token = super_secret_key
+@submissionsIntegrationId = af837db6-9a1f-4b38-878f-f84fde8a0b50
+@submissionPubTypeId = e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225
+@evaluationSummaryPubTypeId = 2981e8ca-dabe-416f-bce0-fcc418036529
+
+# Create a submission with an evaluation summary
+POST http://{{host}}/api/v0/integrations/{{submissionsIntegrationId}}/pubs HTTP/1.1
+content-type: {{contentType}}
+authorization: Bearer {{token}}
+
+{
+    "pubTypeId": "{{submissionPubTypeId}}",
+    "values": {
+        "Title": "A Paper",
+        "DOI": "10.1007/s00216-020-02650-1",
+        "URL": "https://link.springer.com/article/10.1007/s00216-020-02650-1",
+        "Abstract": "The paper's abstract."
+    },
+    "children": [
+        {
+            "pubTypeId": "{{evaluationSummaryPubTypeId}}",
+            "values": {
+                "Title": "Evaluation Summary of \"A Paper\"",
+                "Description": "",
+                "Manager's Notes": "hi"
+            }
+        }
+    ]
+}
+

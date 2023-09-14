@@ -18,6 +18,12 @@ export const pubInclude = {
 			},
 		},
 	},
+	children: {
+		select: {
+			id: true,
+			values: { include: { field: true } },
+		},
+	},
 } satisfies Prisma.PubInclude;
 
 export type PubPayload = Prisma.PubGetPayload<{ include: typeof pubInclude }>;

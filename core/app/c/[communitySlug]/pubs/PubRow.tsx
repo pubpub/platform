@@ -29,11 +29,11 @@ type Props = {
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
-const getTitle = (pub: Props["pub"]) => {
-	const titleValue = pub.values.find((value) => {
+const getTitle = (values: Props["pub"]["values"]) => {
+	const title = values.find((value) => {
 		return value.field.name === "Title";
 	});
-	return titleValue?.value as string;
+	return title?.value as string;
 };
 
 const getStatus = (pub: Props["pub"], integrationId: string) => {
@@ -203,7 +203,7 @@ const PubRow: React.FC<Props> = function (props) {
 				</div>
 			</div>
 			<div className="mt-0 items-stretch flex justify-between">
-				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
+				<h3 className="text-md font-semibold">{getTitle(pub.values)}</h3>
 				<div className="flex items-end shrink-0">
 					{/* TODO: if no assigned members, don't show move button to non admin */}
 					{stage && (
@@ -281,8 +281,8 @@ const PubRow: React.FC<Props> = function (props) {
 													<DialogContent>
 														<Card>
 															<CardTitle className="space-y-1.5 p-6">
-																Assign <i>{getTitle(pub)}</i> to{" "}
-																{member.name}?
+																Assign <i>{getTitle(pub.values)}</i>{" "}
+																to {member.name}?
 															</CardTitle>
 															<CardContent>
 																{member.name} will be notified that
@@ -325,6 +325,11 @@ const PubRow: React.FC<Props> = function (props) {
 						Email Members
 					</Button>
 				</div>
+			</div>
+			<div>
+				{pub.children.map((child) => (
+					<div key={child.id}>{getTitle(child.values)}</div>
+				))}
 			</div>
 		</div>
 	);
