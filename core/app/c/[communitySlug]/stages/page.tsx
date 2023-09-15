@@ -44,6 +44,7 @@ const getCachedCommunityStages = async (communitySlug: string) => {
 		["cache-key"],
 		{
 			tags: ["stages"],
+			revalidate: 24,
 		}
 	);
 	return data();
@@ -58,8 +59,8 @@ export default async function Page({ params }: Props) {
 	}
 	let token;
 	token = await createToken(loginData.id);
-	const stages = await getCommunityStages(params.communitySlug);
-	// const stages = await getCachedCommunityStages(params.communitySlug);
+	// const stages = await getCommunityStages(params.communitySlug);
+	const stages = await getCachedCommunityStages(params.communitySlug);
 	if (!stages) {
 		return null;
 	}
