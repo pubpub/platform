@@ -4,7 +4,7 @@ import { Fragment } from "react";
 import { Button, Card, CardContent } from "ui";
 import { getPubUsers, getStageMoveConstraints } from "~/lib/permissions";
 import { StagePayload, StagePayloadMoveConstraintDestination, User } from "~/lib/types";
-import PubRow from "../pubs/PubRow";
+import PubRow from "~/components/PubRow";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
