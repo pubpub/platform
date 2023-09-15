@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { expect } from "utils";
 import prisma from "~/prisma/db";
 
@@ -15,7 +15,7 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 				},
 			},
 		});
-		revalidatePath(`/`);
+		revalidateTag("stages");
 	} catch {
 		return { message: "The Pub was not successully moved" };
 	}
