@@ -58,8 +58,8 @@ export default async function Page({ params }: Props) {
 	}
 	let token;
 	token = await createToken(loginData.id);
-	// const stages = await getCommunityStages(params.communitySlug);
-	const stages = await getCachedCommunityStages(params.communitySlug);
+	const stages = await getCommunityStages(params.communitySlug);
+	// const stages = await getCachedCommunityStages(params.communitySlug);
 	if (!stages) {
 		return null;
 	}
