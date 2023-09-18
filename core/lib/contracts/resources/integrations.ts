@@ -2,18 +2,31 @@ import { Prisma } from "@prisma/client";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-type Json = Prisma.InputJsonValue;
-const Json: z.ZodType<Json> = z.lazy(() =>
-	z.union([z.union([z.string(), z.number(), z.boolean()]), z.array(Json), z.record(Json)])
+export type JsonInput = Prisma.InputJsonValue;
+export const JsonInput: z.ZodType<JsonInput> = z.lazy(() =>
+	z.union([
+		z.union([z.string(), z.number(), z.boolean()]),
+		z.array(JsonInput),
+		z.record(JsonInput),
+	])
+);
+export type JsonOutput = Prisma.JsonValue;
+export const JsonOutput: z.ZodType<JsonOutput> = z.lazy(() =>
+	z.union([
+		z.union([z.string(), z.number(), z.boolean()]),
+		z.array(JsonOutput),
+		z.record(JsonOutput),
+	])
 );
 
-const PubValuesSchema = z.record(Json);
+export const PubValuesRequest = z.record(JsonInput);
+export const PubValuesResponse = z.record(JsonOutput);
 
 const BaseCreatePubBody = z.object({
 	id: z.string().optional(),
 	parentId: z.string().optional(),
 	pubTypeId: z.string(),
-	values: PubValuesSchema,
+	values: PubValuesRequest,
 });
 
 export type CreatePubBody = z.infer<typeof BaseCreatePubBody> & {
@@ -39,7 +52,7 @@ const UserSchema = z.object({
 	updatedAt: z.date(),
 });
 
-export type PubFieldsResponse = z.infer<typeof PubValuesSchema>;
+export type PubFieldsResponse = z.infer<typeof PubValuesResponse>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
 const contract = initContract();
@@ -83,7 +96,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubValuesSchema),
+				200: PubValuesResponse,
 			},
 		},
 		getAllPubs: {
@@ -95,7 +108,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubValuesSchema),
+				200: z.array(PubValuesResponse),
 			},
 		},
 		updatePub: {
@@ -103,13 +116,13 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs/:pubId",
 			summary: "Adds field(s) to a pub",
 			description: "A way to update a field for an existing pub",
-			body: PubValuesSchema,
+			body: PubValuesRequest,
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubValuesSchema,
+				200: PubValuesResponse,
 			},
 		},
 		getSuggestedMembers: {
