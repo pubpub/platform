@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { Button, Card, CardContent } from "ui";
 import PubRow from "~/components/PubRow";
-import { getPubUsers, getStageMoveConstraints } from "~/lib/permissions";
-import { StagePayload, StagePayloadMoveConstraintDestination, User } from "~/lib/types";
+import { getPubUsers } from "~/lib/permissions";
+import { StagePayload, StagesCanMoveFromOrTo, User } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
@@ -14,9 +14,10 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 		<div>
 			{stages.map((stage) => {
 				const users = getPubUsers(stage.permissions);
-				const moveStages: StagePayloadMoveConstraintDestination[] =
-					stage.moveConstraints.map((stage) => stage.destination);
-
+				const stagesForMoving: StagesCanMoveFromOrTo[] = [
+					...stage.moveConstraintSources.map((stage) => stage.stage),
+					...stage.moveConstraints.map((stage) => stage.destination),
+				];
 				return (
 					<div key={stage.id} className="mb-20">
 						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>
@@ -66,7 +67,7 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 														stage={stage}
 														users={users}
 														loginData={loginData}
-														stages={moveStages}
+														stages={stagesForMoving}
 													/>
 												}
 											/>
