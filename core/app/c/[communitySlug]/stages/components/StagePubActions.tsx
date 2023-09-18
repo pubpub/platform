@@ -22,7 +22,7 @@ import {
 	User,
 } from "~/lib/types";
 import Image from "next/image";
-import { assign, move } from "./actions";
+import { assign, move } from "../lib/actions";
 
 type Props = {
 	users: PermissionPayloadUser[];

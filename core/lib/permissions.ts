@@ -17,5 +17,5 @@ export const getPubUsers = (permissions: PermissionPayload[]) => {
 };
 
 export const getStageMoveConstraints = (stageMoveConstraints: StagePayloadMoveConstraint) => {
-	return stageMoveConstraints.map((ting) => ting.destination);
+	return stageMoveConstraints);
 };
