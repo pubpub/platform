@@ -366,7 +366,9 @@ const PubRow: React.FC<Props> = function (props) {
 	);
 };
 
-const ChildHierarchy = ({ pub }: { pub: PubPayload }) => {
+type X = PubPayload["children"][number]["children"];
+
+const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 	return (
 		<dl className={cn("ml-4")}>
 			{groupPubChildrenByPubType(pub.children).map((group) => (
@@ -378,9 +380,7 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload }) => {
 						<ul>
 							{group.pubs.map((child) => (
 								<li key={child.id} className={cn("ml-4")}>
-									{/* @ts-ignore */}
 									<div>{getTitle(child.values)}</div>
-									{/* @ts-ignore */}
 									{pub.children?.length > 0 && <ChildHierarchy pub={child} />}
 								</li>
 							))}

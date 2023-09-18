@@ -1,11 +1,9 @@
 import { Prisma } from "@prisma/client";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
-	include:
-		| ({
-				[K in T]: RecursiveInclude<T, U>;
-		  } & U)
-		| U;
+	include: {
+		[K in T]: RecursiveInclude<T, U>;
+	} & U;
 };
 
 export const makeRecursiveInclude = <T extends string, U extends {}>(
@@ -14,14 +12,14 @@ export const makeRecursiveInclude = <T extends string, U extends {}>(
 	depth: number
 ): RecursiveInclude<T, U> => {
 	if (depth === 0) {
-		return { include: { [key]: true, ...include } };
+		return { include: { [key]: true, ...include } } as unknown as RecursiveInclude<T, U>;
 	}
 	return {
 		include: {
 			[key]: makeRecursiveInclude(key, include, depth - 1),
 			...include,
 		},
-	};
+	} as RecursiveInclude<T, U>;
 };
 
 export const pubInclude = {
