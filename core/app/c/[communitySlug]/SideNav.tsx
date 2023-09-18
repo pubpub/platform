@@ -58,7 +58,7 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 				/>
 				{divider}
 				<NavLink
-					href="placeholder"
+					href={`${prefix}/recent-items`}
 					text={"Recent Items"}
 					icon={<img src="/icons/pin.svg" />}
 				/>
