@@ -1,3 +1,4 @@
+"use client";
 import { Button, Popover, PopoverContent, PopoverTrigger, useToast } from "ui";
 import { move } from "../lib/actions";
 
