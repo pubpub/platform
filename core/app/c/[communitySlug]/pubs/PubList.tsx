@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "ui";
-import PubRow from "~/components/PubRow";
+import PubRow from "~/app/components/PubRow";
 import { PubPayload } from "~/lib/types";
 
 type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string };

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { Button, Card, CardContent } from "ui";
-import PubRow from "~/components/PubRow";
+import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
 import { StagePayload, StagesCanMoveFromOrTo, User } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
