@@ -1,11 +1,11 @@
 "use client";
 import { Button, Popover, PopoverContent, PopoverTrigger, useToast } from "ui";
 import { move } from "../lib/actions";
-import { PubPayload, StagePayload } from "~/lib/types";
+import { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
 
 type Props = {
 	pub: PubPayload;
-	stages: any[];
+	stages: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
 };
 
@@ -26,6 +26,21 @@ export default function Move(props: Props) {
 			title: "Success",
 			description: "Pub was successfully moved",
 			variant: "default",
+			action: (
+				<Button
+					onClick={async () =>
+						await move(pubId, destStageId, sourceStageId).then(() =>
+							toast({
+								variant: "default",
+								title: "Success",
+								description: "Pub was successfully moved back",
+							})
+						)
+					}
+				>
+					Undo
+				</Button>
+			),
 		});
 	};
 	return (
