@@ -72,9 +72,6 @@ export const stageInclude = {
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
 
-export type StagePayloadMoveConstraint = NonNullable<StagePayload["moveConstraints"]>;
-export type StagePayloadMoveConstraintSource = NonNullable<StagePayload["moveConstraintSources"]>;
-
 export type StagesCanMoveFromOrTo =
-	| StagePayloadMoveConstraint[number]["destination"]
-	| StagePayloadMoveConstraintSource[number]["stage"];
+	| NonNullable<StagePayload["moveConstraints"]>[number]["destination"]
+	| NonNullable<StagePayload["moveConstraintSources"]>[number]["destination"];

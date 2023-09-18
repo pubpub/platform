@@ -14,10 +14,9 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 		<div>
 			{stages.map((stage) => {
 				const users = getPubUsers(stage.permissions);
-				const stagesForMoving: StagesCanMoveFromOrTo[] = [
-					...stage.moveConstraintSources.map((stage) => stage.stage),
-					...stage.moveConstraints.map((stage) => stage.destination),
-				];
+				const sources = [...stage.moveConstraintSources.map((stage) => stage.stage)];
+				const destinations = [...stage.moveConstraints.map((stage) => stage.destination)];
+
 				return (
 					<div key={stage.id} className="mb-20">
 						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>
@@ -67,7 +66,7 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 														stage={stage}
 														users={users}
 														loginData={loginData}
-														stages={stagesForMoving}
+														stages={sources}
 													/>
 												}
 											/>

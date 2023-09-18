@@ -1,8 +1,15 @@
 "use client";
 import { Button, Popover, PopoverContent, PopoverTrigger, useToast } from "ui";
 import { move } from "../lib/actions";
+import { PubPayload, StagePayload } from "~/lib/types";
 
-export default function Move({ stage, stages, pub }) {
+type Props = {
+	pub: PubPayload;
+	stages: any[];
+	stage: StagePayload;
+};
+
+export default function Move(props: Props) {
 	const { toast } = useToast();
 
 	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
@@ -33,12 +40,12 @@ export default function Move({ stage, stages, pub }) {
 					<div className="mb-4">
 						<b>Move this pub to:</b>
 					</div>
-					{stages.map((s) => {
-						return s.id === stage.id ? null : (
+					{props.stages.map((s) => {
+						return s.id === props.stage.id ? null : (
 							<Button
 								variant="ghost"
-								key={s.name}
-								onClick={() => onMove(pub.id, stage.id, s.id)}
+								key={s.id}
+								onClick={() => onMove(props.pub.id, props.stage.id, s.id)}
 							>
 								{s.name}
 							</Button>

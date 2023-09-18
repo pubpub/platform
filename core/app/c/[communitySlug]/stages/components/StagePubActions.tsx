@@ -19,12 +19,16 @@ type Props = {
 };
 
 export const StagePubActions = (props: Props) => {
-	const { users, pub, stage, loginData, stages } = props;
-
 	return (
 		<div className="flex items-end shrink-0">
-			<Move pub={pub} stage={stage} stages={stages} />
-			<Assign pub={pub} loginData={loginData} stage={stage} stages={stages} users={users} />
+			<Move pub={props.pub} stage={props.stage} stages={props.stages} />
+			<Assign
+				pub={props.pub}
+				loginData={props.loginData}
+				stage={props.stage}
+				stages={props.stages}
+				users={props.users}
+			/>
 			<Button size="sm" variant="outline" className="ml-1">
 				Email Members
 			</Button>
