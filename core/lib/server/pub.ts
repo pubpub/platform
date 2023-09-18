@@ -1,8 +1,9 @@
 import { CreatePubBody } from "~/lib/contracts/resources/integrations";
 import prisma from "~/prisma/db";
-import { recursiveInclude } from "../types";
+import { makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
+import { expect } from "utils";
 
 export const getPubFields = async (pubId: string) => {
 	const pubValues = await prisma.pubValue.findMany({
@@ -20,10 +21,10 @@ export const getPubFields = async (pubId: string) => {
 		},
 	});
 
-	return pubValues.reduce((prev: any, curr) => {
+	return pubValues.reduce((prev, curr) => {
 		prev[curr.field.name] = curr.value;
 		return prev;
-	}, {});
+	}, {} as Record<string, Prisma.JsonValue>);
 };
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
@@ -59,12 +60,12 @@ const normalizePubValues = async (values: CreatePubBody["values"], pubTypeId?: s
 	return normalizedValues;
 };
 
-const getPubCreateDepth = (body: CreatePubBody, depth = 0) => {
+const getUpdateDepth = (body: CreatePubBody, depth = 0) => {
 	if (!body.children) {
 		return depth;
 	}
 	for (const child of body.children) {
-		depth = Math.max(getPubCreateDepth(child, depth), depth);
+		depth = Math.max(getUpdateDepth(child, depth), depth);
 	}
 	return depth + 1;
 };
@@ -73,14 +74,14 @@ const makePubChildrenCreateOptions = async (body: CreatePubBody, communityId: st
 	if (!body.children) {
 		return undefined;
 	}
-	const tasks: ReturnType<typeof makePubCreateInput>[] = [];
+	const inputs: ReturnType<typeof makeRecursivePubUpdateInput>[] = [];
 	for (const child of body.children) {
 		if ("id" in child) {
 			continue;
 		}
-		tasks.push(makePubCreateInput(child, communityId));
+		inputs.push(makeRecursivePubUpdateInput(child, communityId));
 	}
-	return Promise.all(tasks);
+	return Promise.all(inputs);
 };
 
 const makePubChildrenConnectOptions = (body: CreatePubBody) => {
@@ -99,7 +100,7 @@ const makePubChildrenConnectOptions = (body: CreatePubBody) => {
 /**
  * Build a Prisma `PubCreateInput` object used to create a pub with descendants.
  */
-const makePubCreateInput = async (
+const makeRecursivePubUpdateInput = async (
 	body: CreatePubBody,
 	communityId: string
 ): Promise<Prisma.PubCreateInput> => {
@@ -128,25 +129,26 @@ export const createPub = async (instanceId: string, body: CreatePubBody) => {
 		throw InstanceNotFoundError;
 	}
 
-	// TODO: Refactor this to use raw SQL with a recursive CTE
-	const pubCreateDepth = getPubCreateDepth(body);
-	const pubCreateInput = {
-		...(await makePubCreateInput(body, instance.communityId)),
-		stage: {
-			connect: { id: instance.stageId },
+	const updateDepth = getUpdateDepth(body);
+	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
+	const updateArgs = {
+		data: {
+			stages: {
+				connect: { id: expect(instance.stageId) },
+			},
+			...updateInput,
 		},
+		...makeRecursiveInclude("children", {}, updateDepth),
 	};
-	const pubCreateInclude = recursiveInclude("children", {}, pubCreateDepth);
-	let pub: Prisma.PubGetPayload<typeof pubCreateInclude & { data: typeof pubCreateInput }>;
+	let pub: Prisma.PubGetPayload<typeof updateArgs>;
 
 	if ("id" in body) {
 		pub = await prisma.pub.update({
 			where: { id: body.id },
-			data: pubCreateInput,
-			...pubCreateInclude,
+			...updateArgs,
 		});
 	} else {
-		pub = await prisma.pub.create({ data: pubCreateInput, ...pubCreateInclude });
+		pub = await prisma.pub.create(updateArgs);
 	}
 
 	if (!pub) {
@@ -161,9 +163,7 @@ export const getPub = async (pubId: string) => {
 	return pub;
 };
 
-export const updatePub = async (pubId: string, pubFields: any) => {
-	const newValues = await normalizePubValues(pubFields);
-
+export const updatePub = async (pubId: string, values: any) => {
 	await prisma.pub.update({
 		where: { id: pubId },
 		include: {
@@ -172,14 +172,14 @@ export const updatePub = async (pubId: string, pubFields: any) => {
 		data: {
 			values: {
 				createMany: {
-					data: newValues,
+					data: await normalizePubValues(values),
 				},
 			},
 		},
 	});
 
 	//TODO: we shouldn't query the db twice for this
-	const updatedFields = await getPubFields(pubId);
+	const pub = await getPubFields(pubId);
 
-	return updatedFields;
+	return pub;
 };

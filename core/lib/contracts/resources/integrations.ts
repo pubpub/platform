@@ -1,10 +1,11 @@
+import { Prisma } from "@prisma/client";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-const Literal = z.union([z.string(), z.number(), z.boolean()]);
-type Literal = z.infer<typeof Literal>;
-type Json = Literal | { [key: string]: Json } | Json[];
-const Json: z.ZodType<Json> = z.lazy(() => z.union([Literal, z.array(Json), z.record(Json)]));
+type Json = Prisma.InputJsonValue;
+const Json: z.ZodType<Json> = z.lazy(() =>
+	z.union([z.union([z.string(), z.number(), z.boolean()]), z.array(Json), z.record(Json)])
+);
 
 const PubValuesSchema = z.record(Json);
 

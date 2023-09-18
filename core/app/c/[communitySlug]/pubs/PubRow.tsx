@@ -349,7 +349,7 @@ const PubRow: React.FC<Props> = function (props) {
 				<Collapsible>
 					<CollapsibleTrigger>
 						<div>
-							<span>Contents:</span>{" "}
+							<span className={cn("mr-2")}>Contents:</span>
 							{groupPubChildrenByPubType(pub.children).map((group) => (
 								<em key={group.pubType.id} className={cn("mr-2")}>
 									{group.pubType.name} ({group.pubs.length})

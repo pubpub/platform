@@ -8,7 +8,7 @@ export type RecursiveInclude<T extends string, U extends {}> = {
 		| U;
 };
 
-export const recursiveInclude = <T extends string, U extends {}>(
+export const makeRecursiveInclude = <T extends string, U extends {}>(
 	key: T,
 	include: U,
 	depth: number
@@ -18,7 +18,7 @@ export const recursiveInclude = <T extends string, U extends {}>(
 	}
 	return {
 		include: {
-			[key]: recursiveInclude(key, include, depth - 1),
+			[key]: makeRecursiveInclude(key, include, depth - 1),
 			...include,
 		},
 	};
@@ -43,7 +43,7 @@ export const pubInclude = {
 		},
 	},
 	children: {
-		...recursiveInclude(
+		...makeRecursiveInclude(
 			"children",
 			{
 				pubType: true,
