@@ -214,8 +214,7 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					instanceId,
 					expect(process.env.API_KEY),
 					"GET",
-					"pubs",
-					pubId
+					`pubs$/${pubId}`
 				);
 			} catch (cause) {
 				throw new Error("Failed to get pub", { cause });
