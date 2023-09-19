@@ -22,20 +22,39 @@ export const JsonOutput: z.ZodType<JsonOutput> = z.lazy(() =>
 export const PubValuesRequest = z.record(JsonInput);
 export const PubValuesResponse = z.record(JsonOutput);
 
-const BaseCreatePubBody = z.object({
+const BaseCreatePubRequestBody = z.object({
 	id: z.string().optional(),
 	parentId: z.string().optional(),
 	pubTypeId: z.string(),
 	values: PubValuesRequest,
 });
 
-export type CreatePubBody = z.infer<typeof BaseCreatePubBody> & {
-	children?: CreatePubBody[];
+export type CreatePubRequestBody = z.infer<typeof BaseCreatePubRequestBody> & {
+	children?: CreatePubRequestBody[];
 };
 
-export const CreatePubBody: z.ZodType<CreatePubBody> = BaseCreatePubBody.extend({
-	children: z.lazy(() => CreatePubBody.array().optional()),
+export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
+	BaseCreatePubRequestBody.extend({
+		children: z.lazy(() => CreatePubRequestBody.array().optional()),
+	});
+
+export const BaseCreatePubResponseBody = z.object({
+	id: z.string(),
+	communityId: z.string(),
+	pubTypeId: z.string(),
+	parentId: z.string().nullable(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
 });
+
+export type CreatePubResponseBody = z.infer<typeof BaseCreatePubResponseBody> & {
+	children: CreatePubResponseBody[];
+};
+
+export const CreatePubResponseBody: z.ZodType<CreatePubResponseBody> =
+	BaseCreatePubResponseBody.extend({
+		children: z.lazy(() => CreatePubResponseBody.array()),
+	});
 
 const SuggestedMembersSchema = z.object({
 	id: z.string(),
@@ -77,12 +96,12 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs",
 			summary: "Creates a new pub",
 			description: "A way to create a new pub",
-			body: CreatePubBody,
+			body: CreatePubRequestBody,
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.any(),
+				200: CreatePubResponseBody,
 				404: z.object({ message: z.string() }),
 			},
 		},

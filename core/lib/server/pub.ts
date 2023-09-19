@@ -1,4 +1,4 @@
-import { CreatePubBody } from "~/lib/contracts/resources/integrations";
+import { CreatePubRequestBody } from "~/lib/contracts/resources/integrations";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
@@ -31,7 +31,7 @@ const InstanceNotFoundError = new NotFoundError("Integration instance not found"
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldNamesNotFoundError = new NotFoundError("Pub fields not found");
 
-const normalizePubValues = async (values: CreatePubBody["values"], pubTypeId?: string) => {
+const normalizePubValues = async (values: CreatePubRequestBody["values"], pubTypeId?: string) => {
 	const pubFieldNames = Object.keys(values);
 	const pubFieldIds = await prisma.pubField.findMany({
 		where: {
@@ -60,7 +60,7 @@ const normalizePubValues = async (values: CreatePubBody["values"], pubTypeId?: s
 	return normalizedValues;
 };
 
-const getUpdateDepth = (body: CreatePubBody, depth = 0) => {
+const getUpdateDepth = (body: CreatePubRequestBody, depth = 0) => {
 	if (!body.children) {
 		return depth;
 	}
@@ -70,7 +70,7 @@ const getUpdateDepth = (body: CreatePubBody, depth = 0) => {
 	return depth + 1;
 };
 
-const makePubChildrenCreateOptions = async (body: CreatePubBody, communityId: string) => {
+const makePubChildrenCreateOptions = async (body: CreatePubRequestBody, communityId: string) => {
 	if (!body.children) {
 		return undefined;
 	}
@@ -84,7 +84,7 @@ const makePubChildrenCreateOptions = async (body: CreatePubBody, communityId: st
 	return Promise.all(inputs);
 };
 
-const makePubChildrenConnectOptions = (body: CreatePubBody) => {
+const makePubChildrenConnectOptions = (body: CreatePubRequestBody) => {
 	if (!body.children) {
 		return undefined;
 	}
@@ -101,7 +101,7 @@ const makePubChildrenConnectOptions = (body: CreatePubBody) => {
  * Build a Prisma `PubCreateInput` object used to create a pub with descendants.
  */
 const makeRecursivePubUpdateInput = async (
-	body: CreatePubBody,
+	body: CreatePubRequestBody,
 	communityId: string
 ): Promise<Prisma.PubCreateInput> => {
 	return {
@@ -120,7 +120,7 @@ const makeRecursivePubUpdateInput = async (
 	};
 };
 
-export const createPub = async (instanceId: string, body: CreatePubBody) => {
+export const createPub = async (instanceId: string, body: CreatePubRequestBody) => {
 	const instance = await prisma.integrationInstance.findUnique({
 		where: { id: instanceId },
 	});
