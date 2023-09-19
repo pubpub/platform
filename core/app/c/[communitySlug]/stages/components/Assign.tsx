@@ -19,14 +19,14 @@ import {
 	PermissionPayloadUser,
 	PubPayload,
 	StagePayload,
-	StagesCanMoveFromOrTo,
+	StagePayloadMoveConstraintDestination,
 	User,
 } from "~/lib/types";
 import { assign } from "../lib/actions";
 
 type Props = {
 	pub: PubPayload;
-	stages: StagesCanMoveFromOrTo[];
+	stages: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
 	loginData: User;
 	users: PermissionPayloadUser[];
