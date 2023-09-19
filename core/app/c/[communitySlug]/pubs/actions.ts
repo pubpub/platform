@@ -33,8 +33,8 @@ export async function assign(pubId: string, userId: string, stageId: string) {
 		await prisma.pub.update({
 			where: { id: pubId },
 			include: { claims: true },
-				data: {
-					claims: {
+			data: {
+				claims: {
 					create: {
 						stageId: stageId,
 						userId: userId,

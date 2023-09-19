@@ -1,12 +1,15 @@
 "use client";
 import Image from "next/image";
-import React from "react";
+import React, { Fragment } from "react";
 import {
 	Button,
 	Card,
 	CardContent,
 	CardFooter,
 	CardTitle,
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
 	Dialog,
 	DialogContent,
 	DialogTrigger,
@@ -18,6 +21,7 @@ import {
 import { expect } from "utils";
 import { PubPayload, StagePayload, User } from "~/lib/types";
 import { assign, move } from "./actions";
+import cn from "~/lib/cn";
 
 type Props = {
 	pub: PubPayload;
@@ -29,18 +33,33 @@ type Props = {
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
-const getTitle = (pub: Props["pub"]) => {
-	const titleValue = pub.values.find((value) => {
+const groupPubChildrenByPubType = (pubs: PubPayload["children"]) => {
+	const pubTypes = pubs.reduce((prev, curr) => {
+		const pubType = curr.pubType;
+		if (!prev[pubType.id]) {
+			prev[pubType.id] = {
+				pubType,
+				pubs: [],
+			};
+		}
+		prev[pubType.id].pubs.push(curr);
+		return prev;
+	}, {} as { [key: string]: { pubType: PubPayload["pubType"]; pubs: PubPayload["children"] } });
+	return Object.values(pubTypes);
+};
+
+const getTitle = (values: Props["pub"]["values"]) => {
+	const title = values.find((value) => {
 		return value.field.name === "Title";
 	});
-	return titleValue?.value as string;
+	return title?.value as string;
 };
 
 const getStatus = (pub: Props["pub"], integrationId: string) => {
-	const statusValue = pub.values.find((value) => {
+	const status = pub.values.find((value) => {
 		return value.field.integrationId === integrationId;
 	});
-	return statusValue?.value as { text: string; color: string };
+	return status?.value as { text: string; color: string };
 };
 
 const getInstances = (pub: Props["pub"]) => {
@@ -203,7 +222,7 @@ const PubRow: React.FC<Props> = function (props) {
 				</div>
 			</div>
 			<div className="mt-0 items-stretch flex justify-between">
-				<h3 className="text-md font-semibold">{getTitle(pub)}</h3>
+				<h3 className="text-md font-semibold">{getTitle(pub.values)}</h3>
 				<div className="flex items-end shrink-0">
 					{/* TODO: if no assigned members, don't show move button to non admin */}
 					{stage && (
@@ -281,8 +300,8 @@ const PubRow: React.FC<Props> = function (props) {
 													<DialogContent>
 														<Card>
 															<CardTitle className="space-y-1.5 p-6">
-																Assign <i>{getTitle(pub)}</i> to{" "}
-																{member.name}?
+																Assign <i>{getTitle(pub.values)}</i>{" "}
+																to {member.name}?
 															</CardTitle>
 															<CardContent>
 																{member.name} will be notified that
@@ -326,7 +345,49 @@ const PubRow: React.FC<Props> = function (props) {
 					</Button>
 				</div>
 			</div>
+			{pub.children.length > 0 && (
+				<Collapsible>
+					<CollapsibleTrigger>
+						<div>
+							<span className={cn("mr-2")}>Contents:</span>
+							{groupPubChildrenByPubType(pub.children).map((group) => (
+								<em key={group.pubType.id} className={cn("mr-2")}>
+									{group.pubType.name} ({group.pubs.length})
+								</em>
+							))}
+						</div>
+					</CollapsibleTrigger>
+					<CollapsibleContent>
+						<ChildHierarchy pub={pub} />
+					</CollapsibleContent>
+				</Collapsible>
+			)}
 		</div>
 	);
 };
+
+const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
+	return (
+		<dl className={cn("ml-4")}>
+			{groupPubChildrenByPubType(pub.children).map((group) => (
+				<Fragment key={group.pubType.id}>
+					<dt key={group.pubType.id}>
+						<strong>{group.pubType.name}</strong>
+					</dt>
+					<dd>
+						<ul>
+							{group.pubs.map((child) => (
+								<li key={child.id} className={cn("ml-4")}>
+									<div>{getTitle(child.values)}</div>
+									{pub.children?.length > 0 && <ChildHierarchy pub={child} />}
+								</li>
+							))}
+						</ul>
+					</dd>
+				</Fragment>
+			))}
+		</dl>
+	);
+};
+
 export default PubRow;

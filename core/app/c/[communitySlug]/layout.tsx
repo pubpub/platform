@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
 import { getLoginData } from "~/lib/auth/loginData";
 import SideNav from "./SideNav";
+import { redirect } from "next/navigation";
 
 export type CommunityData = Prisma.PromiseReturnType<typeof getCommunity>;
 
@@ -11,8 +12,9 @@ const getCommunity = async (slug: string) => {
 	});
 };
 
-const getAvailableCommunities = async () => {
-	const loginData = await getLoginData();
+const getAvailableCommunities = async (
+	loginData: Prisma.UserGetPayload<Prisma.UserDefaultArgs>
+) => {
 	return prisma.community.findMany({
 		where: { members: { some: { userId: loginData?.id } } },
 	});
@@ -21,11 +23,15 @@ const getAvailableCommunities = async () => {
 type Props = { children: React.ReactNode; params: { communitySlug: string } };
 
 export default async function MainLayout({ children, params }: Props) {
+	const loginData = await getLoginData();
+	if (!loginData) {
+		redirect("/login");
+	}
 	const community = await getCommunity(params.communitySlug);
 	if (!community) {
 		return null;
 	}
-	const availableCommunities = await getAvailableCommunities();
+	const availableCommunities = await getAvailableCommunities(loginData);
 	return (
 		<div className="flex min-h-screen">
 			<SideNav community={community} availableCommunities={availableCommunities} />

@@ -68,6 +68,10 @@ model Pub {
   communityId String    @map(name: "community_id")
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  
+  parent     Pub?      @relation("pub_parent", fields: [parentId], references: [id])
+  parentId   String?   @map(name: "parent_id")
+  children   Pub[]     @relation("pub_parent")
 
   values               PubValue[]
   stages               Stage[]
