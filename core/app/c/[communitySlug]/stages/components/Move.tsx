@@ -55,14 +55,14 @@ export default function Move(props: Props) {
 					<div className="mb-4">
 						<b>Move this pub to:</b>
 					</div>
-					{props.stages.map((s) => {
-						return s.id === props.stage.id ? null : (
+					{props.stages.map((stage) => {
+						return stage.id === props.stage.id ? null : (
 							<Button
 								variant="ghost"
-								key={s.id}
-								onClick={() => onMove(props.pub.id, props.stage.id, s.id)}
+								key={stage.id}
+								onClick={() => onMove(props.pub.id, props.stage.id, stage.id)}
 							>
-								{s.name}
+								{stage.name}
 							</Button>
 						);
 					})}

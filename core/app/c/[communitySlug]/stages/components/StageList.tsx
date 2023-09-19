@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { Button, Card, CardContent } from "ui";
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
-import { StagePayload, StagePayloadMoveConstraintDestination, User } from "~/lib/types";
+import { StagePayload, User } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
@@ -14,9 +14,7 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 		<div>
 			{stages.map((stage) => {
 				const users = getPubUsers(stage.permissions);
-				const destinations: StagePayloadMoveConstraintDestination[] = [
-					...stage.moveConstraints.map((stage) => stage.destination),
-				];
+				const destinations = stage.moveConstraints.map((stage) => stage.destination);
 				return (
 					<div key={stage.id} className="mb-20">
 						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>
@@ -59,7 +57,7 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 												key={pub.id}
 												pub={pub}
 												token={token}
-												actions={
+												stagePubActions={
 													<StagePubActions
 														key={stage.id}
 														pub={pub}
