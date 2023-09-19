@@ -1,5 +1,27 @@
 import { Prisma } from "@prisma/client";
 
+export type RecursiveInclude<T extends string, U extends {}> = {
+	include: {
+		[K in T]: RecursiveInclude<T, U>;
+	} & U;
+};
+
+export const makeRecursiveInclude = <T extends string, U extends {}>(
+	key: T,
+	include: U,
+	depth: number
+): RecursiveInclude<T, U> => {
+	if (depth === 0) {
+		return { include: { [key]: true, ...include } } as unknown as RecursiveInclude<T, U>;
+	}
+	return {
+		include: {
+			[key]: makeRecursiveInclude(key, include, depth - 1),
+			...include,
+		},
+	} as RecursiveInclude<T, U>;
+};
+
 export const pubInclude = {
 	pubType: true,
 	values: { include: { field: true } },
@@ -17,6 +39,16 @@ export const pubInclude = {
 				},
 			},
 		},
+	},
+	children: {
+		...makeRecursiveInclude(
+			"children",
+			{
+				pubType: true,
+				values: { include: { field: true } },
+			},
+			3
+		),
 	},
 } satisfies Prisma.PubInclude;
 

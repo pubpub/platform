@@ -1,14 +1,61 @@
+import { Prisma } from "@prisma/client";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-const contract = initContract();
+export type JsonInput = Prisma.InputJsonValue;
+export const JsonInput: z.ZodType<JsonInput> = z.lazy(() =>
+	z.union([
+		z.union([z.string(), z.number(), z.boolean()]),
+		z.array(JsonInput),
+		z.record(JsonInput),
+	])
+);
+export type JsonOutput = Prisma.JsonValue;
+export const JsonOutput: z.ZodType<JsonOutput> = z.lazy(() =>
+	z.union([
+		z.union([z.string(), z.number(), z.boolean()]),
+		z.array(JsonOutput),
+		z.record(JsonOutput),
+	])
+);
 
-const PubFieldsSchema = z.any();
+export const PubValuesRequestBody = z.record(JsonInput);
+export const PubValuesResponseBody = z.record(JsonOutput);
 
-const PubPostSchema = z.object({
+const BaseCreatePubRequestBody = z.object({
+	id: z.string().optional(),
+	parentId: z.string().optional(),
 	pubTypeId: z.string(),
-	pubFields: PubFieldsSchema,
+	values: PubValuesRequestBody,
 });
+
+export type CreatePubRequestBody = z.infer<typeof BaseCreatePubRequestBody> & {
+	children?: CreatePubRequestBody[];
+};
+
+export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
+	BaseCreatePubRequestBody.extend({
+		children: z.lazy(() => CreatePubRequestBody.array().optional()),
+	});
+
+export const BaseCreatePubResponseBody = z.object({
+	id: z.string(),
+	communityId: z.string(),
+	pubTypeId: z.string(),
+	parentId: z.string().nullable(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+});
+
+export type CreatePubResponseBody = z.infer<typeof BaseCreatePubResponseBody> & {
+	children: CreatePubResponseBody[];
+};
+
+export const CreatePubResponseBody: z.ZodType<CreatePubResponseBody> =
+	BaseCreatePubResponseBody.extend({
+		children: z.lazy(() => CreatePubResponseBody.array()),
+	});
+
 const SuggestedMembersSchema = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -24,9 +71,10 @@ const UserSchema = z.object({
 	updatedAt: z.date(),
 });
 
-export type PubFieldsResponse = z.infer<typeof PubFieldsSchema>;
-export type PubPostBody = z.infer<typeof PubPostSchema>;
+export type PubFieldsResponse = z.infer<typeof PubValuesResponseBody>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
+
+const contract = initContract();
 
 export const integrationsApi = contract.router(
 	{
@@ -48,12 +96,12 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs",
 			summary: "Creates a new pub",
 			description: "A way to create a new pub",
-			body: PubPostSchema,
+			body: CreatePubRequestBody,
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubFieldsSchema,
+				200: CreatePubResponseBody,
 				404: z.object({ message: z.string() }),
 			},
 		},
@@ -67,7 +115,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubFieldsSchema),
+				200: PubValuesResponseBody,
 			},
 		},
 		getAllPubs: {
@@ -79,7 +127,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubFieldsSchema),
+				200: z.array(PubValuesResponseBody),
 			},
 		},
 		updatePub: {
@@ -87,13 +135,13 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs/:pubId",
 			summary: "Adds field(s) to a pub",
 			description: "A way to update a field for an existing pub",
-			body: PubFieldsSchema,
+			body: PubValuesRequestBody,
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubFieldsSchema,
+				200: PubValuesResponseBody,
 			},
 		},
 		getSuggestedMembers: {

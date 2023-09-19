@@ -1,10 +1,11 @@
+"use client";
 import Link from "next/link";
 import { Fragment } from "react";
-import { Button, Card, CardContent } from "ui";
-import PubRow from "~/app/components/PubRow";
+import { Button } from "ui";
 import { getPubUsers } from "~/lib/permissions";
 import { StagePayload, User } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
+import PubRow from "~/app/components/PubRow";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
@@ -48,32 +49,28 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 								</Fragment>
 							);
 						})}
-						<Card>
-							<CardContent className="pt-4">
-								{stage.pubs.map((pub, index, list) => {
-									return (
-										<Fragment key={pub.id}>
-											<PubRow
-												key={pub.id}
+						{stage.pubs.map((pub, index, list) => {
+							return (
+								<Fragment key={pub.id}>
+									<PubRow
+										key={pub.id}
+										pub={pub}
+										token={token}
+										stagePubActions={
+											<StagePubActions
+												key={stage.id}
 												pub={pub}
-												token={token}
-												stagePubActions={
-													<StagePubActions
-														key={stage.id}
-														pub={pub}
-														stage={stage}
-														users={users}
-														loginData={loginData}
-														stages={destinations}
-													/>
-												}
+												stage={stage}
+												users={users}
+												loginData={loginData}
+												stages={destinations}
 											/>
-											{index < list.length - 1 && <hr />}
-										</Fragment>
-									);
-								})}
-							</CardContent>
-						</Card>
+										}
+									/>
+									{index < list.length - 1 && <hr />}
+								</Fragment>
+							);
+						})}
 					</div>
 				);
 			})}

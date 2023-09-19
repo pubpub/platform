@@ -197,11 +197,11 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new Error("Failed to authenticate user or integration", { cause });
 			}
 		},
-		async create(instanceId, pub, pubTypeId) {
+		async create(instanceId, values, pubTypeId) {
 			try {
 				return await makeRequest(instanceId, expect(process.env.API_KEY), "POST", "pubs", {
 					pubTypeId,
-					pubFields: pub,
+					values,
 				});
 			} catch (cause) {
 				console.error(cause);

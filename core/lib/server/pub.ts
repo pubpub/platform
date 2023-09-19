@@ -1,9 +1,12 @@
+import { CreatePubRequestBody } from "~/lib/contracts/resources/integrations";
 import prisma from "~/prisma/db";
-import { PubPostBody } from "~/lib/contracts/resources/integrations";
+import { makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
+import { Prisma } from "@prisma/client";
+import { expect } from "utils";
 
 export const getPubFields = async (pubId: string) => {
-	const fields = await prisma.pubValue.findMany({
+	const pubValues = await prisma.pubValue.findMany({
 		where: { pubId },
 		distinct: ["fieldId"],
 		orderBy: {
@@ -18,24 +21,22 @@ export const getPubFields = async (pubId: string) => {
 		},
 	});
 
-	return fields.reduce((prev: any, curr) => {
+	return pubValues.reduce((prev, curr) => {
 		prev[curr.field.name] = curr.value;
 		return prev;
-	}, {});
+	}, {} as Record<string, Prisma.JsonValue>);
 };
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
-const PubTypeNotFoundError = new NotFoundError("PubType not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldNamesNotFoundError = new NotFoundError("Pub fields not found");
 
-const getPubValues = async (pubFields: any, pubTypeId?: string) => {
-	const fieldNames = Object.keys(pubFields);
-
-	const fieldIds = await prisma.pubField.findMany({
+const normalizePubValues = async (values: CreatePubRequestBody["values"], pubTypeId?: string) => {
+	const pubFieldNames = Object.keys(values);
+	const pubFieldIds = await prisma.pubField.findMany({
 		where: {
 			name: {
-				in: fieldNames,
+				in: pubFieldNames,
 			},
 			pubTypes: {
 				some: {
@@ -45,60 +46,109 @@ const getPubValues = async (pubFields: any, pubTypeId?: string) => {
 		},
 	});
 
-	if (!fieldIds) {
+	if (!pubFieldIds) {
 		throw PubFieldNamesNotFoundError;
 	}
 
-	const values = fieldIds.map((field) => {
+	const normalizedValues = pubFieldIds.map((field) => {
 		return {
 			fieldId: field.id,
-			value: pubFields[field.name],
+			value: values[field.name],
 		};
 	});
 
-	return values;
+	return normalizedValues;
 };
 
-export const createPub = async (instanceId: string, body: PubPostBody) => {
-	const { pubTypeId, pubFields } = body;
+const getUpdateDepth = (body: CreatePubRequestBody, depth = 0) => {
+	if (!body.children) {
+		return depth;
+	}
+	for (const child of body.children) {
+		depth = Math.max(getUpdateDepth(child, depth), depth);
+	}
+	return depth + 1;
+};
 
-	const [instance, pubType] = await Promise.all([
-		prisma.integrationInstance.findUnique({
-			where: { id: instanceId },
-		}),
-		prisma.pubType.findUnique({
-			where: { id: pubTypeId },
-		}),
-	]);
+const makePubChildrenCreateOptions = async (body: CreatePubRequestBody, communityId: string) => {
+	if (!body.children) {
+		return undefined;
+	}
+	const inputs: ReturnType<typeof makeRecursivePubUpdateInput>[] = [];
+	for (const child of body.children) {
+		if ("id" in child) {
+			continue;
+		}
+		inputs.push(makeRecursivePubUpdateInput(child, communityId));
+	}
+	return Promise.all(inputs);
+};
+
+const makePubChildrenConnectOptions = (body: CreatePubRequestBody) => {
+	if (!body.children) {
+		return undefined;
+	}
+	const connect: Prisma.PubWhereUniqueInput[] = [];
+	for (const child of body.children) {
+		if ("id" in child) {
+			connect.push({ id: child.id });
+		}
+	}
+	return connect;
+};
+
+/**
+ * Build a Prisma `PubCreateInput` object used to create a pub with descendants.
+ */
+const makeRecursivePubUpdateInput = async (
+	body: CreatePubRequestBody,
+	communityId: string
+): Promise<Prisma.PubCreateInput> => {
+	return {
+		community: { connect: { id: communityId } },
+		pubType: { connect: { id: body.pubTypeId } },
+		values: {
+			createMany: {
+				data: await normalizePubValues(body.values),
+			},
+		},
+		children: {
+			// For each child, either connect to an existing pub or create a new one.
+			connect: makePubChildrenConnectOptions(body),
+			create: await makePubChildrenCreateOptions(body, communityId),
+		},
+	};
+};
+
+export const createPub = async (instanceId: string, body: CreatePubRequestBody) => {
+	const instance = await prisma.integrationInstance.findUnique({
+		where: { id: instanceId },
+	});
 
 	if (!instance) {
 		throw InstanceNotFoundError;
 	}
-
-	if (!pubType) {
-		throw PubTypeNotFoundError;
-	}
-
-	const pubValues = await getPubValues(pubFields, pubType.id);
-
-	const pub = await prisma.pub.create({
+	const updateDepth = getUpdateDepth(body);
+	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
+	const updateArgs = {
 		data: {
-			pubTypeId: pubType.id,
-			communityId: instance.communityId,
-			values: {
-				createMany: {
-					data: pubValues,
-				},
+			stages: {
+				connect: { id: expect(instance.stageId) },
 			},
-			stages: instance.stageId
-				? {
-						connect: {
-							id: instance.stageId,
-						},
-				  }
-				: undefined,
+			...updateInput,
 		},
-	});
+		...makeRecursiveInclude("children", {}, updateDepth),
+	};
+	let pub: Prisma.PubGetPayload<typeof updateArgs>;
+
+	if ("id" in body) {
+		pub = await prisma.pub.update({
+			where: { id: body.id },
+			...updateArgs,
+		});
+	} else {
+		pub = await prisma.pub.create(updateArgs);
+	}
 
 	if (!pub) {
 		throw PubNotFoundError;
@@ -112,9 +162,7 @@ export const getPub = async (pubId: string) => {
 	return pub;
 };
 
-export const updatePub = async (pubId: string, pubFields: any) => {
-	const newValues = await getPubValues(pubFields);
-
+export const updatePub = async (pubId: string, values: any) => {
 	await prisma.pub.update({
 		where: { id: pubId },
 		include: {
@@ -123,14 +171,14 @@ export const updatePub = async (pubId: string, pubFields: any) => {
 		data: {
 			values: {
 				createMany: {
-					data: newValues,
+					data: await normalizePubValues(values),
 				},
 			},
 		},
 	});
 
 	//TODO: we shouldn't query the db twice for this
-	const updatedFields = await getPubFields(pubId);
+	const pub = await getPubFields(pubId);
 
-	return updatedFields;
+	return pub;
 };
