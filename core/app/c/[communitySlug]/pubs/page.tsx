@@ -5,6 +5,7 @@ import PubHeader from "./PubHeader";
 import { createToken } from "~/lib/server/token";
 import { pubInclude, stageInclude } from "~/lib/types";
 import { redirect } from "next/navigation";
+import { expect } from "utils";
 
 const getCommunityPubs = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({
@@ -38,10 +39,7 @@ const getStages = async (communitySlug: string) => {
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
-	const loginData = await getLoginData();
-	if (!loginData) {
-		redirect("/login");
-	}
+	const loginData = expect(await getLoginData());
 	const token = await createToken(loginData.id);
 	const pubs = await getCommunityPubs(params.communitySlug);
 	if (!pubs) {
