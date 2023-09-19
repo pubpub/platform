@@ -19,14 +19,14 @@ export const JsonOutput: z.ZodType<JsonOutput> = z.lazy(() =>
 	])
 );
 
-export const PubValuesRequest = z.record(JsonInput);
-export const PubValuesResponse = z.record(JsonOutput);
+export const PubValuesRequestBody = z.record(JsonInput);
+export const PubValuesResponseBody = z.record(JsonOutput);
 
 const BaseCreatePubRequestBody = z.object({
 	id: z.string().optional(),
 	parentId: z.string().optional(),
 	pubTypeId: z.string(),
-	values: PubValuesRequest,
+	values: PubValuesRequestBody,
 });
 
 export type CreatePubRequestBody = z.infer<typeof BaseCreatePubRequestBody> & {
@@ -71,7 +71,7 @@ const UserSchema = z.object({
 	updatedAt: z.date(),
 });
 
-export type PubFieldsResponse = z.infer<typeof PubValuesResponse>;
+export type PubFieldsResponse = z.infer<typeof PubValuesResponseBody>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
 const contract = initContract();
@@ -115,7 +115,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubValuesResponse,
+				200: PubValuesResponseBody,
 			},
 		},
 		getAllPubs: {
@@ -127,7 +127,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubValuesResponse),
+				200: z.array(PubValuesResponseBody),
 			},
 		},
 		updatePub: {
@@ -135,13 +135,13 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs/:pubId",
 			summary: "Adds field(s) to a pub",
 			description: "A way to update a field for an existing pub",
-			body: PubValuesRequest,
+			body: PubValuesRequestBody,
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubValuesResponse,
+				200: PubValuesResponseBody,
 			},
 		},
 		getSuggestedMembers: {
