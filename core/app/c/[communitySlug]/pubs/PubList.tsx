@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "ui";
-import PubRow from "./PubRow";
+import PubRow from "~/app/components/PubRow";
 import { PubPayload } from "~/lib/types";
 
 type Props = { pubs: PubPayload[]; topPubs?: PubPayload[]; token: string };
@@ -60,11 +60,7 @@ const PubList: React.FC<Props> = function ({ pubs, topPubs, token }) {
 						{/* @ts-ignore */}
 						{!!children.length && jankyExpandState[pub.id] && (
 							<div className="ml-6">
-								<PubList
-									pubs={pubs}
-									topPubs={children}
-									token={token}
-								/>
+								<PubList pubs={pubs} topPubs={children} token={token} />
 							</div>
 						)}
 					</div>

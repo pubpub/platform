@@ -1,10 +1,10 @@
-"use client";
-import { Card, CardContent } from "ui";
-import PubRow from "../pubs/PubRow";
-import { Button } from "ui";
 import Link from "next/link";
 import { Fragment } from "react";
+import { Button, Card, CardContent } from "ui";
+import PubRow from "~/app/components/PubRow";
+import { getPubUsers } from "~/lib/permissions";
 import { StagePayload, User } from "~/lib/types";
+import { StagePubActions } from "./StagePubActions";
 
 type Props = { stages: StagePayload[]; token: string; loginData: User };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
@@ -13,6 +13,8 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 	return (
 		<div>
 			{stages.map((stage) => {
+				const users = getPubUsers(stage.permissions);
+				const destinations = stage.moveConstraints.map((stage) => stage.destination);
 				return (
 					<div key={stage.id} className="mb-20">
 						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>
@@ -55,9 +57,16 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 												key={pub.id}
 												pub={pub}
 												token={token}
-												stages={stages}
-												stage={stage}
-												loginData={loginData}
+												stagePubActions={
+													<StagePubActions
+														key={stage.id}
+														pub={pub}
+														stage={stage}
+														users={users}
+														loginData={loginData}
+														stages={destinations}
+													/>
+												}
 											/>
 											{index < list.length - 1 && <hr />}
 										</Fragment>

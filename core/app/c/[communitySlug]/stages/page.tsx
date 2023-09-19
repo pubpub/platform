@@ -1,8 +1,8 @@
-import prisma from "~/prisma/db";
-import StageList from "./StageList";
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import { stageInclude } from "~/lib/types";
+import prisma from "~/prisma/db";
+import StageList from "./components/StageList";
 
 const getCommunityStages = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({
