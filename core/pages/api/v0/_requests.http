@@ -42,16 +42,7 @@ authorization: Bearer {{token}}
                     "values": {
                         "Title": "Evaluation 2 of \"When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia\"",
                         "Description": "Evaluation B"
-                    },
-                    "children": [
-                        {
-                            "pubTypeId": "{{evaluationPubTypeId}}",
-                            "values": {
-                                "Title": "Evaluation 2 of \"When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia\"",
-                                "Description": "Evaluation B"
-                            }
-                        }
-                    ]
+                    }
                 }
             ]
         }

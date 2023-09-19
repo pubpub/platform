@@ -128,7 +128,6 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBody) 
 	if (!instance) {
 		throw InstanceNotFoundError;
 	}
-
 	const updateDepth = getUpdateDepth(body);
 	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
 	const updateArgs = {

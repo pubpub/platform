@@ -366,8 +366,6 @@ const PubRow: React.FC<Props> = function (props) {
 	);
 };
 
-type X = PubPayload["children"][number]["children"];
-
 const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 	return (
 		<dl className={cn("ml-4")}>
