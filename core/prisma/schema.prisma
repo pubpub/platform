@@ -84,17 +84,29 @@ model Pub {
 }
 
 model PubField {
-  id            String       @id @default(uuid())
-  name          String
-  integration   Integration? @relation(fields: [integrationId], references: [id])
-  integrationId String?      @map(name: "integration_id")
-  createdAt     DateTime     @default(now()) @map(name: "created_at")
-  updatedAt     DateTime     @default(now()) @updatedAt @map(name: "updated_at")
+  id               String          @id @default(uuid())
+  name             String
+  integration      Integration?    @relation(fields: [integrationId], references: [id])
+  integrationId    String?         @map(name: "integration_id")
+  createdAt        DateTime        @default(now()) @map(name: "created_at")
+  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updated_at")
+  schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
+  pubFieldSchemaId String?
 
   values   PubValue[]
   pubTypes PubType[]
 
   @@map(name: "pub_fields")
+}
+
+model PubFieldSchema {
+  id        String     @id @default(uuid())
+  namespace String
+  name      String
+  schema    Json
+  PubFields PubField[]
+
+  @@unique([name, namespace], name: "schema_identifier")
 }
 
 model PubValue {
@@ -273,8 +285,8 @@ model IntegrationInstance {
   communityId   String      @map(name: "community_id")
   createdAt     DateTime    @default(now()) @map(name: "created_at")
   updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updated_at")
-  stage         Stage?       @relation(fields: [stageId], references: [id])
-  stageId       String?      @map(name: "stage_id")
+  stage         Stage?      @relation(fields: [stageId], references: [id])
+  stageId       String?     @map(name: "stage_id")
 
   pubs Pub[]
 
