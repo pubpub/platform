@@ -12,7 +12,7 @@ export const makeRecursiveInclude = <T extends string, U extends {}>(
 	depth: number
 ): RecursiveInclude<T, U> => {
 	if (depth === 0) {
-		return { include: { [key]: true, ...include } } as unknown as RecursiveInclude<T, U>;
+		return { include: { [key]: false, ...include } } as unknown as RecursiveInclude<T, U>;
 	}
 	return {
 		include: {

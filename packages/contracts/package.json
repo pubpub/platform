@@ -1,0 +1,28 @@
+{
+	"name": "contracts",
+	"private": true,
+	"version": "0.0.0",
+	"description": "",
+	"main": "dist/contracts.cjs.js",
+	"module": "dist/contracts.esm.js",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"type-check": "tsc"
+	},
+	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
+	"license": "GPL-2.0+",
+	"dependencies": {
+		"utils": "workspace:*"
+	},
+	"peerDependencies": {
+		"@ts-rest/core": "^3.28.0",
+		"zod": "^3.21.4"
+	},
+	"devDependencies": {
+		"@ts-rest/core": "^3.28.0",
+		"tsconfig": "workspace:*",
+		"zod": "^3.21.4"
+	}
+}
