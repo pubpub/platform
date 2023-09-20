@@ -1,4 +1,5 @@
 export type ManifestJson = {
+	url: string;
 	read?: { [key: string]: { id: string } } | string;
 	write?: { [key: string]: { id: string } } | string;
 	register?: { [key: string]: { id: string } };

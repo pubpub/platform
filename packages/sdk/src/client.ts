@@ -8,8 +8,6 @@ import {
 	User,
 	api,
 } from "contracts";
-import { expect } from "utils";
-import { IntegrationApiError } from "./errors";
 import { Manifest, ManifestJson } from "./manifest";
 
 /**
@@ -41,7 +39,7 @@ export type WritableKey<T extends Manifest> = Extract<
  */
 export type Parse<T extends ManifestJson> = {
 	[K in Extract<keyof T, "read" | "write">]: T[K] extends string ? "*" : T[K];
-} & { [K in Extract<keyof T, "register">]: T[K] };
+} & { [K in Extract<keyof T, "register">]: T[K] } & { url: string };
 
 /**
  * Payload used to create a pub.
