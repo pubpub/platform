@@ -1,18 +1,10 @@
-import { Client, CreatePayload, Parse, ReadPayload, UpdatePayload } from "./client";
-import { Manifest } from "./types";
-
 export * from "./errors";
-export * from "./types";
+export * from "./manifest";
 export * from "./client";
 
-export type Create<T extends Client<Manifest>> = T extends Client<infer U>
-	? CreatePayload<Parse<U>>
-	: never;
+import type { User, JsonInput } from "contracts";
 
-export type Read<T extends Client<Manifest>> = T extends Client<infer U>
-	? ReadPayload<Parse<U>>
-	: never;
+type Field = JsonInput;
 
-export type Update<T extends Client<Manifest>> = T extends Client<infer U>
-	? UpdatePayload<Parse<U>>
-	: never;
+export type { User, Field };
+export type PubValues = Record<string, Field>;

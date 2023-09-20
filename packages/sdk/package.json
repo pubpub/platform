@@ -20,15 +20,18 @@
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
 	"dependencies": {
+		"@ts-rest/core": "^3.28.0",
 		"utils": "workspace:*"
 	},
 	"peerDependencies": {
+		"contracts": "workspace:*",
 		"ui": "workspace:*",
 		"react": "^18.2.0"
 	},
 	"devDependencies": {
 		"@types/node": "^20.4.2",
 		"@types/react": "^18.2.5",
+		"contracts": "workspace:*",
 		"tsconfig": "workspace:*",
 		"ui": "workspace:*"
 	},

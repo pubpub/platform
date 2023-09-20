@@ -27,17 +27,20 @@ export type JsonOutput = JsonValue;
 export const JsonOutput = JsonInput as z.ZodType<JsonOutput>;
 
 const commonPubFields = z.object({
-	communityId: z.string(),
 	pubTypeId: z.string(),
-	parentId: z.string().nullable(),
-	createdAt: z.date(),
-	updatedAt: z.date(),
+	parentId: z.string().optional().nullable(),
 });
 
 // Get pub types
 
-export const GetPubResponseBody = commonPubFields.extend({
+export const GetPubResponseBodyBase = commonPubFields.extend({
 	values: z.record(JsonOutput),
+});
+export type GetPubResponseBody = z.infer<typeof GetPubResponseBodyBase> & {
+	children: GetPubResponseBody[];
+};
+export const GetPubResponseBody: z.ZodType<GetPubResponseBody> = GetPubResponseBodyBase.extend({
+	children: z.lazy(() => GetPubResponseBody.array()),
 });
 
 // Create pub types
@@ -47,11 +50,11 @@ const CreatePubRequestBodyBase = commonPubFields.extend({
 	values: z.record(JsonInput),
 });
 export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBodyBase> & {
-	children: CreatePubRequestBody[];
+	children?: CreatePubRequestBody[];
 };
 export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
 	CreatePubRequestBodyBase.extend({
-		children: z.lazy(() => CreatePubRequestBody.array()),
+		children: z.lazy(() => CreatePubRequestBody.array().optional()),
 	});
 
 export const CreatePubResponseBodyBase = commonPubFields.extend({
@@ -90,21 +93,23 @@ export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
 		children: z.lazy(() => CreatePubResponseBody.array()),
 	});
 
-const SuggestedMembersSchema = z.object({
+export const SuggestedMembers = z.object({
 	id: z.string(),
 	name: z.string(),
 });
+export type SuggestedMembers = z.infer<typeof SuggestedMembers>;
 
-const UserSchema = z.object({
+export const User = z.object({
 	id: z.string(),
 	slug: z.string(),
 	email: z.string(),
 	name: z.string(),
 	avatar: z.string().nullable(),
 });
+export type User = z.infer<typeof User>;
 
 export type PubFieldsResponse = z.infer<typeof GetPubResponseBody>;
-export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
+export type SuggestedMember = z.infer<typeof SuggestedMembers>;
 
 const contract = initContract();
 
@@ -120,7 +125,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: UserSchema,
+				200: User,
 			},
 		},
 		createPub: {
@@ -189,7 +194,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(SuggestedMembersSchema),
+				200: z.array(SuggestedMembers),
 			},
 		},
 		sendEmail: {
@@ -228,7 +233,7 @@ export const integrationsApi = contract.router(
 		// 		instanceId: z.string(),
 		// 	}),
 		// 	responses: {
-		// 		200: z.array(SuggestedMembersSchema),
+		// 		200: z.array(SuggestedMembers),
 		// 	},
 		// },
 	},

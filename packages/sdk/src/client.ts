@@ -1,6 +1,16 @@
+import { initClient } from "@ts-rest/core";
+import {
+	CreatePubRequestBody,
+	CreatePubResponseBody,
+	GetPubResponseBody,
+	UpdatePubRequestBody,
+	UpdatePubResponseBody,
+	User,
+	api,
+} from "contracts";
 import { expect } from "utils";
 import { IntegrationApiError } from "./errors";
-import { Manifest, ManifestJson, User } from "./types";
+import { Manifest, ManifestJson } from "./manifest";
 
 /**
  * Derive a union of readable keys from a manifest.
@@ -73,165 +83,85 @@ export type UpdateResponse<U extends UpdatePayload<Manifest>> = {
 };
 
 export type Client<T extends Manifest> = {
-	/**
-	 * Authenticate a user, returning their profile.
-	 */
 	auth(instanceId: string, token: string): Promise<User>;
-	/**
-	 * Create a pub using the given pub type id and fields.
-	 */
-	create(
-		instanceId: string,
-		pub: CreatePayload<T>,
-		pubTypeId: string
-	): Promise<CreateResponse<T>>;
-	/**
-	 * Get part of a pub.
-	 */
-	read<U extends ReadPayload<T>>(
-		instanceId: string,
-		pubId: string,
-		...fields: U
-	): Promise<ReadResponse<U>>;
-	/**
-	 * Update part of a pub.
-	 */
-	update<U extends UpdatePayload<T>>(
-		instanceId: string,
-		pubId: string,
-		patch: U
-	): Promise<UpdateResponse<U>>;
-};
-
-/**
- * Make an HTTP request to the PubPub API.
- */
-const makeRequest = async (
-	instanceId: string,
-	token: string,
-	method: "GET" | "POST" | "PATCH",
-	path?: string | null | undefined,
-	body?: unknown
-) => {
-	const url = `${process.env.PUBPUB_URL}/api/v0/integrations/${instanceId}${
-		path ? `/${path}` : ""
-	}`;
-	const signal = AbortSignal.timeout(5000);
-	const headers = {
-		"Content-Type": "application/json",
-		Authorization: `Bearer ${token}`,
-	};
-	let response: Response;
-	try {
-		response = await fetch(url, {
-			method,
-			headers,
-			signal,
-			body: body ? JSON.stringify(body) : undefined,
-			cache: "no-store",
-		});
-	} catch (error) {
-		if (error instanceof Error && error.name === "TimeoutError") {
-			throw new Error("Failed to reach PubPub within 5 seconds");
-		}
-		// Some other type of network error occurred.
-		throw error;
-	}
-	if (response.ok) {
-		return response.json();
-	}
-	let message = "Request to PubPub failed";
-	switch (response.status) {
-		// 400 responses are expected to be Zod validation errors.
-		case 400:
-			let json: unknown;
-			try {
-				json = await response.json();
-			} catch (error) {
-				message = "Expected JSON response";
-				break;
-			}
-			if (typeof json === "object" && json !== null && "name" in json && "issues" in json) {
-				switch (json.name) {
-					case "ZodError":
-						throw new IntegrationApiError("Request contained invalid fields", {
-							cause: {
-								status: 400,
-								issues: json.issues,
-							},
-						});
-					default:
-						message = "Invalid request";
-						break;
-				}
-			}
-			break;
-		case 401:
-			message = "User or integration not authenticated";
-			break;
-		case 403:
-			message = "User or integration not authorized";
-			break;
-		case 404:
-			message = "Integration not found";
-			break;
-	}
-	throw new IntegrationApiError(message, { cause: { status: response.status } });
+	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
+	getPub(instanceId: string, pubId: string): Promise<GetPubResponseBody>;
+	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
 };
 
 /**
  * Create a client for the PubPub API.
  */
 export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
+	const client = initClient(api.integrations, {
+		baseUrl: manifest.url,
+		baseHeaders: {},
+	});
 	return {
 		async auth(instanceId, token) {
 			try {
-				const userRaw = await makeRequest(instanceId, token, "GET", "auth");
-				const user = {
-					...userRaw,
-					createdAt: new Date(userRaw.createdAt),
-					updatedAt: new Date(userRaw.updatedAt),
-				};
-				return user;
-			} catch (cause) {
-				throw new Error("Failed to authenticate user or integration", { cause });
-			}
-		},
-		async create(instanceId, values, pubTypeId) {
-			try {
-				return await makeRequest(instanceId, expect(process.env.API_KEY), "POST", "pubs", {
-					pubTypeId,
-					values,
+				const response = await client.auth({
+					headers: {
+						authorization: `Bearer ${token}`,
+					},
+					params: { instanceId },
 				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to authenticate user or integration", { cause: response });
 			} catch (cause) {
-				console.error(cause);
-				throw new Error("Failed to create pub", { cause });
+				throw new Error("Request failed", { cause });
 			}
 		},
-		async read(instanceId, pubId, ...fields) {
+		async createPub(instanceId, pub) {
 			try {
-				return await makeRequest(
-					instanceId,
-					expect(process.env.API_KEY),
-					"GET",
-					"pubs",
-					pubId
-				);
+				const response = await client.createPub({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					body: pub,
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to create pub", { cause: response });
 			} catch (cause) {
-				throw new Error("Failed to get pub", { cause });
+				throw new Error("Request failed", { cause });
 			}
 		},
-		async update(instanceId, pubId, patch) {
+		async getPub(instanceId, pubId) {
 			try {
-				return await makeRequest(
-					instanceId,
-					expect(process.env.API_KEY),
-					"PATCH",
-					`pubs/${pubId}`,
-					patch
-				);
+				const response = await client.getPub({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId, pubId },
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get pub", { cause: response });
 			} catch (cause) {
-				throw new Error("Failed to update pub", { cause });
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async updatePub(instanceId, pub) {
+			try {
+				const response = await client.updatePub({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId, pubId: pub.id },
+					body: pub,
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to update pub", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
 			}
 		},
 	};
