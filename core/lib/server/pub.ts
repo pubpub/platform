@@ -1,61 +1,43 @@
-import { CreatePubRequestBody, UpdatePubRequestBody } from "contracts";
+import { CreatePubRequestBody, GetPubResponseBody, UpdatePubRequestBody } from "contracts";
 import prisma from "~/prisma/db";
-import { makeRecursiveInclude } from "../types";
+import { RecursiveInclude, makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
 import { expect } from "utils";
 
-export const getPub = async (pubId: string) => {
-	const pub = await prisma.pub.findUnique({
-		where: { id: pubId },
+const pubValuesInclude = {
+	values: {
+		distinct: ["fieldId"],
+		orderBy: { createdAt: "desc" },
 		include: {
-			values: {
-				orderBy: {
-					createdAt: "desc",
-				},
-				include: {
-					field: {
-						select: {
-							name: true,
-						},
-					},
-				},
+			field: {
+				select: { name: true },
 			},
 		},
-	});
+	},
+} satisfies Prisma.PubInclude;
+
+const recursivelyDenormalizePubValues = async (
+	pub: Prisma.PubGetPayload<RecursiveInclude<"children", typeof pubValuesInclude>>
+): Promise<GetPubResponseBody> => {
+	const values = pub.values.reduce((prev, curr) => {
+		prev[curr.field.name] = curr.value;
+		return prev;
+	}, {} as Record<string, Prisma.JsonValue>);
+	const children = await Promise.all(pub.children.map(recursivelyDenormalizePubValues));
+
+	return { ...pub, children, values };
+};
+
+export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBody> => {
+	const pubInclude = makeRecursiveInclude("children", pubValuesInclude, depth);
+	const pub = await prisma.pub.findUnique({ where: { id: pubId }, ...pubInclude });
 
 	if (!pub) {
 		throw PubNotFoundError;
 	}
 
-	const pubValues = pub.values.reduce((prev, curr) => {
-		prev[curr.field.name] = curr.value;
-		return prev;
-	}, {} as Record<string, Prisma.JsonValue>);
-
-	return { ...pub, values: pubValues };
-};
-
-export const getPubFields = async (pubId: string) => {
-	const pubValues = await prisma.pubValue.findMany({
-		where: { pubId },
-		distinct: ["fieldId"],
-		orderBy: {
-			createdAt: "desc",
-		},
-		include: {
-			field: {
-				select: {
-					name: true,
-				},
-			},
-		},
-	});
-
-	return pubValues.reduce((prev, curr) => {
-		prev[curr.field.name] = curr.value;
-		return prev;
-	}, {} as Record<string, Prisma.JsonValue>);
+	return recursivelyDenormalizePubValues(pub);
 };
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");

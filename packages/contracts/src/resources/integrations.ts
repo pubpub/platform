@@ -34,6 +34,7 @@ const commonPubFields = z.object({
 // Get pub types
 
 export const GetPubResponseBodyBase = commonPubFields.extend({
+	id: z.string(),
 	values: z.record(JsonOutput),
 });
 export type GetPubResponseBody = z.infer<typeof GetPubResponseBodyBase> & {
@@ -150,6 +151,7 @@ export const integrationsApi = contract.router(
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
+				depth: z.number().optional(),
 			}),
 			responses: {
 				200: GetPubResponseBody,
