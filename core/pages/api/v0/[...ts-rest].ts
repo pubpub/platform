@@ -1,7 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { type NextApiRequest, type NextApiResponse } from "next/types";
 import crypto from "node:crypto";
-import { api } from "~/lib/contracts";
+import { api } from "contracts";
 import {
 	BadRequestError,
 	HTTPStatusError,

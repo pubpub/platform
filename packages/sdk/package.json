@@ -1,5 +1,6 @@
 {
 	"name": "@pubpub/sdk",
+	"private": true,
 	"version": "0.0.6",
 	"description": "",
 	"main": "dist/pubpub-sdk.cjs.js",

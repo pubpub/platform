@@ -1,4 +1,4 @@
-import { CreatePubRequestBody, UpdatePubRequestBody } from "~/lib/contracts/resources/integrations";
+import { CreatePubRequestBody, UpdatePubRequestBody } from "contracts";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";

@@ -1,8 +1,21 @@
-import { Prisma } from "@prisma/client";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-export type JsonInput = Prisma.InputJsonValue;
+// Json value types taken from prisma
+export type JsonObject = { [Key in string]?: JsonValue };
+export interface JsonArray extends Array<JsonValue> {}
+export type JsonValue = string | number | boolean | JsonObject | JsonArray | null;
+export type InputJsonObject = { readonly [Key in string]?: InputJsonValue | null };
+interface InputJsonArray extends ReadonlyArray<InputJsonValue | null> {}
+type InputJsonValue =
+	| string
+	| number
+	| boolean
+	| InputJsonObject
+	| InputJsonArray
+	| { toJSON(): unknown };
+
+export type JsonInput = InputJsonValue;
 export const JsonInput: z.ZodType<JsonInput> = z.lazy(() =>
 	z.union([
 		z.union([z.string(), z.number(), z.boolean()]),
@@ -10,7 +23,7 @@ export const JsonInput: z.ZodType<JsonInput> = z.lazy(() =>
 		z.record(JsonInput),
 	])
 );
-export type JsonOutput = Prisma.JsonValue;
+export type JsonOutput = JsonValue;
 export const JsonOutput = JsonInput as z.ZodType<JsonOutput>;
 
 const commonPubFields = z.object({
