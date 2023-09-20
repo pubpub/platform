@@ -1,7 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { type NextApiRequest, type NextApiResponse } from "next/types";
 import crypto from "node:crypto";
-import { api } from "~/lib/contracts";
+import { api } from "contracts";
 import {
 	BadRequestError,
 	HTTPStatusError,
@@ -58,50 +58,32 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	getPub: async ({ headers, params }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		const pubFieldValuePairs = await getPub(params.pubId);
-		return {
-			status: 200,
-			body: pubFieldValuePairs,
-		};
+		const pub = await getPub(params.pubId, params.depth);
+		return { status: 200, body: pub };
 	},
 	getAllPubs: async ({ headers }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		return {
-			status: 200,
-			body: [{ message: "This is not implemented" }],
-		};
+		return { status: 501, body: { error: "Method not implemented" } };
 	},
 	updatePub: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const updatedPub = await updatePub(params.pubId, body);
-		return {
-			status: 200,
-			body: updatedPub,
-		};
+		return { status: 200, body: updatedPub };
 	},
 	getSuggestedMembers: async ({ headers, params }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const member = await getMembers(params.memberCandidateString);
-		return {
-			status: 200,
-			body: member,
-		};
+		return { status: 200, body: member };
 	},
 	auth: async ({ headers }) => {
 		const token = getBearerToken(headers.authorization);
 		const user = await validateToken(token);
-		return {
-			status: 200,
-			body: user,
-		};
+		return { status: 200, body: user };
 	},
 	sendEmail: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		await emailUser(body.to, body.subject, body.message, params.instanceId);
-		return {
-			status: 200,
-			body: undefined,
-		};
+		return { status: 200, body: undefined };
 	},
 });
 

@@ -1,0 +1,65 @@
+@hostname = localhost
+@port = 3000
+@host = {{hostname}}:{{port}}
+@contentType = application/json
+@token = super_secret_key
+@submissionsIntegrationId = af837db6-9a1f-4b38-878f-f84fde8a0b50
+@submissionPubTypeId = e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225
+@evaluationSummaryPubTypeId = 2981e8ca-dabe-416f-bce0-fcc418036529
+@evaluationPubTypeId = 81d18691-3ac4-42c1-b55b-d3b2c065b9ad
+
+# Create a submission with an evaluation summary and two evaluations
+POST http://{{host}}/api/v0/integrations/{{submissionsIntegrationId}}/pubs HTTP/1.1
+content-type: {{contentType}}
+authorization: Bearer {{token}}
+
+{
+    "pubTypeId": "{{submissionPubTypeId}}",
+    "values": {
+        "Title": "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
+        "DOI": "10.1007/s00216-020-02650-1",
+        "URL": "https://link.springer.com/article/10.1007/s00216-020-02650-1",
+        "Abstract": "The paper's abstract."
+    },
+    "children": [
+        {
+            "pubTypeId": "{{evaluationSummaryPubTypeId}}",
+            "values": {
+                "Title": "Evaluation Summary of \"A Paper\"",
+                "Description": "",
+                "Manager's Notes": "hi"
+            },
+            "children": [
+                {
+                    "pubTypeId": "{{evaluationPubTypeId}}",
+                    "values": {
+                        "Title": "Evaluation 1 of \"When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia\"",
+                        "Description": "Evaluation A"
+                    }
+                },
+                {
+                    "pubTypeId": "{{evaluationPubTypeId}}",
+                    "values": {
+                        "Title": "Evaluation 2 of \"When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia\"",
+                        "Description": "Evaluation B"
+                    }
+                }
+            ]
+        }
+    ]
+}
+
+###
+
+# Reparent test
+POST http://{{host}}/api/v0/integrations/{{submissionsIntegrationId}}/pubs HTTP/1.1
+content-type: {{contentType}}
+authorization: Bearer {{token}}
+
+{
+    "pubTypeId": "{{submissionPubTypeId}}",
+    "values": {},
+    "id": "ab0fcb95-d3b9-4eee-9041-783062c0f8e7",
+    "parentId": "01bf280d-5b34-48ee-b836-2318b773a6b9"
+}
+
