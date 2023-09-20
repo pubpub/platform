@@ -1,9 +1,40 @@
-import { CreatePubRequestBody } from "~/lib/contracts/resources/integrations";
+import { CreatePubRequestBody, UpdatePubRequestBody } from "~/lib/contracts/resources/integrations";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
 import { expect } from "utils";
+
+export const getPub = async (pubId: string) => {
+	const pub = await prisma.pub.findUnique({
+		where: { id: pubId },
+		include: {
+			values: {
+				orderBy: {
+					createdAt: "desc",
+				},
+				include: {
+					field: {
+						select: {
+							name: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!pub) {
+		throw PubNotFoundError;
+	}
+
+	const pubValues = pub.values.reduce((prev, curr) => {
+		prev[curr.field.name] = curr.value;
+		return prev;
+	}, {} as Record<string, Prisma.JsonValue>);
+
+	return { ...pub, values: pubValues };
+};
 
 export const getPubFields = async (pubId: string) => {
 	const pubValues = await prisma.pubValue.findMany({
@@ -128,6 +159,7 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBody) 
 	if (!instance) {
 		throw InstanceNotFoundError;
 	}
+
 	const updateDepth = getUpdateDepth(body);
 	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
 	const updateArgs = {
@@ -139,46 +171,32 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBody) 
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),
 	};
-	let pub: Prisma.PubGetPayload<typeof updateArgs>;
-
-	if ("id" in body) {
-		pub = await prisma.pub.update({
-			where: { id: body.id },
-			...updateArgs,
-		});
-	} else {
-		pub = await prisma.pub.create(updateArgs);
-	}
-
-	if (!pub) {
-		throw PubNotFoundError;
-	}
+	const pub = await prisma.pub.create(updateArgs);
 
 	return pub;
 };
 
-export const getPub = async (pubId: string) => {
-	const pub = await getPubFields(pubId);
-	return pub;
-};
-
-export const updatePub = async (pubId: string, values: any) => {
-	await prisma.pub.update({
-		where: { id: pubId },
-		include: {
-			values: true,
-		},
-		data: {
-			values: {
-				createMany: {
-					data: await normalizePubValues(values),
-				},
-			},
-		},
+export const updatePub = async (instanceId: string, body: UpdatePubRequestBody) => {
+	const instance = await prisma.integrationInstance.findUnique({
+		where: { id: instanceId },
 	});
 
-	//TODO: we shouldn't query the db twice for this
-	const pub = await getPubFields(pubId);
+	if (!instance) {
+		throw InstanceNotFoundError;
+	}
+
+	const updateDepth = getUpdateDepth(body);
+	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
+	const updateArgs = {
+		data: {
+			...updateInput,
+		},
+		...makeRecursiveInclude("children", {}, updateDepth),
+	};
+	const pub = await prisma.pub.update({
+		where: { id: body.id },
+		...updateArgs,
+	});
 
 	return pub;
 };

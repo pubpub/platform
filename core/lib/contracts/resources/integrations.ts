@@ -11,35 +11,9 @@ export const JsonInput: z.ZodType<JsonInput> = z.lazy(() =>
 	])
 );
 export type JsonOutput = Prisma.JsonValue;
-export const JsonOutput: z.ZodType<JsonOutput> = z.lazy(() =>
-	z.union([
-		z.union([z.string(), z.number(), z.boolean()]),
-		z.array(JsonOutput),
-		z.record(JsonOutput),
-	])
-);
+export const JsonOutput = JsonInput as z.ZodType<JsonOutput>;
 
-export const PubValuesRequestBody = z.record(JsonInput);
-export const PubValuesResponseBody = z.record(JsonOutput);
-
-const BaseCreatePubRequestBody = z.object({
-	id: z.string().optional(),
-	parentId: z.string().optional(),
-	pubTypeId: z.string(),
-	values: PubValuesRequestBody,
-});
-
-export type CreatePubRequestBody = z.infer<typeof BaseCreatePubRequestBody> & {
-	children?: CreatePubRequestBody[];
-};
-
-export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
-	BaseCreatePubRequestBody.extend({
-		children: z.lazy(() => CreatePubRequestBody.array().optional()),
-	});
-
-export const BaseCreatePubResponseBody = z.object({
-	id: z.string(),
+const commonPubFields = z.object({
 	communityId: z.string(),
 	pubTypeId: z.string(),
 	parentId: z.string().nullable(),
@@ -47,12 +21,59 @@ export const BaseCreatePubResponseBody = z.object({
 	updatedAt: z.date(),
 });
 
-export type CreatePubResponseBody = z.infer<typeof BaseCreatePubResponseBody> & {
+// Get pub types
+
+export const GetPubResponseBody = commonPubFields.extend({
+	values: z.record(JsonOutput),
+});
+
+// Create pub types
+
+const CreatePubRequestBodyBase = commonPubFields.extend({
+	id: z.string().optional(),
+	values: z.record(JsonInput),
+});
+export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBodyBase> & {
+	children: CreatePubRequestBody[];
+};
+export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
+	CreatePubRequestBodyBase.extend({
+		children: z.lazy(() => CreatePubRequestBody.array()),
+	});
+
+export const CreatePubResponseBodyBase = commonPubFields.extend({
+	id: z.string(),
+});
+export type CreatePubResponseBody = z.infer<typeof CreatePubResponseBodyBase> & {
 	children: CreatePubResponseBody[];
 };
-
 export const CreatePubResponseBody: z.ZodType<CreatePubResponseBody> =
-	BaseCreatePubResponseBody.extend({
+	CreatePubResponseBodyBase.extend({
+		children: z.lazy(() => CreatePubResponseBody.array()),
+	});
+
+// Update pub types
+
+const UpdatePubRequestBodyBase = commonPubFields.extend({
+	id: z.string(),
+	values: z.record(JsonInput),
+});
+export type UpdatePubRequestBody = z.infer<typeof UpdatePubRequestBodyBase> & {
+	children: UpdatePubRequestBody[];
+};
+export const UpdatePubRequestBody: z.ZodType<UpdatePubRequestBody> =
+	UpdatePubRequestBodyBase.extend({
+		children: z.lazy(() => UpdatePubRequestBody.array()),
+	});
+
+export const UpdatePubResponseBodyBase = commonPubFields.extend({
+	id: z.string(),
+});
+export type UpdatePubResponseBody = z.infer<typeof UpdatePubResponseBodyBase> & {
+	children: UpdatePubResponseBody[];
+};
+export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
+	CreatePubResponseBodyBase.extend({
 		children: z.lazy(() => CreatePubResponseBody.array()),
 	});
 
@@ -67,11 +88,9 @@ const UserSchema = z.object({
 	email: z.string(),
 	name: z.string(),
 	avatar: z.string().nullable(),
-	createdAt: z.date(),
-	updatedAt: z.date(),
 });
 
-export type PubFieldsResponse = z.infer<typeof PubValuesResponseBody>;
+export type PubFieldsResponse = z.infer<typeof GetPubResponseBody>;
 export type SuggestedMember = z.infer<typeof SuggestedMembersSchema>;
 
 const contract = initContract();
@@ -115,7 +134,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubValuesResponseBody,
+				200: GetPubResponseBody,
 			},
 		},
 		getAllPubs: {
@@ -127,7 +146,9 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.array(PubValuesResponseBody),
+				501: z.object({
+					error: z.string(),
+				}),
 			},
 		},
 		updatePub: {
@@ -135,13 +156,13 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs/:pubId",
 			summary: "Adds field(s) to a pub",
 			description: "A way to update a field for an existing pub",
-			body: PubValuesRequestBody,
+			body: UpdatePubRequestBody,
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: PubValuesResponseBody,
+				200: UpdatePubResponseBody,
 			},
 		},
 		getSuggestedMembers: {
