@@ -100,9 +100,11 @@ model PubField {
 }
 
 model PubFieldSchema {
-  id        String     @id @default(uuid())
+  id        String @id @default(uuid())
   namespace String
   name      String
+
+  // This must be a dereferenced JSONSchema. We should find a way to validate.
   schema    Json
   PubFields PubField[]
 

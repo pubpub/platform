@@ -47,6 +47,7 @@ async function createUserMembers(email, password, slug, name, prismaCommunityIds
 
 async function main() {
 	const communityIds = [...Array(7)].map((x) => uuidv4());
+	const schemaIds = [...Array(7)].map((x) => uuidv4());
 	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 	const prismaCommunityIds = [{ communityId: unJournalId, canAdmin: true }];
 
@@ -61,6 +62,21 @@ async function main() {
 	});*/
 
 	try {
+		await prisma.pubFieldSchema.create({
+			data: {
+				name: "title",
+				namespace: "schema",
+				schema: {
+					"@id": "schema:headline",
+					description: "The title of the creative work.",
+					aliases: ["headline"],
+					type: "array",
+					items: {
+						$ref: "Inline.schema.json",
+					},
+				},
+			},
+		});
 		await createUserMembers(
 			"all@pubpub.org",
 			"pubpub-all",
