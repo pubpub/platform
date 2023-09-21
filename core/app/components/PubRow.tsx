@@ -65,12 +65,14 @@ const PubRow: React.FC<Props> = function (props: Props) {
 					<div className="text-sm text-gray-500 font-semibold">
 						{props.pub.pubType.name}
 					</div>
-					<IntegrationActions pub={props.pub} token={props.token} />
+					<div>
+						<IntegrationActions pub={props.pub} token={props.token} />
+						<div className="ml-2">{props.actions}</div>
+					</div>
 				</div>
 			</RowHeader>
 			<RowContent className="items-stretch flex justify-between items-start">
 				<h3 className="text-md font-medium">{getTitle(props.pub)}</h3>
-				<div className="ml-2">{props.actions}</div>
 			</RowContent>
 			{props.pub.children.length > 0 && (
 				<RowFooter className="items-stretch flex justify-between">

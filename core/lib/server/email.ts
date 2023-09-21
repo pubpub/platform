@@ -2,6 +2,7 @@ import type { Prisma, User } from "@prisma/client";
 import { Eta } from "eta";
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";
+import { IntegrationAction } from "../types";
 import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
@@ -60,7 +61,7 @@ const makeTemplateApi = (
 	instance: Prisma.IntegrationInstanceGetPayload<{ include: typeof instanceInclude }>,
 	user: User
 ) => {
-	const actionUrls = (instance.integration.actions as { name: string; url: string }[]).reduce(
+	const actionUrls = (instance.integration.actions as IntegrationAction[]).reduce(
 		(actions, action) => {
 			actions[action.name] = action.href;
 			return actions;
