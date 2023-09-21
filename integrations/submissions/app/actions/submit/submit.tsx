@@ -34,9 +34,9 @@ type Props = {
 };
 
 const optional = (schema: z.ZodType<any, any>) =>
-	z.preprocess((doi) => {
-		if (!doi || typeof doi !== "string") return undefined;
-		return doi === "" ? undefined : doi;
+	z.preprocess((value) => {
+		if (!value || typeof value !== "string") return undefined;
+		return value === "" ? undefined : value;
 	}, schema.optional());
 
 // TODO: generate fields using instance's configured PubType
