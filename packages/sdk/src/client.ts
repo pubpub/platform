@@ -5,6 +5,7 @@ import {
 	GetPubResponseBody,
 	UpdatePubRequestBody,
 	UpdatePubResponseBody,
+	SendEmailRequestBody,
 	User,
 	api,
 } from "contracts";
@@ -83,8 +84,9 @@ export type UpdateResponse<U extends UpdatePayload<Manifest>> = {
 export type Client<T extends Manifest> = {
 	auth(instanceId: string, token: string): Promise<User>;
 	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
-	getPub(instanceId: string, pubId: string): Promise<GetPubResponseBody>;
+	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
 	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
+	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<void>;
 };
 
 /**
@@ -103,6 +105,7 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						authorization: `Bearer ${token}`,
 					},
 					params: { instanceId },
+					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -120,6 +123,8 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId },
 					body: pub,
+					// TODO: investigate @ts-rest/next cache invalidation
+					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -129,13 +134,15 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new Error("Request failed", { cause });
 			}
 		},
-		async getPub(instanceId, pubId) {
+		async getPub(instanceId, pubId, depth = 1) {
 			try {
 				const response = await client.getPub({
 					headers: {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
 					params: { instanceId, pubId },
+					query: { depth: String(depth) },
+					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -153,11 +160,30 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId, pubId: pub.id },
 					body: pub,
+					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
 				}
 				throw new Error("Failed to update pub", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async sendEmail(instanceId, email) {
+			try {
+				const response = await client.sendEmail({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					body: email,
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return;
+				}
+				throw new Error("Failed to send email", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

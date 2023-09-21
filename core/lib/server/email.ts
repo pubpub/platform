@@ -98,12 +98,16 @@ export const emailUser = async (
 	}
 
 	const html = await eta.renderStringAsync(message, makeTemplateApi(instanceId, user));
-
-	await smtpclient.sendMail({
+	const { accepted, rejected } = await smtpclient.sendMail({
 		from: "PubPub Team <hello@mg.pubpub.org>",
 		to: email,
 		replyTo: "hello@pubpub.org",
 		html,
 		subject,
 	});
+
+	return {
+		accepted,
+		rejected,
+	};
 };

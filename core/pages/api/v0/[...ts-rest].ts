@@ -56,9 +56,9 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const pub = await createPub(params.instanceId, body);
 		return { status: 200, body: pub };
 	},
-	getPub: async ({ headers, params }) => {
+	getPub: async ({ headers, params, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		const pub = await getPub(params.pubId, params.depth);
+		const pub = await getPub(params.pubId, Number(query.depth));
 		return { status: 200, body: pub };
 	},
 	getAllPubs: async ({ headers }) => {
@@ -82,8 +82,8 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	sendEmail: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		await emailUser(body.to, body.subject, body.message, params.instanceId);
-		return { status: 200, body: undefined };
+		const info = await emailUser(body.to, body.subject, body.message, params.instanceId);
+		return { status: 200, body: info };
 	},
 });
 

@@ -102,26 +102,7 @@ const IntegrationActions = (props: Props) => {
 						})}
 					</PopoverContent>
 				</Popover>
-			) : (
-				<div className="flex items-center text-gray-600">
-					<img src="/icons/integration.svg" />
-					<div className="flex items-baseline">
-						<div className="text-sm whitespace-nowrap ml-1">
-							{buttons.length} Integration
-							{buttons.length !== 1 ? "s" : ""}
-						</div>
-						{buttons.map((button) => {
-							return (
-								<div
-									key={button.actions[0].text}
-									// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
-									className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
-								/>
-							);
-						})}
-					</div>
-				</div>
-			)}
+			) : null}
 		</div>
 	);
 };

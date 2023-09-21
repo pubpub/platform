@@ -1,14 +1,23 @@
 "use server";
 
-import { Create, Update } from "@pubpub/sdk";
-import { assert } from "utils";
-import { findInstance } from "~/lib/instance";
-import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
 import { client } from "~/lib/pubpub";
 
-export const evaluate = async (instanceId: string) => {
+export const evaluate = async (
+	instanceId: string,
+	pubId: string,
+	title: string,
+	description: string
+) => {
 	try {
-		return {};
+		const pub = await client.createPub(instanceId, {
+			values: {
+				Title: `Evaluation of ${title}`,
+				Description: description,
+			},
+			pubTypeId: "81d18691-3ac4-42c1-b55b-d3b2c065b9ad",
+			parentId: pubId,
+		});
+		return pub;
 	} catch (error) {
 		return { error: error.message };
 	}

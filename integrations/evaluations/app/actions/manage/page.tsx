@@ -9,6 +9,7 @@ type Props = {
 
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
+
 	return (
 		<>
 			<h1>Evaluation Integration</h1>
