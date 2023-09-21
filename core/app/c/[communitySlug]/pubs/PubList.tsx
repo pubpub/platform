@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "utils";
 import PubRow from "~/app/components/PubRow";
 import { PubPayload } from "~/lib/types";
 
@@ -6,17 +7,9 @@ type Props = { pubs: PubPayload[]; token: string };
 
 const PubList: React.FC<Props> = function ({ pubs, token }) {
 	return (
-		<div>
+		<div className={cn("flex flex-col gap-2")}>
 			{pubs.map((pub) => {
-				return (
-					<div key={pub.id}>
-						<div className="flex items-center mt-[-1px] border-t border-b border-gray-100">
-							<div className="flex-1">
-								<PubRow pub={pub} token={token} />
-							</div>
-						</div>
-					</div>
-				);
+				return <PubRow key={pub.id} pub={pub} token={token} />;
 			})}
 		</div>
 	);

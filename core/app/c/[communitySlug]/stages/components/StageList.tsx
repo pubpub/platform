@@ -56,7 +56,7 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 										key={pub.id}
 										pub={pub}
 										token={token}
-										stagePubActions={
+										actions={
 											<StagePubActions
 												key={stage.id}
 												pub={pub}

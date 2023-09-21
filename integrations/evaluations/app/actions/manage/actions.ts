@@ -4,7 +4,7 @@ import { client } from "~/lib/pubpub";
 
 export const manage = async (instanceId: string, pubId: string, email: string, name: string) => {
 	try {
-		const pub = await client.getPub(instanceId, pubId, 1);
+		const pub = await client.getPub(instanceId, pubId);
 		await client.sendEmail(instanceId, {
 			to: {
 				name,

@@ -86,7 +86,7 @@ export const emailUser = async (
 				user = await prisma.user.create({
 					data: {
 						email: to.email,
-						slug: slugifyString(email!),
+						slug: slugifyString(to.email),
 						name: to.name,
 					},
 				});

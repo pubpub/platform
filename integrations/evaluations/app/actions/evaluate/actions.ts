@@ -1,5 +1,6 @@
 "use server";
 
+import { findInstance } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
 export const evaluate = async (
@@ -8,13 +9,17 @@ export const evaluate = async (
 	title: string,
 	description: string
 ) => {
+	const instance = await findInstance(instanceId);
+	if (instance === undefined) {
+		return { error: "Instance not configured" };
+	}
 	try {
 		const pub = await client.createPub(instanceId, {
 			values: {
-				Title: `Evaluation of ${title}`,
+				Title: `Evaluation of "${title}"`,
 				Description: description,
 			},
-			pubTypeId: "81d18691-3ac4-42c1-b55b-d3b2c065b9ad",
+			pubTypeId: instance.pubTypeId,
 			parentId: pubId,
 		});
 		return pub;

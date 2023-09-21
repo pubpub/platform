@@ -84,7 +84,7 @@ export function Configure(props: Props) {
 									</FormControl>
 									<FormDescription>
 										The pub type determines the fields available on the
-										submission form.
+										evaluation form.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>

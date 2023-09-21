@@ -10,10 +10,5 @@ type Props = {
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
 
-	return (
-		<>
-			<h1>Evaluation Integration</h1>
-			<EmailForm instanceId={instanceId} pubId={pubId} />
-		</>
-	);
+	return <EmailForm instanceId={instanceId} pubId={pubId} />;
 }

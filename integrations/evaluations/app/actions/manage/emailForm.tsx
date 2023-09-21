@@ -7,7 +7,10 @@ import {
 	Button,
 	Card,
 	CardContent,
+	CardDescription,
 	CardFooter,
+	CardHeader,
+	CardTitle,
 	Form,
 	FormControl,
 	FormDescription,
@@ -85,6 +88,12 @@ export function EmailForm(props: Props) {
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
+					<CardHeader>
+						<CardTitle>Invite Evaluators</CardTitle>
+						<CardDescription>
+							Use this form to invite evaluators to review a submission.
+						</CardDescription>
+					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>
 						<FormField
 							control={form.control}

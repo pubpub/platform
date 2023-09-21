@@ -8,7 +8,6 @@ import { client } from "~/lib/pubpub";
 
 export const submit = async (instanceId: string, values: PubValues) => {
 	try {
-		assert(typeof instanceId === "string");
 		const instance = await findInstance(instanceId);
 		if (instance === undefined) {
 			return { error: "Instance not configured" };
