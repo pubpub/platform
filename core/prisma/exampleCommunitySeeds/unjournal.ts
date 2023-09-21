@@ -665,27 +665,21 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const evaluationIntegrationUrl =
+	const evaluationsIntegrationUrl =
 		process.env.NODE_ENV === "production"
 			? "https://integration-evaluations.onrender.com"
 			: "http://localhost:3001";
-	const evaluationIntegration = await prisma.integration.create({
+	const evaluationsIntegration = await prisma.integration.create({
 		data: {
 			name: "Evaluation Manager",
 			actions: [
 				{
 					name: "manage",
 					text: "Manage Evaluation",
-					href: `${evaluationIntegrationUrl}/actions/manage`,
-				},
-				/* Adding this temporarily for testing -- eventually this will be done in the app via invites */
-				{
-					name: "evaluate",
-					text: "Evaluate",
-					href: `${evaluationIntegrationUrl}/actions/evaluate`,
+					href: `${evaluationsIntegrationUrl}/actions/manage`,
 				},
 			],
-			settingsUrl: `${evaluationIntegrationUrl}/configure`,
+			settingsUrl: `${evaluationsIntegrationUrl}/configure`,
 		},
 	});
 
@@ -699,7 +693,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		{
 			id: "d6177ad1-ae7d-43b7-9c12-dcd31a38f255",
 			name: "Unjournal Evaluation Manager",
-			integrationId: evaluationIntegration.id,
+			integrationId: evaluationsIntegration.id,
 			stageId: stageIds[3],
 		},
 	];

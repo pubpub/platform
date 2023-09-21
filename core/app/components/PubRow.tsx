@@ -65,9 +65,9 @@ const PubRow: React.FC<Props> = function (props: Props) {
 					<div className="text-sm text-gray-500 font-semibold">
 						{props.pub.pubType.name}
 					</div>
-					<div>
+					<div className="flex flex-row">
 						<IntegrationActions pub={props.pub} token={props.token} />
-						<div className="ml-2">{props.actions}</div>
+						<div className="ml-1">{props.actions}</div>
 					</div>
 				</div>
 			</RowHeader>

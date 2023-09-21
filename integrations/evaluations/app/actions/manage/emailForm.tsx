@@ -26,10 +26,11 @@ import {
 import { cn } from "utils";
 import * as z from "zod";
 import { manage } from "./actions";
+import { GetPubResponseBody } from "@pubpub/sdk";
 
 type Props = {
 	instanceId: string;
-	pubId: string;
+	pub: GetPubResponseBody;
 };
 
 // TODO: generate fields using instance's configured PubType
@@ -53,7 +54,13 @@ export function EmailForm(props: Props) {
 	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
 	const onSubmit = async (values: z.infer<typeof schema>) => {
-		const result = await manage(props.instanceId, props.pubId, values.email, values.name);
+		const result = await manage(
+			props.instanceId,
+			props.pub.id,
+			props.pub.values.Title as string,
+			values.email,
+			values.name
+		);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
@@ -91,7 +98,8 @@ export function EmailForm(props: Props) {
 					<CardHeader>
 						<CardTitle>Invite Evaluators</CardTitle>
 						<CardDescription>
-							Use this form to invite evaluators to review a submission.
+							Use this form to invite evaluators to review "
+							{props.pub.values.Title as string}".
 						</CardDescription>
 					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>
