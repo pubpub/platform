@@ -29,9 +29,9 @@ export const StagePubActions = (props: Props) => {
 				stages={props.stages}
 				users={props.users}
 			/>
-			<Button size="sm" variant="outline" className="ml-1">
+			{/* <Button size="sm" variant="outline" className="ml-1">
 				Email Members
-			</Button>
+			</Button> */}
 		</div>
 	);
 };

@@ -655,6 +655,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Submission Manager",
 			actions: [
 				{
+					name: "submit",
 					text: "Submit Pub",
 					href: `${submissionsIntegrationUrl}/actions/submit`,
 					kind: "stage",
@@ -673,11 +674,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Evaluation Manager",
 			actions: [
 				{
+					name: "manage",
 					text: "Manage Evaluation",
 					href: `${evaluationIntegrationUrl}/actions/manage`,
 				},
 				/* Adding this temporarily for testing -- eventually this will be done in the app via invites */
 				{
+					name: "evaluate",
 					text: "Evaluate",
 					href: `${evaluationIntegrationUrl}/actions/evaluate`,
 				},

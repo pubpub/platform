@@ -1,4 +1,4 @@
-import type { User } from "@prisma/client";
+import type { Prisma, User } from "@prisma/client";
 import { Eta } from "eta";
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";
@@ -9,7 +9,8 @@ import { createToken } from "./token";
 type To = { email: string; name: string } | { userId: string };
 type Node = string | { t: string; val: string };
 
-const tokens = new Set(["user.token", "user.id", "user.name", "instance.id"]);
+const staticTokens = new Set(["user.token", "user.id", "user.name", "instance.id"]);
+const dynamicTokens = /^instance\.actions\.(\w+)$/;
 
 const plugin = {
 	processAST(nodes: Node[]) {
@@ -21,7 +22,7 @@ const plugin = {
 				next.push(node);
 			} else if (node.t === "i") {
 				// Accept valid tokens
-				if (!tokens.has(node.val)) {
+				if (!staticTokens.has(node.val) && !dynamicTokens.test(node.val)) {
 					throw new BadRequestError(`Invalid token ${node.val}`);
 				}
 				// Await async tokens
@@ -47,9 +48,38 @@ const eta = new Eta({
 	cache: false,
 });
 
-const makeTemplateApi = (instanceId: string, user: User) => {
+const instanceInclude = {
+	integration: {
+		select: {
+			actions: true,
+		},
+	},
+} satisfies Prisma.IntegrationInstanceInclude;
+
+const makeTemplateApi = (
+	instance: Prisma.IntegrationInstanceGetPayload<{ include: typeof instanceInclude }>,
+	user: User
+) => {
+	const actionUrls = (instance.integration.actions as { name: string; url: string }[]).reduce(
+		(actions, action) => {
+			actions[action.name] = action.href;
+			return actions;
+		},
+		{} as Record<string, string>
+	);
+	const actions = new Proxy(actionUrls, {
+		get(target, prop) {
+			if (typeof prop !== "string") {
+				throw new BadRequestError("Invalid token");
+			}
+			if (!(prop in target)) {
+				throw new BadRequestError(`Invalid token instance.actions.${prop}`);
+			}
+			return target[prop];
+		},
+	});
 	return {
-		instance: { id: instanceId },
+		instance: { id: instance.id, actions },
 		user: {
 			id: user.id,
 			name: user.name,
@@ -66,6 +96,15 @@ export const emailUser = async (
 	message: string,
 	instanceId: string
 ) => {
+	const instance = await prisma.integrationInstance.findUnique({
+		where: { id: instanceId },
+		include: instanceInclude,
+	});
+
+	if (!instance) {
+		throw new NotFoundError(`Integration instance ${instanceId} not found`);
+	}
+
 	let user: User;
 	let email: string;
 	if ("userId" in to) {
@@ -97,7 +136,7 @@ export const emailUser = async (
 		email = user.email;
 	}
 
-	const html = await eta.renderStringAsync(message, makeTemplateApi(instanceId, user));
+	const html = await eta.renderStringAsync(message, makeTemplateApi(instance, user));
 	const { accepted, rejected } = await smtpclient.sendMail({
 		from: "PubPub Team <hello@mg.pubpub.org>",
 		to: email,

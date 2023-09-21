@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { Fragment } from "react";
 import { Button } from "ui";
@@ -18,37 +19,42 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 				const destinations = stage.moveConstraints.map((stage) => stage.destination);
 				return (
 					<div key={stage.id} className="mb-20">
-						<h3 className="font-bold text-lg mb-2">{stage.name}</h3>
-						{stage.integrationInstances.map((instance) => {
-							if (!Array.isArray(instance.integration.actions)) {
-								return null;
-							}
-							return (
-								<Fragment key={instance.id}>
-									{instance.integration.actions?.map(
-										(action: IntegrationAction) => {
-											if (action.kind === "stage") {
-												const href = new URL(action.href);
-												href.searchParams.set("instanceId", instance.id);
-												href.searchParams.set("token", token);
-												return (
-													<Button
-														key={action.text}
-														variant="outline"
-														size="sm"
-														asChild
-													>
-														<Link href={href.toString()}>
-															{action.text}
-														</Link>
-													</Button>
-												);
+						<div className="flex flex-row justify-between">
+							<h3 className="font-semibold text-lg mb-2">{stage.name}</h3>
+							{stage.integrationInstances.map((instance) => {
+								if (!Array.isArray(instance.integration.actions)) {
+									return null;
+								}
+								return (
+									<Fragment key={instance.id}>
+										{instance.integration.actions?.map(
+											(action: IntegrationAction) => {
+												if (action.kind === "stage") {
+													const href = new URL(action.href);
+													href.searchParams.set(
+														"instanceId",
+														instance.id
+													);
+													href.searchParams.set("token", token);
+													return (
+														<Button
+															key={action.text}
+															variant="outline"
+															size="sm"
+															asChild
+														>
+															<Link href={href.toString()}>
+																{action.text}
+															</Link>
+														</Button>
+													);
+												}
 											}
-										}
-									)}
-								</Fragment>
-							);
-						})}
+										)}
+									</Fragment>
+								);
+							})}
+						</div>
 						{stage.pubs.map((pub, index, list) => {
 							return (
 								<Fragment key={pub.id}>

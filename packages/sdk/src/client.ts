@@ -6,6 +6,7 @@ import {
 	UpdatePubRequestBody,
 	UpdatePubResponseBody,
 	SendEmailRequestBody,
+	SendEmailResponseBody,
 	User,
 	api,
 } from "contracts";
@@ -86,7 +87,7 @@ export type Client<T extends Manifest> = {
 	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
 	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
-	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<void>;
+	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
 };
 
 /**
@@ -181,7 +182,7 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					cache: "no-cache",
 				});
 				if (response.status === 200) {
-					return;
+					return response.body;
 				}
 				throw new Error("Failed to send email", { cause: response });
 			} catch (cause) {

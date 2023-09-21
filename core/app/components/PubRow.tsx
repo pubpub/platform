@@ -1,10 +1,11 @@
 "use client";
+
 import React, { Fragment } from "react";
 import { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
 import { cn } from "utils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui";
-import { Row, RowContent, RowFooter } from "./Row";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui";
+import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 
 type Props = {
 	pub: PubPayload;
@@ -42,7 +43,9 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 					{group.pubs.map((child) => (
 						<li key={child.id} className={cn("list-none")}>
 							<div>
-								<span className="text-gray-500 mr-2">{group.pubType.name}</span>
+								<span className="text-gray-500 mr-2 font-semibold">
+									{group.pubType.name}
+								</span>
 								{getTitle(child)}
 							</div>
 							{pub.children?.length > 0 && <ChildHierarchy pub={child} />}
@@ -57,34 +60,37 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 const PubRow: React.FC<Props> = function (props: Props) {
 	return (
 		<Row>
-			<RowContent className="items-stretch flex justify-between">
-				<div>
-					<div className="text-sm text-gray-500">{props.pub.pubType.name}</div>
-					<h3 className="text-md font-semibold">{getTitle(props.pub)}</h3>
-				</div>
-				<div className="flex items-center justify-between">
+			<RowHeader>
+				<div className="flex flex-row justify-between items-center">
+					<div className="text-sm text-gray-500 font-semibold">
+						{props.pub.pubType.name}
+					</div>
 					<IntegrationActions pub={props.pub} token={props.token} />
 				</div>
+			</RowHeader>
+			<RowContent className="items-stretch flex justify-between items-start">
+				<h3 className="text-md font-medium">{getTitle(props.pub)}</h3>
+				<div className="ml-2">{props.actions}</div>
 			</RowContent>
-			<RowFooter className="items-stretch flex justify-between">
-				{props.pub.children.length > 0 && (
+			{props.pub.children.length > 0 && (
+				<RowFooter className="items-stretch flex justify-between">
 					<Collapsible>
 						<CollapsibleTrigger>
-							<div className={cn("text-sm")}>
-								{groupPubChildrenByPubType(props.pub.children).map((group) => (
-									<em key={group.pubType.id} className={cn("mr-2")}>
-										{group.pubType.name} ({group.pubs.length})
-									</em>
-								))}
-							</div>
+							<Button
+								asChild
+								variant="link"
+								size="sm"
+								className="px-0 flex items-center"
+							>
+								<span className="mr-1">Contents ({props.pub.children.length})</span>
+							</Button>
 						</CollapsibleTrigger>
 						<CollapsibleContent>
 							<ChildHierarchy pub={props.pub} />
 						</CollapsibleContent>
 					</Collapsible>
-				)}
-				{props.actions}
-			</RowFooter>
+				</RowFooter>
+			)}
 		</Row>
 	);
 };

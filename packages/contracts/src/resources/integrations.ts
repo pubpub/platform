@@ -129,6 +129,11 @@ export const SendEmailRequestBody = z.object({
 	message: z.string(),
 });
 export type SendEmailRequestBody = z.infer<typeof SendEmailRequestBody>;
+export const SendEmailResponseBody = z.object({
+	accepted: z.array(z.string()),
+	rejected: z.array(z.string()),
+});
+export type SendEmailResponseBody = z.infer<typeof SendEmailResponseBody>;
 
 const contract = initContract();
 
@@ -230,10 +235,7 @@ export const integrationsApi = contract.router(
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.object({
-					accepted: z.array(z.string()),
-					rejected: z.array(z.string()),
-				}),
+				200: SendEmailResponseBody,
 			},
 		},
 		// TODO implement these endpoints

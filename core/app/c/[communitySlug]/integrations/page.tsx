@@ -18,24 +18,7 @@ const getCommunityIntegrations = async (communitySlug: string) => {
 		include: {
 			integration: true,
 			pubs: { include: { values: { include: { field: true } } } },
-			stage: true
-			// stages: {
-			// 	include: {
-			// 		pubs: {
-			// 			include: {
-			// 				pubType: true,
-			// 				values: { include: { field: true } },
-			// 				stages: {
-			// 					include: {
-			// 						integrationInstances: { include: { integration: true } },
-			// 					},
-			// 				},
-			// 				integrationInstances: { include: { integration: true } },
-			// 			},
-			// 		},
-			// 		integrationInstances: { include: { integration: true } },
-			// 	},
-			// },
+			stage: true,
 		},
 	});
 };
@@ -51,11 +34,13 @@ export default async function Page({ params }: Props) {
 	const loginData = await getLoginData();
 	let token;
 	if (loginData) {
-		token = await createToken(loginData.id)
+		token = await createToken(loginData.id);
 	}
 	return (
 		<>
-			<h1 style={{ marginBottom: "2em" }}>Integrations</h1>
+			<div className="flex mb-16 justify-between items-center">
+				<h1 className="font-bold text-xl">Integrations</h1>
+			</div>
 			<IntegrationsList instances={integrations} token={token} />
 		</>
 	);

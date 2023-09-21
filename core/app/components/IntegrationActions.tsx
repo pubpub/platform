@@ -55,56 +55,56 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 const IntegrationActions = (props: Props) => {
 	const buttons = getButtons(props.pub, props.token);
 
-	return (
-		<div className="flex items-center text-gray-600">
-			{buttons.length ? (
-				<Popover>
-					<PopoverTrigger asChild>
-						<Button variant="ghost" size="sm">
-							<img src="/icons/integration.svg" />
-							<div className="flex items-baseline">
-								<div className="text-sm whitespace-nowrap ml-1">
-									{buttons.length} Integration
-									{buttons.length !== 1 ? "s" : ""}
-								</div>
-								{buttons.map((button) => {
-									return (
-										<div
-											key={button.actions[0].text}
-											// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
-											className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
-										/>
-									);
-								})}
-							</div>
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent>
+	return buttons.length ? (
+		<Popover>
+			<PopoverTrigger asChild>
+				<Button variant="link" size="sm" className="px-0 flex items-center">
+					<img src="/icons/integration.svg" />
+					<div className="flex items-center">
+						<div className="text-sm whitespace-nowrap mx-1">
+							{buttons.length} Integration
+							{buttons.length !== 1 ? "s" : ""}
+						</div>
 						{buttons.map((button) => {
-							if (!Array.isArray(button.actions)) {
+							return (
+								<div
+									key={button.actions[0].href}
+									// className={`w-2 h-2 rounded-lg ml-1 bg-[${button.status.color}]`}
+									className={`w-2 h-2 rounded-lg ml-1 bg-amber-500`}
+								/>
+							);
+						})}
+					</div>
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent>
+				<ul className="list-none">
+					{buttons.map((button) => {
+						if (!Array.isArray(button.actions)) {
+							return null;
+						}
+						return button.actions.map((action: IntegrationAction) => {
+							if (!(action.text && action.href)) {
 								return null;
 							}
-							return button.actions.map((action: IntegrationAction) => {
-								if (!(action.text && action.href)) {
-									return null;
-								}
-								// Don't render "stage" only actions in the pub row
-								if (action.kind === "stage") {
-									return null;
-								}
-								return (
+							// Don't render "stage" only actions in the pub row
+							if (action.kind === "stage") {
+								return null;
+							}
+							return (
+								<li key={action.href} className="flex items-stretch">
 									<Button variant="ghost" size="sm" key={action.href}>
 										<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
 										<a href={action.href}>{action.text}</a>
 									</Button>
-								);
-							});
-						})}
-					</PopoverContent>
-				</Popover>
-			) : null}
-		</div>
-	);
+								</li>
+							);
+						});
+					})}
+				</ul>
+			</PopoverContent>
+		</Popover>
+	) : null;
 };
 
 export default IntegrationActions;
