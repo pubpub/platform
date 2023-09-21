@@ -12,7 +12,36 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(9)].map(() => uuidv4());
+	const confidenceRatingSchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "confidencerating",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:confidencerating",
+				description: "The confidence rating assigned to a work.",
+				type: "object",
+				properties: {
+					rating: {
+						description:
+							"A rating of quality from 0 to 100, with 0 being the worst and 100 being the best.",
+						type: "integer",
+						minimunm: 0,
+						maximum: 100,
+						required: true,
+					},
+					confidence: {
+						description: "The degree of confidence the rater has in the rating given.",
+						type: "integer",
+						minimum: 1,
+						maximum: 5,
+						required: true,
+					},
+				},
+			},
+		},
+	});
+
+	const fieldIds = [...Array(10)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
 		data: [
@@ -25,6 +54,11 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			{ id: fieldIds[6], name: "Evaluated Paper" },
 			{ id: fieldIds[7], name: "Tags" },
 			{ id: fieldIds[8], name: "DOI" },
+			{
+				id: fieldIds[9],
+				name: "Confidence Rating",
+				pubFieldSchemaId: confidenceRatingSchema.id,
+			},
 		],
 	});
 
@@ -75,7 +109,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Evaluation",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
+				connect: [
+					{ id: fieldIds[0] },
+					{ id: fieldIds[1] },
+					{ id: fieldIds[3] },
+					{ id: fieldIds[9] },
+				],
 			},
 		},
 	});

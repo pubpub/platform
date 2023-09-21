@@ -62,35 +62,6 @@ async function main() {
 	});*/
 
 	try {
-		await prisma.pubFieldSchema.create({
-			data: {
-				name: "confidencerating",
-				namespace: "unjournal",
-				schema: {
-					$id: "unjournal:confidencerating",
-					description: "The confidence rating assigned to a work.",
-					type: "object",
-					properties: {
-						rating: {
-							description:
-								"A rating of quality from 0 to 100, with 0 being the worst and 100 being the best.",
-							type: "integer",
-							minimunm: 0,
-							maximum: 100,
-							required: true,
-						},
-						confidence: {
-							description:
-								"The degree of confidence the rater has in the rating given.",
-							type: "integer",
-							minimum: 1,
-							maximum: 5,
-							required: true,
-						},
-					},
-				},
-			},
-		});
 		await createUserMembers(
 			"all@pubpub.org",
 			"pubpub-all",
