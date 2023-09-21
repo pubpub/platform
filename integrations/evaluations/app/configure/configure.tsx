@@ -66,7 +66,7 @@ export function Configure(props: Props) {
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
 					<CardHeader>
-						<CardTitle>Evaluation Settings</CardTitle>
+						<CardTitle>Evaluations Settings</CardTitle>
 						<CardDescription>
 							This form contains fields used to configure an instance of the
 							evaluations integration.
@@ -84,7 +84,7 @@ export function Configure(props: Props) {
 									</FormControl>
 									<FormDescription>
 										The pub type determines the fields available on the
-										submission form.
+										evaluation form.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>

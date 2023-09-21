@@ -33,7 +33,9 @@ export default async function Page({ params }: Props) {
 	}
 	return (
 		<>
-			<h1 style={{ marginBottom: "2em" }}>Stages</h1>
+			<div className="flex mb-16 justify-between items-center">
+				<h1 className="font-bold text-xl">Stages</h1>
+			</div>
 			<StageList stages={stages} token={token} loginData={loginData} />
 		</>
 	);

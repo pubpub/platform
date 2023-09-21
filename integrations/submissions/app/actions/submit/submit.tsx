@@ -33,13 +33,19 @@ type Props = {
 	instanceId: string;
 };
 
+const optional = (schema: z.ZodType<any, any>) =>
+	z.preprocess((value) => {
+		if (!value || typeof value !== "string") return undefined;
+		return value === "" ? undefined : value;
+	}, schema.optional());
+
 // TODO: generate fields using instance's configured PubType
 const schema = z.object({
-	Description: z.string().min(1, "Description is required"),
-	DOI: z.string().regex(DOI_REGEX, "Invalid DOI"),
-	Title: z.string().min(1, "Title is required"),
-	URL: z.string().regex(URL_REGEX, "Invalid URL"),
-	"Manager's Notes": z.string(),
+	Description: optional(z.string().optional()),
+	DOI: optional(z.string().regex(DOI_REGEX, "Invalid DOI")),
+	Title: z.string().min(3, "Title is required"),
+	URL: optional(z.string().regex(URL_REGEX, "Invalid URL")),
+	"Manager's Notes": optional(z.string()),
 });
 
 export function Submit(props: Props) {
@@ -63,7 +69,7 @@ export function Submit(props: Props) {
 		// The DOI field may contain either a DOI or a URL that contains a DOI.
 		// If the value is a URL, we convert it into a valid DOI before sending
 		// it to core PubPub.
-		if ("DOI" in pub) {
+		if (pub.DOI) {
 			pub.DOI = normalizeDoi(pub.DOI);
 		}
 		const result = await submit(props.instanceId, pub);
@@ -149,9 +155,10 @@ export function Submit(props: Props) {
 									// If a user inputs a URL containing a DOI, or a DOI with a specifier
 									// like doi:10.1234, send only DOI with the request to auto-fill
 									// metadata.
-									const normalizedDoi = isDoi(field.value)
-										? normalizeDoi(field.value)
-										: "";
+									const normalizedDoi =
+										field.value && isDoi(field.value)
+											? normalizeDoi(field.value)
+											: "";
 									return (
 										<FormItem className={cn("flex-1")}>
 											<FormLabel>DOI</FormLabel>

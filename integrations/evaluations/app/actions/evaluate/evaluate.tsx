@@ -19,7 +19,6 @@ import {
 	FormLabel,
 	FormMessage,
 	Icon,
-	Input,
 	Textarea,
 	useLocalStorage,
 	useToast,
@@ -27,15 +26,16 @@ import {
 import { cn } from "utils";
 import * as z from "zod";
 import { evaluate } from "./actions";
+import { GetPubResponseBody } from "@pubpub/sdk";
 
 type Props = {
 	instanceId: string;
-	pub: any;
+	pub: GetPubResponseBody;
 };
 
 // TODO: generate fields using instance's configured PubType
 const schema = z.object({
-	Description: z.string().min(1, "Description is required"),
+	description: z.string().min(1, "Description is required"),
 });
 
 export function Evaluate(props: Props) {
@@ -44,19 +44,20 @@ export function Evaluate(props: Props) {
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		// TODO: generate fields using instance's configured PubType
 		resolver: zodResolver(schema),
 		defaultValues: {
-			Description: "",
+			description: "",
 		},
 	});
 	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
-	const onSubmit = async (pub: z.infer<typeof schema>) => {
-		// The DOI field may contain either a DOI or a URL that contains a DOI.
-		// If the value is a URL, we convert it into a valid DOI before sending
-		// it to core PubPub.
-		const result = await evaluate(props.instanceId);
+	const onSubmit = async (values: z.infer<typeof schema>) => {
+		const result = await evaluate(
+			props.instanceId,
+			pub.id,
+			pub.values.Title as string,
+			values.description
+		);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
@@ -72,16 +73,11 @@ export function Evaluate(props: Props) {
 		}
 	};
 
-	// Load the persisted values.
 	const { reset } = form;
 	useEffect(() => {
-		// `keepDefaultValues` is set to true to prevent the form from
-		// validating fields that were not filled during the previous session.
 		reset(persistedValues, { keepDefaultValues: true });
 	}, [reset]);
 
-	// Persist form values to local storage. This operation is debounced by
-	// the timeout passed to <LocalStorageProvider>.
 	const values = form.watch();
 	useEffect(() => {
 		persist(values);
@@ -92,13 +88,13 @@ export function Evaluate(props: Props) {
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
 					<CardHeader>
-						<CardTitle>{pub.Title}</CardTitle>
+						<CardTitle>{pub.values.Title as string}</CardTitle>
 						<CardDescription>Submit Your Evaluation</CardDescription>
 					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>
 						<FormField
 							control={form.control}
-							name="Description"
+							name="description"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Evaluation</FormLabel>

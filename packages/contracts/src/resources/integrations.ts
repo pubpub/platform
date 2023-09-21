@@ -94,11 +94,15 @@ export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
 		children: z.lazy(() => CreatePubResponseBody.array()),
 	});
 
+// Member suggestion types
+
 export const SuggestedMembers = z.object({
 	id: z.string(),
 	name: z.string(),
 });
 export type SuggestedMembers = z.infer<typeof SuggestedMembers>;
+
+// Auth types
 
 export const User = z.object({
 	id: z.string(),
@@ -109,8 +113,27 @@ export const User = z.object({
 });
 export type User = z.infer<typeof User>;
 
-export type PubFieldsResponse = z.infer<typeof GetPubResponseBody>;
-export type SuggestedMember = z.infer<typeof SuggestedMembers>;
+// Email types
+
+export const SendEmailRequestBody = z.object({
+	to: z.union([
+		z.object({
+			userId: z.string(),
+		}),
+		z.object({
+			email: z.string(),
+			name: z.string(),
+		}),
+	]),
+	subject: z.string(),
+	message: z.string(),
+});
+export type SendEmailRequestBody = z.infer<typeof SendEmailRequestBody>;
+export const SendEmailResponseBody = z.object({
+	accepted: z.array(z.string()),
+	rejected: z.array(z.string()),
+});
+export type SendEmailResponseBody = z.infer<typeof SendEmailResponseBody>;
 
 const contract = initContract();
 
@@ -151,7 +174,9 @@ export const integrationsApi = contract.router(
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
-				depth: z.number().optional(),
+			}),
+			query: z.object({
+				depth: z.string().optional(),
 			}),
 			responses: {
 				200: GetPubResponseBody,
@@ -205,24 +230,12 @@ export const integrationsApi = contract.router(
 			summary: "Send an email from PubPub to a new or existing PubPub user",
 			description:
 				"Recipient can be an existing pubpub user identified by ID, or a new user who must be identified by email and name.",
-			body: z.object({
-				to: z.union([
-					z.object({
-						userId: z.string(),
-					}),
-					z.object({
-						email: z.string(),
-						name: z.string(),
-					}),
-				]),
-				subject: z.string(),
-				message: z.string(),
-			}),
+			body: SendEmailRequestBody,
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
 			responses: {
-				200: z.undefined(),
+				200: SendEmailResponseBody,
 			},
 		},
 		// TODO implement these endpoints

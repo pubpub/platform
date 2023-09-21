@@ -24,19 +24,16 @@ const recursivelyDenormalizePubValues = async (
 		prev[curr.field.name] = curr.value;
 		return prev;
 	}, {} as Record<string, Prisma.JsonValue>);
-	const children = await Promise.all(pub.children.map(recursivelyDenormalizePubValues));
-
+	const children = await Promise.all(pub.children?.map(recursivelyDenormalizePubValues));
 	return { ...pub, children, values };
 };
 
 export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBody> => {
 	const pubInclude = makeRecursiveInclude("children", pubValuesInclude, depth);
 	const pub = await prisma.pub.findUnique({ where: { id: pubId }, ...pubInclude });
-
 	if (!pub) {
 		throw PubNotFoundError;
 	}
-
 	return recursivelyDenormalizePubValues(pub);
 };
 
@@ -130,6 +127,7 @@ const makeRecursivePubUpdateInput = async (
 			connect: makePubChildrenConnectOptions(body),
 			create: await makePubChildrenCreateOptions(body, communityId),
 		},
+		...(body.parentId && { parent: { connect: { id: body.parentId } } }),
 	};
 };
 
@@ -146,9 +144,11 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBody) 
 	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
 	const updateArgs = {
 		data: {
-			stages: {
-				connect: { id: expect(instance.stageId) },
-			},
+			...(!body.parentId && {
+				stages: {
+					connect: { id: expect(instance.stageId) },
+				},
+			}),
 			...updateInput,
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),

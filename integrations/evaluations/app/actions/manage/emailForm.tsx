@@ -20,26 +20,26 @@ import {
 	FormMessage,
 	Icon,
 	Input,
-	Textarea,
 	useLocalStorage,
 	useToast,
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
 import { manage } from "./actions";
+import { GetPubResponseBody } from "@pubpub/sdk";
 
 type Props = {
 	instanceId: string;
-	pubId: string;
+	pub: GetPubResponseBody;
 };
 
 // TODO: generate fields using instance's configured PubType
 const schema = z.object({
-	Email: z.string().email("Enter a valid email address"),
+	email: z.string().email("Enter a valid email address"),
+	name: z.string().min(1, "Name is required"),
 });
 
 export function EmailForm(props: Props) {
-	const { pubId } = props;
 	const { toast } = useToast();
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
@@ -47,13 +47,20 @@ export function EmailForm(props: Props) {
 		// TODO: generate fields using instance's configured PubType
 		resolver: zodResolver(schema),
 		defaultValues: {
-			Email: "",
+			email: "",
+			name: "",
 		},
 	});
 	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
-	const onSubmit = async (email: z.infer<typeof schema>) => {
-		const result = await manage(props.instanceId, props.pubId, email);
+	const onSubmit = async (values: z.infer<typeof schema>) => {
+		const result = await manage(
+			props.instanceId,
+			props.pub.id,
+			props.pub.values.Title as string,
+			values.email,
+			values.name
+		);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
@@ -88,10 +95,17 @@ export function EmailForm(props: Props) {
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
+					<CardHeader>
+						<CardTitle>Invite Evaluators</CardTitle>
+						<CardDescription>
+							Use this form to invite evaluators to review "
+							{props.pub.values.Title as string}".
+						</CardDescription>
+					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>
 						<FormField
 							control={form.control}
-							name="Email"
+							name="email"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Email Address</FormLabel>
@@ -100,6 +114,22 @@ export function EmailForm(props: Props) {
 									</FormControl>
 									<FormDescription>
 										The email of the evaluator you'd like to invite.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="name"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Reviewer Name</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										The name of the evaluator you'd like to invite.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>

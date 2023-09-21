@@ -1,14 +1,28 @@
 "use server";
 
-import { Create, Update } from "@pubpub/sdk";
-import { assert } from "utils";
 import { findInstance } from "~/lib/instance";
-import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
 import { client } from "~/lib/pubpub";
 
-export const evaluate = async (instanceId: string) => {
+export const evaluate = async (
+	instanceId: string,
+	pubId: string,
+	title: string,
+	description: string
+) => {
+	const instance = await findInstance(instanceId);
+	if (instance === undefined) {
+		return { error: "Instance not configured" };
+	}
 	try {
-		return {};
+		const pub = await client.createPub(instanceId, {
+			values: {
+				Title: `Evaluation of "${title}"`,
+				Description: description,
+			},
+			pubTypeId: instance.pubTypeId,
+			parentId: pubId,
+		});
+		return pub;
 	} catch (error) {
 		return { error: error.message };
 	}
