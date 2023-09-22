@@ -135,6 +135,32 @@ export const SendEmailResponseBody = z.object({
 });
 export type SendEmailResponseBody = z.infer<typeof SendEmailResponseBody>;
 
+// PubType Types
+
+export const GetPubTypeResponseBody = z.object({
+	id: z.string(),
+	name: z.string(),
+	description: z.string().nullable(),
+	fields: z
+		.array(
+			z.object({
+				id: z.string(),
+				name: z.string(),
+				schema: z
+					.object({
+						id: z.string(),
+						namespace: z.string(),
+						name: z.string(),
+						schema: JsonOutput,
+					})
+					.nullable(),
+			})
+		)
+		.nullable(),
+});
+
+export type GetPubTypeResponseBody = z.infer<typeof GetPubTypeResponseBody>;
+
 const contract = initContract();
 
 export const integrationsApi = contract.router(
@@ -236,6 +262,19 @@ export const integrationsApi = contract.router(
 			}),
 			responses: {
 				200: SendEmailResponseBody,
+			},
+		},
+		getPubType: {
+			method: "GET",
+			path: "/:instanceId/pubTypes/:pubTypeId",
+			summary: "Get a pubType and its fields and schemas",
+			description: "",
+			pathParams: z.object({
+				instanceId: z.string(),
+				pubTypeId: z.string(),
+			}),
+			responses: {
+				200: GetPubTypeResponseBody,
 			},
 		},
 		// TODO implement these endpoints

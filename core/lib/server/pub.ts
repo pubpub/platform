@@ -1,4 +1,9 @@
-import { CreatePubRequestBody, GetPubResponseBody, UpdatePubRequestBody } from "contracts";
+import {
+	CreatePubRequestBody,
+	GetPubResponseBody,
+	UpdatePubRequestBody,
+	GetPubTypeResponseBody,
+} from "contracts";
 import prisma from "~/prisma/db";
 import { RecursiveInclude, makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
@@ -181,4 +186,33 @@ export const updatePub = async (instanceId: string, body: UpdatePubRequestBody) 
 	});
 
 	return pub;
+};
+
+export const getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseBody> => {
+	const pubType = await prisma.pubType.findUnique({
+		where: { id: pubTypeId },
+		select: {
+			id: true,
+			name: true,
+			description: true,
+			fields: {
+				select: {
+					id: true,
+					name: true,
+					schema: {
+						select: {
+							id: true,
+							namespace: true,
+							name: true,
+							schema: true,
+						},
+					},
+				},
+			},
+		},
+	});
+	if (!pubType) {
+		throw PubNotFoundError;
+	}
+	return pubType;
 };
