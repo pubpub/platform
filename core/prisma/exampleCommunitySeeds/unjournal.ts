@@ -678,6 +678,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					text: "Manage Evaluation",
 					href: `${evaluationsIntegrationUrl}/actions/manage`,
 				},
+				{
+					name: "evaluate",
+					href: `${evaluationsIntegrationUrl}/actions/evaluate`,
+				},
 			],
 			settingsUrl: `${evaluationsIntegrationUrl}/configure`,
 		},
