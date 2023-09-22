@@ -26,11 +26,12 @@ import {
 import { cn } from "utils";
 import * as z from "zod";
 import { evaluate } from "./actions";
-import { GetPubResponseBody } from "@pubpub/sdk";
+import { GetPubResponseBody, GetPubTypeResponseBody } from "@pubpub/sdk";
 
 type Props = {
 	instanceId: string;
 	pub: GetPubResponseBody;
+	pubType: GetPubTypeResponseBody;
 };
 
 // TODO: generate fields using instance's configured PubType
