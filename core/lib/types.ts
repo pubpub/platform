@@ -25,6 +25,7 @@ export const makeRecursiveInclude = <T extends string, U extends {}>(
 export const pubInclude = {
 	pubType: true,
 	values: { include: { field: true } },
+	slug: true,
 	stages: {
 		include: {
 			integrationInstances: { include: { integration: true } },
