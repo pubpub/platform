@@ -6,6 +6,7 @@ import IntegrationActions from "./IntegrationActions";
 import { cn } from "utils";
 import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
+import { renderPubTitle } from "./lib/utils";
 
 type Props = {
 	pub: PubPayload;
@@ -72,7 +73,7 @@ const PubRow: React.FC<Props> = function (props: Props) {
 				</div>
 			</RowHeader>
 			<RowContent className="items-stretch flex justify-between items-start">
-				<h3 className="text-md font-medium">{getTitle(props.pub)}</h3>
+				<h3 className="text-md font-medium">{renderPubTitle(props.pub)}</h3>
 			</RowContent>
 			{props.pub.children.length > 0 && (
 				<RowFooter className="items-stretch flex justify-between">
@@ -94,6 +95,7 @@ const PubRow: React.FC<Props> = function (props: Props) {
 				</RowFooter>
 			)}
 		</Row>
+		
 	);
 };
 export default PubRow;

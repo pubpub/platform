@@ -62,6 +62,7 @@ model Community {
 model Pub {
   id          String    @id @default(uuid())
   valuesBlob  Json?
+  slug        String?   @unique
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String    @map(name: "pub_type_id")
   community   Community @relation(fields: [communityId], references: [id])
@@ -273,8 +274,8 @@ model IntegrationInstance {
   communityId   String      @map(name: "community_id")
   createdAt     DateTime    @default(now()) @map(name: "created_at")
   updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updated_at")
-  stage         Stage?       @relation(fields: [stageId], references: [id])
-  stageId       String?      @map(name: "stage_id")
+  stage         Stage?      @relation(fields: [stageId], references: [id])
+  stageId       String?     @map(name: "stage_id")
 
   pubs Pub[]
 

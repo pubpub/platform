@@ -22,7 +22,7 @@ import {
 	StagePayloadMoveConstraintDestination,
 	User,
 } from "~/lib/types";
-import { assign } from "../lib/actions";
+import { assign } from "./lib/actions";
 
 type Props = {
 	pub: PubPayload;
