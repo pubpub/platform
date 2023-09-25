@@ -43,7 +43,9 @@ export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 
 	// dangerously assert there is a schema
-	const jsonSchema = pubType.fields![3].schema!.schema;
+	const jsonSchema = pubType.fields;
+
+	console.log(jsonSchema);
 
 	const { toast } = useToast();
 	const form = useForm<z.infer<typeof schema>>({
