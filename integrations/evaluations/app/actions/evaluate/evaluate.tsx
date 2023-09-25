@@ -71,7 +71,7 @@ const buildFormFromSchema = (schema, form, iterator?: number) => {
 		});
 	} else {
 		switch (schema.type) {
-			case "integer":
+			case "number":
 				fields.push(
 					<FormField
 						control={form.control}

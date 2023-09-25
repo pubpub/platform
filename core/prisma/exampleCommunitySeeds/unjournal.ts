@@ -25,15 +25,16 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 						title: "Rating",
 						description:
 							"A rating of quality from 0 to 100, with 0 being the worst and 100 being the best.",
-						type: "integer",
-						minimum: 1,
+						type: "number",
+						minimum: 0,
 						maximum: 100,
-						default: 1,
+						default: 0,
 					},
 					confidence: {
 						title: "Confidence",
-						description: "The degree of confidence the rater has in the rating given.",
-						type: "integer",
+						description:
+							"The degree of confidence the rater has in the rating given, from 1 to 5.",
+						type: "number",
 						minimum: 1,
 						maximum: 5,
 						default: 1,
