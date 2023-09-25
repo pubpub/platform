@@ -1,6 +1,7 @@
 "use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
+import Ajv2020 from "ajv/dist/2020";
+const ajv = new Ajv2020();
+import { ajvResolver } from "@hookform/resolvers/ajv";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -39,108 +40,97 @@ const schema = z.object({
 	description: z.string().min(1, "Description is required"),
 });
 
+const buildFormSchemaFromFields = (pubType) => {
+	const schema = {
+		$id: `urn:uuid:${pubType.id}`,
+		title: `${pubType.name}`,
+		type: "object",
+		properties: {},
+	};
+
+	pubType.fields.forEach((field) => {
+		if (!field.schema) {
+			schema.properties[field.name] = {
+				type: "string",
+				title: `${field.name}`,
+				$id: `urn:uuid:${field.id}`,
+				default: "",
+			};
+		} else {
+			schema.properties[field.name] = field.schema.schema;
+		}
+	});
+	return schema;
+};
+
+const buildFormFromSchema = (schema, form, iterator?: number) => {
+	const fields: any[] = [];
+	if (schema.properties) {
+		Object.entries(schema.properties).forEach(([key, val]: [any, any]) => {
+			fields.push(buildFormFromSchema(val, form, key));
+		});
+	} else {
+		switch (schema.type) {
+			case "integer":
+				fields.push(
+					<FormField
+						control={form.control}
+						name={schema.title}
+						key={schema["$id"] || schema.title + iterator}
+						defaultValue={schema.default}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>{schema.title}</FormLabel>
+								<FormControl>
+									<Input type="number" {...field} />
+								</FormControl>
+								<FormDescription>{schema.description}</FormDescription>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				);
+				break;
+			default:
+				fields.push(
+					<FormField
+						control={form.control}
+						name={schema.title}
+						key={schema["$id"] || schema.title + iterator}
+						defaultValue={schema.default}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>{schema.title}</FormLabel>
+								<FormControl>
+									<Input {...field} />
+								</FormControl>
+								<FormDescription>{schema.description}</FormDescription>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				);
+		}
+	}
+	return fields;
+};
+
 export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 
-	// dangerously assert there is a schema
-	const jsonSchema = pubType.fields;
+	const generatedSchema = buildFormSchemaFromFields(pubType);
 
-	console.log(jsonSchema);
-
-	const { toast } = useToast();
-	const form = useForm<z.infer<typeof schema>>({
+	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		resolver: zodResolver(schema),
-		defaultValues: {
-			description: "",
-		},
+		resolver: ajvResolver(generatedSchema),
+		defaultValues: {},
 	});
-	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
-	const onSubmit2 = async (values) => {
-		console.log("submitted", values);
-	};
-
-	const onSubmit = async (values: z.infer<typeof schema>) => {
-		const result = await evaluate(
-			props.instanceId,
-			pub.id,
-			pub.values.Title as string,
-			values.description
-		);
-		if ("error" in result && typeof result.error === "string") {
-			toast({
-				title: "Error",
-				description: result.error,
-				variant: "destructive",
-			});
-		} else {
-			toast({
-				title: "Success",
-				description: "The pub was created successfully",
-			});
-			form.reset();
-		}
-	};
-
-	const { reset } = form;
-	useEffect(() => {
-		reset(persistedValues, { keepDefaultValues: true });
-	}, [reset]);
-
-	const values = form.watch();
-	useEffect(() => {
-		persist(values);
-	}, [values]);
-
+	const GeneratedFormFields = buildFormFromSchema(generatedSchema, form);
 	return (
-		<>
-			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)}>
-					<Card>
-						<CardHeader>
-							<CardTitle>{pub.values.Title as string}</CardTitle>
-							<CardDescription>Submit Your Evaluation</CardDescription>
-						</CardHeader>
-						<CardContent className={cn("flex flex-col column gap-4")}>
-							<FormField
-								control={form.control}
-								name="description"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Evaluation</FormLabel>
-										<FormControl>
-											<Textarea {...field} />
-										</FormControl>
-										<FormDescription>
-											The description of the work being submitted.
-										</FormDescription>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</CardContent>
-						<CardFooter className={cn("flex justify-between")}>
-							<Button
-								variant="outline"
-								onClick={(e) => {
-									e.preventDefault();
-									window.history.back();
-								}}
-							>
-								Go Back
-							</Button>
-							<Button type="submit" disabled={!form.formState.isValid}>
-								{form.formState.isSubmitting && (
-									<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
-								)}
-								Submit Evaluation
-							</Button>
-						</CardFooter>
-					</Card>
-				</form>
-			</Form>
-		</>
+		<Form {...form}>
+			<form>{GeneratedFormFields}</form>
+		</Form>
 	);
 }

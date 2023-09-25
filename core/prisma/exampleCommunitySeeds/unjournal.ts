@@ -22,19 +22,21 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				type: "object",
 				properties: {
 					rating: {
+						title: "Rating",
 						description:
 							"A rating of quality from 0 to 100, with 0 being the worst and 100 being the best.",
 						type: "integer",
-						minimunm: 0,
+						minimum: 1,
 						maximum: 100,
-						required: true,
+						default: 1,
 					},
 					confidence: {
+						title: "Confidence",
 						description: "The degree of confidence the rater has in the rating given.",
 						type: "integer",
 						minimum: 1,
 						maximum: 5,
-						required: true,
+						default: 1,
 					},
 				},
 			},
