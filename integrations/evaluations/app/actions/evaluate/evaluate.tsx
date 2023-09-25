@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { parseSchema } from "json-schema-to-zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -29,7 +28,6 @@ import { cn } from "utils";
 import * as z from "zod";
 import { evaluate } from "./actions";
 import { GetPubResponseBody, GetPubTypeResponseBody } from "@pubpub/sdk";
-import { createTsForm } from "@ts-react/form";
 
 type Props = {
 	instanceId: string;
@@ -37,53 +35,16 @@ type Props = {
 	pubType: GetPubTypeResponseBody;
 };
 
-// TODO: generate fields using instance's configured PubType
 const schema = z.object({
 	description: z.string().min(1, "Description is required"),
 });
 
-// create the mapping
-const mapping = [
-	[z.string(), Input],
-	[z.number(), Input],
-] as const; // 👈 `as const` is necessary
-
-// A typesafe React component
-const MyForm = createTsForm(mapping);
-
 export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
-	const myObject = {
-		type: "object",
-		properties: {
-			hello: {
-				type: "string",
-			},
-		},
-	};
-	// dangerously assert there is a schema, also ignore a typescript warning
-	const zodSchema = parseSchema(pubType.fields![3].schema!.schema);
-	const outputSchema = z
-		.object({
-			rating: z
-				.number()
-				.int()
-				.lte(100)
-				.describe(
-					"A rating of quality from 0 to 100, with 0 being the worst and 100 being the best."
-				)
-				.optional(),
-			confidence: z
-				.number()
-				.int()
-				.gte(1)
-				.lte(5)
-				.describe("The degree of confidence the rater has in the rating given.")
-				.optional(),
-		})
-		.describe("The confidence rating assigned to a work.");
 
-	console.log(zodSchema);
+	// dangerously assert there is a schema
+	const jsonSchema = pubType.fields![3].schema!.schema;
+
 	const { toast } = useToast();
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
@@ -133,13 +94,6 @@ export function Evaluate(props: Props) {
 
 	return (
 		<>
-			{zodSchema && (
-				<MyForm
-					schema={zodSchema}
-					onSubmit={onSubmit2}
-					renderAfter={() => <button type="submit">Submit</button>}
-				/>
-			)}
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)}>
 					<Card>
