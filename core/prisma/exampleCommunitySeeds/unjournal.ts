@@ -390,6 +390,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
+			pubs: {
+				connect: [{ id: submission1.id }],
+			},
 		},
 	});
 
@@ -400,6 +403,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 			stages: {
 				connect: [{ id: stageIds[0] }],
+			},
+			pubs: {
+				connect: [{ id: submission1.id }],
 			},
 		},
 	});
