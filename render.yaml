@@ -3,6 +3,7 @@ services:
     # core
     - type: web
       name: core
+      region: ohio
       runtime: node
       rootDir: .
       buildCommand: ./bin/render-build.sh core
