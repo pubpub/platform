@@ -1,11 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { v4 as uuidv4 } from "uuid";
-import { faker } from "@faker-js/faker";
-
-import buildArcadia from "./exampleCommunitySeeds/arcadia";
-import buildMITP from "./exampleCommunitySeeds/mitp";
-import buildBiorxiv from "./exampleCommunitySeeds/biorxiv";
-import buildBrown from "./exampleCommunitySeeds/brown";
 import { SupabaseClient } from "@supabase/supabase-js";
 import buildUnjournal from "./exampleCommunitySeeds/unjournal";
 
@@ -46,19 +39,10 @@ async function createUserMembers(email, password, slug, name, prismaCommunityIds
 }
 
 async function main() {
-	const communityIds = [...Array(7)].map((x) => uuidv4());
 	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 	const prismaCommunityIds = [{ communityId: unJournalId, canAdmin: true }];
 
-	// await buildArcadia(prisma, communityIds[0]);
-	// await buildMITP(prisma, communityIds[1]);
-	// await buildBiorxiv(prisma, communityIds[2]);
-	// await buildBrown(prisma, communityIds[3]);
 	await buildUnjournal(prisma, unJournalId);
-
-	/*	communityIds.slice(0, 4).forEach((communityId) => {
-		prismaCommunityIds.push({ communityId: communityId, canAdmin: true });
-	});*/
 
 	try {
 		await createUserMembers(
