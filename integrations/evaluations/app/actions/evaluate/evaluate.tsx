@@ -1,7 +1,7 @@
 "use client";
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { ControllerRenderProps, UseFormReturn, useForm } from "react-hook-form";
 import {
 	Button,
 	Card,
@@ -39,9 +39,10 @@ const schema = z.object({
 	description: z.string().min(1, "Description is required"),
 });
 
+// a bit of a hack, but allows us to use AJV's JSON schema type
 interface pubpubSchema {}
 
-const buildFormSchemaFromFields = (pubType) => {
+const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
 	const schema = {
 		$id: `urn:uuid:${pubType.id}`,
 		title: `${pubType.name}`,
@@ -50,24 +51,24 @@ const buildFormSchemaFromFields = (pubType) => {
 		// this is required due to an AJV bug, per: https://github.com/ajv-validator/ajv/issues/2317
 		oneOf: [],
 	};
-
-	pubType.fields.forEach((field) => {
-		if (!field.schema) {
-			schema.properties[field.name] = {
-				type: "string",
-				title: `${field.name}`,
-				$id: `urn:uuid:${field.id}`,
-				default: "",
-			};
-		} else {
-			schema.properties[field.name] = field.schema.schema;
-		}
-	});
+	pubType.fields &&
+		pubType.fields.forEach((field) => {
+			if (!field.schema) {
+				schema.properties[field.name] = {
+					type: "string",
+					title: `${field.name}`,
+					$id: `urn:uuid:${field.id}`,
+					default: "",
+				};
+			} else {
+				schema.properties[field.name] = field.schema.schema;
+			}
+		});
 	return schema;
 };
 
 // todo: array, and more complex types that we might want to handle
-const getFormField = (schemaType: "string" | "number", field) => {
+const getFormField = (schemaType: "string" | "number", field: ControllerRenderProps) => {
 	switch (schemaType) {
 		case "number":
 			return (
@@ -83,7 +84,12 @@ const getFormField = (schemaType: "string" | "number", field) => {
 	}
 };
 
-const buildFormFromSchema = (schema, form, schemaIndex?: number, title?: string) => {
+const buildFormFromSchema = (
+	schema: JSONSchemaType<pubpubSchema>,
+	form: UseFormReturn,
+	schemaIndex?: number,
+	title?: string
+) => {
 	const fields: any[] = [];
 	if (schema.properties) {
 		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
