@@ -63,29 +63,32 @@ const buildFormSchemaFromFields = (pubType) => {
 	return schema;
 };
 
-const buildFormFromSchema = (schema, form, iterator?: number, nestedKey?: string) => {
+const buildFormFromSchema = (schema, form, schemaIndex?: number, title?: string) => {
 	const fields: any[] = [];
 	if (schema.properties) {
-		Object.entries(schema.properties).forEach(([key, val]: [any, any]) => {
-			console.log(val);
-			fields.push(buildFormFromSchema(val, form, key, val.title));
+		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
+			const fieldTitle = schemaIndex ? schema.title + "." + key : undefined;
+			fields.push(buildFormFromSchema(val, form, fieldIndex, fieldTitle));
 		});
 	} else {
-		console.log(nestedKey);
-		const title = schema.title;
+		const fieldTitle = title || schema.title;
 		switch (schema.type) {
 			case "number":
 				fields.push(
 					<FormField
 						control={form.control}
-						name={title}
-						key={schema["$id"] || title + iterator}
+						name={fieldTitle}
+						key={schema["$id"] || fieldTitle + schemaIndex}
 						defaultValue={schema.default}
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>{schema.title}</FormLabel>
 								<FormControl>
-									<Input type="number" {...field} />
+									<Input
+										type="number"
+										{...field}
+										onChange={(event) => field.onChange(+event.target.value)}
+									/>
 								</FormControl>
 								<FormDescription>{schema.description}</FormDescription>
 								<FormMessage />
@@ -98,8 +101,8 @@ const buildFormFromSchema = (schema, form, iterator?: number, nestedKey?: string
 				fields.push(
 					<FormField
 						control={form.control}
-						name={schema.title}
-						key={schema["$id"] || schema.title + iterator}
+						name={fieldTitle}
+						key={schema["$id"] || fieldTitle + schemaIndex}
 						defaultValue={schema.default}
 						render={({ field }) => (
 							<FormItem>
@@ -126,7 +129,15 @@ export function Evaluate(props: Props) {
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		resolver: ajvResolver(generatedSchema),
+		resolver: async (data, context, options) => {
+			// you can debug your validation schema here
+			console.log("formData", data);
+			console.log(
+				"validation result",
+				await ajvResolver(generatedSchema)(data, context, options)
+			);
+			return ajvResolver(generatedSchema)(data, context, options);
+		},
 		defaultValues: {},
 	});
 
