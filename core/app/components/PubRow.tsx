@@ -61,7 +61,7 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 
 const PubRow: React.FC<Props> = function (props: Props) {
 	return (
-		<Row>
+		<Row className="mb-9">
 			<RowHeader>
 				<div className="flex flex-row justify-between items-center">
 					<div className="text-sm text-gray-500 font-semibold">

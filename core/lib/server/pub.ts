@@ -118,6 +118,7 @@ const makeRecursivePubUpdateInput = async (
 	return {
 		community: { connect: { id: communityId } },
 		pubType: { connect: { id: body.pubTypeId } },
+		slug: generateHash(8),
 		values: {
 			createMany: {
 				data: await normalizePubValues(body.values),
@@ -151,7 +152,6 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBody) 
 				},
 			}),
 			...updateInput,
-			slug: generateHash(8),
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),
 	};
