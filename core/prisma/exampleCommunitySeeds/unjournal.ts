@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { faker } from "@faker-js/faker";
+import { generateHash } from "../../lib/string";
 
 export default async function main(prisma: PrismaClient, communityUUID: string) {
 	await prisma.community.create({
@@ -116,11 +117,11 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const submission1 = await prisma.pub.create({
+	const submission = await prisma.pub.create({
 		data: {
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
-			slug: "test",
+			slug: generateHash(8),
 			values: {
 				createMany: {
 					data: [
@@ -142,7 +143,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
-			slug: "test1",
+			slug: generateHash(8),
 			values: {
 				createMany: {
 					data: [
@@ -164,7 +165,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
-			slug: "test4",
+			slug: generateHash(8),
 			values: {
 				createMany: {
 					data: [
@@ -186,7 +187,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
-			slug: "test3",
+			slug: generateHash(8),
 			values: {
 				createMany: {
 					data: [
@@ -204,77 +205,81 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	// const evaluating2 = await prisma.pub.create({
-	// 	data: {
-	// 		pubTypeId: submissionTypeId,
-	// 		communityId: communityUUID,
-	// 		values: {
-	// 			createMany: {
-	// 				data: [
-	// 					{
-	// 						fieldId: fieldIds[0],
-	// 						value: "Artificial Intelligence and Economic Growth”: Philip Trammell",
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[1],
-	// 						value: `An evaluation of “Artificial Intelligence and Economic Growth” for Unjournal`,
-	// 					},
-	// 				],
-	// 			},
-	// 		},
-	// 	},
-	// });
+	const evaluating2 = await prisma.pub.create({
+		data: {
+			pubTypeId: submissionTypeId,
+			communityId: communityUUID,
+			slug: generateHash(8),
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "Artificial Intelligence and Economic Growth”: Philip Trammell",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `An evaluation of “Artificial Intelligence and Economic Growth” for Unjournal`,
+						},
+					],
+				},
+			},
+		},
+	});
 
-	// const authorRejection = await prisma.pub.create({
-	// 	data: {
-	// 		pubTypeId: submissionTypeId,
-	// 		communityId: communityUUID,
-	// 		values: {
-	// 			createMany: {
-	// 				data: [
-	// 					{
-	// 						fieldId: fieldIds[0],
-	// 						value: "Do Celebrity Endorsements Matter? A Twitter Experiment Promoting Vaccination In Indonesia",
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[1],
-	// 						value: `You haver to reject me. Pleseeee. Reject meeeeeeee`,
-	// 					},
-	// 				],
-	// 			},
-	// 		},
-	// 	},
-	// });
+	const authorRejection = await prisma.pub.create({
+		data: {
+			pubTypeId: submissionTypeId,
+			communityId: communityUUID,
+			slug: generateHash(8),
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "Do Celebrity Endorsements Matter? A Twitter Experiment Promoting Vaccination In Indonesia",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `You haver to reject me. Pleseeee. Reject meeeeeeee`,
+						},
+					],
+				},
+			},
+		},
+	});
 
-	// const evaluationSummary1 = await prisma.pub.create({
-	// 	data: {
-	// 		pubTypeId: evaluationSummaryTypeId,
-	// 		communityId: communityUUID,
-	// 		values: {
-	// 			createMany: {
-	// 				data: [
-	// 					{
-	// 						fieldId: fieldIds[0],
-	// 						value: "Evaluation summary and metrics: “Artificial Intelligence and Economic Growth”",
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[1],
-	// 						value: `Summary, metrics and ratings, and Manager's comments on Evaluation of “Artificial Intelligence and Economic Growth” by Aghion et al.`,
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[2],
-	// 						value: "Ive never seen a squeaky wheel effect climate change",
-	// 					},
-	// 				],
-	// 			},
-	// 		},
-	// 	},
-	// });
+	const evaluationSummary = await prisma.pub.create({
+		data: {
+			pubTypeId: evaluationSummaryTypeId,
+			communityId: communityUUID,
+			slug: generateHash(8),
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "Evaluation summary and metrics: “Artificial Intelligence and Economic Growth”",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `Summary, metrics and ratings, and Manager's comments on Evaluation of “Artificial Intelligence and Economic Growth” by Aghion et al.`,
+						},
+						{
+							fieldId: fieldIds[2],
+							value: "Ive never seen a squeaky wheel effect climate change",
+						},
+					],
+				},
+			},
+		},
+	});
 
-	const authorsResponse2 = await prisma.pub.create({
+	const authorsResponse = await prisma.pub.create({
 		data: {
 			pubTypeId: authorResponseTypeId,
 			communityId: communityUUID,
+			slug: generateHash(8),
 			values: {
 				createMany: {
 					data: [
@@ -292,47 +297,49 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	// const evaluation1 = await prisma.pub.create({
-	// 	data: {
-	// 		pubTypeId: evaluationTypeId,
-	// 		communityId: communityUUID,
-	// 		values: {
-	// 			createMany: {
-	// 				data: [
-	// 					{
-	// 						fieldId: fieldIds[0],
-	// 						value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[1],
-	// 						value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
-	// 					},
-	// 				],
-	// 			},
-	// 		},
-	// 	},
-	// });
+	const evaluation1 = await prisma.pub.create({
+		data: {
+			pubTypeId: evaluationTypeId,
+			communityId: communityUUID,
+			slug: generateHash(8),
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
+						},
+						{
+							fieldId: fieldIds[1],
+							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
+						},
+					],
+				},
+			},
+		},
+	});
 
-	// const evaluation2 = await prisma.pub.create({
-	// 	data: {
-	// 		pubTypeId: evaluationTypeId,
-	// 		communityId: communityUUID,
-	// 		values: {
-	// 			createMany: {
-	// 				data: [
-	// 					{
-	// 						fieldId: fieldIds[0],
-	// 						value: "Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell",
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[1],
-	// 						value: `Philip Trammell's Evaluation 2 of “Artificial Intelligence and Economic Growth” for Unjournal`,
-	// 					},
-	// 				],
-	// 			},
-	// 		},
-	// 	},
-	// });
+	const evaluation2 = await prisma.pub.create({
+		data: {
+			pubTypeId: evaluationTypeId,
+			communityId: communityUUID,
+			slug: generateHash(8),
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: `Philip Trammell's Evaluation 2 of “Artificial Intelligence and Economic Growth” for Unjournal`,
+						},
+					],
+				},
+			},
+		},
+	});
 
 	const stageIds = [...Array(7)].map((x) => uuidv4());
 	await prisma.stage.createMany({
@@ -391,7 +398,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				connect: [{ id: stageIds[0] }],
 			},
 			pubs: {
-				connect: [{ id: submission1.id }],
+				connect: [{ id: submission.id }],
 			},
 		},
 	});
@@ -405,7 +412,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				connect: [{ id: stageIds[0] }],
 			},
 			pubs: {
-				connect: [{ id: submission1.id }],
+				connect: [{ id: submission.id }],
 			},
 		},
 	});
@@ -557,7 +564,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});*/
 
 	await prisma.pub.update({
-		where: { id: submission1.id },
+		where: { id: submission.id },
 		data: {
 			stages: { connect: { id: stageIds[0] } },
 		},
@@ -577,34 +584,26 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		where: { id: evaluating1.id },
 		data: { stages: { connect: { id: stageIds[3] } } },
 	});
-	// await prisma.pub.update({
-	// 	where: { id: evaluating2.id },
-	// 	data: { stages: { connect: { id: stageIds[3] } } },
-	// });
 	await prisma.pub.update({
-		where: { id: evaluationSummary1.id },
+		where: { id: evaluating2.id },
+		data: { stages: { connect: { id: stageIds[3] } } },
+	});
+	await prisma.pub.update({
+		where: { id: evaluationSummary.id },
 		data: { stages: { connect: { id: stageIds[4] } } },
 	});
-	// await prisma.pub.update({
-	// 	where: { id: evaluationSummary2.id },
-	// 	data: { stages: { connect: { id: stageIds[4] } } },
-	// });
-	// await prisma.pub.update({
-	// 	where: { id: authorsResponse.id },
-	// 	data: { stages: { connect: { id: stageIds[4] } } },
-	// });
 	await prisma.pub.update({
-		where: { id: authorsResponse2.id },
+		where: { id: authorsResponse.id },
 		data: { stages: { connect: { id: stageIds[4] } } },
 	});
 	await prisma.pub.update({
 		where: { id: evaluation1.id },
 		data: { stages: { connect: { id: stageIds[5] } } },
 	});
-	// await prisma.pub.update({
-	// 	where: { id: evaluation2.id },
-	// 	data: { stages: { connect: { id: stageIds[5] } } },
-	// });
+	await prisma.pub.update({
+		where: { id: evaluation2.id },
+		data: { stages: { connect: { id: stageIds[5] } } },
+	});
 	await prisma.pub.update({
 		where: { id: authorRejection.id },
 		data: { stages: { connect: { id: stageIds[6] } } },
@@ -676,4 +675,32 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			});
 		})
 	);
+
+	const pubIds = [...Array(7)].map((x) => uuidv4());
+	const submissionToEvaluate = await prisma.pub.create({
+		data: {
+			pubTypeId: submissionTypeId,
+			communityId: communityUUID,
+			stages: { connect: { id: stageIds[3] } },
+			slug: generateHash(8),
+			values: {
+				createMany: {
+					data: [
+						{
+							fieldId: fieldIds[0],
+							value: "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
+						},
+						{
+							fieldId: fieldIds[1],
+							value: "Celebrity endorsements are often sought to influence public opinion. We ask whether celebrity endorsement per se has an effect beyond the fact that their statements are seen by many, and whether on net their statements actually lead people to change their beliefs. To do so, we conducted a nationwide Twitter experiment in Indonesia with 46 high-profile celebrities and organizations, with a total of 7.8 million followers, who agreed to let us randomly tweet or retweet content promoting immunization from their accounts. Our design exploits the structure of what information is passed on along a retweet chain on Twitter to parse reach versus endorsement effects. Endorsements matter: tweets that users can identify as being originated by a celebrity are far more likely to be liked or retweeted by users than similar tweets seen by the same users but without the celebrities' imprimatur. By contrast, explicitly citing sources in the tweets actually reduces diffusion. By randomizing which celebrities tweeted when, we find suggestive evidence that overall exposure to the campaign may influence beliefs about vaccination and knowledge of immunization-seeking behavior by one's network. Taken together, the findings suggest an important role for celebrity endorsement.",
+						},
+						{
+							fieldId: fieldIds[8],
+							value: "10.3386/w25589",
+						},
+					],
+				},
+			},
+		},
+	});
 }

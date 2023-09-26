@@ -4,6 +4,7 @@ import { RecursiveInclude, makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
 import { expect } from "utils";
+import { generateHash } from "~/lib/string";
 
 const pubValuesInclude = {
 	values: {
@@ -150,6 +151,7 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBody) 
 				},
 			}),
 			...updateInput,
+			slug: generateHash(8),
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),
 	};

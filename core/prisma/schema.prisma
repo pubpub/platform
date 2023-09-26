@@ -62,7 +62,7 @@ model Community {
 model Pub {
   id          String    @id @default(uuid())
   valuesBlob  Json?
-  slug        String?   @unique
+  slug        String    @unique
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String    @map(name: "pub_type_id")
   community   Community @relation(fields: [communityId], references: [id])
