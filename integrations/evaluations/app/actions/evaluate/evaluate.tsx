@@ -63,6 +63,22 @@ const buildFormSchemaFromFields = (pubType) => {
 	return schema;
 };
 
+const getFormField = (schemaType: "string" | "array" | "number", field) => {
+	switch (schemaType) {
+		case "number":
+			return (
+				<Input
+					type="number"
+					{...field}
+					onChange={(event) => field.onChange(+event.target.value)}
+				/>
+			);
+			break;
+		default:
+			return <Input {...field} />;
+	}
+};
+
 const buildFormFromSchema = (schema, form, schemaIndex?: number, title?: string) => {
 	const fields: any[] = [];
 	if (schema.properties) {
@@ -72,51 +88,22 @@ const buildFormFromSchema = (schema, form, schemaIndex?: number, title?: string)
 		});
 	} else {
 		const fieldTitle = title || schema.title;
-		switch (schema.type) {
-			case "number":
-				fields.push(
-					<FormField
-						control={form.control}
-						name={fieldTitle}
-						key={schema["$id"] || fieldTitle + schemaIndex}
-						defaultValue={schema.default}
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>{schema.title}</FormLabel>
-								<FormControl>
-									<Input
-										type="number"
-										{...field}
-										onChange={(event) => field.onChange(+event.target.value)}
-									/>
-								</FormControl>
-								<FormDescription>{schema.description}</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-				);
-				break;
-			default:
-				fields.push(
-					<FormField
-						control={form.control}
-						name={fieldTitle}
-						key={schema["$id"] || fieldTitle + schemaIndex}
-						defaultValue={schema.default}
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>{schema.title}</FormLabel>
-								<FormControl>
-									<Input {...field} />
-								</FormControl>
-								<FormDescription>{schema.description}</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-				);
-		}
+		fields.push(
+			<FormField
+				control={form.control}
+				name={fieldTitle}
+				key={schema["$id"] || fieldTitle + schemaIndex}
+				defaultValue={schema.default}
+				render={({ field }) => (
+					<FormItem>
+						<FormLabel>{schema.title}</FormLabel>
+						<FormControl>{getFormField(schema.type, field)}</FormControl>
+						<FormDescription>{schema.description}</FormDescription>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+		);
 	}
 	return fields;
 };
@@ -129,15 +116,7 @@ export function Evaluate(props: Props) {
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		resolver: async (data, context, options) => {
-			// you can debug your validation schema here
-			console.log("formData", data);
-			console.log(
-				"validation result",
-				await ajvResolver(generatedSchema)(data, context, options)
-			);
-			return ajvResolver(generatedSchema)(data, context, options);
-		},
+		resolver: ajvResolver(generatedSchema),
 		defaultValues: {},
 	});
 
