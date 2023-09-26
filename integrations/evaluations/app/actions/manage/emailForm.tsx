@@ -57,7 +57,7 @@ export function EmailForm(props: Props) {
 		const result = await manage(
 			props.instanceId,
 			props.pub.id,
-			props.pub.values.Title as string,
+			props.pub.values['unjournal/title'] as string,
 			values.email,
 			values.name
 		);
@@ -99,7 +99,7 @@ export function EmailForm(props: Props) {
 						<CardTitle>Invite Evaluators</CardTitle>
 						<CardDescription>
 							Use this form to invite evaluators to review "
-							{props.pub.values.Title as string}".
+							{props.pub.values['unjournal/title'] as string}".
 						</CardDescription>
 					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>

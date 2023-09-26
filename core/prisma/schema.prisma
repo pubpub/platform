@@ -68,10 +68,10 @@ model Pub {
   communityId String    @map(name: "community_id")
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
-  
-  parent     Pub?      @relation("pub_parent", fields: [parentId], references: [id])
-  parentId   String?   @map(name: "parent_id")
-  children   Pub[]     @relation("pub_parent")
+
+  parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id])
+  parentId String? @map(name: "parent_id")
+  children Pub[]   @relation("pub_parent")
 
   values               PubValue[]
   stages               Stage[]
@@ -86,6 +86,7 @@ model Pub {
 model PubField {
   id            String       @id @default(uuid())
   name          String
+  slug          String       @unique
   integration   Integration? @relation(fields: [integrationId], references: [id])
   integrationId String?      @map(name: "integration_id")
   createdAt     DateTime     @default(now()) @map(name: "created_at")
@@ -273,8 +274,8 @@ model IntegrationInstance {
   communityId   String      @map(name: "community_id")
   createdAt     DateTime    @default(now()) @map(name: "created_at")
   updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updated_at")
-  stage         Stage?       @relation(fields: [stageId], references: [id])
-  stageId       String?      @map(name: "stage_id")
+  stage         Stage?      @relation(fields: [stageId], references: [id])
+  stageId       String?     @map(name: "stage_id")
 
   pubs Pub[]
 

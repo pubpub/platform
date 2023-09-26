@@ -16,15 +16,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	await prisma.pubField.createMany({
 		data: [
-			{ id: fieldIds[0], name: "Title" },
-			{ id: fieldIds[1], name: "Description" },
-			{ id: fieldIds[2], name: "Manager's Notes" },
-			{ id: fieldIds[3], name: "Parent" },
-			{ id: fieldIds[4], name: "Children" },
-			{ id: fieldIds[5], name: "Content" },
-			{ id: fieldIds[6], name: "Evaluated Paper" },
-			{ id: fieldIds[7], name: "Tags" },
-			{ id: fieldIds[8], name: "DOI" },
+			{ id: fieldIds[0], name: "Title", slug: "unjournal/title" },
+			{ id: fieldIds[1], name: "Description", slug: "unjournal/description" },
+			{ id: fieldIds[2], name: "Manager's Notes", slug: "unjournal/managers-notes" },
+			{ id: fieldIds[3], name: "Parent", slug: "unjournal/parent" },
+			{ id: fieldIds[4], name: "Children", slug: "unjournal/children" },
+			{ id: fieldIds[5], name: "Content", slug: "unjournal/content" },
+			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal/evaluated-paper" },
+			{ id: fieldIds[7], name: "Tags", slug: "unjournal/tags" },
+			{ id: fieldIds[8], name: "DOI", slug: "unjournal/doi" },
 		],
 	});
 

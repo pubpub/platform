@@ -16,8 +16,8 @@ export const evaluate = async (
 	try {
 		const pub = await client.createPub(instanceId, {
 			values: {
-				Title: `Evaluation of "${title}"`,
-				Description: description,
+				'unjournal/title': `Evaluation of "${title}"`,
+				'unjournal/description': description,
 			},
 			pubTypeId: instance.pubTypeId,
 			parentId: pubId,
