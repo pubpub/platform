@@ -63,20 +63,23 @@ const buildFormSchemaFromFields = (pubType) => {
 	return schema;
 };
 
-const buildFormFromSchema = (schema, form, iterator?: number) => {
+const buildFormFromSchema = (schema, form, iterator?: number, nestedKey?: string) => {
 	const fields: any[] = [];
 	if (schema.properties) {
 		Object.entries(schema.properties).forEach(([key, val]: [any, any]) => {
-			fields.push(buildFormFromSchema(val, form, key));
+			console.log(val);
+			fields.push(buildFormFromSchema(val, form, key, val.title));
 		});
 	} else {
+		console.log(nestedKey);
+		const title = schema.title;
 		switch (schema.type) {
 			case "number":
 				fields.push(
 					<FormField
 						control={form.control}
-						name={schema.title}
-						key={schema["$id"] || schema.title + iterator}
+						name={title}
+						key={schema["$id"] || title + iterator}
 						defaultValue={schema.default}
 						render={({ field }) => (
 							<FormItem>

@@ -18,6 +18,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			namespace: "unjournal",
 			schema: {
 				$id: "unjournal:confidencerating",
+				title: "Confidence Rating",
 				description: "The confidence rating assigned to a work.",
 				type: "object",
 				properties: {
