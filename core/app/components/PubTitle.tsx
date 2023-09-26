@@ -1,7 +1,10 @@
 import { PubPayload } from "~/lib/types";
 
-export const renderPubTitle = (pub: PubPayload) => {
-	const titleValue = pub.values.find((value) => {
+type Props = {
+	pub: PubPayload;
+};
+export const PubTitle: React.FC<Props> = function (props: Props) {
+	const titleValue = props.pub.values.find((value) => {
 		return value.field.name === "Title";
 	});
 	const title = titleValue?.value as string;

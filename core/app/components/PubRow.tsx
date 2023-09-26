@@ -6,8 +6,8 @@ import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui"
 import { cn } from "utils";
 import { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
+import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
-import { renderPubTitle } from "./lib/utils";
 
 type Props = {
 	pub: PubPayload;
@@ -75,7 +75,9 @@ const PubRow: React.FC<Props> = function (props: Props) {
 			</RowHeader>
 			<RowContent className="items-stretch flex justify-between items-start">
 				<h3 className="text-md font-medium">
-					<Link href={`pubs/${props.pub.slug}`}>{renderPubTitle(props.pub)}</Link>
+					<Link href={`pubs/${props.pub.slug}`}>
+						<PubTitle pub={props.pub} />
+					</Link>
 				</h3>
 			</RowContent>
 			{props.pub.children.length > 0 && (
