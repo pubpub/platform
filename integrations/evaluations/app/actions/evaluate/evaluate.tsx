@@ -29,9 +29,6 @@ type Props = {
 	pubType: GetPubTypeResponseBody;
 };
 
-// a bit of a hack, but allows us to use AJV's JSON schema type
-interface pubpubSchema {}
-
 export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 	const { toast } = useToast();
