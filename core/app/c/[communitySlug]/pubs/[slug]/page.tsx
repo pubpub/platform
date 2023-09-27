@@ -10,7 +10,7 @@ import prisma from "~/prisma/db";
 
 const getPubForSlug = async (slug: string) => {
 	return await prisma.pub.findUnique({
-		where: { slug },
+		where: { id: slug },
 		include: {
 			...pubInclude,
 		},

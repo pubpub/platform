@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { faker } from "@faker-js/faker";
-import { generateHash } from "../../lib/string";
 
 export default async function main(prisma: PrismaClient, communityUUID: string) {
 	await prisma.community.create({
@@ -121,7 +120,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
-			slug: generateHash(8),
 			values: {
 				createMany: {
 					data: [
@@ -143,7 +141,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
-			slug: generateHash(8),
+
 			values: {
 				createMany: {
 					data: [
@@ -165,7 +163,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
-			slug: generateHash(8),
+
 			values: {
 				createMany: {
 					data: [
@@ -183,163 +181,163 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const evaluating1 = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
-			slug: generateHash(8),
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: 'Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
-						},
-						{
-							fieldId: fieldIds[1],
-							value: 'This will be evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
-						},
-					],
-				},
-			},
-		},
-	});
+	// const evaluating1 = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
 
-	const evaluating2 = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
-			slug: generateHash(8),
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Artificial Intelligence and Economic Growth”: Philip Trammell",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: `An evaluation of “Artificial Intelligence and Economic Growth” for Unjournal`,
-						},
-					],
-				},
-			},
-		},
-	});
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: 'Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: 'This will be evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 
-	const authorRejection = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
-			slug: generateHash(8),
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Do Celebrity Endorsements Matter? A Twitter Experiment Promoting Vaccination In Indonesia",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: `You haver to reject me. Pleseeee. Reject meeeeeeee`,
-						},
-					],
-				},
-			},
-		},
-	});
+	// const evaluating2 = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
 
-	const evaluationSummary = await prisma.pub.create({
-		data: {
-			pubTypeId: evaluationSummaryTypeId,
-			communityId: communityUUID,
-			slug: generateHash(8),
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Evaluation summary and metrics: “Artificial Intelligence and Economic Growth”",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: `Summary, metrics and ratings, and Manager's comments on Evaluation of “Artificial Intelligence and Economic Growth” by Aghion et al.`,
-						},
-						{
-							fieldId: fieldIds[2],
-							value: "Ive never seen a squeaky wheel effect climate change",
-						},
-					],
-				},
-			},
-		},
-	});
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "Artificial Intelligence and Economic Growth”: Philip Trammell",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: `An evaluation of “Artificial Intelligence and Economic Growth” for Unjournal`,
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 
-	const authorsResponse = await prisma.pub.create({
-		data: {
-			pubTypeId: authorResponseTypeId,
-			communityId: communityUUID,
-			slug: generateHash(8),
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: `Authors response to Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell`,
-						},
-						{
-							fieldId: fieldIds[1],
-							value: `You can beleive it or not, but i am telling you right now, that, that AI back there is is not real!`,
-						},
-					],
-				},
-			},
-		},
-	});
+	// const authorRejection = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
 
-	const evaluation1 = await prisma.pub.create({
-		data: {
-			pubTypeId: evaluationTypeId,
-			communityId: communityUUID,
-			slug: generateHash(8),
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
-						},
-						{
-							fieldId: fieldIds[1],
-							value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
-						},
-					],
-				},
-			},
-		},
-	});
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "Do Celebrity Endorsements Matter? A Twitter Experiment Promoting Vaccination In Indonesia",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: `You haver to reject me. Pleseeee. Reject meeeeeeee`,
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 
-	const evaluation2 = await prisma.pub.create({
-		data: {
-			pubTypeId: evaluationTypeId,
-			communityId: communityUUID,
-			slug: generateHash(8),
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: `Philip Trammell's Evaluation 2 of “Artificial Intelligence and Economic Growth” for Unjournal`,
-						},
-					],
-				},
-			},
-		},
-	});
+	// const evaluationSummary = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: evaluationSummaryTypeId,
+	// 		communityId: communityUUID,
+
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "Evaluation summary and metrics: “Artificial Intelligence and Economic Growth”",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: `Summary, metrics and ratings, and Manager's comments on Evaluation of “Artificial Intelligence and Economic Growth” by Aghion et al.`,
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[2],
+	// 						value: "Ive never seen a squeaky wheel effect climate change",
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
+
+	// const authorsResponse = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: authorResponseTypeId,
+	// 		communityId: communityUUID,
+
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: `Authors response to Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell`,
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: `You can beleive it or not, but i am telling you right now, that, that AI back there is is not real!`,
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
+
+	// const evaluation1 = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: evaluationTypeId,
+	// 		communityId: communityUUID,
+
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" (Buntaine et al)',
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: 'Evaluation 1 of "Does the Squeaky Wheel Get More Grease? The Direct and Indirect Effects of Citizen Participation on Environmental Governance in China" - Revised 11 August because of a small oversight',
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
+
+	// const evaluation2 = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: evaluationTypeId,
+	// 		communityId: communityUUID,
+
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "Evaluation 2 of “Artificial Intelligence and Economic Growth”: Philip Trammell",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: `Philip Trammell's Evaluation 2 of “Artificial Intelligence and Economic Growth” for Unjournal`,
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 
 	const stageIds = [...Array(7)].map((x) => uuidv4());
 	await prisma.stage.createMany({
@@ -580,34 +578,34 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		where: { id: toEvaluate.id },
 		data: { stages: { connect: { id: stageIds[2] } } },
 	});
-	await prisma.pub.update({
-		where: { id: evaluating1.id },
-		data: { stages: { connect: { id: stageIds[3] } } },
-	});
-	await prisma.pub.update({
-		where: { id: evaluating2.id },
-		data: { stages: { connect: { id: stageIds[3] } } },
-	});
-	await prisma.pub.update({
-		where: { id: evaluationSummary.id },
-		data: { stages: { connect: { id: stageIds[4] } } },
-	});
-	await prisma.pub.update({
-		where: { id: authorsResponse.id },
-		data: { stages: { connect: { id: stageIds[4] } } },
-	});
-	await prisma.pub.update({
-		where: { id: evaluation1.id },
-		data: { stages: { connect: { id: stageIds[5] } } },
-	});
-	await prisma.pub.update({
-		where: { id: evaluation2.id },
-		data: { stages: { connect: { id: stageIds[5] } } },
-	});
-	await prisma.pub.update({
-		where: { id: authorRejection.id },
-		data: { stages: { connect: { id: stageIds[6] } } },
-	});
+	// await prisma.pub.update({
+	// 	where: { id: evaluating1.id },
+	// 	data: { stages: { connect: { id: stageIds[3] } } },
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: evaluating2.id },
+	// 	data: { stages: { connect: { id: stageIds[3] } } },
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: evaluationSummary.id },
+	// 	data: { stages: { connect: { id: stageIds[4] } } },
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: authorsResponse.id },
+	// 	data: { stages: { connect: { id: stageIds[4] } } },
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: evaluation1.id },
+	// 	data: { stages: { connect: { id: stageIds[5] } } },
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: evaluation2.id },
+	// 	data: { stages: { connect: { id: stageIds[5] } } },
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: authorRejection.id },
+	// 	data: { stages: { connect: { id: stageIds[6] } } },
+	// });
 
 	const submissionsIntegrationUrl =
 		process.env.NODE_ENV === "production"
@@ -682,7 +680,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			pubTypeId: submissionTypeId,
 			communityId: communityUUID,
 			stages: { connect: { id: stageIds[3] } },
-			slug: generateHash(8),
+
 			values: {
 				createMany: {
 					data: [

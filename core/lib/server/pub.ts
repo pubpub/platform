@@ -4,7 +4,6 @@ import { RecursiveInclude, makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
 import { expect } from "utils";
-import { generateHash } from "~/lib/string";
 
 const pubValuesInclude = {
 	values: {
@@ -118,7 +117,6 @@ const makeRecursivePubUpdateInput = async (
 	return {
 		community: { connect: { id: communityId } },
 		pubType: { connect: { id: body.pubTypeId } },
-		slug: generateHash(8),
 		values: {
 			createMany: {
 				data: await normalizePubValues(body.values),

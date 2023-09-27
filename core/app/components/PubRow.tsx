@@ -73,9 +73,9 @@ const PubRow: React.FC<Props> = function (props: Props) {
 					</div>
 				</div>
 			</RowHeader>
-			<RowContent className="items-stretch flex justify-between items-start">
+			<RowContent className="flex justify-between items-start">
 				<h3 className="text-md font-medium">
-					<Link href={`pubs/${props.pub.slug}`}>
+					<Link href={`pubs/${props.pub.id}`}>
 						<PubTitle pub={props.pub} />
 					</Link>
 				</h3>
