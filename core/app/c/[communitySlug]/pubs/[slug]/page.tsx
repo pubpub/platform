@@ -38,7 +38,7 @@ export default async function Page({
 	const users = getPubUsers(pub.permissions);
 
 	return (
-		<div>
+		<div className="mb-20">
 			<div className="pb-6">
 				<Link href={`/c/${params.communitySlug}/pubs`}>
 					<Button>View all pubs</Button>
@@ -48,8 +48,8 @@ export default async function Page({
 				<h3>{pub.pubType.name}</h3>
 				<PubTitle pub={pub} />
 			</div>
-			<div className="flex flex-row">
-				<div className="w-[900px]">
+			<div className="flex flex-row max-w-[100%] space-x-2">
+				<div>
 					{pub.values
 						.filter((value) => {
 							return value.field.name !== "Title";
@@ -64,7 +64,7 @@ export default async function Page({
 							);
 						})}
 				</div>
-				<div className="h-100% bg-gray-50 w-[250px] p-4 shadow-inner flex flex-col font-semibold">
+				<div className="h-100% p-2 bg-gray-50 min-w-[250px] shadow-inner flex flex-col font-semibold p-4">
 					<div className="pb-3">
 						{/* TODO: build workflow as series of move constraints? */}
 						<div>Current Stage</div>
