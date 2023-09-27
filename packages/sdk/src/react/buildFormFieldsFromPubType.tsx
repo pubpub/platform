@@ -1,49 +1,24 @@
-"use client";
-import { ajvResolver } from "@hookform/resolvers/ajv";
-import { useEffect } from "react";
-import { ControllerRenderProps, UseFormReturn, useForm } from "react-hook-form";
-import {
-	Button,
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-	Form,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-	Icon,
-	Textarea,
-	useLocalStorage,
-	useToast,
-	Input,
-} from "ui";
-import { cn } from "utils";
-import * as z from "zod";
-import { evaluate } from "./actions";
-import { GetPubResponseBody, GetPubTypeResponseBody } from "@pubpub/sdk";
+import * as React from "react";
+// this import causes a cyclic dependency in pnpm but here we are
+import { GetPubTypeResponseBody } from "contracts";
+import { ControllerRenderProps, UseFormReturn } from "react-hook-form";
 import { JSONSchemaType } from "ajv";
 
-type Props = {
-	instanceId: string;
-	pub: GetPubResponseBody;
-	pubType: GetPubTypeResponseBody;
-};
-
-const schema = z.object({
-	description: z.string().min(1, "Description is required"),
-});
+import {
+	Input,
+	FormField,
+	FormControl,
+	FormItem,
+	FormLabel,
+	FormDescription,
+	FormMessage,
+} from "ui/src";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
 interface pubpubSchema {}
 
 const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
-	const schema = {
+	const schema: JSONSchemaType<pubpubSchema> = {
 		$id: `urn:uuid:${pubType.id}`,
 		title: `${pubType.name}`,
 		type: "object",
@@ -52,14 +27,14 @@ const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
 	pubType.fields &&
 		pubType.fields.forEach((field) => {
 			if (!field.schema) {
-				schema.properties[field.name] = {
+				schema.properties![field.name] = {
 					type: "string",
 					title: `${field.name}`,
 					$id: `urn:uuid:${field.id}`,
 					default: "",
 				};
 			} else {
-				schema.properties[field.name] = field.schema.schema;
+				schema.properties![field.name] = field.schema.schema;
 			}
 		});
 	return schema;
@@ -115,25 +90,3 @@ const buildFormFromSchema = (
 	}
 	return fields;
 };
-
-export function Evaluate(props: Props) {
-	const { pub, pubType } = props;
-
-	// this is due to an AJV bug, per: https://github.com/ajv-validator/ajv/issues/2317
-	const generatedSchema: JSONSchemaType<pubpubSchema> = buildFormSchemaFromFields(pubType);
-
-	const form = useForm({
-		mode: "onChange",
-		reValidateMode: "onChange",
-		resolver: ajvResolver(generatedSchema),
-		defaultValues: {},
-	});
-
-	const GeneratedFormFields = buildFormFromSchema(generatedSchema, form);
-
-	return (
-		<Form {...form}>
-			<form>{GeneratedFormFields}</form>
-		</Form>
-	);
-}

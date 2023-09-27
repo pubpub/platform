@@ -21,12 +21,14 @@
 	"license": "GPL-2.0+",
 	"dependencies": {
 		"@ts-rest/core": "^3.28.0",
+		"ajv": "^8.12.0",
+		"react-hook-form": "^7.46.1",
 		"utils": "workspace:*"
 	},
 	"peerDependencies": {
 		"contracts": "workspace:*",
-		"ui": "workspace:*",
-		"react": "^18.2.0"
+		"react": "^18.2.0",
+		"ui": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/node": "^20.4.2",
