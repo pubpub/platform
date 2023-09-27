@@ -16,6 +16,9 @@ import {
 	FormMessage,
 	Form,
 	CardContent,
+	CardTitle,
+	CardHeader,
+	CardDescription,
 } from "ui/src";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
@@ -64,14 +67,27 @@ export const getFormField = (schemaType: "string" | "number", field: ControllerR
 export const buildFormFromSchema = (
 	schema: JSONSchemaType<pubpubSchema>,
 	form: UseFormReturn,
-	schemaIndex?: number,
+	schemaIndex?: string,
 	title?: string
 ) => {
 	const fields: any[] = [];
 	if (schema.properties) {
 		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
+			const combinedIndex = `${schemaIndex}-${fieldIndex}`;
 			const fieldTitle = schemaIndex ? schema.title + "." + key : undefined;
-			fields.push(buildFormFromSchema(val, form, fieldIndex, fieldTitle));
+			const fieldContent =
+				schemaIndex && val.properties ? (
+					<CardContent key={key}>
+						<CardHeader>
+							<CardTitle>{schema.title}</CardTitle>
+							<CardDescription>{schema.description}</CardDescription>
+						</CardHeader>
+						{buildFormFromSchema(val, form, combinedIndex, fieldTitle)}
+					</CardContent>
+				) : (
+					buildFormFromSchema(val, form, combinedIndex, fieldTitle)
+				);
+			fields.push(fieldContent);
 		});
 	} else {
 		const fieldTitle = title || schema.title;

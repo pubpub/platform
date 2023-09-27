@@ -12,55 +12,87 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const confidenceRatingSchema = await prisma.pubFieldSchema.create({
+	const confidenceObject = {
+		rating: {
+			title: "Rating",
+			type: "number",
+			minimum: 0,
+			maximum: 100,
+			default: 0,
+		},
+		confidence: {
+			title: "90% Confidence Interval",
+			description: "E.g. for a 50 rating, you might give a CI of 42, 61",
+			type: "object",
+			properties: {
+				low: {
+					title: "Low",
+					type: "number",
+					minimum: 0,
+					maximum: 100,
+					default: 0,
+				},
+				high: {
+					title: "High",
+					type: "number",
+					minimum: 0,
+					maximum: 100,
+					default: 0,
+				},
+				comments: {
+					title: "Additional Comments",
+					type: "string",
+					minLength: 0,
+				},
+			},
+		},
+	};
+
+	const metricsSchema = await prisma.pubFieldSchema.create({
 		data: {
-			name: "confidencerating",
+			name: "metrics",
 			namespace: "unjournal",
 			schema: {
-				$id: "unjournal:confidencerating",
-				title: "Confidence Rating",
-				description: "The confidence rating assigned to a work.",
+				$id: "unjournal:metrics",
+				title: "Metrics and Predictions",
+				description: "Responses will be public. See here for details on the categories.",
 				type: "object",
 				properties: {
-					rating: {
-						title: "Rating",
-						description:
-							"A rating of quality from 0 to 100, with 0 being the worst and 100 being the best.",
-						type: "number",
-						minimum: 0,
-						maximum: 100,
-						default: 0,
-					},
-					confidence: {
-						title: "Confidence",
-						description:
-							"The degree of confidence the rater has in the rating given, from 1 to 5.",
-						type: "number",
-						minimum: 1,
-						maximum: 5,
-						default: 1,
+					assessment: {
+						title: "Overall Assessment",
+						type: "object",
+						properties: confidenceObject,
 					},
 				},
 			},
 		},
 	});
 
-	const fieldIds = [...Array(10)].map(() => uuidv4());
+	const fieldIds = [...Array(12)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
 		data: [
 			{ id: fieldIds[0], name: "Title" },
 			{ id: fieldIds[1], name: "Description" },
 			{ id: fieldIds[2], name: "Manager's Notes" },
-			{ id: fieldIds[4], name: "Children" },
+			{ id: fieldIds[3], name: "Anonymity" },
+			{ id: fieldIds[4], name: "Metrics" },
 			{ id: fieldIds[5], name: "Content" },
 			{ id: fieldIds[6], name: "Evaluated Paper" },
 			{ id: fieldIds[7], name: "Tags" },
 			{ id: fieldIds[8], name: "DOI" },
 			{
 				id: fieldIds[9],
-				name: "Confidence Rating",
-				pubFieldSchemaId: confidenceRatingSchema.id,
+				name: "Metrics and Predictions",
+				pubFieldSchemaId: metricsSchema.id,
+			},
+			{
+				id: fieldIds[10],
+				name: "Survey Questions",
+			},
+			{
+				id: fieldIds[11],
+				name: "Survey Questions",
 			},
 		],
 	});
