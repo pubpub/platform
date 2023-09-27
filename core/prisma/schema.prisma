@@ -86,6 +86,7 @@ model Pub {
 model PubField {
   id            String       @id @default(uuid())
   name          String
+  slug          String       @unique
   integration   Integration? @relation(fields: [integrationId], references: [id])
   integrationId String?      @map(name: "integration_id")
   createdAt     DateTime     @default(now()) @map(name: "created_at")

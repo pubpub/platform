@@ -34,7 +34,7 @@ type Props = {
 
 const getTitle = (pub: Props["pub"]) => {
 	const titleValue = pub.values.find((value) => {
-		return value.field.name === "Title";
+		return value.field.slug === "unjournal/title";
 	});
 	return titleValue?.value as string;
 };

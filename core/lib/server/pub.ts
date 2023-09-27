@@ -11,7 +11,7 @@ const pubValuesInclude = {
 		orderBy: { createdAt: "desc" },
 		include: {
 			field: {
-				select: { name: true },
+				select: { slug: true },
 			},
 		},
 	},
@@ -21,7 +21,7 @@ const recursivelyDenormalizePubValues = async (
 	pub: Prisma.PubGetPayload<RecursiveInclude<"children", typeof pubValuesInclude>>
 ): Promise<GetPubResponseBody> => {
 	const values = pub.values.reduce((prev, curr) => {
-		prev[curr.field.name] = curr.value;
+		prev[curr.field.slug] = curr.value;
 		return prev;
 	}, {} as Record<string, Prisma.JsonValue>);
 	const children = await Promise.all(pub.children?.map(recursivelyDenormalizePubValues));
@@ -39,14 +39,14 @@ export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBo
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
-const PubFieldNamesNotFoundError = new NotFoundError("Pub fields not found");
+const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
 
 const normalizePubValues = async (values: CreatePubRequestBody["values"], pubTypeId?: string) => {
-	const pubFieldNames = Object.keys(values);
+	const pubFieldSlugs = Object.keys(values);
 	const pubFieldIds = await prisma.pubField.findMany({
 		where: {
-			name: {
-				in: pubFieldNames,
+			slug: {
+				in: pubFieldSlugs,
 			},
 			pubTypes: {
 				some: {
@@ -57,13 +57,13 @@ const normalizePubValues = async (values: CreatePubRequestBody["values"], pubTyp
 	});
 
 	if (!pubFieldIds) {
-		throw PubFieldNamesNotFoundError;
+		throw PubFieldSlugsNotFoundError;
 	}
 
 	const normalizedValues = pubFieldIds.map((field) => {
 		return {
 			fieldId: field.id,
-			value: values[field.name],
+			value: values[field.slug],
 		};
 	});
 

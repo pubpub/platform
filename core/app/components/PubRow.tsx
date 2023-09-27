@@ -32,7 +32,7 @@ const groupPubChildrenByPubType = (pubs: PubPayload["children"]) => {
 
 const getTitle = (pub: PubPayload["children"][number]) => {
 	const title = pub.values.find((value) => {
-		return value.field.name === "Title";
+		return value.field.slug === "unjournal/title";
 	});
 	return title?.value as string;
 };

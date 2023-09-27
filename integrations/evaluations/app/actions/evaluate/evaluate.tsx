@@ -55,7 +55,7 @@ export function Evaluate(props: Props) {
 		const result = await evaluate(
 			props.instanceId,
 			pub.id,
-			pub.values.Title as string,
+			pub.values['unjournal/title'] as string,
 			values.description
 		);
 		if ("error" in result && typeof result.error === "string") {
@@ -88,7 +88,7 @@ export function Evaluate(props: Props) {
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
 					<CardHeader>
-						<CardTitle>{pub.values.Title as string}</CardTitle>
+						<CardTitle>{pub.values['unjournal/title'] as string}</CardTitle>
 						<CardDescription>Submit Your Evaluation</CardDescription>
 					</CardHeader>
 					<CardContent className={cn("flex flex-col column gap-4")}>
