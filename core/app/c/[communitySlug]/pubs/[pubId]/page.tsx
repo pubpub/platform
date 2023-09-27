@@ -8,9 +8,9 @@ import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 
-const getPubForSlug = async (slug: string) => {
+const getPub = async (pubId: string) => {
 	return await prisma.pub.findUnique({
-		where: { id: slug },
+		where: { id: pubId },
 		include: {
 			...pubInclude,
 		},
@@ -20,18 +20,19 @@ const getPubForSlug = async (slug: string) => {
 export default async function Page({
 	params,
 }: {
-	params: { slug: string; communitySlug: string };
+	params: { pubId: string; communitySlug: string };
 }) {
+	console.log(params);
 	const loginData = await getLoginData();
 	if (!loginData) {
 		return null;
 	}
 	let token;
 	token = await createToken(loginData.id);
-	if (!params.slug || !params.communitySlug) {
+	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}
-	const pub = await getPubForSlug(params.slug);
+	const pub = await getPub(params.pubId);
 	if (!pub) {
 		return null;
 	}
