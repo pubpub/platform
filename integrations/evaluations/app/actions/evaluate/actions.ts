@@ -1,13 +1,13 @@
 "use server";
 
+import { JSONType } from "ajv";
 import { findInstance } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
 export const evaluate = async (
 	instanceId: string,
 	pubId: string,
-	title: string,
-	description: string
+	values: Record<string, JSONType>
 ) => {
 	const instance = await findInstance(instanceId);
 	if (instance === undefined) {
@@ -15,12 +15,9 @@ export const evaluate = async (
 	}
 	try {
 		const pub = await client.createPub(instanceId, {
-			values: {
-				Title: `Evaluation of "${title}"`,
-				Description: description,
-			},
 			pubTypeId: instance.pubTypeId,
 			parentId: pubId,
+			values: values,
 		});
 		return pub;
 	} catch (error) {
