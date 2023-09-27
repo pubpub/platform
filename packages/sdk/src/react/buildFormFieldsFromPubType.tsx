@@ -1,8 +1,9 @@
 import * as React from "react";
 // this import causes a cyclic dependency in pnpm but here we are
 import { GetPubTypeResponseBody } from "contracts";
-import { ControllerRenderProps, UseFormReturn } from "react-hook-form";
+import { ControllerRenderProps, UseFormProps, UseFormReturn, useForm } from "react-hook-form";
 import { JSONSchemaType } from "ajv";
+import { ajvResolver } from "@hookform/resolvers/ajv";
 
 import {
 	Input,
@@ -12,12 +13,29 @@ import {
 	FormLabel,
 	FormDescription,
 	FormMessage,
+	Form,
 } from "ui/src";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
 interface pubpubSchema {}
 
-const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
+export const buildFormFieldsFromPubType = (pubType: GetPubTypeResponseBody) => {
+	const schema = buildFormSchemaFromFields(pubType);
+	const form = useForm({
+		mode: "onChange",
+		reValidateMode: "onChange",
+		resolver: ajvResolver(schema),
+		defaultValues: {},
+	});
+	const formFields = buildFormFromSchema(schema, form);
+	return (
+		<Form {...form}>
+			<form>{formFields}</form>
+		</Form>
+	);
+};
+
+export const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
 	const schema: JSONSchemaType<pubpubSchema> = {
 		$id: `urn:uuid:${pubType.id}`,
 		title: `${pubType.name}`,
@@ -41,7 +59,7 @@ const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
 };
 
 // todo: array, and more complex types that we might want to handle
-const getFormField = (schemaType: "string" | "number", field: ControllerRenderProps) => {
+export const getFormField = (schemaType: "string" | "number", field: ControllerRenderProps) => {
 	switch (schemaType) {
 		case "number":
 			return (
@@ -57,7 +75,7 @@ const getFormField = (schemaType: "string" | "number", field: ControllerRenderPr
 	}
 };
 
-const buildFormFromSchema = (
+export const buildFormFromSchema = (
 	schema: JSONSchemaType<pubpubSchema>,
 	form: UseFormReturn,
 	schemaIndex?: number,

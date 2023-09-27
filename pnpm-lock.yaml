@@ -351,6 +351,9 @@ importers:
 
   packages/sdk:
     dependencies:
+      '@hookform/resolvers':
+        specifier: ^3.3.1
+        version: 3.3.1(react-hook-form@7.46.1)
       '@ts-rest/core':
         specifier: ^3.28.0
         version: 3.28.0(zod@3.21.4)
