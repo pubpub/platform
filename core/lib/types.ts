@@ -22,6 +22,33 @@ export const makeRecursiveInclude = <T extends string, U extends {}>(
 	} as RecursiveInclude<T, U>;
 };
 
+export const permissionInclude = {
+	member: {
+		include: {
+			user: {
+				select: {
+					id: true,
+					name: true,
+					avatar: true,
+					email: true,
+				},
+			},
+		},
+	},
+	memberGroup: {
+		include: {
+			users: {
+				select: {
+					id: true,
+					name: true,
+					avatar: true,
+					email: true,
+				},
+			},
+		},
+	},
+} satisfies Prisma.PermissionInclude;
+
 export const pubInclude = {
 	pubType: true,
 	values: { include: { field: true } },
@@ -50,6 +77,7 @@ export const pubInclude = {
 			3
 		),
 	},
+	permissions: { include: permissionInclude },
 } satisfies Prisma.PubInclude;
 
 export type PubPayload = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
@@ -63,32 +91,6 @@ export type User = {
 	createdAt: Date;
 	updatedAt: Date;
 };
-export const permissionInclude = {
-	member: {
-		include: {
-			user: {
-				select: {
-					id: true,
-					name: true,
-					avatar: true,
-					email: true,
-				},
-			},
-		},
-	},
-	memberGroup: {
-		include: {
-			users: {
-				select: {
-					id: true,
-					name: true,
-					avatar: true,
-					email: true,
-				},
-			},
-		},
-	},
-} satisfies Prisma.PermissionInclude;
 
 export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof permissionInclude }>;
 
