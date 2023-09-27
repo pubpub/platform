@@ -52,7 +52,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			{ id: fieldIds[0], name: "Title" },
 			{ id: fieldIds[1], name: "Description" },
 			{ id: fieldIds[2], name: "Manager's Notes" },
-			{ id: fieldIds[3], name: "Parent" },
 			{ id: fieldIds[4], name: "Children" },
 			{ id: fieldIds[5], name: "Content" },
 			{ id: fieldIds[6], name: "Evaluated Paper" },
@@ -84,12 +83,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Evaluation Summary",
 			communityId: communityUUID,
 			fields: {
-				connect: [
-					{ id: fieldIds[0] },
-					{ id: fieldIds[1] },
-					{ id: fieldIds[2] },
-					{ id: fieldIds[3] },
-				],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[2] }],
 			},
 		},
 	});
@@ -101,7 +95,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Author Response",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }],
 			},
 		},
 	});
@@ -113,12 +107,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Evaluation",
 			communityId: communityUUID,
 			fields: {
-				connect: [
-					{ id: fieldIds[0] },
-					{ id: fieldIds[1] },
-					{ id: fieldIds[3] },
-					{ id: fieldIds[9] },
-				],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[9] }],
 			},
 		},
 	});
