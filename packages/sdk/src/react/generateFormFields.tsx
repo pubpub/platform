@@ -3,7 +3,6 @@ import * as React from "react";
 import { GetPubTypeResponseBody } from "contracts";
 import { ControllerRenderProps, UseFormProps, UseFormReturn, useForm } from "react-hook-form";
 import { JSONSchemaType } from "ajv";
-import { ajvResolver } from "@hookform/resolvers/ajv";
 
 import { cn } from "utils";
 import {
@@ -76,11 +75,11 @@ export const buildFormFromSchema = (
 			const combinedIndex = `${schemaIndex}-${fieldIndex}`;
 			const fieldTitle = schemaIndex ? schema.title + "." + key : undefined;
 			const fieldContent =
-				schemaIndex && val.properties ? (
+				(fieldIndex || schemaIndex) && val.properties ? (
 					<CardContent key={key}>
 						<CardHeader>
-							<CardTitle>{schema.title}</CardTitle>
-							<CardDescription>{schema.description}</CardDescription>
+							<CardTitle>{val.title}</CardTitle>
+							<CardDescription>{val.description}</CardDescription>
 						</CardHeader>
 						{buildFormFromSchema(val, form, combinedIndex, fieldTitle)}
 					</CardContent>
