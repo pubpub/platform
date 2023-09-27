@@ -22,7 +22,6 @@ export default async function Page({
 }: {
 	params: { pubId: string; communitySlug: string };
 }) {
-	console.log(params);
 	const loginData = await getLoginData();
 	if (!loginData) {
 		return null;
