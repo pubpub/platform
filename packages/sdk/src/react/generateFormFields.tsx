@@ -73,7 +73,11 @@ export const buildFormFromSchema = (
 	if (schema.properties) {
 		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
 			const combinedIndex = `${schemaIndex}-${fieldIndex}`;
-			const fieldTitle = schemaIndex ? schema.title + "." + key : undefined;
+			const fieldTitle = schemaIndex
+				? title
+					? title + "." + key
+					: schema.title + "." + key
+				: undefined;
 			const fieldContent =
 				(fieldIndex || schemaIndex) && val.properties ? (
 					<CardContent key={key}>
