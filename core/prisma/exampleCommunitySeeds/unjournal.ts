@@ -745,7 +745,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				// This needs to be registered for emails to work, but we don't want it to show on each pub...hrm...
 				{
 					name: "evaluate",
-					text: "Evaluate Pub",
 					href: `${evaluationsIntegrationUrl}/actions/evaluate`,
 				},
 			],
