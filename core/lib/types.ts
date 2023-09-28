@@ -84,7 +84,7 @@ export const pubInclude = {
 
 export type PubPayload = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
 
-export type User = {
+type User = {
 	id: string;
 	slug: string;
 	firstName: string;
@@ -98,11 +98,8 @@ export type User = {
 };
 
 export type UserPostBody = Pick<User, "firstName" | "lastName" | "email" | "password">;
-
 export type UserPutBody = Pick<User, "firstName" | "lastName">;
-
 export type UserLoginData = Omit<User, "password">;
-
 export type UserSettings = Pick<User, "firstName" | "lastName" | "email" | "slug">;
 
 export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof permissionInclude }>;
