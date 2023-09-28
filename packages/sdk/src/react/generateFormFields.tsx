@@ -65,6 +65,7 @@ export const getFormField = (schemaType: "string" | "number", field: ControllerR
 	}
 };
 
+// buildFormFieldsFromSchema
 export const buildFormFromSchema = (
 	schema: JSONSchemaType<pubpubSchema>,
 	form: UseFormReturn,
@@ -74,6 +75,7 @@ export const buildFormFromSchema = (
 	const fields: React.ReactNode[] = [];
 	console.log(schema);
 	if (schema.properties) {
+		// could be map or flatmap
 		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
 			// Create unique index for React keys
 			const combinedIndex = `${schemaIndex}-${fieldIndex}`;
