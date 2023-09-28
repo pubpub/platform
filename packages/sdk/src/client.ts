@@ -42,7 +42,7 @@ export type WritableKey<T extends Manifest> = Extract<
  */
 export type Parse<T extends ManifestJson> = {
 	[K in Extract<keyof T, "read" | "write">]: T[K] extends string ? "*" : T[K];
-} & { [K in Extract<keyof T, "register">]: T[K] } & { url: string };
+} & { [K in Extract<keyof T, "register">]: T[K] };
 
 /**
  * Payload used to create a pub.
@@ -97,7 +97,7 @@ export type Client<T extends Manifest> = {
  */
 export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 	const client = initClient(api.integrations, {
-		baseUrl: manifest.url,
+		baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
 		baseHeaders: {},
 	});
 	return {

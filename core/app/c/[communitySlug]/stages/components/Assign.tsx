@@ -22,7 +22,7 @@ import {
 	StagePayloadMoveConstraintDestination,
 	User,
 } from "~/lib/types";
-import { assign } from "../lib/actions";
+import { assign } from "./lib/actions";
 
 type Props = {
 	pub: PubPayload;
@@ -34,7 +34,7 @@ type Props = {
 
 const getTitle = (pub: Props["pub"]) => {
 	const titleValue = pub.values.find((value) => {
-		return value.field.name === "Title";
+		return value.field.slug === "unjournal/title";
 	});
 	return titleValue?.value as string;
 };

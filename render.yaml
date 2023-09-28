@@ -3,6 +3,7 @@ services:
     # core
     - type: web
       name: core
+      region: ohio
       runtime: node
       rootDir: .
       buildCommand: ./bin/render-build.sh core
@@ -30,3 +31,23 @@ services:
                 type: redis
                 name: integration-instances
                 property: connectionString
+    # integration-evaluations
+    - type: web
+      name: integration-evaluations
+      region: ohio
+      runtime: node
+      rootDir: .
+      buildCommand: ./bin/render-build.sh integration-evaluations
+      startCommand: pnpm start --filter integration-evaluations
+      envVars:
+          - fromGroup: pubpub-integration-prod-env
+          - key: REDIS_CONNECTION_STRING
+            fromService:
+                type: redis
+                name: integration-instances
+                property: connectionString
+databases:
+    - name: core
+      plan: standard
+      postgresMajorVersion: 15
+      region: ohio

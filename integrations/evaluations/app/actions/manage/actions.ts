@@ -10,7 +10,6 @@ export const manage = async (
 	name: string
 ) => {
 	try {
-		const pub = await client.getPub(instanceId, pubId);
 		const info = await client.sendEmail(instanceId, {
 			to: {
 				name,

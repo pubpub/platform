@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import React, { Fragment } from "react";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui";
+import { cn } from "utils";
 import { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
-import { cn } from "utils";
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui";
+import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 
 type Props = {
@@ -30,7 +32,7 @@ const groupPubChildrenByPubType = (pubs: PubPayload["children"]) => {
 
 const getTitle = (pub: PubPayload["children"][number]) => {
 	const title = pub.values.find((value) => {
-		return value.field.name === "Title";
+		return value.field.slug === "unjournal/title";
 	});
 	return title?.value as string;
 };
@@ -59,7 +61,7 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 
 const PubRow: React.FC<Props> = function (props: Props) {
 	return (
-		<Row>
+		<Row className="mb-9">
 			<RowHeader>
 				<div className="flex flex-row justify-between items-center">
 					<div className="text-sm text-gray-500 font-semibold">
@@ -71,8 +73,12 @@ const PubRow: React.FC<Props> = function (props: Props) {
 					</div>
 				</div>
 			</RowHeader>
-			<RowContent className="items-stretch flex justify-between items-start">
-				<h3 className="text-md font-medium">{getTitle(props.pub)}</h3>
+			<RowContent className="flex justify-between items-start">
+				<h3 className="text-md font-medium">
+					<Link href={`pubs/${props.pub.id}`}>
+						<PubTitle pub={props.pub} />
+					</Link>
+				</h3>
 			</RowContent>
 			{props.pub.children.length > 0 && (
 				<RowFooter className="items-stretch flex justify-between">
