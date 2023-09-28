@@ -48,6 +48,6 @@ services:
                 property: connectionString
 databases:
     - name: core
-      plan: free
+      plan: standard
       postgresMajorVersion: 15
       region: ohio
