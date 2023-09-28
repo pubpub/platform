@@ -59,7 +59,37 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				type: "object",
 				properties: {
 					assessment: {
-						title: "Overall Assessment",
+						title: "Overall assessment",
+						type: "object",
+						properties: confidenceObject,
+					},
+					advancing: {
+						title: "Advancing knowledge and practice",
+						type: "object",
+						properties: confidenceObject,
+					},
+					methods: {
+						title: "Methods: Justification, reasonableness, validity, robustness",
+						type: "object",
+						properties: confidenceObject,
+					},
+					logic: {
+						title: "Logic & Communication",
+						type: "object",
+						properties: confidenceObject,
+					},
+					open: {
+						title: "Open, collaborative, replicable",
+						type: "object",
+						properties: confidenceObject,
+					},
+					real: {
+						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
+						type: "object",
+						properties: confidenceObject,
+					},
+					relevance: {
+						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
 						type: "object",
 						properties: confidenceObject,
 					},
@@ -88,10 +118,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 			{
 				id: fieldIds[10],
-				name: "Survey Questions",
-			},
-			{
-				id: fieldIds[11],
 				name: "Survey Questions",
 			},
 		],
@@ -745,6 +771,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				// This needs to be registered for emails to work, but we don't want it to show on each pub...hrm...
 				{
 					name: "evaluate",
+					text: "Evaluate Pub",
 					href: `${evaluationsIntegrationUrl}/actions/evaluate`,
 				},
 			],
