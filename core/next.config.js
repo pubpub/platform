@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const withPreconstruct = require("@preconstruct/next");
+const { withSentryConfig } = require("@sentry/nextjs");
 
-const nextConfig = {
+const nextConfig = withPreconstruct({
 	reactStrictMode: true,
 	images: {
 		remotePatterns: [
@@ -22,17 +23,10 @@ const nextConfig = {
 	experimental: {
 		serverActions: true,
 	},
-};
-
-module.exports = withPreconstruct(nextConfig);
-
-
-// Injected content via Sentry wizard below
-
-const { withSentryConfig } = require("@sentry/nextjs");
+});
 
 module.exports = withSentryConfig(
-  module.exports,
+  nextConfig,
   {
     // For all available options, see:
     // https://github.com/getsentry/sentry-webpack-plugin#options
@@ -53,7 +47,7 @@ module.exports = withSentryConfig(
     transpileClientSDK: true,
 
     // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
-    tunnelRoute: "/monitoring",
+    // tunnelRoute: "/monitoring",
 
     // Hides source maps from generated client bundles
     hideSourceMaps: true,
