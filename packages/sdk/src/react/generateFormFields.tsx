@@ -32,14 +32,14 @@ export const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
 	pubType.fields &&
 		pubType.fields.forEach((field) => {
 			if (!field.schema) {
-				schema.properties![field.name] = {
+				schema.properties![field.slug] = {
 					type: "string",
 					title: `${field.name}`,
-					$id: `urn:uuid:${field.id}`,
+					$id: `urn:uuid:${field.id}#${field.slug}`,
 					default: "",
 				};
 			} else {
-				schema.properties![field.name] = field.schema.schema;
+				schema.properties![field.slug] = field.schema.schema;
 			}
 		});
 	return schema;
@@ -66,17 +66,14 @@ export const buildFormFromSchema = (
 	schema: JSONSchemaType<pubpubSchema>,
 	form: UseFormReturn,
 	schemaIndex?: string,
-	title?: string
+	name?: string
 ) => {
 	const fields: any[] = [];
 	if (schema.properties) {
 		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
+			schemaIndex && console.log(key);
 			const combinedIndex = `${schemaIndex}-${fieldIndex}`;
-			const fieldTitle = schemaIndex
-				? title
-					? title + "." + key
-					: schema.title + "." + key
-				: undefined;
+			const fieldTitle = schemaIndex && name ? name + "." + key : key;
 			const fieldContent =
 				(fieldIndex || schemaIndex) && val.properties ? (
 					<CardContent key={key}>
@@ -92,7 +89,7 @@ export const buildFormFromSchema = (
 			fields.push(fieldContent);
 		});
 	} else {
-		const fieldTitle = title || schema.title;
+		const fieldTitle = name || schema.$id!.split("#")[1];
 		fields.push(
 			<CardContent
 				className={cn("flex flex-col column gap-4")}

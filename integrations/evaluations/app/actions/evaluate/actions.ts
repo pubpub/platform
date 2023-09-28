@@ -19,6 +19,8 @@ export const evaluate = async (
 			parentId: pubId,
 			values: values,
 		});
+		console.log(values);
+		return;
 		return pub;
 	} catch (error) {
 		return { error: error.message };

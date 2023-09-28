@@ -199,6 +199,7 @@ export const getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseB
 				select: {
 					id: true,
 					name: true,
+					slug: true,
 					schema: {
 						select: {
 							id: true,

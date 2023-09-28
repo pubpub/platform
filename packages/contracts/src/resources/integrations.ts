@@ -146,6 +146,7 @@ export const GetPubTypeResponseBody = z.object({
 			z.object({
 				id: z.string(),
 				name: z.string(),
+				slug: z.string(),
 				schema: z
 					.object({
 						id: z.string(),
