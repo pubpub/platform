@@ -3,6 +3,7 @@ services:
     # core
     - type: web
       name: core
+      region: ohio
       runtime: node
       rootDir: .
       buildCommand: ./bin/render-build.sh core
@@ -45,3 +46,8 @@ services:
                 type: redis
                 name: integration-instances
                 property: connectionString
+databases:
+    - name: core
+      plan: free
+      postgresMajorVersion: 15
+      region: ohio
