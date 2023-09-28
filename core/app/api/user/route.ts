@@ -7,19 +7,21 @@ import { getLoginId } from "lib/auth/loginId";
 import { BadRequestError, ForbiddenError, UnauthorizedError, handleErrors } from "~/lib/server";
 
 export type UserPostBody = {
-	name: string;
+	firstName: string;
+	lastName?: string;
 	email: string;
 	password: string;
 };
 
 export type UserPutBody = {
-	name: string;
+	firstName: string;
+	lastName: string;
 };
 
 export async function POST(req: NextRequest) {
 	return await handleErrors(async () => {
 		const submittedData: UserPostBody = await req.json();
-		const { name, email, password } = submittedData;
+		const { firstName, lastName, email, password } = submittedData;
 		const supabase = getServerSupabase();
 		const { data, error } = await supabase.auth.signUp({
 			email,
@@ -54,29 +56,32 @@ export async function POST(req: NextRequest) {
 		await prisma.user.create({
 			data: {
 				id: data.user.id,
-				slug: `${slugifyString(name)}-${generateHash(4, "0123456789")}`,
-				name,
+				slug: `${slugifyString(firstName)}${
+					lastName ? `-${slugifyString(lastName)}` : ""
+				}-${generateHash(4, "0123456789")}`,
+				firstName,
+				lastName: lastName || undefined,
 				email,
 			},
 		});
 
 		return NextResponse.json({}, { status: 201 });
-	})
+	});
 }
 
 export async function PUT(req: NextRequest) {
 	return await handleErrors(async () => {
 		const loginId = await getLoginId(req);
 		if (!loginId) {
-			throw new UnauthorizedError()
+			throw new UnauthorizedError();
 		}
 		const submittedData: UserPutBody = await req.json();
-		const { name } = submittedData;
+		const { firstName, lastName } = submittedData;
 		const currentData = await prisma.user.findUnique({
 			where: { id: loginId },
 		});
 		if (!currentData) {
-			throw new BadRequestError('Unable to find user')
+			throw new BadRequestError("Unable to find user");
 		}
 		const slugSuffix = getSlugSuffix(currentData.slug);
 		await prisma.user.update({
@@ -84,12 +89,13 @@ export async function PUT(req: NextRequest) {
 				id: loginId,
 			},
 			data: {
-				slug: `${slugifyString(name)}-${slugSuffix}`,
-				name,
+				slug: `${slugifyString(firstName)}-${slugSuffix}`,
+				firstName,
+				lastName,
 			},
 		});
 		return NextResponse.json({}, { status: 200 });
-	})
+	});
 }
 
 // Used to determine if an email is available when a user attempts to change theirs
@@ -97,25 +103,25 @@ export async function GET(req: NextRequest) {
 	return await handleErrors(async () => {
 		const loginId = await getLoginId(req);
 		if (!loginId) {
-			throw new UnauthorizedError()
+			throw new UnauthorizedError();
 		}
 
-		const email = req.nextUrl.searchParams.get('email')
+		const email = req.nextUrl.searchParams.get("email");
 
 		if (!email) {
-			throw new BadRequestError()
+			throw new BadRequestError();
 		}
 
 		const emailUsed = await prisma.user.findUnique({
 			where: {
-				email
-			}
-		})
+				email,
+			},
+		});
 
 		if (emailUsed) {
-			throw new ForbiddenError('Email already in use')
+			throw new ForbiddenError("Email already in use");
 		}
 
-		return NextResponse.json({message: "Email is available"}, { status: 200 })
-	})
+		return NextResponse.json({ message: "Email is available" }, { status: 200 });
+	});
 }

@@ -16,7 +16,7 @@ model User {
   slug      String   @unique
   email     String   @unique
   firstName String
-  lastName  String
+  lastName  String?
   orcid     String?
   avatar    String?
   createdAt DateTime @default(now()) @map(name: "created_at")

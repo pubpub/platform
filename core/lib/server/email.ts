@@ -7,7 +7,7 @@ import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
 
-type To = { email: string; firstName: string; lastName: string } | { userId: string };
+type To = { email: string; firstName: string; lastName?: string } | { userId: string };
 type Node = string | { t: string; val: string };
 
 const staticTokens = new Set([

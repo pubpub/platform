@@ -87,12 +87,23 @@ export type PubPayload = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
 export type User = {
 	id: string;
 	slug: string;
-	email: string;
-	name: string;
+	firstName: string;
+	lastName: string;
 	avatar: string | null;
 	createdAt: Date;
 	updatedAt: Date;
+	orcid: string | null;
+	email: string;
+	password: string;
 };
+
+export type UserPostBody = Pick<User, "firstName" | "lastName" | "email" | "password">;
+
+export type UserPutBody = Pick<User, "firstName" | "lastName">;
+
+export type UserLoginData = Omit<User, "password">;
+
+export type UserSettings = Pick<User, "firstName" | "lastName" | "email" | "slug">;
 
 export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof permissionInclude }>;
 

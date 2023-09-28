@@ -99,7 +99,7 @@ export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
 export const SuggestedMember = z.object({
 	id: z.string(),
 	firstName: z.string(),
-	lastName: z.string(),
+	lastName: z.string().nullable(),
 });
 export type SuggestedMember = z.infer<typeof SuggestedMember>;
 
@@ -110,7 +110,7 @@ export const User = z.object({
 	slug: z.string(),
 	email: z.string(),
 	firstName: z.string(),
-	lastName: z.string(),
+	lastName: z.string().nullable(),
 	avatar: z.string().nullable(),
 });
 export type User = z.infer<typeof User>;
@@ -125,7 +125,7 @@ export const SendEmailRequestBody = z.object({
 		z.object({
 			email: z.string(),
 			firstName: z.string(),
-			lastName: z.string(),
+			lastName: z.string().optional(),
 		}),
 	]),
 	subject: z.string(),
@@ -253,7 +253,7 @@ export const integrationsApi = contract.router(
 				.object({
 					email: z.string(),
 					firstName: z.string(),
-					lastName: z.string(),
+					lastName: z.string().optional(),
 				})
 				.partial()
 				.refine(
