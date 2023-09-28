@@ -7,7 +7,14 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const prisma = new PrismaClient();
 const supabase = new SupabaseClient(supabaseUrl!, supabaseKey!);
 
-async function createUserMembers(email, password, slug, name, prismaCommunityIds) {
+async function createUserMembers(
+	email: string,
+	password: string,
+	slug: string,
+	firstName: string,
+	lastName: string,
+	prismaCommunityIds: { communityId: string; canAdmin: boolean }[]
+) {
 	let user;
 	const { data, error } = await supabase.auth.admin.createUser({
 		email,
@@ -29,9 +36,10 @@ async function createUserMembers(email, password, slug, name, prismaCommunityIds
 	await prisma.user.create({
 		data: {
 			id: user ? user.id : undefined,
-			slug: slug,
+			slug,
 			email: user ? user.email : email,
-			name: name,
+			firstName,
+			lastName,
 			avatar: "/demo/person.png",
 			memberships: { createMany: { data: prismaCommunityIds } },
 		},
@@ -49,7 +57,8 @@ async function main() {
 			"all@pubpub.org",
 			"pubpub-all",
 			"all",
-			"Jill Admin",
+			"Jill",
+			"Admin",
 			prismaCommunityIds
 		);
 	} catch (error) {

@@ -92,17 +92,20 @@ export default function Assign(props: Props) {
 											height={20}
 										/>
 									</div>
-									<span>{user.name}</span>
+									<span>
+										{user.firstName} {user.lastName}
+									</span>
 								</Button>
 							</DialogTrigger>
 							<DialogContent>
 								<Card>
 									<CardTitle className="space-y-1.5 p-6">
-										Assign <i>{getTitle(props.pub)}</i> to {user.name}?
+										Assign <i>{getTitle(props.pub)}</i> to {user.firstName}{" "}
+										{user.lastName}?
 									</CardTitle>
 									<CardContent>
-										{user.name} will be notified that they have been assigned to
-										this Pub.
+										{user.firstName} {user.lastName} will be notified that they
+										have been assigned to this Pub.
 									</CardContent>
 									<CardFooter className="flex flex-row">
 										<Button

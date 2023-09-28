@@ -10,6 +10,7 @@ import {
 	SendEmailResponseBody,
 	User,
 	api,
+	SuggestedMember,
 } from "contracts";
 import { Manifest, ManifestJson } from "./manifest";
 
@@ -83,12 +84,26 @@ export type UpdateResponse<U extends UpdatePayload<Manifest>> = {
 	[K in keyof U]: unknown;
 };
 
+// TODO: compute this with a generic type alias
+export type SuggestedMembersQuery =
+	| { email: string }
+	| { email: string; firstName: string }
+	| { email: string; lastName: string }
+	| { email: string; firstName: string; lastName: string }
+	| { firstName: string }
+	| { lastName: string }
+	| { firstName: string; lastName: string };
+
 export type Client<T extends Manifest> = {
 	auth(instanceId: string, token: string): Promise<User>;
 	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
 	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
 	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
+	getSuggestedMembers(
+		instanceId: string,
+		query: SuggestedMembersQuery
+	): Promise<SuggestedMember[]>;
 	getPubType(instanceId: string, pubTypeId: string): Promise<GetPubTypeResponseBody>;
 };
 
@@ -191,6 +206,24 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new Error("Request failed", { cause });
 			}
 		},
+		async getSuggestedMembers(instanceId, query) {
+			try {
+				const response = await client.getSuggestedMembers({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					query,
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get suggested members", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
 		async getPubType(instanceId, pubTypeId) {
 			try {
 				const response = await client.getPubType({
@@ -203,7 +236,7 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				if (response.status === 200) {
 					return response.body;
 				}
-				throw new Error("Failed to get pub", { cause: response });
+				throw new Error("Failed to get pub type", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

@@ -176,7 +176,8 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			slug: faker.lorem.slug(),
 			email: faker.internet.email(),
-			name: faker.person.fullName(),
+			firstName: "David",
+			lastName: faker.person.lastName(),
 			avatar: faker.image.avatar(),
 		},
 	});
@@ -185,7 +186,8 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			slug: faker.lorem.slug(),
 			email: faker.internet.email(),
-			name: faker.person.fullName(),
+			firstName: faker.person.firstName(),
+			lastName: faker.person.lastName(),
 			avatar: faker.image.avatar(),
 		},
 	});

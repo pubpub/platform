@@ -72,9 +72,9 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const updatedPub = await updatePub(params.pubId, body);
 		return { status: 200, body: updatedPub };
 	},
-	getSuggestedMembers: async ({ headers, params }) => {
+	getSuggestedMembers: async ({ headers, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		const member = await getMembers(params.memberCandidateString);
+		const member = await getMembers(query.email, query.firstName, query.lastName);
 		return { status: 200, body: member };
 	},
 	auth: async ({ headers }) => {
