@@ -38,15 +38,7 @@ export function Evaluate(props: Props) {
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		resolver: async (data, context, options) => {
-			// you can debug your validation schema here
-			console.log("formData", data);
-			console.log(
-				"validation result",
-				await ajvResolver(generatedSchema)(data, context, options)
-			);
-			return ajvResolver(generatedSchema)(data, context, options);
-		},
+		resolver: ajvResolver(generatedSchema),
 		defaultValues: {},
 	});
 
