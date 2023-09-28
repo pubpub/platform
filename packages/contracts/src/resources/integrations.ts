@@ -96,11 +96,12 @@ export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
 
 // Member suggestion types
 
-export const SuggestedMembers = z.object({
+export const SuggestedMember = z.object({
 	id: z.string(),
-	name: z.string(),
+	firstName: z.string(),
+	lastName: z.string(),
 });
-export type SuggestedMembers = z.infer<typeof SuggestedMembers>;
+export type SuggestedMember = z.infer<typeof SuggestedMember>;
 
 // Auth types
 
@@ -108,7 +109,8 @@ export const User = z.object({
 	id: z.string(),
 	slug: z.string(),
 	email: z.string(),
-	name: z.string(),
+	firstName: z.string(),
+	lastName: z.string(),
 	avatar: z.string().nullable(),
 });
 export type User = z.infer<typeof User>;
@@ -122,7 +124,8 @@ export const SendEmailRequestBody = z.object({
 		}),
 		z.object({
 			email: z.string(),
-			name: z.string(),
+			firstName: z.string(),
+			lastName: z.string(),
 		}),
 	]),
 	subject: z.string(),
@@ -239,16 +242,27 @@ export const integrationsApi = contract.router(
 		},
 		getSuggestedMembers: {
 			method: "GET",
-			path: "/:instanceId/autosuggest/members/:memberCandidateString",
+			path: "/:instanceId/autosuggest/members",
 			summary: "autosuggest member",
 			description:
 				"A way to autosuggest members so that integrations users can find users or verify they exist. Will return a name for ",
 			pathParams: z.object({
-				memberCandidateString: z.string(),
 				instanceId: z.string(),
 			}),
+			query: z
+				.object({
+					email: z.string(),
+					firstName: z.string(),
+					lastName: z.string(),
+				})
+				.partial()
+				.refine(
+					({ email, firstName, lastName }) =>
+						email !== undefined || firstName !== undefined || lastName !== undefined,
+					{ message: "One of the fields must be defined" }
+				),
 			responses: {
-				200: z.array(SuggestedMembers),
+				200: z.array(SuggestedMember),
 			},
 		},
 		sendEmail: {

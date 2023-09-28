@@ -7,10 +7,16 @@ import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
 
-type To = { email: string; name: string } | { userId: string };
+type To = { email: string; firstName: string; lastName: string } | { userId: string };
 type Node = string | { t: string; val: string };
 
-const staticTokens = new Set(["user.token", "user.id", "user.name", "instance.id"]);
+const staticTokens = new Set([
+	"user.token",
+	"user.id",
+	"user.firstName",
+	"user.lastName",
+	"instance.id",
+]);
 const dynamicTokens = /^instance\.actions\.(\w+)$/;
 
 const plugin = {
@@ -83,7 +89,8 @@ const makeTemplateApi = (
 		instance: { id: instance.id, actions },
 		user: {
 			id: user.id,
-			name: user.name,
+			firstName: user.firstName,
+			lastName: user.lastName,
 			get token() {
 				return createToken(user.id);
 			},
@@ -127,7 +134,8 @@ export const emailUser = async (
 					data: {
 						email: to.email,
 						slug: slugifyString(to.email),
-						name: to.name,
+						firstName: to.firstName,
+						lastName: to.lastName,
 					},
 				});
 			} catch (cause) {

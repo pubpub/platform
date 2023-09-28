@@ -13,9 +13,9 @@ import { validateToken } from "~/lib/server/token";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 
 const checkAuthentication = (authHeader: string) => {
-	const apiKey = getBearerToken(authHeader)
+	const apiKey = getBearerToken(authHeader);
 	const serverKey = process.env.API_KEY!;
-	compareAPIKeys(serverKey, apiKey)
+	compareAPIKeys(serverKey, apiKey);
 };
 
 // TODO: verify pub belongs to integrationInstance probably in some middleware
@@ -41,9 +41,9 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const updatedPub = await updatePub(params.pubId, body);
 		return { status: 200, body: updatedPub };
 	},
-	getSuggestedMembers: async ({ headers, params }) => {
+	getSuggestedMembers: async ({ headers, query }) => {
 		checkAuthentication(headers.authorization);
-		const member = await getMembers(params.memberCandidateString);
+		const member = await getMembers(query.email, query.firstName, query.lastName);
 		return { status: 200, body: member };
 	},
 	auth: async ({ headers }) => {

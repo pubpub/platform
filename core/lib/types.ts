@@ -28,7 +28,8 @@ export const permissionInclude = {
 			user: {
 				select: {
 					id: true,
-					name: true,
+					firstName: true,
+					lastName: true,
 					avatar: true,
 					email: true,
 				},
@@ -40,7 +41,8 @@ export const permissionInclude = {
 			users: {
 				select: {
 					id: true,
-					name: true,
+					firstName: true,
+					lastName: true,
 					avatar: true,
 					email: true,
 				},
