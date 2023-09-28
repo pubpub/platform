@@ -17,12 +17,14 @@ import {
 	CardTitle,
 	CardHeader,
 	CardDescription,
-} from "ui/src";
+} from "ui";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
-interface pubpubSchema {}
+type pubpubSchema = {};
 
-export const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
+export const buildFormSchemaFromFields = (
+	pubType: GetPubTypeResponseBody
+): JSONSchemaType<pubpubSchema> => {
 	const schema: JSONSchemaType<pubpubSchema> = {
 		$id: `urn:uuid:${pubType.id}`,
 		title: `${pubType.name}`,
@@ -31,6 +33,7 @@ export const buildFormSchemaFromFields = (pubType: GetPubTypeResponseBody) => {
 	};
 	pubType.fields &&
 		pubType.fields.forEach((field) => {
+			// TODO: replace with actual schemas
 			if (!field.schema) {
 				schema.properties![field.slug] = {
 					type: "string",
@@ -68,12 +71,16 @@ export const buildFormFromSchema = (
 	schemaIndex?: string,
 	name?: string
 ) => {
-	const fields: any[] = [];
+	const fields: React.ReactNode[] = [];
+	console.log(schema);
 	if (schema.properties) {
 		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
-			schemaIndex && console.log(key);
+			// Create unique index for React keys
 			const combinedIndex = `${schemaIndex}-${fieldIndex}`;
+
+			// Set right name for form input for validation & API call
 			const fieldTitle = schemaIndex && name ? name + "." + key : key;
+
 			const fieldContent =
 				(fieldIndex || schemaIndex) && val.properties ? (
 					<CardContent key={key}>
