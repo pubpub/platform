@@ -45,7 +45,6 @@ export const buildFormSchemaFromFields = (
 				schema.properties![field.slug] = field.schema.schema;
 			}
 		});
-	console.log(schema);
 	return schema;
 };
 
@@ -74,7 +73,6 @@ export const buildFormFromSchema = (
 	name?: string
 ) => {
 	const fields: React.ReactNode[] = [];
-	console.log(schema);
 	if (schema.properties) {
 		// could be map or flatmap
 		Object.entries(schema.properties).forEach(([key, val]: [string, any], fieldIndex) => {
