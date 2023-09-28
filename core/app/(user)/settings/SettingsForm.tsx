@@ -5,21 +5,25 @@ import { UserPutBody } from "app/api/user/route";
 import { supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 import { getSlugSuffix, slugifyString } from "lib/string";
-type Props = {
-	name: string;
-	email: string;
-	slug: string;
-};
+import { UserSettings } from "~/lib/types";
 
-export default function SettingsForm({ name: initName, email: initEmail, slug }: Props) {
-	const [name, setName] = useState(initName);
+type Props = UserSettings;
+
+export default function SettingsForm({
+	firstName: initFirstName,
+	lastName: initLastName,
+	email: initEmail,
+	slug,
+}: Props) {
+	const [firstName, setFirstName] = useState(initFirstName);
+	const [lastName, setLastName] = useState(initLastName);
 	const [email, setEmail] = useState(initEmail);
 	const [isLoading, setIsLoading] = useState(false);
 	const [resetIsLoading, setResetIsLoading] = useState(false);
 	const [resetSuccess, setResetSuccess] = useState(false);
 	const emailChanged = initEmail !== email;
 	const router = useRouter();
-	const valuesChanged = emailChanged || name !== initName;
+	const valuesChanged = emailChanged || firstName !== initFirstName || lastName !== initLastName;
 	const slugSuffix = getSlugSuffix(slug);
 
 	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
@@ -27,7 +31,8 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 
 		setIsLoading(true);
 		const putBody: UserPutBody = {
-			name,
+			firstName,
+			lastName,
 		};
 		if (emailChanged) {
 			const { error } = await supabase.auth.updateUser({ email });
@@ -69,9 +74,21 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 			<div className="my-10">
 				<form onSubmit={handleSubmit}>
 					<label htmlFor="name">Name</label>
-					<input name="name" value={name} onChange={(evt) => setName(evt.target.value)} />
-					<div className="text-gray-500 text-sm leading-tight -mt-3">
-						Username: {slugifyString(name)}-{slugSuffix}
+					<div className="flex flex-row">
+						<input
+							name="name"
+							value={firstName}
+							onChange={(evt) => setFirstName(evt.target.value)}
+							className="mr-2"
+						/>
+						<input
+							name="name"
+							value={lastName}
+							onChange={(evt) => setLastName(evt.target.value)}
+						/>
+					</div>
+					<div className="text-gray-500 text-sm leading-tight mt-3">
+						Username: {slugifyString(firstName)}-{slugifyString(lastName)}-{slugSuffix}
 					</div>
 					<label htmlFor="email">Email</label>
 					<input
@@ -88,7 +105,7 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 					<Button
 						className="mt-4"
 						type="submit"
-						disabled={!valuesChanged || !name || !email}
+						disabled={!valuesChanged || !firstName || !lastName || !email}
 					>
 						Save Changes
 					</Button>

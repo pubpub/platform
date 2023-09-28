@@ -1,11 +1,11 @@
-import React from "react";
+import React, { use } from "react";
 import { Button } from "ui";
 import {
 	PermissionPayloadUser,
 	PubPayload,
 	StagePayload,
 	StagePayloadMoveConstraintDestination,
-	User,
+	UserLoginData,
 } from "~/lib/types";
 import Move from "./Move";
 import Assign from "./Assign";
@@ -15,7 +15,7 @@ type Props = {
 	pub: PubPayload;
 	stages: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
-	loginData: User;
+	loginData: UserLoginData;
 };
 
 export const StagePubActions = (props: Props) => {

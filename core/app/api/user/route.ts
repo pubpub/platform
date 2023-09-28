@@ -4,20 +4,11 @@ import prisma from "prisma/db";
 import { getServerSupabase } from "lib/supabaseServer";
 import { generateHash, getSlugSuffix, slugifyString } from "lib/string";
 import { getLoginId } from "lib/auth/loginId";
-
-export type UserPostBody = {
-	name: string;
-	email: string;
-	password: string;
-};
-
-export type UserPutBody = {
-	name: string;
-};
+import { UserPostBody, UserPutBody } from "~/lib/types";
 
 export async function POST(req: NextRequest) {
 	const submittedData: UserPostBody = await req.json();
-	const { name, email, password } = submittedData;
+	const { firstName, lastName, email, password } = submittedData;
 	const supabase = getServerSupabase();
 	const { data, error } = await supabase.auth.signUp({
 		email,
@@ -52,9 +43,10 @@ export async function POST(req: NextRequest) {
 	await prisma.user.create({
 		data: {
 			id: data.user.id,
-			slug: `${slugifyString(name)}-${generateHash(4, "0123456789")}`,
-			name,
+			slug: `${slugifyString(firstName)}-${generateHash(4, "0123456789")}`,
 			email,
+			firstName,
+			lastName,
 		},
 	});
 
@@ -67,7 +59,7 @@ export async function PUT(req: NextRequest) {
 		return NextResponse.json({ ok: false }, { status: 401 });
 	}
 	const submittedData: UserPutBody = await req.json();
-	const { name } = submittedData;
+	const { firstName, lastName } = submittedData;
 	const currentData = await prisma.user.findUnique({
 		where: { id: loginId },
 	});
@@ -80,8 +72,9 @@ export async function PUT(req: NextRequest) {
 			id: loginId,
 		},
 		data: {
-			slug: `${slugifyString(name)}-${slugSuffix}`,
-			name,
+			slug: `${slugifyString(firstName)}-${slugSuffix}`,
+			firstName,
+			lastName,
 		},
 	});
 	return NextResponse.json({ ok: true }, { status: 200 });
