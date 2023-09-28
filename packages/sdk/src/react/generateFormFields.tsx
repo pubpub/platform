@@ -38,13 +38,14 @@ export const buildFormSchemaFromFields = (
 				schema.properties![field.slug] = {
 					type: "string",
 					title: `${field.name}`,
-					$id: `urn:uuid:${field.id}#${field.slug}`,
+					$id: `urn:uuid:${field.id}`,
 					default: "",
 				};
 			} else {
 				schema.properties![field.slug] = field.schema.schema;
 			}
 		});
+	console.log(schema);
 	return schema;
 };
 
@@ -83,6 +84,7 @@ export const buildFormFromSchema = (
 			// Set right name for form input for validation & API call
 			const fieldTitle = schemaIndex && name ? name + "." + key : key;
 
+			// If this isn't the top level and there are sub-properties, make a new card and recurse!
 			const fieldContent =
 				(fieldIndex || schemaIndex) && val.properties ? (
 					<CardContent key={key}>
@@ -102,7 +104,7 @@ export const buildFormFromSchema = (
 		fields.push(
 			<CardContent
 				className={cn("flex flex-col column gap-4")}
-				key={schema["$id"] || fieldTitle + schemaIndex}
+				key={schema["$id"] || schemaIndex}
 			>
 				<FormField
 					control={form.control}

@@ -102,25 +102,25 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	await prisma.pubField.createMany({
 		data: [
-			{ id: fieldIds[0], name: "Title", slug: "unjournal/title" },
-			{ id: fieldIds[1], name: "Description", slug: "unjournal/description" },
-			{ id: fieldIds[2], name: "Manager's Notes", slug: "unjournal/managers-notes" },
-			{ id: fieldIds[3], name: "Anonymity", slug: "unjournal/anonymity" },
-			{ id: fieldIds[4], name: "Metrics", slug: "unjournal/metrics" },
-			{ id: fieldIds[5], name: "Content", slug: "unjournal/content" },
-			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal/evaluated-paper" },
-			{ id: fieldIds[7], name: "Tags", slug: "unjournal/tags" },
-			{ id: fieldIds[8], name: "DOI", slug: "unjournal/doi" },
+			{ id: fieldIds[0], name: "Title", slug: "unjournal:title" },
+			{ id: fieldIds[1], name: "Description", slug: "unjournal:description" },
+			{ id: fieldIds[2], name: "Manager's Notes", slug: "unjournal:managers-notes" },
+			{ id: fieldIds[3], name: "Anonymity", slug: "unjournal:anonymity" },
+			{ id: fieldIds[4], name: "Metrics", slug: "unjournal:metrics" },
+			{ id: fieldIds[5], name: "Content", slug: "unjournal:content" },
+			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal:evaluated-paper" },
+			{ id: fieldIds[7], name: "Tags", slug: "unjournal:tags" },
+			{ id: fieldIds[8], name: "DOI", slug: "unjournal:doi" },
 			{
 				id: fieldIds[9],
 				name: "Metrics and Predictions",
 				pubFieldSchemaId: metricsSchema.id,
-				slug: "unjournal/metrics-predictions",
+				slug: "unjournal:metrics-predictions",
 			},
 			{
 				id: fieldIds[10],
 				name: "Survey Questions",
-				slug: "survey-questions",
+				slug: "unjournal:survey-questions",
 			},
 		],
 	});
