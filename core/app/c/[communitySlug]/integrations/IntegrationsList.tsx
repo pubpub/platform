@@ -9,7 +9,7 @@ type Props = { instances: NonNullable<IntegrationData>; token: string };
 
 const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
 	const titleValue = pub.values.find((value) => {
-		return value.field.slug === "unjournal/title";
+		return value.field.slug === "unjournal:title";
 	});
 	return titleValue?.value as string;
 };

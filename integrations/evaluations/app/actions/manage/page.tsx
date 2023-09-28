@@ -15,7 +15,8 @@ export default async function Page(props: Props) {
 	return (
 		<div>
 			<p>
-				"{pub.values['unjournal/title'] as string}" has been evaluated {pub.children.length} times:
+				"{pub.values["unjournal:title"] as string}" has been evaluated {pub.children.length}{" "}
+				times:
 			</p>
 			<ul>
 				{pub.children.map((child) => (
