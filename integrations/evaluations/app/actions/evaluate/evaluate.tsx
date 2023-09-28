@@ -38,6 +38,7 @@ export function Evaluate(props: Props) {
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
+		// debug instructions: https://react-hook-form.com/docs/useform#resolver
 		resolver: ajvResolver(generatedSchema),
 		defaultValues: {},
 	});
