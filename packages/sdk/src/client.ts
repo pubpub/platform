@@ -105,6 +105,10 @@ export type Client<T extends Manifest> = {
 		query: SuggestedMembersQuery
 	): Promise<SuggestedMember[]>;
 	getPubType(instanceId: string, pubTypeId: string): Promise<GetPubTypeResponseBody>;
+	getSuggestedMembers(
+		instanceId: string,
+		query: SuggestedMembersQuery
+	): Promise<SuggestedMember[]>;
 };
 
 /**
@@ -237,6 +241,23 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to get pub type", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async getSuggestedMembers(instanceId, query) {
+			try {
+				const response = await client.getSuggestedMembers({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					query,
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get suggested members", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}
