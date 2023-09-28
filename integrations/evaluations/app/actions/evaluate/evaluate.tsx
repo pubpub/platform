@@ -45,7 +45,7 @@ export function Evaluate(props: Props) {
 	const [persistedValues, persist] = useLocalStorage<any>(props.instanceId);
 
 	const onSubmit = async (values) => {
-		values.Title = `Evaluation of "${pub.values["unjournal/title"]}"`;
+		values["unjournal/title"] = `Evaluation of "${pub.values["unjournal/title"]}"`;
 		const result = await evaluate(props.instanceId, pub.id, values);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
