@@ -9,7 +9,8 @@ export const manage = async (
 	pubTitle: string,
 	email: string,
 	firstName: string,
-	lastName: string
+	lastName: string,
+	emailTemplate: string
 ) => {
 	try {
 		const info = await client.scheduleEmail(
