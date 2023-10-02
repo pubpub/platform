@@ -84,18 +84,34 @@ model Pub {
 }
 
 model PubField {
-  id            String       @id @default(uuid())
-  name          String
-  slug          String       @unique
-  integration   Integration? @relation(fields: [integrationId], references: [id])
-  integrationId String?      @map(name: "integration_id")
-  createdAt     DateTime     @default(now()) @map(name: "created_at")
-  updatedAt     DateTime     @default(now()) @updatedAt @map(name: "updated_at")
+  id               String          @id @default(uuid())
+  name             String
+  slug             String          @unique
+  integration      Integration?    @relation(fields: [integrationId], references: [id])
+  integrationId    String?         @map(name: "integration_id")
+  createdAt        DateTime        @default(now()) @map(name: "created_at")
+  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updated_at")
+  schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
+  pubFieldSchemaId String?
 
   values   PubValue[]
   pubTypes PubType[]
 
   @@map(name: "pub_fields")
+}
+
+model PubFieldSchema {
+  id        String   @id @default(uuid())
+  namespace String
+  name      String
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  // This must be a dereferenced JSONSchema. We should find a way to validate.
+  schema    Json
+  PubFields PubField[]
+
+  @@unique([name, namespace], name: "schema_identifier")
 }
 
 model PubValue {

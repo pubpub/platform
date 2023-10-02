@@ -4,3 +4,4 @@ export * from "./PubPubLogo";
 export * from "./IntegrationContext";
 export * from "./IntegrationProvider";
 export * from "./Integration";
+export * from "./generateFormFields";

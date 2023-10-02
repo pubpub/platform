@@ -1,8 +1,9 @@
-import { initClient } from "@ts-rest/core";
+import { GetFieldType, initClient } from "@ts-rest/core";
 import {
 	CreatePubRequestBody,
 	CreatePubResponseBody,
 	GetPubResponseBody,
+	GetPubTypeResponseBody,
 	UpdatePubRequestBody,
 	UpdatePubResponseBody,
 	SendEmailRequestBody,
@@ -88,6 +89,7 @@ export type Client<T extends Manifest> = {
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
 	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
 	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
+	getPubType(instanceId: string, pubTypeId: string): Promise<GetPubTypeResponseBody>;
 };
 
 /**
@@ -185,6 +187,23 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to send email", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async getPubType(instanceId, pubTypeId) {
+			try {
+				const response = await client.getPubType({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId, pubTypeId },
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get pub", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

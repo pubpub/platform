@@ -10,6 +10,7 @@ import {
 	getMembers,
 	getPub,
 	updatePub,
+	getPubType,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { validateToken } from "~/lib/server/token";
@@ -85,6 +86,11 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		checkApiKey(getBearerToken(headers.authorization));
 		const info = await emailUser(body.to, body.subject, body.message, params.instanceId);
 		return { status: 200, body: info };
+	},
+	getPubType: async ({ headers, params }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		const pub = await getPubType(params.pubTypeId);
+		return { status: 200, body: pub };
 	},
 });
 

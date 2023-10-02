@@ -12,19 +12,116 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(9)].map(() => uuidv4());
+	const confidenceObject = {
+		rating: {
+			title: "Rating",
+			type: "number",
+			minimum: 0,
+			maximum: 100,
+			default: 0,
+		},
+		confidence: {
+			title: "90% Confidence Interval",
+			description: "E.g. for a 50 rating, you might give a CI of 42, 61",
+			type: "object",
+			properties: {
+				low: {
+					title: "Low",
+					type: "number",
+					minimum: 0,
+					maximum: 100,
+					default: 0,
+				},
+				high: {
+					title: "High",
+					type: "number",
+					minimum: 0,
+					maximum: 100,
+					default: 0,
+				},
+				comments: {
+					title: "Additional Comments",
+					type: "string",
+					minLength: 0,
+				},
+			},
+		},
+	};
+
+	const metricsSchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "metrics",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:metrics",
+				title: "Metrics and Predictions",
+				description: "Responses will be public. See here for details on the categories.",
+				type: "object",
+				properties: {
+					assessment: {
+						title: "Overall assessment",
+						type: "object",
+						properties: confidenceObject,
+					},
+					advancing: {
+						title: "Advancing knowledge and practice",
+						type: "object",
+						properties: confidenceObject,
+					},
+					methods: {
+						title: "Methods: Justification, reasonableness, validity, robustness",
+						type: "object",
+						properties: confidenceObject,
+					},
+					logic: {
+						title: "Logic & Communication",
+						type: "object",
+						properties: confidenceObject,
+					},
+					open: {
+						title: "Open, collaborative, replicable",
+						type: "object",
+						properties: confidenceObject,
+					},
+					real: {
+						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
+						type: "object",
+						properties: confidenceObject,
+					},
+					relevance: {
+						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
+						type: "object",
+						properties: confidenceObject,
+					},
+				},
+			},
+		},
+	});
+
+	const fieldIds = [...Array(12)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
 		data: [
-			{ id: fieldIds[0], name: "Title", slug: "unjournal/title" },
-			{ id: fieldIds[1], name: "Description", slug: "unjournal/description" },
-			{ id: fieldIds[2], name: "Manager's Notes", slug: "unjournal/managers-notes" },
-			{ id: fieldIds[3], name: "Parent", slug: "unjournal/parent" },
-			{ id: fieldIds[4], name: "Children", slug: "unjournal/children" },
-			{ id: fieldIds[5], name: "Content", slug: "unjournal/content" },
-			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal/evaluated-paper" },
-			{ id: fieldIds[7], name: "Tags", slug: "unjournal/tags" },
-			{ id: fieldIds[8], name: "DOI", slug: "unjournal/doi" },
+			{ id: fieldIds[0], name: "Title", slug: "unjournal:title" },
+			{ id: fieldIds[1], name: "Description", slug: "unjournal:description" },
+			{ id: fieldIds[2], name: "Manager's Notes", slug: "unjournal:managers-notes" },
+			{ id: fieldIds[3], name: "Anonymity", slug: "unjournal:anonymity" },
+			{ id: fieldIds[4], name: "Metrics", slug: "unjournal:metrics" },
+			{ id: fieldIds[5], name: "Content", slug: "unjournal:content" },
+			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal:evaluated-paper" },
+			{ id: fieldIds[7], name: "Tags", slug: "unjournal:tags" },
+			{ id: fieldIds[8], name: "DOI", slug: "unjournal:doi" },
+			{
+				id: fieldIds[9],
+				name: "Metrics and Predictions",
+				pubFieldSchemaId: metricsSchema.id,
+				slug: "unjournal:metrics-predictions",
+			},
+			{
+				id: fieldIds[10],
+				name: "Survey Questions",
+				slug: "unjournal:survey-questions",
+			},
 		],
 	});
 
@@ -46,12 +143,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Evaluation Summary",
 			communityId: communityUUID,
 			fields: {
-				connect: [
-					{ id: fieldIds[0] },
-					{ id: fieldIds[1] },
-					{ id: fieldIds[2] },
-					{ id: fieldIds[3] },
-				],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[2] }],
 			},
 		},
 	});
@@ -63,7 +155,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Author Response",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }],
 			},
 		},
 	});
@@ -75,7 +167,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Evaluation",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[3] }],
+				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[9] }],
 			},
 		},
 	});

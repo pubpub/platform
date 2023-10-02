@@ -1,5 +1,6 @@
 import { client } from "~/lib/pubpub";
 import { Evaluate } from "./evaluate";
+import { findInstance } from "~/lib/instance";
 
 type Props = {
 	searchParams: {
@@ -12,5 +13,8 @@ export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
 	const pub = await client.getPub(instanceId, pubId);
 
-	return <Evaluate instanceId={instanceId} pub={pub} />;
+	const instance = await findInstance(instanceId);
+	//dangerously assert instance exists
+	const pubType = await client.getPubType(instanceId, instance!.pubTypeId);
+	return <Evaluate instanceId={instanceId} pub={pub} pubType={pubType} />;
 }

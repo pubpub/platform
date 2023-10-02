@@ -1,7 +1,8 @@
 "use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { ajvResolver } from "@hookform/resolvers/ajv";
+import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
+import { buildFormFieldsFromSchema, buildFormSchemaFromFields } from "@pubpub/sdk/react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import {
 	Button,
@@ -12,52 +13,38 @@ import {
 	CardHeader,
 	CardTitle,
 	Form,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
 	Icon,
-	Textarea,
 	useLocalStorage,
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import * as z from "zod";
 import { evaluate } from "./actions";
-import { GetPubResponseBody } from "@pubpub/sdk";
 
 type Props = {
 	instanceId: string;
 	pub: GetPubResponseBody;
+	pubType: GetPubTypeResponseBody;
 };
 
-// TODO: generate fields using instance's configured PubType
-const schema = z.object({
-	description: z.string().min(1, "Description is required"),
-});
-
 export function Evaluate(props: Props) {
-	const { pub } = props;
+	const { pub, pubType } = props;
 	const { toast } = useToast();
-	const form = useForm<z.infer<typeof schema>>({
+
+	const generatedSchema = buildFormSchemaFromFields(pubType);
+
+	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		resolver: zodResolver(schema),
-		defaultValues: {
-			description: "",
-		},
+		// debug instructions: https://react-hook-form.com/docs/useform#resolver
+		resolver: ajvResolver(generatedSchema),
+		defaultValues: {},
 	});
-	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
-	const onSubmit = async (values: z.infer<typeof schema>) => {
-		const result = await evaluate(
-			props.instanceId,
-			pub.id,
-			pub.values['unjournal/title'] as string,
-			values.description
-		);
+	const [persistedValues, persist] = useLocalStorage<PubValues>(props.instanceId);
+
+	const onSubmit = async (values: PubValues) => {
+		values["unjournal:title"] = `Evaluation of "${pub.values["unjournal:title"]}"`;
+		const result = await evaluate(props.instanceId, pub.id, values);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
@@ -83,32 +70,20 @@ export function Evaluate(props: Props) {
 		persist(values);
 	}, [values]);
 
+	const formFieldsFromSchema = useMemo(
+		() => buildFormFieldsFromSchema(generatedSchema, form.control),
+		[form.control]
+	);
+
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card>
 					<CardHeader>
-						<CardTitle>{pub.values['unjournal/title'] as string}</CardTitle>
-						<CardDescription>Submit Your Evaluation</CardDescription>
+						<CardTitle>{pubType.name}</CardTitle>
+						<CardDescription>{pubType.description}</CardDescription>
 					</CardHeader>
-					<CardContent className={cn("flex flex-col column gap-4")}>
-						<FormField
-							control={form.control}
-							name="description"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Evaluation</FormLabel>
-									<FormControl>
-										<Textarea {...field} />
-									</FormControl>
-									<FormDescription>
-										The description of the work being submitted.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</CardContent>
+					<CardContent>{formFieldsFromSchema}</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
 						<Button
 							variant="outline"
