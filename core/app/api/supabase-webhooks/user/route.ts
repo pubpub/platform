@@ -14,12 +14,12 @@ export async function POST(req: NextRequest) {
     compareAPIKeys(getBearerToken(authHeader), serverKey)
 
     const body = await req.json();
-    if (!body.record || !body.oldRecord) {
+    if (!body.record || !body.old_record) {
         console.log("unexpected webhook payload:", body)
         return NextResponse.json({ error: "Unexpected webhook payload" }, { status: 400 });
     }
 
-    if (body.record.email !== body.oldRecord.email) {
+    if (body.record.email !== body.old_record.email) {
         await prisma.user.update({
             where: {
                 id: body.record.id
