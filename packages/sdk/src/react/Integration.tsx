@@ -8,7 +8,7 @@ export type IntegrationProps = IntegrationProviderProps;
 export const Integration = (props: IntegrationProps) => {
 	const { children, ...options } = props;
 	return (
-		<LocalStorageProvider prefix={`pubpub-integration/${options.name}/`} timeout={1000}>
+		<LocalStorageProvider prefix={`pubpub-integration/${options.name}/`} timeout={200}>
 			<IntegrationProvider {...options}>
 				<IntegrationLayout>{children}</IntegrationLayout>
 			</IntegrationProvider>

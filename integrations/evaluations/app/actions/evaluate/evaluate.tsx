@@ -1,27 +1,24 @@
 "use client";
 import { ajvResolver } from "@hookform/resolvers/ajv";
-import { useEffect } from "react";
+import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
+import { buildFormFieldsFromSchema, buildFormSchemaFromFields } from "@pubpub/sdk/react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import {
 	Button,
 	Card,
+	CardContent,
 	CardDescription,
-	CardHeader,
 	CardFooter,
+	CardHeader,
+	CardTitle,
 	Form,
 	Icon,
-	Input,
 	useLocalStorage,
 	useToast,
-	CardContent,
-	CardTitle,
 } from "ui";
 import { cn } from "utils";
-import * as z from "zod";
 import { evaluate } from "./actions";
-import { GetPubResponseBody, GetPubTypeResponseBody } from "@pubpub/sdk";
-import { JSONSchemaType } from "ajv";
-import { buildFormFromSchema, buildFormSchemaFromFields } from "@pubpub/sdk/react";
 
 type Props = {
 	instanceId: string;
@@ -43,10 +40,9 @@ export function Evaluate(props: Props) {
 		defaultValues: {},
 	});
 
-	// need to fix any here
-	const [persistedValues, persist] = useLocalStorage<any>(props.instanceId);
+	const [persistedValues, persist] = useLocalStorage<PubValues>(props.instanceId);
 
-	const onSubmit = async (values) => {
+	const onSubmit = async (values: PubValues) => {
 		values["unjournal:title"] = `Evaluation of "${pub.values["unjournal:title"]}"`;
 		const result = await evaluate(props.instanceId, pub.id, values);
 		if ("error" in result && typeof result.error === "string") {
@@ -74,7 +70,10 @@ export function Evaluate(props: Props) {
 		persist(values);
 	}, [values]);
 
-	const GeneratedFormFields = buildFormFromSchema(generatedSchema, form);
+	const formFieldsFromSchema = useMemo(
+		() => buildFormFieldsFromSchema(generatedSchema, form.control),
+		[form.control]
+	);
 
 	return (
 		<Form {...form}>
@@ -84,7 +83,7 @@ export function Evaluate(props: Props) {
 						<CardTitle>{pubType.name}</CardTitle>
 						<CardDescription>{pubType.description}</CardDescription>
 					</CardHeader>
-					<CardContent>{GeneratedFormFields}</CardContent>
+					<CardContent>{formFieldsFromSchema}</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
 						<Button
 							variant="outline"

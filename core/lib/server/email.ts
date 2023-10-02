@@ -70,7 +70,6 @@ const makeTemplateApi = (
 	);
 	const actions = new Proxy(actionUrls, {
 		get(target, prop) {
-			console.log(target, prop);
 			if (typeof prop !== "string") {
 				throw new BadRequestError("Invalid token");
 			}
