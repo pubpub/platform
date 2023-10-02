@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
-import { useEffect, useTransition } from "react";
+import React, { useEffect, useTransition } from "react";
 import { Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
 	Button,
@@ -168,6 +168,8 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 
 export function EmailForm(props: Props) {
 	const { toast } = useToast();
+	const [open, setOpen] = React.useState(false);
+
 	const [suggestPending, startTransition] = useTransition();
 	let template: string = "";
 	if (typeof window !== "undefined") {
@@ -312,9 +314,13 @@ export function EmailForm(props: Props) {
 							>
 								Go Back
 							</Button>
-							<Dialog>
+							<Dialog open={open}>
 								<DialogTrigger>
-									<Button variant="outline" className="ml-4">
+									<Button
+										variant="outline"
+										className="ml-4"
+										onClick={() => setOpen(true)}
+									>
 										Edit Template
 									</Button>
 								</DialogTrigger>
@@ -357,8 +363,13 @@ export function EmailForm(props: Props) {
 											</CardContent>
 										</CardContent>
 										<CardFooter className="flex flex-row">
-											<Button variant="default">Save</Button>
-											<Button variant="ghost">Cancel</Button>
+											<Button className="mr-3">Save</Button>
+											<Button
+												variant="secondary"
+												onClick={() => setOpen(false)}
+											>
+												Cancel
+											</Button>
 										</CardFooter>
 									</Card>
 								</DialogContent>
