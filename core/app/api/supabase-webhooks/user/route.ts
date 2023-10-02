@@ -9,13 +9,14 @@ export async function POST(req: NextRequest) {
     const serverKey = process.env.SUPABASE_WEBHOOKS_API_KEY!
     const authHeader = req.headers.get('authorization')
     if (!authHeader) {
-        return NextResponse.json({ ok: false }, { status: 401 })
+        return NextResponse.json({ error: "Authorization header missing" }, { status: 401 })
     }
     compareAPIKeys(getBearerToken(authHeader), serverKey)
 
     const body = await req.json();
     if (!body.record || !body.oldRecord) {
-        return NextResponse.json({ ok: false }, { status: 400 });
+        console.log("unexpected webhook payload:", body)
+        return NextResponse.json({ error: "Unexpected webhook payload" }, { status: 400 });
     }
 
     if (body.record.email !== body.oldRecord.email) {
@@ -27,6 +28,8 @@ export async function POST(req: NextRequest) {
                 email: body.record.email
             }
         });
+        return NextResponse.json({ message: `User ${body.record.id} updated email to ${body.record.email}`}, { status: 200 });
     }
-    return NextResponse.json({ ok: true }, { status: 200 });
+
+    return NextResponse.json({}, { status: 200 });
 }
