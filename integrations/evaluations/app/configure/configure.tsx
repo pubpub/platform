@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
@@ -43,7 +42,9 @@ export function Configure(props: Props) {
 	if (typeof window !== "undefined") {
 		template = window.localStorage.getItem("emailTemplate") ?? "";
 	}
-	console.log("Template", template);
+	const saveToLocalStorage = (template: string) => {
+		window.localStorage.setItem("emailTemplate", template);
+	};
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
@@ -52,10 +53,6 @@ export function Configure(props: Props) {
 			emailTemplate: template ?? "Enter email template here",
 		},
 	});
-
-	const saveToLocalStorage = (template: string) => {
-		window.localStorage.setItem("emailTemplate", template);
-	};
 
 	async function onSubmit(values: z.infer<typeof schema>) {
 		const result = await configure(values.instanceId, values.pubTypeId);

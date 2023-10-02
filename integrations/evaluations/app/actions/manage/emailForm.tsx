@@ -169,6 +169,10 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 export function EmailForm(props: Props) {
 	const { toast } = useToast();
 	const [suggestPending, startTransition] = useTransition();
+	let template: string = "";
+	if (typeof window !== "undefined") {
+		template = window.localStorage.getItem("emailTemplate") ?? "";
+	}
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
@@ -181,7 +185,7 @@ export function EmailForm(props: Props) {
 		// 	],
 		// },
 		defaultValues: {
-			emailTemplate: props.emailTemplate,
+			emailTemplate: template ?? "No default template found, Feel free to edit this text",
 		},
 	});
 	const {
@@ -310,13 +314,7 @@ export function EmailForm(props: Props) {
 							</Button>
 							<Dialog>
 								<DialogTrigger>
-									<Button
-										variant="outline"
-										onClick={() => {
-											console.log("big body benz member i used to be dusty");
-										}}
-										className="ml-4"
-									>
+									<Button variant="outline" className="ml-4">
 										Edit Template
 									</Button>
 								</DialogTrigger>
