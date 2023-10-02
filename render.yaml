@@ -7,7 +7,8 @@ services:
       runtime: node
       rootDir: .
       buildCommand: ./bin/render-build.sh core
-      startCommand: pnpm start --filter core
+      startCommand: pnpm --filter core start
+      preDeployCommand: pnpm --filter core migrate-deploy
       envVars:
           - fromGroup: pubpub-core-prod-env
     # integration-instances
