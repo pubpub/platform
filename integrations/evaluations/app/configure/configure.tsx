@@ -1,5 +1,5 @@
 "use client";
-
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
@@ -29,7 +29,6 @@ import { configure } from "./actions";
 type Props = {
 	instanceId: string;
 	pubTypeId?: string;
-	emailTemplate: string;
 };
 
 const schema = z.object({
@@ -40,14 +39,23 @@ const schema = z.object({
 
 export function Configure(props: Props) {
 	const { toast } = useToast();
+	let template: string = "";
+	if (typeof window !== "undefined") {
+		template = window.localStorage.getItem("emailTemplate") ?? "";
+	}
+	console.log("Template", template);
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			pubTypeId: props.pubTypeId ?? "",
 			instanceId: props.instanceId,
-			emailTemplate: props.emailTemplate,
+			emailTemplate: template ?? "Enter email template here",
 		},
 	});
+
+	const saveToLocalStorage = (template: string) => {
+		window.localStorage.setItem("emailTemplate", template);
+	};
 
 	async function onSubmit(values: z.infer<typeof schema>) {
 		const result = await configure(values.instanceId, values.pubTypeId);
@@ -122,6 +130,15 @@ export function Configure(props: Props) {
 								</FormItem>
 							)}
 						/>
+
+						<Button
+							onClick={(e) => {
+								e.preventDefault();
+								saveToLocalStorage(form.getValues().emailTemplate);
+							}}
+						>
+							Save Template
+						</Button>
 					</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
 						<Button
