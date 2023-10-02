@@ -20,6 +20,7 @@ import {
 	CardContent,
 	CardTitle,
 	CardDescription,
+	Textarea,
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
@@ -28,11 +29,13 @@ import { configure } from "./actions";
 type Props = {
 	instanceId: string;
 	pubTypeId?: string;
+	emailTemplate: string;
 };
 
 const schema = z.object({
 	pubTypeId: z.string().length(36),
 	instanceId: z.string(),
+	emailTemplate: z.string(),
 });
 
 export function Configure(props: Props) {
@@ -42,6 +45,7 @@ export function Configure(props: Props) {
 		defaultValues: {
 			pubTypeId: props.pubTypeId ?? "",
 			instanceId: props.instanceId,
+			emailTemplate: props.emailTemplate,
 		},
 	});
 
@@ -87,6 +91,35 @@ export function Configure(props: Props) {
 										evaluation form.
 									</FormDescription>
 									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</CardContent>
+					<CardContent>
+						<FormField
+							control={form.control}
+							name="emailTemplate"
+							render={({ field }) => (
+								<FormItem>
+									<div
+										style={{
+											display: "flex",
+											flexDirection: "column",
+											alignItems: "baseline",
+											justifyContent: "space-between",
+										}}
+									>
+										<FormLabel>Email Template</FormLabel>
+										<FormControl className="mt-[8px]">
+											{/* <Input {...field} /> */}
+											<Textarea {...field} required />
+										</FormControl>
+										<FormDescription>
+											The email template is what is sent to a user when they
+											are invited to evaluate
+										</FormDescription>
+										<FormMessage />
+									</div>
 								</FormItem>
 							)}
 						/>

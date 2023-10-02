@@ -289,15 +289,27 @@ export function EmailForm(props: Props) {
 						</Button>
 					</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
-						<Button
-							variant="outline"
-							onClick={(e) => {
-								e.preventDefault();
-								window.history.back();
-							}}
-						>
-							Go Back
-						</Button>
+						<div className={cn("justify-items-start")}>
+							<Button
+								variant="outline"
+								onClick={(e) => {
+									e.preventDefault();
+									window.history.back();
+								}}
+							>
+								Go Back
+							</Button>
+							<Button
+								variant="outline"
+								onClick={() => {
+									console.log("big body benz member i used to be dusty");
+								}}
+								className="ml-4"
+							>
+								Edit Template
+							</Button>
+						</div>
+
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
 								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />

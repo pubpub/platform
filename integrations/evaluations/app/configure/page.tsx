@@ -10,5 +10,12 @@ type Props = {
 export default async function Page(props: Props) {
 	const { instanceId } = props.searchParams;
 	const instance = await findInstance(instanceId);
-	return <Configure instanceId={instanceId} pubTypeId={instance?.pubTypeId} />;
+	const emailTemplate = "Hello i dont know where this is comming from, probs his file disk";
+	return (
+		<Configure
+			instanceId={instanceId}
+			pubTypeId={instance?.pubTypeId}
+			emailTemplate={emailTemplate}
+		/>
+	);
 }
