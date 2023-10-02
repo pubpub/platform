@@ -4,6 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
 	Button,
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
 	Form,
 	FormControl,
 	FormDescription,
@@ -13,14 +19,8 @@ import {
 	FormMessage,
 	Icon,
 	Input,
-	useToast,
-	Card,
-	CardHeader,
-	CardFooter,
-	CardContent,
-	CardTitle,
-	CardDescription,
 	Textarea,
+	useToast,
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
@@ -111,7 +111,6 @@ export function Configure(props: Props) {
 									>
 										<FormLabel>Email Template</FormLabel>
 										<FormControl className="mt-[8px]">
-											{/* <Input {...field} /> */}
 											<Textarea {...field} required />
 										</FormControl>
 										<FormDescription>

@@ -11,6 +11,7 @@ type Props = {
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
 	const pub = await client.getPub(instanceId, pubId);
+	const emailTemplate = "Hello i dont know where this is comming from, probs his file disk";
 
 	return (
 		<div>
@@ -23,7 +24,7 @@ export default async function Page(props: Props) {
 					<li key={child.id}>{child.values.Title as string}</li>
 				))}
 			</ul>
-			<EmailForm instanceId={instanceId} pub={pub} />
+			<EmailForm instanceId={instanceId} pub={pub} emailTemplate={emailTemplate} />
 		</div>
 	);
 }

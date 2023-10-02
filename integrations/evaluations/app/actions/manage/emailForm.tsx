@@ -12,6 +12,9 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
+	Dialog,
+	DialogContent,
+	DialogTrigger,
 	Form,
 	FormControl,
 	FormDescription,
@@ -21,6 +24,7 @@ import {
 	FormMessage,
 	Icon,
 	Input,
+	Textarea,
 	useLocalStorage,
 	useToast,
 } from "ui";
@@ -31,6 +35,7 @@ import { suggest, manage } from "./actions";
 type Props = {
 	instanceId: string;
 	pub: GetPubResponseBody;
+	emailTemplate: string;
 };
 
 // TODO: generate fields using instance's configured PubType
@@ -43,6 +48,7 @@ const schema = z.object({
 			lastName: z.string().min(1, "Last name is required"),
 		})
 	),
+	emailTemplate: z.string(),
 });
 
 type SuggestButtonProps = {
@@ -174,6 +180,9 @@ export function EmailForm(props: Props) {
 		// 		{ email: "", firstName: "", lastName: "" },
 		// 	],
 		// },
+		defaultValues: {
+			emailTemplate: props.emailTemplate,
+		},
 	});
 	const {
 		fields: invites,
@@ -299,15 +308,63 @@ export function EmailForm(props: Props) {
 							>
 								Go Back
 							</Button>
-							<Button
-								variant="outline"
-								onClick={() => {
-									console.log("big body benz member i used to be dusty");
-								}}
-								className="ml-4"
-							>
-								Edit Template
-							</Button>
+							<Dialog>
+								<DialogTrigger>
+									<Button
+										variant="outline"
+										onClick={() => {
+											console.log("big body benz member i used to be dusty");
+										}}
+										className="ml-4"
+									>
+										Edit Template
+									</Button>
+								</DialogTrigger>
+								<DialogContent>
+									<Card>
+										<CardTitle className="space-y-1.5 p-6">
+											Edit Template
+										</CardTitle>
+										<CardContent>
+											<CardContent>
+												<FormField
+													control={form.control}
+													name="emailTemplate"
+													render={({ field }) => (
+														<FormItem>
+															<div
+																style={{
+																	display: "flex",
+																	flexDirection: "column",
+																	alignItems: "baseline",
+																	justifyContent: "space-between",
+																}}
+															>
+																<FormLabel>
+																	Email Template
+																</FormLabel>
+																<FormControl className="mt-[8px]">
+																	<Textarea {...field} required />
+																</FormControl>
+																<FormDescription>
+																	The email template is what is
+																	sent to a user when they are
+																	invited to evaluate
+																</FormDescription>
+																<FormMessage />
+															</div>
+														</FormItem>
+													)}
+												/>
+											</CardContent>
+										</CardContent>
+										<CardFooter className="flex flex-row">
+											<Button variant="default">Save</Button>
+											<Button variant="ghost">Cancel</Button>
+										</CardFooter>
+									</Card>
+								</DialogContent>
+							</Dialog>
 						</div>
 
 						<Button type="submit" disabled={!form.formState.isValid}>
