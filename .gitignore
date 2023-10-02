@@ -46,3 +46,6 @@ dump.rdb
 
 # turbo
 .turbo
+
+# Sentry Auth Token
+.sentryclirc
