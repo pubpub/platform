@@ -1,11 +1,10 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { Button } from "ui";
-import { UserPutBody } from "app/api/user/route";
 import { supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 import { getSlugSuffix, slugifyString } from "lib/string";
-import { UserSettings } from "~/lib/types";
+import { UserPutBody, UserSettings } from "~/lib/types";
 
 type Props = UserSettings;
 
