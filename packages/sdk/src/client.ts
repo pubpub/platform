@@ -4,6 +4,7 @@ import {
 	CreatePubResponseBody,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
+	JobOptions,
 	JobResponseBody,
 	SendEmailRequestBody,
 	SendEmailResponseBody,
@@ -110,6 +111,11 @@ export type Client<T extends Manifest> = {
 		query: SuggestedMembersQuery
 	): Promise<SuggestedMember[]>;
 	getPubType(instanceId: string, pubTypeId: string): Promise<GetPubTypeResponseBody>;
+	scheduleEmail(
+		instanceId: string,
+		email: SendEmailRequestBody,
+		options: JobOptions
+	): Promise<JobResponseBody>;
 };
 
 /**
@@ -245,6 +251,28 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to get pub type", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async scheduleEmail(instanceId, email, options) {
+			try {
+				const response = await client.createJob({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					body: {
+						kind: "sendEmail",
+						init: email,
+						options,
+					},
+					cache: "no-cache",
+				});
+				if (response.status === 202) {
+					return response.body;
+				}
+				throw new Error("Failed to schedule email", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

@@ -1,7 +1,8 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
-import { type NextApiRequest, type NextApiResponse } from "next/types";
-import crypto, { randomUUID } from "node:crypto";
 import { api } from "contracts";
+import { Job, WorkerUtils, makeWorkerUtils } from "graphile-worker";
+import { type NextApiRequest, type NextApiResponse } from "next/types";
+import crypto from "node:crypto";
 import {
 	BadRequestError,
 	HTTPStatusError,
@@ -9,12 +10,11 @@ import {
 	createPub,
 	getMembers,
 	getPub,
-	updatePub,
 	getPubType,
+	updatePub,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { validateToken } from "~/lib/server/token";
-import { makeWorkerUtils, WorkerUtils } from "graphile-worker";
 
 let _workerUtils: WorkerUtils;
 const getWorkerUtils = async () => {
@@ -96,21 +96,6 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	sendEmail: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		if (body.job) {
-			const workerUtils = await getWorkerUtils();
-			const { job, ...email } = body;
-			await workerUtils.addJob("sendEmail", [params.instanceId, email], {
-				...job,
-				runAt: body.job.runAt ? new Date(body.job.runAt) : undefined,
-			});
-			return {
-				status: 202,
-				body: {
-					message: "Job created",
-					job: { key: job.key ?? null },
-				},
-			};
-		}
 		const info = await emailUser(body.to, body.subject, body.message, params.instanceId);
 		return { status: 200, body: info };
 	},
@@ -118,6 +103,29 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		checkApiKey(getBearerToken(headers.authorization));
 		const pub = await getPubType(params.pubTypeId);
 		return { status: 200, body: pub };
+	},
+	createJob: async ({ headers, params, body }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		const workerUtils = await getWorkerUtils();
+		const { kind, init, options } = body;
+		let job: Job;
+		switch (kind) {
+			case "sendEmail":
+				job = await workerUtils.addJob("sendEmail", [params.instanceId, init], {
+					...options,
+					runAt: options.runAt ? new Date(options.runAt) : undefined,
+				});
+				break;
+		}
+		if (job === undefined) {
+			throw new BadRequestError(`Job kind ${kind} not found`);
+		}
+		return {
+			status: 202,
+			body: {
+				key: job.key,
+			},
+		};
 	},
 });
 
