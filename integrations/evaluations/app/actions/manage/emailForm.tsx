@@ -179,6 +179,10 @@ export function EmailForm(props: Props) {
 		subject = window.localStorage.getItem("subject") ?? "";
 		message = window.localStorage.getItem("message") ?? "";
 	}
+	const saveToLocalStorage = (template: { subject: string; message: string }) => {
+		window.localStorage.setItem("subject", template.subject);
+		window.localStorage.setItem("message", template.message);
+	};
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
@@ -393,7 +397,16 @@ export function EmailForm(props: Props) {
 											</div>
 										</CardContent>
 										<CardFooter className="flex flex-row">
-											<Button className="mr-3">Save</Button>
+											<Button
+												className="mr-3"
+												onClick={(e) => {
+													e.preventDefault();
+													saveToLocalStorage(form.getValues().template);
+													setOpen(false);
+												}}
+											>
+												Save
+											</Button>
 											<Button
 												variant="secondary"
 												onClick={() => setOpen(false)}
