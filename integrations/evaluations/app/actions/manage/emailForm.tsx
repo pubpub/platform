@@ -254,10 +254,11 @@ export function EmailForm(props: Props) {
 	let message: string = "";
 	let subject: string = "";
 
-	if (typeof window !== "undefined") {
+	useEffect(() => {
 		subject = window.localStorage.getItem("subject") ?? "";
 		message = window.localStorage.getItem("message") ?? "";
-	}
+	}, []);
+
 	const [suggestPending, startTransition] = useTransition();
 	const template = {
 		subject: subject !== "" ? subject : "You've been invited to review a submission on PubPub",
@@ -270,12 +271,6 @@ export function EmailForm(props: Props) {
 		resolver: zodResolver(schema),
 		defaultValues: {
 			invites: [
-				{
-					email: "",
-					firstName: "",
-					lastName: "",
-					template,
-				},
 				{
 					email: "",
 					firstName: "",

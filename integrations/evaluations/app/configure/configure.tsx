@@ -37,8 +37,6 @@ const schema = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
-	emailTemplate: z.string(),
-	subjectTemplate: z.string(),
 });
 
 export function Configure(props: Props) {
