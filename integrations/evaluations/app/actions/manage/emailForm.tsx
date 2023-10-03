@@ -219,7 +219,8 @@ export function EmailForm(props: Props) {
 			props.pub.values["unjournal:title"] as string,
 			values.invites[0].email,
 			values.invites[0].firstName,
-			values.invites[0].lastName
+			values.invites[0].lastName,
+			values.template
 		);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
