@@ -30,7 +30,7 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { suggest, manage } from "./actions";
+import { manage, suggest } from "./actions";
 
 type Props = {
 	instanceId: string;
