@@ -35,7 +35,6 @@ import { suggest, manage } from "./actions";
 type Props = {
 	instanceId: string;
 	pub: GetPubResponseBody;
-	emailTemplate: string;
 };
 
 // TODO: generate fields using instance's configured PubType

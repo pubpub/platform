@@ -101,6 +101,24 @@ export function Configure(props: Props) {
 						/>
 					</CardContent>
 					<CardContent>
+						<FormLabel>Email Template</FormLabel>
+						<FormField
+							control={form.control}
+							name="pubTypeId"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Subject</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										The pub type determines the fields available on the
+										evaluation form.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 						<FormField
 							control={form.control}
 							name="emailTemplate"
@@ -114,7 +132,7 @@ export function Configure(props: Props) {
 											justifyContent: "space-between",
 										}}
 									>
-										<FormLabel>Email Template</FormLabel>
+										<FormLabel>Email Message</FormLabel>
 										<FormControl className="mt-[8px]">
 											<Textarea {...field} required />
 										</FormControl>
