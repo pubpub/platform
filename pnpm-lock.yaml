@@ -189,15 +189,16 @@ importers:
       '@pubpub/sdk':
         specifier: workspace:*
         version: link:../packages/sdk
-      dotenv:
-        specifier: ^16.3.1
-        version: 16.3.1
       graphile-worker:
         specifier: ^0.15.0
         version: 0.15.0
       tsx:
         specifier: ^3.13.0
         version: 3.13.0
+    devDependencies:
+      dotenv-cli:
+        specifier: ^7.2.1
+        version: 7.2.1
 
   integrations/evaluations:
     dependencies:
@@ -4962,6 +4963,7 @@ packages:
   /dotenv@16.3.1:
     resolution: {integrity: sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==}
     engines: {node: '>=12'}
+    dev: true
 
   /drange@1.1.1:
     resolution: {integrity: sha512-pYxfDYpued//QpnLIm4Avk7rsNtAtQkUES2cwAYSvD/wd2pKD71gN2Ebj3e7klzXwjocvE8c5vx/1fxwpqmSxA==}
