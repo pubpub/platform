@@ -1,0 +1,15 @@
+{
+	"name": "flock",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"start": "tsx index.ts",
+		"dev": "dotenv -e .env.local tsx index.ts"
+	},
+	"dependencies": {
+		"@pubpub/sdk": "workspace:*",
+		"dotenv": "^16.3.1",
+		"graphile-worker": "^0.15.0",
+		"tsx": "^3.13.0"
+	}
+}

@@ -11,6 +11,16 @@ services:
       preDeployCommand: pnpm --filter core migrate-deploy
       envVars:
           - fromGroup: pubpub-core-prod-env
+    # flock
+    - type: worker
+      name: flock
+      region: ohio
+      runtime: node
+      rootDir: .
+      buildCommand: ./bin/render-build.sh flock
+      startCommand: pnpm start --filter flock
+      envVars:
+          - fromGroup: pubpub-flock-prod-env
     # integration-instances
     - type: redis
       name: integration-instances

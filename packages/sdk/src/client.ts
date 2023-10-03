@@ -1,16 +1,17 @@
-import { GetFieldType, initClient } from "@ts-rest/core";
+import { initClient } from "@ts-rest/core";
 import {
 	CreatePubRequestBody,
 	CreatePubResponseBody,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
-	UpdatePubRequestBody,
-	UpdatePubResponseBody,
+	JobResponseBody,
 	SendEmailRequestBody,
 	SendEmailResponseBody,
+	SuggestedMember,
+	UpdatePubRequestBody,
+	UpdatePubResponseBody,
 	User,
 	api,
-	SuggestedMember,
 } from "contracts";
 import { Manifest, ManifestJson } from "./manifest";
 
@@ -95,20 +96,20 @@ export type SuggestedMembersQuery =
 	| { firstName: string; lastName: string };
 
 export type Client<T extends Manifest> = {
+	// TODO: Derive these return types from contract
 	auth(instanceId: string, token: string): Promise<User>;
 	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
 	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
-	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
+	sendEmail(
+		instanceId: string,
+		email: SendEmailRequestBody
+	): Promise<SendEmailResponseBody | JobResponseBody>;
 	getSuggestedMembers(
 		instanceId: string,
 		query: SuggestedMembersQuery
 	): Promise<SuggestedMember[]>;
 	getPubType(instanceId: string, pubTypeId: string): Promise<GetPubTypeResponseBody>;
-	getSuggestedMembers(
-		instanceId: string,
-		query: SuggestedMembersQuery
-	): Promise<SuggestedMember[]>;
 };
 
 /**
@@ -205,6 +206,9 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				if (response.status === 200) {
 					return response.body;
 				}
+				if (response.status === 202) {
+					return response.body;
+				}
 				throw new Error("Failed to send email", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
@@ -241,23 +245,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to get pub type", { cause: response });
-			} catch (cause) {
-				throw new Error("Request failed", { cause });
-			}
-		},
-		async getSuggestedMembers(instanceId, query) {
-			try {
-				const response = await client.getSuggestedMembers({
-					headers: {
-						authorization: `Bearer ${process.env.API_KEY}`,
-					},
-					params: { instanceId },
-					query,
-				});
-				if (response.status === 200) {
-					return response.body;
-				}
-				throw new Error("Failed to get suggested members", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

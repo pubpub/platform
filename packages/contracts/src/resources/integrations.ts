@@ -31,6 +31,23 @@ const commonPubFields = z.object({
 	parentId: z.string().optional().nullable(),
 });
 
+// Job types
+
+export const Job = z.object({
+	key: z.string().optional(),
+	runAt: z.string(),
+	maxAttempts: z.number().optional(),
+});
+export type Job = z.infer<typeof Job>;
+
+export const JobResponseBody = z.object({
+	message: z.string(),
+	job: z.object({
+		key: z.string().nullable(),
+	}),
+});
+export type JobResponseBody = z.infer<typeof JobResponseBody>;
+
 // Get pub types
 
 export const GetPubResponseBodyBase = commonPubFields.extend({
@@ -130,6 +147,7 @@ export const SendEmailRequestBody = z.object({
 	]),
 	subject: z.string(),
 	message: z.string(),
+	job: Job.optional(),
 });
 export type SendEmailRequestBody = z.infer<typeof SendEmailRequestBody>;
 export const SendEmailResponseBody = z.object({
@@ -138,7 +156,7 @@ export const SendEmailResponseBody = z.object({
 });
 export type SendEmailResponseBody = z.infer<typeof SendEmailResponseBody>;
 
-// PubType Types
+// PubType types
 
 export const GetPubTypeResponseBody = z.object({
 	id: z.string(),
@@ -277,6 +295,7 @@ export const integrationsApi = contract.router(
 			}),
 			responses: {
 				200: SendEmailResponseBody,
+				202: JobResponseBody,
 			},
 		},
 		getPubType: {

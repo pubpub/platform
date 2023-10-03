@@ -1,8 +1,6 @@
 "use server";
 
 import { SuggestedMembersQuery } from "@pubpub/sdk";
-import { error } from "console";
-import { string } from "zod";
 import { client } from "~/lib/pubpub";
 
 export const manage = async (
@@ -22,6 +20,10 @@ export const manage = async (
 			},
 			subject: "You've been invited to review a submission on PubPub",
 			message: `Hello {{user.firstName}} {{user.lastName}}! You've been invited to evaluate <a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a> on PubPub.`,
+			job: {
+				key: `${instanceId}-${pubId}-invite-${email}`,
+				runAt: new Date().toISOString(),
+			},
 		});
 		return info;
 	} catch (error) {
