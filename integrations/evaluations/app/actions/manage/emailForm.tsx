@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
-import React, { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
 	Button,
@@ -45,12 +45,12 @@ const schema = z.object({
 			email: z.string().email("Enter a valid email address"),
 			firstName: z.string().min(1, "First name is required"),
 			lastName: z.string().min(1, "Last name is required"),
+			template: z.object({
+				subject: z.string(),
+				message: z.string(),
+			}),
 		})
 	),
-	template: z.object({
-		subject: z.string(),
-		message: z.string(),
-	}),
 });
 
 type SuggestButtonProps = {
@@ -90,10 +90,13 @@ type EvaluatorInviteProps = {
 };
 
 const EvaluatorInvite = (props: EvaluatorInviteProps) => {
+	const [open, setOpen] = useState(false);
+
 	const value = useWatch<z.infer<typeof schema>>({
 		control: props.control,
 		name: `invites.${props.index}`,
 	});
+
 	return (
 		<div key={props.item.key} className="flex flex-row gap-4 items-end mb-4">
 			<FormField
@@ -161,6 +164,84 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 				query={value as SuggestedMembersQuery}
 				onClick={() => props.onSuggest(props.index, value as SuggestedMembersQuery)}
 			/>
+			<Dialog open={open}>
+				<DialogTrigger>
+					<Button
+						variant="ghost"
+						className="ml-4"
+						onClick={(e) => {
+							e.preventDefault();
+							setOpen(true);
+						}}
+					>
+						<Icon.Send className="h-4 w-4" />
+					</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<Card>
+						<CardTitle className="space-y-1.5 p-6">Edit Template</CardTitle>
+						<CardContent>
+							<div className="mb-3">
+								<FormField
+									name={`invites.${props.index}.template.subject`}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Subject</FormLabel>
+											<FormControl>
+												<Input {...field} />
+											</FormControl>
+											<FormDescription>
+												The pub type determines the fields available on the
+												evaluation form.
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+							<div className="flex flex-col justify-between align-baseline">
+								<FormLabel>Email Message</FormLabel>
+								<div className="mt-2 mb-4">
+									Hello {"Jill"} {"Admin"}! You've been invited to evaluate{" "}
+									<a className="text-sky-400/100" href="https://www.pubpub.org">
+										Example Pub
+									</a>{" "}
+									on PubPub.
+								</div>
+								<FormField
+									name={`invites.${props.index}.template.message`}
+									render={({ field }) => (
+										<FormItem>
+											<FormControl className="mt-[8px]">
+												<Textarea {...field} required />
+											</FormControl>
+											<FormDescription>
+												Your email will begin with the above content. Add
+												plain text to customize the email.
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+						</CardContent>
+						<CardFooter className="flex flex-row">
+							<Button
+								className="mr-3"
+								onClick={(e) => {
+									e.preventDefault();
+									setOpen(false);
+								}}
+							>
+								Save
+							</Button>
+							<Button variant="secondary" onClick={() => setOpen(false)}>
+								Cancel
+							</Button>
+						</CardFooter>
+					</Card>
+				</DialogContent>
+			</Dialog>
 			<Button variant="ghost" onClick={() => props.onRemove(props.index)}>
 				<Icon.X className="h-4 w-4" />
 			</Button>
@@ -170,38 +251,38 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 
 export function EmailForm(props: Props) {
 	const { toast } = useToast();
-	const [open, setOpen] = React.useState(false);
-
-	const [suggestPending, startTransition] = useTransition();
 	let message: string = "";
 	let subject: string = "";
+
 	if (typeof window !== "undefined") {
 		subject = window.localStorage.getItem("subject") ?? "";
 		message = window.localStorage.getItem("message") ?? "";
 	}
-	const saveToLocalStorage = (template: { subject: string; message: string }) => {
-		window.localStorage.setItem("subject", template.subject);
-		window.localStorage.setItem("message", template.message);
+	const [suggestPending, startTransition] = useTransition();
+	const template = {
+		subject: subject !== "" ? subject : "You've been invited to review a submission on PubPub",
+		message: message !== "" ? message : `Please reach out if you have any questions.`,
 	};
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		// TODO: generate fields using instance's configured PubType
 		resolver: zodResolver(schema),
-		// defaultValues: {
-		// 	invites: [
-		// 		{ email: "", firstName: "", lastName: "" },
-		// 		{ email: "", firstName: "", lastName: "" },
-		// 	],
-		// },
 		defaultValues: {
-			template: {
-				subject:
-					subject !== ""
-						? subject
-						: "You've been invited to review a submission on PubPub",
-				message: message !== "" ? message : `Please reach out if you have any questions.`,
-			},
+			invites: [
+				{
+					email: "",
+					firstName: "",
+					lastName: "",
+					template,
+				},
+				{
+					email: "",
+					firstName: "",
+					lastName: "",
+					template,
+				},
+			],
 		},
 	});
 	const {
@@ -310,7 +391,12 @@ export function EmailForm(props: Props) {
 							onClick={(e) => {
 								e.preventDefault();
 								invites.length < 5 &&
-									append({ email: "", firstName: "", lastName: "" });
+									append({
+										email: "",
+										firstName: "",
+										lastName: "",
+										template,
+									});
 							}}
 							className="color:red-500"
 						>
@@ -329,94 +415,6 @@ export function EmailForm(props: Props) {
 							>
 								Go Back
 							</Button>
-							<Dialog open={open}>
-								<DialogTrigger>
-									<Button
-										variant="outline"
-										className="ml-4"
-										onClick={() => setOpen(true)}
-									>
-										Edit Template
-									</Button>
-								</DialogTrigger>
-								<DialogContent>
-									<Card>
-										<CardTitle className="space-y-1.5 p-6">
-											Edit Template
-										</CardTitle>
-										<CardContent>
-											<div className="mb-3">
-												<FormField
-													control={form.control}
-													name="template.subject"
-													render={({ field }) => (
-														<FormItem>
-															<FormLabel>Subject</FormLabel>
-															<FormControl>
-																<Input {...field} />
-															</FormControl>
-															<FormDescription>
-																The pub type determines the fields
-																available on the evaluation form.
-															</FormDescription>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-											</div>
-											<div className="flex flex-col justify-between align-baseline">
-												<FormLabel>Email Message</FormLabel>
-												<div className="mt-2 mb-4">
-													Hello {"Jill"} {"Admin"}! You've been invited to
-													evaluate{" "}
-													<a
-														className="text-sky-400/100"
-														href="https://www.pubpub.org"
-													>
-														Example Pub
-													</a>{" "}
-													on PubPub.
-												</div>
-												<FormField
-													control={form.control}
-													name="template.message"
-													render={({ field }) => (
-														<FormItem>
-															<FormControl className="mt-[8px]">
-																<Textarea {...field} required />
-															</FormControl>
-															<FormDescription>
-																Your email will begin with the above
-																content. Add plain text to customize
-																the email.
-															</FormDescription>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-											</div>
-										</CardContent>
-										<CardFooter className="flex flex-row">
-											<Button
-												className="mr-3"
-												onClick={(e) => {
-													e.preventDefault();
-													saveToLocalStorage(form.getValues().template);
-													setOpen(false);
-												}}
-											>
-												Save
-											</Button>
-											<Button
-												variant="secondary"
-												onClick={() => setOpen(false)}
-											>
-												Cancel
-											</Button>
-										</CardFooter>
-									</Card>
-								</DialogContent>
-							</Dialog>
 						</div>
 
 						<Button type="submit" disabled={!form.formState.isValid}>
