@@ -33,24 +33,39 @@ type Props = {
 const schema = z.object({
 	pubTypeId: z.string().length(36),
 	instanceId: z.string(),
+	template: z.object({
+		subject: z.string(),
+		message: z.string(),
+	}),
 	emailTemplate: z.string(),
+	subjectTemplate: z.string(),
 });
 
 export function Configure(props: Props) {
 	const { toast } = useToast();
-	let template: string = "";
+	let message: string = "";
+	let subject: string = "";
 	if (typeof window !== "undefined") {
-		template = window.localStorage.getItem("emailTemplate") ?? "";
+		subject = window.localStorage.getItem("subject") ?? "";
+		message = window.localStorage.getItem("message") ?? "";
 	}
-	const saveToLocalStorage = (template: string) => {
-		window.localStorage.setItem("emailTemplate", template);
+	const saveToLocalStorage = (template: { subject: string; message: string }) => {
+		window.localStorage.setItem("subject", template.subject);
+		window.localStorage.setItem("message", template.message);
 	};
+
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			pubTypeId: props.pubTypeId ?? "",
 			instanceId: props.instanceId,
-			emailTemplate: template ?? "Enter email template here",
+			template: {
+				subject:
+					subject !== ""
+						? subject
+						: "You've been invited to review a submission on PubPub",
+				message: message !== "" ? message : `Please reach out if you have any questions.`,
+			},
 		},
 	});
 
@@ -101,55 +116,61 @@ export function Configure(props: Props) {
 						/>
 					</CardContent>
 					<CardContent>
-						<FormLabel>Email Template</FormLabel>
-						<FormField
-							control={form.control}
-							name="pubTypeId"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Subject</FormLabel>
-									<FormControl>
-										<Input {...field} />
-									</FormControl>
-									<FormDescription>
-										The pub type determines the fields available on the
-										evaluation form.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="emailTemplate"
-							render={({ field }) => (
-								<FormItem>
-									<div
-										style={{
-											display: "flex",
-											flexDirection: "column",
-											alignItems: "baseline",
-											justifyContent: "space-between",
-										}}
-									>
-										<FormLabel>Email Message</FormLabel>
+						<div className="text-xl font-medium">
+							<span>Email Template</span>
+						</div>
+					</CardContent>
+					<CardContent>
+						<div className="mb-3">
+							<FormField
+								control={form.control}
+								name="template.subject"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Subject</FormLabel>
+										<FormControl>
+											<Input {...field} />
+										</FormControl>
+										<FormDescription>
+											The pub type determines the fields available on the
+											evaluation form.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+						<div className="flex flex-col justify-between align-baseline">
+							<FormLabel>Email Message</FormLabel>
+							<div className="mt-2 mb-4">
+								Hello {"Jill"} {"Admin"}! You've been invited to evaluate{" "}
+								<a className="text-sky-400/100" href="https://www.pubpub.org">
+									Example Pub
+								</a>{" "}
+								on PubPub.
+							</div>
+							<FormField
+								control={form.control}
+								name="template.message"
+								render={({ field }) => (
+									<FormItem>
 										<FormControl className="mt-[8px]">
 											<Textarea {...field} required />
 										</FormControl>
 										<FormDescription>
-											The email template is what is sent to a user when they
-											are invited to evaluate
+											Your email will begin with the above content. Add plain
+											text to customize the email.
 										</FormDescription>
 										<FormMessage />
-									</div>
-								</FormItem>
-							)}
-						/>
+									</FormItem>
+								)}
+							/>
+						</div>
 
 						<Button
 							onClick={(e) => {
 								e.preventDefault();
-								saveToLocalStorage(form.getValues().emailTemplate);
+								saveToLocalStorage(form.getValues().template);
 							}}
 						>
 							Save Template

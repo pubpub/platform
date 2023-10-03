@@ -47,7 +47,10 @@ const schema = z.object({
 			lastName: z.string().min(1, "Last name is required"),
 		})
 	),
-	emailTemplate: z.string(),
+	template: z.object({
+		subject: z.string(),
+		message: z.string(),
+	}),
 });
 
 type SuggestButtonProps = {
@@ -170,9 +173,11 @@ export function EmailForm(props: Props) {
 	const [open, setOpen] = React.useState(false);
 
 	const [suggestPending, startTransition] = useTransition();
-	let template: string = "";
+	let message: string = "";
+	let subject: string = "";
 	if (typeof window !== "undefined") {
-		template = window.localStorage.getItem("emailTemplate") ?? "";
+		subject = window.localStorage.getItem("subject") ?? "";
+		message = window.localStorage.getItem("message") ?? "";
 	}
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
@@ -186,7 +191,13 @@ export function EmailForm(props: Props) {
 		// 	],
 		// },
 		defaultValues: {
-			emailTemplate: template ?? "No default template found, Feel free to edit this text",
+			template: {
+				subject:
+					subject !== ""
+						? subject
+						: "You've been invited to review a submission on PubPub",
+				message: message !== "" ? message : `Please reach out if you have any questions.`,
+			},
 		},
 	});
 	const {
@@ -329,37 +340,56 @@ export function EmailForm(props: Props) {
 											Edit Template
 										</CardTitle>
 										<CardContent>
-											<CardContent>
+											<div className="mb-3">
 												<FormField
 													control={form.control}
-													name="emailTemplate"
+													name="template.subject"
 													render={({ field }) => (
 														<FormItem>
-															<div
-																style={{
-																	display: "flex",
-																	flexDirection: "column",
-																	alignItems: "baseline",
-																	justifyContent: "space-between",
-																}}
-															>
-																<FormLabel>
-																	Email Template
-																</FormLabel>
-																<FormControl className="mt-[8px]">
-																	<Textarea {...field} required />
-																</FormControl>
-																<FormDescription>
-																	The email template is what is
-																	sent to a user when they are
-																	invited to evaluate
-																</FormDescription>
-																<FormMessage />
-															</div>
+															<FormLabel>Subject</FormLabel>
+															<FormControl>
+																<Input {...field} />
+															</FormControl>
+															<FormDescription>
+																The pub type determines the fields
+																available on the evaluation form.
+															</FormDescription>
+															<FormMessage />
 														</FormItem>
 													)}
 												/>
-											</CardContent>
+											</div>
+											<div className="flex flex-col justify-between align-baseline">
+												<FormLabel>Email Message</FormLabel>
+												<div className="mt-2 mb-4">
+													Hello {"Jill"} {"Admin"}! You've been invited to
+													evaluate{" "}
+													<a
+														className="text-sky-400/100"
+														href="https://www.pubpub.org"
+													>
+														Example Pub
+													</a>{" "}
+													on PubPub.
+												</div>
+												<FormField
+													control={form.control}
+													name="template.message"
+													render={({ field }) => (
+														<FormItem>
+															<FormControl className="mt-[8px]">
+																<Textarea {...field} required />
+															</FormControl>
+															<FormDescription>
+																Your email will begin with the above
+																content. Add plain text to customize
+																the email.
+															</FormDescription>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+											</div>
 										</CardContent>
 										<CardFooter className="flex flex-row">
 											<Button className="mr-3">Save</Button>
