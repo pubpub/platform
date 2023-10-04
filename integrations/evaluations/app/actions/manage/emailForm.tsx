@@ -391,17 +391,15 @@ export function EmailForm(props: Props) {
 						</Button>
 					</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
-						<div className={cn("justify-items-start")}>
-							<Button
-								variant="outline"
-								onClick={(e) => {
-									e.preventDefault();
-									window.history.back();
-								}}
-							>
-								Go Back
-							</Button>
-						</div>
+						<Button
+							variant="outline"
+							onClick={(e) => {
+								e.preventDefault();
+								window.history.back();
+							}}
+						>
+							Go Back
+						</Button>
 
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
