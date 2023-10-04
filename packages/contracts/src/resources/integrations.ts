@@ -169,7 +169,7 @@ export type GetPubTypeResponseBody = z.infer<typeof GetPubTypeResponseBody>;
 
 export const JobOptions = z.object({
 	key: z.string().optional(),
-	runAt: z.string(),
+	runAt: z.coerce.date(),
 	maxAttempts: z.number().optional(),
 });
 export type JobOptions = z.infer<typeof JobOptions>;

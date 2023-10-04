@@ -1,13 +1,6 @@
 import { JobOptions, SendEmailRequestBody } from "contracts";
 import { makeWorkerUtils, Job } from "graphile-worker";
 
-const parseJobOptions = (options: JobOptions) => {
-	return {
-		...options,
-		runAt: options.runAt ? new Date(options.runAt) : undefined,
-	};
-};
-
 export type JobsClient = {
 	sendEmail(
 		instanceId: string,
@@ -23,11 +16,7 @@ export const makeJobsClient = async () => {
 	await workerUtils.migrate();
 	return {
 		async sendEmail(instanceId: string, email: SendEmailRequestBody, jobOptions: JobOptions) {
-			const job = await workerUtils.addJob(
-				"sendEmail",
-				[instanceId, email],
-				parseJobOptions(jobOptions)
-			);
+			const job = await workerUtils.addJob("sendEmail", [instanceId, email], jobOptions);
 			return job;
 		},
 	};
