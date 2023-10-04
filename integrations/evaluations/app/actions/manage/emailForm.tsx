@@ -30,7 +30,7 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { suggest } from "./actions";
+import { manage, suggest } from "./actions";
 
 type Props = {
 	instanceId: string;
@@ -291,7 +291,7 @@ export function EmailForm(props: Props) {
 			values.invites[0].email,
 			values.invites[0].firstName,
 			values.invites[0].lastName,
-			values.template
+			values.invites[0].template
 		);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
