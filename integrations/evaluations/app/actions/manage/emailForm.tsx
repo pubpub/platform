@@ -30,11 +30,15 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { manage, suggest } from "./actions";
+import { suggest } from "./actions";
 
 type Props = {
 	instanceId: string;
 	pub: GetPubResponseBody;
+	template?: {
+		subject: string;
+		message: string;
+	};
 };
 
 // TODO: generate fields using instance's configured PubType
@@ -226,15 +230,6 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 							</div>
 						</CardContent>
 						<CardFooter className="flex flex-row">
-							<Button
-								className="mr-3"
-								onClick={(e) => {
-									e.preventDefault();
-									setOpen(false);
-								}}
-							>
-								Save
-							</Button>
 							<Button variant="secondary" onClick={() => setOpen(false)}>
 								Cancel
 							</Button>
@@ -251,19 +246,15 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 
 export function EmailForm(props: Props) {
 	const { toast } = useToast();
-	let message: string = "";
-	let subject: string = "";
-
-	useEffect(() => {
-		subject = window.localStorage.getItem("subject") ?? "";
-		message = window.localStorage.getItem("message") ?? "";
-	}, []);
-
-	const [suggestPending, startTransition] = useTransition();
 	const template = {
-		subject: subject !== "" ? subject : "You've been invited to review a submission on PubPub",
-		message: message !== "" ? message : `Please reach out if you have any questions.`,
+		subject:
+			(props.template && props.template.subject) ??
+			"You've been invited to review a submission on PubPub",
+		message:
+			(props.template && props.template.message) ??
+			`Please reach out if you have any questions.`,
 	};
+	const [suggestPending, startTransition] = useTransition();
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",

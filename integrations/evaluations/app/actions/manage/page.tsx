@@ -1,3 +1,4 @@
+import { findInstance } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { EmailForm } from "./emailForm";
 
@@ -11,6 +12,7 @@ type Props = {
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
 	const pub = await client.getPub(instanceId, pubId);
+	const instance = await findInstance(instanceId);
 
 	return (
 		<div>
@@ -23,7 +25,7 @@ export default async function Page(props: Props) {
 					<li key={child.id}>{child.values.Title as string}</li>
 				))}
 			</ul>
-			<EmailForm instanceId={instanceId} pub={pub} />
+			<EmailForm instanceId={instanceId} pub={pub} template={instance?.template} />
 		</div>
 	);
 }

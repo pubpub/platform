@@ -28,6 +28,10 @@ import { configure } from "./actions";
 type Props = {
 	instanceId: string;
 	pubTypeId?: string;
+	template?: {
+		subject: string;
+		message: string;
+	};
 };
 
 const schema = z.object({
@@ -41,34 +45,25 @@ const schema = z.object({
 
 export function Configure(props: Props) {
 	const { toast } = useToast();
-	let message: string = "";
-	let subject: string = "";
-	if (typeof window !== "undefined") {
-		subject = window.localStorage.getItem("subject") ?? "";
-		message = window.localStorage.getItem("message") ?? "";
-	}
-	const saveToLocalStorage = (template: { subject: string; message: string }) => {
-		window.localStorage.setItem("subject", template.subject);
-		window.localStorage.setItem("message", template.message);
+	const template = {
+		subject:
+			(props.template && props.template.subject) ??
+			"You've been invited to review a submission on PubPub",
+		message:
+			(props.template && props.template.message) ??
+			`Please reach out if you have any questions.`,
 	};
-
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			pubTypeId: props.pubTypeId ?? "",
 			instanceId: props.instanceId,
-			template: {
-				subject:
-					subject !== ""
-						? subject
-						: "You've been invited to review a submission on PubPub",
-				message: message !== "" ? message : `Please reach out if you have any questions.`,
-			},
+			template,
 		},
 	});
 
 	async function onSubmit(values: z.infer<typeof schema>) {
-		const result = await configure(values.instanceId, values.pubTypeId);
+		const result = await configure(values.instanceId, values.pubTypeId, values.template);
 		if ("error" in result) {
 			toast({
 				title: "Error",
@@ -164,15 +159,6 @@ export function Configure(props: Props) {
 								)}
 							/>
 						</div>
-
-						<Button
-							onClick={(e) => {
-								e.preventDefault();
-								saveToLocalStorage(form.getValues().template);
-							}}
-						>
-							Save Template
-						</Button>
 					</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
 						<Button
