@@ -1,0 +1,17 @@
+{
+	"name": "jobs",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"start": "tsx index.ts",
+		"dev": "dotenv -e .env.local tsx index.ts"
+	},
+	"dependencies": {
+		"@pubpub/sdk": "workspace:*",
+		"graphile-worker": "^0.15.0",
+		"tsx": "^3.13.0"
+	},
+	"devDependencies": {
+		"dotenv-cli": "^7.2.1"
+	}
+}

@@ -1,16 +1,17 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "contracts";
+import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import {
 	createPub,
 	getMembers,
 	getPub,
+	getPubType,
 	tsRestHandleErrors,
 	updatePub,
-	getPubType,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
+import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
-import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
@@ -60,6 +61,12 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		checkAuthentication(headers.authorization);
 		const pub = await getPubType(params.pubTypeId);
 		return { status: 200, body: pub };
+	},
+	scheduleEmail: async ({ headers, params, body, query }) => {
+		checkAuthentication(headers.authorization);
+		const jobs = await getJobsClient();
+		const job = await jobs.sendEmail(params.instanceId, body, query);
+		return { status: 202, body: job };
 	},
 });
 

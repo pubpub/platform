@@ -207,6 +207,7 @@ export function EmailForm(props: Props) {
 				title: "Success",
 				description: "The email was sent successfully",
 			});
+			// form.reset();
 		}
 	};
 
