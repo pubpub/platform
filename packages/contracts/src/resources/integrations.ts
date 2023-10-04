@@ -174,16 +174,9 @@ export const JobOptions = z.object({
 });
 export type JobOptions = z.infer<typeof JobOptions>;
 
-const ScheduleEmailRequestBody = z
-	.object({
-		email: SendEmailRequestBody,
-	})
-	.and(z.object({ options: JobOptions }));
-
 export const ScheduleEmailResponseBody = z.object({
 	key: z.string().nullable(),
 });
-
 export type ScheduleEmailResponseBody = z.infer<typeof ScheduleEmailResponseBody>;
 
 const contract = initContract();
