@@ -138,7 +138,7 @@ export const SendEmailResponseBody = z.object({
 });
 export type SendEmailResponseBody = z.infer<typeof SendEmailResponseBody>;
 
-// PubType Types
+// PubType types
 
 export const GetPubTypeResponseBody = z.object({
 	id: z.string(),
@@ -164,6 +164,20 @@ export const GetPubTypeResponseBody = z.object({
 });
 
 export type GetPubTypeResponseBody = z.infer<typeof GetPubTypeResponseBody>;
+
+// Job types
+
+export const JobOptions = z.object({
+	key: z.string().optional(),
+	runAt: z.coerce.date(),
+	maxAttempts: z.number().optional(),
+});
+export type JobOptions = z.infer<typeof JobOptions>;
+
+export const ScheduleEmailResponseBody = z.object({
+	key: z.string().nullable(),
+});
+export type ScheduleEmailResponseBody = z.infer<typeof ScheduleEmailResponseBody>;
 
 const contract = initContract();
 
@@ -290,6 +304,17 @@ export const integrationsApi = contract.router(
 			}),
 			responses: {
 				200: GetPubTypeResponseBody,
+			},
+		},
+		scheduleEmail: {
+			method: "POST",
+			path: "/:instanceId/email/schedule",
+			summary: "Schedule an email to be sent at some point in the future",
+			description: "",
+			body: SendEmailRequestBody,
+			query: JobOptions,
+			responses: {
+				202: ScheduleEmailResponseBody,
 			},
 		},
 		// TODO implement these endpoints

@@ -1,16 +1,18 @@
-import { GetFieldType, initClient } from "@ts-rest/core";
+import { initClient } from "@ts-rest/core";
 import {
 	CreatePubRequestBody,
 	CreatePubResponseBody,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
-	UpdatePubRequestBody,
-	UpdatePubResponseBody,
+	JobOptions,
+	ScheduleEmailResponseBody,
 	SendEmailRequestBody,
 	SendEmailResponseBody,
+	SuggestedMember,
+	UpdatePubRequestBody,
+	UpdatePubResponseBody,
 	User,
 	api,
-	SuggestedMember,
 } from "contracts";
 import { Manifest, ManifestJson } from "./manifest";
 
@@ -95,6 +97,7 @@ export type SuggestedMembersQuery =
 	| { firstName: string; lastName: string };
 
 export type Client<T extends Manifest> = {
+	// TODO: Derive these return types from contract
 	auth(instanceId: string, token: string): Promise<User>;
 	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
@@ -105,6 +108,11 @@ export type Client<T extends Manifest> = {
 		query: SuggestedMembersQuery
 	): Promise<SuggestedMember[]>;
 	getPubType(instanceId: string, pubTypeId: string): Promise<GetPubTypeResponseBody>;
+	scheduleEmail(
+		instanceId: string,
+		email: SendEmailRequestBody,
+		jobOptions: JobOptions
+	): Promise<ScheduleEmailResponseBody>;
 };
 
 /**
@@ -237,6 +245,25 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to get pub type", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async scheduleEmail(instanceId, email, jobOptions) {
+			try {
+				const response = await client.scheduleEmail({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					body: email,
+					query: jobOptions,
+					cache: "no-cache",
+				});
+				if (response.status === 202) {
+					return response.body;
+				}
+				throw new Error("Failed to schedule email", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

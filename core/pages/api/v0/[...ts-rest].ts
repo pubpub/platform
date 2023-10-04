@@ -1,7 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
+import { api } from "contracts";
 import { type NextApiRequest, type NextApiResponse } from "next/types";
 import crypto from "node:crypto";
-import { api } from "contracts";
 import {
 	BadRequestError,
 	HTTPStatusError,
@@ -9,10 +9,11 @@ import {
 	createPub,
 	getMembers,
 	getPub,
-	updatePub,
 	getPubType,
+	updatePub,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
+import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
 
 const handleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse) => {
@@ -91,6 +92,12 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		checkApiKey(getBearerToken(headers.authorization));
 		const pub = await getPubType(params.pubTypeId);
 		return { status: 200, body: pub };
+	},
+	scheduleEmail: async ({ headers, params, body, query }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		const jobs = await getJobsClient();
+		const job = await jobs.sendEmail(params.instanceId, body, query);
+		return { status: 202, body: job };
 	},
 });
 
