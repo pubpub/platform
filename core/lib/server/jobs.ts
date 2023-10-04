@@ -1,7 +1,7 @@
 import { JobOptions, SendEmailRequestBody } from "contracts";
 import { makeWorkerUtils, Job } from "graphile-worker";
 
-const normalizeJobOptions = (options: JobOptions) => {
+const parseJobOptions = (options: JobOptions) => {
 	return {
 		...options,
 		runAt: options.runAt ? new Date(options.runAt) : undefined,
@@ -26,7 +26,7 @@ export const makeJobsClient = async () => {
 			const job = await workerUtils.addJob(
 				"sendEmail",
 				[instanceId, email],
-				normalizeJobOptions(jobOptions)
+				parseJobOptions(jobOptions)
 			);
 			return job;
 		},
