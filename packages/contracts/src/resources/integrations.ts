@@ -174,20 +174,17 @@ export const JobOptions = z.object({
 });
 export type JobOptions = z.infer<typeof JobOptions>;
 
-const JobRequestBody = z
-	.discriminatedUnion("kind", [
-		z.object({
-			kind: z.literal("sendEmail"),
-			init: SendEmailRequestBody,
-		}),
-	])
+const ScheduleEmailRequestBody = z
+	.object({
+		email: SendEmailRequestBody,
+	})
 	.and(z.object({ options: JobOptions }));
 
-export const JobResponseBody = z.object({
+export const ScheduleEmailResponseBody = z.object({
 	key: z.string().nullable(),
 });
 
-export type JobResponseBody = z.infer<typeof JobResponseBody>;
+export type ScheduleEmailResponseBody = z.infer<typeof ScheduleEmailResponseBody>;
 
 const contract = initContract();
 
@@ -301,7 +298,6 @@ export const integrationsApi = contract.router(
 			}),
 			responses: {
 				200: SendEmailResponseBody,
-				202: JobResponseBody,
 			},
 		},
 		getPubType: {
@@ -317,14 +313,15 @@ export const integrationsApi = contract.router(
 				200: GetPubTypeResponseBody,
 			},
 		},
-		createJob: {
+		scheduleEmail: {
 			method: "POST",
-			path: "/:instanceId/jobs",
-			summary: "Schedule a job to be run",
+			path: "/:instanceId/email/schedule",
+			summary: "Schedule an email to be sent at some point in the future",
 			description: "",
-			body: JobRequestBody,
+			body: SendEmailRequestBody,
+			query: JobOptions,
 			responses: {
-				202: JobResponseBody,
+				202: ScheduleEmailResponseBody,
 			},
 		},
 		// TODO implement these endpoints

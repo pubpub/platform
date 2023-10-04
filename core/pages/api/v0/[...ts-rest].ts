@@ -1,6 +1,5 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "contracts";
-import { Job, WorkerUtils, makeWorkerUtils } from "graphile-worker";
 import { type NextApiRequest, type NextApiResponse } from "next/types";
 import crypto from "node:crypto";
 import {
@@ -14,18 +13,8 @@ import {
 	updatePub,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
+import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
-
-let _workerUtils: WorkerUtils;
-const getWorkerUtils = async () => {
-	if (_workerUtils === undefined) {
-		_workerUtils = await makeWorkerUtils({
-			connectionString: process.env.DATABASE_URL,
-		});
-		await _workerUtils.migrate();
-	}
-	return _workerUtils;
-};
 
 const handleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse) => {
 	if (error instanceof HTTPStatusError) {
@@ -104,28 +93,11 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const pub = await getPubType(params.pubTypeId);
 		return { status: 200, body: pub };
 	},
-	createJob: async ({ headers, params, body }) => {
+	scheduleEmail: async ({ headers, params, body, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		const workerUtils = await getWorkerUtils();
-		const { kind, init, options } = body;
-		let job: Job;
-		switch (kind) {
-			case "sendEmail":
-				job = await workerUtils.addJob("sendEmail", [params.instanceId, init], {
-					...options,
-					runAt: options.runAt ? new Date(options.runAt) : undefined,
-				});
-				break;
-		}
-		if (job === undefined) {
-			throw new BadRequestError(`Job kind ${kind} not found`);
-		}
-		return {
-			status: 202,
-			body: {
-				key: job.key,
-			},
-		};
+		const jobs = await getJobsClient();
+		const job = await jobs.sendEmail(params.instanceId, body, query);
+		return { status: 202, body: job };
 	},
 });
 

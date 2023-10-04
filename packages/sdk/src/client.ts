@@ -5,7 +5,7 @@ import {
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
 	JobOptions,
-	JobResponseBody,
+	ScheduleEmailResponseBody,
 	SendEmailRequestBody,
 	SendEmailResponseBody,
 	SuggestedMember,
@@ -102,10 +102,7 @@ export type Client<T extends Manifest> = {
 	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
 	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
-	sendEmail(
-		instanceId: string,
-		email: SendEmailRequestBody
-	): Promise<SendEmailResponseBody | JobResponseBody>;
+	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
 	getSuggestedMembers(
 		instanceId: string,
 		query: SuggestedMembersQuery
@@ -114,8 +111,8 @@ export type Client<T extends Manifest> = {
 	scheduleEmail(
 		instanceId: string,
 		email: SendEmailRequestBody,
-		options: JobOptions
-	): Promise<JobResponseBody>;
+		jobOptions: JobOptions
+	): Promise<ScheduleEmailResponseBody>;
 };
 
 /**
@@ -212,9 +209,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				if (response.status === 200) {
 					return response.body;
 				}
-				if (response.status === 202) {
-					return response.body;
-				}
 				throw new Error("Failed to send email", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
@@ -255,18 +249,15 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new Error("Request failed", { cause });
 			}
 		},
-		async scheduleEmail(instanceId, email, options) {
+		async scheduleEmail(instanceId, email, jobOptions) {
 			try {
-				const response = await client.createJob({
+				const response = await client.scheduleEmail({
 					headers: {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
 					params: { instanceId },
-					body: {
-						kind: "sendEmail",
-						init: email,
-						options,
-					},
+					body: email,
+					query: jobOptions,
 					cache: "no-cache",
 				});
 				if (response.status === 202) {
