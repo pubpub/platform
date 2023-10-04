@@ -1,26 +1,15 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
-import { type NextApiRequest, type NextApiResponse } from "next/types";
 import { api } from "contracts";
 import {
-	HTTPStatusError,
 	createPub,
 	getMembers,
 	getPub,
+	tsRestHandleErrors,
 	updatePub,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { validateToken } from "~/lib/server/token";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
-
-const handleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse) => {
-	if (error instanceof HTTPStatusError) {
-		return res.status(error.status).json({ message: error.message });
-	}
-	if (error instanceof Error) {
-		console.error(error.message);
-	}
-	return res.status(500).json({ message: "Internal Server Error" });
-};
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader)
@@ -73,5 +62,5 @@ const router = {
 };
 
 export default createNextRouter(api, router, {
-	errorHandler: handleErrors,
+	errorHandler: tsRestHandleErrors,
 });
