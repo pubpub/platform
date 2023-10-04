@@ -1,6 +1,6 @@
 packages:
     - "core"
-    - "flock"
+    - "jobs"
     - "tsconfig"
     - "integrations/*"
     - "packages/*"
