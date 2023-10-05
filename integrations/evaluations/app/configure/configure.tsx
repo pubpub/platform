@@ -24,8 +24,6 @@ import {
 import { cn } from "utils";
 import * as z from "zod";
 import { configure } from "./actions";
-import { useEditor, EditorContent, useCurrentEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 
 type Props = {
 	instanceId: string;
@@ -45,22 +43,6 @@ const schema = z.object({
 	}),
 });
 
-const Editor = (field) => {
-	const editor = useEditor({
-		extensions: [StarterKit],
-		content: field.value,
-		onUpdate: ({ editor }) => {
-			field!.onChange(editor.getHTML());
-		},
-	});
-	console.log("On Change", field);
-	return (
-		<div className="mt-2">
-			<EditorContent editor={editor} />
-		</div>
-	);
-};
-
 export function Configure(props: Props) {
 	const { toast } = useToast();
 	const template = {
@@ -79,10 +61,7 @@ export function Configure(props: Props) {
 			template,
 		},
 	});
-	const editor = useEditor({
-		extensions: [StarterKit],
-		content: template.message,
-	});
+
 	async function onSubmit(values: z.infer<typeof schema>) {
 		const result = await configure(values.instanceId, values.pubTypeId, values.template);
 		if ("error" in result) {
@@ -145,23 +124,17 @@ export function Configure(props: Props) {
 											<Input {...field} />
 										</FormControl>
 										<FormDescription>
-											The pub type determines the fields available on the
-											evaluation form.
+											This is the default subject line for the email. You can
+											change it by entering text above.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
 						</div>
-						{/* <div className="flex flex-col justify-between align-baseline">
+						<div className="flex flex-col justify-between align-baseline">
 							<FormLabel>Email Message</FormLabel>
-							<div className="mt-2 mb-4">
-								Hello {"Jill"} {"Admin"}! You've been invited to evaluate{" "}
-								<a className="text-sky-400/100" href="https://www.pubpub.org">
-									Example Pub
-								</a>{" "}
-								on PubPub.
-							</div>
+
 							<FormField
 								control={form.control}
 								name="template.message"
@@ -171,25 +144,13 @@ export function Configure(props: Props) {
 											<Textarea {...field} required />
 										</FormControl>
 										<FormDescription>
-											Your email will begin with the above content. Add plain
-											text to customize the email.
+											Change the default email message by entering text.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
-						</div> */}
-						<Controller
-							name="template.message"
-							control={form.control}
-							render={({ field }) => (
-								<Editor
-									{...field}
-									onChange={field.onChange}
-									// initialContent={field}
-								/>
-							)}
-						/>
+						</div>
 					</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
 						<Button

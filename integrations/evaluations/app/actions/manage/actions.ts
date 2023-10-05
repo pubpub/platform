@@ -23,9 +23,8 @@ export const manage = async (
 				},
 				subject: template.subject ?? "You've been invited to review a submission on PubPub",
 				message:
-					`Hello {{user.firstName}} {{user.lastName}}! You've been invited to evaluate <a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a> on PubPub.` +
-					`\n` +
-					template.message,
+					template.message ??
+					`Hello {{user.firstName}} {{user.lastName}}! You've been invited to evaluate <a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a> on PubPub.`,
 			},
 			{
 				key: `${instanceId}-${pubId}-invite-${email}`,

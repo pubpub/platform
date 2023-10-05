@@ -13,6 +13,8 @@ import {
 	CardHeader,
 	CardTitle,
 	Dialog,
+	DialogClose,
+	DialogTitle,
 	DialogContent,
 	DialogTrigger,
 	Form,
@@ -168,73 +170,56 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 				query={value as SuggestedMembersQuery}
 				onClick={() => props.onSuggest(props.index, value as SuggestedMembersQuery)}
 			/>
-			<Dialog open={open}>
-				<DialogTrigger>
-					<Button
-						variant="ghost"
-						className="ml-4"
-						onClick={(e) => {
-							e.preventDefault();
-							setOpen(true);
-						}}
-					>
-						<Icon.Send className="h-4 w-4" />
+			<Dialog>
+				<DialogTrigger asChild>
+					<Button variant="ghost" className="ml-4">
+						<Icon.Mail className="h-4 w-4" />
 					</Button>
 				</DialogTrigger>
 				<DialogContent>
-					<Card>
-						<CardTitle className="space-y-1.5 p-6">Edit Template</CardTitle>
-						<CardContent>
-							<div className="mb-3">
-								<FormField
-									name={`invites.${props.index}.template.subject`}
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Subject</FormLabel>
-											<FormControl>
-												<Input {...field} />
-											</FormControl>
-											<FormDescription>
-												The pub type determines the fields available on the
-												evaluation form.
-											</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-							<div className="flex flex-col justify-between align-baseline">
-								<FormLabel>Email Message</FormLabel>
-								<div className="mt-2 mb-4">
-									Hello {"Jill"} {"Admin"}! You've been invited to evaluate{" "}
-									<a className="text-sky-400/100" href="https://www.pubpub.org">
-										Example Pub
-									</a>{" "}
-									on PubPub.
-								</div>
-								<FormField
-									name={`invites.${props.index}.template.message`}
-									render={({ field }) => (
-										<FormItem>
-											<FormControl className="mt-[8px]">
-												<Textarea {...field} required />
-											</FormControl>
-											<FormDescription>
-												Your email will begin with the above content. Add
-												plain text to customize the email.
-											</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-						</CardContent>
-						<CardFooter className="flex flex-row">
-							<Button variant="secondary" onClick={() => setOpen(false)}>
-								Cancel
-							</Button>
-						</CardFooter>
-					</Card>
+					<div className="flex">
+						<DialogTitle>Edit Template</DialogTitle>
+						<DialogClose asChild>
+							<button className="ml-auto" aria-label="Close">
+								<Icon.X className="h-4 w-4" />
+							</button>
+						</DialogClose>
+					</div>
+					<div className="mb-3">
+						<FormField
+							name={`invites.${props.index}.template.subject`}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Subject</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										This is the default subject line for the email. You can
+										change it by entering text above.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+					<div className="flex flex-col justify-between align-baseline">
+						<FormLabel>Email Message</FormLabel>
+						<FormField
+							name={`invites.${props.index}.template.message`}
+							render={({ field }) => (
+								<FormItem>
+									<FormControl className="mt-[8px]">
+										<Textarea {...field} required />
+									</FormControl>
+									<FormDescription>
+										Change the default email message by entering text.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
 				</DialogContent>
 			</Dialog>
 			<Button variant="ghost" onClick={() => props.onRemove(props.index)}>
