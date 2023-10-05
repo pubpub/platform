@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import {
 	Button,
 	Card,
@@ -24,6 +24,8 @@ import {
 import { cn } from "utils";
 import * as z from "zod";
 import { configure } from "./actions";
+import { useEditor, EditorContent, useCurrentEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 type Props = {
 	instanceId: string;
@@ -43,6 +45,22 @@ const schema = z.object({
 	}),
 });
 
+const Editor = (field) => {
+	const editor = useEditor({
+		extensions: [StarterKit],
+		content: field.value,
+		onUpdate: ({ editor }) => {
+			field!.onChange(editor.getHTML());
+		},
+	});
+	console.log("On Change", field);
+	return (
+		<div className="mt-2">
+			<EditorContent editor={editor} />
+		</div>
+	);
+};
+
 export function Configure(props: Props) {
 	const { toast } = useToast();
 	const template = {
@@ -61,7 +79,10 @@ export function Configure(props: Props) {
 			template,
 		},
 	});
-
+	const editor = useEditor({
+		extensions: [StarterKit],
+		content: template.message,
+	});
 	async function onSubmit(values: z.infer<typeof schema>) {
 		const result = await configure(values.instanceId, values.pubTypeId, values.template);
 		if ("error" in result) {
@@ -77,7 +98,6 @@ export function Configure(props: Props) {
 			});
 		}
 	}
-
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -133,7 +153,7 @@ export function Configure(props: Props) {
 								)}
 							/>
 						</div>
-						<div className="flex flex-col justify-between align-baseline">
+						{/* <div className="flex flex-col justify-between align-baseline">
 							<FormLabel>Email Message</FormLabel>
 							<div className="mt-2 mb-4">
 								Hello {"Jill"} {"Admin"}! You've been invited to evaluate{" "}
@@ -158,7 +178,18 @@ export function Configure(props: Props) {
 									</FormItem>
 								)}
 							/>
-						</div>
+						</div> */}
+						<Controller
+							name="template.message"
+							control={form.control}
+							render={({ field }) => (
+								<Editor
+									{...field}
+									onChange={field.onChange}
+									// initialContent={field}
+								/>
+							)}
+						/>
 					</CardContent>
 					<CardFooter className={cn("flex justify-between")}>
 						<Button
