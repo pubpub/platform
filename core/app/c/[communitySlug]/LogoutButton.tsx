@@ -2,7 +2,7 @@
 import { supabase } from "~/lib/supabase";
 import { Button } from "ui";
 
-export default async function LogoutButton() {
+export default function LogoutButton() {
 	const handleSignout = async () => {
 		await supabase.auth.signOut();
 		window.location.href = "/";
