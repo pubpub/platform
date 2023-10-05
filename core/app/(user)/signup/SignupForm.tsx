@@ -24,10 +24,10 @@ export default function SignupForm() {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(postBody),
 		});
-		const data = await response.json();
-		if (data.error) {
+		if (!response.ok) {
 			setIsLoading(false);
-			console.error(data.error);
+			const { message } = await response.json();
+			console.error(message);
 		} else {
 			setIsLoading(false);
 			setSignupComplete(true);
