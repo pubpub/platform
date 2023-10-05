@@ -57,7 +57,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		return { status: 200, body: info };
 	},
 	getPubType: async ({ headers, params }) => {
-		checkApiKey(getBearerToken(headers.authorization));
+		checkAuthentication(headers.authorization);
 		const pub = await getPubType(params.pubTypeId);
 		return { status: 200, body: pub };
 	},
