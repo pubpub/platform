@@ -177,7 +177,7 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 					</Button>
 				</DialogTrigger>
 				<DialogContent>
-					<div className="flex">
+					<div className="flex mb-3">
 						<DialogTitle>Edit Template</DialogTitle>
 						<DialogClose asChild>
 							<button className="ml-auto" aria-label="Close">
