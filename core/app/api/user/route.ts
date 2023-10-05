@@ -88,7 +88,7 @@ export async function PUT(req: NextRequest) {
 				name,
 			},
 		});
-		return NextResponse.json({}, { status: 204 });
+		return NextResponse.json({}, { status: 200 });
 	})
 }
 
@@ -116,6 +116,6 @@ export async function GET(req: NextRequest) {
 			throw new ForbiddenError('Email already in use')
 		}
 
-		return NextResponse.json({message: "Email is available"}, { status: 204 })
+		return NextResponse.json({message: "Email is available"}, { status: 200 })
 	})
 }
