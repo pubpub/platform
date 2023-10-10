@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
 	Button,
@@ -12,6 +12,11 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
+	Dialog,
+	DialogClose,
+	DialogTitle,
+	DialogContent,
+	DialogTrigger,
 	Form,
 	FormControl,
 	FormDescription,
@@ -21,16 +26,21 @@ import {
 	FormMessage,
 	Icon,
 	Input,
+	Textarea,
 	useLocalStorage,
 	useToast,
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { suggest, manage } from "./actions";
+import { manage, suggest } from "./actions";
 
 type Props = {
 	instanceId: string;
 	pub: GetPubResponseBody;
+	template?: {
+		subject: string;
+		message: string;
+	};
 };
 
 // TODO: generate fields using instance's configured PubType
@@ -41,6 +51,10 @@ const schema = z.object({
 			email: z.string().email("Enter a valid email address"),
 			firstName: z.string().min(1, "First name is required"),
 			lastName: z.string().min(1, "Last name is required"),
+			template: z.object({
+				subject: z.string(),
+				message: z.string(),
+			}),
 		})
 	),
 });
@@ -82,10 +96,13 @@ type EvaluatorInviteProps = {
 };
 
 const EvaluatorInvite = (props: EvaluatorInviteProps) => {
+	const [open, setOpen] = useState(false);
+
 	const value = useWatch<z.infer<typeof schema>>({
 		control: props.control,
 		name: `invites.${props.index}`,
 	});
+
 	return (
 		<div key={props.item.key} className="flex flex-row gap-4 items-end mb-4">
 			<FormField
@@ -153,6 +170,58 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 				query={value as SuggestedMembersQuery}
 				onClick={() => props.onSuggest(props.index, value as SuggestedMembersQuery)}
 			/>
+			<Dialog>
+				<DialogTrigger asChild>
+					<Button variant="ghost" className="ml-4">
+						<Icon.Mail className="h-4 w-4" />
+					</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<div className="flex mb-3">
+						<DialogTitle>Edit Template</DialogTitle>
+						<DialogClose asChild>
+							<button className="ml-auto" aria-label="Close">
+								<Icon.X className="h-4 w-4" />
+							</button>
+						</DialogClose>
+					</div>
+					<div className="mb-3">
+						<FormField
+							name={`invites.${props.index}.template.subject`}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Subject</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										This is the default subject line for the email. You can
+										change it by entering text above.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+					<div className="flex flex-col justify-between align-baseline">
+						<FormLabel>Email Message</FormLabel>
+						<FormField
+							name={`invites.${props.index}.template.message`}
+							render={({ field }) => (
+								<FormItem>
+									<FormControl className="mt-[8px]">
+										<Textarea {...field} required />
+									</FormControl>
+									<FormDescription>
+										Change the default email message by entering text.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+				</DialogContent>
+			</Dialog>
 			<Button variant="ghost" onClick={() => props.onRemove(props.index)}>
 				<Icon.X className="h-4 w-4" />
 			</Button>
@@ -162,18 +231,30 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 
 export function EmailForm(props: Props) {
 	const { toast } = useToast();
+	const template = {
+		subject:
+			(props.template && props.template.subject) ??
+			"You've been invited to review a submission on PubPub",
+		message:
+			(props.template && props.template.message) ??
+			`Please reach out if you have any questions.`,
+	};
 	const [suggestPending, startTransition] = useTransition();
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		// TODO: generate fields using instance's configured PubType
 		resolver: zodResolver(schema),
-		// defaultValues: {
-		// 	invites: [
-		// 		{ email: "", firstName: "", lastName: "" },
-		// 		{ email: "", firstName: "", lastName: "" },
-		// 	],
-		// },
+		defaultValues: {
+			invites: [
+				{
+					email: "",
+					firstName: "",
+					lastName: "",
+					template,
+				},
+			],
+		},
 	});
 	const {
 		fields: invites,
@@ -194,7 +275,8 @@ export function EmailForm(props: Props) {
 			props.pub.values["unjournal:title"] as string,
 			values.invites[0].email,
 			values.invites[0].firstName,
-			values.invites[0].lastName
+			values.invites[0].lastName,
+			values.invites[0].template
 		);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
@@ -280,7 +362,12 @@ export function EmailForm(props: Props) {
 							onClick={(e) => {
 								e.preventDefault();
 								invites.length < 5 &&
-									append({ email: "", firstName: "", lastName: "" });
+									append({
+										email: "",
+										firstName: "",
+										lastName: "",
+										template,
+									});
 							}}
 							className="color:red-500"
 						>
@@ -298,6 +385,7 @@ export function EmailForm(props: Props) {
 						>
 							Go Back
 						</Button>
+
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
 								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
