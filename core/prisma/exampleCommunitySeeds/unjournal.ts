@@ -98,6 +98,32 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const evaluator = await prisma.pubFieldSchema.create({
+		data: {
+			name: "evaluator",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:evaluator",
+				title: "Evaluator",
+				type: "object",
+				properties: {
+					firstName: {
+						title: "First Name",
+						type: "string",
+					},
+					lastName: {
+						title: "Last Name",
+						type: "string",
+					},
+					email: {
+						title: "Email",
+						type: "string",
+					},
+				},
+			},
+		},
+	});
+
 	const fieldIds = [...Array(12)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
@@ -113,12 +139,18 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			{ id: fieldIds[8], name: "DOI", slug: "unjournal:doi" },
 			{
 				id: fieldIds[9],
+				name: "Submission Evaluator",
+				pubFieldSchemaId: evaluator.id,
+				slug: "unjournal:submission-evaluator",
+			},
+			{
+				id: fieldIds[10],
 				name: "Metrics and Predictions",
 				pubFieldSchemaId: metricsSchema.id,
 				slug: "unjournal:metrics-predictions",
 			},
 			{
-				id: fieldIds[10],
+				id: fieldIds[11],
 				name: "Survey Questions",
 				slug: "unjournal:survey-questions",
 			},
@@ -167,7 +199,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Evaluation",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[9] }],
+				connect: [
+					{ id: fieldIds[0] },
+					{ id: fieldIds[1] },
+					{ id: fieldIds[9] }, // Submission Evaluator
+					{ id: fieldIds[10] }, // Metrics and Predictions
+				],
 			},
 		},
 	});

@@ -91,7 +91,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	scheduleEmail: async ({ headers, params, body, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const jobs = await getJobsClient();
-		const job = await jobs.sendEmail(params.instanceId, body, query);
+		const job = await jobs.scheduleEmail(params.instanceId, body, query);
 		return { status: 202, body: job };
 	},
 	getSuggestedMembers: async ({ headers, query }) => {

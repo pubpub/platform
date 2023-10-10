@@ -34,20 +34,10 @@ import { cn } from "utils";
 import * as z from "zod";
 import { manage, suggest } from "./actions";
 
-type Props = {
-	instanceId: string;
-	pub: GetPubResponseBody;
-	template?: {
-		subject: string;
-		message: string;
-	};
-};
-
 // TODO: generate fields using instance's configured PubType
 const schema = z.object({
 	invites: z.array(
 		z.object({
-			id: z.string().optional(),
 			email: z.string().email("Enter a valid email address"),
 			firstName: z.string().min(1, "First name is required"),
 			lastName: z.string().min(1, "Last name is required"),
@@ -229,6 +219,15 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 	);
 };
 
+type Props = {
+	instanceId: string;
+	pub: GetPubResponseBody;
+	template?: {
+		subject: string;
+		message: string;
+	};
+};
+
 export function EmailForm(props: Props) {
 	const { toast } = useToast();
 	const template = {
@@ -273,10 +272,7 @@ export function EmailForm(props: Props) {
 			props.instanceId,
 			props.pub.id,
 			props.pub.values["unjournal:title"] as string,
-			values.invites[0].email,
-			values.invites[0].firstName,
-			values.invites[0].lastName,
-			values.invites[0].template
+			values.invites
 		);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
