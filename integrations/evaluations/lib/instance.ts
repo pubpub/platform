@@ -3,6 +3,7 @@ import manifest from "../pubpub-integration.json";
 
 export type Instance = {
 	pubTypeId: string;
+	template: { subject: string; message: string };
 };
 
 // const client = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING });
@@ -22,6 +23,7 @@ const db = async () => {
 
 export const makeInstance = (): Instance => ({
 	pubTypeId: "",
+	template: { subject: "", message: "" },
 });
 
 export const findInstance = async (instanceId: string) => {
