@@ -105,21 +105,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			schema: {
 				$id: "unjournal:evaluator",
 				title: "Evaluator",
-				type: "object",
-				properties: {
-					firstName: {
-						title: "First Name",
-						type: "string",
-					},
-					lastName: {
-						title: "Last Name",
-						type: "string",
-					},
-					email: {
-						title: "Email",
-						type: "string",
-					},
-				},
+				type: "string",
+				minLength: 36,
+				maxLength: 36,
 			},
 		},
 	});
@@ -141,7 +129,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				id: fieldIds[9],
 				name: "Submission Evaluator",
 				pubFieldSchemaId: evaluator.id,
-				slug: "unjournal:submission-evaluator",
+				slug: "unjournal:evaluator",
 			},
 			{
 				id: fieldIds[10],

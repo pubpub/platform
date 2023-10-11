@@ -1,11 +1,11 @@
 "use server";
 
 import { PubValues } from "@pubpub/sdk";
-import { findInstance } from "~/lib/instance";
+import { getInstanceConfig } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
 export const evaluate = async (instanceId: string, pubId: string, values: PubValues) => {
-	const instance = await findInstance(instanceId);
+	const instance = await getInstanceConfig(instanceId);
 	if (instance === undefined) {
 		return { error: "Instance not configured" };
 	}

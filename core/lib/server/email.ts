@@ -1,7 +1,6 @@
 import type { Prisma, User } from "@prisma/client";
 import { Eta } from "eta";
 import prisma from "~/prisma/db";
-import { slugifyString } from "../string";
 import { IntegrationAction } from "../types";
 import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
@@ -99,10 +98,10 @@ const makeTemplateApi = (
 };
 
 export const emailUser = async (
-	to: Readonly<To>,
+	instanceId: string,
+	user: User,
 	subject: string,
-	message: string,
-	instanceId: string
+	message: string
 ) => {
 	const instance = await prisma.integrationInstance.findUnique({
 		where: { id: instanceId },
@@ -113,42 +112,10 @@ export const emailUser = async (
 		throw new NotFoundError(`Integration instance ${instanceId} not found`);
 	}
 
-	let user: User;
-	let email: string;
-	if ("userId" in to) {
-		// Requester is sending an email to existing user
-		const dbUser = await prisma.user.findUnique({ where: { id: to.userId } });
-		if (!dbUser) {
-			throw new NotFoundError(`User ${to.userId} not found`);
-		}
-		user = dbUser;
-		email = dbUser.email;
-	} else {
-		// Requester wishes to find or create user from an email address
-		const dbUser = await prisma.user.findUnique({ where: { email: to.email } });
-		if (dbUser) {
-			user = dbUser;
-		} else {
-			try {
-				user = await prisma.user.create({
-					data: {
-						email: to.email,
-						slug: slugifyString(to.email),
-						firstName: to.firstName,
-						lastName: to.lastName,
-					},
-				});
-			} catch (cause) {
-				throw new Error(`Unable to create user for ${to.email}`, { cause });
-			}
-		}
-		email = user.email;
-	}
-
 	const html = await eta.renderStringAsync(message, makeTemplateApi(instance, user));
 	const { accepted, rejected } = await smtpclient.sendMail({
 		from: "PubPub Team <hello@mg.pubpub.org>",
-		to: email,
+		to: user.email,
 		replyTo: "hello@pubpub.org",
 		html,
 		subject,

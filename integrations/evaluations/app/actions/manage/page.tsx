@@ -1,31 +1,41 @@
-import { findInstance } from "~/lib/instance";
+import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { EmailForm } from "./emailForm";
+import { expect } from "utils";
 
 type Props = {
 	searchParams: {
 		instanceId: string;
-		pubId: any;
+		pubId: string;
 	};
 };
 
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
-	const pub = await client.getPub(instanceId, pubId);
-	const instance = await findInstance(instanceId);
+	const instanceConfig = expect(await getInstanceConfig(instanceId));
+	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+	// Fetch the submission pub and its children
+	const submission = await client.getPub(instanceId, pubId);
+	// Load user info for each of the submission's child evaluations
+	const evaluators =
+		submission.children.length > 0
+			? await client.getUsers(
+					instanceId,
+					submission.children
+						// Only consider the children that are evaluations
+						.filter((child) => child.pubTypeId === instanceConfig.pubTypeId)
+						// Extract the evaluator user id
+						.map((child) => child.values["unjournal:evaluator"] as string)
+			  )
+			: [];
 
 	return (
-		<div>
-			<p>
-				"{pub.values["unjournal:title"] as string}" has been evaluated {pub.children.length}{" "}
-				times:
-			</p>
-			<ul>
-				{pub.children.map((child) => (
-					<li key={child.id}>{child.values.Title as string}</li>
-				))}
-			</ul>
-			<EmailForm instanceId={instanceId} pub={pub} template={instance?.template} />
-		</div>
+		<EmailForm
+			instanceId={instanceId}
+			submission={submission}
+			evaluators={evaluators}
+			template={instanceConfig?.template}
+			templates={instanceState}
+		/>
 	);
 }

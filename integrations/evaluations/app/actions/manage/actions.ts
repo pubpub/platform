@@ -1,22 +1,22 @@
 "use server";
 
-import { SuggestedMembersQuery } from "@pubpub/sdk";
-import { findInstance } from "~/lib/instance";
+import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
+import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
-export type EvaluatorInvite = {
-	email: string;
-	firstName: string;
-	lastName: string;
+export type Evaluator =
+	| { userId: string; firstName: string; lastName: string }
+	| { email: string; firstName: string; lastName: string };
+
+export type EvaluatorInvite = Evaluator & {
 	template: {
 		subject: string;
 		message: string;
 	};
 };
 
-const makeEvaluatorInviteKey = (instanceId: string, pubId: string, email: string) => {
-	return `${instanceId}-${pubId}-invite-${email}`;
-};
+const makeInviteJobKey = (instanceId: string, pubId: string, userId: string) =>
+	`${instanceId}:${pubId}:${userId}`;
 
 export const manage = async (
 	instanceId: string,
@@ -24,85 +24,69 @@ export const manage = async (
 	pubTitle: string,
 	invites: EvaluatorInvite[]
 ) => {
-	const instance = await findInstance(instanceId);
-	if (instance === undefined) {
+	const instanceConfig = await getInstanceConfig(instanceId);
+	if (instanceConfig === undefined) {
 		return { error: `No instance found with id ${instanceId}` };
 	}
-	const pub = await client.getPub(instanceId, pubId);
-	const pubEvaluations = pub.children.filter((child) => child.pubTypeId === instance.pubTypeId);
-	const pubEvaluationsByInviteKey = pubEvaluations.reduce((acc, evaluation) => {
-		const inviteKey = makeEvaluatorInviteKey(
-			instanceId,
-			pubId,
-			(evaluation.values["unjournal:submission-evaluator"] as EvaluatorInvite).email
+
+	try {
+		const pub = await client.getPub(instanceId, pubId);
+		const state = await getInstanceState(instanceId, pubId);
+		const evaluations = pub.children.filter(
+			(child) => child.pubTypeId === instanceConfig.pubTypeId
 		);
-		acc[inviteKey] = evaluation;
-		return acc;
-	}, {} as Record<string, any>);
-	for (const invite of invites) {
-		const inviteKey = makeEvaluatorInviteKey(instanceId, pubId, invite.email);
-		const existingEvaluation = pubEvaluationsByInviteKey[inviteKey];
-		if (existingEvaluation === undefined) {
-			const evaluation = await client.createPub(instanceId, {
-				parentId: pubId,
-				pubTypeId: instance.pubTypeId,
-				values: {
-					"unjournal:title": `Evaluation of ${pubTitle} by ${invite.firstName} ${invite.lastName}`,
-					"unjournal:submission-evaluator": invite,
-				},
+		const evaluationsByEvaluator = evaluations.reduce((acc, evaluation) => {
+			acc[evaluation.values["unjournal:evaluator"] as string] = evaluation;
+			return acc;
+		}, {} as Record<string, GetPubResponseBody>);
+		// { "user-abc-123": Evaluation, "user-def-456": Evaluation, ... }
+
+		for (let i = 0; i < invites.length; i++) {
+			let invite = invites[i];
+			if ("email" in invite) {
+				const user = await client.getOrCreateUser(instanceId, invite);
+				invite = invites[i] = {
+					userId: user.id,
+					firstName: invite.firstName,
+					lastName: invite.lastName,
+					template: invite.template,
+				};
+			}
+			// Save email template
+			await setInstanceState(instanceId, pubId, {
+				...state,
+				[invite.userId]: invite.template,
 			});
-			const info = await client.scheduleEmail(
+			const evaluation = evaluationsByEvaluator[invite.userId];
+			if (evaluation === undefined) {
+				// New evaluator added. Make the corresponding evaluation pub.
+				await client.createPub(instanceId, {
+					parentId: pubId,
+					pubTypeId: instanceConfig.pubTypeId,
+					values: {
+						"unjournal:title": `Evaluation of ${pubTitle} by ${invite.firstName} ${invite.lastName}`,
+						"unjournal:evaluator": invite.userId,
+					},
+				});
+			}
+			// Schedule (or replace) email to be sent to evaluator
+			await client.scheduleEmail(
 				instanceId,
 				{
 					to: {
-						firstName: invite.firstName,
-						lastName: invite.lastName,
-						email: invite.email,
+						userId: invite.userId,
 					},
-					subject:
-						invite.template.subject ??
-						"You've been invited to review a submission on PubPub",
-					message:
-						invite.template.message ??
-						`Hello {{user.firstName}} {{user.lastName}}! You've been invited to evaluate <a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a> on PubPub.`,
+					subject: invite.template.subject ?? instanceConfig.template.subject,
+					message: invite.template.message ?? instanceConfig.template.message,
 				},
 				{
-					key: inviteKey,
+					key: makeInviteJobKey(instanceId, pubId, invite.userId),
+					mode: "preserve_run_at",
 					runAt: new Date(),
 				}
 			);
-			return info;
-		} else {
-			await client.updatePub(instanceId, {
-				id: existingEvaluation.id,
-				pubTypeId: instance.pubTypeId,
-				values: {
-					"unjournal:submission-evaluator": invite,
-				},
-				children: [],
-			});
 		}
-	}
-	try {
-		// const info = await client.scheduleEmail(
-		// 	instanceId,
-		// 	{
-		// 		to: {
-		// 			firstName,
-		// 			lastName,
-		// 			email,
-		// 		},
-		// 		subject: template.subject ?? "You've been invited to review a submission on PubPub",
-		// 		message:
-		// 			template.message ??
-		// 			`Hello {{user.firstName}} {{user.lastName}}! You've been invited to evaluate <a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a> on PubPub.`,
-		// 	},
-		// 	{
-		// 		key: `${instanceId}-${pubId}-invite-${email}`,
-		// 		runAt: new Date(),
-		// 	}
-		// );
-		// return info;
+		return invites;
 	} catch (error) {
 		return { error: error.message };
 	}

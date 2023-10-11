@@ -94,41 +94,22 @@ export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
 		children: z.lazy(() => CreatePubResponseBody.array()),
 	});
 
-// Member types
-
-export const Memberbase = z.object({
-	id: z.string(),
-	slug: z.string(),
-	email: z.string(),
-	firstName: z.string(),
-	lastName: z.string(),
-	orcid: z.string().nullable(),
-	avatar: z.string().nullable(),
-});
-
-export const SuggestedMember = Memberbase.pick({
-	id: true,
-	firstName: true,
-	lastName: true,
-});
-export type SuggestedMember = z.infer<typeof SuggestedMember>;
-
-export const Member = Memberbase.pick({
-	id: true,
-	firstName: true,
-	lastName: true,
-});
-
 // Auth types
 
-export const User = z.object({
+export const SafeUser = z.object({
 	id: z.string(),
-	slug: z.string(),
-	email: z.string(),
 	firstName: z.string(),
 	lastName: z.string(),
-	avatar: z.string().nullable(),
 });
+export type SafeUser = z.infer<typeof SafeUser>;
+
+export const User = SafeUser.and(
+	z.object({
+		slug: z.string(),
+		email: z.string(),
+		avatar: z.string().nullable(),
+	})
+);
 export type User = z.infer<typeof User>;
 
 // Email types
@@ -149,8 +130,11 @@ export const SendEmailRequestBody = z.object({
 });
 export type SendEmailRequestBody = z.infer<typeof SendEmailRequestBody>;
 export const SendEmailResponseBody = z.object({
-	accepted: z.array(z.string()),
-	rejected: z.array(z.string()),
+	info: z.object({
+		accepted: z.array(z.string()),
+		rejected: z.array(z.string()),
+	}),
+	userId: z.string(),
 });
 export type SendEmailResponseBody = z.infer<typeof SendEmailResponseBody>;
 
@@ -187,11 +171,15 @@ export const JobOptions = z.object({
 	key: z.string().optional(),
 	runAt: z.coerce.date(),
 	maxAttempts: z.number().optional(),
+	mode: z.enum(["replace", "preserve_run_at"]).optional(),
 });
 export type JobOptions = z.infer<typeof JobOptions>;
 
 export const ScheduleEmailResponseBody = z.object({
-	key: z.string().nullable(),
+	job: z.object({
+		key: z.string().nullable(),
+	}),
+	userId: z.string(),
 });
 export type ScheduleEmailResponseBody = z.infer<typeof ScheduleEmailResponseBody>;
 
@@ -330,20 +318,44 @@ export const integrationsApi = contract.router(
 					{ message: "One of the fields must be defined" }
 				),
 			responses: {
-				200: z.array(SuggestedMember),
+				200: z.array(SafeUser),
 			},
 		},
-		getMembers: {
+		getUsers: {
 			method: "GET",
-			path: "/:instanceId/members",
-			summary: "Gets a list of members on this instance given a list of user ids ids",
-			description: "A way to get all members for an integration instance",
+			path: "/:instanceId/users",
+			summary: "Get user details for one or more user ids",
+			description: "",
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
-			query: z.object({ userIds: z.array(z.string()) }),
+			query: z.object({
+				userIds: z.array(z.string()),
+			}),
 			responses: {
-				200: z.array(Member),
+				200: z.array(SafeUser),
+			},
+		},
+		getOrCreateUser: {
+			method: "POST",
+			path: "/:instanceId/user",
+			summary: "Get or create a user",
+			description: "",
+			body: z.union([
+				z.object({
+					userId: z.string(),
+				}),
+				z.object({
+					email: z.string(),
+					firstName: z.string(),
+					lastName: z.string(),
+				}),
+			]),
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: User,
 			},
 		},
 		// TODO implement these endpoints

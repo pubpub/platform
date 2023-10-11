@@ -1,13 +1,15 @@
 import * as redis from "redis";
-import manifest from "../pubpub-integration.json";
 
-export type Instance = {
+export type EmailTemplate = { subject: string; message: string };
+
+export type InstanceConfig = {
 	pubTypeId: string;
-	template: { subject: string; message: string };
+	template: EmailTemplate;
 };
 
-// const client = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING });
-// const connect = client.connect();
+export type InstanceState = {
+	[userId: string]: EmailTemplate;
+};
 
 let client: redis.RedisClientType;
 let clientConnect: Promise<void>;
@@ -21,20 +23,34 @@ const db = async () => {
 	return client;
 };
 
-export const makeInstance = (): Instance => ({
+export const makeInstanceConfig = (): InstanceConfig => ({
 	pubTypeId: "",
 	template: { subject: "", message: "" },
 });
 
-export const findInstance = async (instanceId: string) => {
-	const instance = await (await db()).get(`${manifest.name}:${instanceId}`);
-	return instance ? (JSON.parse(instance) as Instance) : undefined;
+export const getInstanceConfig = async (instanceId: string) => {
+	const instance = await (await db()).get(instanceId);
+	return instance ? (JSON.parse(instance) as InstanceConfig) : undefined;
 };
 
-export const updateInstance = async (instanceId: string, instance: Instance): Promise<Instance> => {
-	(await db()).set(`${manifest.name}:${instanceId}`, JSON.stringify(instance));
+export const updateInstance = async (
+	instanceId: string,
+	instance: InstanceConfig
+): Promise<InstanceConfig> => {
+	(await db()).set(instanceId, JSON.stringify(instance));
 	return instance;
 };
 
-export const getAllInstanceIds = async () =>
-	(await (await db()).keys(`${manifest.name}:*`))?.map((key) => key.split(":")[1]);
+export const getInstanceState = async (instanceId: string, pubId: string) => {
+	const state = await (await db()).get(`${instanceId}:${pubId}`);
+	return state ? (JSON.parse(state) as InstanceState) : undefined;
+};
+
+export const setInstanceState = async (
+	instanceId: string,
+	pubId: string,
+	state: InstanceState
+): Promise<InstanceState> => {
+	(await db()).set(`${instanceId}:${pubId}`, JSON.stringify(state));
+	return state;
+};

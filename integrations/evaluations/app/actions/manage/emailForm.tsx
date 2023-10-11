@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
-import { useEffect, useState, useTransition } from "react";
+import { GetPubResponseBody, SafeUser, SuggestedMembersQuery } from "@pubpub/sdk";
+import { useState, useTransition } from "react";
 import { Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
 	Button,
@@ -14,8 +14,8 @@ import {
 	CardTitle,
 	Dialog,
 	DialogClose,
-	DialogTitle,
 	DialogContent,
+	DialogTitle,
 	DialogTrigger,
 	Form,
 	FormControl,
@@ -27,35 +27,50 @@ import {
 	Icon,
 	Input,
 	Textarea,
-	useLocalStorage,
 	useToast,
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
 import { manage, suggest } from "./actions";
 
+const InviteBase = z.object({
+	firstName: z.string(),
+	lastName: z.string(),
+	template: z.object({
+		subject: z.string(),
+		message: z.string(),
+	}),
+});
+
+const Invite = z.union([
+	z
+		.object({
+			userId: z.string(),
+		})
+		.and(InviteBase),
+	z
+		.object({
+			email: z.string(),
+		})
+		.and(InviteBase),
+]);
+
+type Invite = z.infer<typeof Invite>;
+
 // TODO: generate fields using instance's configured PubType
 const schema = z.object({
-	invites: z.array(
-		z.object({
-			email: z.string().email("Enter a valid email address"),
-			firstName: z.string().min(1, "First name is required"),
-			lastName: z.string().min(1, "Last name is required"),
-			template: z.object({
-				subject: z.string(),
-				message: z.string(),
-			}),
-		})
-	),
+	invites: z.array(Invite),
 });
 
 type SuggestButtonProps = {
 	index: number;
-	query: SuggestedMembersQuery & { id?: string };
+	query: SuggestedMembersQuery;
+	disabled?: boolean;
 	onClick: (key: number, query: SuggestedMembersQuery) => void;
 };
 
 const SuggestButton = (props: SuggestButtonProps) => {
+	const disabled = props.disabled ?? false;
 	const [pending, startTransition] = useTransition();
 	return (
 		<Button
@@ -64,9 +79,9 @@ const SuggestButton = (props: SuggestButtonProps) => {
 				event.preventDefault();
 				startTransition(() => props.onClick(props.index, props.query));
 			}}
-			disabled={pending || props.query.id !== undefined}
+			disabled={pending || disabled}
 		>
-			{props.query.id ? (
+			{disabled ? (
 				<Icon.Check className="h-4 w-4" />
 			) : pending ? (
 				<Icon.Loader2 className="h-4 w-4" />
@@ -79,7 +94,6 @@ const SuggestButton = (props: SuggestButtonProps) => {
 
 type EvaluatorInviteProps = {
 	control: Control<any>;
-	item: SuggestedMembersQuery & { key: string };
 	index: number;
 	onRemove: (index: number) => void;
 	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
@@ -88,13 +102,15 @@ type EvaluatorInviteProps = {
 const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 	const [open, setOpen] = useState(false);
 
-	const value = useWatch<z.infer<typeof schema>>({
+	const invite = useWatch<z.infer<typeof schema>>({
 		control: props.control,
 		name: `invites.${props.index}`,
 	});
 
+	const isSuggested = typeof invite === "object" && "userId" in invite;
+
 	return (
-		<div key={props.item.key} className="flex flex-row gap-4 items-end mb-4">
+		<div className="flex flex-row gap-4 items-end mb-4">
 			<FormField
 				name={`invites.${props.index}.email`}
 				render={({ field }) => (
@@ -109,8 +125,15 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 						)}
 						<FormControl>
 							<Input
-								placeholder={props.index === 0 ? "e.g. stevie@example.org" : ""}
+								placeholder={
+									isSuggested
+										? "(email hidden)"
+										: props.index === 0
+										? "e.g. stevie@example.org"
+										: ""
+								}
 								{...field}
+								disabled={isSuggested}
 							/>
 						</FormControl>
 						<FormMessage />
@@ -130,7 +153,11 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 							</>
 						)}
 						<FormControl>
-							<Input placeholder={props.index === 0 ? "Stevie" : ""} {...field} />
+							<Input
+								placeholder={props.index === 0 ? "Stevie" : ""}
+								{...field}
+								disabled={isSuggested}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -149,7 +176,11 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 							</>
 						)}
 						<FormControl>
-							<Input placeholder={props.index === 0 ? "Admin" : ""} {...field} />
+							<Input
+								placeholder={props.index === 0 ? "Admin" : ""}
+								{...field}
+								disabled={isSuggested}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -157,12 +188,13 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 			/>
 			<SuggestButton
 				index={props.index}
-				query={value as SuggestedMembersQuery}
-				onClick={() => props.onSuggest(props.index, value as SuggestedMembersQuery)}
+				disabled={isSuggested}
+				query={invite as SuggestedMembersQuery}
+				onClick={() => props.onSuggest(props.index, invite as SuggestedMembersQuery)}
 			/>
 			<Dialog>
 				<DialogTrigger asChild>
-					<Button variant="ghost" className="ml-4">
+					<Button variant="ghost">
 						<Icon.Mail className="h-4 w-4" />
 					</Button>
 				</DialogTrigger>
@@ -221,60 +253,58 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 
 type Props = {
 	instanceId: string;
-	pub: GetPubResponseBody;
+	submission: GetPubResponseBody;
 	template?: {
 		subject: string;
 		message: string;
+	};
+	evaluators: SafeUser[];
+	templates: {
+		[userId: string]: {
+			subject: string;
+			message: string;
+		};
 	};
 };
 
 export function EmailForm(props: Props) {
 	const { toast } = useToast();
 	const template = {
-		subject:
-			(props.template && props.template.subject) ??
-			"You've been invited to review a submission on PubPub",
-		message:
-			(props.template && props.template.message) ??
-			`Please reach out if you have any questions.`,
+		subject: props.template?.subject ?? "You've been invited to review a submission on PubPub",
+		message: props.template?.message ?? `Please reach out if you have any questions.`,
 	};
-	const [suggestPending, startTransition] = useTransition();
 	const form = useForm<z.infer<typeof schema>>({
-		mode: "onChange",
+		mode: "all",
 		reValidateMode: "onChange",
-		// TODO: generate fields using instance's configured PubType
 		resolver: zodResolver(schema),
 		defaultValues: {
-			invites: [
-				{
-					email: "",
-					firstName: "",
-					lastName: "",
-					template,
-				},
-			],
+			invites: props.evaluators.map((evaluator) => ({
+				userId: evaluator.id,
+				firstName: evaluator.firstName,
+				lastName: evaluator.lastName,
+				template: props.templates[evaluator.id] ?? template,
+			})),
 		},
 	});
 	const {
 		fields: invites,
-		update,
 		remove,
 		append,
+		update,
 	} = useFieldArray({
 		control: form.control,
 		name: "invites",
 		keyName: "key",
 	});
-	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
 	const onSubmit = async (values: z.infer<typeof schema>) => {
 		const result = await manage(
 			props.instanceId,
-			props.pub.id,
-			props.pub.values["unjournal:title"] as string,
+			props.submission.id,
+			props.submission.values["unjournal:title"] as string,
 			values.invites
 		);
-		if ("error" in result && typeof result.error === "string") {
+		if ("error" in result) {
 			toast({
 				title: "Error",
 				description: result.error,
@@ -285,12 +315,11 @@ export function EmailForm(props: Props) {
 				title: "Success",
 				description: "The email was sent successfully",
 			});
-			// form.reset();
+			form.reset({ invites: result });
 		}
 	};
 
 	const onSuggest = async (index: number, query: SuggestedMembersQuery) => {
-		console.log(query);
 		const result = await suggest(props.instanceId, query);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
@@ -301,7 +330,13 @@ export function EmailForm(props: Props) {
 		} else if (Array.isArray(result)) {
 			if (result.length > 0) {
 				const [user] = result;
-				update(index, { ...values.invites[index], ...user });
+				const invite = invites[index];
+				update(index, {
+					userId: user.id,
+					firstName: user.firstName,
+					lastName: user.lastName,
+					template: invite.template,
+				});
 				toast({
 					title: "Success",
 					description: "A user was suggested",
@@ -315,82 +350,62 @@ export function EmailForm(props: Props) {
 			}
 		}
 	};
-
-	// Load the persisted values.
-	// const { reset } = form;
-	// useEffect(() => {
-	// 	// `keepDefaultValues` is set to true to prevent the form from
-	// 	// validating fields that were not filled during the previous session.
-	// 	reset(persistedValues, { keepDefaultValues: true });
-	// }, [reset]);
-
-	// Persist form values to local storage. This operation is debounced by
-	// the timeout passed to <LocalStorageProvider>.
-	const values = form.watch();
-	useEffect(() => {
-		persist(values);
-	}, [values]);
-
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<Card>
-					<CardHeader>
-						<CardTitle>Invite Evaluators</CardTitle>
-						<CardDescription>
-							Use this form to invite evaluators to review "
-							{props.pub.values["unjournal:title"] as string}".
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						{invites.map((item, index) => (
-							<EvaluatorInvite
-								key={item.key}
-								item={item}
-								control={form.control}
-								index={index}
-								onRemove={remove}
-								onSuggest={onSuggest}
-							/>
-						))}
-						<Button
-							variant="ghost"
-							onClick={(e) => {
-								e.preventDefault();
-								invites.length < 5 &&
-									append({
-										email: "",
-										firstName: "",
-										lastName: "",
-										template,
-									});
-							}}
-							className="color:red-500"
-						>
-							<Icon.Plus className="h-4 w-4 mr-2" />
-							Add Evaluator
-						</Button>
-					</CardContent>
-					<CardFooter className={cn("flex justify-between")}>
-						<Button
-							variant="outline"
-							onClick={(e) => {
-								e.preventDefault();
-								window.history.back();
-							}}
-						>
-							Go Back
-						</Button>
-
-						<Button type="submit" disabled={!form.formState.isValid}>
-							{form.formState.isSubmitting && (
-								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
-							)}
-							Invite
-						</Button>
-					</CardFooter>
-				</Card>
-			</form>
+			<Card>
+				<CardHeader>
+					<CardTitle>Invite Evaluators</CardTitle>
+					<CardDescription>
+						Use this form to invite evaluators to review "
+						{props.submission.values["unjournal:title"] as string}".
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{invites.map((invite, index) => (
+						<EvaluatorInvite
+							key={invite.key}
+							control={form.control}
+							index={index}
+							onRemove={remove}
+							onSuggest={onSuggest}
+						/>
+					))}
+					<Button
+						variant="ghost"
+						onClick={(e) => {
+							e.preventDefault();
+							invites.length < 5 &&
+								append({
+									email: "",
+									firstName: "",
+									lastName: "",
+									template,
+								});
+						}}
+						className="color:red-500"
+					>
+						<Icon.Plus className="h-4 w-4 mr-2" />
+						Add Evaluator
+					</Button>
+				</CardContent>
+				<CardFooter className={cn("flex justify-between")}>
+					<Button
+						variant="outline"
+						onClick={(e) => {
+							e.preventDefault();
+							window.history.back();
+						}}
+					>
+						Go Back
+					</Button>
+					<Button onClick={form.handleSubmit(onSubmit)}>
+						{form.formState.isSubmitting && (
+							<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
+						)}
+						Invite
+					</Button>
+				</CardFooter>
+			</Card>
 		</Form>
 	);
 }

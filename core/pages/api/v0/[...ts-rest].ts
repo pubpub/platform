@@ -16,6 +16,7 @@ import {
 import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
+import { findOrCreateUser } from "~/lib/server/user";
 
 const handleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse) => {
 	if (error instanceof HTTPStatusError) {
@@ -85,21 +86,36 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	sendEmail: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		const info = await emailUser(body.to, body.subject, body.message, params.instanceId);
-		return { status: 200, body: info };
+		const user = await ("userId" in body.to
+			? findOrCreateUser(body.to.userId)
+			: findOrCreateUser(body.to.email, body.to.firstName, body.to.lastName));
+		const info = await emailUser(params.instanceId, user, body.subject, body.message);
+		return { status: 200, body: { info, userId: user.id } };
 	},
 	scheduleEmail: async ({ headers, params, body, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
+		const { to, subject, message } = body;
 		const jobs = await getJobsClient();
-		const job = await jobs.scheduleEmail(params.instanceId, body, query);
-		return { status: 202, body: job };
+		const user = await ("userId" in to
+			? findOrCreateUser(to.userId)
+			: findOrCreateUser(to.email, to.firstName, to.lastName));
+		const payload = { to: { userId: user.id }, subject, message };
+		const job = await jobs.scheduleEmail(params.instanceId, payload, query);
+		return { status: 202, body: { job, userId: user.id } };
+	},
+	getOrCreateUser: async ({ headers, body }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		const user = await ("userId" in body
+			? findOrCreateUser(body.userId)
+			: findOrCreateUser(body.email, body.firstName, body.lastName));
+		return { status: 200, body: user };
 	},
 	getSuggestedMembers: async ({ headers, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const member = await getSuggestedMembers(query.email, query.firstName, query.lastName);
 		return { status: 200, body: member };
 	},
-	getMembers: async ({ headers, query }) => {
+	getUsers: async ({ headers, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const members = await getMembers(query.userIds);
 		return {
@@ -115,4 +131,5 @@ const router = {
 
 export default createNextRouter(api, router, {
 	errorHandler: handleErrors,
+	jsonQuery: true,
 });
