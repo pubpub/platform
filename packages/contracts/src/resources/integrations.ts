@@ -94,14 +94,30 @@ export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
 		children: z.lazy(() => CreatePubResponseBody.array()),
 	});
 
-// Member suggestion types
+// Member types
 
-export const SuggestedMember = z.object({
+export const Memberbase = z.object({
 	id: z.string(),
+	slug: z.string(),
+	email: z.string(),
 	firstName: z.string(),
 	lastName: z.string().nullable(),
+	orcid: z.string().nullable(),
+	avatar: z.string().nullable(),
+});
+
+export const SuggestedMember = Memberbase.pick({
+	id: true,
+	firstName: true,
+	lastName: true,
 });
 export type SuggestedMember = z.infer<typeof SuggestedMember>;
+
+export const Member = Memberbase.pick({
+	id: true,
+	firstName: true,
+	lastName: true,
+});
 
 // Auth types
 
@@ -196,6 +212,19 @@ export const integrationsApi = contract.router(
 				200: User,
 			},
 		},
+		getPubType: {
+			method: "GET",
+			path: "/:instanceId/pubTypes/:pubTypeId",
+			summary: "Get a pubType and its fields and schemas",
+			description: "",
+			pathParams: z.object({
+				instanceId: z.string(),
+				pubTypeId: z.string(),
+			}),
+			responses: {
+				200: GetPubTypeResponseBody,
+			},
+		},
 		createPub: {
 			method: "POST",
 			path: "/:instanceId/pubs",
@@ -254,6 +283,31 @@ export const integrationsApi = contract.router(
 				200: UpdatePubResponseBody,
 			},
 		},
+		sendEmail: {
+			method: "POST",
+			path: "/:instanceId/email",
+			summary: "Send an email from PubPub to a new or existing PubPub user",
+			description:
+				"Recipient can be an existing pubpub user identified by ID, or a new user who must be identified by email and name.",
+			body: SendEmailRequestBody,
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: SendEmailResponseBody,
+			},
+		},
+		scheduleEmail: {
+			method: "POST",
+			path: "/:instanceId/email/schedule",
+			summary: "Schedule an email to be sent at some point in the future",
+			description: "",
+			body: SendEmailRequestBody,
+			query: JobOptions,
+			responses: {
+				202: ScheduleEmailResponseBody,
+			},
+		},
 		getSuggestedMembers: {
 			method: "GET",
 			path: "/:instanceId/autosuggest/members",
@@ -279,42 +333,17 @@ export const integrationsApi = contract.router(
 				200: z.array(SuggestedMember),
 			},
 		},
-		sendEmail: {
-			method: "POST",
-			path: "/:instanceId/email",
-			summary: "Send an email from PubPub to a new or existing PubPub user",
-			description:
-				"Recipient can be an existing pubpub user identified by ID, or a new user who must be identified by email and name.",
-			body: SendEmailRequestBody,
-			pathParams: z.object({
-				instanceId: z.string(),
-			}),
-			responses: {
-				200: SendEmailResponseBody,
-			},
-		},
-		getPubType: {
+		getMembers: {
 			method: "GET",
-			path: "/:instanceId/pubTypes/:pubTypeId",
-			summary: "Get a pubType and its fields and schemas",
-			description: "",
+			path: "/:instanceId/members",
+			summary: "Gets a list of members on this instance given a list of user ids ids",
+			description: "A way to get all members for an integration instance",
 			pathParams: z.object({
 				instanceId: z.string(),
-				pubTypeId: z.string(),
 			}),
+			query: z.object({ userIds: z.array(z.string()) }),
 			responses: {
-				200: GetPubTypeResponseBody,
-			},
-		},
-		scheduleEmail: {
-			method: "POST",
-			path: "/:instanceId/email/schedule",
-			summary: "Schedule an email to be sent at some point in the future",
-			description: "",
-			body: SendEmailRequestBody,
-			query: JobOptions,
-			responses: {
-				202: ScheduleEmailResponseBody,
+				200: z.array(Member),
 			},
 		},
 		// TODO implement these endpoints

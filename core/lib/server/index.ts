@@ -1,3 +1,3 @@
 export * from "./pub";
-export * from "./autosuggest";
+export * from "./members";
 export * from "./errors";
