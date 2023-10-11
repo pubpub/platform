@@ -7,6 +7,7 @@ import {
 	HTTPStatusError,
 	UnauthorizedError,
 	createPub,
+	getSuggestedMembers,
 	getMembers,
 	getPub,
 	getPubType,
@@ -51,8 +52,17 @@ const checkApiKey = (apiKey: string) => {
 };
 
 // TODO: verify pub belongs to integrationInstance probably in some middleware
-// TODO: verify token in header
 const integrationsRouter = createNextRoute(api.integrations, {
+	auth: async ({ headers }) => {
+		const token = getBearerToken(headers.authorization);
+		const user = await validateToken(token);
+		return { status: 200, body: user };
+	},
+	getPubType: async ({ headers, params }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		const pub = await getPubType(params.pubTypeId);
+		return { status: 200, body: pub };
+	},
 	createPub: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const pub = await createPub(params.instanceId, body);
@@ -73,31 +83,28 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const updatedPub = await updatePub(params.pubId, body);
 		return { status: 200, body: updatedPub };
 	},
-	getSuggestedMembers: async ({ headers, query }) => {
-		checkApiKey(getBearerToken(headers.authorization));
-		const member = await getMembers(query.email, query.firstName, query.lastName);
-		return { status: 200, body: member };
-	},
-	auth: async ({ headers }) => {
-		const token = getBearerToken(headers.authorization);
-		const user = await validateToken(token);
-		return { status: 200, body: user };
-	},
 	sendEmail: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const info = await emailUser(body.to, body.subject, body.message, params.instanceId);
 		return { status: 200, body: info };
-	},
-	getPubType: async ({ headers, params }) => {
-		checkApiKey(getBearerToken(headers.authorization));
-		const pub = await getPubType(params.pubTypeId);
-		return { status: 200, body: pub };
 	},
 	scheduleEmail: async ({ headers, params, body, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const jobs = await getJobsClient();
 		const job = await jobs.sendEmail(params.instanceId, body, query);
 		return { status: 202, body: job };
+	},
+	getSuggestedMembers: async ({ headers, query }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		const member = await getSuggestedMembers(query.email, query.firstName, query.lastName);
+		return { status: 200, body: member };
+	},
+	getMembers: async ({ headers, query }) => {
+		console.log("getMembers header", headers);
+		console.log("getMembers query", query);
+		checkApiKey(getBearerToken(headers.authorization));
+		const members = await getMembers(query);
+		return { status: 200, body: members };
 	},
 });
 
