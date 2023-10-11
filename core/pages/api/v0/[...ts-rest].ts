@@ -100,11 +100,12 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		return { status: 200, body: member };
 	},
 	getMembers: async ({ headers, query }) => {
-		console.log("getMembers header", headers);
-		console.log("getMembers query", query);
 		checkApiKey(getBearerToken(headers.authorization));
-		const members = await getMembers(query);
-		return { status: 200, body: members };
+		const members = await getMembers(query.userIds);
+		return {
+			status: 200,
+			body: members,
+		};
 	},
 });
 
