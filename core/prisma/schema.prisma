@@ -12,13 +12,14 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  slug      String   @unique
-  email     String   @unique
-  name      String
-  avatar    String?
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  id         String   @id @default(uuid())
+  supabaseId String?  @unique
+  slug       String   @unique
+  email      String   @unique
+  name       String
+  avatar     String?
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
   claims       ActionClaim[]
   moves        ActionMove[]

@@ -5,7 +5,6 @@ import { getRefreshCookie, getTokenCookie } from "~/lib/auth/cookies";
 import { getServerSupabase } from "~/lib/supabaseServer";
 
 const JWT_SECRET: string = process.env.JWT_SECRET || "";
-const DATABASE_URL: string = process.env.DATABASE_URL || "";
 
 /* This is only called from API calls */
 /* When rendering server components, use getLoginData from loginData.ts */
