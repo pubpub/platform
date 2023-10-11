@@ -114,6 +114,7 @@ export const SuggestedMember = Memberbase.pick({
 export type SuggestedMember = z.infer<typeof SuggestedMember>;
 
 export const Member = Memberbase.pick({
+	id: true,
 	firstName: true,
 	lastName: true,
 });

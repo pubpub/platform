@@ -52,6 +52,7 @@ export const getMembers = async (userId: string[]) => {
 			},
 		},
 		select: {
+			id: true,
 			firstName: true,
 			lastName: true,
 		},
