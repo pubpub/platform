@@ -2,14 +2,14 @@ import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { useTransition } from "react";
 import { Button, Icon } from "ui";
 
-export type EvaluatorSuggestButtonProps = {
+type Props = {
 	index: number;
 	query: SuggestedMembersQuery;
 	disabled?: boolean;
 	onClick: (key: number, query: SuggestedMembersQuery) => void;
 };
 
-export const EvaluatorSuggestButton = (props: EvaluatorSuggestButtonProps) => {
+export const EvaluatorSuggestButton = (props: Props) => {
 	const disabled = props.disabled ?? false;
 	const [pending, startTransition] = useTransition();
 	return (

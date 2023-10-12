@@ -42,7 +42,7 @@ const daysHoursMinutes = (ms: number) => {
 	return [days, pad(hours), pad(minutes)].join(":");
 };
 
-export type EvaluatorInviteRowProps = {
+type Props = {
 	control: Control<any>;
 	inviteTime: string | undefined;
 	index: number;
@@ -50,7 +50,7 @@ export type EvaluatorInviteRowProps = {
 	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
 };
 
-export const EvaluatorInviteRow = memo((props: EvaluatorInviteRowProps) => {
+export const EvaluatorInviteRow = memo((props: Props) => {
 	const getTimeBeforeInviteSent = () =>
 		props.inviteTime ? new Date(props.inviteTime).getTime() - Date.now() : Infinity;
 	const [timeBeforeInviteSent, setTimeBeforeInviteSent] = useState(getTimeBeforeInviteSent);

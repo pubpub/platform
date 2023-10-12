@@ -24,33 +24,35 @@ import { InstanceConfig, InstanceState } from "~/lib/instance";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
 import { EmailFormSchema } from "./types";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 
 type Props = {
 	evaluators: SafeUser[];
 	instanceId: string;
+	instanceConfig: InstanceConfig;
 	instanceState: InstanceState;
 	pub: GetPubResponseBody;
-	template?: InstanceConfig["template"];
 };
 
-export function EmailForm(props: Props) {
+export function EvaluatorInviteForm(props: Props) {
 	const { toast } = useToast();
-	const template = {
-		subject: props.template?.subject ?? "You've been invited to review a submission on PubPub",
-		message: props.template?.message ?? `Please reach out if you have any questions.`,
+	const makeInvites = () => {
+		return props.evaluators.map((evaluator) => ({
+			userId: evaluator.id,
+			firstName: evaluator.firstName,
+			lastName: evaluator.lastName,
+			// Restore a customized template or copy the default one
+			template: props.instanceState[evaluator.id]?.inviteTemplate ?? {
+				...props.instanceConfig.template,
+			},
+		}));
 	};
 	const form = useForm<z.infer<typeof EmailFormSchema>>({
 		mode: "all",
 		reValidateMode: "onChange",
 		resolver: zodResolver(EmailFormSchema),
 		defaultValues: {
-			invites: props.evaluators.map((evaluator) => ({
-				userId: evaluator.id,
-				firstName: evaluator.firstName,
-				lastName: evaluator.lastName,
-				template: props.instanceState[evaluator.id]?.inviteTemplate ?? template,
-			})),
+			invites: makeInvites(),
 		},
 	});
 	const {
@@ -150,7 +152,12 @@ export function EmailForm(props: Props) {
 	const onAppend = useCallback(
 		(event: React.MouseEvent) => {
 			event.preventDefault();
-			append({ email: "", firstName: "", lastName: "", template });
+			append({
+				email: "",
+				firstName: "",
+				lastName: "",
+				template: { ...props.instanceConfig.template },
+			});
 		},
 		[append]
 	);
@@ -159,6 +166,14 @@ export function EmailForm(props: Props) {
 		event.preventDefault();
 		window.history.back();
 	}, []);
+
+	// If the evaluators change (i.e. cache was invalidated), reset the form
+	// with updated evaluator invites.
+	useEffect(() => {
+		form.reset({
+			invites: makeInvites(),
+		});
+	}, [props.evaluators]);
 
 	return (
 		<Form {...form}>

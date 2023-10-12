@@ -1,6 +1,6 @@
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import { EmailForm } from "./EvaluatorInviteForm";
+import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
 import { expect } from "utils";
 
 type Props = {
@@ -36,11 +36,11 @@ export default async function Page(props: Props) {
 	);
 
 	return (
-		<EmailForm
+		<EvaluatorInviteForm
 			instanceId={instanceId}
 			pub={pub}
 			evaluators={evaluators}
-			template={instanceConfig?.template}
+			instanceConfig={instanceConfig}
 			instanceState={instanceState}
 		/>
 	);
