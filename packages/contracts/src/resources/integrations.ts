@@ -127,6 +127,7 @@ export const SendEmailRequestBody = z.object({
 	]),
 	subject: z.string(),
 	message: z.string(),
+	extra: z.record(z.string()).optional(),
 });
 export type SendEmailRequestBody = z.infer<typeof SendEmailRequestBody>;
 export const SendEmailResponseBody = z.object({
@@ -168,7 +169,7 @@ export type GetPubTypeResponseBody = z.infer<typeof GetPubTypeResponseBody>;
 // Job types
 
 export const JobOptions = z.object({
-	key: z.string().optional(),
+	jobKey: z.string().optional(),
 	runAt: z.coerce.date(),
 	maxAttempts: z.number().optional(),
 	mode: z.enum(["replace", "preserve_run_at"]).optional(),

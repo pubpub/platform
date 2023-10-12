@@ -25,9 +25,15 @@ export default async function Page(props: Props) {
 						// Only consider the children that are evaluations
 						.filter((child) => child.pubTypeId === instanceConfig.pubTypeId)
 						// Extract the evaluator user id
-						.map((child) => child.values["unjournal:evaluator"] as string)
+						.map((evaluation) => evaluation.values["unjournal:evaluator"] as string)
 			  )
 			: [];
+
+	evaluators.sort(
+		(a, b) =>
+			new Date(instanceState[a.id]?.emailScheduledTime).getTime() -
+			new Date(instanceState[b.id]?.emailScheduledTime).getTime()
+	);
 
 	return (
 		<EmailForm

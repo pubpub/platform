@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GetPubResponseBody, SafeUser, SuggestedMembersQuery } from "@pubpub/sdk";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Control, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
 	Button,
@@ -13,8 +13,9 @@ import {
 	CardHeader,
 	CardTitle,
 	Dialog,
-	DialogClose,
 	DialogContent,
+	DialogDescription,
+	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 	Form,
@@ -31,36 +32,34 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
+import { InstanceConfig, InstanceState } from "~/lib/instance";
 import * as actions from "./actions";
-import { InstanceState } from "~/lib/instance";
 
-const InviteBase = z.object({
-	firstName: z.string(),
-	lastName: z.string(),
+const EvaluatorInviteBase = z.object({
+	firstName: z.string().min(1, "First name is required"),
+	lastName: z.string().min(1, "Last name is required"),
 	template: z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
 });
 
-const Invite = z.union([
+const EvaluatorInvite: z.ZodType<actions.EvaluatorInvite> = z.union([
 	z
 		.object({
 			userId: z.string(),
 		})
-		.and(InviteBase),
+		.and(EvaluatorInviteBase),
 	z
 		.object({
-			email: z.string(),
+			email: z.string().email("Invalid email address"),
 		})
-		.and(InviteBase),
+		.and(EvaluatorInviteBase),
 ]);
 
-type Invite = z.infer<typeof Invite>;
-
 // TODO: generate fields using instance's configured PubType
-const schema = z.object({
-	invites: z.array(Invite),
+const EmailFormSchema = z.object({
+	invites: z.array(EvaluatorInvite),
 });
 
 type SuggestButtonProps = {
@@ -93,7 +92,7 @@ const SuggestButton = (props: SuggestButtonProps) => {
 	);
 };
 
-type EvaluatorInviteProps = {
+type EvaluatorInviteRowProps = {
 	control: Control<any>;
 	time: string | undefined;
 	index: number;
@@ -101,41 +100,31 @@ type EvaluatorInviteProps = {
 	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
 };
 
-const EvaluatorInvite = (props: EvaluatorInviteProps) => {
-	const [open, setOpen] = useState(false);
-
-	const invite = useWatch<z.infer<typeof schema>>({
+const EvaluatorInviteRow = (props: EvaluatorInviteRowProps) => {
+	const invite = useWatch<z.infer<typeof EmailFormSchema>>({
 		control: props.control,
 		name: `invites.${props.index}`,
 	});
-
-	const isSuggested = typeof invite === "object" && "userId" in invite;
+	const inviteSent = Boolean(props.time && new Date(props.time) < new Date());
+	const inviteIsForPubPubUser = typeof invite === "object" && "userId" in invite;
 
 	return (
-		<div className="flex flex-row gap-4 items-end mb-4">
+		<div className="flex flex-row gap-4 mb-4">
 			<FormField
 				name={`invites.${props.index}.email`}
 				render={({ field }) => (
 					<FormItem className="flex-1 self-start">
-						{props.index === 0 && (
-							<>
-								<FormLabel>Email Address</FormLabel>
-								<FormDescription>
-									The email of the evaluator you'd like to invite.
-								</FormDescription>
-							</>
-						)}
 						<FormControl>
 							<Input
 								placeholder={
-									isSuggested
+									inviteIsForPubPubUser
 										? "(email hidden)"
 										: props.index === 0
 										? "e.g. stevie@example.org"
 										: ""
 								}
 								{...field}
-								disabled={isSuggested}
+								disabled={inviteIsForPubPubUser}
 							/>
 						</FormControl>
 						<FormMessage />
@@ -146,19 +135,11 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 				name={`invites.${props.index}.firstName`}
 				render={({ field }) => (
 					<FormItem className="flex-1 self-start">
-						{props.index === 0 && (
-							<>
-								<FormLabel>First Name</FormLabel>
-								<FormDescription>
-									The first name of the evaluator you'd like to invite.
-								</FormDescription>
-							</>
-						)}
 						<FormControl>
 							<Input
 								placeholder={props.index === 0 ? "Stevie" : ""}
 								{...field}
-								disabled={isSuggested}
+								disabled={inviteIsForPubPubUser}
 							/>
 						</FormControl>
 						<FormMessage />
@@ -169,105 +150,99 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 				name={`invites.${props.index}.lastName`}
 				render={({ field }) => (
 					<FormItem className="flex-1 self-start">
-						{props.index === 0 && (
-							<>
-								<FormLabel>Last Name</FormLabel>
-								<FormDescription>
-									The last name of the evaluator you'd like to invite.
-								</FormDescription>
-							</>
-						)}
 						<FormControl>
 							<Input
 								placeholder={props.index === 0 ? "Admin" : ""}
 								{...field}
-								disabled={isSuggested}
+								disabled={inviteIsForPubPubUser}
 							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
 				)}
 			/>
-			<SuggestButton
-				index={props.index}
-				disabled={isSuggested}
-				query={invite as SuggestedMembersQuery}
-				onClick={() => props.onSuggest(props.index, invite as SuggestedMembersQuery)}
-			/>
-			<Dialog>
-				<DialogTrigger asChild>
-					<Button variant="ghost">
-						<Icon.Mail className="h-4 w-4" />
-					</Button>
-				</DialogTrigger>
-				<DialogContent>
-					<div className="flex mb-3">
-						<DialogTitle>Edit Template</DialogTitle>
-						<DialogClose asChild>
-							<button className="ml-auto" aria-label="Close">
-								<Icon.X className="h-4 w-4" />
-							</button>
-						</DialogClose>
-					</div>
-					<div className="mb-3">
-						{props.time && (
-							<FormDescription>
-								This email is scheduled to be sent at{" "}
-								{new Date(props.time).toLocaleString()}
-							</FormDescription>
-						)}
-						<FormField
-							name={`invites.${props.index}.template.subject`}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Subject</FormLabel>
-									<FormControl>
-										<Input {...field} />
-									</FormControl>
-									<FormDescription>
-										This is the default subject line for the email. You can
-										change it by entering text above.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
-					<div className="flex flex-col justify-between align-baseline">
-						<FormLabel>Email Message</FormLabel>
-						<FormField
-							name={`invites.${props.index}.template.message`}
-							render={({ field }) => (
-								<FormItem>
-									<FormControl className="mt-[8px]">
-										<Textarea {...field} required />
-									</FormControl>
-									<FormDescription>
-										Change the default email message by entering text.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
-				</DialogContent>
-			</Dialog>
-			<Button variant="ghost" onClick={() => props.onRemove(props.index)}>
-				<Icon.X className="h-4 w-4" />
-			</Button>
+			<div className="shrink-0 basis-36">
+				<SuggestButton
+					index={props.index}
+					disabled={inviteIsForPubPubUser}
+					query={invite as SuggestedMembersQuery}
+					onClick={() => props.onSuggest(props.index, invite as SuggestedMembersQuery)}
+				/>
+				<Dialog>
+					<DialogTrigger asChild>
+						<Button variant="ghost">
+							<Icon.Mail className="h-4 w-4" />
+						</Button>
+					</DialogTrigger>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>Edit Template</DialogTitle>
+							{props.time &&
+								(inviteSent ? (
+									<DialogDescription>
+										This email was sent at{" "}
+										<strong className="font-medium">
+											{new Date(props.time).toLocaleString()}
+										</strong>
+										, and can no longer be edited.
+									</DialogDescription>
+								) : (
+									<DialogDescription>
+										This email is scheduled to be sent at{" "}
+										<strong className="font-medium">
+											{new Date(props.time).toLocaleString()}
+										</strong>
+										.
+									</DialogDescription>
+								))}
+						</DialogHeader>
+						<div className="flex flex-col justify-between align-baseline gap-4">
+							<FormField
+								name={`invites.${props.index}.template.subject`}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Subject</FormLabel>
+										<FormControl>
+											<Input {...field} disabled={inviteSent} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name={`invites.${props.index}.template.message`}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Email Message</FormLabel>
+										<FormControl className="mt-[8px]">
+											<Textarea
+												{...field}
+												required
+												disabled={inviteSent}
+												rows={8}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+					</DialogContent>
+				</Dialog>
+				<Button variant="ghost" onClick={() => props.onRemove(props.index)}>
+					<Icon.X className="h-4 w-4" />
+				</Button>
+			</div>
 		</div>
 	);
 };
 
 type Props = {
-	instanceId: string;
-	submission: GetPubResponseBody;
-	template?: {
-		subject: string;
-		message: string;
-	};
 	evaluators: SafeUser[];
+	instanceId: string;
 	instanceState: InstanceState;
+	submission: GetPubResponseBody;
+	template?: InstanceConfig["template"];
 };
 
 export function EmailForm(props: Props) {
@@ -276,10 +251,10 @@ export function EmailForm(props: Props) {
 		subject: props.template?.subject ?? "You've been invited to review a submission on PubPub",
 		message: props.template?.message ?? `Please reach out if you have any questions.`,
 	};
-	const form = useForm<z.infer<typeof schema>>({
+	const form = useForm<z.infer<typeof EmailFormSchema>>({
 		mode: "all",
 		reValidateMode: "onChange",
-		resolver: zodResolver(schema),
+		resolver: zodResolver(EmailFormSchema),
 		defaultValues: {
 			invites: props.evaluators.map((evaluator) => ({
 				userId: evaluator.id,
@@ -300,7 +275,7 @@ export function EmailForm(props: Props) {
 		keyName: "key",
 	});
 
-	const onSubmit = async (values: z.infer<typeof schema>) => {
+	const onSubmit = async (values: z.infer<typeof EmailFormSchema>) => {
 		const result = await actions.save(
 			props.instanceId,
 			props.submission.id,
@@ -339,6 +314,7 @@ export function EmailForm(props: Props) {
 					lastName: user.lastName,
 					template: invite.template,
 				});
+				form.trigger(`invites.${index}`);
 				toast({
 					title: "Success",
 					description: "A user was suggested",
@@ -359,6 +335,7 @@ export function EmailForm(props: Props) {
 			if ("userId" in invite) {
 				await actions.remove(props.instanceId, props.submission.id, invite.userId);
 			}
+			remove(index);
 			toast({
 				title: "Success",
 				description: "The evaluator was removed",
@@ -383,8 +360,29 @@ export function EmailForm(props: Props) {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
+					<div className="flex flex-row gap-4 mb-4">
+						<FormItem className="flex-1">
+							<FormLabel>Email Address</FormLabel>
+							<FormDescription>
+								The email of the evaluator you'd like to invite.
+							</FormDescription>
+						</FormItem>
+						<FormItem className="flex-1">
+							<FormLabel>First Name</FormLabel>
+							<FormDescription>
+								The first name of the evaluator you'd like to invite.
+							</FormDescription>
+						</FormItem>
+						<FormItem className="flex-1">
+							<FormLabel>Last Name</FormLabel>
+							<FormDescription>
+								The last name of the evaluator you'd like to invite.
+							</FormDescription>
+						</FormItem>
+						<div className="shrink-0 basis-36"></div>
+					</div>
 					{invites.map((invite, index) => (
-						<EvaluatorInvite
+						<EvaluatorInviteRow
 							key={invite.key}
 							time={
 								"userId" in invite
@@ -429,7 +427,7 @@ export function EmailForm(props: Props) {
 						{form.formState.isSubmitting && (
 							<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
 						)}
-						Invite
+						Save
 					</Button>
 				</CardFooter>
 			</Card>

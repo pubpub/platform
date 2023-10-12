@@ -31,7 +31,7 @@ export const save = async (
 	invites: EvaluatorInvite[]
 ) => {
 	try {
-		const instanceState = await getInstanceState(instanceId, pubId);
+		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
 		const instanceConfig = await getInstanceConfig(instanceId);
 		if (instanceConfig === undefined) {
 			return { error: `No instance found with id ${instanceId}` };
@@ -67,8 +67,10 @@ export const save = async (
 					},
 				});
 			}
+			// FIXME: This is added for demo purposes to show email scheduling. This
+			// should instead be calcualated from instance configuration.
 			const runAt = new Date();
-			runAt.setMinutes(runAt.getMinutes() + i * 2);
+			runAt.setMinutes(runAt.getMinutes() + i * 3);
 			// Schedule (or replace) email to be sent to evaluator
 			await client.scheduleEmail(
 				instanceId,
@@ -78,22 +80,23 @@ export const save = async (
 					},
 					subject: invite.template.subject ?? instanceConfig.template.subject,
 					message: invite.template.message ?? instanceConfig.template.message,
+					extra: {
+						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
+					},
 				},
 				{
-					key: makeInviteJobKey(instanceId, pubId, invite.userId),
+					jobKey: makeInviteJobKey(instanceId, pubId, invite.userId),
 					mode: "preserve_run_at",
 					runAt,
 				}
 			);
 			// Save updated email template and job run time
-			await setInstanceState(instanceId, pubId, {
-				...instanceState,
-				[invite.userId]: {
-					emailTemplate: invite.template,
-					emailScheduledTime: runAt.toString(),
-				},
-			});
+			instanceState[invite.userId] = {
+				emailTemplate: invite.template,
+				emailScheduledTime: runAt.toString(),
+			};
 		}
+		await setInstanceState(instanceId, pubId, instanceState);
 		revalidatePath("/");
 		return { success: true };
 	} catch (error) {

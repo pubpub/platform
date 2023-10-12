@@ -6,7 +6,6 @@ import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
 
-type To = { email: string; firstName: string; lastName: string } | { userId: string };
 type Node = string | { t: string; val: string };
 
 const staticTokens = new Set([
@@ -16,7 +15,8 @@ const staticTokens = new Set([
 	"user.lastName",
 	"instance.id",
 ]);
-const dynamicTokens = /^instance\.actions\.(\w+)$/;
+const dynamicTokens = /^(instance\.actions|extra)\.(\w+)$/;
+const commentRegex = /\/\*([\s\S]*?)\*\//g;
 
 const plugin = {
 	processAST(nodes: Node[]) {
@@ -27,6 +27,10 @@ const plugin = {
 				// Accept any string
 				next.push(node);
 			} else if (node.t === "i") {
+				// Strip pure comment interpolations
+				if (node.val.replace(commentRegex, "") === "") {
+					continue;
+				}
 				// Accept valid tokens
 				if (!staticTokens.has(node.val) && !dynamicTokens.test(node.val)) {
 					throw new BadRequestError(`Invalid token ${node.val}`);
@@ -43,7 +47,9 @@ const plugin = {
 };
 
 const eta = new Eta({
-	functionHeader: "const user=it.user,instance=it.instance",
+	autoEscape: false,
+	// <%= it.user.id %> becomes <%= user.id %>
+	functionHeader: "const user=it.user,instance=it.instance,extra=it.extra",
 	// <%= token %> becomes {{= token }}
 	tags: ["{{", "}}"],
 	// {{= token }} becomes {{ token }}
@@ -62,9 +68,10 @@ const instanceInclude = {
 	},
 } satisfies Prisma.IntegrationInstanceInclude;
 
-const makeTemplateApi = (
+const makeTemplateApi = async (
 	instance: Prisma.IntegrationInstanceGetPayload<{ include: typeof instanceInclude }>,
-	user: User
+	user: User,
+	extra: Record<string, string> = {}
 ) => {
 	const actionUrls = (instance.integration.actions as IntegrationAction[]).reduce(
 		(actions, action) => {
@@ -84,7 +91,7 @@ const makeTemplateApi = (
 			return target[prop];
 		},
 	});
-	return {
+	const api = {
 		instance: { id: instance.id, actions },
 		user: {
 			id: user.id,
@@ -95,13 +102,25 @@ const makeTemplateApi = (
 			},
 		},
 	};
+
+	const parsedExtra: Record<string, string> = {};
+
+	for (const key in extra) {
+		parsedExtra[key] = await eta.renderStringAsync(extra[key], api);
+	}
+
+	return {
+		...api,
+		extra: parsedExtra,
+	};
 };
 
 export const emailUser = async (
 	instanceId: string,
 	user: User,
 	subject: string,
-	message: string
+	message: string,
+	extra?: Record<string, string>
 ) => {
 	const instance = await prisma.integrationInstance.findUnique({
 		where: { id: instanceId },
@@ -112,7 +131,7 @@ export const emailUser = async (
 		throw new NotFoundError(`Integration instance ${instanceId} not found`);
 	}
 
-	const html = await eta.renderStringAsync(message, makeTemplateApi(instance, user));
+	const html = await eta.renderStringAsync(message, await makeTemplateApi(instance, user, extra));
 	const { accepted, rejected } = await smtpclient.sendMail({
 		from: "PubPub Team <hello@mg.pubpub.org>",
 		to: user.email,

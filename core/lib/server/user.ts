@@ -16,14 +16,14 @@ export async function findOrCreateUser(
 ): Promise<User> {
 	let user: User;
 	if (typeof firstName === "undefined" || typeof lastName === "undefined") {
-		// Requester is sending an email to existing user
+		// Find user by id
 		const dbUser = await prisma.user.findUnique({ where: { id: userIdOrEmail } });
 		if (!dbUser) {
 			throw new NotFoundError(`User ${userIdOrEmail} not found`);
 		}
 		user = dbUser;
 	} else {
-		// Requester wishes to find or create user from an email address
+		// Find or create user by email
 		const dbUser = await prisma.user.findUnique({ where: { email: userIdOrEmail } });
 		if (dbUser) {
 			user = dbUser;

@@ -100,17 +100,27 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const user = await ("userId" in body.to
 			? findOrCreateUser(body.to.userId)
 			: findOrCreateUser(body.to.email, body.to.firstName, body.to.lastName));
-		const info = await emailUser(params.instanceId, user, body.subject, body.message);
-		return { status: 200, body: { info, userId: user.id } };
+		try {
+			const info = await emailUser(
+				params.instanceId,
+				user,
+				body.subject,
+				body.message,
+				body.extra
+			);
+		} catch (error) {
+			console.log("error", error);
+		}
+		return { status: 200, body: { info: {} as any, userId: user.id } };
 	},
 	scheduleEmail: async ({ headers, params, body, query }) => {
 		checkApiKey(getBearerToken(headers.authorization));
-		const { to, subject, message } = body;
+		const { to, subject, message, extra } = body;
 		const jobs = await getJobsClient();
 		const user = await ("userId" in to
 			? findOrCreateUser(to.userId)
 			: findOrCreateUser(to.email, to.firstName, to.lastName));
-		const payload = { to: { userId: user.id }, subject, message };
+		const payload = { to: { userId: user.id }, subject, message, extra };
 		const job = await jobs.scheduleEmail(params.instanceId, payload, query);
 		return { status: 202, body: { job, userId: user.id } };
 	},
