@@ -37,6 +37,8 @@ export const getSuggestedMembers = async (
 		take: 10,
 		select: {
 			id: true,
+			slug: true,
+			avatar: true,
 			firstName: true,
 			lastName: true,
 		},
@@ -44,15 +46,17 @@ export const getSuggestedMembers = async (
 	return members;
 };
 
-export const getMembers = async (userId: string[]) => {
+export const getMembers = async (userIds: string[]) => {
 	const members = await prisma.user.findMany({
 		where: {
 			id: {
-				in: userId,
+				in: userIds,
 			},
 		},
 		select: {
 			id: true,
+			slug: true,
+			avatar: true,
 			firstName: true,
 			lastName: true,
 		},

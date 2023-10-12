@@ -3,7 +3,7 @@ import { Toaster } from "ui";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";
-import { Instance, findInstance } from "~/lib/instance";
+import { InstanceConfig, getInstanceConfig } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import "./globals.css";
 
@@ -20,9 +20,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 	const instanceId = expect(searchParams.get("instanceId"));
 	const token = expect(searchParams.get("token"));
 	const user = await client.auth(instanceId, token);
-	let instance: Instance | undefined;
+	let instance: InstanceConfig | undefined;
 	if (instanceId) {
-		instance = await findInstance(instanceId);
+		instance = await getInstanceConfig(instanceId);
 	}
 	return (
 		<html lang="en">

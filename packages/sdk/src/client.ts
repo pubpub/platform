@@ -5,10 +5,10 @@ import {
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
 	JobOptions,
+	SafeUser,
 	ScheduleEmailResponseBody,
 	SendEmailRequestBody,
 	SendEmailResponseBody,
-	SuggestedMember,
 	UpdatePubRequestBody,
 	UpdatePubResponseBody,
 	User,
@@ -102,17 +102,21 @@ export type Client<T extends Manifest> = {
 	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
 	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
+	deletePub(instanceId: string, pubId: string): Promise<void>;
 	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
-	getSuggestedMembers(
-		instanceId: string,
-		query: SuggestedMembersQuery
-	): Promise<SuggestedMember[]>;
+	getSuggestedMembers(instanceId: string, query: SuggestedMembersQuery): Promise<SafeUser[]>;
 	getPubType(instanceId: string, pubTypeId: string): Promise<GetPubTypeResponseBody>;
 	scheduleEmail(
 		instanceId: string,
 		email: SendEmailRequestBody,
 		jobOptions: JobOptions
 	): Promise<ScheduleEmailResponseBody>;
+	unscheduleEmail(instanceId: string, key: string): Promise<void>;
+	getUsers(instanceId: string, userIds: string[]): Promise<SafeUser[]>;
+	getOrCreateUser(
+		instanceId: string,
+		user: { userId: string } | { email: string; firstName: string; lastName: string }
+	): Promise<User>;
 };
 
 /**
@@ -122,6 +126,7 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 	const client = initClient(api.integrations, {
 		baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
 		baseHeaders: {},
+		jsonQuery: true,
 	});
 	return {
 		async auth(instanceId, token) {
@@ -196,6 +201,24 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 				throw new Error("Request failed", { cause });
 			}
 		},
+		async deletePub(instanceId, pubId) {
+			try {
+				const response = await client.deletePub({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					body: {},
+					params: { instanceId, pubId },
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return;
+				}
+				throw new Error("Failed to delete pub", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
 		async sendEmail(instanceId, email) {
 			try {
 				const response = await client.sendEmail({
@@ -264,6 +287,60 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to schedule email", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async unscheduleEmail(instanceId, key) {
+			try {
+				const response = await client.unscheduleEmail({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					body: {},
+					params: { instanceId, key },
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return;
+				}
+				throw new Error("Failed to unschedule email", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async getUsers(instanceId, userIds) {
+			try {
+				const response = await client.getUsers({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					query: { userIds },
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get users", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async getOrCreateUser(instanceId, user) {
+			try {
+				const response = await client.getOrCreateUser({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					body: user,
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get or create user", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

@@ -1,6 +1,6 @@
 "use server";
 
-import { updateInstance } from "~/lib/instance";
+import { setInstanceConfig } from "~/lib/instance";
 
 export const configure = (
 	instanceId: string,
@@ -9,7 +9,7 @@ export const configure = (
 ) => {
 	try {
 		// return { error: "We couldn't update the instance." };
-		return updateInstance(instanceId, { pubTypeId, template });
+		return setInstanceConfig(instanceId, { pubTypeId, template });
 	} catch (error) {
 		return { error: error.message };
 	}

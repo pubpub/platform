@@ -96,7 +96,7 @@ export const UpdatePubResponseBody: z.ZodType<UpdatePubResponseBody> =
 
 // Member types
 
-export const Memberbase = z.object({
+export const MemberBase = z.object({
 	id: z.string(),
 	slug: z.string(),
 	email: z.string(),
@@ -106,14 +106,14 @@ export const Memberbase = z.object({
 	avatar: z.string().nullable(),
 });
 
-export const SuggestedMember = Memberbase.pick({
+export const SuggestedMember = MemberBase.pick({
 	id: true,
 	firstName: true,
 	lastName: true,
 });
 export type SuggestedMember = z.infer<typeof SuggestedMember>;
 
-export const Member = Memberbase.pick({
+export const Member = MemberBase.pick({
 	id: true,
 	firstName: true,
 	lastName: true,
@@ -121,14 +121,20 @@ export const Member = Memberbase.pick({
 
 // Auth types
 
-export const User = z.object({
+export const SafeUser = z.object({
 	id: z.string(),
 	slug: z.string(),
-	email: z.string(),
 	firstName: z.string(),
 	lastName: z.string().nullable(),
 	avatar: z.string().nullable(),
 });
+export type SafeUser = z.infer<typeof SafeUser>;
+
+export const User = SafeUser.and(
+	z.object({
+		email: z.string(),
+	})
+);
 export type User = z.infer<typeof User>;
 
 // Email types
@@ -146,11 +152,15 @@ export const SendEmailRequestBody = z.object({
 	]),
 	subject: z.string(),
 	message: z.string(),
+	extra: z.record(z.string()).optional(),
 });
 export type SendEmailRequestBody = z.infer<typeof SendEmailRequestBody>;
 export const SendEmailResponseBody = z.object({
-	accepted: z.array(z.string()),
-	rejected: z.array(z.string()),
+	info: z.object({
+		accepted: z.array(z.string()),
+		rejected: z.array(z.string()),
+	}),
+	userId: z.string(),
 });
 export type SendEmailResponseBody = z.infer<typeof SendEmailResponseBody>;
 
@@ -184,14 +194,18 @@ export type GetPubTypeResponseBody = z.infer<typeof GetPubTypeResponseBody>;
 // Job types
 
 export const JobOptions = z.object({
-	key: z.string().optional(),
+	jobKey: z.string().optional(),
 	runAt: z.coerce.date(),
 	maxAttempts: z.number().optional(),
+	mode: z.enum(["replace", "preserve_run_at"]).optional(),
 });
 export type JobOptions = z.infer<typeof JobOptions>;
 
 export const ScheduleEmailResponseBody = z.object({
-	key: z.string().nullable(),
+	job: z.object({
+		key: z.string().nullable(),
+	}),
+	userId: z.string(),
 });
 export type ScheduleEmailResponseBody = z.infer<typeof ScheduleEmailResponseBody>;
 
@@ -283,6 +297,22 @@ export const integrationsApi = contract.router(
 				200: UpdatePubResponseBody,
 			},
 		},
+		deletePub: {
+			method: "DELETE",
+			path: "/:instanceId/pubs/:pubId",
+			summary: "Deletes a pub",
+			description: "A way to delete a pub",
+			body: z.any(),
+			pathParams: z.object({
+				pubId: z.string(),
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.object({
+					message: z.string(),
+				}),
+			},
+		},
 		sendEmail: {
 			method: "POST",
 			path: "/:instanceId/email",
@@ -308,6 +338,22 @@ export const integrationsApi = contract.router(
 				202: ScheduleEmailResponseBody,
 			},
 		},
+		unscheduleEmail: {
+			method: "DELETE",
+			path: "/:instanceId/email/schedule/:key",
+			summary: "Delete a scheduled email",
+			description: "",
+			body: z.any(),
+			pathParams: z.object({
+				instanceId: z.string(),
+				key: z.string(),
+			}),
+			responses: {
+				200: z.object({
+					message: z.string(),
+				}),
+			},
+		},
 		getSuggestedMembers: {
 			method: "GET",
 			path: "/:instanceId/autosuggest/members",
@@ -330,20 +376,44 @@ export const integrationsApi = contract.router(
 					{ message: "One of the fields must be defined" }
 				),
 			responses: {
-				200: z.array(SuggestedMember),
+				200: z.array(SafeUser),
 			},
 		},
-		getMembers: {
+		getUsers: {
 			method: "GET",
-			path: "/:instanceId/members",
-			summary: "Gets a list of members on this instance given a list of user ids ids",
-			description: "A way to get all members for an integration instance",
+			path: "/:instanceId/users",
+			summary: "Get user details for one or more user ids",
+			description: "",
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
-			query: z.object({ userIds: z.array(z.string()) }),
+			query: z.object({
+				userIds: z.array(z.string()),
+			}),
 			responses: {
-				200: z.array(Member),
+				200: z.array(SafeUser),
+			},
+		},
+		getOrCreateUser: {
+			method: "POST",
+			path: "/:instanceId/user",
+			summary: "Get or create a user",
+			description: "",
+			body: z.union([
+				z.object({
+					userId: z.string(),
+				}),
+				z.object({
+					email: z.string(),
+					firstName: z.string(),
+					lastName: z.string(),
+				}),
+			]),
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: User,
 			},
 		},
 		// TODO implement these endpoints

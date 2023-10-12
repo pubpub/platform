@@ -1,14 +1,19 @@
 import { run, JobHelpers, Task } from "graphile-worker";
-import { Client, makeClient } from "@pubpub/sdk";
+import { Client, SendEmailRequestBody, makeClient } from "@pubpub/sdk";
 
 const client = makeClient({});
 
+type InstanceJobPayload<T> = {
+	instanceId: string;
+	body: T;
+};
+
 const makeTaskList = (client: Client<{}>) => {
 	const sendEmail = (async (
-		payload: Parameters<(typeof client)["sendEmail"]>,
+		payload: InstanceJobPayload<SendEmailRequestBody>,
 		helpers: JobHelpers
 	) => {
-		const [instanceId, body] = payload;
+		const { instanceId, body } = payload;
 		const info = await client.sendEmail(instanceId, body);
 		helpers.logger.info(`Sent email`, info);
 	}) as Task;
