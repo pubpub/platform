@@ -2,12 +2,7 @@
 
 import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
-import {
-	getInstanceConfig,
-	getInstanceState,
-	setInstanceState,
-	setInstanceConfig,
-} from "~/lib/instance";
+import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
 export type Evaluator =
