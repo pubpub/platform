@@ -49,7 +49,7 @@ export function EmailForm(props: Props) {
 				userId: evaluator.id,
 				firstName: evaluator.firstName,
 				lastName: evaluator.lastName,
-				template: props.instanceState[evaluator.id]?.emailTemplate ?? template,
+				template: props.instanceState[evaluator.id]?.inviteTemplate ?? template,
 			})),
 		},
 	});
@@ -148,14 +148,9 @@ export function EmailForm(props: Props) {
 	);
 
 	const onAppend = useCallback(
-		async (event: React.MouseEvent) => {
+		(event: React.MouseEvent) => {
 			event.preventDefault();
-			append({
-				email: "",
-				firstName: "",
-				lastName: "",
-				template,
-			});
+			append({ email: "", firstName: "", lastName: "", template });
 		},
 		[append]
 	);
@@ -200,9 +195,9 @@ export function EmailForm(props: Props) {
 					{invites.map((invite, index) => (
 						<EvaluatorInviteRow
 							key={invite.key}
-							time={
+							inviteTime={
 								"userId" in invite
-									? props.instanceState[invite.userId]?.emailScheduledTime
+									? props.instanceState[invite.userId]?.inviteTime
 									: undefined
 							}
 							control={form.control}

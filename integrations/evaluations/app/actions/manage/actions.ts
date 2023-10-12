@@ -63,8 +63,8 @@ export const save = async (
 					to: {
 						userId: invite.userId,
 					},
-					subject: invite.template.subject ?? instanceConfig.template.subject,
-					message: invite.template.message ?? instanceConfig.template.message,
+					subject: invite.template.subject,
+					message: invite.template.message,
 					extra: {
 						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
 					},
@@ -77,8 +77,8 @@ export const save = async (
 			);
 			// Save updated email template and job run time
 			instanceState[invite.userId] = {
-				emailTemplate: invite.template,
-				emailScheduledTime: runAt.toString(),
+				inviteTemplate: invite.template,
+				inviteTime: instanceState[invite.userId]?.inviteTime ?? runAt.toString(),
 			};
 		}
 		await setInstanceState(instanceId, pubId, instanceState);

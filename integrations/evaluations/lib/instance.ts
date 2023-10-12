@@ -9,8 +9,8 @@ export type InstanceConfig = {
 
 export type InstanceState = {
 	[userId: string]: {
-		emailTemplate: EmailTemplate;
-		emailScheduledTime: string;
+		inviteTemplate: EmailTemplate;
+		inviteTime: string;
 	};
 };
 

@@ -235,70 +235,70 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const submission = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "Advance Market Commitments: Insights from Theory and Experience",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: `Ten years ago, donors committed $1.5 billion to a pilot Advance Market Commitment (AMC) to help purchase pneumococcal vaccine for low-income countries. The AMC aimed to encourage the development of such vaccines, ensure distribution to children in low-income countries, and pilot the AMC mechanism for possible future use. Three vaccines have been developed and more than 150 million children immunized, saving an estimated 700,000 lives. This paper reviews the economic logic behind AMCs, the experience with the pilot, and key issues for future AMCs.`,
-						},
-					],
-				},
-			},
-		},
-	});
+	// const submission = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "Advance Market Commitments: Insights from Theory and Experience",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: `Ten years ago, donors committed $1.5 billion to a pilot Advance Market Commitment (AMC) to help purchase pneumococcal vaccine for low-income countries. The AMC aimed to encourage the development of such vaccines, ensure distribution to children in low-income countries, and pilot the AMC mechanism for possible future use. Three vaccines have been developed and more than 150 million children immunized, saving an estimated 700,000 lives. This paper reviews the economic logic behind AMCs, the experience with the pilot, and key issues for future AMCs.`,
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 
-	const toAskForConsent = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
+	// const toAskForConsent = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
 
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "The Governance of Non-Profits and their Social Impact: Evidence from a Randomized Program in Healthcare in the Democratic Republic of Congo",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: "Substantial funding is provided to the healthcare systems of low-income countries. However, an important challenge is to ensure that this funding be used efficiently. This challenge is complicated by the fact that a large share of healthcare services in low-income countries is provided by non-profit health centers that often lack i) effective governance structures and ii) organizational know-how and adequate training. In this paper, we argue that the bundling of performance-based incentives with auditing and feedback (A&F) is a potential way to overcome these obstacles. First, the combination of feedback and performance-based incentives—that is, feedback joint with incentives to act on this feedback and achieve specific health outcomes—helps address the knowledge gap that may otherwise undermine performance-based incentives. Second, coupling feedback with auditing helps ensure that the information underlying the feedback is reliable—a prerequisite for effective feedback. To examine the effectiveness of this bundle, we use data from a randomized governance program conducted in the Democratic Republic of Congo. Within the program, a set of health centers were randomly assigned to a “governance treatment” that consisted of performance-based incentives combined with A&F, while others were not. Consistent with our prediction, we find that the governance treatment led to i) higher operating efficiency and ii) improvements in health outcomes. Furthermore, we find that funding is not a substitute for the governance treatment—health centers that only receive funding increase their scale, but do not show improvements in operating efficiency nor health outcomes.",
-						},
-					],
-				},
-			},
-		},
-	});
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "The Governance of Non-Profits and their Social Impact: Evidence from a Randomized Program in Healthcare in the Democratic Republic of Congo",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: "Substantial funding is provided to the healthcare systems of low-income countries. However, an important challenge is to ensure that this funding be used efficiently. This challenge is complicated by the fact that a large share of healthcare services in low-income countries is provided by non-profit health centers that often lack i) effective governance structures and ii) organizational know-how and adequate training. In this paper, we argue that the bundling of performance-based incentives with auditing and feedback (A&F) is a potential way to overcome these obstacles. First, the combination of feedback and performance-based incentives—that is, feedback joint with incentives to act on this feedback and achieve specific health outcomes—helps address the knowledge gap that may otherwise undermine performance-based incentives. Second, coupling feedback with auditing helps ensure that the information underlying the feedback is reliable—a prerequisite for effective feedback. To examine the effectiveness of this bundle, we use data from a randomized governance program conducted in the Democratic Republic of Congo. Within the program, a set of health centers were randomly assigned to a “governance treatment” that consisted of performance-based incentives combined with A&F, while others were not. Consistent with our prediction, we find that the governance treatment led to i) higher operating efficiency and ii) improvements in health outcomes. Furthermore, we find that funding is not a substitute for the governance treatment—health centers that only receive funding increase their scale, but do not show improvements in operating efficiency nor health outcomes.",
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 
-	const toEvaluate = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
+	// const toEvaluate = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
 
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "ADVANCE MARKET COMMITMENTS: INSIGHTS FROM THEORY AND EXPERIENCE",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: `Ten years ago, donors committed $1.5 billion to a pilot Advance Market Commitment (AMC) to help purchase pneumococcal vaccine for low-income countries. The AMC aimed to encourage the development of such vaccines, ensure distribution to children in low-income countries, and pilot the AMC mechanism for possible future use. Three vaccines have been developed and more than 150 million children immunized, saving an estimated 700,000 lives. This paper reviews the economic logic behind AMCs, the experience with the pilot, and key issues for future AMCs.`,
-						},
-					],
-				},
-			},
-		},
-	});
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "ADVANCE MARKET COMMITMENTS: INSIGHTS FROM THEORY AND EXPERIENCE",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: `Ten years ago, donors committed $1.5 billion to a pilot Advance Market Commitment (AMC) to help purchase pneumococcal vaccine for low-income countries. The AMC aimed to encourage the development of such vaccines, ensure distribution to children in low-income countries, and pilot the AMC mechanism for possible future use. Three vaccines have been developed and more than 150 million children immunized, saving an estimated 700,000 lives. This paper reviews the economic logic behind AMCs, the experience with the pilot, and key issues for future AMCs.`,
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 
 	// const evaluating1 = await prisma.pub.create({
 	// 	data: {
@@ -514,9 +514,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
-			pubs: {
-				connect: [{ id: submission.id }],
-			},
+			// pubs: {
+			// 	connect: [{ id: submission.id }],
+			// },
 		},
 	});
 
@@ -528,9 +528,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			stages: {
 				connect: [{ id: stageIds[0] }],
 			},
-			pubs: {
-				connect: [{ id: submission.id }],
-			},
+			// pubs: {
+			// 	connect: [{ id: submission.id }],
+			// },
 		},
 	});
 
@@ -680,23 +680,23 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});*/
 
-	await prisma.pub.update({
-		where: { id: submission.id },
-		data: {
-			stages: { connect: { id: stageIds[0] } },
-		},
-	});
-	await prisma.pub.update({
-		where: { id: toAskForConsent.id },
-		data: {
-			stages: { connect: { id: stageIds[1] } },
-			permissions: { create: { memberGroupId: memberGroup.id } },
-		},
-	});
-	await prisma.pub.update({
-		where: { id: toEvaluate.id },
-		data: { stages: { connect: { id: stageIds[2] } } },
-	});
+	// await prisma.pub.update({
+	// 	where: { id: submission.id },
+	// 	data: {
+	// 		stages: { connect: { id: stageIds[0] } },
+	// 	},
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: toAskForConsent.id },
+	// 	data: {
+	// 		stages: { connect: { id: stageIds[1] } },
+	// 		permissions: { create: { memberGroupId: memberGroup.id } },
+	// 	},
+	// });
+	// await prisma.pub.update({
+	// 	where: { id: toEvaluate.id },
+	// 	data: { stages: { connect: { id: stageIds[2] } } },
+	// });
 	// await prisma.pub.update({
 	// 	where: { id: evaluating1.id },
 	// 	data: { stages: { connect: { id: stageIds[3] } } },
@@ -793,31 +793,31 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		})
 	);
 
-	const pubIds = [...Array(7)].map((x) => uuidv4());
-	const submissionToEvaluate = await prisma.pub.create({
-		data: {
-			pubTypeId: submissionTypeId,
-			communityId: communityUUID,
-			stages: { connect: { id: stageIds[3] } },
+	// const pubIds = [...Array(7)].map((x) => uuidv4());
+	// const submissionToEvaluate = await prisma.pub.create({
+	// 	data: {
+	// 		pubTypeId: submissionTypeId,
+	// 		communityId: communityUUID,
+	// 		stages: { connect: { id: stageIds[3] } },
 
-			values: {
-				createMany: {
-					data: [
-						{
-							fieldId: fieldIds[0],
-							value: "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
-						},
-						{
-							fieldId: fieldIds[1],
-							value: "Celebrity endorsements are often sought to influence public opinion. We ask whether celebrity endorsement per se has an effect beyond the fact that their statements are seen by many, and whether on net their statements actually lead people to change their beliefs. To do so, we conducted a nationwide Twitter experiment in Indonesia with 46 high-profile celebrities and organizations, with a total of 7.8 million followers, who agreed to let us randomly tweet or retweet content promoting immunization from their accounts. Our design exploits the structure of what information is passed on along a retweet chain on Twitter to parse reach versus endorsement effects. Endorsements matter: tweets that users can identify as being originated by a celebrity are far more likely to be liked or retweeted by users than similar tweets seen by the same users but without the celebrities' imprimatur. By contrast, explicitly citing sources in the tweets actually reduces diffusion. By randomizing which celebrities tweeted when, we find suggestive evidence that overall exposure to the campaign may influence beliefs about vaccination and knowledge of immunization-seeking behavior by one's network. Taken together, the findings suggest an important role for celebrity endorsement.",
-						},
-						{
-							fieldId: fieldIds[8],
-							value: "10.3386/w25589",
-						},
-					],
-				},
-			},
-		},
-	});
+	// 		values: {
+	// 			createMany: {
+	// 				data: [
+	// 					{
+	// 						fieldId: fieldIds[0],
+	// 						value: "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[1],
+	// 						value: "Celebrity endorsements are often sought to influence public opinion. We ask whether celebrity endorsement per se has an effect beyond the fact that their statements are seen by many, and whether on net their statements actually lead people to change their beliefs. To do so, we conducted a nationwide Twitter experiment in Indonesia with 46 high-profile celebrities and organizations, with a total of 7.8 million followers, who agreed to let us randomly tweet or retweet content promoting immunization from their accounts. Our design exploits the structure of what information is passed on along a retweet chain on Twitter to parse reach versus endorsement effects. Endorsements matter: tweets that users can identify as being originated by a celebrity are far more likely to be liked or retweeted by users than similar tweets seen by the same users but without the celebrities' imprimatur. By contrast, explicitly citing sources in the tweets actually reduces diffusion. By randomizing which celebrities tweeted when, we find suggestive evidence that overall exposure to the campaign may influence beliefs about vaccination and knowledge of immunization-seeking behavior by one's network. Taken together, the findings suggest an important role for celebrity endorsement.",
+	// 					},
+	// 					{
+	// 						fieldId: fieldIds[8],
+	// 						value: "10.3386/w25589",
+	// 					},
+	// 				],
+	// 			},
+	// 		},
+	// 	},
+	// });
 }

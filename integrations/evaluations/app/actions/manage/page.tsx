@@ -31,8 +31,8 @@ export default async function Page(props: Props) {
 
 	evaluators.sort(
 		(a, b) =>
-			new Date(instanceState[a.id]?.emailScheduledTime).getTime() -
-			new Date(instanceState[b.id]?.emailScheduledTime).getTime()
+			new Date(instanceState[a.id]?.inviteTime).getTime() -
+			new Date(instanceState[b.id]?.inviteTime).getTime()
 	);
 
 	return (
