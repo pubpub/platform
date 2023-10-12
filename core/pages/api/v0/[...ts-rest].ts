@@ -12,6 +12,7 @@ import {
 	getPub,
 	getPubType,
 	updatePub,
+	deletePub,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
@@ -84,6 +85,16 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const updatedPub = await updatePub(params.pubId, body);
 		return { status: 200, body: updatedPub };
 	},
+	deletePub: async ({ headers, params }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		await deletePub(params.pubId);
+		return {
+			status: 200,
+			body: {
+				message: "Pub deleted",
+			},
+		};
+	},
 	sendEmail: async ({ headers, params, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));
 		const user = await ("userId" in body.to
@@ -102,6 +113,17 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const payload = { to: { userId: user.id }, subject, message };
 		const job = await jobs.scheduleEmail(params.instanceId, payload, query);
 		return { status: 202, body: { job, userId: user.id } };
+	},
+	unscheduleEmail: async ({ headers, params }) => {
+		checkApiKey(getBearerToken(headers.authorization));
+		const jobs = await getJobsClient();
+		await jobs.unscheduleEmail(params.key);
+		return {
+			status: 200,
+			body: {
+				message: "Email unscheduled",
+			},
+		};
 	},
 	getOrCreateUser: async ({ headers, body }) => {
 		checkApiKey(getBearerToken(headers.authorization));

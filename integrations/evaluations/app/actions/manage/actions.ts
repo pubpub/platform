@@ -1,7 +1,13 @@
 "use server";
 
 import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
-import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
+import { revalidatePath } from "next/cache";
+import {
+	getInstanceConfig,
+	getInstanceState,
+	setInstanceState,
+	setInstanceConfig,
+} from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
 export type Evaluator =
@@ -18,20 +24,19 @@ export type EvaluatorInvite = Evaluator & {
 const makeInviteJobKey = (instanceId: string, pubId: string, userId: string) =>
 	`${instanceId}:${pubId}:${userId}`;
 
-export const manage = async (
+export const save = async (
 	instanceId: string,
 	pubId: string,
 	pubTitle: string,
 	invites: EvaluatorInvite[]
 ) => {
-	const instanceConfig = await getInstanceConfig(instanceId);
-	if (instanceConfig === undefined) {
-		return { error: `No instance found with id ${instanceId}` };
-	}
-
 	try {
+		const instanceState = await getInstanceState(instanceId, pubId);
+		const instanceConfig = await getInstanceConfig(instanceId);
+		if (instanceConfig === undefined) {
+			return { error: `No instance found with id ${instanceId}` };
+		}
 		const pub = await client.getPub(instanceId, pubId);
-		const state = await getInstanceState(instanceId, pubId);
 		const evaluations = pub.children.filter(
 			(child) => child.pubTypeId === instanceConfig.pubTypeId
 		);
@@ -39,24 +44,17 @@ export const manage = async (
 			acc[evaluation.values["unjournal:evaluator"] as string] = evaluation;
 			return acc;
 		}, {} as Record<string, GetPubResponseBody>);
-		// { "user-abc-123": Evaluation, "user-def-456": Evaluation, ... }
-
 		for (let i = 0; i < invites.length; i++) {
 			let invite = invites[i];
 			if ("email" in invite) {
 				const user = await client.getOrCreateUser(instanceId, invite);
-				invite = invites[i] = {
+				invite = {
 					userId: user.id,
 					firstName: invite.firstName,
 					lastName: invite.lastName,
 					template: invite.template,
 				};
 			}
-			// Save email template
-			await setInstanceState(instanceId, pubId, {
-				...state,
-				[invite.userId]: invite.template,
-			});
 			const evaluation = evaluationsByEvaluator[invite.userId];
 			if (evaluation === undefined) {
 				// New evaluator added. Make the corresponding evaluation pub.
@@ -69,6 +67,8 @@ export const manage = async (
 					},
 				});
 			}
+			const runAt = new Date();
+			runAt.setMinutes(runAt.getMinutes() + i * 2);
 			// Schedule (or replace) email to be sent to evaluator
 			await client.scheduleEmail(
 				instanceId,
@@ -82,11 +82,20 @@ export const manage = async (
 				{
 					key: makeInviteJobKey(instanceId, pubId, invite.userId),
 					mode: "preserve_run_at",
-					runAt: new Date(),
+					runAt,
 				}
 			);
+			// Save updated email template and job run time
+			await setInstanceState(instanceId, pubId, {
+				...instanceState,
+				[invite.userId]: {
+					emailTemplate: invite.template,
+					emailScheduledTime: runAt.toString(),
+				},
+			});
 		}
-		return invites;
+		revalidatePath("/");
+		return { success: true };
 	} catch (error) {
 		return { error: error.message };
 	}
@@ -96,6 +105,28 @@ export const suggest = async (instanceId: string, query: SuggestedMembersQuery) 
 	try {
 		const suggestions = await client.getSuggestedMembers(instanceId, query);
 		return suggestions;
+	} catch (error) {
+		return { error: error.message };
+	}
+};
+
+export const remove = async (instanceId: string, pubId: string, userId: string) => {
+	try {
+		const instanceState = await getInstanceState(instanceId, pubId);
+		const submission = await client.getPub(instanceId, pubId);
+		const evaluation = submission.children.find(
+			(child) => child.values["unjournal:evaluator"] === userId
+		);
+		if (evaluation !== undefined) {
+			await client.deletePub(instanceId, evaluation.id);
+		}
+		if (instanceState !== undefined) {
+			const { [userId]: _, ...instanceStateWithoutEvaluator } = instanceState;
+			setInstanceState(instanceId, pubId, instanceStateWithoutEvaluator);
+		}
+		await client.unscheduleEmail(instanceId, makeInviteJobKey(instanceId, pubId, userId));
+		revalidatePath("/");
+		return { success: true };
 	} catch (error) {
 		return { error: error.message };
 	}

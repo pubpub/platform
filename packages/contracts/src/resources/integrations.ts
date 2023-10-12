@@ -271,6 +271,22 @@ export const integrationsApi = contract.router(
 				200: UpdatePubResponseBody,
 			},
 		},
+		deletePub: {
+			method: "DELETE",
+			path: "/:instanceId/pubs/:pubId",
+			summary: "Deletes a pub",
+			description: "A way to delete a pub",
+			body: z.any(),
+			pathParams: z.object({
+				pubId: z.string(),
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.object({
+					message: z.string(),
+				}),
+			},
+		},
 		sendEmail: {
 			method: "POST",
 			path: "/:instanceId/email",
@@ -294,6 +310,22 @@ export const integrationsApi = contract.router(
 			query: JobOptions,
 			responses: {
 				202: ScheduleEmailResponseBody,
+			},
+		},
+		unscheduleEmail: {
+			method: "DELETE",
+			path: "/:instanceId/email/schedule/:key",
+			summary: "Delete a scheduled email",
+			description: "",
+			body: z.any(),
+			pathParams: z.object({
+				instanceId: z.string(),
+				key: z.string(),
+			}),
+			responses: {
+				200: z.object({
+					message: z.string(),
+				}),
 			},
 		},
 		getSuggestedMembers: {

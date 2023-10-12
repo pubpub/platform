@@ -31,7 +31,8 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { manage, suggest } from "./actions";
+import * as actions from "./actions";
+import { InstanceState } from "~/lib/instance";
 
 const InviteBase = z.object({
 	firstName: z.string(),
@@ -94,6 +95,7 @@ const SuggestButton = (props: SuggestButtonProps) => {
 
 type EvaluatorInviteProps = {
 	control: Control<any>;
+	time: string | undefined;
 	index: number;
 	onRemove: (index: number) => void;
 	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
@@ -208,6 +210,12 @@ const EvaluatorInvite = (props: EvaluatorInviteProps) => {
 						</DialogClose>
 					</div>
 					<div className="mb-3">
+						{props.time && (
+							<FormDescription>
+								This email is scheduled to be sent at{" "}
+								{new Date(props.time).toLocaleString()}
+							</FormDescription>
+						)}
 						<FormField
 							name={`invites.${props.index}.template.subject`}
 							render={({ field }) => (
@@ -259,12 +267,7 @@ type Props = {
 		message: string;
 	};
 	evaluators: SafeUser[];
-	templates: {
-		[userId: string]: {
-			subject: string;
-			message: string;
-		};
-	};
+	instanceState: InstanceState;
 };
 
 export function EmailForm(props: Props) {
@@ -282,7 +285,7 @@ export function EmailForm(props: Props) {
 				userId: evaluator.id,
 				firstName: evaluator.firstName,
 				lastName: evaluator.lastName,
-				template: props.templates[evaluator.id] ?? template,
+				template: props.instanceState[evaluator.id]?.emailTemplate ?? template,
 			})),
 		},
 	});
@@ -298,7 +301,7 @@ export function EmailForm(props: Props) {
 	});
 
 	const onSubmit = async (values: z.infer<typeof schema>) => {
-		const result = await manage(
+		const result = await actions.save(
 			props.instanceId,
 			props.submission.id,
 			props.submission.values["unjournal:title"] as string,
@@ -313,14 +316,13 @@ export function EmailForm(props: Props) {
 		} else {
 			toast({
 				title: "Success",
-				description: "The email was sent successfully",
+				description: "The invite form was sent successfully",
 			});
-			form.reset({ invites: result });
 		}
 	};
 
 	const onSuggest = async (index: number, query: SuggestedMembersQuery) => {
-		const result = await suggest(props.instanceId, query);
+		const result = await actions.suggest(props.instanceId, query);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
@@ -350,6 +352,26 @@ export function EmailForm(props: Props) {
 			}
 		}
 	};
+
+	const onRemove = async (index: number) => {
+		try {
+			const invite = invites[index];
+			if ("userId" in invite) {
+				await actions.remove(props.instanceId, props.submission.id, invite.userId);
+			}
+			toast({
+				title: "Success",
+				description: "The evaluator was removed",
+			});
+		} catch (e) {
+			toast({
+				title: "Error",
+				description: "The evaluator could not be removed",
+				variant: "destructive",
+			});
+		}
+	};
+
 	return (
 		<Form {...form}>
 			<Card>
@@ -364,9 +386,14 @@ export function EmailForm(props: Props) {
 					{invites.map((invite, index) => (
 						<EvaluatorInvite
 							key={invite.key}
+							time={
+								"userId" in invite
+									? props.instanceState[invite.userId]?.emailScheduledTime
+									: undefined
+							}
 							control={form.control}
 							index={index}
-							onRemove={remove}
+							onRemove={onRemove}
 							onSuggest={onSuggest}
 						/>
 					))}

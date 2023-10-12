@@ -71,7 +71,7 @@ model Pub {
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id])
+  parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id], onDelete: Cascade)
   parentId String? @map(name: "parent_id")
   children Pub[]   @relation("pub_parent")
 
@@ -121,7 +121,7 @@ model PubValue {
   field     PubField @relation(fields: [fieldId], references: [id])
   fieldId   String   @map(name: "field_id")
   value     Json
-  pub       Pub      @relation(fields: [pubId], references: [id])
+  pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
   pubId     String   @map(name: "pub_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")

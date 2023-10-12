@@ -8,7 +8,10 @@ export type InstanceConfig = {
 };
 
 export type InstanceState = {
-	[userId: string]: EmailTemplate;
+	[userId: string]: {
+		emailTemplate: EmailTemplate;
+		emailScheduledTime: string;
+	};
 };
 
 let client: redis.RedisClientType;
@@ -33,7 +36,7 @@ export const getInstanceConfig = async (instanceId: string) => {
 	return instance ? (JSON.parse(instance) as InstanceConfig) : undefined;
 };
 
-export const updateInstance = async (
+export const setInstanceConfig = async (
 	instanceId: string,
 	instance: InstanceConfig
 ): Promise<InstanceConfig> => {

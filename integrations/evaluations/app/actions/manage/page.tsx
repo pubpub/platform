@@ -35,7 +35,7 @@ export default async function Page(props: Props) {
 			submission={submission}
 			evaluators={evaluators}
 			template={instanceConfig?.template}
-			templates={instanceState}
+			instanceState={instanceState}
 		/>
 	);
 }

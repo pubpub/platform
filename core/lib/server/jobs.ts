@@ -7,6 +7,7 @@ export type JobsClient = {
 		email: SendEmailRequestBody,
 		jobOptions: JobOptions
 	): Promise<Job>;
+	unscheduleEmail(jobKey: string): Promise<void>;
 };
 
 export const makeJobsClient = async (): Promise<JobsClient> => {
@@ -22,6 +23,11 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 		) {
 			const job = await workerUtils.addJob("sendEmail", { instanceId, body }, jobOptions);
 			return job;
+		},
+		async unscheduleEmail(jobKey: string) {
+			await workerUtils.withPgClient(async (pg) => {
+				await pg.query(`SELECT graphile_worker.remove_job($1);`, [jobKey]);
+			});
 		},
 	};
 };
