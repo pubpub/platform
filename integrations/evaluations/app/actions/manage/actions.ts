@@ -4,17 +4,7 @@ import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-
-export type Evaluator =
-	| { userId: string; firstName: string; lastName: string }
-	| { email: string; firstName: string; lastName: string };
-
-export type EvaluatorInvite = Evaluator & {
-	template: {
-		subject: string;
-		message: string;
-	};
-};
+import { EvaluatorInvite } from "./types";
 
 const makeInviteJobKey = (instanceId: string, pubId: string, userId: string) =>
 	`${instanceId}:${pubId}:${userId}`;

@@ -1,6 +1,6 @@
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import { EmailForm } from "./emailForm";
+import { EmailForm } from "./EvaluatorInviteForm";
 import { expect } from "utils";
 
 type Props = {
@@ -14,14 +14,14 @@ export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
 	const instanceConfig = expect(await getInstanceConfig(instanceId));
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-	// Fetch the submission pub and its children
-	const submission = await client.getPub(instanceId, pubId);
-	// Load user info for each of the submission's child evaluations
+	// Fetch the pub and its children
+	const pub = await client.getPub(instanceId, pubId);
+	// Load user info for each of the child evaluations
 	const evaluators =
-		submission.children.length > 0
+		pub.children.length > 0
 			? await client.getUsers(
 					instanceId,
-					submission.children
+					pub.children
 						// Only consider the children that are evaluations
 						.filter((child) => child.pubTypeId === instanceConfig.pubTypeId)
 						// Extract the evaluator user id
@@ -38,7 +38,7 @@ export default async function Page(props: Props) {
 	return (
 		<EmailForm
 			instanceId={instanceId}
-			submission={submission}
+			pub={pub}
 			evaluators={evaluators}
 			template={instanceConfig?.template}
 			instanceState={instanceState}
