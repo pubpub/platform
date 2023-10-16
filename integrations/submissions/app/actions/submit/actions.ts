@@ -1,7 +1,6 @@
 "use server";
 
 import { PubValues } from "@pubpub/sdk";
-import { assert } from "utils";
 import { findInstance } from "~/lib/instance";
 import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
 import { client } from "~/lib/pubpub";

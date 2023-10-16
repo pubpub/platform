@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { Button } from "ui";
-import { UserPostBody } from "app/api/user/route";
+import { UserPostBody } from "~/lib/types";
 
 export default function SignupForm() {
-	const [name, setName] = useState("");
+	const [firstName, setFirstName] = useState("");
+	const [lastName, setLastName] = useState("");
 	const [password, setPassword] = useState("");
 	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +16,8 @@ export default function SignupForm() {
 
 		setIsLoading(true);
 		const postBody: UserPostBody = {
-			name,
+			firstName,
+			lastName,
 			password,
 			email,
 		};
@@ -42,15 +44,27 @@ export default function SignupForm() {
 					<div className="my-10">
 						<form onSubmit={handleSubmit}>
 							<div>
-								<label htmlFor="name">Name</label>
+								<label htmlFor="firstName">Name</label>
 							</div>
 							<div>
 								<input
-									id="name"
+									id="firstName"
 									className="w-full"
-									name="name"
-									value={name}
-									onChange={(evt) => setName(evt.target.value)}
+									name="firstName"
+									value={firstName}
+									onChange={(evt) => setFirstName(evt.target.value)}
+								/>
+							</div>
+							<div>
+								<label htmlFor="lastName">Name</label>
+							</div>
+							<div>
+								<input
+									id="lastName"
+									className="w-full"
+									name="lastName"
+									value={lastName}
+									onChange={(evt) => setLastName(evt.target.value)}
 								/>
 							</div>
 							<div className="mt-2">
@@ -82,7 +96,7 @@ export default function SignupForm() {
 								<Button
 									variant="outline"
 									type="submit"
-									disabled={!name || !email || !password}
+									disabled={!firstName || !email || !password}
 								>
 									Create Account
 								</Button>

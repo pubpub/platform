@@ -1,69 +1,74 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { Button } from "ui";
-import { UserPutBody } from "app/api/user/route";
 import { supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 import { getSlugSuffix, slugifyString } from "lib/string";
-type Props = {
-	name: string;
-	email: string;
-	slug: string;
-};
+import { UserPutBody, UserSettings } from "~/lib/types";
 
-export default function SettingsForm({ name: initName, email: initEmail, slug }: Props) {
-	const [name, setName] = useState(initName);
+type Props = UserSettings;
+
+export default function SettingsForm({
+	firstName: initFirstName,
+	lastName: initLastName,
+	email: initEmail,
+	slug,
+}: Props) {
+	const [firstName, setFirstName] = useState(initFirstName);
+	const [lastName, setLastName] = useState(initLastName);
 	const [email, setEmail] = useState(initEmail);
-	const [emailError, setEmailError] = useState('')
+	const [emailError, setEmailError] = useState("");
 	const [emailIsLoading, setEmailIsLoading] = useState(false);
-	const [emailSuccess, setEmailSuccess] = useState(false)
-	const [isLoading, setIsLoading] = useState(false);
-	const [resetIsLoading, setResetIsLoading] = useState(false);
+	const [emailSuccess, setEmailSuccess] = useState(false);
+	const [, setIsLoading] = useState(false);
+	const [, setResetIsLoading] = useState(false);
 	const [resetSuccess, setResetSuccess] = useState(false);
 	const emailChanged = initEmail !== email;
 	const router = useRouter();
-	const valuesChanged = name !== initName;
+	const valuesChanged = emailChanged || firstName !== initFirstName || lastName !== initLastName;
 	const slugSuffix = getSlugSuffix(slug);
 
 	const updateEmail = async (e: FormEvent<EventTarget>) => {
 		e.preventDefault();
-		setEmailError("")
+		setEmailError("");
 		if (emailChanged) {
 			setEmailIsLoading(true);
 			const response = await fetch("/api/user?email=" + email, {
 				method: "GET",
 				headers: { "content-type": "application/json" },
-			})
-			const genericError = () => setEmailError('An error happened while trying to update your email')
+			});
+			const genericError = () =>
+				setEmailError("An error happened while trying to update your email");
 
 			if (!response.ok) {
 				if (response.status === 403) {
 					setEmailError(`A PubPub account already exists for ${email}`);
 				} else {
-					genericError()
-					const { message }: { message?: string } = await response.json()
+					genericError();
+					const { message }: { message?: string } = await response.json();
 					console.error(`Error: ${response.status} ${message}`);
 				}
-				setEmailIsLoading(false)
-				return
+				setEmailIsLoading(false);
+				return;
 			}
 
 			const { error } = await supabase.auth.updateUser({ email });
 			setEmailIsLoading(false);
 			if (error) {
-				genericError()
+				genericError();
 				console.error(error);
 			}
 			setEmailSuccess(true);
 		}
-	}
+	};
 
 	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
 		evt.preventDefault();
 
 		setIsLoading(true);
 		let putBody: UserPutBody = {
-			name,
+			firstName,
+			lastName,
 		};
 		const response = await fetch("/api/user", {
 			method: "PUT",
@@ -74,7 +79,7 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 		setIsLoading(false);
 		if (!response.ok) {
 			if (data.message) {
-				console.error(data.message)
+				console.error(data.message);
 			}
 		} else {
 			router.refresh();
@@ -97,16 +102,26 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 		<>
 			<div className="my-10">
 				<form onSubmit={handleSubmit}>
-					<label htmlFor="name">Name</label>
-					<input name="name" value={name} onChange={(evt) => setName(evt.target.value)} />
-					<div className="text-gray-500 text-sm leading-tight">
-						Username: {slugifyString(name)}-{slugSuffix}
+					<div className="flex flex-row">
+						<label htmlFor="firstName">First Name</label>
+						<input
+							name="firstName"
+							value={firstName}
+							onChange={(evt) => setFirstName(evt.target.value)}
+							className="mr-2"
+						/>
+						<label htmlFor="lastName">Last Name</label>
+						<input
+							name="lastName"
+							value={lastName ?? ""}
+							onChange={(evt) => setLastName(evt.target.value)}
+						/>
 					</div>
-					<Button
-						className="mt-4"
-						type="submit"
-						disabled={!valuesChanged || !name}
-					>
+					<div className="text-gray-500 text-sm leading-tight mt-3">
+						Username: {slugifyString(firstName)}
+						{lastName ? `-${slugifyString(lastName)}` : ""}-{slugSuffix}
+					</div>
+					<Button className="mt-4" type="submit" disabled={!valuesChanged || !firstName}>
 						Save Changes
 					</Button>
 				</form>
@@ -120,20 +135,21 @@ export default function SettingsForm({ name: initName, email: initEmail, slug }:
 					/>
 					<Button
 						type="submit"
-						disabled={!email || !emailChanged || emailSuccess}
+						disabled={!email || !emailChanged || emailSuccess || !firstName}
 					>
 						Update Email
 					</Button>
-					{!emailIsLoading && (emailError ? (
-						<div className="text-red-700 text-sm leading-tight">
-							{emailError}
-						</div>
-					) : emailSuccess && (
-						<div className="text-red-700 text-sm leading-tight">
-							You will need to confirm this change by clicking a link sent to the new
-							email address.
-						</div>
-					))}
+					{!emailIsLoading &&
+						(emailError ? (
+							<div className="text-red-700 text-sm leading-tight">{emailError}</div>
+						) : (
+							emailSuccess && (
+								<div className="text-red-700 text-sm leading-tight">
+									You will need to confirm this change by clicking a link sent to
+									the new email address.
+								</div>
+							)
+						))}
 				</form>
 				<p className="my-4">
 					Click below to receive an email with a secure link for reseting yor password.

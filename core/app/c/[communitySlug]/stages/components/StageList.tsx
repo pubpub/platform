@@ -4,11 +4,11 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { Button } from "ui";
 import { getPubUsers } from "~/lib/permissions";
-import { StagePayload, User } from "~/lib/types";
+import { StagePayload, UserLoginData } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
 import PubRow from "~/app/components/PubRow";
 
-type Props = { stages: StagePayload[]; token: string; loginData: User };
+type Props = { stages: StagePayload[]; token: string; loginData: UserLoginData };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 const StageList: React.FC<Props> = function ({ stages, token, loginData }) {

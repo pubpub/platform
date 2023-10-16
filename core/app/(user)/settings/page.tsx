@@ -9,7 +9,12 @@ export default async function Page() {
 	}
 	return (
 		<div className="max-w-lg m-auto">
-			<SettingsForm name={loginData.name} email={loginData.email} slug={loginData.slug} />
+			<SettingsForm
+				firstName={loginData.firstName}
+				lastName={loginData.lastName}
+				email={loginData.email}
+				slug={loginData.slug}
+			/>
 		</div>
 	);
 }

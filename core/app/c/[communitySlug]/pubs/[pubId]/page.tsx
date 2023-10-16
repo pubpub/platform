@@ -89,7 +89,7 @@ export default async function Page({
 									<div key={user.id}>
 										<Avatar className="w-8 h-8 mr-2">
 											<AvatarImage src={user.avatar || undefined} />
-											<AvatarFallback>{user.name[0]}</AvatarFallback>
+											<AvatarFallback>{user.firstName[0]}</AvatarFallback>
 										</Avatar>
 									</div>
 								);

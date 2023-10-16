@@ -90,7 +90,8 @@ params: - api key - list of fields?
     	- template (should be able to reference user fields which will be substituted with values for the recipient. and pubs too, if that pub is in the instance scope)
     		- user vars:
     			- user.id
-    			- user.name
+    			- user.firstName
+				- user.lastName
     			- user.email
     			- user.JWT (useful for generating magic link)
     		- instance vars:

@@ -20,7 +20,7 @@ import {
 	PubPayload,
 	StagePayload,
 	StagePayloadMoveConstraintDestination,
-	User,
+	UserLoginData,
 } from "~/lib/types";
 import { assign } from "./lib/actions";
 
@@ -28,7 +28,7 @@ type Props = {
 	pub: PubPayload;
 	stages: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
-	loginData: User;
+	loginData: UserLoginData;
 	users: PermissionPayloadUser[];
 };
 
@@ -86,23 +86,28 @@ export default function Assign(props: Props) {
 								<Button variant="ghost" onClick={() => setSelectedUserid(user.id)}>
 									<div className="mr-4">
 										<Image
-											src={user.avatar ?? "user.initials"}
-											alt={"user.initials"}
+											src={
+												user.avatar ?? `${user.firstName} ${user.lastName}`
+											}
+											alt={`${user.firstName} ${user.lastName}`}
 											width={20}
 											height={20}
 										/>
 									</div>
-									<span>{user.name}</span>
+									<span>
+										{user.firstName} {user.lastName}
+									</span>
 								</Button>
 							</DialogTrigger>
 							<DialogContent>
 								<Card>
 									<CardTitle className="space-y-1.5 p-6">
-										Assign <i>{getTitle(props.pub)}</i> to {user.name}?
+										Assign <i>{getTitle(props.pub)}</i> to {user.firstName}{" "}
+										{user.lastName}?
 									</CardTitle>
 									<CardContent>
-										{user.name} will be notified that they have been assigned to
-										this Pub.
+										{user.firstName} {user.lastName} will be notified that they
+										have been assigned to this Pub.
 									</CardContent>
 									<CardFooter className="flex flex-row">
 										<Button

@@ -188,6 +188,10 @@ export const updatePub = async (instanceId: string, body: UpdatePubRequestBody) 
 	return pub;
 };
 
+export const deletePub = async (pubId: string) => {
+	await prisma.pub.delete({ where: { id: pubId } });
+};
+
 export const getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseBody> => {
 	const pubType = await prisma.pubType.findUnique({
 		where: { id: pubTypeId },

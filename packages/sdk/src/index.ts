@@ -6,6 +6,11 @@ import type { JsonInput } from "contracts";
 
 type Field = JsonInput;
 
-export type { User, GetPubResponseBody, GetPubTypeResponseBody } from "contracts";
+export type {
+	SafeUser,
+	GetPubResponseBody,
+	GetPubTypeResponseBody,
+	SendEmailRequestBody,
+} from "contracts";
 export type { Field };
 export type PubValues = Record<string, Field>;
