@@ -7,7 +7,6 @@
 
 */
 -- AlterTable
-ALTER TABLE "users" DROP COLUMN "name",
-ADD COLUMN     "firstName" TEXT NOT NULL,
+ALTER TABLE "users" RENAME COLUMN "name" TO "firstName",
 ADD COLUMN     "lastName" TEXT NOT NULL,
 ADD COLUMN     "orcid" TEXT;
