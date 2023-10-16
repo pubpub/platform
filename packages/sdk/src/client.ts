@@ -115,7 +115,7 @@ export type Client<T extends Manifest> = {
 	getUsers(instanceId: string, userIds: string[]): Promise<SafeUser[]>;
 	getOrCreateUser(
 		instanceId: string,
-		user: { userId: string } | { email: string; firstName: string; lastName: string }
+		user: { userId: string } | { email: string; firstName: string; lastName?: string }
 	): Promise<User>;
 };
 

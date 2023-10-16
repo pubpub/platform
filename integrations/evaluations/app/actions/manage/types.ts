@@ -1,8 +1,8 @@
 import * as z from "zod";
 
 export type Evaluator =
-	| { userId: string; firstName: string; lastName: string }
-	| { email: string; firstName: string; lastName: string };
+	| { userId: string; firstName: string; lastName?: string }
+	| { email: string; firstName: string; lastName?: string };
 
 export type EvaluatorInvite = Evaluator & {
 	template: {

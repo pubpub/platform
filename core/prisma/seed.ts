@@ -12,7 +12,7 @@ async function createUserMembers(
 	password: string,
 	slug: string,
 	firstName: string,
-	lastName: string,
+	lastName: string | undefined,
 	prismaCommunityIds: { communityId: string; canAdmin: boolean }[]
 ) {
 	let user;

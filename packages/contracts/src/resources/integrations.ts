@@ -406,7 +406,7 @@ export const integrationsApi = contract.router(
 				z.object({
 					email: z.string(),
 					firstName: z.string(),
-					lastName: z.string(),
+					lastName: z.string().optional(),
 				}),
 			]),
 			pathParams: z.object({

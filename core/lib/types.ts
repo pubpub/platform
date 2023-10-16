@@ -88,7 +88,7 @@ type User = {
 	id: string;
 	slug: string;
 	firstName: string;
-	lastName: string;
+	lastName: string | null;
 	avatar: string | null;
 	createdAt: Date;
 	updatedAt: Date;

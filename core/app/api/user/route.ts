@@ -15,7 +15,7 @@ export type UserPostBody = {
 
 export type UserPutBody = {
 	firstName: string;
-	lastName: string;
+	lastName?: string;
 };
 
 export async function POST(req: NextRequest) {
