@@ -113,12 +113,13 @@ export default function SettingsForm({
 						<label htmlFor="lastName">Last Name</label>
 						<input
 							name="lastName"
-							value={lastName}
+							value={lastName ?? ""}
 							onChange={(evt) => setLastName(evt.target.value)}
 						/>
 					</div>
 					<div className="text-gray-500 text-sm leading-tight mt-3">
-						Username: {slugifyString(firstName)}-{slugifyString(lastName)}-{slugSuffix}
+						Username: {slugifyString(firstName)}
+						{lastName ? `-${slugifyString(lastName)}` : ""}-{slugSuffix}
 					</div>
 					<Button className="mt-4" type="submit" disabled={!valuesChanged || !firstName}>
 						Save Changes

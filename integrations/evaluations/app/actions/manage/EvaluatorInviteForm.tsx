@@ -40,7 +40,7 @@ export function EvaluatorInviteForm(props: Props) {
 		return props.evaluators.map((evaluator) => ({
 			userId: evaluator.id,
 			firstName: evaluator.firstName,
-			lastName: evaluator.lastName,
+			lastName: evaluator.lastName ?? undefined,
 			// Restore a customized template or copy the default one
 			template: props.instanceState[evaluator.id]?.inviteTemplate ?? {
 				...props.instanceConfig.template,
@@ -106,7 +106,7 @@ export function EvaluatorInviteForm(props: Props) {
 					update(index, {
 						userId: user.id,
 						firstName: user.firstName,
-						lastName: user.lastName,
+						lastName: user.lastName ?? undefined,
 						template: invite.template,
 					});
 					form.trigger(`invites.${index}`);

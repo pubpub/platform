@@ -1,7 +1,7 @@
 import { initContract } from "@ts-rest/core";
 import { integrationsApi } from "./resources/integrations";
 
-export type * from "./resources/integrations";
+export * from "./resources/integrations";
 
 const contract = initContract();
 

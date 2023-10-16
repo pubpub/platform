@@ -13,7 +13,7 @@ export type EvaluatorInvite = Evaluator & {
 
 export const EvaluatorInviteBase = z.object({
 	firstName: z.string().min(1, "First name is required"),
-	lastName: z.string().min(1, "Last name is required"),
+	lastName: z.string().min(1, "Last name is required").optional(),
 	template: z.object({
 		subject: z.string(),
 		message: z.string(),
