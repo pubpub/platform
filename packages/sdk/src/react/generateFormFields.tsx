@@ -51,23 +51,56 @@ export const buildFormSchemaFromFields = (
 };
 
 // todo: array, and more complex types that we might want to handle
-export const getFormField = (
-	schemaType: "string" | "number" | "boolean",
-	field: ControllerRenderProps
-) => {
-	switch (schemaType) {
+export const getFormField = (schema: JSONSchemaType<AnySchema>, field: ControllerRenderProps) => {
+	const { title, description, type } = schema;
+	const descriptionComponentWithHtml = (
+		<FormDescription dangerouslySetInnerHTML={{ __html: description }} />
+	);
+	switch (type) {
 		case "number":
 			return (
-				<Input
-					type="number"
-					{...field}
-					onChange={(event) => field.onChange(+event.target.value)}
-				/>
+				<FormItem>
+					<FormLabel>{title}</FormLabel>
+					{descriptionComponentWithHtml}
+					<FormControl>
+						<Input
+							type="number"
+							{...field}
+							onChange={(event) => field.onChange(+event.target.value)}
+						/>
+					</FormControl>
+					<FormMessage />
+				</FormItem>
 			);
 		case "boolean":
-			return <Checkbox />;
+			return (
+				<FormItem className={cn("flex flex-row items-start space-x-3 space-y-0")}>
+					<FormControl>
+						<Checkbox
+							{...field}
+							onCheckedChange={(checked) => {
+								field.onChange(checked);
+							}}
+						/>
+					</FormControl>
+					<div className={cn("space-y-1 leading-none")}>
+						<FormLabel>{title}</FormLabel>
+						{descriptionComponentWithHtml}
+						<FormMessage />
+					</div>
+				</FormItem>
+			);
 		default:
-			return <Input {...field} />;
+			return (
+				<FormItem>
+					<FormLabel>{schema.title}</FormLabel>
+					{descriptionComponentWithHtml}
+					<FormControl>
+						<Input {...field} />
+					</FormControl>
+					<FormMessage />
+				</FormItem>
+			);
 	}
 };
 
@@ -83,14 +116,7 @@ const ScalarField = (props: ScalarFieldProps) => {
 			control={props.control}
 			name={props.title}
 			defaultValue={props.schema.default ?? ""}
-			render={({ field }) => (
-				<FormItem>
-					<FormLabel>{props.schema.title}</FormLabel>
-					<FormDescription>{props.schema.description}</FormDescription>
-					<FormControl>{getFormField(props.schema.type, field)}</FormControl>
-					<FormMessage />
-				</FormItem>
-			)}
+			render={({ field }) => getFormField(props.schema, field)}
 		/>
 	);
 };
