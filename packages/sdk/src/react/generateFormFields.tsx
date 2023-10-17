@@ -9,6 +9,7 @@ import {
 	CardDescription,
 	CardHeader,
 	CardTitle,
+	Checkbox,
 	FormControl,
 	FormDescription,
 	FormField,
@@ -18,6 +19,7 @@ import {
 	Input,
 } from "ui";
 import { cn } from "utils";
+import { Check } from "ui/src/icon";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
 type AnySchema = {};
@@ -49,7 +51,10 @@ export const buildFormSchemaFromFields = (
 };
 
 // todo: array, and more complex types that we might want to handle
-export const getFormField = (schemaType: "string" | "number", field: ControllerRenderProps) => {
+export const getFormField = (
+	schemaType: "string" | "number" | "boolean",
+	field: ControllerRenderProps
+) => {
 	switch (schemaType) {
 		case "number":
 			return (
@@ -59,6 +64,8 @@ export const getFormField = (schemaType: "string" | "number", field: ControllerR
 					onChange={(event) => field.onChange(+event.target.value)}
 				/>
 			);
+		case "boolean":
+			return <Checkbox />;
 		default:
 			return <Input {...field} />;
 	}
@@ -79,8 +86,8 @@ const ScalarField = (props: ScalarFieldProps) => {
 			render={({ field }) => (
 				<FormItem>
 					<FormLabel>{props.schema.title}</FormLabel>
-					<FormControl>{getFormField(props.schema.type, field)}</FormControl>
 					<FormDescription>{props.schema.description}</FormDescription>
+					<FormControl>{getFormField(props.schema.type, field)}</FormControl>
 					<FormMessage />
 				</FormItem>
 			)}

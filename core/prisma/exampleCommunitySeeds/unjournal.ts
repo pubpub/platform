@@ -230,7 +230,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				title: "Please write your evaluation here",
 				description:
 					"Remember that your responses will be made public. Please consult <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators'>our criteria</a>. We are essentially asking for a 'standard high-quality referee report' here, with some specific considerations (mentioned in the above link). We welcome detail, elaboration, and technical discussion. If you prefer to link or submit your evaluation content in a different format, please link it here or send it to the corresponding/managing editor. Length and time spent: This is of course, up to you.  The Econometrics society recommends a 2-3 page referee report. In a recent survey (Charness et al, 2022), economists report spending (median and mean) about one day per report, with substantial shares reporting ‘half a day’ and ‘two days’. We expect that that reviewers tend to spend more time on papers for high-status journals, and when reviewing work closely tied to their own agenda.",
-				type: "boolean",
+				type: "string",
 			},
 		},
 	});

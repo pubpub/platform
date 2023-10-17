@@ -413,6 +413,9 @@ importers:
       '@radix-ui/react-avatar':
         specifier: ^1.0.3
         version: 1.0.3(@types/react@18.2.12)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-checkbox':
+        specifier: ^1.0.4
+        version: 1.0.4(@types/react@18.2.12)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-collapsible':
         specifier: ^1.0.3
         version: 1.0.3(@types/react@18.2.12)(react-dom@18.2.0)(react@18.2.0)
@@ -457,7 +460,7 @@ importers:
         version: 3.3.3(ts-node@10.9.1)
       tailwindcss-animate:
         specifier: ^1.0.6
-        version: 1.0.6(tailwindcss@3.3.3)
+        version: 1.0.6
       utils:
         specifier: workspace:*
         version: link:../utils
@@ -2536,6 +2539,33 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /@radix-ui/react-checkbox@1.0.4(@types/react@18.2.12)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-CBuGQa52aAYnADZVt/KBQzXrwx6TqnlwtcIPGtVt5JkkzQwMOLJjPukimhfKEr4GQNd43C+djUh5Ikopj8pSLg==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.22.10
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.12)(react@18.2.0)
+      '@radix-ui/react-context': 1.0.1(@types/react@18.2.12)(react@18.2.0)
+      '@radix-ui/react-presence': 1.0.1(@types/react@18.2.12)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-primitive': 1.0.3(@types/react@18.2.12)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.2.12)(react@18.2.0)
+      '@radix-ui/react-use-previous': 1.0.1(@types/react@18.2.12)(react@18.2.0)
+      '@radix-ui/react-use-size': 1.0.1(@types/react@18.2.12)(react@18.2.0)
+      '@types/react': 18.2.12
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /@radix-ui/react-collapsible@1.0.3(@types/react@18.2.12)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-UBmVDkmR6IvDsloHVN+3rtx4Mi5TFvylYXpluuv0f37dtaz3H99bp8No0LGXRigVpl3UAT4l9j6bIchh42S/Gg==}
     peerDependencies:
@@ -3102,6 +3132,20 @@ packages:
 
   /@radix-ui/react-use-layout-effect@1.0.1(@types/react@18.2.12)(react@18.2.0):
     resolution: {integrity: sha512-v/5RegiJWYdoCvMnITBkNNx6bCj20fiaJnWtRkU18yITptraXjffz5Qbn05uOiQnOvi+dbkznkoaMltz1GnszQ==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.22.10
+      '@types/react': 18.2.12
+      react: 18.2.0
+    dev: false
+
+  /@radix-ui/react-use-previous@1.0.1(@types/react@18.2.12)(react@18.2.0):
+    resolution: {integrity: sha512-cV5La9DPwiQ7S0gf/0qiD6YgNqM5Fk97Kdrlc5yBcrF3jyEZQwm7vYFqMo4IfeHgJXsRaMvLABFtd0OVEmZhDw==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.8 || ^17.0 || ^18.0
@@ -8825,12 +8869,10 @@ packages:
     resolution: {integrity: sha512-3mFKyCo/MBcgyOTlrY8T7odzZFx+w+qKSMAmdFzRvqBfLlSigU6TZnlFHK0lkMwj9Bj8OYU+9yW9lmGuS0QEnQ==}
     dev: false
 
-  /tailwindcss-animate@1.0.6(tailwindcss@3.3.3):
+  /tailwindcss-animate@1.0.6:
     resolution: {integrity: sha512-4WigSGMvbl3gCCact62ZvOngA+PRqhAn7si3TQ3/ZuPuQZcIEtVap+ENSXbzWhpojKB8CpvnIsrwBu8/RnHtuw==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
-    dependencies:
-      tailwindcss: 3.3.3(ts-node@10.9.1)
     dev: false
 
   /tailwindcss@3.3.3(ts-node@10.9.1):
