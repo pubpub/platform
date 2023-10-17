@@ -37,24 +37,12 @@ export default function SignupForm() {
 	};
 
 	return (
-		<div className="border p-4">
+		<div className="border p-4 bg-white">
 			{!signupComplete && (
 				<>
 					<h1 className="text-2xl text-center">Signup</h1>
 					<div className="my-10">
 						<form onSubmit={handleSubmit}>
-							<div>
-								<label htmlFor="firstName">Name</label>
-							</div>
-							<div>
-								<input
-									id="firstName"
-									className="w-full"
-									name="firstName"
-									value={firstName}
-									onChange={(evt) => setFirstName(evt.target.value)}
-								/>
-							</div>
 							<div>
 								<label htmlFor="lastName">Name</label>
 							</div>
