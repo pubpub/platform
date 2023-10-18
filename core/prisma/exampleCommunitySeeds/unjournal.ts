@@ -12,22 +12,34 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const confidenceObject = {
-		confidence: {
-			id: "unjournal:confidence",
-			title: "90% Confidence Interval Rating",
-			description:
-				"Provide three numbers: your rating, then the 90% confidence bounds for your rating. E.g. for a 50 rating, you might give bounds of 42 and 61.",
-			type: "array",
-			maxItems: 3,
-			minItems: 3,
-			items: { type: "integer" },
-		},
-		supComments: {
+	const commentsObject = {
+		comments: {
 			title: "Additional Comments",
 			type: "string",
 			minLength: 0,
 		},
+	};
+
+	const HundredConfidenceDef = {
+		$id: "unjournal:100confidence",
+		title: "90% Confidence Interval Rating",
+		description:
+			"Provide three numbers: your rating, then the 90% confidence bounds for your rating. E.g. for a 50 rating, you might give bounds of 42 and 61.",
+		type: "array",
+		maxItems: 3,
+		minItems: 3,
+		items: { type: "integer", minimum: 0, maximum: 100 },
+	};
+
+	const FiveConfidenceDef = {
+		$id: "unjournal:5confidence",
+		title: "90% Confidence Interval Rating",
+		description:
+			"Provide three numbers: your rating, then the 90% confidence bounds for your rating. E.g. for a 50 rating, you might give bounds of 42 and 61.",
+		type: "array",
+		maxItems: 3,
+		minItems: 3,
+		items: { type: "number", minimum: 0, maximum: 5 },
 	};
 
 	const metricsSchema = await prisma.pubFieldSchema.create({
@@ -40,41 +52,65 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				description:
 					"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories'>here</a> for details on the categories.",
 				type: "object",
+				$defs: {
+					confidence: HundredConfidenceDef,
+				},
 				properties: {
 					assessment: {
 						title: "Overall assessment",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 					advancing: {
 						title: "Advancing knowledge and practice",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 					methods: {
 						title: "Methods: Justification, reasonableness, validity, robustness",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 					logic: {
 						title: "Logic & communication",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 					open: {
 						title: "Open, collaborative, replicable",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 					real: {
 						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 					relevance: {
 						title: "Relevance to global priorities",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 				},
 			},
@@ -105,16 +141,25 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				description:
 					"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#journal-prediction-metrics'>here</a> for details on the metrics.",
 				type: "object",
+				$defs: {
+					confidence: FiveConfidenceDef,
+				},
 				properties: {
 					qualityJournal: {
 						title: "What 'quality journal' do you expect this work will this be published in?",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 					qualityLevel: {
 						title: "Overall assessment on 'scale of journals'; i.e., quality-level of  journal it should be published in.",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...commentsObject,
+						},
 					},
 				},
 			},

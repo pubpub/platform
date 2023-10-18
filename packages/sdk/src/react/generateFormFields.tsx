@@ -133,7 +133,6 @@ export const buildFormFieldsFromSchema = (
 	path?: string
 ) => {
 	const fields: React.ReactNode[] = [];
-	console.log(schema);
 	if (isObjectSchema(schema)) {
 		for (const [fieldKey, fieldSchema] of Object.entries(schema.properties)) {
 			const fieldPath = path ? `${path}.${fieldKey}` : fieldKey;
