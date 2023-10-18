@@ -33,10 +33,13 @@ export default function Features() {
 				<div className="pt-12 md:pt-20">
 					{/* Section header */}
 					<div className="max-w-3xl mx-auto text-center pb-12 md:pb-16">
-						<h1 className="h2 mb-4">Explore the solutions</h1>
+						<h1 className="h2 mb-4">
+							Enhancing open publishing by giving you the flexibility to collaborate
+							the way you want
+						</h1>
 						<p className="text-xl text-gray-600">
-							Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
-							dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat.
+							We provide core integrations for your workflows that allow you to submit
+							pubs to your Community
 						</p>
 					</div>
 
@@ -48,11 +51,13 @@ export default function Features() {
 							data-aos="fade-right"
 						>
 							<div className="md:pr-4 lg:pr-12 xl:pr-16 mb-8">
-								<h3 className="h3 mb-3">Powerful suite of tools</h3>
+								<h3 className="h3 mb-3">
+									Minimally configured tools for publishing
+								</h3>
 								<p className="text-xl text-gray-600">
-									Duis aute irure dolor in reprehenderit in voluptate velit esse
-									cillum dolore pariatur. Excepteur sint occaecat cupidatat non
-									proident, sunt in culpa.
+									Our platform along with our core integrations make managing your
+									publishing process easy. We provide the tools to help you expand
+									the platform to meet your needs.
 								</p>
 							</div>
 							{/* Tabs buttons */}
@@ -71,11 +76,11 @@ export default function Features() {
 								>
 									<div>
 										<div className="font-bold leading-snug tracking-tight mb-1">
-											Building the Simple ecosystem
+											Pubs
 										</div>
 										<div className="text-gray-600">
-											Take collaboration to the next level with security and
-											administrative features built for teams.
+											Define arbitrailry structured content to publish,
+											review, and currate. Literally anything. Yes, anything.
 										</div>
 									</div>
 									<div className="flex justify-center items-center w-8 h-8 bg-white rounded-full shadow flex-shrink-0 ml-3">
@@ -102,11 +107,11 @@ export default function Features() {
 								>
 									<div>
 										<div className="font-bold leading-snug tracking-tight mb-1">
-											Building the Simple ecosystem
+											Stages
 										</div>
 										<div className="text-gray-600">
-											Take collaboration to the next level with security and
-											administrative features built for teams.
+											Move pubs between stages your community defines to
+											create incredibly flexible workflows.
 										</div>
 									</div>
 									<div className="flex justify-center items-center w-8 h-8 bg-white rounded-full shadow flex-shrink-0 ml-3">
@@ -136,11 +141,13 @@ export default function Features() {
 								>
 									<div>
 										<div className="font-bold leading-snug tracking-tight mb-1">
-											Building the Simple ecosystem
+											Integrations
 										</div>
 										<div className="text-gray-600">
-											Take collaboration to the next level with security and
-											administrative features built for teams.
+											Our core integrations are powerful enough for you to set
+											up powerful workflows, but we can't do everything. We
+											provide the tools to help you expand the platform to
+											meet your needs.
 										</div>
 									</div>
 									<div className="flex justify-center items-center w-8 h-8 bg-white rounded-full shadow flex-shrink-0 ml-3">
