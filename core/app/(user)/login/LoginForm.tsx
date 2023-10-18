@@ -28,7 +28,6 @@ export default function LoginForm() {
 
 	return (
 		<div className="border p-4">
-			<h1 className="text-2xl text-center">Login</h1>
 			<div className="my-10">
 				<form onSubmit={handleSubmit}>
 					<div>
@@ -38,6 +37,7 @@ export default function LoginForm() {
 						<input
 							id="email"
 							className="w-full"
+							placeholder="Enter your email address"
 							name="email"
 							value={email}
 							onChange={(evt) => setEmail(evt.target.value)}
@@ -50,6 +50,7 @@ export default function LoginForm() {
 						<input
 							id="password"
 							className="w-full"
+							placeholder="Enter your password"
 							name="password"
 							value={password}
 							type="password"
@@ -58,12 +59,7 @@ export default function LoginForm() {
 					</div>
 
 					<div className="my-6 text-center">
-						<Button
-							className="mr-4"
-							variant="outline"
-							type="submit"
-							disabled={!email || !password}
-						>
+						<Button className="mr-4" type="submit" disabled={!email || !password}>
 							Login
 						</Button>
 						<Link href="/forgot" className="text-sm text-gray-600 hover:underline">

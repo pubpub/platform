@@ -40,7 +40,6 @@ export default function SignupForm() {
 		<div className="border p-4 bg-white">
 			{!signupComplete && (
 				<>
-					<h1 className="text-2xl text-center">Signup</h1>
 					<div className="my-10">
 						<form onSubmit={handleSubmit}>
 							<div>
@@ -48,8 +47,20 @@ export default function SignupForm() {
 							</div>
 							<div>
 								<input
+									id="firstName"
+									className="w-full"
+									placeholder="First Name"
+									name="firstName"
+									value={firstName}
+									onChange={(evt) => setFirstName(evt.target.value)}
+								/>
+							</div>
+							<br />
+							<div>
+								<input
 									id="lastName"
 									className="w-full"
+									placeholder="Last Name"
 									name="lastName"
 									value={lastName}
 									onChange={(evt) => setLastName(evt.target.value)}
@@ -62,6 +73,7 @@ export default function SignupForm() {
 								<input
 									id="email"
 									className="w-full"
+									placeholder="Email"
 									name="email"
 									value={email}
 									onChange={(evt) => setEmail(evt.target.value)}
@@ -74,6 +86,7 @@ export default function SignupForm() {
 								<input
 									id="password"
 									className="w-full"
+									placeholder="Password"
 									name="Password"
 									value={password}
 									type="password"
