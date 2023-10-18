@@ -17,15 +17,15 @@ const StagesEditor = ({ stages }) => {
 	};
 
 	return (
-		<div className="flex space-x-4">
-			<div className="w-1/3">
+		<div className="flex flex-col space-x-4">
+			<div>
 				{/* Display a list of stages as tabs */}
 				<div className="space-y-2">
 					{stages.map((stage) => (
 						<button
 							key={stage}
 							className={`px-4 py-2 border ${
-								selectedStage === stage ? "bg-blue-500" : ""
+								selectedStage === stage ? "text-white bg-black" : ""
 							}`}
 							onClick={() => handleStageChange(stage)}
 						>
@@ -35,7 +35,7 @@ const StagesEditor = ({ stages }) => {
 				</div>
 			</div>
 
-			<div className="w-2/3">
+			<div>
 				{/* Display the selected stage for editing */}
 				<div className="p-4">
 					{/* Add your editing content here */}
@@ -68,23 +68,6 @@ export default function StageManagement(props: Props) {
 				communityId: props.community.id,
 				order: "zz",
 			},
-		});
-	};
-
-	const renderStages = () => {
-		return props.stages?.map((stage) => {
-			return (
-				<div className="py-6">
-					<Card>
-						<CardTitle>Stage</CardTitle>
-						<CardContent>
-							Name: {stage.name}
-							<br />
-							Order: {stage.order}
-						</CardContent>
-					</Card>
-				</div>
-			);
 		});
 	};
 
