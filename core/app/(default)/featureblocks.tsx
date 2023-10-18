@@ -12,11 +12,8 @@ export default function FeaturesBlocks() {
 				<div className="py-12 md:py-20">
 					{/* Section header */}
 					<div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
-						<h2 className="h2 mb-4">Explore the solutions</h2>
-						<p className="text-xl text-gray-600">
-							Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
-							dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat.
-						</p>
+						<h2 className="h2 mb-4">FISCH platform features</h2>
+						<p className="text-xl text-gray-600">Notable FISCH features</p>
 					</div>
 
 					{/* Items */}
@@ -30,14 +27,14 @@ export default function FeaturesBlocks() {
 							>
 								<g fill="none" fillRule="evenodd">
 									<rect
-										className="fill-current text-blue-600"
+										className="fill-current text-purple-600"
 										width="64"
 										height="64"
 										rx="32"
 									/>
 									<g strokeWidth="2">
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											d="M34.514 35.429l2.057 2.285h8M20.571 26.286h5.715l2.057 2.285"
 										/>
 										<path
@@ -45,7 +42,7 @@ export default function FeaturesBlocks() {
 											d="M20.571 37.714h5.715L36.57 26.286h8"
 										/>
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											strokeLinecap="square"
 											d="M41.143 34.286l3.428 3.428-3.428 3.429"
 										/>
@@ -58,10 +55,11 @@ export default function FeaturesBlocks() {
 								</g>
 							</svg>
 							<h4 className="text-xl font-bold leading-snug tracking-tight mb-1">
-								Headless CMS
+								Open Source
 							</h4>
 							<p className="text-gray-600 text-center">
-								Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+								We made sure to make FISCH as flexible as possible so haters
+								wouldn't call us feuxpen source.
 							</p>
 						</div>
 
@@ -74,7 +72,7 @@ export default function FeaturesBlocks() {
 							>
 								<g fill="none" fillRule="evenodd">
 									<rect
-										className="fill-current text-blue-600"
+										className="fill-current text-purple-600"
 										width="64"
 										height="64"
 										rx="32"
@@ -92,17 +90,18 @@ export default function FeaturesBlocks() {
 											d="M19.153 23.267c3.59-2.213 5.99-6.169 5.99-10.696C25.143 5.63 19.514 0 12.57 0 5.63 0 0 5.629 0 12.571c0 4.527 2.4 8.483 5.99 10.696"
 										/>
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											d="M16.161 18.406a6.848 6.848 0 003.268-5.835 6.857 6.857 0 00-6.858-6.857 6.857 6.857 0 00-6.857 6.857 6.848 6.848 0 003.268 5.835"
 										/>
 									</g>
 								</g>
 							</svg>
 							<h4 className="text-xl font-bold leading-snug tracking-tight mb-1">
-								Headless CMS
+								Core integrations
 							</h4>
 							<p className="text-gray-600 text-center">
-								Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+								We provide you the ability to seek reviewers, submit works, and
+								currate content.
 							</p>
 						</div>
 
@@ -115,14 +114,14 @@ export default function FeaturesBlocks() {
 							>
 								<g fill="none" fillRule="evenodd">
 									<rect
-										className="fill-current text-blue-600"
+										className="fill-current text-purple-600"
 										width="64"
 										height="64"
 										rx="32"
 									/>
 									<g strokeWidth="2">
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											d="M34.743 29.714L36.57 32 27.43 43.429H24M24 20.571h3.429l1.828 2.286"
 										/>
 										<path
@@ -131,7 +130,7 @@ export default function FeaturesBlocks() {
 											d="M34.743 41.143l1.828 2.286H40M40 20.571h-3.429L27.43 32l1.828 2.286"
 										/>
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											d="M36.571 32H40"
 										/>
 										<path
@@ -143,10 +142,11 @@ export default function FeaturesBlocks() {
 								</g>
 							</svg>
 							<h4 className="text-xl font-bold leading-snug tracking-tight mb-1">
-								Headless CMS
+								Public API
 							</h4>
 							<p className="text-gray-600 text-center">
-								Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+								You can build your own integration with FISCH using our public
+								API.Not easily though.
 							</p>
 						</div>
 
@@ -159,7 +159,7 @@ export default function FeaturesBlocks() {
 							>
 								<g fill="none" fillRule="evenodd">
 									<rect
-										className="fill-current text-blue-600"
+										className="fill-current text-purple-600"
 										width="64"
 										height="64"
 										rx="32"
@@ -178,7 +178,7 @@ export default function FeaturesBlocks() {
 											d="M20.571 26.286A5.714 5.714 0 0126.286 32 5.714 5.714 0 0132 26.286"
 										/>
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											d="M21.714 40h4.572M24 37.714v4.572M37.714 24h4.572M40 21.714v4.572"
 											strokeLinecap="square"
 										/>
@@ -186,10 +186,14 @@ export default function FeaturesBlocks() {
 								</g>
 							</svg>
 							<h4 className="text-xl font-bold leading-snug tracking-tight mb-1">
-								Headless CMS
+								Community
 							</h4>
 							<p className="text-gray-600 text-center">
-								Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+								We support communities of all sizes by not gating access to our core
+								features Seriously, we'll be here for you when you need us. Unless
+								its really hard, then we'll probably just ignore you. Not to be rude
+								but because we are scared of you seeing the sticks and paper this
+								thing is held together with
 							</p>
 						</div>
 
@@ -202,7 +206,7 @@ export default function FeaturesBlocks() {
 							>
 								<g fill="none" fillRule="evenodd">
 									<rect
-										className="fill-current text-blue-600"
+										className="fill-current text-purple-600"
 										width="64"
 										height="64"
 										rx="32"
@@ -213,7 +217,7 @@ export default function FeaturesBlocks() {
 											d="M19.429 32a12.571 12.571 0 0021.46 8.89L23.111 23.11A12.528 12.528 0 0019.429 32z"
 										/>
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											d="M32 19.429c6.943 0 12.571 5.628 12.571 12.571M32 24a8 8 0 018 8"
 										/>
 										<path
@@ -224,10 +228,13 @@ export default function FeaturesBlocks() {
 								</g>
 							</svg>
 							<h4 className="text-xl font-bold leading-snug tracking-tight mb-1">
-								Headless CMS
+								Not evil
 							</h4>
 							<p className="text-gray-600 text-center">
-								Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+								We are a company who believes in the best for others. That's why we
+								are a non-profit. We are not evil. We promise. We dont want you to
+								pay us shit tons of money so we can gatekeep knwoledge. We want you
+								to pay us shit tons becuase this is hard.
 							</p>
 						</div>
 
@@ -240,7 +247,7 @@ export default function FeaturesBlocks() {
 							>
 								<g fill="none" fillRule="evenodd">
 									<rect
-										className="fill-current text-blue-600"
+										className="fill-current text-purple-600"
 										width="64"
 										height="64"
 										rx="32"
@@ -251,17 +258,18 @@ export default function FeaturesBlocks() {
 											d="M29.714 40.358l-4.777 2.51 1.349-7.865-5.715-5.57 7.898-1.147L32 21.13l3.531 7.155 7.898 1.147L40 32.775"
 										/>
 										<path
-											className="stroke-current text-blue-300"
+											className="stroke-current text-purple-300"
 											d="M44.571 43.429H34.286M44.571 37.714H34.286"
 										/>
 									</g>
 								</g>
 							</svg>
 							<h4 className="text-xl font-bold leading-snug tracking-tight mb-1">
-								Headless CMS
+								This last block is a joke
 							</h4>
 							<p className="text-gray-600 text-center">
-								Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+								I like symmetry and the template came like this. You see. We put
+								time in where it counts
 							</p>
 						</div>
 					</div>

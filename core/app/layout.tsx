@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import { Toaster } from "ui";
 import "ui/styles.css";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData, handleRedirect } from "~/lib/auth/loginData";
 import InitClient from "./InitClient";
 import Footer from "./footer";
 import "./css/globals.css";
@@ -20,7 +20,7 @@ const inter = Inter({
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	const loginData = await getLoginData();
-
+	await handleRedirect();
 	return (
 		<html lang="en">
 			<body

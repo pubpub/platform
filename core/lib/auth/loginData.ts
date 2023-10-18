@@ -80,8 +80,6 @@ export const handleRedirect = async () => {
 		console.log("community", community);
 		if (community) {
 			redirect(`/c/${community.slug}`);
-		} else {
-			redirect("/c/join");
 		}
 	}
 };
