@@ -1,9 +1,7 @@
 import { Inter } from "next/font/google";
-import { redirect } from "next/navigation";
 import { Toaster } from "ui";
 import "ui/styles.css";
 import { getLoginData } from "~/lib/auth/loginData";
-import prisma from "~/prisma/db";
 import InitClient from "./InitClient";
 import Footer from "./footer";
 import "./css/globals.css";

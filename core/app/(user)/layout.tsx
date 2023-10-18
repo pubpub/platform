@@ -1,4 +1,4 @@
-export default async function UserLayout({ children }: { children: React.ReactNode }) {
+export default function UserLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<div className="grow">
 			<div className="container mx-auto">{children}</div>
