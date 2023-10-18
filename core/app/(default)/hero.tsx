@@ -1,6 +1,3 @@
-import VideoThumb from "@/public/images/hero-image.png";
-import ModalVideo from "./modal-video";
-
 export default function Hero() {
 	return (
 		<section className="relative">
@@ -34,10 +31,7 @@ export default function Hero() {
 				<div className="pt-32 pb-12 md:pt-40 md:pb-20">
 					{/* Section header */}
 					<div className="text-center pb-12 md:pb-16">
-						<h1
-							className="text-5xl md:text-6xl font-extrabold leading-tighter tracking-tighter mb-4"
-							data-aos="zoom-y-out"
-						>
+						<h1 className="text-5xl md:text-6xl font-extrabold leading-tighter tracking-tighter mb-4">
 							Make your website{" "}
 							<span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
 								wonderful
@@ -78,15 +72,6 @@ export default function Hero() {
 					</div>
 
 					{/* Hero image */}
-					<ModalVideo
-						thumb={VideoThumb}
-						thumbWidth={768}
-						thumbHeight={432}
-						thumbAlt="Modal video thumbnail"
-						video="/videos/video.mp4"
-						videoWidth={1920}
-						videoHeight={1080}
-					/>
 				</div>
 			</div>
 		</section>

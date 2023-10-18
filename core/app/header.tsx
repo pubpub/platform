@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 
 import Link from "next/link";
-import Logo from "./logo";
-import Dropdown from "./dropdown";
 import MobileMenu from "./mobile-menu";
 
 export default function Header() {
@@ -12,7 +10,7 @@ export default function Header() {
 
 	// detect whether user has scrolled the page down by 10px
 	const scrollHandler = () => {
-		window.pageYOffset > 10 ? setTop(false) : setTop(true);
+		window.scrollY > 10 ? setTop(false) : setTop(true);
 	};
 
 	useEffect(() => {
@@ -30,9 +28,9 @@ export default function Header() {
 			<div className="max-w-6xl mx-auto px-5 sm:px-6">
 				<div className="flex items-center justify-between h-16 md:h-20">
 					{/* Site branding */}
-					<div className="shrink-0 mr-4">
-						<Logo />
-					</div>
+					<Link className="shrink-0 mr-4" href="/">
+						<img src="/logos/icon.svg" className="w-6" />
+					</Link>
 
 					{/* Desktop navigation */}
 					<nav className="hidden md:flex md:grow">
@@ -40,10 +38,10 @@ export default function Header() {
 						<ul className="flex grow justify-end flex-wrap items-center">
 							<li>
 								<Link
-									href="/signin"
+									href="/login"
 									className="font-medium text-gray-600 hover:text-gray-900 px-5 py-3 flex items-center transition duration-150 ease-in-out"
 								>
-									Sign in
+									Log in
 								</Link>
 							</li>
 							<li>

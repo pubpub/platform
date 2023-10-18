@@ -1,6 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Not clear why we need this here if we
-also import ui/styles which includes it */

@@ -1,9 +1,13 @@
-import "ui/styles.css";
-import "./globals.css";
-import InitClient from "./InitClient";
-import { Toaster } from "ui";
-import Header from "./header";
 import { Inter } from "next/font/google";
+import { redirect } from "next/navigation";
+import { Toaster } from "ui";
+import "ui/styles.css";
+import { getLoginData } from "~/lib/auth/loginData";
+import prisma from "~/prisma/db";
+import InitClient from "./InitClient";
+import Footer from "./footer";
+import "./css/globals.css";
+import Header from "./header";
 
 export const metadata = {
 	title: "PubPub v7 Mockup Demo",
@@ -16,17 +20,20 @@ const inter = Inter({
 	display: "swap",
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+	const loginData = await getLoginData();
+
 	return (
 		<html lang="en">
 			<body
 				className={`${inter.variable} font-inter antialiased bg-white text-gray-900 tracking-tight`}
 			>
 				<div className="flex flex-col min-h-screen overflow-hidden supports-[overflow:clip]:overflow-clip">
-					<Header />
 					<InitClient />
+					{!loginData && <Header />}
 					{children}
 					<Toaster />
+					{!loginData && <Footer />}
 				</div>
 			</body>
 		</html>
