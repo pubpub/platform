@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
 import { hasInvite } from "~/lib/types";
+import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
 
 type Props = {
 	searchParams: {
