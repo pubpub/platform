@@ -29,6 +29,13 @@ export const save = async (
 			acc[evaluation.values["unjournal:evaluator"] as string] = evaluation;
 			return acc;
 		}, {} as Record<string, GetPubResponseBody>);
+		// Create the initial invite time based on the last invite. If there is
+		// no last invite, use the current time.
+		const lastInvite = invites[invites.length - 1];
+		const lastInviteTime =
+			"userId" in lastInvite
+				? new Date(instanceState[lastInvite.userId].inviteTime)
+				: new Date();
 		for (let i = 0; i < invites.length; i++) {
 			let invite = invites[i];
 			if ("email" in invite) {
@@ -41,6 +48,7 @@ export const save = async (
 				};
 			}
 			const evaluation = evaluationsByEvaluator[invite.userId];
+			let runAt: Date;
 			if (evaluation === undefined) {
 				// New evaluator added. Make the corresponding evaluation pub.
 				await client.createPub(instanceId, {
@@ -51,11 +59,13 @@ export const save = async (
 						"unjournal:evaluator": invite.userId,
 					},
 				});
+				// Create new invite time.
+				runAt = new Date(lastInviteTime);
+				runAt.setMinutes(runAt.getMinutes() + i++ * 3);
+			} else {
+				// Use existing invite time.
+				runAt = new Date(instanceState[invite.userId]?.inviteTime);
 			}
-			// FIXME: This is added for demo purposes to show email scheduling. This
-			// should instead be calcualated from instance configuration.
-			const runAt = new Date();
-			runAt.setMinutes(runAt.getMinutes() + i * 3);
 			// Schedule (or replace) email to be sent to evaluator
 			await client.scheduleEmail(
 				instanceId,

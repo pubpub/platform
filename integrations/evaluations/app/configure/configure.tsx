@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import {
 	Button,
 	Card,
@@ -25,7 +26,7 @@ import { cn } from "utils";
 import * as z from "zod";
 import { configure } from "./actions";
 
-type Props = {
+type BaseProps = {
 	instanceId: string;
 	pubTypeId?: string;
 	template?: {
@@ -33,6 +34,13 @@ type Props = {
 		message: string;
 	};
 };
+
+type RedirectProps = BaseProps & {
+	action: string;
+	pubId: string;
+};
+
+type Props = BaseProps | RedirectProps;
 
 const schema = z.object({
 	pubTypeId: z.string().length(36),
@@ -42,6 +50,10 @@ const schema = z.object({
 		message: z.string(),
 	}),
 });
+
+const isActionRedirect = (props: Props): props is RedirectProps => {
+	return "action" in props;
+};
 
 export function Configure(props: Props) {
 	const { toast } = useToast();
@@ -61,8 +73,7 @@ export function Configure(props: Props) {
 			template,
 		},
 	});
-
-	async function onSubmit(values: z.infer<typeof schema>) {
+	const onSubmit = async (values: z.infer<typeof schema>) => {
 		const result = await configure(values.instanceId, values.pubTypeId, values.template);
 		if ("error" in result) {
 			toast({
@@ -76,7 +87,17 @@ export function Configure(props: Props) {
 				description: "The instance was updated successfully.",
 			});
 		}
-	}
+	};
+
+	useEffect(() => {
+		if (isActionRedirect(props)) {
+			toast({
+				title: "Configure Instance",
+				description: "Please configure the instance before managing evaluations.",
+			});
+		}
+	}, []);
+
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -157,10 +178,14 @@ export function Configure(props: Props) {
 							variant="outline"
 							onClick={(e) => {
 								e.preventDefault();
-								window.history.back();
+								if (isActionRedirect(props)) {
+									window.location.href = `/${props.action}?instanceId=${props.instanceId}&pubId=${props.pubId}`;
+								} else {
+									window.history.back();
+								}
 							}}
 						>
-							Go Back
+							Go Back{isActionRedirect(props) ? ` to ${props.action}` : ""}
 						</Button>
 						<Button type="submit" disabled={!form.formState.isValid}>
 							Configure

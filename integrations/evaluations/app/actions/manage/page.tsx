@@ -2,6 +2,7 @@ import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
 import { expect } from "utils";
+import { notFound, redirect } from "next/navigation";
 
 type Props = {
 	searchParams: {
@@ -12,7 +13,13 @@ type Props = {
 
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
-	const instanceConfig = expect(await getInstanceConfig(instanceId));
+	if (!instanceId) {
+		notFound();
+	}
+	const instanceConfig = await getInstanceConfig(instanceId);
+	if (instanceConfig === undefined) {
+		redirect(`/configure?instanceId=${instanceId}&pubId=${pubId}&action=manage`);
+	}
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
 	console.log(instanceState);
 	// Fetch the pub and its children
