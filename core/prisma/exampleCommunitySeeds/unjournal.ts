@@ -13,38 +13,20 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 
 	const confidenceObject = {
-		rating: {
-			title: "Rating",
-			type: "number",
-			minimum: 0,
-			maximum: 100,
-			default: 0,
-		},
 		confidence: {
-			title: "90% Confidence Interval",
-			description: "E.g. for a 50 rating, you might give a CI of 42, 61",
-			type: "object",
-			properties: {
-				low: {
-					title: "Low",
-					type: "number",
-					minimum: 0,
-					maximum: 100,
-					default: 0,
-				},
-				high: {
-					title: "High",
-					type: "number",
-					minimum: 0,
-					maximum: 100,
-					default: 0,
-				},
-				comments: {
-					title: "Additional Comments",
-					type: "string",
-					minLength: 0,
-				},
-			},
+			id: "unjournal:confidence",
+			title: "90% Confidence Interval Rating",
+			description:
+				"Provide three numbers: your rating, then the 90% confidence bounds for your rating. E.g. for a 50 rating, you might give bounds of 42 and 61.",
+			type: "array",
+			maxItems: 3,
+			minItems: 3,
+			items: { type: "integer" },
+		},
+		supComments: {
+			title: "Additional Comments",
+			type: "string",
+			minLength: 0,
 		},
 	};
 
