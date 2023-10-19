@@ -138,6 +138,9 @@ const getCustomRenderer = (
 		fieldSchema.$id === "unjournal:100confidence" ||
 		fieldSchema.$id === "unjournal:5confidence"
 	) {
+		// not sure why, but these need to be set outside of the render in FormField?
+		const min = fieldSchema.items.minimum;
+		const max = fieldSchema.items.maximum;
 		return (
 			<CardContent
 				className={cn("flex flex-col column gap-4 w-1/2")}
@@ -156,8 +159,8 @@ const getCustomRenderer = (
 							<FormControl>
 								<Confidence
 									{...field}
-									min={fieldSchema.items.minimum}
-									max={fieldSchema.items.maximim}
+									min={min}
+									max={max}
 									onValueChange={(event) => field.onChange(event)}
 								/>
 							</FormControl>
