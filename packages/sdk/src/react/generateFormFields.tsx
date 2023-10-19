@@ -17,6 +17,7 @@ import {
 	FormLabel,
 	FormMessage,
 	Input,
+	Confidence,
 } from "ui";
 import { cn } from "utils";
 
@@ -47,40 +48,6 @@ export const buildFormSchemaFromFields = (
 		}
 	}
 	return schema;
-};
-
-const customScalars = ["unjournal:100confidence", "unjournal:5confidence"];
-
-const hasCustomRenderer = (id: string) => {
-	return customScalars.includes(id);
-};
-
-const getCustomRenderer = (
-	path: string | undefined,
-	control: Control,
-	fieldSchema: JSONSchemaType<AnySchema>,
-	parentSchema: JSONSchemaType<AnySchema>
-) => {
-	if (fieldSchema.$id === "unjournal:100confidence") {
-		return (
-			<CardContent
-				className={cn("flex flex-col column gap-4")}
-				key={parentSchema.$id ?? path}
-			>
-				<h1>100</h1>
-			</CardContent>
-		);
-	}
-	if (fieldSchema.$id === "unjournal:5confidence") {
-		return (
-			<CardContent
-				className={cn("flex flex-col column gap-4")}
-				key={parentSchema.$id ?? path}
-			>
-				<h1>5</h1>
-			</CardContent>
-		);
-	}
 };
 
 // todo: array, and more complex types that we might want to handle
@@ -152,6 +119,55 @@ const ScalarField = (props: ScalarFieldProps) => {
 			render={({ field }) => getFormField(props.schema, field)}
 		/>
 	);
+};
+
+const customScalars = ["unjournal:100confidence", "unjournal:5confidence"];
+
+const hasCustomRenderer = (id: string) => {
+	return customScalars.includes(id);
+};
+
+// todo: don't just use if statements, make more dynamic
+const getCustomRenderer = (
+	path: string | undefined,
+	control: Control,
+	fieldSchema: JSONSchemaType<AnySchema>,
+	parentSchema: JSONSchemaType<AnySchema>
+) => {
+	if (
+		fieldSchema.$id === "unjournal:100confidence" ||
+		fieldSchema.$id === "unjournal:5confidence"
+	) {
+		return (
+			<CardContent
+				className={cn("flex flex-col column gap-4 w-1/2")}
+				key={parentSchema.$id ?? path}
+			>
+				<FormField
+					control={control}
+					name={path ?? parentSchema.$id!.split("#")[1]}
+					defaultValue={fieldSchema.default ?? [0, 0, 0]}
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>{fieldSchema.title}</FormLabel>
+							<CardDescription
+								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
+							/>
+							<FormControl>
+								<Confidence
+									{...field}
+									min={fieldSchema.items.minimum}
+									max={fieldSchema.items.maximim}
+									onValueChange={(event) => field.onChange(event)}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+			</CardContent>
+		);
+	}
 };
 
 const isObjectSchema = (

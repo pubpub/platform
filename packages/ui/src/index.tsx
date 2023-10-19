@@ -19,5 +19,8 @@ export * from "./toaster";
 export * from "./tooltip";
 export * from "./use-toast";
 
+/* Renderers */
+export * from "./customRenderers/confidence";
+
 /* Hooks */
 export * from "./hooks";

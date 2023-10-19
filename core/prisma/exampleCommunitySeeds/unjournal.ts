@@ -28,6 +28,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		type: "array",
 		maxItems: 3,
 		minItems: 3,
+		default: [20, 30, 40],
 		items: { type: "integer", minimum: 0, maximum: 100 },
 	};
 
@@ -39,6 +40,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		type: "array",
 		maxItems: 3,
 		minItems: 3,
+		default: [2, 3, 4],
 		items: { type: "number", minimum: 0, maximum: 5 },
 	};
 
