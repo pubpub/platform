@@ -239,9 +239,10 @@ export const buildFormFieldsFromSchema = (
 				: `${resolvedSchema.$id}#/properties`;
 
 			const fieldContent = isObjectSchema(fieldSchema) ? (
-				<CardContent key={fieldKey}>
+				<div key={fieldKey} className={path ? cn("ml-8 border-l-2 pb-4") : cn("mb-8")}>
+					{!path && <Separator />}
 					<CardHeader>
-						<CardTitle>{fieldSchema.title}</CardTitle>
+						<CardTitle className={cn("text-lg")}>{fieldSchema.title}</CardTitle>
 						<CardDescription
 							dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
 						/>
@@ -254,7 +255,7 @@ export const buildFormFieldsFromSchema = (
 						fieldSchema,
 						fieldSchemaPath
 					)}
-				</CardContent>
+				</div>
 			) : (
 				buildFormFieldsFromSchema(
 					compiledSchema,
