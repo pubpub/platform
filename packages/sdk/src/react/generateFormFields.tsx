@@ -10,6 +10,7 @@ import {
 	CardHeader,
 	CardTitle,
 	Checkbox,
+	Confidence,
 	FormControl,
 	FormDescription,
 	FormField,
@@ -17,7 +18,7 @@ import {
 	FormLabel,
 	FormMessage,
 	Input,
-	Confidence,
+	Separator,
 } from "ui";
 import { cn } from "utils";
 
