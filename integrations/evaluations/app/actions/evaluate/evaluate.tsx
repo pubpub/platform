@@ -32,10 +32,11 @@ export function Evaluate(props: Props) {
 	const { toast } = useToast();
 
 	// we need to use an uncompiled schema for validation, but compiled for building the form
-	// we could return a compiled schema, but ajvResolver complains about, ironically, a resolved schema from ajv
+	// "Schema" is a key later used to retrieve this schema (we could later pass multiple for dereferencing, for example)
 	const generatedSchema = buildFormSchemaFromFields(pubType);
 	const ajv = new Ajv();
-	const compiledSchema = ajv.addSchema(generatedSchema, "schema");
+	const schemaKey = "schema";
+	const compiledSchema = ajv.addSchema(generatedSchema, schemaKey);
 
 	const form = useForm({
 		mode: "onChange",
@@ -76,7 +77,7 @@ export function Evaluate(props: Props) {
 	}, [values]);
 
 	const formFieldsFromSchema = useMemo(
-		() => buildFormFieldsFromSchema(compiledSchema, form.control),
+		() => buildFormFieldsFromSchema(compiledSchema, schemaKey, form.control),
 		[form.control]
 	);
 

@@ -49,6 +49,40 @@ export const buildFormSchemaFromFields = (
 	return schema;
 };
 
+const customScalars = ["unjournal:100confidence", "unjournal:5confidence"];
+
+const hasCustomRenderer = (id: string) => {
+	return customScalars.includes(id);
+};
+
+const getCustomRenderer = (
+	path: string | undefined,
+	control: Control,
+	fieldSchema: JSONSchemaType<AnySchema>,
+	parentSchema: JSONSchemaType<AnySchema>
+) => {
+	if (fieldSchema.$id === "unjournal:100confidence") {
+		return (
+			<CardContent
+				className={cn("flex flex-col column gap-4")}
+				key={parentSchema.$id ?? path}
+			>
+				<h1>100</h1>
+			</CardContent>
+		);
+	}
+	if (fieldSchema.$id === "unjournal:5confidence") {
+		return (
+			<CardContent
+				className={cn("flex flex-col column gap-4")}
+				key={parentSchema.$id ?? path}
+			>
+				<h1>5</h1>
+			</CardContent>
+		);
+	}
+};
+
 // todo: array, and more complex types that we might want to handle
 export const getFormField = (schema: JSONSchemaType<AnySchema>, field: ControllerRenderProps) => {
 	const { title, description, type } = schema;
@@ -130,7 +164,10 @@ const hasRef = (schema: JSONSchemaType<AnySchema>) => {
 	return schema.$ref;
 };
 
-const getResolvedSchema = (schema: JSONSchemaType<AnySchema>, compiledSchema: Ajv) => {};
+const hasResolvedSchema = (compiledSchema: Ajv, schemaKey: string) => {
+	const resolvedSchema = compiledSchema.getSchema(schemaKey);
+	return resolvedSchema && resolvedSchema.schema;
+};
 
 const getDereferencedSchema = (
 	schema: JSONSchemaType<AnySchema>,
@@ -155,21 +192,26 @@ const getDereferencedSchema = (
 };
 
 export const buildFormFieldsFromSchema = (
-	schema: Ajv,
+	compiledSchema: Ajv,
+	compiledSchemaKey: string,
 	control: Control,
 	path?: string,
 	fieldSchema?: JSONSchemaType<AnySchema>,
 	schemaPath?: string
 ) => {
 	const fields: React.ReactNode[] = [];
+
+	// probably should refactor into function and throw an error if the schema can't be resolved from the compiled schema
 	const resolvedSchema = fieldSchema
 		? fieldSchema
-		: (schema.getSchema("schema")!.schema as JSONSchemaType<AnySchema>);
+		: (compiledSchema.getSchema("schema")!.schema as JSONSchemaType<AnySchema>);
+
 	if (isObjectSchema(resolvedSchema)) {
 		for (const [fieldKey, fieldSchema] of Object.entries(resolvedSchema.properties)) {
 			const fieldPath = path ? `${path}.${fieldKey}` : fieldKey;
 
-			// for querying the compiled schema later
+			// for querying the compiled schema later -- pretty robust, but does assume defs are not at top level
+			// may be better way to query just at last schema id, for example
 			const fieldSchemaPath = schemaPath
 				? resolvedSchema.$id
 					? `${schemaPath}/${resolvedSchema.$id}`
@@ -185,7 +227,8 @@ export const buildFormFieldsFromSchema = (
 						/>
 					</CardHeader>
 					{buildFormFieldsFromSchema(
-						schema,
+						compiledSchema,
+						compiledSchemaKey,
 						control,
 						fieldPath,
 						fieldSchema,
@@ -193,27 +236,38 @@ export const buildFormFieldsFromSchema = (
 					)}
 				</CardContent>
 			) : (
-				buildFormFieldsFromSchema(schema, control, fieldPath, fieldSchema, fieldSchemaPath)
+				buildFormFieldsFromSchema(
+					compiledSchema,
+					compiledSchemaKey,
+					control,
+					fieldPath,
+					fieldSchema,
+					fieldSchemaPath
+				)
 			);
 			fields.push(fieldContent);
 		}
 	} else {
-		const scalarSchema = hasRef(resolvedSchema)
-			? (schema.getSchema(`${schemaPath}${resolvedSchema.$ref!.split("#")[1]}`)!
-					.schema as JSONSchemaType<AnySchema>)
-			: resolvedSchema;
-		fields.push(
-			<CardContent
-				className={cn("flex flex-col column gap-4")}
-				key={resolvedSchema.$id ?? path}
-			>
-				<ScalarField
-					title={path ?? resolvedSchema.$id!.split("#")[1]}
-					schema={scalarSchema}
-					control={control}
-				/>
-			</CardContent>
-		);
+		const scalarSchema =
+			hasRef(resolvedSchema) && hasResolvedSchema(compiledSchema, compiledSchemaKey)
+				? (compiledSchema.getSchema(`${schemaPath}${resolvedSchema.$ref!.split("#")[1]}`)!
+						.schema as JSONSchemaType<AnySchema>)
+				: resolvedSchema;
+
+		scalarSchema.$id && hasCustomRenderer(scalarSchema.$id)
+			? fields.push(getCustomRenderer(path, control, scalarSchema, resolvedSchema))
+			: fields.push(
+					<CardContent
+						className={cn("flex flex-col column gap-4")}
+						key={resolvedSchema.$id ?? path}
+					>
+						<ScalarField
+							title={path ?? resolvedSchema.$id!.split("#")[1]}
+							schema={scalarSchema}
+							control={control}
+						/>
+					</CardContent>
+			  );
 	}
 	return fields;
 };
