@@ -34,7 +34,8 @@ export function Evaluate(props: Props) {
 
 	// we need to use an uncompiled schema for validation, but compiled for building the form
 	// "Schema" is a key later used to retrieve this schema (we could later pass multiple for dereferencing, for example)
-	const generatedSchema = buildFormSchemaFromFields(pubType);
+	const exclude = ["unjournal:title", "unjournal:evaluator"];
+	const generatedSchema = buildFormSchemaFromFields(pubType, exclude);
 	const ajv = new Ajv();
 	const schemaKey = "schema";
 	const compiledSchema = ajv.addSchema(generatedSchema, schemaKey);

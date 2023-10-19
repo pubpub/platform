@@ -26,7 +26,8 @@ import { cn } from "utils";
 type AnySchema = {};
 
 export const buildFormSchemaFromFields = (
-	pubType: GetPubTypeResponseBody
+	pubType: GetPubTypeResponseBody,
+	exclude: String[]
 ): JSONSchemaType<AnySchema> => {
 	const schema = {
 		$id: `urn:uuid:${pubType.id}`,
@@ -36,15 +37,18 @@ export const buildFormSchemaFromFields = (
 	} as JSONSchemaType<AnySchema>;
 	if (pubType.fields) {
 		for (const field of pubType.fields) {
-			if (field.schema) {
-				schema.properties[field.slug] = field.schema.schema as JSONSchemaType<AnySchema>;
-			} else {
-				schema.properties[field.slug] = {
-					type: "string",
-					title: `${field.name}`,
-					$id: `urn:uuid:${field.id}`,
-					default: "",
-				};
+			if (!exclude.includes(field.slug)) {
+				if (field.schema) {
+					schema.properties[field.slug] = field.schema
+						.schema as JSONSchemaType<AnySchema>;
+				} else {
+					schema.properties[field.slug] = {
+						type: "string",
+						title: `${field.name}`,
+						$id: `urn:uuid:${field.id}`,
+						default: "",
+					};
+				}
 			}
 		}
 	}
