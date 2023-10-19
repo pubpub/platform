@@ -83,6 +83,7 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 					<FormControl>
 						<Checkbox
 							{...field}
+							defaultChecked={field.value}
 							onCheckedChange={(checked) => {
 								field.onChange(checked);
 							}}

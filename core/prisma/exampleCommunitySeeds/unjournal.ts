@@ -230,6 +230,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					revision: {
 						title: "Would you be willing to consider evaluating a revised version of this work?",
 						type: "boolean",
+						default: false,
 					},
 				},
 			},
@@ -246,6 +247,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				description:
 					"If no, the public sections of your review will be published anonymously.",
 				type: "boolean",
+				default: false,
 			},
 		},
 	});
