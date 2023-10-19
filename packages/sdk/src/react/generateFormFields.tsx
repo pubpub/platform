@@ -1,6 +1,6 @@
 import * as React from "react";
 // this import causes a cyclic dependency in pnpm but here we are
-import { JSONSchemaType } from "ajv";
+import Ajv, { JSONSchemaType } from "ajv";
 import { GetPubTypeResponseBody } from "contracts";
 import { Control, ControllerRenderProps } from "react-hook-form";
 
@@ -19,7 +19,6 @@ import {
 	Input,
 } from "ui";
 import { cn } from "utils";
-import { Check } from "ui/src/icon";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
 type AnySchema = {};
@@ -127,15 +126,56 @@ const isObjectSchema = (
 	return schema.properties && Object.keys(schema.properties).length > 0;
 };
 
-export const buildFormFieldsFromSchema = (
+const hasRef = (schema: JSONSchemaType<AnySchema>) => {
+	return schema.$ref;
+};
+
+const getResolvedSchema = (schema: JSONSchemaType<AnySchema>, compiledSchema: Ajv) => {};
+
+const getDereferencedSchema = (
 	schema: JSONSchemaType<AnySchema>,
-	control: Control,
+	compiledSchema: Ajv,
 	path?: string
 ) => {
-	const fields: React.ReactNode[] = [];
 	if (isObjectSchema(schema)) {
 		for (const [fieldKey, fieldSchema] of Object.entries(schema.properties)) {
+			const fieldPath = path
+				? schema.$id
+					? `${path}/${schema.$id}`
+					: path
+				: `${schema.$id}#/properties`;
+			const dereffedField = getDereferencedSchema(fieldSchema, compiledSchema, fieldPath);
+		}
+	} else {
+		if (schema.$ref) {
+			const fieldPath = path + schema.$ref.split("#")[1];
+			return compiledSchema.getSchema(fieldPath)!.schema;
+		}
+	}
+};
+
+export const buildFormFieldsFromSchema = (
+	schema: Ajv,
+	control: Control,
+	path?: string,
+	fieldSchema?: JSONSchemaType<AnySchema>,
+	schemaPath?: string
+) => {
+	const fields: React.ReactNode[] = [];
+	const resolvedSchema = fieldSchema
+		? fieldSchema
+		: (schema.getSchema("schema")!.schema as JSONSchemaType<AnySchema>);
+	if (isObjectSchema(resolvedSchema)) {
+		for (const [fieldKey, fieldSchema] of Object.entries(resolvedSchema.properties)) {
 			const fieldPath = path ? `${path}.${fieldKey}` : fieldKey;
+
+			// for querying the compiled schema later
+			const fieldSchemaPath = schemaPath
+				? resolvedSchema.$id
+					? `${schemaPath}/${resolvedSchema.$id}`
+					: schemaPath
+				: `${resolvedSchema.$id}#/properties`;
+
 			const fieldContent = isObjectSchema(fieldSchema) ? (
 				<CardContent key={fieldKey}>
 					<CardHeader>
@@ -144,19 +184,32 @@ export const buildFormFieldsFromSchema = (
 							dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
 						/>
 					</CardHeader>
-					{buildFormFieldsFromSchema(fieldSchema, control, fieldPath)}
+					{buildFormFieldsFromSchema(
+						schema,
+						control,
+						fieldPath,
+						fieldSchema,
+						fieldSchemaPath
+					)}
 				</CardContent>
 			) : (
-				buildFormFieldsFromSchema(fieldSchema, control, fieldPath)
+				buildFormFieldsFromSchema(schema, control, fieldPath, fieldSchema, fieldSchemaPath)
 			);
 			fields.push(fieldContent);
 		}
 	} else {
+		const scalarSchema = hasRef(resolvedSchema)
+			? (schema.getSchema(`${schemaPath}${resolvedSchema.$ref!.split("#")[1]}`)!
+					.schema as JSONSchemaType<AnySchema>)
+			: resolvedSchema;
 		fields.push(
-			<CardContent className={cn("flex flex-col column gap-4")} key={schema.$id ?? path}>
+			<CardContent
+				className={cn("flex flex-col column gap-4")}
+				key={resolvedSchema.$id ?? path}
+			>
 				<ScalarField
-					title={path ?? schema.$id!.split("#")[1]}
-					schema={schema}
+					title={path ?? resolvedSchema.$id!.split("#")[1]}
+					schema={scalarSchema}
 					control={control}
 				/>
 			</CardContent>

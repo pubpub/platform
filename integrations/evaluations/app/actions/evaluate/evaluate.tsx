@@ -1,4 +1,5 @@
 "use client";
+import Ajv from "ajv";
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
 import { buildFormFieldsFromSchema, buildFormSchemaFromFields } from "@pubpub/sdk/react";
@@ -30,7 +31,11 @@ export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 	const { toast } = useToast();
 
+	// we need to use an uncompiled schema for validation, but compiled for building the form
+	// we could return a compiled schema, but ajvResolver complains about, ironically, a resolved schema from ajv
 	const generatedSchema = buildFormSchemaFromFields(pubType);
+	const ajv = new Ajv();
+	const compiledSchema = ajv.addSchema(generatedSchema, "schema");
 
 	const form = useForm({
 		mode: "onChange",
@@ -71,7 +76,7 @@ export function Evaluate(props: Props) {
 	}, [values]);
 
 	const formFieldsFromSchema = useMemo(
-		() => buildFormFieldsFromSchema(generatedSchema, form.control),
+		() => buildFormFieldsFromSchema(compiledSchema, form.control),
 		[form.control]
 	);
 
