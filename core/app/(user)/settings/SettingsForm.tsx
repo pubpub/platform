@@ -88,7 +88,7 @@ export default function SettingsForm({
 	const resetPassword = async () => {
 		setResetIsLoading(true);
 		const { error } = await supabase.auth.resetPasswordForEmail(initEmail, {
-			redirectTo: "https://www.pubpub.org/reset",
+			redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			console.error(error);

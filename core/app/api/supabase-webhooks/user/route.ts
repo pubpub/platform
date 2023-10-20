@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
             try {
                 await prisma.user.update({
                     where: {
-                        id: body.record.id
+                        supabaseId: body.record.id
                     },
                     data: {
                         email: newEmail
