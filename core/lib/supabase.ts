@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { AuthError, createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export let supabase: SupabaseClient;
 
@@ -13,3 +13,5 @@ export const createBrowserSupabase = () => {
 		},
 	});
 };
+
+export const formatSupabaseError = (error: AuthError) => `${error.name} ${error.status}: ${error.message}`

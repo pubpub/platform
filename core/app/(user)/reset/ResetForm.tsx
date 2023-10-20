@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { Button } from "ui";
-import { supabase } from "lib/supabase";
+import { formatSupabaseError, supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function ResetForm() {
@@ -9,18 +9,18 @@ export default function ResetForm() {
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [success, setSuccess] = useState(false);
-	const [failure, setFailure] = useState(false);
+	const [error, setError] = useState("");
 
 	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
 		setIsLoading(true);
-		setFailure(false);
+		setError("");
 		evt.preventDefault();
 		const { data, error } = await supabase.auth.updateUser({
 			password,
 		});
 		if (error) {
 			setIsLoading(false);
-			setFailure(true);
+			setError(formatSupabaseError(error));
 		} else if (data) {
 			setIsLoading(false);
 			setSuccess(true);
@@ -46,7 +46,7 @@ export default function ResetForm() {
 						<Button variant="outline" type="submit" disabled={!password}>
 							Set new password
 						</Button>
-						{failure && (
+						{error && (
 							<div className={"text-red-700 my-4"}>Error reseting password</div>
 						)}
 					</form>

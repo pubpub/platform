@@ -5,6 +5,7 @@
 	"scripts": {
 		"dev": "next dev -p 3000",
 		"build": "next build",
+		"invite-users": "dotenv -e .env.local ts-node scripts/invite.ts",
 		"migrate-dev": "dotenv -e .env.local prisma migrate dev",
 		"migrate-deploy": "dotenv -e .env.local prisma migrate deploy",
 		"prisma-studio": "dotenv -e .env.local prisma studio",
@@ -15,7 +16,7 @@
 		"type-check-watch": "tsc --watch"
 	},
 	"prisma": {
-		"seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+		"seed": "ts-node prisma/seed.ts"
 	},
 	"dependencies": {
 		"@faker-js/faker": "^8.0.2",
@@ -56,6 +57,7 @@
 		"@types/react-dom": "18.2.5",
 		"@types/uuid": "^9.0.2",
 		"autoprefixer": "^10.4.14",
+		"csv-parse": "^5.5.2",
 		"dotenv-cli": "^7.2.1",
 		"postcss": "^8.4.27",
 		"prisma": "^5.2.0",
@@ -63,6 +65,7 @@
 		"tailwindcss": "^3.3.3",
 		"ts-node": "^10.9.1",
 		"tsconfig": "workspace:*",
-		"typescript": "5.1.3"
+		"typescript": "5.1.3",
+		"yargs": "^17.7.2"
 	}
 }

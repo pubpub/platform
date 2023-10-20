@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import buildUnjournal from "./exampleCommunitySeeds/unjournal";
 
+export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const prisma = new PrismaClient();
@@ -47,7 +49,6 @@ async function createUserMembers(
 }
 
 async function main() {
-	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 	const prismaCommunityIds = [{ communityId: unJournalId, canAdmin: true }];
 
 	await buildUnjournal(prisma, unJournalId);
