@@ -37,6 +37,8 @@ export const getLoginData = cache(async () => {
 		// a name before progressing
 		const firstName = supabaseUser.user_metadata.firstName ?? "";
 		const lastName = supabaseUser.user_metadata.lastName ?? null;
+		const communityId = supabaseUser.user_metadata.communityId;
+		const canAdmin = supabaseUser.user_metadata.canAdmin ?? false;
 
 		user = await prisma.user.create({
 			data: {
@@ -47,6 +49,12 @@ export const getLoginData = cache(async () => {
 				slug: `${slugifyString(firstName)}${
 					lastName ? `-${slugifyString(lastName)}` : ""
 				}-${generateHash(4, "0123456789")}`,
+				memberships: {
+					create: {
+						communityId,
+						canAdmin,
+					}
+				}
 			},
 		});
 	}
