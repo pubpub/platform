@@ -16,7 +16,7 @@ root
 └── ...
 ```
 
--   `core` holds the primary app that is hosted on `www.pubpub.org`.
+-   `core` holds the primary app that is hosted on `v7.pubpub.org`.
 -   `integrations` holds the integrations developed by the PubPub team. 3rd party integrations may be developed and hosted elsewhere.
 -   `packages` holds libraries and npm packages that are used by `core`, `integrations`, and 3rd party integration developers.
 

@@ -14,7 +14,7 @@ export default function ForgotForm() {
 		setIsLoading(true);
 		setFailure(false);
 		const { error } = await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: "https://www.pubpub.org/reset",
+			redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			console.error(error);

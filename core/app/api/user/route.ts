@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "prisma/db";
 import { getServerSupabase } from "lib/supabaseServer";
 import { generateHash, getSlugSuffix, slugifyString } from "lib/string";
-import { getLoginId } from "lib/auth/loginId";
+import { getSupabaseId } from "lib/auth/loginId";
 import { BadRequestError, ForbiddenError, UnauthorizedError, handleErrors } from "~/lib/server";
 import { captureException } from "@sentry/nextjs";
 
@@ -27,19 +27,19 @@ export async function POST(req: NextRequest) {
 
 		const existingUser = await prisma.user.findUnique({
 			where: {
-				email
-			}
-		})
+				email,
+			},
+		});
 
 		if (existingUser?.supabaseId) {
-			throw new ForbiddenError("User already exists")
+			throw new ForbiddenError("User already exists");
 		}
 
 		const { data, error } = await supabase.auth.signUp({
 			email,
 			password,
 			options: {
-				emailRedirectTo: "https://www.pubpub.org/confirm",
+				emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/login`,
 			},
 		});
 		/* Supabase returns:
@@ -71,13 +71,13 @@ export async function POST(req: NextRequest) {
 		if (existingUser) {
 			await prisma.user.update({
 				where: {
-					email
+					email,
 				},
 				data: {
-					supabaseId: data.user.id
-				}
-			})
-			return NextResponse.json({ message: "Existing account claimed" }, { status: 200 })
+					supabaseId: data.user.id,
+				},
+			});
+			return NextResponse.json({ message: "Existing account claimed" }, { status: 200 });
 		} else {
 			const newUser = await prisma.user.create({
 				data: {
@@ -91,30 +91,28 @@ export async function POST(req: NextRequest) {
 					email,
 				},
 			});
-			return NextResponse.json({}, { status: 201 });
+			return NextResponse.json({message: "New user created"}, { status: 201 });
 		}
 	});
 }
 
 export async function PUT(req: NextRequest) {
 	return await handleErrors(async () => {
-		const loginId = await getLoginId(req);
-		if (!loginId) {
+		const supabaseId = await getSupabaseId(req);
+		if (!supabaseId) {
 			throw new UnauthorizedError();
 		}
 		const submittedData: UserPutBody = await req.json();
 		const { firstName, lastName } = submittedData;
 		const currentData = await prisma.user.findUnique({
-			where: { id: loginId },
+			where: { supabaseId },
 		});
 		if (!currentData) {
 			throw new BadRequestError("Unable to find user");
 		}
 		const slugSuffix = getSlugSuffix(currentData.slug);
 		await prisma.user.update({
-			where: {
-				id: loginId,
-			},
+			where: { supabaseId },
 			data: {
 				slug: `${slugifyString(firstName)}-${slugSuffix}`,
 				firstName,
@@ -128,8 +126,8 @@ export async function PUT(req: NextRequest) {
 // Used to determine if an email is available when a user attempts to change theirs
 export async function GET(req: NextRequest) {
 	return await handleErrors(async () => {
-		const loginId = await getLoginId(req);
-		if (!loginId) {
+		const supabaseId = await getSupabaseId(req);
+		if (!supabaseId) {
 			throw new UnauthorizedError();
 		}
 
