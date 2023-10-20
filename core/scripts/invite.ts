@@ -5,6 +5,7 @@ import { hideBin } from "yargs/helpers";
 import { formatSupabaseError } from "../lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { unJournalId } from "../prisma/seed";
 
 const getServerSupabase = () => {
 	const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,11 +22,14 @@ const getServerSupabase = () => {
 const client = getServerSupabase();
 
 const inviteUser = async (email, firstName, lastName) => {
-	const { error: createError } = await client.auth.admin.createUser({email,
+	const { error: createError } = await client.auth.admin.createUser({
+		email,
 		password: randomUUID(),
 		user_metadata: {
 			firstName,
 			lastName,
+			communityId: unJournalId,
+			canAdmin: true,
 		},
 		email_confirm: true,
 	});
@@ -34,8 +38,8 @@ const inviteUser = async (email, firstName, lastName) => {
 	}
 
 	const { error: resetError } = await client.auth.resetPasswordForEmail(email, {
-		redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`
-	})
+		redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+	});
 	if (resetError) {
 		throw new Error(formatSupabaseError(resetError));
 	}
@@ -64,7 +68,7 @@ const usage = () => {
 	process.exit();
 };
 
-const { _: args} = yargs(hideBin(process.argv)).argv;
+const { _: args } = yargs(hideBin(process.argv)).argv;
 if (args.length !== 1) {
 	console.log(args);
 	usage();
