@@ -133,13 +133,14 @@ const hasCustomRenderer = (id: string) => {
 	return customScalars.includes(id);
 };
 
+type CustomRendererProps = {
+	control: Control;
+	fieldSchema: JSONSchemaType<AnySchema>;
+	fieldName: string;
+};
 // todo: don't just use if statements, make more dynamic
-const getCustomRenderer = (
-	path: string | undefined,
-	control: Control,
-	fieldSchema: JSONSchemaType<AnySchema>,
-	parentSchema: JSONSchemaType<AnySchema>
-) => {
+const CustomRenderer = (props: CustomRendererProps) => {
+	const { control, fieldSchema, fieldName } = props;
 	if (
 		fieldSchema.$id === "unjournal:100confidence" ||
 		fieldSchema.$id === "unjournal:5confidence"
@@ -148,13 +149,10 @@ const getCustomRenderer = (
 		const min = fieldSchema.items.minimum;
 		const max = fieldSchema.items.maximum;
 		return (
-			<CardContent
-				className={cn("flex flex-col column gap-4 w-1/2")}
-				key={parentSchema.$id ?? path}
-			>
+			<CardContent className={cn("flex flex-col column gap-4 w-1/2")}>
 				<FormField
 					control={control}
-					name={path ?? parentSchema.$id!.split("#")[1]}
+					name={fieldName}
 					defaultValue={fieldSchema.default ?? [0, 0, 0]}
 					render={({ field }) => (
 						<FormItem>
@@ -283,21 +281,27 @@ export const buildFormFieldsFromSchema = (
 				? (compiledSchema.getSchema(`${schemaPath}${resolvedSchema.$ref!.split("#")[1]}`)!
 						.schema as JSONSchemaType<AnySchema>)
 				: resolvedSchema;
-
-		scalarSchema.$id && hasCustomRenderer(scalarSchema.$id)
-			? fields.push(getCustomRenderer(path, control, scalarSchema, resolvedSchema))
-			: fields.push(
-					<CardContent
-						className={cn("flex flex-col column gap-4")}
-						key={resolvedSchema.$id ?? path}
-					>
-						<ScalarField
-							title={path ?? resolvedSchema.$id!.split("#")[1]}
-							schema={scalarSchema}
-							control={control}
-						/>
-					</CardContent>
-			  );
+		fields.push(
+			scalarSchema.$id && hasCustomRenderer(scalarSchema.$id) ? (
+				<CustomRenderer
+					key={resolvedSchema.$id ?? path}
+					control={control}
+					fieldSchema={scalarSchema}
+					fieldName={path ?? resolvedSchema.$id!.split("#")[1]}
+				/>
+			) : (
+				<CardContent
+					className={cn("flex flex-col column gap-4")}
+					key={resolvedSchema.$id ?? path}
+				>
+					<ScalarField
+						title={path ?? resolvedSchema.$id!.split("#")[1]}
+						schema={scalarSchema}
+						control={control}
+					/>
+				</CardContent>
+			)
+		);
 	}
 	return fields;
 };
