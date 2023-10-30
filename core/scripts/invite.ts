@@ -5,7 +5,7 @@ import { hideBin } from "yargs/helpers";
 import { formatSupabaseError } from "../lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
-import { unJournalId } from "../prisma/seed";
+import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
 
 const getServerSupabase = () => {
 	const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
