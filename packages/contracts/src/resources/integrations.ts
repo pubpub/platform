@@ -214,7 +214,7 @@ const contract = initContract();
 // Integration Instance types
 
 export const IntegrationInstanceConfigBody = z.object({
-	configKey: z.object({}),
+	config: z.object({}),
 });
 
 export type IntegrationInstanceConfig = z.infer<typeof IntegrationInstanceConfigBody>;
