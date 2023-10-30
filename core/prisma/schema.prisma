@@ -295,6 +295,8 @@ model IntegrationInstance {
   updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updated_at")
   stage         Stage?      @relation(fields: [stageId], references: [id])
   stageId       String?     @map(name: "stage_id")
+  config        Json?
+
   pubs Pub[]
 
   @@map(name: "integration_instances")

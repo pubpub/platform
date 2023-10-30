@@ -129,8 +129,9 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		console.log(body);
 		return { status: 501, body: { error: "Method not implemented" } };
 	},
-	getInstanceConfig: async ({ headers }) => {
+	getInstanceConfig: async ({ headers, params }) => {
 		checkAuthentication(headers.authorization);
+		console.log(params);
 		return { status: 501, body: { error: "Method not implemented" } };
 	},
 });
