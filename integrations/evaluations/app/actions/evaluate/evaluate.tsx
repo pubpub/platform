@@ -82,7 +82,7 @@ export function Evaluate(props: Props) {
 		const schemaKey = "schema";
 		const compiledSchema = ajv.addSchema(generatedSchema, schemaKey);
 		return buildFormFieldsFromSchema(compiledSchema, schemaKey, form.control);
-	}, [form.control, pubType]);
+	}, [form.control, pubType, generatedSchema]);
 
 	return (
 		<>
