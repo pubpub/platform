@@ -47,7 +47,7 @@ export default function ResetForm() {
 							Set new password
 						</Button>
 						{error && (
-							<div className={"text-red-700 my-4"}>Error reseting password</div>
+							<div className={"text-red-700 my-4"}>Error resetting password: {error}</div>
 						)}
 					</form>
 				</div>

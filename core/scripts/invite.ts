@@ -5,7 +5,7 @@ import { hideBin } from "yargs/helpers";
 import { formatSupabaseError } from "../lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
-import { unJournalId } from "../prisma/seed";
+import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
 
 const getServerSupabase = () => {
 	const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,26 +22,21 @@ const getServerSupabase = () => {
 const client = getServerSupabase();
 
 const inviteUser = async (email, firstName, lastName) => {
-	const { error: createError } = await client.auth.admin.createUser({
+	const { error } = await client.auth.signUp({
 		email,
 		password: randomUUID(),
-		user_metadata: {
-			firstName,
-			lastName,
-			communityId: unJournalId,
-			canAdmin: true,
+		options: {
+			emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			data: {
+				firstName,
+				lastName,
+				communityId: unJournalId,
+				canAdmin: true,
+			},
 		},
-		email_confirm: true,
 	});
-	if (createError) {
-		throw new Error(formatSupabaseError(createError));
-	}
-
-	const { error: resetError } = await client.auth.resetPasswordForEmail(email, {
-		redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-	});
-	if (resetError) {
-		throw new Error(formatSupabaseError(resetError));
+	if (error) {
+		throw new Error(formatSupabaseError(error));
 	}
 };
 
