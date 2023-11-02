@@ -33,11 +33,12 @@ async function createUserMembers(
 	} else {
 		user = data.user;
 	}
+
 	await prisma.user.create({
 		data: {
-			id: user ? user.id : undefined,
 			slug,
 			email: user ? user.email : email,
+			supabaseId: user.id,
 			firstName,
 			lastName,
 			avatar: "/demo/person.png",

@@ -82,7 +82,6 @@ export async function POST(req: NextRequest) {
 		} else {
 			const newUser = await prisma.user.create({
 				data: {
-					id: data.user.id,
 					supabaseId: data.user.id,
 					slug: `${slugifyString(firstName)}${
 						lastName ? `-${slugifyString(lastName)}` : ""
