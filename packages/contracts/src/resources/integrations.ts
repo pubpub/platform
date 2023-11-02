@@ -211,14 +211,6 @@ export type ScheduleEmailResponseBody = z.infer<typeof ScheduleEmailResponseBody
 
 const contract = initContract();
 
-// Integration Instance types
-
-export const IntegrationInstanceConfigBody = z.object({
-	config: z.object({}),
-});
-
-export type IntegrationInstanceConfig = z.infer<typeof IntegrationInstanceConfigBody>;
-
 export const integrationsApi = contract.router(
 	{
 		auth: {
@@ -425,11 +417,11 @@ export const integrationsApi = contract.router(
 			},
 		},
 		setInstanceConfig: {
-			method: "POST",
+			method: "PUT",
 			path: "/:instanceId/config",
 			summary: "Set the configuration for an instance",
 			description: "Used to configure the integration with PubPub",
-			body: IntegrationInstanceConfigBody,
+			body: z.any(),
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
@@ -442,6 +434,31 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/config",
 			summary: "Get the configuration for an instance",
 			description: "This enpoint will retrieve the instances config with PubPub",
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.any(),
+			},
+		},
+		setInstanceState: {
+			method: "PUT",
+			path: "/:instanceId/state/:pubId",
+			summary: "Set the sate for an instance",
+			description: "",
+			body: z.any(),
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.any(),
+			},
+		},
+		getInstanceState: {
+			method: "GET",
+			path: "/:instanceId/state/:pubId",
+			summary: "Set the sate for an instance",
+			description: "",
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),

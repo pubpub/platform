@@ -76,12 +76,13 @@ model Pub {
   parentId String? @map(name: "parent_id")
   children Pub[]   @relation("pub_parent")
 
-  values               PubValue[]
-  stages               Stage[]
-  claims               ActionClaim[]
-  moves                ActionMove[]
-  integrationInstances IntegrationInstance[]
-  permissions          Permission[]
+  values                   PubValue[]
+  stages                   Stage[]
+  claims                   ActionClaim[]
+  moves                    ActionMove[]
+  integrationInstances     IntegrationInstance[]
+  permissions              Permission[]
+  IntegrationInstanceState IntegrationInstanceState[]
 
   @@map(name: "pubs")
 }
@@ -297,7 +298,18 @@ model IntegrationInstance {
   stageId       String?     @map(name: "stage_id")
   config        Json?
 
-  pubs Pub[]
+  pubs                     Pub[]
+  IntegrationInstanceState IntegrationInstanceState[]
 
   @@map(name: "integration_instances")
+}
+
+model IntegrationInstanceState {
+  pub        Pub                 @relation(fields: [pubId], references: [id])
+  pubId      String              @map(name: "pub_id")
+  instance   IntegrationInstance @relation(fields: [instanceId], references: [id])
+  instanceId String              @map(name: "instance_id")
+  value      Json
+
+  @@unique([pubId, instanceId], name: "pub_instance")
 }

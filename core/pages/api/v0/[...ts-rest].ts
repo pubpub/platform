@@ -3,13 +3,17 @@ import { api } from "contracts";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import {
 	createPub,
-	getSuggestedMembers,
+	deletePub,
+	getIntegrationInstanceConfig,
+	getIntegrationInstanceState,
 	getMembers,
 	getPub,
 	getPubType,
+	getSuggestedMembers,
+	setIntegrationInstanceConfig,
+	setIntegrationInstanceState,
 	tsRestHandleErrors,
 	updatePub,
-	deletePub,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
@@ -124,15 +128,29 @@ const integrationsRouter = createNextRoute(api.integrations, {
 			body: members,
 		};
 	},
-	setInstanceConfig: async ({ headers, body }) => {
+	setInstanceConfig: async ({ headers, params, body }) => {
 		checkAuthentication(headers.authorization);
-		console.log(body);
-		return { status: 501, body: { error: "Method not implemented" } };
+		const config = await setIntegrationInstanceConfig(params.instanceId, body.config);
+		console.log("config", config);
+		return { status: 501, body: config };
 	},
 	getInstanceConfig: async ({ headers, params }) => {
 		checkAuthentication(headers.authorization);
-		console.log(params);
-		return { status: 501, body: { error: "Method not implemented" } };
+		const config = await getIntegrationInstanceConfig(params.instanceId);
+		console.log("config", config);
+		return { status: 501, body: config };
+	},
+	setInstanceState: async ({ headers, params, body }) => {
+		checkAuthentication(headers.authorization);
+		const state = await setIntegrationInstanceState(params.instanceId, params.pubId, body);
+		console.log("state", state);
+		return { status: 200, body: state };
+	},
+	getInstanceState: async ({ headers, params }) => {
+		checkAuthentication(headers.authorization);
+		const state = await getIntegrationInstanceState(params.instanceId, params.pubId);
+		console.log("state", state);
+		return { status: 200, body: state };
 	},
 });
 
