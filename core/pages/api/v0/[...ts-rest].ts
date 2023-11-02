@@ -130,26 +130,22 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	setInstanceConfig: async ({ headers, params, body }) => {
 		checkAuthentication(headers.authorization);
-		const config = await setIntegrationInstanceConfig(params.instanceId, body.config);
-		console.log("config", config);
-		return { status: 501, body: config };
+		const config = await setIntegrationInstanceConfig(params.instanceId, { ...body });
+		return { status: 200, body: config };
 	},
 	getInstanceConfig: async ({ headers, params }) => {
 		checkAuthentication(headers.authorization);
 		const config = await getIntegrationInstanceConfig(params.instanceId);
-		console.log("config", config);
-		return { status: 501, body: config };
+		return { status: 200, body: config };
 	},
 	setInstanceState: async ({ headers, params, body }) => {
 		checkAuthentication(headers.authorization);
 		const state = await setIntegrationInstanceState(params.instanceId, params.pubId, body);
-		console.log("state", state);
 		return { status: 200, body: state };
 	},
 	getInstanceState: async ({ headers, params }) => {
 		checkAuthentication(headers.authorization);
 		const state = await getIntegrationInstanceState(params.instanceId, params.pubId);
-		console.log("state", state);
 		return { status: 200, body: state };
 	},
 });
