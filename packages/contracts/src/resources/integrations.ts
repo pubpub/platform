@@ -444,8 +444,8 @@ export const integrationsApi = contract.router(
 		setInstanceState: {
 			method: "PUT",
 			path: "/:instanceId/state/:pubId",
-			summary: "Set the sate for an instance",
-			description: "",
+			summary: "Sets the state for an instance",
+			description: "If we need to set the state for an instance we will use this endpoint",
 			body: z.any(),
 			pathParams: z.object({
 				instanceId: z.string(),
@@ -457,8 +457,8 @@ export const integrationsApi = contract.router(
 		getInstanceState: {
 			method: "GET",
 			path: "/:instanceId/state/:pubId",
-			summary: "Set the sate for an instance",
-			description: "",
+			summary: "Gets the state for an instance",
+			description: "When we need to get the state for an instance we will use this endpoint",
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
