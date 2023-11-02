@@ -12,8 +12,8 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const commentsObject = {
-		comments: {
+	const confidenceCommentsObject = {
+		confidence2: {
 			title: "Additional Comments",
 			type: "string",
 			minLength: 0,
@@ -58,60 +58,60 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					confidence: HundredConfidenceDef,
 				},
 				properties: {
-					assessment: {
+					metrics1: {
 						title: "Overall assessment",
 						type: "object",
 						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
 						},
 					},
-					advancing: {
+					metrics2: {
 						title: "Advancing knowledge and practice",
 						type: "object",
 						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
 						},
 					},
-					methods: {
+					metrics3: {
 						title: "Methods: Justification, reasonableness, validity, robustness",
 						type: "object",
 						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
 						},
 					},
-					logic: {
+					metrics4: {
 						title: "Logic & communication",
 						type: "object",
 						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
 						},
 					},
-					open: {
+					metrics5: {
 						title: "Open, collaborative, replicable",
 						type: "object",
 						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
 						},
 					},
-					real: {
+					metrics6: {
 						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
 						type: "object",
 						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
 						},
 					},
-					relevance: {
+					metrics7: {
 						title: "Relevance to global priorities",
 						type: "object",
 						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
 						},
 					},
 				},
@@ -152,7 +152,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 						type: "object",
 						properties: {
 							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							...confidenceCommentsObject,
 						},
 					},
 					qualityLevel: {
@@ -160,7 +160,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 						type: "object",
 						properties: {
 							confidence: { $ref: "#/$defs/confidence" },
-							...commentsObject,
+							...confidenceCommentsObject,
 						},
 					},
 				},

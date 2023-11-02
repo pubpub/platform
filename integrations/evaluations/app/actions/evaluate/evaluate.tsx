@@ -32,13 +32,10 @@ export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 	const { toast } = useToast();
 
-	// we need to use an uncompiled schema for validation, but compiled for building the form
-	// "Schema" is a key later used to retrieve this schema (we could later pass multiple for dereferencing, for example)
-	const exclude = ["unjournal:title", "unjournal:evaluator"];
-	const generatedSchema = buildFormSchemaFromFields(pubType, exclude);
-	const ajv = new Ajv();
-	const schemaKey = "schema";
-	const compiledSchema = ajv.addSchema(generatedSchema, schemaKey);
+	const generatedSchema = useMemo(() => {
+		const exclude = ["unjournal:title", "unjournal:evaluator"];
+		return buildFormSchemaFromFields(pubType, exclude);
+	}, [pubType]);
 
 	const form = useForm({
 		mode: "onChange",
@@ -78,10 +75,14 @@ export function Evaluate(props: Props) {
 		persist(values);
 	}, [values]);
 
-	const formFieldsFromSchema = useMemo(
-		() => buildFormFieldsFromSchema(compiledSchema, schemaKey, form.control),
-		[form.control]
-	);
+	const formFieldsFromSchema = useMemo(() => {
+		// we need to use an uncompiled schema for validation, but compiled for building the form
+		// "Schema" is a key later used to retrieve this schema (we could later pass multiple for dereferencing, for example)
+		const ajv = new Ajv();
+		const schemaKey = "schema";
+		const compiledSchema = ajv.addSchema(generatedSchema, schemaKey);
+		return buildFormFieldsFromSchema(compiledSchema, schemaKey, form.control);
+	}, [form.control, pubType]);
 
 	return (
 		<>

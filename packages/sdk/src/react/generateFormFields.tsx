@@ -155,7 +155,7 @@ const CustomRenderer = (props: CustomRendererProps) => {
 					name={fieldName}
 					defaultValue={fieldSchema.default ?? [0, 0, 0]}
 					render={({ field }) => (
-						<FormItem>
+						<FormItem className="mb-6">
 							<FormLabel>{fieldSchema.title}</FormLabel>
 							<CardDescription
 								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
@@ -166,6 +166,7 @@ const CustomRenderer = (props: CustomRendererProps) => {
 									min={min}
 									max={max}
 									onValueChange={(event) => field.onChange(event)}
+									className="confidence"
 								/>
 							</FormControl>
 							<FormMessage />
