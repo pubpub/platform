@@ -69,14 +69,15 @@ export async function POST(req: NextRequest) {
 		}
 
 		if (existingUser) {
-			await prisma.user.update({
-				where: {
-					email,
-				},
-				data: {
-					supabaseId: data.user.id,
-				},
-			});
+			// TODO: create community membership here, update name, slug etc. 
+			// await prisma.user.update({
+			// 	where: {
+			// 		email,
+			// 	},
+			// 	data: {
+			// 		supabaseId: data.user.id,
+			// 	},
+			// });
 			return NextResponse.json({ message: "Existing account claimed" }, { status: 200 });
 		} else {
 			const newUser = await prisma.user.create({
