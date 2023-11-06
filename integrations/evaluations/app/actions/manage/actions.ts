@@ -76,12 +76,12 @@ export const save = async (
 				}
 			);
 			// Save updated email template and job run time
-			instanceState[invite.userId] = {
+			instanceState.value[invite.userId] = {
 				inviteTemplate: invite.template,
-				inviteTime: instanceState[invite.userId]?.inviteTime ?? runAt.toString(),
+				inviteTime: instanceState.value[invite.userId]?.inviteTime ?? runAt.toString(),
 			};
 		}
-		await setInstanceState(instanceId, pubId, instanceState);
+		await setInstanceState(instanceId, pubId, instanceState.value);
 		revalidatePath("/");
 		return { success: true };
 	} catch (error) {
@@ -109,7 +109,7 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 			await client.deletePub(instanceId, evaluation.id);
 		}
 		if (instanceState !== undefined) {
-			const { [userId]: _, ...instanceStateWithoutEvaluator } = instanceState;
+			const { [userId]: _, ...instanceStateWithoutEvaluator } = instanceState.value;
 			setInstanceState(instanceId, pubId, instanceStateWithoutEvaluator);
 		}
 		await client.unscheduleEmail(instanceId, makeInviteJobKey(instanceId, pubId, userId));
