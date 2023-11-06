@@ -23,7 +23,7 @@ export const save = async (
 		}
 		const pub = await client.getPub(instanceId, pubId);
 		const evaluations = pub.children.filter(
-			(child) => child.pubTypeId === instanceConfig.pubTypeId
+			(child) => child.pubTypeId === instanceConfig.config.pubTypeId
 		);
 		const evaluationsByEvaluator = evaluations.reduce((acc, evaluation) => {
 			acc[evaluation.values["unjournal:evaluator"] as string] = evaluation;
@@ -45,7 +45,7 @@ export const save = async (
 				// New evaluator added. Make the corresponding evaluation pub.
 				await client.createPub(instanceId, {
 					parentId: pubId,
-					pubTypeId: instanceConfig.pubTypeId,
+					pubTypeId: instanceConfig.config.pubTypeId,
 					values: {
 						"unjournal:title": `Evaluation of ${pubTitle} by ${invite.firstName} ${invite.lastName}`,
 						"unjournal:evaluator": invite.userId,

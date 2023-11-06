@@ -23,7 +23,7 @@ export default async function Page(props: Props) {
 					instanceId,
 					pub.children
 						// Only consider the children that are evaluations
-						.filter((child) => child.pubTypeId === instanceConfig.pubTypeId)
+						.filter((child) => child.pubTypeId === instanceConfig.config.pubTypeId)
 						// Extract the evaluator user id
 						.map((evaluation) => evaluation.values["unjournal:evaluator"] as string)
 			  )
