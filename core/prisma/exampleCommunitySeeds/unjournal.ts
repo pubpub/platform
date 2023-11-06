@@ -254,13 +254,53 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
+	const fileUploadSchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "uploadFile",
+			namespace: "pubpub",
+			schema: {
+				$id: "pubpub:fileUpload",
+				title: "Upload Files",
+				type: "array",
+				items: {
+					type: "object",
+					properties: {
+						fileName: {
+							type: "string",
+						},
+						fileSource: {
+							type: "string",
+						},
+						fileType: {
+							type: "string",
+						},
+						fileSize: {
+							type: "number",
+						},
+						fileMeta: {
+							type: "object",
+						},
+						fileUploadUrl: {
+							type: "string",
+							format: "uri",
+						},
+						filePreview: {
+							type: "string",
+							format: "uri",
+						},
+					},
+				},
+			},
+		},
+	});
+
 	const evaluationSchema = await prisma.pubFieldSchema.create({
 		data: {
 			name: "evaluation",
 			namespace: "unjournal",
 			schema: {
 				$id: "unjournal:evaluation",
-				title: "Please write your evaluation here",
+				title: "Please link to or upload your evaluation here",
 				description:
 					"Remember that your responses will be made public. Please consult <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators'>our criteria</a>. We are essentially asking for a 'standard high-quality referee report' here, with some specific considerations (mentioned in the above link). We welcome detail, elaboration, and technical discussion. If you prefer to link or submit your evaluation content in a different format, please link it here or send it to the corresponding/managing editor. Length and time spent: This is of course, up to you.  The Econometrics society recommends a 2-3 page referee report. In a recent survey (Charness et al, 2022), economists report spending (median and mean) about one day per report, with substantial shares reporting 'half a day' and 'two days'. We expect that that reviewers tend to spend more time on papers for high-status journals, and when reviewing work closely tied to their own agenda.",
 				type: "string",
@@ -291,6 +331,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				name: "Evaluation",
 				pubFieldSchemaId: evaluationSchema.id,
 				slug: "unjournal:evaluation",
+			},
+			{
+				id: fieldIds[15],
+				name: "File Upload",
+				pubFieldSchemaId: fileUploadSchema.id,
+				slug: "pubpub:fileUpload",
 			},
 			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal:evaluated-paper" },
 			{ id: fieldIds[7], name: "Tags", slug: "unjournal:tags" },
@@ -398,6 +444,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					{ id: fieldIds[12] },
 					{ id: fieldIds[13] },
 					{ id: fieldIds[14] }, // evaluator
+					{ id: fieldIds[15] },
 				],
 			},
 		},

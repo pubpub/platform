@@ -1,3 +1,5 @@
+/* util/src/index.tsx */
+
 /* Components */
 export * as Icon from "./icon";
 export * from "./alert";
@@ -22,7 +24,8 @@ export * from "./tooltip";
 export * from "./use-toast";
 
 /* Renderers */
-export * from "./customRenderers/confidence";
+export * from "./customRenderers/confidence/confidence";
+export * from "./customRenderers/fileUpload/fileUpload";
 
 /* Hooks */
 export * from "./hooks";

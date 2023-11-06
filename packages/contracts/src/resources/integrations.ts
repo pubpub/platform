@@ -474,6 +474,20 @@ export const integrationsApi = contract.router(
 				200: z.any(),
 			},
 		},
+		generateSignedAssetUploadUrl: {
+			method: "POST",
+			path: "/:instanceId/asset",
+			summary: "Get a signed upload URL",
+			description: "",
+			body: z.object({
+				pubId: z.string(),
+				fileName: z.string(),
+			}),
+			pathParams: z.object({ instanceId: z.string() }),
+			responses: {
+				200: z.string(),
+			},
+		},
 		// TODO implement these endpoints
 		// getAllMembers: {
 		// 	method: "GET",

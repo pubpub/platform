@@ -121,6 +121,11 @@ export type Client<T extends Manifest> = {
 	getInstanceConfig(instanceId: string): Promise<any>;
 	setInstanceState(instanceId: string, pubId: string, state: any): Promise<any>;
 	getInstanceState(instanceId: string, pubId: string): Promise<any>;
+	generateSignedAssetUploadUrl(
+		instanceId: string,
+		pubId: string,
+		fileName: string
+	): Promise<string>;
 };
 
 /**
@@ -345,6 +350,29 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to get or create user", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async generateSignedAssetUploadUrl(instanceId, pubId, fileName) {
+			try {
+				const response = await client.generateSignedAssetUploadUrl({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: {
+						instanceId: instanceId,
+					},
+					body: {
+						pubId: pubId,
+						fileName: fileName,
+					},
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to create signed URL", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}
