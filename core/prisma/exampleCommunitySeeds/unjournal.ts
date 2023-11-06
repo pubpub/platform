@@ -14,40 +14,36 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const confidenceObject = {
-		rating: {
-			title: "Rating",
-			type: "number",
-			minimum: 0,
-			maximum: 100,
-			default: 0,
+	const confidenceCommentsObject = {
+		confidence2: {
+			title: "Additional Comments",
+			type: "string",
+			minLength: 0,
 		},
-		confidence: {
-			title: "90% Confidence Interval",
-			description: "E.g. for a 50 rating, you might give a CI of 42, 61",
-			type: "object",
-			properties: {
-				low: {
-					title: "Low",
-					type: "number",
-					minimum: 0,
-					maximum: 100,
-					default: 0,
-				},
-				high: {
-					title: "High",
-					type: "number",
-					minimum: 0,
-					maximum: 100,
-					default: 0,
-				},
-				comments: {
-					title: "Additional Comments",
-					type: "string",
-					minLength: 0,
-				},
-			},
-		},
+	};
+
+	const HundredConfidenceDef = {
+		$id: "unjournal:100confidence",
+		title: "90% Confidence Interval Rating",
+		description:
+			"Provide three numbers: your rating, then the 90% confidence bounds for your rating. E.g. for a 50 rating, you might give bounds of 42 and 61.",
+		type: "array",
+		maxItems: 3,
+		minItems: 3,
+		default: [20, 30, 40],
+		items: { type: "integer", minimum: 0, maximum: 100 },
+	};
+
+	const FiveConfidenceDef = {
+		$id: "unjournal:5confidence",
+		title: "90% Confidence Interval Rating",
+		description:
+			"Provide three numbers: your rating, then the 90% confidence bounds for your rating. E.g. for a 50 rating, you might give bounds of 42 and 61.",
+		type: "array",
+		maxItems: 3,
+		minItems: 3,
+		default: [2, 3, 4],
+		items: { type: "number", minimum: 0, maximum: 5 },
 	};
 
 	const metricsSchema = await prisma.pubFieldSchema.create({
@@ -56,44 +52,69 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			namespace: "unjournal",
 			schema: {
 				$id: "unjournal:metrics",
-				title: "Metrics and Predictions",
-				description: "Responses will be public. See here for details on the categories.",
+				title: "Metrics",
+				description:
+					"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories'>here</a> for details on the categories.",
 				type: "object",
+				$defs: {
+					confidence: HundredConfidenceDef,
+				},
 				properties: {
-					assessment: {
+					metrics1: {
 						title: "Overall assessment",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
 					},
-					advancing: {
+					metrics2: {
 						title: "Advancing knowledge and practice",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
 					},
-					methods: {
+					metrics3: {
 						title: "Methods: Justification, reasonableness, validity, robustness",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
 					},
-					logic: {
-						title: "Logic & Communication",
+					metrics4: {
+						title: "Logic & communication",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
 					},
-					open: {
+					metrics5: {
 						title: "Open, collaborative, replicable",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
 					},
-					real: {
+					metrics6: {
 						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
 					},
-					relevance: {
-						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
+					metrics7: {
+						title: "Relevance to global priorities",
 						type: "object",
-						properties: confidenceObject,
+						properties: {
+							confidence1: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
 					},
 				},
 			},
@@ -114,35 +135,201 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(12)].map(() => uuidv4());
+	const predictionsSchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "predictions",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:predictions",
+				title: "Prediction metric",
+				description:
+					"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#journal-prediction-metrics'>here</a> for details on the metrics.",
+				type: "object",
+				$defs: {
+					confidence: FiveConfidenceDef,
+				},
+				properties: {
+					qualityJournal: {
+						title: "What 'quality journal' do you expect this work will this be published in?",
+						type: "object",
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
+					},
+					qualityLevel: {
+						title: "Overall assessment on 'scale of journals'; i.e., quality-level of  journal it should be published in.",
+						type: "object",
+						properties: {
+							confidence: { $ref: "#/$defs/confidence" },
+							...confidenceCommentsObject,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	const confidentialCommentsSchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "confidential-comments",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:confidential-comments",
+				title: "Please write confidential comments here",
+				description:
+					"Response will not be public or seen by authors, please use this section only for comments that are personal/sensitivity in nature and place most of your evaluation in the public section).",
+				type: "string",
+			},
+		},
+	});
+
+	const surveySchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "survey",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:survey",
+				title: "Survey questions",
+				description: "Responses will be public unless you ask us to keep them private.",
+				type: "object",
+				properties: {
+					field: {
+						title: "How long have you been in this field?",
+						type: "string",
+					},
+					papers: {
+						title: "How many proposals, papers, and projects have you evaluated/reviewed (for journals, grants, or other peer-review)?",
+						type: "string",
+					},
+				},
+			},
+		},
+	});
+
+	const feedbackSchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "feedback",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:feedback",
+				title: "Feedback",
+				description: "Responses will not be public or seen by authors.",
+				type: "object",
+				properties: {
+					rating: {
+						title: "How would you rate this template and process?",
+						type: "string",
+					},
+					suggestions: {
+						title: "Do you have any suggestions or questions about this process or the Unjournal? (We will try to respond, and incorporate your suggestions.)",
+						type: "string",
+					},
+					time: {
+						title: "Approximately how long did you spend completing this evaluation?",
+						type: "string",
+					},
+					revision: {
+						title: "Would you be willing to consider evaluating a revised version of this work?",
+						type: "boolean",
+						default: false,
+					},
+				},
+			},
+		},
+	});
+
+	const anonymitySchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "anonymity",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:anonymity",
+				title: "Would you like to publicly sign your review?",
+				description:
+					"If no, the public sections of your review will be published anonymously.",
+				type: "boolean",
+				default: false,
+			},
+		},
+	});
+
+	const evaluationSchema = await prisma.pubFieldSchema.create({
+		data: {
+			name: "evaluation",
+			namespace: "unjournal",
+			schema: {
+				$id: "unjournal:evaluation",
+				title: "Please write your evaluation here",
+				description:
+					"Remember that your responses will be made public. Please consult <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators'>our criteria</a>. We are essentially asking for a 'standard high-quality referee report' here, with some specific considerations (mentioned in the above link). We welcome detail, elaboration, and technical discussion. If you prefer to link or submit your evaluation content in a different format, please link it here or send it to the corresponding/managing editor. Length and time spent: This is of course, up to you.  The Econometrics society recommends a 2-3 page referee report. In a recent survey (Charness et al, 2022), economists report spending (median and mean) about one day per report, with substantial shares reporting ‘half a day’ and ‘two days’. We expect that that reviewers tend to spend more time on papers for high-status journals, and when reviewing work closely tied to their own agenda.",
+				type: "string",
+			},
+		},
+	});
+
+	const fieldIds = [...Array(15)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
 		data: [
 			{ id: fieldIds[0], name: "Title", slug: "unjournal:title" },
 			{ id: fieldIds[1], name: "Description", slug: "unjournal:description" },
 			{ id: fieldIds[2], name: "Manager's Notes", slug: "unjournal:managers-notes" },
-			{ id: fieldIds[3], name: "Anonymity", slug: "unjournal:anonymity" },
-			{ id: fieldIds[4], name: "Metrics", slug: "unjournal:metrics" },
-			{ id: fieldIds[5], name: "Content", slug: "unjournal:content" },
+			{
+				id: fieldIds[3],
+				name: "Anonymity",
+				pubFieldSchemaId: anonymitySchema.id,
+				slug: "unjournal:anonymity",
+			},
+			{
+				id: fieldIds[4],
+				name: "Please enter your 'salted hashtag' here if you know it. Otherwise please enter an anonymous psuedonym here",
+				slug: "unjournal:hashtag",
+			},
+			{
+				id: fieldIds[5],
+				name: "Evaluation",
+				pubFieldSchemaId: evaluationSchema.id,
+				slug: "unjournal:evaluation",
+			},
 			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal:evaluated-paper" },
 			{ id: fieldIds[7], name: "Tags", slug: "unjournal:tags" },
 			{ id: fieldIds[8], name: "DOI", slug: "unjournal:doi" },
 			{
 				id: fieldIds[9],
-				name: "Submission Evaluator",
-				pubFieldSchemaId: evaluator.id,
-				slug: "unjournal:evaluator",
+				name: "Metrics",
+				pubFieldSchemaId: metricsSchema.id,
+				slug: "unjournal:metrics",
 			},
 			{
 				id: fieldIds[10],
-				name: "Metrics and Predictions",
-				pubFieldSchemaId: metricsSchema.id,
-				slug: "unjournal:metrics-predictions",
+				name: "Predictions",
+				slug: "unjournal:predictions",
+				pubFieldSchemaId: predictionsSchema.id,
 			},
 			{
 				id: fieldIds[11],
+				name: "Confidential Comments",
+				slug: "unjournal:confidential-comments",
+				pubFieldSchemaId: confidentialCommentsSchema.id,
+			},
+			{
+				id: fieldIds[12],
 				name: "Survey Questions",
-				slug: "unjournal:survey-questions",
+				slug: "unjournal:survey",
+				pubFieldSchemaId: surveySchema.id,
+			},
+			{
+				id: fieldIds[13],
+				name: "Feedback",
+				slug: "unjournal:feedback",
+				pubFieldSchemaId: feedbackSchema.id,
+			},
+			{
+				id: fieldIds[14],
+				name: "Submission Evaluator",
+				pubFieldSchemaId: evaluator.id,
+				slug: "unjournal:evaluator",
 			},
 		],
 	});
@@ -191,9 +378,15 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			fields: {
 				connect: [
 					{ id: fieldIds[0] },
-					{ id: fieldIds[1] },
-					{ id: fieldIds[9] }, // Submission Evaluator
-					{ id: fieldIds[10] }, // Metrics and Predictions
+					{ id: fieldIds[3] },
+					{ id: fieldIds[4] },
+					{ id: fieldIds[5] },
+					{ id: fieldIds[9] },
+					{ id: fieldIds[10] },
+					{ id: fieldIds[11] },
+					{ id: fieldIds[12] },
+					{ id: fieldIds[13] },
+					{ id: fieldIds[14] }, // evaluator
 				],
 			},
 		},
