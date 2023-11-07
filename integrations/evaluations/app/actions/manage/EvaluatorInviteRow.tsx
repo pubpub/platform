@@ -5,6 +5,7 @@ import { memo, useEffect, useState } from "react";
 import { Control, useWatch } from "react-hook-form";
 import {
 	Button,
+	Checkbox,
 	Dialog,
 	DialogContent,
 	DialogDescription,
@@ -46,6 +47,8 @@ type Props = {
 	control: Control<any>;
 	inviteTime: string | undefined;
 	index: number;
+	readOnly?: boolean;
+	onSelect: (index: number) => void;
 	onRemove: (index: number) => void;
 	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
 };
@@ -77,6 +80,7 @@ export const EvaluatorInviteRow = memo((props: Props) => {
 
 	return (
 		<div className="flex flex-row gap-4 mb-4">
+			<Checkbox disabled={props.readOnly} />
 			<FormField
 				name={`invites.${props.index}.email`}
 				render={({ field }) => (

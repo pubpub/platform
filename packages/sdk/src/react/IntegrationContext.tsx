@@ -1,14 +1,14 @@
 import { User } from "contracts";
 import { createContext } from "react";
 
-export type IntegrationContext = {
+export type IntegrationContext<T> = {
 	name: string;
 	user: User;
-	instance: unknown;
+	config?: T;
 };
 
-export const IntegrationContext = createContext<IntegrationContext>({
+export const IntegrationContext = createContext<IntegrationContext<unknown>>({
 	name: "",
 	user: null!,
-	instance: null,
+	config: null,
 });

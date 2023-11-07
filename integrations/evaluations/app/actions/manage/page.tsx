@@ -13,7 +13,7 @@ type Props = {
 
 export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
-	if (!instanceId) {
+	if (!(instanceId && pubId)) {
 		notFound();
 	}
 	const instanceConfig = await getInstanceConfig(instanceId);

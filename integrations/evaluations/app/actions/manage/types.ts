@@ -9,6 +9,7 @@ export type EvaluatorInvite = Evaluator & {
 		subject: string;
 		message: string;
 	};
+	selected?: boolean;
 };
 
 export const EvaluatorInviteBase = z.object({
@@ -18,6 +19,7 @@ export const EvaluatorInviteBase = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
+	selected: z.boolean().optional(),
 });
 
 export const EvaluatorInvite: z.ZodType<EvaluatorInvite> = z.union([

@@ -1,10 +1,10 @@
-import { headers } from "next/headers";
+import { User } from "@pubpub/sdk";
+import { cookies } from "next/headers";
 import { Toaster } from "ui";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";
 import { InstanceConfig, getInstanceConfig } from "~/lib/instance";
-import { client } from "~/lib/pubpub";
 import "./globals.css";
 
 export const metadata = {
@@ -15,22 +15,19 @@ export const metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	// This header is set in the root middleware module, which allows layouts
 	// to fetch data using search parameters.
-	const search = expect(headers().get("x-next-search"));
-	const searchParams = new URLSearchParams(search);
-	const instanceId = expect(searchParams.get("instanceId"));
-	const token = expect(searchParams.get("token"));
-	const user = await client.auth(instanceId, token);
-	let instance: InstanceConfig | undefined;
+	const instanceId = expect(cookies().get("instanceId")?.value);
+	const user: User = JSON.parse(expect(cookies().get("user")).value);
+	let config: InstanceConfig | undefined;
 	if (instanceId) {
-		instance = await getInstanceConfig(instanceId);
+		config = await getInstanceConfig(instanceId);
 	}
 	return (
 		<html lang="en">
 			<body>
-				<Integration
+				<Integration<InstanceConfig>
 					name="Evaluations"
 					user={{ ...user, avatar: `${process.env.PUBPUB_URL}/${user.avatar}` }}
-					instance={instance}
+					config={config}
 				>
 					{children}
 				</Integration>

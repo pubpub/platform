@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GetPubResponseBody, SafeUser, SuggestedMembersQuery } from "@pubpub/sdk";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
 	Button,
@@ -20,11 +21,10 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { InstanceConfig, InstanceState } from "~/lib/instance";
+import { InstanceConfig, InstanceState, InviteStatus } from "~/lib/instance";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
 import { EmailFormSchema } from "./types";
-import React, { useCallback, useEffect } from "react";
 
 type Props = {
 	evaluators: SafeUser[];
@@ -45,6 +45,7 @@ export function EvaluatorInviteForm(props: Props) {
 			template: props.instanceState[evaluator.id]?.inviteTemplate ?? {
 				...props.instanceConfig.template,
 			},
+			selected: false,
 		}));
 	};
 	const form = useForm<z.infer<typeof EmailFormSchema>>({
@@ -65,6 +66,17 @@ export function EvaluatorInviteForm(props: Props) {
 		name: "invites",
 		keyName: "key",
 	});
+
+	const onSelect = useCallback(
+		(index: number) => {
+			const invite = invites[index];
+			update(index, {
+				...invite,
+				selected: invite.selected,
+			});
+		},
+		[invites]
+	);
 
 	const onSubmit = useCallback(
 		async (values: z.infer<typeof EmailFormSchema>) => {
@@ -216,7 +228,14 @@ export function EvaluatorInviteForm(props: Props) {
 									: undefined
 							}
 							control={form.control}
+							readOnly={
+								// The row is read-only if the evaluator has already been
+								// invited.
+								"userId" in invite &&
+								props.instanceState[invite.userId] !== undefined
+							}
 							index={index}
+							onSelect={onSelect}
 							onRemove={onRemove}
 							onSuggest={onSuggest}
 						/>

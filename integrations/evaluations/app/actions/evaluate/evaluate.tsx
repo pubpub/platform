@@ -20,7 +20,7 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import { evaluate } from "./actions";
+import { submit } from "./actions";
 
 type Props = {
 	instanceId: string;
@@ -49,7 +49,7 @@ export function Evaluate(props: Props) {
 
 	const onSubmit = async (values: PubValues) => {
 		values["unjournal:title"] = `Evaluation of "${pub.values["unjournal:title"]}"`;
-		const result = await evaluate(props.instanceId, pub.id, values);
+		const result = await submit(props.instanceId, pub.id, values);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
