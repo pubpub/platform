@@ -16,6 +16,10 @@ export const save = async (
 	send: boolean
 ) => {
 	try {
+		const instanceConfig = expect(
+			await getInstanceConfig(instanceId),
+			"Instance not configured"
+		);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
 		const userIds = new Set<string>();
 		for (let i = 0; i < evaluators.length; i++) {
