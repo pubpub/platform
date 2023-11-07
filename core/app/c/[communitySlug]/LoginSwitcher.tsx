@@ -1,6 +1,6 @@
 import { getLoginData } from "~/lib/auth/loginData";
 import { Avatar, AvatarFallback, AvatarImage } from "ui";
-import LogoutButton from "./LogoutButton";
+import LogoutButton from "../../components/LogoutButton";
 import Link from "next/link";
 
 export default async function LoginSwitcher() {

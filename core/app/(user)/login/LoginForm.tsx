@@ -3,6 +3,9 @@ import React, { useState, FormEvent } from "react";
 import { Button } from "ui";
 import { supabase } from "lib/supabase";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
+let prisma;
 
 export default function LoginForm() {
 	const [password, setPassword] = useState("");
@@ -10,7 +13,7 @@ export default function LoginForm() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [failure, setFailure] = useState(false);
 
-	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
+	async function handleSubmit(evt: FormEvent<EventTarget>) {
 		setIsLoading(true);
 		setFailure(false);
 		evt.preventDefault();
@@ -22,9 +25,19 @@ export default function LoginForm() {
 			setIsLoading(false);
 			setFailure(true);
 		} else if (data) {
-			window.location.href = "/";
+			// check if user is in a community
+			const response = await fetch(`/api/member?email=${data.user.email}`, {
+				method: "GET",
+				headers: { "content-type": "application/json" },
+			});
+			const { member } = await response.json();
+			if (member) {
+				window.location.href = "/communities";
+			} else {
+				window.location.href = "/join";
+			}
 		}
-	};
+	}
 
 	return (
 		<div className="border p-4">

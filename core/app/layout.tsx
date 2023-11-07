@@ -6,6 +6,7 @@ import InitClient from "./InitClient";
 import Footer from "./footer";
 import "./css/globals.css";
 import Header from "./header";
+import LogoutButton from "./components/LogoutButton";
 
 export const metadata = {
 	title: "PubPub v7 Mockup Demo",
@@ -27,10 +28,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 			>
 				<div className="flex flex-col min-h-screen overflow-hidden supports-[overflow:clip]:overflow-clip">
 					<InitClient />
-					{!loginData && <Header />}
+					{loginData ? <LogoutButton /> : <Header />}
 					{children}
-					<Toaster />
 					{!loginData && <Footer />}
+					<Toaster />
 				</div>
 			</body>
 		</html>
