@@ -69,17 +69,6 @@ export function EvaluatorInviteForm(props: Props) {
 		keyName: "key",
 	});
 
-	const onSelect = useCallback(
-		(index: number) => {
-			const evaluator = evaluators[index];
-			update(index, {
-				...evaluator,
-				selected: evaluator.selected,
-			});
-		},
-		[evaluators]
-	);
-
 	const onSubmit = useCallback(
 		async (values: InviteFormSchema, send = false) => {
 			const result = await actions.save(
@@ -230,7 +219,6 @@ export function EvaluatorInviteForm(props: Props) {
 							control={form.control}
 							readOnly={hasInvite(evaluator)}
 							index={index}
-							onSelect={onSelect}
 							onRemove={onRemove}
 							onSuggest={onSuggest}
 						/>

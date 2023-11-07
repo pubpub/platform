@@ -2,32 +2,10 @@
 
 import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { Control, useWatch } from "react-hook-form";
-<<<<<<< HEAD
 import { Button, FormControl, FormField, FormItem, FormMessage, Icon, Input } from "ui";
 import { cn } from "utils";
 import { hasUser } from "~/lib/types";
 import { EvaluatorInviteRowEmailDialog } from "./EvaluatorInviteRowEmailDialog";
-=======
-import {
-	Button,
-	Checkbox,
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-	Icon,
-	Input,
-	Textarea,
-} from "ui";
-import * as z from "zod";
->>>>>>> wip
 import { EvaluatorSuggestButton } from "./EvaluatorSuggestButton";
 import { EvaluatorInviteRowStatus } from "./EvalutorInviteRowStatus";
 import { InviteFormEvaluator, InviteFormSchema } from "./types";
@@ -37,10 +15,6 @@ type Props = {
 	invitedAt: string | undefined;
 	index: number;
 	readOnly?: boolean;
-<<<<<<< HEAD
-=======
-	onSelect: (index: number) => void;
->>>>>>> wip
 	onRemove: (index: number) => void;
 	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
 };
@@ -54,7 +28,19 @@ export const EvaluatorInviteRow = (props: Props) => {
 
 	return (
 		<div className="flex flex-row gap-4 mb-4">
-			<Checkbox disabled={props.readOnly} />
+			<FormField
+				name={`invites.${props.index}.selected`}
+				render={({ field }) => {
+					return (
+						<FormItem className="w-4">
+							<FormControl>
+								<input type="checkbox" disabled={props.readOnly} {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
+			/>
 			<FormField
 				name={`evaluators.${props.index}.selected`}
 				render={({ field }) => {

@@ -1,13 +1,12 @@
 import { User } from "@pubpub/sdk";
-import { cookies, headers } from "next/headers";
 import { Toaster } from "ui";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";
 import { getInstanceConfig } from "~/lib/instance";
-import "./globals.css";
 import { cookie } from "~/lib/request";
 import { InstanceConfig } from "~/lib/types";
+import "./globals.css";
 
 export const metadata = {
 	title: "PubPub Evaluations Integration",

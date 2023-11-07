@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import { InstanceState, hasInvite } from "~/lib/types";
+import { hasInvite } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
 
 export const save = async (
