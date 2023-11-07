@@ -1,15 +1,15 @@
 import prisma from "~/prisma/db";
 
-export const setIntegrationInstanceConfig = async (instanceId: string, value) => {
+export async function setIntegrationInstanceConfig(instanceId: string, config: object) {
 	return await prisma.integrationInstance.update({
 		where: {
 			id: instanceId,
 		},
 		data: {
-			config: value,
+			config,
 		},
 	});
-};
+}
 
 export const getIntegrationInstanceConfig = async (instanceId: string) => {
 	return await prisma.integrationInstance.findFirst({
@@ -22,7 +22,7 @@ export const getIntegrationInstanceConfig = async (instanceId: string) => {
 	});
 };
 
-export const setIntegrationInstanceState = async (instanceId: string, pubId: string, value) => {
+export const setIntegrationInstanceState = async (instanceId: string, pubId: string, state) => {
 	return await prisma.integrationInstanceState.upsert({
 		where: {
 			pub_instance: {
@@ -31,12 +31,12 @@ export const setIntegrationInstanceState = async (instanceId: string, pubId: str
 			},
 		},
 		update: {
-			value,
+			state,
 		},
 		create: {
 			instanceId,
 			pubId,
-			value,
+			state,
 		},
 	});
 };
@@ -50,7 +50,7 @@ export const getIntegrationInstanceState = async (instanceId: string, pubId: str
 			},
 		},
 		select: {
-			value: true,
+			state: true,
 		},
 	});
 };

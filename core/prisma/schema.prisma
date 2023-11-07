@@ -309,7 +309,7 @@ model IntegrationInstanceState {
   pubId      String              @map(name: "pub_id")
   instance   IntegrationInstance @relation(fields: [instanceId], references: [id])
   instanceId String              @map(name: "instance_id")
-  value      Json
+  state      Json
 
   @@unique([pubId, instanceId], name: "pub_instance")
 }

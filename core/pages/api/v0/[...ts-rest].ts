@@ -19,6 +19,7 @@ import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
 import { findOrCreateUser } from "~/lib/server/user";
+import prisma from "~/prisma/db";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
