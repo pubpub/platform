@@ -62,7 +62,7 @@ export default function Hero() {
 										className="btn text-white bg-purple-600 hover:bg-purple-700 w-full mb-4 sm:w-auto sm:mb-0"
 										href="c/join"
 									>
-										Join a community
+										Create a community
 									</Link>
 								</div>
 
