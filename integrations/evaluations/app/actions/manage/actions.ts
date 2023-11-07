@@ -2,15 +2,10 @@
 
 import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
-import {
-	InviteStatus,
-	getInstanceConfig,
-	getInstanceState,
-	setInstanceState,
-} from "~/lib/instance";
-import { client } from "~/lib/pubpub";
-import { EvaluatorInvite } from "./types";
 import { expect } from "utils";
+import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
+import { client } from "~/lib/pubpub";
+import type { InviteFormEvaluator } from "./EvaluatorInviteForm";
 
 const makeInviteJobKey = (instanceId: string, pubId: string, userId: string) =>
 	`${instanceId}:${pubId}:${userId}`;
@@ -19,7 +14,7 @@ export const save = async (
 	instanceId: string,
 	pubId: string,
 	pubTitle: string,
-	invites: EvaluatorInvite[]
+	evaluators: InviteFormEvaluator[]
 ) => {
 	try {
 		const instanceConfig = expect(
@@ -27,6 +22,11 @@ export const save = async (
 			"Instance not configured"
 		);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+		const titleFieldSlug = expect(instanceConfig.titleFieldSlug, "Title field not configured");
+		const evaluatorFieldSlug = expect(
+			instanceConfig.evaluatorFieldSlug,
+			"Evaluator field not configured"
+		);
 		const pub = await client.getPub(instanceId, pubId);
 		// Evaluations are created for each evaluator immediately when the form is
 		// saved.
@@ -37,32 +37,32 @@ export const save = async (
 			acc[evaluation.values[instanceConfig.evaluatorFieldSlug] as string] = evaluation;
 			return acc;
 		}, {} as Record<string, GetPubResponseBody>);
-		for (let i = 0; i < invites.length; i++) {
-			let invite = invites[i];
+		for (let i = 0; i < evaluators.length; i++) {
+			let evaluator = evaluators[i];
 			// Invites either have an `email` or `userId` property. If they have a
-			// `userId`, a Pub has already been created for the evaluator.
-			if ("email" in invite) {
-				const user = await client.getOrCreateUser(instanceId, invite);
-				invite = {
+			// `userId`, an account has already been created for the evaluator. If
+			// not, we need to create them an account.
+			if ("email" in evaluator) {
+				const user = await client.getOrCreateUser(instanceId, evaluator);
+				evaluator = {
+					...evaluator,
 					userId: user.id,
-					firstName: invite.firstName,
-					lastName: invite.lastName,
-					template: invite.template,
+					status: "associated",
 				};
 			}
 			// If the invite was selected, we create an evaluation Pub for the
 			// evaluator which will store their evaluation and display statuses
 			// in core.
-			if (invite.selected) {
+			if (evaluator.selected) {
 				// If an evaluation hasn't been created for the evaluator, create it.
-				const evaluation = evaluationsByEvaluator[invite.userId];
+				const evaluation = evaluationsByEvaluator[evaluator.userId];
 				if (evaluation === undefined) {
 					await client.createPub(instanceId, {
 						parentId: pubId,
 						pubTypeId: instanceConfig.pubTypeId,
 						values: {
-							[instanceConfig.titleFieldSlug]: `Evaluation of ${pubTitle} by ${invite.firstName} ${invite.lastName}`,
-							[instanceConfig.evaluatorFieldSlug]: invite.userId,
+							[titleFieldSlug]: `Evaluation of ${pubTitle} by ${evaluator.firstName} ${evaluator.lastName}`,
+							[evaluatorFieldSlug]: evaluator.userId,
 						},
 					});
 				}
@@ -70,19 +70,19 @@ export const save = async (
 				// personalized template) that should contain the invite links.
 				await client.sendEmail(instanceId, {
 					to: {
-						userId: invite.userId,
+						userId: evaluator.userId,
 					},
-					subject: invite.template.subject,
-					message: invite.template.message,
+					subject: evaluator.emailTemplate.subject,
+					message: evaluator.emailTemplate.message,
 					extra: {
 						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
 					},
 				});
 				// Save updated email template and invite time.
-				instanceState[invite.userId] = {
-					status: InviteStatus.Invited,
-					inviteTemplate: invite.template,
-					inviteTime: new Date().toString(),
+				instanceState[evaluator.userId] = {
+					...evaluator,
+					status: "invited",
+					invitedAt: new Date().toString(),
 				};
 			}
 		}
@@ -105,20 +105,22 @@ export const suggest = async (instanceId: string, query: SuggestedMembersQuery) 
 
 export const remove = async (instanceId: string, pubId: string, userId: string) => {
 	try {
-		const config = expect(await getInstanceConfig(instanceId), "Instance not configured");
-		const state = await getInstanceState(instanceId, pubId);
-		const submission = await client.getPub(instanceId, pubId);
-		const evaluation = submission.children.find(
-			(child) => child.values[config.evaluatorFieldSlug] === userId
+		const instanceConfig = expect(
+			await getInstanceConfig(instanceId),
+			"Instance not configured"
+		);
+		const instanceState = await getInstanceState(instanceId, pubId);
+		const pub = await client.getPub(instanceId, pubId);
+		const evaluation = pub.children.find(
+			(child) => child.values[instanceConfig.evaluatorFieldSlug] === userId
 		);
 		if (evaluation !== undefined) {
 			await client.deletePub(instanceId, evaluation.id);
 		}
-		if (state !== undefined) {
-			const { [userId]: _, ...instanceStateWithoutEvaluator } = state;
-			setInstanceState(instanceId, pubId, instanceStateWithoutEvaluator);
+		if (instanceState !== undefined) {
+			delete instanceState[userId];
+			setInstanceState(instanceId, pubId, instanceState);
 		}
-		await client.unscheduleEmail(instanceId, makeInviteJobKey(instanceId, pubId, userId));
 		revalidatePath("/");
 		return { success: true };
 	} catch (error) {

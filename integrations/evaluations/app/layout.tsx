@@ -1,11 +1,12 @@
 import { User } from "@pubpub/sdk";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Toaster } from "ui";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";
 import { InstanceConfig, getInstanceConfig } from "~/lib/instance";
 import "./globals.css";
+import { cookie } from "~/lib/request";
 
 export const metadata = {
 	title: "PubPub Evaluations Integration",
@@ -13,13 +14,11 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-	// This header is set in the root middleware module, which allows layouts
-	// to fetch data using search parameters.
-	const instanceId = expect(cookies().get("instanceId")?.value);
-	const user: User = JSON.parse(expect(cookies().get("user")).value);
-	let config: InstanceConfig | undefined;
+	const instanceId = expect(cookie("instanceId"), "instanceId missing");
+	const user: User = JSON.parse(expect(cookie("user"), "user missing"));
+	let instanceConfig: InstanceConfig | undefined;
 	if (instanceId) {
-		config = await getInstanceConfig(instanceId);
+		instanceConfig = await getInstanceConfig(instanceId);
 	}
 	return (
 		<html lang="en">
@@ -27,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 				<Integration<InstanceConfig>
 					name="Evaluations"
 					user={{ ...user, avatar: `${process.env.PUBPUB_URL}/${user.avatar}` }}
-					config={config}
+					config={instanceConfig}
 				>
 					{children}
 				</Integration>

@@ -1,37 +1,11 @@
-import { client } from "~/lib/pubpub";
+import { client } from "./pubpub";
+import { InstanceConfig, InstanceState, defaultInstanceConfig } from "./types";
 
-export type EmailTemplate = { subject: string; message: string };
+export const makeInstanceConfig = (): InstanceConfig => structuredClone(defaultInstanceConfig);
 
-export enum InviteStatus {
-	Invited,
-	Accepted,
-	Declined,
-	Submitted,
-}
-
-export type InstanceConfig = {
-	pubTypeId: string;
-	evaluatorFieldSlug: string;
-	titleFieldSlug: string;
-	template: EmailTemplate;
-};
-
-export type InstanceState = {
-	[userId: string]: {
-		status: InviteStatus;
-		inviteTemplate: EmailTemplate;
-		inviteTime: string;
-	};
-};
-
-export const makeInstanceConfig = (): InstanceConfig => ({
-	pubTypeId: "",
-	template: { subject: "", message: "" },
-	evaluatorFieldSlug: "",
-	titleFieldSlug: "",
-});
-
-export const getInstanceConfig = async (instanceId: string) => {
+export const getInstanceConfig = async (
+	instanceId: string
+): Promise<InstanceConfig | undefined> => {
 	return await client.getInstanceConfig(instanceId);
 };
 
@@ -42,7 +16,10 @@ export const setInstanceConfig = async (
 	return await client.setInstanceConfig(instanceId, instanceConfig);
 };
 
-export const getInstanceState = async (instanceId: string, pubId: string) => {
+export const getInstanceState = async (
+	instanceId: string,
+	pubId: string
+): Promise<InstanceState | undefined> => {
 	return await client.getInstanceState(instanceId, pubId);
 };
 

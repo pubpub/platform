@@ -1,3 +1,5 @@
+"use client";
+
 import { GetPubResponseBody } from "@pubpub/sdk";
 import { useCallback } from "react";
 import { Button } from "ui";

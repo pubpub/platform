@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody, SafeUser, SuggestedMembersQuery } from "@pubpub/sdk";
-import React, { useCallback, useEffect, useMemo } from "react";
+import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
+import React, { useCallback, useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
 	Button,
@@ -21,39 +21,34 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { InstanceConfig, InstanceState, InviteStatus } from "~/lib/instance";
+import { Evaluator, InstanceConfig, isInvited } from "~/lib/types";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
-import { EmailFormSchema } from "./types";
+
+const InviteFormEvaluator = Evaluator.and(z.object({ selected: z.boolean() }));
+export type InviteFormEvaluator = z.infer<typeof InviteFormEvaluator>;
+const InviteFormSchema = z.object({
+	invites: z.array(InviteFormEvaluator),
+});
 
 type Props = {
-	evaluators: SafeUser[];
+	evaluators: Evaluator[];
 	instanceId: string;
 	instanceConfig: InstanceConfig;
-	instanceState: InstanceState;
 	pub: GetPubResponseBody;
 };
 
 export function EvaluatorInviteForm(props: Props) {
 	const { toast } = useToast();
-	const makeInvites = () => {
-		return props.evaluators.map((evaluator) => ({
-			userId: evaluator.id,
-			firstName: evaluator.firstName,
-			lastName: evaluator.lastName ?? undefined,
-			// Restore a customized template or copy the default one
-			template: props.instanceState[evaluator.id]?.inviteTemplate ?? {
-				...props.instanceConfig.template,
-			},
-			selected: false,
-		}));
-	};
-	const form = useForm<z.infer<typeof EmailFormSchema>>({
+	const form = useForm<z.infer<typeof InviteFormSchema>>({
 		mode: "all",
 		reValidateMode: "onChange",
-		resolver: zodResolver(EmailFormSchema),
+		resolver: zodResolver(InviteFormSchema),
 		defaultValues: {
-			invites: makeInvites(),
+			invites: props.evaluators.map((evaluator) => ({
+				...evaluator,
+				selected: isInvited(evaluator),
+			})),
 		},
 	});
 	const {
@@ -67,23 +62,12 @@ export function EvaluatorInviteForm(props: Props) {
 		keyName: "key",
 	});
 
-	const onSelect = useCallback(
-		(index: number) => {
-			const invite = invites[index];
-			update(index, {
-				...invite,
-				selected: invite.selected,
-			});
-		},
-		[invites]
-	);
-
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof EmailFormSchema>) => {
+		async (values: z.infer<typeof InviteFormSchema>) => {
 			const result = await actions.save(
 				props.instanceId,
 				props.pub.id,
-				props.pub.values["unjournal:title"] as string,
+				props.pub.values[props.instanceConfig.titleFieldSlug] as string,
 				values.invites
 			);
 			if ("error" in result) {
@@ -119,7 +103,9 @@ export function EvaluatorInviteForm(props: Props) {
 						userId: user.id,
 						firstName: user.firstName,
 						lastName: user.lastName ?? undefined,
-						template: invite.template,
+						emailTemplate: invite.emailTemplate,
+						selected: invite.selected,
+						status: "associated",
 					});
 					form.trigger(`invites.${index}`);
 					toast({
@@ -168,7 +154,9 @@ export function EvaluatorInviteForm(props: Props) {
 				email: "",
 				firstName: "",
 				lastName: "",
-				template: { ...props.instanceConfig.template },
+				emailTemplate: { ...props.instanceConfig.template },
+				selected: false,
+				status: "listed",
 			});
 		},
 		[append]
@@ -183,7 +171,7 @@ export function EvaluatorInviteForm(props: Props) {
 	// with updated evaluator invites.
 	useEffect(() => {
 		form.reset({
-			invites: makeInvites(),
+			invites: props.evaluators,
 		});
 	}, [props.evaluators]);
 
@@ -194,11 +182,12 @@ export function EvaluatorInviteForm(props: Props) {
 					<CardTitle>Invite Evaluators</CardTitle>
 					<CardDescription>
 						Use this form to invite evaluators to review "
-						{props.pub.values["unjournal:title"] as string}".
+						{props.pub.values[props.instanceConfig.titleFieldSlug] as string}".
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-row gap-4 mb-4">
+						<FormItem className="flex-0 w-4"></FormItem>
 						<FormItem className="flex-1">
 							<FormLabel>Email Address</FormLabel>
 							<FormDescription>
@@ -222,20 +211,10 @@ export function EvaluatorInviteForm(props: Props) {
 					{invites.map((invite, index) => (
 						<EvaluatorInviteRow
 							key={invite.key}
-							inviteTime={
-								"userId" in invite
-									? props.instanceState[invite.userId]?.inviteTime
-									: undefined
-							}
+							invitedAt={isInvited(invite) ? invite.invitedAt : undefined}
 							control={form.control}
-							readOnly={
-								// The row is read-only if the evaluator has already been
-								// invited.
-								"userId" in invite &&
-								props.instanceState[invite.userId] !== undefined
-							}
+							readOnly={isInvited(invite)}
 							index={index}
-							onSelect={onSelect}
 							onRemove={onRemove}
 							onSuggest={onSuggest}
 						/>

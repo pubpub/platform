@@ -45,17 +45,16 @@ const daysHoursMinutes = (ms: number) => {
 
 type Props = {
 	control: Control<any>;
-	inviteTime: string | undefined;
+	invitedAt: string | undefined;
 	index: number;
 	readOnly?: boolean;
-	onSelect: (index: number) => void;
 	onRemove: (index: number) => void;
 	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
 };
 
-export const EvaluatorInviteRow = memo((props: Props) => {
+export const EvaluatorInviteRow = (props: Props) => {
 	const getTimeBeforeInviteSent = () =>
-		props.inviteTime ? new Date(props.inviteTime).getTime() - Date.now() : Infinity;
+		props.invitedAt ? new Date(props.invitedAt).getTime() - Date.now() : Infinity;
 	const [timeBeforeInviteSent, setTimeBeforeInviteSent] = useState(getTimeBeforeInviteSent);
 	const invite = useWatch<z.infer<typeof EmailFormSchema>>({
 		control: props.control,
@@ -76,11 +75,23 @@ export const EvaluatorInviteRow = memo((props: Props) => {
 			}, 1000);
 		}
 		return () => clearInterval(interval);
-	}, [props.inviteTime]);
+	}, [props.invitedAt]);
 
 	return (
 		<div className="flex flex-row gap-4 mb-4">
-			<Checkbox disabled={props.readOnly} />
+			<FormField
+				name={`invites.${props.index}.selected`}
+				render={({ field }) => {
+					return (
+						<FormItem className="w-4">
+							<FormControl>
+								<input type="checkbox" disabled={props.readOnly} {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
+			/>
 			<FormField
 				name={`invites.${props.index}.email`}
 				render={({ field }) => (
@@ -153,12 +164,12 @@ export const EvaluatorInviteRow = memo((props: Props) => {
 					<DialogContent>
 						<DialogHeader>
 							<DialogTitle>Edit Template</DialogTitle>
-							{props.inviteTime &&
+							{props.invitedAt &&
 								(inviteSent ? (
 									<DialogDescription>
 										This email was sent at{" "}
 										<strong className="font-medium">
-											{new Date(props.inviteTime).toLocaleString()}
+											{new Date(props.invitedAt).toLocaleString()}
 										</strong>
 										, and can no longer be edited.
 									</DialogDescription>
@@ -166,7 +177,7 @@ export const EvaluatorInviteRow = memo((props: Props) => {
 									<DialogDescription>
 										This email is scheduled to be sent at{" "}
 										<strong className="font-medium">
-											{new Date(props.inviteTime).toLocaleString()}
+											{new Date(props.invitedAt).toLocaleString()}
 										</strong>
 										.
 									</DialogDescription>
@@ -211,4 +222,4 @@ export const EvaluatorInviteRow = memo((props: Props) => {
 			</div>
 		</div>
 	);
-});
+};

@@ -21,9 +21,11 @@ import {
 } from "ui";
 import { cn } from "utils";
 import { submit } from "./actions";
+import { InstanceConfig } from "~/lib/instance";
 
 type Props = {
 	instanceId: string;
+	instanceConfig: InstanceConfig;
 	pub: GetPubResponseBody;
 	pubType: GetPubTypeResponseBody;
 };
@@ -33,7 +35,10 @@ export function Evaluate(props: Props) {
 	const { toast } = useToast();
 
 	const generatedSchema = useMemo(() => {
-		const exclude = ["unjournal:title", "unjournal:evaluator"];
+		const exclude = [
+			props.instanceConfig.titleFieldSlug,
+			props.instanceConfig.evaluatorFieldSlug,
+		];
 		return buildFormSchemaFromFields(pubType, exclude);
 	}, [pubType]);
 
@@ -48,7 +53,9 @@ export function Evaluate(props: Props) {
 	const [persistedValues, persist] = useLocalStorage<PubValues>(props.instanceId);
 
 	const onSubmit = async (values: PubValues) => {
-		values["unjournal:title"] = `Evaluation of "${pub.values["unjournal:title"]}"`;
+		values[props.instanceConfig.titleFieldSlug] = `Evaluation of "${
+			pub.values[props.instanceConfig.titleFieldSlug]
+		}"`;
 		const result = await submit(props.instanceId, pub.id, values);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
@@ -98,7 +105,9 @@ export function Evaluate(props: Props) {
 					</CardDescription>
 					<Separator />
 					<p className={cn("text-sm")}>To evaluate:</p>
-					<h1 className={cn("text-2xl")}>{`${pub.values["unjournal:title"]}`}</h1>
+					<h1 className={cn("text-2xl")}>{`${
+						pub.values[props.instanceConfig.titleFieldSlug]
+					}`}</h1>
 					<p className={cn("text-base")}>
 						{pub.values["unjournal:description"] &&
 							`${pub.values["unjournal:description"]}`}

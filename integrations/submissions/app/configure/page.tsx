@@ -1,4 +1,4 @@
-import { findInstance } from "~/lib/instance";
+import { getInstanceConfig } from "~/lib/instance";
 import { Configure } from "./configure";
 
 type Props = {
@@ -9,6 +9,6 @@ type Props = {
 
 export default async function Page(props: Props) {
 	const { instanceId } = props.searchParams;
-	const instance = await findInstance(instanceId);
+	const instance = await getInstanceConfig(instanceId);
 	return <Configure instanceId={instanceId} pubTypeId={instance?.pubTypeId} />;
 }

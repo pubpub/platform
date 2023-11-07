@@ -1,13 +1,13 @@
 "use server";
 
 import { PubValues } from "@pubpub/sdk";
-import { findInstance } from "~/lib/instance";
+import { getInstanceConfig } from "~/lib/instance";
 import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
 import { client } from "~/lib/pubpub";
 
 export const submit = async (instanceId: string, values: PubValues) => {
 	try {
-		const instance = await findInstance(instanceId);
+		const instance = await getInstanceConfig(instanceId);
 		if (instance === undefined) {
 			return { error: "Instance not configured" };
 		}

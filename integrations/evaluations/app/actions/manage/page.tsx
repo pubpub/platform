@@ -1,8 +1,8 @@
+import { notFound, redirect } from "next/navigation";
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
-import { expect } from "utils";
-import { notFound, redirect } from "next/navigation";
+import { isInvited } from "~/lib/types";
 
 type Props = {
 	searchParams: {
@@ -21,35 +21,19 @@ export default async function Page(props: Props) {
 		redirect(`/configure?instanceId=${instanceId}&pubId=${pubId}&action=manage`);
 	}
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-	console.log(instanceState);
-	// Fetch the pub and its children
 	const pub = await client.getPub(instanceId, pubId);
-	// Load user info for each of the child evaluations
-	const evaluators =
-		pub.children.length > 0
-			? await client.getUsers(
-					instanceId,
-					pub.children
-						// Only consider the children that are evaluations
-						.filter((child) => child.pubTypeId === instanceConfig.config.pubTypeId)
-						// Extract the evaluator user id
-						.map((evaluation) => evaluation.values["unjournal:evaluator"] as string)
-			  )
-			: [];
-
-	evaluators.sort(
-		(a, b) =>
-			new Date(instanceState.state[a.id]?.inviteTime).getTime() -
-			new Date(instanceState.state[b.id]?.inviteTime).getTime()
-	);
-
+	const evaluators = Object.values(instanceState).sort((a, b) => {
+		if (isInvited(a) && !isInvited(b)) return -1;
+		if (isInvited(b) && !isInvited(a)) return 1;
+		if (!(isInvited(a) && isInvited(b))) return 0;
+		return new Date(a.invitedAt).getTime() - new Date(b.invitedAt).getTime();
+	});
 	return (
 		<EvaluatorInviteForm
 			instanceId={instanceId}
-			pub={pub}
+			instanceConfig={instanceConfig}
 			evaluators={evaluators}
-			instanceConfig={instanceConfig.config}
-			instanceState={instanceState.state}
+			pub={pub}
 		/>
 	);
 }
