@@ -5,7 +5,6 @@ import prisma from "~/prisma/db";
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { getUserInfoFromJWT } from "~/lib/auth/loginId";
 import { generateHash, slugifyString } from "../string";
-import { redirect } from "next/navigation";
 
 /* This is only called from Server Component functions */
 /* When in the API, use getLoginId from loginId.ts */
@@ -77,9 +76,9 @@ export const handleRedirect = async () => {
 			where: { members: { some: { userId: loginData.id } } },
 			select: { slug: true },
 		});
-		console.log("community", community);
-		if (community) {
-			redirect(`/c/${community.slug}`);
-		}
+		// console.log("community", community);
+		// if (community) {
+		// 	redirect(`/c/${community.slug}`);
+		// }
 	}
 };
