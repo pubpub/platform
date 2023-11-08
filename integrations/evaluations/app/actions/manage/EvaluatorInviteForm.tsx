@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody, SafeUser } from "@pubpub/sdk";
-import React, { use, useCallback, useEffect } from "react";
+import { GetPubResponseBody } from "@pubpub/sdk";
+import React, { useCallback } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
 	Button,
