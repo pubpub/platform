@@ -1,11 +1,17 @@
 "use client";
 import { Button, Popover, PopoverContent, PopoverTrigger, useToast } from "ui";
+import {
+	PubPayload,
+	StagePayload,
+	StagePayloadMoveConstraintDestination,
+	StagePayloadMoveConstraintDestinationFrom,
+} from "~/lib/types";
 import { move } from "./lib/actions";
-import { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
 
 type Props = {
 	pub: PubPayload;
-	stages: StagePayloadMoveConstraintDestination[];
+	stages?: StagePayloadMoveConstraintDestination[];
+	stagesToMoveBackFrom?: StagePayloadMoveConstraintDestinationFrom[];
 	stage: StagePayload;
 };
 
@@ -43,29 +49,57 @@ export default function Move(props: Props) {
 			),
 		});
 	};
+
+	function renderMoveButtonText() {
+		if (props.stages) {
+			return "Move";
+		} else {
+			return "Move back";
+		}
+	}
+
+	function renderMoveText() {
+		if (props.stages) {
+			return "Move this pub to:";
+		} else {
+			return "Move this pub back to:";
+		}
+	}
+
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
 				<Button size="sm" variant="outline" className="ml-1">
-					Move
+					{renderMoveButtonText()}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent>
 				<div className="flex flex-col">
-					<div className="mb-4">
-						<b>Move this pub to:</b>
-					</div>
-					{props.stages.map((stage) => {
-						return stage.id === props.stage.id ? null : (
-							<Button
-								variant="ghost"
-								key={stage.id}
-								onClick={() => onMove(props.pub.id, props.stage.id, stage.id)}
-							>
-								{stage.name}
-							</Button>
-						);
-					})}
+					<div className="mb-4">{renderMoveText()}</div>
+					{props.stages &&
+						props.stages.map((stage) => {
+							return stage.id === props.stage.id ? null : (
+								<Button
+									variant="ghost"
+									key={stage.id}
+									onClick={() => onMove(props.pub.id, props.stage.id, stage.id)}
+								>
+									{stage.name}
+								</Button>
+							);
+						})}
+					{props.stagesToMoveBackFrom &&
+						props.stagesToMoveBackFrom.map((stage) => {
+							return stage.id === props.stage.id ? null : (
+								<Button
+									variant="ghost"
+									key={stage.id}
+									onClick={() => onMove(props.pub.id, props.stage.id, stage.id)}
+								>
+									{stage.name}
+								</Button>
+							);
+						})}
 				</div>
 			</PopoverContent>
 		</Popover>
