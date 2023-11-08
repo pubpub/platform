@@ -3,7 +3,6 @@ import React, { useState, FormEvent } from "react";
 import { Button } from "ui";
 import { supabase } from "lib/supabase";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 let prisma;
 
@@ -32,7 +31,7 @@ export default function LoginForm() {
 			});
 			const { member } = await response.json();
 			if (member) {
-				window.location.href = "/communities";
+				window.location.href = `/c/${member.community.slug}`;
 			} else {
 				window.location.href = "/join";
 			}

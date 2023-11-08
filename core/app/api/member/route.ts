@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
 
 			const member = await prisma.member.findFirst({
 				where: { userId: user.id },
+				include: { community: true },
 			});
 			return Response.json({ member, status: 200 });
 		} else {

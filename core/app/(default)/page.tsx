@@ -21,12 +21,13 @@ export default async function Page() {
 
 		const member = await prisma.member.findFirst({
 			where: { userId: user.id },
+			include: { community: true },
 		});
 
 		if (member) {
-			redirect("/communities");
+			redirect(`/c/${member.community.slug}`);
 		} else {
-			redirect("/join");
+			redirect("/settings");
 		}
 	}
 	return (

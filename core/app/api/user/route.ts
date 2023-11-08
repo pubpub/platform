@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 			// });
 			return NextResponse.json({ message: "Existing account claimed" }, { status: 200 });
 		} else {
-			const newUser = await prisma.user.create({
+			await prisma.user.create({
 				data: {
 					supabaseId: data.user.id,
 					slug: `${slugifyString(firstName)}${
