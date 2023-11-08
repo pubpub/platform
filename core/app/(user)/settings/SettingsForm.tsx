@@ -1,9 +1,10 @@
 "use client";
-import React, { useState, FormEvent } from "react";
-import { Button } from "ui";
+import { getSlugSuffix, slugifyString } from "lib/string";
 import { supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
-import { getSlugSuffix, slugifyString } from "lib/string";
+import { FormEvent, useState } from "react";
+import { Button } from "ui";
+import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
 
 type Props = UserSettings;
@@ -162,6 +163,9 @@ export default function SettingsForm({
 						Password reset email sent! Please check your inbox.
 					</div>
 				)}
+				<div className="mt-8">
+					<LogoutButton />
+				</div>
 			</div>
 		</>
 	);
