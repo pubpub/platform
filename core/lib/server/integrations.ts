@@ -1,6 +1,7 @@
 import prisma from "~/prisma/db";
 
-export async function setIntegrationInstanceConfig(instanceId: string, config: object) {
+// TODO: If its the case an integration instance can be attached to a stage without configuring it this should be an upsert
+export async function updateIntegrationInstanceConfig(instanceId: string, config: object) {
 	return await prisma.integrationInstance.update({
 		where: {
 			id: instanceId,

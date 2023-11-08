@@ -10,7 +10,7 @@ import {
 	getPub,
 	getPubType,
 	getSuggestedMembers,
-	setIntegrationInstanceConfig,
+	updateIntegrationInstanceConfig,
 	setIntegrationInstanceState,
 	tsRestHandleErrors,
 	updatePub,
@@ -131,7 +131,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	setInstanceConfig: async ({ headers, params, body }) => {
 		checkAuthentication(headers.authorization);
-		const config = await setIntegrationInstanceConfig(params.instanceId, { ...body });
+		const config = await updateIntegrationInstanceConfig(params.instanceId, { ...body });
 		return { status: 200, body: config };
 	},
 	getInstanceConfig: async ({ headers, params }) => {
