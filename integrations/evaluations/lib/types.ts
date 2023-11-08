@@ -3,12 +3,13 @@ import * as z from "zod";
 export type EmailTemplate = { subject: string; message: string };
 
 export const InviteStatus = z.enum([
-	"listed",
-	"associated",
+	"unsaved",
+	"unsaved-with-user",
+	"saved",
 	"invited",
 	"accepted",
 	"declined",
-	"submitted",
+	"received",
 ]);
 export type InviteStatus = z.infer<typeof InviteStatus>;
 
@@ -45,17 +46,22 @@ export const EvaluatorWithInvite = EvaluatorWithPubPubUser.merge(
 export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithPubPubUser>;
 
 export const Evaluator = z.discriminatedUnion("status", [
-	// Listed evaluators, i.e. evaluators in the form that have not been saved
-	// yet. These evaluators do not yet have user ids associated with them.
+	// Unsaved evaluators, i.e. evaluators in the form that have not been
+	// persisted yet. These evaluators do not yet have user ids associated with
+	// them.
 	z.object({ status: z.literal(InviteStatus.options[0]) }).merge(EvaluatorWithEmail),
-	// Saved evaluators, i.e. evaluators in the form that have been saved. These
-	// evaluators have PubPub user accounts but have not yet been invited.
+	// Unsaved evaluators with PubPub user accounts. These evaluators have user
+	// ids associated with them but have not yet been persisted.
 	z.object({ status: z.literal(InviteStatus.options[1]) }).merge(EvaluatorWithPubPubUser),
-	// Evaluators who have received invites. They have a user account and an `inviteTime`.
+	// Saved evaluators, i.e. evaluators in the form that have been persisted.
+	// These evaluators have PubPub user accounts but have not yet been invited.
+	z.object({ status: z.literal(InviteStatus.options[2]) }).merge(EvaluatorWithPubPubUser),
+	// Evaluators who have received invites. They have a user account and an
+	// `invitedAt` timestamp.
 	z.object({ status: z.literal("invited") }).merge(EvaluatorWithInvite),
 	z.object({ status: z.literal("accepted") }).merge(EvaluatorWithInvite),
 	z.object({ status: z.literal("declined") }).merge(EvaluatorWithInvite),
-	z.object({ status: z.literal("submitted") }).merge(EvaluatorWithInvite),
+	z.object({ status: z.literal("received") }).merge(EvaluatorWithInvite),
 ]);
 export type Evaluator = z.infer<typeof Evaluator>;
 
@@ -77,16 +83,36 @@ export const defaultInstanceConfig = {
 	titleFieldSlug: "",
 };
 
-export const isInvited = (
+export const isSaved = (
 	evaluator: Evaluator
-): evaluator is Evaluator & { status: Exclude<InviteStatus, "listed" | "associated"> } => {
-	return evaluator.status !== "listed" && evaluator.status !== "associated";
+): evaluator is Evaluator & { status: Exclude<InviteStatus, "unsaved" | "unsaved-with-user"> } => {
+	return evaluator.status !== "unsaved" && evaluator.status !== "unsaved-with-user";
 };
 
-export function assertIsInvited(
+export const hasUser = (
 	evaluator: Evaluator
-): asserts evaluator is Evaluator & { status: Exclude<InviteStatus, "listed" | "associated"> } {
-	if (!isInvited(evaluator)) {
-		throw new Error("Invite is not invited");
+): evaluator is Evaluator & {
+	status: Exclude<InviteStatus, "unsaved">;
+} => {
+	return evaluator.status !== "unsaved";
+};
+
+export const hasInvite = (
+	evaluator: Evaluator
+): evaluator is Evaluator & {
+	status: Exclude<InviteStatus, "unsaved" | "unsaved-with-user" | "saved">;
+} => {
+	return (
+		evaluator.status !== "unsaved" &&
+		evaluator.status !== "unsaved-with-user" &&
+		evaluator.status !== "saved"
+	);
+};
+
+export function assertIsInvited(evaluator: Evaluator): asserts evaluator is Evaluator & {
+	status: Exclude<InviteStatus, "unsaved" | "unsaved-with-user" | "saved">;
+} {
+	if (!hasInvite(evaluator)) {
+		throw new Error("Evaluator is not invited");
 	}
 }

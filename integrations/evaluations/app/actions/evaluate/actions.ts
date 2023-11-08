@@ -8,34 +8,53 @@ import { client } from "~/lib/pubpub";
 import { assertIsInvited } from "~/lib/types";
 
 export const accept = async (instanceId: string, pubId: string, userId: string) => {
-	const state = (await getInstanceState(instanceId, pubId)) ?? {};
-	const evaluator = expect(state[userId], `User was not invited to evaluate pub ${pubId}`);
+	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+	const evaluator = expect(
+		instanceState[userId],
+		`User was not invited to evaluate pub ${pubId}`
+	);
 	assertIsInvited(evaluator);
-	state[userId] = { ...evaluator, status: "accepted" };
-	await setInstanceState(instanceId, pubId, state);
+	instanceState[userId] = { ...evaluator, status: "accepted" };
+	await setInstanceState(instanceId, pubId, instanceState);
 	revalidatePath("/");
 };
 
 export const decline = async (instanceId: string, pubId: string, userId: string) => {
-	const state = (await getInstanceState(instanceId, pubId)) ?? {};
-	const evaluator = expect(state[userId], `User was not invited to evaluate pub ${pubId}`);
+	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+	const evaluator = expect(
+		instanceState[userId],
+		`User was not invited to evaluate pub ${pubId}`
+	);
 	assertIsInvited(evaluator);
-	state[userId] = { ...evaluator, status: "declined" };
-	await setInstanceState(instanceId, pubId, state);
+	instanceState[userId] = { ...evaluator, status: "declined" };
+	await setInstanceState(instanceId, pubId, instanceState);
 	revalidatePath("/");
 };
 
-export const submit = async (instanceId: string, pubId: string, values: PubValues) => {
-	const instance = await getInstanceConfig(instanceId);
-	if (instance === undefined) {
+export const submit = async (
+	instanceId: string,
+	pubId: string,
+	userId: string,
+	values: PubValues
+) => {
+	const instanceConfig = await getInstanceConfig(instanceId);
+	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+	if (instanceConfig === undefined) {
 		return { error: "Instance not configured" };
 	}
+	const evaluator = expect(
+		instanceState[userId],
+		`User was not invited to evaluate pub ${pubId}`
+	);
+	assertIsInvited(evaluator);
 	try {
 		const pub = await client.createPub(instanceId, {
-			pubTypeId: instance.config.pubTypeId,
+			pubTypeId: instanceConfig.pubTypeId,
 			parentId: pubId,
 			values: values,
 		});
+		instanceState[userId] = { ...evaluator, status: "received" };
+		await setInstanceState(instanceId, pubId, instanceState);
 		return pub;
 	} catch (error) {
 		return { error: error.message };

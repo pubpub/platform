@@ -14,4 +14,5 @@ export {
 	CircleDashed,
 	CircleDollarSign,
 	XCircle,
+	BadgeCheck,
 } from "lucide-react";

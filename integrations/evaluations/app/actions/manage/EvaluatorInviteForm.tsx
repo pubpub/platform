@@ -20,13 +20,12 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import { EmailTemplate, Evaluator, InstanceConfig, isInvited } from "~/lib/types";
+import { EmailTemplate, Evaluator, InstanceConfig, hasInvite, isSaved } from "~/lib/types";
 import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
 import { EvaluatorInviteFormSendButton } from "./EvaluatorInviteFormSendButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
 import { InviteFormEvaluator, InviteFormSchema } from "./types";
-import * as z from "zod";
 
 type Props = {
 	evaluators: Evaluator[];
@@ -42,7 +41,7 @@ const makeEvaluator = (template: EmailTemplate): InviteFormEvaluator => {
 		lastName: "",
 		emailTemplate: { ...template },
 		selected: false,
-		status: "listed",
+		status: "unsaved",
 	};
 };
 
@@ -55,7 +54,7 @@ export function EvaluatorInviteForm(props: Props) {
 		defaultValues: {
 			evaluators: props.evaluators.map((evaluator) => ({
 				...evaluator,
-				selected: isInvited(evaluator),
+				selected: false,
 			})),
 		},
 	});
@@ -113,7 +112,7 @@ export function EvaluatorInviteForm(props: Props) {
 						userId: user.id,
 						firstName: user.firstName,
 						lastName: user.lastName ?? undefined,
-						status: "associated",
+						status: "unsaved-with-user",
 					});
 					form.trigger(`evaluators.${index}`);
 					toast({
@@ -136,7 +135,7 @@ export function EvaluatorInviteForm(props: Props) {
 		async (index: number) => {
 			try {
 				const evaluator = evaluators[index];
-				if (evaluator.status !== "listed") {
+				if (isSaved(evaluator)) {
 					await actions.remove(props.instanceId, props.pub.id, evaluator.userId);
 				}
 				remove(index);
@@ -174,7 +173,7 @@ export function EvaluatorInviteForm(props: Props) {
 		form.reset({
 			evaluators: props.evaluators.map((evaluator) => ({
 				...evaluator,
-				selected: isInvited(evaluator),
+				selected: false,
 			})),
 		});
 	}, [props.evaluators]);
@@ -210,14 +209,14 @@ export function EvaluatorInviteForm(props: Props) {
 								The last name of the evaluator you'd like to invite.
 							</FormDescription>
 						</FormItem>
-						<div className="shrink-0 basis-36"></div>
+						<div className="shrink-0 basis-48"></div>
 					</div>
 					{evaluators.map((invite, index) => (
 						<EvaluatorInviteRow
 							key={invite.key}
-							invitedAt={isInvited(invite) ? invite.invitedAt : undefined}
+							invitedAt={hasInvite(invite) ? invite.invitedAt : undefined}
 							control={form.control}
-							readOnly={isInvited(invite)}
+							readOnly={hasInvite(invite)}
 							index={index}
 							onRemove={onRemove}
 							onSuggest={onSuggest}

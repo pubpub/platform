@@ -6,6 +6,7 @@ import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { InviteFormEvaluator } from "./types";
+import { hasInvite } from "~/lib/types";
 
 export const save = async (
 	instanceId: string,
@@ -15,55 +16,18 @@ export const save = async (
 	send: boolean
 ) => {
 	try {
-		const instanceConfig = expect(
-			await getInstanceConfig(instanceId),
-			"Instance not configured"
-		);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		const titleFieldSlug = expect(instanceConfig.titleFieldSlug, "Title field not configured");
-		const evaluatorFieldSlug = expect(
-			instanceConfig.evaluatorFieldSlug,
-			"Evaluator field not configured"
-		);
-		const pub = await client.getPub(instanceId, pubId);
-		// Evaluations are created for each evaluator immediately when the form is
-		// saved.
-		const evaluations = pub.children.filter(
-			(child) => child.pubTypeId === instanceConfig.pubTypeId
-		);
-		const evaluationsByEvaluator = evaluations.reduce((acc, evaluation) => {
-			acc[evaluation.values[instanceConfig.evaluatorFieldSlug] as string] = evaluation;
-			return acc;
-		}, {} as Record<string, GetPubResponseBody>);
 		for (let i = 0; i < evaluators.length; i++) {
 			let evaluator = evaluators[i];
-			// Invites either have an `email` or `userId` property. If they have a
-			// `userId`, an account has already been created for the evaluator. If
-			// not, we need to create them an account.
-			if ("email" in evaluator) {
+			if (!hasInvite(evaluator)) {
 				const user = await client.getOrCreateUser(instanceId, evaluator);
 				evaluator = {
 					...evaluator,
 					userId: user.id,
-					status: "associated",
+					status: "saved",
 				};
 			}
-			// If the invite was selected, we create an evaluation Pub for the
-			// evaluator which will store their evaluation and display statuses
-			// in core.
-			if (send && evaluator.selected) {
-				// If an evaluation hasn't been created for the evaluator, create it.
-				const evaluation = evaluationsByEvaluator[evaluator.userId];
-				if (evaluation === undefined) {
-					await client.createPub(instanceId, {
-						parentId: pubId,
-						pubTypeId: instanceConfig.pubTypeId,
-						values: {
-							[titleFieldSlug]: `Evaluation of ${pubTitle} by ${evaluator.firstName} ${evaluator.lastName}`,
-							[evaluatorFieldSlug]: evaluator.userId,
-						},
-					});
-				}
+			if (send && evaluator.selected && !hasInvite(evaluator)) {
 				// Send an email to the evaluator with the default email template (or
 				// personalized template) that should contain the invite links.
 				await client.sendEmail(instanceId, {
@@ -76,9 +40,11 @@ export const save = async (
 						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
 					},
 				});
-				evaluator.status = "invited";
-			} else {
-				evaluator.status = "associated";
+				evaluator = {
+					...evaluator,
+					status: "invited",
+					invitedAt: new Date().toString(),
+				};
 			}
 			const { selected, ...rest } = evaluator;
 			instanceState[evaluator.userId] = rest;

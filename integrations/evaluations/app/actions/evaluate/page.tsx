@@ -7,6 +7,7 @@ import { Declined } from "./declined";
 import { Evaluate } from "./evaluate";
 import { Respond } from "./respond";
 import { Submitted } from "./submitted";
+import { SafeUser } from "@pubpub/sdk";
 
 type Props = {
 	searchParams: {
@@ -20,7 +21,7 @@ export default async function Page(props: Props) {
 	if (!(instanceId && pubId)) {
 		notFound();
 	}
-	const user = JSON.parse(expect(cookie("user")));
+	const user: SafeUser = JSON.parse(expect(cookie("user")));
 	const instanceConfig = await getInstanceConfig(instanceId);
 	const instanceState = await getInstanceState(instanceId, pubId);
 	const pub = await client.getPub(instanceId, pubId);
@@ -37,6 +38,7 @@ export default async function Page(props: Props) {
 		case "accepted":
 			return (
 				<Evaluate
+					userId={user.id}
 					instanceId={instanceId}
 					instanceConfig={instanceConfig}
 					pub={pub}
@@ -46,7 +48,7 @@ export default async function Page(props: Props) {
 		// If they have responded "Decline", render the decline page.
 		case "declined":
 			return <Declined />;
-		case "submitted":
+		case "received":
 			// If they have submitted an evaluation, render the submitted page.
 			return <Submitted />;
 		default:
