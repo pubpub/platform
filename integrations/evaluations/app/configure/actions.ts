@@ -1,6 +1,7 @@
 "use server";
 
-import { InstanceConfig, setInstanceConfig } from "~/lib/instance";
+import { setInstanceConfig } from "~/lib/instance";
+import { InstanceConfig } from "~/lib/types";
 
 export const configure = (instanceId: string, instanceConfig: InstanceConfig) => {
 	try {

@@ -63,7 +63,7 @@ export type InstanceConfig = {
 	pubTypeId: string;
 	evaluatorFieldSlug: string;
 	titleFieldSlug: string;
-	template: EmailTemplate;
+	emailTemplate: EmailTemplate;
 };
 
 export type InstanceState = {
@@ -72,13 +72,21 @@ export type InstanceState = {
 
 export const defaultInstanceConfig = {
 	pubTypeId: "",
-	template: { subject: "", message: "" },
+	emailTemplate: { subject: "", message: "" },
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 };
 
 export const isInvited = (
-	invite: Evaluator
-): invite is Evaluator & { status: Exclude<InviteStatus, "listed" | "associated"> } => {
-	return invite.status !== "listed" && invite.status !== "associated";
+	evaluator: Evaluator
+): evaluator is Evaluator & { status: Exclude<InviteStatus, "listed" | "associated"> } => {
+	return evaluator.status !== "listed" && evaluator.status !== "associated";
 };
+
+export function assertIsInvited(
+	evaluator: Evaluator
+): asserts evaluator is Evaluator & { status: Exclude<InviteStatus, "listed" | "associated"> } {
+	if (!isInvited(evaluator)) {
+		throw new Error("Invite is not invited");
+	}
+}

@@ -5,16 +5,14 @@ import { revalidatePath } from "next/cache";
 import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import type { InviteFormEvaluator } from "./EvaluatorInviteForm";
-
-const makeInviteJobKey = (instanceId: string, pubId: string, userId: string) =>
-	`${instanceId}:${pubId}:${userId}`;
+import { InviteFormEvaluator } from "./types";
 
 export const save = async (
 	instanceId: string,
 	pubId: string,
 	pubTitle: string,
-	evaluators: InviteFormEvaluator[]
+	evaluators: InviteFormEvaluator[],
+	send: boolean
 ) => {
 	try {
 		const instanceConfig = expect(
@@ -53,7 +51,7 @@ export const save = async (
 			// If the invite was selected, we create an evaluation Pub for the
 			// evaluator which will store their evaluation and display statuses
 			// in core.
-			if (evaluator.selected) {
+			if (send && evaluator.selected) {
 				// If an evaluation hasn't been created for the evaluator, create it.
 				const evaluation = evaluationsByEvaluator[evaluator.userId];
 				if (evaluation === undefined) {
@@ -78,13 +76,12 @@ export const save = async (
 						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
 					},
 				});
-				// Save updated email template and invite time.
-				instanceState[evaluator.userId] = {
-					...evaluator,
-					status: "invited",
-					invitedAt: new Date().toString(),
-				};
+				evaluator.status = "invited";
+			} else {
+				evaluator.status = "associated";
 			}
+			const { selected, ...rest } = evaluator;
+			instanceState[evaluator.userId] = rest;
 		}
 		await setInstanceState(instanceId, pubId, instanceState);
 		revalidatePath("/");

@@ -4,6 +4,7 @@ import { Button, Icon } from "ui";
 
 type Props = {
 	index: number;
+	icon: React.ReactNode;
 	query: SuggestedMembersQuery;
 	disabled?: boolean;
 	onClick: (key: number, query: SuggestedMembersQuery) => void;
@@ -19,10 +20,10 @@ export const EvaluatorSuggestButton = (props: Props) => {
 				event.preventDefault();
 				startTransition(() => props.onClick(props.index, props.query));
 			}}
-			disabled={pending || disabled}
+			disabled={pending}
 		>
 			{disabled ? (
-				<Icon.Check className="h-4 w-4" />
+				props.icon
 			) : pending ? (
 				<Icon.Loader2 className="h-4 w-4" />
 			) : (

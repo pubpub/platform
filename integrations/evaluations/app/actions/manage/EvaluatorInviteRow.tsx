@@ -5,7 +5,6 @@ import { memo, useEffect, useState } from "react";
 import { Control, useWatch } from "react-hook-form";
 import {
 	Button,
-	Checkbox,
 	Dialog,
 	DialogContent,
 	DialogDescription,
@@ -20,10 +19,13 @@ import {
 	Icon,
 	Input,
 	Textarea,
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
 } from "ui";
-import * as z from "zod";
 import { EvaluatorSuggestButton } from "./EvaluatorSuggestButton";
-import { EmailFormSchema } from "./types";
+import { InviteFormEvaluator, InviteFormSchema } from "./types";
 
 const pad = (n: number) => (n < 10 ? "0" + n : n);
 const daysHoursMinutes = (ms: number) => {
@@ -43,6 +45,57 @@ const daysHoursMinutes = (ms: number) => {
 	return [days, pad(hours), pad(minutes)].join(":");
 };
 
+const getEvaluatorStatusText = (status: InviteFormEvaluator["status"]) => {
+	switch (status) {
+		case "listed":
+			return "Evaluator not invited";
+		case "associated":
+			return "Evaluator has PubPub account";
+		case "invited":
+			return "Invite sent";
+		case "accepted":
+			return "Invite accepted";
+		case "declined":
+			return "Invite declined";
+		case "submitted":
+			return "Evalution submitted";
+	}
+};
+
+const EvaluatorStatusIcon = memo(({ status }: { status: InviteFormEvaluator["status"] }) => {
+	let icon: React.ReactNode;
+	switch (status) {
+		case "listed":
+			icon = <Icon.CircleDashed className="h-4 w-4" />;
+			break;
+		case "associated":
+			icon = <Icon.UserCircle2 className="h-4 w-4" />;
+			break;
+		case "invited":
+			icon = <Icon.CircleEllipsis className="h-4 w-4" />;
+			break;
+		case "accepted":
+			icon = <Icon.CheckCircle className="h-4 w-4" />;
+			break;
+		case "declined":
+			icon = <Icon.XCircle className="h-4 w-4" />;
+			break;
+		case "submitted":
+			icon = <Icon.CircleDollarSign className="h-4 w-4" />;
+			break;
+	}
+	return (
+		<TooltipProvider>
+			<Tooltip>
+				<TooltipTrigger>{icon}</TooltipTrigger>
+				<TooltipContent>
+					<p>{getEvaluatorStatusText(status)}</p>
+				</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
+	);
+});
+
 type Props = {
 	control: Control<any>;
 	invitedAt: string | undefined;
@@ -56,12 +109,12 @@ export const EvaluatorInviteRow = (props: Props) => {
 	const getTimeBeforeInviteSent = () =>
 		props.invitedAt ? new Date(props.invitedAt).getTime() - Date.now() : Infinity;
 	const [timeBeforeInviteSent, setTimeBeforeInviteSent] = useState(getTimeBeforeInviteSent);
-	const invite = useWatch<z.infer<typeof EmailFormSchema>>({
+	const evaluator = useWatch<InviteFormSchema>({
 		control: props.control,
-		name: `invites.${props.index}`,
-	});
+		name: `evaluators.${props.index}`,
+	}) as InviteFormEvaluator;
 	const inviteSent = timeBeforeInviteSent <= 0;
-	const inviteHasUser = typeof invite === "object" && "userId" in invite;
+	const inviteHasUser = typeof evaluator === "object" && "userId" in evaluator;
 
 	// Update the timer every second.
 	useEffect(() => {
@@ -80,12 +133,17 @@ export const EvaluatorInviteRow = (props: Props) => {
 	return (
 		<div className="flex flex-row gap-4 mb-4">
 			<FormField
-				name={`invites.${props.index}.selected`}
+				name={`evaluators.${props.index}.selected`}
 				render={({ field }) => {
 					return (
-						<FormItem className="w-4">
+						<FormItem className="flex w-4 items-center">
 							<FormControl>
-								<input type="checkbox" disabled={props.readOnly} {...field} />
+								<input
+									type="checkbox"
+									{...field}
+									disabled={props.readOnly}
+									className="disabled:opacity-50"
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -93,7 +151,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 				}}
 			/>
 			<FormField
-				name={`invites.${props.index}.email`}
+				name={`evaluators.${props.index}.email`}
 				render={({ field }) => (
 					<FormItem className="flex-1 self-start">
 						<FormControl>
@@ -114,7 +172,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 				)}
 			/>
 			<FormField
-				name={`invites.${props.index}.firstName`}
+				name={`evaluators.${props.index}.firstName`}
 				render={({ field }) => (
 					<FormItem className="flex-1 self-start">
 						<FormControl>
@@ -129,7 +187,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 				)}
 			/>
 			<FormField
-				name={`invites.${props.index}.lastName`}
+				name={`evaluators.${props.index}.lastName`}
 				render={({ field }) => (
 					<FormItem className="flex-1 self-start">
 						<FormControl>
@@ -146,9 +204,10 @@ export const EvaluatorInviteRow = (props: Props) => {
 			<div className="shrink-0 basis-36">
 				<EvaluatorSuggestButton
 					index={props.index}
+					icon={<EvaluatorStatusIcon status={evaluator.status} />}
 					disabled={inviteHasUser}
-					query={invite as SuggestedMembersQuery}
-					onClick={() => props.onSuggest(props.index, invite as SuggestedMembersQuery)}
+					query={evaluator}
+					onClick={() => props.onSuggest(props.index, evaluator)}
 				/>
 				<Dialog>
 					<DialogTrigger asChild>
@@ -185,7 +244,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 						</DialogHeader>
 						<div className="flex flex-col justify-between align-baseline gap-4">
 							<FormField
-								name={`invites.${props.index}.template.subject`}
+								name={`evaluators.${props.index}.emailTemplate.subject`}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Subject</FormLabel>
@@ -197,7 +256,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 								)}
 							/>
 							<FormField
-								name={`invites.${props.index}.template.message`}
+								name={`evaluators.${props.index}.emailTemplate.message`}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Email Message</FormLabel>

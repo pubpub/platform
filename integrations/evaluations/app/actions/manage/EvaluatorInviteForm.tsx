@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
+import { GetPubResponseBody } from "@pubpub/sdk";
 import React, { useCallback, useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
@@ -20,16 +20,13 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import * as z from "zod";
-import { Evaluator, InstanceConfig, isInvited } from "~/lib/types";
+import { EmailTemplate, Evaluator, InstanceConfig, isInvited } from "~/lib/types";
+import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
+import { EvaluatorInviteFormSendButton } from "./EvaluatorInviteFormSendButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
-
-const InviteFormEvaluator = Evaluator.and(z.object({ selected: z.boolean() }));
-export type InviteFormEvaluator = z.infer<typeof InviteFormEvaluator>;
-const InviteFormSchema = z.object({
-	invites: z.array(InviteFormEvaluator),
-});
+import { InviteFormEvaluator, InviteFormSchema } from "./types";
+import * as z from "zod";
 
 type Props = {
 	evaluators: Evaluator[];
@@ -38,37 +35,49 @@ type Props = {
 	pub: GetPubResponseBody;
 };
 
+const makeEvaluator = (template: EmailTemplate): InviteFormEvaluator => {
+	return {
+		email: "",
+		firstName: "",
+		lastName: "",
+		emailTemplate: { ...template },
+		selected: false,
+		status: "listed",
+	};
+};
+
 export function EvaluatorInviteForm(props: Props) {
 	const { toast } = useToast();
-	const form = useForm<z.infer<typeof InviteFormSchema>>({
+	const form = useForm<InviteFormSchema>({
 		mode: "all",
 		reValidateMode: "onChange",
 		resolver: zodResolver(InviteFormSchema),
 		defaultValues: {
-			invites: props.evaluators.map((evaluator) => ({
+			evaluators: props.evaluators.map((evaluator) => ({
 				...evaluator,
 				selected: isInvited(evaluator),
 			})),
 		},
 	});
 	const {
-		fields: invites,
+		fields: evaluators,
 		remove,
 		append,
 		update,
 	} = useFieldArray({
 		control: form.control,
-		name: "invites",
+		name: "evaluators",
 		keyName: "key",
 	});
 
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof InviteFormSchema>) => {
+		async (values: InviteFormSchema, send = false) => {
 			const result = await actions.save(
 				props.instanceId,
 				props.pub.id,
 				props.pub.values[props.instanceConfig.titleFieldSlug] as string,
-				values.invites
+				values.evaluators,
+				send
 			);
 			if ("error" in result) {
 				toast({
@@ -87,8 +96,8 @@ export function EvaluatorInviteForm(props: Props) {
 	);
 
 	const onSuggest = useCallback(
-		async (index: number, query: SuggestedMembersQuery) => {
-			const result = await actions.suggest(props.instanceId, query);
+		async (index: number, evaluator: InviteFormEvaluator) => {
+			const result = await actions.suggest(props.instanceId, evaluator);
 			if ("error" in result && typeof result.error === "string") {
 				toast({
 					title: "Error",
@@ -98,16 +107,15 @@ export function EvaluatorInviteForm(props: Props) {
 			} else if (Array.isArray(result)) {
 				if (result.length > 0) {
 					const [user] = result;
-					const invite = invites[index];
+					const evaluator = evaluators[index];
 					update(index, {
+						...evaluator,
 						userId: user.id,
 						firstName: user.firstName,
 						lastName: user.lastName ?? undefined,
-						emailTemplate: invite.emailTemplate,
-						selected: invite.selected,
 						status: "associated",
 					});
-					form.trigger(`invites.${index}`);
+					form.trigger(`evaluators.${index}`);
 					toast({
 						title: "Success",
 						description: "A user was suggested",
@@ -121,15 +129,15 @@ export function EvaluatorInviteForm(props: Props) {
 				}
 			}
 		},
-		[invites, toast, update, form.trigger]
+		[evaluators, toast, update, form.trigger]
 	);
 
 	const onRemove = useCallback(
 		async (index: number) => {
 			try {
-				const invite = invites[index];
-				if ("userId" in invite) {
-					await actions.remove(props.instanceId, props.pub.id, invite.userId);
+				const evaluator = evaluators[index];
+				if (evaluator.status !== "listed") {
+					await actions.remove(props.instanceId, props.pub.id, evaluator.userId);
 				}
 				remove(index);
 				toast({
@@ -144,20 +152,13 @@ export function EvaluatorInviteForm(props: Props) {
 				});
 			}
 		},
-		[invites, toast]
+		[evaluators, toast]
 	);
 
 	const onAppend = useCallback(
 		(event: React.MouseEvent) => {
 			event.preventDefault();
-			append({
-				email: "",
-				firstName: "",
-				lastName: "",
-				emailTemplate: { ...props.instanceConfig.template },
-				selected: false,
-				status: "listed",
-			});
+			append(makeEvaluator(props.instanceConfig.emailTemplate));
 		},
 		[append]
 	);
@@ -168,10 +169,13 @@ export function EvaluatorInviteForm(props: Props) {
 	}, []);
 
 	// If the evaluators change (i.e. cache was invalidated), reset the form
-	// with updated evaluator invites.
+	// with updated evaluator evaluators.
 	useEffect(() => {
 		form.reset({
-			invites: props.evaluators,
+			evaluators: props.evaluators.map((evaluator) => ({
+				...evaluator,
+				selected: isInvited(evaluator),
+			})),
 		});
 	}, [props.evaluators]);
 
@@ -208,7 +212,7 @@ export function EvaluatorInviteForm(props: Props) {
 						</FormItem>
 						<div className="shrink-0 basis-36"></div>
 					</div>
-					{invites.map((invite, index) => (
+					{evaluators.map((invite, index) => (
 						<EvaluatorInviteRow
 							key={invite.key}
 							invitedAt={isInvited(invite) ? invite.invitedAt : undefined}
@@ -225,15 +229,22 @@ export function EvaluatorInviteForm(props: Props) {
 					</Button>
 				</CardContent>
 				<CardFooter className={cn("flex justify-between")}>
-					<Button variant="outline" onClick={onBack}>
-						Go Back
-					</Button>
-					<Button onClick={form.handleSubmit(onSubmit)}>
+					<div>
+						<Button variant="outline" onClick={onBack}>
+							Go Back
+						</Button>
+					</div>
+					<div className="flex gap-2 items-center">
 						{form.formState.isSubmitting && (
 							<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
 						)}
-						Save
-					</Button>
+						<EvaluatorInviteFormSendButton
+							onClick={form.handleSubmit((values) => onSubmit(values, true))}
+						/>
+						<EvaluatorInviteFormSaveButton
+							onClick={form.handleSubmit((values) => onSubmit(values))}
+						/>
+					</div>
 				</CardFooter>
 			</Card>
 		</Form>

@@ -25,12 +25,12 @@ import {
 import { cn } from "utils";
 import * as z from "zod";
 import { configure } from "./actions";
-import { InstanceConfig } from "~/lib/instance";
+import { InstanceConfig } from "~/lib/types";
 
 type BaseProps = {
 	instanceId: string;
 	instanceConfig?: InstanceConfig;
-	template?: {
+	emailTemplate?: {
 		subject: string;
 		message: string;
 	};
@@ -47,7 +47,7 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 	pubTypeId: z.string().length(36),
 	evaluatorFieldSlug: z.string().min(1),
 	titleFieldSlug: z.string().min(1),
-	template: z.object({
+	emailTemplate: z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
@@ -172,7 +172,7 @@ export function Configure(props: Props) {
 						<div className="mb-3">
 							<FormField
 								control={form.control}
-								name="template.subject"
+								name="emailTemplate.subject"
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Subject</FormLabel>
@@ -189,10 +189,10 @@ export function Configure(props: Props) {
 							/>
 						</div>
 						<div className="flex flex-col justify-between align-baseline">
-							<FormLabel>Email Message</FormLabel>
+							<FormLabel>Body</FormLabel>
 							<FormField
 								control={form.control}
-								name="template.message"
+								name="emailTemplate.message"
 								render={({ field }) => (
 									<FormItem>
 										<FormControl className="mt-[8px]">
