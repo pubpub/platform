@@ -37,9 +37,10 @@ export default function Hero() {
 							FISCH
 						</h1>
 						<h1 className="text-4xl md:text-5xl font-extrabold leading-tighter tracking-tighter mb-4">
-							Wonderful workflows for{" "}
+							Wonderful workflows for
+							<br />
 							<span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-teal-400">
-								publishing
+								Community Publishing
 							</span>
 						</h1>
 						<div className="max-w-3xl mx-auto">
