@@ -156,14 +156,16 @@ model Stage {
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubs                  Pub[] // Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
-  moveConstraints       MoveConstraint[]      @relation("move_constraint")
-  moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
-  claims                ActionClaim[]
-  movesFrom             ActionMove[]          @relation("move_source_stage")
-  movesTo               ActionMove[]          @relation("move_destination_stage")
-  integrationInstances  IntegrationInstance[]
-  permissions           Permission[]
+  pubs                      Pub[] // Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
+  moveConstraintsTo         MoveConstraint[]      @relation("move_constraint")
+  moveConstraintToSources   MoveConstraint[]      @relation("move_constraint_destination")
+  moveConstraintFrom        MoveConstraintFrom[]  @relation("move_constraint_from")
+  moveConstraintFromSources MoveConstraintFrom[]  @relation("move_constraint_destination_from")
+  claims                    ActionClaim[]
+  movesFrom                 ActionMove[]          @relation("move_source_stage")
+  movesTo                   ActionMove[]          @relation("move_destination_stage")
+  integrationInstances      IntegrationInstance[]
+  permissions               Permission[]
 
   @@map(name: "stages")
 }
@@ -178,6 +180,18 @@ model MoveConstraint {
   updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
   @@map(name: "move_constraint")
+}
+
+model MoveConstraintFrom {
+  id            String   @id @default(uuid())
+  stage         Stage    @relation("move_constraint_from", fields: [stageId], references: [id])
+  stageId       String   @map(name: "stage_id")
+  destination   Stage    @relation("move_constraint_destination_from", fields: [destinationId], references: [id])
+  destinationId String   @map(name: "destination_id")
+  createdAt     DateTime @default(now()) @map(name: "created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "move_constraint_from")
 }
 
 model ActionClaim {

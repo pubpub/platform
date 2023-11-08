@@ -16,7 +16,19 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 		<div>
 			{stages.map((stage) => {
 				const users = getPubUsers(stage.permissions);
-				const destinations = stage.moveConstraints.map((stage) => stage.destination);
+				const canMoveTo = stage.moveConstraintsTo.map((stage) => stage.destination);
+				const canMoveFrom = stage.moveConstraintFrom.map((stage) => stage.destination);
+				console.log("\n");
+				console.log("\n");
+				console.log(`stage ${stage.name} can be moved from:`, canMoveFrom);
+				console.log("\n");
+				console.log("\n");
+
+				// console.log("canMoveTo", canMoveTo, "\n");
+				// console.log("canMoveFrom", canMoveFrom, "\n");
+				// wee expect the stage to have asources it can move from and sources it can move to
+				const destinations = [...canMoveTo];
+				// console.log("stage", stage);
 				return (
 					<div key={stage.id} className="mb-20">
 						<div className="flex flex-row justify-between">
