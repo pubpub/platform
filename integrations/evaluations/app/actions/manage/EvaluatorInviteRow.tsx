@@ -29,12 +29,17 @@ export const EvaluatorInviteRow = (props: Props) => {
 	return (
 		<div className="flex flex-row gap-4 mb-4">
 			<FormField
-				name={`invites.${props.index}.selected`}
+				name={`evaluators.${props.index}.selected`}
 				render={({ field }) => {
 					return (
-						<FormItem className="w-4">
+						<FormItem className="flex w-4 items-center">
 							<FormControl>
-								<input type="checkbox" disabled={props.readOnly} {...field} />
+								<input
+									type="checkbox"
+									{...field}
+									disabled={props.readOnly}
+									className="disabled:opacity-50"
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
