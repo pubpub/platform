@@ -27,6 +27,7 @@
 		"@ts-rest/core": "^3.28.0",
 		"@ts-rest/next": "^3.28.0",
 		"@ts-rest/open-api": "^3.28.0",
+		"ajv": "^8.12.0",
 		"clsx": "^2.0.0",
 		"contracts": "workspace:*",
 		"diacritics": "^1.3.0",

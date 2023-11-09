@@ -1,5 +1,17 @@
+import { PubField, PubFieldSchema, PubValue, Prisma } from "@prisma/client";
+import { AnySchema, JSONSchemaType } from "ajv";
 import Link from "next/link";
-import { Button, Avatar, AvatarFallback, AvatarImage } from "ui";
+import {
+	Button,
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+	Card,
+	CardTitle,
+	CardContent,
+	CardHeader,
+	Separator,
+} from "ui";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -7,6 +19,7 @@ import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
+import cn from "~/lib/cn";
 
 const getPub = async (pubId: string) => {
 	return await prisma.pub.findUnique({
@@ -16,6 +29,71 @@ const getPub = async (pubId: string) => {
 		},
 	});
 };
+
+interface PubFieldWithValue extends PubField {
+	schema: PubFieldSchema | null;
+}
+interface PubValueWithFieldAndSchema extends PubValue {
+	field: PubFieldWithValue;
+}
+
+function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, value: Prisma.JsonValue) {
+	const fields: any[] = [];
+	// TODO: get schema IDs and render specific stuff -- e.g. file upload, confidence intervals
+	if (!schema.properties) {
+		switch (schema.type) {
+			case "boolean":
+				fields.push(<p>{JSON.stringify(value)}</p>);
+				break;
+			case "string":
+				fields.push(<p>{value as string}</p>);
+				break;
+			default:
+				fields.push(<p>{JSON.stringify(value)}</p>);
+				break;
+		}
+	} else {
+		const objectSchema = schema.properties as JSONSchemaType<AnySchema>;
+		for (const [fieldKey, fieldSchema] of Object.entries(objectSchema)) {
+			fields.push(
+				<>
+					{fieldSchema.title && (
+						<CardHeader>
+							<CardTitle className={cn("text-sm")}>{fieldSchema.title}</CardTitle>
+						</CardHeader>
+					)}
+					<CardContent>
+						{recursivelyGetScalarFields(
+							fieldSchema as JSONSchemaType<AnySchema>,
+							value![fieldKey]
+						)}
+					</CardContent>
+				</>
+			);
+		}
+	}
+	return fields;
+}
+
+export function renderField(fieldValue: PubValueWithFieldAndSchema) {
+	const JSONSchema = fieldValue.field.schema
+		? (fieldValue.field.schema.schema as JSONSchemaType<AnySchema>)
+		: null;
+	const fieldTitle = (JSONSchema && JSONSchema.title) || fieldValue.field.name;
+	// if there's no schema we assume it's a string
+	const renderedField = JSONSchema
+		? recursivelyGetScalarFields(JSONSchema, fieldValue.value)
+		: fieldValue.value && fieldValue.value.toString();
+	return (
+		<>
+			<Separator />
+			<CardHeader>
+				<CardTitle className={cn("text-base")}>{fieldTitle}</CardTitle>
+			</CardHeader>
+			<CardContent>{renderedField}</CardContent>
+		</>
+	);
+}
 
 export default async function Page({
 	params,
@@ -57,9 +135,8 @@ export default async function Page({
 						.map((value) => {
 							return (
 								<div className="" key={value.id}>
-									<div className="font-semibold">{value.field.name}</div>
 									{/* What does this div actually look like if a value could be a PDF? */}
-									<div>{value.value as string}</div>
+									<div>{renderField(value)}</div>
 								</div>
 							);
 						})}
