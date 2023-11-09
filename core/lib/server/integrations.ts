@@ -1,7 +1,6 @@
 import prisma from "~/prisma/db";
 import { InstanceNotFoundError } from "./errors";
 
-// TODO: If its the case an integration instance can be attached to a stage without configuring it this should be an upsert
 export async function updateIntegrationInstanceConfig(instanceId: string, config: object) {
 	const instance = await prisma.integrationInstance.findUnique({
 		where: {
