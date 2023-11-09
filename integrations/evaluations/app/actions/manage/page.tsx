@@ -14,6 +14,7 @@ export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
 	const instanceConfig = expect(await getInstanceConfig(instanceId));
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+	console.log(instanceState);
 	// Fetch the pub and its children
 	const pub = await client.getPub(instanceId, pubId);
 	// Load user info for each of the child evaluations
@@ -31,8 +32,8 @@ export default async function Page(props: Props) {
 
 	evaluators.sort(
 		(a, b) =>
-			new Date(instanceState.value[a.id]?.inviteTime).getTime() -
-			new Date(instanceState.value[b.id]?.inviteTime).getTime()
+			new Date(instanceState.state[a.id]?.inviteTime).getTime() -
+			new Date(instanceState.state[b.id]?.inviteTime).getTime()
 	);
 
 	return (
@@ -40,8 +41,8 @@ export default async function Page(props: Props) {
 			instanceId={instanceId}
 			pub={pub}
 			evaluators={evaluators}
-			instanceConfig={instanceConfig}
-			instanceState={instanceState.value}
+			instanceConfig={instanceConfig.config}
+			instanceState={instanceState.state}
 		/>
 	);
 }
