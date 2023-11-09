@@ -6,7 +6,7 @@ import {
 } from "contracts";
 import prisma from "~/prisma/db";
 import { RecursiveInclude, makeRecursiveInclude } from "../types";
-import { NotFoundError } from "./errors";
+import { InstanceNotFoundError, NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
 import { expect } from "utils";
 
@@ -42,7 +42,6 @@ export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBo
 	return recursivelyDenormalizePubValues(pub);
 };
 
-const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
 

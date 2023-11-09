@@ -11,7 +11,7 @@ export const evaluate = async (instanceId: string, pubId: string, values: PubVal
 	}
 	try {
 		const pub = await client.createPub(instanceId, {
-			pubTypeId: instance.pubTypeId,
+			pubTypeId: instance.config.pubTypeId,
 			parentId: pubId,
 			values: values,
 		});

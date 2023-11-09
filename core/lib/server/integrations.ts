@@ -1,12 +1,29 @@
 import prisma from "~/prisma/db";
+import { InstanceNotFoundError } from "./errors";
 
-export async function setIntegrationInstanceConfig(instanceId: string, config: object) {
-	return await prisma.integrationInstance.update({
+export async function updateIntegrationInstanceConfig(instanceId: string, config: object) {
+	const instance = await prisma.integrationInstance.findUnique({
 		where: {
 			id: instanceId,
 		},
-		data: {
+	});
+
+	if (!instance) {
+		throw InstanceNotFoundError;
+	}
+	return await prisma.integrationInstance.upsert({
+		where: {
+			id: instanceId,
+		},
+		update: {
 			config,
+		},
+		create: {
+			id: instanceId,
+			config,
+			integrationId: instance.integrationId,
+			communityId: instance.communityId,
+			name: instance.name,
 		},
 	});
 }

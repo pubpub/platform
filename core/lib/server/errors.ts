@@ -2,11 +2,11 @@ import { type NextApiRequest, type NextApiResponse } from "next/types";
 import { ErrorHttpStatusCode } from "@ts-rest/core";
 import { NextRequest, NextResponse } from "next/server";
 
-export class HTTPStatusError <Status extends ErrorHttpStatusCode> extends Error {
+export class HTTPStatusError<Status extends ErrorHttpStatusCode> extends Error {
 	readonly status: ErrorHttpStatusCode;
 
 	constructor(status: Status, message?: string) {
-		super(`HTTP Error ${status}${message ? ': ' + message : ''}`);
+		super(`HTTP Error ${status}${message ? ": " + message : ""}`);
 		this.status = status;
 	}
 }
@@ -38,18 +38,17 @@ export class NotFoundError extends HTTPStatusError<404> {
 // For use in app router API routes
 export const handleErrors = async (routeHandler) => {
 	try {
-		return await routeHandler()
-	} catch(error) {
+		return await routeHandler();
+	} catch (error) {
 		if (error instanceof HTTPStatusError) {
-			return NextResponse.json({ message: error.message }, { status: error.status })
+			return NextResponse.json({ message: error.message }, { status: error.status });
 		}
 		if (error instanceof Error) {
 			console.error(error.message);
 		}
-		return NextResponse.json({ message: "Internal Server Error"}, { status: 500 })
+		return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
 	}
-
-}
+};
 
 export const tsRestHandleErrors = (error: unknown, req: NextApiRequest, res: NextApiResponse) => {
 	if (error instanceof HTTPStatusError) {
@@ -60,3 +59,5 @@ export const tsRestHandleErrors = (error: unknown, req: NextApiRequest, res: Nex
 	}
 	return res.status(500).json({ message: "Internal Server Error" });
 };
+
+export const InstanceNotFoundError = new NotFoundError("Integration instance not found");

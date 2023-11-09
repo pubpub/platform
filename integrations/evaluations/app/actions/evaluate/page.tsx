@@ -15,6 +15,6 @@ export default async function Page(props: Props) {
 
 	const instance = await getInstanceConfig(instanceId);
 	//dangerously assert instance exists
-	const pubType = await client.getPubType(instanceId, instance!.pubTypeId);
+	const pubType = await client.getPubType(instanceId, instance!.config.pubTypeId);
 	return <Evaluate instanceId={instanceId} pub={pub} pubType={pubType} />;
 }

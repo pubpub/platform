@@ -23,7 +23,7 @@ export const save = async (
 		}
 		const pub = await client.getPub(instanceId, pubId);
 		const evaluations = pub.children.filter(
-			(child) => child.pubTypeId === instanceConfig.pubTypeId
+			(child) => child.pubTypeId === instanceConfig.config.pubTypeId
 		);
 		const evaluationsByEvaluator = evaluations.reduce((acc, evaluation) => {
 			acc[evaluation.values["unjournal:evaluator"] as string] = evaluation;
@@ -45,7 +45,7 @@ export const save = async (
 				// New evaluator added. Make the corresponding evaluation pub.
 				await client.createPub(instanceId, {
 					parentId: pubId,
-					pubTypeId: instanceConfig.pubTypeId,
+					pubTypeId: instanceConfig.config.pubTypeId,
 					values: {
 						"unjournal:title": `Evaluation of ${pubTitle} by ${invite.firstName} ${invite.lastName}`,
 						"unjournal:evaluator": invite.userId,
@@ -76,12 +76,12 @@ export const save = async (
 				}
 			);
 			// Save updated email template and job run time
-			instanceState[invite.userId] = {
+			instanceState.state[invite.userId] = {
 				inviteTemplate: invite.template,
-				inviteTime: instanceState[invite.userId]?.inviteTime ?? runAt.toString(),
+				inviteTime: instanceState.state[invite.userId]?.inviteTime ?? runAt.toString(),
 			};
 		}
-		await setInstanceState(instanceId, pubId, instanceState);
+		await setInstanceState(instanceId, pubId, instanceState.state);
 		revalidatePath("/");
 		return { success: true };
 	} catch (error) {
@@ -109,7 +109,7 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 			await client.deletePub(instanceId, evaluation.id);
 		}
 		if (instanceState !== undefined) {
-			const { [userId]: _, ...instanceStateWithoutEvaluator } = instanceState;
+			const { [userId]: _, ...instanceStateWithoutEvaluator } = instanceState.state;
 			setInstanceState(instanceId, pubId, instanceStateWithoutEvaluator);
 		}
 		await client.unscheduleEmail(instanceId, makeInviteJobKey(instanceId, pubId, userId));
