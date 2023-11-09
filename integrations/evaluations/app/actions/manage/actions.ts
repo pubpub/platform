@@ -1,12 +1,12 @@
 "use server";
 
-import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
+import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
 import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
+import { InstanceState, hasInvite } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
-import { hasInvite } from "~/lib/types";
 
 export const save = async (
 	instanceId: string,
@@ -17,6 +17,7 @@ export const save = async (
 ) => {
 	try {
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+		const instanceStatePatch: InstanceState = {};
 		for (let i = 0; i < evaluators.length; i++) {
 			let evaluator = evaluators[i];
 			if (!hasInvite(evaluator)) {
@@ -47,11 +48,18 @@ export const save = async (
 				};
 			}
 			const { selected, ...rest } = evaluator;
-			instanceState[evaluator.userId] = rest;
+			if (evaluator.userId in instanceStatePatch) {
+				const { firstName, lastName } = evaluator;
+				const evaluatorName = `${firstName}${lastName ? ` ${lastName}` : ""}`;
+				return {
+					error: `${evaluatorName} was added more than once.`,
+				};
+			}
+			instanceStatePatch[evaluator.userId] = rest;
 		}
 		await setInstanceState(instanceId, pubId, instanceState);
 		revalidatePath("/");
-		return { success: true };
+		return { success: true, instanceState };
 	} catch (error) {
 		return { error: error.message };
 	}
@@ -59,8 +67,8 @@ export const save = async (
 
 export const suggest = async (instanceId: string, query: SuggestedMembersQuery) => {
 	try {
-		const suggestions = await client.getSuggestedMembers(instanceId, query);
-		return suggestions;
+		const users = await client.getSuggestedMembers(instanceId, query);
+		return users;
 	} catch (error) {
 		return { error: error.message };
 	}
@@ -82,9 +90,8 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 		}
 		if (instanceState !== undefined) {
 			delete instanceState[userId];
-			setInstanceState(instanceId, pubId, instanceState);
+			await setInstanceState(instanceId, pubId, instanceState);
 		}
-		revalidatePath("/");
 		return { success: true };
 	} catch (error) {
 		return { error: error.message };

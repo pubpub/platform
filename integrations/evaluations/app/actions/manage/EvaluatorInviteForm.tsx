@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody } from "@pubpub/sdk";
-import React, { useCallback, useEffect } from "react";
+import { GetPubResponseBody, SafeUser } from "@pubpub/sdk";
+import React, { use, useCallback, useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
 	Button,
@@ -20,7 +20,7 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import { EmailTemplate, Evaluator, InstanceConfig, hasInvite, isSaved } from "~/lib/types";
+import { EmailTemplate, Evaluator, InstanceConfig, hasInvite, hasUser, isSaved } from "~/lib/types";
 import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
 import { EvaluatorInviteFormSendButton } from "./EvaluatorInviteFormSendButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
@@ -51,7 +51,7 @@ export function EvaluatorInviteForm(props: Props) {
 		mode: "all",
 		reValidateMode: "onChange",
 		resolver: zodResolver(InviteFormSchema),
-		defaultValues: {
+		values: {
 			evaluators: props.evaluators.map((evaluator) => ({
 				...evaluator,
 				selected: false,
@@ -91,7 +91,7 @@ export function EvaluatorInviteForm(props: Props) {
 				});
 			}
 		},
-		[toast]
+		[toast, evaluators]
 	);
 
 	const onSuggest = useCallback(
@@ -105,25 +105,37 @@ export function EvaluatorInviteForm(props: Props) {
 				});
 			} else if (Array.isArray(result)) {
 				if (result.length > 0) {
-					const [user] = result;
-					const evaluator = evaluators[index];
-					update(index, {
-						...evaluator,
-						userId: user.id,
-						firstName: user.firstName,
-						lastName: user.lastName ?? undefined,
-						status: "unsaved-with-user",
-					});
-					form.trigger(`evaluators.${index}`);
-					toast({
-						title: "Success",
-						description: "A user was suggested",
-					});
+					const [user] = result.filter(
+						(user) =>
+							!evaluators.some(
+								(evaluator) => hasUser(evaluator) && evaluator.userId === user.id
+							)
+					);
+					if (user === undefined) {
+						toast({
+							title: "No unique matches",
+							description: "All suggested users exist in the form.",
+						});
+					} else {
+						const evaluator = evaluators[index];
+						update(index, {
+							...evaluator,
+							userId: user.id,
+							firstName: user.firstName,
+							lastName: user.lastName ?? undefined,
+							status: "unsaved-with-user",
+						});
+						form.trigger(`evaluators.${index}`);
+						toast({
+							title: "Success",
+							description: "A user was suggested.",
+						});
+					}
 				} else {
 					toast({
 						title: "No matches found",
 						description:
-							"A user was not found for the given email, first name, or last name",
+							"A user was not found for the given email, first name, or last name.",
 					});
 				}
 			}
@@ -135,10 +147,10 @@ export function EvaluatorInviteForm(props: Props) {
 		async (index: number) => {
 			try {
 				const evaluator = evaluators[index];
+				remove(index);
 				if (isSaved(evaluator)) {
 					await actions.remove(props.instanceId, props.pub.id, evaluator.userId);
 				}
-				remove(index);
 				toast({
 					title: "Success",
 					description: "The evaluator was removed",
@@ -159,24 +171,13 @@ export function EvaluatorInviteForm(props: Props) {
 			event.preventDefault();
 			append(makeEvaluator(props.instanceConfig.emailTemplate));
 		},
-		[append]
+		[append, evaluators]
 	);
 
 	const onBack = useCallback((event: React.MouseEvent) => {
 		event.preventDefault();
 		window.history.back();
 	}, []);
-
-	// If the evaluators change (i.e. cache was invalidated), reset the form
-	// with updated evaluator evaluators.
-	useEffect(() => {
-		form.reset({
-			evaluators: props.evaluators.map((evaluator) => ({
-				...evaluator,
-				selected: false,
-			})),
-		});
-	}, [props.evaluators]);
 
 	return (
 		<Form {...form}>
@@ -211,12 +212,12 @@ export function EvaluatorInviteForm(props: Props) {
 						</FormItem>
 						<div className="shrink-0 basis-48"></div>
 					</div>
-					{evaluators.map((invite, index) => (
+					{evaluators.map((evaluator, index) => (
 						<EvaluatorInviteRow
-							key={invite.key}
-							invitedAt={hasInvite(invite) ? invite.invitedAt : undefined}
+							key={evaluator.key}
+							invitedAt={hasInvite(evaluator) ? evaluator.invitedAt : undefined}
 							control={form.control}
-							readOnly={hasInvite(invite)}
+							readOnly={hasInvite(evaluator)}
 							index={index}
 							onRemove={onRemove}
 							onSuggest={onSuggest}
