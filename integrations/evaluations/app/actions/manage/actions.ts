@@ -17,23 +17,43 @@ export const save = async (
 ) => {
 	try {
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		const instanceStatePatch: InstanceState = {};
+		const userIds = new Set<string>();
 		for (let i = 0; i < evaluators.length; i++) {
 			let evaluator = evaluators[i];
-			if (!hasInvite(evaluator)) {
-				const user = await client.getOrCreateUser(instanceId, evaluator);
-				evaluator = {
-					...evaluator,
-					userId: user.id,
-					status: "saved",
+			// Invited evaluators are read-only and already persisted, so we can skip
+			// them.
+			if (hasInvite(evaluator)) {
+				// We still need to add the userId to the set so we can check for
+				// duplicates. We don't need to check, however, because the invite
+				// should already be unique.
+				userIds.add(evaluator.userId);
+				continue;
+			}
+			// Find or create a PubPub user for the evaluator.
+			const user = await client.getOrCreateUser(instanceId, evaluator);
+			// If the user has already been saved or invited, halt and notify the
+			// user.
+			if (userIds.has(user.id)) {
+				const { firstName, lastName } = evaluator;
+				const name = `${firstName}${lastName ? ` ${lastName}` : ""}`;
+				return {
+					error: `${name} was added more than once.`,
 				};
 			}
-			if (send && evaluator.selected && !hasInvite(evaluator)) {
-				// Send an email to the evaluator with the default email template (or
-				// personalized template) that should contain the invite links.
+			// Update the evaluator to reflect that they have been persisted.
+			evaluator = {
+				...evaluator,
+				userId: user.id,
+				firstName: user.firstName,
+				lastName: user.lastName ?? undefined,
+				status: "saved",
+			};
+			// If the user intends to invite selected evaluators, send an email to
+			// the evaluator with the invite link.
+			if (send && evaluator.selected) {
 				await client.sendEmail(instanceId, {
 					to: {
-						userId: evaluator.userId,
+						userId: user.id,
 					},
 					subject: evaluator.emailTemplate.subject,
 					message: evaluator.emailTemplate.message,
@@ -41,25 +61,25 @@ export const save = async (
 						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
 					},
 				});
+				// Update the evaluator to reflect that they have been invited.
 				evaluator = {
 					...evaluator,
 					status: "invited",
 					invitedAt: new Date().toString(),
 				};
 			}
+			// Remove the form's selected property from the evaluator before
+			// persisting.
 			const { selected, ...rest } = evaluator;
-			if (evaluator.userId in instanceStatePatch) {
-				const { firstName, lastName } = evaluator;
-				const evaluatorName = `${firstName}${lastName ? ` ${lastName}` : ""}`;
-				return {
-					error: `${evaluatorName} was added more than once.`,
-				};
-			}
-			instanceStatePatch[evaluator.userId] = rest;
+			instanceState[evaluator.userId] = rest;
+			// Add the user id to the set so we can check for duplicates.
+			userIds.add(user.id);
 		}
+		// Persist the updated instance state.
 		await setInstanceState(instanceId, pubId, instanceState);
+		// Reload the page to reflect the changes.
 		revalidatePath("/");
-		return { success: true, instanceState };
+		return { success: true };
 	} catch (error) {
 		return { error: error.message };
 	}

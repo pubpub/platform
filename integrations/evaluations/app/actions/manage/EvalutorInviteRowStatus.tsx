@@ -3,6 +3,24 @@ import { Badge } from "ui";
 import { cn } from "utils";
 import { InviteStatus } from "~/lib/types";
 
+export const getEvaluatorStatusText = (status: InviteStatus) => {
+	switch (status) {
+		case "unsaved":
+		case "unsaved-with-user":
+			return "Unsaved";
+		case "saved":
+			return "Saved";
+		case "invited":
+			return "Invited";
+		case "accepted":
+			return "Accepted";
+		case "declined":
+			return "Declined";
+		case "received":
+			return "Received";
+	}
+};
+
 const getEvaluatorStatusColor = (status: InviteStatus) => {
 	switch (status) {
 		case "unsaved":
@@ -20,41 +38,27 @@ const getEvaluatorStatusColor = (status: InviteStatus) => {
 	}
 };
 
-export const EvaluatorInviteRowStatus = memo(({ status }: { status: InviteStatus }) => {
-	const color = getEvaluatorStatusColor(status);
+export const getEvaluatorStatusVariant = (status: InviteStatus) => {
 	switch (status) {
 		case "unsaved":
 		case "unsaved-with-user":
-			return (
-				<Badge className={cn(color, "text-[10px] px-1 py-0")} variant="outline">
-					Unsaved
-				</Badge>
-			);
 		case "saved":
-			return (
-				<Badge className={cn(color, "text-[10px] px-1 py-0")} variant="outline">
-					Saved
-				</Badge>
-			);
 		case "invited":
-			return (
-				<Badge className={cn(color, "text-[10px] px-1 py-0")} variant="outline">
-					Invited
-				</Badge>
-			);
 		case "accepted":
-			return (
-				<Badge className={cn(color, "text-[10px] px-1 py-0")} variant="outline">
-					Accepted
-				</Badge>
-			);
 		case "declined":
-			return (
-				<Badge className={cn(color, "text-[10px] px-1 py-0")} variant="outline">
-					Declined
-				</Badge>
-			);
+			return "outline";
 		case "received":
-			return <Badge className={cn(color, "text-[10px] px-1 py-0")}>Received</Badge>;
+			return "default";
 	}
+};
+
+export const EvaluatorInviteRowStatus = memo(({ status }: { status: InviteStatus }) => {
+	const text = getEvaluatorStatusText(status);
+	const color = getEvaluatorStatusColor(status);
+	const variant = getEvaluatorStatusVariant(status);
+	return (
+		<Badge className={cn(color, "text-[10px] px-1 py-0")} variant={variant}>
+			{text}
+		</Badge>
+	);
 });
