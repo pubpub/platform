@@ -59,5 +59,3 @@ export const tsRestHandleErrors = (error: unknown, req: NextApiRequest, res: Nex
 	}
 	return res.status(500).json({ message: "Internal Server Error" });
 };
-
-export const InstanceNotFoundError = new NotFoundError("Integration instance not found");
