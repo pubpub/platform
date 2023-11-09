@@ -14,7 +14,6 @@ export default async function Page(props: Props) {
 	const { instanceId, pubId } = props.searchParams;
 	const instanceConfig = expect(await getInstanceConfig(instanceId));
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-	console.log(instanceState);
 	// Fetch the pub and its children
 	const pub = await client.getPub(instanceId, pubId);
 	// Load user info for each of the child evaluations

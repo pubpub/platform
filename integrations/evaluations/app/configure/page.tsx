@@ -10,7 +10,6 @@ type Props = {
 export default async function Page(props: Props) {
 	const { instanceId } = props.searchParams;
 	const instance = await getInstanceConfig(instanceId);
-	console.log("instance", instance);
 	return (
 		<Configure
 			instanceId={instanceId}
