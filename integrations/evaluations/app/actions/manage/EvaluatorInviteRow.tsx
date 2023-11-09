@@ -1,49 +1,14 @@
 "use client";
 
 import { SuggestedMembersQuery } from "@pubpub/sdk";
-import { useEffect, useState } from "react";
 import { Control, useWatch } from "react-hook-form";
-import {
-	Button,
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-	Icon,
-	Input,
-	Textarea,
-} from "ui";
+import { Button, FormControl, FormField, FormItem, FormMessage, Icon, Input } from "ui";
+import { cn } from "utils";
+import { hasUser } from "~/lib/types";
+import { EvaluatorInviteRowEmailDialog } from "./EvaluatorInviteRowEmailDialog";
 import { EvaluatorSuggestButton } from "./EvaluatorSuggestButton";
 import { EvaluatorInviteRowStatus } from "./EvalutorInviteRowStatus";
 import { InviteFormEvaluator, InviteFormSchema } from "./types";
-import { cn } from "utils";
-import { hasInvite, hasUser } from "~/lib/types";
-import { EvaluatorInviteRowEmailDialog } from "./EvaluatorInviteRowEmailDialog";
-
-const pad = (n: number) => (n < 10 ? "0" + n : n);
-const daysHoursMinutes = (ms: number) => {
-	const msInHour = 60 * 60 * 1000;
-	const msInDay = 24 * msInHour;
-	let days = Math.floor(ms / msInDay);
-	let hours = Math.floor((ms - days * msInDay) / msInHour);
-	let minutes = Math.round((ms - days * msInDay - hours * msInHour) / 60000);
-	if (minutes === 60) {
-		hours++;
-		minutes = 0;
-	}
-	if (hours === 24) {
-		days++;
-		hours = 0;
-	}
-	return [days, pad(hours), pad(minutes)].join(":");
-};
 
 type Props = {
 	control: Control<any>;
