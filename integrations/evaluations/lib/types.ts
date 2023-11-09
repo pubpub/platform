@@ -3,12 +3,24 @@ import * as z from "zod";
 export type EmailTemplate = { subject: string; message: string };
 
 export const InviteStatus = z.enum([
+	// Unsaved evaluators, i.e. evaluators in the form that have not been
+	// persisted yet. These evaluators do not yet have user ids associated with
+	// them.
 	"unsaved",
+	// Unsaved evaluators with PubPub user accounts. These evaluators have user
+	// ids associated with them but have not yet been persisted.
 	"unsaved-with-user",
+	// Saved evaluators, i.e. evaluators in the form that have been persisted.
+	// These evaluators have PubPub user accounts but have not yet been invited.
 	"saved",
+	// Evaluators who have received an invitation. They have a user account and
+	// an `invitedAt` timestamp.
 	"invited",
+	// Evaluators who have accepted an invitation.
 	"accepted",
+	// Evaluators who have declined an invitation.
 	"declined",
+	// Evaluators who have submitted an evaluation.
 	"received",
 ]);
 export type InviteStatus = z.infer<typeof InviteStatus>;
@@ -46,22 +58,20 @@ export const EvaluatorWithInvite = EvaluatorWithPubPubUser.merge(
 export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithPubPubUser>;
 
 export const Evaluator = z.discriminatedUnion("status", [
-	// Unsaved evaluators, i.e. evaluators in the form that have not been
-	// persisted yet. These evaluators do not yet have user ids associated with
-	// them.
+	// "unsaved"
 	z.object({ status: z.literal(InviteStatus.options[0]) }).merge(EvaluatorWithEmail),
-	// Unsaved evaluators with PubPub user accounts. These evaluators have user
-	// ids associated with them but have not yet been persisted.
+	// "unsaved-with-user"
 	z.object({ status: z.literal(InviteStatus.options[1]) }).merge(EvaluatorWithPubPubUser),
-	// Saved evaluators, i.e. evaluators in the form that have been persisted.
-	// These evaluators have PubPub user accounts but have not yet been invited.
+	// "saved"
 	z.object({ status: z.literal(InviteStatus.options[2]) }).merge(EvaluatorWithPubPubUser),
-	// Evaluators who have received invites. They have a user account and an
-	// `invitedAt` timestamp.
-	z.object({ status: z.literal("invited") }).merge(EvaluatorWithInvite),
-	z.object({ status: z.literal("accepted") }).merge(EvaluatorWithInvite),
-	z.object({ status: z.literal("declined") }).merge(EvaluatorWithInvite),
-	z.object({ status: z.literal("received") }).merge(EvaluatorWithInvite),
+	// "invited"
+	z.object({ status: z.literal(InviteStatus.options[3]) }).merge(EvaluatorWithInvite),
+	// "accepted"
+	z.object({ status: z.literal(InviteStatus.options[4]) }).merge(EvaluatorWithInvite),
+	// "declined"
+	z.object({ status: z.literal(InviteStatus.options[5]) }).merge(EvaluatorWithInvite),
+	// "received"
+	z.object({ status: z.literal(InviteStatus.options[6]) }).merge(EvaluatorWithInvite),
 ]);
 export type Evaluator = z.infer<typeof Evaluator>;
 
