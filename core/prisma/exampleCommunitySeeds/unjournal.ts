@@ -543,7 +543,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.stage.update({
 		where: { id: stageIds[0] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [
 						{ destinationId: stageIds[1] },
@@ -560,18 +560,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.stage.update({
 		where: { id: stageIds[1] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [
 						{ destinationId: stageIds[2] },
 						{ destinationId: stageIds[3] },
 						{ destinationId: stageIds[6] },
 					],
-				},
-			},
-			moveConstraintFrom: {
-				createMany: {
-					data: [{ destinationId: stageIds[0] }],
 				},
 			},
 		},
@@ -581,14 +576,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.stage.update({
 		where: { id: stageIds[2] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [{ destinationId: stageIds[3] }, { destinationId: stageIds[6] }],
-				},
-			},
-			moveConstraintFrom: {
-				createMany: {
-					data: [{ destinationId: stageIds[0] }, { destinationId: stageIds[1] }],
 				},
 			},
 		},
@@ -598,18 +588,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.stage.update({
 		where: { id: stageIds[3] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [{ destinationId: stageIds[4] }, { destinationId: stageIds[6] }],
-				},
-			},
-			moveConstraintFrom: {
-				createMany: {
-					data: [
-						{ destinationId: stageIds[0] },
-						{ destinationId: stageIds[1] },
-						{ destinationId: stageIds[2] },
-					],
 				},
 			},
 		},
@@ -619,14 +600,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.stage.update({
 		where: { id: stageIds[4] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [{ destinationId: stageIds[5] }, { destinationId: stageIds[6] }],
-				},
-			},
-			moveConstraintFrom: {
-				createMany: {
-					data: [{ destinationId: stageIds[3] }],
 				},
 			},
 		},
@@ -636,14 +612,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.stage.update({
 		where: { id: stageIds[5] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [{ destinationId: stageIds[6] }],
-				},
-			},
-			moveConstraintFrom: {
-				createMany: {
-					data: [{ destinationId: stageIds[3] }, { destinationId: stageIds[4] }],
 				},
 			},
 		},
@@ -653,22 +624,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	await prisma.stage.update({
 		where: { id: stageIds[6] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [],
-				},
-			},
-			moveConstraintFrom: {
-				createMany: {
-					data: [
-						{ destinationId: stageIds[0] },
-						{ destinationId: stageIds[1] },
-						{ destinationId: stageIds[2] },
-						{ destinationId: stageIds[3] },
-						{ destinationId: stageIds[4] },
-						{ destinationId: stageIds[5] },
-						{ destinationId: stageIds[6] },
-					],
 				},
 			},
 		},
@@ -678,7 +636,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	/* await prisma.stage.update({
 		where: { id: stageIds[6] },
 		data: {
-			moveConstraintsTo: {
+			moveConstraints: {
 				createMany: {
 					data: [],
 				},

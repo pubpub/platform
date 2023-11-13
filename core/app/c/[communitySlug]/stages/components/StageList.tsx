@@ -16,9 +16,10 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 		<div>
 			{stages.map((stage) => {
 				const users = getPubUsers(stage.permissions);
-				const canMoveTo = stage.moveConstraintsTo.map((stage) => stage.destination);
-				const canMoveFrom = stage.moveConstraintFrom.map((stage) => stage.destination);
-
+				const sources = stage.moveConstraintSources.map(
+					(stage) => stages.find((s) => s.id === stage.stageId)!
+				);
+				const destinations = stage.moveConstraints.map((stage) => stage.destination);
 				return (
 					<div key={stage.id} className="mb-20">
 						<div className="flex flex-row justify-between">
@@ -71,8 +72,8 @@ const StageList: React.FC<Props> = function ({ stages, token, loginData }) {
 												stage={stage}
 												users={users}
 												loginData={loginData}
-												stages={canMoveTo}
-												stagesToMoveBackFrom={canMoveFrom}
+												stages={destinations}
+												stagesToMoveBackFrom={sources}
 											/>
 										}
 									/>
