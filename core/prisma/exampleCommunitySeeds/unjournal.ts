@@ -620,18 +620,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	// Shelved --> No Constraints to
-	await prisma.stage.update({
-		where: { id: stageIds[6] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [],
-				},
-			},
-		},
-	});
-
 	// Shelved --> No Constraints?
 	/* await prisma.stage.update({
 		where: { id: stageIds[6] },
