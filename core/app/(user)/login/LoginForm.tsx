@@ -30,10 +30,11 @@ export default function LoginForm() {
 				headers: { "content-type": "application/json" },
 			});
 			const { member } = await response.json();
+			setIsLoading(false);
 			if (member) {
 				window.location.href = `/c/${member.community.slug}`;
 			} else {
-				window.location.href = "/join";
+				window.location.href = "/settings";
 			}
 		}
 	}
