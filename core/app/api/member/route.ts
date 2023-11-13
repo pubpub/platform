@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import prisma from "prisma/db";
 import { handleErrors } from "~/lib/server";
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 				where: { userId: user.id },
 				include: { community: true },
 			});
-			return Response.json({ member, status: 200 });
+			return NextResponse.json({ member, status: 200 });
 		} else {
 			throw new Error("No email provided");
 		}
