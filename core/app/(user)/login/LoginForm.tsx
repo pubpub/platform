@@ -12,7 +12,7 @@ export default function LoginForm() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [failure, setFailure] = useState(false);
 
-	async function handleSubmit(evt: FormEvent<EventTarget>) {
+	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
 		setIsLoading(true);
 		setFailure(false);
 		evt.preventDefault();
