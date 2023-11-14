@@ -4,13 +4,6 @@
 
 /* Not clear why we need this here if we
 also import ui/styles which includes it */
-
-/* Additional styles */
-@import "additional-styles/utility-patterns.css";
-@import "additional-styles/range-slider.css";
-@import "additional-styles/toggle-switch.css";
-@import "additional-styles/theme.css";
-
 @import "tailwindcss/utilities";
 
 /* Additional Tailwind directives: https://tailwindcss.com/docs/functions-and-directives/#responsive */
@@ -19,4 +12,3 @@ also import ui/styles which includes it */
 		direction: rtl;
 	}
 }
-
