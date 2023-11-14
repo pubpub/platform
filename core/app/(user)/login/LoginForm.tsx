@@ -3,10 +3,10 @@ import React, { useState, FormEvent } from "react";
 import { Button } from "ui";
 import { supabase } from "lib/supabase";
 import Link from "next/link";
-
-let prisma;
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
+	const router = useRouter();
 	const [password, setPassword] = useState("");
 	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
@@ -32,9 +32,9 @@ export default function LoginForm() {
 			const { member } = await response.json();
 			setIsLoading(false);
 			if (member) {
-				window.location.href = `/c/${member.community.slug}`;
+				router.push(`/c/${member.community.slug}`);
 			} else {
-				window.location.href = "/settings";
+				router.push("/settings");
 			}
 		}
 	}
