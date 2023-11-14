@@ -31,6 +31,7 @@ export default function LoginForm() {
 			});
 			const { member } = await response.json();
 			setIsLoading(false);
+			router.refresh();
 			if (member) {
 				router.push(`/c/${member.community.slug}`);
 			} else {
