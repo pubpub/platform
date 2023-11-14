@@ -1,5 +1,3 @@
-import React, { use } from "react";
-import { Button } from "ui";
 import {
 	PermissionPayloadUser,
 	PubPayload,
@@ -7,28 +5,37 @@ import {
 	StagePayloadMoveConstraintDestination,
 	UserLoginData,
 } from "~/lib/types";
-import Move from "./Move";
 import Assign from "./Assign";
+import Move from "./Move";
 
 type Props = {
 	users: PermissionPayloadUser[];
 	pub: PubPayload;
-	stages: StagePayloadMoveConstraintDestination[];
+	moveTo: StagePayloadMoveConstraintDestination[];
+	moveFrom: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
 	loginData: UserLoginData;
 };
 
 export const StagePubActions = (props: Props) => {
+	console.log(props.loginData);
 	return (
 		<div className="flex items-end shrink-0">
-			<Move pub={props.pub} stage={props.stage} stages={props.stages} />
-			<Assign
+			<Move
 				pub={props.pub}
-				loginData={props.loginData}
 				stage={props.stage}
-				stages={props.stages}
-				users={props.users}
+				moveTo={props.moveTo}
+				moveFrom={props.moveFrom}
 			/>
+			{props.users.length > 0 && (
+				<Assign
+					pub={props.pub}
+					loginData={props.loginData}
+					stage={props.stage}
+					stages={props.moveTo}
+					users={props.users}
+				/>
+			)}
 		</div>
 	);
 };
