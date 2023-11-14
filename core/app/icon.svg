@@ -3,6 +3,6 @@
 <rect x="20" width="80" height="60" rx="30" fill="black"></rect>
 <rect y="69" width="50" height="45" rx="22.5" fill="black"></rect>
 </g>
-</svg><!--<style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
 @media (prefers-color-scheme: dark) { :root { filter: invert(100%); } }
-</style>--></svg>
+</style></svg>
