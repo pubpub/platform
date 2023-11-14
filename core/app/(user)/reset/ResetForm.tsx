@@ -32,11 +32,13 @@ export default function ResetForm() {
 			});
 			const { member } = await response.json();
 			setIsLoading(false);
-			if (member) {
-				window.location.href = `/c/${member.community.slug}`;
-			} else {
-				window.location.href = "/settings";
-			}
+			setTimeout(() => {
+				if (member) {
+					router.push(`/c/${member.community.slug}`);
+				} else {
+					router.push("/settings");
+				}
+			}, 5000);
 		}
 	};
 
