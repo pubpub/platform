@@ -1,17 +1,12 @@
 "use client";
 import { Button, Popover, PopoverContent, PopoverTrigger, useToast } from "ui";
-import {
-	PubPayload,
-	StagePayload,
-	StagePayloadMoveConstraintDestination,
-	StagePayloadMoveConstraintDestinationFrom,
-} from "~/lib/types";
+import { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
 import { move } from "./lib/actions";
 
 type Props = {
 	pub: PubPayload;
-	stages?: StagePayloadMoveConstraintDestination[];
-	stagesToMoveBackFrom?: StagePayloadMoveConstraintDestinationFrom[];
+	moveTo?: StagePayloadMoveConstraintDestination[];
+	moveFrom?: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
 };
 
@@ -51,7 +46,7 @@ export default function Move(props: Props) {
 	};
 
 	function renderMoveButtonText() {
-		if (props.stages) {
+		if (props.moveTo) {
 			return "Move";
 		} else {
 			return "Move back";
@@ -59,7 +54,7 @@ export default function Move(props: Props) {
 	}
 
 	function renderMoveText() {
-		if (props.stages) {
+		if (props.moveFrom) {
 			return "Move this pub to:";
 		} else {
 			return "Move this pub back to:";
@@ -75,9 +70,9 @@ export default function Move(props: Props) {
 			</PopoverTrigger>
 			<PopoverContent>
 				<div className="flex flex-col">
-					<div className="mb-4">{renderMoveText()}</div>
-					{props.stages &&
-						props.stages.map((stage) => {
+					{props.moveTo &&
+						props.moveTo.map((stage) => {
+							<div className="mb-4">Move this Pub to:</div>;
 							return stage.id === props.stage.id ? null : (
 								<Button
 									variant="ghost"
@@ -88,8 +83,9 @@ export default function Move(props: Props) {
 								</Button>
 							);
 						})}
-					{props.stagesToMoveBackFrom &&
-						props.stagesToMoveBackFrom.map((stage) => {
+					{props.moveFrom &&
+						props.moveFrom.map((stage) => {
+							<div className="mb-4">Move this Pub back to:</div>;
 							return stage.id === props.stage.id ? null : (
 								<Button
 									variant="ghost"

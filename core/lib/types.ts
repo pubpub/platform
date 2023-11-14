@@ -1,4 +1,3 @@
-import { tr } from "@faker-js/faker";
 import { Prisma } from "@prisma/client";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
@@ -119,7 +118,5 @@ export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude
 
 export type StagePayloadMoveConstraint = NonNullable<StagePayload["moveConstraints"]>;
 export type StagePayloadMoveConstraintDestination =
-		StagePayloadMoveConstraint[number]["destination"];
-	export type StagePayloadMoveConstraintDestinationFrom =
-		StagePayloadMoveConstraint[number]["destination"];
+	StagePayloadMoveConstraint[number]["destination"];
 export type IntegrationAction = { name: string; url: string; href: string };
