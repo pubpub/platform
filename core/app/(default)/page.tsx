@@ -1,7 +1,3 @@
-import Hero from "./hero";
-import Features from "./features";
-import FeaturesBlocks from "./featureblocks";
-import Testimonials from "./testimonials";
 import { getLoginData } from "~/lib/auth/loginData";
 import { redirect } from "next/navigation";
 import prisma from "~/prisma/db";
@@ -30,12 +26,5 @@ export default async function Page() {
 			redirect("/settings");
 		}
 	}
-	return (
-		<>
-			<Hero />
-			<Features />
-			<FeaturesBlocks />
-			<Testimonials />
-		</>
-	);
+	return <>Home...</>;
 }

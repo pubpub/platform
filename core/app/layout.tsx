@@ -1,11 +1,8 @@
 import { Inter } from "next/font/google";
 import { Toaster } from "ui";
 import "ui/styles.css";
-import { getLoginData } from "~/lib/auth/loginData";
 import InitClient from "./InitClient";
 import "./css/globals.css";
-import Footer from "./footer";
-import Header from "./header";
 
 export const metadata = {
 	title: "PubPub v7 Mockup Demo",
@@ -19,7 +16,6 @@ const inter = Inter({
 });
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-	const loginData = await getLoginData();
 	return (
 		<html lang="en">
 			<body
@@ -27,9 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 			>
 				<div className="flex flex-col min-h-screen overflow-hidden supports-[overflow:clip]:overflow-clip">
 					<InitClient />
-					{!loginData && <Header />}
 					{children}
-					{!loginData && <Footer />}
 					<Toaster />
 				</div>
 			</body>
