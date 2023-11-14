@@ -40,9 +40,9 @@ export default async function Login() {
 					{/* Page header */}
 					<div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
 						<h1 className="text-5xl md:text-6xl font-extrabold leading-tighter tracking-tighter mb-4">
-							Welcome back.{" "}
+							Welcome back to{" "}
 							<span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
-								We exist.
+								PubPub
 							</span>
 						</h1>
 					</div>

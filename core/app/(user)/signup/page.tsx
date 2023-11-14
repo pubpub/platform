@@ -44,8 +44,11 @@ export default function Page() {
 					<div className="pt-32 pb-12 md:pt-40 md:pb-20">
 						{/* Page header */}
 						<div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
-							<h1 className="h1">
-								Welcome. We exist. <br /> <br /> So watch out 😈
+							<h1 className="text-5xl md:text-6xl font-extrabold leading-tighter tracking-tighter mb-4">
+								Welcome to{" "}
+								<span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400">
+									PubPub
+								</span>
 							</h1>
 						</div>
 
