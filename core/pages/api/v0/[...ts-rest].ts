@@ -75,13 +75,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 			? findOrCreateUser(body.to.userId)
 			: findOrCreateUser(body.to.email, body.to.firstName, body.to.lastName));
 		try {
-			const info = await emailUser(
-				params.instanceId,
-				user,
-				body.subject,
-				body.message,
-				body.extra
-			);
+			const info = await emailUser(params.instanceId, user, body);
 		} catch (error) {
 			console.log("error", error);
 		}

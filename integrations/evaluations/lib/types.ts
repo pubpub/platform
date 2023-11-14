@@ -54,8 +54,14 @@ export const EvaluatorWithInvite = EvaluatorWithPubPubUser.merge(
 		invitedAt: z.string(),
 	})
 );
-
 export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithPubPubUser>;
+
+export const EvaluatorWhoAccepted = EvaluatorWithInvite.merge(
+	z.object({
+		acceptedAt: z.string(),
+	})
+);
+export type EvaluatorWhoAccepted = z.infer<typeof EvaluatorWhoAccepted>;
 
 export const Evaluator = z.discriminatedUnion("status", [
 	// "unsaved"
@@ -67,11 +73,11 @@ export const Evaluator = z.discriminatedUnion("status", [
 	// "invited"
 	z.object({ status: z.literal(InviteStatus.options[3]) }).merge(EvaluatorWithInvite),
 	// "accepted"
-	z.object({ status: z.literal(InviteStatus.options[4]) }).merge(EvaluatorWithInvite),
+	z.object({ status: z.literal(InviteStatus.options[4]) }).merge(EvaluatorWhoAccepted),
 	// "declined"
 	z.object({ status: z.literal(InviteStatus.options[5]) }).merge(EvaluatorWithInvite),
 	// "received"
-	z.object({ status: z.literal(InviteStatus.options[6]) }).merge(EvaluatorWithInvite),
+	z.object({ status: z.literal(InviteStatus.options[6]) }).merge(EvaluatorWhoAccepted),
 ]);
 export type Evaluator = z.infer<typeof Evaluator>;
 
@@ -118,6 +124,20 @@ export const hasInvite = (
 		evaluator.status !== "saved"
 	);
 };
+
+export function assertHasAccepted(evaluator: Evaluator): asserts evaluator is Evaluator & {
+	status: Exclude<
+		InviteStatus,
+		"unsaved" | "unsaved-with-user" | "saved" | "invited" | "declined"
+	>;
+} {
+	if (!hasInvite(evaluator)) {
+		throw new Error("Evaluator is not invited");
+	}
+	if (evaluator.status === "declined") {
+		throw new Error("Evaluator has not accepted");
+	}
+}
 
 export function assertIsInvited(evaluator: Evaluator): asserts evaluator is Evaluator & {
 	status: Exclude<InviteStatus, "unsaved" | "unsaved-with-user" | "saved">;

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import { assertIsInvited } from "~/lib/types";
+import { assertHasAccepted, assertIsInvited } from "~/lib/types";
 
 export const accept = async (instanceId: string, pubId: string, userId: string) => {
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
@@ -14,7 +14,7 @@ export const accept = async (instanceId: string, pubId: string, userId: string) 
 		`User was not invited to evaluate pub ${pubId}`
 	);
 	assertIsInvited(evaluator);
-	instanceState[userId] = { ...evaluator, status: "accepted" };
+	instanceState[userId] = { ...evaluator, status: "accepted", acceptedAt: new Date().toString() };
 	await setInstanceState(instanceId, pubId, instanceState);
 	revalidatePath("/");
 };
@@ -46,7 +46,7 @@ export const submit = async (
 		instanceState[userId],
 		`User was not invited to evaluate pub ${pubId}`
 	);
-	assertIsInvited(evaluator);
+	assertHasAccepted(evaluator);
 	try {
 		const pub = await client.createPub(instanceId, {
 			pubTypeId: instanceConfig.pubTypeId,
