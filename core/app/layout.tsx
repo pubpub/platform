@@ -1,7 +1,7 @@
 import { Toaster } from "ui";
 import "ui/styles.css";
 import InitClient from "./InitClient";
-import "./css/globals.css";
+import "./globals.css";
 
 export const metadata = {
 	title: "PubPub v7 Mockup Demo",

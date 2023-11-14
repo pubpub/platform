@@ -4,11 +4,3 @@
 
 /* Not clear why we need this here if we
 also import ui/styles which includes it */
-@import "tailwindcss/utilities";
-
-/* Additional Tailwind directives: https://tailwindcss.com/docs/functions-and-directives/#responsive */
-@layer utilities {
-	.rtl {
-		direction: rtl;
-	}
-}
