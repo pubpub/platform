@@ -13,8 +13,8 @@ export default async function Page(props: Props) {
 	return (
 		<Configure
 			instanceId={instanceId}
-			pubTypeId={instance?.pubTypeId}
-			template={instance?.template}
+			pubTypeId={instance?.config.pubTypeId}
+			template={instance?.config.template}
 		/>
 	);
 }

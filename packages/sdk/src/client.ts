@@ -117,6 +117,10 @@ export type Client<T extends Manifest> = {
 		instanceId: string,
 		user: { userId: string } | { email: string; firstName: string; lastName?: string }
 	): Promise<User>;
+	setInstanceConfig(instanceId: string, instanceConfig: any): Promise<any>;
+	getInstanceConfig(instanceId: string): Promise<any>;
+	setInstanceState(instanceId: string, pubId: string, state: any): Promise<any>;
+	getInstanceState(instanceId: string, pubId: string): Promise<any>;
 };
 
 /**
@@ -341,6 +345,76 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					return response.body;
 				}
 				throw new Error("Failed to get or create user", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async setInstanceConfig(instanceId, instance) {
+			try {
+				const response = await client.setInstanceConfig({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					body: instance,
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to create instance config", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async getInstanceConfig(instanceId) {
+			try {
+				const response = await client.getInstanceConfig({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId },
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get instance config", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async setInstanceState(instanceId, pubId, state) {
+			try {
+				const response = await client.setInstanceState({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId, pubId },
+					body: state,
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to set instance state", { cause: response });
+			} catch (cause) {
+				throw new Error("Request failed", { cause });
+			}
+		},
+		async getInstanceState(instanceId, pubId) {
+			try {
+				const response = await client.getInstanceState({
+					headers: {
+						authorization: `Bearer ${process.env.API_KEY}`,
+					},
+					params: { instanceId, pubId },
+					cache: "no-cache",
+				});
+				if (response.status === 200) {
+					return response.body;
+				}
+				throw new Error("Failed to get instance state", { cause: response });
 			} catch (cause) {
 				throw new Error("Request failed", { cause });
 			}

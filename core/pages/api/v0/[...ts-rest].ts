@@ -3,18 +3,23 @@ import { api } from "contracts";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import {
 	createPub,
-	getSuggestedMembers,
+	deletePub,
+	getIntegrationInstanceConfig,
+	getIntegrationInstanceState,
 	getMembers,
 	getPub,
 	getPubType,
+	getSuggestedMembers,
+	setIntegrationInstanceConfig,
+	setIntegrationInstanceState,
 	tsRestHandleErrors,
 	updatePub,
-	deletePub,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
 import { findOrCreateUser } from "~/lib/server/user";
+import prisma from "~/prisma/db";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
@@ -123,6 +128,26 @@ const integrationsRouter = createNextRoute(api.integrations, {
 			status: 200,
 			body: members,
 		};
+	},
+	setInstanceConfig: async ({ headers, params, body }) => {
+		checkAuthentication(headers.authorization);
+		const config = await setIntegrationInstanceConfig(params.instanceId, { ...body });
+		return { status: 200, body: config };
+	},
+	getInstanceConfig: async ({ headers, params }) => {
+		checkAuthentication(headers.authorization);
+		const config = await getIntegrationInstanceConfig(params.instanceId);
+		return { status: 200, body: config };
+	},
+	setInstanceState: async ({ headers, params, body }) => {
+		checkAuthentication(headers.authorization);
+		const state = await setIntegrationInstanceState(params.instanceId, params.pubId, body);
+		return { status: 200, body: state };
+	},
+	getInstanceState: async ({ headers, params }) => {
+		checkAuthentication(headers.authorization);
+		const state = await getIntegrationInstanceState(params.instanceId, params.pubId);
+		return { status: 200, body: state };
 	},
 });
 

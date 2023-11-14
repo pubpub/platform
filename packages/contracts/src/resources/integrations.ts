@@ -416,6 +416,56 @@ export const integrationsApi = contract.router(
 				200: User,
 			},
 		},
+		setInstanceConfig: {
+			method: "PUT",
+			path: "/:instanceId/config",
+			summary: "Set the configuration for an instance",
+			description: "Used to configure the integration with PubPub",
+			body: z.any(),
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.any(),
+			},
+		},
+		getInstanceConfig: {
+			method: "GET",
+			path: "/:instanceId/config",
+			summary: "Get the configuration for an instance",
+			description: "This enpoint will retrieve the instances config with PubPub",
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.any(),
+			},
+		},
+		setInstanceState: {
+			method: "PUT",
+			path: "/:instanceId/state/:pubId",
+			summary: "Sets the state for an instance",
+			description: "If we need to set the state for an instance we will use this endpoint",
+			body: z.any(),
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.any(),
+			},
+		},
+		getInstanceState: {
+			method: "GET",
+			path: "/:instanceId/state/:pubId",
+			summary: "Gets the state for an instance",
+			description: "When we need to get the state for an instance we will use this endpoint",
+			pathParams: z.object({
+				instanceId: z.string(),
+			}),
+			responses: {
+				200: z.any(),
+			},
+		},
 		// TODO implement these endpoints
 		// getAllMembers: {
 		// 	method: "GET",
