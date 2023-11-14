@@ -1,6 +1,6 @@
 import ForgotForm from "./ForgotForm";
 
-export default function Page() {
+export default async function Page() {
 	return (
 		<div className="max-w-lg m-auto">
 			<ForgotForm />
