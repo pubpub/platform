@@ -70,32 +70,44 @@ export default function Move(props: Props) {
 			</PopoverTrigger>
 			<PopoverContent>
 				<div className="flex flex-col">
-					{props.moveTo &&
-						props.moveTo.map((stage) => {
-							<div className="mb-4">Move this Pub to:</div>;
-							return stage.id === props.stage.id ? null : (
-								<Button
-									variant="ghost"
-									key={stage.id}
-									onClick={() => onMove(props.pub.id, props.stage.id, stage.id)}
-								>
-									{stage.name}
-								</Button>
-							);
-						})}
-					{props.moveFrom &&
-						props.moveFrom.map((stage) => {
-							<div className="mb-4">Move this Pub back to:</div>;
-							return stage.id === props.stage.id ? null : (
-								<Button
-									variant="ghost"
-									key={stage.id}
-									onClick={() => onMove(props.pub.id, props.stage.id, stage.id)}
-								>
-									{stage.name}
-								</Button>
-							);
-						})}
+					{props.moveTo && (
+						<>
+							<div className="font-bold text-center mb-4">Move this Pub to:</div>
+							{props.moveTo.map((stage) => {
+								return stage.id === props.stage.id ? null : (
+									<Button
+										variant="ghost"
+										key={stage.id}
+										onClick={() =>
+											onMove(props.pub.id, props.stage.id, stage.id)
+										}
+										className="mb-2"
+									>
+										{stage.name}
+									</Button>
+								);
+							})}
+						</>
+					)}
+					{props.moveFrom && (
+						<>
+							<div className="font-bold text-center mb-4">Move this Pub back to:</div>
+							{props.moveFrom.map((stage) => {
+								<div className="mb-4">Move this Pub back to:</div>;
+								return stage.id === props.stage.id ? null : (
+									<Button
+										variant="ghost"
+										key={stage.id}
+										onClick={() =>
+											onMove(props.pub.id, props.stage.id, stage.id)
+										}
+									>
+										{stage.name}
+									</Button>
+								);
+							})}
+						</>
+					)}
 				</div>
 			</PopoverContent>
 		</Popover>
