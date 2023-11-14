@@ -45,27 +45,11 @@ export default function Move(props: Props) {
 		});
 	};
 
-	function renderMoveButtonText() {
-		if (props.moveTo) {
-			return "Move";
-		} else {
-			return "Move back";
-		}
-	}
-
-	function renderMoveText() {
-		if (props.moveFrom) {
-			return "Move this pub to:";
-		} else {
-			return "Move this pub back to:";
-		}
-	}
-
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
 				<Button size="sm" variant="outline" className="ml-1">
-					{renderMoveButtonText()}
+					Move
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent>

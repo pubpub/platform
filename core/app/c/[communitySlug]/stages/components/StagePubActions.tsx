@@ -18,6 +18,7 @@ type Props = {
 };
 
 export const StagePubActions = (props: Props) => {
+	console.log(props.loginData);
 	return (
 		<div className="flex items-end shrink-0">
 			<Move
@@ -26,13 +27,15 @@ export const StagePubActions = (props: Props) => {
 				moveTo={props.moveTo}
 				moveFrom={props.moveFrom}
 			/>
-			<Assign
-				pub={props.pub}
-				loginData={props.loginData}
-				stage={props.stage}
-				stages={props.moveTo}
-				users={props.users}
-			/>
+			{props.users.length > 0 && (
+				<Assign
+					pub={props.pub}
+					loginData={props.loginData}
+					stage={props.stage}
+					stages={props.moveTo}
+					users={props.users}
+				/>
+			)}
 		</div>
 	);
 };
