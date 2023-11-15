@@ -1,87 +1,101 @@
 "use server";
 
-import { GetPubResponseBody, SuggestedMembersQuery } from "@pubpub/sdk";
+import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
+import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import { EvaluatorInvite } from "./types";
-
-const makeInviteJobKey = (instanceId: string, pubId: string, userId: string) =>
-	`${instanceId}:${pubId}:${userId}`;
+import { cookie } from "~/lib/request";
+import { isInvited } from "~/lib/types";
+import { scheduleNoReplyNotificationEmail, scheduleReminderEmail } from "../evaluate/emails";
+import { InviteFormEvaluator } from "./types";
 
 export const save = async (
 	instanceId: string,
 	pubId: string,
 	pubTitle: string,
-	invites: EvaluatorInvite[]
+	evaluators: InviteFormEvaluator[],
+	send: boolean
 ) => {
 	try {
-		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		const instanceConfig = await getInstanceConfig(instanceId);
-		if (instanceConfig === undefined) {
-			return { error: `No instance found with id ${instanceId}` };
-		}
-		const pub = await client.getPub(instanceId, pubId);
-		const evaluations = pub.children.filter(
-			(child) => child.pubTypeId === instanceConfig.config.pubTypeId
+		const user = JSON.parse(expect(cookie("user")));
+		const instanceConfig = expect(
+			await getInstanceConfig(instanceId),
+			"Instance not configured"
 		);
-		const evaluationsByEvaluator = evaluations.reduce((acc, evaluation) => {
-			acc[evaluation.values["unjournal:evaluator"] as string] = evaluation;
-			return acc;
-		}, {} as Record<string, GetPubResponseBody>);
-		for (let i = 0; i < invites.length; i++) {
-			let invite = invites[i];
-			if ("email" in invite) {
-				const user = await client.getOrCreateUser(instanceId, invite);
-				invite = {
-					userId: user.id,
-					firstName: invite.firstName,
-					lastName: invite.lastName,
-					template: invite.template,
+		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+		const evaluatorUserIds = new Set<string>();
+		for (let i = 0; i < evaluators.length; i++) {
+			let evaluator = evaluators[i];
+			// Invited evaluators are read-only and already persisted, so we can skip
+			// them.
+			if (isInvited(evaluator)) {
+				// We still need to add the userId to the set so we can check for
+				// duplicates. We don't need to check, however, because the invite
+				// should already be unique.
+				evaluatorUserIds.add(evaluator.userId);
+				continue;
+			}
+			// Find or create a PubPub user for the evaluator.
+			const evaluatorUser = await client.getOrCreateUser(instanceId, evaluator);
+			// If the user has already been saved or invited, halt and notify the
+			// user.
+			if (evaluatorUserIds.has(evaluatorUser.id)) {
+				const { firstName, lastName } = evaluator;
+				const name = `${firstName}${lastName ? ` ${lastName}` : ""}`;
+				return {
+					error: `${name} was added more than once.`,
 				};
 			}
-			const evaluation = evaluationsByEvaluator[invite.userId];
-			if (evaluation === undefined) {
-				// New evaluator added. Make the corresponding evaluation pub.
-				await client.createPub(instanceId, {
-					parentId: pubId,
-					pubTypeId: instanceConfig.config.pubTypeId,
-					values: {
-						"unjournal:title": `Evaluation of ${pubTitle} by ${invite.firstName} ${invite.lastName}`,
-						"unjournal:evaluator": invite.userId,
-					},
-				});
-			}
-			// FIXME: This is added for demo purposes to show email scheduling. This
-			// should instead be calcualated from instance configuration.
-			const runAt = new Date();
-			runAt.setMinutes(runAt.getMinutes() + i * 3);
-			// Schedule (or replace) email to be sent to evaluator
-			await client.scheduleEmail(
-				instanceId,
-				{
+			// Update the evaluator to reflect that they have been persisted.
+			evaluator = {
+				...evaluator,
+				userId: evaluatorUser.id,
+				firstName: evaluatorUser.firstName,
+				lastName: evaluatorUser.lastName ?? undefined,
+				status: "saved",
+			};
+			// If the user intends to invite selected evaluators, send an email to
+			// the evaluator with the invite link.
+			if (send && evaluator.selected) {
+				await client.sendEmail(instanceId, {
 					to: {
-						userId: invite.userId,
+						userId: evaluatorUser.id,
 					},
-					subject: invite.template.subject,
-					message: invite.template.message,
+					subject: evaluator.emailTemplate.subject,
+					message: evaluator.emailTemplate.message,
 					extra: {
 						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
 					},
-				},
-				{
-					jobKey: makeInviteJobKey(instanceId, pubId, invite.userId),
-					mode: "preserve_run_at",
-					runAt,
-				}
-			);
-			// Save updated email template and job run time
-			instanceState.state[invite.userId] = {
-				inviteTemplate: invite.template,
-				inviteTime: instanceState.state[invite.userId]?.inviteTime ?? runAt.toString(),
-			};
+				});
+				// Update the evaluator to reflect that they have been invited.
+				evaluator = {
+					...evaluator,
+					status: "invited",
+					invitedAt: new Date().toString(),
+					invitedBy: user.id,
+				};
+				// Scehdule a reminder email to person who was invited to evaluate.
+				await scheduleReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+				// Schedule no-reply notification email to person who invited the
+				// evaluator.
+				await scheduleNoReplyNotificationEmail(
+					instanceId,
+					instanceConfig,
+					pubId,
+					evaluator
+				);
+			}
+			// Remove the form's selected property from the evaluator before
+			// persisting.
+			const { selected, ...rest } = evaluator;
+			instanceState[evaluator.userId] = rest;
+			// Add the user id to the set so we can check for duplicates.
+			evaluatorUserIds.add(evaluatorUser.id);
 		}
-		await setInstanceState(instanceId, pubId, instanceState.state);
+		// Persist the updated instance state.
+		await setInstanceState(instanceId, pubId, instanceState);
+		// Reload the page to reflect the changes.
 		revalidatePath("/");
 		return { success: true };
 	} catch (error) {
@@ -91,8 +105,8 @@ export const save = async (
 
 export const suggest = async (instanceId: string, query: SuggestedMembersQuery) => {
 	try {
-		const suggestions = await client.getSuggestedMembers(instanceId, query);
-		return suggestions;
+		const users = await client.getSuggestedMembers(instanceId, query);
+		return users;
 	} catch (error) {
 		return { error: error.message };
 	}
@@ -100,20 +114,22 @@ export const suggest = async (instanceId: string, query: SuggestedMembersQuery) 
 
 export const remove = async (instanceId: string, pubId: string, userId: string) => {
 	try {
+		const instanceConfig = expect(
+			await getInstanceConfig(instanceId),
+			"Instance not configured"
+		);
 		const instanceState = await getInstanceState(instanceId, pubId);
-		const submission = await client.getPub(instanceId, pubId);
-		const evaluation = submission.children.find(
-			(child) => child.values["unjournal:evaluator"] === userId
+		const pub = await client.getPub(instanceId, pubId);
+		const evaluation = pub.children.find(
+			(child) => child.values[instanceConfig.evaluatorFieldSlug] === userId
 		);
 		if (evaluation !== undefined) {
 			await client.deletePub(instanceId, evaluation.id);
 		}
 		if (instanceState !== undefined) {
-			const { [userId]: _, ...instanceStateWithoutEvaluator } = instanceState.state;
-			setInstanceState(instanceId, pubId, instanceStateWithoutEvaluator);
+			delete instanceState[userId];
+			await setInstanceState(instanceId, pubId, instanceState);
 		}
-		await client.unscheduleEmail(instanceId, makeInviteJobKey(instanceId, pubId, userId));
-		revalidatePath("/");
 		return { success: true };
 	} catch (error) {
 		return { error: error.message };

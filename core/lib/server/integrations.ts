@@ -12,7 +12,7 @@ export async function setIntegrationInstanceConfig(instanceId: string, config: o
 }
 
 export const getIntegrationInstanceConfig = async (instanceId: string) => {
-	return await prisma.integrationInstance.findFirst({
+	const instance = await prisma.integrationInstance.findFirst({
 		where: {
 			id: instanceId,
 		},
@@ -20,6 +20,7 @@ export const getIntegrationInstanceConfig = async (instanceId: string) => {
 			config: true,
 		},
 	});
+	return instance?.config;
 };
 
 export const setIntegrationInstanceState = async (instanceId: string, pubId: string, state) => {
@@ -42,7 +43,7 @@ export const setIntegrationInstanceState = async (instanceId: string, pubId: str
 };
 
 export const getIntegrationInstanceState = async (instanceId: string, pubId: string) => {
-	return await prisma.integrationInstanceState.findUnique({
+	const state = await prisma.integrationInstanceState.findUnique({
 		where: {
 			pub_instance: {
 				instanceId,
@@ -53,4 +54,5 @@ export const getIntegrationInstanceState = async (instanceId: string, pubId: str
 			state: true,
 		},
 	});
+	return state?.state;
 };

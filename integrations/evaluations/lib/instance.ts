@@ -1,42 +1,32 @@
-import { client } from "~/lib/pubpub";
+import { client } from "./pubpub";
+import { InstanceConfig, InstanceState, defaultInstanceConfig } from "./types";
 
-export type EmailTemplate = { subject: string; message: string };
+export const makeInstanceConfig = (): InstanceConfig => structuredClone(defaultInstanceConfig);
 
-export type InstanceConfig = {
-	pubTypeId: string;
-	template: EmailTemplate;
+export const getInstanceConfig = async (
+	instanceId: string
+): Promise<InstanceConfig | undefined> => {
+	return await client.getInstanceConfig(instanceId);
 };
 
-export type InstanceState = {
-	[userId: string]: {
-		inviteTemplate: EmailTemplate;
-		inviteTime: string;
-	};
+export const setInstanceConfig = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig
+): Promise<any> => {
+	return await client.setInstanceConfig(instanceId, instanceConfig);
 };
 
-export const makeInstanceConfig = (): InstanceConfig => ({
-	pubTypeId: "",
-	template: { subject: "", message: "" },
-});
-
-export const getInstanceConfig = async (instanceId: string) => {
-	const instanceConfig = await client.getInstanceConfig(instanceId);
-	return instanceConfig ? instanceConfig as any : undefined;
-};
-
-export const setInstanceConfig = async (instanceId: string, instance: any): Promise<any> => {
-	return await client.setInstanceConfig(instanceId, instance);
-};
-
-export const getInstanceState = async (instanceId: string, pubId: string) => {
-	const instanceState = await client.getInstanceState(instanceId, pubId);
-	return instanceState ? instanceState as any : undefined;
+export const getInstanceState = async (
+	instanceId: string,
+	pubId: string
+): Promise<InstanceState | undefined> => {
+	return await client.getInstanceState(instanceId, pubId);
 };
 
 export const setInstanceState = async (
 	instanceId: string,
 	pubId: string,
-	state: any
+	instanceState: InstanceState
 ): Promise<any> => {
-	return await client.setInstanceState(instanceId, pubId, state);
+	return await client.setInstanceState(instanceId, pubId, instanceState);
 };

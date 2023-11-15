@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody, SafeUser, SuggestedMembersQuery } from "@pubpub/sdk";
+import { GetPubResponseBody } from "@pubpub/sdk";
+import React, { useCallback } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
 	Button,
@@ -19,60 +20,63 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import * as z from "zod";
-import { InstanceConfig, InstanceState } from "~/lib/instance";
+import { EmailTemplate, Evaluator, InstanceConfig, isInvited, hasUser, isSaved } from "~/lib/types";
+import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
+import { EvaluatorInviteFormSendButton } from "./EvaluatorInviteFormSendButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
-import { EmailFormSchema } from "./types";
-import React, { useCallback, useEffect } from "react";
+import { InviteFormEvaluator, InviteFormSchema } from "./types";
 
 type Props = {
-	evaluators: SafeUser[];
+	evaluators: Evaluator[];
 	instanceId: string;
 	instanceConfig: InstanceConfig;
-	instanceState: InstanceState;
 	pub: GetPubResponseBody;
+};
+
+const makeEvaluator = (template: EmailTemplate): InviteFormEvaluator => {
+	return {
+		email: "",
+		firstName: "",
+		lastName: "",
+		emailTemplate: { ...template },
+		selected: false,
+		status: "unsaved",
+	};
 };
 
 export function EvaluatorInviteForm(props: Props) {
 	const { toast } = useToast();
-	const makeInvites = () => {
-		return props.evaluators.map((evaluator) => ({
-			userId: evaluator.id,
-			firstName: evaluator.firstName,
-			lastName: evaluator.lastName ?? undefined,
-			// Restore a customized template or copy the default one
-			template: props.instanceState[evaluator.id]?.inviteTemplate ?? {
-				...props.instanceConfig.template,
-			},
-		}));
-	};
-	const form = useForm<z.infer<typeof EmailFormSchema>>({
+	const form = useForm<InviteFormSchema>({
 		mode: "all",
 		reValidateMode: "onChange",
-		resolver: zodResolver(EmailFormSchema),
-		defaultValues: {
-			invites: makeInvites(),
+		resolver: zodResolver(InviteFormSchema),
+		values: {
+			evaluators: props.evaluators.map((evaluator) => ({
+				...evaluator,
+				selected: false,
+			})),
 		},
 	});
 	const {
-		fields: invites,
+		fields: evaluators,
 		remove,
 		append,
 		update,
 	} = useFieldArray({
 		control: form.control,
-		name: "invites",
+		name: "evaluators",
 		keyName: "key",
 	});
 
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof EmailFormSchema>) => {
+		async (values: InviteFormSchema, send = false) => {
 			const result = await actions.save(
 				props.instanceId,
 				props.pub.id,
-				props.pub.values["unjournal:title"] as string,
-				values.invites
+				props.pub.values[props.instanceConfig.titleFieldSlug] as string,
+				values.evaluators,
+				send
 			);
 			if ("error" in result) {
 				toast({
@@ -87,12 +91,12 @@ export function EvaluatorInviteForm(props: Props) {
 				});
 			}
 		},
-		[toast]
+		[toast, evaluators]
 	);
 
 	const onSuggest = useCallback(
-		async (index: number, query: SuggestedMembersQuery) => {
-			const result = await actions.suggest(props.instanceId, query);
+		async (index: number, evaluator: InviteFormEvaluator) => {
+			const result = await actions.suggest(props.instanceId, evaluator);
 			if ("error" in result && typeof result.error === "string") {
 				toast({
 					title: "Error",
@@ -101,39 +105,52 @@ export function EvaluatorInviteForm(props: Props) {
 				});
 			} else if (Array.isArray(result)) {
 				if (result.length > 0) {
-					const [user] = result;
-					const invite = invites[index];
-					update(index, {
-						userId: user.id,
-						firstName: user.firstName,
-						lastName: user.lastName ?? undefined,
-						template: invite.template,
-					});
-					form.trigger(`invites.${index}`);
-					toast({
-						title: "Success",
-						description: "A user was suggested",
-					});
+					const [user] = result.filter(
+						(user) =>
+							!evaluators.some(
+								(evaluator) => hasUser(evaluator) && evaluator.userId === user.id
+							)
+					);
+					if (user === undefined) {
+						toast({
+							title: "No unique matches",
+							description: "All suggested users exist in the form.",
+						});
+					} else {
+						const evaluator = evaluators[index];
+						update(index, {
+							...evaluator,
+							userId: user.id,
+							firstName: user.firstName,
+							lastName: user.lastName ?? undefined,
+							status: "unsaved-with-user",
+						});
+						form.trigger(`evaluators.${index}`);
+						toast({
+							title: "Success",
+							description: "A user was suggested.",
+						});
+					}
 				} else {
 					toast({
 						title: "No matches found",
 						description:
-							"A user was not found for the given email, first name, or last name",
+							"A user was not found for the given email, first name, or last name.",
 					});
 				}
 			}
 		},
-		[invites, toast, update, form.trigger]
+		[evaluators, toast, update, form.trigger]
 	);
 
 	const onRemove = useCallback(
 		async (index: number) => {
 			try {
-				const invite = invites[index];
-				if ("userId" in invite) {
-					await actions.remove(props.instanceId, props.pub.id, invite.userId);
-				}
+				const evaluator = evaluators[index];
 				remove(index);
+				if (isSaved(evaluator)) {
+					await actions.remove(props.instanceId, props.pub.id, evaluator.userId);
+				}
 				toast({
 					title: "Success",
 					description: "The evaluator was removed",
@@ -146,34 +163,21 @@ export function EvaluatorInviteForm(props: Props) {
 				});
 			}
 		},
-		[invites, toast]
+		[evaluators, toast]
 	);
 
 	const onAppend = useCallback(
 		(event: React.MouseEvent) => {
 			event.preventDefault();
-			append({
-				email: "",
-				firstName: "",
-				lastName: "",
-				template: { ...props.instanceConfig.template },
-			});
+			append(makeEvaluator(props.instanceConfig.emailTemplate));
 		},
-		[append]
+		[append, evaluators]
 	);
 
 	const onBack = useCallback((event: React.MouseEvent) => {
 		event.preventDefault();
 		window.history.back();
 	}, []);
-
-	// If the evaluators change (i.e. cache was invalidated), reset the form
-	// with updated evaluator invites.
-	useEffect(() => {
-		form.reset({
-			invites: makeInvites(),
-		});
-	}, [props.evaluators]);
 
 	return (
 		<Form {...form}>
@@ -182,11 +186,12 @@ export function EvaluatorInviteForm(props: Props) {
 					<CardTitle>Invite Evaluators</CardTitle>
 					<CardDescription>
 						Use this form to invite evaluators to review "
-						{props.pub.values["unjournal:title"] as string}".
+						{props.pub.values[props.instanceConfig.titleFieldSlug] as string}".
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-row gap-4 mb-4">
+						<FormItem className="flex-0 w-4"></FormItem>
 						<FormItem className="flex-1">
 							<FormLabel>Email Address</FormLabel>
 							<FormDescription>
@@ -205,17 +210,14 @@ export function EvaluatorInviteForm(props: Props) {
 								The last name of the evaluator you'd like to invite.
 							</FormDescription>
 						</FormItem>
-						<div className="shrink-0 basis-36"></div>
+						<div className="shrink-0 basis-48"></div>
 					</div>
-					{invites.map((invite, index) => (
+					{evaluators.map((evaluator, index) => (
 						<EvaluatorInviteRow
-							key={invite.key}
-							inviteTime={
-								"userId" in invite
-									? props.instanceState[invite.userId]?.inviteTime
-									: undefined
-							}
+							key={evaluator.key}
+							invitedAt={isInvited(evaluator) ? evaluator.invitedAt : undefined}
 							control={form.control}
+							readOnly={isInvited(evaluator)}
 							index={index}
 							onRemove={onRemove}
 							onSuggest={onSuggest}
@@ -227,15 +229,22 @@ export function EvaluatorInviteForm(props: Props) {
 					</Button>
 				</CardContent>
 				<CardFooter className={cn("flex justify-between")}>
-					<Button variant="outline" onClick={onBack}>
-						Go Back
-					</Button>
-					<Button onClick={form.handleSubmit(onSubmit)}>
+					<div>
+						<Button variant="outline" onClick={onBack}>
+							Go Back
+						</Button>
+					</div>
+					<div className="flex gap-2 items-center">
 						{form.formState.isSubmitting && (
 							<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
 						)}
-						Save
-					</Button>
+						<EvaluatorInviteFormSendButton
+							onClick={form.handleSubmit((values) => onSubmit(values, true))}
+						/>
+						<EvaluatorInviteFormSaveButton
+							onClick={form.handleSubmit((values) => onSubmit(values))}
+						/>
+					</div>
 				</CardFooter>
 			</Card>
 		</Form>

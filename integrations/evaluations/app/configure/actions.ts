@@ -1,15 +1,11 @@
 "use server";
 
 import { setInstanceConfig } from "~/lib/instance";
+import { InstanceConfig } from "~/lib/types";
 
-export const configure = (
-	instanceId: string,
-	pubTypeId: string,
-	template: { subject: string; message: string }
-) => {
+export const configure = (instanceId: string, instanceConfig: InstanceConfig) => {
 	try {
-		// return { error: "We couldn't update the instance." };
-		return setInstanceConfig(instanceId, { pubTypeId, template });
+		return setInstanceConfig(instanceId, instanceConfig);
 	} catch (error) {
 		return { error: error.message };
 	}

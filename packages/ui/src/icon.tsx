@@ -1,1 +1,18 @@
-export { Check, Download, Loader2, Plus, Mail, Terminal, Wand2, X, Send } from "lucide-react";
+export {
+	Check,
+	Download,
+	Loader2,
+	Plus,
+	Mail,
+	Terminal,
+	Wand2,
+	X,
+	Send,
+	UserCircle2,
+	CircleEllipsis,
+	CheckCircle,
+	CircleDashed,
+	CircleDollarSign,
+	XCircle,
+	BadgeCheck,
+} from "lucide-react";

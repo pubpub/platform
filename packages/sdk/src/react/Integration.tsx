@@ -3,9 +3,9 @@ import { LocalStorageProvider } from "ui";
 import { IntegrationLayout } from "./IntegrationLayout";
 import { IntegrationProvider, IntegrationProviderProps } from "./IntegrationProvider";
 
-export type IntegrationProps = IntegrationProviderProps;
+export type IntegrationProps<T> = IntegrationProviderProps<T>;
 
-export const Integration = (props: IntegrationProps) => {
+export function Integration<T>(props: IntegrationProps<T>) {
 	const { children, ...options } = props;
 	return (
 		<LocalStorageProvider prefix={`pubpub-integration/${options.name}/`} timeout={200}>
@@ -14,4 +14,4 @@ export const Integration = (props: IntegrationProps) => {
 			</IntegrationProvider>
 		</LocalStorageProvider>
 	);
-};
+}

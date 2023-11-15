@@ -1,10 +1,10 @@
 "use server";
 
-import { updateInstance } from "~/lib/instance";
+import { setInstanceConfig } from "~/lib/instance";
 
 export const configure = (instanceId: string, pubTypeId: string) => {
 	try {
-		return updateInstance(instanceId, { pubTypeId });
+		return setInstanceConfig(instanceId, { pubTypeId });
 	} catch (error) {
 		return { error: error.message };
 	}

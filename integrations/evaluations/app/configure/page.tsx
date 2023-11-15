@@ -4,17 +4,12 @@ import { Configure } from "./configure";
 type Props = {
 	searchParams: {
 		instanceId: string;
+		pubId?: string;
 	};
 };
 
 export default async function Page(props: Props) {
-	const { instanceId } = props.searchParams;
-	const instance = await getInstanceConfig(instanceId);
-	return (
-		<Configure
-			instanceId={instanceId}
-			pubTypeId={instance?.config.pubTypeId}
-			template={instance?.config.template}
-		/>
-	);
+	const { instanceId, pubId } = props.searchParams;
+	const instanceConfig = await getInstanceConfig(instanceId);
+	return <Configure instanceId={instanceId} instanceConfig={instanceConfig} pubId={pubId} />;
 }

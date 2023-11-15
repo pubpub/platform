@@ -7,6 +7,7 @@ import type { JsonInput } from "contracts";
 type Field = JsonInput;
 
 export type {
+	User,
 	SafeUser,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
