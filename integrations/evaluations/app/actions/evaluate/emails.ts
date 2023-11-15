@@ -226,7 +226,7 @@ export const sendAcceptedNotificationEmail = (
 			userId: evaluator.invitedBy,
 		},
 		subject: `[Unjournal] Accepted evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has agreed to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has agreed to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 		include: {
 			pubs: {
@@ -253,7 +253,7 @@ export const sendDeclinedNotificationEmail = async (
 			userId: evaluator.invitedBy,
 		},
 		subject: `[Unjournal] Invited evaluator declines to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has declined to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has declined to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 		include: {
 			pubs: {
@@ -280,7 +280,7 @@ export const sendSubmittedNotificationEmail = async (
 			userId: evaluator.invitedBy,
 		},
 		subject: `[Unjournal] Evaluation submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has submitted an evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}. The submitted evaluation Pub can be viewed <a href="https://v7.pubpub.org/pubs/${evaluator.evaluationPubId}">here</a>.</p>
+		message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has submitted an evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". The submitted evaluation Pub can be viewed <a href="https://v7.pubpub.org/pubs/${evaluator.evaluationPubId}">here</a>.</p>
 <p>You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 		include: {
