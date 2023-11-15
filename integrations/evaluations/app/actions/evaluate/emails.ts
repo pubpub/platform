@@ -6,6 +6,7 @@ import {
 	InstanceConfig,
 } from "~/lib/types";
 
+// TODO: This scales days down to approximate seconds. Remove after demo.
 const DAY_SCALE = 0.0000115741;
 
 const DAYS_TO_ACCEPT_INVITE = 10 * DAY_SCALE;
