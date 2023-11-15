@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
-import { InstanceState, hasInvite } from "~/lib/types";
+import { cookie } from "~/lib/request";
+import { isInvited } from "~/lib/types";
+import { scheduleNoReplyNotificationEmail, scheduleReminderEmail } from "../evaluate/emails";
 import { InviteFormEvaluator } from "./types";
 
 export const save = async (
@@ -16,24 +18,29 @@ export const save = async (
 	send: boolean
 ) => {
 	try {
+		const user = JSON.parse(expect(cookie("user")));
+		const instanceConfig = expect(
+			await getInstanceConfig(instanceId),
+			"Instance not configured"
+		);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		const userIds = new Set<string>();
+		const evaluatorUserIds = new Set<string>();
 		for (let i = 0; i < evaluators.length; i++) {
 			let evaluator = evaluators[i];
 			// Invited evaluators are read-only and already persisted, so we can skip
 			// them.
-			if (hasInvite(evaluator)) {
+			if (isInvited(evaluator)) {
 				// We still need to add the userId to the set so we can check for
 				// duplicates. We don't need to check, however, because the invite
 				// should already be unique.
-				userIds.add(evaluator.userId);
+				evaluatorUserIds.add(evaluator.userId);
 				continue;
 			}
 			// Find or create a PubPub user for the evaluator.
-			const user = await client.getOrCreateUser(instanceId, evaluator);
+			const evaluatorUser = await client.getOrCreateUser(instanceId, evaluator);
 			// If the user has already been saved or invited, halt and notify the
 			// user.
-			if (userIds.has(user.id)) {
+			if (evaluatorUserIds.has(evaluatorUser.id)) {
 				const { firstName, lastName } = evaluator;
 				const name = `${firstName}${lastName ? ` ${lastName}` : ""}`;
 				return {
@@ -43,9 +50,9 @@ export const save = async (
 			// Update the evaluator to reflect that they have been persisted.
 			evaluator = {
 				...evaluator,
-				userId: user.id,
-				firstName: user.firstName,
-				lastName: user.lastName ?? undefined,
+				userId: evaluatorUser.id,
+				firstName: evaluatorUser.firstName,
+				lastName: evaluatorUser.lastName ?? undefined,
 				status: "saved",
 			};
 			// If the user intends to invite selected evaluators, send an email to
@@ -53,7 +60,7 @@ export const save = async (
 			if (send && evaluator.selected) {
 				await client.sendEmail(instanceId, {
 					to: {
-						userId: user.id,
+						userId: evaluatorUser.id,
 					},
 					subject: evaluator.emailTemplate.subject,
 					message: evaluator.emailTemplate.message,
@@ -66,14 +73,25 @@ export const save = async (
 					...evaluator,
 					status: "invited",
 					invitedAt: new Date().toString(),
+					invitedBy: user.id,
 				};
+				// Scehdule a reminder email to person who was invited to evaluate.
+				await scheduleReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+				// Schedule no-reply notification email to person who invited the
+				// evaluator.
+				await scheduleNoReplyNotificationEmail(
+					instanceId,
+					instanceConfig,
+					pubId,
+					evaluator
+				);
 			}
 			// Remove the form's selected property from the evaluator before
 			// persisting.
 			const { selected, ...rest } = evaluator;
 			instanceState[evaluator.userId] = rest;
 			// Add the user id to the set so we can check for duplicates.
-			userIds.add(user.id);
+			evaluatorUserIds.add(evaluatorUser.id);
 		}
 		// Persist the updated instance state.
 		await setInstanceState(instanceId, pubId, instanceState);

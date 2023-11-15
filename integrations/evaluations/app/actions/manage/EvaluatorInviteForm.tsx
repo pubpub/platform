@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody, SafeUser } from "@pubpub/sdk";
-import React, { use, useCallback, useEffect } from "react";
+import { GetPubResponseBody } from "@pubpub/sdk";
+import React, { useCallback } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
 	Button,
@@ -20,7 +20,7 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import { EmailTemplate, Evaluator, InstanceConfig, hasInvite, hasUser, isSaved } from "~/lib/types";
+import { EmailTemplate, Evaluator, InstanceConfig, isInvited, hasUser, isSaved } from "~/lib/types";
 import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
 import { EvaluatorInviteFormSendButton } from "./EvaluatorInviteFormSendButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
@@ -215,9 +215,9 @@ export function EvaluatorInviteForm(props: Props) {
 					{evaluators.map((evaluator, index) => (
 						<EvaluatorInviteRow
 							key={evaluator.key}
-							invitedAt={hasInvite(evaluator) ? evaluator.invitedAt : undefined}
+							invitedAt={isInvited(evaluator) ? evaluator.invitedAt : undefined}
 							control={form.control}
-							readOnly={hasInvite(evaluator)}
+							readOnly={isInvited(evaluator)}
 							index={index}
 							onRemove={onRemove}
 							onSuggest={onSuggest}

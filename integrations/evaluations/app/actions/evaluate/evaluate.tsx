@@ -24,7 +24,6 @@ import { submit } from "./actions";
 import { InstanceConfig } from "~/lib/types";
 
 type Props = {
-	userId: string;
 	instanceId: string;
 	instanceConfig: InstanceConfig;
 	pub: GetPubResponseBody;
@@ -57,7 +56,7 @@ export function Evaluate(props: Props) {
 		values[props.instanceConfig.titleFieldSlug] = `Evaluation of "${
 			pub.values[props.instanceConfig.titleFieldSlug]
 		}"`;
-		const result = await submit(props.instanceId, pub.id, props.userId, values);
+		const result = await submit(props.instanceId, pub.id, values);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",

@@ -24,8 +24,8 @@ import {
 } from "ui";
 import { cn } from "utils";
 import * as z from "zod";
-import { configure } from "./actions";
 import { InstanceConfig } from "~/lib/types";
+import { configure } from "./actions";
 
 type BaseProps = {
 	instanceId: string;

@@ -7,16 +7,15 @@ import { accept, decline } from "./actions";
 
 type Props = {
 	instanceId: string;
-	userId: string;
 	pub: GetPubResponseBody;
 };
 
 export const Respond = (props: Props) => {
 	const onAccept = useCallback(() => {
-		accept(props.instanceId, props.pub.id, props.userId);
+		accept(props.instanceId, props.pub.id);
 	}, []);
 	const onDecline = useCallback(() => {
-		decline(props.instanceId, props.pub.id, props.userId);
+		decline(props.instanceId, props.pub.id);
 	}, []);
 	return (
 		<>

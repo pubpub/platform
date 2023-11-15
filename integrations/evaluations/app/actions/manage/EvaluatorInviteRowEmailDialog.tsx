@@ -17,7 +17,7 @@ import {
 	Input,
 	Textarea,
 } from "ui";
-import { hasInvite } from "~/lib/types";
+import { isInvited } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
 
 export type EvaluatorInviteRowEmailDialogProps = {
@@ -26,7 +26,7 @@ export type EvaluatorInviteRowEmailDialogProps = {
 };
 
 export const EvaluatorInviteRowEmailDialog = (props: EvaluatorInviteRowEmailDialogProps) => {
-	const evaluatorHasInvite = hasInvite(props.evaluator);
+	const evaluatorHasInvite = isInvited(props.evaluator);
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -37,7 +37,7 @@ export const EvaluatorInviteRowEmailDialog = (props: EvaluatorInviteRowEmailDial
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Edit Template</DialogTitle>
-					{hasInvite(props.evaluator) && (
+					{isInvited(props.evaluator) && (
 						<DialogDescription>
 							This email was sent at{" "}
 							<strong className="font-medium">

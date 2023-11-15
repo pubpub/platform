@@ -152,6 +152,12 @@ export const SendEmailRequestBody = z.object({
 	]),
 	subject: z.string(),
 	message: z.string(),
+	include: z
+		.object({
+			users: z.record(z.string()).optional(),
+			pubs: z.record(z.string()).optional(),
+		})
+		.optional(),
 	extra: z.record(z.string()).optional(),
 });
 export type SendEmailRequestBody = z.infer<typeof SendEmailRequestBody>;

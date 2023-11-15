@@ -33,12 +33,11 @@ export default async function Page(props: Props) {
 		// If the evaluator has been invited, but neither accepted nor rejected,
 		// render the response page.
 		case "invited":
-			return <Respond instanceId={instanceId} pub={pub} userId={user.id} />;
+			return <Respond instanceId={instanceId} pub={pub} />;
 		// If they have responded "Accept", render the evaluation form.
 		case "accepted":
 			return (
 				<Evaluate
-					userId={user.id}
 					instanceId={instanceId}
 					instanceConfig={instanceConfig}
 					pub={pub}
