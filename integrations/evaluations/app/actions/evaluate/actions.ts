@@ -31,12 +31,11 @@ export const accept = async (instanceId: string, pubId: string) => {
 			`User was not invited to evaluate pub ${pubId}`
 		);
 		assertIsInvited(evaluator);
-		evaluator = {
+		evaluator = instanceState[user.id] = {
 			...evaluator,
 			status: "accepted",
 			acceptedAt: new Date().toString(),
 		};
-		instanceState[user.id] = evaluator;
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
 		await unscheduleReminderEmail(instanceId, pubId, evaluator);
@@ -62,13 +61,12 @@ export const decline = async (instanceId: string, pubId: string) => {
 			"Instance not configured"
 		);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		const evaluator = expect(
+		let evaluator = expect(
 			instanceState[user.id],
 			`User was not invited to evaluate pub ${pubId}`
 		);
 		assertIsInvited(evaluator);
-
-		instanceState[user.id] = { ...evaluator, status: "declined" };
+		evaluator = instanceState[user.id] = { ...evaluator, status: "declined" };
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
 		await unscheduleReminderEmail(instanceId, pubId, evaluator);
@@ -103,13 +101,12 @@ export const submit = async (instanceId: string, pubId: string, values: PubValue
 			parentId: pubId,
 			values: values,
 		});
-		evaluator = {
+		evaluator = instanceState[user.id] = {
 			...evaluator,
 			status: "received",
 			evaluatedAt: new Date().toString(),
 			evaluationPubId: pub.id,
 		};
-		instanceState[user.id] = evaluator;
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule no-submit notification email.
 		await unscheduleNoSubmitNotificationEmail(instanceId, pubId, evaluator);
