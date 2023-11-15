@@ -109,6 +109,7 @@ const makeTemplateApi = async (
 		},
 		{} as Record<string, string>
 	);
+	// TODO: Batch these calls using prisma.findMany() or equivalent.
 	// Load included pubs.
 	const pubs: { [pubId: string]: GetPubResponseBodyBase } = {};
 	if (body.include?.pubs) {
