@@ -119,7 +119,7 @@ export const unscheduleNoSubmitNotificationEmail = (
 export const sendInviteEmail = async (
 	instanceId: string,
 	pubId: string,
-	evaluator: EvaluatorWithPubPubUser
+	evaluator: EvaluatorWithInvite
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {
@@ -127,15 +127,18 @@ export const sendInviteEmail = async (
 		},
 		subject: evaluator.emailTemplate.subject,
 		message: evaluator.emailTemplate.message,
-		extra: {
-			accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
-			decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
-			info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
-		},
 		include: {
 			pubs: {
 				submission: pubId,
 			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
+			decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
+			info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
 		},
 	});
 };
