@@ -83,6 +83,18 @@ const makeProxy = <T extends Record<string, unknown>>(obj: T, prefix: string) =>
 	});
 };
 
+const pubSelect = {
+	values: true,
+} satisfies Prisma.PubSelect;
+type EmailTemplatePub = Prisma.PubGetPayload<{ select: typeof pubSelect }>;
+
+const userSelect = {
+	firstName: true,
+	lastName: true,
+	email: true,
+} satisfies Prisma.UserSelect;
+type EmailTemplateUser = Prisma.UserGetPayload<{ select: typeof userSelect }>;
+
 const makeTemplateApi = async (
 	instance: Prisma.IntegrationInstanceGetPayload<{ include: typeof instanceInclude }>,
 	user: User,
@@ -96,12 +108,12 @@ const makeTemplateApi = async (
 		{} as Record<string, string>
 	);
 	// Load included pubs.
-	const pubs = {};
+	const pubs: { [pubId: string]: EmailTemplatePub } = {};
 	if (body.include?.pubs) {
 		for (const pubId in body.include.pubs) {
 			const pub = await prisma.pub.findUnique({
 				where: { id: pubId },
-				select: { values: true },
+				select: pubSelect,
 			});
 			if (pub) {
 				pubs[pubId] = pub;
@@ -109,7 +121,7 @@ const makeTemplateApi = async (
 		}
 	}
 	// Load included users.
-	const users = {};
+	const users: { [userId: string]: EmailTemplateUser } = {};
 	if (body.include?.users) {
 		for (const userId in body.include.users) {
 			const user = await prisma.user.findUnique({

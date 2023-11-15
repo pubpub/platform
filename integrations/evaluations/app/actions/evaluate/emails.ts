@@ -138,6 +138,9 @@ export const scheduleReminderEmail = async (
 					pub: pubId,
 				},
 			},
+			extra: {
+				invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}</a>`,
+			},
 		},
 		{ jobKey, runAt }
 	);
