@@ -74,7 +74,6 @@ export function EvaluatorInviteForm(props: Props) {
 			const result = await actions.save(
 				props.instanceId,
 				props.pub.id,
-				props.pub.values[props.instanceConfig.titleFieldSlug] as string,
 				values.evaluators,
 				send
 			);
