@@ -20,7 +20,7 @@ export const getIntegrationInstanceConfig = async (instanceId: string) => {
 			config: true,
 		},
 	});
-	return instance?.config;
+	return instance?.config ?? null;
 };
 
 export const setIntegrationInstanceState = async (instanceId: string, pubId: string, state) => {
@@ -54,5 +54,5 @@ export const getIntegrationInstanceState = async (instanceId: string, pubId: str
 			state: true,
 		},
 	});
-	return state?.state;
+	return state?.state ?? null;
 };

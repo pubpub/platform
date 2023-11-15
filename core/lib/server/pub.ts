@@ -10,7 +10,7 @@ import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
 import { expect } from "utils";
 
-const pubValuesInclude = {
+export const pubValuesInclude = {
 	values: {
 		distinct: ["fieldId"],
 		orderBy: { createdAt: "desc" },

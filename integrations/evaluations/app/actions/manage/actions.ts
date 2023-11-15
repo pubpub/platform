@@ -65,7 +65,12 @@ export const save = async (
 					subject: evaluator.emailTemplate.subject,
 					message: evaluator.emailTemplate.message,
 					extra: {
-						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">${pubTitle}</a>`,
+						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}</a>`,
+					},
+					include: {
+						pubs: {
+							submission: pubId,
+						},
 					},
 				});
 				// Update the evaluator to reflect that they have been invited.
@@ -123,6 +128,8 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 		const evaluation = pub.children.find(
 			(child) => child.values[instanceConfig.evaluatorFieldSlug] === userId
 		);
+		// TODO: When an evaluator is removed, we should unschedule reminder
+		// email and notification email(s).
 		if (evaluation !== undefined) {
 			await client.deletePub(instanceId, evaluation.id);
 		}

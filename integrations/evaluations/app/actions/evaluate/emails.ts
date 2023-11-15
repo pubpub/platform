@@ -6,9 +6,12 @@ import {
 	InstanceConfig,
 } from "~/lib/types";
 
-const DAYS_TO_ACCEPT_INVITE = 10;
-const DAYS_TO_REMIND_EVALUATOR = 5;
-const DAYS_TO_SUBMIT_EVALUATION = 21;
+// TODO: This scales days down to approximate seconds. Remove after demo.
+const DAY_SCALE = 0.0000115741;
+
+const DAYS_TO_ACCEPT_INVITE = 10 * DAY_SCALE;
+const DAYS_TO_REMIND_EVALUATOR = 5 * DAY_SCALE;
+const DAYS_TO_SUBMIT_EVALUATION = 21 * DAY_SCALE;
 
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
@@ -38,12 +41,12 @@ export const scheduleNoReplyNotificationEmail = async (
 			to: {
 				userId: evaluator.invitedBy,
 			},
-			subject: `[Unjournal] No reply from invited evaluator for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-			message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not responded for {{extra.days}} days to our invitation to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+			subject: `[Unjournal] No reply from invited evaluator for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+			message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not responded for {{extra.days}} days to our invitation to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 			include: {
 				pubs: {
-					pub: pubId,
+					submission: pubId,
 				},
 				users: {
 					evaluator: evaluator.userId,
@@ -51,7 +54,7 @@ ${notificationFooter}`,
 			},
 			extra: {
 				days: DAYS_TO_ACCEPT_INVITE.toString(),
-				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 			},
 		},
 		{ jobKey, runAt }
@@ -83,12 +86,12 @@ export const scheduleNoSubmitNotificationEmail = async (
 			to: {
 				userId: evaluator.invitedBy,
 			},
-			subject: `[Unjournal] Evaluation not submitted for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-			message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not submitted an evaluation for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}", which was due on {{extra.due_at}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+			subject: `[Unjournal] Evaluation not submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+			message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not submitted an evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}", which was due on {{extra.due_at}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 			include: {
 				pubs: {
-					pub: pubId,
+					submission: pubId,
 				},
 				users: {
 					evaluator: evaluator.userId,
@@ -96,7 +99,7 @@ ${notificationFooter}`,
 			},
 			extra: {
 				due_at: runAt.toLocaleDateString(),
-				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 			},
 		},
 		{ jobKey, runAt }
@@ -128,18 +131,18 @@ export const scheduleReminderEmail = async (
 			to: {
 				userId: evaluator.userId,
 			},
-			subject: `Reminder: {{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
+			subject: `Reminder: {{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
 			message: evaluator.emailTemplate.message,
 			include: {
 				users: {
 					invitor: evaluator.invitedBy,
 				},
 				pubs: {
-					pub: pubId,
+					submission: pubId,
 				},
 			},
 			extra: {
-				invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId=${pubId}&token={{user.token}}">{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}</a>`,
+				invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}</a>`,
 			},
 		},
 		{ jobKey, runAt }
@@ -168,9 +171,9 @@ export const sendAcceptedEmail = async (
 		to: {
 			userId: evaluator.userId,
 		},
-		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 		message: `<p>Hi {{user.firstName}} {{user.lastName}},</p>
-<p>Thank you for agreeing to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using this evaluation form. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
+<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using this evaluation form. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
 <p>Please aim to submit your completed evaluation by {{extra.due_at}}. If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 <p>Thank you again for your important contribution to the future of science.</p>
@@ -179,14 +182,14 @@ export const sendAcceptedEmail = async (
 <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 		include: {
 			pubs: {
-				pub: pubId,
+				submission: pubId,
 			},
 			users: {
 				invitor: evaluator.invitedBy,
 			},
 		},
 		extra: {
-			due_at: dueAt.toLocaleTimeString(),
+			due_at: dueAt.toLocaleDateString(),
 		},
 	});
 };
@@ -201,12 +204,12 @@ export const sendRequestedInfoNotification = (
 		to: {
 			userId: evaluator.invitedBy,
 		},
-		subject: `[Unjournal] More Information Request for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An invited evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}", has requested more information. You may contact them at <a href="mailto:{{users.evaluator.email}}">{{users.evaluator.email}}</a>.</p>
+		subject: `[Unjournal] More Information Request for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}", has requested more information. You may contact them at <a href="mailto:{{users.evaluator.email}}">{{users.evaluator.email}}</a>.</p>
 ${notificationFooter}`,
 		include: {
 			pubs: {
-				pub: pubId,
+				submission: pubId,
 			},
 			users: {
 				evaluator: evaluator.userId,
@@ -225,19 +228,19 @@ export const sendAcceptedNotificationEmail = (
 		to: {
 			userId: evaluator.invitedBy,
 		},
-		subject: `[Unjournal] Accepted evaluation for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An invited evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, has agreed to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+		subject: `[Unjournal] Accepted evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has agreed to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 		include: {
 			pubs: {
-				pub: pubId,
+				submission: pubId,
 			},
 			users: {
 				evaluator: evaluator.userId,
 			},
 		},
 		extra: {
-			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 		},
 	});
 };
@@ -252,19 +255,19 @@ export const sendDeclinedNotificationEmail = async (
 		to: {
 			userId: evaluator.invitedBy,
 		},
-		subject: `[Unjournal] Invited evaluator declines to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An invited evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, has declined to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+		subject: `[Unjournal] Invited evaluator declines to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has declined to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 		include: {
 			pubs: {
-				pub: pubId,
+				submission: pubId,
 			},
 			users: {
 				evaluator: evaluator.userId,
 			},
 		},
 		extra: {
-			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 		},
 	});
 };
@@ -279,20 +282,20 @@ export const sendSubmittedNotificationEmail = async (
 		to: {
 			userId: evaluator.invitedBy,
 		},
-		subject: `[Unjournal] Evaluation submitted for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, has submitted an evaluation for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}. The submitted evaluation Pub can be viewed <a href="https://v7.pubpub.org/pubs/${evaluator.evaluationPubId}">here</a>.</p>
+		subject: `[Unjournal] Evaluation submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has submitted an evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". The submitted evaluation Pub can be viewed <a href="https://v7.pubpub.org/pubs/${evaluator.evaluationPubId}">here</a>.</p>
 <p>You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
 ${notificationFooter}`,
 		include: {
 			pubs: {
-				pub: pubId,
+				submission: pubId,
 			},
 			users: {
 				evaluator: evaluator.userId,
 			},
 		},
 		extra: {
-			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 		},
 	});
 };

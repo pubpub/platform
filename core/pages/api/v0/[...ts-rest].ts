@@ -19,7 +19,6 @@ import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
 import { findOrCreateUser } from "~/lib/server/user";
-import prisma from "~/prisma/db";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
@@ -83,12 +82,12 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	scheduleEmail: async ({ headers, params, body, query }) => {
 		checkAuthentication(headers.authorization);
-		const { to, subject, message, extra } = body;
+		const { to, subject, message, extra, include } = body;
 		const jobs = await getJobsClient();
 		const user = await ("userId" in to
 			? findOrCreateUser(to.userId)
 			: findOrCreateUser(to.email, to.firstName, to.lastName));
-		const payload = { to: { userId: user.id }, subject, message, extra };
+		const payload = { to: { userId: user.id }, subject, message, extra, include };
 		const job = await jobs.scheduleEmail(params.instanceId, payload, query);
 		return { status: 202, body: { job, userId: user.id } };
 	},
