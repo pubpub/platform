@@ -53,7 +53,7 @@ export const permissionInclude = {
 
 export const pubInclude = {
 	pubType: true,
-	values: { include: { field: true } },
+	values: { include: { field: { include: { schema: true } } } },
 	stages: {
 		include: {
 			integrationInstances: { include: { integration: true } },

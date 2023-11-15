@@ -68,6 +68,9 @@ importers:
       '@ts-rest/open-api':
         specifier: ^3.28.0
         version: 3.28.0(@ts-rest/core@3.28.0)(zod@3.21.4)
+      ajv:
+        specifier: ^8.12.0
+        version: 8.12.0
       clsx:
         specifier: ^2.0.0
         version: 2.0.0
