@@ -26,7 +26,14 @@ export const accept = async (instanceId: string, pubId: string) => {
 			instanceState[user.id],
 			`User was not invited to evaluate pub ${pubId}`
 		);
+		// Accepting again is a no-op.
+		if (evaluator.status === "accepted" || evaluator.status === "received") {
+			return { success: true };
+		}
+		// Assert the user is invited to evaluate this pub.
 		assertIsInvited(evaluator);
+		// Update the evaluator's status to accepted and add recored the time of
+		// acceptance.
 		evaluator = instanceState[user.id] = {
 			...evaluator,
 			status: "accepted",
@@ -57,11 +64,14 @@ export const decline = async (instanceId: string, pubId: string) => {
 			"Instance not configured"
 		);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		let evaluator = expect(
-			instanceState[user.id],
-			`User was not invited to evaluate pub ${pubId}`
-		);
+		let evaluator = expect(instanceState[user.id], "User was not invited to evaluate this pub");
+		// Declining again is a no-op.
+		if (evaluator.status === "declined") {
+			return { success: true };
+		}
+		// Assert the user is invited to evaluate this pub.
 		assertIsInvited(evaluator);
+		// Update the evaluator's status to declined.
 		evaluator = instanceState[user.id] = { ...evaluator, status: "declined" };
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.

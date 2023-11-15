@@ -5,6 +5,8 @@ import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
 import { Respond } from "./respond";
 import { SafeUser } from "@pubpub/sdk";
+import { decline } from "./actions";
+import { assertIsInvited } from "~/lib/types";
 
 type Props = {
 	searchParams: {
@@ -23,10 +25,11 @@ export default async function Page(props: Props) {
 	const instanceConfig = expect(await getInstanceConfig(instanceId), "Instance not configured");
 	const instanceState = await getInstanceState(instanceId, pubId);
 	const pub = await client.getPub(instanceId, pubId);
-	const status = instanceState?.[user.id]?.status;
-	if (status !== "invited" && status !== "declined") {
-		// TODO: Show a more informative error message or redirect based on status.
-		notFound();
+	const evaluator = expect(instanceState?.[user.id], "User was not invited to evaluate this pub");
+	assertIsInvited(evaluator);
+	// Immediately decline the invitation if the user intends to decline.
+	if (evaluator.status !== "declined" && intent === "decline") {
+		await decline(instanceId, pubId);
 	}
 	return (
 		<Respond

@@ -207,12 +207,6 @@ export const Respond = (props: Props) => {
 	const submissionTitle = props.pub.values[props.instanceConfig.titleFieldSlug] as string;
 	const submissionAbstract = props.pub.values["unjournal:abstract"] as string;
 
-	useEffect(() => {
-		if (props.intent === "decline") {
-			onDecline();
-		}
-	}, [onDecline]);
-
 	if (props.intent === "decline") {
 		const params = new URLSearchParams(window.location.search);
 		params.set("intent", "info");
@@ -240,7 +234,7 @@ export const Respond = (props: Props) => {
 	}
 
 	return (
-		<>
+		<div className="prose max-w-none">
 			{props.intent === "info" && (
 				<p>
 					Thanks for following up. Below, we provide more information about the evaluation
@@ -266,9 +260,13 @@ export const Respond = (props: Props) => {
 				<em>The details about the research we are asking you to evaluate.</em>
 			</p>
 			<h3>{submissionTitle}</h3>
-			{submissionAbstract && (
+			{submissionAbstract ? (
 				<p>
 					<strong>Abstract:</strong> {submissionAbstract}
+				</p>
+			) : (
+				<p>
+					<em>No abstract provided.</em>
 				</p>
 			)}
 			{submissionUrl && (
@@ -281,18 +279,23 @@ export const Respond = (props: Props) => {
 			{props.intent === "accept" && (
 				<>
 					<h2>Confirm</h2>
+					<p>
+						We encourage reviewers to complete reviews in three weeks. Upon accepting
+						this invitation, your evaluation will be due roughly on{" "}
+						<strong>
+							{new Date(Date.now() + 21 * (1000 * 60 * 60 * 24)).toLocaleDateString()}
+						</strong>
+						.
+					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
 						<Button onClick={onContact}>Contact Evaluation Manager</Button>
 					</div>
 					<h2>Changed your mind?</h2>
 					<p>
-						<em>
-							If you have changed your mind and decided you will not be able to
-							conduct this evaluation, you may choose 'Decline' below. (But we would
-							also love to get your feedback on why you made this decision — please do
-							contact us.)
-						</em>
+						If you have changed your mind and decided you will not be able to conduct
+						this evaluation, you may choose 'Decline' below. (But we would also love to
+						get your feedback on why you made this decision — please do contact us.)
 					</p>
 					<Button onClick={onDecline}>Decline</Button>
 				</>
@@ -315,6 +318,6 @@ export const Respond = (props: Props) => {
 					</div>
 				</>
 			)}
-		</>
+		</div>
 	);
 };
