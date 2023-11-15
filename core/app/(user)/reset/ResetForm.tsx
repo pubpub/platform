@@ -25,8 +25,19 @@ export default function ResetForm() {
 			setIsLoading(false);
 			setSuccess(true);
 			router.refresh();
+			// check if user is in a community
+			const response = await fetch(`/api/member?email=${data.user.email}`, {
+				method: "GET",
+				headers: { "content-type": "application/json" },
+			});
+			const { member } = await response.json();
+			setIsLoading(false);
 			setTimeout(() => {
-				router.push("/");
+				if (member) {
+					router.push(`/c/${member.community.slug}`);
+				} else {
+					router.push("/settings");
+				}
 			}, 5000);
 		}
 	};
@@ -47,7 +58,9 @@ export default function ResetForm() {
 							Set new password
 						</Button>
 						{error && (
-							<div className={"text-red-700 my-4"}>Error resetting password: {error}</div>
+							<div className={"text-red-700 my-4"}>
+								Error resetting password: {error}
+							</div>
 						)}
 					</form>
 				</div>

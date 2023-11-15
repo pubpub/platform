@@ -53,8 +53,8 @@ export const getLoginData = cache(async () => {
 					create: {
 						communityId,
 						canAdmin,
-					}
-				}
+					},
+				},
 			},
 		});
 	}

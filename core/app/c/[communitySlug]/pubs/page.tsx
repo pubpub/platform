@@ -4,7 +4,6 @@ import PubList from "./PubList";
 import PubHeader from "./PubHeader";
 import { createToken } from "~/lib/server/token";
 import { pubInclude, stageInclude } from "~/lib/types";
-import { redirect } from "next/navigation";
 import { expect } from "utils";
 
 const getCommunityPubs = async (communitySlug: string) => {
