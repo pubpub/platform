@@ -75,7 +75,7 @@ function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, value: Pr
 	return fields;
 }
 
-export function renderField(fieldValue: PubValueWithFieldAndSchema) {
+function renderField(fieldValue: PubValueWithFieldAndSchema) {
 	const JSONSchema = fieldValue.field.schema
 		? (fieldValue.field.schema.schema as JSONSchemaType<AnySchema>)
 		: null;
