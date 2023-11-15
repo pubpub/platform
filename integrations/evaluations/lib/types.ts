@@ -52,9 +52,10 @@ export type EvaluatorWithPubPubUser = z.infer<typeof EvaluatorWithPubPubUser>;
 export const EvaluatorWithInvite = EvaluatorWithPubPubUser.merge(
 	z.object({
 		invitedAt: z.string(),
+		invitedBy: z.string(),
 	})
 );
-export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithPubPubUser>;
+export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithInvite>;
 
 export const EvaluatorWhoAccepted = EvaluatorWithInvite.merge(
 	z.object({
@@ -62,6 +63,14 @@ export const EvaluatorWhoAccepted = EvaluatorWithInvite.merge(
 	})
 );
 export type EvaluatorWhoAccepted = z.infer<typeof EvaluatorWhoAccepted>;
+
+export const EvaluatorWhoEvaluated = EvaluatorWhoAccepted.merge(
+	z.object({
+		evaluatedAt: z.string(),
+		evaluationPubId: z.string(),
+	})
+);
+export type EvaluatorWhoEvaluated = z.infer<typeof EvaluatorWhoEvaluated>;
 
 export const Evaluator = z.discriminatedUnion("status", [
 	// "unsaved"
@@ -77,7 +86,7 @@ export const Evaluator = z.discriminatedUnion("status", [
 	// "declined"
 	z.object({ status: z.literal(InviteStatus.options[5]) }).merge(EvaluatorWithInvite),
 	// "received"
-	z.object({ status: z.literal(InviteStatus.options[6]) }).merge(EvaluatorWhoAccepted),
+	z.object({ status: z.literal(InviteStatus.options[6]) }).merge(EvaluatorWhoEvaluated),
 ]);
 export type Evaluator = z.infer<typeof Evaluator>;
 
@@ -101,23 +110,22 @@ export const defaultInstanceConfig = {
 
 export const isSaved = (
 	evaluator: Evaluator
-): evaluator is Evaluator & { status: Exclude<InviteStatus, "unsaved" | "unsaved-with-user"> } => {
+): evaluator is Exclude<Evaluator, { status: "unsaved" | "unsaved-with-user" }> => {
 	return evaluator.status !== "unsaved" && evaluator.status !== "unsaved-with-user";
 };
 
 export const hasUser = (
 	evaluator: Evaluator
-): evaluator is Evaluator & {
-	status: Exclude<InviteStatus, "unsaved">;
-} => {
+): evaluator is Exclude<Evaluator, { status: "unsaved" }> => {
 	return evaluator.status !== "unsaved";
 };
 
-export const hasInvite = (
+export const isInvited = (
 	evaluator: Evaluator
-): evaluator is Evaluator & {
-	status: Exclude<InviteStatus, "unsaved" | "unsaved-with-user" | "saved">;
-} => {
+): evaluator is Extract<
+	Evaluator,
+	{ status: "invited" | "accepted" | "declined" | "received" }
+> => {
 	return (
 		evaluator.status !== "unsaved" &&
 		evaluator.status !== "unsaved-with-user" &&
@@ -125,24 +133,21 @@ export const hasInvite = (
 	);
 };
 
-export function assertHasAccepted(evaluator: Evaluator): asserts evaluator is Evaluator & {
-	status: Exclude<
-		InviteStatus,
-		"unsaved" | "unsaved-with-user" | "saved" | "invited" | "declined"
-	>;
-} {
-	if (!hasInvite(evaluator)) {
+export function assertIsInvited(
+	evaluator: Evaluator
+): asserts evaluator is Extract<Evaluator, { status: "invited" | "declined" }> {
+	if (!isInvited(evaluator)) {
+		throw new Error("Evaluator is not invited");
+	}
+}
+
+export function assertHasAccepted(
+	evaluator: Evaluator
+): asserts evaluator is Extract<Evaluator, { status: "accepted" }> {
+	if (!isInvited(evaluator)) {
 		throw new Error("Evaluator is not invited");
 	}
 	if (evaluator.status === "declined") {
 		throw new Error("Evaluator has not accepted");
-	}
-}
-
-export function assertIsInvited(evaluator: Evaluator): asserts evaluator is Evaluator & {
-	status: Exclude<InviteStatus, "unsaved" | "unsaved-with-user" | "saved">;
-} {
-	if (!hasInvite(evaluator)) {
-		throw new Error("Evaluator is not invited");
 	}
 }

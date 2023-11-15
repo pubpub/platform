@@ -1,39 +1,56 @@
 import { client } from "~/lib/pubpub";
-import { InstanceConfig, InstanceState, assertHasAccepted } from "~/lib/types";
+import {
+	EvaluatorWhoAccepted,
+	EvaluatorWhoEvaluated,
+	EvaluatorWithInvite,
+	InstanceConfig,
+} from "~/lib/types";
+
+const DAYS_TO_ACCEPT_INVITE = 10;
+const DAYS_TO_REMIND_EVALUATOR = 5;
+const DAYS_TO_SUBMIT_EVALUATION = 21;
+
+const notificationFooter =
+	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
+
+const makeReminderJobKey = (instanceId: string, pubId: string, evaluator: EvaluatorWithInvite) =>
+	`send-email-${instanceId}-${pubId}-${evaluator.userId}-reminder`;
+
+const makeNoReplyJobKey = (instanceId: string, pubId: string, evaluator: EvaluatorWithInvite) =>
+	`send-email-${instanceId}-${pubId}-${evaluator.userId}-${evaluator.invitedBy}-no-reply`;
+
+const makeNoSubmitJobKey = (instanceId: string, pubId: string, evaluator: EvaluatorWithInvite) =>
+	`send-email-${instanceId}-${pubId}-${evaluator.userId}-no-submit`;
 
 export const scheduleNoReplyNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	invitedUserId: string,
-	invitorUserId: string
+	evaluator: EvaluatorWithInvite
 ) => {
-	// Invitors (and CC'd users) receive one notification after 10 days if the
-	// evaluator has neither accepted nor declined the invitiation.
-	const jobKey = `send-email-${instanceId}-${pubId}-${invitorUserId}-no-reply`;
-	const delayDays = 10;
-	const delayMs = delayDays * 24 * 60 * 60 * 1000;
-	const runAt = new Date(Date.now() + delayMs);
+	const jobKey = makeNoReplyJobKey(instanceId, pubId, evaluator);
+	const runAt = new Date(evaluator.invitedAt);
+	runAt.setMinutes(runAt.getMinutes() + DAYS_TO_ACCEPT_INVITE * 24 * 60);
 
 	await client.scheduleEmail(
 		instanceId,
 		{
 			to: {
-				userId: invitorUserId,
+				userId: evaluator.invitedBy,
 			},
 			subject: `[Unjournal] No reply from invited evaluator for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-			message: `<p>An invited evaluator, {{users.invited.firstName}} {{users.invited.lastName}}, has not responded for {{extra.days}} days to our invitation to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
-<p>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</p>`,
+			message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not responded for {{extra.days}} days to our invitation to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+${notificationFooter}`,
 			include: {
 				pubs: {
 					pub: pubId,
 				},
 				users: {
-					invited: invitedUserId,
+					evaluator: evaluator.userId,
 				},
 			},
 			extra: {
-				days: delayDays.toString(),
+				days: DAYS_TO_ACCEPT_INVITE.toString(),
 				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 			},
 		},
@@ -44,37 +61,78 @@ export const scheduleNoReplyNotificationEmail = async (
 export const unscheduleNoReplyNotificationEmail = (
 	instanceId: string,
 	pubId: string,
-	invitorUserId: string
+	evaluator: EvaluatorWithInvite
 ) => {
-	const jobKey = `send-email-${instanceId}-${pubId}-${invitorUserId}-no-reply`;
+	const jobKey = makeNoReplyJobKey(instanceId, pubId, evaluator);
+	return client.unscheduleEmail(instanceId, jobKey);
+};
+
+export const scheduleNoSubmitNotificationEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
+	const runAt = new Date(evaluator.invitedAt);
+	runAt.setMinutes(runAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
+
+	await client.scheduleEmail(
+		instanceId,
+		{
+			to: {
+				userId: evaluator.invitedBy,
+			},
+			subject: `[Unjournal] Evaluation not submitted for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
+			message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not submitted an evaluation for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}", which was due on {{extra.due_at}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+${notificationFooter}`,
+			include: {
+				pubs: {
+					pub: pubId,
+				},
+				users: {
+					evaluator: evaluator.userId,
+				},
+			},
+			extra: {
+				due_at: runAt.toLocaleDateString(),
+				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+			},
+		},
+		{ jobKey, runAt }
+	);
+};
+
+export const unscheduleNoSubmitNotificationEmail = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
 	return client.unscheduleEmail(instanceId, jobKey);
 };
 
 export const scheduleReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
-	instanceState: InstanceState,
 	pubId: string,
-	invitedUserId: string,
-	invitorUserId: string
+	evaluator: EvaluatorWithInvite
 ) => {
-	// Inviteds receive a single reminder after 5 days.
-	const jobKey = `send-email-${instanceId}-${pubId}-${invitedUserId}-reminder`;
-	const delayDays = 5;
-	const delayMs = delayDays * 24 * 60 * 60 * 1000;
-	const runAt = new Date(Date.now() + delayMs);
+	const jobKey = makeReminderJobKey(instanceId, pubId, evaluator);
+	const runAt = new Date(evaluator.invitedAt);
+	runAt.setMinutes(runAt.getMinutes() + DAYS_TO_REMIND_EVALUATOR * 24 * 60);
 
 	await client.scheduleEmail(
 		instanceId,
 		{
 			to: {
-				userId: invitedUserId,
+				userId: evaluator.userId,
 			},
 			subject: `Reminder: {{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
-			message: instanceState[invitedUserId].emailTemplate.message,
+			message: evaluator.emailTemplate.message,
 			include: {
 				users: {
-					invitor: invitorUserId,
+					invitor: evaluator.invitedBy,
 				},
 				pubs: {
 					pub: pubId,
@@ -88,34 +146,29 @@ export const scheduleReminderEmail = async (
 export const unscheduleReminderEmail = (
 	instanceId: string,
 	pubId: string,
-	invitedUserId: string
+	evaluator: EvaluatorWithInvite
 ) => {
-	const jobKey = `send-email-${instanceId}-${pubId}-${invitedUserId}-reminder`;
+	const jobKey = makeReminderJobKey(instanceId, pubId, evaluator);
 	return client.unscheduleEmail(instanceId, jobKey);
 };
 
 export const sendAcceptedEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
-	instanceState: InstanceState,
 	pubId: string,
-	invitedUserId: string,
-	invitorUserId: string
+	evaluator: EvaluatorWhoAccepted
 ) => {
-	const evaluator = instanceState[invitedUserId];
-	assertHasAccepted(evaluator);
-	const deadlineAt = new Date(evaluator.acceptedAt);
-	const deadlineDays = 21;
-	const deadlineMs = deadlineDays * 24 * 60 * 60 * 1000;
-	deadlineAt.setMinutes(deadlineAt.getMinutes() + deadlineMs);
+	const dueAt = new Date(evaluator.acceptedAt);
+	dueAt.setMinutes(dueAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
+
 	await client.sendEmail(instanceId, {
 		to: {
-			userId: invitedUserId,
+			userId: evaluator.userId,
 		},
 		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>Hi {{users.invited.firstName}} {{users.invited.lastName}},</p>
+		message: `<p>Hi {{user.firstName}} {{user.lastName}},</p>
 <p>Thank you for agreeing to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using this evaluation form. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
-<p>Please aim to submit your completed evaluation by {{extra.deadline_at}}. If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+<p>Please aim to submit your completed evaluation by {{extra.due_at}}. If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 <p>Thank you again for your important contribution to the future of science.</p>
 <p>Thanks and best wishes,</p>
@@ -126,16 +179,117 @@ export const sendAcceptedEmail = async (
 				pub: pubId,
 			},
 			users: {
-				invited: invitedUserId,
-				invitor: invitorUserId,
+				invitor: evaluator.invitedBy,
 			},
 		},
 		extra: {
-			deadline_at: deadlineAt.toLocaleTimeString(),
+			due_at: dueAt.toLocaleTimeString(),
 		},
 	});
 };
 
-export const sendAcceptedNotificationEmail = async () => {};
+export const sendRequestedInfoNotification = (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.invitedBy,
+		},
+		subject: `[Unjournal] More Information Request for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An invited evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}", has requested more information. You may contact them at <a href="mailto:{{users.evaluator.email}}">{{users.evaluator.email}}</a>.</p>
+${notificationFooter}`,
+		include: {
+			pubs: {
+				pub: pubId,
+			},
+			users: {
+				evaluator: evaluator.userId,
+			},
+		},
+	});
+};
 
-export const sendDeclinedNotificationEmail = async () => {};
+export const sendAcceptedNotificationEmail = (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.invitedBy,
+		},
+		subject: `[Unjournal] Accepted evaluation for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An invited evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, has agreed to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+${notificationFooter}`,
+		include: {
+			pubs: {
+				pub: pubId,
+			},
+			users: {
+				evaluator: evaluator.userId,
+			},
+		},
+		extra: {
+			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+		},
+	});
+};
+
+export const sendDeclinedNotificationEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.invitedBy,
+		},
+		subject: `[Unjournal] Invited evaluator declines to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An invited evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, has declined to evaluate "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+${notificationFooter}`,
+		include: {
+			pubs: {
+				pub: pubId,
+			},
+			users: {
+				evaluator: evaluator.userId,
+			},
+		},
+		extra: {
+			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+		},
+	});
+};
+
+export const sendSubmittedNotificationEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoEvaluated
+) => {
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.invitedBy,
+		},
+		subject: `[Unjournal] Evaluation submitted for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>An evaluator, {{evaluator.firstName}} {{evaluator.lastName}}, has submitted an evaluation for "{{pubs.pub.values["${instanceConfig.titleFieldSlug}"]}}. The submitted evaluation Pub can be viewed <a href="https://v7.pubpub.org/pubs/${evaluator.evaluationPubId}">here</a>.</p>
+<p>You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
+${notificationFooter}`,
+		include: {
+			pubs: {
+				pub: pubId,
+			},
+			users: {
+				evaluator: evaluator.userId,
+			},
+		},
+		extra: {
+			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pub.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+		},
+	});
+};
