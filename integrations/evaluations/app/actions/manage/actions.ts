@@ -61,8 +61,6 @@ export const save = async (
 			// If the user intends to invite selected evaluators, send an email to
 			// the evaluator with the invite link.
 			if (send && evaluator.selected) {
-				// Immediately send the invite email.
-				await sendInviteEmail(instanceId, pubId, evaluator);
 				// Update the evaluator to reflect that they have been invited.
 				evaluator = {
 					...evaluator,
@@ -70,6 +68,8 @@ export const save = async (
 					invitedAt: new Date().toString(),
 					invitedBy: user.id,
 				};
+				// Immediately send the invite email.
+				await sendInviteEmail(instanceId, pubId, evaluator);
 				// Scehdule a reminder email to person who was invited to evaluate.
 				await scheduleReminderEmail(instanceId, instanceConfig, pubId, evaluator);
 				// Schedule no-reply notification email to person who invited the
