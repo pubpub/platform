@@ -22,9 +22,9 @@ export const submit = async (instanceId: string, values: PubValues) => {
 };
 
 const metadataResolvers = {
-	DOI: makePubFromDoi,
-	URL: makePubFromUrl,
-	Title: makePubFromTitle,
+	"unjournal:doi": makePubFromDoi,
+	"unjournal:url": makePubFromUrl,
+	"unjournal:title": makePubFromTitle,
 };
 
 export const resolveMetadata = async (
