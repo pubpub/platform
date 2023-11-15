@@ -1,3 +1,4 @@
+import { SafeUser } from "@pubpub/sdk";
 import { notFound } from "next/navigation";
 import { expect } from "utils";
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
@@ -5,19 +6,18 @@ import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
 import { Declined } from "./declined";
 import { Evaluate } from "./evaluate";
-import { Respond } from "./respond";
 import { Submitted } from "./submitted";
-import { SafeUser } from "@pubpub/sdk";
 
 type Props = {
 	searchParams: {
 		instanceId: string;
 		pubId: string;
+		intent?: "accept" | "decline" | "info";
 	};
 };
 
 export default async function Page(props: Props) {
-	const { instanceId, pubId } = props.searchParams;
+	const { instanceId, pubId, intent } = props.searchParams;
 	if (!(instanceId && pubId)) {
 		notFound();
 	}
@@ -30,10 +30,6 @@ export default async function Page(props: Props) {
 		throw new Error("Instance not configured");
 	}
 	switch (instanceState?.[user.id]?.status) {
-		// If the evaluator has been invited, but neither accepted nor rejected,
-		// render the response page.
-		case "invited":
-			return <Respond instanceId={instanceId} pub={pub} />;
 		// If they have responded "Accept", render the evaluation form.
 		case "accepted":
 			return (

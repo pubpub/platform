@@ -7,7 +7,11 @@ import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/ins
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
 import { isInvited } from "~/lib/types";
-import { scheduleNoReplyNotificationEmail, scheduleReminderEmail } from "../evaluate/emails";
+import {
+	scheduleNoReplyNotificationEmail,
+	scheduleReminderEmail,
+	sendInviteEmail,
+} from "../../../lib/emails";
 import { InviteFormEvaluator } from "./types";
 
 export const save = async (
@@ -58,21 +62,8 @@ export const save = async (
 			// If the user intends to invite selected evaluators, send an email to
 			// the evaluator with the invite link.
 			if (send && evaluator.selected) {
-				await client.sendEmail(instanceId, {
-					to: {
-						userId: evaluatorUser.id,
-					},
-					subject: evaluator.emailTemplate.subject,
-					message: evaluator.emailTemplate.message,
-					extra: {
-						invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}</a>`,
-					},
-					include: {
-						pubs: {
-							submission: pubId,
-						},
-					},
-				});
+				// Immediately send the invite email.
+				await sendInviteEmail(instanceId, pubTitle, evaluator);
 				// Update the evaluator to reflect that they have been invited.
 				evaluator = {
 					...evaluator,

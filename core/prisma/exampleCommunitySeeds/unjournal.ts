@@ -262,7 +262,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				$id: "unjournal:evaluation",
 				title: "Please write your evaluation here",
 				description:
-					"Remember that your responses will be made public. Please consult <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators'>our criteria</a>. We are essentially asking for a 'standard high-quality referee report' here, with some specific considerations (mentioned in the above link). We welcome detail, elaboration, and technical discussion. If you prefer to link or submit your evaluation content in a different format, please link it here or send it to the corresponding/managing editor. Length and time spent: This is of course, up to you.  The Econometrics society recommends a 2-3 page referee report. In a recent survey (Charness et al, 2022), economists report spending (median and mean) about one day per report, with substantial shares reporting ‘half a day’ and ‘two days’. We expect that that reviewers tend to spend more time on papers for high-status journals, and when reviewing work closely tied to their own agenda.",
+					"Remember that your responses will be made public. Please consult <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators'>our criteria</a>. We are essentially asking for a 'standard high-quality referee report' here, with some specific considerations (mentioned in the above link). We welcome detail, elaboration, and technical discussion. If you prefer to link or submit your evaluation content in a different format, please link it here or send it to the corresponding/managing editor. Length and time spent: This is of course, up to you.  The Econometrics society recommends a 2-3 page referee report. In a recent survey (Charness et al, 2022), economists report spending (median and mean) about one day per report, with substantial shares reporting 'half a day' and 'two days'. We expect that that reviewers tend to spend more time on papers for high-status journals, and when reviewing work closely tied to their own agenda.",
 				type: "string",
 			},
 		},
@@ -711,6 +711,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					href: `${evaluationsIntegrationUrl}/actions/manage`,
 				},
 				{
+					name: "respond",
+					href: `${evaluationsIntegrationUrl}/actions/respond`,
+				},
+				{
 					name: "evaluate",
 					href: `${evaluationsIntegrationUrl}/actions/evaluate`,
 				},
@@ -718,6 +722,20 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			settingsUrl: `${evaluationsIntegrationUrl}/configure`,
 		},
 	});
+
+	const defaultEvaluationEmailSubject =
+		'{{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate {{pubs.submission.values["unjournal:title"]}} for The Unjournal';
+
+	const defaultEvaluationEmailBody = `<p>Hi {{user.firstName}} {{user.lastName}},</p>
+<p>I'm {{users.invitor.firstName}} {{users.invitor.lastName}} from The Unjournal. (See our 'in a nutshell' <a href="https://effective-giving-marketing.gitbook.io/the-unjournal-project-and-communication-space/readme-1">HERE</a>.) I'm writing to invite you to evaluate <a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a>. The abstract is copied below, and the most recent version is linked <a href="{{pubs.submission.values["unjournal:url"]}}">here</a>.</p>	
+<p>The evaluation would be publicly posted at <a href="https://unjournal.pubpub.org">unjournal.pubpub.org</a> (where you can see our output). It will be given a DOI and submitted to research archives such as Google Scholar. You can choose whether to remain anonymous or have the evaluation listed under your name. As a sign that we value this work, we offer a $400 honorarium for on-time evaluations, and we are also setting aside $150 per evaluation for incentives and prizes. See <a href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators">here</a> for our guidelines on what we ask evaluators to do.</p>
+<p>If you're interested, please 'accept' the invitation at the link below, and I'll share with you the (simple) interface for entering your evaluation and rating, as well as any specific considerations relevant to this paper. If you are too busy, please click 'decline' (and we welcome any suggestions you might have for other evaluators). If you are not sure, or if you have any questions about this, please reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a> or select the 'more information' link.</p>
+<p>{{extra.accept_link}} | {{extra.decline_link}} | {{extra.info_link}}</p>
+<p>Thanks and best wishes,</p>	
+<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+<p><a href="https://unjournal.org">Unjournal.org</a></p>	
+<p><a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a></p>
+<p>{{pubs.submission.values["unjournal:abstract"]}}</p>`;
 
 	const integrationInstances = [
 		{
@@ -733,10 +751,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			stageId: stageIds[3],
 			config: {
 				pubTypeId: evaluationTypeId,
-				template: {
-					subject: "You've been invited to review a submission on PubPub",
-					message: `Please reach out if you have any questions.`,
+				emailTemplate: {
+					subject: defaultEvaluationEmailSubject,
+					message: defaultEvaluationEmailBody,
 				},
+				titleFieldSlug: "unjournal:title",
+				evaluatorFieldSlug: "unjournal:evaluator",
 			},
 		},
 	];
