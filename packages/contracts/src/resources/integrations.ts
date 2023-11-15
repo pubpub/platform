@@ -37,6 +37,8 @@ export const GetPubResponseBodyBase = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
 });
+export type GetPubResponseBodyBase = z.infer<typeof GetPubResponseBodyBase>;
+
 export type GetPubResponseBody = z.infer<typeof GetPubResponseBodyBase> & {
 	children: GetPubResponseBody[];
 };

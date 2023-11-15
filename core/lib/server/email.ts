@@ -5,7 +5,8 @@ import { IntegrationAction } from "../types";
 import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
-import { SendEmailRequestBody } from "contracts";
+import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
+import { pubValuesInclude } from "./pub";
 
 type Node = string | { t: string; val: string };
 
@@ -84,11 +85,10 @@ const makeProxy = <T extends Record<string, unknown>>(obj: T, prefix: string) =>
 	});
 };
 
-const pubSelect = {
-	id: true,
-	values: true,
-} satisfies Prisma.PubSelect;
-type EmailTemplatePub = Prisma.PubGetPayload<{ select: typeof pubSelect }>;
+const pubInclude = {
+	...pubValuesInclude,
+} satisfies Prisma.PubInclude;
+type EmailTemplatePub = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
 
 const userSelect = {
 	firstName: true,
@@ -110,16 +110,23 @@ const makeTemplateApi = async (
 		{} as Record<string, string>
 	);
 	// Load included pubs.
-	const pubs: { [pubId: string]: EmailTemplatePub } = {};
+	const pubs: { [pubId: string]: GetPubResponseBodyBase } = {};
 	if (body.include?.pubs) {
 		for (const pubAlias in body.include.pubs) {
 			const pubId = body.include.pubs[pubAlias];
 			const pub = await prisma.pub.findUnique({
 				where: { id: pubId },
-				select: pubSelect,
+				include: pubInclude,
 			});
 			if (pub) {
-				pubs[pubAlias] = pub;
+				pubs[pubAlias] = {
+					id: pub.id,
+					pubTypeId: pub.pubTypeId,
+					values: pub.values.reduce((prev, curr) => {
+						prev[curr.field.slug] = curr.value;
+						return prev;
+					}, {} as Record<string, Prisma.JsonValue>),
+				};
 			}
 		}
 	}
