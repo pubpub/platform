@@ -6,6 +6,6 @@ const packageSource = (id) => path.join(packagePath(id), "src", "**/*.{ts,tsx}")
 
 module.exports = {
 	presets: [sharedConfig],
-	plugins: [require("@tailwindcss/forms")],
+	plugins: [require("@tailwindcss/forms"), require("@tailwindcss/typography")],
 	content: ["./app/**/*.{ts,tsx}", packageSource("ui"), packageSource("@pubpub/sdk")],
 };

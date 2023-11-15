@@ -1,5 +1,3 @@
-type Props = {};
-
-export const Submitted = (props: Props) => {
-	return <></>;
+export const Submitted = () => {
+	return <>Thank you for submitting an evaluation!</>;
 };

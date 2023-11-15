@@ -3,6 +3,7 @@ import {
 	EvaluatorWhoAccepted,
 	EvaluatorWhoEvaluated,
 	EvaluatorWithInvite,
+	EvaluatorWithPubPubUser,
 	InstanceConfig,
 } from "~/lib/types";
 
@@ -115,6 +116,30 @@ export const unscheduleNoSubmitNotificationEmail = (
 	return client.unscheduleEmail(instanceId, jobKey);
 };
 
+export const sendInviteEmail = async (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWithPubPubUser
+) => {
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: evaluator.emailTemplate.subject,
+		message: evaluator.emailTemplate.message,
+		extra: {
+			accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
+			decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
+			info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
+		},
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+		},
+	});
+};
+
 export const scheduleReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -142,7 +167,9 @@ export const scheduleReminderEmail = async (
 				},
 			},
 			extra: {
-				invite_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}</a>`,
+				accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
+				decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
+				info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
 			},
 		},
 		{ jobKey, runAt }
@@ -173,7 +200,7 @@ export const sendAcceptedEmail = async (
 		},
 		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 		message: `<p>Hi {{user.firstName}} {{user.lastName}},</p>
-<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using this evaluation form. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
+<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
 <p>Please aim to submit your completed evaluation by {{extra.due_at}}. If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 <p>Thank you again for your important contribution to the future of science.</p>
@@ -189,6 +216,7 @@ export const sendAcceptedEmail = async (
 			},
 		},
 		extra: {
+			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
 			due_at: dueAt.toLocaleDateString(),
 		},
 	});
@@ -198,7 +226,7 @@ export const sendRequestedInfoNotification = (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWhoAccepted
+	evaluator: EvaluatorWithInvite
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {

@@ -135,19 +135,17 @@ export const isInvited = (
 
 export function assertIsInvited(
 	evaluator: Evaluator
-): asserts evaluator is Extract<Evaluator, { status: "invited" | "declined" }> {
+): asserts evaluator is Exclude<Evaluator, { status: "unsaved" | "unsaved-with-user" | "saved" }> {
 	if (!isInvited(evaluator)) {
-		throw new Error("Evaluator is not invited");
+		throw new Error("User is not invited to evaluate this pub");
 	}
 }
 
 export function assertHasAccepted(
 	evaluator: Evaluator
 ): asserts evaluator is Extract<Evaluator, { status: "accepted" }> {
-	if (!isInvited(evaluator)) {
-		throw new Error("Evaluator is not invited");
-	}
+	assertIsInvited(evaluator);
 	if (evaluator.status === "declined") {
-		throw new Error("Evaluator has not accepted");
+		throw new Error("User has not accepted the invite to evaluate this pub");
 	}
 }
