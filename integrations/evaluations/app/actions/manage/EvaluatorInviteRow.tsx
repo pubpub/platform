@@ -47,24 +47,6 @@ export const EvaluatorInviteRow = (props: Props) => {
 				}}
 			/>
 			<FormField
-				name={`evaluators.${props.index}.selected`}
-				render={({ field }) => {
-					return (
-						<FormItem className="flex w-4 items-center">
-							<FormControl>
-								<input
-									type="checkbox"
-									{...field}
-									disabled={props.readOnly}
-									className="disabled:opacity-50"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					);
-				}}
-			/>
-			<FormField
 				name={`evaluators.${props.index}.email`}
 				render={({ field }) => (
 					<FormItem className="flex-1 self-start">

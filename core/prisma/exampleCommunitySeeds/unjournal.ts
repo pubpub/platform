@@ -732,7 +732,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			integrationId: evaluationsIntegration.id,
 			stageId: stageIds[3],
 			config: {
-				pubTypeId: submissionTypeId,
+				pubTypeId: evaluationTypeId,
 				template: {
 					subject: "You've been invited to review a submission on PubPub",
 					message: `Please reach out if you have any questions.`,

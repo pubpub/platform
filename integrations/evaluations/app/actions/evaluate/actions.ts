@@ -9,6 +9,7 @@ import { cookie } from "~/lib/request";
 import { assertHasAccepted, assertIsInvited } from "~/lib/types";
 import {
 	scheduleNoSubmitNotificationEmail,
+	sendAcceptedEmail,
 	sendAcceptedNotificationEmail,
 	sendDeclinedNotificationEmail,
 	sendSubmittedNotificationEmail,
@@ -25,16 +26,17 @@ export const accept = async (instanceId: string, pubId: string) => {
 			"Instance not configured"
 		);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		const evaluator = expect(
+		let evaluator = expect(
 			instanceState[user.id],
 			`User was not invited to evaluate pub ${pubId}`
 		);
 		assertIsInvited(evaluator);
-		instanceState[user.id] = {
+		evaluator = {
 			...evaluator,
 			status: "accepted",
 			acceptedAt: new Date().toString(),
 		};
+		instanceState[user.id] = evaluator;
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
 		await unscheduleReminderEmail(instanceId, pubId, evaluator);
@@ -42,6 +44,8 @@ export const accept = async (instanceId: string, pubId: string) => {
 		await unscheduleNoReplyNotificationEmail(instanceId, pubId, evaluator);
 		// Immediately send accepted notification email.
 		await sendAcceptedNotificationEmail(instanceId, instanceConfig, pubId, evaluator);
+		// Immediately send accepted email to evaluator.
+		await sendAcceptedEmail(instanceId, instanceConfig, pubId, evaluator);
 		// Schedule no-submit notification email.
 		await scheduleNoSubmitNotificationEmail(instanceId, instanceConfig, pubId, evaluator);
 		revalidatePath("/");

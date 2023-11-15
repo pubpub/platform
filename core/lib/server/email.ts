@@ -16,7 +16,7 @@ const staticTokens = new Set([
 	"user.lastName",
 	"instance.id",
 ]);
-const dynamicTokens = /^(instance\.actions|extra|pubs|users)\.(\w+)$/;
+const dynamicTokens = /^(instance\.actions|extra|pubs|users)\.(.+)$/;
 const commentRegex = /\/\*([\s\S]*?)\*\//g;
 
 const plugin = {
@@ -50,7 +50,8 @@ const plugin = {
 const eta = new Eta({
 	autoEscape: false,
 	// <%= it.user.id %> becomes <%= user.id %>
-	functionHeader: "const user=it.user,instance=it.instance,extra=it.extra",
+	functionHeader:
+		"const user=it.user,instance=it.instance,extra=it.extra,pubs=it.pubs,users=it.users;",
 	// <%= token %> becomes {{= token }}
 	tags: ["{{", "}}"],
 	// {{= token }} becomes {{ token }}
@@ -84,6 +85,7 @@ const makeProxy = <T extends Record<string, unknown>>(obj: T, prefix: string) =>
 };
 
 const pubSelect = {
+	id: true,
 	values: true,
 } satisfies Prisma.PubSelect;
 type EmailTemplatePub = Prisma.PubGetPayload<{ select: typeof pubSelect }>;
@@ -110,26 +112,28 @@ const makeTemplateApi = async (
 	// Load included pubs.
 	const pubs: { [pubId: string]: EmailTemplatePub } = {};
 	if (body.include?.pubs) {
-		for (const pubId in body.include.pubs) {
+		for (const pubAlias in body.include.pubs) {
+			const pubId = body.include.pubs[pubAlias];
 			const pub = await prisma.pub.findUnique({
 				where: { id: pubId },
 				select: pubSelect,
 			});
 			if (pub) {
-				pubs[pubId] = pub;
+				pubs[pubAlias] = pub;
 			}
 		}
 	}
 	// Load included users.
 	const users: { [userId: string]: EmailTemplateUser } = {};
 	if (body.include?.users) {
-		for (const userId in body.include.users) {
+		for (const userAlias in body.include.users) {
+			const userId = body.include.users[userAlias];
 			const user = await prisma.user.findUnique({
 				where: { id: userId },
 				select: { id: true, firstName: true, lastName: true, email: true },
 			});
 			if (user) {
-				users[userId] = user;
+				users[userAlias] = user;
 			}
 		}
 	}
