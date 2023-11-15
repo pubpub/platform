@@ -6,10 +6,10 @@ import { makeExtractPageMetadata } from "./html";
  */
 const derivePubFromCsl = (csl: any) => {
 	return {
-		Description: csl.abstract,
-		DOI: csl.DOI,
-		Title: csl.title,
-		URL: csl.resource?.primary?.URL ?? csl.URL,
+		"unjournal:description": csl.abstract,
+		"unjournal:doi": csl.DOI,
+		"unjournal:title": csl.title,
+		"unjournal:url": csl.resource?.primary?.URL ?? csl.URL,
 	};
 };
 
@@ -18,10 +18,10 @@ const derivePubFromCsl = (csl: any) => {
  */
 const derivePubFromCrossrefWork = (work: any) => {
 	return {
-		Description: work.abstract,
-		DOI: work.DOI,
-		Title: Array.isArray(work.title) ? work.title[0] : work.title,
-		URL: work.resource?.primary?.URL ?? work.URL,
+		"unjournal:description": work.abstract,
+		"unjournal:doi": work.DOI,
+		"unjournal:title": Array.isArray(work.title) ? work.title[0] : work.title,
+		"unjournal:url": work.resource?.primary?.URL ?? work.URL,
 	};
 };
 
@@ -67,12 +67,12 @@ export const makePubFromDoi = async (doi: string) => {
 // Extraction rules for HTML metadata.
 const extractPageMetadata = makeExtractPageMetadata(
 	{
-		mapTo: "Title",
+		mapTo: "unjournal:title",
 		rank: 0,
 		tagName: "title",
 	},
 	{
-		mapTo: "Title",
+		mapTo: "unjournal:title",
 		rank: 1,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -80,7 +80,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "Title",
+		mapTo: "unjournal:title",
 		rank: 2,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -88,7 +88,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "Description",
+		mapTo: "unjournal:description",
 		rank: 0,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -96,7 +96,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "Description",
+		mapTo: "unjournal:description",
 		rank: 1,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -104,7 +104,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "DOI",
+		mapTo: "unjournal:doi",
 		rank: 0,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -112,7 +112,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "DOI",
+		mapTo: "unjournal:doi",
 		rank: 1,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -120,7 +120,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "URL",
+		mapTo: "unjournal:url",
 		rank: 0,
 		tagName: "meta",
 		tagTypeAttr: "property",
@@ -128,7 +128,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "URL",
+		mapTo: "unjournal:url",
 		rank: 1,
 		tagName: "link",
 		tagTypeAttr: "rel",
@@ -167,16 +167,16 @@ export const makePubFromUrl = async (url: string) => {
 	}
 	// Extract metadata directly from the page's HTML.
 	const pub = await extractPageMetadata(url);
-	if (typeof pub.URL === "undefined") {
-		pub.URL = url;
+	if (typeof pub["unjournal:url"] === "undefined") {
+		pub["unjournal:url"] = url;
 	}
-	if (typeof pub.DOI === "string") {
-		pub.DOI = normalizeDoi(pub.DOI);
+	if (typeof pub["unjournal:doi"] === "string") {
+		pub["unjournal:doi"] = normalizeDoi(pub["unjournal:doi"]);
 		// If a DOI was found in the HTML, try to fetch pub from doi.org.
-		Object.assign(pub, await makePubFromDoi(pub.DOI));
+		Object.assign(pub, await makePubFromDoi(pub["unjournal:doi"]));
 	}
-	if (typeof pub.Description === "string") {
-		pub.Description = replaceHtmlEntites(pub.Description);
+	if (typeof pub["unjournal:description"] === "string") {
+		pub["unjournal:description"] = replaceHtmlEntites(pub["unjournal:description"]);
 	}
 	return pub;
 };
