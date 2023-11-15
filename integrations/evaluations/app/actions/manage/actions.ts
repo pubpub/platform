@@ -17,7 +17,6 @@ import { InviteFormEvaluator } from "./types";
 export const save = async (
 	instanceId: string,
 	pubId: string,
-	pubTitle: string,
 	evaluators: InviteFormEvaluator[],
 	send: boolean
 ) => {
@@ -63,7 +62,7 @@ export const save = async (
 			// the evaluator with the invite link.
 			if (send && evaluator.selected) {
 				// Immediately send the invite email.
-				await sendInviteEmail(instanceId, pubTitle, evaluator);
+				await sendInviteEmail(instanceId, pubId, evaluator);
 				// Update the evaluator to reflect that they have been invited.
 				evaluator = {
 					...evaluator,
