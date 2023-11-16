@@ -4,7 +4,8 @@ import { Toaster } from "ui";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";
-import { InstanceConfig, getInstanceConfig } from "~/lib/instance";
+import { getInstanceConfig } from "~/lib/instance";
+import { InstanceConfig } from "~/lib/types";
 import "./globals.css";
 
 export const metadata = {
