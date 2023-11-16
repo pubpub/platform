@@ -67,7 +67,7 @@ export function Evaluate(props: Props) {
 		} else {
 			toast({
 				title: "Success",
-				description: "The pub was created successfully",
+				description: "Your evaluation was submitted successfully!",
 			});
 			form.reset();
 		}
