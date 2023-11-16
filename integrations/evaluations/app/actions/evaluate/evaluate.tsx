@@ -1,6 +1,7 @@
 "use client";
 
 import Ajv from "ajv";
+import { fullFormats } from "ajv-formats/dist/formats";
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
 import { buildFormFieldsFromSchema, buildFormSchemaFromFields } from "@pubpub/sdk/react";
@@ -21,7 +22,7 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import { submit } from "./actions";
+import { submit, upload } from "./actions";
 import { InstanceConfig } from "~/lib/types";
 
 type Props = {
@@ -47,7 +48,9 @@ export function Evaluate(props: Props) {
 		mode: "onChange",
 		reValidateMode: "onChange",
 		// debug instructions: https://react-hook-form.com/docs/useform#resolver
-		resolver: ajvResolver(generatedSchema),
+		resolver: ajvResolver(generatedSchema, {
+			formats: fullFormats,
+		}),
 		defaultValues: {},
 	});
 
@@ -83,13 +86,22 @@ export function Evaluate(props: Props) {
 		persist(values);
 	}, [values]);
 
+	const generateSignedUploadUrl = (fileName) => {
+		return upload(props.instanceId, pub.id, fileName);
+	};
+
 	const formFieldsFromSchema = useMemo(() => {
 		// we need to use an uncompiled schema for validation, but compiled for building the form
 		// "Schema" is a key later used to retrieve this schema (we could later pass multiple for dereferencing, for example)
-		const ajv = new Ajv();
+		const ajv = new Ajv({ formats: fullFormats });
 		const schemaKey = "schema";
 		const compiledSchema = ajv.addSchema(generatedSchema, schemaKey);
-		return buildFormFieldsFromSchema(compiledSchema, schemaKey, form.control);
+		return buildFormFieldsFromSchema(
+			compiledSchema,
+			schemaKey,
+			form.control,
+			generateSignedUploadUrl
+		);
 	}, [form.control, pubType, generatedSchema]);
 
 	return (

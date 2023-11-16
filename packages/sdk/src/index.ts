@@ -2,9 +2,9 @@ export * from "./errors";
 export * from "./manifest";
 export * from "./client";
 
-import type { JsonInput } from "contracts";
+import type { CreatePubRequestBodyWithNulls } from "contracts";
 
-type Field = JsonInput;
+type Field = CreatePubRequestBodyWithNulls["values"][1];
 
 export type {
 	User,
@@ -14,4 +14,4 @@ export type {
 	SendEmailRequestBody,
 } from "contracts";
 export type { Field };
-export type PubValues = Record<string, Field>;
+export type PubValues = CreatePubRequestBodyWithNulls["values"];

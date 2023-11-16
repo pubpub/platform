@@ -11,6 +11,7 @@ import {
 	CardTitle,
 	Checkbox,
 	Confidence,
+	FileUpload,
 	FormControl,
 	FormDescription,
 	FormField,
@@ -127,7 +128,7 @@ const ScalarField = (props: ScalarFieldProps) => {
 	);
 };
 
-const customScalars = ["unjournal:100confidence", "unjournal:5confidence"];
+const customScalars = ["unjournal:100confidence", "unjournal:5confidence", "pubpub:fileUpload"];
 
 const hasCustomRenderer = (id: string) => {
 	return customScalars.includes(id);
@@ -137,6 +138,7 @@ type CustomRendererProps = {
 	control: Control;
 	fieldSchema: JSONSchemaType<AnySchema>;
 	fieldName: string;
+	upload: Function;
 };
 // todo: don't just use if statements, make more dynamic
 const CustomRenderer = (props: CustomRendererProps) => {
@@ -167,6 +169,33 @@ const CustomRenderer = (props: CustomRendererProps) => {
 									max={max}
 									onValueChange={(event) => field.onChange(event)}
 									className="confidence"
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+			</CardContent>
+		);
+	}
+	if (fieldSchema.$id === "pubpub:fileUpload") {
+		return (
+			<CardContent className={cn("flex flex-col column gap-4 w-1/2")}>
+				<FormField
+					control={control}
+					name={fieldName}
+					defaultValue={fieldSchema.default ?? [0, 0, 0]}
+					render={({ field }) => (
+						<FormItem className="mb-6">
+							<FormLabel>{fieldSchema.title}</FormLabel>
+							<CardDescription
+								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
+							/>
+							<FormControl>
+								<FileUpload
+									{...field}
+									upload={props.upload}
+									onUpdateFiles={(event: any[]) => field.onChange(event)}
 								/>
 							</FormControl>
 							<FormMessage />
@@ -219,6 +248,7 @@ export const buildFormFieldsFromSchema = (
 	compiledSchema: Ajv,
 	compiledSchemaKey: string,
 	control: Control,
+	upload: Function,
 	path?: string,
 	fieldSchema?: JSONSchemaType<AnySchema>,
 	schemaPath?: string
@@ -259,6 +289,7 @@ export const buildFormFieldsFromSchema = (
 						compiledSchema,
 						compiledSchemaKey,
 						control,
+						upload,
 						fieldPath,
 						fieldSchema,
 						fieldSchemaPath
@@ -269,6 +300,7 @@ export const buildFormFieldsFromSchema = (
 					compiledSchema,
 					compiledSchemaKey,
 					control,
+					upload,
 					fieldPath,
 					fieldSchema,
 					fieldSchemaPath
@@ -289,6 +321,7 @@ export const buildFormFieldsFromSchema = (
 					control={control}
 					fieldSchema={scalarSchema}
 					fieldName={path ?? resolvedSchema.$id!.split("#")[1]}
+					upload={upload}
 				/>
 			) : (
 				<CardContent

@@ -14,6 +14,7 @@ import {
 	setIntegrationInstanceState,
 	tsRestHandleErrors,
 	updatePub,
+	generateSignedAssetUploadUrl,
 } from "~/lib/server";
 import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
@@ -141,6 +142,14 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		checkAuthentication(headers.authorization);
 		const state = await getIntegrationInstanceState(params.instanceId, params.pubId);
 		return { status: 200, body: state };
+	},
+	generateSignedAssetUploadUrl: async ({ headers, params, body }) => {
+		checkAuthentication(headers.authorization);
+		const url = await generateSignedAssetUploadUrl(body.pubId, body.fileName);
+		return {
+			status: 200,
+			body: url,
+		};
 	},
 });
 

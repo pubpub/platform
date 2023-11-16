@@ -5,6 +5,7 @@ import prisma from "~/prisma/db";
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { getUserInfoFromJWT } from "~/lib/auth/loginId";
 import { generateHash, slugifyString } from "../string";
+import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
 
 /* This is only called from Server Component functions */
 /* When in the API, use getLoginId from loginId.ts */
@@ -37,7 +38,7 @@ export const getLoginData = cache(async () => {
 		// a name before progressing
 		const firstName = supabaseUser.user_metadata.firstName ?? "";
 		const lastName = supabaseUser.user_metadata.lastName ?? null;
-		const communityId = supabaseUser.user_metadata.communityId;
+		const communityId = supabaseUser.user_metadata.communityId ?? unJournalId;
 		const canAdmin = supabaseUser.user_metadata.canAdmin ?? false;
 
 		user = await prisma.user.create({

@@ -47,3 +47,11 @@ export const submit = async (instanceId: string, pubId: string, values: PubValue
 		return { error: error.message };
 	}
 };
+
+export const upload = async (instanceId: string, pubId: string, fileName: string) => {
+	try {
+		return await client.generateSignedAssetUploadUrl(instanceId, pubId, fileName);
+	} catch (error) {
+		return { error: error.message };
+	}
+};
