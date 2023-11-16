@@ -32,7 +32,7 @@ export default async function Login() {
 		<div className="max-w-sm mx-auto">
 			<LoginForm />
 
-			<div className="text-gray-600 text-center mt-6">
+			{/* <div className="text-gray-600 text-center mt-6">
 				Don't have an account?{" "}
 				<Link
 					href="/signup"
@@ -40,7 +40,7 @@ export default async function Login() {
 				>
 					Sign up
 				</Link>
-			</div>
+			</div> */}
 		</div>
 	);
 }

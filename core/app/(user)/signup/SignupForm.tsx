@@ -12,6 +12,8 @@ export default function SignupForm() {
 	const [signupComplete, setSignupComplete] = useState(false);
 
 	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
+		// TODO: reenable signups
+		return;
 		evt.preventDefault();
 
 		setIsLoading(true);
