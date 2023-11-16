@@ -165,7 +165,7 @@ export default function SettingsForm({
 						Password reset email sent! Please check your inbox.
 					</div>
 				)}
-				{communities && (
+				{communities.length && (
 					<div className="mt-8">
 						<p>Communities:</p>
 						{communities.map((community) => {

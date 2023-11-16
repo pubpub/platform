@@ -34,7 +34,7 @@ export default function ResetForm() {
 			setIsLoading(false);
 			setTimeout(() => {
 				if (member) {
-					router.push(`/c/${member.community.slug}`);
+					router.push(`/c/${member.community.slug}/stages`);
 				} else {
 					router.push("/settings");
 				}

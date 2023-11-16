@@ -20,7 +20,7 @@ export default async function Login() {
 			});
 
 			if (member) {
-				redirect(`/c/${member.community.slug}`);
+				redirect(`/c/${member.community.slug}/stages`);
 			} else {
 				redirect("/settings");
 			}

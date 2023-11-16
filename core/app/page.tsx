@@ -18,7 +18,7 @@ export default async function Page() {
 			});
 
 			if (member) {
-				redirect(`/c/${member.community.slug}`);
+				redirect(`/c/${member.community.slug}/stages`);
 			} else {
 				redirect("/settings");
 			}
