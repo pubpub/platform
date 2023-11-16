@@ -71,7 +71,7 @@ const IntegrationActions = (props: Props) => {
 					}
 					return (
 						<li key={action.href} className="flex items-stretch">
-							<Button variant="ghost" size="sm" key={action.href}>
+							<Button variant="outline" size="sm" key={action.href}>
 								<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
 								<a href={action.href}>{action.text}</a>
 							</Button>
