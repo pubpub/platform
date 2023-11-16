@@ -21,12 +21,6 @@ services:
       startCommand: pnpm --filter jobs start 
       envVars:
           - fromGroup: pubpub-flock-prod-env
-    # integration-instances
-    - type: redis
-      name: integration-instances
-      region: ohio
-      ipAllowList: [] # only allow internal connections
-      maxmemoryPolicy: noeviction
     # integration-submissions
     - type: web
       name: integration-submissions
@@ -37,11 +31,6 @@ services:
       startCommand: pnpm start --filter integration-submissions
       envVars:
           - fromGroup: pubpub-integration-prod-env
-          - key: REDIS_CONNECTION_STRING
-            fromService:
-                type: redis
-                name: integration-instances
-                property: connectionString
     # integration-evaluations
     - type: web
       name: integration-evaluations
@@ -52,11 +41,6 @@ services:
       startCommand: pnpm start --filter integration-evaluations
       envVars:
           - fromGroup: pubpub-integration-prod-env
-          - key: REDIS_CONNECTION_STRING
-            fromService:
-                type: redis
-                name: integration-instances
-                property: connectionString
 databases:
     - name: core
       plan: standard

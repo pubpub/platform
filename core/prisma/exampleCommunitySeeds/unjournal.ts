@@ -735,7 +735,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
 <p><a href="https://unjournal.org">Unjournal.org</a></p>	
 <p><a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a></p>
-<p>{{pubs.submission.values["unjournal:abstract"]}}</p>`;
+<p>{{pubs.submission.values["unjournal:description"]}}</p>`;
 
 	const integrationInstances = [
 		{

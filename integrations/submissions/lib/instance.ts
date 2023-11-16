@@ -1,50 +1,30 @@
-import * as redis from "redis";
+import { client } from "./pubpub";
+import { InstanceConfig, InstanceState } from "./types";
 
-export type InstanceConfig = {
-	pubTypeId: string;
-};
-
-export type InstanceState = {};
-
-let client: redis.RedisClientType;
-let clientConnect: Promise<void>;
-
-const db = async () => {
-	if (!client) {
-		client = redis.createClient({ url: process.env.REDIS_CONNECTION_STRING });
-		clientConnect = client.connect();
-	}
-	await clientConnect;
-	return client;
-};
-
-export const makeInstanceConfig = (): InstanceConfig => ({
-	pubTypeId: "",
-});
-
-export const getInstanceConfig = async (instanceId: string) => {
-	const instance = await (await db()).get(instanceId);
-	return instance ? (JSON.parse(instance) as InstanceConfig) : undefined;
+export const getInstanceConfig = async (
+	instanceId: string
+): Promise<InstanceConfig | undefined> => {
+	return await client.getInstanceConfig(instanceId);
 };
 
 export const setInstanceConfig = async (
 	instanceId: string,
-	instance: InstanceConfig
-): Promise<InstanceConfig> => {
-	(await db()).set(instanceId, JSON.stringify(instance));
-	return instance;
+	instanceConfig: InstanceConfig
+): Promise<any> => {
+	return await client.setInstanceConfig(instanceId, instanceConfig);
 };
 
-export const getInstanceState = async (instanceId: string, pubId: string) => {
-	const state = await (await db()).get(`${instanceId}:${pubId}`);
-	return state ? (JSON.parse(state) as InstanceState) : undefined;
+export const getInstanceState = async (
+	instanceId: string,
+	pubId: string
+): Promise<InstanceState | undefined> => {
+	return await client.getInstanceState(instanceId, pubId);
 };
 
 export const setInstanceState = async (
 	instanceId: string,
 	pubId: string,
-	state: InstanceState
-): Promise<InstanceState> => {
-	(await db()).set(`${instanceId}:${pubId}`, JSON.stringify(state));
-	return state;
+	instanceState: InstanceState
+): Promise<any> => {
+	return await client.setInstanceState(instanceId, pubId, instanceState);
 };

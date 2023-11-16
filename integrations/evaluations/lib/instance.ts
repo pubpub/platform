@@ -1,7 +1,5 @@
 import { client } from "./pubpub";
-import { InstanceConfig, InstanceState, defaultInstanceConfig } from "./types";
-
-export const makeInstanceConfig = (): InstanceConfig => structuredClone(defaultInstanceConfig);
+import { InstanceConfig, InstanceState } from "./types";
 
 export const getInstanceConfig = async (
 	instanceId: string
