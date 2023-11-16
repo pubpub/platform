@@ -23,6 +23,8 @@ import {
 import { cn } from "utils";
 import { submit } from "./actions";
 import { InstanceConfig } from "~/lib/types";
+import { Research } from "~/lib/components/Research";
+import { Process } from "~/lib/components/Process";
 
 type Props = {
 	instanceId: string;
@@ -92,46 +94,26 @@ export function Evaluate(props: Props) {
 		return buildFormFieldsFromSchema(compiledSchema, schemaKey, form.control);
 	}, [form.control, pubType, generatedSchema]);
 
+	const submissionUrl = pub.values["unjournal:url"] as string;
+	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
+	const submissionAbstract = pub.values["unjournal:description"] as string;
+
 	return (
 		<>
-			<Card>
-				<CardHeader>
-					<CardDescription>
-						Thanks for your interest in evaluating research for the Unjournal! Your
-						evaluation will be made public and given a DOI, but you have the option to
-						remain anonymous or 'sign your review' and take credit. You will be
-						compensated a minimum of $250 for your evaluation work, and will be eligible
-						for financial 'most informative evaluation' prizes. See the full guidelines
-						on our wiki.
-					</CardDescription>
-					<Separator />
-					<p className={cn("text-sm")}>To evaluate:</p>
-					<h1 className={cn("text-2xl")}>{`${
-						pub.values[props.instanceConfig.titleFieldSlug]
-					}`}</h1>
-					<p className={cn("text-base")}>
-						{pub.values["unjournal:description"] &&
-							`${pub.values["unjournal:description"]}`}
-					</p>
-					<p>
-						<a href={`${pub.values["unjournal:url"]}`}>View Article</a>
-					</p>
-					<h2 className={cn("text-sm")}>Manager Notes:</h2>
-					<p>
-						{pub.values["unjournal:managers-notes"] &&
-							`${pub.values["unjournal:managers-notes"]}`}
-					</p>
-				</CardHeader>
-			</Card>
-			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)}>
-					<Card>
-						<CardHeader>
-							<CardTitle>{pubType.name}</CardTitle>
-							<CardDescription>{pubType.description}</CardDescription>
-						</CardHeader>
-						<CardContent>{formFieldsFromSchema}</CardContent>
-						<CardFooter className={cn("flex justify-between")}>
+			<div className="prose max-w-none">
+				<Research
+					title={submissionTitle}
+					abstract={submissionAbstract}
+					url={submissionUrl}
+					evaluating
+				/>
+				<Process />
+				<h2>{pubType.name}</h2>
+				<p>{pubType.description}</p>
+				<Form {...form}>
+					<form onSubmit={form.handleSubmit(onSubmit)}>
+						{formFieldsFromSchema}
+						<div className={cn("flex justify-between")}>
 							<Button
 								variant="outline"
 								onClick={(e) => {
@@ -147,10 +129,10 @@ export function Evaluate(props: Props) {
 								)}
 								Submit Evaluation
 							</Button>
-						</CardFooter>
-					</Card>
-				</form>
-			</Form>
+						</div>
+					</form>
+				</Form>
+			</div>
 		</>
 	);
 }

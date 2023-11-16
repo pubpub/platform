@@ -3,12 +3,7 @@ import * as React from "react";
 import Ajv, { JSONSchemaType } from "ajv";
 import { GetPubTypeResponseBody } from "contracts";
 import { Control, ControllerRenderProps } from "react-hook-form";
-
 import {
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
 	Checkbox,
 	Confidence,
 	FormControl,
@@ -19,6 +14,7 @@ import {
 	FormMessage,
 	Input,
 	Separator,
+	Textarea,
 } from "ui";
 import { cn } from "utils";
 
@@ -47,6 +43,10 @@ export const buildFormSchemaFromFields = (
 						title: `${field.name}`,
 						$id: `urn:uuid:${field.id}`,
 						default: "",
+						// Schemas without a schema are assumed to be short-form strings,
+						// and rendered as <input type="text">.
+						// TODO: Add maxLength to long-form string fields.
+						maxLength: 100,
 					};
 				}
 			}
@@ -59,13 +59,16 @@ export const buildFormSchemaFromFields = (
 export const getFormField = (schema: JSONSchemaType<AnySchema>, field: ControllerRenderProps) => {
 	const { title, description, type } = schema;
 	const descriptionComponentWithHtml = (
-		<FormDescription dangerouslySetInnerHTML={{ __html: description }} />
+		<FormDescription
+			className="text-[0.8em]"
+			dangerouslySetInnerHTML={{ __html: description }}
+		/>
 	);
 	switch (type) {
 		case "number":
 			return (
-				<FormItem>
-					<FormLabel>{title}</FormLabel>
+				<FormItem className="mb-6">
+					<FormLabel className="text-[0.9em]">{title}</FormLabel>
 					{descriptionComponentWithHtml}
 					<FormControl>
 						<Input
@@ -79,10 +82,11 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 			);
 		case "boolean":
 			return (
-				<FormItem className={cn("flex flex-row items-start space-x-3 space-y-0")}>
+				<FormItem className={cn("mb-6 flex flex-row items-start space-x-3 space-y-0")}>
 					<FormControl>
 						<Checkbox
 							{...field}
+							className="relative top-1"
 							defaultChecked={field.value}
 							onCheckedChange={(checked) => {
 								field.onChange(checked);
@@ -90,7 +94,7 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 						/>
 					</FormControl>
 					<div className={cn("space-y-1 leading-none")}>
-						<FormLabel>{title}</FormLabel>
+						<FormLabel className="text-[0.9em]">{title}</FormLabel>
 						{descriptionComponentWithHtml}
 						<FormMessage />
 					</div>
@@ -98,11 +102,15 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 			);
 		default:
 			return (
-				<FormItem>
-					<FormLabel>{schema.title}</FormLabel>
+				<FormItem className="mb-6">
+					<FormLabel className="text-[0.9em]">{schema.title}</FormLabel>
 					{descriptionComponentWithHtml}
 					<FormControl>
-						<Input {...field} />
+						{"maxLength" in schema && schema.maxLength <= 100 ? (
+							<Input {...field} />
+						) : (
+							<Textarea {...field} />
+						)}
 					</FormControl>
 					<FormMessage />
 				</FormItem>
@@ -149,31 +157,30 @@ const CustomRenderer = (props: CustomRendererProps) => {
 		const min = fieldSchema.items.minimum;
 		const max = fieldSchema.items.maximum;
 		return (
-			<CardContent className={cn("flex flex-col column gap-4 w-1/2")}>
-				<FormField
-					control={control}
-					name={fieldName}
-					defaultValue={fieldSchema.default ?? [0, 0, 0]}
-					render={({ field }) => (
-						<FormItem className="mb-6">
-							<FormLabel>{fieldSchema.title}</FormLabel>
-							<CardDescription
-								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
+			<FormField
+				control={control}
+				name={fieldName}
+				defaultValue={fieldSchema.default ?? [0, 0, 0]}
+				render={({ field }) => (
+					<FormItem className="mb-6">
+						<FormLabel className="text-[0.9em]">{fieldSchema.title}</FormLabel>
+						<FormDescription
+							className="text-[0.8em]"
+							dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
+						/>
+						<FormControl>
+							<Confidence
+								{...field}
+								min={min}
+								max={max}
+								onValueChange={(event) => field.onChange(event)}
+								className="confidence"
 							/>
-							<FormControl>
-								<Confidence
-									{...field}
-									min={min}
-									max={max}
-									onValueChange={(event) => field.onChange(event)}
-									className="confidence"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-			</CardContent>
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
 		);
 	}
 };
@@ -243,18 +250,12 @@ export const buildFormFieldsFromSchema = (
 				: `${resolvedSchema.$id}#/properties`;
 
 			const fieldContent = isObjectSchema(fieldSchema) ? (
-				<div key={fieldKey} className={path ? cn("ml-8 border-l-2 pb-4") : cn("mb-8")}>
-					{!path && <Separator />}
-					<CardHeader>
-						<CardTitle className={path ? cn("text-base") : cn("text-normal")}>
-							{fieldSchema.title}
-						</CardTitle>
-						{fieldSchema.description && (
-							<CardDescription
-								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
-							/>
-						)}
-					</CardHeader>
+				<div key={fieldKey} className="mb-12">
+					{!path && <Separator className="my-8" />}
+					{path ? <h4>{fieldSchema.title}</h4> : <h3>{fieldSchema.title}</h3>}
+					{fieldSchema.description && (
+						<p dangerouslySetInnerHTML={{ __html: fieldSchema.description }} />
+					)}
 					{buildFormFieldsFromSchema(
 						compiledSchema,
 						compiledSchemaKey,
@@ -291,16 +292,12 @@ export const buildFormFieldsFromSchema = (
 					fieldName={path ?? resolvedSchema.$id!.split("#")[1]}
 				/>
 			) : (
-				<CardContent
-					className={cn("flex flex-col column gap-4")}
+				<ScalarField
+					title={path ?? resolvedSchema.$id!.split("#")[1]}
+					schema={scalarSchema}
+					control={control}
 					key={resolvedSchema.$id ?? path}
-				>
-					<ScalarField
-						title={path ?? resolvedSchema.$id!.split("#")[1]}
-						schema={scalarSchema}
-						control={control}
-					/>
-				</CardContent>
+				/>
 			)
 		);
 	}
