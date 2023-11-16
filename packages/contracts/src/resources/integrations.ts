@@ -73,10 +73,11 @@ const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(jsonSchema),
 });
-type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
+
+export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
 	children?: CreatePubRequestBodyWithNulls[];
 };
-const CreatePubRequestBodyWithNulls: z.ZodType<CreatePubRequestBodyWithNulls> =
+export const CreatePubRequestBodyWithNulls: z.ZodType<CreatePubRequestBodyWithNulls> =
 	CreatePubRequestBodyWithNullsBase.extend({
 		children: z.lazy(() => CreatePubRequestBodyWithNulls.array().optional()),
 	});
