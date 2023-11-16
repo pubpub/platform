@@ -268,7 +268,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(15)].map(() => uuidv4());
+	const fieldIds = [...Array(16)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
 		data: [
@@ -330,6 +330,11 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				name: "Submission Evaluator",
 				pubFieldSchemaId: evaluator.id,
 				slug: "unjournal:evaluator",
+			},
+			{
+				id: fieldIds[15],
+				name: "URL",
+				slug: "unjournal:url",
 			},
 		],
 	});
