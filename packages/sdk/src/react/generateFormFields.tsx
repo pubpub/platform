@@ -187,29 +187,27 @@ const CustomRenderer = (props: CustomRendererProps) => {
 	}
 	if (fieldSchema.$id === "pubpub:fileUpload") {
 		return (
-			<CardContent className={cn("flex flex-col column gap-4 w-1/2")}>
-				<FormField
-					control={control}
-					name={fieldName}
-					defaultValue={fieldSchema.default ?? [0, 0, 0]}
-					render={({ field }) => (
-						<FormItem className="mb-6">
-							<FormLabel>{fieldSchema.title}</FormLabel>
-							<CardDescription
-								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
+			<FormField
+				control={control}
+				name={fieldName}
+				defaultValue={fieldSchema.default ?? [0, 0, 0]}
+				render={({ field }) => (
+					<FormItem className="mb-6">
+						<FormLabel>{fieldSchema.title}</FormLabel>
+						<FormDescription
+							dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
+						/>
+						<FormControl>
+							<FileUpload
+								{...field}
+								upload={props.upload}
+								onUpdateFiles={(event: any[]) => field.onChange(event)}
 							/>
-							<FormControl>
-								<FileUpload
-									{...field}
-									upload={props.upload}
-									onUpdateFiles={(event: any[]) => field.onChange(event)}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-			</CardContent>
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
 		);
 	}
 };

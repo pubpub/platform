@@ -1,31 +1,18 @@
 "use client";
 
-import Ajv from "ajv";
-import { fullFormats } from "ajv-formats/dist/formats";
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
 import { buildFormFieldsFromSchema, buildFormSchemaFromFields } from "@pubpub/sdk/react";
+import Ajv from "ajv";
+import { fullFormats } from "ajv-formats/dist/formats";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import {
-	Button,
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-	Form,
-	Icon,
-	Separator,
-	useLocalStorage,
-	useToast,
-} from "ui";
+import { Button, Form, Icon, useLocalStorage, useToast } from "ui";
 import { cn } from "utils";
-import { submit, upload } from "./actions";
-import { InstanceConfig } from "~/lib/types";
-import { Research } from "~/lib/components/Research";
 import { Process } from "~/lib/components/Process";
+import { Research } from "~/lib/components/Research";
+import { InstanceConfig } from "~/lib/types";
+import { submit, upload } from "./actions";
 
 type Props = {
 	instanceId: string;

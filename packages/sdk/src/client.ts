@@ -99,9 +99,15 @@ export type SuggestedMembersQuery =
 export type Client<T extends Manifest> = {
 	// TODO: Derive these return types from contract
 	auth(instanceId: string, token: string): Promise<User>;
-	createPub(instanceId: string, pub: CreatePubRequestBodyWithNulls): Promise<CreatePubResponseBody>;
+	createPub(
+		instanceId: string,
+		pub: CreatePubRequestBodyWithNulls
+	): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
-	updatePub(instanceId: string, pub: CreatePubRequestBodyWithNulls): Promise<UpdatePubResponseBody>;
+	updatePub(
+		instanceId: string,
+		pub: CreatePubRequestBodyWithNulls
+	): Promise<UpdatePubResponseBody>;
 	deletePub(instanceId: string, pubId: string): Promise<void>;
 	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
 	getSuggestedMembers(instanceId: string, query: SuggestedMembersQuery): Promise<SafeUser[]>;
@@ -198,7 +204,7 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					headers: {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
-					params: { instanceId, pubId: pub.id },
+					params: { instanceId, pubId: pub.id! },
 					body: pub,
 					cache: "no-cache",
 				});
