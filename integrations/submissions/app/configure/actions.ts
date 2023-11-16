@@ -2,9 +2,10 @@
 
 import { setInstanceConfig } from "~/lib/instance";
 
-export const configure = (instanceId: string, pubTypeId: string) => {
+export const configure = async (instanceId: string, pubTypeId: string) => {
 	try {
-		return setInstanceConfig(instanceId, { pubTypeId });
+		await setInstanceConfig(instanceId, { pubTypeId });
+		return { success: true };
 	} catch (error) {
 		return { error: error.message };
 	}

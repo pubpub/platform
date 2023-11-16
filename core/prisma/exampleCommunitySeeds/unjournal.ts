@@ -268,7 +268,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const fieldIds = [...Array(15)].map(() => uuidv4());
+	const fieldIds = [...Array(16)].map(() => uuidv4());
 
 	await prisma.pubField.createMany({
 		data: [
@@ -330,6 +330,11 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				name: "Submission Evaluator",
 				pubFieldSchemaId: evaluator.id,
 				slug: "unjournal:evaluator",
+			},
+			{
+				id: fieldIds[15],
+				name: "URL",
+				slug: "unjournal:url",
 			},
 		],
 	});
@@ -735,7 +740,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
 <p><a href="https://unjournal.org">Unjournal.org</a></p>	
 <p><a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a></p>
-<p>{{pubs.submission.values["unjournal:abstract"]}}</p>`;
+<p>{{pubs.submission.values["unjournal:description"]}}</p>`;
 
 	const integrationInstances = [
 		{
@@ -743,6 +748,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Unjournal Submissions Manager",
 			integrationId: submissionsIntegration.id,
 			stageId: stageIds[0],
+			config: {
+				pubTypeId: submissionTypeId,
+			},
 		},
 		{
 			id: "d6177ad1-ae7d-43b7-9c12-dcd31a38f255",

@@ -20,9 +20,9 @@ import {
 	useToast,
 } from "ui";
 import { cn } from "utils";
-import { EmailTemplate, Evaluator, InstanceConfig, isInvited, hasUser, isSaved } from "~/lib/types";
+import { EmailTemplate, Evaluator, InstanceConfig, hasUser, isInvited, isSaved } from "~/lib/types";
+import { EvaluatorInviteFormInviteButton } from "./EvaluatorInviteFormInviteButton";
 import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
-import { EvaluatorInviteFormSendButton } from "./EvaluatorInviteFormSendButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
 import { InviteFormEvaluator, InviteFormSchema } from "./types";
@@ -86,7 +86,7 @@ export function EvaluatorInviteForm(props: Props) {
 			} else {
 				toast({
 					title: "Success",
-					description: "The invite form was sent successfully",
+					description: send ? "Selected evaluators were invited." : "The form was saved.",
 				});
 			}
 		},
@@ -237,7 +237,7 @@ export function EvaluatorInviteForm(props: Props) {
 						{form.formState.isSubmitting && (
 							<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
 						)}
-						<EvaluatorInviteFormSendButton
+						<EvaluatorInviteFormInviteButton
 							onClick={form.handleSubmit((values) => onSubmit(values, true))}
 						/>
 						<EvaluatorInviteFormSaveButton
