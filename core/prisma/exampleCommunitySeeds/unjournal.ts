@@ -743,6 +743,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Unjournal Submissions Manager",
 			integrationId: submissionsIntegration.id,
 			stageId: stageIds[0],
+			config: {
+				pubTypeId: submissionTypeId,
+			},
 		},
 		{
 			id: "d6177ad1-ae7d-43b7-9c12-dcd31a38f255",
