@@ -25,7 +25,7 @@ export default async function Login() {
 				redirect("/settings");
 			}
 		} catch {
-			throw new Error("Not able to redirect user");
+			console.log("Not able to redirect user");
 		}
 	}
 	return (

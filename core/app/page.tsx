@@ -23,8 +23,10 @@ export default async function Page() {
 				redirect("/settings");
 			}
 		} catch {
-			throw new Error("Not able to redirect user");
+			redirect("/login");
 		}
+	} else {
+		redirect("/login")
 	}
 	return <>Home...</>;
 }
