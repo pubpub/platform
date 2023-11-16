@@ -346,7 +346,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			name: "Submission",
 			communityId: communityUUID,
 			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[8] }],
+				connect: [
+					{ id: fieldIds[0] }, // title
+					{ id: fieldIds[1] }, // description
+					{ id: fieldIds[2] }, // manager's notes
+					{ id: fieldIds[8] }, // doi
+					{ id: fieldIds[15] }, // url
+				],
 			},
 		},
 	});
