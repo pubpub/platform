@@ -3,16 +3,12 @@ import {
 	EvaluatorWhoAccepted,
 	EvaluatorWhoEvaluated,
 	EvaluatorWithInvite,
-	EvaluatorWithPubPubUser,
 	InstanceConfig,
 } from "~/lib/types";
 
-// TODO: This scales days down to approximate seconds. Remove after demo.
-const DAY_SCALE = 0.0000115741;
-
-const DAYS_TO_ACCEPT_INVITE = 10 * DAY_SCALE;
-const DAYS_TO_REMIND_EVALUATOR = 5 * DAY_SCALE;
-const DAYS_TO_SUBMIT_EVALUATION = 21 * DAY_SCALE;
+const DAYS_TO_ACCEPT_INVITE = 10;
+const DAYS_TO_REMIND_EVALUATOR = 5;
+const DAYS_TO_SUBMIT_EVALUATION = 21;
 
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
