@@ -22,6 +22,13 @@ export const getLoginData = cache(async () => {
 	}
 	let user = await prisma.user.findUnique({
 		where: { supabaseId: supabaseUser.id },
+		include: {
+			memberships: {
+				include: {
+					community: true
+				}
+			}
+		}
 	});
 
 	if (!user) {
@@ -56,6 +63,13 @@ export const getLoginData = cache(async () => {
 						canAdmin,
 					},
 				},
+			},
+			include: {
+				memberships: {
+					include: {
+						community: true
+					}
+				}
 			},
 		});
 	}
