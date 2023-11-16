@@ -32,11 +32,15 @@ export const resolveMetadata = async (
 	identifierValue: string
 ): Promise<Record<string, unknown> | { error: string }> => {
 	const resolve = metadataResolvers[identifierName];
-	if (resolve !== undefined) {
-		const pub = await resolve(identifierValue);
-		if (pub !== null) {
-			return pub;
+	try {
+		if (resolve !== undefined) {
+			const pub = await resolve(identifierValue);
+			if (pub !== null) {
+				return pub;
+			}
 		}
+	} catch (error) {
+		return { error: "There was an error resolving metadata." };
 	}
-	return { error: "Unable to fetch metadata" };
+	return { error: "No metdata found." };
 };

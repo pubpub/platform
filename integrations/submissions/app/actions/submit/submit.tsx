@@ -82,7 +82,7 @@ export function Submit(props: Props) {
 		} else {
 			toast({
 				title: "Success",
-				description: "The pub was created successfully",
+				description: "The submission was created successfully!",
 			});
 			form.reset();
 		}

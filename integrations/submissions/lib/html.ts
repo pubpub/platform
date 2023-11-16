@@ -234,7 +234,15 @@ export const makeExtractPageMetadata = <T extends TagMappings>(...tagMappings: T
 						parser.end();
 						return reject(new Error("Too many redirects"));
 					}
-					return resolve(extractPageMetadata(expect(res.headers.location), depth + 1));
+					let location = res.headers.location;
+					if (location === undefined) {
+						reject(new Error("Redirect location not found"));
+						return;
+					}
+					if (location.startsWith("/")) {
+						location = `${new URL(url).origin}${location}`;
+					}
+					return resolve(extractPageMetadata(location, depth + 1));
 				}
 				res.on("data", (chunk) => {
 					parser.write(chunk.toString());
