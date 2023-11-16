@@ -1,6 +1,6 @@
 import { initClient } from "@ts-rest/core";
 import {
-	CreatePubRequestBody,
+	CreatePubRequestBodyWithNulls,
 	CreatePubResponseBody,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
@@ -99,9 +99,9 @@ export type SuggestedMembersQuery =
 export type Client<T extends Manifest> = {
 	// TODO: Derive these return types from contract
 	auth(instanceId: string, token: string): Promise<User>;
-	createPub(instanceId: string, pub: CreatePubRequestBody): Promise<CreatePubResponseBody>;
+	createPub(instanceId: string, pub: CreatePubRequestBodyWithNulls): Promise<CreatePubResponseBody>;
 	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
-	updatePub(instanceId: string, pub: UpdatePubRequestBody): Promise<UpdatePubResponseBody>;
+	updatePub(instanceId: string, pub: CreatePubRequestBodyWithNulls): Promise<UpdatePubResponseBody>;
 	deletePub(instanceId: string, pubId: string): Promise<void>;
 	sendEmail(instanceId: string, email: SendEmailRequestBody): Promise<SendEmailResponseBody>;
 	getSuggestedMembers(instanceId: string, query: SuggestedMembersQuery): Promise<SafeUser[]>;

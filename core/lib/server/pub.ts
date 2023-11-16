@@ -46,6 +46,20 @@ const InstanceNotFoundError = new NotFoundError("Integration instance not found"
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
 
+const toJSONNull = (obj) => {
+	if (obj === null) {
+		return Prisma.JsonNull
+	}
+	else if (Array.isArray(obj)) {
+		return obj.map(toJSONNull)
+	} else if (typeof obj === 'object' && obj !== null) {
+		return Object.fromEntries(
+			Object.entries(obj).map(([k, v]) => [k, toJSONNull(v)])
+		)
+	}
+	return obj;
+}
+
 const normalizePubValues = async (values: CreatePubRequestBody["values"], pubTypeId?: string) => {
 	const pubFieldSlugs = Object.keys(values);
 	const pubFieldIds = await prisma.pubField.findMany({
@@ -66,9 +80,10 @@ const normalizePubValues = async (values: CreatePubRequestBody["values"], pubTyp
 	}
 
 	const normalizedValues = pubFieldIds.map((field) => {
+		const value = toJSONNull(values[field.slug])
 		return {
 			fieldId: field.id,
-			value: values[field.slug],
+			value,
 		};
 	});
 

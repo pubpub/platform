@@ -26,6 +26,14 @@ export const JsonInput: z.ZodType<JsonInput> = z.lazy(() =>
 export type JsonOutput = JsonValue;
 export const JsonOutput = JsonInput as z.ZodType<JsonOutput>;
 
+// @see: https://github.com/colinhacks/zod#json-type
+const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+type Literal = z.infer<typeof literalSchema>;
+type Json = Literal | { [key: string]: Json } | Json[];
+const jsonSchema: z.ZodType<Json> = z.lazy(() =>
+	z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)])
+);
+
 const commonPubFields = z.object({
 	pubTypeId: z.string(),
 	parentId: z.string().optional().nullable(),
@@ -58,6 +66,19 @@ export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBodyBase> & {
 export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
 	CreatePubRequestBodyBase.extend({
 		children: z.lazy(() => CreatePubRequestBody.array().optional()),
+	});
+
+// TODO: there has to be a better way to allow the API requests to include nulls in json fields
+const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
+	id: z.string().optional(),
+	values: z.record(jsonSchema),
+});
+type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
+	children?: CreatePubRequestBodyWithNulls[];
+};
+const CreatePubRequestBodyWithNulls: z.ZodType<CreatePubRequestBodyWithNulls> =
+	CreatePubRequestBodyWithNullsBase.extend({
+		children: z.lazy(() => CreatePubRequestBodyWithNulls.array().optional()),
 	});
 
 export const CreatePubResponseBodyBase = commonPubFields.extend({
@@ -252,7 +273,7 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs",
 			summary: "Creates a new pub",
 			description: "A way to create a new pub",
-			body: CreatePubRequestBody,
+			body: CreatePubRequestBodyWithNulls,
 			pathParams: z.object({
 				instanceId: z.string(),
 			}),
@@ -296,7 +317,7 @@ export const integrationsApi = contract.router(
 			path: "/:instanceId/pubs/:pubId",
 			summary: "Adds field(s) to a pub",
 			description: "A way to update a field for an existing pub",
-			body: UpdatePubRequestBody,
+			body: CreatePubRequestBodyWithNulls,
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
