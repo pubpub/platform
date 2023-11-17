@@ -48,7 +48,7 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 								<span className="text-gray-500 mr-2 font-semibold">
 									{group.pubType.name}
 								</span>
-								<Link href={`/pubs/${child.id}`}>
+								<Link href={`/pubs/${child.id}`} className="text-sm hover:underline">
 									{getTitle(child)}
 								</Link>
 							</div>
@@ -77,7 +77,7 @@ const PubRow: React.FC<Props> = function (props: Props) {
 			</RowHeader>
 			<RowContent className="flex justify-between items-start">
 				<h3 className="text-md font-medium">
-					<Link href={`pubs/${props.pub.id}`}>
+					<Link href={`pubs/${props.pub.id}`} className="hover:underline">
 						<PubTitle pub={props.pub} />
 					</Link>
 				</h3>
