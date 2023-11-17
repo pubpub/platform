@@ -48,7 +48,9 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 								<span className="text-gray-500 mr-2 font-semibold">
 									{group.pubType.name}
 								</span>
-								{getTitle(child)}
+								<Link href={`/pubs/${child.id}`}>
+									{getTitle(child)}
+								</Link>
 							</div>
 							{pub.children?.length > 0 && <ChildHierarchy pub={child} />}
 						</li>
