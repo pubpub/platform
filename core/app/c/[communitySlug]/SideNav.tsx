@@ -19,7 +19,7 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					community={community}
 					availableCommunities={availableCommunities}
 				/>
-				<NavLink
+				{/* <NavLink
 					href={`${prefix}/search`}
 					text={"Search"}
 					icon={<img src="/icons/search.svg" />}
@@ -29,7 +29,7 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					text={"Dashboard"}
 					icon={<img src="/icons/dashboard.svg" />}
 					count={8}
-				/>
+				/> */}
 				{divider}
 				<NavLink
 					href={`${prefix}/pubs`}
@@ -46,6 +46,11 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					text={"Integrations"}
 					icon={<img src="/icons/integration.svg" />}
 				/>
+				{/*<NavLink
+					href={`${prefix}/types`}
+					text={"Pub Types"}
+					icon={<img src="" />}
+				/>
 				<NavLink
 					href={`${prefix}/members`}
 					text={"Members"}
@@ -61,7 +66,7 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					href={`${prefix}/recent-items`}
 					text="Recent Items"
 					icon={<img src="/icons/pin.svg" />}
-				/>
+				/> */}
 			</div>
 			<div>
 				<LoginSwitcher />

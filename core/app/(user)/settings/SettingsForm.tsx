@@ -1,9 +1,10 @@
 "use client";
 import { getSlugSuffix, slugifyString } from "lib/string";
 import { supabase } from "lib/supabase";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Button } from "ui";
+import { Avatar, AvatarFallback, AvatarImage, Button } from "ui";
 import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
 
@@ -14,6 +15,7 @@ export default function SettingsForm({
 	lastName: initLastName,
 	email: initEmail,
 	slug,
+	communities,
 }: Props) {
 	const [firstName, setFirstName] = useState(initFirstName);
 	const [lastName, setLastName] = useState(initLastName);
@@ -161,6 +163,29 @@ export default function SettingsForm({
 				{resetSuccess && (
 					<div className="text-green-700">
 						Password reset email sent! Please check your inbox.
+					</div>
+				)}
+				{communities.length && (
+					<div className="mt-8">
+						<p>Communities:</p>
+						{communities.map((community) => {
+							return (
+								<Link
+									href={`/c/${community.slug}`}
+									className="cursor-pointer hover:bg-gray-50"
+								>
+									<Button variant="outline">
+										<div className="flex items-center">
+											<Avatar className="rounded w-9 h-9 mr-2">
+												<AvatarImage src={community.avatar || undefined} />
+												<AvatarFallback>{community.name[0]}</AvatarFallback>
+											</Avatar>
+											<div className="">{community.name}</div>
+										</div>
+									</Button>
+								</Link>
+							);
+						})}
 					</div>
 				)}
 				<div className="mt-8">

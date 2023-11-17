@@ -14,6 +14,7 @@ export default async function Page() {
 				lastName={loginData.lastName}
 				email={loginData.email}
 				slug={loginData.slug}
+				communities={loginData.memberships.map(membership => membership.community)}
 			/>
 		</div>
 	);

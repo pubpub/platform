@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { type Community, Prisma } from "@prisma/client";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
 	include: {
@@ -100,7 +100,7 @@ type User = {
 export type UserPostBody = Pick<User, "firstName" | "lastName" | "email" | "password">;
 export type UserPutBody = Pick<User, "firstName" | "lastName">;
 export type UserLoginData = Omit<User, "password">;
-export type UserSettings = Pick<User, "firstName" | "lastName" | "email" | "slug">;
+export type UserSettings = Pick<User, "firstName" | "lastName" | "email" | "slug"> & { communities: Community[]};
 
 export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof permissionInclude }>;
 

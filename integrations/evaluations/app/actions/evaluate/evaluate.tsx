@@ -112,23 +112,12 @@ export function Evaluate(props: Props) {
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
 						{formFieldsFromSchema}
-						<div className={cn("flex justify-between")}>
-							<Button
-								variant="outline"
-								onClick={(e) => {
-									e.preventDefault();
-									window.history.back();
-								}}
-							>
-								Go Back
-							</Button>
-							<Button type="submit" disabled={!form.formState.isValid}>
-								{form.formState.isSubmitting && (
-									<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
-								)}
-								Submit Evaluation
-							</Button>
-						</div>
+						<Button type="submit" disabled={!form.formState.isValid}>
+							{form.formState.isSubmitting && (
+								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
+							)}
+							Submit Evaluation
+						</Button>
 					</form>
 				</Form>
 			</div>
