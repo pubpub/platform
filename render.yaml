@@ -1,4 +1,4 @@
-previewsEnabled: true
+previewsEnabled: false
 services:
     # core
     - type: web
