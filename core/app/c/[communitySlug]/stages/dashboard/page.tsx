@@ -1,5 +1,6 @@
 import prisma from "~/prisma/db";
 import StageManagement from "./stage";
+import { stageInclude } from "~/lib/types";
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
 	const community = await prisma.community.findUnique({
@@ -10,6 +11,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 	}
 	const stages = await prisma.stage.findMany({
 		where: { communityId: community.id },
+		include: stageInclude,
 	});
 
 	return (

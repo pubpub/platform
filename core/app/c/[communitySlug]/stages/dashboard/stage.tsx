@@ -1,49 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button, Input, Card, CardContent, CardFooter, CardTitle } from "ui";
+import { Button, Input } from "ui";
 import prisma from "~/prisma/db";
+import StagesEditor from "./StagesEditor";
 
 type Props = {
 	community: any;
 	stages: any;
-};
-
-const StagesEditor = ({ stages }) => {
-	const [selectedStage, setSelectedStage] = useState(stages[0]); // Set the initial selected stage.
-
-	const handleStageChange = (newStage: string) => {
-		setSelectedStage(newStage);
-	};
-
-	return (
-		<div className="flex flex-col space-x-4">
-			<div>
-				{/* Display a list of stages as tabs */}
-				<div className="space-y-2">
-					{stages.map((stage) => (
-						<button
-							key={stage}
-							className={`px-4 py-2 border ${
-								selectedStage === stage ? "text-white bg-black" : ""
-							}`}
-							onClick={() => handleStageChange(stage)}
-						>
-							{stage.name}
-						</button>
-					))}
-				</div>
-			</div>
-
-			<div>
-				{/* Display the selected stage for editing */}
-				<div className="p-4">
-					{/* Add your editing content here */}
-					<h1>Edit Stage: {selectedStage.name}</h1>
-				</div>
-			</div>
-		</div>
-	);
 };
 
 export default function StageManagement(props: Props) {
@@ -60,7 +24,7 @@ export default function StageManagement(props: Props) {
 		heightFix();
 	}, []);
 
-	const handleSubmit = async () => {
+	const handleStageCreate = async () => {
 		console.log("clicked");
 		await prisma.stage.create({
 			data: {
@@ -87,9 +51,7 @@ export default function StageManagement(props: Props) {
 						}}
 					>
 						<div>
-							<div className="font-bold leading-snug tracking-tight mb-1">
-								Edit Stages
-							</div>
+							<div className="font-bold tracking-tight mb-1">Edit Stages</div>
 							<div className="text-gray-600">Edit your current stages</div>
 						</div>
 					</div>
@@ -105,9 +67,7 @@ export default function StageManagement(props: Props) {
 						}}
 					>
 						<div>
-							<div className="font-bold leading-snug tracking-tight mb-1">
-								Create new Stages
-							</div>
+							<div className="font-bold tracking-tight mb-1">Create new Stages</div>
 							<div className="text-gray-600">create new stages</div>
 						</div>
 					</div>
