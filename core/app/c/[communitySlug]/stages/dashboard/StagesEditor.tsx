@@ -7,7 +7,6 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-	Checkbox,
 	Form,
 	FormControl,
 	FormDescription,
@@ -186,7 +185,7 @@ const StagesEditor = (props: Props) => {
 																		className="flex flex-row items-start space-x-3 space-y-0"
 																	>
 																		<FormControl>
-																			<Checkbox
+																			<input type="checkbox"
 																				id={stage.id}
 																				checked={false}
 																			/>
