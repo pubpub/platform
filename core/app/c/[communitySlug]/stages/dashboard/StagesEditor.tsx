@@ -17,47 +17,15 @@ import {
 	FormMessage,
 	Icon,
 	Input,
-	useToast,
 } from "ui";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StagePayload } from "~/lib/types";
-import { Check } from "ui/src/icon";
-
-const items = [
-	{
-		id: "recents",
-		label: "Recents",
-	},
-	{
-		id: "home",
-		label: "Home",
-	},
-	{
-		id: "applications",
-		label: "Applications",
-	},
-	{
-		id: "desktop",
-		label: "Desktop",
-	},
-	{
-		id: "downloads",
-		label: "Downloads",
-	},
-	{
-		id: "documents",
-		label: "Documents",
-	},
-] as const;
 
 const schema = z.object({
 	stageName: z.string(),
 	stageOrder: z.string(),
-	items: z.array(z.string()).refine((value) => value.some((item) => item), {
-		message: "You have to select at least one item.",
-	}),
 	stageMoveConstraints: z.array(
 		z.object({
 			id: z.string(),
@@ -83,7 +51,9 @@ type Props = {
 
 const StagesEditor = (props: Props) => {
 	const [selectedStage, setSelectedStage] = useState(props.stages[0]); // Set the initial selected stage.
-
+	const sources = selectedStage.moveConstraintSources.map(
+		(stage) => props.stages.find((s) => s.id === stage.stageId)!
+	);
 	const handleStageChange = (newStage: StagePayload) => {
 		setSelectedStage(newStage);
 	};
@@ -93,7 +63,6 @@ const StagesEditor = (props: Props) => {
 		defaultValues: {
 			stageName: selectedStage.name,
 			stageOrder: selectedStage.order,
-			items: ["recents", "home"],
 			stageMoveConstraints: selectedStage.moveConstraints,
 		},
 	});
@@ -174,98 +143,18 @@ const StagesEditor = (props: Props) => {
 									/>
 								</CardContent>
 								<CardContent>
-									Stages <b>{selectedStage.name}</b> can move to:
-									{/* {selectedStage.moveConstraints.map((constraint) => {
-										return selectedStage.id ===
-											constraint.destination.id ? null : (
-											<div>
-												<Checkbox id={constraint.destination.id} />
-												<label
-													className="text-sm px-1 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-													htmlFor={constraint.destination.id}
-												>
-													{constraint.destination.name}
-												</label>
-											</div>
-										);
-									})} */}
 									<FormField
 										control={form.control}
-										name="items"
+										name="stageMoveConstraints"
 										render={() => (
 											<FormItem>
 												<div className="mb-4">
 													<FormLabel className="text-base">
-														Sidebar
+														Moves to
 													</FormLabel>
 													<FormDescription>
-														Select the items you want to display in the
-														sidebar.
-													</FormDescription>
-												</div>
-												{items.map((item) => (
-													<FormField
-														key={item.id}
-														control={form.control}
-														name="items"
-														render={({ field }) => {
-															return (
-																<FormItem
-																	key={item.id}
-																	className="flex flex-row items-start space-x-3 space-y-0"
-																>
-																	<FormControl>
-																		<Checkbox
-																			checked={field.value?.includes(
-																				item.id
-																			)}
-																			onCheckedChange={(
-																				checked
-																			) => {
-																				return checked
-																					? field.onChange(
-																							[
-																								...field.value,
-																								item.id,
-																							]
-																					  )
-																					: field.onChange(
-																							field.value?.filter(
-																								(
-																									value
-																								) =>
-																									value !==
-																									item.id
-																							)
-																					  );
-																			}}
-																		/>
-																	</FormControl>
-																	<FormLabel className="text-sm font-normal">
-																		{item.label}
-																	</FormLabel>
-																</FormItem>
-															);
-														}}
-													/>
-												))}
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-									<br />
-									<FormField
-										control={form.control}
-										name="items"
-										render={() => (
-											<FormItem>
-												<div className="mb-4">
-													<FormLabel className="text-base">
-														Move Constraints
-													</FormLabel>
-													<FormDescription>
-														Choose where pubs can move to from this
-														stage
+														These are stages {selectedStage.name}{" "}
+														can move to
 													</FormDescription>
 												</div>
 												{selectedStage.moveConstraints.map((stage) => {
@@ -316,14 +205,34 @@ const StagesEditor = (props: Props) => {
 										)}
 									/>
 								</CardContent>
+								<CardContent>
+									<section>Moves from</section>
+									<section className="text-[0.8rem] text-slate-500 dark:text-slate-400">
+										These are the stages {selectedStage.name} can move back from
+									</section>
+									{sources.map((stage) => {
+										return (
+											<div key={stage.id}>
+												<section
+													className="text-blue-500"
+													onClick={() => handleStageChange(stage)}
+												>
+													{stage.name}
+												</section>
+											</div>
+										);
+									})}
+								</CardContent>
 								<CardFooter>
-									<Button variant="destructive">Delete</Button>
-									<Button type="submit" disabled={!form.formState.isValid}>
-										Submit
-										{form.formState.isSubmitting && (
-											<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
-										)}
-									</Button>
+									<div className="flex flex-row space-x-4">
+										<Button variant="destructive">Delete</Button>
+										<Button type="submit" disabled={!form.formState.isValid}>
+											Submit
+											{form.formState.isSubmitting && (
+												<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
+											)}
+										</Button>
+									</div>
 								</CardFooter>
 							</Card>
 						</div>
