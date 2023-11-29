@@ -115,8 +115,10 @@ export const stageInclude = {
 } satisfies Prisma.StageInclude;
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
+export type StageIndex = { [key: string]: StagePayload };
 
 export type StagePayloadMoveConstraint = NonNullable<StagePayload["moveConstraints"]>;
 export type StagePayloadMoveConstraintDestination =
 	StagePayloadMoveConstraint[number]["destination"];
 export type IntegrationAction = { name: string; url: string; href: string };
+

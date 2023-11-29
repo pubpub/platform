@@ -6,7 +6,8 @@ import StagesEditor from "./StagesEditor";
 
 type Props = {
 	community: any;
-	stages: any;
+	stageWorkflows: StagePayload[][];
+	stageIndex: StageIndex;
 };
 
 export default function StageManagement(props: Props) {
