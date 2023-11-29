@@ -135,7 +135,7 @@ const StagesEditor = (props: Props) => {
 												<FormControl>
 													<Input {...field} />
 												</FormControl>
-												<FormDescription>Name of the stage</FormDescription>
+												<FormDescription>Stage order</FormDescription>
 												<FormMessage />
 											</FormItem>
 										)}
