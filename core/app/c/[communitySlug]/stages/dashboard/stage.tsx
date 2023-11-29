@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Button, Input } from "ui";
-import prisma from "~/prisma/db";
 import StagesEditor from "./StagesEditor";
 
 type Props = {
@@ -12,28 +11,6 @@ type Props = {
 
 export default function StageManagement(props: Props) {
 	const [tab, setTab] = useState<number>(1);
-
-	const tabs = useRef<HTMLDivElement>(null);
-
-	const heightFix = () => {
-		if (tabs.current && tabs.current.parentElement)
-			tabs.current.parentElement.style.height = `${tabs.current.clientHeight}px`;
-	};
-
-	useEffect(() => {
-		heightFix();
-	}, []);
-
-	const handleStageCreate = async () => {
-		console.log("clicked");
-		await prisma.stage.create({
-			data: {
-				name: "test",
-				communityId: props.community.id,
-				order: "zz",
-			},
-		});
-	};
 
 	return (
 		<div>
@@ -77,13 +54,13 @@ export default function StageManagement(props: Props) {
 					</button>
 				</div>
 				<div className="max-w-xl md:max-w-none md:w-full mx-auto md:col-span-2 lg:col-span-2 mb-8 md:mb-0 md:order-1">
-					<div className="relative flex flex-col text-center lg:text-left" ref={tabs}>
+					<div className="relative flex flex-col text-center lg:text-left">
 						{tab === 1 ? (
 							<div className="relative inline-flex flex-col">
 								<StagesEditor stages={props.stages} />
 							</div>
 						) : (
-							<div className="relative inline-flex flex-col">
+							<div className="relative inline-flex flex-col max-w-lg">
 								<Input placeholder="Stage Name" />
 								<Button> Create stage </Button>
 							</div>
