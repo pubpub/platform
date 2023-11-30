@@ -21,15 +21,15 @@ export async function GET(req: NextRequest) {
 				},
 			},
 		});
-		const member = user?.memberships[0]
+		const member = user?.memberships[0];
 		if (member) {
-			return NextResponse.json({ member, status: 200 });
+			return NextResponse.json({ member }, { status: 200 });
 		}
 
 		if (user && !user.memberships.length) {
-			throw new NotFoundError("User has no memberships")
+			throw new NotFoundError("User has no memberships");
 		}
 
-		throw new NotFoundError("User not found")
+		throw new NotFoundError("User not found");
 	});
 }
