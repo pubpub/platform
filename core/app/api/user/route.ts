@@ -6,6 +6,7 @@ import { generateHash, getSlugSuffix, slugifyString } from "lib/string";
 import { getSupabaseId } from "lib/auth/loginId";
 import { BadRequestError, ForbiddenError, UnauthorizedError, handleErrors } from "~/lib/server";
 import { captureException } from "@sentry/nextjs";
+import { clientEnv } from "~/lib/env/clientEnv";
 
 export type UserPostBody = {
 	firstName: string;
@@ -40,12 +41,12 @@ export async function POST(req: NextRequest) {
 			email,
 			password,
 			options: {
-				emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/login`,
+				emailRedirectTo: `${clientEnv.NEXT_PUBLIC_PUBPUB_URL}/login`,
 				data: {
 					firstName,
 					lastName,
-					canAdmin: true
-				}
+					canAdmin: true,
+				},
 			},
 		});
 		/* Supabase returns:
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		if (existingUser) {
-			// TODO: create community membership here, update name, slug etc. 
+			// TODO: create community membership here, update name, slug etc.
 			// await prisma.user.update({
 			// 	where: {
 			// 		email,
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
 					email,
 				},
 			});
-			return NextResponse.json({message: "New user created"}, { status: 201 });
+			return NextResponse.json({ message: "New user created" }, { status: 201 });
 		}
 	});
 }

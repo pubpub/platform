@@ -1,12 +1,13 @@
-import nodemailer, { Transporter } from 'nodemailer';
+import nodemailer from "nodemailer";
+import { serverEnv } from "~/lib/env/serverEnv";
 
 export const smtpclient = nodemailer.createTransport({
-    pool: true,
-    host: "smtp.mailgun.org",
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.MAILGUN_SMTP_USERNAME,
-        pass: process.env.MAILGUN_SMTP_PASSWORD,
-    },
-})
+	pool: true,
+	host: serverEnv.MAILGUN_SMTP_HOST,
+	port: parseInt(serverEnv.MAILGUN_SMTP_PORT),
+	secure: serverEnv.MAILGUN_SMTP_HOST !== "localhost",
+	auth: {
+		user: serverEnv.MAILGUN_SMTP_USERNAME,
+		pass: serverEnv.MAILGUN_SMTP_PASSWORD,
+	},
+});

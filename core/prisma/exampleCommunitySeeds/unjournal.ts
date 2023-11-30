@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { faker } from "@faker-js/faker";
+import { serverEnv } from "~/lib/env/serverEnv";
 
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 
@@ -737,7 +738,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	// });
 
 	const submissionsIntegrationUrl =
-		process.env.NODE_ENV === "production"
+		serverEnv.NODE_ENV === "production"
 			? "https://integration-submissions.onrender.com"
 			: "http://localhost:3002";
 	const submissionsIntegration = await prisma.integration.create({
@@ -756,7 +757,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	});
 
 	const evaluationsIntegrationUrl =
-		process.env.NODE_ENV === "production"
+		serverEnv.NODE_ENV === "production"
 			? "https://integration-evaluations.onrender.com"
 			: "http://localhost:3001";
 	const evaluationsIntegration = await prisma.integration.create({
