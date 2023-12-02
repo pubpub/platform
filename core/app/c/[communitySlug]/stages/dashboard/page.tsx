@@ -1,5 +1,5 @@
 import prisma from "~/prisma/db";
-import StageManagement from "./stage";
+import StageManagement from "./StageManagement";
 import { stageInclude } from "~/lib/types";
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
