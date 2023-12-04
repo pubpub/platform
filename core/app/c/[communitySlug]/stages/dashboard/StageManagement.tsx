@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { Button, Input, Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
 import StagesEditor from "./StagesEditor";
+import { StagePayload, StageIndex } from "~/lib/types";
 
 type Props = {
 	community: any;
-	stages: any;
+	stageWorkflows: StagePayload[][];
+	stageIndex: StageIndex;
 };
 
 export default function StageManagement(props: Props) {
@@ -42,7 +44,10 @@ export default function StageManagement(props: Props) {
 			<TabsContent value="1">
 				<div className="relative flex flex-col text-left lg:text-left">
 					<div className="relative inline-flex flex-col">
-						<StagesEditor stages={props.stages} />
+						<StagesEditor
+							stageWorkflows={props.stageWorkflows}
+							stageIndex={props.stageIndex}
+						/>
 					</div>
 				</div>
 			</TabsContent>

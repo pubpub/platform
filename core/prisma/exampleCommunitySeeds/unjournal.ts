@@ -488,13 +488,19 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const stageIds = [...Array(7)].map((x) => uuidv4());
+	const stageIds = [...Array(8)].map((x) => uuidv4());
 	await prisma.stage.createMany({
 		data: [
 			{
 				id: stageIds[0],
 				communityId: communityUUID,
 				name: "Submitted",
+				order: "aa",
+			},
+			{
+				id: stageIds[8],
+				communityId: communityUUID,
+				name: "Submitted to this lil bih",
 				order: "aa",
 			},
 			{
