@@ -34,7 +34,8 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<div className="flex mb-16 justify-between items-center">
-				<h1 className="font-bold text-xl">Stages</h1>
+				<h1 className="font-bold text-xl">Stages</h1> -{" "}
+				{/* <Link href="stages/dashboard">Manage Stages</Link> */}
 			</div>
 			<StageList stages={stages} token={token} loginData={loginData} />
 		</>

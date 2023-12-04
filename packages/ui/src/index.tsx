@@ -17,6 +17,7 @@ export * from "./input";
 export * from "./label";
 export * from "./popover";
 export * from "./separator";
+export * from "./tabs";
 export * from "./textarea";
 export * from "./toast";
 export * from "./toaster";
