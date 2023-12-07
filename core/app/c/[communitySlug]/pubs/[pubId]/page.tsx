@@ -52,12 +52,14 @@ function FileUploadPreview({ files }: { files: FileUpload }) {
 							<HoverCardTrigger asChild>
 								<Button variant="link">{file.fileName}</Button>
 							</HoverCardTrigger>
-							<HoverCardContent className=" w-auto m-auto">
-								<h4>
+							<HoverCardContent className=" w-auto m-auto space-y-1">
+								<h4 className="text-sm font-semibold">
 									{file.fileName} <br />
 								</h4>
-								<li>Size: {file.fileSize / 1000} MB</li>
-								<li>Type: {file.fileType}</li>
+								<p className="text-sm pb-2">
+									The file is <strong>{file.fileSize}</strong> bytes in size. Its
+									MIME type is <strong>{file.fileType}</strong>.
+								</p>
 								<Button variant="secondary">
 									<a target="_blank" href={file.fileUploadUrl}>
 										Open file in new tab
