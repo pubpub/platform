@@ -11,21 +11,12 @@ export type FileUploadFile = {
 };
 export type FileUpload = FileUploadFile[];
 
-export const FileUpload: JSONSchemaType<FileUpload> = {
+export const FileUpload = {
 	$id: "pubpub:fileUpload",
 	title: "Upload Files",
 	type: "array",
 	items: {
 		type: "object",
-		required: [
-			"fileName",
-			"fileSource",
-			"fileType",
-			"fileSize",
-			"fileMeta",
-			"fileUploadUrl",
-			"filePreview",
-		],
 		properties: {
 			fileName: {
 				type: "string",
@@ -52,4 +43,5 @@ export const FileUpload: JSONSchemaType<FileUpload> = {
 			},
 		},
 	},
-};
+} as unknown as JSONSchemaType<FileUpload>;
+
