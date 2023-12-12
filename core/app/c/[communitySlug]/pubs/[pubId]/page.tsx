@@ -45,9 +45,8 @@ function FileUploadPreview({ files }: { files: FileUpload }) {
 	return (
 		<ul>
 			{files.map((file) => {
-				console.log(file);
 				return (
-					<li>
+					<li key={file.fileName}>
 						<HoverCard>
 							<HoverCardTrigger asChild>
 								<Button variant="link">{file.fileName}</Button>

@@ -8,7 +8,6 @@ import { fullFormats } from "ajv-formats/dist/formats";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Form, Icon, useLocalStorage, useToast } from "ui";
-import { cn } from "utils";
 import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
 import { InstanceConfig } from "~/lib/types";
