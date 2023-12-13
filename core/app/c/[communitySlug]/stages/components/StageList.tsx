@@ -7,7 +7,7 @@ import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
 import { StageIndex, StagePayload, UserLoginData } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
-import { stageSources } from "~/lib/pubStages";
+import { stageSources } from "~/lib/stages";
 
 type Props = {
 	stageWorkflows: StagePayload[][];

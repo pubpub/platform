@@ -1,47 +1,65 @@
-import { or } from "ajv/dist/compile/codegen";
-import { useState } from "react";
+import { useState, FormEvent } from "react";
+import StageForm from "./StageForm";
+import { StagePayload, StageIndex } from "~/lib/types";
+import { stageSources } from "~/lib/stages";
 
 type Props = {
 	community: any;
-	stageName: string;
-	order: string;
+	stageWorkflows: StagePayload[][];
+	stageIndex: StageIndex;
 };
 
 export default function StageCreation(props: Props) {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [failure, setFailure] = useState<boolean>(false);
+	const [stage, setStage] = useState<any>({
+		id: "",
+		name: "",
+		order: "",
+		communityId: "",
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		moveConstraints: [],
+	});
+	const sources = stageSources(stage, props.stageIndex);
 
-	async function handleStageCreation(form) {
-		setLoading(true);
-		setFailure(false);
-		// create stage
-		try {
-			const stage = await fetch(`/api/stage/${props.community.slug}`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					name: props.stageName,
-					communityId: props.community.id,
-					order: props.order,
-				}),
-			}).then((res) => res.json());
-			// add stage to stageIndex
-			// add stage to stageWorkflows
-		} catch (error) {
-			console.error(error);
-		}
+	// async function handleStageCreation(evt: FormEvent<EventTarget>) {
+	// 	setLoading(true);
+	// 	evt.preventDefault();
+	// 	try {
+	// 		await fetch(`/api/stage/${props.community.slug}`, {
+	// 			method: "POST",
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 			},
+	// 			body: JSON.stringify({
+	// 				name: "stageName",
+	// 				communityId: props.community.id,
+	// 				order: "props.order",
+	// 			}),
+	// 		}).then((res) => {
+	// 			console.log(res.json());
+	// 			setStage(res.json());
+	// 			console.log("it was all gonna be ok");
+	// 			// add stage to stageIndex
+	// 			// add stage to stageWorkflows
 
-		setLoading(false);
-	}
+	// 			setLoading(false);
+	// 		});
+	// 	} catch (error) {
+	// 		setFailure(true);
+	// 		console.error(error);
+	// 	}
+	// }
 
 	return (
 		<div>
-			<form onSubmit={handleStageCreation}>
-				<input type="text" placeholder="Stage Name" />
-				<button type="submit">Create Stage</button>
-			</form>
+			{/* <StageForm
+				stage={stage}
+				sources={sources}
+				onSubmit={() => console.log("created this")}
+			/> */}
+			hello new world
 		</div>
 	);
 }

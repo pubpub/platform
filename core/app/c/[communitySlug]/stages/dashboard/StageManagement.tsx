@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
 import StagesEditor from "./StagesEditor";
+import StageCreation from "./StageCreation";
 import { StagePayload, StageIndex } from "~/lib/types";
-import { set } from "react-hook-form";
+import * as z from "zod";
 
 type Props = {
 	community: any;
@@ -12,35 +13,31 @@ type Props = {
 	stageIndex: StageIndex;
 };
 
+export const schema = z.object({
+	stageName: z.string(),
+	stageOrder: z.string(),
+	stageMoveConstraints: z.array(
+		z.object({
+			id: z.string(),
+			stageId: z.string(),
+			destinationId: z.string(),
+			createdAt: z.date(),
+			updatedAt: z.date(),
+			destination: z.object({
+				id: z.string(),
+				name: z.string(),
+				order: z.string(),
+				communityId: z.string(),
+				createdAt: z.date(),
+				updatedAt: z.date(),
+			}),
+		})
+	),
+});
+
 export default function StageManagement(props: Props) {
 	const [tab, setTab] = useState<number>(1);
-	const [loading, setLoading] = useState<boolean>(false);
-	const [failure, setFailure] = useState<boolean>(false);
 
-	async function handleStageCreation(form) {
-		setLoading(true);
-		setFailure(false);
-		// create stage
-		try {
-			const stage = await fetch(`/api/stage/${props.community.slug}`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					name: "New Stage",
-					communityId: props.community.id,
-				}),
-			}).then((res) => res.json());
-			// add stage to stageIndex
-			// add stage to stageWorkflows
-		} catch (error) {
-			console.error(error);
-		}
-		// add stage to stageIndex
-		// add stage to stageWorkflows
-		setLoading(false);
-	}
 	return (
 		<Tabs defaultValue={tab.toString()} className="pt-12 md:pt-20">
 			<TabsList className="mb-6 ">
@@ -81,8 +78,11 @@ export default function StageManagement(props: Props) {
 			</TabsContent>
 			<TabsContent value="2">
 				<div className="relative inline-flex flex-col max-w-lg">
-					<Input placeholder="Stage Name" />
-					<Button> Create stage </Button>
+					<StageCreation
+						community={props.community}
+						stageWorkflows={props.stageWorkflows}
+						stageIndex={props.stageIndex}
+					/>
 				</div>
 			</TabsContent>
 		</Tabs>

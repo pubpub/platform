@@ -3,7 +3,7 @@ import { createToken } from "~/lib/server/token";
 import { stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import StageList from "./components/StageList";
-import { stageList } from "~/lib/pubStages";
+import { stageList } from "~/lib/stages";
 
 const getCommunityStages = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({
