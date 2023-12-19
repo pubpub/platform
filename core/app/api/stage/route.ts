@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "prisma/db";
 
-import { BadRequestError, NotFoundError, handleErrors } from "~/lib/server";
+import { BadRequestError, handleErrors } from "~/lib/server";
 
 export async function POST(req: NextRequest) {
 	return await handleErrors(async () => {
@@ -24,5 +24,29 @@ export async function POST(req: NextRequest) {
 		});
 
 		return NextResponse.json({ newStage }, { status: 200 });
+	});
+}
+
+export async function PUT(req: NextRequest) {
+	return await handleErrors(async () => {
+		const { stageName, stageId } = await req.json();
+		console.log("\n\nstageName\n\n", stageName);
+		console.log("\n\nstageId\n\n", stageId);
+
+		// if (!stageId) {
+		// 	throw new BadRequestError("No ID provided");
+		// }
+		// if (!stageName) {
+		// 	throw new BadRequestError("No email provided");
+		// }
+
+		// const updatedStage = await prisma.stage.update({
+		// 	where: { id: stageId },
+		// 	data: {
+		// 		name: stageName,
+		// 	},
+		// });
+
+		return NextResponse.json({ updatedStage: "no" }, { status: 200 });
 	});
 }

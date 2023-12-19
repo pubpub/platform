@@ -1,4 +1,5 @@
 import { StagePayload, StageIndex } from "./types";
+import * as z from "zod";
 
 function createStageList(stage: StagePayload, stages: StageIndex, visited: Array<StagePayload>) {
 	if (visited.includes(stage)) {
@@ -29,3 +30,26 @@ export function stageList(stages: StagePayload[]) {
 export function stageSources(stage: StagePayload, stageIndex: StageIndex) {
 	return stage.moveConstraintSources.map((stage) => stageIndex[stage.stageId]);
 }
+
+export const stageFormSchema = z.object({
+	stageId: z.string().optional(),
+	stageName: z.string(),
+	stageOrder: z.string(),
+	stageMoveConstraints: z.array(
+		z.object({
+			id: z.string(),
+			stageId: z.string(),
+			destinationId: z.string(),
+			createdAt: z.date(),
+			updatedAt: z.date(),
+			destination: z.object({
+				id: z.string(),
+				name: z.string(),
+				order: z.string(),
+				communityId: z.string(),
+				createdAt: z.date(),
+				updatedAt: z.date(),
+			}),
+		})
+	),
+});

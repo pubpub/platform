@@ -21,7 +21,7 @@ export default function StageCreation(props: Props) {
 		updatedAt: new Date(),
 		moveConstraints: [],
 	});
-	const sources = stageSources(stage, props.stageIndex);
+	// const sources = stageSources(stage, props.stageIndex);
 
 	// async function handleStageCreation(evt: FormEvent<EventTarget>) {
 	// 	setLoading(true);

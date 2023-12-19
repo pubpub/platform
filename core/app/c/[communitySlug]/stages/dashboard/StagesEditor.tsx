@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
-import { stageSources } from "~/lib/stages";
+import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "ui";
+import * as z from "zod";
+import { stageFormSchema, stageSources } from "~/lib/stages";
 import { StageIndex, StagePayload } from "~/lib/types";
 import StageForm from "./StageForm";
-import * as z from "zod";
+import { editStage } from "./actions";
 
 type Props = {
 	stageWorkflows: StagePayload[][];
@@ -13,13 +14,28 @@ type Props = {
 const StagesEditor = (props: Props) => {
 	const [selectedStage, setSelectedStage] = useState(props.stageWorkflows[0][0]); // Set the initial selected stage.
 	const sources = stageSources(selectedStage, props.stageIndex);
+
 	const handleStageChange = (newStage: StagePayload) => {
 		setSelectedStage(newStage);
 	};
 
-	// const handleStageEdit = async (data: z.infer<typeof schema>) => {
-	// 	console.log(data);
-	// };
+	const onSubmit = async (data: z.infer<typeof stageFormSchema>) => {
+		console.log(data);
+		const updatedStage = await editStage(data);
+		console.log(updatedStage);
+		// if (res.status !== 200) {
+		// 	toast({
+		// 		title: "Error",
+		// 		description: res.statusText,
+		// 		variant: "destructive",
+		// 	});
+		// } else {
+		// 	toast({
+		// 		title: "Success",
+		// 		description: `${data.stageName} was updated successfully!`,
+		// 	});
+		// }
+	};
 
 	return (
 		<div className="space-x-4">
@@ -44,9 +60,10 @@ const StagesEditor = (props: Props) => {
 									return (
 										<TabsContent value={stage.id} key={stage.id}>
 											<StageForm
-												stage={selectedStage}
+												stage={stage}
 												sources={sources}
-												onSubmit={() => console.log("edited this")}
+												onSubmit={onSubmit}
+												stages={stages}
 											/>
 										</TabsContent>
 									);

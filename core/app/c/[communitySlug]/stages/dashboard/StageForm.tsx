@@ -1,8 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Form, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
 	Button,
+	Form,
 	FormControl,
 	FormDescription,
 	FormField,
@@ -13,28 +14,40 @@ import {
 	Input,
 } from "ui";
 import * as z from "zod";
-import { schema } from "./StageManagement";
+import { stageFormSchema } from "~/lib/stages";
 
 type Props = {
 	stage: any;
 	sources: any;
-	onSubmit: (stagFormData: any) => void;
+	onSubmit: (x: any) => void;
+	stages: any;
 };
 
 export default function StageForm(props: Props) {
-	const form = useForm<z.infer<typeof schema>>({
-		resolver: zodResolver(schema),
+	const stageMoveConstraints = props.stages.reduce((acc, stage) => {
+		return {
+			...acc,
+			[stage.id]: props.stage.moveConstraints.some((toStage) => {
+				return toStage.destinationId === stage.id;
+			}),
+		};
+	}, {});
+
+	const form = useForm<z.infer<typeof stageFormSchema>>({
+		resolver: zodResolver(stageFormSchema),
 		defaultValues: {
+			stageId: props.stage.id,
 			stageName: props.stage.name,
 			stageOrder: props.stage.order,
-			stageMoveConstraints: props.stage.moveConstraints,
+			stageMoveConstraints,
 		},
 	});
 	useEffect(() => {
 		form.reset({
+			stageId: props.stage.id,
 			stageName: props.stage.name,
 			stageOrder: props.stage.order,
-			stageMoveConstraints: props.stage.moveConstraints,
+			stageMoveConstraints,
 		});
 	}, [props.stage]);
 	return (
@@ -80,63 +93,43 @@ export default function StageForm(props: Props) {
 							</FormItem>
 						)}
 					/>
-					<FormField
-						control={form.control}
-						name="stageMoveConstraints"
-						render={() => (
-							<FormItem>
-								<div className="mb-4">
-									<FormLabel className="text-base font-bold">Moves to</FormLabel>
-									<FormDescription>
-										These are stages {props.stage.name} can move to
-									</FormDescription>
+					<ul>
+						<div className="mb-4">
+							<p className="text-base font-bold">Moves to</p>
+							<p>These are stages {props.stage.name} can move to</p>
 
-									{props.stage.moveConstraints.map((stage) => {
-										return props.stage.id === stage.id ? null : (
-											<FormField
-												key={stage.id}
-												control={form.control}
-												name="stageMoveConstraints"
-												render={({ field }) => {
-													console.log(
-														props.stage.moveConstraints.some(
-															(constraint) =>
-																field.value.includes(constraint)
-														)
-													);
-													console.log(
-														field.value?.some((constarint) =>
-															props.stage.moveConstraints.includes(
-																constarint
-															)
-														)
-													);
-													return (
-														<FormItem
-															key={stage.id}
-															className="flex flex-row items-start space-x-3 space-y-0"
-														>
-															<FormControl>
-																<input
-																	type="checkbox"
-																	id={stage.id}
-																	checked={false}
-																/>
-															</FormControl>
-															<FormLabel className="text-sm font-normal">
-																{stage.destination.name}
-															</FormLabel>
-														</FormItem>
-													);
-												}}
-											/>
-										);
-									})}
-									<FormMessage />
-								</div>
-							</FormItem>
-						)}
-					/>
+							{props.stages.map((stage) => {
+								return props.stage.id === stage.id ? null : (
+									<FormField
+										key={stage.id}
+										control={form.control}
+										name={`stageMoveConstraints.${stage.id}`}
+										render={({ field }) => {
+											return (
+												<FormItem
+													key={stage.id}
+													className="flex flex-row items-start space-x-3 space-y-0"
+												>
+													<FormControl>
+														<input
+															type="checkbox"
+															id={stage.id}
+															{...field}
+															defaultChecked={field.value}
+														/>
+													</FormControl>
+													<FormLabel className="text-sm font-normal">
+														{stage.name}
+													</FormLabel>
+												</FormItem>
+											);
+										}}
+									/>
+								);
+							})}
+							<FormMessage />
+						</div>
+					</ul>
 					<div className="mb-4">
 						<p className="text-base font-bold">Moves from</p>
 						<p className="text-[0.8rem] text-slate-500 dark:text-slate-400">
