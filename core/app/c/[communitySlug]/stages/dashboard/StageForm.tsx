@@ -15,6 +15,7 @@ import {
 } from "ui";
 import * as z from "zod";
 import { stageFormSchema } from "~/lib/stages";
+import { addStageToMoveConstraint, removeStageFromMoveConstraint } from "./actions";
 
 type Props = {
 	stage: any;
@@ -32,7 +33,18 @@ export default function StageForm(props: Props) {
 			}),
 		};
 	}, {});
-
+	async function handleAddConstraint(constraint: any) {
+		console.log("Add the move constraint ", constraint);
+		console.log("to the stage", props.stage);
+		const newThing = await addStageToMoveConstraint(constraint, props.stage);
+		console.log(newThing);
+	}
+	async function handleRemoveConstraint(constraint: any) {
+		console.log("Remove the move sonstraint", constraint);
+		console.log("from the stage", props.stage);
+		const newThing = await removeStageFromMoveConstraint(constraint, props.stage);
+		console.log(newThing);
+	}
 	const form = useForm<z.infer<typeof stageFormSchema>>({
 		resolver: zodResolver(stageFormSchema),
 		defaultValues: {
@@ -97,7 +109,6 @@ export default function StageForm(props: Props) {
 						<div className="mb-4">
 							<p className="text-base font-bold">Moves to</p>
 							<p>These are stages {props.stage.name} can move to</p>
-
 							{props.stages.map((stage) => {
 								return props.stage.id === stage.id ? null : (
 									<FormField
@@ -116,6 +127,20 @@ export default function StageForm(props: Props) {
 															id={stage.id}
 															{...field}
 															defaultChecked={field.value}
+															onChange={(e) => {
+																// field.onChange(e);																console.log(e.target.checked);
+																if (e.target.checked) {
+																	handleAddConstraint(
+																		stage,
+																		stageMoveConstraints
+																	);
+																} else {
+																	handleRemoveConstraint(
+																		stage,
+																		stageMoveConstraints
+																	);
+																}
+															}}
 														/>
 													</FormControl>
 													<FormLabel className="text-sm font-normal">
@@ -130,7 +155,7 @@ export default function StageForm(props: Props) {
 							<FormMessage />
 						</div>
 					</ul>
-					<div className="mb-4">
+					<ul className="mb-4">
 						<p className="text-base font-bold">Moves from</p>
 						<p className="text-[0.8rem] text-slate-500 dark:text-slate-400">
 							These are the stages {props.stage.name} can move back from
@@ -147,10 +172,10 @@ export default function StageForm(props: Props) {
 								</div>
 							);
 						})}
-					</div>
+					</ul>
 					<div className="flex flex-row space-x-4">
 						<Button variant="destructive">Delete</Button>
-						<Button type="submit" disabled={!form.formState.isValid}>
+						<Button type="submit">
 							Submit
 							{form.formState.isSubmitting && (
 								<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
