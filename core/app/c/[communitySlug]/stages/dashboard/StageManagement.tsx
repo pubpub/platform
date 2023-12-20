@@ -5,35 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
 import StagesEditor from "./StagesEditor";
 import StageCreation from "./StageCreation";
 import { StagePayload, StageIndex } from "~/lib/types";
-import * as z from "zod";
 
 type Props = {
 	community: any;
 	stageWorkflows: StagePayload[][];
 	stageIndex: StageIndex;
 };
-
-export const schema = z.object({
-	stageName: z.string(),
-	stageOrder: z.string(),
-	stageMoveConstraints: z.array(
-		z.object({
-			id: z.string(),
-			stageId: z.string(),
-			destinationId: z.string(),
-			createdAt: z.date(),
-			updatedAt: z.date(),
-			destination: z.object({
-				id: z.string(),
-				name: z.string(),
-				order: z.string(),
-				communityId: z.string(),
-				createdAt: z.date(),
-				updatedAt: z.date(),
-			}),
-		})
-	),
-});
 
 export default function StageManagement(props: Props) {
 	const [tab, setTab] = useState<number>(1);

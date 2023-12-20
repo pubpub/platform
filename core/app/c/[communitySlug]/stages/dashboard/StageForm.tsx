@@ -33,10 +33,10 @@ export default function StageForm(props: Props) {
 			}),
 		};
 	}, {});
-	async function handleAddConstraint(constraint: any) {
-		console.log("Add the move constraint ", constraint);
+	async function handleAddConstraint(destination: any) {
+		console.log("Add the move constraint ", destination);
 		console.log("to the stage", props.stage);
-		const newThing = await addStageToMoveConstraint(constraint, props.stage);
+		const newThing = await addStageToMoveConstraint(destination, props.stage);
 		console.log(newThing);
 	}
 	async function handleRemoveConstraint(constraint: any) {
@@ -127,17 +127,15 @@ export default function StageForm(props: Props) {
 															id={stage.id}
 															{...field}
 															defaultChecked={field.value}
-															onChange={(e) => {
+															onChange={async (e) => {
 																// field.onChange(e);																console.log(e.target.checked);
 																if (e.target.checked) {
-																	handleAddConstraint(
-																		stage,
-																		stageMoveConstraints
+																	await handleAddConstraint(
+																		stage
 																	);
 																} else {
-																	handleRemoveConstraint(
-																		stage,
-																		stageMoveConstraints
+																	await handleRemoveConstraint(
+																		stage
 																	);
 																}
 															}}
