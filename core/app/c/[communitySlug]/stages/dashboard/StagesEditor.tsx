@@ -12,7 +12,6 @@ type Props = {
 };
 
 const StagesEditor = (props: Props) => {
-	console.log("\n\nTHESE THE STAGES WOKFLOWS\n\n", props.stageWorkflows);
 	const [selectedStage, setSelectedStage] = useState(props.stageWorkflows[0][0]); // Set the initial selected stage.
 	const sources = stageSources(selectedStage, props.stageIndex);
 
