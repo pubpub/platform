@@ -34,10 +34,7 @@ export default function StageForm(props: Props) {
 		};
 	}, {});
 	async function handleAddConstraint(destination: any) {
-		console.log("Add the move constraint ", destination);
-		console.log("to the stage", props.stage);
-		const newThing = await addStageToMoveConstraint(destination, props.stage);
-		console.log(newThing);
+		await addStageToMoveConstraint(destination, props.stage);
 	}
 	async function handleRemoveConstraint(constraint: any) {
 		console.log("Remove the move sonstraint", constraint);
@@ -89,22 +86,6 @@ export default function StageForm(props: Props) {
 							</FormItem>
 						)}
 					/>
-					<FormField
-						control={form.control}
-						name="stageOrder"
-						render={({ field }) => (
-							<FormItem>
-								<div className="mb-4">
-									<FormLabel>Stage Order</FormLabel>
-									<FormControl>
-										<Input {...field} />
-									</FormControl>
-									<FormDescription>Stage order</FormDescription>
-									<FormMessage />
-								</div>
-							</FormItem>
-						)}
-					/>
 					<ul>
 						<div className="mb-4">
 							<p className="text-base font-bold">Moves to</p>
@@ -128,14 +109,14 @@ export default function StageForm(props: Props) {
 															{...field}
 															defaultChecked={field.value}
 															onChange={async (e) => {
-																// field.onChange(e);																console.log(e.target.checked);
+																// field.onChange(e);
 																if (e.target.checked) {
 																	await handleAddConstraint(
 																		stage
 																	);
 																} else {
 																	await handleRemoveConstraint(
-																		stage
+																		stage.id
 																	);
 																}
 															}}

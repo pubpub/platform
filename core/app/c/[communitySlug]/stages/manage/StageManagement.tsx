@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
-import StagesEditor from "./StagesEditor";
+import StageEditor from "./StageEditor";
 import StageCreation from "./StageCreation";
 import { StagePayload, StageIndex } from "~/lib/types";
 
@@ -46,7 +46,7 @@ export default function StageManagement(props: Props) {
 			<TabsContent value="1">
 				<div className="relative flex flex-col text-left lg:text-left">
 					<div className="relative inline-flex flex-col">
-						<StagesEditor
+						<StageEditor
 							stageWorkflows={props.stageWorkflows}
 							stageIndex={props.stageIndex}
 						/>

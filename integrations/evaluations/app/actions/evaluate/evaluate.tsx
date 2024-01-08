@@ -74,7 +74,7 @@ export function Evaluate(props: Props) {
 		persist(values);
 	}, [values]);
 
-	const generateSignedUploadUrl = (fileName) => {
+	const generateSignedUploadUrl = (fileName) =>     {
 		return upload(props.instanceId, pub.id, fileName);
 	};
 

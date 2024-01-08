@@ -34,17 +34,18 @@ export const addStageToMoveConstraint = async (from: any, to: any) => {
 };
 
 export const removeStageFromMoveConstraint = async (constraint: any, stage: any) => {
-	// const updatedStage = await prisma.stage.update({
-	// 	where: { id: stage.stageId },
-	// 	data: {
-	// 		moveConstraints: {
-	// 			disconnect: {
-	// 				id: stage.constraintId,
-	// 			},
-	// 		},
-	// 	},
-	// });
-	// revalidatePath("/");
+	const updatedStage = await prisma.stage.update({
+		where: { id: stage.id },
+		data: {
+			moveConstraints: {
+				disconnect: {
+					id: constraint,
+				},
+			},
+		},
+	});
 
-	return { key: "removal here" };
+	revalidatePath("/");
+
+	return { key: updatedStage };
 };

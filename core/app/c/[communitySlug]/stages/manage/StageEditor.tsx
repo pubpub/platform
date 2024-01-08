@@ -11,7 +11,7 @@ type Props = {
 	stageIndex: StageIndex;
 };
 
-const StagesEditor = (props: Props) => {
+const StageEditor = (props: Props) => {
 	const [selectedStage, setSelectedStage] = useState(props.stageWorkflows[0][0]); // Set the initial selected stage.
 	const sources = stageSources(selectedStage, props.stageIndex);
 
@@ -21,8 +21,8 @@ const StagesEditor = (props: Props) => {
 
 	const onSubmit = async (data: z.infer<typeof stageFormSchema>) => {
 		console.log(data);
-		const updatedStage = await editStage(data);
-		console.log(updatedStage);
+		// const updatedStage = await editStage(data);
+		// console.log(updatedStage);
 		// if (res.status !== 200) {
 		// 	toast({
 		// 		title: "Error",
@@ -36,7 +36,6 @@ const StagesEditor = (props: Props) => {
 		// 	});
 		// }
 	};
-
 	return (
 		<div className="space-x-4">
 			{
@@ -77,4 +76,4 @@ const StagesEditor = (props: Props) => {
 	);
 };
 
-export default StagesEditor;
+export default StageEditor;
