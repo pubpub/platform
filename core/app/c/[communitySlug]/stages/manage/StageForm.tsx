@@ -12,6 +12,7 @@ import {
 	FormMessage,
 	Icon,
 	Input,
+	toast,
 } from "ui";
 import * as z from "zod";
 import { stageFormSchema } from "~/lib/stages";
@@ -35,13 +36,34 @@ export default function StageForm(props: Props) {
 		};
 	}, {});
 	async function handleAddConstraint(destination: any) {
-		await addMoveConstraint(destination, props.stage);
+		const addedConstrait = await addMoveConstraint(destination, props.stage);
+		if ("error" in addedConstrait) {
+			toast({
+				title: "Error",
+				description: addedConstrait.error,
+				variant: "destructive",
+			});
+		} else {
+			toast({
+				title: "Success",
+				description: addedConstrait.success,
+			});
+		}
 	}
 	async function handleRemoveConstraint(constraintToRemove: any) {
-		console.log("Remove the move constraint", constraintToRemove);
-		console.log("from the stage", props.stage);
-		const newThing = await removeMoveConstraint(constraintToRemove, props.stage);
-		console.log(newThing);
+		const removedConstraint = await removeMoveConstraint(constraintToRemove, props.stage);
+		if ("error" in removedConstraint) {
+			toast({
+				title: "Error",
+				description: removedConstraint.error,
+				variant: "destructive",
+			});
+		} else {
+			toast({
+				title: "Success",
+				description: removedConstraint.success,
+			});
+		}
 	}
 	const form = useForm<z.infer<typeof stageFormSchema>>({
 		resolver: zodResolver(stageFormSchema),

@@ -1,5 +1,6 @@
 "use server";
 
+import { error } from "console";
 import { revalidatePath } from "next/cache";
 import { StagePayload } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -15,7 +16,10 @@ export const editStage = async (stage: any) => {
 	return { key: updatedStage };
 };
 
-export async function addMoveConstraint(from: StagePayload, to: StagePayload): Promise<unknown> {
+export async function addMoveConstraint(
+	from: StagePayload,
+	to: StagePayload
+): Promise<{ success?: string; error?: string }> {
 	try {
 		await prisma.moveConstraint.create({
 			data: {
@@ -32,7 +36,7 @@ export async function addMoveConstraint(from: StagePayload, to: StagePayload): P
 			},
 		});
 		revalidatePath("/");
-		return { success: "succesfully added constraint" };
+		return { success: `Successfully added ${to.name} to ${from.name}` };
 	} catch (e) {
 		console.log(e);
 		return { error: e };
@@ -40,36 +44,30 @@ export async function addMoveConstraint(from: StagePayload, to: StagePayload): P
 }
 
 export async function removeMoveConstraint(
-	constraint: StagePayload,
+	stageToRemove: StagePayload,
 	from: StagePayload
-): Promise<unknown> {
+): Promise<{ success?: string; error?: string }> {
 	try {
-		// I think wqe need to disconnect the contraint from the stage then delete it from the DB
-		// but that doesn't seem to work
+		// find move constraint given the stage
+		const moveConstraint = await prisma.moveConstraint.findFirst({
+			where: {
+				stageId: from.id,
+				destinationId: stageToRemove.id,
+			},
+		});
 
-		// //disconnect stage from constraint
-		// await prisma.stage.update({
-		// 	where: {
-		// 		id: from.id,
-		// 	},
-		// 	data: {
-		// 		moveConstraints: {
-		// 			disconnect: {
-		// 				id: constraintToRemove.id,
-		// 			},
-		// 		},
-		// 	},
-		// });
-
+		if (!moveConstraint) {
+			return { error: "No constraint found." };
+		}
 		await prisma.moveConstraint.delete({
-			where: { id: constraint.id },
+			where: { id: moveConstraint.id },
 		});
 
 		revalidatePath("/");
 
-		return { key: "success" };
-	} catch (error) {
-		console.log(error);
-		return { key: error };
+		return { success: `Successfully removed ${stageToRemove.name} from ${from.name}` };
+	} catch (e) {
+		console.log(e);
+		return { error: e };
 	}
 }
