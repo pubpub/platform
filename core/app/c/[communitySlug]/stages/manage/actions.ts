@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { StagePayload } from "~/lib/types";
 import prisma from "~/prisma/db";
 
 export const editStage = async (stage: any) => {
@@ -14,38 +15,61 @@ export const editStage = async (stage: any) => {
 	return { key: updatedStage };
 };
 
-export const addStageToMoveConstraint = async (from: any, to: any) => {
-	const newMoveConstraint = await prisma.moveConstraint.create({
-		data: {
-			stage: {
-				connect: {
-					id: to.id,
+export async function addMoveConstraint(from: StagePayload, to: StagePayload): Promise<unknown> {
+	try {
+		await prisma.moveConstraint.create({
+			data: {
+				stage: {
+					connect: {
+						id: to.id,
+					},
+				},
+				destination: {
+					connect: {
+						id: from.id,
+					},
 				},
 			},
-			destination: {
-				connect: {
-					id: from.id,
-				},
-			},
-		},
-	});
-	revalidatePath("/");
-	return { key: newMoveConstraint };
-};
+		});
+		revalidatePath("/");
+		return { success: "succesfully added constraint" };
+	} catch (e) {
+		console.log(e);
+		return { error: e };
+	}
+}
 
-export const removeStageFromMoveConstraint = async (constraint: any, stage: any) => {
-	const updatedStage = await prisma.stage.update({
-		where: { id: stage.id },
-		data: {
-			moveConstraints: {
-				disconnect: {
-					id: constraint,
-				},
-			},
-		},
-	});
+export async function removeMoveConstraint(
+	constraint: StagePayload,
+	from: StagePayload
+): Promise<unknown> {
+	try {
+		// I think wqe need to disconnect the contraint from the stage then delete it from the DB
+		// but that doesn't seem to work
 
-	revalidatePath("/");
+		// //disconnect stage from constraint
+		// await prisma.stage.update({
+		// 	where: {
+		// 		id: from.id,
+		// 	},
+		// 	data: {
+		// 		moveConstraints: {
+		// 			disconnect: {
+		// 				id: constraintToRemove.id,
+		// 			},
+		// 		},
+		// 	},
+		// });
 
-	return { key: updatedStage };
-};
+		await prisma.moveConstraint.delete({
+			where: { id: constraint.id },
+		});
+
+		revalidatePath("/");
+
+		return { key: "success" };
+	} catch (error) {
+		console.log(error);
+		return { key: error };
+	}
+}

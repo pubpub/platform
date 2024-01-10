@@ -15,13 +15,14 @@ import {
 } from "ui";
 import * as z from "zod";
 import { stageFormSchema } from "~/lib/stages";
-import { addStageToMoveConstraint, removeStageFromMoveConstraint } from "./actions";
+import { addMoveConstraint, removeMoveConstraint } from "./actions";
+import { StagePayload } from "~/lib/types";
 
 type Props = {
-	stage: any;
+	stage: StagePayload;
 	sources: any;
 	onSubmit: (x: any) => void;
-	stages: any;
+	stages: StagePayload[];
 };
 
 export default function StageForm(props: Props) {
@@ -34,12 +35,12 @@ export default function StageForm(props: Props) {
 		};
 	}, {});
 	async function handleAddConstraint(destination: any) {
-		await addStageToMoveConstraint(destination, props.stage);
+		await addMoveConstraint(destination, props.stage);
 	}
-	async function handleRemoveConstraint(constraint: any) {
-		console.log("Remove the move sonstraint", constraint);
+	async function handleRemoveConstraint(constraintToRemove: any) {
+		console.log("Remove the move constraint", constraintToRemove);
 		console.log("from the stage", props.stage);
-		const newThing = await removeStageFromMoveConstraint(constraint, props.stage);
+		const newThing = await removeMoveConstraint(constraintToRemove, props.stage);
 		console.log(newThing);
 	}
 	const form = useForm<z.infer<typeof stageFormSchema>>({
@@ -116,7 +117,7 @@ export default function StageForm(props: Props) {
 																	);
 																} else {
 																	await handleRemoveConstraint(
-																		stage.id
+																		stage
 																	);
 																}
 															}}
