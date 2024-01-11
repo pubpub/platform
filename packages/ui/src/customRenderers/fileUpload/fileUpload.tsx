@@ -9,7 +9,6 @@ import { Dashboard } from "@uppy/react";
 import "@uppy/core/dist/style.min.css";
 import "@uppy/dashboard/dist/style.min.css";
 
-import { cn } from "utils";
 import AwsS3 from "@uppy/aws-s3";
 
 const uppy = new Uppy().use(AwsS3);
@@ -19,15 +18,6 @@ type FileUploadProps = {
 	onUpdateFiles: Function;
 };
 
-type UploadedFile = {
-	fileName: String;
-	fileSource?: String;
-	fileType?: String;
-	fileSize?: Number;
-	fileMeta?: Object;
-	filePreview?: String;
-	fileUploadUrl: String;
-};
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 	useEffect(() => {
 		uppy.on("complete", () => {

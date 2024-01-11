@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { faker } from "@faker-js/faker";
+import { FileUpload } from "../../lib/fields/fileUpload";
 
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 
@@ -258,39 +259,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			name: "uploadFile",
 			namespace: "pubpub",
-			schema: {
-				$id: "pubpub:fileUpload",
-				title: "Upload Files",
-				type: "array",
-				items: {
-					type: "object",
-					properties: {
-						fileName: {
-							type: "string",
-						},
-						fileSource: {
-							type: "string",
-						},
-						fileType: {
-							type: "string",
-						},
-						fileSize: {
-							type: "number",
-						},
-						fileMeta: {
-							type: "object",
-						},
-						fileUploadUrl: {
-							type: "string",
-							format: "uri",
-						},
-						filePreview: {
-							type: "string",
-							format: "uri",
-						},
-					},
-				},
-			},
+			schema: FileUpload,
 		},
 	});
 
