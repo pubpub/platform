@@ -31,7 +31,9 @@ export function stageSources(stage: StagePayload, stageIndex: StageIndex) {
 	return stage.moveConstraintSources.map((stage) => stageIndex[stage.stageId]);
 }
 
-export const stageFormSchema = z.object({
+export const StageFormSchema = z.object({
 	name: z.string(),
-	moveConstraints: z.any(),
+	moveConstraints: z.record(z.boolean()),
 });
+
+export type StageFormSchema = z.infer<typeof StageFormSchema>;

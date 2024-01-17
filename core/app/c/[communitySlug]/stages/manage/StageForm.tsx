@@ -13,7 +13,7 @@ import {
 	Input,
 } from "ui";
 import * as z from "zod";
-import { stageFormSchema } from "~/lib/stages";
+import { StageFormSchema } from "~/lib/stages";
 import { StagePayload } from "~/lib/types";
 
 type Props = {
@@ -42,30 +42,24 @@ export default function StageForm(props: Props) {
 				return toStage.destinationId === stage.id;
 			}),
 		};
-	}, {});
+	}, {} as StageFormSchema["moveConstraints"]);
 
-	const form = useForm<z.infer<typeof stageFormSchema>>({
+	const form = useForm<StageFormSchema>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		defaultValues: {
 			name: props.stage.name || "New Stage",
-			moveConstraints: moveConstraints || {},
+			moveConstraints: moveConstraints,
 		},
 	});
 
 	const onSubmit = useCallback(
-		async (formData) => {
+		async (formData: StageFormSchema) => {
 			const patch = dirtyValues(form.formState.dirtyFields, formData);
-			// const stageUpdateData = {
-			// 	stage: props.stage,
-			// 	newName: formData.name,
-			// 	newMoveConstraints: formData.moveConstraints,
-			// };
 			props.onSubmit(patch);
 		},
 		[props.stage, props.onSubmit]
 	);
-
 
 	useEffect(() => {
 		form.reset({

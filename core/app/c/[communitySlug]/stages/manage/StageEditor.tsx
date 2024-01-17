@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "ui";
-import { stageSources } from "~/lib/stages";
+import { StageFormSchema, stageSources } from "~/lib/stages";
 import { StageIndex, StagePayload } from "~/lib/types";
 import StageForm from "./StageForm";
 import { editStage } from "./actions";
@@ -18,16 +18,11 @@ const StageEditor = (props: Props) => {
 		setSelectedStage(newStage);
 	};
 
-	const onSubmit = async (patchData: any) => {
+	const onSubmit = async (patchData: StageFormSchema) => {
 		console.log(patchData);
-		// const stageUpdateData = {
-		// 	stage: selectedStage,
-		// 	newName: formData.name,
-		// 	newMoveConstraints: formData.moveConstraints,
-		// };
 
-		// const res = await editStage(stageUpdateData);
-		// console.log(res);
+		const res = await editStage(selectedStage.id, patchData);
+		console.log(res);
 
 		// if ("error" in res && typeof res.error === "string") {
 		// 	toast({
