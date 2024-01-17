@@ -1,4 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -14,6 +13,7 @@ import {
 	Input,
 } from "ui";
 import * as z from "zod";
+import { stageFormSchema } from "~/lib/stages";
 import { StagePayload } from "~/lib/types";
 
 type Props = {
@@ -33,7 +33,7 @@ export default function StageForm(props: Props) {
 		};
 	}, {});
 
-	const form = useForm({
+	const form = useForm<z.infer<typeof stageFormSchema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		defaultValues: {
