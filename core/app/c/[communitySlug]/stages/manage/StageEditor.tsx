@@ -37,7 +37,7 @@ const StageEditor = (props: Props) => {
 		} else {
 			toast({
 				title: "Success",
-				description: `${selectedStage.name} was updated successfully!`,
+				description: `${formData.name} was updated successfully!`,
 			});
 		}
 	};

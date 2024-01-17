@@ -5,32 +5,23 @@ import { StagePayload } from "~/lib/types";
 import prisma from "~/prisma/db";
 
 export async function editStage(patchData: any) {
-	const existingMoveDestinations = [
-		...new Set(patchData.stage.moveConstraints.map((constraint) => constraint.destinationId)),
-	];
-
-	const newMoveDestinations = Object.keys(patchData.newMoveConstraints).filter(
-		(id) => patchData.newMoveConstraints[id]
-	);
-	console.log(
-		"\n\n existing move constraints",
-		existingMoveDestinations,
-		"\n\n new",
-		newMoveDestinations,
-		"\n\n"
-	);
-
-	// Check if the arrays are the same
-	const areMoveConstraintsSame =
-		JSON.stringify(existingMoveDestinations) === JSON.stringify(newMoveDestinations);
-
-	console.log("areMoveConstraintsSame: ", areMoveConstraintsSame, "\n\n");
-
-	console.log("Old: ", patchData.stage.name, "New: ", patchData.newName);
 	try {
+		const existingMoveDestinations = [
+			...new Set(
+				patchData.stage.moveConstraints.map((constraint) => constraint.destinationId)
+			),
+		];
+
+		const newMoveDestinations = Object.keys(patchData.newMoveConstraints).filter(
+			(id) => patchData.newMoveConstraints[id]
+		);
+
+		// Check if the arrays are the same
+		const areMoveConstraintsSame =
+			JSON.stringify(existingMoveDestinations) === JSON.stringify(newMoveDestinations);
+
 		// Begin a transaction
 		await prisma.$transaction(async (prisma) => {
-			// Update the stage name
 			if (patchData.stage.name !== patchData.newName) {
 				await prisma.stage.update({
 					where: { id: patchData.stage.id },
@@ -39,7 +30,7 @@ export async function editStage(patchData: any) {
 			}
 
 			if (existingMoveDestinations.length > 0 && !areMoveConstraintsSame) {
-				// Update and/or delete move constraints
+				// Update/create and/or delete move constraints
 				await Promise.all(
 					Object.keys(patchData.newMoveConstraints)
 						.filter((x) => {
@@ -50,7 +41,10 @@ export async function editStage(patchData: any) {
 								// If move constraint is checked, update or create
 								await prisma.moveConstraint.upsert({
 									where: { id: constraintId },
-									update: {},
+									update: {
+										stageId: patchData.stageId,
+										destinationId: constraintId,
+									},
 									create: {
 										id: constraintId,
 										stageId: patchData.stageId,
