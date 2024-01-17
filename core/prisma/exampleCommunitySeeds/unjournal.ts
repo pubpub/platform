@@ -466,7 +466,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				name: "Submitted",
 				order: "aa",
 			},
-
+			{
+				id: stageIds[8],
+				communityId: communityUUID,
+				name: "Submitted to this lil bih",
+				order: "aa",
+			},
 			{
 				id: stageIds[1],
 				communityId: communityUUID,
