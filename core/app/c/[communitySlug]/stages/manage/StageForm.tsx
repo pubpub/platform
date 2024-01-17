@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
 	Button,
@@ -23,6 +23,17 @@ type Props = {
 	stages: StagePayload[];
 };
 
+// Map RHF's dirtyFields over the `data` received by `handleSubmit` and return the changed subset of that data.
+export function dirtyValues(dirtyFields: object | boolean, allValues: object): object {
+	// If *any* item in an array was modified, the entire array must be submitted, because there's no way to indicate
+	// "placeholders" for unchanged elements. `dirtyFields` is `true` for leaves.
+	if (dirtyFields === true || Array.isArray(dirtyFields)) return allValues;
+	// Here, we have an object
+	return Object.fromEntries(
+		Object.keys(dirtyFields).map((key) => [key, dirtyValues(dirtyFields[key], allValues[key])])
+	);
+}
+
 export default function StageForm(props: Props) {
 	const moveConstraints = props.stages.reduce((acc, stage) => {
 		return {
@@ -41,6 +52,21 @@ export default function StageForm(props: Props) {
 			moveConstraints: moveConstraints || {},
 		},
 	});
+
+	const onSubmit = useCallback(
+		async (formData) => {
+			const patch = dirtyValues(form.formState.dirtyFields, formData);
+			// const stageUpdateData = {
+			// 	stage: props.stage,
+			// 	newName: formData.name,
+			// 	newMoveConstraints: formData.moveConstraints,
+			// };
+			props.onSubmit(patch);
+		},
+		[props.stage, props.onSubmit]
+	);
+
+
 	useEffect(() => {
 		form.reset({
 			name: props.stage.name || "New Stage",
@@ -49,13 +75,18 @@ export default function StageForm(props: Props) {
 	}, [props.stage]);
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(props.onSubmit)}>
+			<form
+				onSubmit={form.handleSubmit(onSubmit)}
+				// onChange={(e) => {
+				// 	e.preventDefault();
+				// 	console.log(form.formState.dirtyFields);
+				// }}
+			>
 				<div className="p-4 flex flex-col">
 					<div className="mb-4">
 						<p className="text-2xl font-bold">{props.stage.name}</p>
 						<p className="text-lg">
-							Stage Settings This form contains fields used to edit your surrent
-							stages.
+							This form contains fields used to edit your surrent stages.
 						</p>
 					</div>
 					<FormField

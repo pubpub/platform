@@ -18,28 +18,29 @@ const StageEditor = (props: Props) => {
 		setSelectedStage(newStage);
 	};
 
-	const onSubmit = async (formData: any) => {
-		const stageUpdateData = {
-			stage: selectedStage,
-			newName: formData.name,
-			newMoveConstraints: formData.moveConstraints,
-		};
+	const onSubmit = async (patchData: any) => {
+		console.log(patchData);
+		// const stageUpdateData = {
+		// 	stage: selectedStage,
+		// 	newName: formData.name,
+		// 	newMoveConstraints: formData.moveConstraints,
+		// };
 
-		const res = await editStage(stageUpdateData);
-		console.log(res);
+		// const res = await editStage(stageUpdateData);
+		// console.log(res);
 
-		if ("error" in res && typeof res.error === "string") {
-			toast({
-				title: "Error",
-				description: res.error,
-				variant: "destructive",
-			});
-		} else {
-			toast({
-				title: "Success",
-				description: `${formData.name} was updated successfully!`,
-			});
-		}
+		// if ("error" in res && typeof res.error === "string") {
+		// 	toast({
+		// 		title: "Error",
+		// 		description: res.error,
+		// 		variant: "destructive",
+		// 	});
+		// } else {
+		// 	toast({
+		// 		title: "Success",
+		// 		description: `${formData.name} was updated successfully!`,
+		// 	});
+		// }
 	};
 	return (
 		<div className="space-x-4">

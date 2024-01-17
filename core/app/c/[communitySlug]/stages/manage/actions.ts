@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { StagePayload } from "~/lib/types";
 import prisma from "~/prisma/db";
 
 export async function editStage(patchData: any) {
@@ -20,7 +19,16 @@ export async function editStage(patchData: any) {
 		const areMoveConstraintsSame =
 			JSON.stringify(existingMoveDestinations) === JSON.stringify(newMoveDestinations);
 
-		// Begin a transaction
+		const moveConstraint = await prisma.moveConstraint.findFirst({
+			where: {
+				stageId: patchData.stage.id,
+			},
+		});
+		if (!moveConstraint) {
+			return { error: "Move constraint not found" };
+		}
+		console.log("Move constraint: ", moveConstraint);
+		// Begin a transaction to update stage name and move constarints
 		await prisma.$transaction(async (prisma) => {
 			if (patchData.stage.name !== patchData.newName) {
 				await prisma.stage.update({
@@ -29,26 +37,26 @@ export async function editStage(patchData: any) {
 				});
 			}
 
-			if (existingMoveDestinations.length > 0 && !areMoveConstraintsSame) {
+			if (!areMoveConstraintsSame) {
 				// Update/create and/or delete move constraints
 				await Promise.all(
 					Object.keys(patchData.newMoveConstraints)
 						.filter((x) => {
 							return x !== patchData.stage.id;
 						})
-						.map(async (constraintId) => {
-							if (patchData.newMoveConstraints[constraintId]) {
+						.map(async (destinationId) => {
+							if (patchData.newMoveConstraints[destinationId]) {
 								// If move constraint is checked, update or create
 								await prisma.moveConstraint.upsert({
-									where: { id: constraintId },
+									where: { id: moveConstraint.id },
 									update: {
 										stageId: patchData.stageId,
-										destinationId: constraintId,
+										destinationId: destinationId,
 									},
 									create: {
-										id: constraintId,
+										id: moveConstraint.id,
 										stageId: patchData.stageId,
-										destinationId: constraintId,
+										destinationId: destinationId,
 									},
 								});
 							} else {
@@ -57,19 +65,10 @@ export async function editStage(patchData: any) {
 									patchData.stage.id,
 									"\n",
 									"New Move desination ID",
-									constraintId,
+									destinationId,
 									"\n"
 								);
-								const moveConstraint = await prisma.moveConstraint.findFirst({
-									where: {
-										stage: { id: patchData.stage.id },
-										// stageId: patchData.stage.id,
-										destinationId: constraintId,
-									},
-								});
-								if (!moveConstraint) {
-									return { key: "No constraint found." };
-								}
+
 								console.log("Move constraint: ", moveConstraint);
 								// If move constraint is unchecked, delete
 								// await prisma.moveConstraint.delete({
