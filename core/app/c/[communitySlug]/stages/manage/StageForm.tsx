@@ -15,7 +15,6 @@ import {
 	toast,
 } from "ui";
 import * as z from "zod";
-import { stageFormSchema } from "~/lib/stages";
 import { StagePayload } from "~/lib/types";
 
 type Props = {
@@ -35,10 +34,9 @@ export default function StageForm(props: Props) {
 		};
 	}, {});
 
-	const form = useForm<z.infer<typeof stageFormSchema>>({
+	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		resolver: zodResolver(stageFormSchema),
 		defaultValues: {
 			name: props.stage.name || "New Stage",
 			moveConstraints: moveConstraints || {},

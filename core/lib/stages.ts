@@ -30,8 +30,3 @@ export function stageList(stages: StagePayload[]) {
 export function stageSources(stage: StagePayload, stageIndex: StageIndex) {
 	return stage.moveConstraintSources.map((stage) => stageIndex[stage.stageId]);
 }
-
-export const stageFormSchema = z.object({
-	name: z.string(),
-	moveConstraints: z.any(),
-});
