@@ -13,12 +13,7 @@ export default function StageCreation(props: Props) {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [failure, setFailure] = useState<boolean>(false);
 	const [stage, setStage] = useState<any>({
-		id: "",
 		name: "",
-		order: "",
-		communityId: "",
-		createdAt: new Date(),
-		updatedAt: new Date(),
 		moveConstraints: [],
 	});
 	// const sources = stageSources(stage, props.stageIndex);

@@ -16,7 +16,6 @@ import {
 } from "ui";
 import * as z from "zod";
 import { stageFormSchema } from "~/lib/stages";
-import { addMoveConstraint, removeMoveConstraint } from "./actions";
 import { StagePayload } from "~/lib/types";
 
 type Props = {
@@ -27,7 +26,7 @@ type Props = {
 };
 
 export default function StageForm(props: Props) {
-	const stageMoveConstraints = props.stages.reduce((acc, stage) => {
+	const moveConstraints = props.stages.reduce((acc, stage) => {
 		return {
 			...acc,
 			[stage.id]: props.stage.moveConstraints.some((toStage) => {
@@ -35,51 +34,20 @@ export default function StageForm(props: Props) {
 			}),
 		};
 	}, {});
-	async function handleAddConstraint(destination: any) {
-		const addedConstrait = await addMoveConstraint(destination, props.stage);
-		if ("error" in addedConstrait) {
-			toast({
-				title: "Error",
-				description: addedConstrait.error,
-				variant: "destructive",
-			});
-		} else {
-			toast({
-				title: "Success",
-				description: addedConstrait.success,
-			});
-		}
-	}
-	async function handleRemoveConstraint(constraintToRemove: any) {
-		const removedConstraint = await removeMoveConstraint(constraintToRemove, props.stage);
-		if ("error" in removedConstraint) {
-			toast({
-				title: "Error",
-				description: removedConstraint.error,
-				variant: "destructive",
-			});
-		} else {
-			toast({
-				title: "Success",
-				description: removedConstraint.success,
-			});
-		}
-	}
+
 	const form = useForm<z.infer<typeof stageFormSchema>>({
+		mode: "onChange",
+		reValidateMode: "onChange",
 		resolver: zodResolver(stageFormSchema),
 		defaultValues: {
-			stageId: props.stage.id,
-			stageName: props.stage.name,
-			stageOrder: props.stage.order,
-			stageMoveConstraints,
+			name: props.stage.name || "New Stage",
+			moveConstraints: moveConstraints || {},
 		},
 	});
 	useEffect(() => {
 		form.reset({
-			stageId: props.stage.id,
-			stageName: props.stage.name,
-			stageOrder: props.stage.order,
-			stageMoveConstraints,
+			name: props.stage.name || "New Stage",
+			moveConstraints: moveConstraints || {},
 		});
 	}, [props.stage]);
 	return (
@@ -95,7 +63,7 @@ export default function StageForm(props: Props) {
 					</div>
 					<FormField
 						control={form.control}
-						name="stageName"
+						name="name"
 						render={({ field }) => (
 							<FormItem>
 								<div className="mb-4">
@@ -118,7 +86,7 @@ export default function StageForm(props: Props) {
 									<FormField
 										key={stage.id}
 										control={form.control}
-										name={`stageMoveConstraints.${stage.id}`}
+										name={`moveConstraints.${stage.id}`}
 										render={({ field }) => {
 											return (
 												<FormItem
@@ -131,18 +99,6 @@ export default function StageForm(props: Props) {
 															id={stage.id}
 															{...field}
 															defaultChecked={field.value}
-															onChange={async (e) => {
-																// field.onChange(e);
-																if (e.target.checked) {
-																	await handleAddConstraint(
-																		stage
-																	);
-																} else {
-																	await handleRemoveConstraint(
-																		stage
-																	);
-																}
-															}}
 														/>
 													</FormControl>
 													<FormLabel className="text-sm font-normal">
@@ -165,19 +121,14 @@ export default function StageForm(props: Props) {
 						{props.sources.map((stage) => {
 							return (
 								<div key={stage.id}>
-									<p
-										onClick={() => props.onSubmit(stage)}
-										className="text-blue-500"
-									>
-										{stage.name}
-									</p>
+									<p className="text-blue-500">{stage.name}</p>
 								</div>
 							);
 						})}
 					</ul>
 					<div className="flex flex-row space-x-4">
 						<Button variant="destructive">Delete</Button>
-						<Button type="submit">
+						<Button type="submit" disabled={!form.formState.isValid}>
 							Submit
 							{form.formState.isSubmitting && (
 								<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />

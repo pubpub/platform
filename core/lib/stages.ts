@@ -32,24 +32,6 @@ export function stageSources(stage: StagePayload, stageIndex: StageIndex) {
 }
 
 export const stageFormSchema = z.object({
-	stageId: z.string().optional(),
-	stageName: z.string(),
-	stageOrder: z.string(),
-	stageMoveConstraints: z.array(
-		z.object({
-			id: z.string(),
-			stageId: z.string(),
-			destinationId: z.string(),
-			createdAt: z.date(),
-			updatedAt: z.date(),
-			destination: z.object({
-				id: z.string(),
-				name: z.string(),
-				order: z.string(),
-				communityId: z.string(),
-				createdAt: z.date(),
-				updatedAt: z.date(),
-			}),
-		})
-	),
+	name: z.string(),
+	moveConstraints: z.any(),
 });

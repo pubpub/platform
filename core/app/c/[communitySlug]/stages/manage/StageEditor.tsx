@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "ui";
 import * as z from "zod";
-import { stageFormSchema, stageSources } from "~/lib/stages";
+import { stageSources } from "~/lib/stages";
 import { StageIndex, StagePayload } from "~/lib/types";
 import StageForm from "./StageForm";
 import { editStage } from "./actions";
@@ -19,22 +19,28 @@ const StageEditor = (props: Props) => {
 		setSelectedStage(newStage);
 	};
 
-	const onSubmit = async (data: z.infer<typeof stageFormSchema>) => {
-		console.log(data);
-		// const updatedStage = await editStage(data);
-		// console.log(updatedStage);
-		// if (res.status !== 200) {
-		// 	toast({
-		// 		title: "Error",
-		// 		description: res.statusText,
-		// 		variant: "destructive",
-		// 	});
-		// } else {
-		// 	toast({
-		// 		title: "Success",
-		// 		description: `${data.stageName} was updated successfully!`,
-		// 	});
-		// }
+	const onSubmit = async (formData: any) => {
+		const stageUpdateData = {
+			stage: selectedStage,
+			newName: formData.name,
+			newMoveConstraints: formData.moveConstraints,
+		};
+
+		const res = await editStage(stageUpdateData);
+		console.log(res);
+
+		if ("error" in res && typeof res.error === "string") {
+			toast({
+				title: "Error",
+				description: res.error,
+				variant: "destructive",
+			});
+		} else {
+			toast({
+				title: "Success",
+				description: `${selectedStage.name} was updated successfully!`,
+			});
+		}
 	};
 	return (
 		<div className="space-x-4">
