@@ -12,30 +12,28 @@ import {
 	Icon,
 	Input,
 } from "ui";
-import * as z from "zod";
 import { StageFormSchema } from "~/lib/stages";
-import { StagePayload } from "~/lib/types";
+import { StagePayload, StageIndex } from "~/lib/types";
 
 type Props = {
-	stage: StagePayload;
-	sources: any;
-	onSubmit: (x: any) => void;
-	stages: StagePayload[];
+	stage: StagePayload; // current stage selected for the tab
+	sources: StagePayload[]; // list of stages this stage can move to
+	onSubmit: (x: StageFormSchema) => void;
+	stages: StagePayload[]; // list of stages under the current workflow
+	stageIndex: StageIndex;
 };
 
-// Map RHF's dirtyFields over the `data` received by `handleSubmit` and return the changed subset of that data.
+// https://github.com/orgs/react-hook-form/discussions/1991#discussioncomment-31308
 export function dirtyValues(dirtyFields: object | boolean, allValues: object): object {
-	// If *any* item in an array was modified, the entire array must be submitted, because there's no way to indicate
-	// "placeholders" for unchanged elements. `dirtyFields` is `true` for leaves.
 	if (dirtyFields === true || Array.isArray(dirtyFields)) return allValues;
-	// Here, we have an object
+
 	return Object.fromEntries(
 		Object.keys(dirtyFields).map((key) => [key, dirtyValues(dirtyFields[key], allValues[key])])
 	);
 }
 
 export default function StageForm(props: Props) {
-	const moveConstraints = props.stages.reduce((acc, stage) => {
+	const moveConstraints = Object.values(props.stageIndex).reduce((acc, stage) => {
 		return {
 			...acc,
 			[stage.id]: props.stage.moveConstraints.some((toStage) => {
@@ -103,7 +101,8 @@ export default function StageForm(props: Props) {
 						<div className="mb-4">
 							<p className="text-base font-bold">Moves to</p>
 							<p>These are stages {props.stage.name} can move to</p>
-							{props.stages.map((stage) => {
+							{/* // this gets recomputed on each render/chnage to DB. should be a simple list of stages */}
+							{Object.values(props.stageIndex).map((stage) => {
 								return props.stage.id === stage.id ? null : (
 									<FormField
 										key={stage.id}

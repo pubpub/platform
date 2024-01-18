@@ -20,57 +20,55 @@ const StageEditor = (props: Props) => {
 
 	const onSubmit = async (patchData: StageFormSchema) => {
 		const res = await editStage(selectedStage.id, patchData);
-		console.log(res);
-
-		// if ("error" in res && typeof res.error === "string") {
-		// 	toast({
-		// 		title: "Error",
-		// 		description: res.error,
-		// 		variant: "destructive",
-		// 	});
-		// } else {
-		// 	toast({
-		// 		title: "Success",
-		// 		description: `${formData.name} was updated successfully!`,
-		// 	});
-		// }
+		if ("error" in res && typeof res.error === "string") {
+			toast({
+				title: "Error",
+				description: res.error,
+				variant: "destructive",
+			});
+		} else {
+			toast({
+				title: "Success",
+				description: `${patchData.name} was updated successfully!`,
+			});
+		}
 	};
+	console.log(props.stageWorkflows);
 	return (
 		<div className="space-x-4">
-			{
-				props.stageWorkflows.map((stages) => {
-					return (
-						<div className="space-y-2">
-							<Tabs defaultValue={selectedStage.id}>
-								{stages.map((stage) => {
-									return (
-										<TabsList key={stage.id}>
-											<TabsTrigger
-												value={stage.id}
-												onClick={() => handleStageChange(stage)}
-											>
-												{stage.name}
-											</TabsTrigger>
-										</TabsList>
-									);
-								})}
-								{stages.map((stage) => {
-									return (
-										<TabsContent value={stage.id} key={stage.id}>
-											<StageForm
-												stage={stage}
-												sources={sources}
-												onSubmit={onSubmit}
-												stages={stages}
-											/>
-										</TabsContent>
-									);
-								})}
-							</Tabs>
-						</div>
-					);
-				})[0]
-			}
+			{props.stageWorkflows.map((stages) => {
+				return (
+					<div className="space-y-2">
+						<Tabs defaultValue={selectedStage.id}>
+							{stages.map((stage) => {
+								return (
+									<TabsList key={stage.id}>
+										<TabsTrigger
+											value={stage.id}
+											onClick={() => handleStageChange(stage)}
+										>
+											{stage.name}
+										</TabsTrigger>
+									</TabsList>
+								);
+							})}
+							{stages.map((stage) => {
+								return (
+									<TabsContent value={stage.id} key={stage.id}>
+										<StageForm
+											stage={stage}
+											sources={sources}
+											onSubmit={onSubmit}
+											stages={stages}
+											stageIndex={props.stageIndex}
+										/>
+									</TabsContent>
+								);
+							})}
+						</Tabs>
+					</div>
+				);
+			})}
 		</div>
 	);
 };
