@@ -170,7 +170,6 @@ model Stage {
 }
 
 model MoveConstraint {
-  id            String   @id @default(uuid())
   stage         Stage    @relation("move_constraint", fields: [stageId], references: [id])
   stageId       String   @map(name: "stage_id")
   destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id])
@@ -178,6 +177,7 @@ model MoveConstraint {
   createdAt     DateTime @default(now()) @map(name: "created_at")
   updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
+  @@id([stageId, destinationId], name: "move_constraint_id")
   @@map(name: "move_constraint")
 }
 
@@ -311,5 +311,5 @@ model IntegrationInstanceState {
   instanceId String              @map(name: "instance_id")
   state      Json
 
-  @@unique([pubId, instanceId], name: "pub_instance")
+  @@unique([pubId, instanceId], name: "pub_instance") // guarentees one state per pub-instance pair
 }

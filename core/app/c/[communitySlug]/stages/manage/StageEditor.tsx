@@ -19,8 +19,6 @@ const StageEditor = (props: Props) => {
 	};
 
 	const onSubmit = async (patchData: StageFormSchema) => {
-		console.log(patchData);
-
 		const res = await editStage(selectedStage.id, patchData);
 		console.log(res);
 
