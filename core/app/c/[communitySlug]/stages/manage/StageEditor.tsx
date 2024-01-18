@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "ui";
 import { StageFormSchema, stageSources } from "~/lib/stages";
-import { StageIndex, StagePayload } from "~/lib/types";
+import { DeepPartial, StageIndex, StagePayload } from "~/lib/types";
 import StageForm from "./StageForm";
 import { editStage } from "./actions";
 
@@ -18,7 +18,7 @@ const StageEditor = (props: Props) => {
 		setSelectedStage(newStage);
 	};
 
-	const onSubmit = async (patchData: StageFormSchema) => {
+	const onSubmit = async (patchData: DeepPartial<StageFormSchema>) => {
 		const res = await editStage(selectedStage.id, patchData);
 		if ("error" in res && typeof res.error === "string") {
 			toast({

@@ -12,25 +12,48 @@ import {
 	Icon,
 	Input,
 } from "ui";
+import { assert } from "utils";
 import { StageFormSchema } from "~/lib/stages";
-import { StagePayload, StageIndex } from "~/lib/types";
+import { StagePayload, StageIndex, DeepPartial } from "~/lib/types";
 
 type Props = {
 	stage: StagePayload; // current stage selected for the tab
 	sources: StagePayload[]; // list of stages this stage can move to
-	onSubmit: (x: StageFormSchema) => void;
+	onSubmit: (x: DeepPartial<StageFormSchema>) => void;
 	stages: StagePayload[]; // list of stages under the current workflow
 	stageIndex: StageIndex;
 };
 
-// https://github.com/orgs/react-hook-form/discussions/1991#discussioncomment-31308
-export function dirtyValues(dirtyFields: object | boolean, allValues: object): object {
-	if (dirtyFields === true || Array.isArray(dirtyFields)) return allValues;
+type DirtyFields<V extends object> = {
+	[K in keyof V]?: V[K] extends object ? DirtyFields<V[K]> : boolean;
+};
 
-	return Object.fromEntries(
-		Object.keys(dirtyFields).map((key) => [key, dirtyValues(dirtyFields[key], allValues[key])])
-	);
+function dirtyValuesInner<V extends object>(values: V, dirty: DirtyFields<V>, result: Partial<V>) {
+	for (const key in dirty) {
+		const value = values[key];
+		const dirtyValue = dirty[key];
+		if (dirtyValue === true) {
+			result[key] = value;
+		} else {
+			assert(dirtyValue !== undefined);
+			dirtyValuesInner(value, dirtyValue, (result[key] = {} as V[Extract<keyof V, string>]));
+		}
+	}
 }
+
+function dirtyValues<V extends object>(values: V, dirty: DirtyFields<V>): DeepPartial<V> {
+	const result: Partial<V> = {};
+	dirtyValuesInner(values, dirty, result);
+	return result as DeepPartial<V>;
+}
+// // https://github.com/orgs/react-hook-form/discussions/1991#discussioncomment-31308
+// export function dirtyValues(dirtyFields: object | boolean, allValues: object): object {
+// 	if (dirtyFields === true || Array.isArray(dirtyFields)) return allValues;
+
+// 	return Object.fromEntries(
+// 		Object.keys(dirtyFields).map((key) => [key, dirtyValues(dirtyFields[key], allValues[key])])
+// 	);
+// }
 
 export default function StageForm(props: Props) {
 	const moveConstraints = Object.values(props.stageIndex).reduce((acc, stage) => {
@@ -53,7 +76,7 @@ export default function StageForm(props: Props) {
 
 	const onSubmit = useCallback(
 		async (formData: StageFormSchema) => {
-			const patch = dirtyValues(form.formState.dirtyFields, formData);
+			const patch = dirtyValues(formData, form.formState.dirtyFields);
 			props.onSubmit(patch);
 		},
 		[props.stage, props.onSubmit]
@@ -108,7 +131,7 @@ export default function StageForm(props: Props) {
 										key={stage.id}
 										control={form.control}
 										name={`moveConstraints.${stage.id}`}
-										render={({ field }) => {
+										render={({ field: { value, ...field } }) => {
 											return (
 												<FormItem
 													key={stage.id}
@@ -119,7 +142,7 @@ export default function StageForm(props: Props) {
 															type="checkbox"
 															id={stage.id}
 															{...field}
-															defaultChecked={field.value}
+															defaultChecked={value}
 														/>
 													</FormControl>
 													<FormLabel className="text-sm font-normal">

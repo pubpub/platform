@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { StageFormSchema } from "~/lib/stages";
 import { Prisma } from "@prisma/client";
 import prisma from "~/prisma/db";
+import { DeepPartial } from "~/lib/types";
 
-export async function editStage(stageId: string, patchData: Partial<StageFormSchema>) {
+export async function editStage(stageId: string, patchData: DeepPartial<StageFormSchema>) {
 	try {
 		const stageUpdateData: Prisma.StageUpdateArgs["data"] = {};
 		if (patchData.name) {
