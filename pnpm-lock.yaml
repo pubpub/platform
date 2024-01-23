@@ -40,7 +40,7 @@ importers:
         version: 0.1.11(prettier@2.8.8)
       turbo:
         specifier: latest
-        version: 1.10.15
+        version: 1.10.16
 
   core:
     dependencies:
@@ -70,13 +70,13 @@ importers:
         version: 2.33.2
       '@ts-rest/core':
         specifier: ^3.28.0
-        version: 3.28.0(zod@core+@hookform+resolvers+zod)
+        version: 3.28.0(zod@3.21.4)
       '@ts-rest/next':
         specifier: ^3.28.0
-        version: 3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@core+@hookform+resolvers+zod)
+        version: 3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@3.21.4)
       '@ts-rest/open-api':
         specifier: ^3.28.0
-        version: 3.28.0(@ts-rest/core@3.28.0)(zod@core+@hookform+resolvers+zod)
+        version: 3.28.0(@ts-rest/core@3.28.0)(zod@3.21.4)
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
@@ -135,8 +135,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
       zod:
-        specifier: link:@hookform/resolvers/zod
-        version: link:@hookform/resolvers/zod
+        specifier: ^3.21.4
+        version: 3.21.4
     devDependencies:
       '@preconstruct/next':
         specifier: ^4.0.0
@@ -514,7 +514,7 @@ importers:
         version: 3.3.3(ts-node@10.9.1)
       tailwindcss-animate:
         specifier: ^1.0.6
-        version: 1.0.6
+        version: 1.0.6(tailwindcss@3.3.3)
       utils:
         specifier: workspace:*
         version: link:../utils
@@ -572,7 +572,7 @@ packages:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.19
 
-  /@anatine/zod-openapi@1.14.2(openapi3-ts@2.0.2)(zod@core+@hookform+resolvers+zod):
+  /@anatine/zod-openapi@1.14.2(openapi3-ts@2.0.2)(zod@3.21.4):
     resolution: {integrity: sha512-q0qHfnuNYVKu0Swrnnvfj9971AEyW7c8v9jCOZGCl5ZbyGMNG4RPyJkRcMi/JC8CRfdOe0IDfNm1nNsi2avprg==}
     peerDependencies:
       openapi3-ts: ^2.0.0 || ^3.0.0
@@ -580,7 +580,7 @@ packages:
     dependencies:
       openapi3-ts: 2.0.2
       ts-deepmerge: 6.2.0
-      zod: link:core/@hookform/resolvers/zod
+      zod: 3.21.4
     dev: false
 
   /@aws-crypto/crc32@3.0.0:
@@ -5527,18 +5527,7 @@ packages:
     dependencies:
       zod: 3.21.4
 
-  /@ts-rest/core@3.28.0(zod@core+@hookform+resolvers+zod):
-    resolution: {integrity: sha512-m0Wn2DgO3O57dsGT5fqxvF/WNFPx/8/dxbqLMV9TYXwLBgaJG4vDgR7qXVIYss/c5vlHTQ0oB9X+PwxhI3ksMg==}
-    peerDependencies:
-      zod: ^3.21.0
-    peerDependenciesMeta:
-      zod:
-        optional: true
-    dependencies:
-      zod: link:core/@hookform/resolvers/zod
-    dev: false
-
-  /@ts-rest/next@3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@core+@hookform+resolvers+zod):
+  /@ts-rest/next@3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@3.21.4):
     resolution: {integrity: sha512-Ao9UyxuboVgpFDBAYOASPe47IYXpVO6KpMMZ/c/hJVE6KN66Re/CeIjz3sqetG5G36HoqxyhpkUBr6p22xYLSw==}
     peerDependencies:
       '@ts-rest/core': 3.28.0
@@ -5548,21 +5537,21 @@ packages:
       zod:
         optional: true
     dependencies:
-      '@ts-rest/core': 3.28.0(zod@core+@hookform+resolvers+zod)
+      '@ts-rest/core': 3.28.0(zod@3.21.4)
       next: 13.5.2(@babel/core@7.22.17)(react-dom@18.2.0)(react@18.2.0)
-      zod: link:core/@hookform/resolvers/zod
+      zod: 3.21.4
     dev: false
 
-  /@ts-rest/open-api@3.28.0(@ts-rest/core@3.28.0)(zod@core+@hookform+resolvers+zod):
+  /@ts-rest/open-api@3.28.0(@ts-rest/core@3.28.0)(zod@3.21.4):
     resolution: {integrity: sha512-9EG1mWxzcTriWAQGLNLXvpRT5VLKIQGPcBfTndRDsHUQe9jor+GtjEP8ttuoTfo3GlhkND9V6Qrikda1/kM0tg==}
     peerDependencies:
       '@ts-rest/core': 3.28.0
       zod: ^3.21.0
     dependencies:
-      '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@core+@hookform+resolvers+zod)
-      '@ts-rest/core': 3.28.0(zod@core+@hookform+resolvers+zod)
+      '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@3.21.4)
+      '@ts-rest/core': 3.28.0(zod@3.21.4)
       openapi3-ts: 2.0.2
-      zod: link:core/@hookform/resolvers/zod
+      zod: 3.21.4
     dev: false
 
   /@tsconfig/node10@1.0.9:
@@ -10427,10 +10416,12 @@ packages:
     resolution: {integrity: sha512-3mFKyCo/MBcgyOTlrY8T7odzZFx+w+qKSMAmdFzRvqBfLlSigU6TZnlFHK0lkMwj9Bj8OYU+9yW9lmGuS0QEnQ==}
     dev: false
 
-  /tailwindcss-animate@1.0.6:
+  /tailwindcss-animate@1.0.6(tailwindcss@3.3.3):
     resolution: {integrity: sha512-4WigSGMvbl3gCCact62ZvOngA+PRqhAn7si3TQ3/ZuPuQZcIEtVap+ENSXbzWhpojKB8CpvnIsrwBu8/RnHtuw==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
+    dependencies:
+      tailwindcss: 3.3.3(ts-node@10.9.1)
     dev: false
 
   /tailwindcss@3.3.3(ts-node@10.9.1):
@@ -10631,64 +10622,64 @@ packages:
       yargs: 17.7.2
     dev: true
 
-  /turbo-darwin-64@1.10.15:
-    resolution: {integrity: sha512-Sik5uogjkRTe1XVP9TC2GryEMOJCaKE2pM/O9uLn4koQDnWKGcLQv+mDU+H+9DXvKLnJnKCD18OVRkwK5tdpoA==}
+  /turbo-darwin-64@1.10.16:
+    resolution: {integrity: sha512-+Jk91FNcp9e9NCLYlvDDlp2HwEDp14F9N42IoW3dmHI5ZkGSXzalbhVcrx3DOox3QfiNUHxzWg4d7CnVNCuuMg==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-darwin-arm64@1.10.15:
-    resolution: {integrity: sha512-xwqyFDYUcl2xwXyGPmHkmgnNm4Cy0oNzMpMOBGRr5x64SErS7QQLR4VHb0ubiR+VAb8M+ECPklU6vD1Gm+wekg==}
+  /turbo-darwin-arm64@1.10.16:
+    resolution: {integrity: sha512-jqGpFZipIivkRp/i+jnL8npX0VssE6IAVNKtu573LXtssZdV/S+fRGYA16tI46xJGxSAivrZ/IcgZrV6Jk80bw==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-linux-64@1.10.15:
-    resolution: {integrity: sha512-dM07SiO3RMAJ09Z+uB2LNUSkPp3I1IMF8goH5eLj+d8Kkwoxd/+qbUZOj9RvInyxU/IhlnO9w3PGd3Hp14m/nA==}
+  /turbo-linux-64@1.10.16:
+    resolution: {integrity: sha512-PpqEZHwLoizQ6sTUvmImcRmACyRk9EWLXGlqceogPZsJ1jTRK3sfcF9fC2W56zkSIzuLEP07k5kl+ZxJd8JMcg==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-linux-arm64@1.10.15:
-    resolution: {integrity: sha512-MkzKLkKYKyrz4lwfjNXH8aTny5+Hmiu4SFBZbx+5C0vOlyp6fV5jZANDBvLXWiDDL4DSEAuCEK/2cmN6FVH1ow==}
+  /turbo-linux-arm64@1.10.16:
+    resolution: {integrity: sha512-TMjFYz8to1QE0fKVXCIvG/4giyfnmqcQIwjdNfJvKjBxn22PpbjeuFuQ5kNXshUTRaTJihFbuuCcb5OYFNx4uw==}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-windows-64@1.10.15:
-    resolution: {integrity: sha512-3TdVU+WEH9ThvQGwV3ieX/XHebtYNHv9HARHauPwmVj3kakoALkpGxLclkHFBLdLKkqDvmHmXtcsfs6cXXRHJg==}
+  /turbo-windows-64@1.10.16:
+    resolution: {integrity: sha512-+jsf68krs0N66FfC4/zZvioUap/Tq3sPFumnMV+EBo8jFdqs4yehd6+MxIwYTjSQLIcpH8KoNMB0gQYhJRLZzw==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-windows-arm64@1.10.15:
-    resolution: {integrity: sha512-l+7UOBCbfadvPMYsX08hyLD+UIoAkg6ojfH+E8aud3gcA1padpjCJTh9gMpm3QdMbKwZteT5uUM+wyi6Rbbyww==}
+  /turbo-windows-arm64@1.10.16:
+    resolution: {integrity: sha512-sKm3hcMM1bl0B3PLG4ifidicOGfoJmOEacM5JtgBkYM48ncMHjkHfFY7HrJHZHUnXM4l05RQTpLFoOl/uIo2HQ==}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo@1.10.15:
-    resolution: {integrity: sha512-mKKkqsuDAQy1wCCIjCdG+jOCwUflhckDMSRoeBPcIL/CnCl7c5yRDFe7SyaXloUUkt4tUR0rvNIhVCcT7YeQpg==}
+  /turbo@1.10.16:
+    resolution: {integrity: sha512-2CEaK4FIuSZiP83iFa9GqMTQhroW2QryckVqUydmg4tx78baftTOS0O+oDAhvo9r9Nit4xUEtC1RAHoqs6ZEtg==}
     hasBin: true
     optionalDependencies:
-      turbo-darwin-64: 1.10.15
-      turbo-darwin-arm64: 1.10.15
-      turbo-linux-64: 1.10.15
-      turbo-linux-arm64: 1.10.15
-      turbo-windows-64: 1.10.15
-      turbo-windows-arm64: 1.10.15
+      turbo-darwin-64: 1.10.16
+      turbo-darwin-arm64: 1.10.16
+      turbo-linux-64: 1.10.16
+      turbo-linux-arm64: 1.10.16
+      turbo-windows-64: 1.10.16
+      turbo-windows-arm64: 1.10.16
     dev: true
 
   /type-fest@0.13.1:
