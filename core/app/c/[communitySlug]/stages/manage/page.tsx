@@ -15,7 +15,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 		where: { communityId: community.id },
 		include: stageInclude,
 	});
-	const { stageWorkflows, stageAtIndex: stageIndex } = topologicallySortedStages(stages);
+	const { stageWorkflows, stageAtIndex } = topologicallySortedStages(stages);
 	return (
 		<>
 			<h1>
@@ -24,7 +24,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 			<StageManagement
 				community={community}
 				stageWorkflows={stageWorkflows}
-				stageIndex={stageIndex}
+				stageAtIndex={stageAtIndex}
 			/>
 		</>
 	);

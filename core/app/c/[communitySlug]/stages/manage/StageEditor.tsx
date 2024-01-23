@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "ui";
 import { StageFormSchema, stageSources } from "~/lib/stages";
-import { DeepPartial, StageIndex, StagePayload } from "~/lib/types";
+import { DeepPartial, StageAtIndex, StagePayload } from "~/lib/types";
 import StageForm from "./StageForm";
 import { editStage } from "./actions";
 
 type Props = {
 	stageWorkflows: StagePayload[][];
-	stageIndex: StageIndex;
+	stageAtIndex: StageAtIndex;
 };
 
 const StageEditor = (props: Props) => {
 	const [selectedStage, setSelectedStage] = useState(props.stageWorkflows[0][0]); // Set the initial selected stage.
-	const sources = stageSources(selectedStage, props.stageIndex);
+	const sources = stageSources(selectedStage, props.stageAtIndex);
 
 	const handleStageChange = (newStage: StagePayload) => {
 		setSelectedStage(newStage);
@@ -60,7 +60,7 @@ const StageEditor = (props: Props) => {
 											sources={sources}
 											onSubmit={onSubmit}
 											stages={stages}
-											stageIndex={props.stageIndex}
+											stageAtIndex={props.stageAtIndex}
 										/>
 									</TabsContent>
 								);

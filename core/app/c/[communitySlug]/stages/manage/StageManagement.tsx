@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
 import StageEditor from "./StageEditor";
 import StageCreation from "./StageCreation";
-import { StagePayload, StageIndex } from "~/lib/types";
+import { StagePayload, StageAtIndex } from "~/lib/types";
 
 type Props = {
 	community: any;
 	stageWorkflows: StagePayload[][];
-	stageIndex: StageIndex;
+	stageAtIndex: StageAtIndex;
 };
 
 export default function StageManagement(props: Props) {
@@ -48,7 +48,7 @@ export default function StageManagement(props: Props) {
 					<div className="relative inline-flex flex-col">
 						<StageEditor
 							stageWorkflows={props.stageWorkflows}
-							stageIndex={props.stageIndex}
+							stageAtIndex={props.stageAtIndex}
 						/>
 					</div>
 				</div>
