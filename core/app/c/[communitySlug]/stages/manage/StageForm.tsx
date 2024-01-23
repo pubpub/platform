@@ -46,14 +46,6 @@ function dirtyValues<V extends object>(values: V, dirty: DirtyFields<V>): DeepPa
 	dirtyValuesInner(values, dirty, result);
 	return result as DeepPartial<V>;
 }
-// // https://github.com/orgs/react-hook-form/discussions/1991#discussioncomment-31308
-// export function dirtyValues(dirtyFields: object | boolean, allValues: object): object {
-// 	if (dirtyFields === true || Array.isArray(dirtyFields)) return allValues;
-
-// 	return Object.fromEntries(
-// 		Object.keys(dirtyFields).map((key) => [key, dirtyValues(dirtyFields[key], allValues[key])])
-// 	);
-// }
 
 export default function StageForm(props: Props) {
 	const moveConstraints = Object.values(props.stageIndex).reduce((acc, stage) => {

@@ -55,11 +55,7 @@ export default function StageManagement(props: Props) {
 			</TabsContent>
 			<TabsContent value="2">
 				<div className="relative inline-flex flex-col max-w-lg">
-					<StageCreation
-						community={props.community}
-						stageWorkflows={props.stageWorkflows}
-						stageIndex={props.stageIndex}
-					/>
+					<StageCreation />
 				</div>
 			</TabsContent>
 		</Tabs>
