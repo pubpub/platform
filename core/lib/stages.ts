@@ -1,9 +1,9 @@
-import { StagePayload, StageIndex as StageAtIndex } from "./types";
+import { StagePayload, StageAtIndex } from "./types";
 import * as z from "zod";
 
-// this function takes a stage and a map of 
-// stages and their IDs and a list of stages 
-// that have been visited so far, sets the head and returns a 
+// this function takes a stage and a map of
+// stages and their IDs and a list of stages
+// that have been visited so far, sets the head and returns a
 // list of stages that can be reached from the stage provided
 function createStageList(
 	stage: StagePayload,
@@ -43,7 +43,8 @@ export function topologicallySortedStages(stages: StagePayload[]): {
 	return { stageAtIndex: stageAtIndex, stageWorkflows };
 }
 
-export function stageSources(stage: StagePayload, stageAtIndex: StageAtIndex) {
+// this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
+export function moveConstraintSourcesForStage(stage: StagePayload, stageAtIndex: StageAtIndex) {
 	return stage.moveConstraintSources.map((stage) => stageAtIndex[stage.stageId]);
 }
 
