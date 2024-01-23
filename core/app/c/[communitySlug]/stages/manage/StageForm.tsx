@@ -19,14 +19,16 @@ import { StagePayload, StageAtIndex, DeepPartial } from "~/lib/types";
 type Props = {
 	stage: StagePayload; // current stage selected for the tab
 	sources: StagePayload[]; // list of stages this stage can move to
-	onSubmit: (x: DeepPartial<StageFormSchema>) => void;
+	onSubmit: (x: DeepPartial<StageFormSchema>) => void; // onSubmit being passed to form
 	stages: StagePayload[]; // list of stages under the current workflow
 	stageAtIndex: StageAtIndex;
 };
 
+// generic type alias that takes an object and returns a new object with the same keys but the values are booleans
 type DirtyFields<V extends object> = {
 	[K in keyof V]?: V[K] extends object ? DirtyFields<V[K]> : boolean;
 };
+
 
 function dirtyValuesInner<V extends object>(values: V, dirty: DirtyFields<V>, result: Partial<V>) {
 	for (const key in dirty) {
@@ -41,6 +43,10 @@ function dirtyValuesInner<V extends object>(values: V, dirty: DirtyFields<V>, re
 	}
 }
 
+// this generic function takes an objectfor its generic type parameter
+// its function arguments are the object and a second object that has the same keys as the first object but the values are booleans
+// this returns a new object with the same keys as the first object but the values 
+// are the values from the first object where the key is true in the second object
 function dirtyValues<V extends object>(values: V, dirty: DirtyFields<V>): DeepPartial<V> {
 	const result: Partial<V> = {};
 	dirtyValuesInner(values, dirty, result);
