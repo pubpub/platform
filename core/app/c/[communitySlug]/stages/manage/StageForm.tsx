@@ -29,7 +29,6 @@ type DirtyFields<V extends object> = {
 	[K in keyof V]?: V[K] extends object ? DirtyFields<V[K]> : boolean;
 };
 
-
 function dirtyValuesInner<V extends object>(values: V, dirty: DirtyFields<V>, result: Partial<V>) {
 	for (const key in dirty) {
 		const value = values[key];
@@ -45,7 +44,7 @@ function dirtyValuesInner<V extends object>(values: V, dirty: DirtyFields<V>, re
 
 // this generic function takes an objectfor its generic type parameter
 // its function arguments are the object and a second object that has the same keys as the first object but the values are booleans
-// this returns a new object with the same keys as the first object but the values 
+// this returns a new object with the same keys as the first object but the values
 // are the values from the first object where the key is true in the second object
 function dirtyValues<V extends object>(values: V, dirty: DirtyFields<V>): DeepPartial<V> {
 	const result: Partial<V> = {};

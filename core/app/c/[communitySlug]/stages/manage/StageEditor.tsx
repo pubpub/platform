@@ -35,10 +35,13 @@ const StageEditor = (props: Props) => {
 	};
 	return (
 		<div className="space-x-4">
-			{props.stageWorkflows.map((stages) => {
+			{props.stageWorkflows.map((stages, index) => {
 				return (
 					<div className="space-y-2">
 						<Tabs defaultValue={selectedStage.id}>
+							<div className="mb-4">
+								<h2 className="text-2xl font-bold text-orange-200">Workflow {index}</h2>
+							</div>
 							{stages.map((stage) => {
 								return (
 									<TabsList key={stage.id}>
