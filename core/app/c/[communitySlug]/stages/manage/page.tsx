@@ -1,7 +1,7 @@
 import prisma from "~/prisma/db";
 import StageManagement from "./StageManagement";
 import { stageInclude } from "~/lib/types";
-import { stageList } from "~/lib/stages";
+import { topologicallySortedStages } from "~/lib/stages";
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
 	const community = await prisma.community.findUnique({
@@ -15,7 +15,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 		where: { communityId: community.id },
 		include: stageInclude,
 	});
-	const { stageWorkflows, stageIndex } = stageList(stages);
+	const { stageWorkflows, stageAtIndex: stageIndex } = topologicallySortedStages(stages);
 	return (
 		<>
 			<h1>
