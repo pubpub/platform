@@ -15,6 +15,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 		where: { communityId: community.id },
 		include: stageInclude,
 	});
+	// stage workflows look like this:  [[stage1, stage2], [stage3, stage4]]
 	const { stageWorkflows, stageAtIndex } = topologicallySortedStages(stages);
 	return (
 		<>

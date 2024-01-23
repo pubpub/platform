@@ -82,13 +82,7 @@ export default function StageForm(props: Props) {
 	}, [props.stage]);
 	return (
 		<Form {...form}>
-			<form
-				onSubmit={form.handleSubmit(onSubmit)}
-				// onChange={(e) => {
-				// 	e.preventDefault();
-				// 	console.log(form.formState.dirtyFields);
-				// }}
-			>
+			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<div className="p-4 flex flex-col">
 					<div className="mb-4">
 						<p className="text-2xl font-bold">{props.stage.name}</p>

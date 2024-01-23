@@ -34,7 +34,6 @@ export async function editStage(stageId: string, patchData: DeepPartial<StageFor
 		revalidatePath("/");
 		return { success: "Stage and move constraints updated successfully" };
 	} catch (error) {
-		console.log(error);
 		return { error: `Error updating stage and move constraints: ${error}` };
 	}
 }

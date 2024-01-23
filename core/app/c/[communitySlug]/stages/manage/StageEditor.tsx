@@ -29,11 +29,10 @@ const StageEditor = (props: Props) => {
 		} else {
 			toast({
 				title: "Success",
-				description: `${patchData.name} was updated successfully!`,
+				description: `${patchData.name || selectedStage.name} was updated successfully!`,
 			});
 		}
 	};
-	console.log(props.stageWorkflows);
 	return (
 		<div className="space-x-4">
 			{props.stageWorkflows.map((stages) => {
