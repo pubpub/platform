@@ -51,6 +51,7 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
+	deadline: z.string(),
 });
 
 const isActionRedirect = (props: Props): props is RedirectProps => {
@@ -67,6 +68,7 @@ const defaultInstanceConfig = {
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 	template: defaultEmailTemplate,
+	deadline: "",
 };
 
 export function Configure(props: Props) {
@@ -129,6 +131,22 @@ export function Configure(props: Props) {
 									<FormDescription>
 										The pub type determines the fields available on the
 										evaluation form.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="deadline"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Deadline</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										Set the deadline for evaluations to be submitted.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
