@@ -26,33 +26,35 @@ variable "availability_zones" {
   description = "a list of availability zones"
 }
 
+# variable "container_port" {
+#   description = "The port the containers are listening on"
+#   default     = 5050
+# }
+#
+# variable "container_environment" {
+#   description = "Environment variables for the containers"
+#   default = []
+# }
+#
+# variable "health_check_path" {
+#   description = "The path for the health check"
+#   default     = "/v1/debug/health"
+# }
+#
+# variable "hosted_zone_id" {
+#   description = "The ID of the hosted zone for the domain"
+# }
+#
+# variable "subdomain" {
+#   description = "Prefix to domain name of hosted zone above, so serve app from"
+# }
+
 variable "region" {
   description = "Region for all resources (MUST agree with provider config)"
   default     = "us-east-1"
 }
 
-variable "core_configuration" {
-  description = "Container configurations for `core`"
-  sensitive = true
-
-  type = object({
-    container_port = number
-
-    # This might become too cumbersome, but for now it is nice to
-    # make the surface area clear everywhere
-    environment = object({
-      # DATABASE_URL = string
-      API_KEY = string
-      # ASSETS_REGION = string
-      # ASSETS_UPLOAD_KEY = string
-      # ASSETS_UPLOAD_SECRET_KEY = string
-      JWT_SECRET = string
-      MAILGUN_SMTP_USERNAME = string
-      NEXT_PUBLIC_PUBPUB_URL = string
-      NEXT_PUBLIC_SUPABASE_URL = string
-      SENTRY_AUTH_TOKEN = string
-      SUPABASE_SERVICE_ROLE_KEY = string
-      SUPABASE_WEBHOOKS_API_KEY = string
-    })
-  })
+variable "container_ingress_port" {
+  description = "port to allow traffic in private security group"
+  type = number
 }

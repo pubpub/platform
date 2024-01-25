@@ -115,8 +115,8 @@ resource "aws_security_group" "ecs_tasks" {
 
   ingress {
     protocol = "tcp"
-    from_port = var.core_configuration.container_port
-    to_port = var.core_configuration.container_port
+    from_port = var.container_ingress_port
+    to_port = var.container_ingress_port
     cidr_blocks = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
@@ -129,6 +129,7 @@ resource "aws_security_group" "ecs_tasks" {
     ipv6_cidr_blocks = ["::/0"]
   }
 }
+
 
 # load balancer
 resource "aws_lb" "main" {
@@ -168,6 +169,7 @@ resource "aws_lb_listener" "http" {
     target_group_arn = aws_lb_target_group.main.arn
   }
 }
+
 
 # logging
 

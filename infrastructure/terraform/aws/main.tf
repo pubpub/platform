@@ -24,19 +24,31 @@ module "cluster" {
   environment = var.environment
   region = var.region
 
-  availability_zones = ["us-east-1a", "us-east-1c"]
+  container_ingress_port = 3000
 
-  core_configuration = {
+  availability_zones = ["us-east-1a", "us-east-1c"]
+}
+
+module "service_core" {
+  source = "./modules/ecs-service"
+
+  service_name = "core"
+  cluster_info = module.cluster.cluster_info
+
+
+  repository_url = module.cluster.ecr_repository_url
+
+  configuration = {
     container_port = 3000
-    environment = {
-      API_KEY = "undefined"
-      JWT_SECRET = "undefined"
-      MAILGUN_SMTP_USERNAME = "undefined"
-      NEXT_PUBLIC_PUBPUB_URL = "undefined"
-      NEXT_PUBLIC_SUPABASE_URL = "undefined"
-      SENTRY_AUTH_TOKEN = "undefined"
-      SUPABASE_SERVICE_ROLE_KEY = "undefined"
-      SUPABASE_WEBHOOKS_API_KEY = "undefined"
-    }
+    environment = [
+      {name = "API_KEY", value = "undefined"},
+      {name = "JWT_SECRET", value = "undefined"},
+      {name = "MAILGUN_SMTP_USERNAME", value = "undefined"},
+      {name = "NEXT_PUBLIC_PUBPUB_URL", value = "undefined"},
+      {name = "NEXT_PUBLIC_SUPABASE_URL", value = "undefined"},
+      {name = "SENTRY_AUTH_TOKEN", value = "undefined"},
+      {name = "SUPABASE_SERVICE_ROLE_KEY", value = "undefined"},
+      {name = "SUPABASE_WEBHOOKS_API_KEY", value = "undefined"},
+    ]
   }
 }
