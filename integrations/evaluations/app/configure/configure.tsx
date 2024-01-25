@@ -4,6 +4,8 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import {
 	Button,
+	Calendar,
+	CalendarIcon,
 	Card,
 	CardContent,
 	CardDescription,
@@ -19,6 +21,9 @@ import {
 	FormMessage,
 	Icon,
 	Input,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
 	Textarea,
 	useToast,
 } from "ui";
@@ -26,6 +31,7 @@ import { cn } from "utils";
 import * as z from "zod";
 import { InstanceConfig } from "~/lib/types";
 import { configure } from "./actions";
+import { format } from "date-fns";
 
 type BaseProps = {
 	instanceId: string;
@@ -51,7 +57,7 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
-	deadline: z.string(),
+	deadline: z.date(),
 });
 
 const isActionRedirect = (props: Props): props is RedirectProps => {
@@ -68,7 +74,7 @@ const defaultInstanceConfig = {
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 	template: defaultEmailTemplate,
-	deadline: "",
+	deadline: new Date(Date.now() + 3 * 7 * 24 * 60 * 60 * 1000),
 };
 
 export function Configure(props: Props) {
@@ -140,13 +146,39 @@ export function Configure(props: Props) {
 							control={form.control}
 							name="deadline"
 							render={({ field }) => (
-								<FormItem>
+								<FormItem className="flex flex-col">
 									<FormLabel>Deadline</FormLabel>
-									<FormControl>
-										<Input {...field} />
-									</FormControl>
+									<Popover>
+										<PopoverTrigger asChild>
+											<FormControl>
+												<Button
+													variant={"outline"}
+													className={cn(
+														"w-[240px] pl-3 text-left font-normal",
+														!field.value && "text-muted-foreground"
+													)}
+												>
+													{field.value ? (
+														format(field.value, "PPP")
+													) : (
+														<span>Pick a date</span>
+													)}
+													<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+												</Button>
+											</FormControl>
+										</PopoverTrigger>
+										<PopoverContent className="w-auto p-0" align="start">
+											<Calendar
+												mode="single"
+												selected={field.value}
+												onSelect={field.onChange}
+												disabled={(date) => date < new Date()}
+												defaultMonth={field.value}
+											/>
+										</PopoverContent>
+									</Popover>
 									<FormDescription>
-										Set the deadline for evaluations to be submitted.
+										The deadline you want to set for reviewers
 									</FormDescription>
 									<FormMessage />
 								</FormItem>

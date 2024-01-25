@@ -95,20 +95,11 @@ export type InstanceConfig = {
 	evaluatorFieldSlug: string;
 	titleFieldSlug: string;
 	emailTemplate: EmailTemplate;
-	deadline: string;
+	deadline: Date;
 };
 
 export type InstanceState = {
 	[evaluatorPubPubUserId: string]: Evaluator;
-};
-
-// ask if this will be used elsewhere
-export const defaultInstanceConfig: InstanceConfig = {
-	pubTypeId: "",
-	emailTemplate: { subject: "", message: "" },
-	evaluatorFieldSlug: "",
-	titleFieldSlug: "",
-	deadline: "",
 };
 
 export const isSaved = (
