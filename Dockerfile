@@ -7,6 +7,9 @@
 ARG NODE_VERSION=20.6.0
 ARG PNPM_VERSION=8.14.3
 
+ARG PACKAGE_DIR=core
+ARG PACKAGE=core
+
 ################################################################################
 # Use node image for base image for all stages.
 FROM node:${NODE_VERSION}-alpine as base
@@ -24,6 +27,7 @@ RUN --mount=type=cache,target=/root/.npm \
 ################################################################################
 # Create a stage for installing production dependecies.
 FROM base as deps
+ARG PACKAGE_DIR
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.local/share/pnpm/store to speed up subsequent builds.
@@ -31,7 +35,7 @@ FROM base as deps
 # into this layer.
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-workspace.yaml,target=pnpm-workspace.yaml \
-    --mount=type=bind,source=core/package.json,target=core/package.json \
+    --mount=type=bind,source=${PACKAGE_DIR}/package.json,target=${PACKAGE_DIR}/package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,target=/pnpm/store \
@@ -40,11 +44,12 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 ################################################################################
 # Create a stage for building the application.
 FROM deps as build
+ARG PACKAGE_DIR PACKAGE
 
 # Download additional development dependencies before building, as some projects require
 # "devDependencies" to be installed to build. If you don't need this, remove this step.
 RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=core/package.json,target=core/package.json \
+    --mount=type=bind,source=${PACKAGE_DIR}/package.json,target=${PACKAGE_DIR}/package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=cache,target=/pnpm/store \
@@ -54,12 +59,13 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 COPY . .
 
 # Run the build script.
-RUN ./bin/render-build.sh core
+RUN ./bin/render-build.sh ${PACKAGE}
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
 # where the necessary files are copied from the build stage.
 FROM base as final
+ARG PACKAGE_DIR PACKAGE
 
 # Use production node environment by default.
 ENV NODE_ENV production
@@ -72,28 +78,19 @@ COPY package.json \
      pnpm-workspace.yaml \
      .
 
-COPY ./core/package.json \
-     ./core/.env.template \
-     ./core/postcss.config.js \
-     ./core/tailwind.config.js \
-     ./core/
-
-     #  TODO: These may be needed, but are TS currently:
-     # ./core/next.config.js \
-     # ./core/sentry.client.config.ts \
-     # ./core/sentry.edge.config.ts \
-     # ./core/sentry.server.config.ts \
+COPY ./${PACKAGE_DIR}/package.json \
+     ./${PACKAGE_DIR}/
 
 # Copy the production dependencies from the deps stage and also
 # the built application from the build stage into the image.
 
 COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/core/node_modules ./core/node_modules
-COPY --from=build /usr/src/app/core/.next ./core/.next
+COPY --from=build /usr/src/app/${PACKAGE_DIR}/node_modules ./${PACKAGE_DIR}/node_modules
+COPY --from=build /usr/src/app/${PACKAGE_DIR}/.next ./${PACKAGE_DIR}/.next
 
 
 # Expose the port that the application listens on.
 EXPOSE 3000
 
 # Run the application.
-CMD pnpm --filter core start
+CMD pnpm --filter ${PACKAGE} start
