@@ -21,15 +21,27 @@ export const getLoginData = cache(async () => {
 		return undefined;
 	}
 	let user = await prisma.user.findUnique({
-		where: { supabaseId: supabaseUser.id },
+		where: { email: supabaseUser.email },
 		include: {
 			memberships: {
 				include: {
-					community: true
-				}
-			}
-		}
+					community: true,
+				},
+			},
+		},
 	});
+
+	if (user && !user.supabaseId) {
+		// They logged in via supabase, but the app db record doesn't have a supabaseId yet
+		await prisma.user.update({
+			where: {
+				email: supabaseUser.email,
+			},
+			data: {
+				supabaseId: supabaseUser.id,
+			},
+		});
+	}
 
 	if (!user) {
 		// They successfully logged in via supabase, but no corresponding record was found in the
@@ -67,9 +79,9 @@ export const getLoginData = cache(async () => {
 			include: {
 				memberships: {
 					include: {
-						community: true
-					}
-				}
+						community: true,
+					},
+				},
 			},
 		});
 	}
