@@ -95,7 +95,8 @@ export type InstanceConfig = {
 	evaluatorFieldSlug: string;
 	titleFieldSlug: string;
 	emailTemplate: EmailTemplate;
-	deadline: Date;
+	deadlineLength: number;
+	deadlineUnit: "weeks" | "days" | "months";
 };
 
 export type InstanceState = {

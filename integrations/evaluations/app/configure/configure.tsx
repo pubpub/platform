@@ -48,12 +48,7 @@ type RedirectProps = BaseProps & {
 
 type Props = BaseProps | RedirectProps;
 
-type FormDeadlineOffset = {
-	deadlineLength: number;
-	deadlineUnit: "weeks" | "days" | "months";
-};
-
-const schema: z.ZodType<Partial<InstanceConfig> & FormDeadlineOffset> = z.object({
+const schema: z.ZodType<InstanceConfig> = z.object({
 	pubTypeId: z.string().length(36),
 	evaluatorFieldSlug: z.string().min(1),
 	titleFieldSlug: z.string().min(1),
@@ -79,12 +74,13 @@ const defaultFormValues = {
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 	template: defaultEmailTemplate,
-	deadline: new Date(Date.now() + 3 * 7 * 24 * 60 * 60 * 1000),
 	deadlineLength: 3,
 	deadlineUnit: "weeks" as const,
 };
 
-function calculateDeadline(deadline: FormDeadlineOffset): void {
+function calculateDeadline(
+	deadline: Pick<InstanceConfig, "deadlineLength" | "deadlineUnit">
+): number {
 	let n: number;
 	switch (deadline.deadlineUnit) {
 		case "days":
@@ -103,7 +99,7 @@ function calculateDeadline(deadline: FormDeadlineOffset): void {
 			throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
 	}
 
-	return;
+	return n;
 }
 
 export function Configure(props: Props) {
@@ -118,6 +114,11 @@ export function Configure(props: Props) {
 		defaultValues,
 	});
 	const onSubmit = async (values: z.infer<typeof schema>) => {
+		const deadline = calculateDeadline({
+			deadlineLength: values.deadlineLength,
+			deadlineUnit: values.deadlineUnit,
+		});
+		console.log(deadline);
 		const result = await configure(props.instanceId, values);
 		if ("error" in result) {
 			toast({
