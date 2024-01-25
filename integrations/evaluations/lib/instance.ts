@@ -9,7 +9,7 @@ export const getInstanceConfig = async (
 
 export const setInstanceConfig = async (
 	instanceId: string,
-	instanceConfig: InstanceConfig
+	instanceConfig: Partial<InstanceConfig>
 ): Promise<any> => {
 	return await client.setInstanceConfig(instanceId, instanceConfig);
 };

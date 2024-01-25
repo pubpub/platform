@@ -4,8 +4,6 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import {
 	Button,
-	Calendar,
-	CalendarIcon,
 	Card,
 	CardContent,
 	CardDescription,
@@ -21,9 +19,11 @@ import {
 	FormMessage,
 	Icon,
 	Input,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 	Textarea,
 	useToast,
 } from "ui";
@@ -31,7 +31,6 @@ import { cn } from "utils";
 import * as z from "zod";
 import { InstanceConfig } from "~/lib/types";
 import { configure } from "./actions";
-import { format } from "date-fns";
 
 type BaseProps = {
 	instanceId: string;
@@ -49,7 +48,12 @@ type RedirectProps = BaseProps & {
 
 type Props = BaseProps | RedirectProps;
 
-const schema: z.ZodType<InstanceConfig> = z.object({
+type FormDeadlineOffset = {
+	deadlineLength: number;
+	deadlineUnit: "weeks" | "days" | "months";
+};
+
+const schema: z.ZodType<Partial<InstanceConfig> & FormDeadlineOffset> = z.object({
 	pubTypeId: z.string().length(36),
 	evaluatorFieldSlug: z.string().min(1),
 	titleFieldSlug: z.string().min(1),
@@ -57,7 +61,8 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
-	deadline: z.date(),
+	deadlineLength: z.number().int().min(1),
+	deadlineUnit: z.enum(["weeks", "days", "months"]),
 });
 
 const isActionRedirect = (props: Props): props is RedirectProps => {
@@ -69,18 +74,42 @@ const defaultEmailTemplate = {
 	message: "Please reach out if you have any questions.",
 };
 
-const defaultInstanceConfig = {
+const defaultFormValues = {
 	pubTypeId: "",
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 	template: defaultEmailTemplate,
 	deadline: new Date(Date.now() + 3 * 7 * 24 * 60 * 60 * 1000),
+	deadlineLength: 3,
+	deadlineUnit: "weeks" as const,
 };
+
+function calculateDeadline(deadline: FormDeadlineOffset): void {
+	let n: number;
+	switch (deadline.deadlineUnit) {
+		case "days":
+			// set deadline offset to n days
+			n = deadline.deadlineLength * 24 * 60 * 60 * 1000;
+			break;
+		case "weeks":
+			// set deadline offset to n weeks. eg. whatever this is 3 * 7 * 24 * 60 * 60 * 1000
+			n = deadline.deadlineLength * 7 * 24 * 60 * 60 * 1000;
+			break;
+		case "months":
+			// set deadline offset to n months
+			n = deadline.deadlineLength;
+			break;
+		default:
+			throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
+	}
+
+	return;
+}
 
 export function Configure(props: Props) {
 	const { toast } = useToast();
 	const defaultValues = useMemo(
-		() => Object.assign({}, defaultInstanceConfig, props.instanceConfig),
+		() => Object.assign({}, defaultFormValues, props.instanceConfig),
 		[]
 	);
 	const form = useForm<z.infer<typeof schema>>({
@@ -144,41 +173,44 @@ export function Configure(props: Props) {
 						/>
 						<FormField
 							control={form.control}
-							name="deadline"
+							name="deadlineLength"
 							render={({ field }) => (
-								<FormItem className="flex flex-col">
-									<FormLabel>Deadline</FormLabel>
-									<Popover>
-										<PopoverTrigger asChild>
-											<FormControl>
-												<Button
-													variant={"outline"}
-													className={cn(
-														"w-[240px] pl-3 text-left font-normal",
-														!field.value && "text-muted-foreground"
-													)}
-												>
-													{field.value ? (
-														format(field.value, "PPP")
-													) : (
-														<span>Pick a date</span>
-													)}
-													<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-												</Button>
-											</FormControl>
-										</PopoverTrigger>
-										<PopoverContent className="w-auto p-0" align="start">
-											<Calendar
-												mode="single"
-												selected={field.value}
-												onSelect={field.onChange}
-												disabled={(date) => date < new Date()}
-												defaultMonth={field.value}
-											/>
-										</PopoverContent>
-									</Popover>
+								<FormItem>
+									<FormLabel>Deadline length</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
 									<FormDescription>
-										The deadline you want to set for reviewers
+										This field is used to determine thhe length of the deadline.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="deadlineUnit"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Deadline Format</FormLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
+										<FormControl>
+											<SelectTrigger>
+												<SelectValue placeholder="Select a verified email to display" />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value="days">days</SelectItem>
+											<SelectItem value="weeks">weeks</SelectItem>
+											<SelectItem value="months">month</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormDescription>
+										This field allows you to select whether the deadline is in
+										days, weeks, or months.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
