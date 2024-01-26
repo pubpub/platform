@@ -10,6 +10,20 @@ const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
 const DAYS_TO_SUBMIT_EVALUATION = 21;
 
+export function calculateDeadline(
+	deadline: Pick<InstanceConfig, "deadlineLength" | "deadlineUnit">,
+	date: Date
+): Date {
+	switch (deadline.deadlineUnit) {
+		case "days":
+			return new Date(date.setMinutes(date.getMinutes() + deadline.deadlineLength * 24 * 60));
+		case "months":
+			return new Date(date.setMonth(date.getMonth() + deadline.deadlineLength));
+		default:
+			throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
+	}
+}
+
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
 
@@ -191,8 +205,14 @@ export const sendAcceptedEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const dueAt = new Date(evaluator.acceptedAt);
-	dueAt.setMinutes(dueAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
-
+	// dueAt.setMinutes(dueAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
+	const deadline = calculateDeadline(
+		{
+			deadlineLength: instanceConfig.deadlineLength,
+			deadlineUnit: instanceConfig.deadlineUnit,
+		},
+		dueAt
+	);
 	await client.sendEmail(instanceId, {
 		to: {
 			userId: evaluator.userId,
@@ -216,7 +236,7 @@ export const sendAcceptedEmail = async (
 		},
 		extra: {
 			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
-			due_at: dueAt.toLocaleDateString(),
+			due_at: deadline.toLocaleDateString(),
 		},
 	});
 };

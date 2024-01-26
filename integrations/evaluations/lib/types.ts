@@ -60,6 +60,7 @@ export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithInvite>;
 export const EvaluatorWhoAccepted = EvaluatorWithInvite.merge(
 	z.object({
 		acceptedAt: z.string(),
+		deadline: z.date(),
 	})
 );
 export type EvaluatorWhoAccepted = z.infer<typeof EvaluatorWhoAccepted>;
@@ -96,7 +97,7 @@ export type InstanceConfig = {
 	titleFieldSlug: string;
 	emailTemplate: EmailTemplate;
 	deadlineLength: number;
-	deadlineUnit: "weeks" | "days" | "months";
+	deadlineUnit: "days" | "months";
 };
 
 export type InstanceState = {
