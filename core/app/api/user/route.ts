@@ -68,7 +68,6 @@ export async function POST(req: NextRequest) {
 			}
 		*/
 
-		console.log("Supabase user", data);
 		if (error || !data.user) {
 			console.error("Supabase createUser error: ", error);
 			captureException(error);
