@@ -17,26 +17,23 @@ import { assertIsInvited } from "~/lib/types";
 
 export const accept = async (instanceId: string, pubId: string) => {
 	try {
-		console.log("ACCEPTING");
 		const user = JSON.parse(expect(cookie("user")));
 		const instanceConfig = expect(
 			await getInstanceConfig(instanceId),
 			"Instance not configured"
 		);
-		console.log("INSTANCE CONFIG", instanceConfig);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
 		let evaluator = expect(
 			instanceState[user.id],
 			`User was not invited to evaluate pub ${pubId}`
 		);
-		console.log("EVALUATOR", evaluator);
 		// Accepting again is a no-op.
 		if (evaluator.status === "accepted" || evaluator.status === "received") {
 			return { success: true };
 		}
 		// Assert the user is invited to evaluate this pub.
 		assertIsInvited(evaluator);
-		console.log("inviting");
+		console.log("inviting", evaluator.lastName);
 		// Update the evaluator's status to accepted and add recored the time of
 		// acceptance.
 		evaluator = instanceState[user.id] = {
@@ -45,6 +42,9 @@ export const accept = async (instanceId: string, pubId: string) => {
 			acceptedAt: new Date().toString(),
 			deadline: new Date(),
 		};
+		// add error that value not set
+		console.log("Days to eval", instanceConfig.deadlineLength, instanceConfig.deadlineUnit);
+		
 		const deadline = calculateDeadline(
 			{
 				deadlineLength: instanceConfig.deadlineLength,
