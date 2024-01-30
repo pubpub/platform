@@ -9,6 +9,7 @@ import {
 	sendRequestedInfoNotification,
 	unscheduleNoReplyNotificationEmail,
 	unscheduleReminderEmail,
+	calculateDeadline,
 } from "~/lib/emails";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { cookie } from "~/lib/request";
@@ -16,29 +17,50 @@ import { assertIsInvited } from "~/lib/types";
 
 export const accept = async (instanceId: string, pubId: string) => {
 	try {
+		console.log("ACCEPTING");
 		const user = JSON.parse(expect(cookie("user")));
 		const instanceConfig = expect(
 			await getInstanceConfig(instanceId),
 			"Instance not configured"
 		);
+		console.log("INSTANCE CONFIG", instanceConfig);
 		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
 		let evaluator = expect(
 			instanceState[user.id],
 			`User was not invited to evaluate pub ${pubId}`
 		);
+		console.log("EVALUATOR", evaluator);
 		// Accepting again is a no-op.
 		if (evaluator.status === "accepted" || evaluator.status === "received") {
 			return { success: true };
 		}
 		// Assert the user is invited to evaluate this pub.
 		assertIsInvited(evaluator);
+		console.log("inviting");
 		// Update the evaluator's status to accepted and add recored the time of
 		// acceptance.
 		evaluator = instanceState[user.id] = {
 			...evaluator,
 			status: "accepted",
 			acceptedAt: new Date().toString(),
+			deadline: new Date(),
 		};
+		const deadline = calculateDeadline(
+			{
+				deadlineLength: instanceConfig.deadlineLength,
+				deadlineUnit: instanceConfig.deadlineUnit,
+			},
+			new Date(evaluator.acceptedAt)
+		);
+		console.log(
+			"\n\n",
+			"Deadline",
+			deadline.toLocaleDateString(),
+			"Accepted at",
+			new Date(evaluator.acceptedAt).toLocaleDateString(),
+			"\n\n"
+		);
+		evaluator.deadline = deadline;
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
 		await unscheduleReminderEmail(instanceId, pubId, evaluator);

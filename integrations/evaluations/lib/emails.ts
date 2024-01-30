@@ -204,15 +204,7 @@ export const sendAcceptedEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const dueAt = new Date(evaluator.acceptedAt);
-	// dueAt.setMinutes(dueAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
-	const deadline = calculateDeadline(
-		{
-			deadlineLength: instanceConfig.deadlineLength,
-			deadlineUnit: instanceConfig.deadlineUnit,
-		},
-		dueAt
-	);
+
 	await client.sendEmail(instanceId, {
 		to: {
 			userId: evaluator.userId,
@@ -236,7 +228,7 @@ export const sendAcceptedEmail = async (
 		},
 		extra: {
 			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
-			due_at: deadline.toLocaleDateString(),
+			due_at: evaluator.deadline.toLocaleDateString(),
 		},
 	});
 };
