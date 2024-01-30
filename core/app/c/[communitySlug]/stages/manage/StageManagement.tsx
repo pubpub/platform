@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
 import StageEditor from "./StageEditor";
-import StageCreation from "./StageCreation";
 import { StagePayload, StagesById } from "~/lib/types";
 
 type Props = {
@@ -51,11 +50,6 @@ export default function StageManagement(props: Props) {
 							stagesById={props.stagesById}
 						/>
 					</div>
-				</div>
-			</TabsContent>
-			<TabsContent value="2">
-				<div className="relative inline-flex flex-col max-w-lg">
-					<StageCreation />
 				</div>
 			</TabsContent>
 		</Tabs>
