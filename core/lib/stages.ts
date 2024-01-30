@@ -1,4 +1,4 @@
-import { StagePayload, StageAtIndex } from "./types";
+import { StagePayload, StagesById } from "./types";
 import * as z from "zod";
 
 /**
@@ -13,7 +13,7 @@ import * as z from "zod";
  */
 function createStageList(
 	stage: StagePayload,
-	stages: StageAtIndex,
+	stages: StagesById,
 	visited: Array<StagePayload>
 ): void {
 	if (visited.includes(stage)) {
@@ -31,36 +31,35 @@ function createStageList(
  * @param stages
  * @returns  a map of stages at the index provided in the ID
  */
-export const makeStagesById = (stages: StagePayload[]): StageAtIndex => {
-	const stagesById: StageAtIndex = {};
+export const makeStagesById = (stages: StagePayload[]): StagesById => {
+	const stagesById: StagesById = {};
 	for (const stage of stages) {
 		stagesById[stage.id] = stage;
 	}
 	return stagesById;
 };
 
-
 /**
- * this function takes a list of stages and recursively builds a topological sort of the stages	
+ * this function takes a list of stages and recursively builds a topological sort of the stages
  * @param stages
  * @returns
  */
 export function getStageWorkflows(stages: StagePayload[]): Array<Array<StagePayload>> {
-	const stageAtIndex = makeStagesById(stages);
+	const stagesById = makeStagesById(stages);
 	// find all stages with edges that only point to them
 	const stageRoots = stages.filter((stage) => stage.moveConstraintSources.length === 0);
 	// for each stage, create a list of stages that can be reached from it
 	const stageWorkflows = stageRoots.map((stage) => {
 		const visited: Array<StagePayload> = [];
-		createStageList(stage, stageAtIndex, visited);
+		createStageList(stage, stagesById, visited);
 		return visited;
 	});
 	return stageWorkflows;
 }
 
 // this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
-export function moveConstraintSourcesForStage(stage: StagePayload, stageAtIndex: StageAtIndex) {
-	return stage.moveConstraintSources.map((stage) => stageAtIndex[stage.stageId]);
+export function moveConstraintSourcesForStage(stage: StagePayload, stagesById: StagesById) {
+	return stage.moveConstraintSources.map((stage) => stagesById[stage.stageId]);
 }
 
 export const StageFormSchema = z.object({

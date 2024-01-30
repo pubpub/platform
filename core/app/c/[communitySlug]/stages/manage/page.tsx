@@ -17,7 +17,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 	});
 	// stage workflows look like this:  [[stage1, stage2], [stage3, stage4]]
 	const stageWorkflows = getStageWorkflows(stages);
-	const stageAtIndex = makeStagesById(stages);
+	const stagesById = makeStagesById(stages);
 	return (
 		<>
 			<h1>
@@ -26,7 +26,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 			<StageManagement
 				community={community}
 				stageWorkflows={stageWorkflows}
-				stageAtIndex={stageAtIndex}
+				stagesById={stagesById}
 			/>
 		</>
 	);

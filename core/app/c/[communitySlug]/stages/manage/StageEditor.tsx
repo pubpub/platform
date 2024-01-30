@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "ui";
 import { StageFormSchema, moveConstraintSourcesForStage } from "~/lib/stages";
-import { DeepPartial, StageAtIndex, StagePayload } from "~/lib/types";
+import { DeepPartial, StagesById, StagePayload } from "~/lib/types";
 import StageForm from "./StageForm";
 import { editStage } from "./actions";
 
 type Props = {
 	stageWorkflows: StagePayload[][];
-	stageAtIndex: StageAtIndex;
+	stagesById: StagesById;
 };
 
 const StageEditor = (props: Props) => {
 	const [selectedStage, setSelectedStage] = useState(props.stageWorkflows[0][0]); // Set the initial selected stage.
-	const sources = moveConstraintSourcesForStage(selectedStage, props.stageAtIndex);
+	const sources = moveConstraintSourcesForStage(selectedStage, props.stagesById);
 
 	const handleStageChange = (newStage: StagePayload) => {
 		setSelectedStage(newStage);
@@ -40,7 +40,9 @@ const StageEditor = (props: Props) => {
 					<div className="space-y-2">
 						<Tabs defaultValue={selectedStage.id}>
 							<div className="mb-4">
-								<h2 className="text-2xl font-bold text-orange-200">Workflow {index}</h2>
+								<h2 className="text-2xl font-bold text-orange-200">
+									Workflow {index}
+								</h2>
 							</div>
 							{stages.map((stage) => {
 								return (
@@ -62,7 +64,7 @@ const StageEditor = (props: Props) => {
 											sources={sources}
 											onSubmit={onSubmit}
 											stages={stages}
-											stageAtIndex={props.stageAtIndex}
+											stagesById={props.stagesById}
 										/>
 									</TabsContent>
 								);

@@ -14,14 +14,14 @@ import {
 } from "ui";
 import { assert } from "utils";
 import { StageFormSchema } from "~/lib/stages";
-import { StagePayload, StageAtIndex, DeepPartial } from "~/lib/types";
+import { StagePayload, StagesById, DeepPartial } from "~/lib/types";
 
 type Props = {
 	stage: StagePayload; // current stage selected for the tab
 	sources: StagePayload[]; // list of stages this stage can move to
 	onSubmit: (x: DeepPartial<StageFormSchema>) => void; // onSubmit being passed to form
 	stages: StagePayload[]; // list of stages under the current workflow
-	stageAtIndex: StageAtIndex;
+	stagesById: StagesById;
 };
 
 type DirtyFields<V extends object> = {
@@ -59,7 +59,7 @@ function dirtyValues<V extends object>(values: V, dirty: DirtyFields<V>): DeepPa
 }
 
 export default function StageForm(props: Props) {
-	const moveConstraints = Object.values(props.stageAtIndex).reduce((acc, stage) => {
+	const moveConstraints = Object.values(props.stagesById).reduce((acc, stage) => {
 		return {
 			...acc,
 			[stage.id]: props.stage.moveConstraints.some((toStage) => {
@@ -121,7 +121,7 @@ export default function StageForm(props: Props) {
 						<div className="mb-4">
 							<p className="text-base font-bold">Moves to</p>
 							<p>These are stages {props.stage.name} can move to</p>
-							{Object.values(props.stageAtIndex).map((stage) => {
+							{Object.values(props.stagesById).map((stage) => {
 								return props.stage.id === stage.id ? null : (
 									<FormField
 										key={stage.id}
