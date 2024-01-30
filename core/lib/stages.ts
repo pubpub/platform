@@ -1,10 +1,16 @@
 import { StagePayload, StageAtIndex } from "./types";
 import * as z from "zod";
 
-// this function takes a stage and a map of
-// stages and their IDs and a list of stages
-// that have been visited so far, sets the head and returns a
-// list of stages that can be reached from the stage provided
+/**
+ * takes a stage, a map of
+ * stages to their IDs and a list of stages
+ * that have been visited so far, sets the head and returns a
+ * list of stages that can be reached from the stage provided
+ * @param stage
+ * @param map of stages
+ * @param visited stages
+ * @returns
+ */
 function createStageList(
 	stage: StagePayload,
 	stages: StageAtIndex,
@@ -20,18 +26,27 @@ function createStageList(
 	}
 }
 
-// this function takes a list of stages and returns a map of
-// stages and their IDs and a 2d array of stages ordered by move constraints (topologically sorted)
-export function topologicallySortedStages(stages: StagePayload[]): {
-	stageAtIndex: StageAtIndex;
-	stageWorkflows: Array<Array<StagePayload>>;
-} {
-	// creates a map of stages at the index provided in the ID
-	const stageAtIndex: StageAtIndex = {};
+/**
+ *
+ * @param stages
+ * @returns  a map of stages at the index provided in the ID
+ */
+export const makeStagesById = (stages: StagePayload[]): StageAtIndex => {
+	const stagesById: StageAtIndex = {};
 	for (const stage of stages) {
-		stageAtIndex[stage.id] = stage;
+		stagesById[stage.id] = stage;
 	}
+	return stagesById;
+};
 
+
+/**
+ * this function takes a list of stages and recursively builds a topological sort of the stages	
+ * @param stages
+ * @returns
+ */
+export function getStageWorkflows(stages: StagePayload[]): Array<Array<StagePayload>> {
+	const stageAtIndex = makeStagesById(stages);
 	// find all stages with edges that only point to them
 	const stageRoots = stages.filter((stage) => stage.moveConstraintSources.length === 0);
 	// for each stage, create a list of stages that can be reached from it
@@ -40,7 +55,7 @@ export function topologicallySortedStages(stages: StagePayload[]): {
 		createStageList(stage, stageAtIndex, visited);
 		return visited;
 	});
-	return { stageAtIndex: stageAtIndex, stageWorkflows };
+	return stageWorkflows;
 }
 
 // this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided

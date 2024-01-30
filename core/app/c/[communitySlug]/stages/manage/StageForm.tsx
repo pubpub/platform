@@ -24,7 +24,6 @@ type Props = {
 	stageAtIndex: StageAtIndex;
 };
 
-// generic type alias that takes an object and returns a new object with the same keys but the values are booleans
 type DirtyFields<V extends object> = {
 	[K in keyof V]?: V[K] extends object ? DirtyFields<V[K]> : boolean;
 };
@@ -42,10 +41,15 @@ function dirtyValuesInner<V extends object>(values: V, dirty: DirtyFields<V>, re
 	}
 }
 
-// this generic function takes an objectfor its generic type parameter
-// its function arguments are the object and a second object that has the same keys as the first object but the values are booleans
-// this returns a new object with the same keys as the first object but the values
-// are the values from the first object where the key is true in the second object
+/**
+ * Create an object that is a subset of the first argument, where entries are
+ * only present if the value of the corresponding entry in the second argument
+ * is true.
+ * @example <caption>Include `a` and `c` but not `d`</caption>
+ * const values = { a: 1, b: { c: 2, d: 3 } };
+ * const dirty = { a: true, b: { c: true } };
+ * dirtyValues(values, dirty); // -> { a: 1, b: { c: 2 } }
+ */
 function dirtyValues<V extends object>(values: V, dirty: DirtyFields<V>): DeepPartial<V> {
 	const result: Partial<V> = {};
 	dirtyValuesInner(values, dirty, result);
@@ -115,7 +119,6 @@ export default function StageForm(props: Props) {
 						<div className="mb-4">
 							<p className="text-base font-bold">Moves to</p>
 							<p>These are stages {props.stage.name} can move to</p>
-							{/* // this gets recomputed on each render/chnage to DB. should be a simple list of stages */}
 							{Object.values(props.stageAtIndex).map((stage) => {
 								return props.stage.id === stage.id ? null : (
 									<FormField

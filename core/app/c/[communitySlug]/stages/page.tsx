@@ -3,7 +3,7 @@ import { createToken } from "~/lib/server/token";
 import { stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import StageList from "./components/StageList";
-import { topologicallySortedStages } from "~/lib/stages";
+import { getStageWorkflows, makeStagesById } from "~/lib/stages";
 
 const getCommunityStages = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({
@@ -32,8 +32,8 @@ export default async function Page({ params }: Props) {
 	if (!stages) {
 		return null;
 	}
-	const { stageWorkflows, stageAtIndex: stageIndex } = topologicallySortedStages(stages);
-
+	const stageWorkflows = getStageWorkflows(stages);
+	const stageIndex = makeStagesById(stages);
 	return (
 		<>
 			<div className="flex mb-16 justify-between items-center">
