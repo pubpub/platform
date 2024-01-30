@@ -45,6 +45,8 @@ function dirtyValuesInner<V extends object>(values: V, dirty: DirtyFields<V>, re
  * Create an object that is a subset of the first argument, where entries are
  * only present if the value of the corresponding entry in the second argument
  * is true.
+ * @param values The object to filter
+ * @param dirty An object with the same shape as `values`, where the values are
  * @example <caption>Include `a` and `c` but not `d`</caption>
  * const values = { a: 1, b: { c: 2, d: 3 } };
  * const dirty = { a: true, b: { c: true } };
