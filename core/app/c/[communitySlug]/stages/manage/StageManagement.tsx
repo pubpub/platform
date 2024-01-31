@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
-import StagesEditor from "./StagesEditor";
-import { StagePayload, StageIndex } from "~/lib/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
+import StageEditor from "./StageEditor";
+import { StagePayload, StagesById } from "~/lib/types";
 
 type Props = {
 	community: any;
 	stageWorkflows: StagePayload[][];
-	stageIndex: StageIndex;
+	stagesById: StagesById;
 };
 
 export default function StageManagement(props: Props) {
 	const [tab, setTab] = useState<number>(1);
+
 	return (
 		<Tabs defaultValue={tab.toString()} className="pt-12 md:pt-20">
 			<TabsList className="mb-6 ">
@@ -44,17 +45,11 @@ export default function StageManagement(props: Props) {
 			<TabsContent value="1">
 				<div className="relative flex flex-col text-left lg:text-left">
 					<div className="relative inline-flex flex-col">
-						<StagesEditor
+						<StageEditor
 							stageWorkflows={props.stageWorkflows}
-							stageIndex={props.stageIndex}
+							stagesById={props.stagesById}
 						/>
 					</div>
-				</div>
-			</TabsContent>
-			<TabsContent value="2">
-				<div className="relative inline-flex flex-col max-w-lg">
-					<Input placeholder="Stage Name" />
-					<Button> Create stage </Button>
 				</div>
 			</TabsContent>
 		</Tabs>
