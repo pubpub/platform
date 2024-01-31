@@ -7,7 +7,7 @@ import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
 import { StageIndex, StagePayload, UserLoginData } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
-import { stageSources } from "~/lib/pubStages";
+import { moveConstraintSourcesForStage } from "~/lib/stages";
 
 type Props = {
 	stageWorkflows: StagePayload[][];
@@ -26,7 +26,10 @@ function StageList(props: Props) {
 						<div>
 							{stages.map((stage) => {
 								const users = getPubUsers(stage.permissions);
-								const sources = stageSources(stage, props.stageIndex);
+								const sources = moveConstraintSourcesForStage(
+									stage,
+									props.stageIndex
+								);
 								const destinations = stage.moveConstraints.map(
 									(stage) => stage.destination
 								);

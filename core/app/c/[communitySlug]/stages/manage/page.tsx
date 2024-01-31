@@ -1,7 +1,7 @@
 import prisma from "~/prisma/db";
 import StageManagement from "./StageManagement";
 import { stageInclude } from "~/lib/types";
-import { stageList } from "~/lib/pubStages";
+import { getStageWorkflows, makeStagesById } from "~/lib/stages";
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
 	const community = await prisma.community.findUnique({
@@ -15,7 +15,9 @@ export default async function Page({ params }: { params: { communitySlug: string
 		where: { communityId: community.id },
 		include: stageInclude,
 	});
-	const { stageWorkflows, stageIndex } = stageList(stages);
+	// stage workflows look like this:  [[stage1, stage2], [stage3, stage4]]
+	const stageWorkflows = getStageWorkflows(stages);
+	const stagesById = makeStagesById(stages);
 	return (
 		<>
 			<h1>
@@ -24,7 +26,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 			<StageManagement
 				community={community}
 				stageWorkflows={stageWorkflows}
-				stageIndex={stageIndex}
+				stagesById={stagesById}
 			/>
 		</>
 	);
