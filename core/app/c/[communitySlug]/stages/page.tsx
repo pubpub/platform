@@ -33,7 +33,7 @@ export default async function Page({ params }: Props) {
 		return null;
 	}
 	const stageWorkflows = getStageWorkflows(stages);
-	const stageIndex = makeStagesById(stages);
+	const stageById = makeStagesById(stages);
 	return (
 		<>
 			<div className="flex mb-16 justify-between items-center">
@@ -42,7 +42,7 @@ export default async function Page({ params }: Props) {
 			</div>
 			<StageList
 				stageWorkflows={stageWorkflows}
-				stageIndex={stageIndex}
+				stageById={stageById}
 				token={token}
 				loginData={loginData}
 			/>
