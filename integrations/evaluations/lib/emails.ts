@@ -8,8 +8,13 @@ import {
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
-const DAYS_TO_SUBMIT_EVALUATION = 21;
 
+/**
+ * Reaturns a new date object with the deadline calculated based on the deadlineLength and deadlineUnit.
+ * @param deadline
+ * @param date
+ * @returns Date
+ */
 export function calculateDeadline(
 	deadline: Pick<InstanceConfig, "deadlineLength" | "deadlineUnit">,
 	date: Date
@@ -85,11 +90,10 @@ export const scheduleNoSubmitNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWithInvite
+	evaluator: EvaluatorWhoAccepted
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(evaluator.invitedAt);
-	runAt.setMinutes(runAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
+	const runAt = evaluator.deadline;
 
 	await client.scheduleEmail(
 		instanceId,
@@ -109,7 +113,7 @@ ${notificationFooter}`,
 				},
 			},
 			extra: {
-				due_at: runAt.toLocaleDateString(),
+				due_at: evaluator.deadline.toLocaleDateString(),
 				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 			},
 		},

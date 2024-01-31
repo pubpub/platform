@@ -33,7 +33,6 @@ export const accept = async (instanceId: string, pubId: string) => {
 		}
 		// Assert the user is invited to evaluate this pub.
 		assertIsInvited(evaluator);
-		console.log("inviting", evaluator.lastName);
 		// Update the evaluator's status to accepted and add recored the time of
 		// acceptance.
 		evaluator = instanceState[user.id] = {

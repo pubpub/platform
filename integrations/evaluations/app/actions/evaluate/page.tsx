@@ -30,7 +30,6 @@ export default async function Page(props: Props) {
 	if (instanceConfig === undefined) {
 		throw new Error("Instance not configured");
 	}
-	console.log("Instance state", instanceState);
 	switch (instanceState?.[user.id]?.status) {
 		// If they have responded "Accept", render the evaluation form.
 		case "accepted":
