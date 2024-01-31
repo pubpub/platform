@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { Button, Form, Icon, useLocalStorage, useToast } from "ui";
 import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
-import { InstanceConfig } from "~/lib/types";
+import { Evaluator, InstanceConfig } from "~/lib/types";
 import { submit, upload } from "./actions";
 
 type Props = {
@@ -18,6 +18,7 @@ type Props = {
 	instanceConfig: InstanceConfig;
 	pub: GetPubResponseBody;
 	pubType: GetPubTypeResponseBody;
+	evaluator: Evaluator;
 };
 
 export function Evaluate(props: Props) {
@@ -105,7 +106,7 @@ export function Evaluate(props: Props) {
 					url={submissionUrl}
 					evaluating
 				/>
-				<Process />
+				<Process evaluator={props.evaluator} />
 				<h2>{pubType.name}</h2>
 				<p>{pubType.description}</p>
 				<Form {...form}>
