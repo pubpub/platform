@@ -5,13 +5,13 @@ import { Fragment } from "react";
 import { Button } from "ui";
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
-import { StageIndex, StagePayload, UserLoginData } from "~/lib/types";
+import { StagesById, StagePayload, UserLoginData } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
 import { moveConstraintSourcesForStage } from "~/lib/stages";
 
 type Props = {
 	stageWorkflows: StagePayload[][];
-	stageIndex: StageIndex;
+	stageById: StagesById;
 	token: string;
 	loginData: UserLoginData;
 };
@@ -28,7 +28,7 @@ function StageList(props: Props) {
 								const users = getPubUsers(stage.permissions);
 								const sources = moveConstraintSourcesForStage(
 									stage,
-									props.stageIndex
+									props.stageById
 								);
 								const destinations = stage.moveConstraints.map(
 									(stage) => stage.destination
