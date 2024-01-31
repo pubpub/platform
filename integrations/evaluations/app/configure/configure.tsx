@@ -56,7 +56,7 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
-	deadlineLength: z.number().int().min(1),
+	deadlineLength: z.coerce.number().min(1),
 	deadlineUnit: z.enum(["days", "months"]),
 });
 
@@ -74,7 +74,7 @@ const defaultFormValues: InstanceConfig = {
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 	emailTemplate: defaultEmailTemplate,
-	deadlineLength: 21,
+	deadlineLength: 28,
 	deadlineUnit: "days",
 };
 
@@ -185,7 +185,7 @@ export function Configure(props: Props) {
 								<FormItem>
 									<FormLabel>Deadline length</FormLabel>
 									<FormControl>
-										<Input {...field}  />
+										<Input {...field} />
 									</FormControl>
 									<FormDescription>
 										This field is used to determine thhe length of the deadline.

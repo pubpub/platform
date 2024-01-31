@@ -280,12 +280,19 @@ export const Respond = (props: Props) => {
 				<>
 					<h2>Confirm</h2>
 					<p>
-						We encourage reviewers to complete reviews in three weeks. Upon accepting
-						this invitation, your evaluation will be due roughly on{" "}
+						We strongly encourage evaluators to complete evaluations within three weeks;{" "}
+						relatively quick turnaround is an important part of The Unjournal model, for
+						the benefit of authors, research-users, and the evaluation ecosystem. If you
+						submit the evaluation within that window (by{" "}
 						<strong>
 							{new Date(Date.now() + 21 * (1000 * 60 * 60 * 24)).toLocaleDateString()}
 						</strong>
-						.
+						), you will receive a $100 “prompt evaluation bonus.” After five weeks (
+						<strong>
+							{new Date(Date.now() + 35 * (1000 * 60 * 60 * 24)).toLocaleDateString()}
+						</strong>
+						), we will consider re-assigning the evaluation, and later submissions may
+						not be eligible for the full baseline compensation.
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
@@ -306,10 +313,22 @@ export const Respond = (props: Props) => {
 				<>
 					<h2>To respond to our invitation...</h2>
 					<p>
-						To agree to take on this assignment, please click the 'Accept' button below.
-						If you have questions at this point, please select Contact Evaluation
-						Manager. If you will not be able to accept our invitation, please choose
-						'Decline' below.
+						To agree to take on this assignment, please click the ‘Accept’ button below.
+						If you have questions at this point, please select ‘Contact Evaluation
+						Manager’. If you cannot accept our invitation, please choose ‘Decline’
+						below. We strongly encourage evaluators to complete evaluations within three
+						weeks; relatively quick turnaround is an important part of The Unjournal
+						model, for the benefit of authors, research-users, and the evaluation
+						ecosystem. If you submit the evaluation within that window (by
+						<strong>
+							{new Date(Date.now() + 21 * (1000 * 60 * 60 * 24)).toLocaleDateString()}
+						</strong>
+						), you will receive a $100 “prompt evaluation bonus.” After five weeks (
+						<strong>
+							{new Date(Date.now() + 35 * (1000 * 60 * 60 * 24)).toLocaleDateString()}
+						</strong>
+						), we will consider re-assigning the evaluation, and later submissions may
+						not be eligible for the full baseline compensation.
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>

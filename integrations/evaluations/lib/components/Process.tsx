@@ -1,6 +1,15 @@
 export const Process = () => {
 	return (
 		<>
+			<p>
+				We strongly encourage evaluators to complete evaluations within{""}
+				three weeks; relatively quick turnaround is an important part of The Unjournal
+				model, for the benefit of authors, research-users, and the evaluation ecosystem. If
+				you submit the evaluation within that window (by three-weeks-from-accept), you will
+				receive a $100 “prompt evaluation bonus.” After five weeks (five-weeks-from-accept),
+				we will consider re-assigning the evaluation, and later submissions may not be
+				eligible for the full baseline compensation.
+			</p>
 			<h2>About our evaluation process</h2>
 			<p>
 				As a sign that we{" "}

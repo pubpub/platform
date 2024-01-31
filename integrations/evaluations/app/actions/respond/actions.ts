@@ -42,23 +42,12 @@ export const accept = async (instanceId: string, pubId: string) => {
 			acceptedAt: new Date().toString(),
 			deadline: new Date(),
 		};
-		// add error that value not set
-		console.log("Days to eval", instanceConfig.deadlineLength, instanceConfig.deadlineUnit);
-		
 		const deadline = calculateDeadline(
 			{
 				deadlineLength: instanceConfig.deadlineLength,
 				deadlineUnit: instanceConfig.deadlineUnit,
 			},
 			new Date(evaluator.acceptedAt)
-		);
-		console.log(
-			"\n\n",
-			"Deadline",
-			deadline.toLocaleDateString(),
-			"Accepted at",
-			new Date(evaluator.acceptedAt).toLocaleDateString(),
-			"\n\n"
 		);
 		evaluator.deadline = deadline;
 		await setInstanceState(instanceId, pubId, instanceState);
