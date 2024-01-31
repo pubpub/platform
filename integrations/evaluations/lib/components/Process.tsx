@@ -1,20 +1,27 @@
-import { Evaluator } from "../types";
+import { EvaluatorWhoAccepted } from "../types";
 
 type Props = {
-	evaluator: Evaluator;
+	evaluator: EvaluatorWhoAccepted;
 };
 
 export const Process = (props: Props) => {
+	const deadline = new Date(props.evaluator.deadline);
+	const threeWeeks = new Date(
+		deadline.getTime() + 21 * (1000 * 60 * 60 * 24)
+	).toLocaleDateString();
+	const fiveWeeks = new Date(
+		deadline.getTime() + 35 * (1000 * 60 * 60 * 24)
+	).toLocaleDateString();
 	return (
 		<>
 			<p>
-				We strongly encourage evaluators to complete evaluations within{""}
-				three weeks; relatively quick turnaround is an important part of The Unjournal
-				model, for the benefit of authors, research-users, and the evaluation ecosystem. If
-				you submit the evaluation within that window (by {props.evaluator.firstName}), you will
-				receive a $100 “prompt evaluation bonus.” After five weeks (five-weeks-from-accept),
-				we will consider re-assigning the evaluation, and later submissions may not be
-				eligible for the full baseline compensation.
+				We strongly encourage evaluators to complete evaluations within three weeks;
+				relatively quick turnaround is an important part of The Unjournal model, for the
+				benefit of authors, research-users, and the evaluation ecosystem. If you submit the
+				evaluation within that window (by {threeWeeks} ), you will receive a $100 “prompt
+				evaluation bonus.” After five weeks ( {fiveWeeks} ), we will consider re-assigning
+				the evaluation, and later submissions may not be eligible for the full baseline
+				compensation.
 			</p>
 			<h2>About our evaluation process</h2>
 			<p>

@@ -7,6 +7,7 @@ import { cookie } from "~/lib/request";
 import { Declined } from "./declined";
 import { Evaluate } from "./evaluate";
 import { Submitted } from "./submitted";
+import { EvaluatorWhoAccepted } from "~/lib/types";
 
 type Props = {
 	searchParams: {
@@ -29,7 +30,7 @@ export default async function Page(props: Props) {
 	if (instanceConfig === undefined) {
 		throw new Error("Instance not configured");
 	}
-	console.log(instanceState);
+	console.log("Instance state", instanceState);
 	switch (instanceState?.[user.id]?.status) {
 		// If they have responded "Accept", render the evaluation form.
 		case "accepted":
@@ -39,7 +40,7 @@ export default async function Page(props: Props) {
 					instanceConfig={instanceConfig}
 					pub={pub}
 					pubType={pubType}
-					evaluator={instanceState[user.id]}
+					evaluator={instanceState[user.id] as EvaluatorWhoAccepted}
 				/>
 			);
 		// If they have responded "Decline", render the decline page.

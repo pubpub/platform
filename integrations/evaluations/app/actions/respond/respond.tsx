@@ -319,7 +319,7 @@ export const Respond = (props: Props) => {
 						below. We strongly encourage evaluators to complete evaluations within three
 						weeks; relatively quick turnaround is an important part of The Unjournal
 						model, for the benefit of authors, research-users, and the evaluation
-						ecosystem. If you submit the evaluation within that window (by
+						ecosystem. If you submit the evaluation within that window (by{" "}
 						<strong>
 							{new Date(Date.now() + 21 * (1000 * 60 * 60 * 24)).toLocaleDateString()}
 						</strong>
