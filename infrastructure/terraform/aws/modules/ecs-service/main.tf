@@ -5,13 +5,16 @@ module "ecs_service" {
   cluster_arn = var.cluster_info.cluster_arn
   enable_execute_command = true
 
+  # allow github actions to update the service without confusing TF
+  ignore_task_definition_changes = true
+
   cpu    = var.resources.cpu
   memory = var.resources.memory
   desired_count = var.resources.desired_count
   # execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   # task_role_arn            = aws_iam_role.ecs_task_role.arn
 
-  # Container definition(s)
+  # TEMPLATE Container definition(s).
   container_definitions = {
 
     "${var.service_name}" = {
@@ -56,10 +59,4 @@ module "ecs_service" {
     Environment = "${var.cluster_info.name}-${var.cluster_info.environment}"
     Project     = "Pubpub-v7"
   }
-
-  # this lifecycle property allows us to update the version of the container image without terraform clobbering it later
-  # changing the container image creates a "revision" of the task definition
-  # lifecycle {
-  #   ignore_changes = [services.core.container_definitions.core.image]
-  # }
 }

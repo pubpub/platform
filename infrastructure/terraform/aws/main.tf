@@ -44,7 +44,7 @@ module "service_core" {
       {name = "API_KEY", value = "undefined"},
       {name = "JWT_SECRET", value = "undefined"},
       {name = "MAILGUN_SMTP_USERNAME", value = "undefined"},
-      {name = "NEXT_PUBLIC_PUBPUB_URL", value = "undefined"},
+      {name = "NEXT_PUBLIC_PUBPUB_URL", value = "https://v7.pubpub.org"},
       {name = "NEXT_PUBLIC_SUPABASE_URL", value = "undefined"},
       {name = "SENTRY_AUTH_TOKEN", value = "undefined"},
       {name = "SUPABASE_SERVICE_ROLE_KEY", value = "undefined"},

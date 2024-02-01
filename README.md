@@ -80,3 +80,74 @@ We currently have a race condition where dev will sometimes fail because we can'
 -   https://github.com/vercel/turbo/issues/460
 
 `core` depends on `ui` which depends on `utils`. `utils` often takes longer to build than it does for `ui` to start building, which causes an error to be thrown because `utils` d.ts file has been cleared out during its build and hasn't been replaced yet. This generates an error, but is quick to resolve, so doesn't break actual dev work from beginning. It does make the console output messier though.
+
+
+## Building and deploying for AWS environments
+
+All change management to Knowledge Futures' production environment is done through github actions.
+This environment runs on AWS ECS and leverages terraform to allow reproducible, parametric environments.
+
+Services running in AWS ECS are scheduled using "Task Definitions", which are CRUDdy resources
+including all details for a container. We don't want to tie code releases to terraform "infrastructure" changes,
+but the service "declaration" relies on this Task Definition to exist.
+
+Therefore based on community patterns we have seen, the flow is roughly this:
+1. The infrastructure code in terraform declares a "template" Task Definition.
+2. Terraform is told not to change the "service" based on changes to the Task Definition.
+3. Any changes to the template will be picked up by the next deploy, which is done outside of Terraform.
+4. Github Actions builds new containers on merge, and will use AWS-provided Actions to template the literal correct Task Definition and update the Service.
+
+### Updating deployment topology and/or environment variables/container settings
+
+To change "infrastructure settings", which include anything from networking to env vars,
+make changes to `./infrastructure/terraform/aws`. Use `terraform apply` there to update
+the infrastructure and/or Task Definition Template. See that directory for more info.
+
+Then you must perform a Github Actions Deploy, either by pushing your changes to main or
+with local `act` CLI.
+
+### Updating container versions with github actions
+
+The core automation workflow can be examined in [`awsdeploy.yml`](./.github/workflows/awsdeploy.yml)
+
+There is a Dockerfile in this repository that builds a container for one package. You can use it like:
+
+```
+docker build \
+            --platform linux/amd64 \
+            --build-arg PACKAGE=core \
+            --build-arg PACKAGE_DIR=core \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            .
+```
+
+Note how this matches the invocation used in the Actions workflow file.
+
+We automatically build and push a container to AWS ECR with the github SHA as a tag.
+
+### Using `act` to run the deploy events locally
+
+If you need to build or validate a change and deploy to production, you can use the [`act` cli](https://github.com/nektos/act):
+
+```
+act \
+    -W .github/workflows/awsdeploy.yml \
+    --container-architecture linux/amd64 \
+    --secret-file ~/.aws/pubpub.secrets \
+    -j deploy
+```
+
+**Secrets:** Though you will have an `~/.aws/credentials` file, this is not the format for secrets access that
+`act` requires, so I copy the key-value pairs in that file into a file that matches the Github
+secrets called `~/.aws/pubpub.secrets`:
+
+```
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY...
+```
+
+**Dirty worktree:** If you run `act` like this, the image will be conveniently tagged with the latest SHA plus `-dirty`.
+Images tagged with a SHA alone should be idempotently built, but `-dirty` can be changed/overwritten.
+
+**TODO:**
+- [ ] allow deploying without a rebuild, so that a rollback is convenient
