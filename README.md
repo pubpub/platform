@@ -137,6 +137,19 @@ act \
     -j deploy
 ```
 
+**AWS CLI access in `act`:**
+When you setup `act` locally for the first time, you can choose whether to do a Small, Medium, or Large install.
+The Large install is *very large*, but the medium install does not include the AWS CLI.
+
+If you choose to work with the medium install, you will need to customize afterward by editing your `~/.actrc` file
+to use an image that includes the AWS CLI, for example your .actrc might look like:
+```
+-P ubuntu-latest=eveships/act-plusplus:latest
+-P ubuntu-22.04=catthehacker/ubuntu:full-22.04
+-P ubuntu-20.04=catthehacker/ubuntu:full-20.04
+-P ubuntu-18.04=catthehacker/ubuntu:full-18.04
+```
+
 **Secrets:** Though you will have an `~/.aws/credentials` file, this is not the format for secrets access that
 `act` requires, so I copy the key-value pairs in that file into a file that matches the Github
 secrets called `~/.aws/pubpub.secrets`:
