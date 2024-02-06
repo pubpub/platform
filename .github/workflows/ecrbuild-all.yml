@@ -16,7 +16,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
   build-intg-submissions:
-    uses: ./.github/workflows/ecrbuild-template.yaml
+    uses: ./.github/workflows/ecrbuild-template.yml
     with:
       package-name: integration-submissions
       package-src: integrations/submissions
