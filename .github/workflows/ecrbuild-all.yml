@@ -1,0 +1,25 @@
+# Based on https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/deploying-to-amazon-elastic-container-service
+
+name: aws ecs deploy
+
+on:
+  push:
+
+jobs:
+  build-core:
+    uses: ./.github/workflows/ecrbuild-template.yml
+    with:
+      package-name: core
+      package-src: core
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+  build-intg-submissions:
+    uses: ./.github/workflows/ecrbuild-template.yaml
+    with:
+      package-name: integration-submissions
+      package-src: integrations/submissions
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

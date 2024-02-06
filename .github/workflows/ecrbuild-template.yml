@@ -1,0 +1,68 @@
+# Based on https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/deploying-to-amazon-elastic-container-service
+
+name: aws ecr build template
+
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        required: true
+        type: string
+      package-src:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+env:
+  AWS_REGION: us-east-1                       # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY_PREFIX: pubpub-v7           # set this to your Amazon ECR repository name
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get short sha
+        id: shortsha
+        run: echo "sha_short=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.shortsha.outputs.sha_short }}
+          PACKAGE_DIR: ${{ inputs.package-src }}
+          PACKAGE: ${{ inputs.package-name }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build \
+            --platform linux/amd64 \
+            --build-arg PACKAGE=$PACKAGE \
+            --build-arg PACKAGE_DIR=$PACKAGE_DIR \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG \
+            .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
