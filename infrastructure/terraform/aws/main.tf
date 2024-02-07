@@ -29,26 +29,58 @@ module "cluster" {
   availability_zones = ["us-east-1a", "us-east-1c"]
 }
 
+module "core_dependency_services" {
+  source = "./modules/core-services"
+
+  cluster_info = module.cluster.cluster_info
+}
+
 module "service_core" {
   source = "./modules/ecs-service"
 
   service_name = "core"
   cluster_info = module.cluster.cluster_info
 
-
-  repository_url = module.cluster.ecr_repository_url
+  repository_url = module.cluster.ecr_repository_urls.core
 
   configuration = {
     container_port = 3000
     environment = [
-      {name = "API_KEY", value = "undefined"},
-      {name = "JWT_SECRET", value = "undefined"},
-      {name = "MAILGUN_SMTP_USERNAME", value = "undefined"},
-      {name = "NEXT_PUBLIC_PUBPUB_URL", value = "https://v7.pubpub.org"},
-      {name = "NEXT_PUBLIC_SUPABASE_URL", value = "undefined"},
-      {name = "SENTRY_AUTH_TOKEN", value = "undefined"},
-      {name = "SUPABASE_SERVICE_ROLE_KEY", value = "undefined"},
-      {name = "SUPABASE_WEBHOOKS_API_KEY", value = "undefined"},
+      { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+      { name = "ASSETS_REGION", value = var.region },
+      { name = "ASSETS_BUCKET_NAME", value = var.ASSETS_BUCKET_NAME },
+      { name = "ASSETS_UPLOAD_KEY", value = var.ASSETS_UPLOAD_KEY },
+      { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
+      { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
+      { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+    ]
+
+    secrets = [
+      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.rds_db_password_id },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.api_key_secret_id },
+    ]
+  }
+}
+
+module "service_flock" {
+  source = "./modules/ecs-service"
+
+  service_name = "jobs"
+  cluster_info = module.cluster.cluster_info
+
+  repository_url = module.cluster.ecr_repository_urls.jobs
+
+  configuration = {
+    container_port = 3000
+    environment = [
+      {name = "PUBPUB_URL", value = var.pubpub_url },
+      {name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+      # Secrets - TODO move these to aws secrets
+    ]
+
+    secrets = [
+      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.rds_db_password_id },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.api_key_secret_id },
     ]
   }
 }

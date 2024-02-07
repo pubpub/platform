@@ -4,6 +4,7 @@ variable "cluster_info" {
   type = object({
     region = string
     name = string
+    vpc_id = string
     cluster_arn = string
     environment = string
     private_subnet_ids = list(string)
