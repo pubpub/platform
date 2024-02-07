@@ -39,7 +39,7 @@ export const accept = async (instanceId: string, pubId: string) => {
 			...evaluator,
 			status: "accepted",
 			acceptedAt: new Date().toString(),
-			deadline: new Date(),
+			deadline: new Date(Date.now()),
 		};
 		const deadline = calculateDeadline(
 			{

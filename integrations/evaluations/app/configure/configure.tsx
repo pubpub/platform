@@ -56,7 +56,8 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
-	deadlineLength: z.coerce.number().min(1),
+	// coerce is used here to assert this field is a number, otherwise a vlaidation error will be thrown saying this is a string
+	deadlineLength: z.coerce.number().min(35),
 	deadlineUnit: z.enum(["days", "months"]),
 });
 
@@ -74,7 +75,7 @@ const defaultFormValues: InstanceConfig = {
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 	emailTemplate: defaultEmailTemplate,
-	deadlineLength: 28,
+	deadlineLength: 35,
 	deadlineUnit: "days",
 };
 
