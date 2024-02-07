@@ -9,6 +9,7 @@ import {
 	sendRequestedInfoNotification,
 	unscheduleNoReplyNotificationEmail,
 	unscheduleReminderEmail,
+	calculateDeadline,
 } from "~/lib/emails";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { cookie } from "~/lib/request";
@@ -38,7 +39,16 @@ export const accept = async (instanceId: string, pubId: string) => {
 			...evaluator,
 			status: "accepted",
 			acceptedAt: new Date().toString(),
+			deadline: new Date(Date.now()),
 		};
+		const deadline = calculateDeadline(
+			{
+				deadlineLength: instanceConfig.deadlineLength,
+				deadlineUnit: instanceConfig.deadlineUnit,
+			},
+			new Date(evaluator.acceptedAt)
+		);
+		evaluator.deadline = deadline;
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
 		await unscheduleReminderEmail(instanceId, pubId, evaluator);

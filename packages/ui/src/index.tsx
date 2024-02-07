@@ -17,6 +17,7 @@ export * from "./hover-card";
 export * from "./input";
 export * from "./label";
 export * from "./popover";
+export * from "./select";
 export * from "./separator";
 export * from "./tabs";
 export * from "./textarea";

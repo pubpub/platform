@@ -8,7 +8,26 @@ import {
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
-const DAYS_TO_SUBMIT_EVALUATION = 21;
+
+/**
+ * Reaturns a new date object with the deadline calculated based on the deadlineLength and deadlineUnit.
+ * @param deadline
+ * @param date
+ * @returns Date
+ */
+export function calculateDeadline(
+	deadline: Pick<InstanceConfig, "deadlineLength" | "deadlineUnit">,
+	date: Date
+): Date {
+	switch (deadline.deadlineUnit) {
+		case "days":
+			return new Date(date.setMinutes(date.getMinutes() + deadline.deadlineLength * 24 * 60));
+		case "months":
+			return new Date(date.setMonth(date.getMonth() + deadline.deadlineLength));
+		default:
+			throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
+	}
+}
 
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
@@ -71,11 +90,10 @@ export const scheduleNoSubmitNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWithInvite
+	evaluator: EvaluatorWhoAccepted
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(evaluator.invitedAt);
-	runAt.setMinutes(runAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
+	const runAt = evaluator.deadline;
 
 	await client.scheduleEmail(
 		instanceId,
@@ -95,7 +113,7 @@ ${notificationFooter}`,
 				},
 			},
 			extra: {
-				due_at: runAt.toLocaleDateString(),
+				due_at: evaluator.deadline.toLocaleDateString(),
 				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 			},
 		},
@@ -190,22 +208,26 @@ export const sendAcceptedEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const dueAt = new Date(evaluator.acceptedAt);
-	dueAt.setMinutes(dueAt.getMinutes() + DAYS_TO_SUBMIT_EVALUATION * 24 * 60);
-
 	await client.sendEmail(instanceId, {
 		to: {
 			userId: evaluator.userId,
 		},
 		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 		message: `<p>Hi {{user.firstName}} {{user.lastName}},</p>
-<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
-<p>Please aim to submit your completed evaluation by {{extra.due_at}}. If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
-<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
-<p>Thank you again for your important contribution to the future of science.</p>
-<p>Thanks and best wishes,</p>
-<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
-<p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${
+			instanceConfig.titleFieldSlug
+		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
+		<p>We strongly encourage evaluators to complete evaluations within three weeks; relatively quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
+			evaluator.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus.” After ${new Date(
+			evaluator.deadline.getTime()
+		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+		<p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
+		<p>Thank you again for your important contribution to the future of science.</p>
+		<p>Thanks and best wishes,</p>
+		<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+		<p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 		include: {
 			pubs: {
 				submission: pubId,
@@ -216,7 +238,7 @@ export const sendAcceptedEmail = async (
 		},
 		extra: {
 			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
-			due_at: dueAt.toLocaleDateString(),
+			due_at: evaluator.deadline.toLocaleDateString(),
 		},
 	});
 };

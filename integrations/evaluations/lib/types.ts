@@ -60,6 +60,7 @@ export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithInvite>;
 export const EvaluatorWhoAccepted = EvaluatorWithInvite.merge(
 	z.object({
 		acceptedAt: z.string(),
+		deadline: z.date(),
 	})
 );
 export type EvaluatorWhoAccepted = z.infer<typeof EvaluatorWhoAccepted>;
@@ -95,17 +96,12 @@ export type InstanceConfig = {
 	evaluatorFieldSlug: string;
 	titleFieldSlug: string;
 	emailTemplate: EmailTemplate;
+	deadlineLength: number;
+	deadlineUnit: "days" | "months";
 };
 
 export type InstanceState = {
 	[evaluatorPubPubUserId: string]: Evaluator;
-};
-
-export const defaultInstanceConfig = {
-	pubTypeId: "",
-	emailTemplate: { subject: "", message: "" },
-	evaluatorFieldSlug: "",
-	titleFieldSlug: "",
 };
 
 export const isSaved = (
