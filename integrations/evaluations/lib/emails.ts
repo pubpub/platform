@@ -219,7 +219,7 @@ export const sendAcceptedEmail = async (
 		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
 		<p>We strongly encourage evaluators to complete evaluations within three weeks; relatively quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
 			evaluator.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
-		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus.” After five ${new Date(
+		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus.” After ${new Date(
 			evaluator.deadline.getTime()
 		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 		<p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
