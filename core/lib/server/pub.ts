@@ -1,15 +1,177 @@
-import {
-	CreatePubRequestBody,
-	GetPubResponseBody,
-	UpdatePubRequestBody,
-	GetPubTypeResponseBody,
-	CreatePubRequestBodyWithNulls,
-} from "contracts";
-import prisma from "~/prisma/db";
-import { RecursiveInclude, makeRecursiveInclude } from "../types";
-import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
+import {
+	CreatePubRequestBodyWithNulls,
+	GetPubResponseBody,
+	GetPubTypeResponseBody,
+	JsonValue,
+} from "contracts";
+import { ExpressionBuilder, SelectExpression, SelectQueryBuilder, StringReference } from "kysely";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { expect } from "utils";
+import { db } from "~/kysely/database";
+import Database from "~/kysely/types/Database";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
+import { PubTypesId } from "~/kysely/types/public/PubTypes";
+import { PubsId } from "~/kysely/types/public/Pubs";
+import prisma from "~/prisma/db";
+import { makeRecursiveInclude } from "../types";
+import { NotFoundError } from "./errors";
+
+type PubValues = Record<string, JsonValue>;
+
+type PubNoChildren = {
+	id: PubsId;
+	communityId: CommunitiesId;
+	createdAt: Date;
+	parentId: PubsId | null;
+	pubTypeId: PubTypesId;
+	updatedAt: Date;
+	values: PubValues;
+};
+
+type NestedPub = PubNoChildren & {
+	children: NestedPub[];
+};
+
+type FlatPub = PubNoChildren & {
+	children: PubNoChildren[];
+};
+
+// pubValuesByRef adds a JSON object of pub_values keyed by their field name under the `fields` key to the output of a query
+// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parent_id or _PubToStage.A
+// It doesn't seem to work if you've aliased the table or column (although you can probably work around that with a cast)
+export const pubValuesByRef = (pubIdRef: StringReference<Database, keyof Database>) => {
+	return (eb: ExpressionBuilder<Database, keyof Database>) =>
+		eb
+			.selectFrom("pub_values")
+			.whereRef("pub_values.pub_id", "=", eb.ref(pubIdRef))
+			.$call(pubValues);
+};
+
+// pubValuesByVal does the same thing as pubDataByRef but takes an actual pubId rather than reference to a column
+export const pubValuesByVal = (pubId: PubsId) => {
+	return (eb: ExpressionBuilder<Database, keyof Database>) =>
+		eb.selectFrom("pub_values").where("pub_values.pub_id", "=", pubId).$call(pubValues);
+};
+
+// pubValues is the shared
+const pubValues = (qb: SelectQueryBuilder<Database, keyof Database, {}>) => {
+	return (
+		qb
+			.innerJoin("pub_fields", "pub_fields.id", "pub_values.field_id")
+			// distinct on field_id plus sorting by created at means we only select the most recent
+			// values
+			.distinctOn("pub_values.field_id")
+			.orderBy("pub_values.created_at desc")
+			.select(({ fn }) => {
+				return (
+					fn
+						// Use the postgres function json_object_agg to make a json object of pub values
+						// keyed by field slugs
+						.agg<PubValues>("json_object_agg", ["pub_fields.slug", "pub_values.value"])
+						.as("values")
+				);
+			})
+			.as("values")
+	);
+};
+
+// Converts a pub from having all its children (regardless of depth) in a flat array to a tree
+// structure
+const nestChildren = (pub: FlatPub): NestedPub => {
+	const pubs = pub.children.reduce<Record<PubsId, NestedPub>>((acc, curr) => {
+		acc[curr.id] = { ...curr, children: [] };
+		return acc;
+	}, {});
+
+	const nestedChildren: NestedPub[] = [];
+
+	for (const child of pub.children) {
+		if (child.parentId) {
+			pubs[child.parentId].children.push({ ...child, children: [] });
+		} else {
+			nestedChildren.push({ ...child, children: [] });
+		}
+	}
+	return { ...pub, children: nestedChildren };
+};
+
+// TODO: make this usable in a subquery, possibly by turning it into a view
+// Create a CTE ("children") with the pub's children and their values
+const withPubChildren = ({
+	pubId,
+	pubIdRef,
+}: {
+	pubId?: PubsId;
+	pubIdRef?: StringReference<Database, keyof Database>;
+}) => {
+	const { ref } = db.dynamic;
+
+	return db.withRecursive("children", ({ selectFrom }) => {
+		return selectFrom("pubs")
+			.select(pubValuesByRef("pubs.id"))
+			.$if(!!pubId, (qb) => qb.where("pubs.parent_id", "=", pubId!))
+			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parent_id", "=", ref(pubIdRef!)))
+			.unionAll(({ selectFrom }) => {
+				return selectFrom("children")
+					.innerJoin("pubs", "pubs.parent_id as parentId", "children.id")
+					.select(["pubs.id", "pubs.parent_id as parentId"])
+					.select(pubValuesByRef("pubs.id"));
+			});
+	});
+};
+
+export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+	// This set of columns and aliases is used twice in the query below but can't be extracted without
+	// losing type information
+
+	// const pubColumns: SelectExpression<Database, "pubs">[] = [
+	// 	"id",
+	// 	"community_id as communityId",
+	// 	"created_at as createdAt",
+	// 	"parent_id as parentId",
+	// 	"pub_type_id as pubTypeId",
+	// 	"updated_at as updatedAt",
+	// ];
+
+	const pub: FlatPub | undefined = await withPubChildren({ pubId })
+		.selectFrom("pubs")
+		.where("pubs.id", "=", pubId)
+		// This is extra verbose (compared to .selectAll()) in order to convert these column names to snakeCase
+		.select([
+			"id",
+			"community_id as communityId",
+			"created_at as createdAt",
+			"parent_id as parentId",
+			"pub_type_id as pubTypeId",
+			"updated_at as updatedAt",
+		])
+		.select(pubValuesByVal(pubId))
+		.$narrowType<{ values: PubValues }>()
+		.select((eb) =>
+			jsonArrayFrom(
+				eb
+					.selectFrom("children")
+					.select([
+						"id",
+						"community_id as communityId",
+						"created_at as createdAt",
+						"parent_id as parentId",
+						"pub_type_id as pubTypeId",
+						"updated_at as updatedAt",
+						"values",
+					])
+					.$narrowType<{ values: PubValues }>()
+			).as("children")
+		)
+		.executeTakeFirst();
+
+	if (!pub) {
+		throw PubNotFoundError;
+	}
+
+	return nestChildren(pub);
+};
 
 export const pubValuesInclude = {
 	values: {
@@ -22,26 +184,6 @@ export const pubValuesInclude = {
 		},
 	},
 } satisfies Prisma.PubInclude;
-
-const recursivelyDenormalizePubValues = async (
-	pub: Prisma.PubGetPayload<RecursiveInclude<"children", typeof pubValuesInclude>>
-): Promise<GetPubResponseBody> => {
-	const values = pub.values.reduce((prev, curr) => {
-		prev[curr.field.slug] = curr.value;
-		return prev;
-	}, {} as Record<string, Prisma.JsonValue>);
-	const children = await Promise.all(pub.children?.map(recursivelyDenormalizePubValues));
-	return { ...pub, children, values };
-};
-
-export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBody> => {
-	const pubInclude = makeRecursiveInclude("children", pubValuesInclude, depth);
-	const pub = await prisma.pub.findUnique({ where: { id: pubId }, ...pubInclude });
-	if (!pub) {
-		throw PubNotFoundError;
-	}
-	return recursivelyDenormalizePubValues(pub);
-};
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
@@ -101,7 +243,10 @@ const getUpdateDepth = (body: CreatePubRequestBodyWithNulls, depth = 0) => {
 	return depth + 1;
 };
 
-const makePubChildrenCreateOptions = async (body: CreatePubRequestBodyWithNulls, communityId: string) => {
+const makePubChildrenCreateOptions = async (
+	body: CreatePubRequestBodyWithNulls,
+	communityId: string
+) => {
 	if (!body.children) {
 		return undefined;
 	}

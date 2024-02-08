@@ -292,9 +292,6 @@ export const integrationsApi = contract.router(
 				pubId: z.string(),
 				instanceId: z.string(),
 			}),
-			query: z.object({
-				depth: z.string().optional(),
-			}),
 			responses: {
 				200: GetPubResponseBody,
 			},

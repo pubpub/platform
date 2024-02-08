@@ -1,5 +1,6 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "contracts";
+import { PubsId } from "~/kysely/types/public/Pubs";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
@@ -44,10 +45,9 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		const pub = await createPub(params.instanceId, body);
 		return { status: 200, body: pub };
 	},
-	getPub: async ({ headers, params, query }) => {
+	getPub: async ({ headers, params }) => {
 		checkAuthentication(headers.authorization);
-		const depth = query.depth ? Number(query.depth) : 1;
-		const pub = await getPub(params.pubId, depth);
+		const pub = await getPub(params.pubId as PubsId);
 		return { status: 200, body: pub };
 	},
 	getAllPubs: async ({ headers }) => {
