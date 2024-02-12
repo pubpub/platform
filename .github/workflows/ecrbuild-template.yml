@@ -6,7 +6,6 @@ on:
   workflow_call:
     inputs:
       target:
-        required: true
         default: "main"
         type: string
       package-name:
