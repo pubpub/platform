@@ -60,7 +60,7 @@ export type EvaluatorWithInvite = z.infer<typeof EvaluatorWithInvite>;
 export const EvaluatorWhoAccepted = EvaluatorWithInvite.merge(
 	z.object({
 		acceptedAt: z.string(),
-		deadline: z.date().optional(),
+		deadline: z.coerce.date().optional(),
 	})
 );
 export type EvaluatorWhoAccepted = z.infer<typeof EvaluatorWhoAccepted>;
