@@ -1,117 +1,30 @@
 # Based on https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/deploying-to-amazon-elastic-container-service
 
-name: aws ecs deploy
+name: aws ecs deploy - blake
 
 on:
   push:
     branches:
       - main
 
-env:
-  AWS_REGION: us-east-1                       # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: pubpub-v7           # set this to your Amazon ECR repository name
-  ECS_SERVICE: blake-core               # set this to your Amazon ECS service name
-  ECS_CLUSTER: blake-ecs-cluster-staging                 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION_TEMPLATE: blake-core    # set this to the FAMILY of your task definition
-  CONTAINER_NAME: core           # set this to the name of the container in the
-                                               # containerDefinitions section of your task definition
-
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    environment: production
+  deploy-core:
+    uses: ./.github/workflows/deploy-template.yml
+    with:
+      service-name: core
+      environment: staging
+      env-proper-name: blake
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Get short sha
-        id: shortsha
-        run: echo "sha_short=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.shortsha.outputs.sha_short }}
-        run: |
-          # Build a docker container and
-          # push it to ECR so that it can
-          # be deployed to ECS.
-          docker build \
-            --platform linux/amd64 \
-            --build-arg PACKAGE=core \
-            --build-arg PACKAGE_DIR=core \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    environment: production
-    needs:
-      - build
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Get short sha
-        id: shortsha
-        run: echo "sha_short=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Retrieve Task Definition contents from template
-        id: get-taskdef
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition $ECS_TASK_DEFINITION_TEMPLATE \
-            --query taskDefinition >> template_task_def.json
-
-      - name: Interpolate image tag
-        id: write-tag
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.shortsha.outputs.sha_short }}
-        run: |
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
-        with:
-          task-definition: template_task_def.json
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.write-tag.outputs.image }}
-
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+  deploy-jobs:
+    uses: ./.github/workflows/deploy-template.yml
+    needs: deploy-core
+    with:
+      service-name: jobs
+      environment: staging
+      env-proper-name: blake
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -5,6 +5,10 @@ name: aws ecr build template
 on:
   workflow_call:
     inputs:
+      target:
+        required: true
+        default: "main"
+        type: string
       package-name:
         required: true
         type: string
@@ -61,6 +65,7 @@ jobs:
             --platform linux/amd64 \
             --build-arg PACKAGE=$PACKAGE \
             --build-arg PACKAGE_DIR=$PACKAGE_DIR \
+            --target ${{ inputs.target }} \
             -t $ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG \
             .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG

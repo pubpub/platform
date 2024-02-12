@@ -9,6 +9,7 @@ ARG PNPM_VERSION=8.14.3
 
 ARG PACKAGE_DIR=core
 ARG PACKAGE=core
+ARG PORT=3000
 
 ################################################################################
 # Use node image for base image for all stages.
@@ -64,8 +65,11 @@ RUN ./bin/render-build.sh ${PACKAGE}
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
 # where the necessary files are copied from the build stage.
-FROM base as final
-ARG PACKAGE_DIR PACKAGE
+FROM base as shared
+ARG PACKAGE_DIR PACKAGE PORT
+
+# needed so that the CMD can use this var
+ENV PACKAGE=$PACKAGE
 
 # Use production node environment by default.
 ENV NODE_ENV production
@@ -86,11 +90,18 @@ COPY ./${PACKAGE_DIR}/package.json \
 
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/${PACKAGE_DIR}/node_modules ./${PACKAGE_DIR}/node_modules
-COPY --from=build /usr/src/app/${PACKAGE_DIR}/.next ./${PACKAGE_DIR}/.next
-
 
 # Expose the port that the application listens on.
-EXPOSE 3000
-
+EXPOSE $PORT
 # Run the application.
 CMD pnpm --filter ${PACKAGE} start
+
+# add an optional target to use for the jobs package only
+FROM shared AS jobs
+ARG PACKAGE_DIR
+COPY --from=build /usr/src/app/${PACKAGE_DIR}/index.ts ./${PACKAGE_DIR}/index.ts
+
+# But most packages are built in this standard next.js way.
+FROM shared AS main
+ARG PACKAGE_DIR
+COPY --from=build /usr/src/app/${PACKAGE_DIR}/.next ./${PACKAGE_DIR}/.next
