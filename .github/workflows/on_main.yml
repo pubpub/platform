@@ -17,9 +17,8 @@ jobs:
 
   deploy-all:
     uses: ./.github/workflows/awsdeploy.yml
-    environment: staging
     needs: build-all
-    inputs:
+    with:
       proper-name: blake
       environment: staging
     secrets:
