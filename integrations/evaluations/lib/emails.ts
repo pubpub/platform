@@ -93,7 +93,16 @@ export const scheduleNoSubmitNotificationEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
-	const runAt = evaluator.deadline;
+	const deadline = evaluator.deadline
+		? new Date(evaluator.deadline)
+		: calculateDeadline(
+				{
+					deadlineLength: instanceConfig.deadlineLength,
+					deadlineUnit: instanceConfig.deadlineUnit,
+				},
+				new Date(evaluator.acceptedAt)
+		  );
+	const runAt = deadline;
 
 	await client.scheduleEmail(
 		instanceId,
@@ -113,7 +122,7 @@ ${notificationFooter}`,
 				},
 			},
 			extra: {
-				due_at: evaluator.deadline.toLocaleDateString(),
+				due_at: deadline.toLocaleDateString(),
 				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 			},
 		},
@@ -208,6 +217,15 @@ export const sendAcceptedEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
+	const deadline = evaluator.deadline
+		? new Date(evaluator.deadline)
+		: calculateDeadline(
+				{
+					deadlineLength: instanceConfig.deadlineLength,
+					deadlineUnit: instanceConfig.deadlineUnit,
+				},
+				new Date(evaluator.acceptedAt)
+		  );
 	await client.sendEmail(instanceId, {
 		to: {
 			userId: evaluator.userId,
@@ -218,9 +236,9 @@ export const sendAcceptedEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
 		<p>We strongly encourage evaluators to complete evaluations within three weeks; relatively quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
-			evaluator.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+			deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus.” After ${new Date(
-			evaluator.deadline.getTime()
+			deadline.getTime()
 		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 		<p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
@@ -238,7 +256,7 @@ export const sendAcceptedEmail = async (
 		},
 		extra: {
 			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
-			due_at: evaluator.deadline.toLocaleDateString(),
+			due_at: deadline.toLocaleDateString(),
 		},
 	});
 };
