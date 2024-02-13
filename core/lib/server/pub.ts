@@ -122,45 +122,27 @@ const withPubChildren = ({
 };
 
 export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	// This set of columns and aliases is used twice in the query below but can't be extracted without
-	// losing type information
-
-	// const pubColumns: SelectExpression<Database, "pubs">[] = [
-	// 	"id",
-	// 	"community_id as communityId",
-	// 	"created_at as createdAt",
-	// 	"parent_id as parentId",
-	// 	"pub_type_id as pubTypeId",
-	// 	"updated_at as updatedAt",
-	// ];
+	const pubColumns = [
+		"id",
+		"community_id as communityId",
+		"created_at as createdAt",
+		"parent_id as parentId",
+		"pub_type_id as pubTypeId",
+		"updated_at as updatedAt",
+	] as const satisfies SelectExpression<Database, "pubs">[];
 
 	const pub: FlatPub | undefined = await withPubChildren({ pubId })
 		.selectFrom("pubs")
 		.where("pubs.id", "=", pubId)
 		// This is extra verbose (compared to .selectAll()) in order to convert these column names to snakeCase
-		.select([
-			"id",
-			"community_id as communityId",
-			"created_at as createdAt",
-			"parent_id as parentId",
-			"pub_type_id as pubTypeId",
-			"updated_at as updatedAt",
-		])
+		.select(pubColumns)
 		.select(pubValuesByVal(pubId))
 		.$narrowType<{ values: PubValues }>()
 		.select((eb) =>
 			jsonArrayFrom(
 				eb
 					.selectFrom("children")
-					.select([
-						"id",
-						"community_id as communityId",
-						"created_at as createdAt",
-						"parent_id as parentId",
-						"pub_type_id as pubTypeId",
-						"updated_at as updatedAt",
-						"values",
-					])
+					.select([...pubColumns, "values"])
 					.$narrowType<{ values: PubValues }>()
 			).as("children")
 		)
