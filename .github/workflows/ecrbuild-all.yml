@@ -4,6 +4,12 @@ name: docker build to ECR
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
 
 jobs:
   build-core:
