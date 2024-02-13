@@ -1,0 +1,25 @@
+# Based on https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/deploying-to-amazon-elastic-container-service
+
+name: Promote from main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-all:
+    uses: ./.github/workflows/ecrbuild-all.yml
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+  deploy-all:
+    uses: ./.github/workflows/awsdeploy.yml
+    needs: build-all
+    with:
+      proper-name: blake
+      environment: staging
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
