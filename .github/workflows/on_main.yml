@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - ships/fix-deploy-triggers
 
 jobs:
   build-all:
