@@ -9,7 +9,7 @@ import { cookie } from "~/lib/request";
 import { isInvited } from "~/lib/types";
 import {
 	scheduleNoReplyNotificationEmail,
-	scheduleReminderEmail,
+	scheduleInvitationReminderEmail,
 	sendInviteEmail,
 } from "../../../lib/emails";
 import { InviteFormEvaluator } from "./types";
@@ -71,7 +71,7 @@ export const save = async (
 				// Immediately send the invite email.
 				await sendInviteEmail(instanceId, pubId, evaluator);
 				// Scehdule a reminder email to person who was invited to evaluate.
-				await scheduleReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+				await scheduleInvitationReminderEmail(instanceId, instanceConfig, pubId, evaluator);
 				// Schedule no-reply notification email to person who invited the
 				// evaluator.
 				await scheduleNoReplyNotificationEmail(

@@ -29,6 +29,21 @@ export function calculateDeadline(
 	}
 }
 
+export function getDeadline(
+	instanceConfig: InstanceConfig,
+	evaluator: EvaluatorWhoAccepted & EvaluatorWithInvite
+): Date {
+	return evaluator.deadline
+		? new Date(evaluator.deadline)
+		: calculateDeadline(
+				{
+					deadlineLength: instanceConfig.deadlineLength,
+					deadlineUnit: instanceConfig.deadlineUnit,
+				},
+				new Date(evaluator.acceptedAt)
+		  );
+}
+
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
 
@@ -41,6 +56,7 @@ const makeNoReplyJobKey = (instanceId: string, pubId: string, evaluator: Evaluat
 const makeNoSubmitJobKey = (instanceId: string, pubId: string, evaluator: EvaluatorWithInvite) =>
 	`send-email-${instanceId}-${pubId}-${evaluator.userId}-no-submit`;
 
+// sent to the community manager
 export const scheduleNoReplyNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -139,33 +155,6 @@ export const unscheduleNoSubmitNotificationEmail = (
 	return client.unscheduleEmail(instanceId, jobKey);
 };
 
-export const sendInviteEmail = async (
-	instanceId: string,
-	pubId: string,
-	evaluator: EvaluatorWithInvite
-) => {
-	return client.sendEmail(instanceId, {
-		to: {
-			userId: evaluator.userId,
-		},
-		subject: evaluator.emailTemplate.subject,
-		message: evaluator.emailTemplate.message,
-		include: {
-			pubs: {
-				submission: pubId,
-			},
-			users: {
-				invitor: evaluator.invitedBy,
-			},
-		},
-		extra: {
-			accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
-			decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
-			info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
-		},
-	});
-};
-
 export const scheduleReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -200,65 +189,6 @@ export const scheduleReminderEmail = async (
 		},
 		{ jobKey, runAt }
 	);
-};
-
-export const unscheduleReminderEmail = (
-	instanceId: string,
-	pubId: string,
-	evaluator: EvaluatorWithInvite
-) => {
-	const jobKey = makeReminderJobKey(instanceId, pubId, evaluator);
-	return client.unscheduleEmail(instanceId, jobKey);
-};
-
-export const sendAcceptedEmail = async (
-	instanceId: string,
-	instanceConfig: InstanceConfig,
-	pubId: string,
-	evaluator: EvaluatorWhoAccepted
-) => {
-	const deadline = evaluator.deadline
-		? new Date(evaluator.deadline)
-		: calculateDeadline(
-				{
-					deadlineLength: instanceConfig.deadlineLength,
-					deadlineUnit: instanceConfig.deadlineUnit,
-				},
-				new Date(evaluator.acceptedAt)
-		  );
-	await client.sendEmail(instanceId, {
-		to: {
-			userId: evaluator.userId,
-		},
-		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>Hi {{user.firstName}} {{user.lastName}},</p>
-		<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${
-			instanceConfig.titleFieldSlug
-		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
-		<p>We strongly encourage evaluators to complete evaluations within three weeks; relatively quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
-			deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
-		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus.” After ${new Date(
-			deadline.getTime()
-		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
-		<p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
-		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
-		<p>Thank you again for your important contribution to the future of science.</p>
-		<p>Thanks and best wishes,</p>
-		<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
-		<p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
-		include: {
-			pubs: {
-				submission: pubId,
-			},
-			users: {
-				invitor: evaluator.invitedBy,
-			},
-		},
-		extra: {
-			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
-			due_at: deadline.toLocaleDateString(),
-		},
-	});
 };
 
 export const sendRequestedInfoNotification = (
@@ -363,6 +293,394 @@ ${notificationFooter}`,
 		},
 		extra: {
 			manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
+		},
+	});
+};
+
+// sent to the evaluator
+
+/**
+ *
+ * Sends an email to the evaluator with the invitation to evaluate the pub.
+ * @param instanceId
+ * @param pubId
+ * @param evaluator
+ * @returns Promise that resolves to the result of the email send operation.
+ */
+export const sendInviteEmail = async (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: evaluator.emailTemplate.subject,
+		message: evaluator.emailTemplate.message,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
+			decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
+			info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
+		},
+	});
+};
+
+/**
+ * Sends an email to the evaluator as a reminder to accept the invitation to evaluate the pub.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ */
+export const scheduleInvitationReminderEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	const jobKey = makeReminderJobKey(instanceId, pubId, evaluator);
+	const runAt = new Date(evaluator.invitedAt);
+	runAt.setMinutes(runAt.getMinutes() + DAYS_TO_REMIND_EVALUATOR * 24 * 60);
+
+	await client.scheduleEmail(
+		instanceId,
+		{
+			to: {
+				userId: evaluator.userId,
+			},
+			subject: `Reminder: {{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
+			message: evaluator.emailTemplate.message,
+			include: {
+				users: {
+					invitor: evaluator.invitedBy,
+				},
+				pubs: {
+					submission: pubId,
+				},
+			},
+			extra: {
+				accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
+				decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
+				info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
+			},
+		},
+		{ jobKey, runAt }
+	);
+};
+
+/**
+ * Cancels the scheduled reminder email for the evaluator to accept the invitation to evaluate the pub.
+ * @param instanceId
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
+export const unscheduleReminderEmail = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	const jobKey = makeReminderJobKey(instanceId, pubId, evaluator);
+	return client.unscheduleEmail(instanceId, jobKey);
+};
+
+/**
+ * Sends an email to the evaluator to inform them that their invitation to evaluate the pub has been accepted.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
+export const sendAcceptedEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	const deadline = getDeadline(instanceConfig, evaluator);
+	await client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>Hi {{user.firstName}} {{user.lastName}},</p>
+		<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${
+			instanceConfig.titleFieldSlug
+		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
+		<p>We strongly encourage evaluators to complete evaluations within three weeks; relatively quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
+			deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus.” After ${new Date(
+			deadline.getTime()
+		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+		<p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
+		<p>Thank you again for your important contribution to the future of science.</p>
+		<p>Thanks and best wishes,</p>
+		<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+		<p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
+			due_at: deadline.toLocaleDateString(),
+		},
+	});
+};
+
+// export const sendPromptEvalBonusReminderEmail = () => {};
+// export const sendFinalPromptEvalBonusReminderEmail = () => {};
+// export const sendEvalutaionReminderEmail = () => {};
+// export const sendFinalEvaluationReminderEmail = () => {};
+// export const sendFollowUpToEvaluationReminderEmail = () => {};
+// export const sendNoticeOfNoSubmitEmail = () => {};
+
+// Send prompt evaluation bonus reminder email
+export const sendPromptEvalBonusReminderEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	const deadline = getDeadline(instanceConfig, evaluator);
+	const reminderDeadline = new Date(deadline.getTime() - 14 * (1000 * 60 * 60 * 24));
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: `[Unjournal] Reminder to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for prompt evaluation bonus`,
+		message: `<p>Hi {{user.firstName}},</p>
+	  <p>Thanks again for agreeing to evaluate "{{pubs.submission.values["${
+			instanceConfig.titleFieldSlug
+		}"]}}" for The Unjournal.</p>
+	  <p>This note is a reminder to submit your evaluation by ${new Date(
+			reminderDeadline.getTime() - 14 * (1000 * 60 * 60 * 24)
+		).toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${new Date(
+			deadline.getTime()
+		).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
+	  <p>Thanks and best wishes,</p>
+	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+		},
+	});
+};
+
+// Send final prompt evaluation bonus reminder email
+export const sendFinalPromptEvalBonusReminderEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	const deadline = getDeadline(instanceConfig, evaluator);
+	const reminderDeadline = new Date(deadline.getTime() - 14 * (1000 * 60 * 60 * 24));
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: `[Unjournal] Final Reminder: Submit evaluation for prompt bonus "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>Hi {{user.firstName}},</p>
+	  <p>This is a final reminder to submit your evaluation for "{{pubs.submission.values["${
+			instanceConfig.titleFieldSlug
+		}"]}}" by the deadline ${new Date(
+			reminderDeadline.getTime()
+		).toLocaleDateString()} to receive the $100 “prompt evaluation bonus.”</p>
+	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
+	  <p>Thanks and best wishes,</p>
+	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+		},
+	});
+};
+
+// Send evaluation reminder email
+export const sendEvaluationReminderEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	// Calculate the deadline for the reminder email
+	const deadline = getDeadline(instanceConfig, evaluator);
+
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: `[Unjournal] Reminder to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" by next week`,
+		message: `<p>Hi {{user.firstName}},</p>
+	  <p>Thank you again for agreeing to evaluate "{{pubs.submission.values["${
+			instanceConfig.titleFieldSlug
+		}"]}}" for The Unjournal.</p>
+	  <p>This note is a reminder that your evaluation should be submitted by ${new Date(
+			deadline.getTime()
+		).toLocaleDateString()} (next week). Please note that after that date we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
+	  <p>Thanks and best wishes,</p>
+	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+		},
+	});
+};
+
+// Send final evaluation reminder email
+export const sendFinalEvaluationReminderEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: `[Unjournal] Final Reminder: Evaluation due tomorrow`,
+		message: `<p>Hi {{user.firstName}},</p>
+	  <p>This note is a final reminder that your evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" is due tomorrow. Please make sure to submit your evaluation by the deadline.</p>
+	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
+	  <p>Thanks and best wishes,</p>
+	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+		},
+	});
+};
+
+// Send follow-up to evaluation reminder email
+export const sendFollowUpToFinalEvaluationReminderEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	const deadline = getDeadline(instanceConfig, evaluator);
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: `[Unjournal] Follow-up: Evaluation overdue, to be reassigned`,
+		message: `<p>Hi {{user.firstName}},</p>
+	  <p>This note is a reminder that your evaluation for "{{pubs.submission.values["${
+			instanceConfig.titleFieldSlug
+		}"]}}" is overdue. We are now planning to reassign the evaluation to another evaluator.</p>
+	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
+			deadline.getTime()
+		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>Thanks and best wishes,</p>
+	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+		},
+	});
+};
+
+// Send notice of no submit email
+export const sendNoticeOfNoSubmitEmail = async (
+	instanceId: string,
+	instanceConfig: InstanceConfig,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	const deadline = getDeadline(instanceConfig, evaluator);
+	return client.sendEmail(instanceId, {
+		to: {
+			userId: evaluator.userId,
+		},
+		subject: `[Unjournal] Evaluation not submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
+		message: `<p>Hi {{user.firstName}},</p>
+	  <p>This is to inform you that you have not submitted an evaluation for "{{pubs.submission.values["${
+			instanceConfig.titleFieldSlug
+		}"]}}", which was due on ${new Date(deadline.getTime()).toLocaleDateString()}.</p>
+	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
+			deadline.getTime()
+		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>Thanks and best wishes,</p>
+	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
+		include: {
+			pubs: {
+				submission: pubId,
+			},
+			users: {
+				invitor: evaluator.invitedBy,
+			},
+		},
+		extra: {
+			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 		},
 	});
 };
