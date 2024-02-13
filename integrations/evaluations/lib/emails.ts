@@ -29,10 +29,7 @@ export function calculateDeadline(
 	}
 }
 
-export function getDeadline(
-	instanceConfig: InstanceConfig,
-	evaluator: EvaluatorWhoAccepted & EvaluatorWithInvite
-): Date {
+export function getDeadline(instanceConfig: InstanceConfig, evaluator: EvaluatorWhoAccepted): Date {
 	return evaluator.deadline
 		? new Date(evaluator.deadline)
 		: calculateDeadline(
@@ -109,15 +106,7 @@ export const scheduleNoSubmitNotificationEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
-	const deadline = evaluator.deadline
-		? new Date(evaluator.deadline)
-		: calculateDeadline(
-				{
-					deadlineLength: instanceConfig.deadlineLength,
-					deadlineUnit: instanceConfig.deadlineUnit,
-				},
-				new Date(evaluator.acceptedAt)
-		  );
+	const deadline = getDeadline(instanceConfig, evaluator);
 	const runAt = deadline;
 
 	await client.scheduleEmail(
@@ -153,42 +142,6 @@ export const unscheduleNoSubmitNotificationEmail = (
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
 	return client.unscheduleEmail(instanceId, jobKey);
-};
-
-export const scheduleReminderEmail = async (
-	instanceId: string,
-	instanceConfig: InstanceConfig,
-	pubId: string,
-	evaluator: EvaluatorWithInvite
-) => {
-	const jobKey = makeReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(evaluator.invitedAt);
-	runAt.setMinutes(runAt.getMinutes() + DAYS_TO_REMIND_EVALUATOR * 24 * 60);
-
-	await client.scheduleEmail(
-		instanceId,
-		{
-			to: {
-				userId: evaluator.userId,
-			},
-			subject: `Reminder: {{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
-			message: evaluator.emailTemplate.message,
-			include: {
-				users: {
-					invitor: evaluator.invitedBy,
-				},
-				pubs: {
-					submission: pubId,
-				},
-			},
-			extra: {
-				accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
-				decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
-				info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
-			},
-		},
-		{ jobKey, runAt }
-	);
 };
 
 export const sendRequestedInfoNotification = (
@@ -442,13 +395,6 @@ export const sendAcceptedEmail = async (
 		},
 	});
 };
-
-// export const sendPromptEvalBonusReminderEmail = () => {};
-// export const sendFinalPromptEvalBonusReminderEmail = () => {};
-// export const sendEvalutaionReminderEmail = () => {};
-// export const sendFinalEvaluationReminderEmail = () => {};
-// export const sendFollowUpToEvaluationReminderEmail = () => {};
-// export const sendNoticeOfNoSubmitEmail = () => {};
 
 // Send prompt evaluation bonus reminder email
 export const sendPromptEvalBonusReminderEmail = async (
