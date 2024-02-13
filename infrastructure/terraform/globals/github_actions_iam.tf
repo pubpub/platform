@@ -35,6 +35,16 @@ resource "aws_iam_policy" "ecs" {
     Version:  "2012-10-17",
     Statement: [
       {
+        Sid: "AllowPassRole",
+        Effect: "Allow",
+        Action: [
+          "iam:PassRole"
+        ],
+        Resource: [
+          "*"
+        ]
+      },
+      {
         Sid: "EcsUpdateService",
         Effect: "Allow",
         Action: [

@@ -49,3 +49,7 @@ dump.rdb
 
 # Sentry Auth Token
 .sentryclirc
+
+# Github Actions secrets files
+.vars
+.secrets
