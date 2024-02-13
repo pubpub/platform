@@ -1,0 +1,30 @@
+# Based on https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/deploying-to-amazon-elastic-container-service
+
+name: aws ecs deploy - blake
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-core:
+    uses: ./.github/workflows/deploy-template.yml
+    with:
+      service-name: core
+      environment: staging
+      env-proper-name: blake
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+  deploy-jobs:
+    uses: ./.github/workflows/deploy-template.yml
+    needs: deploy-core
+    with:
+      service-name: jobs
+      environment: staging
+      env-proper-name: blake
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
