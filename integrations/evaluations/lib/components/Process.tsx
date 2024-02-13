@@ -5,7 +5,7 @@ type Props = {
 };
 
 export const Process = (props: Props) => {
-	const deadline = new Date(props.evaluator.deadline);
+	const deadline = new Date(props.evaluator.deadline!);
 
 	return (
 		<>
