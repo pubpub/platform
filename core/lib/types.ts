@@ -100,7 +100,9 @@ type User = {
 export type UserPostBody = Pick<User, "firstName" | "lastName" | "email" | "password">;
 export type UserPutBody = Pick<User, "firstName" | "lastName">;
 export type UserLoginData = Omit<User, "password">;
-export type UserSettings = Pick<User, "firstName" | "lastName" | "email" | "slug"> & { communities: Community[]};
+export type UserSettings = Pick<User, "firstName" | "lastName" | "email" | "slug"> & {
+	communities: Community[];
+};
 
 export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof permissionInclude }>;
 
@@ -115,8 +117,15 @@ export const stageInclude = {
 } satisfies Prisma.StageInclude;
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
+export type StagesById = { [key: string]: StagePayload };
 
 export type StagePayloadMoveConstraint = NonNullable<StagePayload["moveConstraints"]>;
 export type StagePayloadMoveConstraintDestination =
 	StagePayloadMoveConstraint[number]["destination"];
 export type IntegrationAction = { name: string; url: string; href: string };
+
+export type DeepPartial<T> = T extends object
+	? {
+			[P in keyof T]?: DeepPartial<T[P]>;
+	  }
+	: T;

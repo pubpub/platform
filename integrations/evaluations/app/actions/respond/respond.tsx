@@ -1,11 +1,12 @@
 "use client";
 
 import { GetPubResponseBody } from "@pubpub/sdk";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { Button, toast } from "ui";
 import { accept, contact, decline } from "./actions";
 import { InstanceConfig } from "~/lib/types";
 import Link from "next/link";
+import { calculateDeadline } from "~/lib/emails";
 
 type Props = {
 	intent: "accept" | "decline" | "info";
@@ -88,9 +89,10 @@ const EvaluationProcess = () => {
 				>
 					value this work
 				</a>
-				, we offer evaluators a $400 honorarium for completing the assignment by the
-				specified deadline, and we are also setting aside $150 per evaluation for evaluator
-				incentives and prizes.
+				, we offer evaluators a $300 honorarium for completing the assignment by the
+				deadline. Evaluators may earn an additional $100 “prompt evaluation bonus” for
+				completing the assignment promptly (see below). As of February 2024: We are also
+				currently setting aside $150 per evaluation for evaluator incentives and prizes.
 			</p>
 			<p>
 				Your evaluation will be made public and given a DOI, but you have the option to{" "}
@@ -206,7 +208,13 @@ export const Respond = (props: Props) => {
 	const submissionUrl = props.pub.values["unjournal:url"] as string;
 	const submissionTitle = props.pub.values[props.instanceConfig.titleFieldSlug] as string;
 	const submissionAbstract = props.pub.values["unjournal:description"] as string;
-
+	const deadline = calculateDeadline(
+		{
+			deadlineLength: props.instanceConfig.deadlineLength,
+			deadlineUnit: props.instanceConfig.deadlineUnit,
+		},
+		new Date(Date.now())
+	);
 	if (props.intent === "decline") {
 		const params = new URLSearchParams(window.location.search);
 		params.set("intent", "info");
@@ -280,12 +288,18 @@ export const Respond = (props: Props) => {
 				<>
 					<h2>Confirm</h2>
 					<p>
-						We encourage reviewers to complete reviews in three weeks. Upon accepting
-						this invitation, your evaluation will be due roughly on{" "}
+						We strongly encourage evaluators to complete evaluations relatively quickly,
+						for the benefit of authors, research-users, and the evaluation ecosystem. If
+						you submit the evaluation within that window (by{" "}
 						<strong>
-							{new Date(Date.now() + 21 * (1000 * 60 * 60 * 24)).toLocaleDateString()}
+							{new Date(
+								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+							).toLocaleDateString()}
 						</strong>
-						.
+						), you will receive a $100 “prompt evaluation bonus.” After{" "}
+						<strong>{new Date(deadline.getTime()).toLocaleDateString()}</strong>, we
+						will consider re-assigning the evaluation, and later submissions may not be
+						eligible for the full baseline compensation.
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
@@ -306,10 +320,21 @@ export const Respond = (props: Props) => {
 				<>
 					<h2>To respond to our invitation...</h2>
 					<p>
-						To agree to take on this assignment, please click the 'Accept' button below.
-						If you have questions at this point, please select Contact Evaluation
-						Manager. If you will not be able to accept our invitation, please choose
-						'Decline' below.
+						To agree to take on this assignment, please click the ‘Accept’ button below.
+						If you have questions at this point, please select ‘Contact Evaluation
+						Manager’. If you cannot accept our invitation, please choose ‘Decline’
+						below. We strongly encourage evaluators to complete evaluations relatively
+						quickly, for the benefit of authors, research-users, and the evaluation
+						ecosystem. If you submit the evaluation within that window (by{" "}
+						<strong>
+							{new Date(
+								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+							).toLocaleDateString()}
+						</strong>
+						), you will receive a $100 “prompt evaluation bonus.” After{" "}
+						<strong>{new Date(deadline.getTime()).toLocaleDateString()}</strong>, we
+						will consider re-assigning the evaluation, and later submissions may not be
+						eligible for the full baseline compensation.
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>

@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { faker } from "@faker-js/faker";
 import { serverEnv } from "~/lib/env/serverEnv";
+import { FileUpload } from "../../lib/fields/fileUpload";
 
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 
@@ -259,39 +260,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			name: "uploadFile",
 			namespace: "pubpub",
-			schema: {
-				$id: "pubpub:fileUpload",
-				title: "Upload Files",
-				type: "array",
-				items: {
-					type: "object",
-					properties: {
-						fileName: {
-							type: "string",
-						},
-						fileSource: {
-							type: "string",
-						},
-						fileType: {
-							type: "string",
-						},
-						fileSize: {
-							type: "number",
-						},
-						fileMeta: {
-							type: "object",
-						},
-						fileUploadUrl: {
-							type: "string",
-							format: "uri",
-						},
-						filePreview: {
-							type: "string",
-							format: "uri",
-						},
-					},
-				},
-			},
+			schema: FileUpload,
 		},
 	});
 
@@ -489,13 +458,19 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const stageIds = [...Array(7)].map((x) => uuidv4());
+	const stageIds = [...Array(8)].map((x) => uuidv4());
 	await prisma.stage.createMany({
 		data: [
 			{
 				id: stageIds[0],
 				communityId: communityUUID,
 				name: "Submitted",
+				order: "aa",
+			},
+			{
+				id: stageIds[8],
+				communityId: communityUUID,
+				name: "Submitted to this from elsewhere",
 				order: "aa",
 			},
 			{
@@ -819,6 +794,8 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 				titleFieldSlug: "unjournal:title",
 				evaluatorFieldSlug: "unjournal:evaluator",
+				deadlineLength: 35,
+				deadlineUnits: "days",
 			},
 		},
 	];

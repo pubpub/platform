@@ -19,6 +19,11 @@ import {
 	FormMessage,
 	Icon,
 	Input,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 	Textarea,
 	useToast,
 } from "ui";
@@ -51,6 +56,9 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 		subject: z.string(),
 		message: z.string(),
 	}),
+	// coerce is used here to assert this field is a number, otherwise a vlaidation error will be thrown saying this is a string
+	deadlineLength: z.coerce.number().min(35),
+	deadlineUnit: z.enum(["days", "months"]),
 });
 
 const isActionRedirect = (props: Props): props is RedirectProps => {
@@ -62,17 +70,19 @@ const defaultEmailTemplate = {
 	message: "Please reach out if you have any questions.",
 };
 
-const defaultInstanceConfig = {
+const defaultFormValues: InstanceConfig = {
 	pubTypeId: "",
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
-	template: defaultEmailTemplate,
+	emailTemplate: defaultEmailTemplate,
+	deadlineLength: 35,
+	deadlineUnit: "days",
 };
 
 export function Configure(props: Props) {
 	const { toast } = useToast();
 	const defaultValues = useMemo(
-		() => Object.assign({}, defaultInstanceConfig, props.instanceConfig),
+		() => Object.assign({}, defaultFormValues, props.instanceConfig),
 		[]
 	);
 	const form = useForm<z.infer<typeof schema>>({
@@ -161,6 +171,53 @@ export function Configure(props: Props) {
 									</FormControl>
 									<FormDescription>
 										The name of the field used to store the evaluation title.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<div className="text-xl font-medium">
+							<span>Deadline</span>
+						</div>
+						<FormField
+							control={form.control}
+							name="deadlineLength"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Deadline length</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										This field is used to determine thhe length of the deadline.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="deadlineUnit"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Deadline Format</FormLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
+										<FormControl>
+											<SelectTrigger>
+												<SelectValue placeholder="Select a verified email to display" />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value="days">days</SelectItem>
+											<SelectItem value="months">months</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormDescription>
+										This field allows you to select whether the deadline is in
+										days or months.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>

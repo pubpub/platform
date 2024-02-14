@@ -7,6 +7,7 @@ import { cookie } from "~/lib/request";
 import { Declined } from "./declined";
 import { Evaluate } from "./evaluate";
 import { Submitted } from "./submitted";
+import { EvaluatorWhoAccepted } from "~/lib/types";
 
 type Props = {
 	searchParams: {
@@ -38,6 +39,7 @@ export default async function Page(props: Props) {
 					instanceConfig={instanceConfig}
 					pub={pub}
 					pubType={pubType}
+					evaluator={instanceState[user.id] as EvaluatorWhoAccepted}
 				/>
 			);
 		// If they have responded "Decline", render the decline page.

@@ -1,25 +1,29 @@
-import { PubField, PubFieldSchema, PubValue, Prisma } from "@prisma/client";
+import { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import { AnySchema, JSONSchemaType } from "ajv";
 import Link from "next/link";
 import {
-	Button,
 	Avatar,
 	AvatarFallback,
 	AvatarImage,
-	Card,
-	CardTitle,
+	Button,
 	CardContent,
 	CardHeader,
+	CardTitle,
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
 	Separator,
 } from "ui";
+
 import IntegrationActions from "~/app/components/IntegrationActions";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
+import cn from "~/lib/cn";
+import { FileUpload } from "~/lib/fields/fileUpload";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
-import cn from "~/lib/cn";
 
 const getPub = async (pubId: string) => {
 	return await prisma.pub.findUnique({
@@ -37,8 +41,43 @@ interface PubValueWithFieldAndSchema extends PubValue {
 	field: PubFieldWithValue;
 }
 
+function FileUploadPreview({ files }: { files: FileUpload }) {
+	return (
+		<ul>
+			{files.map((file) => {
+				return (
+					<li key={file.fileName}>
+						<HoverCard>
+							<HoverCardTrigger asChild>
+								<Button variant="link">{file.fileName}</Button>
+							</HoverCardTrigger>
+							<HoverCardContent className=" w-auto m-auto space-y-1">
+								<h4 className="text-sm font-semibold">
+									{file.fileName} <br />
+								</h4>
+								<p className="text-sm pb-2">
+									The file is <strong>{file.fileSize}</strong> bytes in size. Its
+									MIME type is <strong>{file.fileType}</strong>.
+								</p>
+								<Button variant="secondary">
+									<a target="_blank" href={file.fileUploadUrl}>
+										Open file in new tab
+									</a>
+								</Button>
+							</HoverCardContent>
+						</HoverCard>
+					</li>
+				);
+			})}
+		</ul>
+	);
+}
+
 function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, value: Prisma.JsonValue) {
 	const fields: any[] = [];
+	if (schema.$id === "pubpub:fileUpload") {
+		return <FileUploadPreview files={value as FileUpload} />;
+	}
 	// TODO: get schema IDs and render specific stuff -- e.g. file upload, confidence intervals
 	if (!schema.properties) {
 		switch (schema.type) {
