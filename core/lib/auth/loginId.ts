@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { getRefreshCookie, getTokenCookie } from "~/lib/auth/cookies";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import type { UserAppMetadata, UserMetadata } from "@supabase/supabase-js";
-import { serverEnv } from "../env/serverEnv";
+import { env } from "../env/env.mjs";
 
 /* This is only called from API calls */
 /* When rendering server components, use getLoginData from loginData.ts */
@@ -45,7 +45,7 @@ export async function getUserInfoFromJWT(
 	refreshToken?: string
 ): Promise<jwtUser | null> {
 	try {
-		const decoded = await jwt.verify(sessionJWT, serverEnv.JWT_SECRET);
+		const decoded = await jwt.verify(sessionJWT, env.JWT_SECRET);
 		if (typeof decoded === "string" || !decoded.sub) {
 			throw new Error("Invalid jwt payload");
 		}

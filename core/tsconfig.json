@@ -1,32 +1,24 @@
 {
-  "extends": "tsconfig/nextjs.json",
-  "compilerOptions": {
-    "noErrorTruncation": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "~/*": [
-        "./*"
-      ]
-    },
-    "strictNullChecks": true
-  },
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+	"extends": "tsconfig/nextjs.json",
+	"compilerOptions": {
+		"moduleResolution": "Bundler",
+		"noErrorTruncation": true,
+		"plugins": [
+			{
+				"name": "next"
+			}
+		],
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./*"]
+		},
+		"strictNullChecks": true
+	},
+	"ts-node": {
+		"compilerOptions": {
+			"module": "CommonJS"
+		}
+	},
+	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "lib/env/env.mts"],
+	"exclude": ["node_modules"]
 }

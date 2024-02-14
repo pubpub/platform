@@ -2,7 +2,7 @@
 import React, { FormEvent, useState } from "react";
 import { Button } from "ui";
 import { supabase } from "lib/supabase";
-import { clientEnv } from "~/lib/env/clientEnv";
+import { env } from "~/lib/env/env.mjs";
 
 export default function ForgotForm() {
 	const [email, setEmail] = useState("");
@@ -15,7 +15,7 @@ export default function ForgotForm() {
 		setIsLoading(true);
 		setFailure(false);
 		const { error } = await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: `${clientEnv.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			console.error(error);

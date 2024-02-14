@@ -4,7 +4,7 @@
 */
 
 import { PrismaClient } from "@prisma/client";
-import { serverEnv } from "~/lib/env/serverEnv";
+import { env } from "~/lib/env/env.mjs";
 
 const globalForPrisma = globalThis as unknown as {
 	prisma: PrismaClient | undefined;
@@ -16,6 +16,6 @@ const prisma =
 		// log: ["query"],
 	});
 
-if (serverEnv.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default prisma;

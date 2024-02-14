@@ -1,11 +1,10 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
-import { clientEnv } from "~/lib/env/clientEnv";
-import { serverEnv } from "./env/serverEnv";
+import { env } from "./env/env.mjs";
 
 export const getServerSupabase = () => {
-	const url = clientEnv.NEXT_PUBLIC_SUPABASE_URL;
-	const key = serverEnv.SUPABASE_SERVICE_ROLE_KEY;
+	const url = env.NEXT_PUBLIC_SUPABASE_URL;
+	const key = env.SUPABASE_SERVICE_ROLE_KEY;
 	if (!url || !key) {
 		throw new Error("Missing Supabase parameters");
 	}
