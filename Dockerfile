@@ -33,9 +33,16 @@ ARG PACKAGE
 COPY . .
 
 # Run the build script.
-RUN ./bin/render-build.sh ${PACKAGE}
+RUN pnpm install --frozen-lockfile
+RUN pnpm p:build
+RUN pnpm --filter ${PACKAGE} build
 
 RUN pnpm --filter ${PACKAGE} --prod deploy /tmp/app
+
+# Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
+RUN [[ ${PACKAGE} == core ]] && \
+    find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
+    | xargs -r -I{} sh -c "rm -rf /tmp/app/{} && cp -R {} /tmp/app/{}"
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
