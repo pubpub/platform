@@ -8,7 +8,7 @@ import {
 	sendDeclinedNotificationEmail,
 	sendRequestedInfoNotification,
 	unscheduleNoReplyNotificationEmail,
-	unscheduleReminderEmail,
+	unscheduleInvitationReminderEmail,
 	calculateDeadline,
 } from "~/lib/emails";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
@@ -50,13 +50,14 @@ export const accept = async (instanceId: string, pubId: string) => {
 		evaluator.deadline = deadline;
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
-		await unscheduleReminderEmail(instanceId, pubId, evaluator);
+		await unscheduleInvitationReminderEmail(instanceId, pubId, evaluator);
 		// Unschedule no-reply notification email.
 		await unscheduleNoReplyNotificationEmail(instanceId, pubId, evaluator);
 		// Immediately send accepted notification email.
 		await sendAcceptedNotificationEmail(instanceId, instanceConfig, pubId, evaluator);
 		// Immediately send accepted email to evaluator.
 		await sendAcceptedEmail(instanceId, instanceConfig, pubId, evaluator);
+
 		// Schedule no-submit notification email.
 		await scheduleNoSubmitNotificationEmail(instanceId, instanceConfig, pubId, evaluator);
 		return { success: true };
@@ -84,7 +85,7 @@ export const decline = async (instanceId: string, pubId: string) => {
 		evaluator = instanceState[user.id] = { ...evaluator, status: "declined" };
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
-		await unscheduleReminderEmail(instanceId, pubId, evaluator);
+		await unscheduleInvitationReminderEmail(instanceId, pubId, evaluator);
 		// Unschedule no-reply notification email.
 		await unscheduleNoReplyNotificationEmail(instanceId, pubId, evaluator);
 		// Immediately send declined notification email.

@@ -337,7 +337,7 @@ export const scheduleInvitationReminderEmail = async (
  * @param evaluator
  * @returns
  */
-export const unscheduleReminderEmail = (
+export const unscheduleInvitationReminderEmail = (
 	instanceId: string,
 	pubId: string,
 	evaluator: EvaluatorWithInvite
@@ -486,7 +486,6 @@ export const sendEvaluationReminderEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	// Calculate the deadline for the reminder email
 	const deadline = getDeadline(instanceConfig, evaluator);
 
 	return client.sendEmail(instanceId, {
