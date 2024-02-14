@@ -5,6 +5,7 @@ import {
 	EvaluatorWithInvite,
 	InstanceConfig,
 } from "~/lib/types";
+import { SendEmailResponseBody } from "../../../packages/contracts";
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
@@ -52,6 +53,42 @@ const makeNoReplyJobKey = (instanceId: string, pubId: string, evaluator: Evaluat
 
 const makeNoSubmitJobKey = (instanceId: string, pubId: string, evaluator: EvaluatorWithInvite) =>
 	`send-email-${instanceId}-${pubId}-${evaluator.userId}-no-submit`;
+
+const makePromptEvalBonusReminderJobKey = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => `send-email-${instanceId}-${pubId}-${evaluator.userId}-prompt-eval-bonus-reminder`;
+
+const makeFinalPromptEvalBonusReminderJobKey = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => `send-email-${instanceId}-${pubId}-${evaluator.userId}-final-prompt-eval-bonus-reminder`;
+
+const makeEvalReminderJobKey = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => `send-email-${instanceId}-${pubId}-${evaluator.userId}-eval-reminder`;
+
+const makeFinalEvalReminderJobKey = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => `send-email-${instanceId}-${pubId}-${evaluator.userId}-final-eval-reminder`;
+
+const makeFollowUpToFinalEvalReminderJobKey = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => `send-email-${instanceId}-${pubId}-${evaluator.userId}-follow-up-to-final-eval-reminder`;
+
+const makeNoticeOfNoSubmitJobKey = (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => `send-email-${instanceId}-${pubId}-${evaluator.userId}-no-submit-notice`;
 
 // sent to the community manager
 export const scheduleNoReplyNotificationEmail = async (
@@ -397,7 +434,7 @@ export const sendAcceptedEmail = async (
 };
 
 // Send prompt evaluation bonus reminder email
-export const sendPromptEvalBonusReminderEmail = async (
+export const schedulePromptEvalBonusReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
@@ -440,7 +477,7 @@ export const sendPromptEvalBonusReminderEmail = async (
 };
 
 // Send final prompt evaluation bonus reminder email
-export const sendFinalPromptEvalBonusReminderEmail = async (
+export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
@@ -480,7 +517,7 @@ export const sendFinalPromptEvalBonusReminderEmail = async (
 };
 
 // Send evaluation reminder email
-export const sendEvaluationReminderEmail = async (
+export const scheduleEvaluationReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
@@ -521,7 +558,7 @@ export const sendEvaluationReminderEmail = async (
 };
 
 // Send final evaluation reminder email
-export const sendFinalEvaluationReminderEmail = async (
+export const scheduleFinalEvaluationReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
@@ -555,7 +592,7 @@ export const sendFinalEvaluationReminderEmail = async (
 };
 
 // Send follow-up to evaluation reminder email
-export const sendFollowUpToFinalEvaluationReminderEmail = async (
+export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
@@ -628,4 +665,20 @@ export const sendNoticeOfNoSubmitEmail = async (
 			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 		},
 	});
+};
+// unschedules all the deadline reminder emails
+export const unscheduleAllDeadlineReminderEmails = async (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWhoAccepted
+) => {
+	const jobKeys = [
+		makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator),
+		makeFinalPromptEvalBonusReminderJobKey(instanceId, pubId, evaluator),
+		makeEvalReminderJobKey(instanceId, pubId, evaluator),
+		makeFinalEvalReminderJobKey(instanceId, pubId, evaluator),
+		makeFollowUpToFinalEvalReminderJobKey(instanceId, pubId, evaluator),
+		makeNoticeOfNoSubmitJobKey(instanceId, pubId, evaluator),
+	];
+	return Promise.all(jobKeys.map((jobKey) => client.unscheduleEmail(instanceId, jobKey)));
 };
