@@ -43,17 +43,13 @@ export default function ForgotForm() {
 								onChange={(evt) => setEmail(evt.target.value)}
 								placeholder="example@mail.com"
 							/>
-							{isLoading ? (
-								<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
-							) : (
-								<Button
-									variant="outline"
-									type="submit"
-									disabled={!email}
-								>
-									Send password reset email
-								</Button>
-							)}
+
+							<Button variant="outline" type="submit" disabled={!email || isLoading}>
+								Send password reset email
+								{isLoading && (
+									<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
+								)}
+							</Button>
 
 							{failure && (
 								<div className={"text-red-700 my-4"}>Error reseting password</div>

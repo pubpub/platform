@@ -54,17 +54,11 @@ export default function ResetForm() {
 							type="password"
 							onChange={(evt) => setPassword(evt.target.value)}
 						/>
-						{isLoading ? (
-							<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
-						) : (
-							<Button
-								variant="outline"
-								type="submit"
-								disabled={!password || isLoading}
-							>
-								Set new password
-							</Button>
-						)}
+
+						<Button variant="outline" type="submit" disabled={!password || isLoading}>
+							Set new password
+							{isLoading && <Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+						</Button>
 
 						{error && (
 							<div className={"text-red-700 my-4"}>

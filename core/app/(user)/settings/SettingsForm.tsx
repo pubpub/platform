@@ -157,14 +157,12 @@ export default function SettingsForm({
 				<p className="my-4">
 					Click below to receive an email with a secure link for reseting yor password.
 				</p>
-				{!resetSuccess &&
-					(!resetIsLoading ? (
-						<Button onClick={resetPassword}>
-							Send password reset email
-						</Button>
-					) : (
-						<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
-					))}
+				{!resetSuccess && (
+					<Button onClick={resetPassword} disabled={resetIsLoading}>
+						Send password reset email
+						{resetIsLoading && <Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+					</Button>
+				)}
 				{resetSuccess && (
 					<div className="text-green-700">
 						Password reset email sent! Please check your inbox.
