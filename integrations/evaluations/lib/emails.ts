@@ -5,7 +5,6 @@ import {
 	EvaluatorWithInvite,
 	InstanceConfig,
 } from "~/lib/types";
-import { SendEmailResponseBody } from "../../../packages/contracts";
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
@@ -287,8 +286,7 @@ ${notificationFooter}`,
 	});
 };
 
-// sent to the evaluator
-
+// emails sent to the evaluator
 /**
  *
  * Sends an email to the evaluator with the invitation to evaluate the pub.
@@ -325,7 +323,7 @@ export const sendInviteEmail = async (
 };
 
 /**
- * Sends an email to the evaluator as a reminder to accept the invitation to evaluate the pub.
+ * Schedules an email to the evaluator as a reminder to accept the invitation to evaluate the pub.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -433,7 +431,14 @@ export const sendAcceptedEmail = async (
 	});
 };
 
-// Send prompt evaluation bonus reminder email
+/**
+ * Schedules a reminder email to an evaluator for prompt evaluation bonus.
+ * @param instanceId - The ID of the instance.
+ * @param instanceConfig - The configuration of the instance.
+ * @param pubId - The ID of the publication.
+ * @param evaluator - The evaluator who accepted the evaluation.
+ * @returns A promise that resolves when the email is sent.
+ */
 export const schedulePromptEvalBonusReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -441,42 +446,51 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
-	const reminderDeadline = new Date(deadline.getTime() - 14 * (1000 * 60 * 60 * 24));
-	return client.sendEmail(instanceId, {
-		to: {
-			userId: evaluator.userId,
-		},
-		subject: `[Unjournal] Reminder to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for prompt evaluation bonus`,
-		message: `<p>Hi {{user.firstName}},</p>
+	const reminderDeadline = new Date(deadline.getTime() - 21 * (1000 * 60 * 60 * 24));
+	const jobKey = makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
+	const runAt = reminderDeadline;
+	return client.scheduleEmail(
+		instanceId,
+		{
+			to: {
+				userId: evaluator.userId,
+			},
+			subject: `[Unjournal] Reminder to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for prompt evaluation bonus`,
+			message: `<p>Hi {{user.firstName}},</p>
 	  <p>Thanks again for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for The Unjournal.</p>
-	  <p>This note is a reminder to submit your evaluation by ${new Date(
-			reminderDeadline.getTime() - 14 * (1000 * 60 * 60 * 24)
-		).toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${new Date(
-			deadline.getTime()
-		).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+	  <p>This note is a reminder to submit your evaluation by ${reminderDeadline.toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${deadline.toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
 	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
-		include: {
-			pubs: {
-				submission: pubId,
+			include: {
+				pubs: {
+					submission: pubId,
+				},
+				users: {
+					invitor: evaluator.invitedBy,
+				},
 			},
-			users: {
-				invitor: evaluator.invitedBy,
+			extra: {
+				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 			},
 		},
-		extra: {
-			evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
-		},
-	});
+		{ jobKey, runAt }
+	);
 };
 
-// Send final prompt evaluation bonus reminder email
+/**
+ * Schedules a final reminder email to an evaluator for prompt evaluation bonus.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -516,7 +530,14 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	});
 };
 
-// Send evaluation reminder email
+/**
+ * Schedules a reminder email to an evaluator to submit their evaluation.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const scheduleEvaluationReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -557,7 +578,14 @@ export const scheduleEvaluationReminderEmail = async (
 	});
 };
 
-// Send final evaluation reminder email
+/**
+ * Schedules a final reminder email to an evaluator to submit their evaluation.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const scheduleFinalEvaluationReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -591,7 +619,14 @@ export const scheduleFinalEvaluationReminderEmail = async (
 	});
 };
 
-// Send follow-up to evaluation reminder email
+/**
+ * Schedules a follow-up to evaluation reminder email to an evaluator.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -629,7 +664,14 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 	});
 };
 
-// Send notice of no submit email
+/**
+ * Schedules a notice of no submit email to an evaluator.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const sendNoticeOfNoSubmitEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -666,7 +708,16 @@ export const sendNoticeOfNoSubmitEmail = async (
 		},
 	});
 };
-// unschedules all the deadline reminder emails
+
+/**
+ * Unschedules all the deadline reminder emails.
+ * `client.unscheduleEmail()` returns no-op for emails that have been
+ * sent, allowing us to call it without checking if an error
+ * @param instanceId
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const unscheduleAllDeadlineReminderEmails = async (
 	instanceId: string,
 	pubId: string,
