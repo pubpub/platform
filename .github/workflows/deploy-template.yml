@@ -5,15 +5,17 @@ name: aws ecs deploy template
 on:
   workflow_call:
     inputs:
-      service-name: # example: core
+      service: # example: core
         required: true
         type: string
-      env-proper-name: # example: blake
+      proper-name: # example: blake
         required: true
         type: string
       environment: # example: staging
         required: true
         type: string
+      image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
+        type: string      # use this to force a container version.
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -22,11 +24,11 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: pubpub-v7-${{ inputs.service-name }}
-  ECS_SERVICE: ${{ inputs.env-proper-name }}-${{inputs.service-name}}
-  ECS_CLUSTER: ${{inputs.env-proper-name}}-ecs-cluster-${{inputs.environment}}
-  ECS_TASK_DEFINITION_TEMPLATE: ${{ inputs.env-proper-name }}-${{inputs.service-name}}
-  CONTAINER_NAME: ${{inputs.service-name}}
+  ECR_REPOSITORY: pubpub-v7-${{ inputs.service }}
+  ECS_SERVICE: ${{ inputs.proper-name }}-${{inputs.service}}
+  ECS_CLUSTER: ${{inputs.proper-name}}-ecs-cluster-${{inputs.environment}}
+  ECS_TASK_DEFINITION_TEMPLATE: ${{ inputs.proper-name }}-${{inputs.service}}
+  CONTAINER_NAME: ${{inputs.service}}
 
 jobs:
   deploy:
@@ -46,9 +48,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Get short sha
-        id: shortsha
-        run: echo "sha_short=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
+      - name: Get image tag based on SHA
+        id: gettag
+        env:
+          OVERRIDE: ${{inputs.image-tag-override}}
+        # use shell substitution
+        run: echo "tag=${OVERRIDE:-$(git describe --always --abbrev=40 --dirty)}" >> $GITHUB_OUTPUT
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -65,7 +70,7 @@ jobs:
         id: write-tag
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.shortsha.outputs.sha_short }}
+          IMAGE_TAG: ${{ steps.gettag.outputs.tag }}
         run: |
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 

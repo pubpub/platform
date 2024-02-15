@@ -5,7 +5,7 @@ name: aws ecr build template
 on:
   workflow_call:
     inputs:
-      package-name:
+      package:
         required: true
         type: string
     secrets:
@@ -48,7 +48,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.shortsha.outputs.sha_short }}
-          PACKAGE: ${{ inputs.package-name }}
+          PACKAGE: ${{ inputs.package }}
         run: |
           # Build a docker container and
           # push it to ECR so that it can
