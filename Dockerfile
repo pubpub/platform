@@ -40,9 +40,11 @@ RUN pnpm --filter ${PACKAGE} build
 RUN pnpm --filter ${PACKAGE} --prod deploy /tmp/app
 
 # Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
-RUN [[ ${PACKAGE} == core ]] && \
-    find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
-    | xargs -r -I{} sh -c "rm -rf /tmp/app/{} && cp -R {} /tmp/app/{}"
+RUN if [[ ${PACKAGE} == core ]]; \\
+    then \
+      find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
+      | xargs -r -I{} sh -c "rm -rf /tmp/app/{} && cp -R {} /tmp/app/{}" \
+    ; fi
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
