@@ -377,6 +377,9 @@ importers:
       '@pubpub/sdk':
         specifier: workspace:*
         version: link:../packages/sdk
+      contracts:
+        specifier: workspace:*
+        version: link:../packages/contracts
       graphile-worker:
         specifier: ^0.15.0
         version: 0.15.0
