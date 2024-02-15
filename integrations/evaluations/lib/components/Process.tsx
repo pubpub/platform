@@ -8,15 +8,43 @@ export const Process = (props: Props) => {
 	return (
 		<>
 			<p>
-				We strongly encourage evaluators to complete evaluations relatively quickly, for the
-				benefit of authors, research-users, and the evaluation ecosystem. If you submit the
-				evaluation within that window (by{" "}
-				{new Date(props.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)).toLocaleDateString()} ),
-				you will receive a $100 “prompt evaluation bonus.” After{" "}
-				{props.deadline.toLocaleDateString()}, we will consider re-assigning the evaluation, and
-				later submissions may not be eligible for the full baseline compensation.
+				Deadline for promptness bonus:{" "}
+				{new Date(
+					props.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+				).toLocaleDateString()}
 			</p>
+			<p>Final deadline: {props.deadline.toLocaleDateString()}</p>
 			<h2>About our evaluation process</h2>
+			<p>
+				We ask evaluators to:
+				<ol>
+					<li>
+						Write an evaluation; essentially a high-quality referee report. Consider{" "}
+						<a
+							target="_blank"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
+						>
+							standard guidelines
+						</a>{" "}
+						as well as The Unjournal’s emphases. Write a review: a “standard
+						high-quality referee report,” with some specific considerations. Please try
+						to address any specific considerations mentioned in our bespoke evaluation
+						notes, or any specific requests from the evaluation manager.
+					</li>
+					<li>Give quantitative metrics and predictions.</li>
+					<li>Answer a short questionnaire about your background and our processes.</li>
+				</ol>
+			</p>
+			<p>
+				We suggest that you read and consult our the full evaluation guidelines{" "}
+				<a
+					target="_blank"
+					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#publishing-and-signing-reviews-considerations-exceptions"
+				>
+					here
+				</a>{" "}
+				(or download the pdf, with all boxes unfolded).
+			</p>
 			<p>
 				As a sign that we{" "}
 				<a
@@ -38,56 +66,6 @@ export const Process = (props: Props) => {
 					remain anonymous or to 'sign your review'
 				</a>{" "}
 				and take credit.
-			</p>
-			<p>We ask evaluators to:</p>
-			<ol>
-				<li>
-					Write a review: a 'standard high-quality referee report,' with some{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#specific-requests-for-focus-or-feedback"
-					>
-						specific considerations
-					</a>
-					.
-				</li>
-				<li>
-					Give{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories"
-					>
-						quantitative metrics and predictions
-					</a>
-					.
-				</li>
-				<li>
-					Answer a{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#survey-questions"
-					>
-						short questionnaire
-					</a>{" "}
-					about your background and our processes.
-				</li>
-			</ol>
-			<p>
-				You can read the full guidelines{" "}
-				<a
-					target="_blank"
-					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#publishing-and-signing-reviews-considerations-exceptions"
-				>
-					here
-				</a>{" "}
-				(or{" "}
-				<a
-					target="_blank"
-					href="https://www.dropbox.com/s/jzxz11gmkrh8lbn/evaluations_as_pdf.pdf?dl=0"
-				>
-					download the pdf
-				</a>
-				).
 			</p>
 		</>
 	);

@@ -8,6 +8,7 @@ import { Dashboard } from "@uppy/react";
 // TODO: impot on prod?
 import "@uppy/core/dist/style.min.css";
 import "@uppy/dashboard/dist/style.min.css";
+import "./fileUpload.css";
 
 import AwsS3 from "@uppy/aws-s3";
 
