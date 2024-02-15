@@ -16,6 +16,7 @@
 		"type-check": "tsc",
 		"type-check-watch": "tsc --watch"
 	},
+  "files": [".next"],
 	"prisma": {
 		"seed": "ts-node prisma/seed.ts"
 	},
