@@ -27,6 +27,7 @@ module "ecs_service" {
       }]
 
       environment = var.configuration.environment
+      secrets = var.configuration.secrets
 
       readonly_root_filesystem = false
 

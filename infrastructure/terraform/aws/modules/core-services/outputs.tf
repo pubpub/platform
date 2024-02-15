@@ -5,12 +5,15 @@ locals {
   db_sslmode = "require"
 }
 
-output "api_key_secret_id" {
-  value = aws_secretsmanager_secret.api_key.id
-}
-
-output "rds_db_password_id" {
-  value = aws_secretsmanager_secret.rds_db_password.id
+output "secrets" {
+  value = {
+    api_key = aws_secretsmanager_secret.api_key.id
+    rds_db_password = aws_secretsmanager_secret.rds_db_password.id
+    jwt_secret = aws_secretsmanager_secret.jwt_secret.id
+    sentry_auth_token = aws_secretsmanager_secret.sentry_auth_token.id
+    supabase_service_role_key = aws_secretsmanager_secret.supabase_service_role_key.id
+    supabase_webhooks_api_key = aws_secretsmanager_secret.supabase_webhooks_api_key.id
+  }
 }
 
 output "rds_connection_string_sans_password" {

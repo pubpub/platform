@@ -88,4 +88,15 @@ resource "aws_db_instance" "core_postgres" {
 
 
 ### TODO : add Sentry? other stuff?
-
+resource "aws_secretsmanager_secret" "jwt_secret" {
+  name = "jwt-secret-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "sentry_auth_token" {
+  name = "sentry-auth-token-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "supabase_service_role_key" {
+  name = "supabase-service-role-key-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "supabase_webhooks_api_key" {
+  name = "supabase-webhooks-api-key-${var.cluster_info.name}-${var.cluster_info.environment}"
+}

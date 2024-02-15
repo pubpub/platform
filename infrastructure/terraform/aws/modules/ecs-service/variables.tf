@@ -47,5 +47,9 @@ variable "configuration" {
       name = string
       value = string
     }))
+    secrets = list(object({
+      name = string
+      valueFrom = string
+    }))
   })
 }

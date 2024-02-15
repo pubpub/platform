@@ -56,8 +56,12 @@ module "service_core" {
     ]
 
     secrets = [
-      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.rds_db_password_id },
-      { name = "API_KEY", valueFrom = module.core_dependency_services.api_key_secret_id },
+      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+      { name = "JWT_SECRET", valueFrom = module.core_dependency_services.secrets.jwt_secret },
+      { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+      { name = "SUPABASE_WEBHOOKS_API_KEY", valueFrom = module.core_dependency_services.secrets.supabase_webhooks_api_key },
+      { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
     ]
   }
 }
@@ -79,8 +83,8 @@ module "service_flock" {
     ]
 
     secrets = [
-      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.rds_db_password_id },
-      { name = "API_KEY", valueFrom = module.core_dependency_services.api_key_secret_id },
+      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
     ]
   }
 }
