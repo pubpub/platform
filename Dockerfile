@@ -43,7 +43,10 @@ RUN pnpm --filter ${PACKAGE} --prod deploy /tmp/app
 RUN if [[ ${PACKAGE} == core ]]; \
     then \
       find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
-      | xargs -r -I{} sh -c "rm -rf /tmp/app/{} && cp -R {} /tmp/app/{}" \
+      | xargs -r -I{} sh -c " \
+        rm -rf /tmp/app/{} && \
+        mkdir -p /tmp/app/{} && \
+        cp -a {}/. /tmp/app/{}/" \
     ; fi
 
 ################################################################################
