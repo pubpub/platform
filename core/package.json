@@ -15,7 +15,7 @@
 		"type-check": "tsc",
 		"type-check-watch": "tsc --watch"
 	},
-  "files": [".next"],
+  "files": [".next", "prisma", "supabase"],
 	"prisma": {
 		"seed": "ts-node prisma/seed.ts"
 	},
@@ -25,6 +25,7 @@
 		"@faker-js/faker": "^8.0.2",
 		"@hookform/resolvers": "^3.3.1",
 		"@prisma/client": "^5.2.0",
+		"prisma": "^5.2.0",
 		"@sentry/nextjs": "^7.72.0",
 		"@stoplight/elements": "^7.12.2",
 		"@supabase/supabase-js": "^2.33.2",
@@ -66,7 +67,6 @@
 		"csv-parse": "^5.5.2",
 		"dotenv-cli": "^7.2.1",
 		"postcss": "^8.4.27",
-		"prisma": "^5.2.0",
 		"supabase": "^1.68.6",
 		"tailwindcss": "^3.3.3",
 		"ts-node": "^10.9.1",

@@ -110,6 +110,9 @@ importers:
       openapi3-ts:
         specifier: ^4.1.2
         version: 4.1.2
+      prisma:
+        specifier: ^5.2.0
+        version: 5.2.0
       react:
         specifier: 18.2.0
         version: 18.2.0
@@ -177,9 +180,6 @@ importers:
       postcss:
         specifier: ^8.4.27
         version: 8.4.27
-      prisma:
-        specifier: ^5.2.0
-        version: 5.2.0
       supabase:
         specifier: ^1.68.6
         version: 1.68.6
@@ -3158,6 +3158,7 @@ packages:
   /@prisma/engines@5.2.0:
     resolution: {integrity: sha512-dT7FOLUCdZmq+AunLqB1Iz+ZH/IIS1Fz2THmKZQ6aFONrQD/BQ5ecJ7g2wGS2OgyUFf4OaLam6/bxmgdOBDqig==}
     requiresBuild: true
+    dev: false
 
   /@radix-ui/number@1.0.1:
     resolution: {integrity: sha512-T5gIdVO2mmPW3NNhjNgEP3cqMXjXL9UbO0BzWcXfvdBs+BohbQxvd/K5hSVKmn9/lbTdsQVKbUcP5WLCwvUbBg==}
@@ -9577,6 +9578,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@prisma/engines': 5.2.0
+    dev: false
 
   /prismjs@1.29.0:
     resolution: {integrity: sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q==}
