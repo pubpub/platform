@@ -6,7 +6,6 @@ on:
   workflow_call:
     inputs:
       package:
-        required: true
         type: string
     secrets:
       AWS_ACCESS_KEY_ID:
@@ -35,20 +34,32 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Get short sha
-        id: shortsha
-        run: echo "sha_short=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Get image label
+        id: label
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          sha_short=$(git describe --always --abbrev=40 --dirty)
+          if [[ -z $PACKAGE ]]
+          then
+            package_suffix=""
+            echo "target=monorepo" >> $GITHUB_OUTPUT
+          else
+            package_suffix="-${PACKAGE}"
+            echo "target=app" >> $GITHUB_OUTPUT
+          fi
+          echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
+
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.shortsha.outputs.sha_short }}
           PACKAGE: ${{ inputs.package }}
+          LABEL: ${{ steps.label.outputs.label }}
+          TARGET: ${{ steps.label.outputs.target }}
         run: |
           # Build a docker container and
           # push it to ECR so that it can
@@ -56,9 +67,8 @@ jobs:
           docker build \
             --platform linux/amd64 \
             --build-arg PACKAGE=$PACKAGE \
-            --build-arg PACKAGE_DIR=$PACKAGE_DIR \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG \
+            --target $TARGET \
+            -t $LABEL \
             .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-$PACKAGE:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          docker push $LABEL
 

@@ -7,7 +7,7 @@
 ARG NODE_VERSION=20.6.0
 ARG PNPM_VERSION=8.14.3
 
-ARG PACKAGE=core
+ARG PACKAGE
 ARG PORT=3000
 
 ################################################################################
@@ -35,9 +35,12 @@ COPY . .
 # Run the build script.
 RUN pnpm install --frozen-lockfile
 RUN pnpm p:build
-RUN pnpm --filter ${PACKAGE} build
 
-RUN pnpm --filter ${PACKAGE} --prod deploy /tmp/app
+RUN if [[ ! -z $PACKAGE ]]; \
+    then \
+      pnpm --filter $PACKAGE build \
+      pnpm --filter $PACKAGE --prod deploy /tmp/app \
+    ; fi
 
 # Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
 RUN if [[ ${PACKAGE} == core ]]; \
