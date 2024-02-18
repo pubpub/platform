@@ -149,14 +149,15 @@ resource "aws_lb_target_group" "main" {
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
-  # health_check {
-  #   path                = var.health_check_path
-  #   interval            = "30"
-  #   protocol            = "HTTP"
-  #   matcher             = "200"
-  #   timeout             = "3"
-  #   unhealthy_threshold = "2"
-  # }
+  health_check {
+    path                = "/"
+    interval            = "30"
+    protocol            = "HTTP"
+    matcher             = "200,307"
+    timeout             = "5"
+    unhealthy_threshold = "3"
+    healthy_threshold   = "5"
+  }
 }
 
 resource "aws_lb_listener" "http" {

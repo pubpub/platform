@@ -43,7 +43,6 @@ module "ecs_service" {
     }
   }
 
-
   load_balancer = {
     service = {
       target_group_arn = var.cluster_info.lb_target_group_arn
