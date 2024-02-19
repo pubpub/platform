@@ -52,6 +52,11 @@ RUN if [[ ${PACKAGE} == core ]]; \
         cp -a {}/. /tmp/app/{}/" \
     ; fi
 
+RUN if [[ ${PACKAGE} == core ]]; \
+    then \
+        cp core/.env.docker /tmp/app/.env" \
+    ; fi
+
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
 # where the necessary files are copied from the build stage.

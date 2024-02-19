@@ -19,3 +19,13 @@ output "secrets" {
 output "rds_connection_string_sans_password" {
   value = "postgresql://${local.db_user}@${local.db_host}:5432/${local.db_name}?sslmode=${local.db_sslmode}"
 }
+
+output "rds_connection_components" {
+  value = {
+    user = local.db_user
+    database = local.db_name
+    host = local.db_host
+    port = "5432"
+    sslmode = local.db_sslmode
+  }
+}

@@ -54,7 +54,11 @@ module "service_core" {
   configuration = {
     container_port = 3000
     environment = [
-      { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+      # { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+      { name = "DB_USER", value = module.core_dependency_services.rds_connection_components.user },
+      { name = "DB_DATABASE", value = module.core_dependency_services.rds_connection_components.database },
+      { name = "DB_HOST", value = module.core_dependency_services.rds_connection_components.host },
+      { name = "DB_PORT", value = module.core_dependency_services.rds_connection_components.port },
       { name = "ASSETS_REGION", value = var.region },
       { name = "ASSETS_BUCKET_NAME", value = var.ASSETS_BUCKET_NAME },
       { name = "ASSETS_UPLOAD_KEY", value = var.ASSETS_UPLOAD_KEY },
@@ -64,7 +68,7 @@ module "service_core" {
     ]
 
     secrets = [
-      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+      { name = "DB_PASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
       { name = "JWT_SECRET", valueFrom = module.core_dependency_services.secrets.jwt_secret },
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
