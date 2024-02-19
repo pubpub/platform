@@ -24,7 +24,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: pubpub-v7-${{ inputs.service }}
+  ECR_REPOSITORY_PREFIX: pubpub-v7
   ECS_SERVICE: ${{ inputs.proper-name }}-${{inputs.service}}
   ECS_CLUSTER: ${{inputs.proper-name}}-ecs-cluster-${{inputs.environment}}
   ECS_TASK_DEFINITION_TEMPLATE: ${{ inputs.proper-name }}-${{inputs.service}}
@@ -70,10 +70,10 @@ jobs:
         id: label
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.gettag.outputs.tag }}
         run: |
-          sha_short=$(git describe --always --abbrev=40 --dirty)
-          echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}:$sha_short" >> $GITHUB_OUTPUT
-          echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$sha_short" >> $GITHUB_OUTPUT
+          echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def-service
