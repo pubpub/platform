@@ -8,7 +8,9 @@
 		"start": "next start",
 		"lint": "next lint"
 	},
-  "files": [".next"],
+	"files": [
+		".next"
+	],
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.1",
 		"@pubpub/sdk": "workspace:*",
@@ -38,6 +40,7 @@
 		"postcss": "^8.4.27",
 		"tailwindcss": "^3.3.3",
 		"tsconfig": "workspace:*",
+		"env": "workspace:*",
 		"typescript": "5.1.3"
 	}
 }
