@@ -38,9 +38,9 @@ RUN pnpm p:build
 
 RUN if [[ ! -z $PACKAGE ]]; \
     then \
-      pnpm --filter $PACKAGE build \
-      pnpm --filter $PACKAGE --prod deploy /tmp/app \
-    ; fi
+      pnpm --filter $PACKAGE build ; \
+      pnpm --filter $PACKAGE --prod deploy /tmp/app ; \
+    fi
 
 # Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
 RUN if [[ ${PACKAGE} == core ]]; \
@@ -49,13 +49,13 @@ RUN if [[ ${PACKAGE} == core ]]; \
       | xargs -r -I{} sh -c " \
         rm -rf /tmp/app/{} && \
         mkdir -p /tmp/app/{} && \
-        cp -a {}/. /tmp/app/{}/" \
-    ; fi
+        cp -a {}/. /tmp/app/{}/" ; \
+    fi
 
 RUN if [[ ${PACKAGE} == core ]]; \
     then \
-        cp core/.env.docker /tmp/app/.env" \
-    ; fi
+        cp core/.env.docker /tmp/app/.env ; \
+    fi
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
