@@ -15,7 +15,7 @@ module "ecs_service" {
   # task_role_arn            = aws_iam_role.ecs_task_role.arn
 
   # TEMPLATE Container definition(s).
-  container_definitions = {
+  container_definitions = merge({
 
     "${var.service_name}" = {
       essential = true
@@ -30,6 +30,11 @@ module "ecs_service" {
       secrets = var.configuration.secrets
 
       readonly_root_filesystem = false
+      dependencies = [for ic in var.init_containers: {
+        containerName = ic.name
+        condition     = "SUCCESS"
+      }]
+
 
       log_configuration = {
         logDriver = "awslogs",
@@ -41,15 +46,36 @@ module "ecs_service" {
       }
       # memory_reservation = 100
     }
-  }
+  },
+  {
+    for ic in var.init_containers: ic.name => {
+      essential = false
+      image     = ic.image
+      command = ic.command
 
-  load_balancer = {
+      environment = var.configuration.environment
+      secrets = var.configuration.secrets
+
+      readonly_root_filesystem = false
+
+      log_configuration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group = var.cluster_info.cloudwatch_log_group_name,
+          awslogs-region = var.cluster_info.region,
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+    }
+  })
+
+  load_balancer = var.set_lb_target ? {
     service = {
       target_group_arn = var.cluster_info.lb_target_group_arn
       container_name   = var.service_name
       container_port   = var.configuration.container_port
     }
-  }
+  } : {}
 
   subnet_ids = var.cluster_info.private_subnet_ids
   security_group_ids = var.cluster_info.container_security_group_ids

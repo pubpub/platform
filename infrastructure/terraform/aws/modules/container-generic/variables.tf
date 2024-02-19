@@ -37,6 +37,22 @@ variable "resources" {
   }
 }
 
+variable "set_lb_target" {
+  description = "whether this service is addressible from the main Load Balancer"
+  type = bool
+  default = false
+}
+
+variable "init_containers" {
+  description = "list of init container specs to run before starting"
+  type = list(object({
+    name = string
+    image = string
+    command = list(string)
+  }))
+  default = []
+}
+
 variable "configuration" {
   description = "Container configuration options"
 

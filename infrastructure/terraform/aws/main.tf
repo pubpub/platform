@@ -36,12 +36,20 @@ module "core_dependency_services" {
 }
 
 module "service_core" {
-  source = "./modules/ecs-service"
+  source = "./modules/container-generic"
 
   service_name = "core"
   cluster_info = module.cluster.cluster_info
 
   repository_url = module.cluster.ecr_repository_urls.core
+
+  set_lb_target = true
+
+  init_containers = [{
+    name = "migrations"
+    image = "${module.cluster.ecr_repository_urls.root}:latest"
+    command = ["npx", "prisma", "migrate", "deploy"]
+  }]
 
   configuration = {
     container_port = 3000
@@ -67,7 +75,7 @@ module "service_core" {
 }
 
 module "service_flock" {
-  source = "./modules/ecs-service"
+  source = "./modules/container-generic"
 
   service_name = "jobs"
   cluster_info = module.cluster.cluster_info
