@@ -17,6 +17,22 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
+  #dispatch event means you can call it from the Github UI and set inputs on a form.
+  # MUST match the inputs of the workflow_call.
+  workflow_dispatch:
+    inputs:
+      proper-name:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
 jobs:
   deploy-core:
     uses: ./.github/workflows/deploy-template.yml
