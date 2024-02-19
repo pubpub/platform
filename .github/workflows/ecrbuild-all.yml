@@ -11,8 +11,16 @@ on:
         required: true
 
 jobs:
+  build-base:
+    uses: ./.github/workflows/ecrbuild-template.yml
+    secrets:
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
   build-core:
     uses: ./.github/workflows/ecrbuild-template.yml
+    needs:
+      - build-base
     with:
       package: core
     secrets:
@@ -21,6 +29,8 @@ jobs:
 
   build-intg-submissions:
     uses: ./.github/workflows/ecrbuild-template.yml
+    needs:
+      - build-base
     with:
       package: integration-submissions
     secrets:
@@ -29,6 +39,8 @@ jobs:
 
   build-jobs:
     uses: ./.github/workflows/ecrbuild-template.yml
+    needs:
+      - build-base
     with:
       package: jobs
     secrets:
