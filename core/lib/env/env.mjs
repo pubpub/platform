@@ -10,6 +10,9 @@ import { z } from "zod";
 
 console.log(process.env);
 export const env = createEnv({
+	shared: {
+		NODE_ENV: z.enum(["development", "production", "test"]),
+	},
 	server: {
 		API_KEY: z.string(),
 		ASSETS_BUCKET_NAME: z.string(),
@@ -20,7 +23,6 @@ export const env = createEnv({
 		JWT_SECRET: z.string(),
 		MAILGUN_SMTP_PASSWORD: z.string(),
 		MAILGUN_SMTP_USERNAME: z.string(),
-		NODE_ENV: z.enum(["development", "production", "test"]),
 		SUPABASE_SERVICE_ROLE_KEY: z.string(),
 		SUPABASE_WEBHOOKS_API_KEY: z.string(),
 		MAILGUN_SMTP_HOST: z.string(),
