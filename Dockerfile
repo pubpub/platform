@@ -40,6 +40,7 @@ RUN if [[ ! -z $PACKAGE ]]; \
     then \
       pnpm --filter $PACKAGE build ; \
       pnpm --filter $PACKAGE --prod deploy /tmp/app ; \
+      cp core/.env.docker /tmp/app/.env ; \
     fi
 
 # Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
@@ -50,11 +51,6 @@ RUN if [[ ${PACKAGE} == core ]]; \
         rm -rf /tmp/app/{} && \
         mkdir -p /tmp/app/{} && \
         cp -a {}/. /tmp/app/{}/" ; \
-    fi
-
-RUN if [[ ${PACKAGE} == core ]]; \
-    then \
-        cp core/.env.docker /tmp/app/.env ; \
     fi
 
 ################################################################################

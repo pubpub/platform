@@ -171,6 +171,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+# TODO - add ACM certificates to support TLS
 
 # logging
 

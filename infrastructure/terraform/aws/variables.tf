@@ -28,6 +28,10 @@ variable "NEXT_PUBLIC_SUPABASE_URL" {
   description = "URL to Supabase public address for this install"
   type = string
 }
+variable "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY" {
+  description = "Supabase anon public key"
+  type = string
+}
 
 # TODO deprecate this in favor of a Terraformed bucket
 variable "ASSETS_BUCKET_NAME" {

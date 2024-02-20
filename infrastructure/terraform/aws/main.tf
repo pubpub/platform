@@ -67,6 +67,7 @@ module "service_core" {
       { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
       { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
       { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+      { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
     ]
 
     secrets = [
