@@ -1,7 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "contracts";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
-import { serverEnv } from "~/lib/env/serverEnv";
+import { env } from "~/lib/env/env.mjs";
 import {
 	createPub,
 	deletePub,
@@ -24,7 +24,7 @@ import { findOrCreateUser } from "~/lib/server/user";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
-	compareAPIKeys(serverEnv.API_KEY, apiKey);
+	compareAPIKeys(env.API_KEY, apiKey);
 };
 
 // TODO: verify pub belongs to integrationInstance probably in some middleware

@@ -6,6 +6,8 @@ import { Integration } from "~/lib/Integration";
 import { getInstanceConfig } from "~/lib/instance";
 import { cookie } from "~/lib/request";
 import { InstanceConfig } from "~/lib/types";
+import { env } from "~/lib/env.mjs";
+
 import "./globals.css";
 
 export const metadata = {
@@ -25,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 			<body>
 				<Integration<InstanceConfig>
 					name="Evaluations"
-					user={{ ...user, avatar: `${process.env.PUBPUB_URL}/${user.avatar}` }}
+					user={{ ...user, avatar: `${env.PUBPUB_URL}/${user.avatar}` }}
 					config={instanceConfig}
 				>
 					{children}

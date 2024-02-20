@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { env } from "~/lib/env/env.mjs";}
+import { env } from "~/lib/env/env.mjs";
 
 export const smtpclient = nodemailer.createTransport({
 	pool: true,

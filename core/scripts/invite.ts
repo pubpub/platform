@@ -6,12 +6,11 @@ import { formatSupabaseError } from "../lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
-import { clientEnv } from "~/lib/env/clientEnv";
-import { serverEnv } from "~/lib/env/serverEnv";
+import { env } from "~/lib/env/env.mjs";
 
 const getServerSupabase = () => {
-	const url = clientEnv.NEXT_PUBLIC_SUPABASE_URL;
-	const key = serverEnv.SUPABASE_SERVICE_ROLE_KEY;
+	const url = env.NEXT_PUBLIC_SUPABASE_URL;
+	const key = env.SUPABASE_SERVICE_ROLE_KEY;
 	if (!url || !key) {
 		throw new Error("Missing Supabase parameters");
 	}
@@ -28,7 +27,7 @@ const inviteUser = async (email, firstName, lastName) => {
 		email,
 		password: randomUUID(),
 		options: {
-			emailRedirectTo: `${clientEnv.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			emailRedirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 			data: {
 				firstName,
 				lastName,

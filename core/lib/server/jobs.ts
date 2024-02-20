@@ -1,6 +1,6 @@
 import { JobOptions, SendEmailRequestBody } from "contracts";
 import { makeWorkerUtils, Job } from "graphile-worker";
-import { serverEnv } from "../env/serverEnv";
+import { env } from "../env/env.mjs";
 
 export type JobsClient = {
 	scheduleEmail(
@@ -13,7 +13,7 @@ export type JobsClient = {
 
 export const makeJobsClient = async (): Promise<JobsClient> => {
 	const workerUtils = await makeWorkerUtils({
-		connectionString: serverEnv.DATABASE_URL,
+		connectionString: env.DATABASE_URL,
 	});
 	await workerUtils.migrate();
 	return {
