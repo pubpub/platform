@@ -49,9 +49,7 @@ module "service_core" {
     name = "migrations"
     image = "${module.cluster.ecr_repository_urls.root}:latest"
     command = [
-      "pnpm", "--filter", "core", "exec",
-      "dotenv", "-e", ".env.docker", "--",
-      "prisma", "migrate", "reset", "--force", "--skip-generate",
+      "pnpm", "--filter", "core", "migrate-docker",
     ]
   }]
 
