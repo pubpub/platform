@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"start": "tsx index.ts",
-		"dev": "dotenv -e .env.local tsx index.ts"
+		"dev": "dotenv -e .env.development tsx index.ts"
 	},
   "files": [
     "index.ts"
