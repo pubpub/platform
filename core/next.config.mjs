@@ -1,7 +1,5 @@
 // @ts-check
 
-import "./lib/env/env.mjs";
-
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
