@@ -448,7 +448,8 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const reminderDeadline = new Date(deadline.getTime() - 21 * (1000 * 60 * 60 * 24));
 	const jobKey = makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = reminderDeadline;
+	// const runAt = reminderDeadline;
+	const runAt = new Date(Date.now());
 	return client.scheduleEmail(
 		instanceId,
 		{
@@ -502,7 +503,9 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const reminderDeadline = new Date(deadline.getTime() - 14 * (1000 * 60 * 60 * 24));
 	const jobKey = makeFinalPromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = reminderDeadline;
+	// const runAt = reminderDeadline;
+	const runAt = new Date(Date.now());
+
 	return client.scheduleEmail(
 		instanceId,
 		{
@@ -552,7 +555,8 @@ export const scheduleEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() - 7 * (1000 * 60 * 60 * 24));
+	// const runAt = new Date(deadline.getTime() - 7 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(Date.now());
 
 	return client.scheduleEmail(
 		instanceId,
@@ -606,7 +610,9 @@ export const scheduleFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() - 1 * (1000 * 60 * 60 * 24));
+	// const runAt = new Date(deadline.getTime() - 1 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(Date.now());
+
 	return client.scheduleEmail(
 		instanceId,
 		{
@@ -654,7 +660,9 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFollowUpToFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() + 6 * (1000 * 60 * 60 * 24));
+	// const runAt = new Date(deadline.getTime() + 6 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(Date.now());
+
 	return client.scheduleEmail(
 		instanceId,
 		{
@@ -705,7 +713,9 @@ export const sendNoticeOfNoSubmitEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeNoticeOfNoSubmitJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() + 8 * (1000 * 60 * 60 * 24));
+	// const runAt = new Date(deadline.getTime() + 8 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(Date.now());
+
 	return client.scheduleEmail(
 		instanceId,
 		{
