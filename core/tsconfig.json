@@ -12,7 +12,8 @@
 		"paths": {
 			"~/*": ["./*"]
 		},
-		"strictNullChecks": true
+		"strictNullChecks": true,
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
 	},
 	"ts-node": {
 		"compilerOptions": {
