@@ -48,7 +48,11 @@ module "service_core" {
   init_containers = [{
     name = "migrations"
     image = "${module.cluster.ecr_repository_urls.root}:latest"
-    command = ["npx", "prisma", "migrate", "deploy"]
+    command = [
+      "pnpm", "--filter", "core", "exec",
+      "dotenv", "-e", ".env.docker", "--",
+      "prisma", "migrate", "reset", "--force", "--skip-generate",
+    ]
   }]
 
   configuration = {

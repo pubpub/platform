@@ -29,8 +29,7 @@ resource "aws_secretsmanager_secret_version" "api_key" {
 # generate password and make it accessible through aws secrets manager
 resource "random_password" "rds_db_password" {
   length           = 16
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  special          = false
 }
 
 resource "aws_secretsmanager_secret" "rds_db_password" {
@@ -79,11 +78,6 @@ resource "aws_db_instance" "core_postgres" {
   parameter_group_name        = "default.postgres14"
   skip_final_snapshot         = true
 
-  lifecycle {
-    ignore_changes = [
-       password,
-    ]
-  }
 }
 
 
