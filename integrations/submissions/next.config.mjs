@@ -2,7 +2,7 @@
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
-import "./lib/env/env.mjs";
+import "./lib/env.mjs";
 
 const nextConfig = withPreconstruct({
 	reactStrictMode: true,
