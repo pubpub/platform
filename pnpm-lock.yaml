@@ -374,6 +374,9 @@ importers:
       graphile-worker:
         specifier: ^0.15.0
         version: 0.15.0
+      logger:
+        specifier: workspace:*
+        version: link:../packages/logger
       tsx:
         specifier: ^3.13.0
         version: 3.13.0

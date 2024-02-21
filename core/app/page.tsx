@@ -1,9 +1,12 @@
 import { redirect } from "next/navigation";
 import { getLoginData } from "~/lib/auth/loginData";
 import prisma from "~/prisma/db";
+import { logger } from "logger";
 
 export default async function Page() {
 	const loginData = await getLoginData();
+
+	logger.info("loginData", loginData);
 	// if user and no commuhnmitiy, redirect to settings
 	if (loginData) {
 		let user;
@@ -26,7 +29,7 @@ export default async function Page() {
 			redirect("/login");
 		}
 	} else {
-		redirect("/login")
+		redirect("/login");
 	}
 	return <>Home...</>;
 }

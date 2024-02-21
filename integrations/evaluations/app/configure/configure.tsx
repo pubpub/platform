@@ -57,7 +57,7 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 		message: z.string(),
 	}),
 	// coerce is used here to assert this field is a number, otherwise a vlaidation error will be thrown saying this is a string
-	deadlineLength: z.coerce.number().min(35),
+	deadlineLength: z.coerce.number().min(0),
 	deadlineUnit: z.enum(["days", "months"]),
 });
 

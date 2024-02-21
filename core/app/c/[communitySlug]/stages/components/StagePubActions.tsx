@@ -18,7 +18,6 @@ type Props = {
 };
 
 export const StagePubActions = (props: Props) => {
-	console.log(props.loginData);
 	return (
 		<div className="flex items-end shrink-0">
 			<Move
