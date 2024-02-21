@@ -1,6 +1,6 @@
 set -euxo pipefail
 
-echo "Checking CI: $CI"
+CI=true
 
 npm i -g pnpm@8.7.0
 pnpm install
