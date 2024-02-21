@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev -p 3000",
-		"build": "next build",
+		"build": "SKIP_VALIDATION=true next build",
 		"invite-users": "dotenv -e .env.local ts-node scripts/invite.ts",
 		"lint": "next lint",
 		"migrate-dev": "dotenv -e .env.local prisma migrate dev",
