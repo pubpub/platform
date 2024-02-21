@@ -1,6 +1,7 @@
 // @ts-check
 
 import { createEnv } from "@t3-oss/env-nextjs";
+import { isBuilding } from "utils";
 import { z } from "zod";
 
 export const env = createEnv({
@@ -11,11 +12,10 @@ export const env = createEnv({
 		API_KEY: z.string(),
 		PUBPUB_URL: z.string().url(),
 	},
-	runtimeEnv: {
+	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
-		API_KEY: process.env.API_KEY,
-		PUBPUB_URL: process.env.PUBPUB_URL,
 	},
 	emptyStringAsUndefined: true,
+	skipValidation: Boolean(process.env.CI),
 	client: {},
 });

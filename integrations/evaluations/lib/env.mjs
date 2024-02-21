@@ -11,11 +11,10 @@ export const env = createEnv({
 		API_KEY: z.string(),
 		PUBPUB_URL: z.string().url(),
 	},
-	runtimeEnv: {
+	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
-		API_KEY: process.env.API_KEY,
-		PUBPUB_URL: process.env.PUBPUB_URL,
 	},
 	emptyStringAsUndefined: true,
+	skipValidation: Boolean(process.env.CI),
 	client: {},
 });
