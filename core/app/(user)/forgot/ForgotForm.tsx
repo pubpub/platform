@@ -1,6 +1,6 @@
 "use client";
 import React, { FormEvent, useState } from "react";
-import { Button } from "ui";
+import { Button } from "ui/button";
 import { supabase } from "lib/supabase";
 
 export default function ForgotForm() {

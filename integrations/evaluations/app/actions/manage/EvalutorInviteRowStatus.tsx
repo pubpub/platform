@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Badge } from "ui";
+import { Badge } from "ui/badge";
 import { cn } from "utils";
 import { InviteStatus } from "~/lib/types";
 

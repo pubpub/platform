@@ -4,7 +4,8 @@ import { supabase } from "lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage, Button } from "ui";
+import { Button } from "ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
 

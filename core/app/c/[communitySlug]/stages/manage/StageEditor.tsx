@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger, toast } from "ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import { toast } from "ui/use-toast";
 import { StageFormSchema, moveConstraintSourcesForStage } from "~/lib/stages";
 import { DeepPartial, StagesById, StagePayload } from "~/lib/types";
 import StageForm from "./StageForm";

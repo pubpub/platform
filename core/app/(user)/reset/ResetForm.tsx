@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import { Button } from "ui";
+import { Button } from "ui/button";
 import { formatSupabaseError, supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 
