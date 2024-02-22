@@ -12,6 +12,11 @@ import { Research } from "~/lib/components/Research";
 import { EvaluatorWhoAccepted, InstanceConfig } from "~/lib/types";
 import { submit, upload } from "./actions";
 import { calculateDeadline } from "~/lib/emails";
+import { useToast } from "ui/use-toast";
+import { useLocalStorage } from "ui/hooks";
+import { Form } from "ui/form";
+import { Button } from "ui/button";
+import { Loader2 } from "ui/icon";
 
 type Props = {
 	instanceId: string;
@@ -123,7 +128,7 @@ export function Evaluate(props: Props) {
 						{formFieldsFromSchema}
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
-								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
 							)}
 							Submit Evaluation
 						</Button>

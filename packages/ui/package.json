@@ -125,6 +125,10 @@
 		"./tailwind.config.js": {
 			"module": "./tailwind.config.js",
 			"default": "./tailwind.config.js"
+		},
+		"./styles.css": {
+			"module": "./styles.css",
+			"default": "./styles.css"
 		}
 	},
 	"files": [
@@ -223,6 +227,10 @@
 				"./tailwind.config.js": {
 					"module": "./tailwind.config.js",
 					"default": "./tailwind.config.js"
+				},
+				"./styles.css": {
+					"module": "./styles.css",
+					"default": "./styles.css"
 				}
 			}
 		},
