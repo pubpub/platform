@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-form.cjs.js",
+	"module": "dist/ui-form.esm.js"
+}

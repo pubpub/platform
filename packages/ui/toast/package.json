@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-toast.cjs.js",
+	"module": "dist/ui-toast.esm.js"
+}

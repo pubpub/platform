@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-card.cjs.js",
+	"module": "dist/ui-card.esm.js"
+}
