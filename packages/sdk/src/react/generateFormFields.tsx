@@ -15,7 +15,13 @@ import { cn } from "utils";
 // a bit of a hack, but allows us to use AJV's JSON schema type
 type AnySchema = {};
 
-export const buildFormSchemaFromFields = (
+/**
+ * Takes a pub type and returns an ajv JSON schema based on its fields
+ * @param pubType
+ * @param exclude
+ * @returns JSONSchemaType<AnySchema>
+ */
+export const buildSchemaFromPubFields = (
 	pubType: GetPubTypeResponseBody,
 	exclude: String[]
 ): JSONSchemaType<AnySchema> => {
@@ -242,85 +248,96 @@ const getDereferencedSchema = (
 	}
 };
 
-export const buildFormFieldsFromSchema = (
-	compiledSchema: Ajv,
-	compiledSchemaKey: string,
-	control: Control,
-	upload: Function,
-	path?: string,
-	fieldSchema?: JSONSchemaType<AnySchema>,
-	schemaPath?: string
-) => {
-	const fields: React.ReactNode[] = [];
+type SchemaBasedFormFieldsProps = {
+	compiledSchema: Ajv;
+	control: Control;
+	upload: Function;
+	path?: string;
+	fieldSchema?: JSONSchemaType<AnySchema>;
+	schemaPath?: string;
+};
+
+/**
+ * Returns an array of JSX form fields based on a JSON schema
+ * @param compiledSchema
+ * @param compiledSchemaKey
+ * @param control
+ * @param upload
+ * @param path
+ * @param fieldSchema
+ * @param schemaPath
+ * @returns
+ */
+export const SchemaBasedFormFields = (props: SchemaBasedFormFieldsProps) => {
+	const fields: React.JSX.Element[] = [];
 
 	// probably should refactor into function and throw an error if the schema can't be resolved from the compiled schema
-	const resolvedSchema = fieldSchema
-		? fieldSchema
-		: (compiledSchema.getSchema("schema")!.schema as JSONSchemaType<AnySchema>);
+	const resolvedSchema = props.fieldSchema
+		? props.fieldSchema
+		: (props.compiledSchema.getSchema("schema")!.schema as JSONSchemaType<AnySchema>);
 
 	if (isObjectSchema(resolvedSchema)) {
 		for (const [fieldKey, fieldSchema] of Object.entries(resolvedSchema.properties)) {
-			const fieldPath = path ? `${path}.${fieldKey}` : fieldKey;
+			const fieldPath = props.path ? `${props.path}.${fieldKey}` : fieldKey;
 
 			// for querying the compiled schema later -- pretty robust, but does assume defs are not at top level
 			// may be better way to query just at last schema id, for example
-			const fieldSchemaPath = schemaPath
+			const fieldSchemaPath = props.schemaPath
 				? resolvedSchema.$id
-					? `${schemaPath}/${resolvedSchema.$id}`
-					: schemaPath
+					? `${props.schemaPath}/${resolvedSchema.$id}`
+					: props.schemaPath
 				: `${resolvedSchema.$id}#/properties`;
 
-			const fieldContent = isObjectSchema(fieldSchema) ? (
-				<div key={fieldKey} className="mb-12">
-					{!path && <Separator className="my-8" />}
-					{path ? <h4>{fieldSchema.title}</h4> : <h3>{fieldSchema.title}</h3>}
-					{fieldSchema.description && (
-						<p dangerouslySetInnerHTML={{ __html: fieldSchema.description }} />
-					)}
-					{buildFormFieldsFromSchema(
-						compiledSchema,
-						compiledSchemaKey,
-						control,
-						upload,
-						fieldPath,
-						fieldSchema,
-						fieldSchemaPath
-					)}
-				</div>
-			) : (
-				buildFormFieldsFromSchema(
-					compiledSchema,
-					compiledSchemaKey,
-					control,
-					upload,
-					fieldPath,
-					fieldSchema,
-					fieldSchemaPath
-				)
-			);
-			fields.push(fieldContent);
+			const fieldContent = isObjectSchema(fieldSchema)
+				? [
+						<div key={fieldKey} className="mb-12">
+							{!props.path && <Separator className="my-8" />}
+							{props.path ? (
+								<h4>{fieldSchema.title}</h4>
+							) : (
+								<h3>{fieldSchema.title}</h3>
+							)}
+							{fieldSchema.description && (
+								<p dangerouslySetInnerHTML={{ __html: fieldSchema.description }} />
+							)}
+							{SchemaBasedFormFields({
+								...props,
+								path: fieldPath,
+								fieldSchema: fieldSchema,
+								schemaPath: fieldSchemaPath,
+							})}
+						</div>,
+				  ]
+				: SchemaBasedFormFields({
+						...props,
+						path: fieldPath,
+						fieldSchema: fieldSchema,
+						schemaPath: fieldSchemaPath,
+				  });
+			fields.push(...fieldContent);
 		}
 	} else {
 		const scalarSchema =
-			hasRef(resolvedSchema) && hasResolvedSchema(compiledSchema, compiledSchemaKey)
-				? (compiledSchema.getSchema(`${schemaPath}${resolvedSchema.$ref!.split("#")[1]}`)!
-						.schema as JSONSchemaType<AnySchema>)
+			resolvedSchema.$ref && props.compiledSchema && props.compiledSchema.getSchema("schema")
+				? (props.compiledSchema.getSchema(
+						`${props.schemaPath}${resolvedSchema.$ref!.split("#")[1]}`
+				  )!.schema as JSONSchemaType<AnySchema>)
 				: resolvedSchema;
 		fields.push(
 			scalarSchema.$id && hasCustomRenderer(scalarSchema.$id) ? (
 				<CustomRenderer
-					key={resolvedSchema.$id ?? path}
-					control={control}
+					key={resolvedSchema.$id ?? props.path}
+					control={props.control}
 					fieldSchema={scalarSchema}
-					fieldName={path ?? resolvedSchema.$id!.split("#")[1]}
-					upload={upload}
+					fieldName={props.path ?? resolvedSchema.$id!.split("#")[1]}
+					upload={props.upload}
 				/>
 			) : (
 				<ScalarField
-					title={path ?? resolvedSchema.$id!.split("#")[1]}
+					title={props.path ?? resolvedSchema.$id!.split("#")[1]}
 					schema={scalarSchema}
-					control={control}
-					key={resolvedSchema.$id ?? path}
+					control={props.control}
+					key={resolvedSchema.$id ?? props.path}
 				/>
 			)
 		);
