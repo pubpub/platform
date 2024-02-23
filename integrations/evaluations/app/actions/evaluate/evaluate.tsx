@@ -39,7 +39,7 @@ export function Evaluate(props: Props) {
 		// unnecessary compilation of schemas that are containers for other schemas
 		// but not used as a whole.
 
-		// Array of schemas can be passed (schemas should have ids), the second parameter will be ignored.
+		// An array of schemas can be passed (schemas should have ids), the second parameter will be ignored.
 		// Key can be passed that can be used to reference the schema and will be used as the schema id 
 		// if there is no id inside the schema. If the key is not passed, the schema id will be used as the key.
 		// Once the schema is added, it (and all the references inside it) can be referenced in 
@@ -49,7 +49,7 @@ export function Evaluate(props: Props) {
 		// not required - the schema will be compiled when it is used first time.
 
 		
-		// "Schema" is a key later used to retrieve this schema 
+		// "schema" is a key later used to retrieve this schema 
 		// (we could later pass multiple for dereferencing, for example)
 		const AJVSchema = new Ajv({ formats: fullFormats }).addSchema(schema, "schema");
 		return { AJVSchema, schema };
