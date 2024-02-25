@@ -9,6 +9,7 @@
 		"migrate-dev": "dotenv -e .env.local prisma migrate dev",
 		"migrate-deploy": "dotenv -e .env.local prisma migrate deploy",
 		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
+    "build-start-docker": "dotenv -e .env.docker next build && dotenv -e .env.docker next start",
 		"prisma-studio": "dotenv -e .env.local prisma studio",
 		"prebuild": "prisma generate",
 		"start": "next start",
