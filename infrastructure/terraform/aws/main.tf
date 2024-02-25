@@ -64,8 +64,8 @@ module "service_core" {
       { name = "ASSETS_REGION", value = var.region },
       { name = "ASSETS_BUCKET_NAME", value = var.ASSETS_BUCKET_NAME },
       { name = "ASSETS_UPLOAD_KEY", value = var.ASSETS_UPLOAD_KEY },
-      { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
       { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
+      { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
       { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
     ]

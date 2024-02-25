@@ -4,9 +4,10 @@ import { Button } from "ui";
 import { supabase } from "lib/supabase";
 import { useEnvContext } from "next-runtime-env";
 
-const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext()
 
 export default function ForgotForm() {
+  const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext()
+
 	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [success, setSuccess] = useState(false);
