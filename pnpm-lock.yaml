@@ -104,6 +104,9 @@ importers:
       next-connect:
         specifier: ^1.0.0
         version: 1.0.0
+      next-runtime-env:
+        specifier: '2'
+        version: 2.0.1(react@18.2.0)
       nodemailer:
         specifier: ^6.9.5
         version: 6.9.5
@@ -8871,6 +8874,14 @@ packages:
     dependencies:
       '@tsconfig/node16': 1.0.4
       regexparam: 2.0.1
+    dev: false
+
+  /next-runtime-env@2.0.1(react@18.2.0):
+    resolution: {integrity: sha512-ItEmjn9dC3JXP+0v2GihVffVgdwDHh9ezHi+D20pzPXICUe9qf8MQOgX3Jhj5GtGdQ3ILhWDv3uQ2VDfKOCiVA==}
+    peerDependencies:
+      react: ^18
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /next-tick@1.1.0:

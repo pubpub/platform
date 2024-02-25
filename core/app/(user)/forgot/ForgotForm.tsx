@@ -2,6 +2,9 @@
 import React, { FormEvent, useState } from "react";
 import { Button } from "ui";
 import { supabase } from "lib/supabase";
+import { useEnvContext } from "next-runtime-env";
+
+const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext()
 
 export default function ForgotForm() {
 	const [email, setEmail] = useState("");
@@ -14,7 +17,7 @@ export default function ForgotForm() {
 		setIsLoading(true);
 		setFailure(false);
 		const { error } = await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			console.error(error);

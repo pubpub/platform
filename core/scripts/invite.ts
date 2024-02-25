@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
 
 const getServerSupabase = () => {
+  // can use the process.env here, because this code only runs in server context
 	const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 	const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 	if (!url || !key) {
