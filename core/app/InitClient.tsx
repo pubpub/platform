@@ -7,9 +7,6 @@ import { useEnvContext } from 'next-runtime-env';
 
 export default function InitClient() {
   const { NEXT_PUBLIC_SUPABASE_PUBLIC_KEY , NEXT_PUBLIC_SUPABASE_URL } = useEnvContext();
-  if (!NEXT_PUBLIC_SUPABASE_URL || !NEXT_PUBLIC_SUPABASE_PUBLIC_KEY) {
-    throw "Server is misconfigured -- supabase parameters required!"
-  }
 
 	const pathname = usePathname();
 	useEffect(() => {
