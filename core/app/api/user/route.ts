@@ -68,9 +68,9 @@ export async function POST(req: NextRequest) {
 			}
 		*/
 
-		logger.info("Supabase user", data);
+		logger.info(`Supabase user: ${data}`);
 		if (error || !data.user) {
-			logger.error("Supabase createUser error: ", error);
+			logger.error(`Supabase createUser error: ${error}`);
 			captureException(error);
 			return NextResponse.json({ message: "Supabase createUser error" }, { status: 500 });
 		}

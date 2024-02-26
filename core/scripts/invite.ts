@@ -45,7 +45,7 @@ const inviteUsersFromCsv = async (path) => {
 	const parser = fs.createReadStream(path).pipe(parse({ columns: true }));
 	for await (const row of parser) {
 		if (!row.firstName || !row.email) {
-			logger.error("Unable to invite user without firstname or email: ", row);
+			logger.error(`Unable to invite user without firstname or email: ${row}`);
 			continue;
 		}
 		try {

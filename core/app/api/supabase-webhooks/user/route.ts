@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
 		const body = await req.json();
 		if (!body.record || !body.old_record) {
-			logger.error("unexpected webhook payload:", body);
+			logger.error(`Unexpected webhook payload: ${body}`);
 			throw new BadRequestError("Unexpected webhook payload");
 		}
 

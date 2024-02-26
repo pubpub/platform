@@ -23,7 +23,7 @@ const makeTaskList = (client: Client<{}>) => {
 };
 
 const main = async () => {
-	logger.info("Starting graphile worker");
+	logger.info("Starting graphile worker...");
 	try {
 		const runner = await run({
 			connectionString: process.env.DATABASE_URL,
@@ -33,9 +33,8 @@ const main = async () => {
 			taskList: makeTaskList(client),
 		});
 
-		logger.info(runner);
+		logger.info({ msg: `Successfully started graphile worker`, runner });
 		await runner.promise;
-		logger.info(runner);
 	} catch (err) {
 		logger.error(err);
 		process.exit(1);

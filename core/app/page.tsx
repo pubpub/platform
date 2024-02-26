@@ -6,7 +6,6 @@ import { logger } from "logger";
 export default async function Page() {
 	const loginData = await getLoginData();
 
-	logger.info("loginData", loginData);
 	// if user and no commuhnmitiy, redirect to settings
 	if (loginData) {
 		let user;

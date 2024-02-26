@@ -23,11 +23,11 @@ async function createUserMembers(
 		email_confirm: true,
 	});
 	if (error) {
-		logger.error("Error creating user", error);
+		logger.warn(`Error creating user: ${error}`);
 		logger.info("Looking up existing supabase user");
 		const { data, error: newError } = await supabase.auth.admin.listUsers();
 		if (newError || !data.users) {
-			logger.error("Error finding existing user", error);
+			logger.error(`Error finding existing user ${error}`);
 		} else {
 			user = data.users.find((user) => user.email === email);
 		}
