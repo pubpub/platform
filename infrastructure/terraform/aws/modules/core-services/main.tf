@@ -29,8 +29,7 @@ resource "aws_secretsmanager_secret_version" "api_key" {
 # generate password and make it accessible through aws secrets manager
 resource "random_password" "rds_db_password" {
   length           = 16
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  special          = false
 }
 
 resource "aws_secretsmanager_secret" "rds_db_password" {
@@ -79,13 +78,19 @@ resource "aws_db_instance" "core_postgres" {
   parameter_group_name        = "default.postgres14"
   skip_final_snapshot         = true
 
-  lifecycle {
-    ignore_changes = [
-       password,
-    ]
-  }
 }
 
 
 ### TODO : add Sentry? other stuff?
-
+resource "aws_secretsmanager_secret" "jwt_secret" {
+  name = "jwt-secret-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "sentry_auth_token" {
+  name = "sentry-auth-token-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "supabase_service_role_key" {
+  name = "supabase-service-role-key-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "supabase_webhooks_api_key" {
+  name = "supabase-webhooks-api-key-${var.cluster_info.name}-${var.cluster_info.environment}"
+}

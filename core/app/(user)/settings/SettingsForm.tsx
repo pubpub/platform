@@ -7,6 +7,9 @@ import { FormEvent, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage, Button, Icon } from "ui";
 import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
+import { useEnvContext } from "next-runtime-env";
+
+const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext()
 
 type Props = UserSettings;
 
@@ -91,7 +94,7 @@ export default function SettingsForm({
 	const resetPassword = async () => {
 		setResetIsLoading(true);
 		const { error } = await supabase.auth.resetPasswordForEmail(initEmail, {
-			redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			console.error(error);
