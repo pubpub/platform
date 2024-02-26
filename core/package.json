@@ -28,7 +28,7 @@
 		"@faker-js/faker": "^8.0.2",
 		"@hookform/resolvers": "^3.3.1",
 		"@prisma/client": "^5.2.0",
-		"@sentry/nextjs": "^7.72.0",
+		"@sentry/nextjs": "^7.102.0",
 		"@stoplight/elements": "^7.12.2",
 		"@supabase/supabase-js": "^2.33.2",
 		"@ts-rest/core": "^3.28.0",

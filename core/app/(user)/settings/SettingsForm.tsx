@@ -4,7 +4,7 @@ import { supabase } from "lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage, Button } from "ui";
+import { Avatar, AvatarFallback, AvatarImage, Button, Icon } from "ui";
 import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
 import { useEnvContext } from "next-runtime-env";
@@ -27,7 +27,7 @@ export default function SettingsForm({
 	const [emailIsLoading, setEmailIsLoading] = useState(false);
 	const [emailSuccess, setEmailSuccess] = useState(false);
 	const [, setIsLoading] = useState(false);
-	const [, setResetIsLoading] = useState(false);
+	const [resetIsLoading, setResetIsLoading] = useState(false);
 	const [resetSuccess, setResetSuccess] = useState(false);
 	const emailChanged = initEmail !== email;
 	const router = useRouter();
@@ -161,7 +161,10 @@ export default function SettingsForm({
 					Click below to receive an email with a secure link for reseting yor password.
 				</p>
 				{!resetSuccess && (
-					<Button onClick={resetPassword}> Send password reset email</Button>
+					<Button onClick={resetPassword} disabled={resetIsLoading}>
+						Send password reset email
+						{resetIsLoading && <Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+					</Button>
 				)}
 				{resetSuccess && (
 					<div className="text-green-700">

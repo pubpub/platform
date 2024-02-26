@@ -104,39 +104,41 @@ const EvaluationProcess = () => {
 				</a>{" "}
 				and take credit.
 			</p>
-			<p>We ask evaluators to:</p>
-			<ol>
-				<li>
-					Write a review: a 'standard high-quality referee report,' with some{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#specific-requests-for-focus-or-feedback"
-					>
-						specific considerations
-					</a>
-					.
-				</li>
-				<li>
-					Give{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories"
-					>
-						quantitative metrics and predictions
-					</a>
-					.
-				</li>
-				<li>
-					Answer a{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#survey-questions"
-					>
-						short questionnaire
-					</a>{" "}
-					about your background and our processes.
-				</li>
-			</ol>
+			<p>
+				We ask evaluators to:
+				<ol>
+					<li>
+						Write a review: a 'standard high-quality referee report,' with some{" "}
+						<a
+							target="_blank"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#specific-requests-for-focus-or-feedback"
+						>
+							specific considerations
+						</a>
+						.
+					</li>
+					<li>
+						Give{" "}
+						<a
+							target="_blank"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories"
+						>
+							quantitative metrics and predictions
+						</a>
+						.
+					</li>
+					<li>
+						Answer a{" "}
+						<a
+							target="_blank"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#survey-questions"
+						>
+							short questionnaire
+						</a>{" "}
+						about your background and our processes.
+					</li>
+				</ol>
+			</p>
 			<p>
 				You can read the full guidelines{" "}
 				<a
