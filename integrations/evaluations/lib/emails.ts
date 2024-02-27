@@ -89,7 +89,15 @@ const makeNoticeOfNoSubmitJobKey = (
 	evaluator: EvaluatorWhoAccepted
 ) => `send-email-${instanceId}-${pubId}-${evaluator.userId}-no-submit-notice`;
 
-// sent to the community manager
+// emails sent to the evaluation manager
+/**
+ * Schedules an email to the evaluation manager to notify them that an invited evaluator has not responded to the invitation.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const scheduleNoReplyNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -126,6 +134,13 @@ ${notificationFooter}`,
 	);
 };
 
+/**
+ * Unschedules the no reply notification email for the evaluation manager.
+ * @param instanceId
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const unscheduleNoReplyNotificationEmail = (
 	instanceId: string,
 	pubId: string,
@@ -135,6 +150,14 @@ export const unscheduleNoReplyNotificationEmail = (
 	return client.unscheduleEmail(instanceId, jobKey);
 };
 
+/**
+ * Schedules an email to the evaluation manager to notify them that an evaluator has not submitted their evaluation.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const scheduleNoSubmitNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -171,6 +194,13 @@ ${notificationFooter}`,
 	);
 };
 
+/**
+ * Unschedules the no submit notification email for the evaluation manager.
+ * @param instanceId
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const unscheduleNoSubmitNotificationEmail = (
 	instanceId: string,
 	pubId: string,
@@ -180,6 +210,14 @@ export const unscheduleNoSubmitNotificationEmail = (
 	return client.unscheduleEmail(instanceId, jobKey);
 };
 
+/**
+ * Sends an email to the evaluation manager to notify them that an evaluator has requested more information.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const sendRequestedInfoNotification = (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -204,6 +242,14 @@ ${notificationFooter}`,
 	});
 };
 
+/**
+ * Sends an email to the evaluation manager to notify them that an evaluator has accepted the invitation to evaluate the pub.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const sendAcceptedNotificationEmail = (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -231,6 +277,14 @@ ${notificationFooter}`,
 	});
 };
 
+/**
+ * Sends an email to the evaluation manager to notify them that an evaluator has declined the invitation to evaluate the pub.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const sendDeclinedNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -258,6 +312,14 @@ ${notificationFooter}`,
 	});
 };
 
+/**
+ * Sends an email to the evaluation manager to notify them that an evaluator has submitted their evaluation.
+ * @param instanceId
+ * @param instanceConfig
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
 export const sendSubmittedNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
@@ -503,8 +565,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const reminderDeadline = new Date(deadline.getTime() - 14 * (1000 * 60 * 60 * 24));
 	const jobKey = makeFinalPromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
-	// const runAt = reminderDeadline;
-	const runAt = new Date(Date.now());
+	const runAt = reminderDeadline;
 
 	return client.scheduleEmail(
 		instanceId,
@@ -555,8 +616,7 @@ export const scheduleEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeEvalReminderJobKey(instanceId, pubId, evaluator);
-	// const runAt = new Date(deadline.getTime() - 7 * (1000 * 60 * 60 * 24));
-	const runAt = new Date(Date.now());
+	const runAt = new Date(deadline.getTime() - 7 * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
@@ -610,8 +670,7 @@ export const scheduleFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	// const runAt = new Date(deadline.getTime() - 1 * (1000 * 60 * 60 * 24));
-	const runAt = new Date(Date.now());
+	const runAt = new Date(deadline.getTime() - 1 * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
@@ -660,8 +719,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFollowUpToFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	// const runAt = new Date(deadline.getTime() + 6 * (1000 * 60 * 60 * 24));
-	const runAt = new Date(Date.now());
+	const runAt = new Date(deadline.getTime() + 6 * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
@@ -713,8 +771,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeNoticeOfNoSubmitJobKey(instanceId, pubId, evaluator);
-	// const runAt = new Date(deadline.getTime() + 8 * (1000 * 60 * 60 * 24));
-	const runAt = new Date(Date.now());
+	const runAt = new Date(deadline.getTime() + 8 * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
