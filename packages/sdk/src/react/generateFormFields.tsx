@@ -190,7 +190,7 @@ const CustomRenderer = (props: CustomRendererProps) => {
 			<FormField
 				control={control}
 				name={fieldName}
-				defaultValue={fieldSchema.default ?? [0, 0, 0]}
+				defaultValue={fieldSchema.default ?? [{}]}
 				render={({ field }) => (
 					<FormItem className="mb-6">
 						<FormLabel>{fieldSchema.title}</FormLabel>

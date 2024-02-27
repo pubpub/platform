@@ -1,6 +1,7 @@
 import { Toaster } from "ui";
 import "ui/styles.css";
 import InitClient from "./InitClient";
+import { PublicEnvProvider } from "next-runtime-env";
 import "./globals.css";
 
 export const metadata = {
@@ -12,9 +13,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 	return (
 		<html lang="en">
 			<body>
-				<InitClient />
-				{children}
-				<Toaster />
+				<PublicEnvProvider>
+					<InitClient />
+					{children}
+					<Toaster />
+				</PublicEnvProvider>
 			</body>
 		</html>
 	);

@@ -36,34 +36,53 @@ module "core_dependency_services" {
 }
 
 module "service_core" {
-  source = "./modules/ecs-service"
+  source = "./modules/container-generic"
 
   service_name = "core"
   cluster_info = module.cluster.cluster_info
 
   repository_url = module.cluster.ecr_repository_urls.core
 
+  set_lb_target = true
+
+  init_containers = [{
+    name = "migrations"
+    image = "${module.cluster.ecr_repository_urls.root}:latest"
+    command = [
+      "pnpm", "--filter", "core", "migrate-docker",
+    ]
+  }]
+
   configuration = {
     container_port = 3000
     environment = [
-      { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+      # { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+      { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
+      { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
+      { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
+      { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
       { name = "ASSETS_REGION", value = var.region },
       { name = "ASSETS_BUCKET_NAME", value = var.ASSETS_BUCKET_NAME },
       { name = "ASSETS_UPLOAD_KEY", value = var.ASSETS_UPLOAD_KEY },
-      { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
       { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
+      { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
       { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+      { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
     ]
 
     secrets = [
-      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.rds_db_password_id },
-      { name = "API_KEY", valueFrom = module.core_dependency_services.api_key_secret_id },
+      { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+      { name = "JWT_SECRET", valueFrom = module.core_dependency_services.secrets.jwt_secret },
+      { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+      { name = "SUPABASE_WEBHOOKS_API_KEY", valueFrom = module.core_dependency_services.secrets.supabase_webhooks_api_key },
+      { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
     ]
   }
 }
 
 module "service_flock" {
-  source = "./modules/ecs-service"
+  source = "./modules/container-generic"
 
   service_name = "jobs"
   cluster_info = module.cluster.cluster_info
@@ -73,14 +92,16 @@ module "service_flock" {
   configuration = {
     container_port = 3000
     environment = [
-      {name = "PUBPUB_URL", value = var.pubpub_url },
-      {name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
-      # Secrets - TODO move these to aws secrets
+      { name = "PUBPUB_URL", value = var.pubpub_url },
+      { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
+      { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
+      { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
+      { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
     ]
 
     secrets = [
-      { name = "DATABASE_PASSWORD", valueFrom = module.core_dependency_services.rds_db_password_id },
-      { name = "API_KEY", valueFrom = module.core_dependency_services.api_key_secret_id },
+      { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
     ]
   }
 }

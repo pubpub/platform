@@ -3,13 +3,16 @@ import { useEffect } from "react";
 import { REFRESH_NAME, TOKEN_NAME } from "lib/auth/cookies";
 import { createBrowserSupabase, supabase } from "lib/supabase";
 import { usePathname } from "next/navigation";
+import { useEnvContext } from "next-runtime-env";
 
 export default function InitClient() {
+	const { NEXT_PUBLIC_SUPABASE_PUBLIC_KEY, NEXT_PUBLIC_SUPABASE_URL } = useEnvContext();
+
 	const pathname = usePathname();
 	useEffect(() => {
 		const isLocalhost = window.location.origin.includes("localhost");
 		const securityValue = isLocalhost ? "secure" : "";
-		createBrowserSupabase();
+		createBrowserSupabase(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLIC_KEY);
 		supabase.auth.onAuthStateChange(async (event, session) => {
 			if (event === "SIGNED_OUT") {
 				// delete cookies on sign out

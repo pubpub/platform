@@ -11,6 +11,8 @@ import { env } from "~/lib/env/env.mjs";
 const getServerSupabase = () => {
 	const url = env.NEXT_PUBLIC_SUPABASE_URL;
 	const key = env.SUPABASE_SERVICE_ROLE_KEY;
+
+	console.log(url);
 	if (!url || !key) {
 		throw new Error("Missing Supabase parameters");
 	}

@@ -3,6 +3,7 @@
 ## Dependencies
 
 ### State file bucket/config
+
 You must have some way of storing terraform state files.
 We use and recommend the s3 backend, but you can change
 that configuration. In order to keep this code generic, however,
@@ -24,3 +25,18 @@ If you need to change the backend, update this file and `init` again.
 the module exposes its configuration area, but those configurations
 need to be supplied at plan/apply time using the flag `-var-file=demo-env.tfvars`.
 
+## Adding secrets
+
+To provide secrets to ECS containers, you should put them in AWS Secrets Manager.
+To do this, replicate the setup in `modules/core-services/main.tf`: create a resource
+that declares the existence of the secret. Since the purpose of this model is to
+avoid having copies of the secrets exist anywhere persistently except the single
+locked-down place, naturally the secret value itself (the "version") can't be passed through terraform.
+
+So you must one-time only, or when changing the secret,
+
+1. go to the AWS Secrets Manager console
+2. and choose your new secret
+3. select "Retrieve secret value" (unintuitive, because there is no value yet)
+4. Console says "Value does not yet exist" and button you just clicked becomes "Set secret value".
+5. Probably, paste your secret in the "plain text" box (you can also do key-value pairs, but then must use the key in the address when retrieving.)

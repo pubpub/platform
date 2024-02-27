@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import { Button } from "ui";
+import { Button, Icon } from "ui";
 import { formatSupabaseError, supabase } from "lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -54,9 +54,12 @@ export default function ResetForm() {
 							type="password"
 							onChange={(evt) => setPassword(evt.target.value)}
 						/>
-						<Button variant="outline" type="submit" disabled={!password}>
+
+						<Button variant="outline" type="submit" disabled={!password || isLoading}>
 							Set new password
+							{isLoading && <Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />}
 						</Button>
+
 						{error && (
 							<div className={"text-red-700 my-4"}>
 								Error resetting password: {error}

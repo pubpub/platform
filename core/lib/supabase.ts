@@ -1,12 +1,8 @@
 import { AuthError, createClient, SupabaseClient } from "@supabase/supabase-js";
-import { env } from "./env/env.mjs";
 
 export let supabase: SupabaseClient;
 
-const url = env.NEXT_PUBLIC_SUPABASE_URL || "";
-const publicKey = env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY || "";
-
-export const createBrowserSupabase = () => {
+export const createBrowserSupabase = (url, publicKey) => {
 	supabase = createClient(url, publicKey, {
 		auth: {
 			autoRefreshToken: true,
