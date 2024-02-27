@@ -5,7 +5,7 @@ import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/s
 import { SchemaBasedFormFields, buildSchemaFromPubFields } from "@pubpub/sdk/react";
 import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
-import { use, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
@@ -44,17 +44,16 @@ export function Evaluate(props: Props) {
 		// but not used as a whole.
 
 		// An array of schemas can be passed (schemas should have ids), the second parameter will be ignored.
-		// Key can be passed that can be used to reference the schema and will be used as the schema id 
+		// Key can be passed that can be used to reference the schema and will be used as the schema id
 		// if there is no id inside the schema. If the key is not passed, the schema id will be used as the key.
-		// Once the schema is added, it (and all the references inside it) can be referenced in 
+		// Once the schema is added, it (and all the references inside it) can be referenced in
 		// other schemas and used to validate data.
 
-		// Although addSchema does not compile schemas, explicit compilation is 
+		// Although addSchema does not compile schemas, explicit compilation is
 		// not required - the schema will be compiled when it is used first time.
 
-		
-		// "schema" is a key later used to retrieve this schema 
-		// (we could later pass multiple for dereferencing, for example)
+		// "schema" is a key described above though we can also use the schema id created when building the schema
+		// we could later pass multiple for dereferencing
 		const AJVSchema = new Ajv({ formats: fullFormats }).addSchema(schema, "schema");
 		return { AJVSchema, schema };
 	}, [pubType]);
@@ -118,8 +117,20 @@ export function Evaluate(props: Props) {
 				new Date(props.evaluator.acceptedAt)
 		  );
 
-	console.log("Schema from fields", schema);
-	console.log("Compiled Schema", AJVSchema);
+	const x = useMemo(() => {
+		return SchemaBasedFormFields({
+			compiledSchema: AJVSchema,
+			control: form.control,
+			upload: signedUploadUrl,
+		});
+	}, [AJVSchema, form.control, signedUploadUrl]);
+
+	console.log("\n\nSchema from fields\n\n", schema);
+	console.log("\n\nAjv Scheman\n\n", AJVSchema);
+	console.log("\n\nForm isvalid\n\n", form.formState.isValid);
+	console.log("\n\nForm errors\n\n", form.formState.errors);
+	console.log("\n\nForm dirty \n\n", form.formState.dirtyFields);
+	console.log("\n\nForm touched\n\n", form.formState.touchedFields);
 	return (
 		<>
 			<div className="prose max-w-none">
@@ -134,11 +145,7 @@ export function Evaluate(props: Props) {
 				<p>{pubType.description}</p>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
-						{SchemaBasedFormFields({
-							compiledSchema: AJVSchema,
-							control: form.control,
-							upload: signedUploadUrl,
-						})}
+						{x}
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
 								<Loader2 className="h-4 w-4 mr-2 animate-spin" />

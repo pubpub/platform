@@ -16,7 +16,7 @@ import { cn } from "utils";
 type AnySchema = {};
 
 /**
- * Takes a pub type and returns an ajv JSON schema based on its fields
+ * Takes a pubType and returns an ajv JSON schema based on the pubType's fields
  * @param pubType
  * @param exclude
  * @returns JSONSchemaType<AnySchema>
@@ -25,12 +25,14 @@ export const buildSchemaFromPubFields = (
 	pubType: GetPubTypeResponseBody,
 	exclude: String[]
 ): JSONSchemaType<AnySchema> => {
+	
 	const schema = {
 		$id: `urn:uuid:${pubType.id}`,
 		title: `${pubType.name}`,
 		type: "object",
 		properties: {},
 	} as JSONSchemaType<AnySchema>;
+
 	if (pubType.fields) {
 		for (const field of pubType.fields) {
 			if (!exclude.includes(field.slug)) {
@@ -258,7 +260,7 @@ type SchemaBasedFormFieldsProps = {
 };
 
 /**
- * Returns an array of JSX form fields based on a JSON schema
+ * Returns an array of JSX form fields based on an Ajv schema
  * @param compiledSchema
  * @param compiledSchemaKey
  * @param control
