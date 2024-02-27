@@ -831,3 +831,23 @@ export const unscheduleAllDeadlineReminderEmails = async (
 	];
 	return Promise.all(jobKeys.map((jobKey) => client.unscheduleEmail(instanceId, jobKey)));
 };
+
+/**
+ * Unschedules all emails. 
+ * @param instanceId
+ * @param pubId
+ * @param evaluator
+ * @returns
+ */
+export const unscheduleAllManagerEmails = async (
+	instanceId: string,
+	pubId: string,
+	evaluator: EvaluatorWithInvite
+) => {
+	const jobKeys = [
+		makeReminderJobKey(instanceId, pubId, evaluator),
+		makeNoReplyJobKey(instanceId, pubId, evaluator),
+		makeNoSubmitJobKey(instanceId, pubId, evaluator),
+	];
+	return Promise.all(jobKeys.map((jobKey) => client.unscheduleEmail(instanceId, jobKey)));
+}

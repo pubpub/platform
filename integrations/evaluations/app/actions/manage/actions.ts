@@ -6,12 +6,14 @@ import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
-import { isInvited } from "~/lib/types";
+import { EvaluatorWhoAccepted, EvaluatorWithInvite, isInvited } from "~/lib/types";
 import {
-	scheduleNoReplyNotificationEmail,
 	scheduleInvitationReminderEmail,
+	scheduleNoReplyNotificationEmail,
 	sendInviteEmail,
-} from "../../../lib/emails";
+	unscheduleAllDeadlineReminderEmails,
+	unscheduleAllManagerEmails,
+} from "~/lib/emails";
 import { InviteFormEvaluator } from "./types";
 
 export const save = async (
@@ -118,6 +120,10 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 		const evaluation = pub.children.find(
 			(child) => child.values[instanceConfig.evaluatorFieldSlug] === userId
 		);
+		await unscheduleAllDeadlineReminderEmails(instanceId, pubId, {
+			userId,
+		} as EvaluatorWhoAccepted);
+		await unscheduleAllManagerEmails(instanceId, pubId, { userId } as EvaluatorWithInvite);
 		// TODO: When an evaluator is removed, we should unschedule reminder
 		// email and notification email(s).
 		if (evaluation !== undefined) {
@@ -127,6 +133,7 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 			delete instanceState[userId];
 			await setInstanceState(instanceId, pubId, instanceState);
 		}
+
 		return { success: true };
 	} catch (error) {
 		return { error: error.message };
