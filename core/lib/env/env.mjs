@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const env = createEnv({
 	shared: {
-		NODE_ENV: z.enum(["development", "production", "test"]),
+		NODE_ENV: z.enum(["development", "production", "test"]).optional(),
 	},
 	server: {
 		API_KEY: z.string(),

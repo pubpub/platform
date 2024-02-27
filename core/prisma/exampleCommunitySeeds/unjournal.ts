@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { faker } from "@faker-js/faker";
 import { FileUpload } from "../../lib/fields/fileUpload";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "../../lib/env/env.mjs";
 
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 

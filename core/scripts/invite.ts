@@ -6,7 +6,7 @@ import { formatSupabaseError } from "../lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "../lib/env/env.mjs";
 
 const getServerSupabase = () => {
 	const url = env.NEXT_PUBLIC_SUPABASE_URL;
