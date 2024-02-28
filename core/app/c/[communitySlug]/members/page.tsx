@@ -40,7 +40,7 @@ export default async function Page({
 	return (
 		<>
 			<div className="flex mb-16 justify-between items-center">
-				<h1 className="font-bold text-xl">Stages</h1>
+				<h1 className="font-bold text-xl">Members</h1>
 				<Dialog>
 					<DialogTrigger>
 						<TooltipProvider>
