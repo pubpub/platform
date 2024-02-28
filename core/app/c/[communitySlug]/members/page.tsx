@@ -1,7 +1,18 @@
-import { Button, Card, CardContent, Icon } from "ui";
+import {
+	Button,
+	Card,
+	CardContent,
+	Icon,
+	Dialog,
+	DialogTrigger,
+	DialogContent,
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "ui";
 import prisma from "~/prisma/db";
 import Image from "next/image";
-import Link from "next/link";
 
 export default async function Page({
 	params: { communitySlug },
@@ -25,9 +36,27 @@ export default async function Page({
 		<>
 			<div className="flex mb-16 justify-between items-center">
 				<h1 className="font-bold text-xl">Stages</h1>
-				<Button variant="outline" className="rounded-full p-2" size="icon">
-					<Icon.UserPlus />
-				</Button>
+				<Dialog>
+					<DialogTrigger>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipContent> Add Member</TooltipContent>
+								<TooltipTrigger asChild>
+									<Button
+										variant="ghost"
+										className="rounded-full p-2"
+										size="icon"
+									>
+										<Icon.UserPlus />
+									</Button>
+								</TooltipTrigger>
+							</Tooltip>
+						</TooltipProvider>
+					</DialogTrigger>
+					<DialogContent>
+						<p>Dialog content</p>
+					</DialogContent>
+				</Dialog>
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
