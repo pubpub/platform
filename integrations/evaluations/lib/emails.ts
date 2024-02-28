@@ -510,8 +510,8 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const reminderDeadline = new Date(deadline.getTime() - 21 * (1000 * 60 * 60 * 24));
 	const jobKey = makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
-	// const runAt = reminderDeadline;
-	const runAt = new Date(Date.now());
+	const runAt = reminderDeadline;
+	
 	return client.scheduleEmail(
 		instanceId,
 		{
@@ -833,7 +833,7 @@ export const unscheduleAllDeadlineReminderEmails = async (
 };
 
 /**
- * Unschedules all emails. 
+ * Unschedules all emails.
  * @param instanceId
  * @param pubId
  * @param evaluator
@@ -850,4 +850,4 @@ export const unscheduleAllManagerEmails = async (
 		makeNoSubmitJobKey(instanceId, pubId, evaluator),
 	];
 	return Promise.all(jobKeys.map((jobKey) => client.unscheduleEmail(instanceId, jobKey)));
-}
+};

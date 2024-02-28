@@ -6,7 +6,13 @@ import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
-import { EvaluatorWhoAccepted, EvaluatorWithInvite, isInvited } from "~/lib/types";
+import {
+	EvaluatorWhoAccepted,
+	EvaluatorWithInvite,
+	assertHasAccepted,
+	assertIsInvited,
+	isInvited,
+} from "~/lib/types";
 import {
 	scheduleInvitationReminderEmail,
 	scheduleNoReplyNotificationEmail,
@@ -120,16 +126,18 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 		const evaluation = pub.children.find(
 			(child) => child.values[instanceConfig.evaluatorFieldSlug] === userId
 		);
-		await unscheduleAllDeadlineReminderEmails(instanceId, pubId, {
-			userId,
-		} as EvaluatorWhoAccepted);
-		await unscheduleAllManagerEmails(instanceId, pubId, { userId } as EvaluatorWithInvite);
-		// TODO: When an evaluator is removed, we should unschedule reminder
-		// email and notification email(s).
+
 		if (evaluation !== undefined) {
 			await client.deletePub(instanceId, evaluation.id);
 		}
 		if (instanceState !== undefined) {
+			let evaluator = expect(
+				instanceState[userId],
+				`User was not invited to evaluate pub ${pubId}`
+			);
+			assertHasAccepted(evaluator);
+			await unscheduleAllDeadlineReminderEmails(instanceId, pubId, evaluator);
+			await unscheduleAllManagerEmails(instanceId, pubId, evaluator);
 			delete instanceState[userId];
 			await setInstanceState(instanceId, pubId, instanceState);
 		}
