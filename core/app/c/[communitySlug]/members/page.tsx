@@ -1,6 +1,7 @@
-import { Card, CardContent } from "ui";
+import { Button, Card, CardContent, Icon } from "ui";
 import prisma from "~/prisma/db";
 import Image from "next/image";
+import Link from "next/link";
 
 export default async function Page({
 	params: { communitySlug },
@@ -23,8 +24,10 @@ export default async function Page({
 	return (
 		<>
 			<div className="flex mb-16 justify-between items-center">
-				<h1 className="font-bold text-xl">Members</h1>
-				{/* <Link href="stages/dashboard">Manage Stages</Link> */}
+				<h1 className="font-bold text-xl">Stages</h1>
+				<Button variant="outline" className="rounded-full p-2" size="icon">
+					<Icon.UserPlus />
+				</Button>
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
