@@ -46,6 +46,11 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					text={"Integrations"}
 					icon={<img src="/icons/integration.svg" />}
 				/>
+				<NavLink
+					href={`${prefix}/members`}
+					text={"Members"}
+					icon={<img src="/icons/members.svg" />}
+				/>
 				{/*<NavLink
 					href={`${prefix}/types`}
 					text={"Pub Types"}
