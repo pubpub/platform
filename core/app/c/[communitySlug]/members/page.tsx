@@ -10,9 +10,14 @@ import {
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
+	Form,
+	FormField,
+	FormItem,
+	Input,
 } from "ui";
 import prisma from "~/prisma/db";
 import Image from "next/image";
+import { MemberInviteForm } from "./MemberInviteForm";
 
 export default async function Page({
 	params: { communitySlug },
@@ -54,7 +59,7 @@ export default async function Page({
 						</TooltipProvider>
 					</DialogTrigger>
 					<DialogContent>
-						<p>Dialog content</p>
+						<MemberInviteForm />
 					</DialogContent>
 				</Dialog>
 			</div>
