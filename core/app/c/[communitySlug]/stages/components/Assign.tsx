@@ -65,7 +65,7 @@ export default function Assign(props: Props) {
 					className="mb-5"
 					onClick={() => onAssign(props.pub.id, props.loginData.id, props.stage.id)}
 				>
-					Claim
+					Self assign
 				</Button>
 				{props.users.map((user) => {
 					const intials = user.lastName

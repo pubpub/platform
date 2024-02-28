@@ -69,6 +69,7 @@ export const pubInclude = {
 			},
 		},
 	},
+	claims: { include: { user: true } },
 	children: {
 		...makeRecursiveInclude(
 			"children",
