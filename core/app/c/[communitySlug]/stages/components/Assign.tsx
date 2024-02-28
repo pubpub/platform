@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import React from "react";
 import { Button } from "ui/button";
 import { Card, CardContent, CardFooter, CardTitle } from "ui/card";
@@ -52,6 +51,7 @@ export default function Assign(props: Props) {
 			variant: "default",
 		});
 	};
+
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
@@ -68,6 +68,9 @@ export default function Assign(props: Props) {
 					Claim
 				</Button>
 				{props.users.map((user) => {
+					const intials = user.lastName
+						? `${user.firstName[0]} ${user.lastName[0]}`
+						: `${user.firstName[0]}`;
 					return (
 						<Dialog
 							open={open && selectedUserId === user.id}
@@ -75,20 +78,17 @@ export default function Assign(props: Props) {
 							key={user.id}
 						>
 							<DialogTrigger>
-								<Button variant="ghost" onClick={() => setSelectedUserid(user.id)}>
+								<Button
+									variant="ghost"
+									className="p-1"
+									onClick={() => setSelectedUserid(user.id)}
+								>
 									<div className="mr-4">
-										<Image
-											src={
-												user.avatar ?? `${user.firstName} ${user.lastName}`
-											}
-											alt={`${user.firstName} ${user.lastName}`}
-											width={20}
-											height={20}
-										/>
+										<Circle text={intials} />
 									</div>
-									<span>
+									<p>
 										{user.firstName} {user.lastName}
-									</span>
+									</p>
 								</Button>
 							</DialogTrigger>
 							<DialogContent>
