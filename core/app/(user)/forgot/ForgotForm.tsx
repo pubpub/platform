@@ -1,9 +1,14 @@
 "use client";
 import React, { FormEvent, useState } from "react";
 import { Button } from "ui/button";
+import { Loader2 } from "ui/icon";
+
 import { supabase } from "lib/supabase";
+import { useEnvContext } from "next-runtime-env";
 
 export default function ForgotForm() {
+	const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
+
 	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [success, setSuccess] = useState(false);
@@ -14,7 +19,7 @@ export default function ForgotForm() {
 		setIsLoading(true);
 		setFailure(false);
 		const { error } = await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			console.error(error);
@@ -43,9 +48,12 @@ export default function ForgotForm() {
 								onChange={(evt) => setEmail(evt.target.value)}
 								placeholder="example@mail.com"
 							/>
-							<Button variant="outline" type="submit" disabled={!email}>
+
+							<Button variant="outline" type="submit" disabled={!email || isLoading}>
 								Send password reset email
+								{isLoading && <Loader2 className="h-4 w-4 ml-4 animate-spin" />}
 							</Button>
+
 							{failure && (
 								<div className={"text-red-700 my-4"}>Error reseting password</div>
 							)}

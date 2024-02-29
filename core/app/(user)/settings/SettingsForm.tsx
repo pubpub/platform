@@ -6,8 +6,12 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Button } from "ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Loader2 } from "ui/icon";
 import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
+import { useEnvContext } from "next-runtime-env";
+
+const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
 
 type Props = UserSettings;
 
@@ -25,7 +29,7 @@ export default function SettingsForm({
 	const [emailIsLoading, setEmailIsLoading] = useState(false);
 	const [emailSuccess, setEmailSuccess] = useState(false);
 	const [, setIsLoading] = useState(false);
-	const [, setResetIsLoading] = useState(false);
+	const [resetIsLoading, setResetIsLoading] = useState(false);
 	const [resetSuccess, setResetSuccess] = useState(false);
 	const emailChanged = initEmail !== email;
 	const router = useRouter();
@@ -92,7 +96,7 @@ export default function SettingsForm({
 	const resetPassword = async () => {
 		setResetIsLoading(true);
 		const { error } = await supabase.auth.resetPasswordForEmail(initEmail, {
-			redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			console.error(error);
@@ -159,7 +163,10 @@ export default function SettingsForm({
 					Click below to receive an email with a secure link for reseting yor password.
 				</p>
 				{!resetSuccess && (
-					<Button onClick={resetPassword}> Send password reset email</Button>
+					<Button onClick={resetPassword} disabled={resetIsLoading}>
+						Send password reset email
+						{resetIsLoading && <Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+					</Button>
 				)}
 				{resetSuccess && (
 					<div className="text-green-700">

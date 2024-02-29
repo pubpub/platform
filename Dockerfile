@@ -7,7 +7,7 @@
 ARG NODE_VERSION=20.6.0
 ARG PNPM_VERSION=8.14.3
 
-ARG PACKAGE=core
+ARG PACKAGE
 ARG PORT=3000
 
 ################################################################################
@@ -33,9 +33,25 @@ ARG PACKAGE
 COPY . .
 
 # Run the build script.
-RUN ./bin/render-build.sh ${PACKAGE}
+RUN pnpm install --frozen-lockfile
+RUN pnpm p:build
 
-RUN pnpm --filter ${PACKAGE} --prod deploy /tmp/app
+RUN if [[ ! -z $PACKAGE ]]; \
+    then \
+      pnpm --filter $PACKAGE build ; \
+      pnpm --filter $PACKAGE --prod deploy /tmp/app ; \
+      cp core/.env.docker /tmp/app/.env ; \
+    fi
+
+# Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
+RUN if [[ ${PACKAGE} == core ]]; \
+    then \
+      find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
+      | xargs -r -I{} sh -c " \
+        rm -rf /tmp/app/{} && \
+        mkdir -p /tmp/app/{} && \
+        cp -a {}/. /tmp/app/{}/" ; \
+    fi
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
