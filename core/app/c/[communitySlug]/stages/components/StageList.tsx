@@ -26,6 +26,8 @@ function StageList(props: Props) {
 						<div>
 							{stages.map((stage) => {
 								const users = getPubUsers(stage.permissions);
+								// users should be just member but these are users
+
 								const sources = moveConstraintSourcesForStage(
 									stage,
 									props.stageById
