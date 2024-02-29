@@ -46,6 +46,8 @@ export const getSuggestedMembers = async (
 	return members;
 };
 
+export type SuggestedUser = Awaited<ReturnType<typeof getSuggestedMembers>>[0];
+
 export const getMembers = async (userIds: string[]) => {
 	const members = await prisma.user.findMany({
 		where: {

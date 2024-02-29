@@ -26,38 +26,79 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
+import { Community } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { Loader2 } from "ui/src/icon";
 
 const memberInviteFormSchema = z.object({
 	email: z.string().email(),
 	admin: z.boolean().default(false).optional(),
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
+	user: z
+		.object({
+			id: z.string(),
+			slug: z.string(),
+			firstName: z.string(),
+			lastName: z.string().nullable(),
+			avatar: z.string().nullable(),
+		})
+		.or(z.literal(false))
+		.optional(),
 });
 
-export const MemberInviteForm = () => {
+export const MemberInviteForm = ({ community }: { community: Community }) => {
 	const [isPending, startTransition] = useTransition();
-	const [user, setUser] = useState<
-		| {
-				id: string;
-				slug: string;
-				firstName: string;
-				lastName: string | null;
-				avatar: string | null;
-		  }
-		| undefined
-		| false
-	>(undefined);
+	const [isSubmitting, startSubmissionTransition] = useTransition();
+	// const [user, setUser] = useState<
+	// 	| {
+	// 			id: string;
+	// 			slug: string;
+	// 			firstName: string;
+	// 			lastName: string | null;
+	// 			avatar: string | null;
+	// 	  }
+	// 	| undefined
+	// 	| false
+	// >(undefined);
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
 			admin: false,
+			user: undefined,
 		},
 	});
 
-	const email = form.watch("email");
+	const user = form.watch("user");
 
-	function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
+	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
 		console.log(data);
+		startSubmissionTransition(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			if (!data.user) {
+				// send invite
+				return;
+			}
+
+			const result = await actions.addMember({
+				user: data.user,
+				admin: data.admin,
+				community,
+			});
+			if ("error" in result) {
+				toast({
+					title: "Error",
+					description: `Failed to add member. ${result.error}`,
+				});
+				return;
+			}
+
+			toast({
+				title: "Success",
+				description: "Member added successfully",
+			});
+		});
+		// close dialog, press escape
 	}
 
 	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
@@ -67,7 +108,7 @@ export const MemberInviteForm = () => {
 				form.setError("email", {
 					message: "Please provide a valid email address",
 				});
-				setUser(undefined);
+				form.setValue("user", undefined);
 				return;
 			}
 			form.clearErrors("email");
@@ -83,11 +124,11 @@ export const MemberInviteForm = () => {
 			}
 
 			if (!users.length) {
-				setUser(false);
+				form.setValue("user", false);
 				return;
 			}
 
-			setUser(users[0]);
+			form.setValue("user", users[0]);
 			console.log(users);
 		});
 	}, 500);
@@ -190,7 +231,7 @@ export const MemberInviteForm = () => {
 						<CardContent className="flex gap-x-4 items-center p-4">
 							<Avatar>
 								<AvatarImage
-									src={user.avatar}
+									src={user.avatar ?? undefined}
 									alt={`${user.firstName} ${user.lastName}`}
 								/>
 								<AvatarFallback>
@@ -208,7 +249,15 @@ export const MemberInviteForm = () => {
 					</Card>
 				)}
 				{user !== undefined && (
-					<Button type="submit">{user === false ? "Invite" : "Add Member"}</Button>
+					<Button type="submit" disabled={isSubmitting}>
+						{isSubmitting ? (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						) : user === false ? (
+							"Invite"
+						) : (
+							"Add Member"
+						)}
+					</Button>
 				)}
 			</form>
 		</Form>
