@@ -25,6 +25,14 @@ export default async function Page({
 		communitySlug: string;
 	};
 }) {
+	const community = await prisma.community.findUnique({
+		where: { slug: communitySlug },
+	});
+
+	if (!community) {
+		return null;
+	}
+
 	const loginData = await getLoginData();
 	const currentCommunityMemberShip = loginData?.memberships?.find(
 		(m) => m.community.slug === communitySlug
@@ -62,7 +70,7 @@ export default async function Page({
 						</Tooltip>
 					</TooltipProvider>
 					<DialogContent>
-						<MemberInviteForm />
+						<MemberInviteForm community={community} />
 					</DialogContent>
 				</Dialog>
 			</div>
