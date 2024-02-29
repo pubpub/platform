@@ -1,13 +1,11 @@
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import {
-	Avatar,
-	AvatarFallback,
-	AvatarImage,
 	DropdownMenu,
 	DropdownMenuItem,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
-} from "ui";
+} from "ui/dropdown-menu";
 import { CommunityData } from "./layout";
 
 type Props = {

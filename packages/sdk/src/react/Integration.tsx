@@ -1,5 +1,5 @@
 import * as React from "react";
-import { LocalStorageProvider } from "ui";
+import { LocalStorageProvider } from "ui/hooks";
 import { IntegrationLayout } from "./IntegrationLayout";
 import { IntegrationProvider, IntegrationProviderProps } from "./IntegrationProvider";
 

@@ -2,16 +2,11 @@
 
 import { useTransition } from "react";
 import { useFormContext } from "react-hook-form";
-import {
-	Button,
-	Icon,
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-	useFormField,
-	useToast,
-} from "ui";
+import { Button } from "ui/button";
+import { Loader2, Wand2 } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { useFormField } from "ui/form";
+import { useToast } from "ui/use-toast";
 import { cn } from "utils";
 import { resolveMetadata } from "./actions";
 
@@ -79,9 +74,9 @@ export const FetchMetadataButton = (props: FetchMetadataButtonProps) => {
 						disabled={!state.isDirty || state.invalid}
 					>
 						{pending ? (
-							<Icon.Loader2 height={18} className="animate-spin" />
+							<Loader2 height={18} className="animate-spin" />
 						) : (
-							<Icon.Wand2 height={18} color="currentColor" />
+							<Wand2 height={18} color="currentColor" />
 						)}
 					</Button>
 				</TooltipTrigger>

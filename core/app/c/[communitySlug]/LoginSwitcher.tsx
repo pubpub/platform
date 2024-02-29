@@ -1,5 +1,6 @@
 import { getLoginData } from "~/lib/auth/loginData";
-import { Avatar, AvatarFallback, AvatarImage, Button } from "ui";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Button } from "ui/button";
 import LogoutButton from "../../components/LogoutButton";
 import Link from "next/link";
 
@@ -27,7 +28,9 @@ export default async function LoginSwitcher() {
 			<div className="mt-1 flex flex-row items-">
 				<LogoutButton />
 				<Link className="ml-2" href="/settings">
-					<Button variant="outline" size="sm">Settings</Button>
+					<Button variant="outline" size="sm">
+						Settings
+					</Button>
 				</Link>
 			</div>
 		</div>

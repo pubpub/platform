@@ -3,14 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { Button } from "ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import {
-	Button,
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
 	Form,
 	FormControl,
 	FormDescription,
@@ -18,12 +13,12 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-	Icon,
-	Input,
-	Textarea,
-	useLocalStorage,
-	useToast,
-} from "ui";
+} from "ui/form";
+import { Loader2 } from "ui/icon";
+import { Input } from "ui/input";
+import { Textarea } from "ui/textarea";
+import { useLocalStorage } from "ui/hooks";
+import { useToast } from "ui/use-toast";
 import { DOI_REGEX, URL_REGEX, cn, isDoi, normalizeDoi } from "utils";
 import * as z from "zod";
 import { FetchMetadataButton } from "./FetchMetadataButton";
@@ -230,7 +225,7 @@ export function Submit(props: Props) {
 						</Button>
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
-								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
 							)}
 							Submit Pub
 						</Button>

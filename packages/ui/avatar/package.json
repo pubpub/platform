@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-avatar.cjs.js",
+	"module": "dist/ui-avatar.esm.js"
+}

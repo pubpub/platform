@@ -1,12 +1,13 @@
 "use client";
 import React, { FormEvent, useState } from "react";
-import { Button, Icon } from "ui";
+import { Button } from "ui/button";
+import { Loader2 } from "ui/icon";
+
 import { supabase } from "lib/supabase";
 import { useEnvContext } from "next-runtime-env";
 
-
 export default function ForgotForm() {
-  const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext()
+	const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
 
 	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
@@ -50,9 +51,7 @@ export default function ForgotForm() {
 
 							<Button variant="outline" type="submit" disabled={!email || isLoading}>
 								Send password reset email
-								{isLoading && (
-									<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
-								)}
+								{isLoading && <Loader2 className="h-4 w-4 ml-4 animate-spin" />}
 							</Button>
 
 							{failure && (

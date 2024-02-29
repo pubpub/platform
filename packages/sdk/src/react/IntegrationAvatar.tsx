@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "ui";
+import { Avatar, AvatarImage, AvatarFallback } from "ui/avatar";
 
 type Props = {
 	firstName: string;

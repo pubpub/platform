@@ -1,19 +1,11 @@
 import { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import { AnySchema, JSONSchemaType } from "ajv";
 import Link from "next/link";
-import {
-	Avatar,
-	AvatarFallback,
-	AvatarImage,
-	Button,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-	Separator,
-} from "ui";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Button } from "ui/button";
+import { CardContent, CardHeader, CardTitle } from "ui/card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
+import { Separator } from "ui/separator";
 
 import IntegrationActions from "~/app/components/IntegrationActions";
 import { PubTitle } from "~/app/components/PubTitle";

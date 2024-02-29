@@ -4,7 +4,9 @@ import { supabase } from "lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage, Button, Icon } from "ui";
+import { Button } from "ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Loader2 } from "ui/icon";
 import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
 import { useEnvContext } from "next-runtime-env";
@@ -162,7 +164,7 @@ export default function SettingsForm({
 				{!resetSuccess && (
 					<Button onClick={resetPassword} disabled={resetIsLoading}>
 						Send password reset email
-						{resetIsLoading && <Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+						{resetIsLoading && <Loader2 className="h-4 w-4 ml-4 animate-spin" />}
 					</Button>
 				)}
 				{resetSuccess && (
