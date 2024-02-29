@@ -1,11 +1,15 @@
 "use client";
 
 import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
 	Button,
 	Card,
 	CardContent,
 	Checkbox,
 	Form,
+	FormControl,
 	FormDescription,
 	FormField,
 	FormItem,
@@ -25,7 +29,7 @@ import * as actions from "./actions";
 
 const memberInviteFormSchema = z.object({
 	email: z.string().email(),
-	admin: z.boolean().optional(),
+	admin: z.boolean().default(false).optional(),
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
 });
@@ -45,6 +49,9 @@ export const MemberInviteForm = () => {
 	>(undefined);
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
+		defaultValues: {
+			admin: false,
+		},
 	});
 
 	const email = form.watch("email");
@@ -120,9 +127,25 @@ export const MemberInviteForm = () => {
 						</FormItem>
 					)}
 				/>
+				{/* <FormField
+					control={form.control}
+					name="admin"
+					render={({ field }) => (
+						<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
+							<FormControl>
+								<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+							</FormControl>
+							<div className="space-y-1 leading-none">
+								<FormLabel>Use different settings for my mobile devices</FormLabel>
+								<FormDescription>
+									You can manage your mobile notifications in the{" "}
+								</FormDescription>
+							</div>
+						</FormItem>
+					)}
+				/> */}
 				{user === false && (
 					<>
-						<p></p>
 						<FormField
 							name="firstName"
 							render={({ field }) => (
@@ -147,10 +170,16 @@ export const MemberInviteForm = () => {
 				)}
 				{user !== undefined && (
 					<FormField
+						control={form.control}
 						name="admin"
 						render={({ field }) => (
-							<FormItem aria-label="Admin" className="flex items-end gap-x-2">
-								<Checkbox {...field} className="w-4 h-4" />
+							<FormItem className="flex items-end gap-x-2">
+								<FormControl>
+									<Checkbox
+										checked={field.value}
+										onCheckedChange={field.onChange}
+									/>
+								</FormControl>
 								<FormLabel>Make user admin of this community</FormLabel>
 							</FormItem>
 						)}
@@ -159,12 +188,16 @@ export const MemberInviteForm = () => {
 				{user && (
 					<Card>
 						<CardContent className="flex gap-x-4 items-center p-4">
-							<Image
-								src={user.avatar}
-								width="50"
-								height="50"
-								className="rounded-full"
-							/>
+							<Avatar>
+								<AvatarImage
+									src={user.avatar}
+									alt={`${user.firstName} ${user.lastName}`}
+								/>
+								<AvatarFallback>
+									{user.firstName[0]}
+									{user?.lastName?.[0] ?? ""}
+								</AvatarFallback>
+							</Avatar>
 							<div className="flex flex-col gap-2">
 								<span>
 									{user.firstName} {user.lastName}
