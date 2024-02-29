@@ -25,13 +25,15 @@ export const StagePubActions = (props: Props) => {
 				moveTo={props.moveTo}
 				moveFrom={props.moveFrom}
 			/>
-			<Assign
-				pub={props.pub}
-				loginData={props.loginData}
-				stage={props.stage}
-				stages={props.moveTo}
-				members={props.pub.community.members}
-			/>
+			{props.pub.claims.length <= 0 && (
+				<Assign
+					pub={props.pub}
+					loginData={props.loginData}
+					stage={props.stage}
+					stages={props.moveTo}
+					members={props.pub.community.members}
+				/>
+			)}
 		</div>
 	);
 };
