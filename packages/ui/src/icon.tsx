@@ -16,4 +16,5 @@ export {
 	XCircle,
 	BadgeCheck,
 	UserPlus,
+	Trash,
 } from "lucide-react";
