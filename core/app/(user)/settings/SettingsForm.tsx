@@ -9,8 +9,6 @@ import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSettings } from "~/lib/types";
 import { useEnvContext } from "next-runtime-env";
 
-const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
-
 type Props = UserSettings;
 
 export default function SettingsForm({
@@ -20,6 +18,7 @@ export default function SettingsForm({
 	slug,
 	communities,
 }: Props) {
+	const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
 	const [firstName, setFirstName] = useState(initFirstName);
 	const [lastName, setLastName] = useState(initLastName);
 	const [email, setEmail] = useState(initEmail);
