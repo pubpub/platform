@@ -8,10 +8,10 @@ import { Button } from "ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Loader2 } from "ui/icon";
 import LogoutButton from "~/app/components/LogoutButton";
-import { UserPutBody, UserSettings } from "~/lib/types";
+import { UserPutBody, UserSetting } from "~/lib/types";
 import { useEnvContext } from "next-runtime-env";
 
-type Props = UserSettings;
+type Props = UserSetting;
 
 export default function SettingsForm({
 	firstName: initFirstName,
