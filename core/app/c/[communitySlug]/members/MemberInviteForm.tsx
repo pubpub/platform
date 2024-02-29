@@ -15,13 +15,13 @@ import {
 	Input,
 	toast,
 } from "ui";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { startTransition, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
+import Image from "next/image";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
-import { User } from "@prisma/client";
 
 const memberInviteFormSchema = z.object({
 	email: z.string().email(),
@@ -29,22 +29,6 @@ const memberInviteFormSchema = z.object({
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
 });
-
-const SuggestButton = (props: { onClick: () => Promise<void> }) => {
-	const [pending, startTransition] = useTransition();
-	return (
-		<Button
-			variant="ghost"
-			onClick={(event) => {
-				event.preventDefault();
-				startTransition(props.onClick);
-			}}
-			disabled={pending}
-		>
-			{pending ? <Icon.Loader2 className="h-4 w-4" /> : <Icon.Wand2 className="h-4 w-4" />}
-		</Button>
-	);
-};
 
 export const MemberInviteForm = () => {
 	const [isPending, startTransition] = useTransition();
@@ -175,7 +159,7 @@ export const MemberInviteForm = () => {
 				{user && (
 					<Card>
 						<CardContent className="flex gap-x-4 items-center p-4">
-							<img
+							<Image
 								src={user.avatar}
 								width="50"
 								height="50"
