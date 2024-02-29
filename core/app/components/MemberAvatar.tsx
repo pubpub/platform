@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "ui";
+import { Avatar, AvatarFallback } from "ui/avatar";
 import { PubPayload } from "~/lib/types";
 
 function MembersAvatars({ pub }: { pub: PubPayload }) {
