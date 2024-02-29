@@ -55,6 +55,7 @@ export default function Assign(props: Props) {
 	const memberIntials = member.user.lastName
 		? `${member.user.firstName[0]} ${member.user.lastName[0]}`
 		: `${member.user.firstName[0]}`;
+	
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
