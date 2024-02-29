@@ -13,6 +13,8 @@ import {
 	Avatar,
 	AvatarImage,
 	AvatarFallback,
+	Label,
+	Badge,
 } from "ui";
 import prisma from "~/prisma/db";
 import { MemberInviteForm } from "./MemberInviteForm";
@@ -76,26 +78,31 @@ export default async function Page({
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
-					{existingMembers.map(({ user, id, createdAt }) => (
-						<div key={id} className="flex gap-x-4 items-center">
-							<Avatar>
-								<AvatarImage
-									src={user.avatar}
-									alt={`${user.firstName} ${user.lastName}`}
-								/>
-								<AvatarFallback>
-									{user.firstName[0]}
-									{user?.lastName?.[0] ?? ""}
-								</AvatarFallback>
-							</Avatar>
-							<div className="flex flex-col gap-2">
-								<span>
-									{user.firstName} {user.lastName}
-								</span>
-								<span className="text-sm">
-									Joined: {new Date(createdAt).toLocaleDateString()}
-								</span>
+					{existingMembers.map(({ user, id, createdAt, canAdmin }) => (
+						<div key={id} className="flex justify-between items-center">
+							<div className="flex gap-x-4 items-center">
+								<Avatar>
+									<AvatarImage
+										src={user.avatar}
+										alt={`${user.firstName} ${user.lastName}`}
+									/>
+									<AvatarFallback>
+										{user.firstName[0]}
+										{user?.lastName?.[0] ?? ""}
+									</AvatarFallback>
+								</Avatar>
+								<div className="flex flex-col gap-2">
+									<span>
+										{user.firstName} {user.lastName}
+									</span>
+									<span className="text-sm">
+										Joined: {new Date(createdAt).toLocaleDateString()}
+									</span>
+								</div>
 							</div>
+							<Button variant="outline" size="icon">
+								<Icon.Trash size="16" />
+							</Button>
 						</div>
 					))}
 				</CardContent>
