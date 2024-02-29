@@ -1,5 +1,5 @@
 import {
-	PermissionPayloadUser,
+	PermissionPayloadMember,
 	PubPayload,
 	StagePayload,
 	StagePayloadMoveConstraintDestination,
@@ -9,7 +9,6 @@ import Assign from "./Assign";
 import Move from "./Move";
 
 type Props = {
-	users: PermissionPayloadUser[];
 	pub: PubPayload;
 	moveTo: StagePayloadMoveConstraintDestination[];
 	moveFrom: StagePayloadMoveConstraintDestination[];
@@ -18,7 +17,6 @@ type Props = {
 };
 
 export const StagePubActions = (props: Props) => {
-	props.pub.community.members;
 	return (
 		<div className="flex items-end shrink-0">
 			<Move
@@ -27,28 +25,13 @@ export const StagePubActions = (props: Props) => {
 				moveTo={props.moveTo}
 				moveFrom={props.moveFrom}
 			/>
-			{props.pub.community.members.map((member) => {
-				if (member.id === props.loginData.id) {
-					return (
-						<Assign
-							pub={props.pub}
-							loginData={props.loginData}
-							stage={props.stage}
-							stages={props.moveTo}
-							users={props.users}
-						/>
-					);
-				}
-			})}
-			{props.users.length > 0 && (
-				<Assign
-					pub={props.pub}
-					loginData={props.loginData}
-					stage={props.stage}
-					stages={props.moveTo}
-					users={props.users}
-				/>
-			)}
+			<Assign
+				pub={props.pub}
+				loginData={props.loginData}
+				stage={props.stage}
+				stages={props.moveTo}
+				members={props.pub.community.members}
+			/>
 		</div>
 	);
 };

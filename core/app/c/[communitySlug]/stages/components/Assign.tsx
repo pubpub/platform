@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { Avatar, AvatarFallback } from "ui/avatar";
 import {
-	PermissionPayloadUser,
+	PermissionPayloadMember,
 	PubPayload,
 	StagePayload,
 	StagePayloadMoveConstraintDestination,
@@ -20,7 +20,7 @@ type Props = {
 	stages: StagePayloadMoveConstraintDestination[];
 	stage: StagePayload;
 	loginData: UserLoginData;
-	users: PermissionPayloadUser[];
+	members: PermissionPayloadMember[];
 };
 
 const getTitle = (pub: Props["pub"]) => {
@@ -67,21 +67,21 @@ export default function Assign(props: Props) {
 				>
 					Self assign
 				</Button>
-				{props.users.map((user) => {
-					const intials = user.lastName
-						? `${user.firstName[0]} ${user.lastName[0]}`
-						: `${user.firstName[0]}`;
+				{props.members.map((member) => {
+					const intials = member.user.lastName
+						? `${member.user.firstName[0]} ${member.user.lastName[0]}`
+						: `${member.user.firstName[0]}`;
 					return (
 						<Dialog
-							open={open && selectedUserId === user.id}
+							open={open && selectedUserId === member.user.id}
 							onOpenChange={setOpen}
-							key={user.id}
+							key={member.user.id}
 						>
 							<DialogTrigger>
 								<Button
 									variant="ghost"
 									className="p-1"
-									onClick={() => setSelectedUserid(user.id)}
+									onClick={() => setSelectedUserid(member.user.id)}
 								>
 									<div className="mr-4">
 										<Avatar className="rounded w-9 h-9 mr-2">
@@ -89,19 +89,19 @@ export default function Assign(props: Props) {
 										</Avatar>
 									</div>
 									<p>
-										{user.firstName} {user.lastName}
+										{member.user.firstName} {member.user.lastName}
 									</p>
 								</Button>
 							</DialogTrigger>
 							<DialogContent>
 								<Card>
 									<CardTitle className="space-y-1.5 p-6">
-										Assign <i>{getTitle(props.pub)}</i> to {user.firstName}{" "}
-										{user.lastName}?
+										Assign <i>{getTitle(props.pub)}</i> to{" "}
+										{member.user.firstName} {member.user.lastName}?
 									</CardTitle>
 									<CardContent>
-										{user.firstName} {user.lastName} will be notified that they
-										have been assigned to this Pub.
+										{member.user.firstName} {member.user.lastName} will be
+										notified that they have been assigned to this Pub.
 									</CardContent>
 									<CardFooter className="flex flex-row">
 										<Button
@@ -109,7 +109,7 @@ export default function Assign(props: Props) {
 											onClick={(event) => {
 												onAssign(
 													props.pub.id,
-													user.id,
+													member.user.id,
 													props.stage.id
 												).then(() => setOpen(false));
 												event.preventDefault();

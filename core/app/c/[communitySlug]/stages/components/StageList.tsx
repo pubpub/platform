@@ -94,8 +94,7 @@ function StageList(props: Props) {
 																key={stage.id}
 																pub={pub}
 																stage={stage}
-																users={users}
-																loginData={props.loginData}
+ 																loginData={props.loginData}
 																moveTo={destinations}
 																moveFrom={sources}
 															/>
