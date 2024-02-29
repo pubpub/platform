@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardTitle } from "ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
-
+import { Avatar, AvatarFallback } from "ui/avatar";
 import {
 	PermissionPayloadUser,
 	PubPayload,
@@ -84,7 +84,9 @@ export default function Assign(props: Props) {
 									onClick={() => setSelectedUserid(user.id)}
 								>
 									<div className="mr-4">
-										<Circle text={intials} />
+										<Avatar className="rounded w-9 h-9 mr-2">
+											<AvatarFallback>{intials}</AvatarFallback>
+										</Avatar>
 									</div>
 									<p>
 										{user.firstName} {user.lastName}
