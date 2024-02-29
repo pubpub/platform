@@ -10,14 +10,13 @@ import {
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
-	Form,
-	FormField,
-	FormItem,
-	Input,
+	Avatar,
+	AvatarImage,
+	AvatarFallback,
 } from "ui";
 import prisma from "~/prisma/db";
-import Image from "next/image";
 import { MemberInviteForm } from "./MemberInviteForm";
+import { getLoginData } from "~/lib/auth/loginData";
 
 export default async function Page({
 	params: { communitySlug },
@@ -26,6 +25,14 @@ export default async function Page({
 		communitySlug: string;
 	};
 }) {
+	const loginData = await getLoginData();
+	const currentCommunityMemberShip = loginData?.memberships?.find(
+		(m) => m.community.slug === communitySlug
+	);
+	if (!currentCommunityMemberShip?.canAdmin) {
+		return null;
+	}
+
 	const existingMembers = await prisma.member.findMany({
 		where: {
 			community: {
@@ -42,22 +49,18 @@ export default async function Page({
 			<div className="flex mb-16 justify-between items-center">
 				<h1 className="font-bold text-xl">Members</h1>
 				<Dialog>
-					<DialogTrigger>
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipContent> Add Member</TooltipContent>
-								<TooltipTrigger asChild>
-									<Button
-										variant="ghost"
-										className="rounded-full p-2"
-										size="icon"
-									>
-										<Icon.UserPlus />
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipContent> Add a user to your community</TooltipContent>
+							<TooltipTrigger asChild>
+								<DialogTrigger asChild>
+									<Button variant="outline" className="flex items-center gap-x-2">
+										<Icon.UserPlus size="16" /> Add Member
 									</Button>
-								</TooltipTrigger>
-							</Tooltip>
-						</TooltipProvider>
-					</DialogTrigger>
+								</DialogTrigger>
+							</TooltipTrigger>
+						</Tooltip>
+					</TooltipProvider>
 					<DialogContent>
 						<MemberInviteForm />
 					</DialogContent>
@@ -65,9 +68,18 @@ export default async function Page({
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
-					{existingMembers.map(({ user, id, canAdmin, createdAt }) => (
+					{existingMembers.map(({ user, id, createdAt }) => (
 						<div key={id} className="flex gap-x-4 items-center">
-							<Image src={user.avatar} width="50" height="50" />
+							<Avatar>
+								<AvatarImage
+									src={user.avatar}
+									alt={`${user.firstName} ${user.lastName}`}
+								/>
+								<AvatarFallback>
+									{user.firstName[0]}
+									{user?.lastName?.[0] ?? ""}
+								</AvatarFallback>
+							</Avatar>
 							<div className="flex flex-col gap-2">
 								<span>
 									{user.firstName} {user.lastName}
