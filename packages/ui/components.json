@@ -10,7 +10,8 @@
 		"cssVariables": false
 	},
 	"aliases": {
-		"components": "packages/ui/src",
-		"utils": "utils/classnames"
+		"components": "src",
+		"utils": "utils",
+		"ui": "src"
 	}
 }
