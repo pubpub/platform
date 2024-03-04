@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-popover.cjs.js",
+	"module": "dist/ui-popover.esm.js"
+}

@@ -1,5 +1,5 @@
 import { useFormState } from "react-hook-form";
-import { Button, Icon } from "ui";
+import { Button } from "ui/button";
 
 export type EvaluatorInviteFormSaveButtonProps = {
 	onClick: () => void;

@@ -1,20 +1,12 @@
 "use client";
 import Image from "next/image";
 import React from "react";
-import {
-	Button,
-	Card,
-	CardContent,
-	CardFooter,
-	CardTitle,
-	Dialog,
-	DialogContent,
-	DialogTrigger,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-	useToast,
-} from "ui";
+import { Button } from "ui/button";
+import { Card, CardContent, CardFooter, CardTitle } from "ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { useToast } from "ui/use-toast";
+
 import {
 	PermissionPayloadUser,
 	PubPayload,

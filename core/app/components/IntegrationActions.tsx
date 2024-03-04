@@ -1,4 +1,4 @@
-import { Popover, PopoverTrigger, Button, PopoverContent } from "ui";
+import { Button } from "ui/button";
 import { PubPayload } from "~/lib/types";
 
 type Props = {

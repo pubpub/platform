@@ -3,6 +3,7 @@
 ## Dependencies
 
 ### State file bucket/config
+
 You must have some way of storing terraform state files.
 We use and recommend the s3 backend, but you can change
 that configuration. In order to keep this code generic, however,
@@ -23,7 +24,6 @@ If you need to change the backend, update this file and `init` again.
 
 the module exposes its configuration area, but those configurations
 need to be supplied at plan/apply time using the flag `-var-file=demo-env.tfvars`.
-
 
 ## Adding secrets
 

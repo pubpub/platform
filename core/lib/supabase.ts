@@ -11,4 +11,5 @@ export const createBrowserSupabase = (url, publicKey) => {
 	});
 };
 
-export const formatSupabaseError = (error: AuthError) => `${error.name} ${error.status}: ${error.message}`
+export const formatSupabaseError = (error: AuthError) =>
+	`${error.name} ${error.status}: ${error.message}`;

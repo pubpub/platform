@@ -4,9 +4,163 @@
 	"version": "0.0.0",
 	"main": "dist/ui.cjs.js",
 	"module": "dist/ui.esm.js",
+	"exports": {
+		"./card": {
+			"module": "./card/dist/ui-card.esm.js",
+			"default": "./card/dist/ui-card.cjs.js"
+		},
+		"./form": {
+			"module": "./form/dist/ui-form.esm.js",
+			"default": "./form/dist/ui-form.cjs.js"
+		},
+		"./icon": {
+			"module": "./icon/dist/ui-icon.esm.js",
+			"default": "./icon/dist/ui-icon.cjs.js"
+		},
+		"./tabs": {
+			"module": "./tabs/dist/ui-tabs.esm.js",
+			"default": "./tabs/dist/ui-tabs.cjs.js"
+		},
+		"./alert": {
+			"module": "./alert/dist/ui-alert.esm.js",
+			"default": "./alert/dist/ui-alert.cjs.js"
+		},
+		"./badge": {
+			"module": "./badge/dist/ui-badge.esm.js",
+			"default": "./badge/dist/ui-badge.cjs.js"
+		},
+		"./input": {
+			"module": "./input/dist/ui-input.esm.js",
+			"default": "./input/dist/ui-input.cjs.js"
+		},
+		"./label": {
+			"module": "./label/dist/ui-label.esm.js",
+			"default": "./label/dist/ui-label.cjs.js"
+		},
+		"./toast": {
+			"module": "./toast/dist/ui-toast.esm.js",
+			"default": "./toast/dist/ui-toast.cjs.js"
+		},
+		"./avatar": {
+			"module": "./avatar/dist/ui-avatar.esm.js",
+			"default": "./avatar/dist/ui-avatar.cjs.js"
+		},
+		"./button": {
+			"module": "./button/dist/ui-button.esm.js",
+			"default": "./button/dist/ui-button.cjs.js"
+		},
+		"./dialog": {
+			"module": "./dialog/dist/ui-dialog.esm.js",
+			"default": "./dialog/dist/ui-dialog.cjs.js"
+		},
+		"./select": {
+			"module": "./select/dist/ui-select.esm.js",
+			"default": "./select/dist/ui-select.cjs.js"
+		},
+		"./popover": {
+			"module": "./popover/dist/ui-popover.esm.js",
+			"default": "./popover/dist/ui-popover.cjs.js"
+		},
+		"./toaster": {
+			"module": "./toaster/dist/ui-toaster.esm.js",
+			"default": "./toaster/dist/ui-toaster.cjs.js"
+		},
+		"./tooltip": {
+			"module": "./tooltip/dist/ui-tooltip.esm.js",
+			"default": "./tooltip/dist/ui-tooltip.cjs.js"
+		},
+		"./calandar": {
+			"module": "./calandar/dist/ui-calandar.esm.js",
+			"default": "./calandar/dist/ui-calandar.cjs.js"
+		},
+		"./checkbox": {
+			"module": "./checkbox/dist/ui-checkbox.esm.js",
+			"default": "./checkbox/dist/ui-checkbox.cjs.js"
+		},
+		"./textarea": {
+			"module": "./textarea/dist/ui-textarea.esm.js",
+			"default": "./textarea/dist/ui-textarea.cjs.js"
+		},
+		"./separator": {
+			"module": "./separator/dist/ui-separator.esm.js",
+			"default": "./separator/dist/ui-separator.cjs.js"
+		},
+		"./use-toast": {
+			"module": "./use-toast/dist/ui-use-toast.esm.js",
+			"default": "./use-toast/dist/ui-use-toast.cjs.js"
+		},
+		"./hooks": {
+			"module": "./hooks/dist/ui-hooks.esm.js",
+			"default": "./hooks/dist/ui-hooks.cjs.js"
+		},
+		"./hover-card": {
+			"module": "./hover-card/dist/ui-hover-card.esm.js",
+			"default": "./hover-card/dist/ui-hover-card.cjs.js"
+		},
+		"./collapsible": {
+			"module": "./collapsible/dist/ui-collapsible.esm.js",
+			"default": "./collapsible/dist/ui-collapsible.cjs.js"
+		},
+		"./dropdown-menu": {
+			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
+			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
+		},
+		"./customRenderers/confidence/confidence": {
+			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
+			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
+		},
+		"./customRenderers/fileUpload/fileUpload": {
+			"module": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.esm.js",
+			"default": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.cjs.js"
+		},
+		"./package.json": "./package.json",
+		"./customRenderers/confidence": {
+			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
+			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
+		},
+		"./customRenderers/fileUpload": {
+			"module": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.esm.js",
+			"default": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.cjs.js"
+		},
+		"./tailwind.config.js": {
+			"module": "./tailwind.config.js",
+			"default": "./tailwind.config.js"
+		},
+		"./styles.css": {
+			"module": "./styles.css",
+			"default": "./styles.css"
+		}
+	},
 	"files": [
 		"dist",
-		"styles.css"
+		"styles.css",
+		"alert",
+		"avatar",
+		"badge",
+		"button",
+		"calandar",
+		"card",
+		"checkbox",
+		"collapsible",
+		"dialog",
+		"dropdown-menu",
+		"form",
+		"hover-card",
+		"icon",
+		"index",
+		"input",
+		"label",
+		"popover",
+		"select",
+		"separator",
+		"tabs",
+		"textarea",
+		"toast",
+		"toaster",
+		"tooltip",
+		"use-toast",
+		"hooks",
+		"customRenderers"
 	],
 	"scripts": {
 		"type-check": "tsc"
@@ -57,7 +211,58 @@
 		"react": "^18.2.0",
 		"react-hook-form": "^7.46.1",
 		"tsconfig": "workspace:*",
-		"typescript": "^4.9.4",
+		"typescript": "^5.3.3",
 		"zod": "^3.21.4"
+	},
+	"preconstruct": {
+		"exports": {
+			"extra": {
+				"./customRenderers/confidence": {
+					"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
+					"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
+				},
+				"./customRenderers/fileUpload": {
+					"module": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.esm.js",
+					"default": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.cjs.js"
+				},
+				"./tailwind.config.js": {
+					"module": "./tailwind.config.js",
+					"default": "./tailwind.config.js"
+				},
+				"./styles.css": {
+					"module": "./styles.css",
+					"default": "./styles.css"
+				}
+			}
+		},
+		"entrypoints": [
+			"alert.tsx",
+			"avatar.tsx",
+			"badge.tsx",
+			"button.tsx",
+			"calandar.tsx",
+			"card.tsx",
+			"checkbox.tsx",
+			"collapsible.tsx",
+			"dialog.tsx",
+			"dropdown-menu.tsx",
+			"form.tsx",
+			"hover-card.tsx",
+			"icon.tsx",
+			"input.tsx",
+			"label.tsx",
+			"popover.tsx",
+			"select.tsx",
+			"separator.tsx",
+			"tabs.tsx",
+			"textarea.tsx",
+			"toast.tsx",
+			"toaster.tsx",
+			"tooltip.tsx",
+			"use-toast.tsx",
+			"hooks/index.ts",
+			"customRenderers/confidence/confidence.tsx",
+			"customRenderers/fileUpload/fileUpload.tsx"
+		]
 	}
 }

@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-textarea.cjs.js",
+	"module": "dist/ui-textarea.esm.js"
+}

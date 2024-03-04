@@ -2,7 +2,10 @@
 
 import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { Control, useWatch } from "react-hook-form";
-import { Button, FormControl, FormField, FormItem, FormMessage, Icon, Input } from "ui";
+import { Button } from "ui/button";
+import { Input } from "ui/input";
+import { FormControl, FormField, FormItem, FormMessage } from "ui/form";
+import { X } from "ui/icon";
 import { cn } from "utils";
 import { hasUser } from "~/lib/types";
 import { EvaluatorInviteRowEmailDialog } from "./EvaluatorInviteRowEmailDialog";
@@ -115,7 +118,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 					)}
 					<EvaluatorInviteRowEmailDialog evaluator={evaluator} index={props.index} />
 					<Button variant="ghost" onClick={() => props.onRemove(props.index)}>
-						<Icon.X className="h-4 w-4" />
+						<X className="h-4 w-4" />
 					</Button>
 				</div>
 			</div>

@@ -1,22 +1,18 @@
 "use client";
 
+import { Button } from "ui/button";
 import {
-	Button,
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-	Icon,
-	Input,
-	Textarea,
-} from "ui";
+} from "ui/dialog";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Mail } from "ui/icon";
+import { Input } from "ui/input";
+import { Textarea } from "ui/textarea";
 import { isInvited } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
 
@@ -31,7 +27,7 @@ export const EvaluatorInviteRowEmailDialog = (props: EvaluatorInviteRowEmailDial
 		<Dialog>
 			<DialogTrigger asChild>
 				<Button className="relative" variant="ghost">
-					<Icon.Mail className="h-4 w-4" />
+					<Mail className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
 			<DialogContent>

@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-separator.cjs.js",
+	"module": "dist/ui-separator.esm.js"
+}
