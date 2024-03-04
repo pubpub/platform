@@ -101,15 +101,7 @@ export function Evaluate(props: Props) {
 	const submissionUrl = pub.values["unjournal:url"] as string;
 	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
 	const submissionAbstract = pub.values["unjournal:description"] as string;
-	const deadline = props.evaluator.deadline
-		? new Date(props.evaluator.deadline)
-		: calculateDeadline(
-				{
-					deadlineLength: props.instanceConfig.deadlineLength,
-					deadlineUnit: props.instanceConfig.deadlineUnit,
-				},
-				new Date(props.evaluator.acceptedAt)
-		  );
+	const deadline = getDeadline(props.instanceConfig, props.evaluator);
 
 	return (
 		<>

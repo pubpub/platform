@@ -9,7 +9,6 @@ import {
 	ScheduleEmailResponseBody,
 	SendEmailRequestBody,
 	SendEmailResponseBody,
-	UpdatePubRequestBody,
 	UpdatePubResponseBody,
 	User,
 	api,
