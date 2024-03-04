@@ -1,4 +1,5 @@
-import { Card, CardContent, Avatar, AvatarImage, AvatarFallback } from "ui";
+import { Avatar, AvatarImage, AvatarFallback } from "ui/avatar";
+import { Card, CardContent } from "ui/card";
 import prisma from "~/prisma/db";
 import { getLoginData } from "~/lib/auth/loginData";
 import { RemoveMemberButton } from "./RemoveMemberButton";

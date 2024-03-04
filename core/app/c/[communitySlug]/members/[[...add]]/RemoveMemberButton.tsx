@@ -1,7 +1,6 @@
 "use client";
 
-import { Community, Member, User } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+import type { Member, User } from "@prisma/client";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -10,14 +9,11 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTrigger,
-	Button,
-	Icon,
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-	toast,
-} from "ui";
+} from "ui/alert-dialog";
+import { Button } from "ui/button";
+import { Trash } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { toast } from "ui/use-toast";
 import * as actions from "./actions";
 import { usePathname } from "next/navigation";
 
@@ -40,7 +36,7 @@ export const RemoveMemberButton = ({
 					<TooltipTrigger asChild>
 						<AlertDialogTrigger asChild>
 							<Button variant="outline" size="icon">
-								<Icon.Trash size="16" />
+								<Trash size="16" />
 							</Button>
 						</AlertDialogTrigger>
 					</TooltipTrigger>
@@ -79,7 +75,7 @@ export const RemoveMemberButton = ({
 								});
 							}}
 						>
-							<Icon.Trash size="16" className="mr-2" />
+							<Trash size="16" className="mr-2" />
 							Remove
 						</Button>
 					</AlertDialogAction>

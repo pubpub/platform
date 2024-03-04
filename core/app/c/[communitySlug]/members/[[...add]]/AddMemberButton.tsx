@@ -1,14 +1,9 @@
 "use client";
 
-import {
-	Button,
-	DialogTrigger,
-	Icon,
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "ui";
+import { Button } from "ui/button";
+import { DialogTrigger } from "ui/dialog";
+import { UserPlus } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 const MaybeAsDialogTrigger = ({
 	inDialog,
@@ -42,7 +37,7 @@ export const AddMemberButton = ({
 						className="flex items-center gap-x-2"
 						onClick={onClick}
 					>
-						<Icon.UserPlus size="16" /> Add Member
+						<UserPlus size="16" /> Add Member
 					</Button>
 				</MaybeAsDialogTrigger>
 			</TooltipTrigger>

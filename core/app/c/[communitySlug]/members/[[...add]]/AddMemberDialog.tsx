@@ -2,17 +2,11 @@
 
 import { Community } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import {
-	Button,
-	Dialog,
-	DialogContent,
-	DialogTrigger,
-	Icon,
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "ui";
+import { Button } from "ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import { UserPlus } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+
 import { MemberInviteForm } from "./MemberInviteForm";
 import { useEffect, useState } from "react";
 
@@ -40,7 +34,7 @@ export const AddMemberDialog = ({ open, community }: { open: boolean; community:
 					<TooltipTrigger asChild>
 						<DialogTrigger asChild>
 							<Button variant="outline" className="flex items-center gap-x-2">
-								<Icon.UserPlus size="16" /> Add Member
+								<UserPlus size="16" /> Add Member
 							</Button>
 						</DialogTrigger>
 					</TooltipTrigger>

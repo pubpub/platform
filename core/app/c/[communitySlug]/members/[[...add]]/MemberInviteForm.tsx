@@ -1,13 +1,11 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+
+import { Button } from "ui/button";
+import { Card, CardContent } from "ui/card";
+import { Checkbox } from "ui/checkbox";
 import {
-	Avatar,
-	AvatarFallback,
-	AvatarImage,
-	Button,
-	Card,
-	CardContent,
-	Checkbox,
 	Form,
 	FormControl,
 	FormDescription,
@@ -15,10 +13,11 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-	Icon,
-	Input,
-	toast,
-} from "ui";
+} from "ui/form";
+import { Loader2 } from "ui/icon";
+import { Input } from "ui/input";
+import { toast } from "ui/use-toast";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,7 +25,6 @@ import { useEffect, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
 import { Community } from "@prisma/client";
-import { Loader2 } from "ui/src/icon";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 const memberInviteFormSchema = z.object({
@@ -176,7 +174,7 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 										debouncedEmailCheck(e.target.value);
 									}}
 								/>
-								{isPending && <Icon.Loader2 className="h-4 w-4 animate-spin" />}
+								{isPending && <Loader2 className="h-4 w-4 animate-spin" />}
 							</div>
 							{user === undefined ? (
 								<FormDescription>
