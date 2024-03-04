@@ -11,7 +11,7 @@ import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
 import { EvaluatorWhoAccepted, InstanceConfig } from "~/lib/types";
 import { submit, upload } from "./actions";
-import { calculateDeadline } from "~/lib/emails";
+import { calculateDeadline, getDeadline } from "~/lib/emails";
 import { useToast } from "ui/use-toast";
 import { useLocalStorage } from "ui/hooks";
 import { Form } from "ui/form";
