@@ -14,7 +14,7 @@ function MembersAvatars({ pub }: { pub: PubPayload }) {
 						return (
 							<div className="flex flex-row p-1">
 								<div className="mr-4">
-									<Avatar className="rounded w-9 h-9 mr-2">
+									<Avatar>
 										<AvatarFallback>{intials}</AvatarFallback>
 									</Avatar>
 								</div>
