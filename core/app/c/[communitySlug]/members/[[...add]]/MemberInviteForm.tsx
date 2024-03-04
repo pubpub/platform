@@ -14,7 +14,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "ui/form";
-import { Loader2 } from "ui/icon";
+import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
@@ -260,9 +260,13 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 						{form.formState.isSubmitting ? (
 							<Loader2 className="h-4 w-4 animate-spin" />
 						) : user === false ? (
-							"Invite"
+							<span className="flex items-center gap-x-2">
+								<Mail size="16" /> Invite
+							</span>
 						) : (
-							"Add Member"
+							<span className="flex items-center gap-x-2">
+								<UserPlus size="16" /> Add Member
+							</span>
 						)}
 					</Button>
 				)}

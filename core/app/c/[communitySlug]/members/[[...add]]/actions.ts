@@ -8,6 +8,7 @@ import { Community, Member, User } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { getLoginData } from "~/lib/auth/loginData";
+import { emailUser } from "~/lib/server/email";
 
 export const suggest = cache(async (email: string, community: Community) => {
 	try {
@@ -106,6 +107,12 @@ export const removeMember = async ({
 	path: string | null;
 }) => {
 	try {
+		const loginData = await getLoginData();
+
+		if (member.userId === loginData?.id) {
+			return { error: "You cannot remove yourself from the community" };
+		}
+
 		const deleted = await prisma.member.delete({
 			where: {
 				id: member.id,
