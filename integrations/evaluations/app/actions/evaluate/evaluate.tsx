@@ -124,13 +124,6 @@ export function Evaluate(props: Props) {
 			upload: signedUploadUrl,
 		});
 	}, [AJVSchema, form.control, signedUploadUrl]);
-
-	console.log("\n\nSchema from fields\n\n", schema);
-	console.log("\n\nAjv Scheman\n\n", AJVSchema);
-	console.log("\n\nForm isvalid\n\n", form.formState.isValid);
-	console.log("\n\nForm errors\n\n", form.formState.errors);
-	console.log("\n\nForm dirty \n\n", form.formState.dirtyFields);
-	console.log("\n\nForm touched\n\n", form.formState.touchedFields);
 	return (
 		<>
 			<div className="prose max-w-none">
