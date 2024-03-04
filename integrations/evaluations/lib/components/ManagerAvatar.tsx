@@ -16,6 +16,7 @@ export function ManagerAvatar({ pub }: { pub: any }) {
 							<p className="font-medium" key={claim.id}>
 								{claim.user.firstName} {claim.user.lastName}{" "}
 							</p>
+							<a target="_blank" href={`mailto:${claim.user.email}`}>contact</a>
 						</div>
 					);
 				})}
