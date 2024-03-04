@@ -67,7 +67,7 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 
 		const timer = new Promise((resolve) => setTimeout(resolve, 1000));
 		if (!data.user) {
-			// send invite
+			// TODO: send invite
 			return;
 		}
 

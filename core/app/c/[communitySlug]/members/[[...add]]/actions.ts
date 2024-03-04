@@ -8,7 +8,7 @@ import { Community, Member, User } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { getLoginData } from "~/lib/auth/loginData";
-import { emailUser } from "~/lib/server/email";
+import { smtpclient } from "~/lib/server/mailgun";
 
 export const suggest = cache(async (email: string, community: Community) => {
 	try {
@@ -125,4 +125,26 @@ export const removeMember = async ({
 	} catch (error) {
 		return { error: error.message };
 	}
+};
+
+const html = String.raw;
+
+const inviteEmailHTML = html` <p>Hi there,</p>`;
+
+export const inviteMember = async ({
+	email,
+	firstName,
+	lastName,
+}: {
+	email: string;
+	firstName: string;
+	lastName: string;
+}) => {
+	const { accepted, rejected } = await smtpclient.sendMail({
+		from: "PubPub <hello@mg.pubpub.org>",
+		to: email,
+		replyTo: "hello@pubpub.org",
+		html,
+		subject,
+	});
 };
