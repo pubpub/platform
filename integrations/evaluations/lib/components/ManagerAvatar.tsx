@@ -14,9 +14,15 @@ export function ManagerAvatar({ pub }: { pub: any }) {
 								<AvatarFallback>{intials}</AvatarFallback>
 							</Avatar>
 							<p className="font-medium" key={claim.id}>
-								{claim.user.firstName} {claim.user.lastName}{" "}
+								{claim.user.firstName} {claim.user.lastName}:{" "}
 							</p>
-							<a target="_blank" href={`mailto:${claim.user.email}`}>contact</a>
+							<a
+								target="_blank"
+								className="hover:underline text-sm"
+								href={`mailto:${claim.user.email}`}
+							>
+								contact
+							</a>
 						</div>
 					);
 				})}

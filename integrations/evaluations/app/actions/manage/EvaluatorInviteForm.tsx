@@ -16,6 +16,7 @@ import { Form, FormDescription, FormItem, FormLabel } from "ui/form";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Loader2, Plus } from "ui/icon";
+import { ManagerAvatar } from "~/lib/components/ManagerAvatar";
 
 type Props = {
 	evaluators: Evaluator[];
@@ -176,6 +177,9 @@ export function EvaluatorInviteForm(props: Props) {
 					<CardDescription>
 						Use this form to invite evaluators to review "
 						{props.pub.values[props.instanceConfig.titleFieldSlug] as string}".
+						<div className="border-t border-gray-300 pb-2"></div>
+						<p className="text-lg pb-1">Manager</p>
+						<ManagerAvatar pub={props.pub}/>
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
