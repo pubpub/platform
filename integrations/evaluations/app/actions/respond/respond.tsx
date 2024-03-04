@@ -306,7 +306,9 @@ export const Respond = (props: Props) => {
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
-						<Button onClick={onContact}>Contact Evaluation Manager</Button>
+						<a href={`mailto://${props.pub.claims![0].user.email}`}>
+							<Button>Contact Evaluation Manager</Button>
+						</a>
 					</div>
 					<h2>Changed your mind?</h2>
 					<p>

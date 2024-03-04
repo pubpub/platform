@@ -17,7 +17,7 @@ export const Process = (props: Props) => {
 				).toLocaleDateString()}
 			</p>
 			<p>Final deadline: {props.deadline.toLocaleDateString()}</p>
-			<h2>Your Evalutaion Manager</h2>
+			<h2>Evaluation Manager</h2>
 			<ManagerAvatar pub={props.pub} />
 			<h2>About our evaluation process</h2>
 			<p>

@@ -1,5 +1,7 @@
 import { Button } from "ui/button";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "ui/hover-card";
 import { PubPayload } from "~/lib/types";
+import Assign from "../c/[communitySlug]/stages/components/Assign";
 
 type Props = {
 	pub: PubPayload;
@@ -71,10 +73,27 @@ const IntegrationActions = (props: Props) => {
 					}
 					return (
 						<li key={action.href} className="flex items-stretch">
-							<Button variant="outline" size="sm" key={action.href}>
-								<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
-								<a href={action.href}>{action.text}</a>
-							</Button>
+							{props.pub.claims.length > 0 ? (
+								<Button variant="outline" size="sm" key={action.href}>
+									<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
+									<a href={action.href}>{action.text}</a>
+								</Button>
+							) : (
+								<HoverCard defaultOpen>
+									<HoverCardTrigger asChild>
+										<Button variant="outline" size="sm" key={action.href}>
+											<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
+											<p>{action.text}</p>
+										</Button>
+									</HoverCardTrigger>
+									<HoverCardContent className=" w-auto m-auto space-y-1">
+										<h2 className="text-sm font-semibold">No Assignees</h2>
+										<p className="text-sm pb-2">
+											Assign a manager to this pub to enable this action.
+										</p>
+									</HoverCardContent>
+								</HoverCard>
+							)}
 						</li>
 					);
 				});
