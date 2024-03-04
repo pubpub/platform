@@ -18,7 +18,7 @@ type Props = {
 };
 
 export default async function Page(props: Props) {
-	const { instanceId, pubId, intent } = props.searchParams;
+	const { instanceId, pubId } = props.searchParams;
 	if (!(instanceId && pubId)) {
 		notFound();
 	}

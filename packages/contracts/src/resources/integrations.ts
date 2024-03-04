@@ -34,13 +34,47 @@ const jsonSchema: z.ZodType<Json> = z.lazy(() =>
 	z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)])
 );
 
+// Auth types
+
+export const SafeUser = z.object({
+	id: z.string(),
+	slug: z.string(),
+	firstName: z.string(),
+	lastName: z.string().nullable(),
+	avatar: z.string().nullable(),
+});
+export type SafeUser = z.infer<typeof SafeUser>;
+
+export const User = SafeUser.and(
+	z.object({
+		email: z.string(),
+	})
+);
+export type User = z.infer<typeof User>;
+
+// Get pub types
+const PubClaimObject = z.object({
+	id: z.string(),
+	stage: z.object({
+		id: z.string(),
+	}),
+	pub: z.object({
+		id: z.string(),
+	}),
+	user: User,
+	releasedAt: z.string().nullable(),
+	createdAt: z.string(),
+	updatedAt: z.string(),
+});
+
+// Define a schema for the array of Claims
+const ClaimsArray = z.array(PubClaimObject);
+
 const commonPubFields = z.object({
 	pubTypeId: z.string(),
 	parentId: z.string().optional().nullable(),
+	claims: ClaimsArray.optional(),
 });
-
-// Get pub types
-
 export const GetPubResponseBodyBase = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
@@ -142,24 +176,6 @@ export const Member = MemberBase.pick({
 	firstName: true,
 	lastName: true,
 });
-
-// Auth types
-
-export const SafeUser = z.object({
-	id: z.string(),
-	slug: z.string(),
-	firstName: z.string(),
-	lastName: z.string().nullable(),
-	avatar: z.string().nullable(),
-});
-export type SafeUser = z.infer<typeof SafeUser>;
-
-export const User = SafeUser.and(
-	z.object({
-		email: z.string(),
-	})
-);
-export type User = z.infer<typeof User>;
 
 // Email types
 

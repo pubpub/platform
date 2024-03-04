@@ -112,7 +112,7 @@ export function Evaluate(props: Props) {
 					url={submissionUrl}
 					evaluating
 				/>
-				<Process deadline={deadline} />
+				<Process deadline={deadline} pub={pub} />
 				<h2>{pubType.name}</h2>
 				<p>{pubType.description}</p>
 				<Form {...form}>

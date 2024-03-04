@@ -1,12 +1,17 @@
-import { EvaluatorWhoAccepted } from "../types";
+import { GetPubResponseBody } from "@pubpub/sdk";
+import { ManagerAvatar } from "./MemberAvatar";
 
 type Props = {
 	deadline: Date;
+	pub: GetPubResponseBody;
 };
 
 export const Process = (props: Props) => {
+	console.log(props.pub.claims?.map((claim) => claim ?? "The World Government"));
+
 	return (
 		<>
+			<h2>Deadlines</h2>
 			<p>
 				Deadline for promptness bonus:{" "}
 				{new Date(
@@ -14,6 +19,9 @@ export const Process = (props: Props) => {
 				).toLocaleDateString()}
 			</p>
 			<p>Final deadline: {props.deadline.toLocaleDateString()}</p>
+			<h2>Manager</h2>
+			<p>{props.pub.claims![0].user!.firstName ?? "The World Government"}</p>
+			<ManagerAvatar pub={props.pub} />
 			<h2>About our evaluation process</h2>
 			<p>
 				We ask evaluators to:

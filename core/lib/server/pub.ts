@@ -21,6 +21,7 @@ export const pubValuesInclude = {
 			},
 		},
 	},
+	claims: { include: { user: true } },
 } satisfies Prisma.PubInclude;
 
 const recursivelyDenormalizePubValues = async (
@@ -101,7 +102,10 @@ const getUpdateDepth = (body: CreatePubRequestBodyWithNulls, depth = 0) => {
 	return depth + 1;
 };
 
-const makePubChildrenCreateOptions = async (body: CreatePubRequestBodyWithNulls, communityId: string) => {
+const makePubChildrenCreateOptions = async (
+	body: CreatePubRequestBodyWithNulls,
+	communityId: string
+) => {
 	if (!body.children) {
 		return undefined;
 	}
