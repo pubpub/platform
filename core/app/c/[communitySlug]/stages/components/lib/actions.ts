@@ -42,6 +42,7 @@ export async function assign(pubId: string, userId: string, stageId: string) {
 				},
 			},
 		});
+		revalidatePath("/");
 	} catch {
 		return { message: "The Pub was not successully assigned" };
 	}
