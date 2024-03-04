@@ -44,3 +44,9 @@ variable "ASSETS_UPLOAD_KEY" {
   description = "AWS access key ID for uploading to s3"
   type = string
 }
+
+variable "HONEYCOMBIO_APIKEY" {
+  description = "API Key for Honeycomb integration"
+  type = string
+  sensitive = true
+}

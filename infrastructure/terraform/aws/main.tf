@@ -7,6 +7,11 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.0"
     }
+
+    honeycombio = {
+      source  = "honeycombio/honeycombio"
+      version = ">= 0.22.0"
+    }
   }
   backend "s3" {
     # contents provided in NAME.s3.tfbackend
@@ -104,4 +109,28 @@ module "service_flock" {
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
     ]
   }
+}
+
+module "honeycomb-aws-integrations" {
+  source = "honeycombio/integrations/aws"
+
+  # TODO: aws cloudwatch logs integration
+  cloudwatch_log_groups = [module.cluster.cluster_info.cloudwatch_log_group_name] // CloudWatch Log Group names to stream to Honeycomb.
+
+  # aws rds logs integration
+  # enable_rds_logs  = true
+  # rds_db_name      = module.core_dependency_services.rds_db_instance_name
+  # rds_db_engine    = "postgresql"
+  # rds_db_log_types = ["slowquery"] // valid types include general, slowquery, error, and audit (audit will be unstructured)
+
+  # aws metrics integration
+  enable_cloudwatch_metrics = true
+
+  # s3 logfile - alb access logs
+  # s3_bucket_arn  = var.s3_bucket_arn
+  # s3_parser_type = "alb" // valid types are alb, elb, cloudfront, vpc-flow-log, s3-access, json, and keyval
+
+  #honeycomb
+  honeycomb_api_key = var.HONEYCOMBIO_APIKEY
+  honeycomb_dataset = "${var.name}-${var.environment}"
 }

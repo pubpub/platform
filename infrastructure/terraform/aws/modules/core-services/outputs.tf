@@ -27,5 +27,6 @@ output "rds_connection_components" {
     host = local.db_host
     port = "5432"
     sslmode = local.db_sslmode
+    id = aws_db_instance.core_postgres.id
   }
 }
