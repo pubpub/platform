@@ -1,7 +1,7 @@
 "use client";
 
 import { Community } from "@prisma/client";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
 	Button,
 	Dialog,
@@ -14,18 +14,9 @@ import {
 	TooltipTrigger,
 } from "ui";
 import { MemberInviteForm } from "./MemberInviteForm";
-import { UserFetch } from "./UserFetch";
 import { useEffect, useState } from "react";
 
-export const AddMemberDialog = ({
-	open,
-	community,
-	searchParams,
-}: {
-	open: boolean;
-	searchParams: { email?: string };
-	community: Community;
-}) => {
+export const AddMemberDialog = ({ open, community }: { open: boolean; community: Community }) => {
 	const router = useRouter();
 	const [actuallyOpen, setActuallyOpen] = useState(false);
 
@@ -56,9 +47,7 @@ export const AddMemberDialog = ({
 				</Tooltip>
 			</TooltipProvider>
 			<DialogContent suppressHydrationWarning={true}>
-				<MemberInviteForm community={community}>
-					<UserFetch email={searchParams.email} />
-				</MemberInviteForm>
+				<MemberInviteForm community={community} />
 			</DialogContent>
 		</Dialog>
 	);

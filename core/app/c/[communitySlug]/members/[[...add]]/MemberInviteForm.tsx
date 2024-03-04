@@ -22,20 +22,12 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Suspense, useEffect, useState, useTransition } from "react";
-import Image from "next/image";
+import { useEffect, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
 import { Community } from "@prisma/client";
-import { revalidatePath } from "next/cache";
 import { Loader2 } from "ui/src/icon";
-// import { UserFetch } from "./UserFetch";
-import { lazy } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-
-const UserFetch = lazy(async () =>
-	import("./UserFetch").then((mod) => ({ default: mod.UserFetch }))
-);
 
 const memberInviteFormSchema = z.object({
 	email: z.string().email(),
@@ -59,7 +51,6 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const path = usePathname();
-	const [isMounted, setIsMounted] = useState(false);
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
@@ -77,7 +68,7 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 		// form submissions are autowrapped in transitions, so we don't need to wrap this in a startTransition
 
 		const timer = new Promise((resolve) => setTimeout(resolve, 1000));
-		if (!data.user || typeof data.user === "string") {
+		if (!data.user) {
 			// send invite
 			return;
 		}
@@ -102,9 +93,8 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 			description: "Member added successfully",
 		});
 
+		// navigate away from the add page to the normal member page
 		router.push(path!.replace(/\/add.*/, ""));
-		// });
-		// close dialog, press escape
 	}
 
 	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
@@ -163,28 +153,10 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 	 * Run the debounced email check on mount if email is provided through the query params
 	 */
 	useEffect(() => {
-		setIsMounted(true);
 		if (email) {
 			debouncedEmailCheck(email);
 		}
 	}, []);
-
-	if (!isMounted) {
-		return null;
-	}
-	// const call = useDebouncedCallback((e) => {
-	// 	startTransition(() => {
-	// 		router.replace(
-	// 			path +
-	// 				"?" +
-	// 				new URLSearchParams({
-	// 					email: e.target.value,
-	// 				}).toString(),
-	// 			{}
-	// 		);
-	// 	});
-	// 	//		router.refresh();
-	// }, 500);
 
 	return (
 		<Form {...form}>

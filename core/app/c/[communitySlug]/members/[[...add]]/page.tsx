@@ -1,40 +1,16 @@
-import {
-	Button,
-	Card,
-	CardContent,
-	Icon,
-	Dialog,
-	DialogTrigger,
-	DialogContent,
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-	Avatar,
-	AvatarImage,
-	AvatarFallback,
-	DialogOverlay,
-} from "ui";
+import { Card, CardContent, Avatar, AvatarImage, AvatarFallback } from "ui";
 import prisma from "~/prisma/db";
-import { MemberInviteForm } from "./MemberInviteForm";
 import { getLoginData } from "~/lib/auth/loginData";
 import { RemoveMemberButton } from "./RemoveMemberButton";
-import { UserFetch } from "./UserFetch";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { AddMemberDialog } from "./AddMemberDialog";
-import { AddMemberButton } from "./AddMemberButton";
 
 export default async function Page({
 	params: { communitySlug, add },
-	searchParams,
 }: {
 	params: {
 		communitySlug: string;
 		add?: string[];
-	};
-	searchParams: {
-		email?: string;
-		add?: string;
 	};
 }) {
 	if (add && add[0] !== "add") {
@@ -74,11 +50,7 @@ export default async function Page({
 		<>
 			<div className="flex mb-16 justify-between items-center">
 				<h1 className="font-bold text-xl">Members</h1>
-				<AddMemberDialog
-					community={community}
-					searchParams={searchParams}
-					open={Boolean(add)}
-				/>
+				<AddMemberDialog community={community} open={Boolean(add)} />
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
