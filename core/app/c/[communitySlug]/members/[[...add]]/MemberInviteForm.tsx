@@ -54,13 +54,7 @@ const memberInviteFormSchema = z.object({
 		.optional(),
 });
 
-export const MemberInviteForm = ({
-	community,
-	children,
-}: {
-	community: Community;
-	children: React.ReactNode;
-}) => {
+export const MemberInviteForm = ({ community }: { community: Community }) => {
 	const [isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
 	const router = useRouter();

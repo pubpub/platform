@@ -87,7 +87,7 @@ export default async function Page({
 								<div className="flex gap-x-4 items-center">
 									<Avatar>
 										<AvatarImage
-											src={user.avatar}
+											src={user.avatar ?? undefined}
 											alt={`${user.firstName} ${user.lastName}`}
 										/>
 										<AvatarFallback>
