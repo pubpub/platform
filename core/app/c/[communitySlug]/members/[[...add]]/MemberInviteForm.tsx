@@ -22,13 +22,20 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import Image from "next/image";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
 import { Community } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { Loader2 } from "ui/src/icon";
+// import { UserFetch } from "./UserFetch";
+import { lazy } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+
+const UserFetch = lazy(async () =>
+	import("./UserFetch").then((mod) => ({ default: mod.UserFetch }))
+);
 
 const memberInviteFormSchema = z.object({
 	email: z.string().email(),
@@ -47,20 +54,18 @@ const memberInviteFormSchema = z.object({
 		.optional(),
 });
 
-export const MemberInviteForm = ({ community }: { community: Community }) => {
+export const MemberInviteForm = ({
+	community,
+	children,
+}: {
+	community: Community;
+	children: React.ReactNode;
+}) => {
 	const [isPending, startTransition] = useTransition();
-	const [isSubmitting, startSubmissionTransition] = useTransition();
-	// const [user, setUser] = useState<
-	// 	| {
-	// 			id: string;
-	// 			slug: string;
-	// 			firstName: string;
-	// 			lastName: string | null;
-	// 			avatar: string | null;
-	// 	  }
-	// 	| undefined
-	// 	| false
-	// >(undefined);
+	const searchParams = useSearchParams();
+	const router = useRouter();
+	const path = usePathname();
+
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
@@ -70,67 +75,82 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 	});
 
 	const user = form.watch("user");
+	const email = form.watch("email");
 
 	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
-		console.log(data);
-		startSubmissionTransition(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-			if (!data.user) {
-				// send invite
-				return;
-			}
+		// form submissions are autowrapped in transitions, so we don't need to wrap this in a startTransition
 
-			const result = await actions.addMember({
-				user: data.user,
-				admin: data.admin,
-				community,
-			});
-			if ("error" in result) {
-				toast({
-					title: "Error",
-					description: `Failed to add member. ${result.error}`,
-				});
-				return;
-			}
+		const timer = new Promise((resolve) => setTimeout(resolve, 1000));
+		if (!data.user) {
+			// send invite
+			return;
+		}
 
-			toast({
-				title: "Success",
-				description: "Member added successfully",
-			});
+		const result = actions.addMember({
+			user: data.user,
+			admin: data.admin,
+			community,
 		});
+
+		await Promise.all([timer, result]);
+		if ("error" in result) {
+			toast({
+				title: "Error",
+				description: `Failed to add member. ${result.error}`,
+			});
+			return;
+		}
+
+		toast({
+			title: "Success",
+			description: "Member added successfully",
+		});
+		// });
 		// close dialog, press escape
 	}
 
-	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
-		startTransition(async () => {
-			// validate the email
-			if (!memberInviteFormSchema.shape.email.safeParse(email).success) {
-				form.setError("email", {
-					message: "Please provide a valid email address",
-				});
-				form.setValue("user", undefined);
-				return;
-			}
-			form.clearErrors("email");
+	// const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
+	// 	startTransition(async () => {
+	// 		// validate the email
+	// 		if (!memberInviteFormSchema.shape.email.safeParse(email).success) {
+	// 			form.setError("email", {
+	// 				message: "Please provide a valid email address",
+	// 			});
+	// 			form.setValue("user", undefined);
+	// 			return;
+	// 		}
+	// 		form.clearErrors("email");
 
-			const users = await actions.suggest(email);
+	// 		const users = await actions.suggest(email);
 
-			if (!Array.isArray(users)) {
-				toast({
-					title: "Error",
-					description: "Failed to suggest user",
-				});
-				return;
-			}
+	// 		if (!Array.isArray(users)) {
+	// 			toast({
+	// 				title: "Error",
+	// 				description: "Failed to suggest user",
+	// 			});
+	// 			return;
+	// 		}
 
-			if (!users.length) {
-				form.setValue("user", false);
-				return;
-			}
+	// 		if (!users.length) {
+	// 			form.setValue("user", false);
+	// 			return;
+	// 		}
 
-			form.setValue("user", users[0]);
-			console.log(users);
+	// 		form.setValue("user", users[0]);
+	// 	});
+	// }, 500);
+	const call = useDebouncedCallback((e) => {
+		startTransition(() => {
+			router.replace(
+				path +
+					"?" +
+					new URLSearchParams({
+						email: e.target.value,
+					}).toString(),
+				{}
+			);
 		});
+		//		router.refresh();
 	}, 500);
 
 	return (
@@ -147,7 +167,8 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 									{...field}
 									onChange={(e) => {
 										field.onChange(e);
-										debouncedEmailCheck(e.target.value);
+										call(e);
+										// debouncedEmailCheck(e.target.value);
 									}}
 								/>
 								{isPending && <Icon.Loader2 className="h-4 w-4 animate-spin" />}
@@ -168,23 +189,6 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 						</FormItem>
 					)}
 				/>
-				{/* <FormField
-					control={form.control}
-					name="admin"
-					render={({ field }) => (
-						<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
-							<FormControl>
-								<Checkbox checked={field.value} onCheckedChange={field.onChange} />
-							</FormControl>
-							<div className="space-y-1 leading-none">
-								<FormLabel>Use different settings for my mobile devices</FormLabel>
-								<FormDescription>
-									You can manage your mobile notifications in the{" "}
-								</FormDescription>
-							</div>
-						</FormItem>
-					)}
-				/> */}
 				{user === false && (
 					<>
 						<FormField
@@ -226,6 +230,10 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 						)}
 					/>
 				)}
+				{children}
+				{/* <Suspense fallback={<div>Loading...</div>}>
+					<UserFetch email={email} />
+				</Suspense> */}
 				{user && (
 					<Card>
 						<CardContent className="flex gap-x-4 items-center p-4">
@@ -249,8 +257,8 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 					</Card>
 				)}
 				{user !== undefined && (
-					<Button type="submit" disabled={isSubmitting}>
-						{isSubmitting ? (
+					<Button type="submit" disabled={form.formState.isSubmitting}>
+						{form.formState.isSubmitting ? (
 							<Loader2 className="h-4 w-4 animate-spin" />
 						) : user === false ? (
 							"Invite"

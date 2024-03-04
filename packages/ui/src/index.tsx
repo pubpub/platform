@@ -3,6 +3,7 @@
 /* Components */
 export * as Icon from "./icon";
 export * from "./alert";
+export * from "./alert-dialog";
 export * from "./avatar";
 export * from "./badge";
 export * from "./button";

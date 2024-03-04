@@ -4,7 +4,7 @@ import type { SuggestedUser } from "~/lib/server/members";
 
 import { getSuggestedMembers } from "~/lib/server";
 import prisma from "~/prisma/db";
-import { Community } from "@prisma/client";
+import { Community, Member, User } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export const suggest = async (email?: string) => {
@@ -47,6 +47,28 @@ export const addMember = async ({
 
 		revalidatePath(`/c/${community.slug}/members`, "page");
 		return member;
+	} catch (error) {
+		return { error: error.message };
+	}
+};
+
+export const removeMember = async ({
+	member,
+	path,
+}: {
+	member: Member & { user: User };
+	path: string | null;
+}) => {
+	try {
+		const deleted = await prisma.member.delete({
+			where: {
+				id: member.id,
+			},
+		});
+		if (path) {
+			revalidatePath(path, "page");
+		}
+		return { success: true };
 	} catch (error) {
 		return { error: error.message };
 	}
