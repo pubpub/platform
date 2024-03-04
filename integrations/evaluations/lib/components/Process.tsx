@@ -1,5 +1,5 @@
 import { GetPubResponseBody } from "@pubpub/sdk";
-import { ManagerAvatar } from "./MemberAvatar";
+import { ManagerAvatar } from "./ManagerAvatar";
 
 type Props = {
 	deadline: Date;
@@ -20,7 +20,6 @@ export const Process = (props: Props) => {
 			</p>
 			<p>Final deadline: {props.deadline.toLocaleDateString()}</p>
 			<h2>Manager</h2>
-			<p>{props.pub.claims![0].user!.firstName ?? "The World Government"}</p>
 			<ManagerAvatar pub={props.pub} />
 			<h2>About our evaluation process</h2>
 			<p>
