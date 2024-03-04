@@ -79,8 +79,8 @@ const IntegrationActions = (props: Props) => {
 									<a href={action.href}>{action.text}</a>
 								</Button>
 							) : (
-								<HoverCard defaultOpen>
-									<HoverCardTrigger asChild>
+								<HoverCard>
+									<HoverCardTrigger asChild >
 										<Button variant="outline" size="sm" key={action.href}>
 											<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
 											<p>{action.text}</p>
