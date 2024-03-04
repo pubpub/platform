@@ -101,6 +101,10 @@
 			"module": "./collapsible/dist/ui-collapsible.esm.js",
 			"default": "./collapsible/dist/ui-collapsible.cjs.js"
 		},
+		"./alert-dialog": {
+			"module": "./alert-dialog/dist/ui-alert-dialog.esm.js",
+			"default": "./alert-dialog/dist/ui-alert-dialog.cjs.js"
+		},
 		"./dropdown-menu": {
 			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
 			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
@@ -135,6 +139,7 @@
 		"dist",
 		"styles.css",
 		"alert",
+		"alert-dialog",
 		"avatar",
 		"badge",
 		"button",
@@ -237,6 +242,7 @@
 		},
 		"entrypoints": [
 			"alert.tsx",
+			"alert-dialog.tsx",
 			"avatar.tsx",
 			"badge.tsx",
 			"button.tsx",
