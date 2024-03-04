@@ -22,7 +22,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Suspense, useState, useTransition } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
@@ -65,12 +65,14 @@ export const MemberInviteForm = ({
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const path = usePathname();
+	const [isMounted, setIsMounted] = useState(false);
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
 			admin: false,
 			user: undefined,
+			email: searchParams?.get("email") ?? "",
 		},
 	});
 
@@ -81,7 +83,7 @@ export const MemberInviteForm = ({
 		// form submissions are autowrapped in transitions, so we don't need to wrap this in a startTransition
 
 		const timer = new Promise((resolve) => setTimeout(resolve, 1000));
-		if (!data.user) {
+		if (!data.user || typeof data.user === "string") {
 			// send invite
 			return;
 		}
@@ -105,53 +107,90 @@ export const MemberInviteForm = ({
 			title: "Success",
 			description: "Member added successfully",
 		});
+
+		router.push(path!.replace(/\/add.*/, ""));
 		// });
 		// close dialog, press escape
 	}
 
-	// const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
-	// 	startTransition(async () => {
-	// 		// validate the email
-	// 		if (!memberInviteFormSchema.shape.email.safeParse(email).success) {
-	// 			form.setError("email", {
-	// 				message: "Please provide a valid email address",
-	// 			});
-	// 			form.setValue("user", undefined);
-	// 			return;
-	// 		}
-	// 		form.clearErrors("email");
+	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
+		startTransition(async () => {
+			if (!email) {
+				form.setValue("user", undefined);
+				return;
+			}
+			// validate the email
+			if (!memberInviteFormSchema.shape.email.safeParse(email).success) {
+				form.setError("email", {
+					message: "Please provide a valid email address",
+				});
+				form.setValue("user", undefined);
+				return;
+			}
+			form.clearErrors("email");
 
-	// 		const users = await actions.suggest(email);
+			router.replace(path + "?" + new URLSearchParams({ email }).toString(), {});
 
-	// 		if (!Array.isArray(users)) {
-	// 			toast({
-	// 				title: "Error",
-	// 				description: "Failed to suggest user",
-	// 			});
-	// 			return;
-	// 		}
+			const { member, user, error } = await actions.suggest(email, community);
 
-	// 		if (!users.length) {
-	// 			form.setValue("user", false);
-	// 			return;
-	// 		}
+			if (typeof user === "string") {
+				form.setValue("user", undefined);
+				toast({
+					title: "Cannot add user",
+					description: error,
+				});
+				return;
+			}
 
-	// 		form.setValue("user", users[0]);
-	// 	});
-	// }, 500);
-	const call = useDebouncedCallback((e) => {
-		startTransition(() => {
-			router.replace(
-				path +
-					"?" +
-					new URLSearchParams({
-						email: e.target.value,
-					}).toString(),
-				{}
-			);
+			if (error) {
+				toast({
+					title: "Error",
+					description: "Failed to suggest user",
+				});
+				return;
+			}
+
+			if (user) {
+				form.setValue("user", user);
+				return;
+			}
+
+			if (member) {
+				form.setValue("user", undefined);
+				return;
+			}
+
+			form.setValue("user", false);
+			return;
 		});
-		//		router.refresh();
 	}, 500);
+
+	/**
+	 * Run the debounced email check on mount if email is provided through the query params
+	 */
+	useEffect(() => {
+		setIsMounted(true);
+		if (email) {
+			debouncedEmailCheck(email);
+		}
+	}, []);
+
+	if (!isMounted) {
+		return null;
+	}
+	// const call = useDebouncedCallback((e) => {
+	// 	startTransition(() => {
+	// 		router.replace(
+	// 			path +
+	// 				"?" +
+	// 				new URLSearchParams({
+	// 					email: e.target.value,
+	// 				}).toString(),
+	// 			{}
+	// 		);
+	// 	});
+	// 	//		router.refresh();
+	// }, 500);
 
 	return (
 		<Form {...form}>
@@ -167,8 +206,8 @@ export const MemberInviteForm = ({
 									{...field}
 									onChange={(e) => {
 										field.onChange(e);
-										call(e);
-										// debouncedEmailCheck(e.target.value);
+										// call(e);
+										debouncedEmailCheck(e.target.value);
 									}}
 								/>
 								{isPending && <Icon.Loader2 className="h-4 w-4 animate-spin" />}
@@ -230,10 +269,6 @@ export const MemberInviteForm = ({
 						)}
 					/>
 				)}
-				{children}
-				{/* <Suspense fallback={<div>Loading...</div>}>
-					<UserFetch email={email} />
-				</Suspense> */}
 				{user && (
 					<Card>
 						<CardContent className="flex gap-x-4 items-center p-4">

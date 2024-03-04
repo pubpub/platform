@@ -13,6 +13,7 @@ import {
 	Avatar,
 	AvatarImage,
 	AvatarFallback,
+	DialogOverlay,
 } from "ui";
 import prisma from "~/prisma/db";
 import { MemberInviteForm } from "./MemberInviteForm";
@@ -20,6 +21,8 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 import { UserFetch } from "./UserFetch";
 import { notFound, redirect } from "next/navigation";
+import { AddMemberDialog } from "./AddMemberDialog";
+import { AddMemberButton } from "./AddMemberButton";
 
 export default async function Page({
 	params: { communitySlug, add },
@@ -29,11 +32,15 @@ export default async function Page({
 		communitySlug: string;
 		add?: string[];
 	};
-	searchParams;
+	searchParams: {
+		email?: string;
+		add?: string;
+	};
 }) {
 	if (add && add[0] !== "add") {
-		notFound();
+		return notFound();
 	}
+
 	const community = await prisma.community.findUnique({
 		where: { slug: communitySlug },
 	});
@@ -65,31 +72,11 @@ export default async function Page({
 		<>
 			<div className="flex mb-16 justify-between items-center">
 				<h1 className="font-bold text-xl">Members</h1>
-				<Dialog
+				<AddMemberDialog
+					community={community}
+					searchParams={searchParams}
 					open={Boolean(add)}
-					onOpenChange={async (open) => {
-						"use server";
-						redirect(`/c/${communitySlug}/members${open ? "/add" : ""}`);
-					}}
-				>
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipContent> Add a user to your community</TooltipContent>
-							<TooltipTrigger asChild>
-								<DialogTrigger asChild>
-									<Button variant="outline" className="flex items-center gap-x-2">
-										<Icon.UserPlus size="16" /> Add Member
-									</Button>
-								</DialogTrigger>
-							</TooltipTrigger>
-						</Tooltip>
-					</TooltipProvider>
-					<DialogContent>
-						<MemberInviteForm community={community}>
-							<UserFetch email={searchParams.email} />
-						</MemberInviteForm>
-					</DialogContent>
-				</Dialog>
+				/>
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
