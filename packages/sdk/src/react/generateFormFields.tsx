@@ -25,7 +25,6 @@ export const buildSchemaFromPubFields = (
 	pubType: GetPubTypeResponseBody,
 	exclude: String[]
 ): JSONSchemaType<AnySchema> => {
-	
 	const schema = {
 		$id: `urn:uuid:${pubType.id}`,
 		title: `${pubType.name}`,

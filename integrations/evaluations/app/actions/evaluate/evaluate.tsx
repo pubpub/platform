@@ -30,7 +30,7 @@ export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 	const { toast } = useToast();
 
-	const { AJVSchema, schema } = useMemo(() => {
+	const { AjvSchema, schema } = useMemo(() => {
 		const exclude = [
 			props.instanceConfig.titleFieldSlug,
 			props.instanceConfig.evaluatorFieldSlug,
@@ -54,8 +54,8 @@ export function Evaluate(props: Props) {
 
 		// "schema" is a key described above though we can also use the schema id created when building the schema
 		// we could later pass multiple for dereferencing
-		const AJVSchema = new Ajv({ formats: fullFormats }).addSchema(schema, "schema");
-		return { AJVSchema, schema };
+		const AjvSchema = new Ajv({ formats: fullFormats }).addSchema(schema, "schema");
+		return { AjvSchema, schema };
 	}, [pubType]);
 
 	const form = useForm({
@@ -119,11 +119,11 @@ export function Evaluate(props: Props) {
 
 	const EvaluationFormFields = useMemo(() => {
 		return SchemaBasedFormFields({
-			compiledSchema: AJVSchema,
+			compiledSchema: AjvSchema,
 			control: form.control,
 			upload: signedUploadUrl,
 		});
-	}, [AJVSchema, form.control, signedUploadUrl]);
+	}, [AjvSchema, form.control, signedUploadUrl]);
 	return (
 		<>
 			<div className="prose max-w-none">
