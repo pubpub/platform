@@ -7,8 +7,6 @@ type Props = {
 };
 
 export const Process = (props: Props) => {
-	console.log(props.pub.claims?.map((claim) => claim ?? "The World Government"));
-
 	return (
 		<>
 			<h2>Deadlines</h2>
