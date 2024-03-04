@@ -117,7 +117,7 @@ export function Evaluate(props: Props) {
 				new Date(props.evaluator.acceptedAt)
 		  );
 
-	const x = useMemo(() => {
+	const EvaluationFormFields = useMemo(() => {
 		return SchemaBasedFormFields({
 			compiledSchema: AJVSchema,
 			control: form.control,
@@ -145,7 +145,7 @@ export function Evaluate(props: Props) {
 				<p>{pubType.description}</p>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
-						{x}
+						{EvaluationFormFields}
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
 								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
