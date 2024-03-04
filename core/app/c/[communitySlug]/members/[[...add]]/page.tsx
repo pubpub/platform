@@ -53,6 +53,8 @@ export default async function Page({
 	const currentCommunityMemberShip = loginData?.memberships?.find(
 		(m) => m.community.slug === communitySlug
 	);
+
+	// we don't want to show the members page to non-admins
 	if (!currentCommunityMemberShip?.canAdmin) {
 		return null;
 	}
