@@ -40,6 +40,7 @@ RUN if [[ ! -z $PACKAGE ]]; \
     then \
       pnpm --filter $PACKAGE build ; \
       pnpm --filter $PACKAGE --prod deploy /tmp/app ; \
+      cp core/next.docker.config.js /tmp/app/next.config.js ; \
       cp core/.env.docker /tmp/app/.env ; \
     fi
 

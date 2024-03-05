@@ -18,7 +18,8 @@
 		"type-check-watch": "tsc --watch"
 	},
 	"files": [
-		".next"
+		".next",
+		"public"
 	],
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"
