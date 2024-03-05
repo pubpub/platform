@@ -26,7 +26,7 @@ export default async function Page() {
 			redirect("/login");
 		}
 	} else {
-		redirect("/login")
+		redirect("/login");
 	}
 	return <>Home...</>;
 }

@@ -511,7 +511,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	const reminderDeadline = new Date(deadline.getTime() - 21 * (1000 * 60 * 60 * 24));
 	const jobKey = makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
 	const runAt = reminderDeadline;
-	
+
 	return client.scheduleEmail(
 		instanceId,
 		{

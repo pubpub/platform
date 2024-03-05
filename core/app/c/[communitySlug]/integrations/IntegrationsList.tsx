@@ -49,7 +49,7 @@ const IntegrationList: React.FC<Props> = function ({ instances, token }) {
 								<div className="mt-4">
 									{instance.pubs.map((pub) => {
 										return (
-											<div className="text-sm">
+											<div key={pub.id} className="text-sm">
 												Attached to pub:{" "}
 												<span className="font-bold">{getTitle(pub)}</span>
 											</div>
