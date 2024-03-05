@@ -6,9 +6,6 @@ import "./lib/env.mjs";
 
 const nextConfig = withPreconstruct({
 	reactStrictMode: true,
-	experimental: {
-		serverActions: true,
-	},
 });
 
 export default withSentryConfig(

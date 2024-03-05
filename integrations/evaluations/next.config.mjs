@@ -10,9 +10,6 @@ import "./lib/env.mjs";
  */
 const nextConfig = {
 	reactStrictMode: true,
-	experimental: {
-		serverActions: true,
-	},
 };
 
 export default withPreconstruct(
