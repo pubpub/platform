@@ -6,12 +6,20 @@ import { expect } from "utils";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
-import { isInvited } from "~/lib/types";
 import {
+	EvaluatorWhoAccepted,
+	EvaluatorWithInvite,
+	assertHasAccepted,
+	assertIsInvited,
+	isInvited,
+} from "~/lib/types";
+import {
+	scheduleInvitationReminderEmail,
 	scheduleNoReplyNotificationEmail,
-	scheduleReminderEmail,
 	sendInviteEmail,
-} from "../../../lib/emails";
+	unscheduleAllDeadlineReminderEmails,
+	unscheduleAllManagerEmails,
+} from "~/lib/emails";
 import { InviteFormEvaluator } from "./types";
 
 export const save = async (
@@ -71,7 +79,7 @@ export const save = async (
 				// Immediately send the invite email.
 				await sendInviteEmail(instanceId, pubId, evaluator);
 				// Scehdule a reminder email to person who was invited to evaluate.
-				await scheduleReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+				await scheduleInvitationReminderEmail(instanceId, instanceConfig, pubId, evaluator);
 				// Schedule no-reply notification email to person who invited the
 				// evaluator.
 				await scheduleNoReplyNotificationEmail(
@@ -118,15 +126,22 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 		const evaluation = pub.children.find(
 			(child) => child.values[instanceConfig.evaluatorFieldSlug] === userId
 		);
-		// TODO: When an evaluator is removed, we should unschedule reminder
-		// email and notification email(s).
+
 		if (evaluation !== undefined) {
 			await client.deletePub(instanceId, evaluation.id);
 		}
 		if (instanceState !== undefined) {
+			let evaluator = expect(
+				instanceState[userId],
+				`User was not invited to evaluate pub ${pubId}`
+			);
+			assertHasAccepted(evaluator);
+			await unscheduleAllDeadlineReminderEmails(instanceId, pubId, evaluator);
+			await unscheduleAllManagerEmails(instanceId, pubId, evaluator);
 			delete instanceState[userId];
 			await setInstanceState(instanceId, pubId, instanceState);
 		}
+
 		return { success: true };
 	} catch (error) {
 		return { error: error.message };

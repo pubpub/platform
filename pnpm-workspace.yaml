@@ -1,6 +1,6 @@
 packages:
     - "core"
     - "jobs"
-    - "tsconfig"
+    - "config/*"
     - "integrations/*"
     - "packages/*"

@@ -8,8 +8,14 @@ import {
 	sendDeclinedNotificationEmail,
 	sendRequestedInfoNotification,
 	unscheduleNoReplyNotificationEmail,
-	unscheduleReminderEmail,
+	unscheduleInvitationReminderEmail,
 	calculateDeadline,
+	schedulePromptEvalBonusReminderEmail,
+	scheduleFinalPromptEvalBonusReminderEmail,
+	scheduleEvaluationReminderEmail,
+	scheduleFinalEvaluationReminderEmail,
+	scheduleFollowUpToFinalEvaluationReminderEmail,
+	sendNoticeOfNoSubmitEmail,
 } from "~/lib/emails";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { cookie } from "~/lib/request";
@@ -39,7 +45,6 @@ export const accept = async (instanceId: string, pubId: string) => {
 			...evaluator,
 			status: "accepted",
 			acceptedAt: new Date().toString(),
-			deadline: new Date(Date.now()),
 		};
 		const deadline = calculateDeadline(
 			{
@@ -50,16 +55,40 @@ export const accept = async (instanceId: string, pubId: string) => {
 		);
 		evaluator.deadline = deadline;
 		await setInstanceState(instanceId, pubId, instanceState);
-		// Unschedule reminder email.
-		await unscheduleReminderEmail(instanceId, pubId, evaluator);
-		// Unschedule no-reply notification email.
+		// Unschedule reminder email to evaluator.
+		await unscheduleInvitationReminderEmail(instanceId, pubId, evaluator);
+		// Unschedule no-reply notification email to community manager.
 		await unscheduleNoReplyNotificationEmail(instanceId, pubId, evaluator);
-		// Immediately send accepted notification email.
+		// Immediately send accepted notification email to community manager.
 		await sendAcceptedNotificationEmail(instanceId, instanceConfig, pubId, evaluator);
 		// Immediately send accepted email to evaluator.
 		await sendAcceptedEmail(instanceId, instanceConfig, pubId, evaluator);
-		// Schedule no-submit notification email.
+		// Schedule no-submit notification email to community manager.
 		await scheduleNoSubmitNotificationEmail(instanceId, instanceConfig, pubId, evaluator);
+
+		// schedule prompt evaluation email to evaluator.
+		await schedulePromptEvalBonusReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+		//schedule final prompt eval email to evaluator
+		await scheduleFinalPromptEvalBonusReminderEmail(
+			instanceId,
+			instanceConfig,
+			pubId,
+			evaluator
+		);
+		//schedule eval reminder email to evaluator
+		await scheduleEvaluationReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+		//schedule final eval reminder email to evaluator
+		await scheduleFinalEvaluationReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+		//schedule follow up to final eval reminder email to evaluator
+		await scheduleFollowUpToFinalEvaluationReminderEmail(
+			instanceId,
+			instanceConfig,
+			pubId,
+			evaluator
+		);
+		// schedule no-submit notification email to evalutaor
+		await sendNoticeOfNoSubmitEmail(instanceId, instanceConfig, pubId, evaluator);
+
 		return { success: true };
 	} catch (error) {
 		return { error: error.message };
@@ -85,7 +114,7 @@ export const decline = async (instanceId: string, pubId: string) => {
 		evaluator = instanceState[user.id] = { ...evaluator, status: "declined" };
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email.
-		await unscheduleReminderEmail(instanceId, pubId, evaluator);
+		await unscheduleInvitationReminderEmail(instanceId, pubId, evaluator);
 		// Unschedule no-reply notification email.
 		await unscheduleNoReplyNotificationEmail(instanceId, pubId, evaluator);
 		// Immediately send declined notification email.

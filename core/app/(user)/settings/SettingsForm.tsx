@@ -180,6 +180,7 @@ export default function SettingsForm({
 								<Link
 									href={`/c/${community.slug}`}
 									className="cursor-pointer hover:bg-gray-50"
+									key={community.id}
 								>
 									<Button variant="outline">
 										<div className="flex items-center">
