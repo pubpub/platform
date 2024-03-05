@@ -9,6 +9,9 @@ import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { getLoginData } from "~/lib/auth/loginData";
 import { smtpclient } from "~/lib/server/mailgun";
+import { getServerSupabase } from "~/lib/supabaseServer";
+import { randomUUID } from "crypto";
+import { formatSupabaseError } from "~/lib/supabase";
 
 export const suggest = cache(async (email: string, community: Community) => {
 	try {
@@ -127,24 +130,39 @@ export const removeMember = async ({
 	}
 };
 
-const html = String.raw;
-
-const inviteEmailHTML = html` <p>Hi there,</p>`;
-
 export const inviteMember = async ({
 	email,
 	firstName,
 	lastName,
+	community,
 }: {
 	email: string;
 	firstName: string;
 	lastName: string;
+	community: Community;
 }) => {
-	const { accepted, rejected } = await smtpclient.sendMail({
-		from: "PubPub <hello@mg.pubpub.org>",
-		to: email,
-		replyTo: "hello@pubpub.org",
-		html,
-		subject,
+	const loginData = await getLoginData();
+
+	if (!loginData?.memberships?.find((m) => m.communityId === community.id)?.canAdmin) {
+		throw new Error("You do not have permission to invite members to this community");
+	}
+
+	const client = getServerSupabase();
+
+	const { error } = await client.auth.signUp({
+		email,
+		password: randomUUID(),
+		options: {
+			emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			data: {
+				firstName,
+				lastName,
+				communityId: community.id,
+				canAdmin: true,
+			},
+		},
 	});
+	if (error) {
+		throw new Error(formatSupabaseError(error));
+	}
 };
