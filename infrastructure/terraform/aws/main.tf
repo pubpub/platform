@@ -38,6 +38,7 @@ module "core_dependency_services" {
   source = "./modules/core-services"
 
   cluster_info = module.cluster.cluster_info
+  HONEYCOMB_API_KEY = var.HONEYCOMB_API_KEY
 }
 
 module "service_core" {
@@ -82,6 +83,7 @@ module "service_core" {
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
       { name = "SUPABASE_WEBHOOKS_API_KEY", valueFrom = module.core_dependency_services.secrets.supabase_webhooks_api_key },
       { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
+      { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
     ]
   }
 }
@@ -107,6 +109,7 @@ module "service_flock" {
     secrets = [
       { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+      { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
     ]
   }
 }
@@ -115,5 +118,5 @@ module "observability_honeycomb_integration" {
   source = "./modules/honeycomb-integration"
 
   cluster_info = module.cluster.cluster_info
-  HONEYCOMBIO_APIKEY = var.HONEYCOMBIO_APIKEY
+  HONEYCOMB_API_KEY = var.HONEYCOMB_API_KEY
 }

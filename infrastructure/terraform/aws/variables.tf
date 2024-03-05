@@ -45,7 +45,7 @@ variable "ASSETS_UPLOAD_KEY" {
   type = string
 }
 
-variable "HONEYCOMBIO_APIKEY" {
+variable "HONEYCOMB_API_KEY" {
   description = "API Key for Honeycomb integration"
   type = string
   sensitive = true

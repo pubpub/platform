@@ -14,7 +14,7 @@ variable "cluster_info" {
   })
 }
 
-variable "HONEYCOMBIO_APIKEY" {
+variable "HONEYCOMB_API_KEY" {
   description = "API key for the honeycomb environment"
   type = string
   sensitive = true

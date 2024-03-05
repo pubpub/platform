@@ -13,3 +13,13 @@ variable "cluster_info" {
     lb_target_group_arn = string
   })
 }
+
+
+# TODO: Possibly, this factoring could be improved
+# by making it easier to deploy the Core without a honeycomb
+# account.
+variable "HONEYCOMB_API_KEY" {
+  description = "API key for the honeycomb environment"
+  type = string
+  sensitive = true
+}

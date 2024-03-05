@@ -24,7 +24,7 @@ module "honeycomb-aws-cloudwatch-metrics-integration" {
 
   name = "${var.cluster_info.name}-${var.cluster_info.environment}-cw-metrics"
 
-  honeycomb_api_key      = var.HONEYCOMBIO_APIKEY // Honeycomb API key.
+  honeycomb_api_key      = var.HONEYCOMB_API_KEY // Honeycomb API key.
   honeycomb_dataset_name = "cloudwatch-metrics" // Your Honeycomb dataset name that will receive the metrics.
 
   s3_failure_bucket_arn = module.firehose_failure_bucket.s3_bucket_arn
@@ -41,6 +41,6 @@ module "honeycomb-aws-cloudwatch-logs-integration" {
   s3_failure_bucket_arn = module.firehose_failure_bucket.s3_bucket_arn
 
   #honeycomb
-  honeycomb_api_key      = var.HONEYCOMBIO_APIKEY // Honeycomb API key.
+  honeycomb_api_key      = var.HONEYCOMB_API_KEY // Honeycomb API key.
   honeycomb_dataset_name = "cloudwatch-logs" // Your Honeycomb dataset name that will receive the logs.
 }
