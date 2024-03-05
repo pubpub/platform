@@ -1,4 +1,4 @@
-import { Toaster } from "ui";
+import { Toaster } from "ui/toaster";
 import "ui/styles.css";
 import InitClient from "./InitClient";
 import { PublicEnvProvider } from "next-runtime-env";

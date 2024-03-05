@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import { Button } from "ui";
+import { Button } from "ui/button";
 import { supabase } from "lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,7 +38,7 @@ export default function LoginForm() {
 				router.push("/settings");
 			}
 		}
-	}
+	};
 
 	return (
 		<div className="border p-4">

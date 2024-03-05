@@ -1,5 +1,5 @@
 import { User } from "@pubpub/sdk";
-import { Toaster } from "ui";
+import { Toaster } from "ui/toaster";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";

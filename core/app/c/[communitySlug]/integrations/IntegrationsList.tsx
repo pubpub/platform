@@ -1,7 +1,9 @@
 "use client";
 
 import NextLink from "next/link";
-import { Button, Card, CardContent, CardHeader } from "ui";
+
+import { Button } from "ui/button";
+import { Card, CardContent, CardHeader } from "ui/card";
 import { IntegrationData } from "./page";
 import { Row, RowContent, RowFooter } from "~/app/components/Row";
 

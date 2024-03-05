@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import { Button } from "ui";
+import { Button } from "ui/button";
 import { UserPostBody } from "~/lib/types";
 
 export default function SignupForm() {

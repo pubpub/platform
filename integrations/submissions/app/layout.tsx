@@ -1,7 +1,7 @@
 import { User } from "@pubpub/sdk";
 import { cookies, headers } from "next/headers";
-import { Toaster } from "ui";
 import { env } from "~/lib/env.mjs";
+import { Toaster } from "ui/toaster";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";

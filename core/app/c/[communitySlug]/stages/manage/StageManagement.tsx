@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import StageEditor from "./StageEditor";
 import { StagePayload, StagesById } from "~/lib/types";
 

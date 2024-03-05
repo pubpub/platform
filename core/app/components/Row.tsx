@@ -1,7 +1,7 @@
 "use client";
 
 import { PropsWithChildren } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "ui";
+import { Card, CardContent, CardFooter, CardHeader } from "ui/card";
 import { cn } from "utils";
 
 type Props = PropsWithChildren<{ className?: string }>;

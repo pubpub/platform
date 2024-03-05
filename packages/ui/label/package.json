@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-label.cjs.js",
+	"module": "dist/ui-label.esm.js"
+}

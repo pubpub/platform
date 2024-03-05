@@ -3,7 +3,11 @@
 import { PubValues } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
 import { expect } from "utils";
-import { sendSubmittedNotificationEmail, unscheduleNoSubmitNotificationEmail } from "~/lib/emails";
+import {
+	sendSubmittedNotificationEmail,
+	unscheduleAllDeadlineReminderEmails,
+	unscheduleNoSubmitNotificationEmail,
+} from "~/lib/emails";
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
@@ -37,8 +41,10 @@ export const submit = async (instanceId: string, pubId: string, values: PubValue
 			evaluationPubId: pub.id,
 		};
 		await setInstanceState(instanceId, pubId, instanceState);
-		// Unschedule no-submit notification email.
+		// Unschedule no-submit notification email for manager.
 		await unscheduleNoSubmitNotificationEmail(instanceId, pubId, evaluator);
+		// unschedule dealine reminder emails.
+		await unscheduleAllDeadlineReminderEmails(instanceId, pubId, evaluator);
 		// Immediately send submitted notification email.
 		await sendSubmittedNotificationEmail(instanceId, instanceConfig, pubId, evaluator);
 		revalidatePath("/");

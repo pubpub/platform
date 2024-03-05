@@ -3,20 +3,13 @@ import * as React from "react";
 import Ajv, { JSONSchemaType } from "ajv";
 import { GetPubTypeResponseBody } from "contracts";
 import { Control, ControllerRenderProps } from "react-hook-form";
-import {
-	Checkbox,
-	Confidence,
-	FileUpload,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-	Input,
-	Separator,
-	Textarea,
-} from "ui";
+import { Checkbox } from "ui/checkbox";
+import { Confidence } from "ui/customRenderers/confidence/confidence";
+import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Input } from "ui/input";
+import { Separator } from "ui/separator";
+import { Textarea } from "ui/textarea";
 import { cn } from "utils";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type

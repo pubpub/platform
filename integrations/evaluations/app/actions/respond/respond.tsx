@@ -2,7 +2,8 @@
 
 import { GetPubResponseBody } from "@pubpub/sdk";
 import { useCallback } from "react";
-import { Button, toast } from "ui";
+import { Button } from "ui/button";
+import { toast } from "ui/use-toast";
 import { accept, contact, decline } from "./actions";
 import { InstanceConfig } from "~/lib/types";
 import Link from "next/link";

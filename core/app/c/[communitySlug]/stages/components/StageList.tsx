@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Fragment } from "react";
-import { Button } from "ui";
+import { Button } from "ui/button";
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
 import { StagesById, StagePayload, UserLoginData } from "~/lib/types";

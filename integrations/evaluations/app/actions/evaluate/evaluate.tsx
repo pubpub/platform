@@ -7,12 +7,16 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { Button, Form, Icon, useLocalStorage, useToast } from "ui";
 import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
 import { EvaluatorWhoAccepted, InstanceConfig } from "~/lib/types";
 import { submit, upload } from "./actions";
-import { calculateDeadline } from "~/lib/emails";
+import { getDeadline } from "~/lib/emails";
+import { useToast } from "ui/use-toast";
+import { useLocalStorage } from "ui/hooks";
+import { Form } from "ui/form";
+import { Button } from "ui/button";
+import { Loader2 } from "ui/icon";
 
 type Props = {
 	instanceId: string;
@@ -97,15 +101,7 @@ export function Evaluate(props: Props) {
 	const submissionUrl = pub.values["unjournal:url"] as string;
 	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
 	const submissionAbstract = pub.values["unjournal:description"] as string;
-	const deadline = props.evaluator.deadline
-		? new Date(props.evaluator.deadline)
-		: calculateDeadline(
-				{
-					deadlineLength: props.instanceConfig.deadlineLength,
-					deadlineUnit: props.instanceConfig.deadlineUnit,
-				},
-				new Date(props.evaluator.acceptedAt)
-		  );
+	const deadline = getDeadline(props.instanceConfig, props.evaluator);
 
 	return (
 		<>
@@ -124,7 +120,7 @@ export function Evaluate(props: Props) {
 						{formFieldsFromSchema}
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
-								<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
 							)}
 							Submit Evaluation
 						</Button>
