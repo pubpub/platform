@@ -1,8 +1,14 @@
 "use client";
 import React from "react";
 import { Button } from "ui/button";
-import { Card, CardContent, CardFooter, CardTitle } from "ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTrigger,
+	DialogClose,
+} from "ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { Avatar, AvatarFallback } from "ui/avatar";
@@ -31,12 +37,9 @@ const getTitle = (pub: Props["pub"]) => {
 };
 
 export default function Assign(props: Props) {
-	const [open, setOpen] = React.useState(false);
-	const [selectedUserId, setSelectedUserid] = React.useState("");
 	const { toast } = useToast();
-
-	const onAssign = async (pubId: string, userId: string, stageId: string) => {
-		const err = await assign(pubId, userId, stageId);
+	const onAssign = async (userId: string, stageId: string) => {
+		const err = await assign(props.pub.id, userId, stageId);
 		if (err) {
 			toast({
 				title: "Error",
@@ -51,99 +54,66 @@ export default function Assign(props: Props) {
 			variant: "default",
 		});
 	};
-	const member = props.members.find((member) => member.user.id === props.loginData.id)!;
-	const memberIntials = member.user.lastName
-		? `${member.user.firstName[0]} ${member.user.lastName[0]}`
-		: `${member.user.firstName[0]}`;
-	
+
 	return (
-		<Popover>
-			<PopoverTrigger asChild>
-				<Button size="sm" variant="outline" className="ml-1">
-					Assign
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent className="flex flex-col">
-				<Button
-					variant="secondary"
-					className="mb-5"
-					onClick={() => onAssign(props.pub.id, props.loginData.id, props.stage.id)}
-				>
-					<div className="mr-4">
-						<Avatar className="rounded w-9 h-9 mr-2">
-							<AvatarFallback>{memberIntials}</AvatarFallback>
-						</Avatar>
-					</div>
-					<p>
-						{member.user.firstName} {member.user.lastName}
-					</p>
-				</Button>
-				{props.members
-					.filter((member) => member.user.id !== props.loginData.id)
-					.map((member) => {
-						const intials = member.user.lastName
-							? `${member.user.firstName[0]} ${member.user.lastName[0]}`
-							: `${member.user.firstName[0]}`;
-						return (
-							<Dialog
-								open={open && selectedUserId === member.user.id}
-								onOpenChange={setOpen}
-								key={member.user.id}
-							>
-								<DialogTrigger>
-									<Button
-										variant="ghost"
-										className="p-1"
-										onClick={() => setSelectedUserid(member.user.id)}
-									>
-										<div className="mr-4">
+		<>
+			<Popover>
+				<PopoverTrigger asChild>
+					<Button size="sm" variant="outline" className="ml-1">
+						Assign
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent className="flex flex-col">
+					{props.members
+						.slice()
+						.sort((member) => (member.user.id === props.loginData.id ? -1 : 1))
+						.map((member) => {
+							const intials = member.user.lastName
+								? `${member.user.firstName[0]} ${member.user.lastName[0]}`
+								: `${member.user.firstName[0]}`;
+							return (
+								<Dialog>
+									<DialogTrigger>
+										<div className="flex flex-row content-center">
 											<Avatar className="rounded w-9 h-9 mr-2">
 												<AvatarFallback>{intials}</AvatarFallback>
 											</Avatar>
+											<p>
+												{member.user.firstName} {member.user.lastName}
+											</p>
 										</div>
-										<p>
-											{member.user.firstName} {member.user.lastName}
-										</p>
-									</Button>
-								</DialogTrigger>
-								<DialogContent>
-									<Card>
-										<CardTitle className="space-y-1.5 p-6">
-											Assign <i>{getTitle(props.pub)}</i> to{" "}
+									</DialogTrigger>
+									<DialogContent>
+										<DialogHeader>
+											Assign <em>{getTitle(props.pub)}</em> to{" "}
 											{member.user.firstName} {member.user.lastName}?
-										</CardTitle>
-										<CardContent>
+										</DialogHeader>
+										<p>
 											{member.user.firstName} {member.user.lastName} will be
 											notified that they have been assigned to this Pub.
-										</CardContent>
-										<CardFooter className="flex flex-row">
+										</p>
+										<DialogFooter className="sm:justify-between">
+											<DialogClose asChild>
+												<Button type="button" variant="secondary">
+													Close
+												</Button>
+											</DialogClose>
 											<Button
 												variant="default"
 												onClick={(event) => {
-													onAssign(
-														props.pub.id,
-														member.user.id,
-														props.stage.id
-													).then(() => setOpen(false));
+													onAssign(member.user.id, props.stage.id);
 													event.preventDefault();
 												}}
 											>
 												Assign
 											</Button>
-											<Button
-												className="mx-3"
-												variant="secondary"
-												onClick={() => setOpen(false)}
-											>
-												Cancel
-											</Button>
-										</CardFooter>
-									</Card>
-								</DialogContent>
-							</Dialog>
-						);
-					})}
-			</PopoverContent>
-		</Popover>
+										</DialogFooter>
+									</DialogContent>
+								</Dialog>
+							);
+						})}
+				</PopoverContent>
+			</Popover>
+		</>
 	);
 }
