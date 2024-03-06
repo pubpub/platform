@@ -70,7 +70,7 @@ export default function Assign(props: Props) {
 		<>
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger asChild>
-					<Button size="sm" variant="outline" role="combobox">
+					<Button size="sm" variant="outline" role="combobox" className="w-[100]">
 						{userId
 							? props.members.find((member) => member.user.id === userId)?.user
 									.firstName
@@ -139,7 +139,7 @@ export default function Assign(props: Props) {
 												<Avatar className="rounded w-9 h-9 mr-2">
 													<AvatarFallback>{intials}</AvatarFallback>
 												</Avatar>
-												<p>
+												<p className="w-4">
 													{member.user.firstName} {member.user.lastName}
 												</p>
 											</div>
