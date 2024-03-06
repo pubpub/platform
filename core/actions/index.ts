@@ -1,3 +1,8 @@
-import { log } from "./log/action";
+import * as log from "./log/action";
 
-export const actions = [log];
+export const actions = {
+	[log.action.name]: {
+		action: log.action,
+		run: log.run,
+	},
+};

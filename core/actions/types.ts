@@ -11,24 +11,19 @@ export type ActionPub<T extends ActionPubType> = {
 	};
 };
 
-export type RunProps<T extends ActionPubType, C> = {
-	pub: ActionPub<T>;
-	config: C;
-};
+export type RunProps<T extends Action> = T extends Action<infer PT, infer AC, infer PC>
+	? { config: AC; pub: PT; pubConfig: PC }
+	: never;
 
 export type ConfigProps<C> = {
 	config: C;
 };
 
-export type Action<T extends ActionPubType = ActionPubType, C = unknown> = {
+export type Action<PT extends ActionPubType = ActionPubType, AC = unknown, PC = unknown> = {
 	name: string;
-	config: z.Schema<C>;
-	fields: T;
-	ui?: {
-		Configure?(props: ConfigProps<C>): JSX.Element;
-		Run?(props: RunProps<T, C>): JSX.Element;
-	};
-	run(props: RunProps<T, C>): Promise<unknown>;
+	config: z.Schema<AC>;
+	pubConfig: z.Schema<PC>;
+	fields: PT;
 };
 
 export const defineAction = <T extends ActionPubType>(action: Action<T>) => action;

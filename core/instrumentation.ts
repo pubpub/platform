@@ -5,7 +5,7 @@ import { logger } from "logger";
 
 export async function register() {
 	logger.info("Registering actions");
-	for (const action of actions) {
+	for (const { action } of Object.values(actions)) {
 		logger.info(`Registering action ${action.name}`);
 		await registerAction(action);
 	}
