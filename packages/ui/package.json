@@ -57,6 +57,10 @@
 			"module": "./select/dist/ui-select.esm.js",
 			"default": "./select/dist/ui-select.cjs.js"
 		},
+		"./command": {
+			"module": "./command/dist/ui-command.esm.js",
+			"default": "./command/dist/ui-command.cjs.js"
+		},
 		"./popover": {
 			"module": "./popover/dist/ui-popover.esm.js",
 			"default": "./popover/dist/ui-popover.cjs.js"
@@ -142,6 +146,7 @@
 		"card",
 		"checkbox",
 		"collapsible",
+		"command",
 		"dialog",
 		"dropdown-menu",
 		"form",
@@ -192,6 +197,7 @@
 		"@uppy/react": "^3.1.4",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.0.0",
+		"cmdk": "^0.2.1",
 		"lucide-react": "^0.274.0",
 		"react-day-picker": "^8.10.0",
 		"tailwind-merge": "^1.14.0",
@@ -243,6 +249,7 @@
 			"card.tsx",
 			"checkbox.tsx",
 			"collapsible.tsx",
+			"command.tsx",
 			"dialog.tsx",
 			"dropdown-menu.tsx",
 			"form.tsx",
