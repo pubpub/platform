@@ -43,9 +43,7 @@ export const RemoveMemberButton = ({
 				</Tooltip>
 			</TooltipProvider>
 			<AlertDialogContent>
-				<AlertDialogHeader>
-					<span>Remove Member</span>
-				</AlertDialogHeader>
+				<AlertDialogHeader>Remove Member</AlertDialogHeader>
 				<p>
 					Are you sure you want to remove{" "}
 					<strong>
@@ -55,9 +53,8 @@ export const RemoveMemberButton = ({
 				</p>
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction asChild>
-						<Button
-							variant="destructive"
+					<Button asChild variant="destructive">
+						<AlertDialogAction
 							onClick={async () => {
 								const response = await actions.removeMember({ member, path });
 								if ("error" in response) {
@@ -77,8 +74,8 @@ export const RemoveMemberButton = ({
 						>
 							<Trash size="16" className="mr-2" />
 							Remove
-						</Button>
-					</AlertDialogAction>
+						</AlertDialogAction>
+					</Button>
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>

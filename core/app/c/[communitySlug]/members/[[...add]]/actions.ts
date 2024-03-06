@@ -8,9 +8,7 @@ import { Community, Member, User } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { getLoginData } from "~/lib/auth/loginData";
-import { smtpclient } from "~/lib/server/mailgun";
 import { getServerSupabase } from "~/lib/supabaseServer";
-import { randomUUID } from "crypto";
 import { formatSupabaseError } from "~/lib/supabase";
 
 export const suggest = cache(async (email: string, community: Community) => {
@@ -60,7 +58,6 @@ export const suggest = cache(async (email: string, community: Community) => {
 	} catch (error) {
 		return {
 			user: null,
-			member: null,
 			error: error.message,
 		};
 	}
@@ -95,6 +92,21 @@ export const addMember = async ({
 			},
 		});
 
+		// the user exists in our DB, but not in supabase
+		// most likely they were invited as an evaluator before
+		if (!user.supabaseId) {
+			const { error: supabaseInviteError } = await inviteMember({
+				email: user.email,
+				firstName: user.firstName,
+				lastName: user.lastName,
+				community,
+			});
+
+			if (supabaseInviteError) {
+				return { error: supabaseInviteError };
+			}
+		}
+
 		revalidatePath(`/c/${community.slug}/members`, "page");
 		return member;
 	} catch (error) {
@@ -121,6 +133,11 @@ export const removeMember = async ({
 				id: member.id,
 			},
 		});
+
+		if (!deleted) {
+			return { error: "Failed to remove member" };
+		}
+
 		if (path) {
 			revalidatePath(path, "page");
 		}
@@ -138,7 +155,7 @@ export const inviteMember = async ({
 }: {
 	email: string;
 	firstName: string;
-	lastName: string;
+	lastName?: string | null;
 	community: Community;
 }) => {
 	const loginData = await getLoginData();
@@ -149,20 +166,46 @@ export const inviteMember = async ({
 
 	const client = getServerSupabase();
 
-	const { error } = await client.auth.signUp({
-		email,
-		password: randomUUID(),
-		options: {
-			emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-			data: {
-				firstName,
-				lastName,
-				communityId: community.id,
-				canAdmin: true,
-			},
+	const { error, data } = await client.auth.admin.inviteUserByEmail(email, {
+		redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+		data: {
+			firstName,
+			lastName,
+			communityId: community.id,
+			communitySlug: community.slug,
+			communityName: community.name,
+			canAdmin: true,
 		},
 	});
-	if (error) {
-		throw new Error(formatSupabaseError(error));
+
+	if (!error) {
+		return { user: data.user, error: null };
 	}
+
+	// 422 = email already exists
+	if (error.status !== 422) {
+		// could be anything!
+		return { user: null, error: `Failed to invite member.\n ${formatSupabaseError(error)}` };
+	}
+
+	const { data: resendData, error: resendError } = await client.auth.resend({
+		email,
+		type: "signup",
+		options: {
+			emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+		},
+	});
+
+	if (resendError) {
+		return {
+			user: null,
+			error: `Failed to invite member.\n ${formatSupabaseError(resendError)}`,
+		};
+	}
+
+	revalidatePath(`/c/${community.slug}/members`, "page");
+	return {
+		user: resendData.user,
+		error: null,
+	};
 };

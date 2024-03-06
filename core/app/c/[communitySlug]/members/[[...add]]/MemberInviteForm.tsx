@@ -21,67 +21,145 @@ import { toast } from "ui/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useTransition } from "react";
+import { useCallback, useEffect, useReducer, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
 import { Community } from "@prisma/client";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { SuggestedUser } from "~/lib/server";
 
 const memberInviteFormSchema = z.object({
-	email: z.string().email(),
+	email: z.string().email({
+		message: "Please provide a valid email address",
+	}),
 	admin: z.boolean().default(false).optional(),
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
-	user: z
-		.object({
-			id: z.string(),
-			slug: z.string(),
-			firstName: z.string(),
-			lastName: z.string().nullable(),
-			avatar: z.string().nullable(),
-		})
-		.or(z.literal(false))
-		.optional(),
 });
+
+type FormState =
+	| {
+			state: "user-not-found" | "initial";
+			data: null;
+	  }
+	| { state: "user-found"; data: { user: SuggestedUser } };
+
+const formStateReducer = (
+	state: FormState,
+	{
+		email,
+		user,
+		error,
+	}: {
+		email?: string;
+		user?: SuggestedUser | false | null | "you" | "existing-member";
+		error?: string;
+	}
+): FormState => {
+	console.log({ email, user, error });
+	switch (true) {
+		case !email:
+			return { state: "initial", data: null };
+
+		case email && user === false:
+			return { state: "initial", data: null };
+
+		case email && user === null:
+			return { state: "user-not-found", data: null };
+
+		case Boolean(email) && typeof user === "string" && Boolean(error):
+			toast({
+				title: "Cannot add user",
+				description: error,
+				variant: "destructive",
+			});
+			return { state: "initial", data: null };
+
+		case Boolean(error):
+			toast({
+				title: "Error",
+				description: error,
+				variant: "destructive",
+			});
+			return { state: "initial", data: null };
+
+		case Boolean(email) && Boolean(user):
+			return { state: "user-found", data: { user: user as SuggestedUser } };
+
+		default:
+			return { state: "initial", data: null };
+	}
+};
 
 export const MemberInviteForm = ({ community }: { community: Community }) => {
 	const [isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
 	const router = useRouter();
-	const path = usePathname();
+	const [state, dispatch] = useReducer(formStateReducer, {
+		state: "initial",
+		data: null,
+	});
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
+		delayError: 200,
+		mode: "onChange",
 		defaultValues: {
 			admin: false,
-			user: undefined,
 			email: searchParams?.get("email") ?? "",
+			firstName: "",
+			lastName: "",
 		},
 	});
 
-	const user = form.watch("user");
-	const email = form.watch("email");
+	const closeForm = useCallback(
+		() => router.push(window.location.pathname!.replace(/\/add.*/, "")),
+		[]
+	);
 
 	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
-		// form submissions are autowrapped in transitions, so we don't need to wrap this in a startTransition
-
-		const timer = new Promise((resolve) => setTimeout(resolve, 1000));
-		if (!data.user) {
-			// TODO: send invite
+		if (state.state === "initial") {
 			return;
 		}
 
-		const result = actions.addMember({
-			user: data.user,
+		if (state.state === "user-not-found") {
+			// TODO: send invite
+			const { error } = await actions.inviteMember({
+				email: data.email,
+				firstName: data.firstName!,
+				lastName: data.lastName!,
+				community,
+			});
+
+			if (error) {
+				toast({
+					title: "Error",
+					description: error,
+					variant: "destructive",
+				});
+				return;
+			}
+
+			toast({
+				title: "Success",
+				description: "User invited successfully",
+			});
+			closeForm();
+
+			return;
+		}
+
+		const result = await actions.addMember({
+			user: state.data!.user,
 			admin: data.admin,
 			community,
 		});
 
-		await Promise.all([timer, result]);
 		if ("error" in result) {
 			toast({
 				title: "Error",
 				description: `Failed to add member. ${result.error}`,
+				variant: "destructive",
 			});
 			return;
 		}
@@ -92,67 +170,33 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 		});
 
 		// navigate away from the add page to the normal member page
-		router.push(path!.replace(/\/add.*/, ""));
+		closeForm();
 	}
 
 	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
-		startTransition(async () => {
-			if (!email) {
-				form.setValue("user", undefined);
-				return;
-			}
-			// validate the email
-			if (!memberInviteFormSchema.shape.email.safeParse(email).success) {
-				form.setError("email", {
-					message: "Please provide a valid email address",
-				});
-				form.setValue("user", undefined);
-				return;
-			}
-			form.clearErrors("email");
-
-			router.replace(path + "?" + new URLSearchParams({ email }).toString(), {});
-
-			const { member, user, error } = await actions.suggest(email, community);
-
-			if (typeof user === "string") {
-				form.setValue("user", undefined);
-				toast({
-					title: "Cannot add user",
-					description: error,
-				});
-				return;
-			}
-
-			if (error) {
-				toast({
-					title: "Error",
-					description: "Failed to suggest user",
-				});
-				return;
-			}
-
-			if (user) {
-				form.setValue("user", user);
-				return;
-			}
-
-			if (member) {
-				form.setValue("user", undefined);
-				return;
-			}
-
-			form.setValue("user", false);
+		if (form.getFieldState("email").error) {
+			console.log(email, " somehow invalid");
+			dispatch({ email, user: undefined });
 			return;
-		});
+		}
+
+		router.replace(
+			window.location.pathname + "?" + new URLSearchParams({ email }).toString(),
+			{}
+		);
+
+		const { user, error } = await actions.suggest(email, community);
+
+		dispatch({ email, error, user });
 	}, 500);
 
 	/**
 	 * Run the debounced email check on mount if email is provided through the query params
 	 */
 	useEffect(() => {
-		if (email) {
-			debouncedEmailCheck(email);
+		const searchParamEmail = searchParams?.get("email");
+		if (searchParamEmail) {
+			debouncedEmailCheck(searchParamEmail);
 		}
 	}, []);
 
@@ -161,6 +205,7 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 				<FormField
 					name="email"
+					control={form.control}
 					render={({ field }) => (
 						<FormItem aria-label="Email">
 							<FormLabel>Email</FormLabel>
@@ -171,28 +216,31 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 									onChange={(e) => {
 										field.onChange(e);
 										// call(e);
-										debouncedEmailCheck(e.target.value);
+										startTransition(async () => {
+											await debouncedEmailCheck(e.target.value);
+										});
 									}}
 								/>
 								{isPending && <Loader2 className="h-4 w-4 animate-spin" />}
 							</div>
-							{user === undefined ? (
+							{state.state === "initial" ? (
 								<FormDescription>
 									First try typing the email address of the person you'd like to
 									invite. If they're already a user, you can add them as a member
 									immediately.
 								</FormDescription>
-							) : user === false ? (
+							) : state.state === "user-not-found" ? (
 								<FormDescription>
 									This email is not yet associated with an account. You can still
 									invite them to join this community.
 								</FormDescription>
 							) : null}
+
 							<FormMessage />
 						</FormItem>
 					)}
 				/>
-				{user === false && (
+				{state.state === "user-not-found" && (
 					<>
 						<FormField
 							name="firstName"
@@ -216,7 +264,7 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 						/>
 					</>
 				)}
-				{user !== undefined && (
+				{state.state !== "initial" && (
 					<FormField
 						control={form.control}
 						name="admin"
@@ -233,33 +281,33 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 						)}
 					/>
 				)}
-				{user && (
+				{state.state === "user-found" && (
 					<Card>
 						<CardContent className="flex gap-x-4 items-center p-4">
 							<Avatar>
 								<AvatarImage
-									src={user.avatar ?? undefined}
-									alt={`${user.firstName} ${user.lastName}`}
+									src={state.data.user.avatar ?? undefined}
+									alt={`${state.data.user.firstName} ${state.data.user.lastName}`}
 								/>
 								<AvatarFallback>
-									{user.firstName[0]}
-									{user?.lastName?.[0] ?? ""}
+									{state.data.user.firstName[0]}
+									{state.data.user?.lastName?.[0] ?? ""}
 								</AvatarFallback>
 							</Avatar>
 							<div className="flex flex-col gap-2">
 								<span>
-									{user.firstName} {user.lastName}
+									{state.data.user.firstName} {state.data.user.lastName}
 								</span>
 								<span>{form.getValues().email}</span>
 							</div>
 						</CardContent>
 					</Card>
 				)}
-				{user !== undefined && (
+				{state.state !== "initial" && (
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting ? (
 							<Loader2 className="h-4 w-4 animate-spin" />
-						) : user === false ? (
+						) : state.state === "user-not-found" ? (
 							<span className="flex items-center gap-x-2">
 								<Mail size="16" /> Invite
 							</span>

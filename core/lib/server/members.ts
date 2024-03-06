@@ -35,10 +35,12 @@ export const getSuggestedMembers = cache(
 			take: 10,
 			select: {
 				id: true,
+				email: true,
 				slug: true,
 				avatar: true,
 				firstName: true,
 				lastName: true,
+				supabaseId: true,
 			},
 		});
 		return members;

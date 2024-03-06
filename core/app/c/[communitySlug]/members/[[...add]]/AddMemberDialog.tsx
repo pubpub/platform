@@ -24,7 +24,7 @@ export const AddMemberDialog = ({ open, community }: { open: boolean; community:
 	return (
 		<Dialog
 			open={actuallyOpen}
-			onOpenChange={async (open) => {
+			onOpenChange={(open) => {
 				router.push(`/c/${community.slug}/members${open ? "/add" : ""}`);
 			}}
 		>
