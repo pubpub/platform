@@ -30,12 +30,12 @@ export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 	const { toast } = useToast();
 
-	const { AjvSchema, schema } = useMemo(() => {
+	const { compiledSchema, uncompiledSchema } = useMemo(() => {
 		const exclude = [
 			props.instanceConfig.titleFieldSlug,
 			props.instanceConfig.evaluatorFieldSlug,
 		];
-		const schema = buildSchemaFromPubFields(pubType, exclude);
+		const uncompiledSchema = buildSchemaFromPubFields(pubType, exclude);
 		// https://ajv.js.org/api.html#ajv-addschema-schema-object-object-key-string-ajv
 		// Add schema(s) to validator instance. This method does not compile schemas
 		// (but it still validates them). Because of that dependencies can be added in
@@ -54,15 +54,18 @@ export function Evaluate(props: Props) {
 
 		// "schema" is a key described above though we can also use the schema id created when building the schema
 		// we could later pass multiple for dereferencing
-		const AjvSchema = new Ajv({ formats: fullFormats }).addSchema(schema, "schema");
-		return { AjvSchema, schema };
+		const compiledSchema = new Ajv({ formats: fullFormats }).addSchema(
+			uncompiledSchema,
+			"schema"
+		);
+		return { compiledSchema, uncompiledSchema };
 	}, [pubType]);
 
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		// debug instructions: https://react-hook-form.com/docs/useform#resolver
-		resolver: ajvResolver(schema, {
+		resolver: ajvResolver(uncompiledSchema, {
 			formats: fullFormats,
 		}),
 		defaultValues: {},
@@ -117,13 +120,6 @@ export function Evaluate(props: Props) {
 				new Date(props.evaluator.acceptedAt)
 		  );
 
-	const EvaluationFormFields = useMemo(() => {
-		return SchemaBasedFormFields({
-			compiledSchema: AjvSchema,
-			control: form.control,
-			upload: signedUploadUrl,
-		});
-	}, [AjvSchema, form.control, signedUploadUrl]);
 	return (
 		<>
 			<div className="prose max-w-none">
@@ -138,7 +134,11 @@ export function Evaluate(props: Props) {
 				<p>{pubType.description}</p>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
-						{EvaluationFormFields}
+						<SchemaBasedFormFields
+							compiledSchema={compiledSchema}
+							control={form.control}
+							upload={signedUploadUrl}
+						/>
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
 								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
