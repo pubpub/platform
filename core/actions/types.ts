@@ -1,13 +1,13 @@
 import { JTDDataType } from "ajv/dist/jtd";
 import * as z from "zod";
-import { CoreField } from "./fields";
+import { CorePubField } from "./corePubFields";
 
-export type ActionPubType = CoreField[];
+export type ActionPubType = CorePubField[];
 
 export type ActionPub<T extends ActionPubType> = {
 	id: string;
 	values: {
-		[key in T[number]["name"]]: JTDDataType<T[number]["schema"]>;
+		[key in T[number]["name"]]: JTDDataType<T[number]["schema"]["schema"]>;
 	};
 };
 
@@ -20,10 +20,11 @@ export type ConfigProps<C> = {
 };
 
 export type Action<PT extends ActionPubType = ActionPubType, AC = unknown, PC = unknown> = {
+	id?: string;
 	name: string;
 	config: z.Schema<AC>;
 	pubConfig: z.Schema<PC>;
-	fields: PT;
+	pubFields: PT;
 };
 
 export const defineAction = <T extends ActionPubType>(action: Action<T>) => action;

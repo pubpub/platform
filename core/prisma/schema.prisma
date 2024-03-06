@@ -98,6 +98,7 @@ model PubField {
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
   pubFieldSchemaId String?
 
+  actions  Action[]
   values   PubValue[]
   pubTypes PubType[]
 
@@ -312,4 +313,15 @@ model IntegrationInstanceState {
   state      Json
 
   @@unique([pubId, instanceId], name: "pub_instance") // guarentees one state per pub-instance pair
+}
+
+model Action {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  pubFields PubField[]
+
+  @@map(name: "actions")
 }
