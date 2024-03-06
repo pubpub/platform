@@ -1,14 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Button } from "ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTrigger,
-	DialogClose,
-} from "ui/dialog";
+
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
@@ -32,31 +25,31 @@ type Props = {
 	members: PermissionPayloadMember[];
 };
 
-const getTitle = (pub: Props["pub"]) => {
-	const titleValue = pub.values.find((value) => {
-		return value.field.slug === "unjournal:title";
-	});
-	return titleValue?.value as string;
-};
-
 export default function Assign(props: Props) {
 	const { toast } = useToast();
 	const [userId, setUser] = React.useState<string>("");
 	const [open, setOpen] = React.useState<boolean>(false);
 	const [isLoading, setLoading] = useState<boolean>(false);
+	const [claimId, setClaimId] = useState<string>("");
 
 	useEffect(() => {
 		// set userId to who has claim on pub
 		const claim = props.pub.claims[0];
 		if (claim) {
+			setClaimId(claim.id);
 			setUser(claim.userId);
 		}
 	}, [props.pub.claims, props.stage.id]);
 
-	const handleAssign = async (userId: string, stageId: string, doWhat: boolean) => {
+	const handleAssign = async (
+		doWhat: boolean,
+		userId?: string,
+		stageId?: string,
+		claimId?: string
+	) => {
 		const res = doWhat
-			? await assign(props.pub.id, userId, stageId)
-			: await unassign(props.pub.id, userId, stageId);
+			? await assign(props.pub.id, userId!, stageId!)
+			: await unassign(props.pub.id, claimId!);
 
 		if ("error" in res && typeof res.error === "string") {
 			toast({
@@ -105,26 +98,26 @@ export default function Assign(props: Props) {
 												// if nothing is selected, assign the userId
 												if (!userId) {
 													handleAssign(
+														true,
 														member.user.id,
-														props.stage.id,
-														true
+														props.stage.id
 													);
 												}
 												// if the currentvalue is the same, unassign the userId
 												if (currentUserId === userId) {
 													handleAssign(
+														false,
 														member.user.id,
-														props.stage.id,
-														false
+														props.stage.id
 													);
 												}
 												// if the currentvalue is different but a userId exist, unassign the previous userId, assign the currentuser
 												if (currentUserId !== userId && userId) {
-													handleAssign(userId, props.stage.id, false);
+													handleAssign(false, userId, claimId);
 													handleAssign(
+														true,
 														member.user.id,
-														props.stage.id,
-														true
+														props.stage.id
 													);
 												}
 												setUser(

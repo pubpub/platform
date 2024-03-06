@@ -23,35 +23,47 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 
 export async function assign(pubId: string, userId: string, stageId: string) {
 	try {
-		// const pub = await prisma.pub.findUnique({
-		// 	where: { id: pubId },
-		// 	include: { claims: true },
-		// });
-		// if (expect(pub).claims.find((claim) => claim.userId === userId)) {
-		// 	return { message: "User already assigned" };
-		// }
-		// await prisma.pub.update({
-		// 	where: { id: pubId },
-		// 	include: { claims: true },
-		// 	data: {
-		// 		claims: {
-		// 			create: {
-		// 				stageId: stageId,
-		// 				userId: userId,
-		// 			},
-		// 		},
-		// 	},
-		// });
+		const pub = await prisma.pub.findUnique({
+			where: { id: pubId },
+			include: { claims: true },
+		});
+		if (expect(pub).claims.find((claim) => claim.userId === userId)) {
+			return { message: "User already assigned" };
+		}
+		await prisma.pub.update({
+			where: { id: pubId },
+			include: { claims: true },
+			data: {
+				claims: {
+					create: {
+						stageId: stageId,
+						userId: userId,
+					},
+				},
+			},
+		});
 		console.log("assigned");
+		revalidatePath("/");
+
 		return { message: "User was successfully assigned" };
 	} catch {
 		return { error: "The user was not successully assigned" };
 	}
 }
 
-export async function unassign(pubId: string, userId: string, stageId: string) {
+export async function unassign(pubId: string, claimId: string) {
 	try {
+		await prisma.pub.update({
+			where: { id: pubId },
+			include: { claims: true },
+			data: {
+				claims: {
+					disconnect: { id: claimId },
+				},
+			},
+		});
 		console.log("unassigned");
+		revalidatePath("/");
 		return { message: "User was successfully unassigned" };
 	} catch {
 		return { error: "The user was not successully unassigned" };
