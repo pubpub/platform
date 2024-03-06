@@ -97,6 +97,10 @@
 			"module": "./hover-card/dist/ui-hover-card.esm.js",
 			"default": "./hover-card/dist/ui-hover-card.cjs.js"
 		},
+		"./pagination": {
+			"module": "./pagination/dist/ui-pagination.esm.js",
+			"default": "./pagination/dist/ui-pagination.cjs.js"
+		},
 		"./collapsible": {
 			"module": "./collapsible/dist/ui-collapsible.esm.js",
 			"default": "./collapsible/dist/ui-collapsible.cjs.js"

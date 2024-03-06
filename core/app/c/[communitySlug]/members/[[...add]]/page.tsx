@@ -6,13 +6,28 @@ import { RemoveMemberButton } from "./RemoveMemberButton";
 import { notFound } from "next/navigation";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { Badge } from "ui/badge";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationEllipsis,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "ui/pagination";
+
+const PAGE_SIZE = 1 as const;
 
 export default async function Page({
 	params: { communitySlug, add },
+	searchParams,
 }: {
 	params: {
 		communitySlug: string;
 		add?: string[];
+	};
+	searchParams: {
+		page?: string;
 	};
 }) {
 	if (add && add[0] !== "add") {
@@ -24,7 +39,7 @@ export default async function Page({
 	});
 
 	if (!community) {
-		return null;
+		return notFound();
 	}
 
 	const loginData = await getLoginData();
@@ -37,6 +52,8 @@ export default async function Page({
 		return null;
 	}
 
+	const page = parseInt(searchParams.page ?? "1", 10);
+
 	const existingMembers = await prisma.member.findMany({
 		where: {
 			community: {
@@ -46,7 +63,17 @@ export default async function Page({
 		include: {
 			user: true,
 		},
+		skip: (page - 1) * PAGE_SIZE,
+		take: PAGE_SIZE + 1,
 	});
+
+	if (!existingMembers.length && page !== 1) {
+		return notFound();
+	}
+
+	const hasMore = existingMembers.length > PAGE_SIZE;
+	const needsPagination = page > 1 || hasMore;
+	console.log(page);
 
 	return (
 		<>
@@ -56,7 +83,7 @@ export default async function Page({
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
-					{existingMembers.map((member) => {
+					{existingMembers.slice(0, PAGE_SIZE).map((member) => {
 						const { id, createdAt, user, canAdmin } = member;
 						return (
 							<div key={id} className="flex justify-between items-center gap-x-4">
@@ -88,6 +115,52 @@ export default async function Page({
 					})}
 				</CardContent>
 			</Card>
+			{needsPagination && (
+				<Pagination>
+					<PaginationContent className="my-4">
+						{page > 1 && (
+							<>
+								<PaginationItem>
+									<PaginationPrevious
+										href={`/c/${communitySlug}/members?page=${page - 1}}`}
+									/>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationLink
+										href={`/c/${communitySlug}/members?page=${page - 1}`}
+									>
+										{page - 1}
+									</PaginationLink>
+								</PaginationItem>
+							</>
+						)}
+						<PaginationItem>
+							<PaginationLink
+								href={`/c/${communitySlug}/members?page=${page}`}
+								isActive
+							>
+								{page}
+							</PaginationLink>
+						</PaginationItem>
+						{hasMore && (
+							<>
+								<PaginationItem>
+									<PaginationLink
+										href={`/c/${communitySlug}/members?page=${page + 1}`}
+									>
+										{page + 1}
+									</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationNext
+										href={`/c/${communitySlug}/members?page=${page + 1}`}
+									/>
+								</PaginationItem>
+							</>
+						)}
+					</PaginationContent>
+				</Pagination>
+			)}
 		</>
 	);
 }
