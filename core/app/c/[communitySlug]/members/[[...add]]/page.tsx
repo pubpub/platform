@@ -5,6 +5,7 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 import { notFound } from "next/navigation";
 import { AddMemberDialog } from "./AddMemberDialog";
+import { Badge } from "ui/badge";
 
 export default async function Page({
 	params: { communitySlug, add },
@@ -56,29 +57,31 @@ export default async function Page({
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">
 					{existingMembers.map((member) => {
-						const { id, createdAt, user } = member;
+						const { id, createdAt, user, canAdmin } = member;
 						return (
-							<div key={id} className="flex justify-between items-center">
-								<div className="flex gap-x-4 items-center">
-									<Avatar>
-										<AvatarImage
-											src={user.avatar ?? undefined}
-											alt={`${user.firstName} ${user.lastName}`}
-										/>
-										<AvatarFallback>
-											{user.firstName[0]}
-											{user?.lastName?.[0] ?? ""}
-										</AvatarFallback>
-									</Avatar>
-									<div className="flex flex-col gap-2">
+							<div key={id} className="flex justify-between items-center gap-x-4">
+								<Avatar>
+									<AvatarImage
+										src={user.avatar ?? undefined}
+										alt={`${user.firstName} ${user.lastName}`}
+									/>
+									<AvatarFallback>
+										{user.firstName[0]}
+										{user?.lastName?.[0] ?? ""}
+									</AvatarFallback>
+								</Avatar>
+								<div className="flex flex-col gap-y-1 flex-grow">
+									<div>
 										<span>
 											{user.firstName} {user.lastName}
 										</span>
-										<span className="text-sm">
-											Joined: {new Date(createdAt).toLocaleDateString()}
-										</span>
 									</div>
+									<span className="text-xs">
+										Joined on {new Date(createdAt).toLocaleDateString()}
+									</span>
 								</div>
+
+								{canAdmin && <Badge>admin</Badge>}
 								<RemoveMemberButton member={member} />
 							</div>
 						);
