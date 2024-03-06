@@ -269,7 +269,7 @@ type SchemaBasedFormFieldsProps = {
  * @param schemaPath
  * @returns
  */
-export const SchemaBasedFormFields = (props: SchemaBasedFormFieldsProps) => {
+export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsProps) => {
 	const fields: React.JSX.Element[] = [];
 
 	// probably should refactor into function and throw an error if the schema can't be resolved from the compiled schema
@@ -301,20 +301,24 @@ export const SchemaBasedFormFields = (props: SchemaBasedFormFieldsProps) => {
 							{fieldSchema.description && (
 								<p dangerouslySetInnerHTML={{ __html: fieldSchema.description }} />
 							)}
-							{SchemaBasedFormFields({
-								...props,
-								path: fieldPath,
-								fieldSchema: fieldSchema,
-								schemaPath: fieldSchemaPath,
-							})}
+							<SchemaBasedFormFields
+								{...props}
+								path={fieldPath}
+								fieldSchema={fieldSchema}
+								schemaPath={fieldSchemaPath}
+							/>
+							;
 						</div>,
 				  ]
-				: SchemaBasedFormFields({
-						...props,
-						path: fieldPath,
-						fieldSchema: fieldSchema,
-						schemaPath: fieldSchemaPath,
-				  });
+				: [
+						<SchemaBasedFormFields
+							{...props}
+							path={fieldPath}
+							fieldSchema={fieldSchema}
+							schemaPath={fieldSchemaPath}
+						/>,
+				  ];
+
 			fields.push(...fieldContent);
 		}
 	} else {
@@ -344,4 +348,4 @@ export const SchemaBasedFormFields = (props: SchemaBasedFormFieldsProps) => {
 		);
 	}
 	return fields;
-};
+});
