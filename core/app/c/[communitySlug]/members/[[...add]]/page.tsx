@@ -9,14 +9,13 @@ import { Badge } from "ui/badge";
 import {
 	Pagination,
 	PaginationContent,
-	PaginationEllipsis,
 	PaginationItem,
 	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
 } from "ui/pagination";
 
-const PAGE_SIZE = 1 as const;
+const PAGE_SIZE = 10 as const;
 
 export default async function Page({
 	params: { communitySlug, add },
@@ -24,6 +23,7 @@ export default async function Page({
 }: {
 	params: {
 		communitySlug: string;
+		// this controls whether the add member dialog is open
 		add?: string[];
 	};
 	searchParams: {
@@ -73,7 +73,6 @@ export default async function Page({
 
 	const hasMore = existingMembers.length > PAGE_SIZE;
 	const needsPagination = page > 1 || hasMore;
-	console.log(page);
 
 	return (
 		<>

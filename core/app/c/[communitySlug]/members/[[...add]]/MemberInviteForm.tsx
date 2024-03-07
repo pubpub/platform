@@ -185,7 +185,7 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 			{}
 		);
 
-		const { user, error } = await actions.suggest(email, community);
+		const { user, error } = await actions.suggest({ email, community });
 
 		dispatch({ email, error, user });
 	}, 500);
