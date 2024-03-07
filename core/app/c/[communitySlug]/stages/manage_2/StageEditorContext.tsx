@@ -20,19 +20,23 @@ import * as actions from "./actions";
 export type StageEditorContext = {
 	stages: StagePayload[];
 	selectedStageIds: string[];
-	setSelectedStageIds: (stageIds: string[]) => void;
 	selectedMoveConstraintIds: [string, string][];
+	deleteStages: (stageIds: string[]) => void;
+	setSelectedStageIds: (stageIds: string[]) => void;
 	setSelectedMoveConstraintIds: (moveConstraintIds: [string, string][]) => void;
 	createMoveConstraint: (sourceStageId: string, destinationStageId: string) => void;
+	deleteMoveConstraints: (moveConstraintIds: [string, string][]) => void;
 };
 
 export const stageEditorContext = createContext<StageEditorContext>({
 	stages: [],
 	selectedStageIds: [],
+	deleteStages: () => {},
 	setSelectedStageIds: () => {},
 	selectedMoveConstraintIds: [],
 	setSelectedMoveConstraintIds: () => {},
 	createMoveConstraint: () => {},
+	deleteMoveConstraints: () => {},
 });
 
 export type StageEditorProviderProps = PropsWithChildren<{
@@ -146,18 +150,26 @@ export const StageEditorProvider = (props: StageEditorProviderProps) => {
 			console.error(e);
 		}
 	};
-	const deleteStages = async () => {
+	const deleteStages = async (stageIds: string[]) => {
+		try {
+			optimisticStagesDispatch({ type: "deleteStages", stageIds });
+			await actions.deleteStages(props.communityId, stageIds);
+		} catch (e) {
+			console.error(e);
+		}
+	};
+	const deleteStagesAndMoveConstraints = async () => {
 		try {
 			if (selectedMoveConstraintIds.length > 0) {
 				optimisticStagesDispatch({
 					type: "deleteMoveConstraints",
 					moveConstraintIds: selectedMoveConstraintIds,
 				});
-				await actions.deleteMoveConstraints(selectedMoveConstraintIds);
+				await actions.deleteMoveConstraints(props.communityId, selectedMoveConstraintIds);
 				return;
 			}
 			optimisticStagesDispatch({ type: "deleteStages", stageIds: selectedStageIds });
-			await actions.deleteStages(selectedStageIds);
+			await actions.deleteStages(props.communityId, selectedStageIds);
 		} catch (e) {
 			console.error(e);
 		}
@@ -169,7 +181,22 @@ export const StageEditorProvider = (props: StageEditorProviderProps) => {
 				sourceStageId,
 				destinationStageId,
 			});
-			await actions.createMoveConstraint(sourceStageId, destinationStageId);
+			await actions.createMoveConstraint(
+				props.communityId,
+				sourceStageId,
+				destinationStageId
+			);
+		} catch (e) {
+			console.error(e);
+		}
+	};
+	const deleteMoveConstraints = async (moveConstraintIds: [string, string][]) => {
+		try {
+			optimisticStagesDispatch({
+				type: "deleteMoveConstraints",
+				moveConstraintIds: moveConstraintIds,
+			});
+			await actions.deleteMoveConstraints(props.communityId, moveConstraintIds);
 		} catch (e) {
 			console.error(e);
 		}
@@ -177,10 +204,12 @@ export const StageEditorProvider = (props: StageEditorProviderProps) => {
 	const value = {
 		stages: optimisticStages,
 		selectedStageIds,
-		setSelectedStageIds,
 		selectedMoveConstraintIds,
+		deleteStages,
+		setSelectedStageIds,
 		setSelectedMoveConstraintIds,
 		createMoveConstraint,
+		deleteMoveConstraints,
 	};
 	return (
 		<stageEditorContext.Provider value={value}>
@@ -188,7 +217,7 @@ export const StageEditorProvider = (props: StageEditorProviderProps) => {
 				<ContextMenuTrigger>{props.children}</ContextMenuTrigger>
 				<ContextMenuContent className="w-64">
 					{(selectedStageIds.length > 0 || selectedMoveConstraintIds.length > 0) && (
-						<ContextMenuItem inset onClick={deleteStages}>
+						<ContextMenuItem inset onClick={deleteStagesAndMoveConstraints}>
 							Delete
 							<ContextMenuShortcut>⏎</ContextMenuShortcut>
 						</ContextMenuItem>

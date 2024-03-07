@@ -9,15 +9,19 @@ import ReactFlow, {
 	Edge,
 	MarkerType,
 	Node,
+	OnSelectionChangeParams,
 	ReactFlowProvider,
 	useEdgesState,
 	useNodesState,
-	useOnSelectionChange,
 	useStoreApi,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { StagePayload } from "~/lib/types";
 import { useStageEditor } from "./StageEditorContext";
+import { StageNode } from "./StageNode";
+
+const nodeWidth = 172;
+const nodeHeight = 36;
 
 const makeNode = (stage: StagePayload) => {
 	return {
@@ -63,20 +67,24 @@ const makeLayoutedElements = (
 	edges: Edge[],
 	prevNodes: Map<string, Node>
 ) => {
-	graph.setGraph({ rankdir: "HR" });
+	graph.setGraph({ rankdir: "LR" });
+
 	edges.forEach((edge) => graph.setEdge(edge.source, edge.target));
 	nodes.forEach((node) =>
-		graph.setNode(
-			node.id,
-			// @ts-expect-error
-			node
-		)
+		graph.setNode(node.id, { ...node, width: nodeWidth, height: nodeHeight })
 	);
 	Dagre.layout(graph);
 	return {
 		nodes: nodes.map((node) => {
 			const { x, y } = prevNodes.get(node.id)?.position ?? graph.node(node.id);
-			return { ...node, position: { x, y } };
+			// @ts-ignore
+			node.targetPosition = "left";
+			// @ts-ignore
+			node.sourcePosition = "right";
+			return {
+				...node,
+				position: { x, y },
+			};
 		}),
 		edges,
 	};
@@ -86,10 +94,13 @@ export const StageGraph = () => {
 	const {
 		stages,
 		selectedStageIds,
+		deleteStages,
 		setSelectedStageIds,
 		setSelectedMoveConstraintIds,
 		createMoveConstraint,
+		deleteMoveConstraints,
 	} = useStageEditor();
+	const nodeTypes = useMemo(() => ({ stage: StageNode }), []);
 	const store = useStoreApi().getState();
 	const graph = useMemo(
 		() => new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({})),
@@ -119,6 +130,19 @@ export const StageGraph = () => {
 		},
 		[createMoveConstraint]
 	);
+	const onNodesDelete = useCallback(
+		(nodesToDelete: Node[]) => {
+			deleteStages(nodesToDelete.map((node) => node.id));
+		},
+		[deleteStages]
+	);
+
+	const onEdgesDelete = useCallback(
+		(edgesToDelete: Edge[]) => {
+			deleteMoveConstraints(edgesToDelete.map((edge) => [edge.source, edge.target]));
+		},
+		[deleteMoveConstraints]
+	);
 
 	useEffect(() => {
 		prevNodes.current = nodes;
@@ -129,23 +153,30 @@ export const StageGraph = () => {
 		setEdges(layoutedEdges);
 	}, [layoutedNodes, layoutedEdges, setNodes, setEdges]);
 
-	useOnSelectionChange({
-		onChange({ nodes, edges }) {
-			setSelectedStageIds(nodes.map((node) => node.id));
-			setSelectedMoveConstraintIds(edges.map((edge) => [edge.source, edge.target]));
-		},
-	});
+	const onSelectionChange = useCallback(({ nodes, edges }: OnSelectionChangeParams) => {
+		setSelectedStageIds(nodes.map((node) => node.id));
+		setSelectedMoveConstraintIds(edges.map((edge) => [edge.source, edge.target]));
+	}, []);
 
 	return (
 		<div style={{ height: "100%" }}>
 			<ReactFlow
 				nodes={nodes}
 				edges={edges}
+				nodeTypes={nodeTypes}
+				edgesUpdatable={false}
+				edgesFocusable={false}
+				nodesDraggable={false}
+				nodesConnectable={false}
+				nodesFocusable={false}
+				elementsSelectable={false}
+				onSelectionChange={onSelectionChange}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
 				onConnect={onConnect}
+				onEdgesDelete={onEdgesDelete}
+				onNodesDelete={onNodesDelete}
 				onNodeContextMenu={onNodeContextMenu}
-				fitView
 			>
 				<Background />
 				<Controls />

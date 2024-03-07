@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import db from "~/prisma/db";
 
 export async function createStage(communityId: string) {
@@ -15,11 +15,11 @@ export async function createStage(communityId: string) {
 			},
 		},
 	});
-	revalidatePath("/");
+	revalidateTag(`community-stages_${communityId}`);
 	return stage;
 }
 
-export async function deleteStages(stageIds: string[]) {
+export async function deleteStages(communityId: string, stageIds: string[]) {
 	await db.stage.deleteMany({
 		where: {
 			id: {
@@ -27,10 +27,14 @@ export async function deleteStages(stageIds: string[]) {
 			},
 		},
 	});
-	revalidatePath("/");
+	revalidateTag(`community-stages_${communityId}`);
 }
 
-export async function createMoveConstraint(sourceStageId: string, destinationStageId: string) {
+export async function createMoveConstraint(
+	communityId: string,
+	sourceStageId: string,
+	destinationStageId: string
+) {
 	await db.moveConstraint.create({
 		data: {
 			stage: {
@@ -45,10 +49,13 @@ export async function createMoveConstraint(sourceStageId: string, destinationSta
 			},
 		},
 	});
-	revalidatePath("/");
+	revalidateTag(`community-stages_${communityId}`);
 }
 
-export async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
+export async function deleteMoveConstraints(
+	communityId: string,
+	moveConstraintIds: [string, string][]
+) {
 	const ops = moveConstraintIds.map(([sourceStageId, destinationStageId]) => {
 		return db.moveConstraint.delete({
 			where: {
@@ -60,5 +67,5 @@ export async function deleteMoveConstraints(moveConstraintIds: [string, string][
 		});
 	});
 	await Promise.all(ops);
-	revalidatePath("/");
+	revalidateTag(`community-stages_${communityId}`);
 }
