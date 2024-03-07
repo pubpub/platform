@@ -1,6 +1,7 @@
 import { stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
-import { Graph } from "./Flow";
+import { StageEditor } from "./StageEditor";
+import { StageEditorProvider } from "./StageEditorContext";
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
 	const community = await prisma.community.findUnique({
@@ -16,5 +17,9 @@ export default async function Page({ params }: { params: { communitySlug: string
 		include: stageInclude,
 	});
 
-	return <Graph stages={stages} />;
+	return (
+		<StageEditorProvider stages={stages} communityId={community.id}>
+			<StageEditor />
+		</StageEditorProvider>
+	);
 }

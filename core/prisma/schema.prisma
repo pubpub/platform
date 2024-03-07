@@ -171,9 +171,9 @@ model Stage {
 }
 
 model MoveConstraint {
-  stage         Stage    @relation("move_constraint", fields: [stageId], references: [id])
+  stage         Stage    @relation("move_constraint", fields: [stageId], references: [id], onDelete: Cascade)
   stageId       String   @map(name: "stage_id")
-  destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id])
+  destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id], onDelete: Cascade)
   destinationId String   @map(name: "destination_id")
   createdAt     DateTime @default(now()) @map(name: "created_at")
   updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")

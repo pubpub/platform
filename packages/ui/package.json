@@ -101,6 +101,10 @@
 			"module": "./collapsible/dist/ui-collapsible.esm.js",
 			"default": "./collapsible/dist/ui-collapsible.cjs.js"
 		},
+		"./context-menu": {
+			"module": "./context-menu/dist/ui-context-menu.esm.js",
+			"default": "./context-menu/dist/ui-context-menu.cjs.js"
+		},
 		"./dropdown-menu": {
 			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
 			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
@@ -142,6 +146,7 @@
 		"card",
 		"checkbox",
 		"collapsible",
+		"context-menu",
 		"dialog",
 		"dropdown-menu",
 		"form",
@@ -170,6 +175,7 @@
 		"@radix-ui/react-avatar": "^1.0.3",
 		"@radix-ui/react-checkbox": "^1.0.4",
 		"@radix-ui/react-collapsible": "^1.0.3",
+		"@radix-ui/react-context-menu": "^2.1.5",
 		"@radix-ui/react-dialog": "^1.0.4",
 		"@radix-ui/react-dropdown-menu": "^2.0.5",
 		"@radix-ui/react-hover-card": "^1.0.7",
@@ -243,6 +249,7 @@
 			"card.tsx",
 			"checkbox.tsx",
 			"collapsible.tsx",
+			"context-menu.tsx",
 			"dialog.tsx",
 			"dropdown-menu.tsx",
 			"form.tsx",
