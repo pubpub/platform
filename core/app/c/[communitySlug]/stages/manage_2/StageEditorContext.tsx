@@ -7,13 +7,6 @@ import {
 	useContext,
 	useState,
 } from "react";
-import {
-	ContextMenu,
-	ContextMenuContent,
-	ContextMenuItem,
-	ContextMenuShortcut,
-	ContextMenuTrigger,
-} from "ui/context-menu";
 import { StagePayload } from "~/lib/types";
 import * as actions from "./actions";
 
@@ -26,6 +19,8 @@ export type StageEditorContext = {
 	setSelectedMoveConstraintIds: (moveConstraintIds: [string, string][]) => void;
 	createMoveConstraint: (sourceStageId: string, destinationStageId: string) => void;
 	deleteMoveConstraints: (moveConstraintIds: [string, string][]) => void;
+	deleteStagesAndMoveConstraints: () => void;
+	createStage: () => void;
 };
 
 export const stageEditorContext = createContext<StageEditorContext>({
@@ -37,6 +32,8 @@ export const stageEditorContext = createContext<StageEditorContext>({
 	setSelectedMoveConstraintIds: () => {},
 	createMoveConstraint: () => {},
 	deleteMoveConstraints: () => {},
+	deleteStagesAndMoveConstraints: () => {},
+	createStage: () => {},
 });
 
 export type StageEditorProviderProps = PropsWithChildren<{
@@ -138,45 +135,56 @@ export const StageEditorProvider = (props: StageEditorProviderProps) => {
 	const [selectedMoveConstraintIds, setSelectedMoveConstraintIds] = useState<[string, string][]>(
 		[]
 	);
-	const [optimisticStages, optimisticStagesDispatch] = experimental_useOptimistic(
+	const [stages, dispatch] = experimental_useOptimistic(
 		props.stages,
 		makeOptimisitcStagesReducer(props.communityId)
 	);
+
 	const createStage = async () => {
 		try {
-			optimisticStagesDispatch({ type: "createStage" });
+			dispatch({ type: "createStage" });
 			await actions.createStage(props.communityId);
 		} catch (e) {
 			console.error(e);
 		}
 	};
+
 	const deleteStages = async (stageIds: string[]) => {
 		try {
-			optimisticStagesDispatch({ type: "deleteStages", stageIds });
+			dispatch({ type: "deleteStages", stageIds });
 			await actions.deleteStages(props.communityId, stageIds);
 		} catch (e) {
 			console.error(e);
 		}
 	};
+
 	const deleteStagesAndMoveConstraints = async () => {
 		try {
+			if (selectedStageIds.length > 0) {
+				dispatch({
+					type: "deleteStages",
+					stageIds: selectedStageIds,
+				});
+			}
 			if (selectedMoveConstraintIds.length > 0) {
-				optimisticStagesDispatch({
+				dispatch({
 					type: "deleteMoveConstraints",
 					moveConstraintIds: selectedMoveConstraintIds,
 				});
-				await actions.deleteMoveConstraints(props.communityId, selectedMoveConstraintIds);
-				return;
 			}
-			optimisticStagesDispatch({ type: "deleteStages", stageIds: selectedStageIds });
-			await actions.deleteStages(props.communityId, selectedStageIds);
+			await actions.deleteStagesAndMoveConstraints(
+				props.communityId,
+				selectedStageIds,
+				selectedMoveConstraintIds
+			);
 		} catch (e) {
 			console.error(e);
 		}
 	};
+
 	const createMoveConstraint = async (sourceStageId: string, destinationStageId: string) => {
 		try {
-			optimisticStagesDispatch({
+			dispatch({
 				type: "createMoveConstraint",
 				sourceStageId,
 				destinationStageId,
@@ -190,19 +198,21 @@ export const StageEditorProvider = (props: StageEditorProviderProps) => {
 			console.error(e);
 		}
 	};
+
 	const deleteMoveConstraints = async (moveConstraintIds: [string, string][]) => {
 		try {
-			optimisticStagesDispatch({
+			dispatch({
 				type: "deleteMoveConstraints",
-				moveConstraintIds: moveConstraintIds,
+				moveConstraintIds,
 			});
 			await actions.deleteMoveConstraints(props.communityId, moveConstraintIds);
 		} catch (e) {
 			console.error(e);
 		}
 	};
+
 	const value = {
-		stages: optimisticStages,
+		stages,
 		selectedStageIds,
 		selectedMoveConstraintIds,
 		deleteStages,
@@ -210,24 +220,10 @@ export const StageEditorProvider = (props: StageEditorProviderProps) => {
 		setSelectedMoveConstraintIds,
 		createMoveConstraint,
 		deleteMoveConstraints,
+		deleteStagesAndMoveConstraints,
+		createStage,
 	};
 	return (
-		<stageEditorContext.Provider value={value}>
-			<ContextMenu>
-				<ContextMenuTrigger>{props.children}</ContextMenuTrigger>
-				<ContextMenuContent className="w-64">
-					{(selectedStageIds.length > 0 || selectedMoveConstraintIds.length > 0) && (
-						<ContextMenuItem inset onClick={deleteStagesAndMoveConstraints}>
-							Delete
-							<ContextMenuShortcut>⏎</ContextMenuShortcut>
-						</ContextMenuItem>
-					)}
-					<ContextMenuItem inset onClick={createStage}>
-						Add Stage
-						<ContextMenuShortcut>⌘[</ContextMenuShortcut>
-					</ContextMenuItem>
-				</ContextMenuContent>
-			</ContextMenu>
-		</stageEditorContext.Provider>
+		<stageEditorContext.Provider value={value}>{props.children}</stageEditorContext.Provider>
 	);
 };

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import db from "~/prisma/db";
 
 export async function createStage(communityId: string) {
@@ -67,5 +67,21 @@ export async function deleteMoveConstraints(
 		});
 	});
 	await Promise.all(ops);
+	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function deleteStagesAndMoveConstraints(
+	communityId: string,
+	stageIds: string[],
+	moveConstraintIds: [string, string][]
+) {
+	// Delete move constraints prior to deleting stages to prevent foreign
+	// key constraint violations.
+	if (moveConstraintIds.length > 0) {
+		await deleteMoveConstraints(communityId, moveConstraintIds);
+	}
+	if (stageIds.length > 0) {
+		await deleteStages(communityId, stageIds);
+	}
 	revalidateTag(`community-stages_${communityId}`);
 }

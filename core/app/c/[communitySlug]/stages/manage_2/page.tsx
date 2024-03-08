@@ -27,6 +27,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 
 	return (
 		<StageEditorProvider stages={stages} communityId={community.id}>
+			<div className="h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)] pointer-events-none z-50 fixed" />
 			<StageEditor />
 		</StageEditorProvider>
 	);
