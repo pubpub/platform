@@ -56,12 +56,12 @@ export async function deleteMoveConstraints(
 	communityId: string,
 	moveConstraintIds: [string, string][]
 ) {
-	const ops = moveConstraintIds.map(([sourceStageId, destinationStageId]) => {
+	const ops = moveConstraintIds.map(([stageId, destinationId]) => {
 		return db.moveConstraint.delete({
 			where: {
 				move_constraint_id: {
-					stageId: sourceStageId,
-					destinationId: destinationStageId,
+					stageId,
+					destinationId,
 				},
 			},
 		});
@@ -83,5 +83,21 @@ export async function deleteStagesAndMoveConstraints(
 	if (stageIds.length > 0) {
 		await deleteStages(communityId, stageIds);
 	}
+	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function updateStageName(communityId: string, stageId: string, name: string) {
+	await db.stage.update({
+		where: {
+			id: stageId,
+		},
+		data: {
+			name,
+		},
+	});
+	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function revalidateStages(communityId: string) {
 	revalidateTag(`community-stages_${communityId}`);
 }
