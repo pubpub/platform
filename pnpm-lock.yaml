@@ -385,6 +385,12 @@ importers:
 
   jobs:
     dependencies:
+      '@honeycombio/opentelemetry-node':
+        specifier: ^0.6.1
+        version: 0.6.1
+      '@opentelemetry/auto-instrumentations-node':
+        specifier: ^0.41.1
+        version: 0.41.1(@opentelemetry/api@1.7.0)
       '@pubpub/sdk':
         specifier: workspace:*
         version: link:../packages/sdk
