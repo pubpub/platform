@@ -120,6 +120,50 @@ module "service_flock" {
   }
 }
 
+ module "service_intg_submissions" {
+   source = "./modules/container-generic"
+
+   service_name = "integration-submissions"
+   cluster_info = module.cluster.cluster_info
+
+   repository_url = module.cluster.ecr_repository_urls.intg_submissions
+
+   configuration = {
+     container_port = 10000
+     environment = [
+       { name = "PUBPUB_URL", value = var.pubpub_url },
+     ]
+
+     secrets = [
+       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+     ]
+   }
+ }
+
+ module "service_intg_evaluations" {
+   source = "./modules/container-generic"
+
+   service_name = "integration-evaluations"
+   cluster_info = module.cluster.cluster_info
+
+   repository_url = module.cluster.ecr_repository_urls.intg_evaluations
+
+   configuration = {
+     container_port = 10000
+     environment = [
+       { name = "PUBPUB_URL", value = var.pubpub_url },
+     ]
+
+     secrets = [
+       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+     ]
+   }
+ }
+
 module "observability_honeycomb_integration" {
   source = "./modules/honeycomb-integration"
 

@@ -60,3 +60,27 @@ jobs:
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+    deploy-intg-submissions:
+        uses: ./.github/workflows/deploy-template.yml
+        needs: deploy-core
+        with:
+            service: integration-submissions
+            environment: ${{ inputs.environment }}
+            proper-name: ${{ inputs.proper-name }}
+            image-tag-override: ${{ inputs.image-tag-override }}
+        secrets:
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+    deploy-intg-evaluations:
+        uses: ./.github/workflows/deploy-template.yml
+        needs: deploy-core
+        with:
+            service: integration-evaluations
+            environment: ${{ inputs.environment }}
+            proper-name: ${{ inputs.proper-name }}
+            image-tag-override: ${{ inputs.image-tag-override }}
+        secrets:
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
