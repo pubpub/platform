@@ -53,7 +53,7 @@ export const AddMemberDialog = ({
 					</TooltipTrigger>
 				</Tooltip>
 			</TooltipProvider>
-			<DialogContent suppressHydrationWarning={true}>
+			<DialogContent>
 				<MemberInviteForm community={community} user={user} error={error} email={email} />
 			</DialogContent>
 		</Dialog>

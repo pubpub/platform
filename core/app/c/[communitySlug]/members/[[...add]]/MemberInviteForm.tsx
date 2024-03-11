@@ -56,7 +56,6 @@ const formStateReducer = (
 		error?: string;
 	}
 ): FormState => {
-	console.log({ email, user, error });
 	switch (true) {
 		case !email:
 			return { state: "initial", data: null };
@@ -184,7 +183,6 @@ export const MemberInviteForm = ({
 
 	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
 		if (form.getFieldState("email").error) {
-			console.log(email, " somehow invalid");
 			dispatch({ email, user: undefined });
 			return;
 		}
