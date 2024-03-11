@@ -11,6 +11,7 @@ export {
 	Plus,
 	Send,
 	Settings,
+	Table,
 	Terminal,
 	UserCircle2,
 	Wand2,

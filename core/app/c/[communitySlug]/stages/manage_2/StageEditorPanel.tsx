@@ -1,25 +1,80 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import debounce from "debounce";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+	ComponentPropsWithoutRef,
+	ElementRef,
+	forwardRef,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+} from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
+import {
+	NavigationMenu,
+	NavigationMenuContent,
+	NavigationMenuItem,
+	NavigationMenuLink,
+	NavigationMenuList,
+	NavigationMenuTrigger,
+	NavigationMenuViewport,
+} from "ui/navigation-menu";
 import { Separator } from "ui/separator";
 import { Sheet, SheetContent } from "ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import { expect } from "utils";
+import { cn, expect } from "utils";
 import { z } from "zod";
 import { StagePayload } from "~/lib/types";
-import { useStages } from "./StagesContext";
 import { useStageEditor } from "./StageEditorContext";
+import { useStages } from "./StagesContext";
 
 const overviewFormSchema = z.object({
 	name: z.string(),
 });
 
-export function TabsDemo() {
+const components: { title: string; href: string; description: string }[] = [
+	{
+		title: "Pub Mover",
+		href: "",
+		description: "Moves a Pub to a different stage.",
+	},
+	{
+		title: "Crossref",
+		href: "",
+		description: "Deposits a Pub to Crossref, optionally assigning a DOI.",
+	},
+];
+
+const ListItem = forwardRef<ElementRef<"a">, ComponentPropsWithoutRef<"a">>(
+	({ className, title, children, ...props }, ref) => {
+		return (
+			<li>
+				<NavigationMenuLink asChild>
+					<a
+						ref={ref}
+						className={cn(
+							"block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer",
+							className
+						)}
+						{...props}
+					>
+						<div className="text-sm font-medium leading-none">{title}</div>
+						<p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+							{children}
+						</p>
+					</a>
+				</NavigationMenuLink>
+			</li>
+		);
+	}
+);
+ListItem.displayName = "ListItem";
+
+export function StageEditorPanelTabs() {
 	const { actions, deleteStages, updateStageName } = useStages();
 	const { editingStage } = useStageEditor();
 	const stageRef = useRef<StagePayload>(editingStage);
@@ -60,59 +115,68 @@ export function TabsDemo() {
 			</TabsList>
 			<TabsContent value="overview">
 				<Card>
-					<CardHeader>
-						<CardTitle>Overview</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-2">
-						<div className="space-y-1">
-							<Label htmlFor="name">Stage Name</Label>
-							<Input id="name" {...form.register("name")} />
+					<CardContent className="space-y-2 py-2">
+						<div className="space-y-2 py-2">
+							<Label htmlFor="name">
+								<h4 className="font-semibold mb-2 text-base">Stage Name</h4>
+								<Input id="name" {...form.register("name")} />
+							</Label>
 						</div>
 						<Separator />
-						<h3>Actions Enabled on this Stage</h3>
-						<p>No actions</p>
+						<div className="space-y-2 py-2">
+							<h4 className="font-semibold mb-2">Actions Enabled on this Stage</h4>
+							<p>This stage has no actions.</p>
+						</div>
 						<Separator />
-						<h3>Stage Management</h3>
-						<Button onClick={onDeleteClick}>Delete this Stage</Button>
-					</CardContent>
-					<CardFooter></CardFooter>
-				</Card>
-			</TabsContent>
-			<TabsContent value="pubs">
-				<Card>
-					<CardHeader>
-						<CardTitle>Password</CardTitle>
-						<CardDescription>
-							Change your password here. After saving, you'll be logged out.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-2">
-						<div className="space-y-1">
-							<Label htmlFor="current">Current password</Label>
-							<Input id="current" type="password" />
-						</div>
-						<div className="space-y-1">
-							<Label htmlFor="new">New password</Label>
-							<Input id="new" type="password" />
+						<div className="space-y-2 py-2">
+							<h4 className="font-semibold mb-2">Stage Management</h4>
+							<Button variant="secondary" onClick={onDeleteClick}>
+								Delete this Stage
+							</Button>
 						</div>
 					</CardContent>
-					<CardFooter>
-						<Button>Save password</Button>
-					</CardFooter>
 				</Card>
 			</TabsContent>
+			<TabsContent value="pubs"></TabsContent>
 			<TabsContent value="actions">
 				<Card>
 					<CardHeader>
 						<CardTitle>Actions</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-2">
-						<p>No actions</p>
-						<ul>
-							{actions.map((action) => (
-								<li key={action.id}>{action.name}</li>
-							))}
-						</ul>
+						<p>This stage has no actions.</p>
+						<NavigationMenu>
+							<NavigationMenuList>
+								<NavigationMenuItem>
+									<NavigationMenuTrigger
+										onPointerEnter={(event) => event.preventDefault()}
+										onPointerLeave={(event) => event.preventDefault()}
+									>
+										Add Action
+									</NavigationMenuTrigger>
+									<NavigationMenuContent
+										onPointerEnter={(event) => event.preventDefault()}
+										onPointerLeave={(event) => event.preventDefault()}
+									>
+										<ul className="grid w-[300px] gap-3 p-4 md:grid-cols-2">
+											{components.map((component) => (
+												<ListItem
+													key={component.title}
+													title={component.title}
+													href={component.href}
+												>
+													{component.description}
+												</ListItem>
+											))}
+										</ul>
+									</NavigationMenuContent>
+								</NavigationMenuItem>
+							</NavigationMenuList>
+							<NavigationMenuViewport
+								onPointerEnter={(event) => event.preventDefault()}
+								onPointerLeave={(event) => event.preventDefault()}
+							/>
+						</NavigationMenu>
 					</CardContent>
 					<CardFooter></CardFooter>
 				</Card>
@@ -140,7 +204,7 @@ export const StageEditorPanel = () => {
 			onOpenChange={onOpenChange}
 		>
 			<SheetContent className="sm:max-w-md">
-				<TabsDemo />
+				<StageEditorPanelTabs />
 			</SheetContent>
 		</Sheet>
 	);

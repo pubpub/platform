@@ -101,14 +101,14 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 			<Handle type="source" position={Position.Right} />
 			<div className="flex flex-col">
 				<div>
-					<h3
+					<p
 						className="font-medium text-sm nodrag cursor-text inline"
 						contentEditable
 						suppressContentEditableWarning
 						ref={nameRef}
 					>
 						{props.data.stage.name}
-					</h3>
+					</p>
 				</div>
 				<ul className="p-0 m-0 list-none flex gap-2">
 					<li>
