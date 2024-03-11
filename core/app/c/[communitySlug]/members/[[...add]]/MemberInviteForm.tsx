@@ -25,7 +25,7 @@ import { useCallback, useEffect, useReducer, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
 import { Community } from "@prisma/client";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { SuggestedUser } from "~/lib/server";
 
 const memberInviteFormSchema = z.object({

@@ -110,7 +110,7 @@ export default async function Page({
 								</div>
 
 								{canAdmin && <Badge>admin</Badge>}
-								<RemoveMemberButton member={member} />
+								<RemoveMemberButton member={member} community={community} />
 							</div>
 						);
 					})}

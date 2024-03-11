@@ -1,6 +1,6 @@
 "use client";
 
-import type { Member, User } from "@prisma/client";
+import type { Community, Member, User } from "@prisma/client";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -15,17 +15,17 @@ import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
 import * as actions from "./actions";
-import { usePathname } from "next/navigation";
 
 export const RemoveMemberButton = ({
 	member,
+	community,
 }: {
 	member: Member & {
 		user: User;
 	};
+	community: Community;
 }) => {
 	const { user } = member;
-	const path = usePathname();
 	return (
 		<AlertDialog>
 			<TooltipProvider>
@@ -56,7 +56,7 @@ export const RemoveMemberButton = ({
 					<Button asChild variant="destructive">
 						<AlertDialogAction
 							onClick={async () => {
-								const response = await actions.removeMember({ member, path });
+								const response = await actions.removeMember({ member, community });
 								if ("error" in response) {
 									toast({
 										title: "Error",

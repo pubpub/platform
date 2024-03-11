@@ -4,10 +4,15 @@ import type { SuggestedUser } from "~/lib/server/members";
 
 import prisma from "~/prisma/db";
 import { Community, Member, User } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import { formatSupabaseError } from "~/lib/supabase";
+
+export const revalidateMemberPathsAndTags = (community: Community) => {
+	revalidatePath(`/c/${community.slug}/members`);
+	revalidateTag(`members_${community.id}`);
+};
 
 export const addMember = async ({
 	user,
@@ -38,6 +43,8 @@ export const addMember = async ({
 			},
 		});
 
+		revalidateMemberPathsAndTags(community);
+
 		// the user exists in our DB, but not in supabase
 		// most likely they were invited as an evaluator before
 		if (!user.supabaseId) {
@@ -53,7 +60,6 @@ export const addMember = async ({
 			}
 		}
 
-		revalidatePath(`/c/${community.slug}/members`, "page");
 		return member;
 	} catch (error) {
 		return { error: error.message };
@@ -62,10 +68,10 @@ export const addMember = async ({
 
 export const removeMember = async ({
 	member,
-	path,
+	community,
 }: {
 	member: Member & { user: User };
-	path: string | null;
+	community: Community;
 }) => {
 	try {
 		const loginData = await getLoginData();
@@ -84,9 +90,7 @@ export const removeMember = async ({
 			return { error: "Failed to remove member" };
 		}
 
-		if (path) {
-			revalidatePath(path, "page");
-		}
+		revalidateMemberPathsAndTags(community);
 		return { success: true };
 	} catch (error) {
 		return { error: error.message };
@@ -125,6 +129,7 @@ export const inviteMember = async ({
 	});
 
 	if (!error) {
+		revalidateMemberPathsAndTags(community);
 		return { user: data.user, error: null };
 	}
 
@@ -149,7 +154,7 @@ export const inviteMember = async ({
 		};
 	}
 
-	revalidatePath(`/c/${community.slug}/members`, "page");
+	revalidateMemberPathsAndTags(community);
 	return {
 		user: resendData.user,
 		error: null,
