@@ -91,9 +91,18 @@ const formStateReducer = (
 	}
 };
 
-export const MemberInviteForm = ({ community }: { community: Community }) => {
+export const MemberInviteForm = ({
+	community,
+	email,
+	user,
+	error,
+}: {
+	community: Community;
+	email?: string;
+	user: SuggestedUser | null | "you" | "existing-member";
+	error?: string;
+}) => {
 	const [isPending, startTransition] = useTransition();
-	const searchParams = useSearchParams();
 	const router = useRouter();
 	const [state, dispatch] = useReducer(formStateReducer, {
 		state: "initial",
@@ -106,7 +115,7 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 		mode: "onChange",
 		defaultValues: {
 			admin: false,
-			email: searchParams?.get("email") ?? "",
+			email: email,
 			firstName: "",
 			lastName: "",
 		},
@@ -184,21 +193,14 @@ export const MemberInviteForm = ({ community }: { community: Community }) => {
 			window.location.pathname + "?" + new URLSearchParams({ email }).toString(),
 			{}
 		);
-
-		const { user, error } = await actions.suggest({ email, community });
-
-		dispatch({ email, error, user });
 	}, 500);
 
-	/**
-	 * Run the debounced email check on mount if email is provided through the query params
-	 */
+	// we only want to update the state when the user or email changes, which
+	// is after the email check has been debounced AND the user has been fetched
+	// from the higher up server component
 	useEffect(() => {
-		const searchParamEmail = searchParams?.get("email");
-		if (searchParamEmail) {
-			debouncedEmailCheck(searchParamEmail);
-		}
-	}, []);
+		dispatch({ email, error, user });
+	}, [user, email, error]);
 
 	return (
 		<Form {...form}>

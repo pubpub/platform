@@ -14,6 +14,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "ui/pagination";
+import { AddMember } from "./AddMember";
 
 const PAGE_SIZE = 10 as const;
 
@@ -28,6 +29,7 @@ export default async function Page({
 	};
 	searchParams: {
 		page?: string;
+		email?: string;
 	};
 }) {
 	if (add && add[0] !== "add") {
@@ -78,7 +80,7 @@ export default async function Page({
 		<>
 			<div className="flex mb-16 justify-between items-center">
 				<h1 className="font-bold text-xl">Members</h1>
-				<AddMemberDialog community={community} open={Boolean(add)} />
+				<AddMember community={community} open={!!add} email={searchParams.email} />
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">

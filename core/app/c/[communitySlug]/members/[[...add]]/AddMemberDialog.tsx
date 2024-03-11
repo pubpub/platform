@@ -9,8 +9,21 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 
 import { MemberInviteForm } from "./MemberInviteForm";
 import { useEffect, useState } from "react";
+import { SuggestedUser } from "~/lib/server";
 
-export const AddMemberDialog = ({ open, community }: { open: boolean; community: Community }) => {
+export const AddMemberDialog = ({
+	open,
+	community,
+	user,
+	email,
+	error,
+}: {
+	open: boolean;
+	community: Community;
+	error?: string;
+	user: SuggestedUser | null | "you" | "existing-member";
+	email?: string;
+}) => {
 	const router = useRouter();
 	const [actuallyOpen, setActuallyOpen] = useState(false);
 
@@ -41,7 +54,7 @@ export const AddMemberDialog = ({ open, community }: { open: boolean; community:
 				</Tooltip>
 			</TooltipProvider>
 			<DialogContent suppressHydrationWarning={true}>
-				<MemberInviteForm community={community} />
+				<MemberInviteForm community={community} user={user} error={error} email={email} />
 			</DialogContent>
 		</Dialog>
 	);
