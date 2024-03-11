@@ -37,6 +37,10 @@
 			"module": "./label/dist/ui-label.esm.js",
 			"default": "./label/dist/ui-label.cjs.js"
 		},
+		"./table": {
+			"module": "./table/dist/ui-table.esm.js",
+			"default": "./table/dist/ui-table.cjs.js"
+		},
 		"./toast": {
 			"module": "./toast/dist/ui-toast.esm.js",
 			"default": "./toast/dist/ui-toast.cjs.js"
@@ -163,6 +167,7 @@
 		"popover",
 		"select",
 		"separator",
+		"table",
 		"tabs",
 		"textarea",
 		"toast",
@@ -267,6 +272,7 @@
 			"popover.tsx",
 			"select.tsx",
 			"separator.tsx",
+			"table.tsx",
 			"tabs.tsx",
 			"textarea.tsx",
 			"toast.tsx",
