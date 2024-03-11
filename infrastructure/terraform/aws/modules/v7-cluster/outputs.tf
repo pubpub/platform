@@ -3,6 +3,7 @@ output "ecr_repository_urls" {
     root = aws_ecr_repository.pubpub_v7.repository_url
     core = aws_ecr_repository.pubpub_v7_core.repository_url
     intg_submissions = aws_ecr_repository.pubpub_v7_intg_submissions.repository_url
+    intg_evaluations = aws_ecr_repository.pubpub_v7_intg_evaluations.repository_url
     jobs = aws_ecr_repository.pubpub_v7_jobs.repository_url
   }
 }
