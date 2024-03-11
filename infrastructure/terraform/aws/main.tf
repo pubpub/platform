@@ -38,6 +38,7 @@ module "core_dependency_services" {
   source = "./modules/core-services"
 
   cluster_info = module.cluster.cluster_info
+  assets_bucket_url_name = var.ASSETS_BUCKET_NAME
   HONEYCOMB_API_KEY = var.HONEYCOMB_API_KEY
 }
 
@@ -69,8 +70,10 @@ module "service_core" {
       { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
       { name = "ASSETS_REGION", value = var.region },
       { name = "ASSETS_BUCKET_NAME", value = var.ASSETS_BUCKET_NAME },
-      { name = "ASSETS_UPLOAD_KEY", value = var.ASSETS_UPLOAD_KEY },
+      { name = "ASSETS_UPLOAD_KEY", value = module.core_dependency_services.asset_uploader_key_id },
       { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
+      { name = "MAILGUN_SMTP_HOST", value = var.MAILGUN_SMTP_HOST },
+      { name = "MAILGUN_SMTP_PORT", value = var.MAILGUN_SMTP_PORT },
       { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
       { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
@@ -80,10 +83,13 @@ module "service_core" {
       { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
       { name = "JWT_SECRET", valueFrom = module.core_dependency_services.secrets.jwt_secret },
+      { name = "ASSETS_UPLOAD_SECRET_KEY", valueFrom = module.core_dependency_services.secrets.asset_uploader_secret_key },
+
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
       { name = "SUPABASE_WEBHOOKS_API_KEY", valueFrom = module.core_dependency_services.secrets.supabase_webhooks_api_key },
       { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+      { name = "MAILGUN_SMTP_PASSWORD", valueFrom = module.core_dependency_services.secrets.mailgun_smtp_password },
     ]
   }
 }
