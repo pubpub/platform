@@ -1,6 +1,14 @@
 "use client";
 
-import { PropsWithChildren, createContext, useCallback, useContext, useRef, useState } from "react";
+import {
+	PropsWithChildren,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { Node } from "reactflow";
 import { useLocalStorage } from "ui/hooks";
 import { StagePayload } from "~/lib/types";
@@ -65,7 +73,7 @@ const usePersistedNodePositions = (storageKey: string) => {
 };
 
 export const StageEditorProvider = (props: StageEditorProps) => {
-	const { deleteStagesAndMoveConstraints, fetchStages: refresh } = useStages();
+	const { deleteStagesAndMoveConstraints, fetchStages: refresh, stages } = useStages();
 	const [editingStage, setEditingStage] = useState<StagePayload | null>(null);
 	const [hasSelection, setHasSelection] = useState(false);
 	const [getNodePosition, setNodePositions] = usePersistedNodePositions(
@@ -99,6 +107,13 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 		);
 		setHasSelection(false);
 	}, []);
+
+	useEffect(() => {
+		if (editingStage) {
+			const stage = stages.find((s) => s.id === editingStage.id);
+			setEditingStage(stage ?? null);
+		}
+	}, [stages, editingStage]);
 
 	const value = {
 		deleteSelection,

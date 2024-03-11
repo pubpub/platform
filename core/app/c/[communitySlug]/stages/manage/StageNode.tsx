@@ -1,21 +1,11 @@
-import {
-	FocusEvent,
-	KeyboardEvent,
-	MouseEvent,
-	memo,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { KeyboardEvent, MouseEvent, memo, useCallback, useMemo, useRef, useState } from "react";
 import { Handle, NodeProps, Position } from "reactflow";
 import { Button } from "ui/button";
-import { StagePayload } from "~/lib/types";
-import { cn, expect } from "utils";
 import { Settings } from "ui/icon";
-import { useStages } from "./StagesContext";
+import { cn, expect } from "utils";
+import { StagePayload } from "~/lib/types";
 import { useStageEditor } from "./StageEditorContext";
+import { useStages } from "./StagesContext";
 
 export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;

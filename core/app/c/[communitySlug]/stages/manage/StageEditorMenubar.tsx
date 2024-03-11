@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
 import {
@@ -13,21 +14,12 @@ import {
 } from "ui/menubar";
 import { useStageEditor } from "./StageEditorContext";
 import { useStages } from "./StagesContext";
-import { useCallback } from "react";
 
 export const StageEditorMenubar = () => {
 	const { zoomIn, zoomOut, fitView } = useReactFlow();
 	const { createStage } = useStages();
 	const { deleteSelection, hasSelection } = useStageEditor();
 	const { resetLayout } = useStageEditor();
-
-	const onNewStageClick = useCallback(() => {
-		createStage();
-	}, [createStage]);
-
-	const onAutoLayoutClick = useCallback(() => {
-		resetLayout();
-	}, [resetLayout]);
 
 	const onZoomInClick = useCallback(() => {
 		zoomIn();
@@ -46,7 +38,7 @@ export const StageEditorMenubar = () => {
 			<MenubarMenu>
 				<MenubarTrigger>File</MenubarTrigger>
 				<MenubarContent>
-					<MenubarItem onClick={onNewStageClick}>
+					<MenubarItem onClick={createStage}>
 						New Stage
 						<MenubarShortcut>^N</MenubarShortcut>
 					</MenubarItem>
@@ -85,7 +77,7 @@ export const StageEditorMenubar = () => {
 						Fit View
 						<MenubarShortcut>^0</MenubarShortcut>
 					</MenubarItem>
-					<MenubarItem onClick={onAutoLayoutClick}>Auto Layout</MenubarItem>
+					<MenubarItem onClick={resetLayout}>Auto Layout</MenubarItem>
 				</MenubarContent>
 			</MenubarMenu>
 			<MenubarMenu>

@@ -7,11 +7,11 @@ import {
 	useCallback,
 	useEffect,
 	useMemo,
-	useRef,
+	useState,
 } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 import {
@@ -26,7 +26,7 @@ import {
 import { Separator } from "ui/separator";
 import { Sheet, SheetContent } from "ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import { cn, expect } from "utils";
+import { cn } from "utils";
 import { z } from "zod";
 import { StagePayload } from "~/lib/types";
 import { useStageEditor } from "./StageEditorContext";
@@ -35,19 +35,6 @@ import { useStages } from "./StagesContext";
 const overviewFormSchema = z.object({
 	name: z.string(),
 });
-
-const components: { title: string; href: string; description: string }[] = [
-	{
-		title: "Pub Mover",
-		href: "",
-		description: "Moves a Pub to a different stage.",
-	},
-	{
-		title: "Crossref",
-		href: "",
-		description: "Deposits a Pub to Crossref, optionally assigning a DOI.",
-	},
-];
 
 const ListItem = forwardRef<ElementRef<"a">, ComponentPropsWithoutRef<"a">>(
 	({ className, title, children, ...props }, ref) => {
@@ -74,31 +61,47 @@ const ListItem = forwardRef<ElementRef<"a">, ComponentPropsWithoutRef<"a">>(
 );
 ListItem.displayName = "ListItem";
 
-export function StageEditorPanelTabs() {
+const preventNavigationHoverBehavior = {
+	onPointerEnter: (event: React.PointerEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+	},
+	onPointerLeave: (event: React.PointerEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+	},
+	onPointerMove: (event: React.PointerEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+	},
+};
+
+type StageEditorPanelTabsProps = {
+	stage: StagePayload;
+};
+
+export function StageEditorPanelTabs(props: StageEditorPanelTabsProps) {
 	const { actions, deleteStages, updateStageName } = useStages();
-	const { editingStage } = useStageEditor();
-	const stageRef = useRef<StagePayload>(editingStage);
-	const stage = expect(stageRef.current);
 	const form = useForm<z.infer<typeof overviewFormSchema>>({
 		mode: "all",
 		reValidateMode: "onChange",
 		resolver: zodResolver(overviewFormSchema),
 		defaultValues: {
-			name: stage.name,
+			name: props.stage.name,
 		},
 	});
 	const name = form.watch("name");
 
 	const onDeleteClick = useCallback(() => {
-		deleteStages([stage.id]);
-	}, [deleteStages, stage]);
+		deleteStages([props.stage.id]);
+	}, [deleteStages, props.stage]);
 
 	const onNameChange = useMemo(
 		() =>
 			debounce((name: string) => {
-				updateStageName(stage.id, name);
+				updateStageName(props.stage.id, name);
 			}, 500),
-		[updateStageName]
+		[updateStageName, props.stage]
 	);
 
 	useEffect(() => {
@@ -148,37 +151,23 @@ export function StageEditorPanelTabs() {
 						<NavigationMenu>
 							<NavigationMenuList>
 								<NavigationMenuItem>
-									<NavigationMenuTrigger
-										onPointerEnter={(event) => event.preventDefault()}
-										onPointerLeave={(event) => event.preventDefault()}
-									>
+									<NavigationMenuTrigger {...preventNavigationHoverBehavior}>
 										Add Action
 									</NavigationMenuTrigger>
-									<NavigationMenuContent
-										onPointerEnter={(event) => event.preventDefault()}
-										onPointerLeave={(event) => event.preventDefault()}
-									>
+									<NavigationMenuContent {...preventNavigationHoverBehavior}>
 										<ul className="grid w-[300px] gap-3 p-4 md:grid-cols-2">
-											{components.map((component) => (
-												<ListItem
-													key={component.title}
-													title={component.title}
-													href={component.href}
-												>
-													{component.description}
+											{actions.map((action) => (
+												<ListItem key={action.id} title={action.name}>
+													Missing description
 												</ListItem>
 											))}
 										</ul>
 									</NavigationMenuContent>
 								</NavigationMenuItem>
 							</NavigationMenuList>
-							<NavigationMenuViewport
-								onPointerEnter={(event) => event.preventDefault()}
-								onPointerLeave={(event) => event.preventDefault()}
-							/>
+							<NavigationMenuViewport {...preventNavigationHoverBehavior} />
 						</NavigationMenu>
 					</CardContent>
-					<CardFooter></CardFooter>
 				</Card>
 			</TabsContent>
 			<TabsContent value="members"></TabsContent>
@@ -188,23 +177,31 @@ export function StageEditorPanelTabs() {
 
 export const StageEditorPanel = () => {
 	const { editingStage, editStage } = useStageEditor();
-	const { stages } = useStages();
+	const [open, setOpen] = useState(false);
+	const [stage, setStage] = useState<StagePayload | null>(null);
+
 	const onOpenChange = useCallback(
 		(open: boolean) => {
 			if (!open) {
 				editStage(null);
 			}
+			setOpen(open);
 		},
 		[editStage]
 	);
 
+	useEffect(() => {
+		const open = editingStage !== null;
+		if (open) {
+			setStage(editingStage);
+		}
+		setOpen(open);
+	}, [editingStage]);
+
 	return (
-		<Sheet
-			open={stages.some((stage) => stage.id === editingStage?.id)}
-			onOpenChange={onOpenChange}
-		>
+		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent className="sm:max-w-md">
-				<StageEditorPanelTabs />
+				{stage !== null && <StageEditorPanelTabs stage={stage} />}
 			</SheetContent>
 		</Sheet>
 	);

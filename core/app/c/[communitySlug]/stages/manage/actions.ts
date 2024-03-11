@@ -1,48 +1,103 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { StageFormSchema } from "~/lib/stages";
-import { Prisma } from "@prisma/client";
-import prisma from "~/prisma/db";
-import { DeepPartial } from "~/lib/types";
+import { revalidateTag } from "next/cache";
+import db from "~/prisma/db";
 
-export async function editStage(stageId: string, patchData: DeepPartial<StageFormSchema>) {
-	try {
-		// the following lines builds an object using patchData to update the stage
-		const stageUpdateData: Prisma.StageUpdateArgs["data"] = {};
+export async function createStage(communityId: string) {
+	const stage = await db.stage.create({
+		data: {
+			name: "Untitled Stage",
+			order: "aa",
+			community: {
+				connect: {
+					id: communityId,
+				},
+			},
+		},
+	});
+	revalidateTag(`community-stages_${communityId}`);
+	return stage;
+}
 
-		if (patchData.name) {
-			stageUpdateData.name = patchData.name;
-		}
+export async function deleteStages(communityId: string, stageIds: string[]) {
+	await db.stage.deleteMany({
+		where: {
+			id: {
+				in: stageIds,
+			},
+		},
+	});
+	revalidateTag(`community-stages_${communityId}`);
+}
 
-		// but moveConstraints is a bit more complicated because it's a many-to-many relationship
-		// so we need to build an object that prisma can understand
-		// we need connectOrCreate because we want to create new list of move constraints if they don't exist
-		// and we need deleteMany because we want to delete move constraints that are no longer needed
-		if (patchData.moveConstraints) {
-			const entries = Object.entries(patchData.moveConstraints);
-			const constraintsToConnectOrCreate = entries
-				.filter(([, value]) => value)
-				.map(([key]) => ({
-					where: { move_constraint_id: { stageId, destinationId: key } },
-					create: { destinationId: key },
-				}));
-			const constraintsToDelete = entries
-				.filter(([, value]) => !value)
-				.map(([key]) => ({ destinationId: key, stageId }));
-			stageUpdateData.moveConstraints = {
-				connectOrCreate: constraintsToConnectOrCreate,
-				deleteMany: constraintsToDelete,
-			};
-		}
+export async function createMoveConstraint(
+	communityId: string,
+	sourceStageId: string,
+	destinationStageId: string
+) {
+	await db.moveConstraint.create({
+		data: {
+			stage: {
+				connect: {
+					id: sourceStageId,
+				},
+			},
+			destination: {
+				connect: {
+					id: destinationStageId,
+				},
+			},
+		},
+	});
+	revalidateTag(`community-stages_${communityId}`);
+}
 
-		await prisma.stage.update({
-			where: { id: stageId },
-			data: stageUpdateData,
+export async function deleteMoveConstraints(
+	communityId: string,
+	moveConstraintIds: [string, string][]
+) {
+	const ops = moveConstraintIds.map(([stageId, destinationId]) => {
+		return db.moveConstraint.delete({
+			where: {
+				move_constraint_id: {
+					stageId,
+					destinationId,
+				},
+			},
 		});
-		revalidatePath("/");
-		return { success: "Stage and move constraints updated successfully" };
-	} catch (error) {
-		return { error: `Error updating stage and move constraints: ${error}` };
+	});
+	await Promise.all(ops);
+	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function deleteStagesAndMoveConstraints(
+	communityId: string,
+	stageIds: string[],
+	moveConstraintIds: [string, string][]
+) {
+	// Delete move constraints prior to deleting stages to prevent foreign
+	// key constraint violations.
+	if (moveConstraintIds.length > 0) {
+		await deleteMoveConstraints(communityId, moveConstraintIds);
 	}
+	if (stageIds.length > 0) {
+		await deleteStages(communityId, stageIds);
+	}
+	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function updateStageName(communityId: string, stageId: string, name: string) {
+	await db.stage.update({
+		where: {
+			id: stageId,
+		},
+		data: {
+			name,
+		},
+	});
+	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function revalidateStages(communityId: string) {
+	revalidateTag(`community-stages_${communityId}`);
 }
