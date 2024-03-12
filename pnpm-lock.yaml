@@ -352,9 +352,15 @@ importers:
 
   integrations/evaluations:
     dependencies:
+      '@honeycombio/opentelemetry-node':
+        specifier: ^0.6.1
+        version: 0.6.1
       '@hookform/resolvers':
         specifier: ^3.3.1
         version: 3.3.1(react-hook-form@7.46.1)
+      '@opentelemetry/auto-instrumentations-node':
+        specifier: ^0.41.1
+        version: 0.41.1(@opentelemetry/api@1.7.0)
       '@pubpub/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
@@ -446,9 +452,15 @@ importers:
 
   integrations/submissions:
     dependencies:
+      '@honeycombio/opentelemetry-node':
+        specifier: ^0.6.1
+        version: 0.6.1
       '@hookform/resolvers':
         specifier: ^3.3.1
         version: 3.3.1(react-hook-form@7.46.1)
+      '@opentelemetry/auto-instrumentations-node':
+        specifier: ^0.41.1
+        version: 0.41.1(@opentelemetry/api@1.7.0)
       '@pubpub/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk

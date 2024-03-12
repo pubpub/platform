@@ -23,8 +23,8 @@ export const env = createEnv({
 		SUPABASE_WEBHOOKS_API_KEY: z.string(),
 		MAILGUN_SMTP_HOST: z.string(),
 		MAILGUN_SMTP_PORT: z.string(),
-		OTEL_SERVICE_NAME: z.string(),
-		HONEYCOMB_API_KEY: z.string(),
+		OTEL_SERVICE_NAME: z.string().optional(),
+		HONEYCOMB_API_KEY: z.string().optional(),
 	},
 	client: {
 		NEXT_PUBLIC_PUBPUB_URL: z.string().url(),

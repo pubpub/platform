@@ -6,6 +6,9 @@ import "./lib/env.mjs";
 
 const nextConfig = withPreconstruct({
 	reactStrictMode: true,
+	experimental: {
+		instrumentationHook: true,
+	},
 });
 
 export default withSentryConfig(
