@@ -109,21 +109,15 @@ const EvaluationProcess = () => {
 				We ask evaluators to:
 				<ol>
 					<li>
-						Write an evaluation, essentially a high-quality referee report. Consider{" "}
+						Write an evaluation: essentially a high-quality referee report, considering{" "}
 						<a
 							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
 						>
-							standard guidelines
-						</a>{" "}
-						as well as{" "}
-						<a
-							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#overall-assessment"
-						>
-							The Unjournal's emphases
+							The Unjournal's guidelines
 						</a>
-						.
+						. Please try to address any specific considerations mentioned in the
+						manager’s notes above, or any specific requests from the evaluation manager.
 					</li>
 					<li>
 						Give{" "}
