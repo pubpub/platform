@@ -268,7 +268,7 @@ export const Respond = (props: Props) => {
 			)}
 			<h2>About the research</h2>
 			<p>
-				<em>The details about the research we are asking you to evaluate.</em>
+				<em>The details of the research we are asking you to evaluate.</em>
 			</p>
 			<h3>{submissionTitle}</h3>
 			{submissionAbstract ? (
@@ -299,7 +299,9 @@ export const Respond = (props: Props) => {
 								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 							).toLocaleDateString()}
 						</strong>
-						), you will receive a $100 “prompt evaluation bonus.” After{" "}
+						), you will receive a $100 “prompt evaluation bonus,” in addition to the
+						baseline $300 honorarium, as well as other potential evaluator incentives
+						and prizes. After{" "}
 						<strong>{new Date(deadline.getTime()).toLocaleDateString()}</strong>, we
 						will consider re-assigning the evaluation, and later submissions may not be
 						eligible for the full baseline compensation.
