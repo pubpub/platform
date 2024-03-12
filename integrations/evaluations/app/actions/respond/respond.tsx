@@ -92,7 +92,7 @@ const EvaluationProcess = () => {
 				</a>
 				, we offer evaluators a $300 honorarium for completing the assignment by the
 				deadline. Evaluators may earn an additional $100 “prompt evaluation bonus” for
-				completing the assignment promptly (see below). As of February 2024: We are also
+				completing the assignment promptly (see below). As of February 2024, we are also
 				currently setting aside $150 per evaluation for evaluator incentives and prizes.
 			</p>
 			<p>
@@ -101,9 +101,9 @@ const EvaluationProcess = () => {
 					target="_blank"
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#that-this-review-and-ratings-will-be-made-public"
 				>
-					remain anonymous or to 'sign your review'
-				</a>{" "}
-				and take credit.
+					remain anonymous or to be identified as the author
+				</a>
+				.
 			</p>
 			<p>
 				We ask evaluators to:
