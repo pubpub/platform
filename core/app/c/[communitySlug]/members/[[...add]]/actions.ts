@@ -10,6 +10,7 @@ import { getServerSupabase } from "~/lib/supabaseServer";
 import { formatSupabaseError } from "~/lib/supabase";
 import { generateHash, slugifyString } from "~/lib/string";
 import { captureException } from "@sentry/nextjs";
+import { TableMember } from "./getMemberTableColumns";
 
 export const revalidateMemberPathsAndTags = (community: Community) => {
 	revalidatePath(`/c/${community.slug}/members`);
@@ -72,13 +73,13 @@ export const removeMember = async ({
 	member,
 	community,
 }: {
-	member: Member & { user: User };
+	member: TableMember;
 	community: Community;
 }) => {
 	try {
 		const loginData = await getLoginData();
 
-		if (member.userId === loginData?.id) {
+		if (loginData?.memberships.find((m) => m.id === member.id)) {
 			return { error: "You cannot remove yourself from the community" };
 		}
 

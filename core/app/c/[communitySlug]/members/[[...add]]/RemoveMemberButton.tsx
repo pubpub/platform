@@ -15,17 +15,15 @@ import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
 import * as actions from "./actions";
+import { TableMember } from "./getMemberTableColumns";
 
 export const RemoveMemberButton = ({
 	member,
 	community,
 }: {
-	member: Member & {
-		user: User;
-	};
+	member: TableMember;
 	community: Community;
 }) => {
-	const { user } = member;
 	return (
 		<AlertDialog>
 			<TooltipProvider>
@@ -35,8 +33,8 @@ export const RemoveMemberButton = ({
 					</TooltipContent>
 					<TooltipTrigger asChild>
 						<AlertDialogTrigger asChild>
-							<Button variant="outline" size="icon">
-								<Trash size="16" />
+							<Button variant="ghost">
+								Remove member <Trash size="14" className="ml-2" />
 							</Button>
 						</AlertDialogTrigger>
 					</TooltipTrigger>
@@ -47,7 +45,7 @@ export const RemoveMemberButton = ({
 				<p>
 					Are you sure you want to remove{" "}
 					<strong>
-						{user.firstName} {user.lastName}
+						{member.firstName} {member.lastName}
 					</strong>{" "}
 					from this community?
 				</p>

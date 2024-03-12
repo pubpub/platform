@@ -17,4 +17,5 @@ export {
 	BadgeCheck,
 	UserPlus,
 	Trash,
+	MoreVertical,
 } from "lucide-react";
