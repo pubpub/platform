@@ -122,6 +122,8 @@ const withPubChildren = ({
 };
 
 export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+	// These aliases are used to make sure the JSON object returned matches
+	// the old prisma query's return value
 	const pubColumns = [
 		"id",
 		"community_id as communityId",
@@ -134,7 +136,6 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	const pub: FlatPub | undefined = await withPubChildren({ pubId })
 		.selectFrom("pubs")
 		.where("pubs.id", "=", pubId)
-		// This is extra verbose (compared to .selectAll()) in order to convert these column names to snakeCase
 		.select(pubColumns)
 		.select(pubValuesByVal(pubId))
 		.$narrowType<{ values: PubValues }>()
