@@ -109,12 +109,19 @@ const EvaluationProcess = () => {
 				We ask evaluators to:
 				<ol>
 					<li>
-						Write a review: a 'standard high-quality referee report,' with some{" "}
+						Write an evaluation, essentially a high-quality referee report. Consider{" "}
 						<a
 							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#specific-requests-for-focus-or-feedback"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
 						>
-							specific considerations
+							standard guidelines
+						</a>{" "}
+						as well as{" "}
+						<a
+							target="_blank"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#overall-assessment"
+						>
+							The Unjournal's emphases
 						</a>
 						.
 					</li>
@@ -122,22 +129,13 @@ const EvaluationProcess = () => {
 						Give{" "}
 						<a
 							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
 						>
 							quantitative metrics and predictions
 						</a>
 						.
 					</li>
-					<li>
-						Answer a{" "}
-						<a
-							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#survey-questions"
-						>
-							short questionnaire
-						</a>{" "}
-						about your background and our processes.
-					</li>
+					<li>Answer a short questionnaire about your background and our processes.</li>
 				</ol>
 			</p>
 			<p>
@@ -147,15 +145,8 @@ const EvaluationProcess = () => {
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#publishing-and-signing-reviews-considerations-exceptions"
 				>
 					here
-				</a>{" "}
-				(or{" "}
-				<a
-					target="_blank"
-					href="https://www.dropbox.com/s/jzxz11gmkrh8lbn/evaluations_as_pdf.pdf?dl=0"
-				>
-					download the pdf
 				</a>
-				).
+				.
 			</p>
 		</>
 	);
