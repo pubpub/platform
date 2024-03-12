@@ -19,7 +19,7 @@ export const Process = (props: Props) => {
 				We ask evaluators to:
 				<ol>
 					<li>
-						Write an evaluation, essentially a high-quality referee report. Consider{" "}
+						Write an evaluation: essentially a high-quality referee report. Consider{" "}
 						<a
 							target="_blank"
 							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
@@ -59,17 +59,15 @@ export const Process = (props: Props) => {
 				.
 			</p>
 			<p>
-				As a sign that we{" "}
+				We compensate evaluators, as described above, as a sign that we{" "}
 				<a
 					target="_blank"
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/why-pay-evaluators-reviewers"
 				>
 					value this work
 				</a>
-				, we offer a $300 honorarium for evaluations submitted before the deadline, and an
-				additional $100 bonus for completing the assignment within three weeks from the date
-				you accepted. We are also setting aside $150 per evaluation for evaluator incentives
-				and prizes.
+				. In addition, we are setting aside $150 per evaluation for evaluator incentives and
+				prizes.
 			</p>
 			<p>
 				Your evaluation will be made public and given a DOI, but you have the option to{" "}
