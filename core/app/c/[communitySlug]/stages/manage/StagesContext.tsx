@@ -6,6 +6,8 @@ import {
 	experimental_useOptimistic,
 	useCallback,
 	useContext,
+	useEffect,
+	useState,
 } from "react";
 import { ActionPayload, StagePayload } from "~/lib/types";
 import * as actions from "./actions";
@@ -143,11 +145,20 @@ const makeOptimisitcStagesReducer =
 		}
 	};
 
+type DeleteBatch = {
+	stageIds: string[];
+	moveConstraintIds: [string, string][];
+};
+
 export const StagesProvider = (props: StagesProviderProps) => {
 	const [stages, dispatch] = experimental_useOptimistic(
 		props.stages,
 		makeOptimisitcStagesReducer(props.communityId)
 	);
+	const [deleteBatch, setDeleteBatch] = useState({
+		stageIds: [],
+		moveConstraintIds: [],
+	} as DeleteBatch);
 
 	const createStage = useCallback(async () => {
 		try {
@@ -162,7 +173,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 		async (stageIds: string[]) => {
 			try {
 				dispatch({ type: "stages_deleted", stageIds });
-				await actions.deleteStages(props.communityId, stageIds);
+				setDeleteBatch((prev) => ({ ...prev, stageIds: [...prev.stageIds, ...stageIds] }));
 			} catch (e) {
 				console.error(e);
 			}
@@ -224,7 +235,10 @@ export const StagesProvider = (props: StagesProviderProps) => {
 					type: "move_constraints_deleted",
 					moveConstraintIds,
 				});
-				await actions.deleteMoveConstraints(props.communityId, moveConstraintIds);
+				setDeleteBatch((prev) => ({
+					...prev,
+					moveConstraintIds: [...prev.moveConstraintIds, ...moveConstraintIds],
+				}));
 			} catch (e) {
 				console.error(e);
 			}
@@ -251,6 +265,14 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	const fetchStages = useCallback(() => {
 		actions.revalidateStages(props.communityId);
 	}, [props.communityId]);
+
+	useEffect(() => {
+		const { stageIds, moveConstraintIds } = deleteBatch;
+		if (stageIds.length > 0 || moveConstraintIds.length > 0) {
+			deleteStagesAndMoveConstraints(stageIds, moveConstraintIds);
+			setDeleteBatch({ stageIds: [], moveConstraintIds: [] });
+		}
+	}, [deleteBatch]);
 
 	const value = {
 		actions: props.actions,
