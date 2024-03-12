@@ -30,6 +30,7 @@ const nextConfig = {
 	},
 	experimental: {
 		serverActions: true,
+		instrumentationHook: true,
 	},
 };
 

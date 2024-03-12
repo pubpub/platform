@@ -26,7 +26,10 @@ module "ecs_service" {
         hostPort      = var.configuration.container_port
       }]
 
-      environment = var.configuration.environment
+      environment = concat(
+        var.configuration.environment,
+        [{ name = "OTEL_SERVICE_NAME", value = "${var.service_name}.${var.service_name}" }],
+      )
       secrets = var.configuration.secrets
 
       readonly_root_filesystem = false
@@ -53,7 +56,10 @@ module "ecs_service" {
       image     = ic.image
       command = ic.command
 
-      environment = var.configuration.environment
+      environment = concat(
+        var.configuration.environment,
+        [{ name = "OTEL_SERVICE_NAME", value = "${var.service_name}.${ic.name}" }],
+      )
       secrets = var.configuration.secrets
 
       readonly_root_filesystem = false

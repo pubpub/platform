@@ -24,6 +24,18 @@ variable "MAILGUN_SMTP_USERNAME" {
   type = string
 }
 
+variable "MAILGUN_SMTP_HOST" {
+  description = "SMTP Hostname for Mailgun service"
+  type = string
+  default = "smtp.mailgun.org"
+}
+
+variable "MAILGUN_SMTP_PORT" {
+  description = "SMTP Network Port for Mailgun service"
+  type = string
+  default = "465"
+}
+
 variable "NEXT_PUBLIC_SUPABASE_URL" {
   description = "URL to Supabase public address for this install"
   type = string
@@ -39,8 +51,8 @@ variable "ASSETS_BUCKET_NAME" {
   type = string
 }
 
-# TODO: deprecate this in favor of terraformed iam/service roles
-variable "ASSETS_UPLOAD_KEY" {
-  description = "AWS access key ID for uploading to s3"
+variable "HONEYCOMB_API_KEY" {
+  description = "API Key for Honeycomb integration"
   type = string
+  sensitive = true
 }
