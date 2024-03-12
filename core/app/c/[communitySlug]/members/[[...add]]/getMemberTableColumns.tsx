@@ -9,14 +9,13 @@ import { DataTableColumnHeader } from "ui/data-table";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 import { RemoveMemberButton } from "./RemoveMemberButton";
-import { Community, User } from "@prisma/client";
+import { Community } from "@prisma/client";
 
 export type TableMember = {
 	id: string;
@@ -118,12 +117,6 @@ export const getMemberTableColumns = ({ community }: { community: Community }) =
 							<div className="w-full">
 								<RemoveMemberButton community={community} member={row.original} />
 							</div>
-							{/* <DropdownMenuItem onClick={() => navigator.clipboard.writeText(payment.id)}>
-							Copy payment ID
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem>View customer</DropdownMenuItem>
-						<DropdownMenuItem>View payment details</DropdownMenuItem> */}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);

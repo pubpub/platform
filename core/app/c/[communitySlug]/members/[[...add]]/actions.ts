@@ -3,7 +3,7 @@
 import type { SuggestedUser } from "~/lib/server/members";
 
 import prisma from "~/prisma/db";
-import { Community, Member, User } from "@prisma/client";
+import { Community } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getServerSupabase } from "~/lib/supabaseServer";
