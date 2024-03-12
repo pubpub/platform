@@ -160,10 +160,6 @@ export const StageEditorGraph = () => {
 
 	const onNodesDelete = useCallback(
 		(nodes: Node[]) => {
-			console.log(
-				"onNodesDelete",
-				nodes.map((node) => node.id)
-			);
 			deleteStages(nodes.map((node) => node.id));
 		},
 		[deleteStages]
@@ -171,10 +167,6 @@ export const StageEditorGraph = () => {
 
 	const onEdgesDelete = useCallback(
 		(edges: Edge[]) => {
-			console.log(
-				"onEdgesDelete",
-				edges.map((edge) => [edge.source, edge.target])
-			);
 			deleteMoveConstraints(edges.map((edge) => [edge.source, edge.target]));
 		},
 		[deleteMoveConstraints]
