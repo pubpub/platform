@@ -467,12 +467,12 @@ export const sendAcceptedEmail = async (
 		<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
-		<p>We strongly encourage evaluators to complete evaluations within three weeks; relatively quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
+		<p>We strongly encourage evaluators to complete evaluations within three weeks; quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
 			deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
-		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus.” After ${new Date(
+		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus,” in addition to the baseline $300 honorarium, as well as other potential evaluator incentives and prizes. After ${new Date(
 			deadline.getTime()
 		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
-		<p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+		<p>If you have any questions, please contact me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 		<p>Thank you again for your important contribution to the future of science.</p>
 		<p>Thanks and best wishes,</p>

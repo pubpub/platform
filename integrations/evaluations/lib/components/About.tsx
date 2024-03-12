@@ -52,7 +52,7 @@ export const About = () => {
 					target="_blank"
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/readme-1#funding"
 				>
-					funding
+					funding sources
 				</a>
 				.
 			</p>
