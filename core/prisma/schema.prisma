@@ -58,7 +58,6 @@ model Community {
   members              Member[]
   memberGroups         MemberGroup[]
   stages               Stage[]
-  PendingMember        PendingMember[]
 
   @@map(name: "communities")
 }
@@ -313,15 +312,4 @@ model IntegrationInstanceState {
   state      Json
 
   @@unique([pubId, instanceId], name: "pub_instance") // guarentees one state per pub-instance pair
-}
-
-model PendingMember {
-  id          String    @id @default(uuid())
-  email       String
-  community   Community @relation(fields: [communityId], references: [id])
-  communityId String    @map(name: "community_id")
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
-
-  @@map(name: "pending_members")
 }
