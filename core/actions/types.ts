@@ -12,7 +12,7 @@ export type ActionPub<T extends ActionPubType> = {
 };
 
 export type RunProps<T extends Action> = T extends Action<infer PT, infer AC, infer PC>
-	? { config: AC; pub: PT; pubConfig: PC }
+	? { config: AC; pub: ActionPub<PT>; pubConfig: PC }
 	: never;
 
 export type ConfigProps<C> = {
@@ -27,4 +27,4 @@ export type Action<PT extends ActionPubType = ActionPubType, AC = unknown, PC = 
 	pubFields: PT;
 };
 
-export const defineAction = <T extends ActionPubType>(action: Action<T>) => action;
+export const defineAction = <T extends ActionPubType, AC, PC>(action: Action<T, AC, PC>) => action;

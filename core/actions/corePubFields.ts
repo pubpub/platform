@@ -23,6 +23,6 @@ export const title = {
 			type: "string",
 		} satisfies JSONSchemaType<string>,
 	},
-} satisfies CorePubField;
+} as const satisfies CorePubField;
 
-export const corePubFields = [title];
+export const corePubFields = [title] as const;
