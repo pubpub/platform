@@ -19,7 +19,7 @@ export const Process = (props: Props) => {
 				We ask evaluators to:
 				<ol>
 					<li>
-						Write an evaluation; essentially a high-quality referee report. Consider{" "}
+						Write an evaluation, essentially a high-quality referee report. Consider{" "}
 						<a
 							target="_blank"
 							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
@@ -28,29 +28,35 @@ export const Process = (props: Props) => {
 						</a>{" "}
 						as well as{" "}
 						<a
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
 							target="_blank"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#overall-assessment"
 						>
-							The Unjournal’s emphases
+							The Unjournal's emphases
 						</a>
-						. Write a review: a “standard high-quality referee report,” with some
-						specific considerations. Please try to address any specific considerations
-						mentioned in our bespoke evaluation notes, or any specific requests from the
-						evaluation manager.
+						.
 					</li>
-					<li>Give quantitative metrics and predictions.</li>
+					<li>
+						Give{" "}
+						<a
+							target="_blank"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
+						>
+							quantitative metrics and predictions
+						</a>
+						.
+					</li>
 					<li>Answer a short questionnaire about your background and our processes.</li>
 				</ol>
 			</p>
 			<p>
-				We suggest that you read and consult our the full evaluation guidelines{" "}
+				You can read the full guidelines{" "}
 				<a
 					target="_blank"
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#publishing-and-signing-reviews-considerations-exceptions"
 				>
 					here
-				</a>{" "}
-				(or download the pdf, with all boxes unfolded).
+				</a>
+				.
 			</p>
 			<p>
 				As a sign that we{" "}
@@ -71,9 +77,9 @@ export const Process = (props: Props) => {
 					target="_blank"
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#that-this-review-and-ratings-will-be-made-public"
 				>
-					remain anonymous or to 'sign your review'
-				</a>{" "}
-				and take credit.
+					remain anonymous or to be identified as the author
+				</a>
+				.
 			</p>
 		</>
 	);
