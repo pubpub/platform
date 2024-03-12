@@ -1,10 +1,48 @@
-import { CoreField } from "./fields";
+import prisma from "~/prisma/db";
+import { CorePubField } from "./corePubFields";
 import { Action } from "./types";
 
-export const registerCoreField = async (field: CoreField) => {
+export const registerCorePubField = async (corePubField: CorePubField) => {
 	// Ensure the field exists in the database and is up to date
+	const pubField = await prisma.pubField.upsert({
+		where: {
+			slug: corePubField.slug,
+		},
+		create: {
+			name: corePubField.name,
+			slug: corePubField.slug,
+			schema: {
+				create: corePubField.schema,
+			},
+		},
+		update: {
+			name: corePubField.name,
+			schema: {
+				update: corePubField.schema,
+			},
+		},
+	});
+	corePubField.id = pubField.id;
 };
 
 export const registerAction = async (action: Action) => {
+	const pubFieldIds = action.pubFields.map((field) => ({ id: field.id! }));
 	// Ensure the action exists in the database and is up to date
+	const persistedAction = await prisma.action.upsert({
+		where: {
+			name: action.name,
+		},
+		update: {
+			pubFields: {
+				connect: pubFieldIds,
+			},
+		},
+		create: {
+			name: action.name,
+			pubFields: {
+				connect: pubFieldIds,
+			},
+		},
+	});
+	persistedAction.id = persistedAction.id;
 };
