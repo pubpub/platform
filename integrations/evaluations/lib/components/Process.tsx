@@ -8,12 +8,12 @@ export const Process = (props: Props) => {
 	return (
 		<>
 			<p>
-				Deadline for promptness bonus:{" "}
+				Early deadline, for prompt evaluation bonus:{" "}
 				{new Date(
 					props.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 				).toLocaleDateString()}
 			</p>
-			<p>Final deadline: {props.deadline.toLocaleDateString()}</p>
+			<p>Final deadline, for $300 base honorarium: {props.deadline.toLocaleDateString()}</p>
 			<h2>About our evaluation process</h2>
 			<p>
 				We ask evaluators to:
