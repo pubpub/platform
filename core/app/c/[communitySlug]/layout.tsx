@@ -42,7 +42,7 @@ export default async function MainLayout({ children, params }: Props) {
 	return (
 		<div className="flex min-h-screen">
 			<SideNav community={community} availableCommunities={availableCommunities} />
-			<div className="flex-auto ml-[250px]">{children}</div>
+			<div className="flex-auto ml-[250px] py-4 px-12 relative">{children}</div>
 		</div>
 	);
 }

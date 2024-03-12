@@ -32,8 +32,9 @@ export default async function Page({ params }: { params: { communitySlug: string
 		<StagesProvider actions={actions} stages={stages} communityId={community.id}>
 			<StageEditorProvider communityId={community.id}>
 				<LocalStorageProvider timeout={200}>
-					<div className="h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)] pointer-events-none z-50 fixed" />
-					<StageEditor />
+					<div className="h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)] z-50 absolute top-0 left-0 v-full w-full">
+						<StageEditor />
+					</div>
 				</LocalStorageProvider>
 			</StageEditorProvider>
 		</StagesProvider>
