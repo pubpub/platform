@@ -328,3 +328,14 @@ model Action {
 
   @@map(name: "actions")
 }
+
+model Action {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  pubFields PubField[]
+
+  @@map(name: "actions")
+}
