@@ -13,6 +13,12 @@ export const Research = (props: Props) => {
 			{props.evaluating ? (
 				<>
 					<h2>The Unjournal: Evaluation Form</h2>
+					<p>
+						<em>
+							Note: This form saves your progress locally. You should be able to leave
+							this page and resume later on the same computer.
+						</em>
+					</p>
 					<h3>You have been asked to evaluate the following research:</h3>
 				</>
 			) : (
