@@ -19,7 +19,7 @@ export const Research = (props: Props) => {
 				<>
 					<h2>About the research</h2>
 					<p>
-						<em>The details about the research we are asking you to evaluate.</em>
+						<em>The details of the research we are asking you to evaluate.</em>
 					</p>
 				</>
 			)}
