@@ -85,6 +85,9 @@ module "service_core" {
       { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
       { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
+      { name = "PUBPUB_URL", value = var.pubpub_url },
+      { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+      { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
     ]
 
     secrets = [
