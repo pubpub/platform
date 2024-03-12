@@ -225,6 +225,41 @@ export const Respond = (props: Props) => {
 					<Link href={infoUrl}>this page</Link>—where you may also opt to accept or
 					request more information.
 				</p>
+				<h2>Feedback and suggested evaluators (optional)</h2>
+				<p>
+					We would also appreciate your suggestions for other potential evaluators for
+					this research. As a sign that we value this, if you suggest someone who ends up
+					evaluating this research (who was not already on our list), we will award you
+					$50. You can suggest potential evaluators in the form{" "}
+					<a
+						target="_blank"
+						href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
+					>
+						here
+					</a>
+					.
+				</p>
+				<p>
+					We are also eager to understand how to better recruit evaluators for The
+					Unjournal. In the same{" "}
+					<a
+						target="_blank"
+						href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
+					>
+						form
+					</a>
+					, you can also let us know why you decided not to accept this assignment, and
+					what might make this more attractive to you and others in the future. Again, to
+					signal that we value this, we will provide $50 awards for people who offer
+					advice that seems particularly useful. (We commit to offering at least one such
+					award for every five people submitting suggestions, not to exceed $50 in total
+					awards per month).
+				</p>
+				<p>
+					Alternatively, you can just send a{" "}
+					<a href="mailto:contact@unjournal.org">quick email</a> to let us know your
+					thoughts and suggestions.
+				</p>
 			</>
 		);
 	}
