@@ -8,6 +8,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import { formatSupabaseError } from "~/lib/supabase";
+import { generateHash, slugifyString } from "~/lib/string";
+import { captureException } from "@sentry/nextjs";
 
 export const revalidateMemberPathsAndTags = (community: Community) => {
 	revalidatePath(`/c/${community.slug}/members`);
@@ -102,11 +104,13 @@ export const inviteMember = async ({
 	firstName,
 	lastName,
 	community,
+	retry = false,
 }: {
 	email: string;
 	firstName: string;
 	lastName?: string | null;
 	community: Community;
+	retry?: boolean;
 }) => {
 	const loginData = await getLoginData();
 
@@ -128,35 +132,70 @@ export const inviteMember = async ({
 		},
 	});
 
+	// successfully invited user
 	if (!error) {
+		// create user and add as member
+		const user = await prisma.user.create({
+			data: {
+				email,
+				firstName,
+				lastName,
+				supabaseId: data.user?.id,
+				slug: `${slugifyString(firstName)}${
+					lastName ? `-${slugifyString(lastName)}` : ""
+				}-${generateHash(4, "0123456789")}`,
+				memberships: {
+					create: {
+						communityId: community.id,
+						canAdmin: true,
+					},
+				},
+			},
+		});
+
 		revalidateMemberPathsAndTags(community);
 		return { user: data.user, error: null };
 	}
 
-	// 422 = email already exists
+	// 422 = email already exists in supabase
 	if (error.status !== 422) {
+		captureException(error);
 		// could be anything!
 		return { user: null, error: `Failed to invite member.\n ${formatSupabaseError(error)}` };
 	}
 
-	const { data: resendData, error: resendError } = await client.auth.resend({
-		email,
-		type: "signup",
-		options: {
-			emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-		},
-	});
-
-	if (resendError) {
-		return {
-			user: null,
-			error: `Failed to invite member.\n ${formatSupabaseError(resendError)}`,
-		};
+	if (retry) {
+		captureException("Somehow unable to reinvite user even after deleting them from supabase");
+		return { user: null, error: `Failed to invite member.` };
 	}
 
-	revalidateMemberPathsAndTags(community);
-	return {
-		user: resendData.user,
-		error: null,
-	};
+	// from here on, we know the user already exists in supabase, and that they do not exist in our DB
+	// we can therefore safely delete the user from supabase and re-invite them
+
+	const { data: supabaseUserData, error: getEmailError } = await client.auth.admin.getUserByEmail(
+		email
+	);
+
+	if (getEmailError) {
+		// all hope is lost
+		captureException(getEmailError);
+		return { user: null, error: `Failed to invite member.` };
+	}
+
+	const { error: deleteError } = await client.auth.admin.deleteUser(supabaseUserData.user.id);
+
+	if (deleteError) {
+		captureException(deleteError);
+		return { user: null, error: `Failed to invite member.` };
+	}
+
+	console.log("Retrying invite for user ", email);
+	// we try again!
+	return inviteMember({
+		email,
+		firstName,
+		lastName,
+		community,
+		retry: true,
+	});
 };
