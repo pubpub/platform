@@ -21,12 +21,12 @@ import { toast } from "ui/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useCallback, useEffect, useReducer, useTransition } from "react";
+import { useCallback, useEffect, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
 import { Community } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { SuggestedUser } from "~/lib/server";
+import { MemberFormState } from "./AddMember";
 
 const memberInviteFormSchema = z.object({
 	email: z.string().email({
@@ -37,76 +37,17 @@ const memberInviteFormSchema = z.object({
 	lastName: z.string().optional(),
 });
 
-type FormState =
-	| {
-			state: "user-not-found" | "initial";
-			data: null;
-	  }
-	| { state: "user-found"; data: { user: SuggestedUser } };
-
-const formStateReducer = (
-	state: FormState,
-	{
-		email,
-		user,
-		error,
-	}: {
-		email?: string;
-		user?: SuggestedUser | false | null | "you" | "existing-member";
-		error?: string;
-	}
-): FormState => {
-	switch (true) {
-		case !email:
-			return { state: "initial", data: null };
-
-		case email && user === false:
-			return { state: "initial", data: null };
-
-		case email && user === null:
-			return { state: "user-not-found", data: null };
-
-		case Boolean(email) && typeof user === "string" && Boolean(error):
-			toast({
-				title: "Cannot add user",
-				description: error,
-				variant: "destructive",
-			});
-			return { state: "initial", data: null };
-
-		case Boolean(error):
-			toast({
-				title: "Error",
-				description: error,
-				variant: "destructive",
-			});
-			return { state: "initial", data: null };
-
-		case Boolean(email) && Boolean(user):
-			return { state: "user-found", data: { user: user as SuggestedUser } };
-
-		default:
-			return { state: "initial", data: null };
-	}
-};
-
 export const MemberInviteForm = ({
 	community,
+	state,
 	email,
-	user,
-	error,
 }: {
 	community: Community;
+	state: MemberFormState;
 	email?: string;
-	user: SuggestedUser | null | "you" | "existing-member";
-	error?: string;
 }) => {
 	const [isPending, startTransition] = useTransition();
 	const router = useRouter();
-	const [state, dispatch] = useReducer(formStateReducer, {
-		state: "initial",
-		data: null,
-	});
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
@@ -131,7 +72,6 @@ export const MemberInviteForm = ({
 		}
 
 		if (state.state === "user-not-found") {
-			// TODO: send invite
 			const { error } = await actions.inviteMember({
 				email: data.email,
 				firstName: data.firstName!,
@@ -150,7 +90,7 @@ export const MemberInviteForm = ({
 
 			toast({
 				title: "Success",
-				description: "User invited successfully",
+				description: "User successfully invited ",
 			});
 			closeForm();
 
@@ -158,7 +98,7 @@ export const MemberInviteForm = ({
 		}
 
 		const result = await actions.addMember({
-			user: state.data!.user,
+			user: state.user,
 			admin: data.admin,
 			community,
 		});
@@ -182,11 +122,7 @@ export const MemberInviteForm = ({
 	}
 
 	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
-		if (form.getFieldState("email").error) {
-			dispatch({ email, user: undefined });
-			return;
-		}
-
+		// this is how we make the higher up server component fetch the user again
 		router.replace(
 			window.location.pathname + "?" + new URLSearchParams({ email }).toString(),
 			{}
@@ -197,8 +133,15 @@ export const MemberInviteForm = ({
 	// is after the email check has been debounced AND the user has been fetched
 	// from the higher up server component
 	useEffect(() => {
-		dispatch({ email, error, user });
-	}, [user, email, error]);
+		if (!state.error) {
+			return;
+		}
+		toast({
+			title: "Error",
+			variant: "destructive",
+			description: state.error,
+		});
+	}, [state.error]);
 
 	return (
 		<Form {...form}>
@@ -286,17 +229,17 @@ export const MemberInviteForm = ({
 						<CardContent className="flex gap-x-4 items-center p-4">
 							<Avatar>
 								<AvatarImage
-									src={state.data.user.avatar ?? undefined}
-									alt={`${state.data.user.firstName} ${state.data.user.lastName}`}
+									src={state.user.avatar ?? undefined}
+									alt={`${state.user.firstName} ${state.user.lastName}`}
 								/>
 								<AvatarFallback>
-									{state.data.user.firstName[0]}
-									{state.data.user?.lastName?.[0] ?? ""}
+									{state.user.firstName[0]}
+									{state.user?.lastName?.[0] ?? ""}
 								</AvatarFallback>
 							</Avatar>
 							<div className="flex flex-col gap-2">
 								<span>
-									{state.data.user.firstName} {state.data.user.lastName}
+									{state.user.firstName} {state.user.lastName}
 								</span>
 								<span>{form.getValues().email}</span>
 							</div>

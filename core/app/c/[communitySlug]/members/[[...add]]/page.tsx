@@ -80,7 +80,12 @@ export default async function Page({
 		<>
 			<div className="flex mb-16 justify-between items-center">
 				<h1 className="font-bold text-xl">Members</h1>
-				<AddMember community={community} open={!!add} email={searchParams.email} />
+				{/* <AddMember community={community} open={!!add} email={searchParams.email} /> */}
+				<AddMemberDialog
+					community={community}
+					open={!!add}
+					content={<AddMember community={community} email={searchParams.email} />}
+				/>
 			</div>
 			<Card>
 				<CardContent className="flex flex-col gap-y-10 py-4">

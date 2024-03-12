@@ -4,6 +4,7 @@ import { getSuggestedMembers } from "~/lib/server";
 import prisma from "~/prisma/db";
 import { getLoginData } from "~/lib/auth/loginData";
 import { unstable_cache } from "next/cache";
+import { MemberInviteForm } from "./MemberInviteForm";
 
 const createCachedGetUser = ({
 	email,
@@ -14,9 +15,18 @@ const createCachedGetUser = ({
 	currentEmail?: string;
 	community: Community;
 }) => {
+	if (!email) {
+		return () => ({
+			user: null,
+			state: "initial" as const,
+			error: null,
+		});
+	}
+
 	if (email === currentEmail) {
 		return () => ({
-			user: "you" as const,
+			user: null,
+			state: "initial" as const,
 			error: "You cannot add yourself as a member",
 		});
 	}
@@ -25,7 +35,8 @@ const createCachedGetUser = ({
 		async ({ email, currentEmail }: { email?: string; currentEmail?: string }) => {
 			if (email === currentEmail) {
 				return {
-					user: "you" as const,
+					user: null,
+					state: "initial" as const,
 					error: "You cannot add yourself as a member",
 				};
 			}
@@ -33,7 +44,7 @@ const createCachedGetUser = ({
 			const [user] = await getSuggestedMembers(email);
 
 			if (!user) {
-				return { user: null };
+				return { user: null, state: "user-not-found" as const, error: null };
 			}
 
 			const existingMember = await prisma.member.findFirst({
@@ -45,12 +56,13 @@ const createCachedGetUser = ({
 
 			if (existingMember) {
 				return {
-					user: "existing-member" as const,
+					user: null,
+					state: "initial" as const,
 					error: "User is already a member of this community",
 				};
 			}
 
-			return { user };
+			return { user, state: "user-found" as const, error: null };
 		},
 		undefined,
 		{
@@ -59,15 +71,9 @@ const createCachedGetUser = ({
 	);
 };
 
-export const AddMember = async ({
-	email,
-	community,
-	open,
-}: {
-	email?: string;
-	community: Community;
-	open: boolean;
-}) => {
+export type MemberFormState = Awaited<ReturnType<ReturnType<typeof createCachedGetUser>>>;
+
+export const AddMember = async ({ email, community }: { email?: string; community: Community }) => {
 	const loginData = await getLoginData();
 
 	const getUserAndMember = createCachedGetUser({
@@ -76,18 +82,10 @@ export const AddMember = async ({
 		community,
 	});
 
-	const { user, error } = await getUserAndMember({
+	const state = await getUserAndMember({
 		email,
 		currentEmail: loginData?.email,
 	});
 
-	return (
-		<AddMemberDialog
-			user={user}
-			error={error}
-			open={open}
-			community={community}
-			email={email}
-		/>
-	);
+	return <MemberInviteForm state={state} community={community} email={email} />;
 };

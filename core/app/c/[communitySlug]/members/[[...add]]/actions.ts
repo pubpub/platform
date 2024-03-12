@@ -189,7 +189,6 @@ export const inviteMember = async ({
 		return { user: null, error: `Failed to invite member.` };
 	}
 
-	console.log("Retrying invite for user ", email);
 	// we try again!
 	return inviteMember({
 		email,

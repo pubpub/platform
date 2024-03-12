@@ -8,21 +8,18 @@ import { UserPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import { MemberInviteForm } from "./MemberInviteForm";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SuggestedUser } from "~/lib/server";
+import { AddMember } from "./AddMember";
 
 export const AddMemberDialog = ({
 	open,
 	community,
-	user,
-	email,
-	error,
+	content,
 }: {
 	open: boolean;
 	community: Community;
-	error?: string;
-	user: SuggestedUser | null | "you" | "existing-member";
-	email?: string;
+	content: React.ReactNode;
 }) => {
 	const router = useRouter();
 	const [actuallyOpen, setActuallyOpen] = useState(false);
@@ -53,9 +50,7 @@ export const AddMemberDialog = ({
 					</TooltipTrigger>
 				</Tooltip>
 			</TooltipProvider>
-			<DialogContent>
-				<MemberInviteForm community={community} user={user} error={error} email={email} />
-			</DialogContent>
+			<DialogContent>{content}</DialogContent>
 		</Dialog>
 	);
 };
