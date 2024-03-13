@@ -5,7 +5,6 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { unstable_cache } from "next/cache";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 import { MemberInviteForm } from "./MemberInviteForm";
-import { z } from "zod";
 
 const createCachedGetUser = ({
 	email,
@@ -24,7 +23,7 @@ const createCachedGetUser = ({
 		});
 	}
 
-	const parsedEmail = z.string().email().safeParse(email);
+	const parsedEmail = memberInviteFormSchema.shape.email.safeParse(email);
 	if (!parsedEmail.success) {
 		return () => ({
 			user: null,

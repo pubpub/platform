@@ -44,7 +44,6 @@ export const MemberInviteForm = ({
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
-			state: state.state,
 			canAdmin: false,
 			email: email,
 		},
@@ -61,6 +60,17 @@ export const MemberInviteForm = ({
 		}
 
 		if (state.state === "user-not-found") {
+			// we manually do this check instead of letting zod do it
+			// bc otherwis we need to either dynamically change the schema
+			// or pass the state to the schema/form
+			if (!data.firstName || !data.lastName) {
+				form.setError(!data.firstName ? "firstName" : "lastName", {
+					type: "manual",
+					message: `Please provide a ${!data.firstName ? "first" : "last"} name`,
+				});
+				return;
+			}
+
 			const { error } = await actions.createUserWithMembership({
 				email: data.email,
 				firstName: data.firstName!,
@@ -122,7 +132,6 @@ export const MemberInviteForm = ({
 	// is after the email check has been debounced AND the user has been fetched
 	// from the higher up server component
 	useEffect(() => {
-		form.setValue("state", state.state);
 		if (!state.error) {
 			form.clearErrors("email");
 			return;
