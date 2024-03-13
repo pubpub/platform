@@ -3,13 +3,16 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"start": "tsx index.ts",
+		"start": "tsx -r ./tracing.ts index.ts",
 		"dev": "dotenv -e .env.development tsx index.ts"
 	},
-  "files": [
-    "index.ts"
-  ],
+	"files": [
+		"tracing.ts",
+		"index.ts"
+	],
 	"dependencies": {
+		"@honeycombio/opentelemetry-node": "^0.6.1",
+		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
 		"@pubpub/sdk": "workspace:*",
 		"contracts": "workspace:*",
 		"graphile-worker": "^0.15.0",

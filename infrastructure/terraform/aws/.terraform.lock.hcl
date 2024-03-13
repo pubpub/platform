@@ -42,3 +42,25 @@ provider "registry.terraform.io/hashicorp/random" {
     "zh:f1ca75f417ce490368f047b63ec09fd003711ae48487fba90b4aba2ccf71920e",
   ]
 }
+
+provider "registry.terraform.io/honeycombio/honeycombio" {
+  version     = "0.22.0"
+  constraints = ">= 0.3.0"
+  hashes = [
+    "h1:y2thf9K3ZkOd+7YlE0c9Hrhlrym0Byou9ZaF4pRzdcQ=",
+    "zh:02fc459be9937338a4c29513b8b97780c380f153a083e81b6c3c6df3bd0963be",
+    "zh:488659a795acd8923069fdf50f7b79ae214059e304a5fb8fe6fe590bc3e22225",
+    "zh:508ccec207061bcd662c41867b8fcf60eb38e08e7cfac24951b624f7a7f1312b",
+    "zh:694c3076c2a140d3c9217987f5b5a5e30425aeab13831cfe6fd716c411ec262e",
+    "zh:8ada3becaf167c60cb73d7da7254896451926e7d51e4c2d5bdae0d77042529d7",
+    "zh:92b1d2711fe3fea68885043cee68a3b349453bcb357317fc38417e14dfc17c4e",
+    "zh:95e147005583e3f73a53933f510bcc0f0e7509db0cb6b4f19f7572b19aa84e13",
+    "zh:af1ceff120c8252fbab7e85650f7bfb218a33a8bf0450614cb8a1a35938a26f1",
+    "zh:d63e4befd2f8f575c803a168e5a938439383014ab6cfcbd44b546ebbbb76dd05",
+    "zh:d78d2ed88131544c40474fb20191859ef9d8a2ee6265478ac3db618abac2b0b0",
+    "zh:e0cb8ce8bc92c24f31e0cc1489ae030842d53348909f8a34feea11efdac2d3c1",
+    "zh:e950ed7d9609db6418b0d8f6bdfdf375a0cf168af95a4220b36fc925309f90c9",
+    "zh:eb47da8c317e62896434c5fefea681dcc2b329200a6f0037de1fa5fdc2c0b441",
+    "zh:fdeed74e55497c6549f0be6608fe7ddefdc816683257245d5d31d67037bbf462",
+  ]
+}

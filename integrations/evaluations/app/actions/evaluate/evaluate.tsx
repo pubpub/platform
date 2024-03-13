@@ -2,7 +2,7 @@
 
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
-import { buildFormFieldsFromSchema, buildFormSchemaFromFields } from "@pubpub/sdk/react";
+import { SchemaBasedFormFields, buildSchemaFromPubFields } from "@pubpub/sdk/react";
 import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useEffect, useMemo } from "react";
@@ -30,19 +30,42 @@ export function Evaluate(props: Props) {
 	const { pub, pubType } = props;
 	const { toast } = useToast();
 
-	const generatedSchema = useMemo(() => {
+	const { compiledSchema, uncompiledSchema } = useMemo(() => {
 		const exclude = [
 			props.instanceConfig.titleFieldSlug,
 			props.instanceConfig.evaluatorFieldSlug,
 		];
-		return buildFormSchemaFromFields(pubType, exclude);
+		const uncompiledSchema = buildSchemaFromPubFields(pubType, exclude);
+		// https://ajv.js.org/api.html#ajv-addschema-schema-object-object-key-string-ajv
+		// Add schema(s) to validator instance. This method does not compile schemas
+		// (but it still validates them). Because of that dependencies can be added in
+		// any order and circular dependencies are supported. It also prevents
+		// unnecessary compilation of schemas that are containers for other schemas
+		// but not used as a whole.
+
+		// An array of schemas can be passed (schemas should have ids), the second parameter will be ignored.
+		// Key can be passed that can be used to reference the schema and will be used as the schema id
+		// if there is no id inside the schema. If the key is not passed, the schema id will be used as the key.
+		// Once the schema is added, it (and all the references inside it) can be referenced in
+		// other schemas and used to validate data.
+
+		// Although addSchema does not compile schemas, explicit compilation is
+		// not required - the schema will be compiled when it is used first time.
+
+		// "schema" is a key described above though we can also use the schema id created when building the schema
+		// we could later pass multiple for dereferencing
+		const compiledSchema = new Ajv({ formats: fullFormats }).addSchema(
+			uncompiledSchema,
+			"schema"
+		);
+		return { compiledSchema, uncompiledSchema };
 	}, [pubType]);
 
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		// debug instructions: https://react-hook-form.com/docs/useform#resolver
-		resolver: ajvResolver(generatedSchema, {
+		resolver: ajvResolver(uncompiledSchema, {
 			formats: fullFormats,
 		}),
 		defaultValues: {},
@@ -80,23 +103,9 @@ export function Evaluate(props: Props) {
 		persist(values);
 	}, [values]);
 
-	const generateSignedUploadUrl = (fileName) => {
+	const signedUploadUrl = (fileName) => {
 		return upload(props.instanceId, pub.id, fileName);
 	};
-
-	const formFieldsFromSchema = useMemo(() => {
-		// we need to use an uncompiled schema for validation, but compiled for building the form
-		// "Schema" is a key later used to retrieve this schema (we could later pass multiple for dereferencing, for example)
-		const ajv = new Ajv({ formats: fullFormats });
-		const schemaKey = "schema";
-		const compiledSchema = ajv.addSchema(generatedSchema, schemaKey);
-		return buildFormFieldsFromSchema(
-			compiledSchema,
-			schemaKey,
-			form.control,
-			generateSignedUploadUrl
-		);
-	}, [form.control, pubType, generatedSchema]);
 
 	const submissionUrl = pub.values["unjournal:url"] as string;
 	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
@@ -117,7 +126,11 @@ export function Evaluate(props: Props) {
 				<p>{pubType.description}</p>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
-						{formFieldsFromSchema}
+						<SchemaBasedFormFields
+							compiledSchema={compiledSchema}
+							control={form.control}
+							upload={signedUploadUrl}
+						/>
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
 								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
