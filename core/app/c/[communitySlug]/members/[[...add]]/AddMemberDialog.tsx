@@ -7,10 +7,7 @@ import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
 import { UserPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
-import { MemberInviteForm } from "./MemberInviteForm";
 import React, { useEffect, useState } from "react";
-import { SuggestedUser } from "~/lib/server";
-import { AddMember } from "./AddMember";
 
 export const AddMemberDialog = ({
 	open,
