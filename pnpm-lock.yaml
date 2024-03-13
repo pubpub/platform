@@ -40,7 +40,7 @@ importers:
         version: 0.1.11(prettier@2.8.8)
       turbo:
         specifier: latest
-        version: 1.12.4
+        version: 1.12.5
 
   config/tsconfig: {}
 
@@ -78,16 +78,16 @@ importers:
         version: 2.33.2
       '@t3-oss/env-nextjs':
         specifier: ^0.9.2
-        version: 0.9.2(typescript@5.1.3)(zod@3.21.4)
+        version: 0.9.2(typescript@5.1.3)(zod@3.22.4)
       '@ts-rest/core':
         specifier: ^3.28.0
-        version: 3.28.0(zod@3.21.4)
+        version: 3.28.0(zod@3.22.4)
       '@ts-rest/next':
         specifier: ^3.28.0
-        version: 3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@3.21.4)
+        version: 3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@3.22.4)
       '@ts-rest/open-api':
         specifier: ^3.28.0
-        version: 3.28.0(@ts-rest/core@3.28.0)(zod@3.21.4)
+        version: 3.28.0(@ts-rest/core@3.28.0)(zod@3.22.4)
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
@@ -152,8 +152,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@preconstruct/next':
         specifier: ^4.0.0
@@ -232,10 +232,10 @@ importers:
         version: 7.102.0(next@13.5.2)(react@18.2.0)
       '@t3-oss/env-nextjs':
         specifier: ^0.9.2
-        version: 0.9.2(typescript@5.1.3)(zod@3.21.4)
+        version: 0.9.2(typescript@5.1.3)(zod@3.22.4)
       '@ts-react/form':
         specifier: ^1.8.3
-        version: 1.8.3(@hookform/resolvers@3.3.1)(react-hook-form@7.46.1)(react@18.2.0)(zod@3.21.4)
+        version: 1.8.3(@hookform/resolvers@3.3.1)(react-hook-form@7.46.1)(react@18.2.0)(zod@3.22.4)
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
@@ -273,8 +273,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@preconstruct/next':
         specifier: ^4.0.0
@@ -320,7 +320,7 @@ importers:
         version: 7.102.0(next@13.5.2)(react@18.2.0)
       '@t3-oss/env-nextjs':
         specifier: ^0.9.2
-        version: 0.9.2(typescript@5.1.3)(zod@3.21.4)
+        version: 0.9.2(typescript@5.1.3)(zod@3.22.4)
       clsx:
         specifier: ^2.0.0
         version: 2.0.0
@@ -352,8 +352,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@preconstruct/next':
         specifier: ^4.0.0
@@ -416,13 +416,13 @@ importers:
     devDependencies:
       '@ts-rest/core':
         specifier: ^3.28.0
-        version: 3.28.0(zod@3.21.4)
+        version: 3.28.0(zod@3.22.4)
       tsconfig:
         specifier: workspace:*
         version: link:../../config/tsconfig
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.22.4
 
   packages/sdk:
     dependencies:
@@ -431,7 +431,7 @@ importers:
         version: 3.3.1(react-hook-form@7.46.1)
       '@ts-rest/core':
         specifier: ^3.28.0
-        version: 3.28.0(zod@3.21.4)
+        version: 3.28.0(zod@3.22.4)
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
@@ -579,8 +579,8 @@ importers:
         specifier: ^5.3.3
         version: 5.3.3
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.22.4
 
   packages/utils:
     dependencies:
@@ -611,7 +611,7 @@ packages:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.19
 
-  /@anatine/zod-openapi@1.14.2(openapi3-ts@2.0.2)(zod@3.21.4):
+  /@anatine/zod-openapi@1.14.2(openapi3-ts@2.0.2)(zod@3.22.4):
     resolution: {integrity: sha512-q0qHfnuNYVKu0Swrnnvfj9971AEyW7c8v9jCOZGCl5ZbyGMNG4RPyJkRcMi/JC8CRfdOe0IDfNm1nNsi2avprg==}
     peerDependencies:
       openapi3-ts: ^2.0.0 || ^3.0.0
@@ -619,7 +619,7 @@ packages:
     dependencies:
       openapi3-ts: 2.0.2
       ts-deepmerge: 6.2.0
-      zod: 3.21.4
+      zod: 3.22.4
     dev: false
 
   /@aws-crypto/crc32@3.0.0:
@@ -4449,7 +4449,7 @@ packages:
       semver: 7.5.4
       terser: 5.19.4
       v8-compile-cache: 2.4.0
-      zod: 3.21.4
+      zod: 3.22.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -6946,7 +6946,7 @@ packages:
       tslib: 2.6.1
     dev: false
 
-  /@t3-oss/env-core@0.9.2(typescript@5.1.3)(zod@3.21.4):
+  /@t3-oss/env-core@0.9.2(typescript@5.1.3)(zod@3.22.4):
     resolution: {integrity: sha512-KgWXljUTHgO3o7GMZQPAD5+P+HqpauMNNHowlm7V2b9IeMitSUpNKwG6xQrup/xARWHTdxRVIl0mSI4wCevQhQ==}
     peerDependencies:
       typescript: '>=5.0.0'
@@ -6956,10 +6956,10 @@ packages:
         optional: true
     dependencies:
       typescript: 5.1.3
-      zod: 3.21.4
+      zod: 3.22.4
     dev: false
 
-  /@t3-oss/env-nextjs@0.9.2(typescript@5.1.3)(zod@3.21.4):
+  /@t3-oss/env-nextjs@0.9.2(typescript@5.1.3)(zod@3.22.4):
     resolution: {integrity: sha512-dklHrgKLESStNVB67Jdbu6osxDYA+xNKaPBRerlnkEvzbCccSKMvZENx6EZebJuR4snqB3/yRykNMn/bdIAyiQ==}
     peerDependencies:
       typescript: '>=5.0.0'
@@ -6968,9 +6968,9 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@t3-oss/env-core': 0.9.2(typescript@5.1.3)(zod@3.21.4)
+      '@t3-oss/env-core': 0.9.2(typescript@5.1.3)(zod@3.22.4)
       typescript: 5.1.3
-      zod: 3.21.4
+      zod: 3.22.4
     dev: false
 
   /@tailwindcss/forms@0.5.6(tailwindcss@3.3.3):
@@ -7002,7 +7002,7 @@ packages:
     resolution: {integrity: sha512-pCvdmea/F3Tn4hAtHqNXmjcixSaroJJ+L3STXlYJdir1g1m2mRQpWbN8a4SvgQtaw2930Ckhdx8qXdXBFMKbAA==}
     dev: false
 
-  /@ts-react/form@1.8.3(@hookform/resolvers@3.3.1)(react-hook-form@7.46.1)(react@18.2.0)(zod@3.21.4):
+  /@ts-react/form@1.8.3(@hookform/resolvers@3.3.1)(react-hook-form@7.46.1)(react@18.2.0)(zod@3.22.4):
     resolution: {integrity: sha512-r/QALdzmMHh8zkVA3YCjmzIInIEx4QwWUeffE0t8TGRj0qaszGXmGvlX4ZrNGnB67bQj/g+doDwa2FEyvJ7yfw==}
     peerDependencies:
       '@hookform/resolvers': ^2.8.0 || ^3.0.0
@@ -7013,10 +7013,10 @@ packages:
       '@hookform/resolvers': 3.3.1(react-hook-form@7.46.1)
       react: 18.2.0
       react-hook-form: 7.46.1(react@18.2.0)
-      zod: 3.21.4
+      zod: 3.22.4
     dev: false
 
-  /@ts-rest/core@3.28.0(zod@3.21.4):
+  /@ts-rest/core@3.28.0(zod@3.22.4):
     resolution: {integrity: sha512-m0Wn2DgO3O57dsGT5fqxvF/WNFPx/8/dxbqLMV9TYXwLBgaJG4vDgR7qXVIYss/c5vlHTQ0oB9X+PwxhI3ksMg==}
     peerDependencies:
       zod: ^3.21.0
@@ -7024,9 +7024,9 @@ packages:
       zod:
         optional: true
     dependencies:
-      zod: 3.21.4
+      zod: 3.22.4
 
-  /@ts-rest/next@3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@3.21.4):
+  /@ts-rest/next@3.28.0(@ts-rest/core@3.28.0)(next@13.5.2)(zod@3.22.4):
     resolution: {integrity: sha512-Ao9UyxuboVgpFDBAYOASPe47IYXpVO6KpMMZ/c/hJVE6KN66Re/CeIjz3sqetG5G36HoqxyhpkUBr6p22xYLSw==}
     peerDependencies:
       '@ts-rest/core': 3.28.0
@@ -7036,21 +7036,21 @@ packages:
       zod:
         optional: true
     dependencies:
-      '@ts-rest/core': 3.28.0(zod@3.21.4)
+      '@ts-rest/core': 3.28.0(zod@3.22.4)
       next: 13.5.2(@babel/core@7.22.17)(@opentelemetry/api@1.7.0)(react-dom@18.2.0)(react@18.2.0)
-      zod: 3.21.4
+      zod: 3.22.4
     dev: false
 
-  /@ts-rest/open-api@3.28.0(@ts-rest/core@3.28.0)(zod@3.21.4):
+  /@ts-rest/open-api@3.28.0(@ts-rest/core@3.28.0)(zod@3.22.4):
     resolution: {integrity: sha512-9EG1mWxzcTriWAQGLNLXvpRT5VLKIQGPcBfTndRDsHUQe9jor+GtjEP8ttuoTfo3GlhkND9V6Qrikda1/kM0tg==}
     peerDependencies:
       '@ts-rest/core': 3.28.0
       zod: ^3.21.0
     dependencies:
-      '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@3.21.4)
-      '@ts-rest/core': 3.28.0(zod@3.21.4)
+      '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@3.22.4)
+      '@ts-rest/core': 3.28.0(zod@3.22.4)
       openapi3-ts: 2.0.2
-      zod: 3.21.4
+      zod: 3.22.4
     dev: false
 
   /@tsconfig/node10@1.0.9:
@@ -12584,64 +12584,64 @@ packages:
       yargs: 17.7.2
     dev: true
 
-  /turbo-darwin-64@1.12.4:
-    resolution: {integrity: sha512-dBwFxhp9isTa9RS/fz2gDVk5wWhKQsPQMozYhjM7TT4jTrnYn0ZJMzr7V3B/M/T8QF65TbniW7w1gtgxQgX5Zg==}
+  /turbo-darwin-64@1.12.5:
+    resolution: {integrity: sha512-0GZ8reftwNQgIQLHkHjHEXTc/Z1NJm+YjsrBP+qhM/7yIZ3TEy9gJhuogDt2U0xIWwFgisTyzbtU7xNaQydtoA==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-darwin-arm64@1.12.4:
-    resolution: {integrity: sha512-1Uo5iI6xsJ1j9ObsqxYRsa3W26mEbUe6fnj4rQYV6kDaqYD54oAMJ6hM53q9rB8JvFxwdrUXGp3PwTw9A0qqkA==}
+  /turbo-darwin-arm64@1.12.5:
+    resolution: {integrity: sha512-8WpOLNNzvH6kohQOjihD+gaWL+ZFNfjvBwhOF0rjEzvW+YR3Pa7KjhulrjWyeN2yMFqAPubTbZIGOz1EVXLuQA==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-linux-64@1.12.4:
-    resolution: {integrity: sha512-ONg2aSqKP7LAQOg7ysmU5WpEQp4DGNxSlAiR7um+LKtbmC/UxogbR5+T+Uuq6zGuQ5kJyKjWJ4NhtvUswOqBsA==}
+  /turbo-linux-64@1.12.5:
+    resolution: {integrity: sha512-INit73+bNUpwqGZCxgXCR3I+cQsdkQ3/LkfkgSOibkpg+oGqxJRzeXw3sp990d7SCoE8QOcs3iw+PtiFX/LDAA==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-linux-arm64@1.12.4:
-    resolution: {integrity: sha512-9FPufkwdgfIKg/9jj87Cdtftw8o36y27/S2vLN7FTR2pp9c0MQiTBOLVYadUr1FlShupddmaMbTkXEhyt9SdrA==}
+  /turbo-linux-arm64@1.12.5:
+    resolution: {integrity: sha512-6lkRBvxtI/GQdGtaAec9LvVQUoRw6nXFp0kM+Eu+5PbZqq7yn6cMkgDJLI08zdeui36yXhone8XGI8pHg8bpUQ==}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-windows-64@1.12.4:
-    resolution: {integrity: sha512-2mOtxHW5Vjh/5rDVu/aFwsMzI+chs8XcEuJHlY1sYOpEymYTz+u6AXbnzRvwZFMrLKr7J7fQOGl+v96sLKbNdA==}
+  /turbo-windows-64@1.12.5:
+    resolution: {integrity: sha512-gQYbOhZg5Ww0bQ/bC0w/4W6yQRwBumUUnkB+QPo15VznwxZe2a7bo6JM+9Xy9dKLa/kn+p7zTqme4OEp6M3/Yg==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo-windows-arm64@1.12.4:
-    resolution: {integrity: sha512-nOY5wae9qnxPOpT1fRuYO0ks6dTwpKMPV6++VkDkamFDLFHUDVM/9kmD2UTeh1yyrKnrZksbb9zmShhmfj1wog==}
+  /turbo-windows-arm64@1.12.5:
+    resolution: {integrity: sha512-auvhZ9FrhnvQ4mgBlY9O68MT4dIfprYGvd2uPICba/mHUZZvVy5SGgbHJ0KbMwaJfnnFoPgLJO6M+3N2gDprKw==}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
     dev: true
     optional: true
 
-  /turbo@1.12.4:
-    resolution: {integrity: sha512-yUJ7elEUSToiGwFZogXpYKJpQ0BvaMbkEuQECIWtkBLcmWzlMOt6bActsIm29oN83mRU0WbzGt4e8H1KHWedhg==}
+  /turbo@1.12.5:
+    resolution: {integrity: sha512-FATU5EnhrYG8RvQJYFJnDd18DpccDjyvd53hggw9T9JEg9BhWtIEoeaKtBjYbpXwOVrJQMDdXcIB4f2nD3QPPg==}
     hasBin: true
     optionalDependencies:
-      turbo-darwin-64: 1.12.4
-      turbo-darwin-arm64: 1.12.4
-      turbo-linux-64: 1.12.4
-      turbo-linux-arm64: 1.12.4
-      turbo-windows-64: 1.12.4
-      turbo-windows-arm64: 1.12.4
+      turbo-darwin-64: 1.12.5
+      turbo-darwin-arm64: 1.12.5
+      turbo-linux-64: 1.12.5
+      turbo-linux-arm64: 1.12.5
+      turbo-windows-64: 1.12.5
+      turbo-windows-arm64: 1.12.5
     dev: true
 
   /type-fest@0.13.1:
@@ -13319,6 +13319,10 @@ packages:
 
   /zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
+    dev: false
+
+  /zod@3.22.4:
+    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
 
   /zustand@3.7.2(react@18.2.0):
     resolution: {integrity: sha512-PIJDIZKtokhof+9+60cpockVOq05sJzHCriyvaLBmEJixseQ1a5Kdov6fWZfWOu5SK9c+FhH1jU0tntLxRJYMA==}
