@@ -169,9 +169,8 @@ export const MemberInviteForm = ({
 							</div>
 							{state.state === "initial" ? (
 								<FormDescription>
-									First try typing the email address of the person you'd like to
-									invite. If they're already a user, you can add them as a member
-									immediately.
+									Enter the email address of the person you'd like to invite to
+									the {community.name} community
 								</FormDescription>
 							) : state.state === "user-not-found" ? (
 								<FormDescription>
