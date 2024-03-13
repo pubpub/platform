@@ -76,6 +76,7 @@ export const MemberInviteForm = ({
 				firstName: data.firstName!,
 				lastName: data.lastName!,
 				community,
+				canAdmin: Boolean(data.canAdmin),
 			});
 
 			if (error) {

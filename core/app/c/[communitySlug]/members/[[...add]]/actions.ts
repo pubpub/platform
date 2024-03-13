@@ -225,7 +225,7 @@ export const createUserWithMembership = async ({
 	lastName?: string | null;
 	email: string;
 	community: Community;
-	canAdmin?: boolean;
+	canAdmin: boolean;
 }) => {
 	const { error: adminError } = await isCommunityAdmin(community);
 	if (adminError) {
@@ -243,7 +243,7 @@ export const createUserWithMembership = async ({
 			memberships: {
 				create: {
 					communityId: community.id,
-					canAdmin: true,
+					canAdmin,
 				},
 			},
 		},
