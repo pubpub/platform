@@ -18,7 +18,8 @@ import { TableMember, getMemberTableColumns } from "./getMemberTableColumns";
 import { DataTablePagination } from "ui/data-table";
 import { Input } from "ui/input";
 import { Community } from "@prisma/client";
-import { FormLabel } from "ui/form";
+import { Label } from "ui/label";
+import { Search } from "ui/icon";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -49,11 +50,13 @@ function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValu
 
 	return (
 		<div>
-			<div className="flex items-center py-4">
-				<FormLabel htmlFor="email-filter">Filter by email</FormLabel>
+			<div className="flex flex-col items-start gap-y-2 py-4">
+				<Label htmlFor="email-filter" className="flex gap-x-1 items-center">
+					<Search className="w-4 h-4" /> Search by email
+				</Label>
 				<Input
 					name="email-filter"
-					placeholder="Filter emails..."
+					placeholder="jane@example.com"
 					value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
 					onChange={(event) =>
 						table.getColumn("email")?.setFilterValue(event.target.value)

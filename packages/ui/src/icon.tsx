@@ -18,4 +18,5 @@ export {
 	UserPlus,
 	Trash,
 	MoreVertical,
+	Search,
 } from "lucide-react";
