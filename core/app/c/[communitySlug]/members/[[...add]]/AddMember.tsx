@@ -1,9 +1,9 @@
 import { Community } from "@prisma/client";
-import { AddMemberDialog } from "./AddMemberDialog";
 import { getSuggestedMembers } from "~/lib/server";
 import prisma from "~/prisma/db";
 import { getLoginData } from "~/lib/auth/loginData";
 import { unstable_cache } from "next/cache";
+import { memberInviteFormSchema } from "./memberInviteFormSchema";
 import { MemberInviteForm } from "./MemberInviteForm";
 
 const createCachedGetUser = ({
@@ -20,6 +20,15 @@ const createCachedGetUser = ({
 			user: null,
 			state: "initial" as const,
 			error: null,
+		});
+	}
+
+	const parsedEmail = memberInviteFormSchema.shape.email.safeParse(email);
+	if (!parsedEmail.success) {
+		return () => ({
+			user: null,
+			state: "initial" as const,
+			error: parsedEmail.error.issues[0]?.message,
 		});
 	}
 

@@ -27,15 +27,7 @@ import * as actions from "./actions";
 import { Community } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { MemberFormState } from "./AddMember";
-
-const memberInviteFormSchema = z.object({
-	email: z.string().email({
-		message: "Please provide a valid email address",
-	}),
-	canAdmin: z.boolean().default(false).optional(),
-	firstName: z.string().optional(),
-	lastName: z.string().optional(),
-});
+import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const MemberInviteForm = ({
 	community,
@@ -51,13 +43,9 @@ export const MemberInviteForm = ({
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
-		delayError: 200,
-		mode: "onChange",
 		defaultValues: {
 			canAdmin: false,
 			email: email,
-			firstName: "",
-			lastName: "",
 		},
 	});
 
@@ -134,14 +122,15 @@ export const MemberInviteForm = ({
 	// from the higher up server component
 	useEffect(() => {
 		if (!state.error) {
+			form.clearErrors("email");
 			return;
 		}
-		toast({
-			title: "Error",
-			variant: "destructive",
-			description: state.error,
+
+		form.setError("email", {
+			type: "manual",
+			message: state.error,
 		});
-	}, [state.error]);
+	}, [state.error, state.state]);
 
 	return (
 		<Form {...form}>
