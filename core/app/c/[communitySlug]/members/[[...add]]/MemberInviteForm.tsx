@@ -32,7 +32,7 @@ const memberInviteFormSchema = z.object({
 	email: z.string().email({
 		message: "Please provide a valid email address",
 	}),
-	admin: z.boolean().default(false).optional(),
+	canAdmin: z.boolean().default(false).optional(),
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
 });
@@ -54,7 +54,7 @@ export const MemberInviteForm = ({
 		delayError: 200,
 		mode: "onChange",
 		defaultValues: {
-			admin: false,
+			canAdmin: false,
 			email: email,
 			firstName: "",
 			lastName: "",
@@ -72,7 +72,7 @@ export const MemberInviteForm = ({
 		}
 
 		if (state.state === "user-not-found") {
-			const { error } = await actions.inviteMember({
+			const { error } = await actions.createUserWithMembership({
 				email: data.email,
 				firstName: data.firstName!,
 				lastName: data.lastName!,
@@ -90,7 +90,7 @@ export const MemberInviteForm = ({
 
 			toast({
 				title: "Success",
-				description: "User successfully invited ",
+				description: "User successfully invited",
 			});
 			closeForm();
 
@@ -99,7 +99,7 @@ export const MemberInviteForm = ({
 
 		const result = await actions.addMember({
 			user: state.user,
-			admin: data.admin,
+			canAdmin: data.canAdmin,
 			community,
 		});
 
@@ -210,7 +210,7 @@ export const MemberInviteForm = ({
 				{state.state !== "initial" && (
 					<FormField
 						control={form.control}
-						name="admin"
+						name="canAdmin"
 						render={({ field }) => (
 							<FormItem className="flex items-end gap-x-2">
 								<FormControl>

@@ -561,7 +561,7 @@ importers:
         version: 0.274.0(react@18.2.0)
       next:
         specifier: 13.5.2
-        version: 13.5.2(@babel/core@7.22.17)(react-dom@18.2.0)(react@18.2.0)
+        version: 13.5.2(@babel/core@7.22.17)(@opentelemetry/api@1.7.0)(react-dom@18.2.0)(react@18.2.0)
       react-day-picker:
         specifier: ^8.10.0
         version: 8.10.0(date-fns@3.3.1)(react@18.2.0)
