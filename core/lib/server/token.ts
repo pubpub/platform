@@ -43,13 +43,13 @@ export const validateToken = async (token: string) => {
 	// 	throw new UnauthorizedError('Token already used')
 	// }
 
-	const { hash, user, expiresAt } = dbToken
+	const { hash, user } = dbToken
 
 	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
 	// different expiration periods
-	if (expiresAt < new Date()) {
-		throw new UnauthorizedError('Expired token')
-	}
+	// if (expiresAt < new Date()) {
+	// 	throw new UnauthorizedError('Expired token')
+	// }
 
 	// Finally, hash the token string input and do a constant time comparison between this value and the hash retrieved from the database
 	const inputHash = createHash(tokenString).digest()
