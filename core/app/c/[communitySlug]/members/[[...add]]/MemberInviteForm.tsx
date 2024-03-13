@@ -44,6 +44,7 @@ export const MemberInviteForm = ({
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
+			state: state.state,
 			canAdmin: false,
 			email: email,
 		},
@@ -121,6 +122,7 @@ export const MemberInviteForm = ({
 	// is after the email check has been debounced AND the user has been fetched
 	// from the higher up server component
 	useEffect(() => {
+		form.setValue("state", state.state);
 		if (!state.error) {
 			form.clearErrors("email");
 			return;
