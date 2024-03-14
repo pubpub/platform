@@ -106,7 +106,6 @@ const PubRow: React.FC<Props> = function (props: Props) {
 					</Collapsible>
 				</RowFooter>
 			)}
-			<MembersAvatars pub={props.pub} />
 		</Row>
 	);
 };

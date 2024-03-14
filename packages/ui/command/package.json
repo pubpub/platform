@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-command.cjs.js",
+	"module": "dist/ui-command.esm.js"
+}

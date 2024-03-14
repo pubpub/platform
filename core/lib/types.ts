@@ -60,15 +60,6 @@ export const pubInclude = {
 		},
 	},
 	integrationInstances: { include: { integration: true } },
-	community: {
-		include: {
-			members: {
-				include: {
-					user: true,
-				},
-			},
-		},
-	},
 	claims: { include: { user: true } },
 	children: {
 		...makeRecursiveInclude(
@@ -110,6 +101,14 @@ export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof pe
 export type PermissionPayloadUser = NonNullable<PermissionPayload["member"]>["user"];
 export type PermissionPayloadMember = NonNullable<PermissionPayload["member"]>;
 
+export const communityMemberInclude = {
+	user: true,
+};
+
+export type CommunityMemberPayload = Prisma.MemberGetPayload<{
+	include: typeof communityMemberInclude;
+}>;
+
 export const stageInclude = {
 	pubs: { include: pubInclude },
 	integrationInstances: { include: { integration: true } },
@@ -131,4 +130,3 @@ export type DeepPartial<T> = T extends object
 			[P in keyof T]?: DeepPartial<T[P]>;
 	  }
 	: T;
-
