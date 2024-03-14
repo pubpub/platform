@@ -70,7 +70,7 @@ const AboutUnjournal = () => {
 					target="_blank"
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/readme-1#funding"
 				>
-					funding
+					funding sources
 				</a>
 				.
 			</p>
@@ -92,7 +92,7 @@ const EvaluationProcess = () => {
 				</a>
 				, we offer evaluators a $300 honorarium for completing the assignment by the
 				deadline. Evaluators may earn an additional $100 “prompt evaluation bonus” for
-				completing the assignment promptly (see below). As of February 2024: We are also
+				completing the assignment promptly (see below). As of February 2024, we are also
 				currently setting aside $150 per evaluation for evaluator incentives and prizes.
 			</p>
 			<p>
@@ -101,43 +101,35 @@ const EvaluationProcess = () => {
 					target="_blank"
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#that-this-review-and-ratings-will-be-made-public"
 				>
-					remain anonymous or to 'sign your review'
-				</a>{" "}
-				and take credit.
+					remain anonymous or to be identified as the author
+				</a>
+				.
 			</p>
 			<p>
 				We ask evaluators to:
 				<ol>
 					<li>
-						Write a review: a 'standard high-quality referee report,' with some{" "}
+						Write an evaluation: essentially a high-quality referee report, considering{" "}
 						<a
 							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#specific-requests-for-focus-or-feedback"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
 						>
-							specific considerations
+							The Unjournal's guidelines
 						</a>
-						.
+						. Please try to address any specific considerations mentioned in the
+						manager’s notes above, or any specific requests from the evaluation manager.
 					</li>
 					<li>
 						Give{" "}
 						<a
 							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories"
+							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
 						>
 							quantitative metrics and predictions
 						</a>
 						.
 					</li>
-					<li>
-						Answer a{" "}
-						<a
-							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#survey-questions"
-						>
-							short questionnaire
-						</a>{" "}
-						about your background and our processes.
-					</li>
+					<li>Answer a short questionnaire about your background and our processes.</li>
 				</ol>
 			</p>
 			<p>
@@ -147,15 +139,8 @@ const EvaluationProcess = () => {
 					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#publishing-and-signing-reviews-considerations-exceptions"
 				>
 					here
-				</a>{" "}
-				(or{" "}
-				<a
-					target="_blank"
-					href="https://www.dropbox.com/s/jzxz11gmkrh8lbn/evaluations_as_pdf.pdf?dl=0"
-				>
-					download the pdf
 				</a>
-				).
+				.
 			</p>
 		</>
 	);
@@ -240,6 +225,41 @@ export const Respond = (props: Props) => {
 					<Link href={infoUrl}>this page</Link>—where you may also opt to accept or
 					request more information.
 				</p>
+				<h2>Feedback and suggested evaluators (optional)</h2>
+				<p>
+					We would also appreciate your suggestions for other potential evaluators for
+					this research. As a sign that we value this, if you suggest someone who ends up
+					evaluating this research (who was not already on our list), we will award you
+					$50. You can suggest potential evaluators in the form{" "}
+					<a
+						target="_blank"
+						href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
+					>
+						here
+					</a>
+					.
+				</p>
+				<p>
+					We are also eager to understand how to better recruit evaluators for The
+					Unjournal. In the same{" "}
+					<a
+						target="_blank"
+						href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
+					>
+						form
+					</a>
+					, you can also let us know why you decided not to accept this assignment, and
+					what might make this more attractive to you and others in the future. Again, to
+					signal that we value this, we will provide $50 awards for people who offer
+					advice that seems particularly useful. (We commit to offering at least one such
+					award for every five people submitting suggestions, not to exceed $50 in total
+					awards per month).
+				</p>
+				<p>
+					Alternatively, you can just send a{" "}
+					<a href="mailto:contact@unjournal.org">quick email</a> to let us know your
+					thoughts and suggestions.
+				</p>
 			</>
 		);
 	}
@@ -268,7 +288,7 @@ export const Respond = (props: Props) => {
 			)}
 			<h2>About the research</h2>
 			<p>
-				<em>The details about the research we are asking you to evaluate.</em>
+				<em>The details of the research we are asking you to evaluate.</em>
 			</p>
 			<h3>{submissionTitle}</h3>
 			{submissionAbstract ? (
@@ -299,7 +319,9 @@ export const Respond = (props: Props) => {
 								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 							).toLocaleDateString()}
 						</strong>
-						), you will receive a $100 “prompt evaluation bonus.” After{" "}
+						), you will receive a $100 “prompt evaluation bonus,” in addition to the
+						baseline $300 honorarium, in addition to the baseline $300 honorarium, as
+						well as other potential evaluator incentives and prizes. After{" "}
 						<strong>{new Date(deadline.getTime()).toLocaleDateString()}</strong>, we
 						will consider re-assigning the evaluation, and later submissions may not be
 						eligible for the full baseline compensation.
@@ -334,7 +356,9 @@ export const Respond = (props: Props) => {
 								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 							).toLocaleDateString()}
 						</strong>
-						), you will receive a $100 “prompt evaluation bonus.” After{" "}
+						), you will receive a $100 “prompt evaluation bonus,” in addition to the
+						baseline $300 honorarium, as well as other potential evaluator incentives
+						and prizes. After{" "}
 						<strong>{new Date(deadline.getTime()).toLocaleDateString()}</strong>, we
 						will consider re-assigning the evaluation, and later submissions may not be
 						eligible for the full baseline compensation.

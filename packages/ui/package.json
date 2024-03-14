@@ -37,6 +37,10 @@
 			"module": "./label/dist/ui-label.esm.js",
 			"default": "./label/dist/ui-label.cjs.js"
 		},
+		"./table": {
+			"module": "./table/dist/ui-table.esm.js",
+			"default": "./table/dist/ui-table.cjs.js"
+		},
 		"./toast": {
 			"module": "./toast/dist/ui-toast.esm.js",
 			"default": "./toast/dist/ui-toast.cjs.js"
@@ -89,6 +93,10 @@
 			"module": "./use-toast/dist/ui-use-toast.esm.js",
 			"default": "./use-toast/dist/ui-use-toast.cjs.js"
 		},
+		"./data-table": {
+			"module": "./data-table/dist/ui-data-table.esm.js",
+			"default": "./data-table/dist/ui-data-table.cjs.js"
+		},
 		"./hooks": {
 			"module": "./hooks/dist/ui-hooks.esm.js",
 			"default": "./hooks/dist/ui-hooks.cjs.js"
@@ -97,9 +105,17 @@
 			"module": "./hover-card/dist/ui-hover-card.esm.js",
 			"default": "./hover-card/dist/ui-hover-card.cjs.js"
 		},
+		"./pagination": {
+			"module": "./pagination/dist/ui-pagination.esm.js",
+			"default": "./pagination/dist/ui-pagination.cjs.js"
+		},
 		"./collapsible": {
 			"module": "./collapsible/dist/ui-collapsible.esm.js",
 			"default": "./collapsible/dist/ui-collapsible.cjs.js"
+		},
+		"./alert-dialog": {
+			"module": "./alert-dialog/dist/ui-alert-dialog.esm.js",
+			"default": "./alert-dialog/dist/ui-alert-dialog.cjs.js"
 		},
 		"./dropdown-menu": {
 			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
@@ -135,6 +151,7 @@
 		"dist",
 		"styles.css",
 		"alert",
+		"alert-dialog",
 		"avatar",
 		"badge",
 		"button",
@@ -142,6 +159,7 @@
 		"card",
 		"checkbox",
 		"collapsible",
+		"data-table",
 		"dialog",
 		"dropdown-menu",
 		"form",
@@ -150,9 +168,11 @@
 		"index",
 		"input",
 		"label",
+		"pagination",
 		"popover",
 		"select",
 		"separator",
+		"table",
 		"tabs",
 		"textarea",
 		"toast",
@@ -167,6 +187,7 @@
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.1",
+		"@radix-ui/react-alert-dialog": "^1.0.5",
 		"@radix-ui/react-avatar": "^1.0.3",
 		"@radix-ui/react-checkbox": "^1.0.4",
 		"@radix-ui/react-collapsible": "^1.0.3",
@@ -183,6 +204,7 @@
 		"@radix-ui/react-tabs": "^1.0.4",
 		"@radix-ui/react-toast": "^1.1.4",
 		"@radix-ui/react-tooltip": "^1.0.6",
+		"@tanstack/react-table": "^8.13.2",
 		"@uppy/aws-s3": "^3.4.0",
 		"@uppy/core": "^3.6.1",
 		"@uppy/dashboard": "^3.6.0",
@@ -192,7 +214,8 @@
 		"@uppy/react": "^3.1.4",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.0.0",
-		"lucide-react": "^0.274.0",
+		"lucide-react": "^0.357.0",
+		"next": "13.5.2",
 		"react-day-picker": "^8.10.0",
 		"tailwind-merge": "^1.14.0",
 		"tailwindcss-animate": "^1.0.6",
@@ -202,7 +225,7 @@
 		"react": "^18.2.0",
 		"react-hook-form": "^7.46.1",
 		"tailwindcss": "^3.3.3",
-		"zod": "^3.21.4"
+		"zod": "^3.22.4"
 	},
 	"devDependencies": {
 		"@types/react": "^18.2.5",
@@ -210,8 +233,8 @@
 		"react": "^18.2.0",
 		"react-hook-form": "^7.46.1",
 		"tsconfig": "workspace:*",
-		"typescript": "^5.3.3",
-		"zod": "^3.21.4"
+		"typescript": "^5.4.2",
+		"zod": "^3.22.4"
 	},
 	"preconstruct": {
 		"exports": {
@@ -236,6 +259,7 @@
 		},
 		"entrypoints": [
 			"alert.tsx",
+			"alert-dialog.tsx",
 			"avatar.tsx",
 			"badge.tsx",
 			"button.tsx",
@@ -243,6 +267,7 @@
 			"card.tsx",
 			"checkbox.tsx",
 			"collapsible.tsx",
+			"data-table.tsx",
 			"dialog.tsx",
 			"dropdown-menu.tsx",
 			"form.tsx",
@@ -250,9 +275,11 @@
 			"icon.tsx",
 			"input.tsx",
 			"label.tsx",
+			"pagination.tsx",
 			"popover.tsx",
 			"select.tsx",
 			"separator.tsx",
+			"table.tsx",
 			"tabs.tsx",
 			"textarea.tsx",
 			"toast.tsx",
