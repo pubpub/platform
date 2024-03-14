@@ -23,6 +23,7 @@ import { DOI_REGEX, URL_REGEX, cn, isDoi, normalizeDoi } from "utils";
 import * as z from "zod";
 import { FetchMetadataButton } from "./FetchMetadataButton";
 import { submit } from "./actions";
+import { useIntegration } from "@pubpub/sdk/src/react/IntegrationProvider";
 
 type Props = {
 	instanceId: string;
@@ -60,6 +61,7 @@ export function Submit(props: Props) {
 	});
 	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
 
+	const { user } = useIntegration();
 	const onSubmit = async (pub: z.infer<typeof schema>) => {
 		// The DOI field may contain either a DOI or a URL that contains a DOI.
 		// If the value is a URL, we convert it into a valid DOI before sending
@@ -67,7 +69,7 @@ export function Submit(props: Props) {
 		if (pub["unjournal:doi"]) {
 			pub["unjournal:doi"] = normalizeDoi(pub["unjournal:doi"]);
 		}
-		const result = await submit(props.instanceId, pub);
+		const result = await submit(props.instanceId, pub, user.id);
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
