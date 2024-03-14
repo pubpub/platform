@@ -115,7 +115,7 @@ export default function Assign(props: Props) {
 			</PopoverTrigger>
 			<PopoverContent className="w-[200px] p-0">
 				<Command>
-					<CommandInput placeholder="Search member..." />
+					<CommandInput className="h-8 my-2" placeholder="Search member..." />
 					<CommandEmpty>No member found.</CommandEmpty>
 					<CommandList>
 						<CommandGroup>
