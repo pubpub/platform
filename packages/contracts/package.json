@@ -18,11 +18,11 @@
 	},
 	"peerDependencies": {
 		"@ts-rest/core": "^3.28.0",
-		"zod": "^3.21.4"
+		"zod": "^3.22.4"
 	},
 	"devDependencies": {
 		"@ts-rest/core": "^3.28.0",
 		"tsconfig": "workspace:*",
-		"zod": "^3.21.4"
+		"zod": "^3.22.4"
 	}
 }

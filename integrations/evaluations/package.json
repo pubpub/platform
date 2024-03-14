@@ -29,7 +29,7 @@
 		"tailwind-merge": "^1.14.0",
 		"ui": "workspace:*",
 		"utils": "workspace:*",
-		"zod": "^3.21.4"
+		"zod": "^3.22.4"
 	},
 	"devDependencies": {
 		"@preconstruct/next": "^4.0.0",
