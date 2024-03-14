@@ -85,7 +85,7 @@
 		"ts-node": "^10.9.1",
 		"tsconfig": "workspace:*",
 		"tsx": "^3.13.0",
-		"typescript": "5.3.3",
+		"typescript": "5.4.2",
 		"yargs": "^17.7.2"
 	}
 }
