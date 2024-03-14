@@ -6,7 +6,8 @@
 		"dev": "next dev -p 3002",
 		"build": "SKIP_VALIDATION=true next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"type-check": "tsc"
 	},
 	"files": [
 		".next"

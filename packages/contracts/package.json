@@ -23,6 +23,7 @@
 	"devDependencies": {
 		"@ts-rest/core": "^3.28.0",
 		"tsconfig": "workspace:*",
+		"typescript": "^5.4.2",
 		"zod": "^3.22.4"
 	}
 }
