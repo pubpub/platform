@@ -62,7 +62,7 @@ const commonPubFields = z.object({
 export const GetPubResponseBodyBase = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
-	assignee: SafeUser.optional(),
+	assignee: User.optional(),
 });
 export type GetPubResponseBodyBase = z.infer<typeof GetPubResponseBodyBase>;
 

@@ -211,38 +211,6 @@ export const unscheduleNoSubmitNotificationEmail = (
 };
 
 /**
- * Sends an email to the evaluation manager to notify them that an evaluator has requested more information.
- * @param instanceId
- * @param instanceConfig
- * @param pubId
- * @param evaluator
- * @returns
- */
-export const sendRequestedInfoNotification = (
-	instanceId: string,
-	instanceConfig: InstanceConfig,
-	pubId: string,
-	evaluator: EvaluatorWithInvite
-) => {
-	return client.sendEmail(instanceId, {
-		to: {
-			userId: evaluator.invitedBy,
-		},
-		subject: `[Unjournal] More Information Request for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}", has requested more information. You may contact them at <a href="mailto:{{users.evaluator.email}}">{{users.evaluator.email}}</a>.</p>
-${notificationFooter}`,
-		include: {
-			pubs: {
-				submission: pubId,
-			},
-			users: {
-				evaluator: evaluator.userId,
-			},
-		},
-	});
-};
-
-/**
  * Sends an email to the evaluation manager to notify them that an evaluator has accepted the invitation to evaluate the pub.
  * @param instanceId
  * @param instanceConfig

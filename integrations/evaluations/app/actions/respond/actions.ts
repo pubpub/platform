@@ -14,7 +14,6 @@ import {
 	sendAcceptedNotificationEmail,
 	sendDeclinedNotificationEmail,
 	sendNoticeOfNoSubmitEmail,
-	sendRequestedInfoNotification,
 	unscheduleInvitationReminderEmail,
 	unscheduleNoReplyNotificationEmail,
 } from "~/lib/emails";
@@ -128,24 +127,4 @@ export const decline = async (
 		return { error: error.message };
 	}
 	redirect(`/actions/respond/declined${redirectParams}`);
-};
-
-export const contact = async (instanceId: string, pubId: string) => {
-	try {
-		const user = JSON.parse(expect(cookie("user")));
-		const instanceConfig = expect(
-			await getInstanceConfig(instanceId),
-			"Instance not configured"
-		);
-		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
-		let evaluator = expect(
-			instanceState[user.id],
-			`User was not invited to evaluate pub ${pubId}`
-		);
-		assertIsInvited(evaluator);
-		await sendRequestedInfoNotification(instanceId, instanceConfig, pubId, evaluator);
-		return { success: true };
-	} catch (error) {
-		return { error: error.message };
-	}
 };
