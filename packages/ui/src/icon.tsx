@@ -15,4 +15,8 @@ export {
 	CircleDollarSign,
 	XCircle,
 	BadgeCheck,
+	UserPlus,
+	Trash,
+	MoreVertical,
+	Search,
 } from "lucide-react";

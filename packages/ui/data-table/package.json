@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-data-table.cjs.js",
+	"module": "dist/ui-data-table.esm.js"
+}

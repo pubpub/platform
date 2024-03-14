@@ -3,15 +3,22 @@ import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 
 import { CommunityData } from "./layout";
+import { getLoginData } from "~/lib/auth/loginData";
 
 type Props = {
 	community: NonNullable<CommunityData>;
 	availableCommunities: NonNullable<CommunityData>[];
 };
 
-const SideNav: React.FC<Props> = function ({ community, availableCommunities }) {
+const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
 	const prefix = `/c/${community.slug}`;
 	const divider = <div className="h-[1px] bg-gray-200 my-4" />;
+
+	const loginData = await getLoginData();
+	const isAdmin = loginData?.memberships.find(
+		(m) => m.community.slug === community.slug
+	)?.canAdmin;
+
 	return (
 		<div className={"fixed h-screen bg-gray-50 w-[250px] p-4 shadow-inner flex flex-col"}>
 			<div className="flex-auto">
@@ -46,6 +53,13 @@ const SideNav: React.FC<Props> = function ({ community, availableCommunities }) 
 					text={"Integrations"}
 					icon={<img src="/icons/integration.svg" />}
 				/>
+				{isAdmin && (
+					<NavLink
+						href={`${prefix}/members`}
+						text={"Members"}
+						icon={<img src="/icons/members.svg" />}
+					/>
+				)}
 				{/*<NavLink
 					href={`${prefix}/types`}
 					text={"Pub Types"}
