@@ -86,8 +86,8 @@ importers:
         specifier: ^3.28.0
         version: 3.28.0(zod@3.22.4)
       '@ts-rest/next':
-        specifier: ^3.28.0
-        version: 3.28.0(@ts-rest/core@3.28.0)(next@14.1.2)(zod@3.22.4)
+        specifier: ^3.33.1
+        version: 3.33.1(next@14.1.2)(zod@3.22.4)
       '@ts-rest/open-api':
         specifier: ^3.28.0
         version: 3.28.0(@ts-rest/core@3.28.0)(zod@3.22.4)
@@ -7207,17 +7207,15 @@ packages:
     dependencies:
       zod: 3.22.4
 
-  /@ts-rest/next@3.28.0(@ts-rest/core@3.28.0)(next@14.1.2)(zod@3.22.4):
-    resolution: {integrity: sha512-Ao9UyxuboVgpFDBAYOASPe47IYXpVO6KpMMZ/c/hJVE6KN66Re/CeIjz3sqetG5G36HoqxyhpkUBr6p22xYLSw==}
+  /@ts-rest/next@3.33.1(next@14.1.2)(zod@3.22.4):
+    resolution: {integrity: sha512-/QhxcCbwxthxDBsKUaYc209S0j/fIP6m8RrFGVDTPXkKtCCZMLeo+nlDPfSwYdUZSiI+tw807S4st1Nn4t8Cwg==}
     peerDependencies:
-      '@ts-rest/core': 3.28.0
-      next: ^12.0.0 || ^13.0.0
-      zod: ^3.21.0
+      next: ^12.0.0 || ^13.0.0 || ^14.0.0
+      zod: ^3.22.3
     peerDependenciesMeta:
       zod:
         optional: true
     dependencies:
-      '@ts-rest/core': 3.28.0(zod@3.22.4)
       next: 14.1.2(@babel/core@7.22.17)(@opentelemetry/api@1.7.0)(react-dom@18.2.0)(react@18.2.0)
       zod: 3.22.4
     dev: false
