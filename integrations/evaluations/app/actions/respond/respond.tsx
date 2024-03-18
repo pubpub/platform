@@ -6,7 +6,6 @@ import { Button } from "ui/button";
 import { toast } from "ui/use-toast";
 import { accept, contact, decline } from "./actions";
 import { InstanceConfig } from "~/lib/types";
-import Link from "next/link";
 import { calculateDeadline } from "~/lib/emails";
 
 type Props = {
@@ -105,33 +104,31 @@ const EvaluationProcess = () => {
 				</a>
 				.
 			</p>
-			<p>
-				We ask evaluators to:
-				<ol>
-					<li>
-						Write an evaluation: essentially a high-quality referee report, considering{" "}
-						<a
-							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
-						>
-							The Unjournal's guidelines
-						</a>
-						. Please try to address any specific considerations mentioned in the
-						manager’s notes above, or any specific requests from the evaluation manager.
-					</li>
-					<li>
-						Give{" "}
-						<a
-							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
-						>
-							quantitative metrics and predictions
-						</a>
-						.
-					</li>
-					<li>Answer a short questionnaire about your background and our processes.</li>
-				</ol>
-			</p>
+			<p>We ask evaluators to:</p>
+			<ol>
+				<li>
+					Write an evaluation: essentially a high-quality referee report, considering{" "}
+					<a
+						target="_blank"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
+					>
+						The Unjournal's guidelines
+					</a>
+					. Please try to address any specific considerations mentioned in the manager’s
+					notes above, or any specific requests from the evaluation manager.
+				</li>
+				<li>
+					Give{" "}
+					<a
+						target="_blank"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
+					>
+						quantitative metrics and predictions
+					</a>
+					.
+				</li>
+				<li>Answer a short questionnaire about your background and our processes.</li>
+			</ol>
 			<p>
 				You can read the full guidelines{" "}
 				<a
@@ -149,12 +146,7 @@ const EvaluationProcess = () => {
 export const Respond = (props: Props) => {
 	const onAccept = useCallback(async () => {
 		const result = await accept(props.instanceId, props.pub.id);
-		if (result.success) {
-			toast({
-				title: "Accepted",
-				description: "You will receive details about the evaluation by email.",
-			});
-		} else {
+		if (result?.error) {
 			toast({
 				title: "Error",
 				description: "There was an error accepting this submission.",
@@ -164,12 +156,7 @@ export const Respond = (props: Props) => {
 	}, []);
 	const onDecline = useCallback(async () => {
 		const result = await decline(props.instanceId, props.pub.id);
-		if (result.success) {
-			toast({
-				title: "Declined",
-				description: "You have declined to evaluate this submission.",
-			});
-		} else {
+		if (result?.error) {
 			toast({
 				title: "Error",
 				description: "There was an error declining this submission.",
@@ -203,66 +190,6 @@ export const Respond = (props: Props) => {
 		},
 		new Date(Date.now())
 	);
-	if (props.intent === "decline") {
-		const params = new URLSearchParams(window.location.search);
-		params.set("intent", "info");
-		const infoUrl = window.location.pathname + "?" + params.toString();
-		return (
-			<>
-				<p>
-					You have declined to evaluate{" "}
-					<a target="_blank" href={submissionUrl}>
-						"{submissionTitle}"
-					</a>{" "}
-					for{" "}
-					<a target="_blank" href="https://unjournal.org">
-						<em>The Unjournal</em>
-					</a>
-					. Thank you for considering our invitation.
-				</p>
-				<p>
-					You may read more about the research, and our evaluation process, on{" "}
-					<Link href={infoUrl}>this page</Link>—where you may also opt to accept or
-					request more information.
-				</p>
-				<h2>Feedback and suggested evaluators (optional)</h2>
-				<p>
-					We would also appreciate your suggestions for other potential evaluators for
-					this research. As a sign that we value this, if you suggest someone who ends up
-					evaluating this research (who was not already on our list), we will award you
-					$50. You can suggest potential evaluators in the form{" "}
-					<a
-						target="_blank"
-						href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
-					>
-						here
-					</a>
-					.
-				</p>
-				<p>
-					We are also eager to understand how to better recruit evaluators for The
-					Unjournal. In the same{" "}
-					<a
-						target="_blank"
-						href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
-					>
-						form
-					</a>
-					, you can also let us know why you decided not to accept this assignment, and
-					what might make this more attractive to you and others in the future. Again, to
-					signal that we value this, we will provide $50 awards for people who offer
-					advice that seems particularly useful. (We commit to offering at least one such
-					award for every five people submitting suggestions, not to exceed $50 in total
-					awards per month).
-				</p>
-				<p>
-					Alternatively, you can just send a{" "}
-					<a href="mailto:contact@unjournal.org">quick email</a> to let us know your
-					thoughts and suggestions.
-				</p>
-			</>
-		);
-	}
 
 	return (
 		<div className="prose max-w-none">
