@@ -142,32 +142,19 @@ resource "aws_lb" "main" {
   enable_deletion_protection = false
 }
 
-resource "aws_lb_target_group" "main" {
-  name        = "${var.name}-tg-${var.environment}"
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    path                = "/"
-    interval            = "30"
-    protocol            = "HTTP"
-    matcher             = "200,307"
-    timeout             = "5"
-    unhealthy_threshold = "3"
-    healthy_threshold   = "5"
-  }
-}
-
-resource "aws_lb_listener" "http" {
+resource "aws_lb_listener" "main" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.main.arn
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "not found"
+      status_code  = "404"
+    }
   }
 }
 

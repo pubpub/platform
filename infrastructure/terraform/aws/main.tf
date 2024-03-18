@@ -50,7 +50,15 @@ module "service_core" {
 
   repository_url = module.cluster.ecr_repository_urls.core
 
-  set_lb_target = true
+  listener = {
+    service_name = "core"
+    public = true
+    rule_path_pattern = "/*"
+    rule_priority = 100
+    from_port = 3000
+    to_port = 3000
+    protocol = "tcp"
+  }
 
   init_containers = [{
     name = "migrations"
@@ -128,8 +136,18 @@ module "service_flock" {
 
    repository_url = module.cluster.ecr_repository_urls.intg_submissions
 
+   listener = {
+     service_name = "submissions"
+     public = true
+     rule_path_pattern = "/intg/submissions/*"
+     # lower number means this will be evaluated BEFORE the catch-all to core.
+     rule_priority = 80
+     from_port = 10000
+     to_port = 10000
+     protocol = "tcp"
+   }
+
    configuration = {
-     container_port = 10000
      environment = [
        { name = "PUBPUB_URL", value = var.pubpub_url },
      ]
@@ -150,8 +168,18 @@ module "service_flock" {
 
    repository_url = module.cluster.ecr_repository_urls.intg_evaluations
 
+   listener = {
+     service_name = "evaluations"
+     public = true
+     rule_path_pattern = "/intg/evaluations/*"
+     # these may not be equal, so just set it adjacent to non-conflicting rule for submissions
+     rule_priority = 81
+     from_port = 10000
+     to_port = 10000
+     protocol = "tcp"
+   }
+
    configuration = {
-     container_port = 10000
      environment = [
        { name = "PUBPUB_URL", value = var.pubpub_url },
      ]
@@ -160,6 +188,30 @@ module "service_flock" {
        { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
        { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
        { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+     ]
+   }
+ }
+
+ module "service_scripts_exec" {
+   source = "./modules/container-generic"
+
+   service_name = "scripts_exec"
+   cluster_info = module.cluster.cluster_info
+
+   repository_url = module.cluster.ecr_repository_urls.root
+   # TODO: add command
+
+   configuration = {
+     environment = [
+       # { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+       { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
+       { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
+       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
+       { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
+     ]
+
+     secrets = [
+       { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
      ]
    }
  }

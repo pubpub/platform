@@ -29,6 +29,11 @@ RUN --mount=type=cache,target=/root/.npm \
 FROM base as monorepo
 ARG PACKAGE
 
+# install postgres utilities for scripts
+RUN apk add postgresql
+# if booting without a command, just sit and wait forever for a term signal
+CMD exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"
+
 # Copy the rest of the source files into the image.
 COPY . .
 

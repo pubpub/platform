@@ -18,6 +18,6 @@ output "cluster_info" {
     private_subnet_ids = aws_subnet.private.*.id
     container_security_group_ids = [aws_security_group.ecs_tasks.id]
     cloudwatch_log_group_name = aws_cloudwatch_log_group.ecs.name
-    lb_target_group_arn = aws_lb_target_group.main.arn
+    lb_listener_arn = aws_lb_listener.main.arn
   }
 }

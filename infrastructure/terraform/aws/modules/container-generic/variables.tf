@@ -10,7 +10,7 @@ variable "cluster_info" {
     private_subnet_ids = list(string)
     container_security_group_ids = list(string)
     cloudwatch_log_group_name = string
-    lb_target_group_arn = string
+    lb_listener_arn = string
   })
 }
 
@@ -37,12 +37,6 @@ variable "resources" {
   }
 }
 
-variable "set_lb_target" {
-  description = "whether this service is addressible from the main Load Balancer"
-  type = bool
-  default = false
-}
-
 variable "init_containers" {
   description = "list of init container specs to run before starting"
   type = list(object({
@@ -53,11 +47,32 @@ variable "init_containers" {
   default = []
 }
 
+variable "listener" {
+  description = "specification of the inbound network addressibility"
+  default = null
+
+  type = object({
+    service_name = string
+    # whether to expose this to inbound internet traffic
+    public = bool
+    # the path pattern for public routes from the ALB hostname
+    rule_path_pattern = string
+    # priority, in case this conflicts with other rules.
+    # lower numbers are evaluated first, so more specific
+    # should have lowest numbers.
+    # 100 is a good default when no collision is expected.
+    rule_priority = number
+
+    from_port = number
+    to_port = number
+    protocol = string
+  })
+}
+
 variable "configuration" {
   description = "Container configuration options"
 
   type = object({
-    container_port = number
 
     environment = list(object({
       name = string
