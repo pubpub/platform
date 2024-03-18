@@ -104,33 +104,31 @@ const EvaluationProcess = () => {
 				</a>
 				.
 			</p>
-			<p>
-				We ask evaluators to:
-				<ol>
-					<li>
-						Write an evaluation: essentially a high-quality referee report, considering{" "}
-						<a
-							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
-						>
-							The Unjournal's guidelines
-						</a>
-						. Please try to address any specific considerations mentioned in the
-						manager’s notes above, or any specific requests from the evaluation manager.
-					</li>
-					<li>
-						Give{" "}
-						<a
-							target="_blank"
-							href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
-						>
-							quantitative metrics and predictions
-						</a>
-						.
-					</li>
-					<li>Answer a short questionnaire about your background and our processes.</li>
-				</ol>
-			</p>
+			<p>We ask evaluators to:</p>
+			<ol>
+				<li>
+					Write an evaluation: essentially a high-quality referee report, considering{" "}
+					<a
+						target="_blank"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
+					>
+						The Unjournal's guidelines
+					</a>
+					. Please try to address any specific considerations mentioned in the manager’s
+					notes above, or any specific requests from the evaluation manager.
+				</li>
+				<li>
+					Give{" "}
+					<a
+						target="_blank"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
+					>
+						quantitative metrics and predictions
+					</a>
+					.
+				</li>
+				<li>Answer a short questionnaire about your background and our processes.</li>
+			</ol>
 			<p>
 				You can read the full guidelines{" "}
 				<a
@@ -148,12 +146,7 @@ const EvaluationProcess = () => {
 export const Respond = (props: Props) => {
 	const onAccept = useCallback(async () => {
 		const result = await accept(props.instanceId, props.pub.id);
-		if ("success" in result && result.success === false) {
-			toast({
-				title: "Already Accepted",
-				description: "You have already accepted this invitation.",
-			});
-		} else if (result.error) {
+		if (result?.error) {
 			toast({
 				title: "Error",
 				description: "There was an error accepting this submission.",
@@ -163,7 +156,7 @@ export const Respond = (props: Props) => {
 	}, []);
 	const onDecline = useCallback(async () => {
 		const result = await decline(props.instanceId, props.pub.id);
-		if (result.error) {
+		if (result?.error) {
 			toast({
 				title: "Error",
 				description: "There was an error declining this submission.",

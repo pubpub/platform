@@ -22,7 +22,14 @@ import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/ins
 import { cookie } from "~/lib/request";
 import { assertIsInvited } from "~/lib/types";
 
-export const accept = async (instanceId: string, pubId: string) => {
+type ErrorResult = {
+	error: string;
+};
+
+export const accept = async (
+	instanceId: string,
+	pubId: string
+): Promise<ErrorResult | undefined> => {
 	const redirectParams = `?token=${cookie("token")}&instanceId=${instanceId}&pubId=${pubId}`;
 	try {
 		const user = JSON.parse(expect(cookie("user")));
@@ -37,10 +44,7 @@ export const accept = async (instanceId: string, pubId: string) => {
 		);
 		// Accepting again is a no-op.
 		if (evaluator.status === "accepted" || evaluator.status === "received") {
-			return {
-				success: false,
-				message: "You have already accepted this invitation",
-			};
+			redirect(`/actions/respond/accepted${redirectParams}`);
 		}
 		// Assert the user is invited to evaluate this pub.
 		assertIsInvited(evaluator);
@@ -51,13 +55,7 @@ export const accept = async (instanceId: string, pubId: string) => {
 			status: "accepted",
 			acceptedAt: new Date().toString(),
 		};
-		const deadline = calculateDeadline(
-			{
-				deadlineLength: instanceConfig.deadlineLength,
-				deadlineUnit: instanceConfig.deadlineUnit,
-			},
-			new Date(evaluator.acceptedAt)
-		);
+		const deadline = calculateDeadline(instanceConfig, new Date(evaluator.acceptedAt));
 		evaluator.deadline = deadline;
 		await setInstanceState(instanceId, pubId, instanceState);
 		// Unschedule reminder email to evaluator.
@@ -99,7 +97,10 @@ export const accept = async (instanceId: string, pubId: string) => {
 	redirect(`/actions/respond/accepted${redirectParams}`);
 };
 
-export const decline = async (instanceId: string, pubId: string) => {
+export const decline = async (
+	instanceId: string,
+	pubId: string
+): Promise<ErrorResult | undefined> => {
 	const redirectParams = `?token=${cookie("token")}&instanceId=${instanceId}&pubId=${pubId}`;
 	try {
 		const user = JSON.parse(expect(cookie("user")));
