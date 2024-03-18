@@ -195,10 +195,10 @@ module "service_flock" {
    }
  }
 
- module "service_scripts_exec" {
+ module "service_bastion" {
    source = "./modules/container-generic"
 
-   service_name = "scripts_exec"
+   service_name = "bastion"
    cluster_info = module.cluster.cluster_info
 
    repository_url = module.cluster.ecr_repository_urls.root
@@ -216,6 +216,12 @@ module "service_flock" {
      secrets = [
        { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
      ]
+   }
+
+   resources = {
+     cpu = 1024
+     memory = 2048
+     desired_count = 1
    }
  }
 

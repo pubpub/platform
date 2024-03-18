@@ -31,7 +31,7 @@ FROM base as monorepo
 # install postgres utilities for scripts
 RUN apk add postgresql
 # if booting without a command, just sit and wait forever for a term signal
-CMD exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"
+CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 
 # Copy the rest of the source files into the image.
 COPY . .

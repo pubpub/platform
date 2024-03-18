@@ -3,50 +3,55 @@
 name: aws ecs deploy template
 
 on:
-    workflow_call:
-        inputs:
-            service: # example: core
-                required: true
-                type: string
-            proper-name: # example: blake
-                required: true
-                type: string
-            environment: # example: staging
-                required: true
-                type: string
-            image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
-                type: string # use this to force a container version.
-        secrets:
-            AWS_ACCESS_KEY_ID:
-                required: true
-            AWS_SECRET_ACCESS_KEY:
-                required: true
-    workflow_dispatch:
-        inputs:
-            service: # example: core
-                required: true
-                type: string
-            proper-name: # example: blake
-                required: true
-                type: string
-            environment: # example: staging
-                required: true
-                type: string
-            image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
-                type: string # use this to force a container version.
-        secrets:
-            AWS_ACCESS_KEY_ID:
-                required: true
-            AWS_SECRET_ACCESS_KEY:
-                required: true
+  workflow_call:
+    inputs:
+      service: # example: core
+        required: true
+        type: string
+      proper-name: # example: blake
+        required: true
+        type: string
+      environment: # example: staging
+        required: true
+        type: string
+      repo-name-override:
+        type: string
+      image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
+        type: string      # use this to force a container version.
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      service: # example: core
+        required: true
+        type: string
+      proper-name: # example: blake
+        required: true
+        type: string
+      environment: # example: staging
+        required: true
+        type: string
+      repo-name-override:
+        type: string
+      image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
+        type: string      # use this to force a container version.
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
 
 env:
-    AWS_REGION: us-east-1
-    ECR_REPOSITORY_PREFIX: pubpub-v7
-    ECS_SERVICE: ${{ inputs.proper-name }}-${{inputs.service}}
-    ECS_CLUSTER: ${{inputs.proper-name}}-ecs-cluster-${{inputs.environment}}
-    ECS_TASK_DEFINITION_TEMPLATE: ${{ inputs.proper-name }}-${{inputs.service}}
-    CONTAINER_NAME: ${{inputs.service}}
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_PREFIX: pubpub-v7
+  ECR_REPOSITORY_NAME_OVERRIDE: ${{ inputs.repo-name-override }}
+  ECS_SERVICE: ${{ inputs.proper-name }}-${{inputs.service}}
+  ECS_CLUSTER: ${{inputs.proper-name}}-ecs-cluster-${{inputs.environment}}
+  ECS_TASK_DEFINITION_TEMPLATE: ${{ inputs.proper-name }}-${{inputs.service}}
+  CONTAINER_NAME: ${{inputs.service}}
 
 jobs:
     deploy:
@@ -90,7 +95,7 @@ jobs:
                   ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
                   IMAGE_TAG: ${{ steps.gettag.outputs.tag }}
               run: |
-                  echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+                  echo "label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
                   echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
             - name: Fill in the new image ID in the Amazon ECS task definition
