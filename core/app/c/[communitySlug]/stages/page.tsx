@@ -1,21 +1,22 @@
+import { notFound } from "next/navigation";
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
-import { stageInclude } from "~/lib/types";
+import { getStageWorkflows, makeStagesById } from "~/lib/stages";
+import { communityMemberInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import StageList from "./components/StageList";
-import { getStageWorkflows, makeStagesById } from "~/lib/stages";
 
-const getCommunityStages = async (communitySlug: string) => {
-	const community = await prisma.community.findUnique({
+const getCommunityBySlug = async (communitySlug: string) => {
+	return await prisma.community.findUnique({
 		where: { slug: communitySlug },
-	});
-	if (!community) {
-		return null;
-	}
-	// When trying to render the workflows a member can see. We look at the pubs they can see, get the workflows associated, and then show all those.
-	return await prisma.stage.findMany({
-		where: { communityId: community.id },
-		include: stageInclude,
+		include: {
+			stages: {
+				include: stageInclude,
+			},
+			members: {
+				include: communityMemberInclude,
+			},
+		},
 	});
 };
 
@@ -26,21 +27,20 @@ export default async function Page({ params }: Props) {
 	if (!loginData) {
 		return null;
 	}
-	let token;
-	token = await createToken(loginData.id);
-	const stages = await getCommunityStages(params.communitySlug);
-	if (!stages) {
-		return null;
+	const community = await getCommunityBySlug(params.communitySlug);
+	if (!community) {
+		notFound();
 	}
-	const stageWorkflows = getStageWorkflows(stages);
-	const stageById = makeStagesById(stages);
+	const token = await createToken(loginData.id);
+	const stageWorkflows = getStageWorkflows(community.stages);
+	const stageById = makeStagesById(community.stages);
 	return (
 		<>
 			<div className="flex mb-16 justify-between items-center">
 				<h1 className="font-bold text-xl">Stages</h1>
-				{/* <Link href="stages/dashboard">Manage Stages</Link> */}
 			</div>
 			<StageList
+				members={community.members}
 				stageWorkflows={stageWorkflows}
 				stageById={stageById}
 				token={token}

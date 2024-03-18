@@ -9,6 +9,7 @@ import { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
+import MembersAvatars from "./MemberAvatar";
 
 type Props = {
 	pub: PubPayload;

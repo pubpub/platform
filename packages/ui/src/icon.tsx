@@ -1,5 +1,6 @@
 export {
 	Check,
+	ChevronsUpDown,
 	Download,
 	Loader2,
 	Plus,

@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-combobox.cjs.js",
+	"module": "dist/ui-combobox.esm.js"
+}
