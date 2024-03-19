@@ -112,24 +112,28 @@ resource "aws_security_group" "alb" {
 resource "aws_security_group" "ecs_tasks" {
   name = "${var.name}-sg-task-${var.environment}"
   vpc_id = aws_vpc.main.id
-
-  ingress {
-    protocol = "tcp"
-    from_port = var.container_ingress_port
-    to_port = var.container_ingress_port
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  egress {
-    protocol = "-1"
-    from_port = 0
-    to_port = 0
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
 }
 
+resource "aws_vpc_security_group_ingress_rule" "ecs_tasks_ingress_alb_all" {
+  security_group_id = aws_security_group.ecs_tasks.id
+  referenced_security_group_id = aws_security_group.alb.id
+
+  # allow ALB traffic on all ports. ALB defines access controls.
+  ip_protocol = -1
+}
+
+# allow all outbound traffic.
+resource "aws_vpc_security_group_egress_rule" "ecs_tasks_egress_ipv4" {
+  security_group_id = aws_security_group.ecs_tasks.id
+  cidr_ipv4 = "0.0.0.0/0"
+  ip_protocol = -1
+}
+
+resource "aws_vpc_security_group_egress_rule" "ecs_tasks_egress_ipv6" {
+  security_group_id = aws_security_group.ecs_tasks.id
+  cidr_ipv6 = "::/0"
+  ip_protocol = -1
+}
 
 # load balancer
 resource "aws_lb" "main" {

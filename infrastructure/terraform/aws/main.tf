@@ -29,7 +29,7 @@ module "cluster" {
   environment = var.environment
   region = var.region
 
-  container_ingress_port = 3000
+  container_ingress_port = 8080
 
   availability_zones = ["us-east-1a", "us-east-1c"]
 }
@@ -49,11 +49,12 @@ module "service_core" {
   cluster_info = module.cluster.cluster_info
 
   repository_url = module.cluster.ecr_repository_urls.core
+  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
 
   listener = {
     service_name = "core"
     public = true
-    rule_path_pattern = "/*"
+    path_prefix = "/"
     rule_priority = 100
     from_port = 3000
     to_port = 3000
@@ -138,11 +139,12 @@ module "service_flock" {
    cluster_info = module.cluster.cluster_info
 
    repository_url = module.cluster.ecr_repository_urls.intg_submissions
+  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
 
    listener = {
      service_name = "submissions"
      public = true
-     rule_path_pattern = "/intg/submissions/*"
+     path_prefix = "/intg/submissions/"
      # lower number means this will be evaluated BEFORE the catch-all to core.
      rule_priority = 80
      from_port = 10000
@@ -170,11 +172,12 @@ module "service_flock" {
    cluster_info = module.cluster.cluster_info
 
    repository_url = module.cluster.ecr_repository_urls.intg_evaluations
+  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
 
    listener = {
      service_name = "evaluations"
      public = true
-     rule_path_pattern = "/intg/evaluations/*"
+     path_prefix = "/intg/evaluations/"
      # these may not be equal, so just set it adjacent to non-conflicting rule for submissions
      rule_priority = 81
      from_port = 10000
@@ -220,7 +223,9 @@ module "service_flock" {
 
    resources = {
      cpu = 1024
-     memory = 2048
+     memory = 2048 # need slightly beefier machine for the bastion
+
+     # TODO: disable autoscaling, which makes no sense for a bastion
      desired_count = 1
    }
  }

@@ -11,6 +11,7 @@ variable "cluster_info" {
     container_security_group_ids = list(string)
     cloudwatch_log_group_name = string
     lb_listener_arn = string
+    # service_namespace_arn = string
   })
 }
 
@@ -20,6 +21,12 @@ variable "service_name" {
 
 variable "repository_url" {
   description = "url to the image repository (excluding tag)"
+  type = string
+}
+variable "nginx_image" {
+  description = "fully qualified nginx image to pull (including tag)"
+  type = string
+  default = null
 }
 
 variable "resources" {
@@ -55,8 +62,9 @@ variable "listener" {
     service_name = string
     # whether to expose this to inbound internet traffic
     public = bool
-    # the path pattern for public routes from the ALB hostname
-    rule_path_pattern = string
+    # the path prefix for public routes from the ALB hostname
+    # - MUST end in a slash.
+    path_prefix = string
     # priority, in case this conflicts with other rules.
     # lower numbers are evaluated first, so more specific
     # should have lowest numbers.
