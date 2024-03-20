@@ -2,11 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
 import { logger } from "logger";
+import { env } from "~/lib/env/env.mjs";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
 const prisma = new PrismaClient();
-const supabase = new SupabaseClient(supabaseUrl!, supabaseKey!);
+const supabase = new SupabaseClient(supabaseUrl, supabaseKey);
 
 async function createUserMembers(
 	email: string,

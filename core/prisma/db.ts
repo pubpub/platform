@@ -4,6 +4,7 @@
 */
 
 import { PrismaClient } from "@prisma/client";
+import { env } from "~/lib/env/env.mjs";
 
 const globalForPrisma = globalThis as unknown as {
 	prisma: PrismaClient | undefined;
@@ -15,6 +16,6 @@ const prisma =
 		// log: ["query"],
 	});
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default prisma;

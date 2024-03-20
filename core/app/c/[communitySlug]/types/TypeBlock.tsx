@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Button, Card, CardContent } from "ui";
+import { Button } from "ui/button";
+import { Card, CardContent } from "ui/card";
 import { TypesData } from "./page";
 
 type Props = { type: NonNullable<TypesData>[number] };

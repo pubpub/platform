@@ -1,6 +1,7 @@
 import { User } from "@pubpub/sdk";
 import { cookies, headers } from "next/headers";
-import { Toaster } from "ui";
+import { env } from "~/lib/env.mjs";
+import { Toaster } from "ui/toaster";
 import "ui/styles.css";
 import { expect } from "utils";
 import { Integration } from "~/lib/Integration";
@@ -41,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 			<body>
 				<Integration<InstanceConfig>
 					name="Submissions"
-					user={{ ...user, avatar: `${process.env.PUBPUB_URL}/${user.avatar}` }}
+					user={{ ...user, avatar: `${env.PUBPUB_URL}/${user.avatar}` }}
 					config={instanceConfig}
 				>
 					{children}

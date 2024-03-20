@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import React, { Fragment } from "react";
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui";
+import { Button } from "ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { cn } from "utils";
 import { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
+import MembersAvatars from "./MemberAvatar";
 
 type Props = {
 	pub: PubPayload;
@@ -48,7 +50,10 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 								<span className="text-gray-500 mr-2 font-semibold">
 									{group.pubType.name}
 								</span>
-								<Link href={`/pubs/${child.id}`} className="text-sm hover:underline">
+								<Link
+									href={`/pubs/${child.id}`}
+									className="text-sm hover:underline"
+								>
 									{getTitle(child)}
 								</Link>
 							</div>

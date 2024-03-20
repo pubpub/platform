@@ -3,6 +3,7 @@ import { captureException } from "@sentry/nextjs";
 import { logger } from "logger";
 import { NextRequest, NextResponse } from "next/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
+import { env } from "~/lib/env/env.mjs";
 import { BadRequestError, UnauthorizedError, handleErrors } from "~/lib/server/errors";
 import prisma from "~/prisma/db";
 
@@ -12,7 +13,7 @@ import prisma from "~/prisma/db";
 // For debugging, the responses sent by this handler are stored in supabase under net._http_response
 export async function POST(req: NextRequest) {
 	return await handleErrors(async () => {
-		const serverKey = process.env.SUPABASE_WEBHOOKS_API_KEY!;
+		const serverKey = env.SUPABASE_WEBHOOKS_API_KEY;
 		const authHeader = req.headers.get("authorization");
 		if (!authHeader) {
 			throw new UnauthorizedError("Authorization header missing");

@@ -37,14 +37,18 @@ export const getSuggestedMembers = async (
 		take: 10,
 		select: {
 			id: true,
+			email: true,
 			slug: true,
 			avatar: true,
 			firstName: true,
 			lastName: true,
+			supabaseId: true,
 		},
 	});
 	return members;
 };
+
+export type SuggestedUser = Awaited<ReturnType<typeof getSuggestedMembers>>[0];
 
 export const getMembers = async (userIds: string[]) => {
 	const members = await prisma.user.findMany({

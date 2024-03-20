@@ -2,10 +2,7 @@ import { AuthError, createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export let supabase: SupabaseClient;
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const publicKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY || "";
-
-export const createBrowserSupabase = () => {
+export const createBrowserSupabase = (url, publicKey) => {
 	supabase = createClient(url, publicKey, {
 		auth: {
 			autoRefreshToken: true,
@@ -14,4 +11,5 @@ export const createBrowserSupabase = () => {
 	});
 };
 
-export const formatSupabaseError = (error: AuthError) => `${error.name} ${error.status}: ${error.message}`
+export const formatSupabaseError = (error: AuthError) =>
+	`${error.name} ${error.status}: ${error.message}`;

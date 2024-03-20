@@ -7,6 +7,7 @@ import { getSupabaseId } from "lib/auth/loginId";
 import { BadRequestError, ForbiddenError, UnauthorizedError, handleErrors } from "~/lib/server";
 import { captureException } from "@sentry/nextjs";
 import { logger } from "logger";
+import { env } from "~/lib/env/env.mjs";
 
 export type UserPostBody = {
 	firstName: string;
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
 			email,
 			password,
 			options: {
-				emailRedirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/login`,
+				emailRedirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/login`,
 				data: {
 					firstName,
 					lastName,

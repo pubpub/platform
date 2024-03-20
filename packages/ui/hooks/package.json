@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-hooks.cjs.js",
+	"module": "dist/ui-hooks.esm.js"
+}

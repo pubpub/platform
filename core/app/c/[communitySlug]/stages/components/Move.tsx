@@ -1,12 +1,15 @@
 "use client";
-import { Button, Popover, PopoverContent, PopoverTrigger, useToast } from "ui";
+
+import { Button } from "ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { useToast } from "ui/use-toast";
 import { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
 import { move } from "./lib/actions";
 
 type Props = {
-	pub: PubPayload;
-	moveTo?: StagePayloadMoveConstraintDestination[];
 	moveFrom?: StagePayloadMoveConstraintDestination[];
+	moveTo?: StagePayloadMoveConstraintDestination[];
+	pub: PubPayload;
 	stage: StagePayload;
 };
 

@@ -26,11 +26,23 @@ resource "aws_secretsmanager_secret_version" "api_key" {
   secret_string = random_password.api_key.result
 }
 
+resource "aws_secretsmanager_secret" "honeycomb_api_key" {
+  name = "honeycombio-apikey-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+
+# N.B. since we have to tell terraform about this secret in order to
+#   configure the Honeycomb module, we might as well set it up automatically
+#   for Secrets Manager too. This pattern is not ideal design on the part of
+#   Honeycomb.
+resource "aws_secretsmanager_secret_version" "honeycomb_api_key" {
+  secret_id     = aws_secretsmanager_secret.honeycomb_api_key.id
+  secret_string = var.HONEYCOMB_API_KEY
+}
+
 # generate password and make it accessible through aws secrets manager
 resource "random_password" "rds_db_password" {
   length           = 16
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  special          = false
 }
 
 resource "aws_secretsmanager_secret" "rds_db_password" {
@@ -78,14 +90,71 @@ resource "aws_db_instance" "core_postgres" {
   password                    = random_password.rds_db_password.result
   parameter_group_name        = "default.postgres14"
   skip_final_snapshot         = true
+}
 
-  lifecycle {
-    ignore_changes = [
-       password,
-    ]
-  }
+# see https://github.com/terraform-aws-modules/terraform-aws-s3-bucket/tree/v4.1.0
+module "assets_bucket" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "~> 4.0"
+
+  block_public_acls = false
+  bucket        = var.assets_bucket_url_name
+  acl = "public-read"
+}
+
+# TODO: replace this with a role-based system for ECS containers
+resource "aws_iam_user" "asset_uploader" {
+  name = "${var.cluster_info.name}-${var.cluster_info.environment}-asset-uploader"
+  path = "/"
+}
+
+resource "aws_iam_access_key" "asset_uploader" {
+  user = aws_iam_user.asset_uploader.name
 }
 
 
-### TODO : add Sentry? other stuff?
+resource "aws_iam_policy" "asset_uploads" {
+  name = "${var.cluster_info.name}-${var.cluster_info.environment}-asset-uploader"
+  description = "Allow "
+  policy      = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "s3:PutObject"
+        Resource = "${module.assets_bucket.s3_bucket_arn}/*"
+      }
+    ]
+  })
+}
 
+resource "aws_iam_user_policy_attachment" "attachment_asset_uploader" {
+  user       = aws_iam_user.asset_uploader.name
+  policy_arn = aws_iam_policy.asset_uploads.arn
+}
+
+resource "aws_secretsmanager_secret" "uploader_iam_secret_key" {
+  name = "asset-uploader-secret-key-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+
+resource "aws_secretsmanager_secret_version" "uploader_iam_secret_key" {
+  secret_id     = aws_secretsmanager_secret.uploader_iam_secret_key.id
+  secret_string = aws_iam_access_key.asset_uploader.secret
+}
+
+## Secrets that must be put into AWS Secrets manager by hand
+resource "aws_secretsmanager_secret" "jwt_secret" {
+  name = "jwt-secret-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "sentry_auth_token" {
+  name = "sentry-auth-token-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "supabase_service_role_key" {
+  name = "supabase-service-role-key-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "supabase_webhooks_api_key" {
+  name = "supabase-webhooks-api-key-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+resource "aws_secretsmanager_secret" "mailgun_smtp_password" {
+  name = "mailgun-smtp-password-${var.cluster_info.name}-${var.cluster_info.environment}"
+}

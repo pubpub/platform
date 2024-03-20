@@ -17,7 +17,6 @@ resource "aws_ecr_repository" "pubpub_v7_core" {
   }
 }
 
-# TODO: integrations may want to be one image alone ...?
 resource "aws_ecr_repository" "pubpub_v7_intg_submissions" {
   name                 = "pubpub-v7-integration-submissions"
   image_tag_mutability = "MUTABLE"

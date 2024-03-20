@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { Button } from "ui/button";
 import {
-	Button,
 	Form,
 	FormControl,
 	FormDescription,
@@ -11,16 +11,12 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-	Icon,
-	Input,
-	useToast,
-	Card,
-	CardHeader,
-	CardFooter,
-	CardContent,
-	CardTitle,
-	CardDescription,
-} from "ui";
+} from "ui/form";
+import { Loader2 } from "ui/icon";
+import { Input } from "ui/input";
+import { useToast } from "ui/use-toast";
+import { Card, CardHeader, CardFooter, CardContent, CardTitle, CardDescription } from "ui/card";
+
 import { cn } from "utils";
 import * as z from "zod";
 import { configure } from "./actions";
@@ -104,7 +100,7 @@ export function Configure(props: Props) {
 						<Button type="submit" disabled={!form.formState.isValid}>
 							Configure
 							{form.formState.isSubmitting && (
-								<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
+								<Loader2 className="h-4 w-4 ml-4 animate-spin" />
 							)}
 						</Button>
 					</CardFooter>

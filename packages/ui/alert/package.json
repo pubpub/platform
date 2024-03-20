@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-alert.cjs.js",
+	"module": "dist/ui-alert.esm.js"
+}

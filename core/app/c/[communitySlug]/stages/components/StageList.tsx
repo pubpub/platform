@@ -2,18 +2,19 @@
 
 import Link from "next/link";
 import { Fragment } from "react";
-import { Button } from "ui";
+import { Button } from "ui/button";
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
-import { StagesById, StagePayload, UserLoginData } from "~/lib/types";
-import { StagePubActions } from "./StagePubActions";
 import { moveConstraintSourcesForStage } from "~/lib/stages";
+import { CommunityMemberPayload, StagePayload, StagesById, UserLoginData } from "~/lib/types";
+import { StagePubActions } from "./StagePubActions";
 
 type Props = {
-	stageWorkflows: StagePayload[][];
-	stageById: StagesById;
-	token: string;
 	loginData: UserLoginData;
+	members: CommunityMemberPayload[];
+	stageById: StagesById;
+	stageWorkflows: StagePayload[][];
+	token: string;
 };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
@@ -26,6 +27,8 @@ function StageList(props: Props) {
 						<div>
 							{stages.map((stage) => {
 								const users = getPubUsers(stage.permissions);
+								// users should be just member but these are users
+
 								const sources = moveConstraintSourcesForStage(
 									stage,
 									props.stageById
@@ -90,12 +93,12 @@ function StageList(props: Props) {
 														actions={
 															<StagePubActions
 																key={stage.id}
+																loginData={props.loginData}
+																members={props.members}
+																moveFrom={sources}
+																moveTo={destinations}
 																pub={pub}
 																stage={stage}
-																users={users}
-																loginData={props.loginData}
-																moveTo={destinations}
-																moveFrom={sources}
 															/>
 														}
 													/>

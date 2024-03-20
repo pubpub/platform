@@ -1,7 +1,9 @@
 "use client";
 
 import NextLink from "next/link";
-import { Button, Card, CardContent, CardHeader } from "ui";
+
+import { Button } from "ui/button";
+import { Card, CardContent, CardHeader } from "ui/card";
 import { IntegrationData } from "./page";
 import { Row, RowContent, RowFooter } from "~/app/components/Row";
 
@@ -47,7 +49,7 @@ const IntegrationList: React.FC<Props> = function ({ instances, token }) {
 								<div className="mt-4">
 									{instance.pubs.map((pub) => {
 										return (
-											<div className="text-sm">
+											<div key={pub.id} className="text-sm">
 												Attached to pub:{" "}
 												<span className="font-bold">{getTitle(pub)}</span>
 											</div>

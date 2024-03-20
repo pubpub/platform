@@ -1,5 +1,6 @@
 export {
 	Check,
+	ChevronsUpDown,
 	Download,
 	Loader2,
 	Plus,
@@ -15,4 +16,8 @@ export {
 	CircleDollarSign,
 	XCircle,
 	BadgeCheck,
+	UserPlus,
+	Trash,
+	MoreVertical,
+	Search,
 } from "lucide-react";

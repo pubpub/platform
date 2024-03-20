@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { Button } from "ui/button";
 import {
-	Button,
 	Form,
 	FormControl,
 	FormDescription,
@@ -9,9 +9,9 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-	Icon,
-	Input,
-} from "ui";
+} from "ui/form";
+import * as Icon from "ui/icon";
+import { Input } from "ui/input";
 import { assert } from "utils";
 import { StageFormSchema } from "~/lib/stages";
 import { StagePayload, StagesById, DeepPartial } from "~/lib/types";

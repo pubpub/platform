@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-tooltip.cjs.js",
+	"module": "dist/ui-tooltip.esm.js"
+}

@@ -1,21 +1,14 @@
 import { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import { AnySchema, JSONSchemaType } from "ajv";
 import Link from "next/link";
-import {
-	Avatar,
-	AvatarFallback,
-	AvatarImage,
-	Button,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-	Separator,
-} from "ui";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Button } from "ui/button";
+import { CardContent, CardHeader, CardTitle } from "ui/card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
+import { Separator } from "ui/separator";
 
 import IntegrationActions from "~/app/components/IntegrationActions";
+import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
 import cn from "~/lib/cn";
@@ -180,7 +173,7 @@ export default async function Page({
 							);
 						})}
 				</div>
-				<div className="h-100% p-2 bg-gray-50 min-w-[250px] shadow-inner flex flex-col font-semibold p-4">
+				<div className="h-100% p-2 bg-gray-50 min-w-[250px] shadow-inner flex flex-col font-semibold">
 					<div className="pb-3">
 						{/* TODO: build workflow as series of move constraints? */}
 						<div>Current Stage</div>
@@ -190,6 +183,7 @@ export default async function Page({
 							})}
 						</div>
 					</div>
+					<MembersAvatars pub={pub} />
 					<div className="pb-3">
 						<div>Integrations</div>
 						<div>

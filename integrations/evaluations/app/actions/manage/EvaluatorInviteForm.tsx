@@ -4,21 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { GetPubResponseBody } from "@pubpub/sdk";
 import React, { useCallback } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import {
-	Button,
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-	Form,
-	FormDescription,
-	FormItem,
-	FormLabel,
-	Icon,
-	useToast,
-} from "ui";
 import { cn } from "utils";
 import { EmailTemplate, Evaluator, InstanceConfig, hasUser, isInvited, isSaved } from "~/lib/types";
 import { EvaluatorInviteFormInviteButton } from "./EvaluatorInviteFormInviteButton";
@@ -26,6 +11,11 @@ import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
 import { InviteFormEvaluator, InviteFormSchema } from "./types";
+import { useToast } from "ui/use-toast";
+import { Form, FormDescription, FormItem, FormLabel } from "ui/form";
+import { Button } from "ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Loader2, Plus } from "ui/icon";
 
 type Props = {
 	evaluators: Evaluator[];
@@ -223,7 +213,7 @@ export function EvaluatorInviteForm(props: Props) {
 						/>
 					))}
 					<Button variant="ghost" onClick={onAppend} className="color:red-500">
-						<Icon.Plus className="h-4 w-4 mr-2" />
+						<Plus className="h-4 w-4 mr-2" />
 						Add Evaluator
 					</Button>
 				</CardContent>
@@ -235,7 +225,7 @@ export function EvaluatorInviteForm(props: Props) {
 					</div>
 					<div className="flex gap-2 items-center">
 						{form.formState.isSubmitting && (
-							<Icon.Loader2 className="h-4 w-4 mr-2 animate-spin" />
+							<Loader2 className="h-4 w-4 mr-2 animate-spin" />
 						)}
 						<EvaluatorInviteFormInviteButton
 							onClick={form.handleSubmit((values) => onSubmit(values, true))}
