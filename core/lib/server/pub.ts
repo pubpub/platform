@@ -156,18 +156,6 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	return nestChildren(pub);
 };
 
-export const pubValuesInclude = {
-	values: {
-		distinct: ["fieldId"],
-		orderBy: { createdAt: "desc" },
-		include: {
-			field: {
-				select: { slug: true },
-			},
-		},
-	},
-} satisfies Prisma.PubInclude;
-
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
