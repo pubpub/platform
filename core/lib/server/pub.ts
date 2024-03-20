@@ -5,7 +5,7 @@ import {
 	GetPubTypeResponseBody,
 	JsonValue,
 } from "contracts";
-import { ExpressionBuilder, SelectExpression, SelectQueryBuilder, StringReference } from "kysely";
+import { ExpressionBuilder, SelectExpression, StringReference, sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { expect } from "utils";
 import { db } from "~/kysely/database";
@@ -41,41 +41,51 @@ type FlatPub = PubNoChildren & {
 // pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parent_id or _PubToStage.A
 // It doesn't seem to work if you've aliased the table or column (although you can probably work around that with a cast)
 export const pubValuesByRef = (pubIdRef: StringReference<Database, keyof Database>) => {
-	return (eb: ExpressionBuilder<Database, keyof Database>) =>
-		eb
-			.selectFrom("pub_values")
-			.whereRef("pub_values.pub_id", "=", eb.ref(pubIdRef))
-			.$call(pubValues);
+	return (eb: ExpressionBuilder<Database, keyof Database>) => pubValues(eb, { pubIdRef });
 };
 
 // pubValuesByVal does the same thing as pubDataByRef but takes an actual pubId rather than reference to a column
 export const pubValuesByVal = (pubId: PubsId) => {
-	return (eb: ExpressionBuilder<Database, keyof Database>) =>
-		eb.selectFrom("pub_values").where("pub_values.pub_id", "=", pubId).$call(pubValues);
+	return (eb: ExpressionBuilder<Database, keyof Database>) => pubValues(eb, { pubId });
 };
 
 // pubValues is the shared logic between pubValuesByRef and pubValuesByVal which handles getting the
 // most recent pub field entries (since the table is append-only) and aggregating the pub_fields and
 // pub_values rows into a single {"slug": "value"} JSON object
-const pubValues = (qb: SelectQueryBuilder<Database, keyof Database, {}>) => {
-	return qb
-		.distinctOn(["pub_values.field_id"])
-		.groupBy(["pub_values.field_id", "pub_values.created_at"])
-		.orderBy(["pub_values.field_id", "pub_values.created_at desc"])
-		.leftJoinLateral(
-			(qb) => qb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
-			(join) => join.onRef("fields.id", "=", "pub_values.field_id")
-		)
-		.select((eb) => {
-			return (
-				eb.fn
-					// Use the postgres function json_object_agg to make a json object of pub values
-					// keyed by field slugs
-					.agg<PubValues>("json_object_agg", ["fields.slug", "pub_values.value"])
-					.as("values")
-			);
-		})
-		.as("values");
+const pubValues = (
+	eb: ExpressionBuilder<Database, keyof Database>,
+	{
+		pubId,
+		pubIdRef,
+	}: {
+		pubId?: PubsId;
+		pubIdRef?: StringReference<Database, keyof Database>;
+	}
+) => {
+	const { ref } = db.dynamic;
+
+	const alias = "latest_values";
+	// Although kysely has selectNoFrom, this kind of query can't be generated without using raw sql
+	const jsonObjAgg = (subquery) =>
+		sql<PubValues>`(select json_object_agg(${sql.ref(alias)}.slug, ${sql.ref(
+			alias
+		)}.value) from ${subquery})`;
+
+	return jsonObjAgg(
+		eb
+			.selectFrom("pub_values")
+			.distinctOn("pub_values.field_id")
+			.selectAll("pub_values")
+			.select("slug")
+			.leftJoinLateral(
+				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
+				(join) => join.onRef("fields.id", "=", "pub_values.field_id")
+			)
+			.orderBy(["pub_values.field_id", "pub_values.created_at desc"])
+			.$if(!!pubId, (qb) => qb.where("pub_values.pub_id", "=", pubId!))
+			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pub_id", "=", ref(pubIdRef!)))
+			.as(alias)
+	).as("values");
 };
 
 // Converts a pub from having all its children (regardless of depth) in a flat array to a tree
