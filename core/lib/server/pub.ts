@@ -111,14 +111,15 @@ const withPubChildren = ({
 	return db.withRecursive("children", (qc) => {
 		return qc
 			.selectFrom("pubs")
+			.select(["id", "parent_id"])
 			.select(pubValuesByRef("pubs.id"))
 			.$if(!!pubId, (qb) => qb.where("pubs.parent_id", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parent_id", "=", ref(pubIdRef!)))
-					.innerJoin("pubs", "pubs.parent_id as parentId", "children.id")
-					.select(["pubs.id", "pubs.parent_id as parentId"])
 			.unionAll((eb) => {
 				return eb
 					.selectFrom("children")
+					.innerJoin("pubs", "pubs.parent_id", "children.id")
+					.select(["pubs.id", "pubs.parent_id"])
 					.select(pubValuesByRef("pubs.id"));
 			});
 	});
