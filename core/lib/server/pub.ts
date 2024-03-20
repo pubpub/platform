@@ -54,46 +54,47 @@ export const pubValuesByVal = (pubId: PubsId) => {
 		eb.selectFrom("pub_values").where("pub_values.pub_id", "=", pubId).$call(pubValues);
 };
 
-// pubValues is the shared
+// pubValues is the shared logic between pubValuesByRef and pubValuesByVal which handles getting the
+// most recent pub field entries (since the table is append-only) and aggregating the pub_fields and
+// pub_values rows into a single {"slug": "value"} JSON object
 const pubValues = (qb: SelectQueryBuilder<Database, keyof Database, {}>) => {
-	return (
-		qb
-			.innerJoin("pub_fields", "pub_fields.id", "pub_values.field_id")
-			// distinct on field_id plus sorting by created at means we only select the most recent
-			// values
-			.distinctOn("pub_values.field_id")
-			.orderBy("pub_values.created_at desc")
-			.select(({ fn }) => {
-				return (
-					fn
-						// Use the postgres function json_object_agg to make a json object of pub values
-						// keyed by field slugs
-						.agg<PubValues>("json_object_agg", ["pub_fields.slug", "pub_values.value"])
-						.as("values")
-				);
-			})
-			.as("values")
-	);
+	return qb
+		.distinctOn(["pub_values.field_id"])
+		.groupBy(["pub_values.field_id", "pub_values.created_at"])
+		.orderBy(["pub_values.field_id", "pub_values.created_at desc"])
+		.leftJoinLateral(
+			(qb) => qb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
+			(join) => join.onRef("fields.id", "=", "pub_values.field_id")
+		)
+		.select((eb) => {
+			return (
+				eb.fn
+					// Use the postgres function json_object_agg to make a json object of pub values
+					// keyed by field slugs
+					.agg<PubValues>("json_object_agg", ["fields.slug", "pub_values.value"])
+					.as("values")
+			);
+		})
+		.as("values");
 };
 
 // Converts a pub from having all its children (regardless of depth) in a flat array to a tree
-// structure
+// structure. Assumes that pub.children are ordered by depth (leaves last)
 const nestChildren = (pub: FlatPub): NestedPub => {
-	const pubs = pub.children.reduce<Record<PubsId, NestedPub>>((acc, curr) => {
-		acc[curr.id] = { ...curr, children: [] };
-		return acc;
-	}, {});
+	const pubList = [pub, ...pub.children];
+	const pubsMap = new Map();
+	pubList.forEach((pub) => pubsMap.set(pub.id, { ...pub, children: [] }));
 
-	const nestedChildren: NestedPub[] = [];
-
-	for (const child of pub.children) {
-		if (child.parentId) {
-			pubs[child.parentId].children.push({ ...child, children: [] });
-		} else {
-			nestedChildren.push({ ...child, children: [] });
+	pubList.forEach((pub) => {
+		if (pub.parentId) {
+			const parent = pubsMap.get(pub.parentId);
+			if (parent) {
+				parent.children.push(pubsMap.get(pub.id));
+			}
 		}
-	}
-	return { ...pub, children: nestedChildren };
+	});
+
+	return pubsMap.get(pub.id);
 };
 
 // TODO: make this usable in a subquery, possibly by turning it into a view
