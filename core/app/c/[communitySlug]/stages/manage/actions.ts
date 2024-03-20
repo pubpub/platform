@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import db from "~/prisma/db";
 
 export async function createStage(communityId: string) {
@@ -117,4 +118,12 @@ export async function updateStageName(communityId: string, stageId: string, name
 
 export async function revalidateStages(communityId: string) {
 	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function editStage(communitySlug: string, stageId?: string) {
+	redirect(
+		stageId
+			? `/c/${communitySlug}/stages/manage?editingStageId=${stageId}`
+			: `/c/${communitySlug}/stages/manage`
+	);
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { useReactFlow } from "reactflow";
 import { useStages } from "./StagesContext";

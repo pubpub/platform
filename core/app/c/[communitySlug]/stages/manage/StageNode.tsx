@@ -13,7 +13,7 @@ export const STAGE_NODE_HEIGHT = 50;
 export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 	const { updateStageName } = useStages();
 	const { editStage } = useStageEditor();
-	const [isEditing, setIsEditing] = useState(false);
+	const [isEditingName, setIsEditingName] = useState(false);
 	const memberships = useMemo(
 		() =>
 			props.data.stage.permissions.reduce((acc, permission) => {
@@ -40,7 +40,7 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 	);
 
 	const onDoubleClick = useCallback(() => {
-		setIsEditing(true);
+		setIsEditingName(true);
 		if (nameRef.current) {
 			const range = document.createRange();
 			const selection = window.getSelection()!;
@@ -54,22 +54,22 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 
 	const onKeyDown = useCallback(
 		(e: KeyboardEvent) => {
-			if (isEditing && e.key === "Enter") {
+			if (isEditingName && e.key === "Enter") {
 				nameRef.current?.blur();
 			}
 		},
-		[isEditing]
+		[isEditingName]
 	);
 
 	const onBlur = useCallback(() => {
-		if (isEditing) {
+		if (isEditingName) {
 			window.getSelection()?.removeAllRanges();
 			if (nameRef.current) {
 				updateStageName(props.data.stage.id, nameRef.current.textContent!);
 			}
-			setIsEditing(false);
+			setIsEditingName(false);
 		}
-	}, [isEditing]);
+	}, [isEditingName]);
 
 	return (
 		<div
