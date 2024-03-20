@@ -18,31 +18,31 @@ export const getCommunityStages = async (communitySlug: string) => {
 	const stages = await db
 		.selectFrom("stages")
 		.where("community_id", "=", community.id)
-		.select(({ selectFrom }) =>
+		.select((eb) =>
 			jsonArrayFrom(
-				selectFrom("move_constraint")
+				eb.selectFrom("move_constraint")
 					.whereRef("move_constraint.stage_id", "=", "stages.id")
 					.selectAll()
 			).as("move_constraints")
 		)
-		.select(({ selectFrom }) =>
+		.select((eb) =>
 			jsonArrayFrom(
-				selectFrom("move_constraint")
+				eb.selectFrom("move_constraint")
 					.whereRef("move_constraint.destination_id", "=", "stages.id")
 					.selectAll()
 			).as("move_constraint_sources")
 		)
-		.select(({ selectFrom }) =>
+		.select((eb) =>
 			jsonArrayFrom(
-				selectFrom("_PubToStage")
+				eb.selectFrom("_PubToStage")
 					.select("_PubToStage.A as pubId")
 					.whereRef("_PubToStage.B", "=", "stages.id")
-					.select(pubValuesByRef("_PubToStage.A"))
+					.select(pubValuesByRef("pubId" as ))
 			).as("pubs")
 		)
-		.select(({ selectFrom }) =>
+		.select((eb) =>
 			jsonArrayFrom(
-				selectFrom("integration_instances")
+				eb.selectFrom("integration_instances")
 					.whereRef("integration_instances.stage_id", "=", "stages.id")
 					.innerJoin(
 						"integrations",
