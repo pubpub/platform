@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "logger";
 import React, { useState, FormEvent } from "react";
 import { Button } from "ui/button";
 import { UserPostBody } from "~/lib/types";
@@ -31,7 +32,7 @@ export default function SignupForm() {
 		if (!response.ok) {
 			setIsLoading(false);
 			const { message } = await response.json();
-			console.error(message);
+			logger.error(message);
 		} else {
 			setIsLoading(false);
 			setSignupComplete(true);
