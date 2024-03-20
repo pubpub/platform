@@ -3,7 +3,6 @@ import "ui/styles.css";
 import InitClient from "./InitClient";
 import { PublicEnvProvider } from "next-runtime-env";
 import "./globals.css";
-import { logger } from "logger";
 
 export const metadata = {
 	title: "PubPub v7",
@@ -11,7 +10,6 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-	logger.info("RootLayout");
 	return (
 		<html lang="en">
 			<body>
