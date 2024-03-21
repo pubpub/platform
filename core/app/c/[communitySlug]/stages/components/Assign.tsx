@@ -41,7 +41,7 @@ export default function Assign(props: Props) {
 	const { toast } = useToast();
 	const [open, setOpen] = React.useState(false);
 	const [selectedUserId, setSelectedUserId] = React.useState<string | undefined>(
-		props.pub.claims[0]?.user.id
+		props.pub.assigneeId ?? undefined
 	);
 	const title = useMemo(() => getTitle(props.pub), [props.pub]);
 	const users = useMemo(() => props.members.map((member) => member.user), [props.members]);
@@ -51,8 +51,8 @@ export default function Assign(props: Props) {
 	);
 
 	const onAssign = useCallback(
-		async (pubId: string, stageId: string, userId?: string) => {
-			const error = await assign(pubId, stageId, userId);
+		async (pubId: string, userId?: string) => {
+			const error = await assign(pubId, userId);
 			if (error) {
 				toast({
 					title: "Error",
@@ -91,10 +91,10 @@ export default function Assign(props: Props) {
 		(value: string) => {
 			const userId = value === selectedUserId ? undefined : value;
 			setSelectedUserId(userId);
-			onAssign(props.pub.id, props.stage.id, userId);
+			onAssign(props.pub.id, userId);
 			setOpen(false);
 		},
-		[selectedUserId, props.pub.id, props.stage.id, onAssign]
+		[selectedUserId, props.pub.id, onAssign]
 	);
 
 	return (

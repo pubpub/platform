@@ -87,14 +87,30 @@ const makeProxy = <T extends Record<string, unknown>>(obj: T, prefix: string) =>
 
 const pubInclude = {
 	...pubValuesInclude,
+	assignee: {
+		select: {
+			id: true,
+			slug: true,
+			avatar: true,
+			firstName: true,
+			lastName: true,
+		},
+	},
 } satisfies Prisma.PubInclude;
-type EmailTemplatePub = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
+
+type EmailTemplatePub = {
+	id: string;
+	pubTypeId: string;
+	values: Record<string, Prisma.JsonValue>;
+	assignee: Prisma.UserGetPayload<(typeof pubInclude)["assignee"]> | null;
+};
 
 const userSelect = {
 	firstName: true,
 	lastName: true,
 	email: true,
 } satisfies Prisma.UserSelect;
+
 type EmailTemplateUser = Prisma.UserGetPayload<{ select: typeof userSelect }>;
 
 const makeTemplateApi = async (
@@ -111,7 +127,7 @@ const makeTemplateApi = async (
 	);
 	// TODO: Batch these calls using prisma.findMany() or equivalent.
 	// Load included pubs.
-	const pubs: { [pubId: string]: GetPubResponseBodyBase } = {};
+	const pubs: { [pubId: string]: EmailTemplatePub } = {};
 	if (body.include?.pubs) {
 		for (const pubAlias in body.include.pubs) {
 			const pubId = body.include.pubs[pubAlias];
@@ -127,6 +143,7 @@ const makeTemplateApi = async (
 						prev[curr.field.slug] = curr.value;
 						return prev;
 					}, {} as Record<string, Prisma.JsonValue>),
+					assignee: pub.assignee,
 				};
 			}
 		}

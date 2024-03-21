@@ -9,6 +9,7 @@ export const SafeUser = z.object({
 	firstName: z.string(),
 	lastName: z.string().nullable(),
 	avatar: z.string().nullable(),
+	createdAt: z.date(),
 });
 export type SafeUser = z.infer<typeof SafeUser>;
 

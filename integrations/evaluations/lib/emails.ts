@@ -9,6 +9,11 @@ import {
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
 
+// Use the submission pub's assigned user if available, otherwise use the
+// invitor's (person who clicked "Invite") name.
+const evaluationManagerName =
+	"{{pubs.submission.assignee?.firstName??users.invitor.firstName}} {{pubs.submission.assignee?.lastName??users.invitor.lastName}}";
+
 /**
  * Reaturns a new date object with the deadline calculated based on the deadlineLength and deadlineUnit.
  * @param deadline
@@ -375,7 +380,7 @@ export const scheduleInvitationReminderEmail = async (
 			to: {
 				userId: evaluator.userId,
 			},
-			subject: `Reminder: {{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
+			subject: `Reminder: ${evaluationManagerName} invited you to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
 			message: evaluator.emailTemplate.message,
 			include: {
 				users: {
@@ -444,7 +449,7 @@ export const sendAcceptedEmail = async (
 		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 		<p>Thank you again for your important contribution to the future of science.</p>
 		<p>Thanks and best wishes,</p>
-		<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+		<p>${evaluationManagerName}</p>
 		<p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 		include: {
 			pubs: {
@@ -498,7 +503,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -550,7 +555,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -604,7 +609,7 @@ export const scheduleEvaluationReminderEmail = async (
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -653,7 +658,7 @@ export const scheduleFinalEvaluationReminderEmail = async (
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -705,7 +710,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -757,7 +762,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
