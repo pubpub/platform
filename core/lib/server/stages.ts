@@ -1,6 +1,8 @@
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { pubValuesByRef } from "./pub";
 import { db } from "~/kysely/database";
+import Database from "~/kysely/types/Database";
+import { StringReference } from "kysely";
 
 // TODO: Finish making this output match the type of getCommunityStages in
 // core/app/c/[communitySlug]/stages/page.tsx (add pub children and other missing joins)
@@ -20,29 +22,33 @@ export const getCommunityStages = async (communitySlug: string) => {
 		.where("community_id", "=", community.id)
 		.select((eb) =>
 			jsonArrayFrom(
-				eb.selectFrom("move_constraint")
+				eb
+					.selectFrom("move_constraint")
 					.whereRef("move_constraint.stage_id", "=", "stages.id")
 					.selectAll()
 			).as("move_constraints")
 		)
 		.select((eb) =>
 			jsonArrayFrom(
-				eb.selectFrom("move_constraint")
+				eb
+					.selectFrom("move_constraint")
 					.whereRef("move_constraint.destination_id", "=", "stages.id")
 					.selectAll()
 			).as("move_constraint_sources")
 		)
 		.select((eb) =>
 			jsonArrayFrom(
-				eb.selectFrom("_PubToStage")
+				eb
+					.selectFrom("_PubToStage")
 					.select("_PubToStage.A as pubId")
 					.whereRef("_PubToStage.B", "=", "stages.id")
-					.select(pubValuesByRef("pubId" as ))
+					.select(pubValuesByRef("pubId" as StringReference<Database, keyof Database>))
 			).as("pubs")
 		)
 		.select((eb) =>
 			jsonArrayFrom(
-				eb.selectFrom("integration_instances")
+				eb
+					.selectFrom("integration_instances")
 					.whereRef("integration_instances.stage_id", "=", "stages.id")
 					.innerJoin(
 						"integrations",
