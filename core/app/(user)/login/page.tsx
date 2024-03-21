@@ -3,6 +3,7 @@ import LoginForm from "./LoginForm";
 import { getLoginData } from "~/lib/auth/loginData";
 import { redirect } from "next/navigation";
 import prisma from "~/prisma/db";
+import { logger } from "logger";
 
 export default async function Login() {
 	const loginData = await getLoginData();
@@ -25,7 +26,7 @@ export default async function Login() {
 				redirect("/settings");
 			}
 		} catch {
-			console.log("Not able to redirect user");
+			logger.warn("Not able to redirect user");
 		}
 	}
 	return (

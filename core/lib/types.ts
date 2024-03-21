@@ -60,15 +60,7 @@ export const pubInclude = {
 		},
 	},
 	integrationInstances: { include: { integration: true } },
-	community: {
-		include: {
-			members: {
-				include: {
-					user: true,
-				},
-			},
-		},
-	},
+	claims: { include: { user: true } },
 	children: {
 		...makeRecursiveInclude(
 			"children",
@@ -100,13 +92,22 @@ type User = {
 export type UserPostBody = Pick<User, "firstName" | "lastName" | "email" | "password">;
 export type UserPutBody = Pick<User, "firstName" | "lastName">;
 export type UserLoginData = Omit<User, "password">;
-export type UserSettings = Pick<User, "firstName" | "lastName" | "email" | "slug"> & {
+export type UserSetting = Pick<User, "firstName" | "lastName" | "email" | "slug"> & {
 	communities: Community[];
 };
 
 export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof permissionInclude }>;
 
 export type PermissionPayloadUser = NonNullable<PermissionPayload["member"]>["user"];
+export type PermissionPayloadMember = NonNullable<PermissionPayload["member"]>;
+
+export const communityMemberInclude = {
+	user: true,
+};
+
+export type CommunityMemberPayload = Prisma.MemberGetPayload<{
+	include: typeof communityMemberInclude;
+}>;
 
 export const stageInclude = {
 	pubs: { include: pubInclude },

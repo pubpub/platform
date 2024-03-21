@@ -110,6 +110,7 @@ export function Evaluate(props: Props) {
 	const submissionUrl = pub.values["unjournal:url"] as string;
 	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
 	const submissionAbstract = pub.values["unjournal:description"] as string;
+	const managersNotes = pub.values["unjournal:managers-notes"] as string;
 	const deadline = getDeadline(props.instanceConfig, props.evaluator);
 
 	return (
@@ -121,7 +122,7 @@ export function Evaluate(props: Props) {
 					url={submissionUrl}
 					evaluating
 				/>
-				<Process deadline={deadline} />
+				<Process deadline={deadline} managersNotes={managersNotes} />
 				<h2>{pubType.name}</h2>
 				<p>{pubType.description}</p>
 				<Form {...form}>

@@ -5,6 +5,7 @@ import { Loader2 } from "ui/icon";
 
 import { supabase } from "lib/supabase";
 import { env } from "~/lib/env/env.mjs";
+import { logger } from "logger";
 
 export default function ForgotForm() {
 	const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function ForgotForm() {
 			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
-			console.error(error);
+			logger.error(error);
 			setFailure(true);
 		} else {
 			setSuccess(true);

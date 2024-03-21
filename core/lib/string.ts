@@ -3,10 +3,11 @@ export const genHumanSlug = (title: string, slug: string): string => {
 	return `${titleSlug}-${slug}`;
 };
 import { remove as removeDiacritics } from "diacritics";
+import { logger } from "logger";
 
 export const slugifyString = (input: string) => {
 	if (typeof input !== "string") {
-		console.error("input is not a valid string");
+		logger.error("input is not a valid string");
 		return "";
 	}
 	return removeDiacritics(input)

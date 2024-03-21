@@ -2,6 +2,7 @@ import { EvaluatorWhoAccepted } from "../types";
 
 type Props = {
 	deadline: Date;
+	managersNotes: string;
 };
 
 export const Process = (props: Props) => {
@@ -14,6 +15,18 @@ export const Process = (props: Props) => {
 				).toLocaleDateString()}
 			</p>
 			<p>Final deadline, for $300 base honorarium: {props.deadline.toLocaleDateString()}</p>
+			{props.managersNotes && (
+				<>
+					<h2>Manager's Notes</h2>
+					<p>
+						<em>
+							The Evaluation Manager may suggest specific aspects of the research work
+							to focus on, or offer other suggestions here.
+						</em>
+					</p>
+					<p>{props.managersNotes}</p>
+				</>
+			)}
 			<h2>About our evaluation process</h2>
 			<p>
 				We ask evaluators to:

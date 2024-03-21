@@ -1,6 +1,6 @@
 "use server";
+
 import { revalidatePath } from "next/cache";
-import { expect } from "utils";
 import prisma from "~/prisma/db";
 
 export async function move(pubId: string, sourceStageId: string, destinationStageId: string) {
@@ -21,27 +21,32 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 	}
 }
 
-export async function assign(pubId: string, userId: string, stageId: string) {
+export async function assign(pubId: string, stageId: string, userId?: string) {
 	try {
-		const pub = await prisma.pub.findUnique({
-			where: { id: pubId },
-			include: { claims: true },
-		});
-		if (expect(pub).claims.find((claim) => claim.userId === userId)) {
-			return { message: "User already assigned" };
-		}
+		// TODO(eric+kalil): make this less hacky once we have only one asignee per-pub
+		// Delete all claims for the Pub since we are committing to one assignee per-pub
 		await prisma.pub.update({
 			where: { id: pubId },
-			include: { claims: true },
 			data: {
 				claims: {
-					create: {
-						stageId: stageId,
-						userId: userId,
-					},
+					deleteMany: {},
 				},
 			},
 		});
+		if (userId) {
+			// Add the new claim
+			await prisma.pub.update({
+				where: { id: pubId },
+				data: {
+					claims: {
+						create: {
+							stageId,
+							userId,
+						},
+					},
+				},
+			});
+		}
 	} catch {
 		return { message: "The Pub was not successully assigned" };
 	}

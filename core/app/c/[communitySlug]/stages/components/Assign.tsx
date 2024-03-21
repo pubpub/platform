@@ -1,14 +1,20 @@
 "use client";
-import Image from "next/image";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { Button } from "ui/button";
-import { Card, CardContent, CardFooter, CardTitle } from "ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "ui/command";
+import { Check, ChevronsUpDown } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
-
+import { cn, expect } from "utils";
 import {
-	PermissionPayloadUser,
+	CommunityMemberPayload,
 	PubPayload,
 	StagePayload,
 	StagePayloadMoveConstraintDestination,
@@ -17,11 +23,11 @@ import {
 import { assign } from "./lib/actions";
 
 type Props = {
-	pub: PubPayload;
-	stages: StagePayloadMoveConstraintDestination[];
-	stage: StagePayload;
 	loginData: UserLoginData;
-	users: PermissionPayloadUser[];
+	members: CommunityMemberPayload[];
+	pub: PubPayload;
+	stage: StagePayload;
+	stages: StagePayloadMoveConstraintDestination[];
 };
 
 const getTitle = (pub: Props["pub"]) => {
@@ -32,102 +38,114 @@ const getTitle = (pub: Props["pub"]) => {
 };
 
 export default function Assign(props: Props) {
-	const [open, setOpen] = React.useState(false);
-	const [selectedUserId, setSelectedUserid] = React.useState("");
 	const { toast } = useToast();
+	const [open, setOpen] = React.useState(false);
+	const [selectedUserId, setSelectedUserId] = React.useState<string | undefined>(
+		props.pub.claims[0]?.user.id
+	);
+	const title = useMemo(() => getTitle(props.pub), [props.pub]);
+	const users = useMemo(() => props.members.map((member) => member.user), [props.members]);
+	const user = useMemo(
+		() => users.find((user) => user.id === selectedUserId),
+		[users, selectedUserId]
+	);
 
-	const onAssign = async (pubId: string, userId: string, stageId: string) => {
-		const err = await assign(pubId, userId, stageId);
-		if (err) {
-			toast({
-				title: "Error",
-				description: err.message,
-				variant: "destructive",
-			});
-			return;
-		}
-		toast({
-			title: "Success",
-			description: "User was succesfully assigned.",
-			variant: "default",
-		});
-	};
+	const onAssign = useCallback(
+		async (pubId: string, stageId: string, userId?: string) => {
+			const error = await assign(pubId, stageId, userId);
+			if (error) {
+				toast({
+					title: "Error",
+					description: error.message,
+					variant: "destructive",
+				});
+				return;
+			}
+			if (userId) {
+				const user = expect(users.find((user) => user.id === userId));
+				toast({
+					title: "Success",
+					description: (
+						<>
+							{user.firstName} was assigned to <em>{title}</em>.
+						</>
+					),
+					variant: "default",
+				});
+			} else {
+				toast({
+					title: "Success",
+					description: (
+						<>
+							<em>{title}</em> was unassigned.
+						</>
+					),
+					variant: "default",
+				});
+			}
+		},
+		[users]
+	);
+
+	const onSelect = useCallback(
+		(value: string) => {
+			const userId = value === selectedUserId ? undefined : value;
+			setSelectedUserId(userId);
+			onAssign(props.pub.id, props.stage.id, userId);
+			setOpen(false);
+		},
+		[selectedUserId, props.pub.id, props.stage.id, onAssign]
+	);
+
 	return (
-		<Popover>
+		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button size="sm" variant="outline" className="ml-1">
-					Assign
+				<Button
+					size="sm"
+					variant="outline"
+					role="combobox"
+					aria-expanded={open}
+					className="w-[150px] justify-between"
+				>
+					<span className="truncate">
+						{user ? `${user.firstName} ${user.lastName}` : "Assign"}
+					</span>
+					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="flex flex-col">
-				<Button
-					variant="secondary"
-					className="mb-5"
-					onClick={() => onAssign(props.pub.id, props.loginData.id, props.stage.id)}
-				>
-					Claim
-				</Button>
-				{props.users.map((user) => {
-					return (
-						<Dialog
-							open={open && selectedUserId === user.id}
-							onOpenChange={setOpen}
-							key={user.id}
-						>
-							<DialogTrigger>
-								<Button variant="ghost" onClick={() => setSelectedUserid(user.id)}>
-									<div className="mr-4">
-										<Image
-											src={
-												user.avatar ?? `${user.firstName} ${user.lastName}`
-											}
-											alt={`${user.firstName} ${user.lastName}`}
-											width={20}
-											height={20}
-										/>
-									</div>
-									<span>
+			<PopoverContent className="w-[200px] p-0">
+				<Command>
+					<CommandInput className="h-8 my-2" placeholder="Search member..." />
+					<CommandEmpty>No member found.</CommandEmpty>
+					<CommandList>
+						<CommandGroup>
+							{users.map((user) => {
+								const keywords = [user.firstName];
+								if (user.lastName) {
+									keywords.push(user.lastName);
+								}
+								return (
+									<CommandItem
+										key={user.id}
+										value={user.id}
+										keywords={keywords}
+										onSelect={onSelect}
+									>
 										{user.firstName} {user.lastName}
-									</span>
-								</Button>
-							</DialogTrigger>
-							<DialogContent>
-								<Card>
-									<CardTitle className="space-y-1.5 p-6">
-										Assign <i>{getTitle(props.pub)}</i> to {user.firstName}{" "}
-										{user.lastName}?
-									</CardTitle>
-									<CardContent>
-										{user.firstName} {user.lastName} will be notified that they
-										have been assigned to this Pub.
-									</CardContent>
-									<CardFooter className="flex flex-row">
-										<Button
-											variant="default"
-											onClick={(event) => {
-												onAssign(
-													props.pub.id,
-													user.id,
-													props.stage.id
-												).then(() => setOpen(false));
-												event.preventDefault();
-											}}
-										>
-											Assign
-										</Button>
-										<Button
-											className="mx-3"
-											variant="secondary"
-											onClick={() => setOpen(false)}
-										>
-											Cancel
-										</Button>
-									</CardFooter>
-								</Card>
-							</DialogContent>
-						</Dialog>
-					);
-				})}
+										<Check
+											className={cn(
+												"mr-2 h-4 w-4",
+												selectedUserId === user.id
+													? "opacity-100"
+													: "opacity-0"
+											)}
+										/>
+									</CommandItem>
+								);
+							})}
+						</CommandGroup>
+					</CommandList>
+				</Command>
 			</PopoverContent>
 		</Popover>
 	);

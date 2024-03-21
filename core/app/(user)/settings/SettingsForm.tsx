@@ -8,10 +8,11 @@ import { Button } from "ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Loader2 } from "ui/icon";
 import LogoutButton from "~/app/components/LogoutButton";
-import { UserPutBody, UserSettings } from "~/lib/types";
 import { env } from "~/lib/env/env.mjs";
+import { UserPutBody, UserSetting } from "~/lib/types";
+import { logger } from "logger";
 
-type Props = UserSettings;
+type Props = UserSetting;
 
 export default function SettingsForm({
 	firstName: initFirstName,
@@ -52,7 +53,7 @@ export default function SettingsForm({
 				} else {
 					genericError();
 					const { message }: { message?: string } = await response.json();
-					console.error(`Error: ${response.status} ${message}`);
+					logger.error(`Error: ${response.status} ${message}`);
 				}
 				setEmailIsLoading(false);
 				return;
@@ -62,7 +63,7 @@ export default function SettingsForm({
 			setEmailIsLoading(false);
 			if (error) {
 				genericError();
-				console.error(error);
+				logger.error(error);
 			}
 			setEmailSuccess(true);
 		}
@@ -85,7 +86,7 @@ export default function SettingsForm({
 		setIsLoading(false);
 		if (!response.ok) {
 			if (data.message) {
-				console.error(data.message);
+				logger.error(data.message);
 			}
 		} else {
 			router.refresh();
@@ -97,7 +98,7 @@ export default function SettingsForm({
 			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
-			console.error(error);
+			logger.error(error);
 		} else {
 			setResetSuccess(true);
 		}
