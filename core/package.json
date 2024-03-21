@@ -8,7 +8,7 @@
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
 		"lint": "next lint",
 		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel",
-		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev",
+		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
 		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
