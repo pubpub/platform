@@ -28,11 +28,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				instanceId,
 				job: { key: jobOptions.jobKey },
 			});
-			const job = await workerUtils.addJob(
-				"sendEmail",
-				{ instanceId, body },
-				{ ...jobOptions, runAt: new Date(Date.now() + 1000 * 15) }
-			);
+			const job = await workerUtils.addJob("sendEmail", { instanceId, body }, jobOptions);
 
 			logger.info({
 				msg: `Successfully scheduled email with key: ${jobOptions.jobKey}`,

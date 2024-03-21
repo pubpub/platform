@@ -45,6 +45,7 @@ export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBo
 				firstName: true,
 				lastName: true,
 				createdAt: true,
+				email: true,
 			},
 		},
 	};
