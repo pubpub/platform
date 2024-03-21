@@ -171,9 +171,7 @@ export function EvaluatorInviteForm(props: Props) {
 		window.history.back();
 	}, []);
 
-	const assignee = props.pub.assignee ?? props.user;
-
-	console.log(assignee);
+	const evaluationManager = props.pub.assignee ?? props.user;
 
 	return (
 		<Form {...form}>
@@ -207,25 +205,26 @@ export function EvaluatorInviteForm(props: Props) {
 							<HoverCard>
 								<HoverCardTrigger asChild>
 									<Button variant="link">
-										{assignee.firstName} {assignee.lastName}
+										{evaluationManager.firstName} {evaluationManager.lastName}
 									</Button>
 								</HoverCardTrigger>
 								<HoverCardContent>
 									<div className="flex justify-between space-x-4">
 										<IntegrationAvatar
-											firstName={assignee.firstName}
-											url={assignee.avatar!}
+											firstName={evaluationManager.firstName}
+											url={evaluationManager.avatar!}
 										/>
 										<div className="space-y-1">
 											<h4 className="text-sm font-semibold">
-												{assignee.firstName} {assignee.lastName}
+												{evaluationManager.firstName}{" "}
+												{evaluationManager.lastName}
 											</h4>
 											<div className="flex items-center pt-2">
 												<Calendar className="mr-2 h-4 w-4 opacity-70" />{" "}
 												<span className="text-xs text-muted-foreground">
 													Joined{" "}
 													{new Date(
-														assignee.createdAt
+														evaluationManager.createdAt
 													).toLocaleDateString(undefined, {
 														year: "numeric",
 														month: "long",

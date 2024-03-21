@@ -94,6 +94,7 @@ const pubInclude = {
 			avatar: true,
 			firstName: true,
 			lastName: true,
+			email: true,
 		},
 	},
 } satisfies Prisma.PubInclude;
