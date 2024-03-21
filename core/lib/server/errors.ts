@@ -1,6 +1,7 @@
 import { type NextApiRequest, type NextApiResponse } from "next/types";
 import { ErrorHttpStatusCode } from "@ts-rest/core";
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "logger";
 
 export class HTTPStatusError<Status extends ErrorHttpStatusCode> extends Error {
 	readonly status: ErrorHttpStatusCode;
@@ -44,7 +45,7 @@ export const handleErrors = async (routeHandler) => {
 			return NextResponse.json({ message: error.message }, { status: error.status });
 		}
 		if (error instanceof Error) {
-			console.error(error.message);
+			logger.error(error.message);
 		}
 		return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
 	}
@@ -55,7 +56,7 @@ export const tsRestHandleErrors = (error: unknown, req: NextApiRequest, res: Nex
 		return res.status(error.status).json({ message: error.message });
 	}
 	if (error instanceof Error) {
-		console.error(error.message);
+		logger.error(error.message);
 	}
 	return res.status(500).json({ message: "Internal Server Error" });
 };

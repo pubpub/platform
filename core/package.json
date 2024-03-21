@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev -p 3000",
+		"dev": "next dev -p 3000 | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
 		"lint": "next lint",
@@ -48,6 +48,7 @@
 		"eta": "^3.1.1",
 		"graphile-worker": "^0.15.0",
 		"jsonwebtoken": "^9.0.0",
+		"logger": "workspace:*",
 		"lucide-react": "^0.356.0",
 		"next": "13.5.2",
 		"next-connect": "^1.0.0",

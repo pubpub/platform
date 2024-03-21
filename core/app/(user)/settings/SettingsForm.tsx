@@ -10,6 +10,7 @@ import { Loader2 } from "ui/icon";
 import LogoutButton from "~/app/components/LogoutButton";
 import { UserPutBody, UserSetting } from "~/lib/types";
 import { useEnvContext } from "next-runtime-env";
+import { logger } from "logger";
 
 type Props = UserSetting;
 
@@ -53,7 +54,7 @@ export default function SettingsForm({
 				} else {
 					genericError();
 					const { message }: { message?: string } = await response.json();
-					console.error(`Error: ${response.status} ${message}`);
+					logger.error(`Error: ${response.status} ${message}`);
 				}
 				setEmailIsLoading(false);
 				return;
@@ -63,7 +64,7 @@ export default function SettingsForm({
 			setEmailIsLoading(false);
 			if (error) {
 				genericError();
-				console.error(error);
+				logger.error(error);
 			}
 			setEmailSuccess(true);
 		}
@@ -86,7 +87,7 @@ export default function SettingsForm({
 		setIsLoading(false);
 		if (!response.ok) {
 			if (data.message) {
-				console.error(data.message);
+				logger.error(data.message);
 			}
 		} else {
 			router.refresh();
@@ -98,7 +99,7 @@ export default function SettingsForm({
 			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
-			console.error(error);
+			logger.error(error);
 		} else {
 			setResetSuccess(true);
 		}

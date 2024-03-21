@@ -1,5 +1,6 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { captureException } from "@sentry/nextjs";
+import { logger } from "logger";
 import { NextRequest, NextResponse } from "next/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
 
 		const body = await req.json();
 		if (!body.record || !body.old_record) {
-			console.error("unexpected webhook payload:", body);
+			logger.error(`Unexpected webhook payload: ${body}`);
 			throw new BadRequestError("Unexpected webhook payload");
 		}
 

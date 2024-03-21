@@ -5,6 +5,7 @@ import { Loader2 } from "ui/icon";
 
 import { supabase } from "lib/supabase";
 import { useEnvContext } from "next-runtime-env";
+import { logger } from "logger";
 
 export default function ForgotForm() {
 	const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
@@ -22,7 +23,7 @@ export default function ForgotForm() {
 			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
-			console.error(error);
+			logger.error(error);
 			setFailure(true);
 		} else {
 			setSuccess(true);

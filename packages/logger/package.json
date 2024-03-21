@@ -1,0 +1,17 @@
+{
+	"name": "logger",
+	"version": "0.0.1",
+	"main": "dist/logger.cjs.js",
+	"module": "dist/logger.esm.js",
+	"scripts": {
+		"type-check": "tsc"
+	},
+	"devDependencies": {
+		"@types/node": "^20",
+		"tsconfig": "workspace:*",
+		"typescript": "^5.3.3"
+	},
+	"dependencies": {
+		"pino": "^8.19.0"
+	}
+}

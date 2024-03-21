@@ -1,5 +1,6 @@
 import { run, JobHelpers, Task } from "graphile-worker";
 import { Client, SendEmailRequestBody, makeClient } from "@pubpub/sdk";
+import { logger } from "logger";
 
 const client = makeClient({});
 
@@ -14,13 +15,15 @@ const makeTaskList = (client: Client<{}>) => {
 		helpers: JobHelpers
 	) => {
 		const { instanceId, body } = payload;
+		logger.info({ msg: `Sending email`, body, job: helpers.job });
 		const info = await client.sendEmail(instanceId, body);
-		helpers.logger.info(`Sent email`, info);
+		logger.info({ msg: `Sent email`, info, job: helpers.job });
 	}) as Task;
 	return { sendEmail };
 };
 
 const main = async () => {
+	logger.info("Starting graphile worker...");
 	try {
 		const runner = await run({
 			connectionString: process.env.DATABASE_URL,
@@ -29,9 +32,11 @@ const main = async () => {
 			pollInterval: 1000,
 			taskList: makeTaskList(client),
 		});
+
+		logger.info({ msg: `Successfully started graphile worker`, runner });
 		await runner.promise;
 	} catch (err) {
-		console.error(err);
+		logger.error(err);
 		process.exit(1);
 	}
 };
