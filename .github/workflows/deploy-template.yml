@@ -57,7 +57,7 @@ jobs:
     deploy:
         name: Deploy
         runs-on: ubuntu-latest
-        environment: production
+        environment: ${{ inputs.proper-name }}-${{ inputs.environment }}
 
         steps:
             - name: Checkout
