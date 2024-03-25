@@ -646,9 +646,6 @@ export const scheduleFinalEvaluationReminderEmail = async (
 	const jobKey = makeFinalEvalReminderJobKey(instanceId, pubId, evaluator);
 	const runAt = new Date(deadline.getTime() - 1 * (1000 * 60 * 60 * 24));
 
-	console.log("deadline", deadline.toLocaleString());
-	console.log("runAt", runAt.toLocaleString());
-
 	return client.scheduleEmail(
 		instanceId,
 		{

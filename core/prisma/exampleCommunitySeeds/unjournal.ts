@@ -768,7 +768,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 <p>The evaluation would be publicly posted at <a href="https://unjournal.pubpub.org">unjournal.pubpub.org</a> (where you can see our output). It will be given a DOI and submitted to research archives such as Google Scholar. You can choose whether to remain anonymous or have the evaluation listed under your name. As a sign that we value this work, we offer a $400 honorarium for on-time evaluations, and we are also setting aside $150 per evaluation for incentives and prizes. See <a href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators">here</a> for our guidelines on what we ask evaluators to do.</p>
 <p>If you're interested, please 'accept' the invitation at the link below, and I'll share with you the (simple) interface for entering your evaluation and rating, as well as any specific considerations relevant to this paper. If you are too busy, please click 'decline' (and we welcome any suggestions you might have for other evaluators). If you are not sure, or if you have any questions about this, please reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a> or select the 'more information' link.</p>
 <p>{{extra.accept_link}} | {{extra.decline_link}} | {{extra.info_link}}</p>
-<p>Thanks and best wishes,</p>	
+<p>Thanks and best wishes,</p>
 <p>${evaluationManagerName}</p>
 <p><a href="https://unjournal.org">Unjournal.org</a></p>	
 <p><a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a></p>
