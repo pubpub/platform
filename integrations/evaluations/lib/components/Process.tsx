@@ -37,7 +37,7 @@ export const Process = (props: Props) => {
 						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
 					>
 						standard guidelines
-					</a>
+					</a>{" "}
 					as well as{" "}
 					<a
 						target="_blank"
