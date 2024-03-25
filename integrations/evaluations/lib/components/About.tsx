@@ -7,22 +7,25 @@ export const About = () => {
 				<a target="_blank" href="https://unjournal.org">
 					<em>The Unjournal</em>
 				</a>{" "}
-				does not 'publish any papers in a journal'; we organize and fund public,
-				journal-independent feedback, rating, and evaluation of hosted papers and
-				dynamically presented research projects.
+				does not 'publish any papers'; we organize and fund public, journal-independent
+				feedback, rating, and evaluation of hosted papers and dynamically presented research
+				projects.
 			</p>
 			<p>
 				Peer review is great, but conventional academic publication processes are wasteful,
 				slow, and rent-extracting. They discourage innovation and prompt researchers to
 				focus more on 'gaming the system' than on the quality of their research. We provide
-				an immediate alternative and at the same time offer a bridge to a more efficient,
-				informative, useful, and transparent research evaluation system.
+				an immediate alternative and a bridge to a more efficient, informative, useful, and
+				transparent research evaluation system.
 			</p>
 			<p>
-				Our evaluations and ratings are hosted here on PubPub, along with manager summaries,
-				author responses, and links to the research being evaluated. Each evaluation and
-				response is given a DOI and indexed by bibliometrics and academic search engines
-				(such as Google Scholar).
+				Our evaluations and ratings are hosted{" "}
+				<a href="https://unjournal.pubpub.org/" target="_blank">
+					here on PubPub
+				</a>
+				, along with manager summaries, author responses, and links to the original
+				research. Each evaluation and response is given a DOI and indexed by bibliometrics
+				and academic search engines (such as Google Scholar).
 			</p>
 			<p>
 				Our initial focus is quantitative work that informs global priorities, especially in
