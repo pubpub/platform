@@ -174,7 +174,7 @@ const makeTemplateApi = async (
 export const emailUser = async (instanceId: string, user: User, body: SendEmailRequestBody) => {
 	const instance = await prisma.integrationInstance.findUnique({
 		where: { id: instanceId },
-		include: instanceInclude,
+		include: { ...instanceInclude, community: { select: { name: true } } },
 	});
 
 	if (!instance) {
@@ -185,7 +185,7 @@ export const emailUser = async (instanceId: string, user: User, body: SendEmailR
 	const subject = await eta.renderStringAsync(body.subject, templateApi);
 	const html = await eta.renderStringAsync(body.message, templateApi);
 	const { accepted, rejected } = await smtpclient.sendMail({
-		from: "PubPub Team <hello@mg.pubpub.org>",
+		from: `${instance.community.name || "PubPub Team"} <hello@mg.pubpub.org>`,
 		to: user.email,
 		replyTo: "hello@pubpub.org",
 		html,
