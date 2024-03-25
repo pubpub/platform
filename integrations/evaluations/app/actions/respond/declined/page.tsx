@@ -46,8 +46,8 @@ export default async function Page(props: Props) {
 			<p>
 				We would also appreciate your suggestions for other potential evaluators for this
 				research. As a sign that we value this, if you suggest someone who ends up
-				evaluating this research (who was not already on our list), we will award you $50.
-				You can suggest potential evaluators in the form{" "}
+				evaluating this research who was not already on our list, we will award you $50. You
+				can suggest potential evaluators in the form{" "}
 				<a
 					target="_blank"
 					href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
@@ -57,8 +57,7 @@ export default async function Page(props: Props) {
 				.
 			</p>
 			<p>
-				We are also eager to understand how to better recruit evaluators for The Unjournal.
-				In the same{" "}
+				We are also eager to understand how to better recruit evaluators. In the same{" "}
 				<a
 					target="_blank"
 					href="https://coda.io/form/Decline-evaluation-feedback-form-suggesting-alternate-evaluators_d3YiJu_WNNW"
@@ -66,15 +65,14 @@ export default async function Page(props: Props) {
 					form
 				</a>
 				, you can also let us know why you decided not to accept this assignment, and what
-				might make this more attractive to you and others in the future. Again, to signal
-				that we value this, we will provide $50 awards for people who offer advice that
-				seems particularly useful. (We commit to offering at least one such award for every
-				five people submitting suggestions, not to exceed $50 in total awards per month).
+				might make this more attractive to you and others in the future. Again, to show that
+				we value this, we will provide $50 awards for people who offer particularly useful
+				advice. (We commit to offering at least one such award for every five people
+				submitting suggestions, not to exceed $50 in total awards per month).
 			</p>
 			<p>
-				Alternatively, you can just send a{" "}
-				<a href="mailto:contact@unjournal.org">quick email</a> to let us know your thoughts
-				and suggestions.
+				Alternatively, you can send a <a href="mailto:contact@unjournal.org">quick email</a>{" "}
+				to let us know your thoughts.
 			</p>
 		</div>
 	);
