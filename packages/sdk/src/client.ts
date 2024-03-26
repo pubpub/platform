@@ -102,7 +102,7 @@ export type Client<T extends Manifest> = {
 		instanceId: string,
 		pub: CreatePubRequestBodyWithNulls
 	): Promise<CreatePubResponseBody>;
-	getPub(instanceId: string, pubId: string, depth?: number): Promise<GetPubResponseBody>;
+	getPub(instanceId: string, pubId: string): Promise<GetPubResponseBody>;
 	updatePub(
 		instanceId: string,
 		pub: CreatePubRequestBodyWithNulls
@@ -186,7 +186,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
 					params: { instanceId, pubId },
-					query: { depth: String(depth) },
 					cache: "no-cache",
 				});
 				if (response.status === 200) {

@@ -6,7 +6,7 @@ import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
 import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
-import { pubValuesInclude } from "./pub";
+import { pubValuesInclude } from "../types";
 
 type Node = string | { t: string; val: string };
 

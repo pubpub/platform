@@ -69,7 +69,6 @@ export async function POST(req: NextRequest) {
 			}
 		*/
 
-		logger.info(`Supabase user: ${data}`);
 		if (error || !data.user) {
 			logger.error(`Supabase createUser error: ${error}`);
 			captureException(error);
