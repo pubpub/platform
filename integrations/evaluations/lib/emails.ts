@@ -9,6 +9,12 @@ import {
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
 
+// Use the submission pub's assigned user if available, otherwise use the
+// invitor's (person who clicked "Invite") name.
+const evaluationManagerName =
+	"{{pubs.submission.assignee?.firstName??users.invitor.firstName}} {{pubs.submission.assignee?.lastName??users.invitor.lastName}}";
+const evaluationManagerEmail = "{{pubs.submission.assignee?.email??users.invitor.email}}";
+
 /**
  * Reaturns a new date object with the deadline calculated based on the deadlineLength and deadlineUnit.
  * @param deadline
@@ -375,7 +381,7 @@ export const scheduleInvitationReminderEmail = async (
 			to: {
 				userId: evaluator.userId,
 			},
-			subject: `Reminder: {{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
+			subject: `Reminder: ${evaluationManagerName} invited you to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for The Unjournal`,
 			message: evaluator.emailTemplate.message,
 			include: {
 				users: {
@@ -440,11 +446,11 @@ export const sendAcceptedEmail = async (
 		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus,” in addition to the baseline $300 honorarium, as well as other potential evaluator incentives and prizes. After ${new Date(
 			deadline.getTime()
 		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
-		<p>If you have any questions, please contact me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+		<p>If you have any questions, please contact me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 		<p>Thank you again for your important contribution to the future of science.</p>
 		<p>Thanks and best wishes,</p>
-		<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+		<p>${evaluationManagerName}</p>
 		<p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 		include: {
 			pubs: {
@@ -495,10 +501,10 @@ export const schedulePromptEvalBonusReminderEmail = async (
 				deadline
 			).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
-	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -547,10 +553,10 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}" by the deadline ${reminderDeadline.toLocaleDateString()} to receive the $100 “prompt evaluation bonus.”</p>
 	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
-	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -601,10 +607,10 @@ export const scheduleEvaluationReminderEmail = async (
 			deadline.getTime()
 		).toLocaleDateString()} (next week). Please note that after that date we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
-	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -650,10 +656,10 @@ export const scheduleFinalEvaluationReminderEmail = async (
 			message: `<p>Hi {{user.firstName}},</p>
 	  <p>This note is a final reminder that your evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" is due tomorrow. Please make sure to submit your evaluation by the deadline.</p>
 	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
-	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -703,9 +709,9 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
 			deadline.getTime() + 7 * (1000 * 60 * 60 * 24)
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
-	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {
@@ -755,9 +761,9 @@ export const sendNoticeOfNoSubmitEmail = async (
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
 			deadline.getTime()
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
-	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a>.</p>
+	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
-	  <p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+	  <p>${evaluationManagerName}</p>
 	  <p><a href="https://unjournal.org/">Unjournal.org</a></p>`,
 			include: {
 				pubs: {

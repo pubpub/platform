@@ -1,18 +1,19 @@
 "use client";
 
-import { GetPubResponseBody } from "@pubpub/sdk";
+import { GetPubResponseBody, User } from "@pubpub/sdk";
 import { useCallback } from "react";
 import { Button } from "ui/button";
 import { toast } from "ui/use-toast";
-import { accept, decline } from "./actions";
-import { InstanceConfig } from "~/lib/types";
 import { calculateDeadline } from "~/lib/emails";
+import { InstanceConfig } from "~/lib/types";
+import { accept, decline } from "./actions";
 
 type Props = {
 	intent: "accept" | "decline" | "info";
 	instanceId: string;
 	instanceConfig: InstanceConfig;
 	pub: GetPubResponseBody;
+	evaluationManager: User;
 };
 
 const AboutUnjournal = () => {
@@ -253,11 +254,11 @@ export const Respond = (props: Props) => {
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
-						{props.pub.assignee && (
-							<a href={`mailto:${props.pub.assignee.email}`}>
+						{props.evaluationManager && (
+							<a href={`mailto:${props.evaluationManager.email}`}>
 								<Button>
-									Email {props.pub.assignee.firstName}{" "}
-									{props.pub.assignee.lastName}
+									Email {props.evaluationManager.firstName}{" "}
+									{props.evaluationManager.lastName}
 								</Button>
 							</a>
 						)}
@@ -298,11 +299,11 @@ export const Respond = (props: Props) => {
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
-						{props.pub.assignee && (
-							<a href={`mailto:${props.pub.assignee.email}`}>
+						{props.evaluationManager && (
+							<a href={`mailto:${props.evaluationManager.email}`}>
 								<Button>
-									Email {props.pub.assignee.firstName}{" "}
-									{props.pub.assignee.lastName}
+									Email {props.evaluationManager.firstName}{" "}
+									{props.evaluationManager.lastName}
 								</Button>
 							</a>
 						)}

@@ -3,6 +3,7 @@ import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { isInvited } from "~/lib/types";
 import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
+import { cookies } from "next/headers";
 
 type Props = {
 	searchParams: {
@@ -22,6 +23,7 @@ export default async function Page(props: Props) {
 	}
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
 	const pub = await client.getPub(instanceId, pubId);
+	const user = JSON.parse(cookies().get("user")?.value!);
 	const evaluators = Object.values(instanceState).sort((a, b) => {
 		if (isInvited(a) && !isInvited(b)) return -1;
 		if (isInvited(b) && !isInvited(a)) return 1;
@@ -34,6 +36,7 @@ export default async function Page(props: Props) {
 			instanceConfig={instanceConfig}
 			evaluators={evaluators}
 			pub={pub}
+			user={user}
 		/>
 	);
 }
