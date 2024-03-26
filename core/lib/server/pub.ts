@@ -6,7 +6,7 @@ import {
 	JsonValue,
 } from "contracts";
 import { ExpressionBuilder, SelectExpression, StringReference, sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { expect } from "utils";
 import { db } from "~/kysely/database";
 import Database from "~/kysely/types/Database";
@@ -135,6 +135,22 @@ const withPubChildren = ({
 	});
 };
 
+const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonObjectFrom(
+		eb
+			.selectFrom("users")
+			.whereRef("users.id", "=", "pubs.assignee_id")
+			.select([
+				"users.id",
+				"slug",
+				"firstName",
+				"lastName",
+				"avatar",
+				"created_at as createdAt",
+				"email",
+			])
+	).as("assignee");
+
 export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	// These aliases are used to make sure the JSON object returned matches
 	// the old prisma query's return value
@@ -147,11 +163,12 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 		"updated_at as updatedAt",
 	] as const satisfies SelectExpression<Database, "pubs">[];
 
-	const pub: FlatPub | undefined = await withPubChildren({ pubId })
+	const pub = await withPubChildren({ pubId })
 		.selectFrom("pubs")
 		.where("pubs.id", "=", pubId)
 		.select(pubColumns)
 		.select(pubValuesByVal(pubId))
+		.select((eb) => pubAssignee(eb))
 		.$narrowType<{ values: PubValues }>()
 		.select((eb) =>
 			jsonArrayFrom(
