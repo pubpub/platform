@@ -1,6 +1,7 @@
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "contracts";
 import { PubsId } from "~/kysely/types/public/Pubs";
+import { logger } from "logger";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
@@ -77,7 +78,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 		try {
 			const info = await emailUser(params.instanceId, user, body);
 		} catch (error) {
-			console.log("error", error);
+			logger.error("error", error);
 		}
 		return { status: 200, body: { info: {} as any, userId: user.id } };
 	},

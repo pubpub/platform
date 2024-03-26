@@ -1,4 +1,5 @@
 export {
+	Calendar,
 	Check,
 	ChevronsUpDown,
 	Download,

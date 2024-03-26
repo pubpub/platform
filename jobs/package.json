@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"start": "tsx -r ./tracing.ts index.ts",
-		"dev": "dotenv -e .env.development tsx index.ts"
+		"dev": "dotenv -e .env.development tsx index.ts | pino-pretty"
 	},
 	"files": [
 		"tracing.ts",
@@ -16,6 +16,7 @@
 		"@pubpub/sdk": "workspace:*",
 		"contracts": "workspace:*",
 		"graphile-worker": "^0.15.0",
+		"logger": "workspace:*",
 		"tsx": "^3.13.0"
 	},
 	"devDependencies": {

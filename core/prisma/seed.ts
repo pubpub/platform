@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
+import { logger } from "logger";
 import { env } from "~/lib/env/env.mjs";
 
 const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,11 +24,11 @@ async function createUserMembers(
 		email_confirm: true,
 	});
 	if (error) {
-		console.log("Error creating user", error);
-		console.log("Looking up existing supabase user");
+		logger.warn(`Error creating user: ${error}`);
+		logger.info("Looking up existing supabase user");
 		const { data, error: newError } = await supabase.auth.admin.listUsers();
 		if (newError || !data.users) {
-			console.log("Error finding existing user", error);
+			logger.error(`Error finding existing user ${error}`);
 		} else {
 			user = data.users.find((user) => user.email === email);
 		}
@@ -63,7 +64,7 @@ async function main() {
 			prismaCommunityIds
 		);
 	} catch (error) {
-		console.log(error);
+		logger.error(error);
 	}
 }
 main()
@@ -71,7 +72,7 @@ main()
 		await prisma.$disconnect();
 	})
 	.catch(async (e) => {
-		console.error(e);
+		logger.error(e);
 		await prisma.$disconnect();
 		process.exit(1);
 	});

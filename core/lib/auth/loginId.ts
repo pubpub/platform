@@ -5,6 +5,7 @@ import { getRefreshCookie, getTokenCookie } from "~/lib/auth/cookies";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import type { UserAppMetadata, UserMetadata } from "@supabase/supabase-js";
 import { env } from "../env/env.mjs";
+import { logger } from "logger";
 
 /* This is only called from API calls */
 /* When rendering server components, use getLoginData from loginData.ts */
@@ -54,7 +55,7 @@ export async function getUserInfoFromJWT(
 		// refreshSession method below returns
 		return { id: decoded.sub, ...decoded } as jwtUser;
 	} catch (jwtError) {
-		console.error("Error verifying jwt", jwtError);
+		logger.error("Error verifying jwt", jwtError);
 		/* We may get a jwtError if it has expired. In which case, */
 		/* we try to use the refreshToken to sign back in before   */
 		/* waiting for the client to that after initial page load. */
@@ -63,7 +64,7 @@ export async function getUserInfoFromJWT(
 			refresh_token: refreshToken || "",
 		});
 		if (error) {
-			console.error("Error refreshing session:", error.message);
+			logger.error("Error refreshing session:", error.message);
 			return null;
 		}
 		if (!data.user?.id) {

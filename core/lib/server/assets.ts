@@ -15,7 +15,6 @@ export const generateSignedAssetUploadUrl = async (pubId: string, fileName: stri
 			secretAccessKey: secret,
 		},
 	});
-	console.log(bucket, pubId, fileName);
 	const command = new PutObjectCommand({
 		Bucket: bucket,
 		Key: `${pubId}/${fileName}`,

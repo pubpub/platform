@@ -6,6 +6,7 @@ import { generateHash, getSlugSuffix, slugifyString } from "lib/string";
 import { getSupabaseId } from "lib/auth/loginId";
 import { BadRequestError, ForbiddenError, UnauthorizedError, handleErrors } from "~/lib/server";
 import { captureException } from "@sentry/nextjs";
+import { logger } from "logger";
 import { env } from "~/lib/env/env.mjs";
 
 export type UserPostBody = {
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
 		*/
 
 		if (error || !data.user) {
-			console.error("Supabase createUser error: ", error);
+			logger.error(`Supabase createUser error: ${error}`);
 			captureException(error);
 			return NextResponse.json({ message: "Supabase createUser error" }, { status: 500 });
 		}

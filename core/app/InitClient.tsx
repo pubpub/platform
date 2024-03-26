@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { REFRESH_NAME, TOKEN_NAME } from "lib/auth/cookies";
 import { createBrowserSupabase, supabase } from "lib/supabase";
 import { usePathname } from "next/navigation";
+import { logger } from "logger";
 import { useEnvContext } from "next-runtime-env";
 
 export default function InitClient() {
@@ -20,6 +21,8 @@ export default function InitClient() {
 				document.cookie = `${TOKEN_NAME}=; path=/; expires=${expires}; SameSite=Lax; ${securityValue}`;
 				document.cookie = `${REFRESH_NAME}=; path=/; expires=${expires}; SameSite=Lax; ${securityValue}`;
 			} else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+				logger.info("Setting cookies");
+
 				const maxAge = 100 * 365 * 24 * 60 * 60; // 100 years, never expires
 				document.cookie = `${TOKEN_NAME}=${session?.access_token}; path=/; max-age=${maxAge}; SameSite=Lax; ${securityValue}`;
 				document.cookie = `${REFRESH_NAME}=${session?.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax; ${securityValue}`;
