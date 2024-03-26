@@ -24,18 +24,18 @@ import { InviteFormEvaluator } from "./types";
 
 export const save = async (
 	instanceId: string,
-	pubId: string,
+	submissionPubId: string,
 	evaluators: InviteFormEvaluator[],
 	send: boolean
 ) => {
 	try {
-		const pub = await client.getPub(instanceId, pubId);
-		const user = pub.assignee ?? JSON.parse(expect(cookie("user")));
+		const submissionPub = await client.getPub(instanceId, submissionPubId);
+		const user = JSON.parse(expect(cookie("user")));
 		const instanceConfig = expect(
 			await getInstanceConfig(instanceId),
 			"Instance not configured"
 		);
-		const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
+		const instanceState = (await getInstanceState(instanceId, submissionPubId)) ?? {};
 		const evaluatorUserIds = new Set<string>();
 		for (let i = 0; i < evaluators.length; i++) {
 			let evaluator = evaluators[i];
@@ -78,16 +78,22 @@ export const save = async (
 					invitedBy: user.id,
 				};
 				// Immediately send the invite email.
-				await sendInviteEmail(instanceId, pubId, evaluator);
+				await sendInviteEmail(instanceId, submissionPubId, evaluator);
 				// Scehdule a reminder email to person who was invited to evaluate.
-				await scheduleInvitationReminderEmail(instanceId, instanceConfig, pubId, evaluator);
+				await scheduleInvitationReminderEmail(
+					instanceId,
+					instanceConfig,
+					submissionPubId,
+					evaluator
+				);
 				// Schedule no-reply notification email to person who invited the
 				// evaluator.
 				await scheduleNoReplyNotificationEmail(
 					instanceId,
 					instanceConfig,
-					pubId,
-					evaluator
+					submissionPubId,
+					evaluator,
+					submissionPub.assignee
 				);
 			}
 			// Remove the form's selected property from the evaluator before
@@ -98,7 +104,7 @@ export const save = async (
 			evaluatorUserIds.add(evaluatorUser.id);
 		}
 		// Persist the updated instance state.
-		await setInstanceState(instanceId, pubId, instanceState);
+		await setInstanceState(instanceId, submissionPubId, instanceState);
 		// Reload the page to reflect the changes.
 		revalidatePath("/");
 		return { success: true };

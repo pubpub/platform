@@ -1,3 +1,4 @@
+import { User } from "@pubpub/sdk";
 import { client } from "~/lib/pubpub";
 import {
 	EvaluatorWhoAccepted,
@@ -108,7 +109,8 @@ export const scheduleNoReplyNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWithInvite
+	evaluator: EvaluatorWithInvite,
+	assignee?: User
 ) => {
 	const jobKey = makeNoReplyJobKey(instanceId, pubId, evaluator);
 	const runAt = new Date(evaluator.invitedAt);
@@ -118,7 +120,7 @@ export const scheduleNoReplyNotificationEmail = async (
 		instanceId,
 		{
 			to: {
-				userId: evaluator.invitedBy,
+				userId: assignee?.id ?? evaluator.invitedBy,
 			},
 			subject: `[Unjournal] No reply from invited evaluator for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 			message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not responded for {{extra.days}} days to our invitation to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
@@ -168,7 +170,8 @@ export const scheduleNoSubmitNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWhoAccepted
+	evaluator: EvaluatorWhoAccepted,
+	assignee?: User
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
 	const deadline = getDeadline(instanceConfig, evaluator);
@@ -178,7 +181,7 @@ export const scheduleNoSubmitNotificationEmail = async (
 		instanceId,
 		{
 			to: {
-				userId: evaluator.invitedBy,
+				userId: assignee?.id ?? evaluator.invitedBy,
 			},
 			subject: `[Unjournal] Evaluation not submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 			message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has not submitted an evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}", which was due on {{extra.due_at}}. You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
@@ -228,11 +231,12 @@ export const sendAcceptedNotificationEmail = (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWithInvite
+	evaluator: EvaluatorWithInvite,
+	assignee?: User
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {
-			userId: evaluator.invitedBy,
+			userId: assignee?.id ?? evaluator.invitedBy,
 		},
 		subject: `[Unjournal] Accepted evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has agreed to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
@@ -263,11 +267,12 @@ export const sendDeclinedNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWithInvite
+	evaluator: EvaluatorWithInvite,
+	assignee?: User
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {
-			userId: evaluator.invitedBy,
+			userId: assignee?.id ?? evaluator.invitedBy,
 		},
 		subject: `[Unjournal] Invited evaluator declines to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 		message: `<p>An invited evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has declined to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". You may review the status of this and other invitations on the {{extra.manage_link}}.</p>
@@ -298,11 +303,12 @@ export const sendSubmittedNotificationEmail = async (
 	instanceId: string,
 	instanceConfig: InstanceConfig,
 	pubId: string,
-	evaluator: EvaluatorWhoEvaluated
+	evaluator: EvaluatorWhoEvaluated,
+	assignee?: User
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {
-			userId: evaluator.invitedBy,
+			userId: assignee?.id ?? evaluator.invitedBy,
 		},
 		subject: `[Unjournal] Evaluation submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 		message: `<p>An evaluator, {{users.evaluator.firstName}} {{users.evaluator.lastName}}, has submitted an evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}". The submitted evaluation Pub can be viewed <a href="https://v7.pubpub.org/pubs/${evaluator.evaluationPubId}">here</a>.</p>
