@@ -1,5 +1,4 @@
 **/*.tfstate
 **/*.tfstate.*
 **/.terraform
-**/*.tfvars
-**/*.tfbackend
+**/secrets.tfvars
