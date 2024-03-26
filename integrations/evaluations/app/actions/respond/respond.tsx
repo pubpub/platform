@@ -24,22 +24,25 @@ const AboutUnjournal = () => {
 				<a target="_blank" href="https://unjournal.org">
 					<em>The Unjournal</em>
 				</a>{" "}
-				does not 'publish any papers in a journal'; we organize and fund public,
-				journal-independent feedback, rating, and evaluation of hosted papers and
-				dynamically presented research projects.
+				does not 'publish any papers'; we organize and fund public, journal-independent
+				feedback, rating, and evaluation of hosted papers and dynamically presented research
+				projects.
 			</p>
 			<p>
 				Peer review is great, but conventional academic publication processes are wasteful,
 				slow, and rent-extracting. They discourage innovation and prompt researchers to
 				focus more on 'gaming the system' than on the quality of their research. We provide
-				an immediate alternative and at the same time offer a bridge to a more efficient,
-				informative, useful, and transparent research evaluation system.
+				an immediate alternative and a bridge to a more efficient, informative, useful, and
+				transparent research evaluation system.
 			</p>
 			<p>
-				Our evaluations and ratings are hosted here on PubPub, along with manager summaries,
-				author responses, and links to the research being evaluated. Each evaluation and
-				response is given a DOI and indexed by bibliometrics and academic search engines
-				(such as Google Scholar).
+				Our evaluations and ratings are hosted{" "}
+				<a href="https://unjournal.pubpub.org/" target="_blank">
+					here on PubPub
+				</a>
+				, along with manager summaries, author responses, and links to the original
+				research. Each evaluation and response is given a DOI and indexed by bibliometrics
+				and academic search engines (such as Google Scholar).
 			</p>
 			<p>
 				Our initial focus is quantitative work that informs global priorities, especially in
@@ -90,53 +93,63 @@ const EvaluationProcess = () => {
 					value this work
 				</a>
 				, we offer evaluators a $300 honorarium for completing the assignment by the
-				deadline. Evaluators may earn an additional $100 “prompt evaluation bonus” for
-				completing the assignment promptly (see below). As of February 2024, we are also
-				currently setting aside $150 per evaluation for evaluator incentives and prizes.
+				deadline. Evaluators earn an additional $100 “prompt evaluation bonus” for
+				completing the assignment promptly. As of February 2024, we also currently set aside
+				$150 per evaluation to offer incentives and prizes for particularly strong work.
 			</p>
 			<p>
 				Your evaluation will be made public and given a DOI, but you have the option to{" "}
-				<a
-					target="_blank"
-					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#that-this-review-and-ratings-will-be-made-public"
-				>
-					remain anonymous or to be identified as the author
-				</a>
+				<strong>
+					<a
+						target="_blank"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#that-this-review-and-ratings-will-be-made-public"
+					>
+						remain anonymous or to be identified as the author
+					</a>
+				</strong>
 				.
 			</p>
 			<p>We ask evaluators to:</p>
 			<ol>
 				<li>
-					Write an evaluation: essentially a high-quality referee report, considering{" "}
+					Write an evaluation: essentially a high-quality referee report. Consider{" "}
 					<a
 						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#the-unjournals-criteria"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#overall-assessment"
 					>
-						The Unjournal's guidelines
+						The Unjournal's emphases
 					</a>
-					. Please try to address any specific considerations mentioned in the manager’s
-					notes above, or any specific requests from the evaluation manager.
+					as well as{" "}
+					<a
+						target="_blank"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
+					>
+						standard guidelines
+					</a>
+					.
 				</li>
 				<li>
-					Give{" "}
+					Rate the paper using{" "}
 					<a
 						target="_blank"
 						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#quantitative-metrics"
 					>
-						quantitative metrics and predictions
+						our quantitative metrics
 					</a>
 					.
 				</li>
 				<li>Answer a short questionnaire about your background and our processes.</li>
 			</ol>
 			<p>
-				You can read the full guidelines{" "}
-				<a
-					target="_blank"
-					href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#publishing-and-signing-reviews-considerations-exceptions"
-				>
-					here
-				</a>
+				<em>
+					You can read the full guidelines{" "}
+					<a
+						target="_blank"
+						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#publishing-and-signing-reviews-considerations-exceptions"
+					>
+						here
+					</a>
+				</em>
 				.
 			</p>
 		</>
@@ -210,7 +223,7 @@ export const Respond = (props: Props) => {
 					<a target="_blank" href="https://unjournal.org">
 						<em>The Unjournal</em>
 					</a>
-					! Please confirm your acceptance below.
+					! <strong>Please confirm your acceptance below.</strong>
 				</p>
 			)}
 			<h2>About the research</h2>
@@ -238,17 +251,17 @@ export const Respond = (props: Props) => {
 				<>
 					<h2>Confirm</h2>
 					<p>
-						We strongly encourage evaluators to complete evaluations relatively quickly,
-						for the benefit of authors, research-users, and the evaluation ecosystem. If
-						you submit the evaluation within that window (by{" "}
+						We strongly encourage evaluators to complete evaluations promptly, for the
+						benefit of authors, research-users, and the evaluation ecosystem. If you
+						submit the evaluation on our preferred schedule (by{" "}
 						<strong>
 							{new Date(
 								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 							).toLocaleDateString()}
 						</strong>
 						), you will receive a $100 “prompt evaluation bonus,” in addition to the
-						baseline $300 honorarium, in addition to the baseline $300 honorarium, as
-						well as other potential evaluator incentives and prizes. After{" "}
+						baseline $300 honorarium, as well as other potential evaluator incentives
+						and prizes. After{" "}
 						<strong>{new Date(deadline.getTime()).toLocaleDateString()}</strong>, we
 						will consider re-assigning the evaluation, and later submissions may not be
 						eligible for the full baseline compensation.
@@ -259,9 +272,10 @@ export const Respond = (props: Props) => {
 					</div>
 					<h2>Changed your mind?</h2>
 					<p>
-						If you have changed your mind and decided you will not be able to conduct
-						this evaluation, you may choose 'Decline' below. (But we would also love to
-						get your feedback on why you made this decision — please do contact us.)
+						If you changed your mind and decided you won't be able to do this
+						evaluation, you can choose 'Decline' below. You will be prompted to give
+						brief feedback and to suggest other evaluators, with a small reward for
+						successful suggestions.
 					</p>
 					<Button onClick={onDecline}>Decline</Button>
 				</>
