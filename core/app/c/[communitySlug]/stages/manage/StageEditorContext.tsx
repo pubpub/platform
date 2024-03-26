@@ -1,20 +1,11 @@
 "use client";
 
-import {
-	PropsWithChildren,
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { PropsWithChildren, createContext, useCallback, useContext, useRef, useState } from "react";
 import { Node } from "reactflow";
 import { useLocalStorage } from "ui/hooks";
 import { StagePayload } from "~/lib/types";
 import { useStages } from "./StagesContext";
 import { useRouter } from "next/navigation";
-import { editStage } from "./actions";
 
 export type StageEditorContext = {
 	deleteSelection: () => void;
@@ -110,14 +101,17 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 
 	const _editStage = useCallback(
 		(stage?: StagePayload) => {
-			editStage(props.communitySlug, stage?.id);
+			router.push(
+				stage
+					? `/c/${props.communitySlug}/stages/manage/${stage.id}`
+					: `/c/${props.communitySlug}/stages/manage`
+			);
 		},
-		[router]
+		[router, props.communitySlug]
 	);
 
 	const value = {
 		deleteSelection,
-		editStage: _editStage,
 		resetLayout,
 		selectedStages: selectedStages.current,
 		selectMoveConstraints: setSelectedMoveConstraints,
@@ -125,6 +119,7 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 		hasSelection,
 		getNodePosition,
 		setNodePositions,
+		editStage: _editStage,
 	};
 
 	return (

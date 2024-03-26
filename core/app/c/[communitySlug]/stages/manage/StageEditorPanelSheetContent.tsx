@@ -5,11 +5,14 @@ type Props = {
 };
 
 export const StageEditorPanelSheetContent = async (props: Props) => {
+	if (props.editingStageId === undefined) {
+		return <p>Byeee</p>;
+	}
 	const stage = props.editingStageId
 		? await prisma.stage.findUnique({
 				where: { id: props.editingStageId },
 		  })
 		: null;
 
-	return <div>{stage?.name}</div>;
+	return <div>Stage: {stage?.name}</div>;
 };

@@ -6,11 +6,14 @@ import { cn, expect } from "utils";
 import { StagePayload } from "~/lib/types";
 import { useStageEditor } from "./StageEditorContext";
 import { useStages } from "./StagesContext";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;
 
 export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
+	const pathname = usePathname();
 	const { updateStageName } = useStages();
 	const { editStage } = useStageEditor();
 	const [isEditingName, setIsEditingName] = useState(false);
@@ -118,9 +121,9 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 					</li>
 				</ul>
 			</div>
-			<Button variant="ghost" size="icon" onClick={onSettingsClick} className="text-gray-300">
+			<Link href={`${pathname}?editingStageId=${props.data.stage.id}`}>
 				<Settings className="h-4 w-4" />
-			</Button>
+			</Link>
 		</div>
 	);
 });
