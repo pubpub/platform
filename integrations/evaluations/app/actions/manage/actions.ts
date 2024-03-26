@@ -29,7 +29,8 @@ export const save = async (
 	send: boolean
 ) => {
 	try {
-		const user = JSON.parse(expect(cookie("user")));
+		const pub = await client.getPub(instanceId, pubId);
+		const user = pub.assignee ?? JSON.parse(expect(cookie("user")));
 		const instanceConfig = expect(
 			await getInstanceConfig(instanceId),
 			"Instance not configured"
