@@ -43,6 +43,7 @@ export const getSuggestedMembers = async (
 			firstName: true,
 			lastName: true,
 			supabaseId: true,
+			createdAt: true,
 		},
 	});
 	return members;
@@ -63,6 +64,7 @@ export const getMembers = async (userIds: string[]) => {
 			avatar: true,
 			firstName: true,
 			lastName: true,
+			createdAt: true,
 		},
 	});
 	return members;

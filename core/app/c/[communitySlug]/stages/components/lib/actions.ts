@@ -21,28 +21,25 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 	}
 }
 
-export async function assign(pubId: string, stageId: string, userId?: string) {
+export async function assign(pubId: string, userId?: string) {
 	try {
-		// TODO(eric+kalil): make this less hacky once we have only one asignee per-pub
-		// Delete all claims for the Pub since we are committing to one assignee per-pub
-		await prisma.pub.update({
-			where: { id: pubId },
-			data: {
-				claims: {
-					deleteMany: {},
-				},
-			},
-		});
 		if (userId) {
-			// Add the new claim
 			await prisma.pub.update({
 				where: { id: pubId },
 				data: {
-					claims: {
-						create: {
-							stageId,
-							userId,
+					assignee: {
+						connect: {
+							id: userId,
 						},
+					},
+				},
+			});
+		} else {
+			await prisma.pub.update({
+				where: { id: pubId },
+				data: {
+					assignee: {
+						disconnect: true,
 					},
 				},
 			});

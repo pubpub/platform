@@ -757,19 +757,22 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const defaultEvaluationEmailSubject =
-		'{{users.invitor.firstName}} {{users.invitor.lastName}} invited you to evaluate {{pubs.submission.values["unjournal:title"]}} for The Unjournal';
+	const evaluationManagerName =
+		"{{pubs.submission.assignee?.firstName??users.invitor.firstName}} {{pubs.submission.assignee?.lastName??users.invitor.lastName}}";
+	const evaluationManagerEmail = "{{pubs.submission.assignee?.email??users.invitor.email}}";
+
+	const defaultEvaluationEmailSubject = `${evaluationManagerName} invited you to evaluate {{pubs.submission.values["unjournal:title"]}} for The Unjournal`;
 
 	const defaultEvaluationEmailBody = `<p>Hi {{user.firstName}} {{user.lastName}},</p>
-<p>I'm {{users.invitor.firstName}} {{users.invitor.lastName}} from The Unjournal. (See our 'in a nutshell' <a href="https://effective-giving-marketing.gitbook.io/the-unjournal-project-and-communication-space/readme-1">HERE</a>.) I'm writing to invite you to evaluate <a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a>. The abstract is copied below, and the most recent version is linked <a href="{{pubs.submission.values["unjournal:url"]}}">here</a>.</p>	
+<p>I'm ${evaluationManagerName} from The Unjournal. (See our 'in a nutshell' <a href="https://effective-giving-marketing.gitbook.io/the-unjournal-project-and-communication-space/readme-1">HERE</a>.) I'm writing to invite you to evaluate <a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a>. The abstract is copied below, and the most recent version is linked <a href="{{pubs.submission.values["unjournal:url"]}}">here</a>.</p>	
 <p>The evaluation would be publicly posted at <a href="https://unjournal.pubpub.org">unjournal.pubpub.org</a> (where you can see our output). It will be given a DOI and submitted to research archives such as Google Scholar. You can choose whether to remain anonymous or have the evaluation listed under your name. As a sign that we value this work, we offer a $400 honorarium for on-time evaluations, and we are also setting aside $150 per evaluation for incentives and prizes. See <a href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators">here</a> for our guidelines on what we ask evaluators to do.</p>
-<p>If you're interested, please 'accept' the invitation at the link below, and I'll share with you the (simple) interface for entering your evaluation and rating, as well as any specific considerations relevant to this paper. If you are too busy, please click 'decline' (and we welcome any suggestions you might have for other evaluators). If you are not sure, or if you have any questions about this, please reach out to me at <a href="mailto:{{users.invitor.email}}">{{users.invitor.email}}</a> or select the 'more information' link.</p>
+<p>If you're interested, please 'accept' the invitation at the link below, and I'll share with you the (simple) interface for entering your evaluation and rating, as well as any specific considerations relevant to this paper. If you are too busy, please click 'decline' (and we welcome any suggestions you might have for other evaluators). If you are not sure, or if you have any questions about this, please reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a> or select the 'more information' link.</p>
 <p>{{extra.accept_link}} | {{extra.decline_link}} | {{extra.info_link}}</p>
-<p>Thanks and best wishes,</p>	
-<p>{{users.invitor.firstName}} {{users.invitor.lastName}}</p>
+<p>Thanks and best wishes,</p>
+<p>${evaluationManagerName}</p>
 <p><a href="https://unjournal.org">Unjournal.org</a></p>	
 <p><a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a></p>
-<p>{{pubs.submission.values["unjournal:description"]}}</p>`;
+<p>{{pubs.submission.values["unjournal:description"]??""}}</p>`;
 
 	const integrationInstances = [
 		{

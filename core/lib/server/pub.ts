@@ -35,8 +35,25 @@ const recursivelyDenormalizePubValues = async (
 };
 
 export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBody> => {
-	const pubInclude = makeRecursiveInclude("children", pubValuesInclude, depth);
-	const pub = await prisma.pub.findUnique({ where: { id: pubId }, ...pubInclude });
+	const include = {
+		...pubValuesInclude,
+		assignee: {
+			select: {
+				id: true,
+				slug: true,
+				avatar: true,
+				firstName: true,
+				lastName: true,
+				createdAt: true,
+				email: true,
+			},
+		},
+	};
+	const recursiveInclude = makeRecursiveInclude("children", include, depth);
+	const pub = await prisma.pub.findUnique({
+		where: { id: pubId },
+		...recursiveInclude,
+	});
 	if (!pub) {
 		throw PubNotFoundError;
 	}
@@ -101,7 +118,10 @@ const getUpdateDepth = (body: CreatePubRequestBodyWithNulls, depth = 0) => {
 	return depth + 1;
 };
 
-const makePubChildrenCreateOptions = async (body: CreatePubRequestBodyWithNulls, communityId: string) => {
+const makePubChildrenCreateOptions = async (
+	body: CreatePubRequestBodyWithNulls,
+	communityId: string
+) => {
 	if (!body.children) {
 		return undefined;
 	}
@@ -110,7 +130,9 @@ const makePubChildrenCreateOptions = async (body: CreatePubRequestBodyWithNulls,
 		if ("id" in child) {
 			continue;
 		}
-		inputs.push(makeRecursivePubUpdateInput(child, communityId));
+		inputs.push(
+			makeRecursivePubUpdateInput({ assigneeId: body.assigneeId, ...child }, communityId)
+		);
 	}
 	return Promise.all(inputs);
 };
@@ -135,6 +157,11 @@ const makeRecursivePubUpdateInput = async (
 	body: CreatePubRequestBodyWithNulls,
 	communityId: string
 ): Promise<Prisma.PubCreateInput> => {
+	const assignee = body.assigneeId
+		? {
+				connect: { id: body.assigneeId },
+		  }
+		: undefined;
 	return {
 		community: { connect: { id: communityId } },
 		pubType: { connect: { id: body.pubTypeId } },
@@ -143,6 +170,7 @@ const makeRecursivePubUpdateInput = async (
 				data: await normalizePubValues(body.values),
 			},
 		},
+		assignee,
 		children: {
 			// For each child, either connect to an existing pub or create a new one.
 			connect: makePubChildrenConnectOptions(body),
@@ -163,7 +191,7 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBodyWi
 
 	const updateDepth = getUpdateDepth(body);
 	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
-	const updateArgs = {
+	const createArgs = {
 		data: {
 			...(!body.parentId && {
 				stages: {
@@ -174,7 +202,7 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBodyWi
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),
 	};
-	const pub = await prisma.pub.create(updateArgs);
+	const pub = await prisma.pub.create(createArgs);
 
 	return pub;
 };

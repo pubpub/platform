@@ -1,18 +1,19 @@
 "use client";
 
-import { GetPubResponseBody } from "@pubpub/sdk";
+import { GetPubResponseBody, User } from "@pubpub/sdk";
 import { useCallback } from "react";
 import { Button } from "ui/button";
 import { toast } from "ui/use-toast";
-import { accept, contact, decline } from "./actions";
-import { InstanceConfig } from "~/lib/types";
 import { calculateDeadline } from "~/lib/emails";
+import { InstanceConfig } from "~/lib/types";
+import { accept, decline } from "./actions";
 
 type Props = {
 	intent: "accept" | "decline" | "info";
 	instanceId: string;
 	instanceConfig: InstanceConfig;
 	pub: GetPubResponseBody;
+	evaluationManager: User;
 };
 
 const AboutUnjournal = () => {
@@ -177,21 +178,6 @@ export const Respond = (props: Props) => {
 			});
 		}
 	}, []);
-	const onContact = useCallback(async () => {
-		const result = await contact(props.instanceId, props.pub.id);
-		if (result.success) {
-			toast({
-				title: "Information Request Sent",
-				description: "You have contacted the evaluation manager.",
-			});
-		} else {
-			toast({
-				title: "Error",
-				description: "There was an error contacting the evaluation manager.",
-				variant: "destructive",
-			});
-		}
-	}, []);
 
 	const submissionUrl = props.pub.values["unjournal:url"] as string;
 	const submissionTitle = props.pub.values[props.instanceConfig.titleFieldSlug] as string;
@@ -268,7 +254,14 @@ export const Respond = (props: Props) => {
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
-						<Button onClick={onContact}>Contact Evaluation Manager</Button>
+						{props.evaluationManager && (
+							<a href={`mailto:${props.evaluationManager.email}`}>
+								<Button>
+									Email {props.evaluationManager.firstName}{" "}
+									{props.evaluationManager.lastName}
+								</Button>
+							</a>
+						)}
 					</div>
 					<h2>Changed your mind?</h2>
 					<p>
@@ -306,7 +299,14 @@ export const Respond = (props: Props) => {
 					</p>
 					<div className="flex gap-1">
 						<Button onClick={onAccept}>Accept</Button>
-						<Button onClick={onContact}>Contact Evaluation Manager</Button>
+						{props.evaluationManager && (
+							<a href={`mailto:${props.evaluationManager.email}`}>
+								<Button>
+									Email {props.evaluationManager.firstName}{" "}
+									{props.evaluationManager.lastName}
+								</Button>
+							</a>
+						)}
 						<Button onClick={onDecline}>Decline</Button>
 					</div>
 				</>
