@@ -3,6 +3,7 @@
 
 import { type PubTypesId } from './PubTypes';
 import { type CommunitiesId } from './Communities';
+import { type UsersId } from './Users';
 import { type ColumnType, type Selectable, type Insertable, type Updateable } from 'kysely';
 
 /** Identifier type for public.pubs */
@@ -23,6 +24,8 @@ export default interface PubsTable {
   valuesBlob: ColumnType<unknown | null, unknown | null, unknown | null>;
 
   parent_id: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
+
+  assignee_id: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 }
 
 export type Pubs = Selectable<PubsTable>;
