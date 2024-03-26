@@ -23,7 +23,7 @@ export default async function middleware(request: NextRequest) {
 		);
 	}
 
-	if (request.cookies.get("token")?.value !== token) {
+	if (request.cookies.get("token")?.value !== token || !request.cookies.get("user")) {
 		response.cookies.set("token", token);
 		let user: User;
 		try {
