@@ -3,7 +3,8 @@
 import {
 	PropsWithChildren,
 	createContext,
-	experimental_useOptimistic,
+	// @ts-expect-error
+	useOptimistic,
 	useCallback,
 	useContext,
 	useEffect,
@@ -151,7 +152,7 @@ type DeleteBatch = {
 };
 
 export const StagesProvider = (props: StagesProviderProps) => {
-	const [stages, dispatch] = experimental_useOptimistic(
+	const [stages, dispatch] = useOptimistic(
 		props.stages,
 		makeOptimisitcStagesReducer(props.communityId)
 	);
