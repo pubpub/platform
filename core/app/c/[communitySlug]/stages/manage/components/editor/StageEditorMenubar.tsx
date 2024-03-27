@@ -13,7 +13,7 @@ import {
 	MenubarTrigger,
 } from "ui/menubar";
 import { useStageEditor } from "./StageEditorContext";
-import { useStages } from "./StagesContext";
+import { useStages } from "../../StagesContext";
 
 export const StageEditorMenubar = () => {
 	const { zoomIn, zoomOut, fitView } = useReactFlow();

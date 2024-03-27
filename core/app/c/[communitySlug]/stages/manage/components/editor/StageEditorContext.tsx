@@ -4,7 +4,7 @@ import { PropsWithChildren, createContext, useCallback, useContext, useRef, useS
 import { Node } from "reactflow";
 import { useLocalStorage } from "ui/hooks";
 import { StagePayload } from "~/lib/types";
-import { useStages } from "./StagesContext";
+import { useStages } from "../../StagesContext";
 import { useRouter } from "next/navigation";
 
 export type StageEditorContext = {

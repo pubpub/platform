@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useReactFlow } from "reactflow";
-import { useStages } from "./StagesContext";
+import { useStages } from "../../StagesContext";
 
 export const StageEditorKeyboardControls = () => {
 	const { createStage } = useStages();

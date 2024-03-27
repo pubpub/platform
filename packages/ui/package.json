@@ -97,6 +97,10 @@
 			"module": "./combobox/dist/ui-combobox.esm.js",
 			"default": "./combobox/dist/ui-combobox.cjs.js"
 		},
+		"./skeleton": {
+			"module": "./skeleton/dist/ui-skeleton.esm.js",
+			"default": "./skeleton/dist/ui-skeleton.cjs.js"
+		},
 		"./textarea": {
 			"module": "./textarea/dist/ui-textarea.esm.js",
 			"default": "./textarea/dist/ui-textarea.cjs.js"
@@ -202,6 +206,7 @@
 		"select",
 		"separator",
 		"sheet",
+		"skeleton",
 		"table",
 		"tabs",
 		"textarea",
@@ -319,6 +324,7 @@
 			"select.tsx",
 			"separator.tsx",
 			"sheet.tsx",
+			"skeleton.tsx",
 			"table.tsx",
 			"tabs.tsx",
 			"textarea.tsx",

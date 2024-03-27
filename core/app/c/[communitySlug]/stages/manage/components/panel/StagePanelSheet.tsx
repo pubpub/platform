@@ -6,10 +6,9 @@ import { Sheet, SheetContent } from "ui/sheet";
 
 type Props = PropsWithChildren<{
 	open: boolean;
-	editingStageId?: string;
 }>;
 
-export const StageEditorPanelSheet = (props: Props) => {
+export const StagePanelSheet = (props: Props) => {
 	const [open, setOpen] = useState(false);
 	const router = useRouter();
 	const pathname = usePathname();

@@ -10,7 +10,7 @@ import {
 	ContextMenuTrigger,
 } from "ui/context-menu";
 import { useStageEditor } from "./StageEditorContext";
-import { useStages } from "./StagesContext";
+import { useStages } from "../../StagesContext";
 
 export const StageEditorContextMenu = (props: PropsWithChildren) => {
 	const { createStage } = useStages();

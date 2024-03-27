@@ -3,9 +3,9 @@ import "reactflow/dist/style.css";
 import { LocalStorageProvider } from "ui/hooks";
 import { stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
-import { StageEditor } from "./StageEditor";
-import { StageEditorProvider } from "./StageEditorContext";
-import { StageEditorPanel } from "./StageEditorPanel";
+import { StageEditor } from "./components/editor/StageEditor";
+import { StageEditorProvider } from "./components/editor/StageEditorContext";
+import { StagePanel } from "./components/panel/StagePanel";
 import { StagesProvider } from "./StagesContext";
 
 type Props = {
@@ -44,10 +44,7 @@ export default async function Page({ params, searchParams }: Props) {
 					<div className="h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)] z-50 absolute top-0 left-0 v-full w-full">
 						<div className="h-full relative select-none">
 							<StageEditor />
-							<StageEditorPanel
-								communitySlug={params.communitySlug}
-								editingStageId={searchParams.editingStageId}
-							/>
+							<StagePanel stageId={searchParams.editingStageId} />
 						</div>
 					</div>
 				</LocalStorageProvider>

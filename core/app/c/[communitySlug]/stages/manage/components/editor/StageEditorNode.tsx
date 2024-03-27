@@ -1,21 +1,20 @@
-import { KeyboardEvent, MouseEvent, memo, useCallback, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { KeyboardEvent, memo, useCallback, useMemo, useRef, useState } from "react";
 import { Handle, NodeProps, Position } from "reactflow";
 import { Button } from "ui/button";
 import { Settings } from "ui/icon";
 import { cn, expect } from "utils";
 import { StagePayload } from "~/lib/types";
+import { useStages } from "../../StagesContext";
 import { useStageEditor } from "./StageEditorContext";
-import { useStages } from "./StagesContext";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;
 
-export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
+export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 	const pathname = usePathname();
 	const { updateStageName } = useStages();
-	const { editStage } = useStageEditor();
 	const [isEditingName, setIsEditingName] = useState(false);
 	const memberships = useMemo(
 		() =>
@@ -33,14 +32,6 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 	);
 	const nodeRef = useRef<HTMLDivElement>(null);
 	const nameRef = useRef<HTMLHeadingElement>(null);
-
-	const onSettingsClick = useCallback(
-		(e: MouseEvent) => {
-			e.preventDefault();
-			editStage(props.data.stage);
-		},
-		[editStage, props.data.stage]
-	);
 
 	const onDoubleClick = useCallback(() => {
 		setIsEditingName(true);

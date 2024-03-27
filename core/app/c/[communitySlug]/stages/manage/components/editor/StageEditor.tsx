@@ -22,8 +22,8 @@ import { StagePayload } from "~/lib/types";
 import { useStageEditor } from "./StageEditorContext";
 import { StageEditorKeyboardControls } from "./StageEditorKeyboardControls";
 import { StageEditorMenubar } from "./StageEditorMenubar";
-import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageNode } from "./StageNode";
-import { useStages } from "./StagesContext";
+import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageEditorNode } from "./StageEditorNode";
+import { useStages } from "../../StagesContext";
 import { StageEditorContextMenu } from "./StageEditorContextMenu";
 
 const makeNode = (stage: StagePayload) => {
@@ -134,7 +134,7 @@ const useLayout = (
 	return layoutWithExistingNodePositions;
 };
 
-const nodeTypes = { stage: StageNode };
+const nodeTypes = { stage: StageEditorNode };
 
 export const StageEditorGraph = () => {
 	const { stages, deleteStages, createMoveConstraint, deleteMoveConstraints } = useStages();
