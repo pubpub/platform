@@ -28,6 +28,8 @@ export default async function Page(props: Props) {
 	const evaluator = expect(instanceState?.[user.id], "User was not invited to evaluate this pub");
 	const redirectParams = `?token=${cookie("token")}&instanceId=${instanceId}&pubId=${pubId}`;
 	assertIsInvited(evaluator);
+	const evaluationManager =
+		pub.assignee ?? (await client.getOrCreateUser(instanceId, { userId: evaluator.invitedBy }));
 	// If the evaluator visited this page with the intent to get more information
 	// (either through the invitation email or the declined screen) or to accept
 	// the invite (through the invitation email), show them the response page.
@@ -38,6 +40,7 @@ export default async function Page(props: Props) {
 				instanceId={instanceId}
 				instanceConfig={instanceConfig}
 				pub={pub}
+				evaluationManager={evaluationManager}
 			/>
 		);
 	}
@@ -67,6 +70,7 @@ export default async function Page(props: Props) {
 					instanceId={instanceId}
 					instanceConfig={instanceConfig}
 					pub={pub}
+					evaluationManager={evaluationManager}
 				/>
 			);
 	}

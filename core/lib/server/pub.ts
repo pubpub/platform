@@ -1,46 +1,190 @@
-import {
-	CreatePubRequestBody,
-	GetPubResponseBody,
-	UpdatePubRequestBody,
-	GetPubTypeResponseBody,
-	CreatePubRequestBodyWithNulls,
-} from "contracts";
-import prisma from "~/prisma/db";
-import { RecursiveInclude, makeRecursiveInclude } from "../types";
-import { NotFoundError } from "./errors";
 import { Prisma } from "@prisma/client";
+import {
+	CreatePubRequestBodyWithNulls,
+	GetPubResponseBody,
+	GetPubTypeResponseBody,
+	JsonValue,
+} from "contracts";
+import { ExpressionBuilder, SelectExpression, StringReference, sql } from "kysely";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { expect } from "utils";
+import { db } from "~/kysely/database";
+import Database from "~/kysely/types/Database";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
+import { PubTypesId } from "~/kysely/types/public/PubTypes";
+import { PubsId } from "~/kysely/types/public/Pubs";
+import prisma from "~/prisma/db";
+import { makeRecursiveInclude } from "../types";
+import { NotFoundError } from "./errors";
 
-export const pubValuesInclude = {
-	values: {
-		distinct: ["fieldId"],
-		orderBy: { createdAt: "desc" },
-		include: {
-			field: {
-				select: { slug: true },
-			},
-		},
-	},
-} satisfies Prisma.PubInclude;
+type PubValues = Record<string, JsonValue>;
 
-const recursivelyDenormalizePubValues = async (
-	pub: Prisma.PubGetPayload<RecursiveInclude<"children", typeof pubValuesInclude>>
-): Promise<GetPubResponseBody> => {
-	const values = pub.values.reduce((prev, curr) => {
-		prev[curr.field.slug] = curr.value;
-		return prev;
-	}, {} as Record<string, Prisma.JsonValue>);
-	const children = await Promise.all(pub.children?.map(recursivelyDenormalizePubValues));
-	return { ...pub, children, values };
+type PubNoChildren = {
+	id: PubsId;
+	communityId: CommunitiesId;
+	createdAt: Date;
+	parentId: PubsId | null;
+	pubTypeId: PubTypesId;
+	updatedAt: Date;
+	values: PubValues;
 };
 
-export const getPub = async (pubId: string, depth = 0): Promise<GetPubResponseBody> => {
-	const pubInclude = makeRecursiveInclude("children", pubValuesInclude, depth);
-	const pub = await prisma.pub.findUnique({ where: { id: pubId }, ...pubInclude });
+type NestedPub = PubNoChildren & {
+	children: NestedPub[];
+};
+
+type FlatPub = PubNoChildren & {
+	children: PubNoChildren[];
+};
+
+// pubValuesByRef adds a JSON object of pub_values keyed by their field name under the `fields` key to the output of a query
+// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parent_id or _PubToStage.A
+// It doesn't seem to work if you've aliased the table or column (although you can probably work around that with a cast)
+export const pubValuesByRef = (pubIdRef: StringReference<Database, keyof Database>) => {
+	return (eb: ExpressionBuilder<Database, keyof Database>) => pubValues(eb, { pubIdRef });
+};
+
+// pubValuesByVal does the same thing as pubDataByRef but takes an actual pubId rather than reference to a column
+export const pubValuesByVal = (pubId: PubsId) => {
+	return (eb: ExpressionBuilder<Database, keyof Database>) => pubValues(eb, { pubId });
+};
+
+// pubValues is the shared logic between pubValuesByRef and pubValuesByVal which handles getting the
+// most recent pub field entries (since the table is append-only) and aggregating the pub_fields and
+// pub_values rows into a single {"slug": "value"} JSON object
+const pubValues = (
+	eb: ExpressionBuilder<Database, keyof Database>,
+	{
+		pubId,
+		pubIdRef,
+	}: {
+		pubId?: PubsId;
+		pubIdRef?: StringReference<Database, keyof Database>;
+	}
+) => {
+	const { ref } = db.dynamic;
+
+	const alias = "latest_values";
+	// Although kysely has selectNoFrom, this kind of query can't be generated without using raw sql
+	const jsonObjAgg = (subquery) =>
+		sql<PubValues>`(select json_object_agg(${sql.ref(alias)}.slug, ${sql.ref(
+			alias
+		)}.value) from ${subquery})`;
+
+	return jsonObjAgg(
+		eb
+			.selectFrom("pub_values")
+			.distinctOn("pub_values.field_id")
+			.selectAll("pub_values")
+			.select("slug")
+			.leftJoinLateral(
+				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
+				(join) => join.onRef("fields.id", "=", "pub_values.field_id")
+			)
+			.orderBy(["pub_values.field_id", "pub_values.created_at desc"])
+			.$if(!!pubId, (qb) => qb.where("pub_values.pub_id", "=", pubId!))
+			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pub_id", "=", ref(pubIdRef!)))
+			.as(alias)
+	).as("values");
+};
+
+// Converts a pub from having all its children (regardless of depth) in a flat array to a tree
+// structure. Assumes that pub.children are ordered by depth (leaves last)
+const nestChildren = (pub: FlatPub): NestedPub => {
+	const pubList = [pub, ...pub.children];
+	const pubsMap = new Map();
+	pubList.forEach((pub) => pubsMap.set(pub.id, { ...pub, children: [] }));
+
+	pubList.forEach((pub) => {
+		if (pub.parentId) {
+			const parent = pubsMap.get(pub.parentId);
+			if (parent) {
+				parent.children.push(pubsMap.get(pub.id));
+			}
+		}
+	});
+
+	return pubsMap.get(pub.id);
+};
+
+// TODO: make this usable in a subquery, possibly by turning it into a view
+// Create a CTE ("children") with the pub's children and their values
+const withPubChildren = ({
+	pubId,
+	pubIdRef,
+}: {
+	pubId?: PubsId;
+	pubIdRef?: StringReference<Database, keyof Database>;
+}) => {
+	const { ref } = db.dynamic;
+
+	return db.withRecursive("children", (qc) => {
+		return qc
+			.selectFrom("pubs")
+			.select(["id", "parent_id"])
+			.select(pubValuesByRef("pubs.id"))
+			.$if(!!pubId, (qb) => qb.where("pubs.parent_id", "=", pubId!))
+			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parent_id", "=", ref(pubIdRef!)))
+			.unionAll((eb) => {
+				return eb
+					.selectFrom("children")
+					.innerJoin("pubs", "pubs.parent_id", "children.id")
+					.select(["pubs.id", "pubs.parent_id"])
+					.select(pubValuesByRef("pubs.id"));
+			});
+	});
+};
+
+const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonObjectFrom(
+		eb
+			.selectFrom("users")
+			.whereRef("users.id", "=", "pubs.assignee_id")
+			.select([
+				"users.id",
+				"slug",
+				"firstName",
+				"lastName",
+				"avatar",
+				"created_at as createdAt",
+				"email",
+			])
+	).as("assignee");
+
+export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+	// These aliases are used to make sure the JSON object returned matches
+	// the old prisma query's return value
+	const pubColumns = [
+		"id",
+		"community_id as communityId",
+		"created_at as createdAt",
+		"parent_id as parentId",
+		"pub_type_id as pubTypeId",
+		"updated_at as updatedAt",
+	] as const satisfies SelectExpression<Database, "pubs">[];
+
+	const pub = await withPubChildren({ pubId })
+		.selectFrom("pubs")
+		.where("pubs.id", "=", pubId)
+		.select(pubColumns)
+		.select(pubValuesByVal(pubId))
+		.select((eb) => pubAssignee(eb))
+		.$narrowType<{ values: PubValues }>()
+		.select((eb) =>
+			jsonArrayFrom(
+				eb
+					.selectFrom("children")
+					.select([...pubColumns, "values"])
+					.$narrowType<{ values: PubValues }>()
+			).as("children")
+		)
+		.executeTakeFirst();
+
 	if (!pub) {
 		throw PubNotFoundError;
 	}
-	return recursivelyDenormalizePubValues(pub);
+
+	return nestChildren(pub);
 };
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
@@ -101,7 +245,10 @@ const getUpdateDepth = (body: CreatePubRequestBodyWithNulls, depth = 0) => {
 	return depth + 1;
 };
 
-const makePubChildrenCreateOptions = async (body: CreatePubRequestBodyWithNulls, communityId: string) => {
+const makePubChildrenCreateOptions = async (
+	body: CreatePubRequestBodyWithNulls,
+	communityId: string
+) => {
 	if (!body.children) {
 		return undefined;
 	}
@@ -110,7 +257,9 @@ const makePubChildrenCreateOptions = async (body: CreatePubRequestBodyWithNulls,
 		if ("id" in child) {
 			continue;
 		}
-		inputs.push(makeRecursivePubUpdateInput(child, communityId));
+		inputs.push(
+			makeRecursivePubUpdateInput({ assigneeId: body.assigneeId, ...child }, communityId)
+		);
 	}
 	return Promise.all(inputs);
 };
@@ -135,6 +284,11 @@ const makeRecursivePubUpdateInput = async (
 	body: CreatePubRequestBodyWithNulls,
 	communityId: string
 ): Promise<Prisma.PubCreateInput> => {
+	const assignee = body.assigneeId
+		? {
+				connect: { id: body.assigneeId },
+		  }
+		: undefined;
 	return {
 		community: { connect: { id: communityId } },
 		pubType: { connect: { id: body.pubTypeId } },
@@ -143,6 +297,7 @@ const makeRecursivePubUpdateInput = async (
 				data: await normalizePubValues(body.values),
 			},
 		},
+		assignee,
 		children: {
 			// For each child, either connect to an existing pub or create a new one.
 			connect: makePubChildrenConnectOptions(body),
@@ -163,7 +318,7 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBodyWi
 
 	const updateDepth = getUpdateDepth(body);
 	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
-	const updateArgs = {
+	const createArgs = {
 		data: {
 			...(!body.parentId && {
 				stages: {
@@ -174,7 +329,7 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBodyWi
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),
 	};
-	const pub = await prisma.pub.create(updateArgs);
+	const pub = await prisma.pub.create(createArgs);
 
 	return pub;
 };

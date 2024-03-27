@@ -1,6 +1,25 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
+// Auth types
+
+export const SafeUser = z.object({
+	id: z.string(),
+	slug: z.string(),
+	firstName: z.string(),
+	lastName: z.string().nullable(),
+	avatar: z.string().nullable(),
+	createdAt: z.date(),
+});
+export type SafeUser = z.infer<typeof SafeUser>;
+
+export const User = SafeUser.and(
+	z.object({
+		email: z.string(),
+	})
+);
+export type User = z.infer<typeof User>;
+
 // Json value types taken from prisma
 export type JsonObject = { [Key in string]?: JsonValue };
 export interface JsonArray extends Array<JsonValue> {}
@@ -44,6 +63,7 @@ const commonPubFields = z.object({
 export const GetPubResponseBodyBase = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
+	assignee: User.optional(),
 });
 export type GetPubResponseBodyBase = z.infer<typeof GetPubResponseBodyBase>;
 
@@ -59,6 +79,7 @@ export const GetPubResponseBody: z.ZodType<GetPubResponseBody> = GetPubResponseB
 const CreatePubRequestBodyBase = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(JsonInput),
+	assigneeId: z.string().optional(),
 });
 export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBodyBase> & {
 	children?: CreatePubRequestBody[];
@@ -72,6 +93,7 @@ export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
 const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(jsonSchema),
+	assigneeId: z.string().optional(),
 });
 
 export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
@@ -142,24 +164,6 @@ export const Member = MemberBase.pick({
 	firstName: true,
 	lastName: true,
 });
-
-// Auth types
-
-export const SafeUser = z.object({
-	id: z.string(),
-	slug: z.string(),
-	firstName: z.string(),
-	lastName: z.string().nullable(),
-	avatar: z.string().nullable(),
-});
-export type SafeUser = z.infer<typeof SafeUser>;
-
-export const User = SafeUser.and(
-	z.object({
-		email: z.string(),
-	})
-);
-export type User = z.infer<typeof User>;
 
 // Email types
 
@@ -291,9 +295,6 @@ export const integrationsApi = contract.router(
 			pathParams: z.object({
 				pubId: z.string(),
 				instanceId: z.string(),
-			}),
-			query: z.object({
-				depth: z.string().optional(),
 			}),
 			responses: {
 				200: GetPubResponseBody,

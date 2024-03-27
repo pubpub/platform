@@ -1,27 +1,30 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GetPubResponseBody } from "@pubpub/sdk";
+import { GetPubResponseBody, User } from "@pubpub/sdk";
+import { IntegrationAvatar } from "@pubpub/sdk/react";
 import React, { useCallback } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { cn } from "utils";
+import { Button } from "ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Form, FormDescription, FormItem, FormLabel } from "ui/form";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
+import { Calendar, Loader2, Plus } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { useToast } from "ui/use-toast";
 import { EmailTemplate, Evaluator, InstanceConfig, hasUser, isInvited, isSaved } from "~/lib/types";
 import { EvaluatorInviteFormInviteButton } from "./EvaluatorInviteFormInviteButton";
 import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
 import * as actions from "./actions";
 import { InviteFormEvaluator, InviteFormSchema } from "./types";
-import { useToast } from "ui/use-toast";
-import { Form, FormDescription, FormItem, FormLabel } from "ui/form";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Loader2, Plus } from "ui/icon";
 
 type Props = {
 	evaluators: Evaluator[];
 	instanceId: string;
 	instanceConfig: InstanceConfig;
 	pub: GetPubResponseBody;
+	user: User;
 };
 
 const makeEvaluator = (template: EmailTemplate): InviteFormEvaluator => {
@@ -168,15 +171,73 @@ export function EvaluatorInviteForm(props: Props) {
 		window.history.back();
 	}, []);
 
+	const evaluationManager = props.pub.assignee ?? props.user;
+
 	return (
 		<Form {...form}>
 			<Card>
-				<CardHeader>
-					<CardTitle>Invite Evaluators</CardTitle>
-					<CardDescription>
-						Use this form to invite evaluators to review "
-						{props.pub.values[props.instanceConfig.titleFieldSlug] as string}".
-					</CardDescription>
+				<CardHeader className="flex flex-row justify-between">
+					<div>
+						<CardTitle>Invite Evaluators</CardTitle>
+						<CardDescription>
+							Use this form to invite evaluators to review "
+							{props.pub.values[props.instanceConfig.titleFieldSlug] as string}".
+						</CardDescription>
+					</div>
+					<div>
+						<div className="mb-4 flex flex-row items-center">
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipContent>
+										<p className="max-w-[200px]">
+											{props.pub.assignee
+												? "The submission's evaluation manager"
+												: "The submission's evaluation manager, unless assigned to another"}
+										</p>
+									</TooltipContent>
+									<TooltipTrigger asChild>
+										<span className="text-sm border-b-2 border-dotted cursor-pointer">
+											Assigned to:
+										</span>
+									</TooltipTrigger>
+								</Tooltip>
+							</TooltipProvider>
+							<HoverCard>
+								<HoverCardTrigger asChild>
+									<Button variant="link">
+										{evaluationManager.firstName} {evaluationManager.lastName}
+									</Button>
+								</HoverCardTrigger>
+								<HoverCardContent>
+									<div className="flex justify-between space-x-4">
+										<IntegrationAvatar
+											firstName={evaluationManager.firstName}
+											url={evaluationManager.avatar!}
+										/>
+										<div className="space-y-1">
+											<h4 className="text-sm font-semibold">
+												{evaluationManager.firstName}{" "}
+												{evaluationManager.lastName}
+											</h4>
+											<div className="flex items-center pt-2">
+												<Calendar className="mr-2 h-4 w-4 opacity-70" />{" "}
+												<span className="text-xs text-muted-foreground">
+													Joined{" "}
+													{new Date(
+														evaluationManager.createdAt
+													).toLocaleDateString(undefined, {
+														year: "numeric",
+														month: "long",
+														day: "numeric",
+													})}
+												</span>
+											</div>
+										</div>
+									</div>
+								</HoverCardContent>
+							</HoverCard>
+						</div>
+					</div>
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-row gap-4 mb-4">
@@ -217,7 +278,7 @@ export function EvaluatorInviteForm(props: Props) {
 						Add Evaluator
 					</Button>
 				</CardContent>
-				<CardFooter className={cn("flex justify-between")}>
+				<CardFooter className="flex justify-between">
 					<div>
 						<Button variant="outline" onClick={onBack}>
 							Go Back

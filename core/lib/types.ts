@@ -51,9 +51,21 @@ export const permissionInclude = {
 	},
 } satisfies Prisma.PermissionInclude;
 
+export const pubValuesInclude = {
+	values: {
+		distinct: ["fieldId"],
+		orderBy: { createdAt: "desc" },
+		include: {
+			field: {
+				include: { schema: true },
+			},
+		},
+	},
+} satisfies Prisma.PubInclude;
+
 export const pubInclude = {
 	pubType: true,
-	values: { include: { field: { include: { schema: true } } } },
+	...pubValuesInclude,
 	stages: {
 		include: {
 			integrationInstances: { include: { integration: true } },

@@ -6,7 +6,7 @@ import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
 import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
-import { pubValuesInclude } from "./pub";
+import { pubValuesInclude } from "../types";
 
 type Node = string | { t: string; val: string };
 
@@ -87,14 +87,31 @@ const makeProxy = <T extends Record<string, unknown>>(obj: T, prefix: string) =>
 
 const pubInclude = {
 	...pubValuesInclude,
+	assignee: {
+		select: {
+			id: true,
+			slug: true,
+			avatar: true,
+			firstName: true,
+			lastName: true,
+			email: true,
+		},
+	},
 } satisfies Prisma.PubInclude;
-type EmailTemplatePub = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
+
+type EmailTemplatePub = {
+	id: string;
+	pubTypeId: string;
+	values: Record<string, Prisma.JsonValue>;
+	assignee: Prisma.UserGetPayload<(typeof pubInclude)["assignee"]> | null;
+};
 
 const userSelect = {
 	firstName: true,
 	lastName: true,
 	email: true,
 } satisfies Prisma.UserSelect;
+
 type EmailTemplateUser = Prisma.UserGetPayload<{ select: typeof userSelect }>;
 
 const makeTemplateApi = async (
@@ -111,7 +128,7 @@ const makeTemplateApi = async (
 	);
 	// TODO: Batch these calls using prisma.findMany() or equivalent.
 	// Load included pubs.
-	const pubs: { [pubId: string]: GetPubResponseBodyBase } = {};
+	const pubs: { [pubId: string]: EmailTemplatePub } = {};
 	if (body.include?.pubs) {
 		for (const pubAlias in body.include.pubs) {
 			const pubId = body.include.pubs[pubAlias];
@@ -127,6 +144,7 @@ const makeTemplateApi = async (
 						prev[curr.field.slug] = curr.value;
 						return prev;
 					}, {} as Record<string, Prisma.JsonValue>),
+					assignee: pub.assignee,
 				};
 			}
 		}
@@ -174,7 +192,7 @@ const makeTemplateApi = async (
 export const emailUser = async (instanceId: string, user: User, body: SendEmailRequestBody) => {
 	const instance = await prisma.integrationInstance.findUnique({
 		where: { id: instanceId },
-		include: instanceInclude,
+		include: { ...instanceInclude, community: { select: { name: true } } },
 	});
 
 	if (!instance) {
@@ -185,7 +203,7 @@ export const emailUser = async (instanceId: string, user: User, body: SendEmailR
 	const subject = await eta.renderStringAsync(body.subject, templateApi);
 	const html = await eta.renderStringAsync(body.message, templateApi);
 	const { accepted, rejected } = await smtpclient.sendMail({
-		from: "PubPub Team <hello@mg.pubpub.org>",
+		from: `${instance.community.name || "PubPub Team"} <hello@mg.pubpub.org>`,
 		to: user.email,
 		replyTo: "hello@pubpub.org",
 		html,
