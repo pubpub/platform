@@ -8,8 +8,8 @@ import { Button } from "ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Loader2 } from "ui/icon";
 import LogoutButton from "~/app/components/LogoutButton";
+import { env } from "~/lib/env/env.mjs";
 import { UserPutBody, UserSetting } from "~/lib/types";
-import { useEnvContext } from "next-runtime-env";
 import { logger } from "logger";
 
 type Props = UserSetting;
@@ -21,7 +21,6 @@ export default function SettingsForm({
 	slug,
 	communities,
 }: Props) {
-	const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
 	const [firstName, setFirstName] = useState(initFirstName);
 	const [lastName, setLastName] = useState(initLastName);
 	const [email, setEmail] = useState(initEmail);
@@ -96,7 +95,7 @@ export default function SettingsForm({
 	const resetPassword = async () => {
 		setResetIsLoading(true);
 		const { error } = await supabase.auth.resetPasswordForEmail(initEmail, {
-			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			logger.error(error);

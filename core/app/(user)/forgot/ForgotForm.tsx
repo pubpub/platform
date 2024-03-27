@@ -4,12 +4,10 @@ import { Button } from "ui/button";
 import { Loader2 } from "ui/icon";
 
 import { supabase } from "lib/supabase";
-import { useEnvContext } from "next-runtime-env";
+import { env } from "~/lib/env/env.mjs";
 import { logger } from "logger";
 
 export default function ForgotForm() {
-	const { NEXT_PUBLIC_PUBPUB_URL } = useEnvContext();
-
 	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [success, setSuccess] = useState(false);
@@ -20,7 +18,7 @@ export default function ForgotForm() {
 		setIsLoading(true);
 		setFailure(false);
 		const { error } = await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: `${NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		});
 		if (error) {
 			logger.error(error);

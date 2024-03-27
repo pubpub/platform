@@ -219,7 +219,7 @@ model ActionMove {
 model Member {
   id          String    @id @default(uuid())
   canAdmin    Boolean // Community-wide administrator
-  // If admin, the permissions are irrelevant because they have acccess to everything, but we 
+  // If admin, the permissions are irrelevant because they have acccess to everything, but we
   // may want to keep the permissions around (though grayed our and with a note?) in case their
   // admin status is ever removed.
   community   Community @relation(fields: [communityId], references: [id])
@@ -266,7 +266,7 @@ model Permission {
   // We don't have a way in this right now to say 'All pubs in a community' or 'all pubs in a workflow'.
   // Our assumption is that the former should just be a community admin, and the latter should just have
   // access to some parent pub whose children are the contents of a workflow. If that winds up being
-  // a bad assumption, wouldn't be too hard to add a `workflows Workflow[]` value below. 
+  // a bad assumption, wouldn't be too hard to add a `workflows Workflow[]` value below.
 
   pubs   Pub[]
   stages Stage[]
@@ -314,5 +314,5 @@ model IntegrationInstanceState {
   instanceId String              @map(name: "instance_id")
   state      Json
 
-  @@unique([pubId, instanceId], name: "pub_instance") // guarentees one state per pub-instance pair
+  @@unique([pubId, instanceId], name: "pub_instance")
 }

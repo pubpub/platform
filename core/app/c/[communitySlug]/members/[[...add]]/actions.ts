@@ -13,6 +13,7 @@ import { captureException } from "@sentry/nextjs";
 import { TableMember } from "./getMemberTableColumns";
 import { cache } from "react";
 import { User } from "@supabase/supabase-js";
+import { env } from "~/lib/env/env.mjs";
 
 export const revalidateMemberPathsAndTags = (community: Community) => {
 	revalidatePath(`/c/${community.slug}/members`);
@@ -73,7 +74,7 @@ const addSupabaseUser = async ({
 	const client = getServerSupabase();
 
 	const { error, data } = await client.auth.admin.inviteUserByEmail(email, {
-		redirectTo: `${process.env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+		redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
 		data: {
 			firstName,
 			lastName,

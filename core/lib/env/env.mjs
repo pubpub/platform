@@ -2,6 +2,7 @@
 
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+import { env as runtimeEnv } from "next-runtime-env";
 
 export const env = createEnv({
 	shared: {
@@ -31,9 +32,9 @@ export const env = createEnv({
 	},
 	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
-		NEXT_PUBLIC_PUBPUB_URL: process.env.NEXT_PUBLIC_PUBPUB_URL,
-		NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,
-		NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+		NEXT_PUBLIC_PUBPUB_URL: runtimeEnv("NEXT_PUBLIC_PUBPUB_URL"),
+		NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: runtimeEnv("NEXT_PUBLIC_SUPABASE_PUBLIC_KEY"),
+		NEXT_PUBLIC_SUPABASE_URL: runtimeEnv("NEXT_PUBLIC_SUPABASE_URL"),
 	},
 	skipValidation: Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
