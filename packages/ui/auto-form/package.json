@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-auto-form.cjs.js",
+	"module": "dist/ui-auto-form.esm.js"
+}

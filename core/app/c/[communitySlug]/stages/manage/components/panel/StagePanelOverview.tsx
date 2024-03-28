@@ -18,15 +18,8 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 		return <SkeletonCard />;
 	}
 
-	const onNameChange = async (name: string) => {
-		"use server";
-		await updateStageName(stage.communityId, stage.id, name);
-	};
-
-	const onDelete = async () => {
-		"use server";
-		await deleteStages(stage.communityId, [stage.id]);
-	};
+	const onNameChange = updateStageName.bind(null, stage.communityId, stage.id);
+	const onDelete = deleteStages.bind(null, stage.communityId, [stage.id]);
 
 	return (
 		<Card>
@@ -42,7 +35,7 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 };
 
 type Props = {
-	stageId?: string;
+	stageId: string | undefined;
 };
 
 export const StagePanelOverview = async (props: Props) => {

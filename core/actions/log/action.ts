@@ -5,7 +5,7 @@ import { defineAction } from "../types";
 export const action = defineAction({
 	name: "log",
 	config: z.object({
-		debounce: z.number().optional(),
+		debounce: z.number().optional().describe("Debounce time in milliseconds."),
 	}),
 	pubConfig: z.object({}),
 	pubFields: [corePubFields.title],

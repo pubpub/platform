@@ -19,12 +19,18 @@ export type ConfigProps<C> = {
 	config: C;
 };
 
-export type Action<PT extends ActionPubType = ActionPubType, AC = unknown, PC = unknown> = {
+export type Action<
+	PT extends ActionPubType = ActionPubType,
+	AC extends object = {},
+	PC extends object = {}
+> = {
 	id?: string;
 	name: string;
-	config: z.Schema<AC>;
-	pubConfig: z.Schema<PC>;
+	config: z.ZodType<AC>;
+	pubConfig: z.ZodType<PC>;
 	pubFields: PT;
 };
 
-export const defineAction = <T extends ActionPubType, AC, PC>(action: Action<T, AC, PC>) => action;
+export const defineAction = <T extends ActionPubType, AC extends object, PC extends object>(
+	action: Action<T, AC, PC>
+) => action;

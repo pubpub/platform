@@ -69,7 +69,7 @@ const ActionCell = (props: ActionCellProps) => {
 
 type Props = {
 	actions: ActionPayload[];
-	onAdd: (action: ActionPayload) => void;
+	onAdd: (actionId: string) => void;
 };
 
 export const StagePanelActionCreator = (props: Props) => {
@@ -77,39 +77,34 @@ export const StagePanelActionCreator = (props: Props) => {
 	const onActionSelect = useCallback(
 		(action: ActionPayload) => {
 			setIsOpen(false);
-			props.onAdd(action);
+			props.onAdd(action.id);
 		},
 		[props.onAdd]
 	);
 	const onOpenChange = useCallback((open: boolean) => {
 		setIsOpen(open);
 	}, []);
+
 	return (
-		<>
-			<div className="space-y-2 py-2">
-				<Dialog open={isOpen} onOpenChange={onOpenChange}>
-					<DialogTrigger asChild>
-						<Button variant="secondary">Add an action</Button>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Add an action</DialogTitle>
-							<DialogDescription>
-								Pick an action to add from the list below.
-							</DialogDescription>
-						</DialogHeader>
-						<div className="grid grid-cols-2 gap-4">
-							{props.actions.map((action) => (
-								<ActionCell
-									key={action.id}
-									action={action}
-									onClick={onActionSelect}
-								/>
-							))}
-						</div>
-					</DialogContent>
-				</Dialog>
-			</div>
-		</>
+		<div className="space-y-2 py-2">
+			<Dialog open={isOpen} onOpenChange={onOpenChange}>
+				<DialogTrigger asChild>
+					<Button variant="secondary">Add an action</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Add an action</DialogTitle>
+						<DialogDescription>
+							Pick an action to add from the list below.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="grid grid-cols-2 gap-4">
+						{props.actions.map((action) => (
+							<ActionCell key={action.id} action={action} onClick={onActionSelect} />
+						))}
+					</div>
+				</DialogContent>
+			</Dialog>
+		</div>
 	);
 };
