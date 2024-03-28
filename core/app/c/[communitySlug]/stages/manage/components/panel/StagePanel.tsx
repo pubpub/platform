@@ -4,13 +4,21 @@ import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelSheet } from "./StagePanelSheet";
 import { StagePanelPubs } from "./StagePanelPubs";
 import { StagePanelMembers } from "./StagePanelMembers";
+import { getStage } from "./queries";
 
 type Props = {
 	stageId: string | undefined;
 };
 
-export const StagePanel = (props: Props) => {
-	const open = Boolean(props.stageId);
+export const StagePanel = async (props: Props) => {
+	let open = Boolean(props.stageId);
+
+	if (props.stageId) {
+		const stage = await getStage(props.stageId);
+		if (stage === null) {
+			open = false;
+		}
+	}
 
 	return (
 		<StagePanelSheet open={open}>

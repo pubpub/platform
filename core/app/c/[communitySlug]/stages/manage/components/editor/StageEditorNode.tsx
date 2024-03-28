@@ -16,7 +16,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 	const pathname = usePathname();
 	const { updateStageName } = useStages();
 	const [isEditingName, setIsEditingName] = useState(false);
-	const memberships = useMemo(
+	const members = useMemo(
 		() =>
 			props.data.stage.permissions.reduce((acc, permission) => {
 				if (permission.memberGroup !== null) {
@@ -102,12 +102,12 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 					</li>
 					<li>
 						<Button variant="link" className="p-0 m-0 h-auto text-xs font-light">
-							0 actions
+							{props.data.stage.actionInstances.length} actions
 						</Button>
 					</li>
 					<li>
 						<Button variant="link" className="p-0 m-0 h-auto text-xs font-light">
-							{memberships.size} members
+							{members.size} members
 						</Button>
 					</li>
 				</ul>

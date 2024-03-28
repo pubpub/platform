@@ -1,7 +1,11 @@
 import { Suspense } from "react";
+import { Card, CardContent } from "ui/card";
+import { Separator } from "ui/separator";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
+import { deleteStages, updateStageName } from "../../actions";
+import { StageNameInput } from "./StageNameInput";
+import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
 import { getStage } from "./queries";
-import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
 
 type PropsInner = {
 	stageId: string;
@@ -14,13 +18,24 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 		return <SkeletonCard />;
 	}
 
+	const onNameChange = async (name: string) => {
+		"use server";
+		await updateStageName(stage.communityId, stage.id, name);
+	};
+
+	const onDelete = async () => {
+		"use server";
+		await deleteStages(stage.communityId, [stage.id]);
+	};
+
 	return (
 		<Card>
-			<CardHeader>
-				<CardTitle>Overview</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<p>{stage.name}</p>
+			<CardContent className="space-y-2 p-4">
+				<StageNameInput value={stage.name} onChange={onNameChange} />
+				<Separator />
+				<div className="space-y-2 py-2">
+					<StagePanelOverviewManagement onDelete={onDelete} />
+				</div>
 			</CardContent>
 		</Card>
 	);

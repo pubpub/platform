@@ -4,6 +4,7 @@ export {
 	Check,
 	CheckCircle,
 	ChevronsUpDown,
+	ChevronDown,
 	CircleDashed,
 	CircleDollarSign,
 	CircleEllipsis,

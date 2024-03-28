@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStagePubs } from "./queries";
 
@@ -10,16 +9,7 @@ type PropsInner = {
 const StagePanelPubsInner = async (props: PropsInner) => {
 	const pubs = await getStagePubs(props.stageId);
 
-	return (
-		<Card className="w-full">
-			<CardHeader>
-				<CardTitle>Pubs</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<p>Pub count: {pubs.length}</p>
-			</CardContent>
-		</Card>
-	);
+	return <p>Pub count: {pubs.length}</p>;
 };
 
 type Props = {

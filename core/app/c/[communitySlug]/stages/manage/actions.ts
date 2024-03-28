@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
-import { redirect } from "next/navigation";
+import { revalidateTag } from "next/cache";
 import db from "~/prisma/db";
 
 export async function createStage(communityId: string) {
@@ -118,4 +117,37 @@ export async function updateStageName(communityId: string, stageId: string, name
 
 export async function revalidateStages(communityId: string) {
 	revalidateTag(`community-stages_${communityId}`);
+}
+
+export async function addAction(communityId: string, stageId: string, actionId: string) {
+	try {
+		await db.actionInstance.create({
+			data: {
+				action: {
+					connect: {
+						id: actionId,
+					},
+				},
+				stage: {
+					connect: {
+						id: stageId,
+					},
+				},
+			},
+		});
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+}
+
+export async function deleteAction(communityId: string, actionId: string) {
+	try {
+		await db.actionInstance.delete({
+			where: {
+				id: actionId,
+			},
+		});
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
 }

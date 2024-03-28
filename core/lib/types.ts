@@ -133,6 +133,7 @@ export const stageInclude = {
 } satisfies Prisma.StageInclude;
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
+export type StagePayloadActionInstance = StagePayload["actionInstances"][number];
 export type StagePayloadAction = StagePayload["actionInstances"][number]["action"];
 export type StagesById = { [key: string]: StagePayload };
 

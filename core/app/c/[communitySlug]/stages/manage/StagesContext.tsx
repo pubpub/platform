@@ -9,6 +9,7 @@ import {
 	useContext,
 	useEffect,
 	useState,
+	startTransition,
 } from "react";
 import { ActionPayload, StagePayload, StagePayloadAction } from "~/lib/types";
 import * as actions from "./actions";
@@ -189,14 +190,18 @@ export const StagesProvider = (props: StagesProviderProps) => {
 
 	const addActionInstance = useCallback(
 		(action: StagePayloadAction, stageId: string) => {
-			dispatch({ type: "action_instance_added", action, stageId });
+			startTransition(() => {
+				dispatch({ type: "action_instance_added", action, stageId });
+			});
 		},
 		[dispatch]
 	);
 
 	const createStage = useCallback(async () => {
 		try {
-			dispatch({ type: "stage_created" });
+			startTransition(() => {
+				dispatch({ type: "stage_created" });
+			});
 			await actions.createStage(props.communityId);
 		} catch (e) {
 			console.error(e);
@@ -206,7 +211,9 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	const deleteStages = useCallback(
 		async (stageIds: string[]) => {
 			try {
-				dispatch({ type: "stages_deleted", stageIds });
+				startTransition(() => {
+					dispatch({ type: "stages_deleted", stageIds });
+				});
 				setDeleteBatch((prev) => ({ ...prev, stageIds: [...prev.stageIds, ...stageIds] }));
 			} catch (e) {
 				console.error(e);
@@ -219,15 +226,19 @@ export const StagesProvider = (props: StagesProviderProps) => {
 		async (stageIds: string[], moveConstraintIds: [string, string][]) => {
 			try {
 				if (stageIds.length > 0) {
-					dispatch({
-						type: "stages_deleted",
-						stageIds,
+					startTransition(() => {
+						dispatch({
+							type: "stages_deleted",
+							stageIds,
+						});
 					});
 				}
 				if (moveConstraintIds.length > 0) {
-					dispatch({
-						type: "move_constraints_deleted",
-						moveConstraintIds,
+					startTransition(() => {
+						dispatch({
+							type: "move_constraints_deleted",
+							moveConstraintIds,
+						});
 					});
 				}
 				await actions.deleteStagesAndMoveConstraints(
@@ -245,10 +256,12 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	const createMoveConstraint = useCallback(
 		async (sourceStageId: string, destinationStageId: string) => {
 			try {
-				dispatch({
-					type: "move_constraint_created",
-					sourceStageId,
-					destinationStageId,
+				startTransition(() => {
+					dispatch({
+						type: "move_constraint_created",
+						sourceStageId,
+						destinationStageId,
+					});
 				});
 				await actions.createMoveConstraint(
 					props.communityId,
@@ -265,9 +278,11 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	const deleteMoveConstraints = useCallback(
 		async (moveConstraintIds: [string, string][]) => {
 			try {
-				dispatch({
-					type: "move_constraints_deleted",
-					moveConstraintIds,
+				startTransition(() => {
+					dispatch({
+						type: "move_constraints_deleted",
+						moveConstraintIds,
+					});
 				});
 				setDeleteBatch((prev) => ({
 					...prev,
@@ -283,10 +298,12 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	const updateStageName = useCallback(
 		async (stageId: string, name: string) => {
 			try {
-				dispatch({
-					type: "stage_name_updated",
-					stageId,
-					name,
+				startTransition(() => {
+					dispatch({
+						type: "stage_name_updated",
+						stageId,
+						name,
+					});
 				});
 				await actions.updateStageName(props.communityId, stageId, name);
 			} catch (e) {
