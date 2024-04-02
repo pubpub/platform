@@ -1,6 +1,7 @@
 "use server";
 
 import { PubValues } from "@pubpub/sdk";
+
 import { getInstanceConfig } from "~/lib/instance";
 import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
 import { client } from "~/lib/pubpub";

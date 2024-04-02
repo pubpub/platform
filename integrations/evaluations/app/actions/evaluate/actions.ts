@@ -1,8 +1,10 @@
 "use server";
 
-import { PubValues } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
+
+import { PubValues } from "@pubpub/sdk";
 import { expect } from "utils";
+
 import {
 	sendSubmittedNotificationEmail,
 	unscheduleAllDeadlineReminderEmails,

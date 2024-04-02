@@ -1,12 +1,18 @@
-import { User } from "@pubpub/sdk";
 import { cookies, headers } from "next/headers";
-import { env } from "~/lib/env.mjs";
+
+import { User } from "@pubpub/sdk";
 import { Toaster } from "ui/toaster";
+
+import { env } from "~/lib/env.mjs";
+
 import "ui/styles.css";
+
 import { expect } from "utils";
-import { Integration } from "~/lib/Integration";
+
 import { getInstanceConfig } from "~/lib/instance";
+import { Integration } from "~/lib/Integration";
 import { InstanceConfig } from "~/lib/types";
+
 import "./globals.css";
 
 export const metadata = {

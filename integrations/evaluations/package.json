@@ -5,6 +5,7 @@
 	"scripts": {
 		"dev": "next dev -p 3001 | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
+		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"start": "next start",
 		"lint": "next lint",
 		"type-check": "tsc"
@@ -33,6 +34,7 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"@preconstruct/next": "^4.0.0",
 		"@tailwindcss/typography": "^0.5.10",
 		"@types/node": "20.3.1",

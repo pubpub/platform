@@ -1,18 +1,10 @@
 "use server";
 
-import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { revalidatePath } from "next/cache";
+
+import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { expect } from "utils";
-import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
-import { client } from "~/lib/pubpub";
-import { cookie } from "~/lib/request";
-import {
-	EvaluatorWhoAccepted,
-	EvaluatorWithInvite,
-	assertHasAccepted,
-	assertIsInvited,
-	isInvited,
-} from "~/lib/types";
+
 import {
 	scheduleInvitationReminderEmail,
 	scheduleNoReplyNotificationEmail,
@@ -20,6 +12,16 @@ import {
 	unscheduleAllDeadlineReminderEmails,
 	unscheduleAllManagerEmails,
 } from "~/lib/emails";
+import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
+import { client } from "~/lib/pubpub";
+import { cookie } from "~/lib/request";
+import {
+	assertHasAccepted,
+	assertIsInvited,
+	EvaluatorWhoAccepted,
+	EvaluatorWithInvite,
+	isInvited,
+} from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
 
 export const save = async (

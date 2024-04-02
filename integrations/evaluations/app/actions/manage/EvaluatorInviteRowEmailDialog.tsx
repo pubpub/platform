@@ -13,6 +13,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { Mail } from "ui/icon";
 import { Input } from "ui/input";
 import { Textarea } from "ui/textarea";
+
 import { isInvited } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
 
@@ -43,7 +44,7 @@ export const EvaluatorInviteRowEmailDialog = (props: EvaluatorInviteRowEmailDial
 						</DialogDescription>
 					)}
 				</DialogHeader>
-				<div className="flex flex-col justify-between align-baseline gap-4">
+				<div className="flex flex-col justify-between gap-4 align-baseline">
 					<FormField
 						name={`evaluators.${props.index}.emailTemplate.subject`}
 						render={({ field }) => (

@@ -193,6 +193,7 @@
 		"customRenderers"
 	],
 	"scripts": {
+		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"type-check": "tsc"
 	},
 	"dependencies": {
@@ -239,6 +240,7 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"@types/react": "^18.2.5",
 		"postcss": "^8.4.20",
 		"react": "^18.2.0",
@@ -303,5 +305,6 @@
 			"customRenderers/confidence/confidence.tsx",
 			"customRenderers/fileUpload/fileUpload.tsx"
 		]
-	}
+	},
+	"prettier": "@pubpub/prettier-config"
 }

@@ -1,8 +1,9 @@
 import * as React from "react";
 // this import causes a cyclic dependency in pnpm but here we are
 import Ajv, { JSONSchemaType } from "ajv";
-import { GetPubTypeResponseBody } from "contracts";
 import { Control, ControllerRenderProps } from "react-hook-form";
+
+import { GetPubTypeResponseBody } from "contracts";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
@@ -308,7 +309,7 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 								schemaPath={fieldSchemaPath}
 							/>
 						</div>,
-				  ]
+					]
 				: [
 						<SchemaBasedFormFields
 							{...props}
@@ -316,7 +317,7 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 							fieldSchema={fieldSchema}
 							schemaPath={fieldSchemaPath}
 						/>,
-				  ];
+					];
 
 			fields.push(...fieldContent);
 		}
@@ -325,7 +326,7 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 			resolvedSchema.$ref && props.compiledSchema && props.compiledSchema.getSchema("schema")
 				? (props.compiledSchema.getSchema(
 						`${props.schemaPath}${resolvedSchema.$ref!.split("#")[1]}`
-				  )!.schema as JSONSchemaType<AnySchema>)
+					)!.schema as JSONSchemaType<AnySchema>)
 				: resolvedSchema;
 		fields.push(
 			scalarSchema.$id && hasCustomRenderer(scalarSchema.$id) ? (

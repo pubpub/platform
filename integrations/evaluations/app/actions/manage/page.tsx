@@ -1,9 +1,10 @@
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { isInvited } from "~/lib/types";
 import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
-import { cookies } from "next/headers";
 
 type Props = {
 	searchParams: {

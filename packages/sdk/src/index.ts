@@ -1,8 +1,8 @@
+import type { CreatePubRequestBodyWithNulls } from "contracts";
+
 export * from "./errors";
 export * from "./manifest";
 export * from "./client";
-
-import type { CreatePubRequestBodyWithNulls } from "contracts";
 
 type Field = CreatePubRequestBodyWithNulls["values"][1];
 
