@@ -45,6 +45,7 @@ export const StagePanelActionEditor = (props: Props) => {
 			</div>
 			<CollapsibleContent className="space-y-2 text-sm">
 				<Separator />
+				<p>{action.description}</p>
 				<div className="py-2 flex flex-col gap-2">
 					<StagePanelActionConfig action={action} />
 					<div className="flex justify-end">

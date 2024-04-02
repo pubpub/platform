@@ -33,12 +33,14 @@ export const registerAction = async (action: Action) => {
 			name: action.name,
 		},
 		update: {
+			description: action.description,
 			pubFields: {
 				connect: pubFieldIds,
 			},
 		},
 		create: {
 			name: action.name,
+			description: action.description,
 			pubFields: {
 				connect: pubFieldIds,
 			},

@@ -26,6 +26,7 @@ export type Action<
 > = {
 	id?: string;
 	name: string;
+	description: string;
 	config: z.ZodType<AC>;
 	pubConfig: z.ZodType<PC>;
 	pubFields: PT;

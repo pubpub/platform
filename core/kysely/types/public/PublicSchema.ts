@@ -26,6 +26,9 @@ import { type default as MemberGroupToUserTable } from "./MemberGroupToUser";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as PubFieldSchemaTable } from "./PubFieldSchema";
 import { type default as IntegrationInstanceStateTable } from "./IntegrationInstanceState";
+import { type default as ActionsTable } from "./Actions";
+import { type default as ActionToPubFieldTable } from "./ActionToPubField";
+import { type default as ActionInstancesTable } from "./ActionInstances";
 
 export default interface PublicSchema {
 	_prisma_migrations: PrismaMigrationsTable;
@@ -77,4 +80,10 @@ export default interface PublicSchema {
 	PubFieldSchema: PubFieldSchemaTable;
 
 	IntegrationInstanceState: IntegrationInstanceStateTable;
+
+	actions: ActionsTable;
+
+	_ActionToPubField: ActionToPubFieldTable;
+
+	action_instances: ActionInstancesTable;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -11,8 +10,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog";
-import { Terminal } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { FileText, Mail, Terminal } from "ui/icon";
 import { ActionPayload } from "~/lib/types";
 
 type ActionCellProps = {
@@ -43,25 +41,19 @@ const ActionCell = (props: ActionCellProps) => {
 			onKeyDown={onKeyDown}
 		>
 			<div className="flex space-x-4">
-				<Terminal />
+				{props.action.name === "log" ? (
+					<Terminal />
+				) : props.action.name === "pdf" ? (
+					<FileText />
+				) : (
+					<Mail />
+				)}
 				<div className="space-y-1">
 					<h4 className="text-sm font-semibold">{props.action.name}</h4>
 					<p className="text-sm leading-tight text-muted-foreground">
-						Print a pub to standard out.
+						{props.action.description}
 					</p>
 				</div>
-			</div>
-			<div className="flex items-center pt-2 gap-1">
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger>
-							<Badge variant="outline">Zapier</Badge>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p className="text-sm">This action can be triggered by Zapier.</p>
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
 			</div>
 		</div>
 	);

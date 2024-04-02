@@ -1,3 +1,4 @@
+import { User } from "@prisma/client";
 import { cache } from "react";
 import { expect } from "utils";
 import prisma from "~/prisma/db";
@@ -41,6 +42,11 @@ export const getStageMembers = cache(async (stageId: string) => {
 			},
 		},
 		include: {
+			member: {
+				include: {
+					user: true,
+				},
+			},
 			memberGroup: {
 				include: {
 					users: true,
@@ -52,13 +58,14 @@ export const getStageMembers = cache(async (stageId: string) => {
 	const members = permissions.reduce((acc, permission) => {
 		if (permission.memberGroup !== null) {
 			for (const user of permission.memberGroup.users) {
-				acc.add(user.id);
+				acc.set(user.id, user);
 			}
 		} else {
-			acc.add(expect(permission.memberId));
+			const user = expect(permission.member).user;
+			acc.set(user.id, user);
 		}
 		return acc;
-	}, new Set<string>());
+	}, new Map<string, User>());
 
 	return members;
 });

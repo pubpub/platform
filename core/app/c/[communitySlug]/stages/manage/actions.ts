@@ -101,7 +101,6 @@ export async function deleteStagesAndMoveConstraints(
 }
 
 export async function updateStageName(communityId: string, stageId: string, name: string) {
-	console.log("sup", communityId, stageId, name);
 	try {
 		await db.stage.update({
 			where: {
