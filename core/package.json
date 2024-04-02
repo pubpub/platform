@@ -7,6 +7,7 @@
 		"build": "SKIP_VALIDATION=true next build",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
 		"lint": "next lint",
+		"format": "prettier --check . --ignore-path ../.gitignore",
 		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel",
 		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
@@ -73,6 +74,7 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"@preconstruct/next": "^4.0.0",
 		"@tailwindcss/forms": "^0.5.6",
 		"@testing-library/react": "^14.2.1",
@@ -101,5 +103,6 @@
 		"vitest": "^1.3.1",
 		"vitest-tsconfig-paths": "^3.4.1",
 		"yargs": "^17.7.2"
-	}
+	},
+	"prettier": "@pubpub/prettier-config"
 }

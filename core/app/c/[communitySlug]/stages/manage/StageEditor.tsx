@@ -1,10 +1,12 @@
 import { useState } from "react";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { toast } from "ui/use-toast";
-import { StageFormSchema, moveConstraintSourcesForStage } from "~/lib/stages";
-import { DeepPartial, StagesById, StagePayload } from "~/lib/types";
-import StageForm from "./StageForm";
+
+import { moveConstraintSourcesForStage, StageFormSchema } from "~/lib/stages";
+import { DeepPartial, StagePayload, StagesById } from "~/lib/types";
 import { editStage } from "./actions";
+import StageForm from "./StageForm";
 
 type Props = {
 	stageWorkflows: StagePayload[][];

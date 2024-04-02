@@ -1,4 +1,5 @@
 import { expect, test, vi } from "vitest";
+
 import { getUserInfoFromJWT } from "../loginId";
 
 vi.mock("~/lib/supabaseServer", () => ({

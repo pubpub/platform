@@ -1,10 +1,12 @@
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { captureException } from "@sentry/nextjs";
+
 import { logger } from "logger";
-import { NextRequest, NextResponse } from "next/server";
+
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
-import { BadRequestError, UnauthorizedError, handleErrors } from "~/lib/server/errors";
+import { BadRequestError, handleErrors, UnauthorizedError } from "~/lib/server/errors";
 import prisma from "~/prisma/db";
 
 // This route responds to a supabase webhook that fires on any updates to the auth.users table.

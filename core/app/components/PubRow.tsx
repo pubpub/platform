@@ -1,15 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import React, { Fragment } from "react";
+import Link from "next/link";
+
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { cn } from "utils";
+
 import { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
+import MembersAvatars from "./MemberAvatar";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
-import MembersAvatars from "./MemberAvatar";
 
 type Props = {
 	pub: PubPayload;
@@ -18,17 +20,20 @@ type Props = {
 };
 
 const groupPubChildrenByPubType = (pubs: PubPayload["children"]) => {
-	const pubTypes = pubs.reduce((prev, curr) => {
-		const pubType = curr.pubType;
-		if (!prev[pubType.id]) {
-			prev[pubType.id] = {
-				pubType,
-				pubs: [],
-			};
-		}
-		prev[pubType.id].pubs.push(curr);
-		return prev;
-	}, {} as { [key: string]: { pubType: PubPayload["pubType"]; pubs: PubPayload["children"] } });
+	const pubTypes = pubs.reduce(
+		(prev, curr) => {
+			const pubType = curr.pubType;
+			if (!prev[pubType.id]) {
+				prev[pubType.id] = {
+					pubType,
+					pubs: [],
+				};
+			}
+			prev[pubType.id].pubs.push(curr);
+			return prev;
+		},
+		{} as { [key: string]: { pubType: PubPayload["pubType"]; pubs: PubPayload["children"] } }
+	);
 	return Object.values(pubTypes);
 };
 
@@ -47,7 +52,7 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 					{group.pubs.map((child) => (
 						<li key={child.id} className={cn("list-none")}>
 							<div>
-								<span className="text-gray-500 mr-2 font-semibold">
+								<span className="mr-2 font-semibold text-gray-500">
 									{group.pubType.name}
 								</span>
 								<Link
@@ -70,8 +75,8 @@ const PubRow: React.FC<Props> = function (props: Props) {
 	return (
 		<Row className="mb-9">
 			<RowHeader>
-				<div className="flex flex-row justify-between items-center">
-					<div className="text-sm text-gray-500 font-semibold">
+				<div className="flex flex-row items-center justify-between">
+					<div className="text-sm font-semibold text-gray-500">
 						{props.pub.pubType.name}
 					</div>
 					<div className="flex flex-row">
@@ -80,7 +85,7 @@ const PubRow: React.FC<Props> = function (props: Props) {
 					</div>
 				</div>
 			</RowHeader>
-			<RowContent className="flex justify-between items-start">
+			<RowContent className="flex items-start justify-between">
 				<h3 className="text-md font-medium">
 					<Link href={`pubs/${props.pub.id}`} className="hover:underline">
 						<PubTitle pub={props.pub} />
@@ -88,14 +93,14 @@ const PubRow: React.FC<Props> = function (props: Props) {
 				</h3>
 			</RowContent>
 			{props.pub.children.length > 0 && (
-				<RowFooter className="items-stretch flex justify-between">
+				<RowFooter className="flex items-stretch justify-between">
 					<Collapsible>
 						<CollapsibleTrigger>
 							<Button
 								asChild
 								variant="link"
 								size="sm"
-								className="px-0 flex items-center"
+								className="flex items-center px-0"
 							>
 								<span className="mr-1">Contents ({props.pub.children.length})</span>
 							</Button>

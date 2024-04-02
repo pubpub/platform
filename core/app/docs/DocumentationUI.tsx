@@ -1,5 +1,7 @@
 "use client";
+
 import { API } from "@stoplight/elements";
+
 import "@stoplight/elements/styles.min.css";
 
 type Props = {

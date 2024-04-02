@@ -1,6 +1,7 @@
-import { api } from "contracts";
 import { generateOpenApi } from "@ts-rest/open-api";
 import { OpenAPIObject } from "openapi3-ts/oas30";
+
+import { api } from "contracts";
 
 export const openApiDocument: OpenAPIObject = generateOpenApi(api, {
 	openapi: "3.0.0",

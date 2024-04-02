@@ -1,9 +1,11 @@
 "use client";
-import React, { useState, FormEvent } from "react";
+
+import React, { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { formatSupabaseError, supabase } from "lib/supabase";
 import { Button } from "ui/button";
 import { Loader2 } from "ui/icon";
-import { formatSupabaseError, supabase } from "lib/supabase";
-import { useRouter } from "next/navigation";
 
 export default function ResetForm() {
 	const router = useRouter();
@@ -58,11 +60,11 @@ export default function ResetForm() {
 
 						<Button variant="outline" type="submit" disabled={!password || isLoading}>
 							Set new password
-							{isLoading && <Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+							{isLoading && <Loader2 className="ml-4 h-4 w-4 animate-spin" />}
 						</Button>
 
 						{error && (
-							<div className={"text-red-700 my-4"}>
+							<div className={"my-4 text-red-700"}>
 								Error resetting password: {error}
 							</div>
 						)}

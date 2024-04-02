@@ -1,7 +1,7 @@
+import { getStageWorkflows, makeStagesById } from "~/lib/stages";
+import { stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import StageManagement from "./StageManagement";
-import { stageInclude } from "~/lib/types";
-import { getStageWorkflows, makeStagesById } from "~/lib/stages";
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
 	const community = await prisma.community.findUnique({

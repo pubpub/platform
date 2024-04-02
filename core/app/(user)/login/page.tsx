@@ -1,9 +1,11 @@
 import Link from "next/link";
-import LoginForm from "./LoginForm";
-import { getLoginData } from "~/lib/auth/loginData";
 import { redirect } from "next/navigation";
-import prisma from "~/prisma/db";
+
 import { logger } from "logger";
+
+import { getLoginData } from "~/lib/auth/loginData";
+import prisma from "~/prisma/db";
+import LoginForm from "./LoginForm";
 
 export default async function Login() {
 	const loginData = await getLoginData();
@@ -30,7 +32,7 @@ export default async function Login() {
 		}
 	}
 	return (
-		<div className="max-w-sm mx-auto">
+		<div className="mx-auto max-w-sm">
 			<LoginForm />
 
 			{/* <div className="text-gray-600 text-center mt-6">

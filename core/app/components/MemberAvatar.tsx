@@ -1,11 +1,12 @@
 import { Avatar, AvatarFallback } from "ui/avatar";
+
 import { PubPayload } from "~/lib/types";
 
 function MembersAvatars({ pub }: { pub: PubPayload }) {
 	return (
 		pub.claims.length > 0 && (
 			<>
-				<p className="font-bold pb-1">Assigned to:</p>
+				<p className="pb-1 font-bold">Assigned to:</p>
 				<div className="ml-4">
 					{pub.claims.map((claim) => {
 						const intials = claim.user.lastName

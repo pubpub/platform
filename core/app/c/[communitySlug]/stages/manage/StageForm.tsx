@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
+
 import { Button } from "ui/button";
 import {
 	Form,
@@ -13,8 +14,9 @@ import {
 import * as Icon from "ui/icon";
 import { Input } from "ui/input";
 import { assert } from "utils";
+
 import { StageFormSchema } from "~/lib/stages";
-import { StagePayload, StagesById, DeepPartial } from "~/lib/types";
+import { DeepPartial, StagePayload, StagesById } from "~/lib/types";
 
 type Props = {
 	stage: StagePayload; // current stage selected for the tab
@@ -59,14 +61,17 @@ function dirtyValues<V extends object>(values: V, dirty: DirtyFields<V>): DeepPa
 }
 
 export default function StageForm(props: Props) {
-	const moveConstraints = Object.values(props.stagesById).reduce((acc, stage) => {
-		return {
-			...acc,
-			[stage.id]: props.stage.moveConstraints.some((toStage) => {
-				return toStage.destinationId === stage.id;
-			}),
-		};
-	}, {} as StageFormSchema["moveConstraints"]);
+	const moveConstraints = Object.values(props.stagesById).reduce(
+		(acc, stage) => {
+			return {
+				...acc,
+				[stage.id]: props.stage.moveConstraints.some((toStage) => {
+					return toStage.destinationId === stage.id;
+				}),
+			};
+		},
+		{} as StageFormSchema["moveConstraints"]
+	);
 
 	const form = useForm<StageFormSchema>({
 		mode: "onChange",
@@ -94,7 +99,7 @@ export default function StageForm(props: Props) {
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<div className="p-4 flex flex-col">
+				<div className="flex flex-col p-4">
 					<div className="mb-4">
 						<p className="text-2xl font-bold">{props.stage.name}</p>
 						<p className="text-lg">
@@ -171,7 +176,7 @@ export default function StageForm(props: Props) {
 						<Button type="submit" disabled={!form.formState.isValid}>
 							Submit
 							{form.formState.isSubmitting && (
-								<Icon.Loader2 className="h-4 w-4 ml-4 animate-spin" />
+								<Icon.Loader2 className="ml-4 h-4 w-4 animate-spin" />
 							)}
 						</Button>
 					</div>

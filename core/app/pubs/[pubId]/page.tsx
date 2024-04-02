@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+
 import prisma from "~/prisma/db";
 
 export type Props = {

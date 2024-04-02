@@ -4,8 +4,9 @@ import NextLink from "next/link";
 
 import { Button } from "ui/button";
 import { Card, CardContent, CardHeader } from "ui/card";
-import { IntegrationData } from "./page";
+
 import { Row, RowContent, RowFooter } from "~/app/components/Row";
+import { IntegrationData } from "./page";
 
 type Props = { instances: NonNullable<IntegrationData>; token: string };
 
@@ -30,10 +31,10 @@ const IntegrationList: React.FC<Props> = function ({ instances, token }) {
 				<CardHeader>Add Integrations</CardHeader>
 				<CardContent>
 					<div className="flex">
-						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
-						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
-						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
-						<div className="bg-gray-100 rounded mr-10 h-12 w-24" />
+						<div className="mr-10 h-12 w-24 rounded bg-gray-100" />
+						<div className="mr-10 h-12 w-24 rounded bg-gray-100" />
+						<div className="mr-10 h-12 w-24 rounded bg-gray-100" />
+						<div className="mr-10 h-12 w-24 rounded bg-gray-100" />
 					</div>
 				</CardContent>
 			</Card>

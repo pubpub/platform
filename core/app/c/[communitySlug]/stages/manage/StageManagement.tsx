@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import StageEditor from "./StageEditor";
+
 import { StagePayload, StagesById } from "~/lib/types";
+import StageEditor from "./StageEditor";
 
 type Props = {
 	community: any;
@@ -25,7 +27,7 @@ export default function StageManagement(props: Props) {
 					value="1"
 				>
 					<div>
-						<p className="font-bold text-left">Edit Stages</p>
+						<p className="text-left font-bold">Edit Stages</p>
 						<p>Edit your current stages</p>
 					</div>
 				</TabsTrigger>
@@ -37,7 +39,7 @@ export default function StageManagement(props: Props) {
 					value="2"
 				>
 					<div>
-						<p className="font-bold text-left">Create new Stages</p>
+						<p className="text-left font-bold">Create new Stages</p>
 						<p>create new stages</p>
 					</div>
 				</TabsTrigger>

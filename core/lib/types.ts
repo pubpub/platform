@@ -1,4 +1,6 @@
-import { type Community, Prisma } from "@prisma/client";
+import type { Community } from "@prisma/client";
+
+import { Prisma } from "@prisma/client";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
 	include: {
@@ -140,5 +142,5 @@ export type IntegrationAction = { name: string; url: string; href: string };
 export type DeepPartial<T> = T extends object
 	? {
 			[P in keyof T]?: DeepPartial<T[P]>;
-	  }
+		}
 	: T;

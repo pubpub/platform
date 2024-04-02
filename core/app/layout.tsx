@@ -1,7 +1,11 @@
 import { Toaster } from "ui/toaster";
+
 import "ui/styles.css";
-import InitClient from "./InitClient";
+
 import { PublicEnvScript } from "next-runtime-env";
+
+import InitClient from "./InitClient";
+
 import "./globals.css";
 
 export const metadata = {

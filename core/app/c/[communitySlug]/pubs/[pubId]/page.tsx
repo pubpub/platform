@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import { AnySchema, JSONSchemaType } from "ajv";
-import Link from "next/link";
+
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { CardContent, CardHeader, CardTitle } from "ui/card";
@@ -44,11 +45,11 @@ function FileUploadPreview({ files }: { files: FileUpload }) {
 							<HoverCardTrigger asChild>
 								<Button variant="link">{file.fileName}</Button>
 							</HoverCardTrigger>
-							<HoverCardContent className=" w-auto m-auto space-y-1">
+							<HoverCardContent className=" m-auto w-auto space-y-1">
 								<h4 className="text-sm font-semibold">
 									{file.fileName} <br />
 								</h4>
-								<p className="text-sm pb-2">
+								<p className="pb-2 text-sm">
 									The file is <strong>{file.fileSize}</strong> bytes in size. Its
 									MIME type is <strong>{file.fileType}</strong>.
 								</p>
@@ -158,7 +159,7 @@ export default async function Page({
 				<h3>{pub.pubType.name}</h3>
 				<PubTitle pub={pub} />
 			</div>
-			<div className="flex flex-row max-w-[100%] space-x-2">
+			<div className="flex max-w-[100%] flex-row space-x-2">
 				<div>
 					{pub.values
 						.filter((value) => {
@@ -173,7 +174,7 @@ export default async function Page({
 							);
 						})}
 				</div>
-				<div className="h-100% p-2 bg-gray-50 min-w-[250px] shadow-inner flex flex-col font-semibold">
+				<div className="h-100% flex min-w-[250px] flex-col bg-gray-50 p-2 font-semibold shadow-inner">
 					<div className="pb-3">
 						{/* TODO: build workflow as series of move constraints? */}
 						<div>Current Stage</div>
@@ -197,7 +198,7 @@ export default async function Page({
 							{users.map((user) => {
 								return (
 									<div key={user.id}>
-										<Avatar className="w-8 h-8 mr-2">
+										<Avatar className="mr-2 h-8 w-8">
 											<AvatarImage src={user.avatar || undefined} />
 											<AvatarFallback>{user.firstName[0]}</AvatarFallback>
 										</Avatar>

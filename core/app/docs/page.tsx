@@ -1,5 +1,6 @@
-import DocumentationUI from "./DocumentationUI";
 import { openApiDocument } from "lib/swagger/swaggerSpec";
+
+import DocumentationUI from "./DocumentationUI";
 
 export const dynamic = "force-dynamic";
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { PropsWithChildren } from "react";
+
 import { Card, CardContent, CardFooter, CardHeader } from "ui/card";
 import { cn } from "utils";
 
@@ -10,7 +11,7 @@ export const Row = (props: Props) => {
 	return (
 		<Card
 			className={cn(
-				"flex flex-col gap-2 px-4 py-3 bg-white border-b border-gray-200",
+				"flex flex-col gap-2 border-b border-gray-200 bg-white px-4 py-3",
 				props.className
 			)}
 		>

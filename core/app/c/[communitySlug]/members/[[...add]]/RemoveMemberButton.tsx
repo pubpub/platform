@@ -1,6 +1,7 @@
 "use client";
 
 import type { Community, Member, User } from "@prisma/client";
+
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -14,6 +15,7 @@ import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
+
 import * as actions from "./actions";
 import { TableMember } from "./getMemberTableColumns";
 

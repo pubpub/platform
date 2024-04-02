@@ -1,4 +1,5 @@
 "use client";
+
 import { TypesData } from "./page";
 import TypeBlock from "./TypeBlock";
 

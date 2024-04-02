@@ -1,18 +1,20 @@
 import { Prisma } from "@prisma/client";
+import { ExpressionBuilder, SelectExpression, sql, StringReference } from "kysely";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+
 import {
 	CreatePubRequestBodyWithNulls,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
 	JsonValue,
 } from "contracts";
-import { ExpressionBuilder, SelectExpression, StringReference, sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { expect } from "utils";
+
 import { db } from "~/kysely/database";
 import Database from "~/kysely/types/Database";
 import { CommunitiesId } from "~/kysely/types/public/Communities";
-import { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { PubsId } from "~/kysely/types/public/Pubs";
+import { PubTypesId } from "~/kysely/types/public/PubTypes";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { NotFoundError } from "./errors";
@@ -287,7 +289,7 @@ const makeRecursivePubUpdateInput = async (
 	const assignee = body.assigneeId
 		? {
 				connect: { id: body.assigneeId },
-		  }
+			}
 		: undefined;
 	return {
 		community: { connect: { id: communityId } },
