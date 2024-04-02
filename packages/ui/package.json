@@ -195,7 +195,7 @@
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"lint": "eslint **/*.tsx",
-		"type-check": "tsc"
+		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.1",

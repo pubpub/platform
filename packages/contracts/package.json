@@ -10,7 +10,7 @@
 	],
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"type-check": "tsc"
+		"type-check": "tsc --noEmit"
 	},
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",

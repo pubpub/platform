@@ -5,7 +5,7 @@
 	"module": "dist/utils.esm.js",
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"type-check": "tsc"
+		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"clsx": "^2.0.0",

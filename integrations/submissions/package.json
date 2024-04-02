@@ -8,7 +8,7 @@
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"start": "next start",
 		"lint": "echo 'No linting rules defined'",
-		"type-check": "tsc"
+		"type-check": "tsc --noEmit"
 	},
 	"files": [
 		".next"

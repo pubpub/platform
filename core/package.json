@@ -20,7 +20,7 @@
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature",
 		"test": "vitest",
-		"type-check": "tsc",
+		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch"
 	},
 	"files": [

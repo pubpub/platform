@@ -8,11 +8,16 @@
 		"./next.js",
 		"./react.js"
 	],
+	"exports": {
+		"./base": "./base.js",
+		"./next": "./next.js",
+		"./react": "./react.js"
+	},
 	"scripts": {
 		"clean": "rm -rf .turbo node_modules",
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"lint": "eslint .",
-		"typecheck": "tsc --noEmit"
+		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@next/eslint-plugin-next": "^14.1.4",

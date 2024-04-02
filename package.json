@@ -23,11 +23,12 @@
 		"@changesets/cli": "^2.26.2",
 		"@preconstruct/cli": "^2.8.3",
 		"@pubpub/prettier-config": "workspace:*",
+		"@turbo/gen": "^1.13.2",
 		"husky": "^8.0.3",
 		"lint-staged": "^13.2.2",
 		"pino-pretty": "^10.3.1",
 		"prettier": "^3.2.5",
-		"turbo": "latest"
+		"turbo": "^1.13.2"
 	},
 	"lint-staged": {
 		"*.{ts,tsx,js,jsx,scss,json,md}": [

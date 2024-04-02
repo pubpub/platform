@@ -5,7 +5,7 @@
 	"module": "dist/logger.esm.js",
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"type-check": "tsc"
+		"type-check": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
