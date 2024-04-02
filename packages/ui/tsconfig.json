@@ -5,6 +5,6 @@
 		"jsx": "react",
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
 	},
-	"include": ["."],
+	"include": ["./src/**/*.ts*"],
 	"exclude": ["dist", "build", "node_modules"]
 }

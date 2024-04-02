@@ -24,7 +24,7 @@ const TypeBlock: React.FC<Props> = function ({ type }) {
 							setExpanded(!expanded);
 						}}
 					>
-						<img src="/icons/chevron-vertical.svg" />
+						<img src="/icons/chevron-vertical.svg" alt="" />
 					</Button>
 				</div>
 				<div className="text-sm">{type.description}</div>

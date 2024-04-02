@@ -13,7 +13,7 @@ function MembersAvatars({ pub }: { pub: PubPayload }) {
 							? `${claim.user.firstName[0]} ${claim.user.lastName[0]}`
 							: `${claim.user.firstName[0]}`;
 						return (
-							<div className="flex flex-row items-center space-x-3">
+							<div key={claim.id} className="flex flex-row items-center space-x-3">
 								<Avatar>
 									<AvatarFallback>{intials}</AvatarFallback>
 								</Avatar>

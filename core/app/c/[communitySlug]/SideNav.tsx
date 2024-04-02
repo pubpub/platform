@@ -40,23 +40,23 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 				<NavLink
 					href={`${prefix}/pubs`}
 					text={"Pubs"}
-					icon={<img src="/icons/pub.svg" />}
+					icon={<img src="/icons/pub.svg" alt="" />}
 				/>
 				<NavLink
 					href={`${prefix}/stages`}
 					text={"Stages"}
-					icon={<img src="/icons/stages.svg" />}
+					icon={<img src="/icons/stages.svg" alt="" />}
 				/>
 				<NavLink
 					href={`${prefix}/integrations`}
 					text={"Integrations"}
-					icon={<img src="/icons/integration.svg" />}
+					icon={<img src="/icons/integration.svg" alt="" />}
 				/>
 				{isAdmin && (
 					<NavLink
 						href={`${prefix}/members`}
 						text={"Members"}
-						icon={<img src="/icons/members.svg" />}
+						icon={<img src="/icons/members.svg" alt="" />}
 					/>
 				)}
 				{/*<NavLink

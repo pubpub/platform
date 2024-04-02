@@ -27,7 +27,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 						<AvatarFallback>{community.name[0]}</AvatarFallback>
 					</Avatar>
 					<div className={textClasses}>{community.name}</div>
-					<img className="" src="/icons/chevron-vertical.svg" />
+					<img className="" src="/icons/chevron-vertical.svg" alt="" />
 				</div>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className=" w-56 bg-white">

@@ -1,3 +1,4 @@
+/* eslint-disable n/no-process-env */
 // @ts-check
 
 import { createEnv } from "@t3-oss/env-nextjs";

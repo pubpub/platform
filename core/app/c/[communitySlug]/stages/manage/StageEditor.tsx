@@ -40,7 +40,7 @@ const StageEditor = (props: Props) => {
 		<div className="space-x-4">
 			{props.stageWorkflows.map((stages, index) => {
 				return (
-					<div className="space-y-2">
+					<div key={stages[0].id} className="space-y-2">
 						<Tabs defaultValue={selectedStage.id}>
 							<div className="mb-4">
 								<h2 className="text-2xl font-bold text-orange-200">

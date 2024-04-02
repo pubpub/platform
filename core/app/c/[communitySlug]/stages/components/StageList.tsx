@@ -26,7 +26,7 @@ function StageList(props: Props) {
 			{
 				props.stageWorkflows.map((stages) => {
 					return (
-						<div>
+						<div key={stages[0].id}>
 							{stages.map((stage) => {
 								const users = getPubUsers(stage.permissions);
 								// users should be just member but these are users
