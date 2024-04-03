@@ -33,9 +33,6 @@
 			"npx prisma format"
 		]
 	},
-	"prisma": {
-		"schema": "core/prisma/schema.prisma"
-	},
 	"preconstruct": {
 		"packages": [
 			"packages/*"
