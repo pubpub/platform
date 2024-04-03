@@ -7,7 +7,6 @@ const config = {
 	],
 	plugins: ["react", "jsx-a11y", "validate-jsx-nesting"],
 	rules: {
-		"react/prop-types": "off",
 		"react/jsx-key": "error",
 		"validate-jsx-nesting/no-invalid-jsx-nesting": "error",
 	},
