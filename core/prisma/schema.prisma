@@ -340,6 +340,7 @@ model ActionInstance {
   stageId   String   @map(name: "stage_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  config    Json?
 
   @@map(name: "action_instances")
 }
