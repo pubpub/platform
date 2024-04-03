@@ -12,6 +12,7 @@ jobs:
         uses: ./.github/workflows/ci.yml
 
     build-all:
+        needs: ci
         uses: ./.github/workflows/ecrbuild-all.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
