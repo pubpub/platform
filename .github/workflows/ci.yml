@@ -27,6 +27,9 @@ jobs:
             - name: install dependencies
               run: pnpm install
 
+            - name: generate prisma types
+              run: pnpm --filter core prisma generate
+
             - name: check formatting
               run: pnpm run format
 
