@@ -12,13 +12,13 @@ import { logger } from "logger";
 
 type Props = {
 	actionInstance: StagePayloadActionInstance;
-	onDelete: (actionInstance: StagePayloadActionInstance) => void;
+	onDelete: (actionInstanceId: string) => void;
 };
 
 export const StagePanelActionEditor = (props: Props) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const onDeleteClick = useCallback(() => {
-		props.onDelete(props.actionInstance);
+		props.onDelete(props.actionInstance.id);
 	}, [props.onDelete, props.actionInstance]);
 	const action = getActionByName(props.actionInstance.action.name);
 
@@ -37,18 +37,19 @@ export const StagePanelActionEditor = (props: Props) => {
 				<span>{props.actionInstance.action.name}</span>
 				<div className="flex gap-1">
 					<CollapsibleTrigger asChild>
-						<Button variant="secondary" size="sm">
+						<Button variant="ghost" size="sm">
 							<ChevronDown size={18} />
 						</Button>
 					</CollapsibleTrigger>
 				</div>
 			</div>
-			<CollapsibleContent className="space-y-2 text-sm">
+			<CollapsibleContent className="space-y-4 text-sm">
 				<Separator />
-				<div className="py-2">
+				<p>{action.description}</p>
+				<div className="py-2 flex flex-col gap-2">
 					<StagePanelActionConfig action={action} />
 					<div className="flex justify-end">
-						<Button variant="outline" size="sm" onClick={onDeleteClick}>
+						<Button variant="secondary" size="sm" onClick={onDeleteClick}>
 							Remove
 						</Button>
 					</div>

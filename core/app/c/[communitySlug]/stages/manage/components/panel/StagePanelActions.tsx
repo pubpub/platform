@@ -20,15 +20,8 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 		return <SkeletonCard />;
 	}
 
-	const onAddAction = async (action: ActionPayload) => {
-		"use server";
-		await addAction(stage.communityId, stage.id, action.id);
-	};
-
-	const onDeleteAction = async (action: StagePayloadActionInstance) => {
-		"use server";
-		await deleteAction(stage.communityId, action.id);
-	};
+	const onAddAction = addAction.bind(null, stage.communityId, stage.id);
+	const onDeleteAction = deleteAction.bind(null, stage.communityId);
 
 	return (
 		<Card>

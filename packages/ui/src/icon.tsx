@@ -9,6 +9,7 @@ export {
 	CircleDollarSign,
 	CircleEllipsis,
 	Download,
+	FileText,
 	Loader2,
 	Mail,
 	MoreVertical,

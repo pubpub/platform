@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-radio-group.cjs.js",
+	"module": "dist/ui-radio-group.esm.js"
+}
