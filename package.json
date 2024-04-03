@@ -33,13 +33,13 @@
 			"npx prisma format"
 		]
 	},
-	"prisma": {
-		"schema": "core/prisma/schema.prisma"
-	},
 	"preconstruct": {
 		"packages": [
 			"packages/*"
 		]
 	},
-	"packageManager": "pnpm@8.7.0"
+	"packageManager": "pnpm@8.7.0",
+	"prisma": {
+		"schema": "core/prisma/schema.prisma"
+	}
 }
