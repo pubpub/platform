@@ -43,7 +43,7 @@ export const StagePanelActionEditor = (props: Props) => {
 					</CollapsibleTrigger>
 				</div>
 			</div>
-			<CollapsibleContent className="space-y-2 text-sm">
+			<CollapsibleContent className="space-y-4 text-sm">
 				<Separator />
 				<p>{action.description}</p>
 				<div className="py-2 flex flex-col gap-2">

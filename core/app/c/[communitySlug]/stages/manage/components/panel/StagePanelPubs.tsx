@@ -1,26 +1,39 @@
 import { Suspense } from "react";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStagePubs } from "./queries";
+import { getStageActions, getStagePubs } from "./queries";
 import { Card, CardContent } from "ui/card";
 import { Button } from "ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 type PropsInner = {
 	stageId: string;
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
-	const pubs = await getStagePubs(props.stageId);
+	const stagePubs = await getStagePubs(props.stageId);
+	const stageActions = await getStageActions(props.stageId);
 
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
 				<h4 className="font-semibold mb-2 text-base">Pubs</h4>
-				{pubs.map((pub) => (
+				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
 						<span>A pub</span>
-						<Button variant="ghost" size="sm">
-							Run action
-						</Button>
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button variant="ghost" size="sm">
+									Run action
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent>
+								{stageActions.map((action) => (
+									<Button key={action.id} variant="ghost" size="sm">
+										{action.action.name}
+									</Button>
+								))}
+							</PopoverContent>
+						</Popover>
 					</div>
 				))}
 			</CardContent>
