@@ -23,7 +23,7 @@ import { DOI_REGEX, URL_REGEX, cn, isDoi, normalizeDoi } from "utils";
 import * as z from "zod";
 import { FetchMetadataButton } from "./FetchMetadataButton";
 import { submit } from "./actions";
-import { useIntegration } from "@pubpub/sdk/src/react/IntegrationProvider";
+import { useIntegration } from "@pubpub/sdk/react";
 
 type Props = {
 	instanceId: string;
