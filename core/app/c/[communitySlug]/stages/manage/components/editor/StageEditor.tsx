@@ -11,6 +11,7 @@ import ReactFlow, {
 	Node,
 	NodeMouseHandler,
 	OnSelectionChangeParams,
+	ReactFlowProvider,
 	useEdgesState,
 	useNodesState,
 	useStoreApi,
@@ -19,8 +20,11 @@ import "reactflow/dist/style.css";
 import { expect } from "utils";
 import { StagePayload } from "~/lib/types";
 import { useStageEditor } from "./StageEditorContext";
-import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageNode } from "./StageNode";
-import { useStages } from "./StagesContext";
+import { StageEditorKeyboardControls } from "./StageEditorKeyboardControls";
+import { StageEditorMenubar } from "./StageEditorMenubar";
+import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageEditorNode } from "./StageEditorNode";
+import { useStages } from "../../StagesContext";
+import { StageEditorContextMenu } from "./StageEditorContextMenu";
 
 const makeNode = (stage: StagePayload) => {
 	return {
@@ -130,7 +134,7 @@ const useLayout = (
 	return layoutWithExistingNodePositions;
 };
 
-const nodeTypes = { stage: StageNode };
+const nodeTypes = { stage: StageEditorNode };
 
 export const StageEditorGraph = () => {
 	const { stages, deleteStages, createMoveConstraint, deleteMoveConstraints } = useStages();
@@ -205,5 +209,17 @@ export const StageEditorGraph = () => {
 				<Controls />
 			</ReactFlow>
 		</div>
+	);
+};
+
+export const StageEditor = () => {
+	return (
+		<ReactFlowProvider>
+			<StageEditorContextMenu>
+				<StageEditorMenubar />
+				<StageEditorGraph />
+				<StageEditorKeyboardControls />
+			</StageEditorContextMenu>
+		</ReactFlowProvider>
 	);
 };

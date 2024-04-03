@@ -4,7 +4,7 @@ import { Action } from "./types";
 
 export const registerCorePubField = async (corePubField: CorePubField) => {
 	// Ensure the field exists in the database and is up to date
-	const pubField = await prisma.pubField.upsert({
+	const persistedCorePubField = await prisma.pubField.upsert({
 		where: {
 			slug: corePubField.slug,
 		},
@@ -22,7 +22,7 @@ export const registerCorePubField = async (corePubField: CorePubField) => {
 			},
 		},
 	});
-	corePubField.id = pubField.id;
+	corePubField.id = persistedCorePubField.id;
 };
 
 export const registerAction = async (action: Action) => {
@@ -33,16 +33,18 @@ export const registerAction = async (action: Action) => {
 			name: action.name,
 		},
 		update: {
+			description: action.description,
 			pubFields: {
 				connect: pubFieldIds,
 			},
 		},
 		create: {
 			name: action.name,
+			description: action.description,
 			pubFields: {
 				connect: pubFieldIds,
 			},
 		},
 	});
-	persistedAction.id = persistedAction.id;
+	action.id = persistedAction.id;
 };

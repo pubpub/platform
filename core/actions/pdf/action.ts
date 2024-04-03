@@ -3,11 +3,11 @@ import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
 
 export const action = defineAction({
-	name: "log",
+	name: "pdf",
 	config: z.object({
-		debounce: z.number().optional().describe("Debounce time in milliseconds."),
+		margin: z.number().optional().describe("Page margin in pixels"),
 	}),
-	description: "Log a pub to the console",
+	description: "Generate a PDF from a pub",
 	pubConfig: z.object({}),
 	pubFields: [corePubFields.title],
 });

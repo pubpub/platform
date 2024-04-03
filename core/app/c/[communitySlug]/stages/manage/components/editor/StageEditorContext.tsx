@@ -1,23 +1,15 @@
 "use client";
 
-import {
-	PropsWithChildren,
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { PropsWithChildren, createContext, useCallback, useContext, useRef, useState } from "react";
 import { Node } from "reactflow";
 import { useLocalStorage } from "ui/hooks";
 import { StagePayload } from "~/lib/types";
-import { useStages } from "./StagesContext";
+import { useStages } from "../../StagesContext";
+import { useRouter } from "next/navigation";
 
 export type StageEditorContext = {
 	deleteSelection: () => void;
-	editingStage: StagePayload | null;
-	editStage: (stage: StagePayload | null) => void;
+	editStage: (stage?: StagePayload) => void;
 	resetLayout: () => void;
 	selectedStages: StagePayload[];
 	selectMoveConstraints: (
@@ -31,7 +23,6 @@ export type StageEditorContext = {
 
 export const StageEditorContext = createContext<StageEditorContext>({
 	deleteSelection: () => {},
-	editingStage: null,
 	editStage: () => {},
 	resetLayout: () => {},
 	selectedStages: [],
@@ -47,7 +38,7 @@ export type NodePositions = {
 };
 
 export type StageEditorProps = PropsWithChildren<{
-	communityId: string;
+	communitySlug: string;
 }>;
 
 const usePersistedNodePositions = (storageKey: string) => {
@@ -73,19 +64,19 @@ const usePersistedNodePositions = (storageKey: string) => {
 };
 
 export const StageEditorProvider = (props: StageEditorProps) => {
-	const { deleteStagesAndMoveConstraints, fetchStages: refresh, stages } = useStages();
-	const [editingStage, setEditingStage] = useState<StagePayload | null>(null);
+	const router = useRouter();
+	const { deleteStagesAndMoveConstraints, fetchStages } = useStages();
 	const [hasSelection, setHasSelection] = useState(false);
 	const [getNodePosition, setNodePositions] = usePersistedNodePositions(
-		`${props.communityId}-stage-editor-node-positions`
+		`${props.communitySlug}-stage-editor-node-positions`
 	);
 	const selectedStages = useRef<StagePayload[]>([]);
 	const selectedMoveConstraints = useRef<StagePayload["moveConstraintSources"][number][]>([]);
 
 	const resetLayout = useCallback(() => {
 		setNodePositions([]);
-		refresh();
-	}, []);
+		fetchStages();
+	}, [fetchStages]);
 
 	const setSelectedStages = useCallback((stages: StagePayload[]) => {
 		selectedStages.current = stages;
@@ -108,17 +99,19 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 		setHasSelection(false);
 	}, []);
 
-	useEffect(() => {
-		if (editingStage) {
-			const stage = stages.find((s) => s.id === editingStage.id);
-			setEditingStage(stage ?? null);
-		}
-	}, [stages, editingStage]);
+	const _editStage = useCallback(
+		(stage?: StagePayload) => {
+			router.push(
+				stage
+					? `/c/${props.communitySlug}/stages/manage/${stage.id}`
+					: `/c/${props.communitySlug}/stages/manage`
+			);
+		},
+		[router, props.communitySlug]
+	);
 
 	const value = {
 		deleteSelection,
-		editingStage,
-		editStage: setEditingStage,
 		resetLayout,
 		selectedStages: selectedStages.current,
 		selectMoveConstraints: setSelectedMoveConstraints,
@@ -126,6 +119,7 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 		hasSelection,
 		getNodePosition,
 		setNodePositions,
+		editStage: _editStage,
 	};
 
 	return (

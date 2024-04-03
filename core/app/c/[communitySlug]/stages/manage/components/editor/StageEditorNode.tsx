@@ -1,20 +1,22 @@
-import { KeyboardEvent, MouseEvent, memo, useCallback, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { KeyboardEvent, memo, useCallback, useMemo, useRef, useState } from "react";
 import { Handle, NodeProps, Position } from "reactflow";
 import { Button } from "ui/button";
 import { Settings } from "ui/icon";
 import { cn, expect } from "utils";
 import { StagePayload } from "~/lib/types";
+import { useStages } from "../../StagesContext";
 import { useStageEditor } from "./StageEditorContext";
-import { useStages } from "./StagesContext";
 
 export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;
 
-export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
+export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
+	const pathname = usePathname();
 	const { updateStageName } = useStages();
-	const { editStage } = useStageEditor();
-	const [isEditing, setIsEditing] = useState(false);
-	const memberships = useMemo(
+	const [isEditingName, setIsEditingName] = useState(false);
+	const members = useMemo(
 		() =>
 			props.data.stage.permissions.reduce((acc, permission) => {
 				if (permission.memberGroup !== null) {
@@ -31,16 +33,8 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
 	const nameRef = useRef<HTMLHeadingElement>(null);
 
-	const onSettingsClick = useCallback(
-		(e: MouseEvent) => {
-			e.preventDefault();
-			editStage(props.data.stage);
-		},
-		[editStage, props.data.stage]
-	);
-
 	const onDoubleClick = useCallback(() => {
-		setIsEditing(true);
+		setIsEditingName(true);
 		if (nameRef.current) {
 			const range = document.createRange();
 			const selection = window.getSelection()!;
@@ -54,22 +48,22 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 
 	const onKeyDown = useCallback(
 		(e: KeyboardEvent) => {
-			if (isEditing && e.key === "Enter") {
+			if (isEditingName && e.key === "Enter") {
 				nameRef.current?.blur();
 			}
 		},
-		[isEditing]
+		[isEditingName]
 	);
 
 	const onBlur = useCallback(() => {
-		if (isEditing) {
+		if (isEditingName) {
 			window.getSelection()?.removeAllRanges();
 			if (nameRef.current) {
 				updateStageName(props.data.stage.id, nameRef.current.textContent!);
 			}
-			setIsEditing(false);
+			setIsEditingName(false);
 		}
-	}, [isEditing]);
+	}, [isEditingName]);
 
 	return (
 		<div
@@ -108,19 +102,19 @@ export const StageNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
 					</li>
 					<li>
 						<Button variant="link" className="p-0 m-0 h-auto text-xs font-light">
-							0 actions
+							{props.data.stage.actionInstances.length} actions
 						</Button>
 					</li>
 					<li>
 						<Button variant="link" className="p-0 m-0 h-auto text-xs font-light">
-							{memberships.size} members
+							{members.size} members
 						</Button>
 					</li>
 				</ul>
 			</div>
-			<Button variant="ghost" size="icon" onClick={onSettingsClick} className="text-gray-300">
+			<Link href={`${pathname}?editingStageId=${props.data.stage.id}`}>
 				<Settings className="h-4 w-4" />
-			</Button>
+			</Link>
 		</div>
 	);
 });
