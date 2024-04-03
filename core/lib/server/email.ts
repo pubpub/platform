@@ -206,17 +206,15 @@ export const emailUser = async (instanceId: string, user: User, body: SendEmailR
 
 	console.log("\n\ninvitor are\n", body.include?.users?.invitor);
 
-	// const invitor = await prisma.user.findUnique({
-	// 	where: { id: body.include?.users?.invitor },
-	// 	select: { email: true, firstName: true, lastName: true },
-	// });
+	const invitor = await prisma.user.findUnique({
+		where: { id: body.include?.users?.invitor },
+		select: { email: true, firstName: true, lastName: true },
+	});
 
-	const invitor = {
-		email: "jilladmin@pubpub.org",
-	};
 	const disclaimer = invitor
 		? `This email contains links unique to you. For your security, do not share this email or the links within. To reply, send an email to your evaluation manager at: <a href="mailto:${invitor.email}" >${invitor.email}</a>.`
 		: `This email contains links unique to you. For your security, do not share this email or the links within. To reply, send an email to the editorial team at <a href="mailto:contact@unjournal.org">contact@unjournal.org</a>.`;
+
 	const templateApi = await makeTemplateApi(instance, user, body);
 	const subject = await eta.renderStringAsync(body.subject, templateApi);
 	const html = await eta.renderStringAsync(disclaimer + `\n\n` + body.message, templateApi);
