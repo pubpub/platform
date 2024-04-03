@@ -13,7 +13,8 @@
 		"lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
 		"lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
 		"lint:ws": "pnpm dlx sherif@latest",
-		"postinstall": "husky install"
+		"postinstall": "husky install",
+		"test": "turbo test"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.22.17",

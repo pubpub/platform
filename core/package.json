@@ -19,7 +19,7 @@
 		"prebuild": "prisma generate",
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature",
-		"test": "vitest",
+		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",
 		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch"
 	},

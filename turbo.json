@@ -28,6 +28,10 @@
 		"format": {
 			"outputs": ["node_modules/.cache/.prettiercache"],
 			"outputMode": "new-only"
+		},
+		"test": {
+			"dependsOn": ["^topo"],
+			"outputs": ["node_modules/.cache/vitestcache"]
 		}
 	}
 }
