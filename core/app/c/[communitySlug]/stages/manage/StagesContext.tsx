@@ -17,7 +17,6 @@ import * as actions from "./actions";
 export type StagesContext = {
 	actions: ActionPayload[];
 	stages: StagePayload[];
-	addActionInstance: (action: StagePayloadAction, stageId: string) => void;
 	deleteStages: (stageIds: string[]) => void;
 	createMoveConstraint: (sourceStageId: string, destinationStageId: string) => void;
 	deleteMoveConstraints: (moveConstraintIds: [string, string][]) => void;
@@ -33,7 +32,6 @@ export type StagesContext = {
 export const StagesContext = createContext<StagesContext>({
 	actions: [],
 	stages: [],
-	addActionInstance: () => {},
 	deleteStages: () => {},
 	createMoveConstraint: () => {},
 	deleteMoveConstraints: () => {},
@@ -52,7 +50,6 @@ export type StagesProviderProps = PropsWithChildren<{
 export const useStages = () => useContext(StagesContext);
 
 type Action =
-	| { type: "action_instance_added"; action: StagePayloadAction; stageId: string }
 	| { type: "stage_created" }
 	| { type: "stages_deleted"; stageIds: string[] }
 	| { type: "move_constraint_created"; sourceStageId: string; destinationStageId: string }
@@ -95,19 +92,6 @@ const makeOptimisitcStagesReducer =
 	(communityId: string) =>
 	(state: StagePayload[], action: Action): StagePayload[] => {
 		switch (action.type) {
-			case "action_instance_added":
-				return state.map((stage) => {
-					if (stage.id === action.stageId) {
-						return {
-							...stage,
-							actionInstances: [
-								...stage.actionInstances,
-								makeOptimisticActionInstance(action.action, action.stageId),
-							],
-						};
-					}
-					return stage;
-				});
 			case "stage_created":
 				return [...state, makeOptimisticStage(communityId)];
 			case "stages_deleted":
@@ -187,15 +171,6 @@ export const StagesProvider = (props: StagesProviderProps) => {
 		stageIds: [],
 		moveConstraintIds: [],
 	} as DeleteBatch);
-
-	const addActionInstance = useCallback(
-		(action: StagePayloadAction, stageId: string) => {
-			startTransition(() => {
-				dispatch({ type: "action_instance_added", action, stageId });
-			});
-		},
-		[dispatch]
-	);
 
 	const createStage = useCallback(async () => {
 		try {
@@ -328,7 +303,6 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	const value = {
 		actions: props.actions,
 		stages,
-		addActionInstance,
 		deleteStages,
 		createMoveConstraint,
 		deleteMoveConstraints,
