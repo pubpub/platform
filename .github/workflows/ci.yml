@@ -26,9 +26,19 @@ jobs:
               run: pnpm config set store-dir $PNPM_CACHE_FOLDER
             - name: install dependencies
               run: pnpm install
+
             - name: check formatting
               run: pnpm run format
+
             - name: lint
               run: pnpm run lint
+
+            # this makes sure all the packages are properly linked
+            - name: preconstruct build
+              run: pnpm p:build
+
+            - name: type-check
+              run: pnpm run type-check
+
             - name: test
               run: pnpm run test
