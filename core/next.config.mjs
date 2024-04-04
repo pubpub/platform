@@ -2,14 +2,13 @@
 
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
-
 import { makeEnvPublic } from "next-runtime-env";
 
-makeEnvPublic('PUBPUB_URL');
-makeEnvPublic('SUPABASE_PUBLIC_KEY');
-makeEnvPublic('SUPABASE_URL');
-
 import "./lib/env/env.mjs";
+
+makeEnvPublic("PUBPUB_URL");
+makeEnvPublic("SUPABASE_PUBLIC_KEY");
+makeEnvPublic("SUPABASE_URL");
 
 /**
  * @type {import("next").NextConfig}
