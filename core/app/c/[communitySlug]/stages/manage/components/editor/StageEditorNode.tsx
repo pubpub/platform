@@ -82,6 +82,8 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 			onDoubleClick={onDoubleClick}
 			onKeyDown={onKeyDown}
 			ref={nodeRef}
+			tabIndex={0}
+			role="button"
 		>
 			<Handle type="target" position={Position.Left} />
 			<Handle type="source" position={Position.Right} />
