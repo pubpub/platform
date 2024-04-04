@@ -206,7 +206,7 @@ export const emailUser = async (instanceId: string, user: User, body: SendEmailR
 
 	const templateApi = await makeTemplateApi(instance, user, body);
 	const subject = await eta.renderStringAsync(body.subject, templateApi);
-	const html = await eta.renderStringAsync( body.message, templateApi);
+	const html = await eta.renderStringAsync(body.message, templateApi);
 	const { accepted, rejected } = await smtpclient.sendMail({
 		from: `${instance.community.name || "PubPub Team"} <hello@mg.pubpub.org>`,
 		to: user.email,
