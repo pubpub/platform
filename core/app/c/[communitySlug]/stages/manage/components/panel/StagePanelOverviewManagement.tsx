@@ -12,7 +12,7 @@ export const StagePanelOverviewManagement = (props: Props) => {
 	};
 	return (
 		<>
-			<h4 className="font-semibold mb-2">Stage Management</h4>
+			<h4 className="mb-2 font-semibold">Stage Management</h4>
 			<Button variant="secondary" onClick={onDeleteClick}>
 				Delete this Stage
 			</Button>

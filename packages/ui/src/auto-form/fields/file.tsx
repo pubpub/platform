@@ -1,11 +1,13 @@
 import * as React from "react";
+import { ChangeEvent, useState } from "react";
+import { Trash2 } from "lucide-react";
+
 import { FormControl, FormItem, FormMessage } from "../../form";
 import { Input } from "../../input";
-import { Trash2 } from "lucide-react";
-import { ChangeEvent, useState } from "react";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
 import { AutoFormInputComponentProps } from "../types";
+
 export default function AutoFormFile({
 	label,
 	isRequired,

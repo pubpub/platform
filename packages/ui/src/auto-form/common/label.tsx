@@ -1,6 +1,8 @@
 import * as React from "react";
-import { FormLabel } from "../../form";
+
 import { cn } from "utils";
+
+import { FormLabel } from "../../form";
 
 function AutoFormLabel({
 	label,

@@ -1,10 +1,11 @@
 import * as React from "react";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion";
-import { Button } from "../../button";
-import { Separator } from "../../separator";
 import { Plus, Trash } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
+
+import { AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion";
+import { Button } from "../../button";
+import { Separator } from "../../separator";
 import { beautifyObjectName } from "../utils";
 import AutoFormObject from "./object";
 
@@ -38,8 +39,8 @@ export default function AutoFormArray({
 	const itemDefType = isZodArray(item)
 		? item._def.type
 		: isZodDefault(item)
-		? item._def.innerType._def.type
-		: null;
+			? item._def.innerType._def.type
+			: null;
 
 	return (
 		<AccordionItem value={name} className="border-none">

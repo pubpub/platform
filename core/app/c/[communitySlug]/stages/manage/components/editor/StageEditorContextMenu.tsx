@@ -1,6 +1,7 @@
 "use client";
 
 import { PropsWithChildren } from "react";
+
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -9,8 +10,9 @@ import {
 	ContextMenuShortcut,
 	ContextMenuTrigger,
 } from "ui/context-menu";
-import { useStageEditor } from "./StageEditorContext";
+
 import { useStages } from "../../StagesContext";
+import { useStageEditor } from "./StageEditorContext";
 
 export const StageEditorContextMenu = (props: PropsWithChildren) => {
 	const { createStage } = useStages();

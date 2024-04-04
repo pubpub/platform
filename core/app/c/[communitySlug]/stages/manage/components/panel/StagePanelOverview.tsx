@@ -1,11 +1,13 @@
 import { Suspense } from "react";
+
 import { Card, CardContent } from "ui/card";
 import { Separator } from "ui/separator";
+
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { deleteStages, updateStageName } from "../../actions";
+import { getStage } from "./queries";
 import { StageNameInput } from "./StageNameInput";
 import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
-import { getStage } from "./queries";
 
 type PropsInner = {
 	stageId: string;

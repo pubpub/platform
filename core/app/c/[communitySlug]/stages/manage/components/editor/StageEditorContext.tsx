@@ -1,11 +1,13 @@
 "use client";
 
-import { PropsWithChildren, createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, PropsWithChildren, useCallback, useContext, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Node } from "reactflow";
+
 import { useLocalStorage } from "ui/hooks";
+
 import { StagePayload } from "~/lib/types";
 import { useStages } from "../../StagesContext";
-import { useRouter } from "next/navigation";
 
 export type StageEditorContext = {
 	deleteSelection: () => void;

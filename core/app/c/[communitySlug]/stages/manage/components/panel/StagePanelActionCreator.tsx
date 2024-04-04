@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -11,6 +12,7 @@ import {
 	DialogTrigger,
 } from "ui/dialog";
 import { FileText, Mail, Terminal } from "ui/icon";
+
 import { ActionPayload } from "~/lib/types";
 
 type ActionCellProps = {
@@ -36,7 +38,7 @@ const ActionCell = (props: ActionCellProps) => {
 		<div
 			tabIndex={0}
 			role="button"
-			className="flex flex-col space-y-1 rounded-md p-3 border transition-colors bg-accent hover:bg-background focus:bg-background hover:text-accent-foreground focus:text-accent-foreground cursor-pointer shadow-md hover:shadow-lg focus:shadow-lg"
+			className="flex cursor-pointer flex-col space-y-1 rounded-md border bg-accent p-3 shadow-md transition-colors hover:bg-background hover:text-accent-foreground hover:shadow-lg focus:bg-background focus:text-accent-foreground focus:shadow-lg"
 			onClick={onClick}
 			onKeyDown={onKeyDown}
 		>

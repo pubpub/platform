@@ -1,7 +1,7 @@
 "use client";
 
-import Dagre, { graphlib } from "@dagrejs/dagre";
 import { useCallback, useEffect, useMemo } from "react";
+import Dagre, { graphlib } from "@dagrejs/dagre";
 import ReactFlow, {
 	Background,
 	Connection,
@@ -16,15 +16,18 @@ import ReactFlow, {
 	useNodesState,
 	useStoreApi,
 } from "reactflow";
+
 import "reactflow/dist/style.css";
+
 import { expect } from "utils";
+
 import { StagePayload } from "~/lib/types";
+import { useStages } from "../../StagesContext";
 import { useStageEditor } from "./StageEditorContext";
+import { StageEditorContextMenu } from "./StageEditorContextMenu";
 import { StageEditorKeyboardControls } from "./StageEditorKeyboardControls";
 import { StageEditorMenubar } from "./StageEditorMenubar";
 import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageEditorNode } from "./StageEditorNode";
-import { useStages } from "../../StagesContext";
-import { StageEditorContextMenu } from "./StageEditorContextMenu";
 
 const makeNode = (stage: StagePayload) => {
 	return {
