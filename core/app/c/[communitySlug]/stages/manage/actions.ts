@@ -1,16 +1,8 @@
 "use server";
 
-<<<<<<< HEAD
-import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
-
-import { StageFormSchema } from "~/lib/stages";
-import { DeepPartial } from "~/lib/types";
-import prisma from "~/prisma/db";
-=======
 import { revalidateTag } from "next/cache";
+
 import db from "~/prisma/db";
->>>>>>> main
 
 export async function createStage(communityId: string) {
 	try {
