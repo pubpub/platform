@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
+import { getActionByName, getActionRunFunctionByName } from "~/actions";
 import db from "~/prisma/db";
 
 export async function createStage(communityId: string) {
@@ -150,4 +151,43 @@ export async function deleteAction(communityId: string, actionId: string) {
 	} finally {
 		revalidateTag(`community-stages_${communityId}`);
 	}
+}
+
+export async function runAction({
+	pubId,
+	actionInstanceId,
+}: {
+	pubId: string;
+	actionInstanceId: string;
+}) {
+	const pub = await db.pub.findUnique({
+		where: {
+			id: pubId,
+		},
+	});
+
+	if (!pub) {
+		throw new Error("Pub not found");
+	}
+
+	const actionInstance = await db.actionInstance.findUnique({
+		where: {
+			id: actionInstanceId,
+		},
+		include: {
+			action: true,
+		},
+	});
+	if (!actionInstance) {
+		throw new Error("Action instance not found");
+	}
+
+	const action = getActionRunFunctionByName(actionInstance.action.name);
+
+	console.log(action);
+	if (!action) {
+		throw new Error("Action not found");
+	}
+
+	// Run the action
 }

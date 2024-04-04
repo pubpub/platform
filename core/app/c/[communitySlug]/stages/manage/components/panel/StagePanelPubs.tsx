@@ -5,6 +5,11 @@ import { Card, CardContent } from "ui/card";
 import { Button } from "ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
+import * as actions from "../../actions";
+import { getActionByName, getActionRunFunctionByName } from "~/actions";
+import { Play } from "ui/icon";
+import { StagePanelPubsRunActionButton } from "./StagePanelPubsrunActionButton";
+
 type PropsInner = {
 	stageId: string;
 };
@@ -12,6 +17,11 @@ type PropsInner = {
 const StagePanelPubsInner = async (props: PropsInner) => {
 	const stagePubs = await getStagePubs(props.stageId);
 	const stageActions = await getStageActions(props.stageId);
+
+	const actions = stageActions.map((action) => ({
+		...action,
+		// run: getActionRunFunctionByName(action.action.name),
+	}));
 
 	return (
 		<Card>
@@ -22,15 +32,17 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 						<span>A pub</span>
 						<Popover>
 							<PopoverTrigger asChild>
-								<Button variant="ghost" size="sm">
+								<Button variant="secondary" size="sm">
 									Run action
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent>
-								{stageActions.map((action) => (
-									<Button key={action.id} variant="ghost" size="sm">
-										{action.action.name}
-									</Button>
+								{actions.map((action) => (
+									<StagePanelPubsRunActionButton
+										key={action.id}
+										action={action}
+										pub={pub}
+									/>
 								))}
 							</PopoverContent>
 						</Popover>

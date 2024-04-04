@@ -21,3 +21,7 @@ export const actions = {
 export const getActionByName = (name: string): Action | undefined => {
 	return actions[name]?.action;
 };
+
+export const getActionRunFunctionByName = (name: string) => {
+	return actions[name]?.run;
+};

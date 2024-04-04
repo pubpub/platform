@@ -14,6 +14,7 @@ export {
 	Mail,
 	MoreVertical,
 	Plus,
+	Play,
 	Search,
 	Send,
 	Settings,
