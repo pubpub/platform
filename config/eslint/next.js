@@ -7,7 +7,7 @@ const config = {
 		"no-restricted-syntax": [
 			"error",
 			{
-				selector: "TryStatement > BlockStatement CallExpression[callee.name='redirect']",
+				selector: "TryStatement > .block CallExpression[callee.name='redirect']",
 				message:
 					"Do not use 'redirect' inside of 'try'. 'redirect' throws an error in order to function: https://nextjs.org/docs/app/api-reference/functions/redirect",
 			},
