@@ -1,6 +1,6 @@
 "use client";
 
-import type { Community, Member, User } from "@prisma/client";
+import type { Community } from "@prisma/client";
 
 import {
 	AlertDialog,
@@ -16,6 +16,8 @@ import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
 
+import { isClientException } from "~/lib/error/ClientException";
+import { useShowClientException } from "~/lib/error/useShowClientException";
 import * as actions from "./actions";
 import { TableMember } from "./getMemberTableColumns";
 
@@ -26,6 +28,7 @@ export const RemoveMemberButton = ({
 	member: TableMember;
 	community: Community;
 }) => {
+	const showClientException = useShowClientException();
 	return (
 		<AlertDialog>
 			<TooltipProvider>
@@ -57,12 +60,8 @@ export const RemoveMemberButton = ({
 						<AlertDialogAction
 							onClick={async () => {
 								const response = await actions.removeMember({ member, community });
-								if ("error" in response) {
-									toast({
-										title: "Error",
-										description: response.error,
-										variant: "destructive",
-									});
+								if (isClientException(response)) {
+									showClientException(response);
 									return;
 								}
 								toast({

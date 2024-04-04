@@ -13,8 +13,8 @@ import {
 } from "react";
 
 
-import { useDisplayUiException } from "~/lib/error/useDisplayUiException";
-import { ActionPayload, StagePayload, StagePayloadAction } from "~/lib/types";
+import { useShowClientException } from "~/lib/error/useShowClientException";
+import { ActionPayload, StagePayload } from "~/lib/types";
 import * as actions from "./actions";
 
 export type StagesContext = {
@@ -78,15 +78,6 @@ const makeOptimisticMoveConstraint = (source: StagePayload, destination: StagePa
 	stageId: source.id,
 	destination,
 	destinationId: destination.id,
-	createdAt: new Date(),
-	updatedAt: new Date(),
-});
-
-const makeOptimisticActionInstance = (action: StagePayloadAction, stageId: string) => ({
-	id: "new",
-	action,
-	actionId: action.id,
-	stageId,
 	createdAt: new Date(),
 	updatedAt: new Date(),
 });
@@ -166,7 +157,7 @@ type DeleteBatch = {
 };
 
 export const StagesProvider = (props: StagesProviderProps) => {
-	const displayUiException = useDisplayUiException();
+	const showClientException = useShowClientException();
 	const [stages, dispatch] = useOptimistic(
 		props.stages,
 		makeOptimisitcStagesReducer(props.communityId)
@@ -182,9 +173,9 @@ export const StagesProvider = (props: StagesProviderProps) => {
 		});
 		const result = await actions.createStage(props.communityId);
 		if (result) {
-			displayUiException(result);
+			showClientException(result);
 		}
-	}, [dispatch, props.communityId, displayUiException]);
+	}, [dispatch, props.communityId, showClientException]);
 
 	const deleteStages = useCallback(
 		async (stageIds: string[]) => {
@@ -220,10 +211,10 @@ export const StagesProvider = (props: StagesProviderProps) => {
 				moveConstraintIds
 			);
 			if (result) {
-				displayUiException(result);
+				showClientException(result);
 			}
 		},
-		[dispatch, props.communityId, displayUiException]
+		[dispatch, props.communityId, showClientException]
 	);
 
 	const createMoveConstraint = useCallback(
@@ -241,10 +232,10 @@ export const StagesProvider = (props: StagesProviderProps) => {
 				destinationStageId
 			);
 			if (result) {
-				displayUiException(result);
+				showClientException(result);
 			}
 		},
-		[dispatch, props.communityId, displayUiException]
+		[dispatch, props.communityId, showClientException]
 	);
 
 	const deleteMoveConstraints = useCallback(
@@ -274,10 +265,10 @@ export const StagesProvider = (props: StagesProviderProps) => {
 			});
 			const result = await actions.updateStageName(props.communityId, stageId, name);
 			if (result) {
-				displayUiException(result);
+				showClientException(result);
 			}
 		},
-		[dispatch, props.communityId, displayUiException]
+		[dispatch, props.communityId, showClientException]
 	);
 
 	const fetchStages = useCallback(() => {

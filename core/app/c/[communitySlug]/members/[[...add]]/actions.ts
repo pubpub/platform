@@ -8,7 +8,7 @@ import { headers } from "next/headers";
 import { cache } from "react";
 import { getLoginData } from "~/lib/auth/loginData";
 import { env } from "~/lib/env/env.mjs";
-import { makeUiException } from "~/lib/error/UIException";
+import { makeClientException } from "~/lib/error/ClientException";
 import type { SuggestedUser } from "~/lib/server/members";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
@@ -172,9 +172,10 @@ export const addMember = async ({
 		async () => {
 			const { error: adminError } = await isCommunityAdmin(community);
 			if (adminError) {
-				return makeUiException(
-					"You do not have permission to invite members to this community"
-				);
+				return makeClientException({
+					title: "Failed to add member",
+					message: "You do not have permission to invite members to this community",
+				});
 			}
 
 			try {
@@ -186,7 +187,10 @@ export const addMember = async ({
 				});
 
 				if (existingMember) {
-					return makeUiException("User is already a member of this community");
+					return makeClientException({
+						title: "Failed to add member",
+						message: "User is already a member of this community",
+					});
 				}
 
 				const member = await prisma.member.create({
@@ -215,7 +219,10 @@ export const addMember = async ({
 				});
 
 				if (supabaseInviteError) {
-					return makeUiException("Failed to add member");
+					return makeClientException({
+						title: "Failed to add member",
+						message: "We encounted a problem with our authentication provider.",
+					});
 				}
 
 				await prisma.user.update({
@@ -229,7 +236,10 @@ export const addMember = async ({
 
 				return { member };
 			} catch (error) {
-				return makeUiException("Failed to add member", captureException(error));
+				return makeClientException({
+					title: "Failed to add member",
+					id: captureException(error),
+				});
 			}
 		}
 	);
@@ -261,9 +271,10 @@ export const createUserWithMembership = async ({
 			try {
 				const { error: adminError } = await isCommunityAdmin(community);
 				if (adminError) {
-					return makeUiException(
-						"You do not have permission to invite members to this community"
-					);
+					return makeClientException({
+						title: "Failed to add member",
+						message: "You do not have permission to invite members to this community",
+					});
 				}
 
 				const user = await prisma.user.create({
@@ -292,7 +303,10 @@ export const createUserWithMembership = async ({
 				});
 
 				if (supabaseError !== null) {
-					return makeUiException("Failed to create user", supabaseError);
+					return makeClientException({
+						title: "Failed to add member",
+						message: "We encounted a problem with our authentication provider.",
+					});
 				}
 
 				await prisma.user.update({
@@ -308,7 +322,10 @@ export const createUserWithMembership = async ({
 
 				return { user };
 			} catch (error) {
-				return makeUiException("Failed to create user", captureException(error));
+				return makeClientException({
+					title: "Failed to add member",
+					id: captureException(error),
+				});
 			}
 		}
 	);
@@ -331,11 +348,17 @@ export const removeMember = async ({
 				const { loginData, error: adminError } = await isCommunityAdmin(community);
 
 				if (adminError) {
-					return { error: adminError };
+					return makeClientException({
+						title: "Failed to remove member",
+						message: adminError,
+					});
 				}
 
 				if (loginData?.memberships.find((m) => m.id === member.id)) {
-					return { error: "You cannot remove yourself from the community" };
+					return makeClientException({
+						title: "Failed to remove member",
+						message: "You cannot remove yourself from the community",
+					});
 				}
 
 				const deleted = await prisma.member.delete({
@@ -345,13 +368,18 @@ export const removeMember = async ({
 				});
 
 				if (!deleted) {
-					return { error: "Failed to remove member" };
+					return makeClientException({
+						title: "Failed to remove member",
+					});
 				}
 
 				revalidateMemberPathsAndTags(community);
 				return { success: true };
 			} catch (error) {
-				return makeUiException(error.message, captureException(error));
+				return makeClientException({
+					title: "Failed to remove member",
+					id: captureException(error),
+				});
 			}
 		}
 	);

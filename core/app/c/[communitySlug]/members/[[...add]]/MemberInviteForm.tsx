@@ -28,8 +28,8 @@ import { toast } from "ui/use-toast";
 import * as actions from "./actions";
 import { MemberFormState } from "./AddMember";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
-import { isUiException } from "~/lib/error/UIException";
-import { useDisplayUiException } from "~/lib/error/useDisplayUiException";
+import { isClientException } from "~/lib/error/ClientException";
+import { useShowClientException } from "~/lib/error/useShowClientException";
 
 export const MemberInviteForm = ({
 	community,
@@ -40,7 +40,7 @@ export const MemberInviteForm = ({
 	state: MemberFormState;
 	email?: string;
 }) => {
-	const displayUiException = useDisplayUiException();
+	const showClientException = useShowClientException();
 	const [isPending, startTransition] = useTransition();
 	const router = useRouter();
 
@@ -82,8 +82,8 @@ export const MemberInviteForm = ({
 				canAdmin: Boolean(data.canAdmin),
 			});
 
-			if (isUiException(result)) {
-				displayUiException(result);
+			if (isClientException(result)) {
+				showClientException(result);
 				return;
 			}
 
@@ -102,8 +102,8 @@ export const MemberInviteForm = ({
 			community,
 		});
 
-		if (isUiException(result)) {
-			displayUiException(result);
+		if (isClientException(result)) {
+			showClientException(result);
 			return;
 		}
 
