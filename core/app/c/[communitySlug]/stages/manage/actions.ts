@@ -1,6 +1,6 @@
 "use server";
 
-import { withServerActionInstrumentation } from "@sentry/nextjs";
+import { withServerActionInstrumentation, captureException } from "@sentry/nextjs";
 import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import db from "~/prisma/db";

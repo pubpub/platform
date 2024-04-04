@@ -18,7 +18,7 @@ import { assertHasAccepted } from "~/lib/types";
 
 export const submit = async (instanceId: string, submissionPubId: string, values: PubValues) => {
 	return withServerActionInstrumentation(
-		"evaluations/evaluate/submit",
+		"evaluate/submit",
 		{
 			headers: headers(),
 		},
@@ -74,7 +74,7 @@ export const submit = async (instanceId: string, submissionPubId: string, values
 
 export const upload = async (instanceId: string, pubId: string, fileName: string) => {
 	return withServerActionInstrumentation(
-		"evaluations/evaluate/upload",
+		"evaluate/upload",
 		{
 			headers: headers(),
 		},

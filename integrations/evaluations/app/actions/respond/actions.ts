@@ -35,7 +35,7 @@ export const accept = async (
 	submissionPubId: string
 ): Promise<ErrorResult | undefined> => {
 	return withServerActionInstrumentation(
-		"evaluations/respond/accept",
+		"respond/accept",
 		{
 			headers: headers(),
 		},

@@ -9,7 +9,7 @@ import { client } from "~/lib/pubpub";
 
 export const submit = async (instanceId: string, values: PubValues, assigneeId: string) => {
 	return withServerActionInstrumentation(
-		"submissions/submit",
+		"submit",
 		{
 			headers: headers(),
 		},
@@ -43,7 +43,7 @@ export const resolveMetadata = async (
 	identifierValue: string
 ): Promise<Record<string, unknown> | { error: string }> => {
 	return withServerActionInstrumentation(
-		"submissions/resolveMetadata",
+		"resolveMetadata",
 		{
 			headers: headers(),
 		},

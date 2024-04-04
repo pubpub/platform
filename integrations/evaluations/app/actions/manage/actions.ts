@@ -33,7 +33,7 @@ export const save = async (
 	send: boolean
 ) => {
 	return withServerActionInstrumentation(
-		"evaluations/manage/save",
+		"manage/save",
 		{
 			headers: headers(),
 		},
@@ -127,7 +127,7 @@ export const save = async (
 
 export const suggest = async (instanceId: string, query: SuggestedMembersQuery) => {
 	return withServerActionInstrumentation(
-		"evaluations/manage/suggest",
+		"manage/suggest",
 		{
 			headers: headers(),
 		},
@@ -144,7 +144,7 @@ export const suggest = async (instanceId: string, query: SuggestedMembersQuery) 
 
 export const remove = async (instanceId: string, pubId: string, userId: string) => {
 	return withServerActionInstrumentation(
-		"evaluations/manage/remove",
+		"manage/remove",
 		{
 			headers: headers(),
 		},
