@@ -1,7 +1,8 @@
-import { expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { PubTitle } from "../PubTitle";
+import { expect, test, vi } from "vitest";
+
 import { PubPayload } from "~/lib/types";
+import { PubTitle } from "../PubTitle";
 
 test("PubTitle component includes the pub title", async () => {
 	const pub: PubPayload = {

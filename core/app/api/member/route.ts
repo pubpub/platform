@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import prisma from "prisma/db";
-import { BadRequestError, NotFoundError, handleErrors } from "~/lib/server";
+
+import { BadRequestError, handleErrors, NotFoundError } from "~/lib/server";
 
 export async function GET(req: NextRequest) {
 	return await handleErrors(async () => {

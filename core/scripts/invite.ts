@@ -1,13 +1,16 @@
-import { parse } from "csv-parse";
+import { randomUUID } from "crypto";
 import fs from "fs";
+
+import { createClient } from "@supabase/supabase-js";
+import { parse } from "csv-parse";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { formatSupabaseError } from "../lib/supabase";
-import { createClient } from "@supabase/supabase-js";
-import { randomUUID } from "crypto";
-import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
+
 import { logger } from "logger";
+
 import { env } from "../lib/env/env.mjs";
+import { formatSupabaseError } from "../lib/supabase";
+import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
 
 const getServerSupabase = () => {
 	const url = env.NEXT_PUBLIC_SUPABASE_URL;

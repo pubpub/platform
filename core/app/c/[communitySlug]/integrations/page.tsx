@@ -1,8 +1,9 @@
 import { Prisma } from "@prisma/client";
-import prisma from "~/prisma/db";
-import IntegrationsList from "./IntegrationsList";
+
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
+import prisma from "~/prisma/db";
+import IntegrationsList from "./IntegrationsList";
 
 export type IntegrationData = Prisma.PromiseReturnType<typeof getCommunityIntegrations>;
 
@@ -38,8 +39,8 @@ export default async function Page({ params }: Props) {
 	}
 	return (
 		<>
-			<div className="flex mb-16 justify-between items-center">
-				<h1 className="font-bold text-xl">Integrations</h1>
+			<div className="mb-16 flex items-center justify-between">
+				<h1 className="text-xl font-bold">Integrations</h1>
 			</div>
 			<IntegrationsList instances={integrations} token={token} />
 		</>

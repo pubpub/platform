@@ -1,4 +1,5 @@
 import { User } from "@pubpub/sdk";
+
 import { client } from "~/lib/pubpub";
 import {
 	EvaluatorWhoAccepted,
@@ -45,7 +46,7 @@ export function getDeadline(instanceConfig: InstanceConfig, evaluator: Evaluator
 					deadlineUnit: instanceConfig.deadlineUnit,
 				},
 				new Date(evaluator.acceptedAt)
-		  );
+			);
 }
 
 const notificationFooter =
@@ -504,8 +505,8 @@ export const schedulePromptEvalBonusReminderEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}" for The Unjournal.</p>
 	  <p>This note is a reminder to submit your evaluation by ${reminderDeadline.toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${new Date(
-				deadline
-			).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+			deadline
+		).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>

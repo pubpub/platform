@@ -4,14 +4,17 @@
 	"main": "dist/utils.cjs.js",
 	"module": "dist/utils.esm.js",
 	"scripts": {
-		"type-check": "tsc"
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"clsx": "^2.0.0",
 		"tailwind-merge": "^1.14.0"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"tsconfig": "workspace:*",
 		"typescript": "^5.4.2"
-	}
+	},
+	"prettier": "@pubpub/prettier-config"
 }

@@ -4,4 +4,4 @@
 
 ### Patch Changes
 
-- b0da2c3: This release adds wrapping to the input group fields and fixes button styles.
+-   b0da2c3: This release adds wrapping to the input group fields and fixes button styles.

@@ -1,7 +1,9 @@
 "use client";
 
-import AutoForm from "ui/auto-form";
 import { ZodObject } from "zod";
+
+import AutoForm from "ui/auto-form";
+
 import { Action } from "~/actions/types";
 
 export type Props = {

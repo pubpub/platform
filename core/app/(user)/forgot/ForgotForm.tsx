@@ -1,11 +1,13 @@
 "use client";
+
 import React, { FormEvent, useState } from "react";
+
+import { supabase } from "lib/supabase";
+import { logger } from "logger";
 import { Button } from "ui/button";
 import { Loader2 } from "ui/icon";
 
-import { supabase } from "lib/supabase";
 import { env } from "~/lib/env/env.mjs";
-import { logger } from "logger";
 
 export default function ForgotForm() {
 	const [email, setEmail] = useState("");
@@ -39,10 +41,10 @@ export default function ForgotForm() {
 					<div className="text-center">
 						<form
 							onSubmit={resetPassword}
-							className="flex justify-between items-center"
+							className="flex items-center justify-between"
 						>
 							<input
-								className="w-1/2 mr-4"
+								className="mr-4 w-1/2"
 								value={email}
 								onChange={(evt) => setEmail(evt.target.value)}
 								placeholder="example@mail.com"
@@ -50,18 +52,18 @@ export default function ForgotForm() {
 
 							<Button variant="outline" type="submit" disabled={!email || isLoading}>
 								Send password reset email
-								{isLoading && <Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+								{isLoading && <Loader2 className="ml-4 h-4 w-4 animate-spin" />}
 							</Button>
 
 							{failure && (
-								<div className={"text-red-700 my-4"}>Error reseting password</div>
+								<div className={"my-4 text-red-700"}>Error reseting password</div>
 							)}
 						</form>
 					</div>
 				</>
 			)}
 			{success && (
-				<div className="text-green-700 my-4">
+				<div className="my-4 text-green-700">
 					Password reset email sent! Please check your inbox.
 				</div>
 			)}

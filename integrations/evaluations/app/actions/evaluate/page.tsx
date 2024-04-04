@@ -1,13 +1,15 @@
-import { SafeUser } from "@pubpub/sdk";
 import { notFound } from "next/navigation";
+
+import { SafeUser } from "@pubpub/sdk";
 import { expect } from "utils";
+
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
+import { EvaluatorWhoAccepted } from "~/lib/types";
 import { Declined } from "./declined";
 import { Evaluate } from "./evaluate";
 import { Submitted } from "./submitted";
-import { EvaluatorWhoAccepted } from "~/lib/types";
 
 type Props = {
 	searchParams: {

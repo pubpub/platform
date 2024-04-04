@@ -1,6 +1,8 @@
 import { memo } from "react";
+
 import { Badge } from "ui/badge";
 import { cn } from "utils";
+
 import { InviteStatus } from "~/lib/types";
 
 export const getEvaluatorStatusText = (status: InviteStatus) => {
@@ -57,7 +59,7 @@ export const EvaluatorInviteRowStatus = memo(({ status }: { status: InviteStatus
 	const color = getEvaluatorStatusColor(status);
 	const variant = getEvaluatorStatusVariant(status);
 	return (
-		<Badge className={cn(color, "text-[10px] px-1 py-0")} variant={variant}>
+		<Badge className={cn(color, "px-1 py-0 text-[10px]")} variant={variant}>
 			{text}
 		</Badge>
 	);

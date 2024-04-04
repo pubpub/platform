@@ -1,4 +1,5 @@
 import { useFormState, useWatch } from "react-hook-form";
+
 import { Button } from "ui/button";
 import { Send } from "ui/icon";
 
@@ -18,7 +19,7 @@ export function EvaluatorInviteFormInviteButton(props: EvaluatorInviteFormInvite
 				!form.evaluators?.some((evaluator) => evaluator.selected) || formState.isSubmitting
 			}
 		>
-			<Send className="h-4 w-4 mr-2" />
+			<Send className="mr-2 h-4 w-4" />
 			Invite
 		</Button>
 	);

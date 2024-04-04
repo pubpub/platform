@@ -3,6 +3,7 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+
 import { env } from "./lib/env/env.mjs";
 
 if (env.NODE_ENV === "production") {

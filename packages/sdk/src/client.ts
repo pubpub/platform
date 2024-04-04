@@ -1,5 +1,7 @@
 import { initClient } from "@ts-rest/core";
+
 import {
+	api,
 	CreatePubRequestBodyWithNulls,
 	CreatePubResponseBody,
 	GetPubResponseBody,
@@ -11,8 +13,8 @@ import {
 	SendEmailResponseBody,
 	UpdatePubResponseBody,
 	User,
-	api,
 } from "contracts";
+
 import { Manifest, ManifestJson } from "./manifest";
 
 /**

@@ -6,7 +6,9 @@
 		"dev": "next dev -p 3000 | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
-		"lint": "next lint",
+		"lint": "dotenv -v SKIP_VALIDATION=true next lint",
+		"lint:fix": "dotenv -v SKIP_VALIDATION=true next lint --fix",
+		"format": "prettier --check . --ignore-path ../.gitignore",
 		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel",
 		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
@@ -17,8 +19,8 @@
 		"prebuild": "prisma generate",
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature",
-		"test": "vitest",
-		"type-check": "tsc",
+		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",
+		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch"
 	},
 	"files": [
@@ -76,6 +78,8 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
+		"@pubpub/eslint-config": "workspace:*",
 		"@preconstruct/next": "^4.0.0",
 		"@tailwindcss/forms": "^0.5.6",
 		"@testing-library/react": "^14.2.1",
@@ -104,5 +108,14 @@
 		"vitest": "^1.3.1",
 		"vitest-tsconfig-paths": "^3.4.1",
 		"yargs": "^17.7.2"
-	}
+	},
+	"eslintConfig": {
+		"root": true,
+		"extends": [
+			"@pubpub/eslint-config/base",
+			"@pubpub/eslint-config/next",
+			"@pubpub/eslint-config/react"
+		]
+	},
+	"prettier": "@pubpub/prettier-config"
 }

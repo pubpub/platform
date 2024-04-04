@@ -1,4 +1,5 @@
-import crypto from "node:crypto"
+import crypto from "node:crypto";
+
 import { BadRequestError, UnauthorizedError } from "../server/errors";
 
 export const getBearerToken = (authHeader: string) => {

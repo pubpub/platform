@@ -1,10 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import { StagePanelActions } from "./StagePanelActions";
-import { StagePanelOverview } from "./StagePanelOverview";
-import { StagePanelSheet } from "./StagePanelSheet";
-import { StagePanelPubs } from "./StagePanelPubs";
-import { StagePanelMembers } from "./StagePanelMembers";
+
 import { getStage } from "./queries";
+import { StagePanelActions } from "./StagePanelActions";
+import { StagePanelMembers } from "./StagePanelMembers";
+import { StagePanelOverview } from "./StagePanelOverview";
+import { StagePanelPubs } from "./StagePanelPubs";
+import { StagePanelSheet } from "./StagePanelSheet";
 import { StagePanelTriggers } from "./StagePanelTriggers";
 
 type Props = {

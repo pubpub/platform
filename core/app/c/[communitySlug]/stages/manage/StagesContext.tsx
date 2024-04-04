@@ -1,16 +1,19 @@
 "use client";
 
 import {
-	PropsWithChildren,
 	createContext,
-	// @ts-expect-error
-	useOptimistic,
+	PropsWithChildren,
+	startTransition,
 	useCallback,
 	useContext,
 	useEffect,
+	// @ts-expect-error
+	useOptimistic,
 	useState,
-	startTransition,
 } from "react";
+
+import { logger } from "logger";
+
 import { ActionPayload, StagePayload, StagePayloadAction } from "~/lib/types";
 import * as actions from "./actions";
 
@@ -179,7 +182,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 			});
 			await actions.createStage(props.communityId);
 		} catch (e) {
-			console.error(e);
+			logger.error(e);
 		}
 	}, [dispatch, props.communityId]);
 
@@ -191,7 +194,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 				});
 				setDeleteBatch((prev) => ({ ...prev, stageIds: [...prev.stageIds, ...stageIds] }));
 			} catch (e) {
-				console.error(e);
+				logger.error(e);
 			}
 		},
 		[dispatch, props.communityId]
@@ -222,7 +225,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 					moveConstraintIds
 				);
 			} catch (e) {
-				console.error(e);
+				logger.error(e);
 			}
 		},
 		[dispatch, props.communityId]
@@ -244,7 +247,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 					destinationStageId
 				);
 			} catch (e) {
-				console.error(e);
+				logger.error(e);
 			}
 		},
 		[dispatch, props.communityId]
@@ -264,7 +267,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 					moveConstraintIds: [...prev.moveConstraintIds, ...moveConstraintIds],
 				}));
 			} catch (e) {
-				console.error(e);
+				logger.error(e);
 			}
 		},
 		[dispatch, props.communityId]
@@ -282,7 +285,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 				});
 				await actions.updateStageName(props.communityId, stageId, name);
 			} catch (e) {
-				console.error(e);
+				logger.error(e);
 			}
 		},
 		[dispatch, props.communityId]

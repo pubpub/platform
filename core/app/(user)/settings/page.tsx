@@ -1,6 +1,8 @@
-import SettingsForm from "./SettingsForm";
-import { getLoginData } from "lib/auth/loginData";
 import { notFound } from "next/navigation";
+
+import { getLoginData } from "lib/auth/loginData";
+
+import SettingsForm from "./SettingsForm";
 
 export default async function Page() {
 	const loginData = await getLoginData();
@@ -8,13 +10,13 @@ export default async function Page() {
 		return notFound();
 	}
 	return (
-		<div className="max-w-lg m-auto">
+		<div className="m-auto max-w-lg">
 			<SettingsForm
 				firstName={loginData.firstName}
 				lastName={loginData.lastName}
 				email={loginData.email}
 				slug={loginData.slug}
-				communities={loginData.memberships.map(membership => membership.community)}
+				communities={loginData.memberships.map((membership) => membership.community)}
 			/>
 		</div>
 	);

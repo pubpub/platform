@@ -1,4 +1,5 @@
-import { normalizeDoi, isDoi } from "utils";
+import { isDoi, normalizeDoi } from "utils";
+
 import { makeExtractPageMetadata } from "./html";
 
 /**

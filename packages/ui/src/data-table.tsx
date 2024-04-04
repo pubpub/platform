@@ -1,13 +1,26 @@
 import * as React from "react";
 import {
+	ArrowDownIcon,
+	ArrowUpIcon,
+	CaretSortIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	DoubleArrowLeftIcon,
 	DoubleArrowRightIcon,
+	EyeNoneIcon,
 } from "@radix-ui/react-icons";
-import { Table } from "@tanstack/react-table";
+import { Column, Table } from "@tanstack/react-table";
+
+import { cn } from "utils";
 
 import { Button } from "./button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "./dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 
 interface DataTablePaginationProps<TData> {
@@ -88,18 +101,6 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 	);
 }
 
-import { ArrowDownIcon, ArrowUpIcon, CaretSortIcon, EyeNoneIcon } from "@radix-ui/react-icons";
-import { Column } from "@tanstack/react-table";
-
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "./dropdown-menu";
-import { cn } from "utils";
-
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
 	column: Column<TData, TValue>;
 	title: string;
@@ -121,7 +122,7 @@ export function DataTableColumnHeader<TData, TValue>({
 					<Button
 						variant="ghost"
 						size="sm"
-						className="flex w-full min-w-fit justify-between gap-x-1 items-center -ml-3 h-8 data-[state=open]:bg-accent"
+						className="-ml-3 flex h-8 w-full min-w-fit items-center justify-between gap-x-1 data-[state=open]:bg-accent"
 					>
 						<span>{title}</span>
 						{column.getIsSorted() === "desc" ? (

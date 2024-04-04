@@ -1,7 +1,8 @@
 import * as React from "react";
+import * as z from "zod";
+
 import { FormControl, FormItem, FormLabel, FormMessage } from "../../form";
 import { RadioGroup, RadioGroupItem } from "../../radio-group";
-import * as z from "zod";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
 import { AutoFormInputComponentProps } from "../types";

@@ -1,5 +1,6 @@
-import SignupForm from "./SignupForm";
 import { getLoginData } from "lib/auth/loginData";
+
+import SignupForm from "./SignupForm";
 
 export default async function Page() {
 	const loginData = await getLoginData();
@@ -8,7 +9,7 @@ export default async function Page() {
 		return <div>Currently logged in. Please logout to signup for a new account.</div>;
 	}
 	return (
-		<div className="max-w-lg m-auto">
+		<div className="m-auto max-w-lg">
 			<SignupForm />
 		</div>
 	);

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useContext } from "react";
+
 import { IntegrationContext } from "./IntegrationContext";
 
 export type IntegrationProviderProps<T> = React.PropsWithChildren<IntegrationContext<T>>;

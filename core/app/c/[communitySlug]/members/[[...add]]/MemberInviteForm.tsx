@@ -1,7 +1,14 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { useCallback, useEffect, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Community } from "@prisma/client";
+import { useForm } from "react-hook-form";
+import { useDebouncedCallback } from "use-debounce";
+import { z } from "zod";
 
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
 import { Checkbox } from "ui/checkbox";
@@ -18,14 +25,7 @@ import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCallback, useEffect, useTransition } from "react";
-import { useDebouncedCallback } from "use-debounce";
 import * as actions from "./actions";
-import { Community } from "@prisma/client";
-import { useRouter } from "next/navigation";
 import { MemberFormState } from "./AddMember";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
@@ -226,7 +226,7 @@ export const MemberInviteForm = ({
 				)}
 				{state.state === "user-found" && (
 					<Card>
-						<CardContent className="flex gap-x-4 items-center p-4">
+						<CardContent className="flex items-center gap-x-4 p-4">
 							<Avatar>
 								<AvatarImage
 									src={state.user.avatar ?? undefined}

@@ -1,8 +1,8 @@
-import { registerAction, registerCorePubField } from "./actions/init";
+import { logger } from "logger";
+
 import { actions } from "./actions";
 import { corePubFields } from "./actions/corePubFields";
-
-import { logger } from "logger";
+import { registerAction, registerCorePubField } from "./actions/init";
 
 export async function register() {
 	logger.info("Registering core fields");

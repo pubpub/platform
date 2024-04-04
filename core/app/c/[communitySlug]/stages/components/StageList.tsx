@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Fragment } from "react";
+import Link from "next/link";
+
 import { Button } from "ui/button";
+
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
 import { moveConstraintSourcesForStage } from "~/lib/stages";
@@ -24,7 +26,7 @@ function StageList(props: Props) {
 			{
 				props.stageWorkflows.map((stages) => {
 					return (
-						<div>
+						<div key={stages[0].id}>
 							{stages.map((stage) => {
 								const users = getPubUsers(stage.permissions);
 								// users should be just member but these are users
@@ -39,7 +41,7 @@ function StageList(props: Props) {
 								return (
 									<div key={stage.id} className="mb-20">
 										<div className="flex flex-row justify-between">
-											<h3 className="font-semibold text-lg mb-2">
+											<h3 className="mb-2 text-lg font-semibold">
 												{stage.name}
 											</h3>
 											{stage.integrationInstances.map((instance) => {

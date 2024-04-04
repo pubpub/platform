@@ -1,5 +1,6 @@
-import { run, JobHelpers, Task } from "graphile-worker";
-import { Client, SendEmailRequestBody, makeClient } from "@pubpub/sdk";
+import { JobHelpers, run, Task } from "graphile-worker";
+
+import { Client, makeClient, SendEmailRequestBody } from "@pubpub/sdk";
 import { logger } from "logger";
 
 const client = makeClient({});

@@ -1,19 +1,19 @@
 "use server";
 
-import type { SuggestedUser } from "~/lib/server/members";
-
-import prisma from "~/prisma/db";
-import { Community } from "@prisma/client";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getServerSupabase } from "~/lib/supabaseServer";
-import { formatSupabaseError } from "~/lib/supabase";
-import { generateHash, slugifyString } from "~/lib/string";
-import { captureException } from "@sentry/nextjs";
-import { TableMember } from "./getMemberTableColumns";
 import { cache } from "react";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { Community } from "@prisma/client";
+import { captureException } from "@sentry/nextjs";
 import { User } from "@supabase/supabase-js";
+
+import type { SuggestedUser } from "~/lib/server/members";
+import { getLoginData } from "~/lib/auth/loginData";
 import { env } from "~/lib/env/env.mjs";
+import { generateHash, slugifyString } from "~/lib/string";
+import { formatSupabaseError } from "~/lib/supabase";
+import { getServerSupabase } from "~/lib/supabaseServer";
+import prisma from "~/prisma/db";
+import { TableMember } from "./getMemberTableColumns";
 
 export const revalidateMemberPathsAndTags = (community: Community) => {
 	revalidatePath(`/c/${community.slug}/members`);
@@ -102,9 +102,8 @@ const addSupabaseUser = async ({
 	}
 
 	// the user already exists in supabase, so we will delete them and try again
-	const { data: supabaseUserData, error: getEmailError } = await client.auth.admin.getUserByEmail(
-		email
-	);
+	const { data: supabaseUserData, error: getEmailError } =
+		await client.auth.admin.getUserByEmail(email);
 
 	if (getEmailError) {
 		captureException(getEmailError);

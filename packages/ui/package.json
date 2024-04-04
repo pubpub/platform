@@ -1,7 +1,7 @@
 {
 	"name": "ui",
 	"private": true,
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"main": "dist/ui.cjs.js",
 	"module": "dist/ui.esm.js",
 	"exports": {
@@ -238,7 +238,9 @@
 		"customRenderers"
 	],
 	"scripts": {
-		"type-check": "tsc"
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"lint": "eslint **/*.tsx",
+		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.1",
@@ -291,7 +293,10 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
+		"@pubpub/eslint-config": "workspace:*",
 		"@types/react": "^18.2.5",
+		"eslint": "^8.57.0",
 		"postcss": "^8.4.20",
 		"react": "^18.2.0",
 		"react-hook-form": "^7.46.1",
@@ -364,5 +369,12 @@
 			"customRenderers/confidence/confidence.tsx",
 			"customRenderers/fileUpload/fileUpload.tsx"
 		]
-	}
+	},
+	"eslintConfig": {
+		"extends": [
+			"@pubpub/eslint-config/base",
+			"@pubpub/eslint-config/react"
+		]
+	},
+	"prettier": "@pubpub/prettier-config"
 }

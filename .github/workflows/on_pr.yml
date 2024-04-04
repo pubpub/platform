@@ -3,14 +3,16 @@
 name: PR Updated triggers
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
+    pull_request:
+        types:
+            - opened
+            - synchronize
 
 jobs:
-  build-all:
-    uses: ./.github/workflows/ecrbuild-all.yml
-    secrets:
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    ci:
+        uses: ./.github/workflows/ci.yml
+    build-all:
+        uses: ./.github/workflows/ecrbuild-all.yml
+        secrets:
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
