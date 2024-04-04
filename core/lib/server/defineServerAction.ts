@@ -1,5 +1,6 @@
-import { withServerActionInstrumentation } from "@sentry/nextjs";
 import { headers } from "next/headers";
+import { withServerActionInstrumentation } from "@sentry/nextjs";
+
 import { isClientExceptionOptions, makeClientException } from "../serverActions";
 
 /**
@@ -27,7 +28,7 @@ export const defineServerAction = <T extends (...args: unknown[]) => unknown>(
 					// server action result as-is.
 					return isClientExceptionOptions(serverActionResult)
 						? // Create a client exception and send its cause (if any) to Sentry.
-						  makeClientException(serverActionResult)
+							makeClientException(serverActionResult)
 						: serverActionResult;
 				} catch (error) {
 					// https://github.com/vercel/next.js/discussions/49426#discussioncomment-8176059

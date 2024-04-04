@@ -4,9 +4,9 @@ import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { addAction, deleteAction } from "../../actions";
+import { getActions, getStage, getStageActions } from "./queries";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
-import { getActions, getStage, getStageActions } from "./queries";
 
 type PropsInner = {
 	stageId: string;

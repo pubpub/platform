@@ -1,7 +1,8 @@
 "use server";
 
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { headers } from "next/headers";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
+
 import { setInstanceConfig } from "~/lib/instance";
 
 export const configure = async (instanceId: string, pubTypeId: string) => {

@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 
 import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { expect } from "utils";
@@ -23,8 +25,6 @@ import {
 	isInvited,
 } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
-import { headers } from "next/headers";
 
 export const save = async (
 	instanceId: string,

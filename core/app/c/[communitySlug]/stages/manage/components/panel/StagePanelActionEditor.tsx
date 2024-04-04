@@ -1,6 +1,5 @@
 "use client";
 
-import { logger } from "logger";
 import { useCallback, useState } from "react";
 
 import { logger } from "logger";

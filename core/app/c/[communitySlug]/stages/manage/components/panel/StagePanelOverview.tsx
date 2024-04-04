@@ -5,9 +5,9 @@ import { Separator } from "ui/separator";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { deleteStage, updateStageName } from "../../actions";
+import { getStage } from "./queries";
 import { StageNameInput } from "./StageNameInput";
 import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
-import { getStage } from "./queries";
 
 type PropsInner = {
 	stageId: string;

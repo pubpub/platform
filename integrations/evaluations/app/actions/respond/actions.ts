@@ -1,9 +1,9 @@
 "use server";
 
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 
 import { expect } from "utils";
 

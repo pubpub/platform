@@ -1,15 +1,15 @@
 "use server";
 
+import { cache } from "react";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { headers } from "next/headers";
 import { Community } from "@prisma/client";
 import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { User } from "@supabase/supabase-js";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { headers } from "next/headers";
-import { cache } from "react";
+
+import type { SuggestedUser } from "~/lib/server/members";
 import { getLoginData } from "~/lib/auth/loginData";
 import { env } from "~/lib/env/env.mjs";
-import type { SuggestedUser } from "~/lib/server/members";
-
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";

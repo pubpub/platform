@@ -1,9 +1,10 @@
 "use server";
 
-import { PubValues } from "@pubpub/sdk";
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
+
+import { PubValues } from "@pubpub/sdk";
 import { expect } from "utils";
 
 import {

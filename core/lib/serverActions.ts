@@ -1,5 +1,6 @@
-import { captureException } from "@sentry/nextjs";
 import { useCallback } from "react";
+import { captureException } from "@sentry/nextjs";
+
 import { toast } from "ui/use-toast";
 
 export type ClientException = {
