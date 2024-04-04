@@ -9,7 +9,7 @@ export type ClientException = {
 	id?: string;
 };
 
-type ClientExceptionOptions = Omit<ClientException, "isClientException">;
+type ClientExceptionOptions = Omit<ClientException, "isClientException"> & { cause?: unknown };
 
 export function makeClientException(options: ClientExceptionOptions): ClientException;
 export function makeClientException(message: string, id?: string): ClientException;

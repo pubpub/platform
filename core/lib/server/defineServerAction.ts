@@ -2,11 +2,45 @@ import { withServerActionInstrumentation } from "@sentry/nextjs";
 import { headers } from "next/headers";
 import { isClientExceptionOptions, makeClientException } from "../serverActions";
 
-export const defineServerAction = <T extends (...args: unknown[]) => unknown>(fn: T) => {
+/**
+ * Wraps a Next.js server action function with Sentry instrumentation. Additionally
+ * handles client exceptions and unexpected errors.
+ *
+ * @param serverActionFn
+ * @returns
+ */
+export const defineServerAction = <T extends (...args: unknown[]) => unknown>(
+	serverActionFn: T
+) => {
 	return async function runServerAction(...args: Parameters<T>) {
-		return withServerActionInstrumentation(fn.name, { headers: headers() }, async () => {
-			const result = await fn(...args);
-			return isClientExceptionOptions(result) ? makeClientException(result) : result;
-		});
+		return withServerActionInstrumentation(
+			serverActionFn.name,
+			{
+				headers: headers(),
+				recordResponse: true,
+			},
+			async () => {
+				try {
+					const serverActionResult = await serverActionFn(...args);
+					// The server action result might be client exception options, in which case
+					// we should return it as a client exception. Otherwise, we should return the
+					// server action result as-is.
+					return isClientExceptionOptions(serverActionResult)
+						? // Create a client exception and send its cause (if any) to Sentry.
+						  makeClientException(serverActionResult)
+						: serverActionResult;
+				} catch (error) {
+					// https://github.com/vercel/next.js/discussions/49426#discussioncomment-8176059
+					// Because you can't simply wrap a server action call on the client in try/catch
+					// we should provide some sort of error response to the client in the case of an
+					// unexpected error. But because we catch uncaught errors ourselves here, Sentry's
+					// `withServerActionInstrumentation` is not really providing much use at this point.
+					return makeClientException({
+						error: "An unexpected error occurred",
+						cause: error,
+					});
+				}
+			}
+		);
 	};
 };
