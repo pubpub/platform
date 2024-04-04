@@ -17,7 +17,7 @@ export const LocalStorageProvider = (props: React.PropsWithChildren<LocalStorage
 };
 
 export const useLocalStorage = <T,>(key: string): [T | undefined, (value: T) => void] => {
-	const { prefix, timeout } = React.useContext(LocalStorageContext);
+	const { prefix = "", timeout } = React.useContext(LocalStorageContext);
 	key = React.useMemo(() => prefix + key, []);
 	const timestamp = React.useRef(performance.now());
 	const value = React.useMemo<T | undefined>(() => {

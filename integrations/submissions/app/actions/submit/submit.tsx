@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { useIntegration } from "@pubpub/sdk/src/react/IntegrationProvider";
+import { useIntegration } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import {
@@ -25,7 +25,6 @@ import { useToast } from "ui/use-toast";
 import { cn, DOI_REGEX, isDoi, normalizeDoi, URL_REGEX } from "utils";
 
 import { submit } from "./actions";
-import { FetchMetadataButton } from "./FetchMetadataButton";
 
 type Props = {
 	instanceId: string;

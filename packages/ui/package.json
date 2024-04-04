@@ -37,6 +37,10 @@
 			"module": "./label/dist/ui-label.esm.js",
 			"default": "./label/dist/ui-label.cjs.js"
 		},
+		"./sheet": {
+			"module": "./sheet/dist/ui-sheet.esm.js",
+			"default": "./sheet/dist/ui-sheet.cjs.js"
+		},
 		"./table": {
 			"module": "./table/dist/ui-table.esm.js",
 			"default": "./table/dist/ui-table.cjs.js"
@@ -61,9 +65,17 @@
 			"module": "./select/dist/ui-select.esm.js",
 			"default": "./select/dist/ui-select.cjs.js"
 		},
+		"./switch": {
+			"module": "./switch/dist/ui-switch.esm.js",
+			"default": "./switch/dist/ui-switch.cjs.js"
+		},
 		"./command": {
 			"module": "./command/dist/ui-command.esm.js",
 			"default": "./command/dist/ui-command.cjs.js"
+		},
+		"./menubar": {
+			"module": "./menubar/dist/ui-menubar.esm.js",
+			"default": "./menubar/dist/ui-menubar.cjs.js"
 		},
 		"./popover": {
 			"module": "./popover/dist/ui-popover.esm.js",
@@ -77,9 +89,9 @@
 			"module": "./tooltip/dist/ui-tooltip.esm.js",
 			"default": "./tooltip/dist/ui-tooltip.cjs.js"
 		},
-		"./calandar": {
-			"module": "./calandar/dist/ui-calandar.esm.js",
-			"default": "./calandar/dist/ui-calandar.cjs.js"
+		"./calendar": {
+			"module": "./calendar/dist/ui-calendar.esm.js",
+			"default": "./calendar/dist/ui-calendar.cjs.js"
 		},
 		"./checkbox": {
 			"module": "./checkbox/dist/ui-checkbox.esm.js",
@@ -88,6 +100,10 @@
 		"./combobox": {
 			"module": "./combobox/dist/ui-combobox.esm.js",
 			"default": "./combobox/dist/ui-combobox.cjs.js"
+		},
+		"./skeleton": {
+			"module": "./skeleton/dist/ui-skeleton.esm.js",
+			"default": "./skeleton/dist/ui-skeleton.cjs.js"
 		},
 		"./textarea": {
 			"module": "./textarea/dist/ui-textarea.esm.js",
@@ -121,13 +137,33 @@
 			"module": "./collapsible/dist/ui-collapsible.esm.js",
 			"default": "./collapsible/dist/ui-collapsible.cjs.js"
 		},
+		"./date-picker": {
+			"module": "./date-picker/dist/ui-date-picker.esm.js",
+			"default": "./date-picker/dist/ui-date-picker.cjs.js"
+		},
+		"./radio-group": {
+			"module": "./radio-group/dist/ui-radio-group.esm.js",
+			"default": "./radio-group/dist/ui-radio-group.cjs.js"
+		},
 		"./alert-dialog": {
 			"module": "./alert-dialog/dist/ui-alert-dialog.esm.js",
 			"default": "./alert-dialog/dist/ui-alert-dialog.cjs.js"
 		},
+		"./context-menu": {
+			"module": "./context-menu/dist/ui-context-menu.esm.js",
+			"default": "./context-menu/dist/ui-context-menu.cjs.js"
+		},
 		"./dropdown-menu": {
 			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
 			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
+		},
+		"./auto-form": {
+			"module": "./auto-form/dist/ui-auto-form.esm.js",
+			"default": "./auto-form/dist/ui-auto-form.cjs.js"
+		},
+		"./navigation-menu": {
+			"module": "./navigation-menu/dist/ui-navigation-menu.esm.js",
+			"default": "./navigation-menu/dist/ui-navigation-menu.cjs.js"
 		},
 		"./customRenderers/confidence/confidence": {
 			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
@@ -160,16 +196,19 @@
 		"styles.css",
 		"alert",
 		"alert-dialog",
+		"auto-form",
 		"avatar",
 		"badge",
 		"button",
-		"calandar",
+		"calendar",
 		"card",
 		"checkbox",
 		"collapsible",
 		"combobox",
 		"command",
+		"context-menu",
 		"data-table",
+		"date-picker",
 		"dialog",
 		"dropdown-menu",
 		"form",
@@ -178,10 +217,16 @@
 		"index",
 		"input",
 		"label",
+		"menubar",
+		"navigation-menu",
 		"pagination",
 		"popover",
+		"radio-group",
 		"select",
 		"separator",
+		"sheet",
+		"skeleton",
+		"switch",
 		"table",
 		"tabs",
 		"textarea",
@@ -199,20 +244,26 @@
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.1",
+		"@radix-ui/react-accordion": "^1.1.2",
 		"@radix-ui/react-alert-dialog": "^1.0.5",
 		"@radix-ui/react-avatar": "^1.0.3",
 		"@radix-ui/react-checkbox": "^1.0.4",
 		"@radix-ui/react-collapsible": "^1.0.3",
+		"@radix-ui/react-context-menu": "^2.1.5",
 		"@radix-ui/react-dialog": "^1.0.4",
 		"@radix-ui/react-dropdown-menu": "^2.0.5",
 		"@radix-ui/react-hover-card": "^1.0.7",
 		"@radix-ui/react-icons": "^1.3.0",
 		"@radix-ui/react-label": "^2.0.2",
+		"@radix-ui/react-menubar": "^1.0.4",
+		"@radix-ui/react-navigation-menu": "^1.1.4",
 		"@radix-ui/react-popover": "^1.0.6",
+		"@radix-ui/react-radio-group": "^1.1.3",
 		"@radix-ui/react-select": "^2.0.0",
 		"@radix-ui/react-separator": "^1.0.3",
 		"@radix-ui/react-slider": "^1.1.2",
 		"@radix-ui/react-slot": "^1.0.2",
+		"@radix-ui/react-switch": "^1.0.3",
 		"@radix-ui/react-tabs": "^1.0.4",
 		"@radix-ui/react-toast": "^1.1.4",
 		"@radix-ui/react-tooltip": "^1.0.6",
@@ -227,6 +278,7 @@
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.0.0",
 		"cmdk": "^1.0.0",
+		"date-fns": "^3.6.0",
 		"lucide-react": "^0.357.0",
 		"next": "13.5.2",
 		"react-day-picker": "^8.10.0",
@@ -276,16 +328,19 @@
 		"entrypoints": [
 			"alert.tsx",
 			"alert-dialog.tsx",
+			"auto-form/index.tsx",
 			"avatar.tsx",
 			"badge.tsx",
 			"button.tsx",
-			"calandar.tsx",
+			"calendar.tsx",
 			"card.tsx",
 			"checkbox.tsx",
 			"collapsible.tsx",
 			"combobox.tsx",
 			"command.tsx",
+			"context-menu.tsx",
 			"data-table.tsx",
+			"date-picker.tsx",
 			"dialog.tsx",
 			"dropdown-menu.tsx",
 			"form.tsx",
@@ -293,10 +348,16 @@
 			"icon.tsx",
 			"input.tsx",
 			"label.tsx",
+			"menubar.tsx",
+			"navigation-menu.tsx",
 			"pagination.tsx",
 			"popover.tsx",
+			"radio-group.tsx",
 			"select.tsx",
 			"separator.tsx",
+			"sheet.tsx",
+			"skeleton.tsx",
+			"switch.tsx",
 			"table.tsx",
 			"tabs.tsx",
 			"textarea.tsx",

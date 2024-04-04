@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-skeleton.cjs.js",
+	"module": "dist/ui-skeleton.esm.js"
+}

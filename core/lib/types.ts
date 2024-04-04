@@ -124,6 +124,9 @@ export type CommunityMemberPayload = Prisma.MemberGetPayload<{
 }>;
 
 export const stageInclude = {
+	actionInstances: {
+		include: { action: true },
+	},
 	pubs: { include: pubInclude },
 	integrationInstances: { include: { integration: true } },
 	permissions: { include: permissionInclude },
@@ -132,6 +135,8 @@ export const stageInclude = {
 } satisfies Prisma.StageInclude;
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
+export type StagePayloadActionInstance = StagePayload["actionInstances"][number];
+export type StagePayloadAction = StagePayload["actionInstances"][number]["action"];
 export type StagesById = { [key: string]: StagePayload };
 
 export type StagePayloadMoveConstraint = NonNullable<StagePayload["moveConstraints"]>;
@@ -144,3 +149,5 @@ export type DeepPartial<T> = T extends object
 			[P in keyof T]?: DeepPartial<T[P]>;
 		}
 	: T;
+
+export type ActionPayload = Prisma.ActionGetPayload<{}>;
