@@ -147,8 +147,8 @@ module "service_flock" {
      path_prefix = "/intg/submissions/"
      # lower number means this will be evaluated BEFORE the catch-all to core.
      rule_priority = 80
-     from_port = 10000
-     to_port = 10000
+     from_port = 3000
+     to_port = 3000
      protocol = "tcp"
    }
 
@@ -180,8 +180,8 @@ module "service_flock" {
      path_prefix = "/intg/evaluations/"
      # these may not be equal, so just set it adjacent to non-conflicting rule for submissions
      rule_priority = 81
-     from_port = 10000
-     to_port = 10000
+     from_port = 3000
+     to_port = 3000
      protocol = "tcp"
    }
 
