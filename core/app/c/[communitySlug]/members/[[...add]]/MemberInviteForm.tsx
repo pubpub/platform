@@ -28,6 +28,8 @@ import { toast } from "ui/use-toast";
 import * as actions from "./actions";
 import { MemberFormState } from "./AddMember";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
+import { isUiException } from "~/lib/error/UIException";
+import { useDisplayUiException } from "~/lib/error/useDisplayUiException";
 
 export const MemberInviteForm = ({
 	community,
@@ -38,6 +40,7 @@ export const MemberInviteForm = ({
 	state: MemberFormState;
 	email?: string;
 }) => {
+	const displayUiException = useDisplayUiException();
 	const [isPending, startTransition] = useTransition();
 	const router = useRouter();
 
@@ -71,7 +74,7 @@ export const MemberInviteForm = ({
 				return;
 			}
 
-			const { error } = await actions.createUserWithMembership({
+			const result = await actions.createUserWithMembership({
 				email: data.email,
 				firstName: data.firstName!,
 				lastName: data.lastName!,
@@ -79,12 +82,8 @@ export const MemberInviteForm = ({
 				canAdmin: Boolean(data.canAdmin),
 			});
 
-			if (error) {
-				toast({
-					title: "Error",
-					description: error,
-					variant: "destructive",
-				});
+			if (isUiException(result)) {
+				displayUiException(result);
 				return;
 			}
 
@@ -103,12 +102,8 @@ export const MemberInviteForm = ({
 			community,
 		});
 
-		if ("error" in result) {
-			toast({
-				title: "Error",
-				description: `Failed to add member. ${result.error}`,
-				variant: "destructive",
-			});
+		if (isUiException(result)) {
+			displayUiException(result);
 			return;
 		}
 

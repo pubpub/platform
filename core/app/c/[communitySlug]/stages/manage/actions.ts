@@ -3,6 +3,7 @@
 import { withServerActionInstrumentation, captureException } from "@sentry/nextjs";
 import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
+import { makeUiException } from "~/lib/error/UIException";
 import db from "~/prisma/db";
 
 export async function createStage(communityId: string) {
@@ -24,6 +25,8 @@ export async function createStage(communityId: string) {
 						},
 					},
 				});
+			} catch (error) {
+				return makeUiException("Failed to create stage", captureException(error));
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}
@@ -46,6 +49,8 @@ export async function deleteStages(communityId: string, stageIds: string[]) {
 						},
 					},
 				});
+			} catch (error) {
+				return makeUiException("Failed to delete stages", captureException(error));
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}
@@ -79,6 +84,8 @@ export async function createMoveConstraint(
 						},
 					},
 				});
+			} catch (error) {
+				return makeUiException("Failed to connect stages", captureException(error));
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}
@@ -108,6 +115,11 @@ export async function deleteMoveConstraints(
 					})
 				);
 				await Promise.all(ops);
+			} catch (error) {
+				return makeUiException(
+					"Failed to delete stage connections",
+					captureException(error)
+				);
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}
@@ -135,6 +147,8 @@ export async function deleteStagesAndMoveConstraints(
 				if (stageIds.length > 0) {
 					await deleteStages(communityId, stageIds);
 				}
+			} catch (error) {
+				return makeUiException("Failed to delete stages", captureException(error));
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}
@@ -158,6 +172,8 @@ export async function updateStageName(communityId: string, stageId: string, name
 						name,
 					},
 				});
+			} catch (error) {
+				return makeUiException("Failed to update stage name", captureException(error));
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}
@@ -199,6 +215,8 @@ export async function addAction(communityId: string, stageId: string, actionId: 
 						},
 					},
 				});
+			} catch (error) {
+				return makeUiException("Failed to add action", captureException(error));
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}
@@ -219,6 +237,8 @@ export async function deleteAction(communityId: string, actionId: string) {
 						id: actionId,
 					},
 				});
+			} catch (error) {
+				return makeUiException("Failed to delete action", captureException(error));
 			} finally {
 				revalidateTag(`community-stages_${communityId}`);
 			}

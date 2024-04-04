@@ -23,7 +23,7 @@ import {
 	isInvited,
 } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
-import { withServerActionInstrumentation } from "@sentry/nextjs";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { headers } from "next/headers";
 
 export const save = async (
@@ -119,6 +119,7 @@ export const save = async (
 				revalidatePath("/");
 				return { success: true };
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 		}
@@ -136,6 +137,7 @@ export const suggest = async (instanceId: string, query: SuggestedMembersQuery) 
 				const users = await client.getSuggestedMembers(instanceId, query);
 				return users;
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 		}
@@ -177,6 +179,7 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 
 				return { success: true };
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 		}

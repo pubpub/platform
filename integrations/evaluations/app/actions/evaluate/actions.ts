@@ -1,7 +1,7 @@
 "use server";
 
 import { PubValues } from "@pubpub/sdk";
-import { withServerActionInstrumentation } from "@sentry/nextjs";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { expect } from "utils";
@@ -66,6 +66,7 @@ export const submit = async (instanceId: string, submissionPubId: string, values
 				revalidatePath("/");
 				return { success: true };
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 		}
@@ -82,6 +83,7 @@ export const upload = async (instanceId: string, pubId: string, fileName: string
 			try {
 				return await client.generateSignedAssetUploadUrl(instanceId, pubId, fileName);
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 		}

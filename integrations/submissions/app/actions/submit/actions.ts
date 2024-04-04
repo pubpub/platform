@@ -1,7 +1,7 @@
 "use server";
 
 import { PubValues } from "@pubpub/sdk";
-import { withServerActionInstrumentation } from "@sentry/nextjs";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { headers } from "next/headers";
 import { getInstanceConfig } from "~/lib/instance";
 import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
@@ -26,6 +26,7 @@ export const submit = async (instanceId: string, values: PubValues, assigneeId: 
 				});
 				return pub;
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 		}
@@ -57,6 +58,7 @@ export const resolveMetadata = async (
 					}
 				}
 			} catch (error) {
+				captureException(error);
 				return { error: "There was an error resolving metadata." };
 			}
 			return { error: "No metdata found." };

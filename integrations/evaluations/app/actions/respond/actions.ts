@@ -1,6 +1,6 @@
 "use server";
 
-import { withServerActionInstrumentation } from "@sentry/nextjs";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -137,6 +137,7 @@ export const accept = async (
 					evaluator
 				);
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 			redirect(`/actions/respond/accepted${redirectParams}`);
@@ -194,6 +195,7 @@ export const decline = async (
 					);
 				}
 			} catch (error) {
+				captureException(error);
 				return { error: error.message };
 			}
 			redirect(`/actions/respond/declined${redirectParams}`);

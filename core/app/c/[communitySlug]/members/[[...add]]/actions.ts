@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { cache } from "react";
 import { getLoginData } from "~/lib/auth/loginData";
 import { env } from "~/lib/env/env.mjs";
+import { makeUiException } from "~/lib/error/UIException";
 import type { SuggestedUser } from "~/lib/server/members";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
@@ -171,7 +172,9 @@ export const addMember = async ({
 		async () => {
 			const { error: adminError } = await isCommunityAdmin(community);
 			if (adminError) {
-				return { error: adminError };
+				return makeUiException(
+					"You do not have permission to invite members to this community"
+				);
 			}
 
 			try {
@@ -183,7 +186,7 @@ export const addMember = async ({
 				});
 
 				if (existingMember) {
-					return { error: "User is already a member of this community" };
+					return makeUiException("User is already a member of this community");
 				}
 
 				const member = await prisma.member.create({
@@ -212,7 +215,7 @@ export const addMember = async ({
 				});
 
 				if (supabaseInviteError) {
-					return { error: supabaseInviteError };
+					return makeUiException("Failed to add member");
 				}
 
 				await prisma.user.update({
@@ -226,7 +229,7 @@ export const addMember = async ({
 
 				return { member };
 			} catch (error) {
-				return { error: error.message };
+				return makeUiException("Failed to add member", captureException(error));
 			}
 		}
 	);
@@ -255,52 +258,58 @@ export const createUserWithMembership = async ({
 			headers: headers(),
 		},
 		async () => {
-			const { error: adminError } = await isCommunityAdmin(community);
-			if (adminError) {
-				return { error: adminError };
-			}
+			try {
+				const { error: adminError } = await isCommunityAdmin(community);
+				if (adminError) {
+					return makeUiException(
+						"You do not have permission to invite members to this community"
+					);
+				}
 
-			const user = await prisma.user.create({
-				data: {
+				const user = await prisma.user.create({
+					data: {
+						email,
+						firstName,
+						lastName,
+						slug: `${slugifyString(firstName)}${
+							lastName ? `-${slugifyString(lastName)}` : ""
+						}-${generateHash(4, "0123456789")}`,
+						memberships: {
+							create: {
+								communityId: community.id,
+								canAdmin,
+							},
+						},
+					},
+				});
+
+				const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
 					email,
 					firstName,
 					lastName,
-					slug: `${slugifyString(firstName)}${
-						lastName ? `-${slugifyString(lastName)}` : ""
-					}-${generateHash(4, "0123456789")}`,
-					memberships: {
-						create: {
-							communityId: community.id,
-							canAdmin,
-						},
+					community,
+					canAdmin,
+				});
+
+				if (supabaseError !== null) {
+					return makeUiException("Failed to create user", supabaseError);
+				}
+
+				await prisma.user.update({
+					where: {
+						id: user.id,
 					},
-				},
-			});
+					data: {
+						supabaseId: supabaseUser.id,
+					},
+				});
 
-			const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
-				email,
-				firstName,
-				lastName,
-				community,
-				canAdmin,
-			});
+				revalidateMemberPathsAndTags(community);
 
-			if (supabaseError !== null) {
-				return { error: supabaseError };
+				return { user };
+			} catch (error) {
+				return makeUiException("Failed to create user", captureException(error));
 			}
-
-			await prisma.user.update({
-				where: {
-					id: user.id,
-				},
-				data: {
-					supabaseId: supabaseUser.id,
-				},
-			});
-
-			revalidateMemberPathsAndTags(community);
-
-			return { user };
 		}
 	);
 };
@@ -342,7 +351,7 @@ export const removeMember = async ({
 				revalidateMemberPathsAndTags(community);
 				return { success: true };
 			} catch (error) {
-				return { error: error.message };
+				return makeUiException(error.message, captureException(error));
 			}
 		}
 	);
