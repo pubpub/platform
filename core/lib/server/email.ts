@@ -204,9 +204,19 @@ export const emailUser = async (instanceId: string, user: User, body: SendEmailR
 		throw new NotFoundError(`Integration instance ${instanceId} not found`);
 	}
 
+	console.log("\n\ninvitor are\n", body.include?.users?.invitor);
+
+	const invitor = await prisma.user.findUnique({
+		where: { id: body.include?.users?.invitor },
+		select: { email: true, firstName: true, lastName: true },
+	});
+
+	const disclaimer = invitor
+		? `This email contains links unique to you. For your security, do not share this email or the links within. To reply, send an email to your evaluation manager at: ${invitor.email}.`
+		: `This email contains links unique to you. For your security, do not share this email or the links within. To reply, send an email to the editorial team at contact@unjournal.org.`;
 	const templateApi = await makeTemplateApi(instance, user, body);
 	const subject = await eta.renderStringAsync(body.subject, templateApi);
-	const html = await eta.renderStringAsync(body.message, templateApi);
+	const html = await eta.renderStringAsync(disclaimer + `\n\n` + body.message, templateApi);
 	const { accepted, rejected } = await smtpclient.sendMail({
 		from: `${instance.community.name || "PubPub Team"} <hello@mg.pubpub.org>`,
 		to: user.email,
