@@ -14,10 +14,10 @@ variable "environment" {
   type = string
 }
 
-variable "pubpub_url" {
-  description = "URL where pubpub will be addressable (include https://)"
-  type = string
-}
+# variable "pubpub_url" {
+#   description = "URL where pubpub will be addressable (include https://)"
+#   type = string
+# }
 
 variable "MAILGUN_SMTP_USERNAME" {
   description = "SMTP Username for Mailgun service"
