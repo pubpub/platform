@@ -16,6 +16,7 @@ import {
 import { useShowClientException } from "~/lib/error/useShowClientException";
 import { ActionPayload, StagePayload } from "~/lib/types";
 import * as actions from "./actions";
+import { isClientException } from "~/lib/error/ClientException";
 
 export type StagesContext = {
 	actions: ActionPayload[];
@@ -172,7 +173,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 			dispatch({ type: "stage_created" });
 		});
 		const result = await actions.createStage(props.communityId);
-		if (result) {
+		if (isClientException(result)) {
 			showClientException(result);
 		}
 	}, [dispatch, props.communityId, showClientException]);
@@ -210,7 +211,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 				stageIds,
 				moveConstraintIds
 			);
-			if (result) {
+			if (isClientException(result)) {
 				showClientException(result);
 			}
 		},
@@ -231,7 +232,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 				sourceStageId,
 				destinationStageId
 			);
-			if (result) {
+			if (isClientException(result)) {
 				showClientException(result);
 			}
 		},
@@ -264,7 +265,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 				});
 			});
 			const result = await actions.updateStageName(props.communityId, stageId, name);
-			if (result) {
+			if (isClientException(result)) {
 				showClientException(result);
 			}
 		},
