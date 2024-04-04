@@ -10,25 +10,21 @@ import { ChevronDown } from "ui/icon";
 import { Separator } from "ui/separator";
 
 import { getActionByName } from "~/actions";
-import { ClientException } from "~/lib/error/ClientException";
-import { useShowClientException } from "~/lib/error/useShowClientException";
+import { useServerAction } from "~/lib/serverActions";
 import { StagePayloadActionInstance } from "~/lib/types";
 import { StagePanelActionConfig } from "./StagePanelActionConfig";
 
 type Props = {
 	actionInstance: StagePayloadActionInstance;
-	onDelete: (actionInstanceId: string) => Promise<ClientException>;
+	onDelete: (actionInstanceId: string) => Promise<unknown>;
 };
 
 export const StagePanelActionEditor = (props: Props) => {
-	const showClientException = useShowClientException();
+	const runOnDelete = useServerAction(props.onDelete);
 	const [isOpen, setIsOpen] = useState(false);
 	const onDeleteClick = useCallback(async () => {
-		const result = await props.onDelete(props.actionInstance.id);
-		if (result) {
-			showClientException(result);
-		}
-	}, [props.onDelete, props.actionInstance, showClientException]);
+		runOnDelete(props.actionInstance.id);
+	}, [props.actionInstance, runOnDelete]);
 	const action = getActionByName(props.actionInstance.action.name);
 
 	if (!action) {

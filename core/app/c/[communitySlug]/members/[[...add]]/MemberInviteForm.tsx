@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Community } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
@@ -25,11 +25,10 @@ import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
-import * as actions from "./actions";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { MemberFormState } from "./AddMember";
+import * as actions from "./actions";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
-import { isClientException } from "~/lib/error/ClientException";
-import { useShowClientException } from "~/lib/error/useShowClientException";
 
 export const MemberInviteForm = ({
 	community,
@@ -40,7 +39,8 @@ export const MemberInviteForm = ({
 	state: MemberFormState;
 	email?: string;
 }) => {
-	const showClientException = useShowClientException();
+	const runCreateUserWithMembership = useServerAction(actions.createUserWithMembership);
+	const runAddMember = useServerAction(actions.addMember);
 	const [isPending, startTransition] = useTransition();
 	const router = useRouter();
 
@@ -74,7 +74,7 @@ export const MemberInviteForm = ({
 				return;
 			}
 
-			const result = await actions.createUserWithMembership({
+			const result = await runCreateUserWithMembership({
 				email: data.email,
 				firstName: data.firstName!,
 				lastName: data.lastName!,
@@ -82,38 +82,32 @@ export const MemberInviteForm = ({
 				canAdmin: Boolean(data.canAdmin),
 			});
 
-			if (isClientException(result)) {
-				showClientException(result);
-				return;
+			if (didSucceed(result)) {
+				toast({
+					title: "Success",
+					description: "User successfully invited",
+				});
+				closeForm();
 			}
-
-			toast({
-				title: "Success",
-				description: "User successfully invited",
-			});
-			closeForm();
 
 			return;
 		}
 
-		const result = await actions.addMember({
+		const result = await runAddMember({
 			user: state.user,
 			canAdmin: data.canAdmin,
 			community,
 		});
 
-		if (isClientException(result)) {
-			showClientException(result);
-			return;
+		if (didSucceed(result)) {
+			toast({
+				title: "Success",
+				description: "Member added successfully",
+			});
+
+			// navigate away from the add page to the normal member page
+			closeForm();
 		}
-
-		toast({
-			title: "Success",
-			description: "Member added successfully",
-		});
-
-		// navigate away from the add page to the normal member page
-		closeForm();
 	}
 
 	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {

@@ -13,8 +13,7 @@ import {
 } from "ui/dialog";
 import { FileText, Mail, Terminal } from "ui/icon";
 
-import { ClientException } from "~/lib/error/ClientException";
-import { useShowClientException } from "~/lib/error/useShowClientException";
+import { useServerAction } from "~/lib/serverActions";
 import { ActionPayload } from "~/lib/types";
 
 type ActionCellProps = {
@@ -65,21 +64,18 @@ const ActionCell = (props: ActionCellProps) => {
 
 type Props = {
 	actions: ActionPayload[];
-	onAdd: (actionId: string) => Promise<ClientException>;
+	onAdd: (actionId: string) => Promise<unknown>;
 };
 
 export const StagePanelActionCreator = (props: Props) => {
-	const showClientException = useShowClientException();
+	const runOnAdd = useServerAction(props.onAdd);
 	const [isOpen, setIsOpen] = useState(false);
 	const onActionSelect = useCallback(
 		async (action: ActionPayload) => {
 			setIsOpen(false);
-			const result = await props.onAdd(action.id);
-			if (result) {
-				showClientException(result);
-			}
+			runOnAdd(action.id);
 		},
-		[props.onAdd, showClientException]
+		[props.onAdd, runOnAdd]
 	);
 	const onOpenChange = useCallback((open: boolean) => {
 		setIsOpen(open);

@@ -16,8 +16,7 @@ import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
 
-import { isClientException } from "~/lib/error/ClientException";
-import { useShowClientException } from "~/lib/error/useShowClientException";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { TableMember } from "./getMemberTableColumns";
 
@@ -28,7 +27,7 @@ export const RemoveMemberButton = ({
 	member: TableMember;
 	community: Community;
 }) => {
-	const showClientException = useShowClientException();
+	const runRemoveMember = useServerAction(actions.removeMember);
 	return (
 		<AlertDialog>
 			<TooltipProvider>
@@ -59,16 +58,14 @@ export const RemoveMemberButton = ({
 					<Button asChild variant="destructive">
 						<AlertDialogAction
 							onClick={async () => {
-								const response = await actions.removeMember({ member, community });
-								if (isClientException(response)) {
-									showClientException(response);
-									return;
+								const response = await runRemoveMember({ member, community });
+								if (didSucceed(response)) {
+									toast({
+										title: "Success",
+										description: "Member successfully removed",
+										variant: "default",
+									});
 								}
-								toast({
-									title: "Success",
-									description: "Member successfully removed",
-									variant: "default",
-								});
 							}}
 						>
 							<Trash size="16" className="mr-2" />
