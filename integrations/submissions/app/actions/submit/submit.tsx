@@ -25,6 +25,7 @@ import { useToast } from "ui/use-toast";
 import { cn, DOI_REGEX, isDoi, normalizeDoi, URL_REGEX } from "utils";
 
 import { submit } from "./actions";
+import { FetchMetadataButton } from "./FetchMetadataButton";
 
 type Props = {
 	instanceId: string;
