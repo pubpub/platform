@@ -204,8 +204,6 @@ export const emailUser = async (instanceId: string, user: User, body: SendEmailR
 		throw new NotFoundError(`Integration instance ${instanceId} not found`);
 	}
 
-	console.log("\n\ninvitor are\n", body.include?.users?.invitor);
-
 	const invitor = await prisma.user.findUnique({
 		where: { id: body.include?.users?.invitor },
 		select: { email: true, firstName: true, lastName: true },
