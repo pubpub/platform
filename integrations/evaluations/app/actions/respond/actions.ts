@@ -1,6 +1,7 @@
 "use server";
 
 import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
+import { isRedirectError } from "next/dist/client/components/redirect";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -40,9 +41,6 @@ export const accept = async (
 			headers: headers(),
 		},
 		async () => {
-			const redirectParams = `?token=${cookie(
-				"token"
-			)}&instanceId=${instanceId}&pubId=${submissionPubId}`;
 			try {
 				const submissionPub = await client.getPub(instanceId, submissionPubId);
 				const user = JSON.parse(expect(cookie("user")));
@@ -55,92 +53,104 @@ export const accept = async (
 					instanceState[user.id],
 					`User was not invited to evaluate pub ${submissionPubId}`
 				);
-				// Accepting again is a no-op.
-				if (evaluator.status === "accepted" || evaluator.status === "received") {
-					redirect(`/actions/respond/accepted${redirectParams}`);
-				}
-				// Assert the user is invited to evaluate this pub.
-				assertIsInvited(evaluator);
-				// Update the evaluator's status to accepted and add recored the time of
-				// acceptance.
-				evaluator = instanceState[user.id] = {
-					...evaluator,
-					status: "accepted",
-					acceptedAt: new Date().toString(),
-				};
-				const deadline = calculateDeadline(instanceConfig, new Date(evaluator.acceptedAt));
-				evaluator.deadline = deadline;
-				await setInstanceState(instanceId, submissionPubId, instanceState);
-				// Unschedule reminder email to evaluator.
-				await unscheduleInvitationReminderEmail(instanceId, submissionPubId, evaluator);
-				// Unschedule no-reply notification email to community manager.
-				await unscheduleNoReplyNotificationEmail(instanceId, submissionPubId, evaluator);
-				// Immediately send accepted notification email to community manager.
-				await sendAcceptedNotificationEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator,
-					submissionPub.assignee
-				);
-				// Immediately send accepted email to evaluator.
-				await sendAcceptedEmail(instanceId, instanceConfig, submissionPubId, evaluator);
-				// Schedule no-submit notification email to community manager.
-				await scheduleNoSubmitNotificationEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator,
-					submissionPub.assignee
-				);
+				const hasAlreadyAccepted =
+					evaluator.status === "accepted" || evaluator.status === "received";
+				// Accepting more than one time is a no-op.
+				if (!hasAlreadyAccepted) {
+					// Assert the user is invited to evaluate this pub.
+					assertIsInvited(evaluator);
+					// Update the evaluator's status to accepted and add recored the time of
+					// acceptance.
+					evaluator = instanceState[user.id] = {
+						...evaluator,
+						status: "accepted",
+						acceptedAt: new Date().toString(),
+					};
+					const deadline = calculateDeadline(
+						instanceConfig,
+						new Date(evaluator.acceptedAt)
+					);
+					evaluator.deadline = deadline;
+					await setInstanceState(instanceId, submissionPubId, instanceState);
+					// Unschedule reminder email to evaluator.
+					await unscheduleInvitationReminderEmail(instanceId, submissionPubId, evaluator);
+					// Unschedule no-reply notification email to community manager.
+					await unscheduleNoReplyNotificationEmail(
+						instanceId,
+						submissionPubId,
+						evaluator
+					);
+					// Immediately send accepted notification email to community manager.
+					await sendAcceptedNotificationEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator,
+						submissionPub.assignee
+					);
+					// Immediately send accepted email to evaluator.
+					await sendAcceptedEmail(instanceId, instanceConfig, submissionPubId, evaluator);
+					// Schedule no-submit notification email to community manager.
+					await scheduleNoSubmitNotificationEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator,
+						submissionPub.assignee
+					);
 
-				// schedule prompt evaluation email to evaluator.
-				await schedulePromptEvalBonusReminderEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator
-				);
-				//schedule final prompt eval email to evaluator
-				await scheduleFinalPromptEvalBonusReminderEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator
-				);
-				//schedule eval reminder email to evaluator
-				await scheduleEvaluationReminderEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator
-				);
-				//schedule final eval reminder email to evaluator
-				await scheduleFinalEvaluationReminderEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator
-				);
-				//schedule follow up to final eval reminder email to evaluator
-				await scheduleFollowUpToFinalEvaluationReminderEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator
-				);
-				// schedule no-submit notification email to evalutaor
-				await sendNoticeOfNoSubmitEmail(
-					instanceId,
-					instanceConfig,
-					submissionPubId,
-					evaluator
-				);
+					// schedule prompt evaluation email to evaluator.
+					await schedulePromptEvalBonusReminderEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator
+					);
+					//schedule final prompt eval email to evaluator
+					await scheduleFinalPromptEvalBonusReminderEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator
+					);
+					//schedule eval reminder email to evaluator
+					await scheduleEvaluationReminderEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator
+					);
+					//schedule final eval reminder email to evaluator
+					await scheduleFinalEvaluationReminderEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator
+					);
+					//schedule follow up to final eval reminder email to evaluator
+					await scheduleFollowUpToFinalEvaluationReminderEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator
+					);
+					// schedule no-submit notification email to evalutaor
+					await sendNoticeOfNoSubmitEmail(
+						instanceId,
+						instanceConfig,
+						submissionPubId,
+						evaluator
+					);
+				}
 			} catch (error) {
 				captureException(error);
 				return { error: error.message };
 			}
-			redirect(`/actions/respond/accepted${redirectParams}`);
+			redirect(
+				`/actions/respond/accepted?token=${cookie(
+					"token"
+				)}&instanceId=${instanceId}&pubId=${submissionPubId}`
+			);
 		}
 	);
 };
