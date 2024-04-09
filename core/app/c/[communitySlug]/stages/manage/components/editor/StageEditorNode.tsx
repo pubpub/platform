@@ -9,7 +9,6 @@ import { cn, expect } from "utils";
 
 import { StagePayload } from "~/lib/types";
 import { useStages } from "../../StagesContext";
-import { useStageEditor } from "./StageEditorContext";
 
 export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;

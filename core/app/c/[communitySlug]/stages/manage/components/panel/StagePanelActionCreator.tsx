@@ -13,6 +13,7 @@ import {
 } from "ui/dialog";
 import { FileText, Mail, Terminal } from "ui/icon";
 
+import { useServerAction } from "~/lib/serverActions";
 import { ActionPayload } from "~/lib/types";
 
 type ActionCellProps = {
@@ -63,17 +64,18 @@ const ActionCell = (props: ActionCellProps) => {
 
 type Props = {
 	actions: ActionPayload[];
-	onAdd: (actionId: string) => void;
+	onAdd: (actionId: string) => Promise<unknown>;
 };
 
 export const StagePanelActionCreator = (props: Props) => {
+	const runOnAdd = useServerAction(props.onAdd);
 	const [isOpen, setIsOpen] = useState(false);
 	const onActionSelect = useCallback(
-		(action: ActionPayload) => {
+		async (action: ActionPayload) => {
 			setIsOpen(false);
-			props.onAdd(action.id);
+			runOnAdd(action.id);
 		},
-		[props.onAdd]
+		[props.onAdd, runOnAdd]
 	);
 	const onOpenChange = useCallback((open: boolean) => {
 		setIsOpen(open);

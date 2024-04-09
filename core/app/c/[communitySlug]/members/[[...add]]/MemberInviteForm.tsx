@@ -25,6 +25,7 @@ import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { MemberFormState } from "./AddMember";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
@@ -38,6 +39,8 @@ export const MemberInviteForm = ({
 	state: MemberFormState;
 	email?: string;
 }) => {
+	const runCreateUserWithMembership = useServerAction(actions.createUserWithMembership);
+	const runAddMember = useServerAction(actions.addMember);
 	const [isPending, startTransition] = useTransition();
 	const router = useRouter();
 
@@ -71,7 +74,7 @@ export const MemberInviteForm = ({
 				return;
 			}
 
-			const { error } = await actions.createUserWithMembership({
+			const result = await runCreateUserWithMembership({
 				email: data.email,
 				firstName: data.firstName!,
 				lastName: data.lastName!,
@@ -79,46 +82,32 @@ export const MemberInviteForm = ({
 				canAdmin: Boolean(data.canAdmin),
 			});
 
-			if (error) {
+			if (didSucceed(result)) {
 				toast({
-					title: "Error",
-					description: error,
-					variant: "destructive",
+					title: "Success",
+					description: "User successfully invited",
 				});
-				return;
+				closeForm();
 			}
-
-			toast({
-				title: "Success",
-				description: "User successfully invited",
-			});
-			closeForm();
 
 			return;
 		}
 
-		const result = await actions.addMember({
+		const result = await runAddMember({
 			user: state.user,
 			canAdmin: data.canAdmin,
 			community,
 		});
 
-		if ("error" in result) {
+		if (didSucceed(result)) {
 			toast({
-				title: "Error",
-				description: `Failed to add member. ${result.error}`,
-				variant: "destructive",
+				title: "Success",
+				description: "Member added successfully",
 			});
-			return;
+
+			// navigate away from the add page to the normal member page
+			closeForm();
 		}
-
-		toast({
-			title: "Success",
-			description: "Member added successfully",
-		});
-
-		// navigate away from the add page to the normal member page
-		closeForm();
 	}
 
 	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {

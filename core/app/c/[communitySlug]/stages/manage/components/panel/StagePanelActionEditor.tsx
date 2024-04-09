@@ -9,19 +9,21 @@ import { ChevronDown } from "ui/icon";
 import { Separator } from "ui/separator";
 
 import { getActionByName } from "~/actions";
+import { useServerAction } from "~/lib/serverActions";
 import { StagePayloadActionInstance } from "~/lib/types";
 import { StagePanelActionConfig } from "./StagePanelActionConfig";
 
 type Props = {
 	actionInstance: StagePayloadActionInstance;
-	onDelete: (actionInstanceId: string) => void;
+	onDelete: (actionInstanceId: string) => Promise<unknown>;
 };
 
 export const StagePanelActionEditor = (props: Props) => {
+	const runOnDelete = useServerAction(props.onDelete);
 	const [isOpen, setIsOpen] = useState(false);
-	const onDeleteClick = useCallback(() => {
-		props.onDelete(props.actionInstance.id);
-	}, [props.onDelete, props.actionInstance]);
+	const onDeleteClick = useCallback(async () => {
+		runOnDelete(props.actionInstance.id);
+	}, [props.actionInstance, runOnDelete]);
 	const action = getActionByName(props.actionInstance.action.name);
 
 	if (!action) {

@@ -1,3 +1,5 @@
+import type { Column, Table } from "@tanstack/react-table";
+
 import * as React from "react";
 import {
 	ArrowDownIcon,
@@ -9,7 +11,6 @@ import {
 	DoubleArrowRightIcon,
 	EyeNoneIcon,
 } from "@radix-ui/react-icons";
-import { Column, Table } from "@tanstack/react-table";
 
 import { cn } from "utils";
 

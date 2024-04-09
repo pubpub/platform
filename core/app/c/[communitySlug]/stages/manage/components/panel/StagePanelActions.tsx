@@ -1,9 +1,8 @@
 import { Suspense } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
+import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { ActionPayload, StagePayloadActionInstance } from "~/lib/types";
 import { addAction, deleteAction } from "../../actions";
 import { getActions, getStage, getStageActions } from "./queries";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";

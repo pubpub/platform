@@ -39,7 +39,7 @@
 		"@hookform/resolvers": "^3.3.1",
 		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
 		"@prisma/client": "^5.2.0",
-		"@sentry/nextjs": "^7.102.0",
+		"@sentry/nextjs": "^7.106.1",
 		"@stoplight/elements": "^7.12.2",
 		"@supabase/supabase-js": "^2.33.2",
 		"@t3-oss/env-nextjs": "^0.9.2",
