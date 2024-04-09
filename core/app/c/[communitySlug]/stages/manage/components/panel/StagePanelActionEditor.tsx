@@ -1,25 +1,29 @@
 "use client";
 
 import { useCallback, useState } from "react";
+
+import { logger } from "logger";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ChevronDown } from "ui/icon";
 import { Separator } from "ui/separator";
+
 import { getActionByName } from "~/actions";
+import { useServerAction } from "~/lib/serverActions";
 import { StagePayloadActionInstance } from "~/lib/types";
 import { StagePanelActionConfig } from "./StagePanelActionConfig";
-import { logger } from "logger";
 
 type Props = {
 	actionInstance: StagePayloadActionInstance;
-	onDelete: (actionInstanceId: string) => void;
+	onDelete: (actionInstanceId: string) => Promise<unknown>;
 };
 
 export const StagePanelActionEditor = (props: Props) => {
+	const runOnDelete = useServerAction(props.onDelete);
 	const [isOpen, setIsOpen] = useState(false);
-	const onDeleteClick = useCallback(() => {
-		props.onDelete(props.actionInstance.id);
-	}, [props.onDelete, props.actionInstance]);
+	const onDeleteClick = useCallback(async () => {
+		runOnDelete(props.actionInstance.id);
+	}, [props.actionInstance, runOnDelete]);
 	const action = getActionByName(props.actionInstance.action.name);
 
 	if (!action) {
@@ -33,7 +37,7 @@ export const StagePanelActionEditor = (props: Props) => {
 			onOpenChange={setIsOpen}
 			className="w-full space-y-2 border px-3 py-2"
 		>
-			<div className="flex items-center justify-between space-x-4 text-sm w-full">
+			<div className="flex w-full items-center justify-between space-x-4 text-sm">
 				<span>{props.actionInstance.action.name}</span>
 				<div className="flex gap-1">
 					<CollapsibleTrigger asChild>
@@ -46,7 +50,7 @@ export const StagePanelActionEditor = (props: Props) => {
 			<CollapsibleContent className="space-y-4 text-sm">
 				<Separator />
 				<p>{action.description}</p>
-				<div className="py-2 flex flex-col gap-2">
+				<div className="flex flex-col gap-2 py-2">
 					<StagePanelActionConfig action={action} />
 					<div className="flex justify-end">
 						<Button variant="secondary" size="sm" onClick={onDeleteClick}>

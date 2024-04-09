@@ -1,11 +1,13 @@
+import type { UserAppMetadata, UserMetadata } from "@supabase/supabase-js";
+
 import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 
+import { logger } from "logger";
+
 import { getRefreshCookie, getTokenCookie } from "~/lib/auth/cookies";
 import { getServerSupabase } from "~/lib/supabaseServer";
-import type { UserAppMetadata, UserMetadata } from "@supabase/supabase-js";
 import { env } from "../env/env.mjs";
-import { logger } from "logger";
 
 /* This is only called from API calls */
 /* When rendering server components, use getLoginData from loginData.ts */

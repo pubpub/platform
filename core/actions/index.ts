@@ -1,6 +1,6 @@
+import * as email from "./email/action";
 import * as log from "./log/action";
 import * as pdf from "./pdf/action";
-import * as email from "./email/action";
 import { Action } from "./types";
 
 export const actions = {

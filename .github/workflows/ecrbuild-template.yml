@@ -3,72 +3,71 @@
 name: aws ecr build template
 
 on:
-  workflow_call:
-    inputs:
-      package:
-        type: string
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
+    workflow_call:
+        inputs:
+            package:
+                type: string
+        secrets:
+            AWS_ACCESS_KEY_ID:
+                required: true
+            AWS_SECRET_ACCESS_KEY:
+                required: true
 
 env:
-  PACKAGE: ${{ inputs.package }}
-  AWS_REGION: us-east-1                       # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY_PREFIX: pubpub-v7           # set this to your Amazon ECR repository name
+    PACKAGE: ${{ inputs.package }}
+    AWS_REGION: us-east-1 # set this to your preferred AWS region, e.g. us-west-1
+    ECR_REPOSITORY_PREFIX: pubpub-v7 # set this to your Amazon ECR repository name
 
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
+    build:
+        name: Build
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.IAM_ROLE_TO_ASSUME }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ vars.IAM_ROLE_TO_ASSUME }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Get image label
-        id: label
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          sha_short=$(git describe --always --abbrev=40 --dirty)
-          if [[ -z $PACKAGE ]]
-          then
-            package_suffix=""
-            echo "target=monorepo" >> $GITHUB_OUTPUT
-          else
-            package_suffix="-${PACKAGE}"
-            echo "target=app" >> $GITHUB_OUTPUT
-          fi
-          echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
+            - name: Get image label
+              id: label
+              env:
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+              run: |
+                  sha_short=$(git describe --always --abbrev=40 --dirty)
+                  if [[ -z $PACKAGE ]]
+                  then
+                    package_suffix=""
+                    echo "target=monorepo" >> $GITHUB_OUTPUT
+                  else
+                    package_suffix="-${PACKAGE}"
+                    echo "target=app" >> $GITHUB_OUTPUT
+                  fi
+                  echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          LABEL: ${{ steps.label.outputs.label }}
-          TARGET: ${{ steps.label.outputs.target }}
-        run: |
-          # Build a docker container and
-          # push it to ECR so that it can
-          # be deployed to ECS.
-          docker build \
-            --platform linux/amd64 \
-            --build-arg PACKAGE=$PACKAGE \
-            --target $TARGET \
-            -t $LABEL \
-            .
-          docker push $LABEL
-
+            - name: Build, tag, and push image to Amazon ECR
+              id: build-image
+              env:
+                  LABEL: ${{ steps.label.outputs.label }}
+                  TARGET: ${{ steps.label.outputs.target }}
+              run: |
+                  # Build a docker container and
+                  # push it to ECR so that it can
+                  # be deployed to ECS.
+                  docker build \
+                    --platform linux/amd64 \
+                    --build-arg PACKAGE=$PACKAGE \
+                    --target $TARGET \
+                    -t $LABEL \
+                    .
+                  docker push $LABEL

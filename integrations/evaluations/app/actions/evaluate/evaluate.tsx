@@ -1,22 +1,24 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { ajvResolver } from "@hookform/resolvers/ajv";
-import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
-import { SchemaBasedFormFields, buildSchemaFromPubFields } from "@pubpub/sdk/react";
 import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
-import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
+
+import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
+import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
+import { Button } from "ui/button";
+import { Form } from "ui/form";
+import { useLocalStorage } from "ui/hooks";
+import { Loader2 } from "ui/icon";
+import { useToast } from "ui/use-toast";
+
 import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
+import { getDeadline } from "~/lib/emails";
 import { EvaluatorWhoAccepted, InstanceConfig } from "~/lib/types";
 import { submit, upload } from "./actions";
-import { getDeadline } from "~/lib/emails";
-import { useToast } from "ui/use-toast";
-import { useLocalStorage } from "ui/hooks";
-import { Form } from "ui/form";
-import { Button } from "ui/button";
-import { Loader2 } from "ui/icon";
 
 type Props = {
 	instanceId: string;
@@ -134,7 +136,7 @@ export function Evaluate(props: Props) {
 						/>
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
-								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 							)}
 							Submit Evaluation
 						</Button>

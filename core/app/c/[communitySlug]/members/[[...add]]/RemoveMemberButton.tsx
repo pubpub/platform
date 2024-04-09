@@ -1,6 +1,7 @@
 "use client";
 
-import type { Community, Member, User } from "@prisma/client";
+import type { Community } from "@prisma/client";
+
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -14,6 +15,8 @@ import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
+
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { TableMember } from "./getMemberTableColumns";
 
@@ -24,6 +27,7 @@ export const RemoveMemberButton = ({
 	member: TableMember;
 	community: Community;
 }) => {
+	const runRemoveMember = useServerAction(actions.removeMember);
 	return (
 		<AlertDialog>
 			<TooltipProvider>
@@ -54,20 +58,14 @@ export const RemoveMemberButton = ({
 					<Button asChild variant="destructive">
 						<AlertDialogAction
 							onClick={async () => {
-								const response = await actions.removeMember({ member, community });
-								if ("error" in response) {
+								const response = await runRemoveMember({ member, community });
+								if (didSucceed(response)) {
 									toast({
-										title: "Error",
-										description: response.error,
-										variant: "destructive",
+										title: "Success",
+										description: "Member successfully removed",
+										variant: "default",
 									});
-									return;
 								}
-								toast({
-									title: "Success",
-									description: "Member successfully removed",
-									variant: "default",
-								});
 							}}
 						>
 							<Trash size="16" className="mr-2" />

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import { getStageWorkflows, makeStagesById } from "~/lib/stages";
@@ -36,8 +37,8 @@ export default async function Page({ params }: Props) {
 	const stageById = makeStagesById(community.stages);
 	return (
 		<>
-			<div className="flex mb-16 justify-between items-center">
-				<h1 className="font-bold text-xl">Stages</h1>
+			<div className="mb-16 flex items-center justify-between">
+				<h1 className="text-xl font-bold">Stages</h1>
 			</div>
 			<StageList
 				members={community.members}

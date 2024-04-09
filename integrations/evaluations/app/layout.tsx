@@ -1,12 +1,15 @@
 import { User } from "@pubpub/sdk";
 import { Toaster } from "ui/toaster";
+
 import "ui/styles.css";
+
 import { expect } from "utils";
-import { Integration } from "~/lib/Integration";
+
+import { env } from "~/lib/env.mjs";
 import { getInstanceConfig } from "~/lib/instance";
+import { Integration } from "~/lib/Integration";
 import { cookie } from "~/lib/request";
 import { InstanceConfig } from "~/lib/types";
-import { env } from "~/lib/env.mjs";
 
 import "./globals.css";
 

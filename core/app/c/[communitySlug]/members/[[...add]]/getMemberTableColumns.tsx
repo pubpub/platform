@@ -1,6 +1,9 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+
+import { Community } from "@prisma/client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -14,8 +17,8 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
+
 import { RemoveMemberButton } from "./RemoveMemberButton";
-import { Community } from "@prisma/client";
 
 export type TableMember = {
 	id: string;
@@ -46,7 +49,7 @@ export const getMemberTableColumns = ({ community }: { community: Community }) =
 					checked={row.getIsSelected()}
 					onCheckedChange={(value) => row.toggleSelected(!!value)}
 					aria-label="Select row"
-					className="w-4 h-4 mr-2"
+					className="mr-2 h-4 w-4"
 				/>
 			),
 			enableSorting: false,

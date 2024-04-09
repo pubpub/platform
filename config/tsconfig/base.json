@@ -13,7 +13,9 @@
 		"preserveWatchOutput": true,
 		"skipLibCheck": true,
 		"strict": true,
-		"incremental": true
+		"incremental": true,
+		"allowJs": true,
+		"noEmit": true
 	},
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules", "build", "dist", ".next"]
 }

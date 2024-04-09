@@ -1,13 +1,14 @@
 import { Suspense } from "react";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStageActions, getStagePubs } from "./queries";
-import { Card, CardContent } from "ui/card";
+
 import { Button } from "ui/button";
+import { Card, CardContent } from "ui/card";
+import { Play } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
-import * as actions from "../../actions";
 import { getActionByName, getActionRunFunctionByName } from "~/actions";
-import { Play } from "ui/icon";
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
+import * as actions from "../../actions";
+import { getStageActions, getStagePubs } from "./queries";
 import { StagePanelPubsRunActionButton } from "./StagePanelPubsrunActionButton";
 
 type PropsInner = {
@@ -26,7 +27,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
-				<h4 className="font-semibold mb-2 text-base">Pubs</h4>
+				<h4 className="mb-2 text-base font-semibold">Pubs</h4>
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
 						<span>A pub</span>

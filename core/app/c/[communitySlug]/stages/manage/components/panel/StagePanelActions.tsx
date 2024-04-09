@@ -1,11 +1,12 @@
 import { Suspense } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
+
+import { Card, CardContent } from "ui/card";
+
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { StagePanelActionCreator } from "./StagePanelActionCreator";
-import { getActions, getStage, getStageActions } from "./queries";
-import { StagePanelActionEditor } from "./StagePanelActionEditor";
-import { ActionPayload, StagePayloadActionInstance } from "~/lib/types";
 import { addAction, deleteAction } from "../../actions";
+import { getActions, getStage, getStageActions } from "./queries";
+import { StagePanelActionCreator } from "./StagePanelActionCreator";
+import { StagePanelActionEditor } from "./StagePanelActionEditor";
 
 type PropsInner = {
 	stageId: string;
@@ -26,7 +27,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
-				<h4 className="font-semibold mb-2 text-base">Actions</h4>
+				<h4 className="mb-2 text-base font-semibold">Actions</h4>
 				{actionInstances.length > 0 ? (
 					<p>
 						<em>{stage.name}</em> has {actionInstances.length} action

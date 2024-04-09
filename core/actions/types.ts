@@ -1,5 +1,6 @@
 import { JTDDataType } from "ajv/dist/jtd";
 import * as z from "zod";
+
 import { CorePubField } from "./corePubFields";
 
 export type ActionPubType = CorePubField[];
@@ -11,9 +12,10 @@ export type ActionPub<T extends ActionPubType> = {
 	};
 };
 
-export type RunProps<T extends Action> = T extends Action<infer PT, infer AC, infer PC>
-	? { config: AC; pub: ActionPub<PT>; pubConfig: PC }
-	: never;
+export type RunProps<T extends Action> =
+	T extends Action<infer PT, infer AC, infer PC>
+		? { config: AC; pub: ActionPub<PT>; pubConfig: PC }
+		: never;
 
 export type ConfigProps<C> = {
 	config: C;
@@ -22,7 +24,7 @@ export type ConfigProps<C> = {
 export type Action<
 	PT extends ActionPubType = ActionPubType,
 	AC extends object = {},
-	PC extends object = {}
+	PC extends object = {},
 > = {
 	id?: string;
 	name: string;

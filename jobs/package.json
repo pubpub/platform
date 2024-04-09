@@ -4,7 +4,9 @@
 	"private": true,
 	"scripts": {
 		"start": "tsx -r ./tracing.ts index.ts",
-		"dev": "dotenv -e .env.development tsx index.ts | pino-pretty"
+		"dev": "dotenv -e .env.development tsx index.ts | pino-pretty",
+		"format": "prettier --check . --ignore-path ../.gitignore",
+		"type-check": "tsc --noEmit"
 	},
 	"files": [
 		"tracing.ts",
@@ -20,6 +22,11 @@
 		"tsx": "^3.13.0"
 	},
 	"devDependencies": {
-		"dotenv-cli": "^7.2.1"
-	}
+		"@pubpub/prettier-config": "workspace:*",
+		"@types/node": "^20.12.2",
+		"dotenv-cli": "^7.2.1",
+		"tsconfig": "workspace:*",
+		"typescript": "^5.4.2"
+	},
+	"prettier": "@pubpub/prettier-config"
 }

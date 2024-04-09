@@ -1,9 +1,11 @@
 "use client";
-import React, { useState, FormEvent } from "react";
-import { Button } from "ui/button";
-import { supabase } from "lib/supabase";
+
+import React, { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+import { supabase } from "lib/supabase";
+import { Button } from "ui/button";
 
 export default function LoginForm() {
 	const router = useRouter();
@@ -81,7 +83,7 @@ export default function LoginForm() {
 						</Link>
 					</div>
 					{failure && (
-						<div className={"text-red-700 my-4"}>Incorrect password or email</div>
+						<div className={"my-4 text-red-700"}>Incorrect password or email</div>
 					)}
 				</form>
 			</div>

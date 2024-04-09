@@ -3,6 +3,7 @@
 import { Button } from "ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
+
 import { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
 import { move } from "./lib/actions";
 
@@ -59,7 +60,7 @@ export default function Move(props: Props) {
 				<div className="flex flex-col">
 					{props.moveTo && (
 						<>
-							<div className="font-bold text-center mb-4">Move this Pub to:</div>
+							<div className="mb-4 text-center font-bold">Move this Pub to:</div>
 							{props.moveTo.map((stage) => {
 								return stage.id === props.stage.id ? null : (
 									<Button
@@ -78,7 +79,7 @@ export default function Move(props: Props) {
 					)}
 					{props.moveFrom && (
 						<>
-							<div className="font-bold text-center mb-4">Move this Pub back to:</div>
+							<div className="mb-4 text-center font-bold">Move this Pub back to:</div>
 							{props.moveFrom.map((stage) => {
 								<div className="mb-4">Move this Pub back to:</div>;
 								return stage.id === props.stage.id ? null : (

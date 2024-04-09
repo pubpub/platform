@@ -1,13 +1,14 @@
+import { KeyboardEvent, memo, useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { KeyboardEvent, memo, useCallback, useMemo, useRef, useState } from "react";
 import { Handle, NodeProps, Position } from "reactflow";
+
 import { Button } from "ui/button";
 import { Settings } from "ui/icon";
 import { cn, expect } from "utils";
+
 import { StagePayload } from "~/lib/types";
 import { useStages } from "../../StagesContext";
-import { useStageEditor } from "./StageEditorContext";
 
 export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;
@@ -68,7 +69,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 	return (
 		<div
 			className={cn(
-				"p-1.5 bg-gray-100 border rounded-md shadow-md text-xs flex items-center justify-between",
+				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md",
 				props.selected ? "border-gray-800" : "border-gray-300"
 			)}
 			// Can't use Tailwind for dynamically computed styles
@@ -80,13 +81,15 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 			onDoubleClick={onDoubleClick}
 			onKeyDown={onKeyDown}
 			ref={nodeRef}
+			tabIndex={0}
+			role="button"
 		>
 			<Handle type="target" position={Position.Left} />
 			<Handle type="source" position={Position.Right} />
 			<div className="flex flex-col">
 				<div>
 					<p
-						className="font-medium text-sm nodrag cursor-text inline"
+						className="nodrag inline cursor-text text-sm font-medium"
 						contentEditable
 						suppressContentEditableWarning
 						ref={nameRef}
@@ -94,19 +97,19 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 						{props.data.stage.name}
 					</p>
 				</div>
-				<ul className="p-0 m-0 list-none flex gap-2">
+				<ul className="m-0 flex list-none gap-2 p-0">
 					<li>
-						<Button variant="link" className="p-0 m-0 h-auto text-xs font-light">
+						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
 							{props.data.stage.pubs.length} pubs
 						</Button>
 					</li>
 					<li>
-						<Button variant="link" className="p-0 m-0 h-auto text-xs font-light">
+						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
 							{props.data.stage.actionInstances.length} actions
 						</Button>
 					</li>
 					<li>
-						<Button variant="link" className="p-0 m-0 h-auto text-xs font-light">
+						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
 							{members.size} members
 						</Button>
 					</li>

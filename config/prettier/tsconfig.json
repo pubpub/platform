@@ -1,0 +1,10 @@
+{
+	"extends": "tsconfig/base.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"noEmit": true,
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+	},
+	"include": ["./*.js"],
+	"exclude": ["node_modules"]
+}

@@ -1,5 +1,6 @@
-import { User } from "contracts";
 import { createContext } from "react";
+
+import { User } from "contracts";
 
 export type IntegrationContext<T> = {
 	name: string;

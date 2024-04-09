@@ -1,7 +1,9 @@
 import { Suspense } from "react";
+
+import { Card, CardContent } from "ui/card";
+
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageMembers } from "./queries";
-import { Card, CardContent } from "ui/card";
 
 type PropsInner = {
 	stageId: string;
@@ -13,7 +15,7 @@ const StagePanelMembersInner = async (props: PropsInner) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
-				<h4 className="font-semibold mb-2 text-base">Members</h4>
+				<h4 className="mb-2 text-base font-semibold">Members</h4>
 				{users.map((user) => (
 					<div key={user.id} className="flex items-center justify-between">
 						{user.firstName} {user.lastName}

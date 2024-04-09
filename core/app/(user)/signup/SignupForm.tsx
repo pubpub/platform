@@ -1,7 +1,10 @@
 "use client";
+
+import React, { FormEvent, useState } from "react";
+
 import { logger } from "logger";
-import React, { useState, FormEvent } from "react";
 import { Button } from "ui/button";
+
 import { UserPostBody } from "~/lib/types";
 
 export default function SignupForm() {
@@ -43,7 +46,7 @@ export default function SignupForm() {
 		<div className="border p-4">
 			{!signupComplete && (
 				<>
-					<h1 className="text-2xl text-center">Signup</h1>
+					<h1 className="text-center text-2xl">Signup</h1>
 					<div className="my-10">
 						<form onSubmit={handleSubmit}>
 							<div>

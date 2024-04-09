@@ -1,8 +1,11 @@
-import { User } from "@pubpub/sdk";
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { client } from "./lib/pubpub";
+
 import { RequestCookies, ResponseCookies } from "next/dist/server/web/spec-extension/cookies";
+import { NextResponse } from "next/server";
+
+import { User } from "@pubpub/sdk";
+
+import { client } from "./lib/pubpub";
 
 // Makes sure cookies are available on the first request (see
 // https://github.com/vercel/next.js/issues/49442#issuecomment-1679807704)

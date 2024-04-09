@@ -3,6 +3,7 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+
 import prisma from "~/prisma/db";
 import { env } from "./lib/env/env.mjs";
 

@@ -1,4 +1,5 @@
 import { initContract } from "@ts-rest/core";
+
 import { integrationsApi } from "./resources/integrations";
 
 export * from "./resources/integrations";

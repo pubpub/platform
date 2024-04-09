@@ -1,4 +1,5 @@
 import * as z from "zod";
+
 import { Evaluator } from "~/lib/types";
 
 export const InviteFormEvaluator = Evaluator.and(z.object({ selected: z.boolean() }));

@@ -1,6 +1,8 @@
-import { User } from "@prisma/client";
 import { cache } from "react";
+import { User } from "@prisma/client";
+
 import { expect } from "utils";
+
 import prisma from "~/prisma/db";
 
 export const getActions = cache(async () => {

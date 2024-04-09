@@ -1,6 +1,7 @@
 import { FieldValues, UseFormWatch } from "react-hook-form";
-import { Dependency, DependencyType, EnumValues } from "./types";
 import * as z from "zod";
+
+import { Dependency, DependencyType, EnumValues } from "./types";
 
 export default function resolveDependencies<SchemaType extends z.infer<z.ZodObject<any, any>>>(
 	dependencies: Dependency<SchemaType>[],

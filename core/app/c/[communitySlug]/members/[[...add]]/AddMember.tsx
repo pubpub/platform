@@ -1,10 +1,11 @@
+import { unstable_cache } from "next/cache";
 import { Community } from "@prisma/client";
+
+import { getLoginData } from "~/lib/auth/loginData";
 import { getSuggestedMembers } from "~/lib/server";
 import prisma from "~/prisma/db";
-import { getLoginData } from "~/lib/auth/loginData";
-import { unstable_cache } from "next/cache";
-import { memberInviteFormSchema } from "./memberInviteFormSchema";
 import { MemberInviteForm } from "./MemberInviteForm";
+import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 const createCachedGetUser = ({
 	email,
