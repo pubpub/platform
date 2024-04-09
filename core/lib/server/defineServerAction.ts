@@ -10,7 +10,7 @@ import { isClientExceptionOptions, makeClientException } from "../serverActions"
  * @param serverActionFn
  * @returns
  */
-export const defineServerAction = <T extends (...args: unknown[]) => unknown>(
+export const defineServerAction = <T extends (...args: unknown[]) => Promise<unknown>>(
 	serverActionFn: T
 ) => {
 	return async function runServerAction(...args: Parameters<T>) {
