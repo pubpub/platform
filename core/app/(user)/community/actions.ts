@@ -1,7 +1,9 @@
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { isSuperAdmin } from "~/lib/server/user";
 import prisma from "~/prisma/db";
 
-const createCommunity = defineServerAction(async function createCommunity({
+export const createCommunity = defineServerAction(async function createCommunity({
+	userId,
 	name,
 	slug,
 	avatar,
@@ -9,15 +11,46 @@ const createCommunity = defineServerAction(async function createCommunity({
 	name: string;
 	slug: string;
 	avatar?: string;
+	userId: string;
 }) {
 	try {
-		await prisma.community.create({
-			data: {
-				name,
-				slug,
-				avatar,
-			},
-		});
+		const superAdmin = await isSuperAdmin(userId); // is this check necessery if hidden behind admin?
+		if (typeof superAdmin === "boolean") {
+			const communityExists = await prisma.community.findFirst({
+				where: {
+					slug: {
+						equals: slug,
+					},
+				},
+			});
+
+			if (communityExists) {
+				return {
+					title: "Failed to create community",
+					error: "Community already exists",
+				};
+			}
+
+			const c = await prisma.community.create({
+				data: {
+					name,
+					slug,
+					avatar,
+				},
+			}); // revalidate cache tags so update happens
+
+			// add the user as a member of the community
+			await prisma.member.create({
+				data: {
+					userId,
+					communityId: c.id,
+					canAdmin: true,
+				},
+			});
+
+			return c;
+		}
+		return superAdmin;
 	} catch (error) {
 		return {
 			title: "Failed to create community",
@@ -27,7 +60,11 @@ const createCommunity = defineServerAction(async function createCommunity({
 	}
 });
 
-const removeCommunity = defineServerAction(async function removeCommunity({ id }: { id: string }) {
+export const removeCommunity = defineServerAction(async function removeCommunity({
+	id,
+}: {
+	id: string;
+}) {
 	try {
 		await prisma.community.delete({
 			where: {
