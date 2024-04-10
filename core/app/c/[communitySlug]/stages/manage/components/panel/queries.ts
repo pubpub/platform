@@ -1,5 +1,6 @@
+import type { User } from "@prisma/client";
+
 import { cache } from "react";
-import { User } from "@prisma/client";
 
 import { expect } from "utils";
 

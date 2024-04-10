@@ -1,6 +1,6 @@
+import type { CorePubField } from "./corePubFields";
+import type { Action } from "./types";
 import prisma from "~/prisma/db";
-import { CorePubField } from "./corePubFields";
-import { Action } from "./types";
 
 export const registerCorePubField = async (corePubField: CorePubField) => {
 	// Ensure the field exists in the database and is up to date

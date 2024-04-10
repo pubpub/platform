@@ -1,7 +1,8 @@
-import { JTDDataType } from "ajv/dist/jtd";
-import * as z from "zod";
+import type { JTDDataType } from "ajv/dist/jtd";
+import type * as z from "zod";
 
-import { CorePubField } from "./corePubFields";
+import type { CorePubField } from "./corePubFields";
+import type { ClientExceptionOptions } from "~/lib/serverActions";
 
 export type ActionPubType = CorePubField[];
 
@@ -37,3 +38,14 @@ export type Action<
 export const defineAction = <T extends ActionPubType, AC extends object, PC extends object>(
 	action: Action<T, AC, PC>
 ) => action;
+
+type ActionSuccess = {
+	success: true;
+	data: unknown;
+};
+
+export const defineRun = <T extends Action = Action>(
+	run: (props: RunProps<T>) => Promise<ActionSuccess | ClientExceptionOptions>
+) => run;
+
+export type Run = ReturnType<typeof defineRun>;

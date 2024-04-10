@@ -41,7 +41,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 								{actions.map((action) => (
 									<StagePanelPubsRunActionButton
 										key={action.id}
-										action={action}
+										actionInstance={action}
 										pub={pub}
 									/>
 								))}

@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
+import { captureException } from "@sentry/nextjs";
 
-import { getActionByName, getActionRunFunctionByName } from "~/actions";
+import { getActionRunByName } from "~/actions/getRuns";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import db from "~/prisma/db";
 
@@ -209,7 +210,7 @@ export const deleteAction = defineServerAction(async function deleteAction(
 	}
 });
 
-export async function runAction({
+export const runAction = defineServerAction(async function runAction({
 	pubId,
 	actionInstanceId,
 }: {
@@ -223,7 +224,9 @@ export async function runAction({
 	});
 
 	if (!pub) {
-		throw new Error("Pub not found");
+		return {
+			error: "Pub not found",
+		};
 	}
 
 	const actionInstance = await db.actionInstance.findUnique({
@@ -234,15 +237,39 @@ export async function runAction({
 			action: true,
 		},
 	});
+
 	if (!actionInstance) {
-		throw new Error("Action instance not found");
+		return {
+			error: "Action instance not found",
+		};
 	}
 
-	const action = getActionRunFunctionByName(actionInstance.action.name);
+	const action = await getActionRunByName(actionInstance.action.name);
+	//	const action = getActionRunFunctionByName(actionInstance.action.name);
 
 	if (!action) {
-		throw new Error("Action not found");
+		return {
+			error: "Action not found",
+		};
 	}
+	console.log(pub.valuesBlob);
 
-	// Run the action
-}
+	try {
+		const result = await action({
+			config: {},
+			pub: {
+				id: pubId,
+				values: JSON.parse(pub.valuesBlob),
+			},
+			pubConfig: {},
+		});
+
+		return result;
+	} catch (error) {
+		captureException(error);
+		return {
+			title: "Failed to run action",
+			error: error.message,
+		};
+	}
+});
