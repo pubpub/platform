@@ -102,7 +102,6 @@ module "ecs_service" {
         # https://aws.amazon.com/blogs/compute/task-networking-in-aws-fargate/
           value = "127.0.0.1" },
         { name = "NGINX_UPSTREAM_PORT",
-        # TODO: confirm this isn't supposed to be to_port
           value = var.listener.from_port },
       ]
 
