@@ -9,7 +9,7 @@
 		"lint": "dotenv -v SKIP_VALIDATION=true next lint",
 		"lint:fix": "dotenv -v SKIP_VALIDATION=true next lint --fix",
 		"format": "prettier --check . --ignore-path ../.gitignore",
-		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel",
+		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel && prettier -w kysely/types/**/*.ts",
 		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
 		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
