@@ -137,8 +137,10 @@ for secrets that don't exist in this repository
 ```bash
 ( cd ..
     if [[ -z $image_tag_override ]]; then
+        tag_flag="--input=image-tag-override=${image_tag_override}"
         echo "Deploying HEAD ($(git rev-parse HEAD)) ... ensure this tag has been pushed!"
     else 
+        tag_flag=""
         echo "Deploying override ($image_tag_override) ... ensure this tag has been pushed!"
     fi
 
@@ -150,6 +152,7 @@ for secrets that don't exist in this repository
       --container-architecture linux/amd64 \
       --input proper-name=${proper_name} \
       --input environment=${environment} \
+      $tag_flag \
       workflow_call
 
     echo "Deploy request complete! Visit AWS console to follow progress:"
@@ -187,8 +190,10 @@ for secrets that don't exist in this repository
 ( cd ..
     if [[ -z $image_tag_override ]]; then
         echo "Deploying HEAD ($(git rev-parse HEAD)) ... ensure this tag has been pushed!"
+        tag_flag=""
     else 
         echo "Deploying override ($image_tag_override) ... ensure this tag has been pushed!"
+        tag_flag="--input=image-tag-override=${image_tag_override}"
     fi
 
     workflow_file=".github/workflows/deploy-template.yml"
@@ -199,6 +204,8 @@ for secrets that don't exist in this repository
       --container-architecture linux/amd64 \
       --input proper-name=${proper_name} \
       --input environment=${environment} \
+      --input service=${service} \
+      $tag_flag \
       workflow_call
 
     echo "Deploy request complete! Visit AWS console to follow progress:"

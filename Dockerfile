@@ -45,6 +45,8 @@ ARG PACKAGE
 
 RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && false)
 
+ENV DOCKERBUILD=1
+
 RUN pnpm --filter $PACKAGE build && \
     pnpm --filter $PACKAGE --prod deploy /tmp/app && \
     cp core/next.docker.config.js /tmp/app/next.config.js && \

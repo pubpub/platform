@@ -5,6 +5,8 @@ import { withSentryConfig } from "@sentry/nextjs";
 import "./lib/env.mjs";
 
 const nextConfig = withPreconstruct({
+	basePath: process.env.DOCKERBUILD ? "/intg/submissions" : undefined,
+	assetPrefix: process.env.DOCKERBUILD ? "/intg/submissions/" : undefined,
 	reactStrictMode: true,
 	experimental: {
 		instrumentationHook: true,
