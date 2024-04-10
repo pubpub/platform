@@ -80,7 +80,7 @@ model Pub {
   children Pub[]   @relation("pub_parent")
 
   values                   PubValue[]
-  stagesExplicit           PubsInStages[]
+  stages                   PubsInStages[]
   claims                   ActionClaim[]
   moves                    ActionMove[]
   integrationInstances     IntegrationInstance[]
@@ -161,7 +161,7 @@ model Stage {
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubsExplicit          PubsInStages[]
+  pubs                  PubsInStages[]
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
   claims                ActionClaim[]
