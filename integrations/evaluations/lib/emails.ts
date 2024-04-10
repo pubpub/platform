@@ -52,10 +52,6 @@ export function getDeadline(instanceConfig: InstanceConfig, evaluator: Evaluator
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
 
-const getUser = async (instanceId: string, userId: string) => {
-	return client.getOrCreateUser(instanceId, { userId });
-};
-
 const userLinkDisclaimer = `This email contains links unique to you. For your security, do not share this email or the links within. To reply, send an email to your evaluation manager at: <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.`;
 
 const makeReminderJobKey = (instanceId: string, pubId: string, evaluator: EvaluatorWithInvite) =>
