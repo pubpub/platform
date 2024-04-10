@@ -45,3 +45,22 @@ export async function findOrCreateUser(
 	}
 	return user;
 }
+
+export async function isSuperAdmin(userId: string) {
+	try {
+		const user = await prisma.user.findUnique({ where: { id: userId } });
+		if (!user) {
+			return {
+				title: "Failed to check super admin status",
+				error: "User not found",
+			};
+		}
+		return user?.isSuperAdmin;
+	} catch (error) {
+		return {
+			title: "Failed to check super admin status",
+			error: "An unexpected error occurred",
+			cause: error,
+		};
+	}
+}

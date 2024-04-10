@@ -6,6 +6,7 @@ import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
 import { ListPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { AddCommunityForm } from "./AddCommunityForm";
 
 export const AddCommunity = () => {
 	const [name, setName] = useState("");
@@ -33,7 +34,7 @@ export const AddCommunity = () => {
 					</TooltipTrigger>
 				</Tooltip>
 			</TooltipProvider>
-			<DialogContent>Nigga What</DialogContent>
+			<DialogContent><AddCommunityForm/></DialogContent>
 		</Dialog>
 	);
 };
