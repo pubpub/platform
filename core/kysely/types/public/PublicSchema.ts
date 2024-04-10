@@ -25,7 +25,6 @@ import { type default as PubFieldSchemaTable } from "./PubFieldSchema";
 import { type default as PubFieldToPubTypeTable } from "./PubFieldToPubType";
 import { type default as PubsTable } from "./Pubs";
 import { type default as PubsInStagesTable } from "./PubsInStages";
-import { type default as PubToStageTable } from "./PubToStage";
 import { type default as PubTypesTable } from "./PubTypes";
 import { type default as PubValuesTable } from "./PubValues";
 import { type default as StagesTable } from "./Stages";
@@ -61,8 +60,6 @@ export default interface PublicSchema {
 	action_claim: ActionClaimTable;
 
 	action_move: ActionMoveTable;
-
-	_PubToStage: PubToStageTable;
 
 	pub_fields: PubFieldsTable;
 

@@ -80,7 +80,6 @@ model Pub {
   children Pub[]   @relation("pub_parent")
 
   values                   PubValue[]
-  stagesImplicit           Stage[]
   stagesExplicit           PubsInStages[]
   claims                   ActionClaim[]
   moves                    ActionMove[]
@@ -162,7 +161,6 @@ model Stage {
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubsImplicit          Pub[] // Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
   pubsExplicit          PubsInStages[]
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
