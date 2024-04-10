@@ -8,14 +8,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsi
 import { ChevronDown } from "ui/icon";
 import { Separator } from "ui/separator";
 
+import type { StagePayloadActionInstance } from "~/lib/types";
 import { getActionByName } from "~/actions";
 import { useServerAction } from "~/lib/serverActions";
-import { StagePayloadActionInstance } from "~/lib/types";
 import { StagePanelActionConfig } from "./StagePanelActionConfig";
 
 type Props = {
 	actionInstance: StagePayloadActionInstance;
 	onDelete: (actionInstanceId: string) => Promise<unknown>;
+	communityId: string;
 };
 
 export const StagePanelActionEditor = (props: Props) => {
@@ -51,7 +52,11 @@ export const StagePanelActionEditor = (props: Props) => {
 				<Separator />
 				<p>{action.description}</p>
 				<div className="flex flex-col gap-2 py-2">
-					<StagePanelActionConfig action={action} />
+					<StagePanelActionConfig
+						instance={props.actionInstance}
+						action={action}
+						communityId={props.communityId}
+					/>
 					<div className="flex justify-end">
 						<Button variant="secondary" size="sm" onClick={onDeleteClick}>
 							Remove

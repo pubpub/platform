@@ -2,11 +2,13 @@
 
 import { revalidateTag } from "next/cache";
 
+import { db } from "~/kysely/database";
+import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import db from "~/prisma/db";
+import prisma from "~/prisma/db";
 
 async function deleteStages(stageIds: string[]) {
-	await db.stage.deleteMany({
+	await prisma.stage.deleteMany({
 		where: {
 			id: {
 				in: stageIds,
@@ -17,7 +19,7 @@ async function deleteStages(stageIds: string[]) {
 
 async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
 	const ops = moveConstraintIds.map(([stageId, destinationId]) =>
-		db.moveConstraint.delete({
+		prisma.moveConstraint.delete({
 			where: {
 				move_constraint_id: {
 					stageId,
@@ -31,7 +33,7 @@ async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
 
 export const createStage = defineServerAction(async function createStage(communityId: string) {
 	try {
-		await db.stage.create({
+		await prisma.stage.create({
 			data: {
 				name: "Untitled Stage",
 				order: "aa",
@@ -57,7 +59,7 @@ export const deleteStage = defineServerAction(async function deleteStage(
 	stageId: string
 ) {
 	try {
-		await db.stage.delete({
+		await prisma.stage.delete({
 			where: {
 				id: stageId,
 			},
@@ -78,7 +80,7 @@ export const createMoveConstraint = defineServerAction(async function createMove
 	destinationStageId: string
 ) {
 	try {
-		await db.moveConstraint.create({
+		await prisma.moveConstraint.create({
 			data: {
 				stage: {
 					connect: {
@@ -134,7 +136,7 @@ export const updateStageName = defineServerAction(async function updateStageName
 	name: string
 ) {
 	try {
-		await db.stage.update({
+		await prisma.stage.update({
 			where: {
 				id: stageId,
 			},
@@ -164,7 +166,7 @@ export const addAction = defineServerAction(async function addAction(
 	actionId: string
 ) {
 	try {
-		await db.actionInstance.create({
+		await prisma.actionInstance.create({
 			data: {
 				action: {
 					connect: {
@@ -188,12 +190,28 @@ export const addAction = defineServerAction(async function addAction(
 	}
 });
 
+export const updateAction = defineServerAction(async function updateAction(
+	communityId: string,
+	actionInstanceId: ActionInstancesId,
+	config: any
+) {
+	try {
+		await db
+			.updateTable("action_instances")
+			.set({ config })
+			.where("id", "=", actionInstanceId)
+			.executeTakeFirstOrThrow();
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
 export const deleteAction = defineServerAction(async function deleteAction(
 	communityId: string,
 	actionId: string
 ) {
 	try {
-		await db.actionInstance.delete({
+		await prisma.actionInstance.delete({
 			where: {
 				id: actionId,
 			},

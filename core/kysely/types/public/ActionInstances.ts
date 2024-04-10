@@ -20,6 +20,8 @@ export default interface ActionInstancesTable {
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 }
 
 export type ActionInstances = Selectable<ActionInstancesTable>;

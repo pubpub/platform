@@ -44,6 +44,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 							key={actionInstance.id}
 							actionInstance={actionInstance}
 							onDelete={onDeleteAction}
+							communityId={stage.communityId}
 						/>
 					))}
 				</div>
