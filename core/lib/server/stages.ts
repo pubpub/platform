@@ -40,10 +40,10 @@ export const getCommunityStages = async (communitySlug: string) => {
 		.select((eb) =>
 			jsonArrayFrom(
 				eb
-					.selectFrom("_PubToStage")
-					.select("_PubToStage.A as pubId")
-					.whereRef("_PubToStage.B", "=", "stages.id")
-					.select(pubValuesByRef("pubId" as StringReference<Database, keyof Database>))
+					.selectFrom("PubsInStages")
+					.select("pubId")
+					.whereRef("stageId", "=", "stages.id")
+					.select(pubValuesByRef("pubId"))
 			).as("pubs")
 		)
 		.select((eb) =>

@@ -70,7 +70,11 @@ export const pubInclude = {
 	...pubValuesInclude,
 	stages: {
 		include: {
-			integrationInstances: { include: { integration: true } },
+			stage: {
+				include: {
+					integrationInstances: { include: { integration: true } },
+				},
+			},
 		},
 	},
 	integrationInstances: { include: { integration: true } },
@@ -127,7 +131,7 @@ export const stageInclude = {
 	actionInstances: {
 		include: { action: true },
 	},
-	pubs: { include: pubInclude },
+	pubs: { include: { pub: { include: pubInclude } } },
 	integrationInstances: { include: { integration: true } },
 	permissions: { include: permissionInclude },
 	moveConstraints: { include: { destination: true } },

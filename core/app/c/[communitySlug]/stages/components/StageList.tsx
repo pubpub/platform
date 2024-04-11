@@ -85,7 +85,7 @@ function StageList(props: Props) {
 												);
 											})}
 										</div>
-										{stage.pubs.map((pub, index, list) => {
+										{stage.pubs.map(({ pub }, index, list) => {
 											return (
 												<Fragment key={pub.id}>
 													<PubRow

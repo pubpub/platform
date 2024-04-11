@@ -179,7 +179,7 @@ export default async function Page({
 						{/* TODO: build workflow as series of move constraints? */}
 						<div>Current Stage</div>
 						<div className="indent-4 font-medium">
-							{pub.stages.map((stage) => {
+							{pub.stages.map(({ stage }) => {
 								return <div key={stage.id}>{stage.name}</div>;
 							})}
 						</div>
