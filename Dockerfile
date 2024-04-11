@@ -49,7 +49,8 @@ ENV DOCKERBUILD=1
 
 RUN pnpm --filter $PACKAGE build && \
     pnpm --filter $PACKAGE --prod deploy /tmp/app && \
-    cp core/next.docker.config.js /tmp/app/next.config.js && \
+    pnpm --filter $PACKAGE exec \
+      cp next.docker.config.js /tmp/app/next.config.js && \
     cp core/.env.docker /tmp/app/.env
 
 # Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852

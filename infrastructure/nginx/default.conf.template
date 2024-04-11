@@ -1,15 +1,16 @@
+upstream nextjs {
+  server ${NGINX_UPSTREAM_HOST}:${NGINX_UPSTREAM_PORT};
+}
+
 server {
   listen ${NGINX_LISTEN_PORT};
   server_name _;
 
-  location /legacy_healthcheck {
-    return 200;
+  location / {
+    proxy_pass  $scheme://nextjs;
   }
 
-  location ${NGINX_PREFIX} {
-    rewrite ^ $request_uri;
-    rewrite ^${NGINX_PREFIX}(.*) /$1 break;
-    return 400;
-    proxy_pass  $scheme://${NGINX_UPSTREAM_HOST}:${NGINX_UPSTREAM_PORT}$uri;
+  location /legacy_healthcheck {
+    return 200;
   }
 }
