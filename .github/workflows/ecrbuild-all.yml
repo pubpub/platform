@@ -11,6 +11,18 @@ on:
                 required: true
 
 jobs:
+    emit-sha-tag:
+        name: Emit container tag sha
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Get image tag
+              id: label
+              run: |
+                  sha_short=$(git describe --always --abbrev=40 --dirty)
+                  echo "Building containers with tag:"
+                  echo "$sha_short"
     # TODO: restore the commented `needs` lines once we implement
     # Docker build caching in github actions
     build-base:
@@ -45,6 +57,16 @@ jobs:
         #   - build-base
         with:
             package: jobs
+        secrets:
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+    build-intg-evaluations:
+        uses: ./.github/workflows/ecrbuild-template.yml
+        # needs:
+        #   - build-base
+        with:
+            package: integration-evaluations
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

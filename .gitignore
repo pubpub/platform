@@ -57,3 +57,6 @@ dump.rdb
 # Supabase
 core/supabase/.branches
 core/supabase/.temp
+
+# Tools
+**/Brewfile.lock.json
