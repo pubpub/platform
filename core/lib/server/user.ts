@@ -55,7 +55,7 @@ export async function isSuperAdmin(userId: string) {
 				error: "User not found",
 			};
 		}
-		return user?.isSuperAdmin;
+		return user;
 	} catch (error) {
 		return {
 			title: "Failed to check super admin status",

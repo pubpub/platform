@@ -15,7 +15,12 @@ export const createCommunity = defineServerAction(async function createCommunity
 }) {
 	try {
 		const superAdmin = await isSuperAdmin(userId); // is this check necessery if hidden behind admin?
-		if (typeof superAdmin === "boolean") {
+
+		// need to solve what assumptions we should make about our current user profiles.
+		// if local the user may not exist in supabase
+		// might wanna check if user exists in supabase and if not create them by default in the signup flow
+		// for now i think it best to assume a dev can create a user profile
+		if (typeof superAdmin === "boolean" && superAdmin) {
 			const communityExists = await prisma.community.findFirst({
 				where: {
 					slug: {
@@ -37,7 +42,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 					slug,
 					avatar,
 				},
-			}); // revalidate cache tags so update happens
+			}); // revalidate cache tags so update happens eventually
 
 			// add the user as a member of the community
 			await prisma.member.create({
