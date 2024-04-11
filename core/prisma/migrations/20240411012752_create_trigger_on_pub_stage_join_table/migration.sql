@@ -18,7 +18,7 @@ $$
 LANGUAGE plpgsql
 VOLATILE;
 
-CREATE TRIGGER pub_entered
-    AFTER INSERT OR UPDATE ON "PubsInStages"
+CREATE TRIGGER pub_moved
+    AFTER INSERT OR DELETE ON "PubsInStages"
     FOR EACH ROW
     EXECUTE FUNCTION emit_event();
