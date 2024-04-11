@@ -24,17 +24,13 @@ import { type default as PubFieldsTable } from "./PubFields";
 import { type default as PubFieldSchemaTable } from "./PubFieldSchema";
 import { type default as PubFieldToPubTypeTable } from "./PubFieldToPubType";
 import { type default as PubsTable } from "./Pubs";
-import { type default as PubToStageTable } from "./PubToStage";
+import { type default as PubsInStagesTable } from "./PubsInStages";
 import { type default as PubTypesTable } from "./PubTypes";
 import { type default as PubValuesTable } from "./PubValues";
 import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
-	_ActionToPubField: ActionToPubFieldTable;
-
-	action_instances: ActionInstancesTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -58,8 +54,6 @@ export default interface PublicSchema {
 	action_claim: ActionClaimTable;
 
 	action_move: ActionMoveTable;
-
-	_PubToStage: PubToStageTable;
 
 	pub_fields: PubFieldsTable;
 
@@ -86,4 +80,10 @@ export default interface PublicSchema {
 	IntegrationInstanceState: IntegrationInstanceStateTable;
 
 	actions: ActionsTable;
+
+	_ActionToPubField: ActionToPubFieldTable;
+
+	action_instances: ActionInstancesTable;
+
+	PubsInStages: PubsInStagesTable;
 }
