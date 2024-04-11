@@ -11,8 +11,8 @@ export async function move(pubId: string, sourceStageId: string, destinationStag
 			include: { stages: true },
 			data: {
 				stages: {
-					disconnect: { pubId_stageId: { stageId: sourceStageId, pubId } },
-					connect: { pubId_stageId: { stageId: destinationStageId, pubId } },
+					delete: { pubId_stageId: { stageId: sourceStageId, pubId } },
+					create: { stageId: destinationStageId },
 				},
 			},
 		});

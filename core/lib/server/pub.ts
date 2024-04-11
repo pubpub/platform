@@ -327,28 +327,17 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBodyWi
 	const createArgs = {
 		data: {
 			...updateInput,
+			...(!body.parentId && {
+				stages: {
+					create: {
+						stageId: instance.stageId,
+					},
+				},
+			}),
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),
 	};
 	const pub = await prisma.pub.create(createArgs);
-
-	if (!body.parentId) {
-		await prisma.pub.update({
-			where: {
-				id: pub.id,
-			},
-			data: {
-				stages: {
-					connect: {
-						pubId_stageId: {
-							pubId: pub.id,
-							stageId: instance.stageId,
-						},
-					},
-				},
-			},
-		});
-	}
 
 	return pub;
 };

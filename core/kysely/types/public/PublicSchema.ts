@@ -31,12 +31,6 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
-	_ActionToPubField: ActionToPubFieldTable;
-
-	action_instances: ActionInstancesTable;
-
-	PubsInStages: PubsInStagesTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -86,4 +80,10 @@ export default interface PublicSchema {
 	IntegrationInstanceState: IntegrationInstanceStateTable;
 
 	actions: ActionsTable;
+
+	_ActionToPubField: ActionToPubFieldTable;
+
+	action_instances: ActionInstancesTable;
+
+	PubsInStages: PubsInStagesTable;
 }
