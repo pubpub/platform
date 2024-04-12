@@ -20,12 +20,22 @@ export const communityCreateFormSchema = z.object({
 	avatar: z.string().optional(),
 });
 
-export const AddCommunityForm = () => {
+type Props = {
+	user: any;
+};
+
+export const AddCommunityForm = (props: Props) => {
 	const runCreateCommunity = useServerAction(createCommunity);
 
 	async function onSubmit(data: z.infer<typeof communityCreateFormSchema>) {
-		const result = await runCreateCommunity({ ...data, userId: "123" });
-		if (didSucceed(result)) {
+		const result = await runCreateCommunity({ ...data, user: props.user });
+		if (typeof result === "boolean") {
+			toast({
+				title: "Falied to Create Community",
+				description: "User is not a super admin",
+				variant: "destructive",
+			});
+		} else if (didSucceed(result)) {
 			toast({
 				title: "Success",
 				description: "Community created",

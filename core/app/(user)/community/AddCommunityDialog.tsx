@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
@@ -9,7 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 
 import { AddCommunityForm } from "./AddCommunityForm";
 
-export const AddCommunity = () => {
+type Props = { user: any };
+export const AddCommunity = (props: Props) => {
 	return (
 		<Dialog>
 			<TooltipProvider>
@@ -25,7 +26,7 @@ export const AddCommunity = () => {
 				</Tooltip>
 			</TooltipProvider>
 			<DialogContent>
-				<AddCommunityForm />
+				<AddCommunityForm user={props.user} />
 			</DialogContent>
 		</Dialog>
 	);

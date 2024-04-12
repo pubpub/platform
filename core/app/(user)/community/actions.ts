@@ -2,10 +2,11 @@
 
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { isSuperAdmin } from "~/lib/server/user";
+import { slugifyString } from "~/lib/string";
 import prisma from "~/prisma/db";
 
 export const createCommunity = defineServerAction(async function createCommunity({
-	userId,
+	user,
 	name,
 	slug,
 	avatar,
@@ -13,16 +14,14 @@ export const createCommunity = defineServerAction(async function createCommunity
 	name: string;
 	slug: string;
 	avatar?: string;
-	userId: string;
+	user: any;
 }) {
 	try {
-		const superAdmin = await isSuperAdmin(userId); // is this check necessery if hidden behind admin?
-
 		// need to solve what assumptions we should make about our current user profiles.
 		// if local the user may not exist in supabase
 		// might wanna check if user exists in supabase and if not create them by default in the signup flow
 		// for now i think it best to assume a dev can create a user profile
-		if (typeof superAdmin === "boolean" && superAdmin) {
+		if (user.isSuperAdmin) {
 			const communityExists = await prisma.community.findFirst({
 				where: {
 					slug: {
@@ -40,16 +39,16 @@ export const createCommunity = defineServerAction(async function createCommunity
 
 			const c = await prisma.community.create({
 				data: {
-					name,
-					slug,
-					avatar,
+					name, // not sure what to enfore for community name
+					slug: slugifyString(slug),
+					avatar, // should make sure this is a path
 				},
 			}); // revalidate cache tags so update happens eventually
 
 			// add the user as a member of the community
 			await prisma.member.create({
 				data: {
-					userId,
+					userId: user.id,
 					communityId: c.id,
 					canAdmin: true,
 				},
@@ -57,7 +56,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 
 			return c;
 		}
-		return superAdmin;
+		return false;
 	} catch (error) {
 		return {
 			title: "Failed to create community",
