@@ -1,7 +1,6 @@
 "use server";
 
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { isSuperAdmin } from "~/lib/server/user";
 import { slugifyString } from "~/lib/string";
 import prisma from "~/prisma/db";
 
