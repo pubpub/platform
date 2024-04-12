@@ -22,19 +22,6 @@ export default async function Page() {
 				<AddCommunity user={loginData} />
 			</div>
 			<div>
-				<ul className="flex flex-col items-center">
-					<li className="mr-4">
-						<a href="/community">unjounral</a>
-					</li>
-					<li className="mr-4">
-						<a href="/community">Nah FR</a>
-					</li>
-					<li>
-						<a href="/community">OP adventure</a>
-					</li>
-				</ul>
-			</div>
-			<div>
 				{getCommunities.map((community) => (
 					<div className="flex flex-row space-x-1" key={community.id}>
 						<h2>{community.name}</h2>
