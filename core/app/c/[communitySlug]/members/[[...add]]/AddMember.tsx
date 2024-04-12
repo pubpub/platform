@@ -6,11 +6,12 @@ import { getSuggestedMembers } from "~/lib/server";
 import prisma from "~/prisma/db";
 import { MemberInviteForm } from "./MemberInviteForm";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
+
 /**
- * 
+ *
  * @param email
  * @param currentEmail
- * @param community 
+ * @param community
  * @returns error state and user state
  */
 const createCachedGetUser = ({

@@ -1,21 +1,18 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+"use client";
+
 import React from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { createCommunity } from "./actions";
-
+import { Button } from "ui/button";
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
-import {
-	Form,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form";
-import { Button } from "ui/button";
+import { toast } from "ui/use-toast";
+
+import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { createCommunity } from "./actions";
 
 export const communityCreateFormSchema = z.object({
 	name: z.string().min(1),
@@ -24,8 +21,16 @@ export const communityCreateFormSchema = z.object({
 });
 
 export const AddCommunityForm = () => {
+	const runCreateCommunity = useServerAction(createCommunity);
+
 	async function onSubmit(data: z.infer<typeof communityCreateFormSchema>) {
-		console.log(data);
+		const result = await runCreateCommunity({ ...data, userId: "123" });
+		if (didSucceed(result)) {
+			toast({
+				title: "Success",
+				description: "Community created",
+			});
+		}
 	}
 	const form = useForm<z.infer<typeof communityCreateFormSchema>>({
 		resolver: zodResolver(communityCreateFormSchema),
@@ -50,7 +55,7 @@ export const AddCommunityForm = () => {
 								<FormDescription>
 									What is the name of your community
 								</FormDescription>
-								<FormMessage/>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
@@ -62,9 +67,9 @@ export const AddCommunityForm = () => {
 								<FormLabel>🐌 Slug</FormLabel>
 								<Input {...field} />
 								<FormDescription>
-									Name the string in URL path for your community 
+									Name the string in URL path for your community
 								</FormDescription>
-								<FormMessage/>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
@@ -78,20 +83,19 @@ export const AddCommunityForm = () => {
 								<FormDescription>
 									What is the avatar for your community
 								</FormDescription>
-								<FormMessage/>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
 					<Button type="submit" disabled={form.formState.isSubmitting}>
-						{form.formState.isSubmitting ? <Loader2 /> : (
-							<div className="flex items-center gap-x-2">
-								Create Community
-							</div>
+						{form.formState.isSubmitting ? (
+							<Loader2 />
+						) : (
+							<div className="flex items-center gap-x-2">Create Community</div>
 						)}
 					</Button>
 				</form>
 			</Form>
-
 		</>
 	);
 };

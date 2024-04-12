@@ -1,8 +1,8 @@
 import React from "react";
 
-import { AddCommunity } from "./AddCommunityDialog";
 import { getLoginData } from "~/lib/auth/loginData";
-import { isSuperAdmin } from '~/lib/server/user';
+import { isSuperAdmin } from "~/lib/server/user";
+import { AddCommunity } from "./AddCommunityDialog";
 
 export default async function Page() {
 	const loginData = await getLoginData();
