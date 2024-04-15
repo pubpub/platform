@@ -20,7 +20,9 @@ export type Props = {
 export const StagePanelActionConfig = (props: Props) => {
 	const onSubmit = useCallback(
 		(instanceConfig) => {
-			updateAction(props.communityId, props.instance.id as ActionInstancesId, instanceConfig);
+			updateAction(props.communityId, props.instance.id as ActionInstancesId, {
+				config: instanceConfig,
+			});
 		},
 		[props.communityId, props.instance.id]
 	);
