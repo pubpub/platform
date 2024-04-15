@@ -19,6 +19,7 @@ async function createUserMembers(
 	slug: string,
 	firstName: string,
 	lastName: string | undefined,
+	isSuperAdmin: boolean,
 	prismaCommunityIds: { communityId: string; canAdmin: boolean }[]
 ) {
 	let user;
@@ -48,6 +49,7 @@ async function createUserMembers(
 			firstName,
 			lastName,
 			avatar: "/demo/person.png",
+			isSuperAdmin,
 			memberships: { createMany: { data: prismaCommunityIds } },
 		},
 	});
@@ -74,6 +76,7 @@ async function main() {
 			"all",
 			"Jill",
 			"Admin",
+			true,
 			prismaCommunityIds
 		);
 	} catch (error) {
