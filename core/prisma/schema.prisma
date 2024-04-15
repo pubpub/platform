@@ -343,6 +343,7 @@ model Action {
 
 model ActionInstance {
   id        String   @id @default(uuid())
+  name      String   @default("")
   action    Action   @relation(fields: [actionId], references: [id], onDelete: Cascade)
   actionId  String   @map(name: "action_id")
   stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)

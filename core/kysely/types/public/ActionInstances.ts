@@ -22,6 +22,8 @@ export default interface ActionInstancesTable {
 	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
+
+	name: ColumnType<string, string | undefined, string>;
 }
 
 export type ActionInstances = Selectable<ActionInstancesTable>;
