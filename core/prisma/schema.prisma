@@ -328,24 +328,23 @@ model IntegrationInstanceState {
   @@unique([pubId, instanceId], name: "pub_instance")
 }
 
-model Action {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String   @default("")
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map(name: "updated_at")
+// model Action {
+//   id          String   @id @default(uuid())
+//   name        String   @unique
+//   description String   @default("")
+//   createdAt   DateTime @default(now()) @map(name: "created_at")
+//   updatedAt   DateTime @default(now()) @updatedAt @map(name: "updated_at")
 
-  instances ActionInstance[]
-  pubFields PubField[]
+//   instances ActionInstance[]
+//   pubFields PubField[]
 
-  @@map(name: "actions")
-}
+//   @@map(name: "actions")
+// }
 
 model ActionInstance {
   id        String   @id @default(uuid())
   name      String   @default("")
-  action    Action   @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  actionId  String   @map(name: "action_id")
+  action    Action
   stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
   stageId   String   @map(name: "stage_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
@@ -353,4 +352,10 @@ model ActionInstance {
   config    Json?
 
   @@map(name: "action_instances")
+}
+
+enum Action {
+  log
+  pdf
+  email
 }

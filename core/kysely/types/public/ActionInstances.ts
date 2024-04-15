@@ -3,7 +3,7 @@
 
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
-import { type ActionsId } from "./Actions";
+import { type default as Action } from "./Action";
 import { type StagesId } from "./Stages";
 
 /** Identifier type for public.action_instances */
@@ -12,8 +12,6 @@ export type ActionInstancesId = string & { __brand: "ActionInstancesId" };
 /** Represents the table public.action_instances */
 export default interface ActionInstancesTable {
 	id: ColumnType<ActionInstancesId, ActionInstancesId, ActionInstancesId>;
-
-	action_id: ColumnType<ActionsId, ActionsId, ActionsId>;
 
 	stage_id: ColumnType<StagesId, StagesId, StagesId>;
 
@@ -24,6 +22,8 @@ export default interface ActionInstancesTable {
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 
 	name: ColumnType<string, string | undefined, string>;
+
+	action: ColumnType<Action, Action, Action>;
 }
 
 export type ActionInstances = Selectable<ActionInstancesTable>;
