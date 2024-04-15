@@ -38,10 +38,9 @@ export default async function Page({ params, searchParams }: Props) {
 	);
 
 	const stages = await getCommunityStages(community.id);
-	const actions = await prisma.action.findMany();
 
 	return (
-		<StagesProvider actions={actions} stages={stages} communityId={community.id}>
+		<StagesProvider stages={stages} communityId={community.id}>
 			<StageEditorProvider communitySlug={params.communitySlug}>
 				<LocalStorageProvider timeout={200}>
 					<div className="v-full absolute left-0 top-0 z-50 h-full w-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">

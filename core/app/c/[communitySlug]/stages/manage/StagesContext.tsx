@@ -1,8 +1,9 @@
 "use client";
 
+import type { PropsWithChildren } from "react";
+
 import {
 	createContext,
-	PropsWithChildren,
 	startTransition,
 	useCallback,
 	useContext,
@@ -12,12 +13,11 @@ import {
 	useState,
 } from "react";
 
+import type { StagePayload } from "~/lib/types";
 import { useServerAction } from "~/lib/serverActions";
-import { ActionPayload, StagePayload } from "~/lib/types";
 import * as actions from "./actions";
 
 export type StagesContext = {
-	actions: ActionPayload[];
 	stages: StagePayload[];
 	deleteStages: (stageIds: string[]) => void;
 	createMoveConstraint: (sourceStageId: string, destinationStageId: string) => void;
@@ -32,7 +32,6 @@ export type StagesContext = {
 };
 
 export const StagesContext = createContext<StagesContext>({
-	actions: [],
 	stages: [],
 	deleteStages: () => {},
 	createMoveConstraint: () => {},
@@ -44,7 +43,6 @@ export const StagesContext = createContext<StagesContext>({
 });
 
 export type StagesProviderProps = PropsWithChildren<{
-	actions: ActionPayload[];
 	communityId: string;
 	stages: StagePayload[];
 }>;
@@ -268,7 +266,6 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	}, [deleteBatch]);
 
 	const value = {
-		actions: props.actions,
 		stages,
 		deleteStages,
 		createMoveConstraint,
