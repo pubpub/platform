@@ -42,10 +42,10 @@ export const StagePanelPubsRunActionButton = ({
 
 	return (
 		<div className="flex w-full items-center justify-between space-x-2 px-4 py-2">
-			<div className="flex items-center gap-2">
-				<action.icon size="14" />
-				{actionInstance.action.name}
-			</div>
+			<action.icon size="14" className="flex-shrink-0" />
+			<span className="flex-grow overflow-auto text-ellipsis">
+				{actionInstance.name || action.name}
+			</span>
 			<Button
 				variant="default"
 				type="button"
