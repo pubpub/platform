@@ -57,7 +57,6 @@ export const runActionInstance = defineServerAction(async function runActionInst
 			cause: actionInstanceResult.reason,
 		};
 	}
-	//	console.log(pubResult.value);
 
 	const actionInstance = actionInstanceResult.value;
 	const pub = pubResult.value;
@@ -107,10 +106,14 @@ export const runActionInstance = defineServerAction(async function runActionInst
 
 	try {
 		const result = await actionRun({
-			config: parsedConfig.data,
+			config: parsedConfig.data as any,
 			pub: {
 				id: pubId,
-				values: pub.valuesBlob,
+				values: {
+					...pub.values,
+					// TODO: REMOVE, FOR DEMO PURPOSES ONLY
+					"pubpub:title": (pub.values["unjournal:title"] as string) || "MISSING TITLE",
+				},
 			},
 			pubConfig: parsedConfig.data,
 		});

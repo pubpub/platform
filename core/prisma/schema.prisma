@@ -101,7 +101,6 @@ model PubField {
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
   pubFieldSchemaId String?
 
-  actions  Action[]
   values   PubValue[]
   pubTypes PubType[]
 

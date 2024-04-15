@@ -25,7 +25,9 @@ export const StagePanelPubsRunActionButton = ({
 	const runAction = useServerAction(runActionInstance);
 
 	const [isPending, startTransition] = useTransition();
-	const [result, setResult] = useState(undefined);
+	const [result, setResult] = useState<Awaited<ReturnType<typeof runAction>> | undefined>(
+		undefined
+	);
 
 	const action = getActionByName(actionInstance.action);
 
@@ -38,11 +40,11 @@ export const StagePanelPubsRunActionButton = ({
 			return;
 		}
 
-		if (result.success) {
+		if ("success" in result) {
 			toast({
 				title: "Action ran successfully!",
 				variant: "default",
-				description: result.data,
+				description: JSON.stringify(result.data || ""),
 			});
 		}
 
@@ -79,7 +81,7 @@ export const StagePanelPubsRunActionButton = ({
 				{isPending ? (
 					<Loader2 size="14" className="animate-spin" />
 				) : result ? (
-					result.error ? (
+					"error" in result ? (
 						<X size="14" />
 					) : (
 						<Check size="14" />

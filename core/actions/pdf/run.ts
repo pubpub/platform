@@ -2,7 +2,7 @@
 
 import { logger } from "logger";
 
-import type { action } from "./action.tsx";
+import type { action } from "./action";
 import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) => {
