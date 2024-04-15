@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+import { Terminal } from "ui/icon";
+
 import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
 
@@ -11,6 +13,6 @@ export const action = defineAction({
 	description: "Log a pub to the console",
 	pubConfig: z.object({}),
 	pubFields: [corePubFields.title],
+	icon: Terminal,
 });
-
 // export { run } from "./run";
