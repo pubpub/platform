@@ -293,9 +293,9 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
-		"@types/react": "^18.2.74",
-		"@pubpub/prettier-config": "workspace:*",
 		"@pubpub/eslint-config": "workspace:*",
+		"@pubpub/prettier-config": "workspace:*",
+		"@types/react": "^18.2.78",
 		"eslint": "^8.57.0",
 		"postcss": "^8.4.20",
 		"react": "^18.2.0",
