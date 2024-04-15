@@ -16,7 +16,6 @@ import { FileText, Mail, Terminal } from "ui/icon";
 import type { Action } from "~/actions/types";
 import { actions } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
-import { ActionPayload } from "~/lib/types";
 
 type ActionCellProps = {
 	action: Action;

@@ -1,31 +1,18 @@
 "use server";
 
 import { captureException } from "@sentry/nextjs";
-import Ajv from "ajv";
 import { sql } from "kysely";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import { logger } from "logger";
 
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import { db } from "~/kysely/database";
-import { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import { PubsId } from "~/kysely/types/public/Pubs";
 import { getPub } from "~/lib/server";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getActionByName } from ".";
 import { getActionRunByName } from "../_lib/getRuns";
 import { validatePubValues } from "../_lib/validateFields";
-
-const pubMap = [
-	"id",
-	"created_at as createdAt",
-	"updated_at as updatedAt",
-	"pub_type_id as pubTypeId",
-	"community_id as communityId",
-	"valuesBlob",
-	"parent_id as parentId",
-	"assignee_id as assigneeId",
-] as const;
 
 export const runActionInstance = defineServerAction(async function runActionInstance({
 	pubId,
@@ -37,20 +24,6 @@ export const runActionInstance = defineServerAction(async function runActionInst
 	pubConfig;
 }) {
 	const pubPromise = getPub(pubId);
-	// const pubPromise = db
-	// 	.selectFrom("pubs")
-	// 	.select((eb) => [
-	// 		"id",
-	// 		"created_at as createdAt",
-	// 		"updated_at as updatedAt",
-	// 		"pub_type_id as pubTypeId",
-	// 		"community_id as communityId",
-	// 		eb.fn.coalesce("valuesBlob", sql`'{}'`).as("valuesBlob"),
-	// 		"parent_id as parentId",
-	// 		"assignee_id as assigneeId",
-	// 	])
-	// 	.where("id", "=", pubId)
-	// 	.executeTakeFirstOrThrow();
 
 	const actionInstancePromise = db
 		.selectFrom("action_instances")
@@ -61,20 +34,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 			"created_at as createdAt",
 			"updated_at as updatedAt",
 			"stage_id as stageId",
-			"action_id as actionId",
-			jsonObjectFrom(
-				eb
-					.selectFrom("actions")
-					.selectAll()
-					.select([
-						"actions.id",
-						"actions.name",
-						"actions.created_at as createdAt",
-						"actions.updated_at as updatedAt",
-						"actions.description",
-					])
-					.whereRef("actions.id", "=", "action_instances.action_id")
-			).as("action"),
+			"action",
 		])
 		.executeTakeFirstOrThrow();
 
@@ -108,9 +68,9 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		};
 	}
 
-	const action = getActionByName(actionInstance.action.name);
+	const action = getActionByName(actionInstance.action);
 
-	const actionRun = await getActionRunByName(actionInstance.action.name);
+	const actionRun = await getActionRunByName(actionInstance.action);
 
 	if (!actionRun || !action) {
 		return {
@@ -158,7 +118,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		return result;
 	} catch (error) {
 		captureException(error);
-		console.log(error);
+		logger.error(error);
 		return {
 			title: "Failed to run action",
 			error: error.message,

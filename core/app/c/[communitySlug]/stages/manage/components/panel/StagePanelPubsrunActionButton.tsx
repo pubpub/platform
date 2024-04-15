@@ -7,6 +7,7 @@ import { startTransition, useEffect, useState, useTransition } from "react";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Check, Loader2, Play, X } from "ui/icon";
+import { toast } from "ui/use-toast";
 
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
@@ -26,18 +27,30 @@ export const StagePanelPubsRunActionButton = ({
 	const [isPending, startTransition] = useTransition();
 	const [result, setResult] = useState(undefined);
 
-	const action = getActionByName(actionInstance.action.name);
+	const action = getActionByName(actionInstance.action);
 
 	if (!action) {
-		logger.info(`Invalid action name ${actionInstance.action.name}`);
+		logger.info(`Invalid action name ${actionInstance.action}`);
 		return null;
 	}
 	useEffect(() => {
-		if (result) {
-			setTimeout(() => {
-				setResult(undefined);
-			}, 2000);
+		if (!result) {
+			return;
 		}
+
+		if (result.success) {
+			toast({
+				title: "Action ran successfully!",
+				variant: "default",
+				description: result.data,
+			});
+		}
+
+		const timeout = setTimeout(() => {
+			setResult(undefined);
+		}, 2000);
+
+		return () => clearTimeout(timeout);
 	}, [result]);
 
 	return (

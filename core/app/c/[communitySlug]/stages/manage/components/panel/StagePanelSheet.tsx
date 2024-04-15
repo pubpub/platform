@@ -1,6 +1,8 @@
 "use client";
 
-import { PropsWithChildren, useEffect, useState } from "react";
+import type { PropsWithChildren } from "react";
+
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Sheet, SheetContent } from "ui/sheet";

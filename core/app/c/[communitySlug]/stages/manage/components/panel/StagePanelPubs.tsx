@@ -2,13 +2,11 @@ import { Suspense } from "react";
 
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
-import { Play } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import * as actions from "../../actions";
 import { getStageActions, getStagePubs } from "./queries";
-import { StagePanelPubsRunActionButton } from "./StagePanelPubsrunActionButton";
+import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
 
 type PropsInner = {
 	stageId: string;

@@ -5,13 +5,13 @@ import { useCallback, useState } from "react";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
-import { ChevronDown, ChevronUp, Pencil, Trash } from "ui/icon";
+import { ChevronUp, Pencil, Trash } from "ui/icon";
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { StagePayloadActionInstance } from "~/lib/types";
 import { getActionByName } from "~/actions/api";
-import { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "../../actions";
 import { StagePanelActionConfig } from "./StagePanelActionConfig";
@@ -28,10 +28,10 @@ export const StagePanelActionEditor = (props: Props) => {
 	const onDeleteClick = useCallback(async () => {
 		runOnDelete(props.actionInstance.id);
 	}, [props.actionInstance, runOnDelete]);
-	const action = getActionByName(props.actionInstance.action.name);
+	const action = getActionByName(props.actionInstance.action);
 
 	if (!action) {
-		logger.warn(`Invalid action name ${props.actionInstance.action.name}`);
+		logger.warn(`Invalid action name ${props.actionInstance.action}`);
 		return null;
 	}
 

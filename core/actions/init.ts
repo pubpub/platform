@@ -24,27 +24,3 @@ export const registerCorePubField = async (corePubField: CorePubField) => {
 	});
 	corePubField.id = persistedCorePubField.id;
 };
-
-export const registerAction = async (action: Action) => {
-	const pubFieldIds = action.pubFields.map((field) => ({ id: field.id! }));
-	// Ensure the action exists in the database and is up to date
-	const persistedAction = await prisma.action.upsert({
-		where: {
-			name: action.name,
-		},
-		update: {
-			description: action.description,
-			pubFields: {
-				connect: pubFieldIds,
-			},
-		},
-		create: {
-			name: action.name,
-			description: action.description,
-			pubFields: {
-				connect: pubFieldIds,
-			},
-		},
-	});
-	action.id = persistedAction.id;
-};

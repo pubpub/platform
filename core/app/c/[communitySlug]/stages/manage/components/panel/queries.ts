@@ -6,10 +6,6 @@ import { expect } from "utils";
 
 import prisma from "~/prisma/db";
 
-export const getActions = cache(async () => {
-	return await prisma.action.findMany();
-});
-
 export const getStage = cache(async (stageId: string) => {
 	return await prisma.stage.findUnique({
 		where: { id: stageId },
@@ -20,9 +16,6 @@ export const getStageActions = cache(async (stageId: string) => {
 	return await prisma.actionInstance.findMany({
 		where: {
 			stageId,
-		},
-		include: {
-			action: true,
 		},
 	});
 });

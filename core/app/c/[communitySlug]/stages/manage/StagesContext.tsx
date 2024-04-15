@@ -8,7 +8,6 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
-	// @ts-expect-error
 	useOptimistic,
 	useState,
 } from "react";

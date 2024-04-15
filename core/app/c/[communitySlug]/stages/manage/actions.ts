@@ -1,13 +1,10 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import { captureException } from "@sentry/nextjs";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { getActionRunByName } from "~/actions/_lib/getRuns";
+import type Action from "~/kysely/types/public/Action";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import { PubsId } from "~/kysely/types/public/Pubs";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
 
@@ -167,28 +164,13 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 export const addAction = defineServerAction(async function addAction(
 	communityId: string,
 	stageId: string,
-	actionName: string
+	actionName: Action
 ) {
 	try {
-		const action = await prisma.action.findFirst({
-			where: {
-				name: actionName,
-			},
-		});
-		if (!action) {
-			return {
-				error: `No such action: ${actionName}`,
-			};
-		}
-
 		await prisma.actionInstance.create({
 			data: {
 				name: actionName,
-				action: {
-					connect: {
-						id: action.id,
-					},
-				},
+				action: actionName,
 				stage: {
 					connect: {
 						id: stageId,
@@ -217,7 +199,6 @@ export const updateAction = defineServerAction(async function updateAction(
 		| { name: string; config?: undefined }
 ) {
 	try {
-		console.log(props);
 		await db
 			.updateTable("action_instances")
 			.set(props.name ? { name: props.name } : { config: props.config })
@@ -245,105 +226,5 @@ export const deleteAction = defineServerAction(async function deleteAction(
 		};
 	} finally {
 		revalidateTag(`community-stages_${communityId}`);
-	}
-});
-
-const pubMap = [
-	"id",
-	"created_at as createdAt",
-	"updated_at as updatedAt",
-	"pub_type_id as pubTypeId",
-	"community_id as communityId",
-	"valuesBlob",
-	"parent_id as parentId",
-	"assignee_id as assigneeId",
-] as const;
-
-export const runAction = defineServerAction(async function runAction({
-	pubId,
-	actionInstanceId,
-}: {
-	pubId: PubsId;
-	actionInstanceId: ActionInstancesId;
-}) {
-	const pub = await db
-		.selectFrom("pubs")
-		.select(pubMap)
-		.where("id", "=", pubId)
-		.executeTakeFirst();
-	if (!pub) {
-		return {
-			error: "Pub not found",
-		};
-	}
-	console.log(pub);
-
-	const actionInstance = await db
-		.selectFrom("action_instances")
-		.where("action_instances.id", "=", actionInstanceId)
-		.select((eb) => [
-			"id",
-			"config",
-			"created_at as createdAt",
-			"updated_at as updatedAt",
-			"stage_id as stageId",
-			"action_id as actionId",
-			jsonObjectFrom(
-				eb
-					.selectFrom("actions")
-					.selectAll()
-					.select([
-						"actions.id",
-						"actions.name",
-						"actions.created_at as createdAt",
-						"actions.updated_at as updatedAt",
-						"actions.description",
-					])
-					.whereRef("actions.id", "=", "action_instances.action_id")
-			).as("action"),
-		])
-		.executeTakeFirst();
-
-	console.log("aaa", actionInstance);
-
-	if (!actionInstance) {
-		return {
-			error: "Action instance not found",
-		};
-	}
-
-	if (!actionInstance.action) {
-		return {
-			error: "Action not found",
-		};
-	}
-
-	const action = await getActionRunByName(actionInstance.action.name);
-	//	const action = getActionRunFunctionByName(actionInstance.action.name);
-
-	if (!action) {
-		return {
-			error: "Action not found",
-		};
-	}
-	console.log("values", pub.valuesBlob);
-
-	try {
-		const result = await action({
-			config: {},
-			pub: {
-				id: pubId,
-				values: JSON.parse(pub.valuesBlob),
-			},
-			pubConfig: {},
-		});
-
-		return result;
-	} catch (error) {
-		captureException(error);
-		return {
-			title: "Failed to run action",
-			error: error.message,
-		};
 	}
 });
