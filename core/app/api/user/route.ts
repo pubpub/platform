@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 			email,
 			password,
 			options: {
-				emailRedirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/login`,
+				emailRedirectTo: `${env.PUBPUB_URL}/login`,
 				data: {
 					firstName,
 					lastName,

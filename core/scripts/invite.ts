@@ -13,7 +13,7 @@ import { formatSupabaseError } from "../lib/supabase";
 import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
 
 const getServerSupabase = () => {
-	const url = env.NEXT_PUBLIC_SUPABASE_URL;
+	const url = env.SUPABASE_URL;
 	const key = env.SUPABASE_SERVICE_ROLE_KEY;
 
 	if (!url || !key) {
@@ -32,7 +32,7 @@ const inviteUser = async (email, firstName, lastName) => {
 		email,
 		password: randomUUID(),
 		options: {
-			emailRedirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			emailRedirectTo: `${env.PUBPUB_URL}/reset`,
 			data: {
 				firstName,
 				lastName,

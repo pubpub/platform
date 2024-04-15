@@ -29,7 +29,7 @@ module "cluster" {
   environment = var.environment
   region = var.region
 
-  container_ingress_port = 3000
+  container_ingress_port = 8080
 
   availability_zones = ["us-east-1a", "us-east-1c"]
 }
@@ -49,8 +49,17 @@ module "service_core" {
   cluster_info = module.cluster.cluster_info
 
   repository_url = module.cluster.ecr_repository_urls.core
+  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
 
-  set_lb_target = true
+  listener = {
+    service_name = "core"
+    public = true
+    path_prefix = "/"
+    rule_priority = 100
+    from_port = 3000
+    to_port = 3000
+    protocol = "tcp"
+  }
 
   init_containers = [{
     name = "migrations"
@@ -74,9 +83,12 @@ module "service_core" {
       { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
       { name = "MAILGUN_SMTP_HOST", value = var.MAILGUN_SMTP_HOST },
       { name = "MAILGUN_SMTP_PORT", value = var.MAILGUN_SMTP_PORT },
-      { name = "NEXT_PUBLIC_PUBPUB_URL", value = var.pubpub_url },
+      { name = "NEXT_PUBLIC_PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
       { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
+      { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+      { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+      { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
     ]
 
     secrets = [
@@ -105,7 +117,7 @@ module "service_flock" {
   configuration = {
     container_port = 3000
     environment = [
-      { name = "PUBPUB_URL", value = var.pubpub_url },
+      { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
       { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
       { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
@@ -119,6 +131,104 @@ module "service_flock" {
     ]
   }
 }
+
+ module "service_intg_submissions" {
+   source = "./modules/container-generic"
+
+   service_name = "integration-submissions"
+   cluster_info = module.cluster.cluster_info
+
+   repository_url = module.cluster.ecr_repository_urls.intg_submissions
+  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
+
+   listener = {
+     service_name = "submissions"
+     public = true
+     path_prefix = "/intg/submissions/"
+     # lower number means this will be evaluated BEFORE the catch-all to core.
+     rule_priority = 80
+     from_port = 3000
+     to_port = 3000
+     protocol = "tcp"
+   }
+
+   configuration = {
+     environment = [
+       { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+     ]
+
+     secrets = [
+       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+     ]
+   }
+ }
+
+ module "service_intg_evaluations" {
+   source = "./modules/container-generic"
+
+   service_name = "integration-evaluations"
+   cluster_info = module.cluster.cluster_info
+
+   repository_url = module.cluster.ecr_repository_urls.intg_evaluations
+  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
+
+   listener = {
+     service_name = "evaluations"
+     public = true
+     path_prefix = "/intg/evaluations/"
+     # these may not be equal, so just set it adjacent to non-conflicting rule for submissions
+     rule_priority = 81
+     from_port = 3000
+     to_port = 3000
+     protocol = "tcp"
+   }
+
+   configuration = {
+     environment = [
+       { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+     ]
+
+     secrets = [
+       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+     ]
+   }
+ }
+
+ module "service_bastion" {
+   source = "./modules/container-generic"
+
+   service_name = "bastion"
+   cluster_info = module.cluster.cluster_info
+
+   repository_url = module.cluster.ecr_repository_urls.root
+   # TODO: add command
+
+   configuration = {
+     environment = [
+       # { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
+       { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
+       { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
+       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
+       { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
+     ]
+
+     secrets = [
+       { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+     ]
+   }
+
+   resources = {
+     cpu = 1024
+     memory = 2048 # need slightly beefier machine for the bastion
+
+     # TODO: disable autoscaling, which makes no sense for a bastion
+     desired_count = 1
+   }
+ }
 
 module "observability_honeycomb_integration" {
   source = "./modules/honeycomb-integration"
