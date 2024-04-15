@@ -5,7 +5,6 @@ import { Card, CardContent } from "ui/card";
 import { Play } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
-import { getActionByName, getActionRunFunctionByName } from "~/actions";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import * as actions from "../../actions";
 import { getStageActions, getStagePubs } from "./queries";
@@ -21,7 +20,6 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 
 	const actions = stageActions.map((action) => ({
 		...action,
-		// run: getActionRunFunctionByName(action.action.name),
 	}));
 
 	return (

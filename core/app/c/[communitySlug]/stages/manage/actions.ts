@@ -4,7 +4,7 @@ import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { getActionRunByName } from "~/actions/getRuns";
+import { getActionRunByName } from "~/actions/_lib/getRuns";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { PubsId } from "~/kysely/types/public/Pubs";
@@ -167,14 +167,26 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 export const addAction = defineServerAction(async function addAction(
 	communityId: string,
 	stageId: string,
-	actionId: string
+	actionName: string
 ) {
 	try {
+		const action = await prisma.action.findFirst({
+			where: {
+				name: actionName,
+			},
+		});
+		if (!action) {
+			return {
+				error: `No such action: ${actionName}`,
+			};
+		}
+
 		await prisma.actionInstance.create({
 			data: {
+				name: actionName,
 				action: {
 					connect: {
-						id: actionId,
+						id: action.id,
 					},
 				},
 				stage: {
@@ -197,12 +209,18 @@ export const addAction = defineServerAction(async function addAction(
 export const updateAction = defineServerAction(async function updateAction(
 	communityId: string,
 	actionInstanceId: ActionInstancesId,
-	config: any
+	props:
+		| {
+				config: Record<string, any>;
+				name?: undefined;
+		  }
+		| { name: string; config?: undefined }
 ) {
 	try {
+		console.log(props);
 		await db
 			.updateTable("action_instances")
-			.set({ config })
+			.set(props.name ? { name: props.name } : { config: props.config })
 			.where("id", "=", actionInstanceId)
 			.executeTakeFirstOrThrow();
 	} finally {

@@ -1,6 +1,6 @@
 import { logger } from "logger";
 
-import { actions } from "./actions";
+import { actions } from "./actions/api";
 import { corePubFields } from "./actions/corePubFields";
 import { registerAction, registerCorePubField } from "./actions/init";
 
@@ -11,7 +11,7 @@ export async function register() {
 		await registerCorePubField(corePubField);
 	}
 	logger.info("Registering actions");
-	for (const { action } of Object.values(actions)) {
+	for (const action of Object.values(actions)) {
 		logger.info(`Registering action ${action.name}`);
 		await registerAction(action);
 	}

@@ -1,7 +1,14 @@
 import { headers } from "next/headers";
 import { withServerActionInstrumentation } from "@sentry/nextjs";
 
-import { ClientException, isClientExceptionOptions, makeClientException } from "../serverActions";
+import { logger } from "logger";
+
+import {
+	ClientException,
+	ClientExceptionOptions,
+	isClientExceptionOptions,
+	makeClientException,
+} from "../serverActions";
 
 /**
  * Wraps a Next.js server action function with Sentry instrumentation. Additionally
@@ -11,7 +18,7 @@ import { ClientException, isClientExceptionOptions, makeClientException } from "
  * @returns
  */
 export const defineServerAction = <
-	T extends (...args: unknown[]) => Promise<unknown | ClientException>,
+	T extends (...args: unknown[]) => Promise<unknown | ClientExceptionOptions>,
 	A extends Parameters<T> = Parameters<T>,
 	R extends Awaited<ReturnType<T>> = Awaited<ReturnType<T>>,
 >(
@@ -35,6 +42,7 @@ export const defineServerAction = <
 							makeClientException(serverActionResult)
 						: serverActionResult;
 				} catch (error) {
+					logger.debug(error);
 					// https://github.com/vercel/next.js/discussions/49426#discussioncomment-8176059
 					// Because you can't simply wrap a server action call on the client in try/catch
 					// we should provide some sort of error response to the client in the case of an

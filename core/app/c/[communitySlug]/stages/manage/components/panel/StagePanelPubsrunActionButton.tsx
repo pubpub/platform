@@ -1,16 +1,18 @@
 "use client";
 
+import type { Action, ActionInstance, Pub } from "@prisma/client";
+
 import { startTransition, useEffect, useState, useTransition } from "react";
-import { Action, ActionInstance, Pub } from "@prisma/client";
-import { useFormState, useFormStatus } from "react-dom";
 
+import { logger } from "logger";
 import { Button } from "ui/button";
-import { Check, Loader2, Play } from "ui/icon";
+import { Check, Loader2, Play, X } from "ui/icon";
 
-import { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import { PubsId } from "~/kysely/types/public/Pubs";
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import { getActionByName } from "~/actions/api";
+import { runActionInstance } from "~/actions/api/runActionInstance";
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "../../actions";
 
 export const StagePanelPubsRunActionButton = ({
 	actionInstance,
@@ -19,11 +21,17 @@ export const StagePanelPubsRunActionButton = ({
 	actionInstance: ActionInstance & { action: Action };
 	pub: Pub;
 }) => {
-	const runAction = useServerAction(actions.runAction);
+	const runAction = useServerAction(runActionInstance);
 
 	const [isPending, startTransition] = useTransition();
 	const [result, setResult] = useState(undefined);
 
+	const action = getActionByName(actionInstance.action.name);
+
+	if (!action) {
+		logger.info(`Invalid action name ${actionInstance.action.name}`);
+		return null;
+	}
 	useEffect(() => {
 		if (result) {
 			setTimeout(() => {
@@ -34,7 +42,10 @@ export const StagePanelPubsRunActionButton = ({
 
 	return (
 		<div className="flex w-full items-center justify-between space-x-2 px-4 py-2">
-			{actionInstance.action.name}
+			<div className="flex items-center gap-2">
+				<action.icon size="14" />
+				{actionInstance.action.name}
+			</div>
 			<Button
 				variant="default"
 				type="button"
@@ -43,12 +54,11 @@ export const StagePanelPubsRunActionButton = ({
 					if (isPending || result) return;
 					startTransition(async () => {
 						setResult(undefined);
-						console.log("Running action");
 						const res = await runAction({
 							actionInstanceId: actionInstance.id as ActionInstancesId,
 							pubId: pub.id as PubsId,
+							pubConfig: {},
 						});
-						console.log("Action run finished");
 						setResult(res);
 					});
 				}}
@@ -56,7 +66,11 @@ export const StagePanelPubsRunActionButton = ({
 				{isPending ? (
 					<Loader2 size="14" className="animate-spin" />
 				) : result ? (
-					<Check size="14" />
+					result.error ? (
+						<X size="14" />
+					) : (
+						<Check size="14" />
+					)
 				) : (
 					<Play size="14" />
 				)}

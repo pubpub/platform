@@ -4,7 +4,7 @@ import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { addAction, deleteAction } from "../../actions";
-import { getActions, getStage, getStageActions } from "./queries";
+import { getStage, getStageActions } from "./queries";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
 
@@ -14,7 +14,6 @@ type PropsInner = {
 
 const StagePanelActionsInner = async (props: PropsInner) => {
 	const stage = await getStage(props.stageId);
-	const actions = await getActions();
 	const actionInstances = await getStageActions(props.stageId);
 
 	if (stage === null) {
@@ -48,7 +47,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 						/>
 					))}
 				</div>
-				<StagePanelActionCreator actions={actions} onAdd={onAddAction} />
+				<StagePanelActionCreator onAdd={onAddAction} />
 			</CardContent>
 		</Card>
 	);
