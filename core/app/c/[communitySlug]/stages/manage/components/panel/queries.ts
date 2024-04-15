@@ -31,7 +31,7 @@ export const getStagePubs = cache(async (stageId: string) => {
 	return await prisma.pub.findMany({
 		where: {
 			stages: {
-				some: { id: stageId },
+				some: { stage: { id: stageId } },
 			},
 		},
 	});

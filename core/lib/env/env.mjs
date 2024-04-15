@@ -8,6 +8,9 @@ import { z } from "zod";
 export const env = createEnv({
 	shared: {
 		NODE_ENV: z.enum(["development", "production", "test"]).optional(),
+		NEXT_PUBLIC_PUBPUB_URL: z.string(),
+		NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: z.string(),
+		NEXT_PUBLIC_SUPABASE_URL: z.string(),
 	},
 	server: {
 		API_KEY: z.string(),
@@ -23,14 +26,13 @@ export const env = createEnv({
 		SUPABASE_WEBHOOKS_API_KEY: z.string(),
 		MAILGUN_SMTP_HOST: z.string(),
 		MAILGUN_SMTP_PORT: z.string(),
-		OTEL_SERVICE_NAME: z.string(),
-		HONEYCOMB_API_KEY: z.string(),
+		OTEL_SERVICE_NAME: z.string().optional(),
+		HONEYCOMB_API_KEY: z.string().optional(),
+		PUBPUB_URL: z.string().url(),
+		SUPABASE_PUBLIC_KEY: z.string(),
+		SUPABASE_URL: z.string().url(),
 	},
-	client: {
-		NEXT_PUBLIC_PUBPUB_URL: z.string().url(),
-		NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: z.string(),
-		NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-	},
+	client: {},
 	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
 		NEXT_PUBLIC_PUBPUB_URL: runtimeEnv("NEXT_PUBLIC_PUBPUB_URL"),

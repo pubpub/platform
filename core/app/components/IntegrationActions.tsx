@@ -18,7 +18,7 @@ const getStatus = (pub: Props["pub"], integrationId: string) => {
 
 const getInstances = (pub: Props["pub"]) => {
 	return pub.integrationInstances.concat(
-		pub.stages.flatMap((stage) => stage.integrationInstances)
+		pub.stages.flatMap(({ stage }) => stage.integrationInstances)
 	);
 };
 

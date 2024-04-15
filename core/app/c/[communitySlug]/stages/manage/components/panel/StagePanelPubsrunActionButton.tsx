@@ -7,6 +7,8 @@ import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "ui/button";
 import { Check, Loader2, Play } from "ui/icon";
 
+import { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import { PubsId } from "~/kysely/types/public/Pubs";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "../../actions";
 
@@ -43,8 +45,8 @@ export const StagePanelPubsRunActionButton = ({
 						setResult(undefined);
 						console.log("Running action");
 						const res = await runAction({
-							actionInstanceId: actionInstance.id,
-							pubId: pub.id,
+							actionInstanceId: actionInstance.id as ActionInstancesId,
+							pubId: pub.id as PubsId,
 						});
 						console.log("Action run finished");
 						setResult(res);

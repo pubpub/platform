@@ -53,3 +53,10 @@ dump.rdb
 # Github Actions secrets files
 .vars
 .secrets
+
+# Supabase
+core/supabase/.branches
+core/supabase/.temp
+
+# Tools
+**/Brewfile.lock.json
