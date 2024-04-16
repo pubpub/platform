@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Community } from "@prisma/client";
 
@@ -12,11 +12,11 @@ import { MemberTable } from "./MemberTable";
 const getCachedMembers = async (community: Community) =>
 	await unstable_cache(
 		async () => {
+	
 			const members = await prisma.member.findMany({
 				where: { community: { id: community.id } },
 				include: { user: true },
 			});
-
 			return members;
 		},
 		[community.id],
@@ -44,10 +44,12 @@ export default async function Page({
 	const community = await prisma.community.findUnique({
 		where: { slug: communitySlug },
 	});
-
+	
 	if (!community) {
 		return notFound();
 	}
+	revalidateTag(`members_${community.id}`) // manually revalidate cache on page load
+	
 
 	const loginData = await getLoginData();
 	const currentCommunityMemberShip = loginData?.memberships?.find(

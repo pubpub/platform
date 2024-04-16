@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
 import prisma from "~/prisma/db";
@@ -16,10 +17,6 @@ export const createCommunity = defineServerAction(async function createCommunity
 	user: any;
 }) {
 	try {
-		// need to solve what assumptions we should make about our current user profiles.
-		// if local the user may not exist in supabase
-		// might wanna check if user exists in supabase and if not create them by default in the signup flow
-		// for now i think it best to assume a dev can create a user profile
 		if (user.isSuperAdmin) {
 			const communityExists = await prisma.community.findFirst({
 				where: {
@@ -52,7 +49,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 					canAdmin: true,
 				},
 			});
-
+			revalidatePath("/");
 			return c;
 		}
 		return false;

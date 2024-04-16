@@ -2,7 +2,10 @@ import React from "react";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import prisma from "~/prisma/db";
+import  {db} from "~/kysely/database";
 import { AddCommunity } from "./AddCommunityDialog";
+import {CommunityTable} from "./CommunityList";
+import { TableCommunity } from "./getCommunityTableColumns";
 
 export default async function Page() {
 	const loginData = await getLoginData();
@@ -14,7 +17,18 @@ export default async function Page() {
 		return null;
 	}
 
-	const getCommunities = await prisma.community.findMany();
+	const communities = await prisma.community.findMany();
+	// const communities = await  db.selectFrom("community").execute();
+	const tableMembers = communities.map((community) => {
+		const { id, name, slug, avatar, createdAt } = community;
+		return {
+			id,
+			name, 
+			slug,
+			avatar,
+			created: new Date(createdAt),
+		} satisfies TableCommunity;
+	});
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
@@ -22,13 +36,7 @@ export default async function Page() {
 				<AddCommunity user={loginData} />
 			</div>
 			<div>
-				{getCommunities.map((community) => (
-					<div className="flex flex-row space-x-1" key={community.id}>
-						<h2>{community.name}</h2>
-						<p>{community.slug}</p>
-						<p>{community.avatar}</p>
-					</div>
-				))}
+				<CommunityTable communities={tableMembers}/>
 			</div>
 		</>
 	);
