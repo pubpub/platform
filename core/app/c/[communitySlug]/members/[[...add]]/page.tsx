@@ -62,7 +62,6 @@ export default async function Page({
 	const page = parseInt(searchParams.page ?? "1", 10);
 
 	const members = await getCachedMembers(community);
-
 	if (!members.length && page !== 1) {
 		return notFound();
 	}
