@@ -22,7 +22,6 @@ export async function move(
 			},
 		});
 		revalidatePath("/");
-		console.log({ communityId });
 		revalidateTag(`community-stages_${communityId}`);
 	} catch {
 		return { message: "The Pub was not successully moved" };
