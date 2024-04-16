@@ -1,5 +1,5 @@
-import type { CorePubField } from "./corePubFields";
-import type { Action } from "./types";
+import type { CorePubField } from "../corePubFields";
+import type { Action } from "../types";
 import prisma from "~/prisma/db";
 
 export const registerCorePubField = async (corePubField: CorePubField) => {
