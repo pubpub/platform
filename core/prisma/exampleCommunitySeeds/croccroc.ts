@@ -6,8 +6,8 @@ import { logger } from "logger";
 
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import { registerCorePubField } from "~/actions/_lib/init";
 import { corePubFields } from "~/actions/corePubFields";
-import { registerCorePubField } from "~/actions/init";
 // import { PrismaClient } from "@prisma/client";
 import { type db as kyselyDb } from "~/kysely/database";
 import { env } from "../../lib/env/env.mjs";
