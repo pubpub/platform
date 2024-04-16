@@ -1,4 +1,4 @@
-import { Parse, makeClient } from "@pubpub/sdk";
+import { makeClient, Parse } from "@pubpub/sdk";
 
 import manifest from "../pubpub-integration.json";
 
