@@ -10,9 +10,9 @@ import type { PubsId } from "~/kysely/types/public/Pubs";
 import { db } from "~/kysely/database";
 import { getPub } from "~/lib/server";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { getActionByName } from ".";
-import { getActionRunByName } from "../_lib/getRuns";
-import { validatePubValues } from "../_lib/validateFields";
+import { getActionByName } from "../api";
+import { getActionRunByName } from "./getRuns";
+import { validatePubValues } from "./validateFields";
 
 export const runActionInstance = defineServerAction(async function runActionInstance({
 	pubId,

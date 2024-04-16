@@ -2,7 +2,7 @@
 
 import type { Action, ActionInstance, Pub } from "@prisma/client";
 
-import { startTransition, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { logger } from "logger";
 import { Button } from "ui/button";
@@ -12,7 +12,7 @@ import { toast } from "ui/use-toast";
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
-import { runActionInstance } from "~/actions/api/runActionInstance";
+import { runActionInstance } from "~/actions/api/server";
 import { useServerAction } from "~/lib/serverActions";
 
 export const StagePanelPubsRunActionButton = ({

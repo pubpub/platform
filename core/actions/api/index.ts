@@ -1,3 +1,5 @@
+// shared actions between server and client
+
 import type { Action } from "../types";
 import * as email from "../email/action";
 import * as log from "../log/action";
