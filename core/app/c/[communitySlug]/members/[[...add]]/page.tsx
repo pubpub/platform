@@ -9,8 +9,8 @@ import { AddMemberDialog } from "./AddMemberDialog";
 import { TableMember } from "./getMemberTableColumns";
 import { MemberTable } from "./MemberTable";
 
-const getCachedMembers = (community: Community) =>
-	unstable_cache(
+const getCachedMembers = async (community: Community) =>
+	await unstable_cache(
 		async () => {
 			const members = await prisma.member.findMany({
 				where: { community: { id: community.id } },
@@ -19,9 +19,9 @@ const getCachedMembers = (community: Community) =>
 
 			return members;
 		},
-		undefined,
+		[community.id],
 		{ tags: [`members_${community.id}`] }
-	);
+	)();
 
 export default async function Page({
 	params: { communitySlug, add },
@@ -61,8 +61,8 @@ export default async function Page({
 
 	const page = parseInt(searchParams.page ?? "1", 10);
 
-	const getMembers = getCachedMembers(community);
-	const members = await getMembers();
+	const members = await getCachedMembers(community);
+
 	if (!members.length && page !== 1) {
 		return notFound();
 	}
