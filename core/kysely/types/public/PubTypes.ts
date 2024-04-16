@@ -10,7 +10,7 @@ export type PubTypesId = string & { __brand: "PubTypesId" };
 
 /** Represents the table public.pub_types */
 export default interface PubTypesTable {
-	id: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
+	id: ColumnType<PubTypesId, PubTypesId | undefined, PubTypesId>;
 
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 

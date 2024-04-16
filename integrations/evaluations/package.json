@@ -25,7 +25,7 @@
 		"ajv-errors": "^3.0.0",
 		"ajv-formats": "^2.1.1",
 		"clsx": "^2.0.0",
-		"next": "14.1.2",
+		"next": "14.2.1",
 		"parse5-sax-parser": "^7.0.0",
 		"react": "18.2.0",
 		"react-dom": "18.2.0",
@@ -36,17 +36,17 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
-		"@pubpub/prettier-config": "workspace:*",
 		"@preconstruct/next": "^4.0.0",
+		"@pubpub/prettier-config": "workspace:*",
 		"@tailwindcss/typography": "^0.5.10",
 		"@types/node": "20.3.1",
-		"@types/react": "18.2.12",
-		"@types/react-dom": "18.2.5",
+		"@types/react": "18.2.78",
+		"@types/react-dom": "18.2.25",
 		"autoprefixer": "^10.4.14",
+		"logger": "workspace:*",
 		"postcss": "^8.4.27",
 		"tailwindcss": "^3.3.3",
 		"tsconfig": "workspace:*",
-		"typescript": "5.4.2",
-		"logger": "workspace:*"
+		"typescript": "5.4.2"
 	}
 }

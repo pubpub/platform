@@ -1,6 +1,15 @@
-import type { RunProps } from "../types";
-import type { action } from "./action";
+"use server";
 
-export async function run({ pub, config, pubConfig }: RunProps<typeof action>) {
-	console.log(pub);
-}
+import { logger } from "logger";
+
+import type { action } from "./action";
+import { defineRun } from "../types";
+
+export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) => {
+	logger.info({ msg: "log", pub, config, pubConfig });
+	return {
+		success: true,
+		report: "Logged out data, check your console.",
+		data: {},
+	};
+});

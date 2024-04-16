@@ -1,6 +1,8 @@
 "use client";
 
-import { PropsWithChildren, useEffect, useState } from "react";
+import type { PropsWithChildren } from "react";
+
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Sheet, SheetContent } from "ui/sheet";
@@ -25,7 +27,7 @@ export const StagePanelSheet = (props: Props) => {
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
-			<SheetContent>{props.children}</SheetContent>
+			<SheetContent className="max-h-100vh overflow-y-auto">{props.children}</SheetContent>
 		</Sheet>
 	);
 };

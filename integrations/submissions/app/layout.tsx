@@ -15,6 +15,8 @@ import { InstanceConfig } from "~/lib/types";
 
 import "./globals.css";
 
+import { ReactNode } from "react";
+
 export const metadata = {
 	title: "PubPub Submissions Integration",
 	description: "",
@@ -36,7 +38,7 @@ const cookie = (name: string) => {
 	return undefined;
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
 	const instanceId = expect(cookie("instanceId"), "instanceId missing");
 	const user: User = JSON.parse(expect(cookie("user"), "user missing"));
 	let instanceConfig: InstanceConfig | undefined;

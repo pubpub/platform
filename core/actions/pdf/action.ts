@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+import { FileText } from "ui/icon";
+
 import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
 
@@ -11,6 +13,7 @@ export const action = defineAction({
 	description: "Generate a PDF from a pub",
 	pubConfig: z.object({}),
 	pubFields: [corePubFields.title],
+	icon: FileText,
 });
 
-export { run } from "./run";
+// export { run } from "./run";

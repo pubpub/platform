@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageActions, getStagePubs } from "./queries";
+import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
 
 type PropsInner = {
 	stageId: string;
@@ -14,6 +15,10 @@ type PropsInner = {
 const StagePanelPubsInner = async (props: PropsInner) => {
 	const stagePubs = await getStagePubs(props.stageId);
 	const stageActions = await getStageActions(props.stageId);
+
+	const actions = stageActions.map((action) => ({
+		...action,
+	}));
 
 	return (
 		<Card>
@@ -24,15 +29,17 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 						<span>A pub</span>
 						<Popover>
 							<PopoverTrigger asChild>
-								<Button variant="ghost" size="sm">
+								<Button variant="secondary" size="sm">
 									Run action
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent>
-								{stageActions.map((action) => (
-									<Button key={action.id} variant="ghost" size="sm">
-										{action.action.name}
-									</Button>
+								{actions.map((action) => (
+									<StagePanelPubsRunActionButton
+										key={action.id}
+										actionInstance={action}
+										pub={pub}
+									/>
 								))}
 							</PopoverContent>
 						</Popover>

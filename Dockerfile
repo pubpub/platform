@@ -5,7 +5,6 @@
 # https://docs.docker.com/go/dockerfile-reference/
 
 ARG NODE_VERSION=20.6.0
-ARG PNPM_VERSION=8.14.3
 
 ARG PACKAGE
 ARG PORT=3000
@@ -13,6 +12,8 @@ ARG PORT=3000
 ################################################################################
 # Use node image for base image for all stages.
 FROM node:${NODE_VERSION}-alpine as base
+
+ARG PNPM_VERSION=8.14.3
 
 # Install python deps for node-gyp
 RUN apk add g++ make py3-pip
