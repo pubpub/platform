@@ -36,7 +36,7 @@ const nextConfig = {
 	},
 	experimental: {
 		instrumentationHook: true,
-		serverComponentsExternalPackages: ["@aws-sdk"],
+		serverComponentsExternalPackages: ["@aws-sdk", "next-runtime-env"],
 	},
 };
 
