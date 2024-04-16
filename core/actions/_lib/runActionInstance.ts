@@ -112,7 +112,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 				id: pubId,
 				values: values as any,
 			},
-			pubConfig: parsedConfig.data,
+			pubConfig: pubConfig,
 		});
 
 		return result;
