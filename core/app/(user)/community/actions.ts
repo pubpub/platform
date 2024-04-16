@@ -2,6 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
+import { expect } from "utils";
+
+import { db } from "~/kysely/database";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
 import prisma from "~/prisma/db";
@@ -27,15 +31,14 @@ export const createCommunity = defineServerAction(async function createCommunity
 	try {
 		// const communityExists = await db
 		// 	.selectFrom("communities")
-		// 	.where("slug", "=", slug)
-		// 	.execute();
+		// 	.where("slug", "=", `${slug}`)
+		// 	.executeTakeFirst();
 
 		const communityExists = await prisma.community.findFirst({
 			where: {
 				slug,
 			},
 		});
-
 		if (communityExists) {
 			return {
 				title: "Failed to create community",
@@ -43,42 +46,26 @@ export const createCommunity = defineServerAction(async function createCommunity
 			};
 		}
 
-		const c = await prisma.community.create({
-			data: {
-				name, // not sure what to enfore for community name
-				slug: slugifyString(slug),
-				avatar, // should make sure this is a path
-			},
-		});
+		const c = expect(
+			await db
+				.insertInto("communities")
+				.values({
+					name,
+					slug: slugifyString(slug),
+					avatar,
+				})
+				.returning(["id", "name", "slug", "avatar", "created_at as createdAt"])
+				.executeTakeFirst()
+		);
 
-		// const c = await db
-		// 	.insertInto("communities")
-		// 	.values({
-		// 		name,
-		// 		slug: slugifyString(slug),
-		// 		avatar
-		// 	})
-		// 	.returning(["id", "name", "slug", "avatar", "created_at"])
-		// 	.executeTakeFirst();
-
-		// add the user as a member of the community
-		await prisma.member.create({
-			data: {
-				userId: user.id,
-				communityId: c.id,
+		await db
+			.insertInto("members")
+			.values({
+				user_id: user.id,
+				community_id: c.id as CommunitiesId,
 				canAdmin: true,
-			},
-		});
-
-		// await db
-		// 	.insertInto("members")
-		// 	.values({
-		// 		user_id: user.id,
-		// 		community_id: c.id as CommunitiesId,
-		// 		canAdmin: true,
-		// 	})
-		// 	.executeTakeFirst();
-
+			})
+			.executeTakeFirst();
 		revalidatePath("/");
 		return c;
 	} catch (error) {
@@ -107,7 +94,7 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 		// await db
 		// 	.deleteFrom("communities")
 		// 	.where("id", "=", community.id as CommunitiesId)
-		// 	.execute();
+		// 	.executeTakeFirst();
 
 		await prisma.community.delete({
 			where: {
