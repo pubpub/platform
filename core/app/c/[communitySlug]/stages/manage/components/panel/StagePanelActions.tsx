@@ -16,7 +16,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 	const stage = await getStage(props.stageId);
 	const actionInstances = await getStageActions(props.stageId);
 
-	if (stage === null) {
+	if (stage === undefined) {
 		return <SkeletonCard />;
 	}
 

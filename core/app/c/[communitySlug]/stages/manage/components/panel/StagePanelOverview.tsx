@@ -16,7 +16,7 @@ type PropsInner = {
 const StagePanelOverviewInner = async (props: PropsInner) => {
 	const stage = await getStage(props.stageId);
 
-	if (stage === null) {
+	if (stage === undefined) {
 		return <SkeletonCard />;
 	}
 

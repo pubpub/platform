@@ -9,17 +9,16 @@ import { StagesId } from "~/kysely/types/public/Stages";
 import prisma from "~/prisma/db";
 
 export const getStage = cache(async (stageId: string) => {
-	const fields = [
-		"stages.id",
-		"stages.community_id as communityId",
-		"stages.name",
-		"stages.order",
-		"stages.created_at as createdAt",
-		"stages.updated_at as updatedAt",
-	] as const;
 	return await db
 		.selectFrom("stages")
-		.select(fields)
+		.select([
+			"stages.id",
+			"stages.community_id as communityId",
+			"stages.name",
+			"stages.order",
+			"stages.created_at as createdAt",
+			"stages.updated_at as updatedAt",
+		])
 		.where("stages.id", "=", stageId as StagesId)
 		.executeTakeFirst();
 });
