@@ -29,7 +29,7 @@ export default async function main(db: typeof kyselyDb, communityUUID: Communiti
 			id: communityUUID,
 			name: "CrocCroc",
 			slug: "croccroc",
-			avatar: "/demo/croccroc.png",
+			avatar: "/demo/croc.png",
 		})
 		.execute();
 
