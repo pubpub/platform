@@ -12,7 +12,7 @@ export type ActionMoveId = string & { __brand: "ActionMoveId" };
 
 /** Represents the table public.action_move */
 export default interface ActionMoveTable {
-	id: ColumnType<ActionMoveId, ActionMoveId, ActionMoveId>;
+	id: ColumnType<ActionMoveId, ActionMoveId | undefined, ActionMoveId>;
 
 	source_stage_id: ColumnType<StagesId, StagesId, StagesId>;
 

@@ -10,7 +10,7 @@ export type StagesId = string & { __brand: "StagesId" };
 
 /** Represents the table public.stages */
 export default interface StagesTable {
-	id: ColumnType<StagesId, StagesId, StagesId>;
+	id: ColumnType<StagesId, StagesId | undefined, StagesId>;
 
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 

@@ -11,7 +11,7 @@ export type ActionInstancesId = string & { __brand: "ActionInstancesId" };
 
 /** Represents the table public.action_instances */
 export default interface ActionInstancesTable {
-	id: ColumnType<ActionInstancesId, ActionInstancesId, ActionInstancesId>;
+	id: ColumnType<ActionInstancesId, ActionInstancesId | undefined, ActionInstancesId>;
 
 	stage_id: ColumnType<StagesId, StagesId, StagesId>;
 

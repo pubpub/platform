@@ -11,7 +11,7 @@ export type PermissionsId = string & { __brand: "PermissionsId" };
 
 /** Represents the table public.permissions */
 export default interface PermissionsTable {
-	id: ColumnType<PermissionsId, PermissionsId, PermissionsId>;
+	id: ColumnType<PermissionsId, PermissionsId | undefined, PermissionsId>;
 
 	member_id: ColumnType<MembersId | null, MembersId | null, MembersId | null>;
 

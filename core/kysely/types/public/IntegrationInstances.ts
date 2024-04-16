@@ -12,7 +12,11 @@ export type IntegrationInstancesId = string & { __brand: "IntegrationInstancesId
 
 /** Represents the table public.integration_instances */
 export default interface IntegrationInstancesTable {
-	id: ColumnType<IntegrationInstancesId, IntegrationInstancesId, IntegrationInstancesId>;
+	id: ColumnType<
+		IntegrationInstancesId,
+		IntegrationInstancesId | undefined,
+		IntegrationInstancesId
+	>;
 
 	name: ColumnType<string, string, string>;
 

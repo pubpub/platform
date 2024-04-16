@@ -12,7 +12,7 @@ export type PubsId = string & { __brand: "PubsId" };
 
 /** Represents the table public.pubs */
 export default interface PubsTable {
-	id: ColumnType<PubsId, PubsId, PubsId>;
+	id: ColumnType<PubsId, PubsId | undefined, PubsId>;
 
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 

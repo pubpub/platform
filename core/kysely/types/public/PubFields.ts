@@ -11,7 +11,7 @@ export type PubFieldsId = string & { __brand: "PubFieldsId" };
 
 /** Represents the table public.pub_fields */
 export default interface PubFieldsTable {
-	id: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;
+	id: ColumnType<PubFieldsId, PubFieldsId | undefined, PubFieldsId>;
 
 	name: ColumnType<string, string, string>;
 

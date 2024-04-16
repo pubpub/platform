@@ -12,7 +12,7 @@ export type ActionClaimId = string & { __brand: "ActionClaimId" };
 
 /** Represents the table public.action_claim */
 export default interface ActionClaimTable {
-	id: ColumnType<ActionClaimId, ActionClaimId, ActionClaimId>;
+	id: ColumnType<ActionClaimId, ActionClaimId | undefined, ActionClaimId>;
 
 	stage_id: ColumnType<StagesId, StagesId, StagesId>;
 

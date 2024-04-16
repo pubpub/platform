@@ -11,7 +11,7 @@ export type MembersId = string & { __brand: "MembersId" };
 
 /** Represents the table public.members */
 export default interface MembersTable {
-	id: ColumnType<MembersId, MembersId, MembersId>;
+	id: ColumnType<MembersId, MembersId | undefined, MembersId>;
 
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 
