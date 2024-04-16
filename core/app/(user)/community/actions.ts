@@ -2,8 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 
-import { db } from "~/kysely/database";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
 import prisma from "~/prisma/db";
@@ -27,10 +25,16 @@ export const createCommunity = defineServerAction(async function createCommunity
 		};
 	}
 	try {
-		const communityExists = await db
-			.selectFrom("communities")
-			.where("slug", "=", slug)
-			.execute();
+		// const communityExists = await db
+		// 	.selectFrom("communities")
+		// 	.where("slug", "=", slug)
+		// 	.execute();
+
+		const communityExists = await prisma.community.findFirst({
+			where: {
+				slug,
+			},
+		});
 
 		if (communityExists) {
 			return {
@@ -50,9 +54,9 @@ export const createCommunity = defineServerAction(async function createCommunity
 		// const c = await db
 		// 	.insertInto("communities")
 		// 	.values({
-		// 		name, 
+		// 		name,
 		// 		slug: slugifyString(slug),
-		// 		avatar 
+		// 		avatar
 		// 	})
 		// 	.returning(["id", "name", "slug", "avatar", "created_at"])
 		// 	.executeTakeFirst();
@@ -100,10 +104,16 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 		};
 	}
 	try {
-		await db
-			.deleteFrom("communities")
-			.where("id", "=", community.id as CommunitiesId)
-			.execute();
+		// await db
+		// 	.deleteFrom("communities")
+		// 	.where("id", "=", community.id as CommunitiesId)
+		// 	.execute();
+
+		await prisma.community.delete({
+			where: {
+				id: community.id,
+			},
+		});
 		revalidatePath("/");
 		return;
 	} catch (error) {

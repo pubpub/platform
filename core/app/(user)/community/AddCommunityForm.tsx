@@ -17,7 +17,7 @@ import { createCommunity } from "./actions";
 export const communityCreateFormSchema = z.object({
 	name: z.string().min(1),
 	slug: z.string().min(1),
-	avatar: z.string().optional(),
+	avatar: z.string().url().optional().or(z.literal('')),
 });
 
 type Props = {
@@ -74,10 +74,10 @@ export const AddCommunityForm = (props: Props) => {
 						name="slug"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>🐌 Slug</FormLabel>
+								<FormLabel>Slug</FormLabel>
 								<Input {...field} />
 								<FormDescription>
-									Name the string in URL path for your community
+									Name the string you want your community to route to
 								</FormDescription>
 								<FormMessage />
 							</FormItem>
@@ -88,10 +88,10 @@ export const AddCommunityForm = (props: Props) => {
 						name="avatar"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Avatar Aang?</FormLabel>
+								<FormLabel>Avatar</FormLabel>
 								<Input {...field} />
 								<FormDescription>
-									What is the avatar for your community
+									What is the url path to the avatar for your community (optional)
 								</FormDescription>
 								<FormMessage />
 							</FormItem>

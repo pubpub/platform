@@ -12,18 +12,6 @@ generator client {
 }
 
 model User {
-<<<<<<< HEAD
-  id         String   @id @default(dbgenerated("gen_random_uuid()"))
-  supabaseId String?  @unique
-  slug       String   @unique
-  email      String   @unique
-  firstName  String
-  lastName   String?
-  orcid      String?
-  avatar     String?
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @default(now()) @updatedAt @map(name: "updated_at")
-=======
   id           String   @id @default(uuid())
   supabaseId   String?  @unique
   slug         String   @unique
@@ -35,7 +23,6 @@ model User {
   createdAt    DateTime @default(now()) @map(name: "created_at")
   updatedAt    DateTime @default(now()) @updatedAt @map(name: "updated_at")
   isSuperAdmin Boolean  @default(false) 
->>>>>>> a0252e8 (add schma and server actions)
 
   claims       ActionClaim[]
   moves        ActionMove[]
