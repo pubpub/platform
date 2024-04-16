@@ -6,6 +6,8 @@ import { makeEnvPublic } from "next-runtime-env";
 
 import "./lib/env/env.mjs";
 
+// import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
+
 makeEnvPublic("PUBPUB_URL");
 makeEnvPublic("SUPABASE_PUBLIC_KEY");
 makeEnvPublic("SUPABASE_URL");
@@ -36,11 +38,19 @@ const nextConfig = {
 	},
 	experimental: {
 		instrumentationHook: true,
-		serverComponentsExternalPackages: ["@aws-sdk", "next-runtime-env"],
+		serverComponentsExternalPackages: ["@aws-sdk"],
+	},
+	// open telemetry cries a lot during build, don't think it's serious
+	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
+	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
+		if (isServer) {
+			config.ignoreWarnings = [{ module: /opentelemetry/ }];
+		}
+		return config;
 	},
 };
 
-export default withPreconstruct(
+const modifiedConfig = withPreconstruct(
 	withSentryConfig(
 		nextConfig,
 		{
@@ -73,3 +83,22 @@ export default withPreconstruct(
 		}
 	)
 );
+
+export default (phase, { defaultConfig }) => {
+	if (phase !== "phase-development-server") {
+		return modifiedConfig;
+	}
+
+	return {
+		...modifiedConfig,
+		experimental: {
+			...modifiedConfig.experimental,
+			serverComponentsExternalPackages: [
+				...(modifiedConfig.experimental?.serverComponentsExternalPackages ?? []),
+				// we need this to be external (for now) during dev, but not during build
+				// https://github.com/expatfile/next-runtime-env/issues/123
+				"next-runtime-env",
+			],
+		},
+	};
+};
