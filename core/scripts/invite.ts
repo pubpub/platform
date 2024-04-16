@@ -1,16 +1,19 @@
-import { parse } from "csv-parse";
+import { randomUUID } from "crypto";
 import fs from "fs";
+
+import { createClient } from "@supabase/supabase-js";
+import { parse } from "csv-parse";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { formatSupabaseError } from "../lib/supabase";
-import { createClient } from "@supabase/supabase-js";
-import { randomUUID } from "crypto";
-import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
+
 import { logger } from "logger";
+
 import { env } from "../lib/env/env.mjs";
+import { formatSupabaseError } from "../lib/supabase";
+import { unJournalId } from "../prisma/exampleCommunitySeeds/unjournal";
 
 const getServerSupabase = () => {
-	const url = env.NEXT_PUBLIC_SUPABASE_URL;
+	const url = env.SUPABASE_URL;
 	const key = env.SUPABASE_SERVICE_ROLE_KEY;
 
 	if (!url || !key) {
@@ -29,7 +32,7 @@ const inviteUser = async (email, firstName, lastName) => {
 		email,
 		password: randomUUID(),
 		options: {
-			emailRedirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+			emailRedirectTo: `${env.PUBPUB_URL}/reset`,
 			data: {
 				firstName,
 				lastName,

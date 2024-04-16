@@ -1,6 +1,8 @@
+import { Job, makeWorkerUtils } from "graphile-worker";
+
 import { JobOptions, SendEmailRequestBody } from "contracts";
-import { makeWorkerUtils, Job } from "graphile-worker";
 import { logger } from "logger";
+
 import { env } from "../env/env.mjs";
 
 export type JobsClient = {

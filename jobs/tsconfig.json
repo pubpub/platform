@@ -1,0 +1,10 @@
+{
+	"extends": "tsconfig/base.json",
+	"compilerOptions": {
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+		"lib": ["ESNext"],
+		"types": ["node"]
+	},
+	"include": ["./*.ts"],
+	"exclude": ["dist", "build", "node_modules", ".turbo"]
+}

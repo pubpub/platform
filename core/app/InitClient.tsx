@@ -1,10 +1,13 @@
 "use client";
+
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+
 import { REFRESH_NAME, TOKEN_NAME } from "lib/auth/cookies";
 import { createBrowserSupabase, supabase } from "lib/supabase";
-import { usePathname } from "next/navigation";
-import { env } from "~/lib/env/env.mjs";
 import { logger } from "logger";
+
+import { env } from "~/lib/env/env.mjs";
 
 export default function InitClient() {
 	const pathname = usePathname();

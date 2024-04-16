@@ -1,9 +1,11 @@
 "use client";
 
-import { GetPubResponseBody, User } from "@pubpub/sdk";
 import { useCallback } from "react";
+
+import { GetPubResponseBody, User } from "@pubpub/sdk";
 import { Button } from "ui/button";
 import { toast } from "ui/use-toast";
+
 import { calculateDeadline } from "~/lib/emails";
 import { InstanceConfig } from "~/lib/types";
 import { accept, decline } from "./actions";

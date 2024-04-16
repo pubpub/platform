@@ -1,48 +1,227 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { StageFormSchema } from "~/lib/stages";
-import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
+
+import { db } from "~/kysely/database";
+import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
-import { DeepPartial } from "~/lib/types";
 
-export async function editStage(stageId: string, patchData: DeepPartial<StageFormSchema>) {
-	try {
-		// the following lines builds an object using patchData to update the stage
-		const stageUpdateData: Prisma.StageUpdateArgs["data"] = {};
-
-		if (patchData.name) {
-			stageUpdateData.name = patchData.name;
-		}
-
-		// but moveConstraints is a bit more complicated because it's a many-to-many relationship
-		// so we need to build an object that prisma can understand
-		// we need connectOrCreate because we want to create new list of move constraints if they don't exist
-		// and we need deleteMany because we want to delete move constraints that are no longer needed
-		if (patchData.moveConstraints) {
-			const entries = Object.entries(patchData.moveConstraints);
-			const constraintsToConnectOrCreate = entries
-				.filter(([, value]) => value)
-				.map(([key]) => ({
-					where: { move_constraint_id: { stageId, destinationId: key } },
-					create: { destinationId: key },
-				}));
-			const constraintsToDelete = entries
-				.filter(([, value]) => !value)
-				.map(([key]) => ({ destinationId: key, stageId }));
-			stageUpdateData.moveConstraints = {
-				connectOrCreate: constraintsToConnectOrCreate,
-				deleteMany: constraintsToDelete,
-			};
-		}
-
-		await prisma.stage.update({
-			where: { id: stageId },
-			data: stageUpdateData,
-		});
-		revalidatePath("/");
-		return { success: "Stage and move constraints updated successfully" };
-	} catch (error) {
-		return { error: `Error updating stage and move constraints: ${error}` };
-	}
+async function deleteStages(stageIds: string[]) {
+	await prisma.stage.deleteMany({
+		where: {
+			id: {
+				in: stageIds,
+			},
+		},
+	});
 }
+
+async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
+	const ops = moveConstraintIds.map(([stageId, destinationId]) =>
+		prisma.moveConstraint.delete({
+			where: {
+				move_constraint_id: {
+					stageId,
+					destinationId,
+				},
+			},
+		})
+	);
+	await Promise.all(ops);
+}
+
+export const createStage = defineServerAction(async function createStage(communityId: string) {
+	try {
+		await prisma.stage.create({
+			data: {
+				name: "Untitled Stage",
+				order: "aa",
+				community: {
+					connect: {
+						id: communityId,
+					},
+				},
+			},
+		});
+	} catch (error) {
+		return {
+			error: "Failed to create stage",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const deleteStage = defineServerAction(async function deleteStage(
+	communityId: string,
+	stageId: string
+) {
+	try {
+		await prisma.stage.delete({
+			where: {
+				id: stageId,
+			},
+		});
+	} catch (error) {
+		return {
+			error: "Failed to delete stage",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const createMoveConstraint = defineServerAction(async function createMoveConstraint(
+	communityId: string,
+	sourceStageId: string,
+	destinationStageId: string
+) {
+	try {
+		await prisma.moveConstraint.create({
+			data: {
+				stage: {
+					connect: {
+						id: sourceStageId,
+					},
+				},
+				destination: {
+					connect: {
+						id: destinationStageId,
+					},
+				},
+			},
+		});
+	} catch (error) {
+		return {
+			error: "Failed to connect stages",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const deleteStagesAndMoveConstraints = defineServerAction(
+	async function deleteStagesAndMoveConstraints(
+		communityId: string,
+		stageIds: string[],
+		moveConstraintIds: [string, string][]
+	) {
+		try {
+			// Delete move constraints prior to deleting stages to prevent foreign
+			// key constraint violations.
+			if (moveConstraintIds.length > 0) {
+				await deleteMoveConstraints(moveConstraintIds);
+			}
+			if (stageIds.length > 0) {
+				await deleteStages(stageIds);
+			}
+		} catch (error) {
+			return {
+				error: "Failed to delete stages and/or connections",
+				cause: error,
+			};
+		} finally {
+			revalidateTag(`community-stages_${communityId}`);
+		}
+	}
+);
+
+export const updateStageName = defineServerAction(async function updateStageName(
+	communityId: string,
+	stageId: string,
+	name: string
+) {
+	try {
+		await prisma.stage.update({
+			where: {
+				id: stageId,
+			},
+			data: {
+				name,
+			},
+		});
+	} catch (error) {
+		return {
+			error: "Failed to update stage name",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const revalidateStages = defineServerAction(async function revalidateStages(
+	communityId: string
+) {
+	revalidateTag(`community-stages_${communityId}`);
+});
+
+export const addAction = defineServerAction(async function addAction(
+	communityId: string,
+	stageId: string,
+	actionId: string
+) {
+	try {
+		await prisma.actionInstance.create({
+			data: {
+				action: {
+					connect: {
+						id: actionId,
+					},
+				},
+				stage: {
+					connect: {
+						id: stageId,
+					},
+				},
+			},
+		});
+	} catch (error) {
+		return {
+			error: "Failed to add action",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const updateAction = defineServerAction(async function updateAction(
+	communityId: string,
+	actionInstanceId: ActionInstancesId,
+	config: any
+) {
+	try {
+		await db
+			.updateTable("action_instances")
+			.set({ config })
+			.where("id", "=", actionInstanceId)
+			.executeTakeFirstOrThrow();
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const deleteAction = defineServerAction(async function deleteAction(
+	communityId: string,
+	actionId: string
+) {
+	try {
+		await prisma.actionInstance.delete({
+			where: {
+				id: actionId,
+			},
+		});
+	} catch (error) {
+		return {
+			error: "Failed to delete action",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});

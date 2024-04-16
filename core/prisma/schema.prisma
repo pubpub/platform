@@ -80,7 +80,7 @@ model Pub {
   children Pub[]   @relation("pub_parent")
 
   values                   PubValue[]
-  stages                   Stage[]
+  stages                   PubsInStages[]
   claims                   ActionClaim[]
   moves                    ActionMove[]
   integrationInstances     IntegrationInstance[]
@@ -101,6 +101,7 @@ model PubField {
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
   pubFieldSchemaId String?
 
+  actions  Action[]
   values   PubValue[]
   pubTypes PubType[]
 
@@ -160,7 +161,7 @@ model Stage {
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubs                  Pub[] // Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
+  pubs                  PubsInStages[]
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
   claims                ActionClaim[]
@@ -168,14 +169,24 @@ model Stage {
   movesTo               ActionMove[]          @relation("move_destination_stage")
   integrationInstances  IntegrationInstance[]
   permissions           Permission[]
+  actionInstances       ActionInstance[]
 
   @@map(name: "stages")
 }
 
+model PubsInStages {
+  pub     Pub    @relation(fields: [pubId], references: [id])
+  pubId   String
+  stage   Stage  @relation(fields: [stageId], references: [id])
+  stageId String
+
+  @@id([pubId, stageId])
+}
+
 model MoveConstraint {
-  stage         Stage    @relation("move_constraint", fields: [stageId], references: [id])
+  stage         Stage    @relation("move_constraint", fields: [stageId], references: [id], onDelete: Cascade)
   stageId       String   @map(name: "stage_id")
-  destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id])
+  destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id], onDelete: Cascade)
   destinationId String   @map(name: "destination_id")
   createdAt     DateTime @default(now()) @map(name: "created_at")
   updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")
@@ -315,4 +326,30 @@ model IntegrationInstanceState {
   state      Json
 
   @@unique([pubId, instanceId], name: "pub_instance")
+}
+
+model Action {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String   @default("")
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map(name: "updated_at")
+
+  instances ActionInstance[]
+  pubFields PubField[]
+
+  @@map(name: "actions")
+}
+
+model ActionInstance {
+  id        String   @id @default(uuid())
+  action    Action   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  actionId  String   @map(name: "action_id")
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId   String   @map(name: "stage_id")
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  config    Json?
+
+  @@map(name: "action_instances")
 }

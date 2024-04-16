@@ -91,7 +91,7 @@ params: - api key - list of fields?
     		- user vars:
     			- user.id
     			- user.firstName
-				- user.lastName
+    			- user.lastName
     			- user.email
     			- user.JWT (useful for generating magic link)
     		- instance vars:

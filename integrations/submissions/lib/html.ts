@@ -1,6 +1,8 @@
-import * as https from "https";
 import * as http from "http";
+import * as https from "https";
+
 import { SAXParser, StartTag, Text } from "parse5-sax-parser";
+
 import { expect } from "utils";
 
 const $indiscriminate = Symbol("indiscriminate");

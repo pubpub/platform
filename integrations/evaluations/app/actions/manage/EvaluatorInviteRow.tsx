@@ -1,12 +1,14 @@
 "use client";
 
-import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { Control, useWatch } from "react-hook-form";
+
+import { SuggestedMembersQuery } from "@pubpub/sdk";
 import { Button } from "ui/button";
-import { Input } from "ui/input";
 import { FormControl, FormField, FormItem, FormMessage } from "ui/form";
 import { X } from "ui/icon";
+import { Input } from "ui/input";
 import { cn } from "utils";
+
 import { hasUser } from "~/lib/types";
 import { EvaluatorInviteRowEmailDialog } from "./EvaluatorInviteRowEmailDialog";
 import { EvaluatorSuggestButton } from "./EvaluatorSuggestButton";
@@ -30,7 +32,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 	const evaluatorHasUser = hasUser(evaluator);
 
 	return (
-		<div className="flex flex-row gap-4 mb-4">
+		<div className="mb-4 flex flex-row gap-4">
 			<FormField
 				name={`evaluators.${props.index}.selected`}
 				render={({ field }) => {
@@ -59,8 +61,8 @@ export const EvaluatorInviteRow = (props: Props) => {
 									evaluatorHasUser
 										? "(email hidden)"
 										: props.index === 0
-										? "e.g. stevie@example.org"
-										: ""
+											? "e.g. stevie@example.org"
+											: ""
 								}
 								{...field}
 								disabled={evaluatorHasUser}

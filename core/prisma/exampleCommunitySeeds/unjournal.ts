@@ -1,8 +1,9 @@
+import { faker } from "@faker-js/faker";
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import { faker } from "@faker-js/faker";
-import { FileUpload } from "../../lib/fields/fileUpload";
+
 import { env } from "../../lib/env/env.mjs";
+import { FileUpload } from "../../lib/fields/fileUpload";
 
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 
@@ -468,12 +469,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				order: "aa",
 			},
 			{
-				id: stageIds[8],
-				communityId: communityUUID,
-				name: "Submitted to this from elsewhere",
-				order: "aa",
-			},
-			{
 				id: stageIds[1],
 				communityId: communityUUID,
 				name: "Ask Author for Consent",
@@ -579,12 +574,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			moveConstraints: {
 				createMany: {
-					data: [
-						{ destinationId: stageIds[1] },
-						{ destinationId: stageIds[2] },
-						{ destinationId: stageIds[3] },
-						{ destinationId: stageIds[6] },
-					],
+					data: [{ destinationId: stageIds[1] }],
 				},
 			},
 		},
@@ -596,11 +586,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			moveConstraints: {
 				createMany: {
-					data: [
-						{ destinationId: stageIds[2] },
-						{ destinationId: stageIds[3] },
-						{ destinationId: stageIds[6] },
-					],
+					data: [{ destinationId: stageIds[2] }],
 				},
 			},
 		},
@@ -612,7 +598,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			moveConstraints: {
 				createMany: {
-					data: [{ destinationId: stageIds[3] }, { destinationId: stageIds[6] }],
+					data: [{ destinationId: stageIds[3] }],
 				},
 			},
 		},
@@ -624,7 +610,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			moveConstraints: {
 				createMany: {
-					data: [{ destinationId: stageIds[4] }, { destinationId: stageIds[6] }],
+					data: [{ destinationId: stageIds[4] }],
 				},
 			},
 		},
@@ -636,35 +622,11 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			moveConstraints: {
 				createMany: {
-					data: [{ destinationId: stageIds[5] }, { destinationId: stageIds[6] }],
+					data: [{ destinationId: stageIds[5] }],
 				},
 			},
 		},
 	});
-
-	// Published --> Production, Shelved
-	await prisma.stage.update({
-		where: { id: stageIds[5] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [{ destinationId: stageIds[6] }],
-				},
-			},
-		},
-	});
-
-	// Shelved --> No Constraints?
-	/* await prisma.stage.update({
-		where: { id: stageIds[6] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [],
-				},
-			},
-		},
-	});*/
 
 	// await prisma.pub.update({
 	// 	where: { id: submission.id },
@@ -763,7 +725,8 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const defaultEvaluationEmailSubject = `${evaluationManagerName} invited you to evaluate {{pubs.submission.values["unjournal:title"]}} for The Unjournal`;
 
-	const defaultEvaluationEmailBody = `<p>Hi {{user.firstName}} {{user.lastName}},</p>
+	const defaultEvaluationEmailBody = `<p>{{extra.disclaimer}}</p><hr/>
+<p>Hi {{user.firstName}} {{user.lastName}},</p>
 <p>I'm ${evaluationManagerName} from The Unjournal. (See our 'in a nutshell' <a href="https://effective-giving-marketing.gitbook.io/the-unjournal-project-and-communication-space/readme-1">HERE</a>.) I'm writing to invite you to evaluate <a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a>. The abstract is copied below, and the most recent version is linked <a href="{{pubs.submission.values["unjournal:url"]}}">here</a>.</p>	
 <p>The evaluation would be publicly posted at <a href="https://unjournal.pubpub.org">unjournal.pubpub.org</a> (where you can see our output). It will be given a DOI and submitted to research archives such as Google Scholar. You can choose whether to remain anonymous or have the evaluation listed under your name. As a sign that we value this work, we offer a $400 honorarium for on-time evaluations, and we are also setting aside $150 per evaluation for incentives and prizes. See <a href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators">here</a> for our guidelines on what we ask evaluators to do.</p>
 <p>If you're interested, please 'accept' the invitation at the link below, and I'll share with you the (simple) interface for entering your evaluation and rating, as well as any specific considerations relevant to this paper. If you are too busy, please click 'decline' (and we welcome any suggestions you might have for other evaluators). If you are not sure, or if you have any questions about this, please reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a> or select the 'more information' link.</p>

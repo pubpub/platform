@@ -1,10 +1,11 @@
 "use client";
 
+import React, { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useFieldArray, useForm } from "react-hook-form";
+
 import { GetPubResponseBody, User } from "@pubpub/sdk";
 import { IntegrationAvatar } from "@pubpub/sdk/react";
-import React, { useCallback } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form, FormDescription, FormItem, FormLabel } from "ui/form";
@@ -12,11 +13,12 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { Calendar, Loader2, Plus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { useToast } from "ui/use-toast";
-import { EmailTemplate, Evaluator, InstanceConfig, hasUser, isInvited, isSaved } from "~/lib/types";
+
+import { EmailTemplate, Evaluator, hasUser, InstanceConfig, isInvited, isSaved } from "~/lib/types";
+import * as actions from "./actions";
 import { EvaluatorInviteFormInviteButton } from "./EvaluatorInviteFormInviteButton";
 import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
 import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
-import * as actions from "./actions";
 import { InviteFormEvaluator, InviteFormSchema } from "./types";
 
 type Props = {
@@ -196,7 +198,7 @@ export function EvaluatorInviteForm(props: Props) {
 										</p>
 									</TooltipContent>
 									<TooltipTrigger asChild>
-										<span className="text-sm border-b-2 border-dotted cursor-pointer">
+										<span className="cursor-pointer border-b-2 border-dotted text-sm">
 											Assigned to:
 										</span>
 									</TooltipTrigger>
@@ -221,7 +223,7 @@ export function EvaluatorInviteForm(props: Props) {
 											</h4>
 											<div className="flex items-center pt-2">
 												<Calendar className="mr-2 h-4 w-4 opacity-70" />{" "}
-												<span className="text-xs text-muted-foreground">
+												<span className="text-muted-foreground text-xs">
 													Joined{" "}
 													{new Date(
 														evaluationManager.createdAt
@@ -240,7 +242,7 @@ export function EvaluatorInviteForm(props: Props) {
 					</div>
 				</CardHeader>
 				<CardContent>
-					<div className="flex flex-row gap-4 mb-4">
+					<div className="mb-4 flex flex-row gap-4">
 						<FormItem className="flex-0 w-4"></FormItem>
 						<FormItem className="flex-1">
 							<FormLabel>Email Address</FormLabel>
@@ -274,7 +276,7 @@ export function EvaluatorInviteForm(props: Props) {
 						/>
 					))}
 					<Button variant="ghost" onClick={onAppend} className="color:red-500">
-						<Plus className="h-4 w-4 mr-2" />
+						<Plus className="mr-2 h-4 w-4" />
 						Add Evaluator
 					</Button>
 				</CardContent>
@@ -284,9 +286,9 @@ export function EvaluatorInviteForm(props: Props) {
 							Go Back
 						</Button>
 					</div>
-					<div className="flex gap-2 items-center">
+					<div className="flex items-center gap-2">
 						{form.formState.isSubmitting && (
-							<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 						)}
 						<EvaluatorInviteFormInviteButton
 							onClick={form.handleSubmit((values) => onSubmit(values, true))}

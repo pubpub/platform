@@ -19,7 +19,7 @@ type Props = {
 
 export const StagePubActions = (props: Props) => {
 	return (
-		<div className="flex items-end shrink-0 gap-2">
+		<div className="flex shrink-0 items-end gap-2">
 			<Move
 				pub={props.pub}
 				stage={props.stage}

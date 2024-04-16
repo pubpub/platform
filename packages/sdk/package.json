@@ -10,7 +10,8 @@
 		"react"
 	],
 	"scripts": {
-		"type-check": "tsc"
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"type-check": "tsc --noEmit"
 	},
 	"keywords": [
 		"pubpub",
@@ -32,6 +33,7 @@
 		"ui": "workspace:*"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "^20.4.2",
 		"@types/react": "^18.2.5",
 		"contracts": "workspace:*",
@@ -44,5 +46,6 @@
 			"index.ts",
 			"react/index.tsx"
 		]
-	}
+	},
+	"prettier": "@pubpub/prettier-config"
 }

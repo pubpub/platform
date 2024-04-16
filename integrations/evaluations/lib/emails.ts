@@ -1,4 +1,5 @@
 import { User } from "@pubpub/sdk";
+
 import { client } from "~/lib/pubpub";
 import {
 	EvaluatorWhoAccepted,
@@ -45,11 +46,13 @@ export function getDeadline(instanceConfig: InstanceConfig, evaluator: Evaluator
 					deadlineUnit: instanceConfig.deadlineUnit,
 				},
 				new Date(evaluator.acceptedAt)
-		  );
+			);
 }
 
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
+
+const userLinkDisclaimer = `This email contains links unique to you. For your security, do not share this email or the links within. To reply, send an email to your evaluation manager at: <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.`;
 
 const makeReminderJobKey = (instanceId: string, pubId: string, evaluator: EvaluatorWithInvite) =>
 	`send-email-${instanceId}-${pubId}-${evaluator.userId}-reminder`;
@@ -360,6 +363,7 @@ export const sendInviteEmail = async (
 			accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
 			decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
 			info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
+			disclaimer: userLinkDisclaimer,
 		},
 	});
 };
@@ -401,6 +405,7 @@ export const scheduleInvitationReminderEmail = async (
 				accept_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=accept">Accept</a>`,
 				decline_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=decline">Decline</a>`,
 				info_link: `<a href="{{instance.actions.respond}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}&intent=info">More Information</a>`,
+				disclaimer: userLinkDisclaimer,
 			},
 		},
 		{ jobKey, runAt }
@@ -443,7 +448,8 @@ export const sendAcceptedEmail = async (
 			userId: evaluator.userId,
 		},
 		subject: `[Unjournal] Thank you for agreeing to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-		message: `<p>Hi {{user.firstName}} {{user.lastName}},</p>
+		message: `<p>{{extra.disclaimer}}</p><hr/><br/>
+		<p>Hi {{user.firstName}} {{user.lastName}},</p>
 		<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
@@ -469,6 +475,7 @@ export const sendAcceptedEmail = async (
 		extra: {
 			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
 			due_at: deadline.toLocaleDateString(),
+			disclaimer: userLinkDisclaimer,
 		},
 	});
 };
@@ -499,13 +506,14 @@ export const schedulePromptEvalBonusReminderEmail = async (
 				userId: evaluator.userId,
 			},
 			subject: `[Unjournal] Reminder to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" for prompt evaluation bonus`,
-			message: `<p>Hi {{user.firstName}},</p>
+			message: `<p>{{extra.disclaimer}}</p><hr/><br/>
+	  <p>Hi {{user.firstName}},</p>
 	  <p>Thanks again for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for The Unjournal.</p>
 	  <p>This note is a reminder to submit your evaluation by ${reminderDeadline.toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${new Date(
-				deadline
-			).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+			deadline
+		).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
@@ -522,6 +530,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 			},
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+				disclaimer: userLinkDisclaimer,
 			},
 		},
 		{ jobKey, runAt }
@@ -554,7 +563,8 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 				userId: evaluator.userId,
 			},
 			subject: `[Unjournal] Final Reminder: Submit evaluation for prompt bonus "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-			message: `<p>Hi {{user.firstName}},</p>
+			message: `<p>{{extra.disclaimer}}</p><hr/><br/>
+	  <p>Hi {{user.firstName}},</p>
 	  <p>This is a final reminder to submit your evaluation for "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" by the deadline ${reminderDeadline.toLocaleDateString()} to receive the $100 “prompt evaluation bonus.”</p>
@@ -574,6 +584,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 			},
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+				disclaimer: userLinkDisclaimer,
 			},
 		},
 		{ jobKey, runAt }
@@ -605,7 +616,7 @@ export const scheduleEvaluationReminderEmail = async (
 				userId: evaluator.userId,
 			},
 			subject: `[Unjournal] Reminder to evaluate "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" by next week`,
-			message: `<p>Hi {{user.firstName}},</p>
+			message: `<p>{{extra.disclaimer}}</p><hr/><br/><p>Hi {{user.firstName}},</p>
 	  <p>Thank you again for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for The Unjournal.</p>
@@ -628,6 +639,7 @@ export const scheduleEvaluationReminderEmail = async (
 			},
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+				disclaimer: userLinkDisclaimer,
 			},
 		},
 		{ jobKey, runAt }
@@ -659,7 +671,8 @@ export const scheduleFinalEvaluationReminderEmail = async (
 				userId: evaluator.userId,
 			},
 			subject: `[Unjournal] Final Reminder: Evaluation due tomorrow`,
-			message: `<p>Hi {{user.firstName}},</p>
+			message: `<p>{{extra.disclaimer}}</p><hr/><br/>
+	  <p>Hi {{user.firstName}},</p>
 	  <p>This note is a final reminder that your evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" is due tomorrow. Please make sure to submit your evaluation by the deadline.</p>
 	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
@@ -677,6 +690,7 @@ export const scheduleFinalEvaluationReminderEmail = async (
 			},
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+				disclaimer: userLinkDisclaimer,
 			},
 		},
 		{ jobKey, runAt }
@@ -708,7 +722,8 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 				userId: evaluator.userId,
 			},
 			subject: `[Unjournal] Follow-up: Evaluation overdue, to be reassigned`,
-			message: `<p>Hi {{user.firstName}},</p>
+			message: `<p>{{extra.disclaimer}}</p><hr/><br/>
+	  <p>Hi {{user.firstName}},</p>
 	  <p>This note is a reminder that your evaluation for "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" is overdue. We are now planning to reassign the evaluation to another evaluator.</p>
@@ -729,6 +744,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 			},
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+				disclaimer: userLinkDisclaimer,
 			},
 		},
 		{ jobKey, runAt }
@@ -760,7 +776,8 @@ export const sendNoticeOfNoSubmitEmail = async (
 				userId: evaluator.userId,
 			},
 			subject: `[Unjournal] Evaluation not submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
-			message: `<p>Hi {{user.firstName}},</p>
+			message: `<p>{{extra.disclaimer}}</p><hr/><br/>
+	  <p>Hi {{user.firstName}},</p>
 	  <p>This is to inform you that you have not submitted an evaluation for "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}", which was due on ${new Date(deadline.getTime()).toLocaleDateString()}.</p>
@@ -781,6 +798,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 			},
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
+				disclaimer: userLinkDisclaimer,
 			},
 		},
 		{ jobKey, runAt }

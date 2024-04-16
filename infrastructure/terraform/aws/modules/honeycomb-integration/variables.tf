@@ -10,7 +10,7 @@ variable "cluster_info" {
     private_subnet_ids = list(string)
     container_security_group_ids = list(string)
     cloudwatch_log_group_name = string
-    lb_target_group_arn = string
+    lb_listener_arn = string
   })
 }
 

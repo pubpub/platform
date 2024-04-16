@@ -1,6 +1,8 @@
-import { type NextApiRequest, type NextApiResponse } from "next/types";
-import { ErrorHttpStatusCode } from "@ts-rest/core";
-import { NextRequest, NextResponse } from "next/server";
+import type { ErrorHttpStatusCode } from "@ts-rest/core";
+import type { NextApiRequest, NextApiResponse } from "next/types";
+
+import { NextResponse } from "next/server";
+
 import { logger } from "logger";
 
 export class HTTPStatusError<Status extends ErrorHttpStatusCode> extends Error {

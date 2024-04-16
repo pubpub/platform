@@ -1,7 +1,8 @@
-import { expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { PubTitle } from "../PubTitle";
+import { expect, test, vi } from "vitest";
+
 import { PubPayload } from "~/lib/types";
+import { PubTitle } from "../PubTitle";
 
 test("PubTitle component includes the pub title", async () => {
 	const pub: PubPayload = {
@@ -79,39 +80,43 @@ test("PubTitle component includes the pub title", async () => {
 		],
 		stages: [
 			{
-				id: "d373e08f-d309-4f84-aa17-cce30ac95a0f",
-				name: "Submitted",
-				order: "aa",
-				communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				integrationInstances: [
-					{
-						id: "af837db6-9a1f-4b38-878f-f84fde8a0b50",
-						name: "Unjournal Submissions Manager",
-						integrationId: "6f4334b8-f31c-417f-8db1-c4dfa671c30b",
-						communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						stageId: "d373e08f-d309-4f84-aa17-cce30ac95a0f",
-						config: { pubTypeId: "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225" },
-						integration: {
-							id: "6f4334b8-f31c-417f-8db1-c4dfa671c30b",
-							name: "Submission Manager",
-							actions: [
-								{
-									href: "http://localhost:3002/actions/submit",
-									kind: "stage",
-									name: "submit",
-									text: "Submit Pub",
-								},
-							],
-							settingsUrl: "http://localhost:3002/configure",
+				pubId: "b5702ef8-29b9-43ad-866c-4c337f598d88",
+				stageId: "d373e08f-d309-4f84-aa17-cce30ac95a0f",
+				stage: {
+					id: "d373e08f-d309-4f84-aa17-cce30ac95a0f",
+					name: "Submitted",
+					order: "aa",
+					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					integrationInstances: [
+						{
+							id: "af837db6-9a1f-4b38-878f-f84fde8a0b50",
+							name: "Unjournal Submissions Manager",
+							integrationId: "6f4334b8-f31c-417f-8db1-c4dfa671c30b",
+							communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
 							createdAt: new Date(),
 							updatedAt: new Date(),
+							stageId: "d373e08f-d309-4f84-aa17-cce30ac95a0f",
+							config: { pubTypeId: "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225" },
+							integration: {
+								id: "6f4334b8-f31c-417f-8db1-c4dfa671c30b",
+								name: "Submission Manager",
+								actions: [
+									{
+										href: "http://localhost:3002/actions/submit",
+										kind: "stage",
+										name: "submit",
+										text: "Submit Pub",
+									},
+								],
+								settingsUrl: "http://localhost:3002/configure",
+								createdAt: new Date(),
+								updatedAt: new Date(),
+							},
 						},
-					},
-				],
+					],
+				},
 			},
 		],
 		integrationInstances: [],

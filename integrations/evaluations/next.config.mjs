@@ -5,11 +5,18 @@ import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 import "./lib/env.mjs";
+
 /**
  * @type {import('next').NextConfig}
  */
+
 const nextConfig = {
+	basePath: process.env.DOCKERBUILD ? "/intg/evaluations" : undefined,
+	assetPrefix: process.env.DOCKERBUILD ? "/intg/evaluations/" : undefined,
 	reactStrictMode: true,
+	experimental: {
+		instrumentationHook: true,
+	},
 };
 
 export default withPreconstruct(

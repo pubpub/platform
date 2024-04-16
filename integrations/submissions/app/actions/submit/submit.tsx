@@ -1,8 +1,11 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+import { useIntegration } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import {
@@ -14,16 +17,15 @@ import {
 	FormLabel,
 	FormMessage,
 } from "ui/form";
+import { useLocalStorage } from "ui/hooks";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 import { Textarea } from "ui/textarea";
-import { useLocalStorage } from "ui/hooks";
 import { useToast } from "ui/use-toast";
-import { DOI_REGEX, URL_REGEX, cn, isDoi, normalizeDoi } from "utils";
-import * as z from "zod";
-import { FetchMetadataButton } from "./FetchMetadataButton";
+import { cn, DOI_REGEX, isDoi, normalizeDoi, URL_REGEX } from "utils";
+
 import { submit } from "./actions";
-import { useIntegration } from "@pubpub/sdk/src/react/IntegrationProvider";
+import { FetchMetadataButton } from "./FetchMetadataButton";
 
 type Props = {
 	instanceId: string;
@@ -108,7 +110,7 @@ export function Submit(props: Props) {
 						<CardTitle>Submit Pub</CardTitle>
 						<CardDescription>Create a new submission.</CardDescription>
 					</CardHeader>
-					<CardContent className={cn("flex flex-col column gap-4")}>
+					<CardContent className={cn("column flex flex-col gap-4")}>
 						<FormField
 							control={form.control}
 							name="unjournal:title"
@@ -227,7 +229,7 @@ export function Submit(props: Props) {
 						</Button>
 						<Button type="submit" disabled={!form.formState.isValid}>
 							{form.formState.isSubmitting && (
-								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 							)}
 							Submit Pub
 						</Button>

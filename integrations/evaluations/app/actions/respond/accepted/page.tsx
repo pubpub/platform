@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+
 import { expect } from "utils";
+
 import { getInstanceConfig } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 

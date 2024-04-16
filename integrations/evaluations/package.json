@@ -5,17 +5,20 @@
 	"scripts": {
 		"dev": "next dev -p 3001 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
+		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"start": "next start",
-		"lint": "next lint",
-		"type-check": "tsc"
+		"lint": "echo 'No linting rules defined'",
+		"type-check": "tsc --noEmit"
 	},
 	"files": [
 		".next"
 	],
 	"dependencies": {
+		"@honeycombio/opentelemetry-node": "^0.6.1",
 		"@hookform/resolvers": "^3.3.1",
+		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
 		"@pubpub/sdk": "workspace:*",
-		"@sentry/nextjs": "^7.102.0",
+		"@sentry/nextjs": "^7.106.1",
 		"@t3-oss/env-nextjs": "^0.9.2",
 		"@ts-react/form": "^1.8.3",
 		"ajv": "^8.12.0",
@@ -33,6 +36,7 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"@preconstruct/next": "^4.0.0",
 		"@tailwindcss/typography": "^0.5.10",
 		"@types/node": "20.3.1",

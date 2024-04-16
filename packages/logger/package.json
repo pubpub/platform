@@ -4,14 +4,17 @@
 	"main": "dist/logger.cjs.js",
 	"module": "dist/logger.esm.js",
 	"scripts": {
-		"type-check": "tsc"
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"type-check": "tsc --noEmit"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "^20",
 		"tsconfig": "workspace:*",
 		"typescript": "^5.3.3"
 	},
 	"dependencies": {
 		"pino": "^8.19.0"
-	}
+	},
+	"prettier": "@pubpub/prettier-config"
 }

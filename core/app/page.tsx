@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+
+import { logger } from "logger";
+
 import { getLoginData } from "~/lib/auth/loginData";
 import prisma from "~/prisma/db";
-import { logger } from "logger";
 
 export default async function Page() {
 	const loginData = await getLoginData();
@@ -13,19 +15,19 @@ export default async function Page() {
 			user = await prisma.user.findUnique({
 				where: { email: loginData.email },
 			});
-
-			const member = await prisma.member.findFirst({
-				where: { userId: user.id },
-				include: { community: true },
-			});
-
-			if (member) {
-				redirect(`/c/${member.community.slug}/stages`);
-			} else {
-				redirect("/settings");
-			}
-		} catch {
+		} catch (e) {
 			redirect("/login");
+		}
+
+		const member = await prisma.member.findFirst({
+			where: { userId: user.id },
+			include: { community: true },
+		});
+
+		if (member) {
+			redirect(`/c/${member.community.slug}/stages`);
+		} else {
+			redirect("/settings");
 		}
 	} else {
 		redirect("/login");

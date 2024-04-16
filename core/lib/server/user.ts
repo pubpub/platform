@@ -1,7 +1,8 @@
 import { User } from "@prisma/client";
+
 import prisma from "~/prisma/db";
-import { NotFoundError } from "./errors";
 import { slugifyString } from "../string";
+import { NotFoundError } from "./errors";
 
 export async function findOrCreateUser(userId: string): Promise<User>;
 export async function findOrCreateUser(
