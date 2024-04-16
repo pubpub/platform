@@ -3,7 +3,9 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 import { logger } from "logger";
 
+import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
+import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
 
 const supabaseUrl = env.SUPABASE_URL;
@@ -52,8 +54,17 @@ async function createUserMembers(
 }
 
 async function main() {
-	const prismaCommunityIds = [{ communityId: unJournalId, canAdmin: true }];
+	const prismaCommunityIds = [
+		{ communityId: unJournalId, canAdmin: true },
+		{
+			communityId: crocCrocId,
+			canAdmin: true,
+		},
+	];
 
+	logger.info("build crocroc");
+	await buildCrocCroc(db, crocCrocId);
+	logger.info("build unjournal");
 	await buildUnjournal(prisma, unJournalId);
 
 	try {
