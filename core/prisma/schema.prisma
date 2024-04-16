@@ -327,19 +327,6 @@ model IntegrationInstanceState {
   @@unique([pubId, instanceId], name: "pub_instance")
 }
 
-// model Action {
-//   id          String   @id @default(uuid())
-//   name        String   @unique
-//   description String   @default("")
-//   createdAt   DateTime @default(now()) @map(name: "created_at")
-//   updatedAt   DateTime @default(now()) @updatedAt @map(name: "updated_at")
-
-//   instances ActionInstance[]
-//   pubFields PubField[]
-
-//   @@map(name: "actions")
-// }
-
 model ActionInstance {
   id        String   @id @default(uuid())
   name      String   @default("")

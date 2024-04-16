@@ -3,7 +3,6 @@
 
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
-import { type default as Action } from "./Action";
 import { type IntegrationsId } from "./Integrations";
 import { type PubFieldSchemaId } from "./PubFieldSchema";
 
@@ -29,8 +28,6 @@ export default interface PubFieldsTable {
 	>;
 
 	slug: ColumnType<string, string, string>;
-
-	actions: ColumnType<Action[] | null, Action[] | null, Action[] | null>;
 }
 
 export type PubFields = Selectable<PubFieldsTable>;
