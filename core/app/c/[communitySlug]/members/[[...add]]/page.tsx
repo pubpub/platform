@@ -16,6 +16,7 @@ const getCachedMembers = async (community: Community) =>
 				where: { community: { id: community.id } },
 				include: { user: true },
 			});
+
 			return members;
 		},
 		[community.id],
@@ -61,6 +62,7 @@ export default async function Page({
 	const page = parseInt(searchParams.page ?? "1", 10);
 
 	const members = await getCachedMembers(community);
+
 	if (!members.length && page !== 1) {
 		return notFound();
 	}
