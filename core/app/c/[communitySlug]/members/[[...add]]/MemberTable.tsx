@@ -3,8 +3,8 @@
 import * as React from "react";
 import { Community } from "@prisma/client";
 
+import { DataTable } from "~/app/components/DataTable";
 import { getMemberTableColumns, TableMember } from "./getMemberTableColumns";
-import {DataTable} from "~/app/components/DataTable";
 
 export const MemberTable = ({
 	members,

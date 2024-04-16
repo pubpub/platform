@@ -17,14 +17,17 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
 
-
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
-    searchBy: string;
+	searchBy: string;
 }
 
-export function DataTable<TData, TValue>({ columns, data, searchBy }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+	columns,
+	data,
+	searchBy,
+}: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 	const [rowSelection, setRowSelection] = React.useState({});
@@ -45,7 +48,7 @@ export function DataTable<TData, TValue>({ columns, data, searchBy }: DataTableP
 			rowSelection,
 		},
 	});
-    
+
 	return (
 		<div>
 			<div className="flex flex-col items-start gap-y-2 py-4">
@@ -54,7 +57,7 @@ export function DataTable<TData, TValue>({ columns, data, searchBy }: DataTableP
 				</Label>
 				<Input
 					name={`${searchBy}-filter`}
-					placeholder={`Search table by ${searchBy}` }
+					placeholder={`Search table by ${searchBy}`}
 					value={(table.getColumn(`${searchBy}`)?.getFilterValue() as string) ?? ""}
 					onChange={(event) =>
 						table.getColumn(`${searchBy}`)?.setFilterValue(event.target.value)
