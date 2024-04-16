@@ -50,6 +50,10 @@ export const defineAction = <
 
 type ActionSuccess = {
 	success: true;
+	/**
+	 * Optionally provide a report to be displayed to the user
+	 */
+	report?: string;
 	data: unknown;
 };
 

@@ -67,6 +67,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		};
 	}
 
+	logger.info(actionInstance.action);
 	const action = getActionByName(actionInstance.action);
 
 	const actionRun = await getActionRunByName(actionInstance.action);
@@ -109,11 +110,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 			config: parsedConfig.data as any,
 			pub: {
 				id: pubId,
-				values: {
-					...pub.values,
-					// TODO: REMOVE, FOR DEMO PURPOSES ONLY
-					"pubpub:title": (pub.values["unjournal:title"] as string) || "MISSING TITLE",
-				},
+				values: values as any,
 			},
 			pubConfig: parsedConfig.data,
 		});

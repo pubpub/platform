@@ -1,10 +1,19 @@
 import Ajv from "ajv";
 
+import { logger } from "logger";
+
+import type { CorePubField } from "../corePubFields";
+
+/**
+ * TODO: Replace this with a more robust validation implementation
+ *
+ * This currently does not allow for mapping of field values to a schema
+ */
 export const validatePubValues = ({
 	fields,
 	values,
 }: {
-	fields: { slug: string; schema: Record<string, unknown> }[];
+	fields: CorePubField[];
 	values: Record<string, unknown>;
 }) => {
 	const validator = new Ajv();
@@ -22,9 +31,13 @@ export const validatePubValues = ({
 			}
 
 			try {
-				const val = validator.validate(field.schema, value);
-				return { ...acc, [field.slug]: val };
+				const val = validator.validate(field.schema.schema, value);
+				if (val !== true) {
+					return { error: `Field ${field.slug} failed schema validation` };
+				}
+				return { ...acc, [field.slug]: value };
 			} catch (e) {
+				logger.error(e);
 				return { error: `Field ${field.slug} failed schema validation` };
 			}
 		},

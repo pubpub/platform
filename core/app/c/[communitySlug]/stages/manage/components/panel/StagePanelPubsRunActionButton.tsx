@@ -44,7 +44,7 @@ export const StagePanelPubsRunActionButton = ({
 			toast({
 				title: "Action ran successfully!",
 				variant: "default",
-				description: JSON.stringify(result.data || ""),
+				description: result.report,
 			});
 		}
 
