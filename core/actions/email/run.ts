@@ -9,7 +9,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) =
 	logger.info({ msg: "email", pub, config, pubConfig });
 
 	return {
-		success: true as const,
+		success: true,
 		report: "Email sent",
 		data: {},
 	};
