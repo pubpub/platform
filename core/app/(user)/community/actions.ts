@@ -9,6 +9,8 @@ import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
 import prisma from "~/prisma/db";
+import { crocCrocId } from "~/prisma/exampleCommunitySeeds/croccroc";
+import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
 import { TableCommunity } from "./getCommunityTableColumns";
 
 export const createCommunity = defineServerAction(async function createCommunity({
@@ -96,6 +98,13 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 		// 	.where("id", "=", community.id as CommunitiesId)
 		// 	.executeTakeFirst();
 
+		if (community.id === unJournalId || community.id === crocCrocId) {
+			return {
+				title: "Failed to remove community",
+				error: "Cannot remove example community",
+			};
+		}
+
 		await prisma.community.delete({
 			where: {
 				id: community.id,
@@ -104,6 +113,7 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 		revalidatePath("/");
 		return;
 	} catch (error) {
+		console.log(error);
 		return {
 			title: "Failed to remove community",
 			error: "An unexpected error occurred",
