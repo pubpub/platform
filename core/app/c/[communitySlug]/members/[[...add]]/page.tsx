@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Community } from "@prisma/client";
 
@@ -47,7 +47,6 @@ export default async function Page({
 	if (!community) {
 		return notFound();
 	}
-	revalidateTag(`members_${community.id}`); // manually revalidate cache on page load
 
 	const loginData = await getLoginData();
 	const currentCommunityMemberShip = loginData?.memberships?.find(

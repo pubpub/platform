@@ -8,7 +8,7 @@ import { MemberInviteForm } from "./MemberInviteForm";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 /**
- *
+ * Create a cached function to get a user by email
  * @param email
  * @param currentEmail
  * @param community

@@ -28,8 +28,6 @@ export default async function MainLayout({ children, params }: Props) {
 	if (!loginData) {
 		redirect("/login");
 	}
-
-	// add to unstable cache
 	const community = await getCommunity(params.communitySlug);
 	if (!community) {
 		return null;
