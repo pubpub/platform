@@ -57,7 +57,7 @@ const createV6Pub = async (
 	authToken: string,
 	communityId: string,
 	title: string
-) => {
+): Promise<{ id: string } | ClientExceptionOptions> => {
 	const createV6PubResponse = await fetch(`https://${communitySlug}.pubpub.org/api/pubs`, {
 		method: "POST",
 		headers: {
@@ -180,17 +180,17 @@ const updateV6PubId = async (pubId: string, v6PubId: string) => {
 
 export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) => {
 	try {
-		let v6PubId = pub.values[corePubFields.v6PubId.slug] as string;
-		let v6Pub: { id: string } | undefined;
-
 		const v6Community = await getV6Community(config.communitySlug, config.authToken);
 
 		if (isClientExceptionOptions(v6Community)) {
 			return v6Community;
 		}
 
+		let v6Pub: { id: string };
+
 		// Fetch the pub if the v7 pub already had a v6 pub id
-		if (typeof v6PubId === "string") {
+		if (corePubFields.v6PubId.slug in pub.values) {
+			const v6PubId = pub.values[corePubFields.v6PubId.slug] as string;
 			const v6PubResult = await getV6Pub(v6PubId, config.communitySlug, config.authToken);
 
 			if (isClientExceptionOptions(v6PubResult)) {
@@ -204,7 +204,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) =
 
 		// Create the pub if the v7 pub did not have a v6 pub id or if the v6 pub
 		// id was invalid (e.g. the v6 pub was deleted)
-		if (v6Pub === undefined) {
+		if (v6Pub! === undefined) {
 			const createV6PubResponse = await createV6Pub(
 				config.communitySlug,
 				config.authToken,
@@ -217,15 +217,14 @@ export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) =
 			}
 
 			v6Pub = createV6PubResponse;
-			v6PubId = createV6PubResponse.id;
 
 			// Update the v6 pub id in the v7 pub
-			await updateV6PubId(pub.id, v6PubId);
+			await updateV6PubId(pub.id, v6Pub.id);
 		}
 
 		// Update the v6 pub content
 		const updateV6PubTextRequest = await updateV6PubText(
-			v6PubId,
+			v6Pub.id,
 			config.communitySlug,
 			config.authToken,
 			pub.values[corePubFields.content.slug]
