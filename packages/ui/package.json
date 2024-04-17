@@ -280,7 +280,7 @@
 		"cmdk": "^1.0.0",
 		"date-fns": "^3.6.0",
 		"lucide-react": "^0.357.0",
-		"next": "13.5.2",
+		"next": "14.2.1",
 		"react-day-picker": "^8.10.0",
 		"tailwind-merge": "^1.14.0",
 		"tailwindcss-animate": "^1.0.6",
@@ -293,9 +293,9 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
-		"@pubpub/prettier-config": "workspace:*",
 		"@pubpub/eslint-config": "workspace:*",
-		"@types/react": "^18.2.5",
+		"@pubpub/prettier-config": "workspace:*",
+		"@types/react": "^18.2.78",
 		"eslint": "^8.57.0",
 		"postcss": "^8.4.20",
 		"react": "^18.2.0",

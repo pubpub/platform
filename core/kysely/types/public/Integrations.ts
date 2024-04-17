@@ -8,7 +8,7 @@ export type IntegrationsId = string & { __brand: "IntegrationsId" };
 
 /** Represents the table public.integrations */
 export default interface IntegrationsTable {
-	id: ColumnType<IntegrationsId, IntegrationsId, IntegrationsId>;
+	id: ColumnType<IntegrationsId, IntegrationsId | undefined, IntegrationsId>;
 
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 

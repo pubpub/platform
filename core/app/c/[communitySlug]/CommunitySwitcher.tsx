@@ -39,7 +39,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 						return (
 							<DropdownMenuItem asChild key={option.id}>
 								<Link
-									href={`/c/${option.slug}`}
+									href={`/c/${option.slug}/stages`}
 									className="cursor-pointer hover:bg-gray-50"
 								>
 									<div className="flex items-center">

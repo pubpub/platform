@@ -2,6 +2,7 @@
 
 import { revalidateTag } from "next/cache";
 
+import type Action from "~/kysely/types/public/Action";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -163,16 +164,13 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 export const addAction = defineServerAction(async function addAction(
 	communityId: string,
 	stageId: string,
-	actionId: string
+	actionName: Action
 ) {
 	try {
 		await prisma.actionInstance.create({
 			data: {
-				action: {
-					connect: {
-						id: actionId,
-					},
-				},
+				name: actionName,
+				action: actionName,
 				stage: {
 					connect: {
 						id: stageId,
@@ -193,12 +191,17 @@ export const addAction = defineServerAction(async function addAction(
 export const updateAction = defineServerAction(async function updateAction(
 	communityId: string,
 	actionInstanceId: ActionInstancesId,
-	config: any
+	props:
+		| {
+				config: Record<string, any>;
+				name?: undefined;
+		  }
+		| { name: string; config?: undefined }
 ) {
 	try {
 		await db
 			.updateTable("action_instances")
-			.set({ config })
+			.set(props.name ? { name: props.name } : { config: props.config })
 			.where("id", "=", actionInstanceId)
 			.executeTakeFirstOrThrow();
 	} finally {

@@ -1,8 +1,7 @@
 import { logger } from "logger";
 
-import { actions } from "./actions";
+import { registerCorePubField } from "./actions/_lib/init";
 import { corePubFields } from "./actions/corePubFields";
-import { registerAction, registerCorePubField } from "./actions/init";
 
 export async function register() {
 	logger.info("Registering core fields");
@@ -10,13 +9,14 @@ export async function register() {
 		logger.info(`Registering core field ${corePubField.slug}`);
 		await registerCorePubField(corePubField);
 	}
-	logger.info("Registering actions");
-	for (const { action } of Object.values(actions)) {
-		logger.info(`Registering action ${action.name}`);
-		await registerAction(action);
-	}
 	logger.info(`Registering instrumentation hook for ${process.env.NEXT_RUNTIME}`);
 	if (process.env.NEXT_RUNTIME === "nodejs") {
+		if (process.env.NODE_ENV === "development") {
+			logger.info(
+				"NEXT_RUNTIME is `nodejs` and NODE_ENV is `development`; skipping OTEL registration."
+			);
+			return;
+		}
 		await import("./instrumentation.node");
 	} else {
 		logger.info("NEXT_RUNTIME is not `nodejs`; skipping OTEL registration.");

@@ -1,7 +1,14 @@
 import { headers } from "next/headers";
 import { withServerActionInstrumentation } from "@sentry/nextjs";
 
-import { isClientExceptionOptions, makeClientException } from "../serverActions";
+import { logger } from "logger";
+
+import {
+	ClientException,
+	ClientExceptionOptions,
+	isClientExceptionOptions,
+	makeClientException,
+} from "../serverActions";
 
 /**
  * Wraps a Next.js server action function with Sentry instrumentation. Additionally
@@ -10,10 +17,14 @@ import { isClientExceptionOptions, makeClientException } from "../serverActions"
  * @param serverActionFn
  * @returns
  */
-export const defineServerAction = <T extends (...args: unknown[]) => Promise<unknown>>(
+export const defineServerAction = <
+	T extends (...args: unknown[]) => Promise<unknown | ClientExceptionOptions>,
+	A extends Parameters<T> = Parameters<T>,
+	R extends Awaited<ReturnType<T>> = Awaited<ReturnType<T>>,
+>(
 	serverActionFn: T
 ) => {
-	return async function runServerAction(...args: Parameters<T>) {
+	return async function runServerAction(...args: A) {
 		return withServerActionInstrumentation(
 			serverActionFn.name,
 			{
@@ -22,7 +33,7 @@ export const defineServerAction = <T extends (...args: unknown[]) => Promise<unk
 			},
 			async () => {
 				try {
-					const serverActionResult = await serverActionFn(...args);
+					const serverActionResult = (await serverActionFn(...args)) as R;
 					// The server action result might be client exception options, in which case
 					// we should return it as a client exception. Otherwise, we should return the
 					// server action result as-is.
@@ -31,6 +42,7 @@ export const defineServerAction = <T extends (...args: unknown[]) => Promise<unk
 							makeClientException(serverActionResult)
 						: serverActionResult;
 				} catch (error) {
+					logger.debug(error);
 					// https://github.com/vercel/next.js/discussions/49426#discussioncomment-8176059
 					// Because you can't simply wrap a server action call on the client in try/catch
 					// we should provide some sort of error response to the client in the case of an

@@ -4,8 +4,6 @@
 import { type default as ActionClaimTable } from "./ActionClaim";
 import { type default as ActionInstancesTable } from "./ActionInstances";
 import { type default as ActionMoveTable } from "./ActionMove";
-import { type default as ActionsTable } from "./Actions";
-import { type default as ActionToPubFieldTable } from "./ActionToPubField";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
 import { type default as IntegrationInstancesTable } from "./IntegrationInstances";
@@ -78,10 +76,6 @@ export default interface PublicSchema {
 	PubFieldSchema: PubFieldSchemaTable;
 
 	IntegrationInstanceState: IntegrationInstanceStateTable;
-
-	actions: ActionsTable;
-
-	_ActionToPubField: ActionToPubFieldTable;
 
 	action_instances: ActionInstancesTable;
 

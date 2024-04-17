@@ -10,7 +10,7 @@ export type MemberGroupsId = string & { __brand: "MemberGroupsId" };
 
 /** Represents the table public.member_groups */
 export default interface MemberGroupsTable {
-	id: ColumnType<MemberGroupsId, MemberGroupsId, MemberGroupsId>;
+	id: ColumnType<MemberGroupsId, MemberGroupsId | undefined, MemberGroupsId>;
 
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 

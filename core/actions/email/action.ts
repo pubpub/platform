@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+import { Mail } from "ui/icon";
+
 import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
 
@@ -13,6 +15,7 @@ export const action = defineAction({
 	description: "Send an email to one or more users",
 	pubConfig: z.object({}),
 	pubFields: [corePubFields.title],
+	icon: Mail,
 });
 
-export { run } from "./run";
+// export { run } from "./run";

@@ -128,9 +128,7 @@ export type CommunityMemberPayload = Prisma.MemberGetPayload<{
 }>;
 
 export const stageInclude = {
-	actionInstances: {
-		include: { action: true },
-	},
+	actionInstances: true,
 	pubs: { include: { pub: { include: pubInclude } } },
 	integrationInstances: { include: { integration: true } },
 	permissions: { include: permissionInclude },
@@ -153,5 +151,3 @@ export type DeepPartial<T> = T extends object
 			[P in keyof T]?: DeepPartial<T[P]>;
 		}
 	: T;
-
-export type ActionPayload = Prisma.ActionGetPayload<{}>;

@@ -72,7 +72,11 @@ export const FetchMetadataButton = (props: FetchMetadataButtonProps) => {
 					<Button
 						variant="ghost"
 						className={cn("ml-2 px-0")}
-						onClick={(event) => startTransition(() => onFetchMetadata(event))}
+						onClick={(event) =>
+							startTransition(() => {
+								onFetchMetadata(event);
+							})
+						}
 						disabled={!state.isDirty || state.invalid}
 					>
 						{pending ? (

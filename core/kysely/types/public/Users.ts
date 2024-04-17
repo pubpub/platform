@@ -8,7 +8,7 @@ export type UsersId = string & { __brand: "UsersId" };
 
 /** Represents the table public.users */
 export default interface UsersTable {
-	id: ColumnType<UsersId, UsersId, UsersId>;
+	id: ColumnType<UsersId, UsersId | undefined, UsersId>;
 
 	slug: ColumnType<string, string, string>;
 

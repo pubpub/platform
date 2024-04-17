@@ -13,12 +13,13 @@ import {
 } from "ui/dialog";
 import { FileText, Mail, Terminal } from "ui/icon";
 
+import type { Action } from "~/actions/types";
+import { actions } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
-import { ActionPayload } from "~/lib/types";
 
 type ActionCellProps = {
-	action: ActionPayload;
-	onClick: (action: ActionPayload) => void;
+	action: Action;
+	onClick: (action: Action) => void;
 };
 
 const ActionCell = (props: ActionCellProps) => {
@@ -44,13 +45,7 @@ const ActionCell = (props: ActionCellProps) => {
 			onKeyDown={onKeyDown}
 		>
 			<div className="flex space-x-4">
-				{props.action.name === "log" ? (
-					<Terminal />
-				) : props.action.name === "pdf" ? (
-					<FileText />
-				) : (
-					<Mail />
-				)}
+				<props.action.icon />
 				<div className="space-y-1">
 					<h4 className="text-sm font-semibold">{props.action.name}</h4>
 					<p className="text-sm leading-tight text-muted-foreground">
@@ -63,17 +58,16 @@ const ActionCell = (props: ActionCellProps) => {
 };
 
 type Props = {
-	actions: ActionPayload[];
-	onAdd: (actionId: string) => Promise<unknown>;
+	onAdd: (actionName: string) => Promise<unknown>;
 };
 
 export const StagePanelActionCreator = (props: Props) => {
 	const runOnAdd = useServerAction(props.onAdd);
 	const [isOpen, setIsOpen] = useState(false);
 	const onActionSelect = useCallback(
-		async (action: ActionPayload) => {
+		async (action: Action) => {
 			setIsOpen(false);
-			runOnAdd(action.id);
+			runOnAdd(action.name);
 		},
 		[props.onAdd, runOnAdd]
 	);
@@ -95,8 +89,12 @@ export const StagePanelActionCreator = (props: Props) => {
 						</DialogDescription>
 					</DialogHeader>
 					<div className="grid grid-cols-2 gap-4">
-						{props.actions.map((action) => (
-							<ActionCell key={action.id} action={action} onClick={onActionSelect} />
+						{Object.values(actions).map((action) => (
+							<ActionCell
+								key={action.name}
+								action={action}
+								onClick={onActionSelect}
+							/>
 						))}
 					</div>
 				</DialogContent>

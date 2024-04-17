@@ -1,27 +1,32 @@
+import type { User } from "@prisma/client";
+
 import { cache } from "react";
-import { User } from "@prisma/client";
 
 import { expect } from "utils";
 
+import { db } from "~/kysely/database";
+import { StagesId } from "~/kysely/types/public/Stages";
 import prisma from "~/prisma/db";
 
-export const getActions = cache(async () => {
-	return await prisma.action.findMany();
-});
-
 export const getStage = cache(async (stageId: string) => {
-	return await prisma.stage.findUnique({
-		where: { id: stageId },
-	});
+	return await db
+		.selectFrom("stages")
+		.select([
+			"stages.id",
+			"stages.community_id as communityId",
+			"stages.name",
+			"stages.order",
+			"stages.created_at as createdAt",
+			"stages.updated_at as updatedAt",
+		])
+		.where("stages.id", "=", stageId as StagesId)
+		.executeTakeFirst();
 });
 
 export const getStageActions = cache(async (stageId: string) => {
 	return await prisma.actionInstance.findMany({
 		where: {
 			stageId,
-		},
-		include: {
-			action: true,
 		},
 	});
 });

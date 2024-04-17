@@ -18,7 +18,7 @@ export default function Move(props: Props) {
 	const { toast } = useToast();
 
 	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
-		const err = await move(pubId, sourceStageId, destStageId);
+		const err = await move(pubId, sourceStageId, destStageId, props.stage.communityId);
 		if (err) {
 			toast({
 				title: "Error",
@@ -34,12 +34,13 @@ export default function Move(props: Props) {
 			action: (
 				<Button
 					onClick={async () =>
-						await move(pubId, destStageId, sourceStageId).then(() =>
-							toast({
-								variant: "default",
-								title: "Success",
-								description: "Pub was successfully moved back",
-							})
+						await move(pubId, destStageId, sourceStageId, props.stage.communityId).then(
+							() =>
+								toast({
+									variant: "default",
+									title: "Success",
+									description: "Pub was successfully moved back",
+								})
 						)
 					}
 				>
