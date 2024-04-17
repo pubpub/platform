@@ -27,6 +27,8 @@ export default interface UsersTable {
 	orcid: ColumnType<string | null, string | null, string | null>;
 
 	supabaseId: ColumnType<string | null, string | null, string | null>;
+
+	isSuperAdmin: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Users = Selectable<UsersTable>;

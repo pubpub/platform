@@ -1,4 +1,4 @@
-import type { Community } from "@prisma/client";
+import type { Community, Member } from "@prisma/client";
 
 import { Prisma } from "@prisma/client";
 
@@ -93,6 +93,20 @@ export const pubInclude = {
 } satisfies Prisma.PubInclude;
 
 export type PubPayload = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
+
+export type UserAndMemberships = {
+	id: string;
+	slug: string;
+	firstName: string;
+	lastName: string | null;
+	avatar: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+	orcid: string | null;
+	email: string;
+	memberships: Member[];
+	isSuperAdmin: boolean;
+};
 
 type User = {
 	id: string;
