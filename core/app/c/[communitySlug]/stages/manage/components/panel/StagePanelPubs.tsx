@@ -4,6 +4,8 @@ import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
+import type { StagesId } from "~/kysely/types/public/Stages";
+import { CreatePubButton } from "~/app/components/CreatePubButton";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageActions, getStagePubs } from "./queries";
 import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
@@ -23,7 +25,12 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
-				<h4 className="mb-2 text-base font-semibold">Pubs</h4>
+				<div className="flex flex-wrap items-center justify-between">
+					<h4 className="mb-2 text-base font-semibold">Pubs</h4>
+					<Suspense fallback={<SkeletonCard />}>
+						<CreatePubButton stageId={props.stageId as StagesId} />
+					</Suspense>
+				</div>
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
 						<span>A pub</span>

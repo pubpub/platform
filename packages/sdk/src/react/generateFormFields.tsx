@@ -312,6 +312,7 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 					]
 				: [
 						<SchemaBasedFormFields
+							key={fieldKey}
 							{...props}
 							path={fieldPath}
 							fieldSchema={fieldSchema}

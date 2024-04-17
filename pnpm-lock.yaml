@@ -147,6 +147,9 @@ importers:
       '@prisma/client':
         specifier: ^5.2.0
         version: 5.2.0(prisma@5.2.0)
+      '@pubpub/sdk':
+        specifier: workspace:*
+        version: link:../packages/sdk
       '@sentry/nextjs':
         specifier: ^7.106.1
         version: 7.109.0(next@14.2.1)(react@18.2.0)
