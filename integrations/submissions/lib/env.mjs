@@ -10,6 +10,8 @@ export const env = createEnv({
 	server: {
 		API_KEY: z.string(),
 		PUBPUB_URL: z.string().url(),
+		OTEL_SERVICE_NAME: z.string().optional(),
+		HONEYCOMB_API_KEY: z.string().optional(),
 	},
 	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,

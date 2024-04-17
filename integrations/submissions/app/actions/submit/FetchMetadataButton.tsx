@@ -2,12 +2,14 @@
 
 import { useTransition } from "react";
 import { useFormContext } from "react-hook-form";
+
 import { Button } from "ui/button";
+import { useFormField } from "ui/form";
 import { Loader2, Wand2 } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { useFormField } from "ui/form";
 import { useToast } from "ui/use-toast";
 import { cn } from "utils";
+
 import { resolveMetadata } from "./actions";
 
 type FetchMetadataButtonProps = {
@@ -69,8 +71,12 @@ export const FetchMetadataButton = (props: FetchMetadataButtonProps) => {
 				<TooltipTrigger asChild>
 					<Button
 						variant="ghost"
-						className={cn("px-0 ml-2")}
-						onClick={(event) => startTransition(() => onFetchMetadata(event))}
+						className={cn("ml-2 px-0")}
+						onClick={(event) =>
+							startTransition(() => {
+								onFetchMetadata(event);
+							})
+						}
 						disabled={!state.isDirty || state.invalid}
 					>
 						{pending ? (

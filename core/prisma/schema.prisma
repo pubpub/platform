@@ -12,7 +12,7 @@ generator client {
 }
 
 model User {
-  id         String   @id @default(uuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
   supabaseId String?  @unique
   slug       String   @unique
   email      String   @unique
@@ -46,7 +46,7 @@ model AuthToken {
 }
 
 model Community {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   name      String
   slug      String   @unique
   avatar    String?
@@ -64,7 +64,7 @@ model Community {
 }
 
 model Pub {
-  id          String    @id @default(uuid())
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String    @map(name: "pub_type_id")
@@ -80,7 +80,7 @@ model Pub {
   children Pub[]   @relation("pub_parent")
 
   values                   PubValue[]
-  stages                   Stage[]
+  stages                   PubsInStages[]
   claims                   ActionClaim[]
   moves                    ActionMove[]
   integrationInstances     IntegrationInstance[]
@@ -91,7 +91,7 @@ model Pub {
 }
 
 model PubField {
-  id               String          @id @default(uuid())
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
   name             String
   slug             String          @unique
   integration      Integration?    @relation(fields: [integrationId], references: [id])
@@ -108,7 +108,7 @@ model PubField {
 }
 
 model PubFieldSchema {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   namespace String
   name      String
   createdAt DateTime @default(now()) @map(name: "created_at")
@@ -122,7 +122,7 @@ model PubFieldSchema {
 }
 
 model PubValue {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   field     PubField @relation(fields: [fieldId], references: [id])
   fieldId   String   @map(name: "field_id")
   value     Json
@@ -137,7 +137,7 @@ model PubValue {
 }
 
 model PubType {
-  id          String    @id @default(uuid())
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   description String?
   community   Community @relation(fields: [communityId], references: [id])
@@ -152,7 +152,7 @@ model PubType {
 }
 
 model Stage {
-  id          String    @id @default(uuid())
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   order       String
   community   Community @relation(fields: [communityId], references: [id])
@@ -160,7 +160,7 @@ model Stage {
   createdAt   DateTime  @default(now()) @map(name: "created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
-  pubs                  Pub[] // Pub-Stage m:m relationship is implicit. If we need additional data on that relationship, we can make it explicit
+  pubs                  PubsInStages[]
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
   claims                ActionClaim[]
@@ -168,14 +168,24 @@ model Stage {
   movesTo               ActionMove[]          @relation("move_destination_stage")
   integrationInstances  IntegrationInstance[]
   permissions           Permission[]
+  actionInstances       ActionInstance[]
 
   @@map(name: "stages")
 }
 
+model PubsInStages {
+  pub     Pub    @relation(fields: [pubId], references: [id])
+  pubId   String
+  stage   Stage  @relation(fields: [stageId], references: [id])
+  stageId String
+
+  @@id([pubId, stageId])
+}
+
 model MoveConstraint {
-  stage         Stage    @relation("move_constraint", fields: [stageId], references: [id])
+  stage         Stage    @relation("move_constraint", fields: [stageId], references: [id], onDelete: Cascade)
   stageId       String   @map(name: "stage_id")
-  destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id])
+  destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id], onDelete: Cascade)
   destinationId String   @map(name: "destination_id")
   createdAt     DateTime @default(now()) @map(name: "created_at")
   updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")
@@ -185,7 +195,7 @@ model MoveConstraint {
 }
 
 model ActionClaim {
-  id         String    @id @default(uuid())
+  id         String    @id @default(dbgenerated("gen_random_uuid()"))
   stage      Stage     @relation(fields: [stageId], references: [id])
   stageId    String    @map(name: "stage_id")
   pub        Pub       @relation(fields: [pubId], references: [id])
@@ -200,7 +210,7 @@ model ActionClaim {
 }
 
 model ActionMove {
-  id                 String   @id @default(uuid())
+  id                 String   @id @default(dbgenerated("gen_random_uuid()"))
   sourceStage        Stage    @relation("move_source_stage", fields: [sourceStageId], references: [id])
   sourceStageId      String   @map(name: "source_stage_id")
   destinationStage   Stage    @relation("move_destination_stage", fields: [destinationStageId], references: [id])
@@ -217,7 +227,7 @@ model ActionMove {
 }
 
 model Member {
-  id          String    @id @default(uuid())
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   canAdmin    Boolean // Community-wide administrator
   // If admin, the permissions are irrelevant because they have acccess to everything, but we
   // may want to keep the permissions around (though grayed our and with a note?) in case their
@@ -235,7 +245,7 @@ model Member {
 }
 
 model MemberGroup {
-  id          String    @id @default(uuid())
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   canAdmin    Boolean // Community-wide administrator
   community   Community @relation(fields: [communityId], references: [id])
   communityId String    @map(name: "community_id")
@@ -252,7 +262,7 @@ model Permission {
   // This is essentially a 'role' - we just don't allow you to name it and repeatedly
   // use it across different members and groups. Wouldn't be too hard to adapt to that
   // in the future though.
-  id            String       @id @default(uuid())
+  id            String       @id @default(dbgenerated("gen_random_uuid()"))
   // Specific permission options here
   // fields - if empty array, all fields
   // integrations - if empty array, all integrations
@@ -275,7 +285,7 @@ model Permission {
 }
 
 model Integration {
-  id          String   @id @default(uuid())
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   actions     Json
   settingsUrl String
@@ -289,7 +299,7 @@ model Integration {
 }
 
 model IntegrationInstance {
-  id            String      @id @default(uuid())
+  id            String      @id @default(dbgenerated("gen_random_uuid()"))
   name          String
   integration   Integration @relation(fields: [integrationId], references: [id])
   integrationId String      @map(name: "integration_id")
@@ -315,4 +325,23 @@ model IntegrationInstanceState {
   state      Json
 
   @@unique([pubId, instanceId], name: "pub_instance")
+}
+
+model ActionInstance {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  name      String   @default("")
+  action    Action
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId   String   @map(name: "stage_id")
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  config    Json?
+
+  @@map(name: "action_instances")
+}
+
+enum Action {
+  log
+  pdf
+  email
 }

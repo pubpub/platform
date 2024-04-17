@@ -1,4 +1,5 @@
 import { Button } from "ui/button";
+
 import { PubPayload } from "~/lib/types";
 
 type Props = {
@@ -17,7 +18,7 @@ const getStatus = (pub: Props["pub"], integrationId: string) => {
 
 const getInstances = (pub: Props["pub"]) => {
 	return pub.integrationInstances.concat(
-		pub.stages.flatMap((stage) => stage.integrationInstances)
+		pub.stages.flatMap(({ stage }) => stage.integrationInstances)
 	);
 };
 
@@ -56,7 +57,7 @@ const IntegrationActions = (props: Props) => {
 	const buttons = getButtons(props.pub, props.token);
 
 	return buttons.length ? (
-		<ul className="list-none flex flex-row">
+		<ul className="flex list-none flex-row">
 			{buttons.map((button) => {
 				if (!Array.isArray(button.actions)) {
 					return null;
@@ -72,7 +73,7 @@ const IntegrationActions = (props: Props) => {
 					return (
 						<li key={action.href} className="flex items-stretch">
 							<Button variant="outline" size="sm" key={action.href}>
-								<div className="w-2 h-2 rounded-lg mr-2 bg-amber-500" />
+								<div className="mr-2 h-2 w-2 rounded-lg bg-amber-500" />
 								<a href={action.href}>{action.text}</a>
 							</Button>
 						</li>

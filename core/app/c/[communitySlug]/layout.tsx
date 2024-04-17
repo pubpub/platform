@@ -1,8 +1,9 @@
-import { Prisma } from "@prisma/client";
-import prisma from "~/prisma/db";
-import { getLoginData } from "~/lib/auth/loginData";
-import SideNav from "./SideNav";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
+
+import { getLoginData } from "~/lib/auth/loginData";
+import prisma from "~/prisma/db";
+import SideNav from "./SideNav";
 
 export type CommunityData = Prisma.PromiseReturnType<typeof getCommunity>;
 
@@ -42,7 +43,7 @@ export default async function MainLayout({ children, params }: Props) {
 	return (
 		<div className="flex min-h-screen">
 			<SideNav community={community} availableCommunities={availableCommunities} />
-			<div className="flex-auto py-4 px-12 ml-64">{children}</div>
+			<div className="relative ml-[250px] flex-auto px-12 py-4">{children}</div>
 		</div>
 	);
 }

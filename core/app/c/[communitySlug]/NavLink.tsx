@@ -1,6 +1,8 @@
 "use client";
-import styles from "./NavLink.module.css";
+
 import Link from "next/link";
+
+import styles from "./NavLink.module.css";
 
 type Props = { href: string; text: string; icon: React.ReactNode; count?: number };
 

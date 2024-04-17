@@ -1,13 +1,21 @@
-import { User } from "@pubpub/sdk";
 import { cookies, headers } from "next/headers";
-import { env } from "~/lib/env.mjs";
+
+import { User } from "@pubpub/sdk";
 import { Toaster } from "ui/toaster";
+
+import { env } from "~/lib/env.mjs";
+
 import "ui/styles.css";
+
 import { expect } from "utils";
-import { Integration } from "~/lib/Integration";
+
 import { getInstanceConfig } from "~/lib/instance";
+import { Integration } from "~/lib/Integration";
 import { InstanceConfig } from "~/lib/types";
+
 import "./globals.css";
+
+import { ReactNode } from "react";
 
 export const metadata = {
 	title: "PubPub Submissions Integration",
@@ -30,7 +38,7 @@ const cookie = (name: string) => {
 	return undefined;
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
 	const instanceId = expect(cookie("instanceId"), "instanceId missing");
 	const user: User = JSON.parse(expect(cookie("user"), "user missing"));
 	let instanceConfig: InstanceConfig | undefined;

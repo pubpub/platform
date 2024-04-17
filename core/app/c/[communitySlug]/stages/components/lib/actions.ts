@@ -1,21 +1,28 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+
 import prisma from "~/prisma/db";
 
-export async function move(pubId: string, sourceStageId: string, destinationStageId: string) {
+export async function move(
+	pubId: string,
+	sourceStageId: string,
+	destinationStageId: string,
+	communityId: string
+) {
 	try {
 		await prisma.pub.update({
 			where: { id: pubId },
 			include: { stages: true },
 			data: {
 				stages: {
-					disconnect: { id: sourceStageId },
-					connect: { id: destinationStageId },
+					delete: { pubId_stageId: { stageId: sourceStageId, pubId } },
+					create: { stageId: destinationStageId },
 				},
 			},
 		});
 		revalidatePath("/");
+		revalidateTag(`community-stages_${communityId}`);
 	} catch {
 		return { message: "The Pub was not successully moved" };
 	}

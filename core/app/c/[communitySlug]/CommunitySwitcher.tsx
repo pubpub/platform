@@ -1,11 +1,13 @@
 import Link from "next/link";
+
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import {
 	DropdownMenu,
-	DropdownMenuItem,
 	DropdownMenuContent,
+	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
+
 import { CommunityData } from "./layout";
 
 type Props = {
@@ -19,16 +21,16 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<div className="flex items-center rounded p-2 hover:bg-gray-200 -m-2 mb-10 cursor-pointer">
+				<div className="-m-2 mb-10 flex cursor-pointer items-center rounded p-2 hover:bg-gray-200">
 					<Avatar className={avatarClasses}>
 						<AvatarImage src={community.avatar || undefined} />
 						<AvatarFallback>{community.name[0]}</AvatarFallback>
 					</Avatar>
 					<div className={textClasses}>{community.name}</div>
-					<img className="" src="/icons/chevron-vertical.svg" />
+					<img className="" src="/icons/chevron-vertical.svg" alt="" />
 				</div>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className=" bg-white w-56">
+			<DropdownMenuContent className=" w-56 bg-white">
 				{availableCommunities
 					.filter((option) => {
 						return option?.slug !== community.slug;
@@ -37,7 +39,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 						return (
 							<DropdownMenuItem asChild key={option.id}>
 								<Link
-									href={`/c/${option.slug}`}
+									href={`/c/${option.slug}/stages`}
 									className="cursor-pointer hover:bg-gray-50"
 								>
 									<div className="flex items-center">

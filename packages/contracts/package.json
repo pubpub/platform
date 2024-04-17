@@ -9,7 +9,8 @@
 		"dist"
 	],
 	"scripts": {
-		"type-check": "tsc"
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"type-check": "tsc --noEmit"
 	},
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
@@ -21,9 +22,11 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
 		"@ts-rest/core": "^3.28.0",
 		"tsconfig": "workspace:*",
 		"typescript": "^5.4.2",
 		"zod": "^3.22.4"
-	}
+	},
+	"prettier": "@pubpub/prettier-config"
 }

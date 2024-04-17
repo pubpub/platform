@@ -1,17 +1,18 @@
 "use client";
-import React, { useState, FormEvent } from "react";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { supabase } from "lib/supabase";
+
+import React, { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
+import { supabase } from "lib/supabase";
+import { Button } from "ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Check, Loader2 } from "ui/icon";
+import { Input } from "ui/input";
 
 const loginFormSchema = z.object({
 	email: z.string().email(),

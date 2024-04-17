@@ -1,9 +1,11 @@
+import { remove as removeDiacritics } from "diacritics";
+
+import { logger } from "logger";
+
 export const genHumanSlug = (title: string, slug: string): string => {
 	const titleSlug = slugifyString(title).slice(0, 25);
 	return `${titleSlug}-${slug}`;
 };
-import { remove as removeDiacritics } from "diacritics";
-import { logger } from "logger";
 
 export const slugifyString = (input: string) => {
 	if (typeof input !== "string") {

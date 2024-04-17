@@ -1,10 +1,11 @@
-import prisma from "~/prisma/db";
+import { redirect } from "next/navigation";
+
 import { getLoginData } from "~/lib/auth/loginData";
-import PubList from "./PubList";
-import PubHeader from "./PubHeader";
 import { createToken } from "~/lib/server/token";
 import { pubInclude, stageInclude } from "~/lib/types";
-import { redirect } from "next/navigation";
+import prisma from "~/prisma/db";
+import PubHeader from "./PubHeader";
+import PubList from "./PubList";
 
 const getCommunityPubs = async (communitySlug: string) => {
 	const community = await prisma.community.findUnique({

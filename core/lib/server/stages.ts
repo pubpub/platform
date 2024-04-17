@@ -1,8 +1,9 @@
+import { StringReference } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
-import { pubValuesByRef } from "./pub";
+
 import { db } from "~/kysely/database";
 import Database from "~/kysely/types/Database";
-import { StringReference } from "kysely";
+import { pubValuesByRef } from "./pub";
 
 // TODO: Finish making this output match the type of getCommunityStages in
 // core/app/c/[communitySlug]/stages/page.tsx (add pub children and other missing joins)
@@ -39,10 +40,10 @@ export const getCommunityStages = async (communitySlug: string) => {
 		.select((eb) =>
 			jsonArrayFrom(
 				eb
-					.selectFrom("_PubToStage")
-					.select("_PubToStage.A as pubId")
-					.whereRef("_PubToStage.B", "=", "stages.id")
-					.select(pubValuesByRef("pubId" as StringReference<Database, keyof Database>))
+					.selectFrom("PubsInStages")
+					.select("pubId")
+					.whereRef("stageId", "=", "stages.id")
+					.select(pubValuesByRef("pubId"))
 			).as("pubs")
 		)
 		.select((eb) =>

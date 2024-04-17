@@ -1,33 +1,56 @@
-import prisma from "~/prisma/db";
-import StageManagement from "./StageManagement";
-import { stageInclude } from "~/lib/types";
-import { getStageWorkflows, makeStagesById } from "~/lib/stages";
+import { unstable_cache } from "next/cache";
 
-export default async function Page({ params }: { params: { communitySlug: string } }) {
+import "reactflow/dist/style.css";
+
+import { LocalStorageProvider } from "ui/hooks";
+
+import { stageInclude } from "~/lib/types";
+import prisma from "~/prisma/db";
+import { StageEditor } from "./components/editor/StageEditor";
+import { StageEditorProvider } from "./components/editor/StageEditorContext";
+import { StagePanel } from "./components/panel/StagePanel";
+import { StagesProvider } from "./StagesContext";
+
+type Props = {
+	params: { communitySlug: string };
+	searchParams: {
+		editingStageId: string | undefined;
+	};
+};
+
+export default async function Page({ params, searchParams }: Props) {
 	const community = await prisma.community.findUnique({
 		where: { slug: params.communitySlug },
 	});
+
 	if (!community) {
 		return null;
 	}
 
-	const stages = await prisma.stage.findMany({
-		where: { communityId: community.id },
-		include: stageInclude,
-	});
-	// stage workflows look like this:  [[stage1, stage2], [stage3, stage4]]
-	const stageWorkflows = getStageWorkflows(stages);
-	const stagesById = makeStagesById(stages);
+	const getCommunityStages = unstable_cache(
+		(communityId: string) =>
+			prisma.stage.findMany({
+				where: { communityId },
+				include: stageInclude,
+			}),
+		undefined,
+		{ tags: [`community-stages_${community.id}`] }
+	);
+
+	const stages = await getCommunityStages(community.id);
+
 	return (
-		<>
-			<h1>
-				Stages in <strong>{params.communitySlug}</strong>
-			</h1>
-			<StageManagement
-				community={community}
-				stageWorkflows={stageWorkflows}
-				stagesById={stagesById}
-			/>
-		</>
+		<StagesProvider stages={stages} communityId={community.id}>
+			<StageEditorProvider communitySlug={params.communitySlug}>
+				<LocalStorageProvider timeout={200}>
+					<div className="v-full absolute left-0 top-0 z-50 h-full w-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
+						<div className="relative h-full select-none">
+							<StageEditor />
+							<StagePanel stageId={searchParams.editingStageId} />
+						</div>
+					</div>
+				</LocalStorageProvider>
+			</StageEditorProvider>
+		</StagesProvider>
 	);
 }

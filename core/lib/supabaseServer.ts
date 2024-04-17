@@ -1,5 +1,7 @@
 import "server-only";
-import { AuthError, User, UserResponse, createClient } from "@supabase/supabase-js";
+
+import { AuthError, createClient, User, UserResponse } from "@supabase/supabase-js";
+
 import { env } from "./env/env.mjs";
 
 /**
@@ -7,14 +9,11 @@ import { env } from "./env/env.mjs";
  */
 export const getSupabaseUserByEmail = async (email: string): Promise<UserResponse> => {
 	try {
-		const res = await fetch(
-			`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users?filter=${email}`,
-			{
-				headers: {
-					Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-				},
-			}
-		);
+		const res = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users?filter=${email}`, {
+			headers: {
+				Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+			},
+		});
 		if (!res.ok) {
 			throw new AuthError(res.statusText, res.status);
 		}
@@ -36,7 +35,7 @@ export const getSupabaseUserByEmail = async (email: string): Promise<UserRespons
 };
 
 export const getServerSupabase = () => {
-	const url = env.NEXT_PUBLIC_SUPABASE_URL;
+	const url = env.SUPABASE_URL;
 	const key = env.SUPABASE_SERVICE_ROLE_KEY;
 	if (!url || !key) {
 		throw new Error("Missing Supabase parameters");

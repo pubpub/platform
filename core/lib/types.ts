@@ -1,4 +1,6 @@
-import { type Community, Prisma } from "@prisma/client";
+import type { Community } from "@prisma/client";
+
+import { Prisma } from "@prisma/client";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
 	include: {
@@ -68,7 +70,11 @@ export const pubInclude = {
 	...pubValuesInclude,
 	stages: {
 		include: {
-			integrationInstances: { include: { integration: true } },
+			stage: {
+				include: {
+					integrationInstances: { include: { integration: true } },
+				},
+			},
 		},
 	},
 	integrationInstances: { include: { integration: true } },
@@ -122,7 +128,8 @@ export type CommunityMemberPayload = Prisma.MemberGetPayload<{
 }>;
 
 export const stageInclude = {
-	pubs: { include: pubInclude },
+	actionInstances: true,
+	pubs: { include: { pub: { include: pubInclude } } },
 	integrationInstances: { include: { integration: true } },
 	permissions: { include: permissionInclude },
 	moveConstraints: { include: { destination: true } },
@@ -130,6 +137,8 @@ export const stageInclude = {
 } satisfies Prisma.StageInclude;
 
 export type StagePayload = Prisma.StageGetPayload<{ include: typeof stageInclude }>;
+export type StagePayloadActionInstance = StagePayload["actionInstances"][number];
+export type StagePayloadAction = StagePayload["actionInstances"][number]["action"];
 export type StagesById = { [key: string]: StagePayload };
 
 export type StagePayloadMoveConstraint = NonNullable<StagePayload["moveConstraints"]>;
@@ -140,5 +149,5 @@ export type IntegrationAction = { name: string; url: string; href: string };
 export type DeepPartial<T> = T extends object
 	? {
 			[P in keyof T]?: DeepPartial<T[P]>;
-	  }
+		}
 	: T;

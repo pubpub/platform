@@ -1,10 +1,12 @@
-import Database from "./types/Database";
-import { Pool } from "pg";
 import { Kysely, PostgresDialect } from "kysely";
+import { Pool } from "pg";
+
+import { env } from "~/lib/env/env.mjs";
+import Database from "./types/Database";
 
 const dialect = new PostgresDialect({
 	pool: new Pool({
-		connectionString: process.env["DATABASE_URL"],
+		connectionString: env.DATABASE_URL,
 	}),
 });
 
@@ -15,9 +17,9 @@ const dialect = new PostgresDialect({
 export const db = new Kysely<Database>({
 	dialect,
 	// log(event) {
-	// if (event.level === "query") {
-	// 	console.log(event.query.sql);
-	// 	console.log(event.query.parameters);
-	// }
+	// 	if (event.level === "query") {
+	// 		console.log(event.query.sql);
+	// 		console.log(event.query.parameters);
+	// 	}
 	// },
 });

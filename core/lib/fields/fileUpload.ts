@@ -44,4 +44,3 @@ export const FileUpload = {
 		},
 	},
 } as unknown as JSONSchemaType<FileUpload>;
-

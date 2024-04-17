@@ -1,0 +1,50 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+
+import { getStage } from "./queries";
+import { StagePanelActions } from "./StagePanelActions";
+import { StagePanelMembers } from "./StagePanelMembers";
+import { StagePanelOverview } from "./StagePanelOverview";
+import { StagePanelPubs } from "./StagePanelPubs";
+import { StagePanelSheet } from "./StagePanelSheet";
+import { StagePanelTriggers } from "./StagePanelTriggers";
+
+type Props = {
+	stageId: string | undefined;
+};
+
+export const StagePanel = async (props: Props) => {
+	let open = Boolean(props.stageId);
+
+	if (props.stageId) {
+		const stage = await getStage(props.stageId);
+		if (stage === null) {
+			open = false;
+		}
+	}
+
+	return (
+		<StagePanelSheet open={open}>
+			<Tabs defaultValue="overview">
+				<TabsList className="grid grid-cols-4">
+					<TabsTrigger value="overview">Overview</TabsTrigger>
+					<TabsTrigger value="pubs">Pubs</TabsTrigger>
+					<TabsTrigger value="actions">Actions</TabsTrigger>
+					<TabsTrigger value="members">Members</TabsTrigger>
+				</TabsList>
+				<TabsContent value="overview">
+					<StagePanelOverview stageId={props.stageId} />
+				</TabsContent>
+				<TabsContent value="pubs">
+					<StagePanelPubs stageId={props.stageId} />
+				</TabsContent>
+				<TabsContent value="actions" className="space-y-2">
+					<StagePanelActions stageId={props.stageId} />
+					<StagePanelTriggers stageId={props.stageId} />
+				</TabsContent>
+				<TabsContent value="members">
+					<StagePanelMembers stageId={props.stageId} />
+				</TabsContent>
+			</Tabs>
+		</StagePanelSheet>
+	);
+};

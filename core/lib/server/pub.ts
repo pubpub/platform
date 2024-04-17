@@ -1,21 +1,23 @@
 import { Prisma } from "@prisma/client";
+import { ExpressionBuilder, SelectExpression, sql, StringReference } from "kysely";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+
 import {
 	CreatePubRequestBodyWithNulls,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
 	JsonValue,
 } from "contracts";
-import { ExpressionBuilder, SelectExpression, StringReference, sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { expect } from "utils";
+
 import { db } from "~/kysely/database";
 import Database from "~/kysely/types/Database";
 import { CommunitiesId } from "~/kysely/types/public/Communities";
-import { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { PubsId } from "~/kysely/types/public/Pubs";
+import { PubTypesId } from "~/kysely/types/public/PubTypes";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
-import { NotFoundError } from "./errors";
+import { ForbiddenError, NotFoundError } from "./errors";
 
 type PubValues = Record<string, JsonValue>;
 
@@ -38,7 +40,7 @@ type FlatPub = PubNoChildren & {
 };
 
 // pubValuesByRef adds a JSON object of pub_values keyed by their field name under the `fields` key to the output of a query
-// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parent_id or _PubToStage.A
+// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parent_id or PubsInStages.pubId
 // It doesn't seem to work if you've aliased the table or column (although you can probably work around that with a cast)
 export const pubValuesByRef = (pubIdRef: StringReference<Database, keyof Database>) => {
 	return (eb: ExpressionBuilder<Database, keyof Database>) => pubValues(eb, { pubIdRef });
@@ -287,7 +289,7 @@ const makeRecursivePubUpdateInput = async (
 	const assignee = body.assigneeId
 		? {
 				connect: { id: body.assigneeId },
-		  }
+			}
 		: undefined;
 	return {
 		community: { connect: { id: communityId } },
@@ -316,16 +318,22 @@ export const createPub = async (instanceId: string, body: CreatePubRequestBodyWi
 		throw InstanceNotFoundError;
 	}
 
+	if (!instance.stageId) {
+		throw new ForbiddenError("Integration instance not attached to stage");
+	}
+
 	const updateDepth = getUpdateDepth(body);
 	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
 	const createArgs = {
 		data: {
+			...updateInput,
 			...(!body.parentId && {
 				stages: {
-					connect: { id: expect(instance.stageId) },
+					create: {
+						stageId: instance.stageId,
+					},
 				},
 			}),
-			...updateInput,
 		},
 		...makeRecursiveInclude("children", {}, updateDepth),
 	};

@@ -1,12 +1,14 @@
 import type { Prisma, User } from "@prisma/client";
+
 import { Eta } from "eta";
+
+import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
+
 import prisma from "~/prisma/db";
-import { IntegrationAction } from "../types";
+import { IntegrationAction, pubValuesInclude } from "../types";
 import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";
-import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
-import { pubValuesInclude } from "../types";
 
 type Node = string | { t: string; val: string };
 
@@ -140,10 +142,13 @@ const makeTemplateApi = async (
 				pubs[pubAlias] = {
 					id: pub.id,
 					pubTypeId: pub.pubTypeId,
-					values: pub.values.reduce((prev, curr) => {
-						prev[curr.field.slug] = curr.value;
-						return prev;
-					}, {} as Record<string, Prisma.JsonValue>),
+					values: pub.values.reduce(
+						(prev, curr) => {
+							prev[curr.field.slug] = curr.value;
+							return prev;
+						},
+						{} as Record<string, Prisma.JsonValue>
+					),
 					assignee: pub.assignee,
 				};
 			}

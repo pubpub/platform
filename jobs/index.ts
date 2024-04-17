@@ -1,5 +1,6 @@
-import { run, JobHelpers, Task } from "graphile-worker";
-import { Client, SendEmailRequestBody, makeClient } from "@pubpub/sdk";
+import { JobHelpers, run, Task } from "graphile-worker";
+
+import { Client, makeClient, SendEmailRequestBody } from "@pubpub/sdk";
 import { logger } from "logger";
 
 const client = makeClient({});
@@ -7,6 +8,19 @@ const client = makeClient({});
 type InstanceJobPayload<T> = {
 	instanceId: string;
 	body: T;
+};
+
+// TODO: Use kanel generated types for these
+type PubInStagesRow = {
+	pubId: string;
+	stageId: string;
+};
+
+type DBTriggerEventPayload<T> = {
+	table: string;
+	operation: string;
+	new: T;
+	old: T;
 };
 
 const makeTaskList = (client: Client<{}>) => {
@@ -19,7 +33,12 @@ const makeTaskList = (client: Client<{}>) => {
 		const info = await client.sendEmail(instanceId, body);
 		logger.info({ msg: `Sent email`, info, job: helpers.job });
 	}) as Task;
-	return { sendEmail };
+
+	const emitEvent = ((payload: DBTriggerEventPayload<PubInStagesRow>) => {
+		logger.info({ msg: "Emitting event", payload });
+	}) as Task;
+
+	return { sendEmail, emitEvent };
 };
 
 const main = async () => {

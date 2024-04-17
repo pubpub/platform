@@ -2,19 +2,36 @@
 	"$schema": "https://turbo.build/schema.json",
 	"globalDependencies": ["**/.env.*local"],
 	"pipeline": {
+		"topo": {
+			"dependsOn": ["^topo"]
+		},
 		"build": {
 			"dependsOn": ["^build"],
 			"outputs": ["dist/**", ".next/**", "!.next/cache/**"]
 		},
 		"start": {},
-		"lint": {},
-		"type-check": {},
+		"lint": {
+			"dependsOn": ["^topo"],
+			"outputs": ["node_modules/.cache/.eslintcache"]
+		},
+		"type-check": {
+			"dependsOn": ["^topo"],
+			"outputs": ["node_modules/.cache/tsbuildinfo.json"]
+		},
 		"dev": {
 			"cache": false,
 			"persistent": true
 		},
 		"clean": {
 			"cache": false
+		},
+		"format": {
+			"outputs": ["node_modules/.cache/.prettiercache"],
+			"outputMode": "new-only"
+		},
+		"test": {
+			"dependsOn": ["^topo"],
+			"outputs": ["node_modules/.cache/vitestcache"]
 		}
 	}
 }

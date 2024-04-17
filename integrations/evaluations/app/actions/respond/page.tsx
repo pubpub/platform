@@ -1,6 +1,8 @@
-import { SafeUser } from "@pubpub/sdk";
 import { notFound, redirect } from "next/navigation";
+
+import { SafeUser } from "@pubpub/sdk";
 import { expect } from "utils";
+
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";

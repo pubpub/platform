@@ -1,5 +1,7 @@
 "use client";
+
 import React, { useCallback, useMemo } from "react";
+
 import { Button } from "ui/button";
 import {
 	Command,
@@ -13,6 +15,7 @@ import { Check, ChevronsUpDown } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { cn, expect } from "utils";
+
 import {
 	CommunityMemberPayload,
 	PubPayload,
@@ -115,7 +118,7 @@ export default function Assign(props: Props) {
 			</PopoverTrigger>
 			<PopoverContent className="w-[200px] p-0">
 				<Command>
-					<CommandInput className="h-8 my-2" placeholder="Search member..." />
+					<CommandInput className="my-2 h-8" placeholder="Search member..." />
 					<CommandEmpty>No member found.</CommandEmpty>
 					<CommandList>
 						<CommandGroup>

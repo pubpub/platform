@@ -1,16 +1,19 @@
 "use client";
-import { getSlugSuffix, slugifyString } from "lib/string";
-import { supabase } from "lib/supabase";
+
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-import { Button } from "ui/button";
+
+import { getSlugSuffix, slugifyString } from "lib/string";
+import { supabase } from "lib/supabase";
+import { logger } from "logger";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Button } from "ui/button";
 import { Loader2 } from "ui/icon";
+
 import LogoutButton from "~/app/components/LogoutButton";
 import { env } from "~/lib/env/env.mjs";
 import { UserPutBody, UserSetting } from "~/lib/types";
-import { logger } from "logger";
 
 type Props = UserSetting;
 
@@ -124,7 +127,7 @@ export default function SettingsForm({
 							onChange={(evt) => setLastName(evt.target.value)}
 						/>
 					</div>
-					<div className="text-gray-500 text-sm leading-tight mt-3">
+					<div className="mt-3 text-sm leading-tight text-gray-500">
 						Username: {slugifyString(firstName)}
 						{lastName ? `-${slugifyString(lastName)}` : ""}-{slugSuffix}
 					</div>
@@ -148,10 +151,10 @@ export default function SettingsForm({
 					</Button>
 					{!emailIsLoading &&
 						(emailError ? (
-							<div className="text-red-700 text-sm leading-tight">{emailError}</div>
+							<div className="text-sm leading-tight text-red-700">{emailError}</div>
 						) : (
 							emailSuccess && (
-								<div className="text-red-700 text-sm leading-tight">
+								<div className="text-sm leading-tight text-red-700">
 									You will need to confirm this change by clicking a link sent to
 									the new email address.
 								</div>
@@ -164,7 +167,7 @@ export default function SettingsForm({
 				{!resetSuccess && (
 					<Button onClick={resetPassword} disabled={resetIsLoading}>
 						Send password reset email
-						{resetIsLoading && <Loader2 className="h-4 w-4 ml-4 animate-spin" />}
+						{resetIsLoading && <Loader2 className="ml-4 h-4 w-4 animate-spin" />}
 					</Button>
 				)}
 				{resetSuccess && (
@@ -184,7 +187,7 @@ export default function SettingsForm({
 								>
 									<Button variant="outline">
 										<div className="flex items-center">
-											<Avatar className="rounded w-9 h-9 mr-2">
+											<Avatar className="mr-2 h-9 w-9 rounded">
 												<AvatarImage src={community.avatar || undefined} />
 												<AvatarFallback>{community.name[0]}</AvatarFallback>
 											</Avatar>

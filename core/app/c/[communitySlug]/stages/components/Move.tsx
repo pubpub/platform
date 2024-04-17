@@ -3,6 +3,7 @@
 import { Button } from "ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
+
 import { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
 import { move } from "./lib/actions";
 
@@ -17,7 +18,7 @@ export default function Move(props: Props) {
 	const { toast } = useToast();
 
 	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
-		const err = await move(pubId, sourceStageId, destStageId);
+		const err = await move(pubId, sourceStageId, destStageId, props.stage.communityId);
 		if (err) {
 			toast({
 				title: "Error",
@@ -33,12 +34,13 @@ export default function Move(props: Props) {
 			action: (
 				<Button
 					onClick={async () =>
-						await move(pubId, destStageId, sourceStageId).then(() =>
-							toast({
-								variant: "default",
-								title: "Success",
-								description: "Pub was successfully moved back",
-							})
+						await move(pubId, destStageId, sourceStageId, props.stage.communityId).then(
+							() =>
+								toast({
+									variant: "default",
+									title: "Success",
+									description: "Pub was successfully moved back",
+								})
 						)
 					}
 				>
@@ -59,7 +61,7 @@ export default function Move(props: Props) {
 				<div className="flex flex-col">
 					{props.moveTo && (
 						<>
-							<div className="font-bold text-center mb-4">Move this Pub to:</div>
+							<div className="mb-4 text-center font-bold">Move this Pub to:</div>
 							{props.moveTo.map((stage) => {
 								return stage.id === props.stage.id ? null : (
 									<Button
@@ -78,7 +80,7 @@ export default function Move(props: Props) {
 					)}
 					{props.moveFrom && (
 						<>
-							<div className="font-bold text-center mb-4">Move this Pub back to:</div>
+							<div className="mb-4 text-center font-bold">Move this Pub back to:</div>
 							{props.moveFrom.map((stage) => {
 								<div className="mb-4">Move this Pub back to:</div>;
 								return stage.id === props.stage.id ? null : (

@@ -1,15 +1,16 @@
-import prisma from "~/prisma/db";
-import { getLoginData } from "~/lib/auth/loginData";
-import { notFound } from "next/navigation";
-import { AddMemberDialog } from "./AddMemberDialog";
-import { AddMember } from "./AddMember";
 import { unstable_cache } from "next/cache";
+import { notFound } from "next/navigation";
 import { Community } from "@prisma/client";
-import { MemberTable } from "./MemberTable";
-import { TableMember } from "./getMemberTableColumns";
 
-const getCachedMembers = (community: Community) =>
-	unstable_cache(
+import { getLoginData } from "~/lib/auth/loginData";
+import prisma from "~/prisma/db";
+import { AddMember } from "./AddMember";
+import { AddMemberDialog } from "./AddMemberDialog";
+import { TableMember } from "./getMemberTableColumns";
+import { MemberTable } from "./MemberTable";
+
+const getCachedMembers = async (community: Community) =>
+	await unstable_cache(
 		async () => {
 			const members = await prisma.member.findMany({
 				where: { community: { id: community.id } },
@@ -18,9 +19,9 @@ const getCachedMembers = (community: Community) =>
 
 			return members;
 		},
-		undefined,
+		[community.id],
 		{ tags: [`members_${community.id}`] }
-	);
+	)();
 
 export default async function Page({
 	params: { communitySlug, add },
@@ -60,8 +61,8 @@ export default async function Page({
 
 	const page = parseInt(searchParams.page ?? "1", 10);
 
-	const getMembers = getCachedMembers(community);
-	const members = await getMembers();
+	const members = await getCachedMembers(community);
+
 	if (!members.length && page !== 1) {
 		return notFound();
 	}
@@ -81,8 +82,8 @@ export default async function Page({
 
 	return (
 		<>
-			<div className="flex mb-16 justify-between items-center">
-				<h1 className="font-bold text-xl">Members</h1>
+			<div className="mb-16 flex items-center justify-between">
+				<h1 className="text-xl font-bold">Members</h1>
 				<AddMemberDialog
 					community={community}
 					open={!!add}

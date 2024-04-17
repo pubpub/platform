@@ -1,25 +1,26 @@
 "use client";
 
 import * as React from "react";
+import { Community } from "@prisma/client";
 import {
 	ColumnDef,
 	ColumnFiltersState,
 	flexRender,
 	getCoreRowModel,
-	useReactTable,
-	SortingState,
-	getSortedRowModel,
-	getPaginationRowModel,
 	getFilteredRowModel,
+	getPaginationRowModel,
+	getSortedRowModel,
+	SortingState,
+	useReactTable,
 } from "@tanstack/react-table";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
-import { TableMember, getMemberTableColumns } from "./getMemberTableColumns";
 import { DataTablePagination } from "ui/data-table";
-import { Input } from "ui/input";
-import { Community } from "@prisma/client";
-import { Label } from "ui/label";
 import { Search } from "ui/icon";
+import { Input } from "ui/input";
+import { Label } from "ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
+
+import { getMemberTableColumns, TableMember } from "./getMemberTableColumns";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -51,8 +52,8 @@ function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValu
 	return (
 		<div>
 			<div className="flex flex-col items-start gap-y-2 py-4">
-				<Label htmlFor="email-filter" className="flex gap-x-1 items-center">
-					<Search className="w-4 h-4" /> Search by email
+				<Label htmlFor="email-filter" className="flex items-center gap-x-1">
+					<Search className="h-4 w-4" /> Search by email
 				</Label>
 				<Input
 					name="email-filter"
@@ -64,7 +65,7 @@ function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValu
 					className="max-w-sm"
 				/>
 			</div>
-			<div className="rounded-md border mb-2">
+			<div className="mb-2 rounded-md border">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -77,7 +78,7 @@ function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValu
 												: flexRender(
 														header.column.columnDef.header,
 														header.getContext()
-												  )}
+													)}
 										</TableHead>
 									);
 								})}

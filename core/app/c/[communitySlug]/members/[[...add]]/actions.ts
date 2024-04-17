@@ -1,26 +1,30 @@
 "use server";
 
-import type { SuggestedUser } from "~/lib/server/members";
-
-import prisma from "~/prisma/db";
-import { Community } from "@prisma/client";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getServerSupabase } from "~/lib/supabaseServer";
-import { formatSupabaseError } from "~/lib/supabase";
-import { generateHash, slugifyString } from "~/lib/string";
-import { captureException } from "@sentry/nextjs";
-import { TableMember } from "./getMemberTableColumns";
 import { cache } from "react";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { headers } from "next/headers";
+import { Community } from "@prisma/client";
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { User } from "@supabase/supabase-js";
-import { env } from "~/lib/env/env.mjs";
 
-export const revalidateMemberPathsAndTags = (community: Community) => {
-	revalidatePath(`/c/${community.slug}/members`);
-	revalidateTag(`members_${community.id}`);
-	// not in use yet, but should be updated here
-	revalidateTag(`users`);
-};
+import type { SuggestedUser } from "~/lib/server/members";
+import { getLoginData } from "~/lib/auth/loginData";
+import { env } from "~/lib/env/env.mjs";
+import { defineServerAction } from "~/lib/server/defineServerAction";
+import { generateHash, slugifyString } from "~/lib/string";
+import { formatSupabaseError } from "~/lib/supabase";
+import { getServerSupabase } from "~/lib/supabaseServer";
+import prisma from "~/prisma/db";
+import { TableMember } from "./getMemberTableColumns";
+
+export const revalidateMemberPathsAndTags = defineServerAction(
+	async function revalidateMemberPathsAndTags(community: Community) {
+		revalidatePath(`/c/${community.slug}/members`);
+		revalidateTag(`members_${community.id}`);
+		// not in use yet, but should be updated here
+		revalidateTag(`users`);
+	}
+);
 
 const isCommunityAdmin = cache(async (community: Community) => {
 	const loginData = await getLoginData();
@@ -92,19 +96,24 @@ const addSupabaseUser = async ({
 	// let's just give up
 	if (!force) {
 		captureException(error);
-		return { user: null, error: `Failed to invite member.\n ${formatSupabaseError(error)}` };
+		return {
+			user: null,
+			error: `Failed to invite member.\n ${formatSupabaseError(error)}`,
+		};
 	}
 
 	// 422 = email already exists in supabase
 	if (error.status !== 422) {
 		captureException(error);
-		return { user: null, error: `Failed to invite member.\n ${formatSupabaseError(error)}` };
+		return {
+			user: null,
+			error: `Failed to invite member.\n ${formatSupabaseError(error)}`,
+		};
 	}
 
 	// the user already exists in supabase, so we will delete them and try again
-	const { data: supabaseUserData, error: getEmailError } = await client.auth.admin.getUserByEmail(
-		email
-	);
+	const { data: supabaseUserData, error: getEmailError } =
+		await client.auth.admin.getUserByEmail(email);
 
 	if (getEmailError) {
 		captureException(getEmailError);
@@ -141,7 +150,7 @@ const addSupabaseUser = async ({
  * @param community - The community to add the member to.
  * @returns A Promise that resolves to the newly created member object, or an error object if an error occurs.
  */
-export const addMember = async ({
+export const addMember = defineServerAction(async function addMember({
 	user,
 	canAdmin,
 	community,
@@ -149,10 +158,13 @@ export const addMember = async ({
 	user: SuggestedUser;
 	canAdmin?: boolean;
 	community: Community;
-}) => {
+}) {
 	const { error: adminError } = await isCommunityAdmin(community);
 	if (adminError) {
-		return { error: adminError };
+		return {
+			title: "Failed to add member",
+			error: "You do not have permission to invite members to this community",
+		};
 	}
 
 	try {
@@ -164,7 +176,10 @@ export const addMember = async ({
 		});
 
 		if (existingMember) {
-			return { error: "User is already a member of this community" };
+			return {
+				title: "Failed to add member",
+				error: "User is already a member of this community",
+			};
 		}
 
 		const member = await prisma.member.create({
@@ -193,7 +208,10 @@ export const addMember = async ({
 		});
 
 		if (supabaseInviteError) {
-			return { error: supabaseInviteError };
+			return {
+				title: "Failed to add member",
+				error: "We encounted a problem with our authentication provider.",
+			};
 		}
 
 		await prisma.user.update({
@@ -207,15 +225,19 @@ export const addMember = async ({
 
 		return { member };
 	} catch (error) {
-		return { error: error.message };
+		return {
+			title: "Failed to add member",
+			error: "An unexpected error occurred",
+			cause: error,
+		};
 	}
-};
+});
 
 /**
  * Create a new user and add them as a member to a community
  * Will also add them as a user to supabase
  */
-export const createUserWithMembership = async ({
+export const createUserWithMembership = defineServerAction(async function createUserWithMembership({
 	firstName,
 	lastName,
 	email,
@@ -227,71 +249,91 @@ export const createUserWithMembership = async ({
 	email: string;
 	community: Community;
 	canAdmin: boolean;
-}) => {
-	const { error: adminError } = await isCommunityAdmin(community);
-	if (adminError) {
-		return { error: adminError };
-	}
+}) {
+	try {
+		const { error: adminError } = await isCommunityAdmin(community);
+		if (adminError) {
+			return {
+				title: "Failed to add member",
+				error: "You do not have permission to invite members to this community",
+			};
+		}
 
-	const user = await prisma.user.create({
-		data: {
+		const user = await prisma.user.create({
+			data: {
+				email,
+				firstName,
+				lastName,
+				slug: `${slugifyString(firstName)}${
+					lastName ? `-${slugifyString(lastName)}` : ""
+				}-${generateHash(4, "0123456789")}`,
+				memberships: {
+					create: {
+						communityId: community.id,
+						canAdmin,
+					},
+				},
+			},
+		});
+
+		const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
 			email,
 			firstName,
 			lastName,
-			slug: `${slugifyString(firstName)}${
-				lastName ? `-${slugifyString(lastName)}` : ""
-			}-${generateHash(4, "0123456789")}`,
-			memberships: {
-				create: {
-					communityId: community.id,
-					canAdmin,
-				},
+			community,
+			canAdmin,
+		});
+
+		if (supabaseError !== null) {
+			return {
+				title: "Failed to add member",
+				error: "We encounted a problem with our authentication provider",
+			};
+		}
+
+		await prisma.user.update({
+			where: {
+				id: user.id,
 			},
-		},
-	});
+			data: {
+				supabaseId: supabaseUser.id,
+			},
+		});
 
-	const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
-		email,
-		firstName,
-		lastName,
-		community,
-		canAdmin,
-	});
+		revalidateMemberPathsAndTags(community);
 
-	if (supabaseError !== null) {
-		return { error: supabaseError };
+		return { user };
+	} catch (error) {
+		return {
+			title: "Failed to add member",
+			error: "An unexpected error occurred",
+			cause: error,
+		};
 	}
+});
 
-	await prisma.user.update({
-		where: {
-			id: user.id,
-		},
-		data: {
-			supabaseId: supabaseUser.id,
-		},
-	});
-
-	revalidateMemberPathsAndTags(community);
-
-	return { user };
-};
-
-export const removeMember = async ({
+export const removeMember = defineServerAction(async function removeMember({
 	member,
 	community,
 }: {
 	member: TableMember;
 	community: Community;
-}) => {
+}) {
 	try {
 		const { loginData, error: adminError } = await isCommunityAdmin(community);
 
 		if (adminError) {
-			return { error: adminError };
+			return {
+				title: "Failed to remove member",
+				error: adminError,
+			};
 		}
 
 		if (loginData?.memberships.find((m) => m.id === member.id)) {
-			return { error: "You cannot remove yourself from the community" };
+			return {
+				title: "Failed to remove member",
+				error: "You cannot remove yourself from the community",
+			};
 		}
 
 		const deleted = await prisma.member.delete({
@@ -301,12 +343,19 @@ export const removeMember = async ({
 		});
 
 		if (!deleted) {
-			return { error: "Failed to remove member" };
+			return {
+				title: "Failed to remove member",
+				error: "An unexpected error occurred",
+			};
 		}
 
 		revalidateMemberPathsAndTags(community);
 		return { success: true };
 	} catch (error) {
-		return { error: error.message };
+		return {
+			title: "Failed to remove member",
+			error: "An unexpected error occurred",
+			cause: error,
+		};
 	}
-};
+});
