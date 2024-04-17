@@ -17,7 +17,7 @@ import { createCommunity } from "./actions";
 export const communityCreateFormSchema = z.object({
 	name: z.string().min(1),
 	slug: z.string().min(1),
-	avatar: z.string().url().optional().or(z.literal('')),
+	avatar: z.string().url().optional().or(z.literal("")),
 });
 
 type Props = {
