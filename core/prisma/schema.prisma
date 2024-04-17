@@ -345,4 +345,5 @@ enum Action {
   log
   pdf
   email
+  pushToV6
 }
