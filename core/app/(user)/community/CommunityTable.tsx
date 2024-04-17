@@ -2,9 +2,9 @@
 
 import React from "react";
 
-import { DataTable } from "~/app/components/DataTable";
-import type { UserAndMemberships } from "~/lib/types";
 import type { TableCommunity } from "./getCommunityTableColumns";
+import type { UserAndMemberships } from "~/lib/types";
+import { DataTable } from "~/app/components/DataTable";
 import { getCommunityTableColumns } from "./getCommunityTableColumns";
 
 export const CommunityTable = ({
