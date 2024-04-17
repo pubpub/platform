@@ -20,19 +20,12 @@ const loginFormSchema = z.object({
 
 export default function LoginForm() {
 	const router = useRouter();
-	// const [password, setPassword] = useState("");
-	// const [email, setEmail] = useState("");
-	// const [isLoading, setIsLoading] = useState(false);
-	// const [failure, setFailure] = useState(false);
 
 	const form = useForm({
 		resolver: zodResolver(loginFormSchema),
 	});
 
 	const handleSubmit = async () => {
-		// setIsLoading(true);
-		// setFailure(false);
-		// evt.preventDefault();
 		const { data, error } = await supabase.auth.signInWithPassword({
 			email: form.getValues().email,
 			password: form.getValues().password,
@@ -116,45 +109,6 @@ export default function LoginForm() {
 						</Link>
 					</CardFooter>
 				</Card>
-				{/* <div>
-						<label htmlFor="email">Email</label>
-					</div>
-					<div>
-						<input
-							id="email"
-							className="w-full"
-							placeholder="Enter your email address"
-							name="email"
-							value={email}
-							onChange={(evt) => setEmail(evt.target.value)}
-						/>
-					</div>
-					<div className="mt-2">
-						<label htmlFor="password">Password</label>
-					</div>
-					<div>
-						<input
-							id="password"
-							className="w-full"
-							placeholder="Enter your password"
-							name="password"
-							value={password}
-							type="password"
-							onChange={(evt) => setPassword(evt.target.value)}
-						/>
-					</div>
-
-					<div className="my-6 text-center">
-						<Button className="mr-4" type="submit" disabled={!email || !password}>
-							Login
-						</Button>
-						<Link href="/forgot" className="text-sm text-gray-600 hover:underline">
-							Forgot Password
-						</Link>
-					</div>
-					{failure && (
-						<div className={"text-red-700 my-4"}>Incorrect password or email</div>
-					)} */}
 			</form>
 		</Form>
 	);
