@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { formatSupabaseError, supabase } from "lib/supabase";
 import { Button } from "ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
@@ -46,8 +47,13 @@ export default function ResetForm() {
 		});
 
 		if (error) {
+			const formattedError =
+				error.name === "AuthSessionMissingError"
+					? "This reset link is invalid or has expired. Please request a new one."
+					: formatSupabaseError(error);
+
 			form.setError("password", {
-				message: formatSupabaseError(error),
+				message: formattedError,
 			});
 			return;
 		}
@@ -55,29 +61,22 @@ export default function ResetForm() {
 		redirectUser(data);
 	};
 
-	useEffect(() => {
-		if (!form.formState.isSubmitSuccessful) {
-			return;
-		}
-	}, [form.formState.isSubmitSuccessful]);
-
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
-				<FormField
-					name="password"
-					render={({ field }) => (
-						<FormItem aria-label="Password">
-							<FormLabel>New Password</FormLabel>
-							<Input {...field} />
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+		<>
+			<Form {...form}>
+				<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
+					<FormField
+						name="password"
+						render={({ field }) => (
+							<FormItem aria-label="Password">
+								<FormLabel>New Password</FormLabel>
+								<Input {...field} />
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
-				{!form.formState.isSubmitSuccessful ? (
 					<Button
-						variant="outline"
 						type="submit"
 						disabled={!form.formState.isDirty || form.formState.isSubmitting}
 					>
@@ -86,13 +85,31 @@ export default function ResetForm() {
 							<Loader2 className="ml-4 h-4 w-4 animate-spin" />
 						)}
 					</Button>
-				) : (
-					<p className="flex flex-col gap-2">
-						<span className="text-green-700">Success - password reset!</span>
-						Redirecting in 5 seconds...
-					</p>
-				)}
-			</form>
-		</Form>
+				</form>
+			</Form>
+
+			<Dialog
+				open={form.formState.isSubmitSuccessful}
+				onOpenChange={(open) => {
+					if (open) {
+						return;
+					}
+
+					form.reset();
+				}}
+			>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Success</DialogTitle>
+						<DialogDescription>
+							<p className="flex flex-col gap-2">
+								<span className="text-green-700">Success - password reset!</span>
+								Redirecting in 5 seconds...
+							</p>
+						</DialogDescription>
+					</DialogHeader>
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 }
