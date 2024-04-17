@@ -93,27 +93,20 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 		};
 	}
 	try {
-		// await db
-		// 	.deleteFrom("communities")
-		// 	.where("id", "=", community.id as CommunitiesId)
-		// 	.executeTakeFirst();
-
 		if (community.id === unJournalId || community.id === crocCrocId) {
 			return {
 				title: "Failed to remove community",
 				error: "Cannot remove example community",
 			};
 		}
+		await db
+			.deleteFrom("communities")
+			.where("id", "=", community.id as CommunitiesId)
+			.executeTakeFirst();
 
-		await prisma.community.delete({
-			where: {
-				id: community.id,
-			},
-		});
 		revalidatePath("/");
 		return;
 	} catch (error) {
-		console.log(error);
 		return {
 			title: "Failed to remove community",
 			error: "An unexpected error occurred",
