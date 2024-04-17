@@ -1,82 +1,98 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { UserResponse } from "@supabase/supabase-js";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { formatSupabaseError, supabase } from "lib/supabase";
 import { Button } from "ui/button";
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
+import { Input } from "ui/input";
+
+const resetPasswordSchema = z.object({
+	password: z.string().min(8),
+});
 
 export default function ResetForm() {
 	const router = useRouter();
-	const [password, setPassword] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
-	const [success, setSuccess] = useState(false);
-	const [error, setError] = useState("");
+	const form = useForm({
+		resolver: zodResolver(resetPasswordSchema),
+	});
 
-	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
-		setIsLoading(true);
-		setError("");
-		evt.preventDefault();
+	const redirectUser = async (data: (UserResponse & { error: null })["data"]) => {
+		router.refresh();
+		// check if user is in a community
+		const response = await fetch(`/api/member?email=${data.user.email}`, {
+			method: "GET",
+			headers: { "content-type": "application/json" },
+		});
+		const { member } = await response.json();
+		setTimeout(() => {
+			if (member) {
+				router.push(`/c/${member.community.slug}/stages`);
+			} else {
+				router.push("/settings");
+			}
+		}, 5000);
+	};
+
+	const onSubmit = async ({ password }: z.infer<typeof resetPasswordSchema>) => {
 		const { data, error } = await supabase.auth.updateUser({
 			password,
 		});
+
 		if (error) {
-			setIsLoading(false);
-			setError(formatSupabaseError(error));
-		} else if (data) {
-			setIsLoading(false);
-			setSuccess(true);
-			router.refresh();
-			// check if user is in a community
-			const response = await fetch(`/api/member?email=${data.user.email}`, {
-				method: "GET",
-				headers: { "content-type": "application/json" },
+			form.setError("password", {
+				message: formatSupabaseError(error),
 			});
-			const { member } = await response.json();
-			setIsLoading(false);
-			setTimeout(() => {
-				if (member) {
-					router.push(`/c/${member.community.slug}/stages`);
-				} else {
-					router.push("/settings");
-				}
-			}, 5000);
+			return;
 		}
+
+		redirectUser(data);
 	};
 
+	useEffect(() => {
+		if (!form.formState.isSubmitSuccessful) {
+			return;
+		}
+	}, [form.formState.isSubmitSuccessful]);
+
 	return (
-		<>
-			{!success && (
-				<div className="my-10">
-					<form onSubmit={handleSubmit}>
-						<label htmlFor="password">Password</label>
-						<input
-							name="password"
-							value={password}
-							type="password"
-							onChange={(evt) => setPassword(evt.target.value)}
-						/>
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
+				<FormField
+					name="password"
+					render={({ field }) => (
+						<FormItem aria-label="Password">
+							<FormLabel>New Password</FormLabel>
+							<Input {...field} />
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 
-						<Button variant="outline" type="submit" disabled={!password || isLoading}>
-							Set new password
-							{isLoading && <Loader2 className="ml-4 h-4 w-4 animate-spin" />}
-						</Button>
-
-						{error && (
-							<div className={"my-4 text-red-700"}>
-								Error resetting password: {error}
-							</div>
+				{!form.formState.isSubmitSuccessful ? (
+					<Button
+						variant="outline"
+						type="submit"
+						disabled={!form.formState.isDirty || form.formState.isSubmitting}
+					>
+						Set new password
+						{form.formState.isSubmitting && (
+							<Loader2 className="ml-4 h-4 w-4 animate-spin" />
 						)}
-					</form>
-				</div>
-			)}
-			{success && (
-				<div className="my-10">
-					<div className="text-green-700">Success - password reset!</div>
-					<div>Redirecting in 5 seconds...</div>
-				</div>
-			)}
-		</>
+					</Button>
+				) : (
+					<p className="flex flex-col gap-2">
+						<span className="text-green-700">Success - password reset!</span>
+						Redirecting in 5 seconds...
+					</p>
+				)}
+			</form>
+		</Form>
 	);
 }
