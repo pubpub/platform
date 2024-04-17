@@ -13,17 +13,14 @@ terraform {
       version = ">= 0.22.0"
     }
   }
-  backend "s3" {
-    # contents provided in NAME.s3.tfbackend
-  }
 }
 
-provider "aws" {
-  region = var.region
-}
+# provider "aws" {
+#   region = var.region
+# }
 
 module "cluster" {
-  source = "./modules/v7-cluster"
+  source = "../v7-cluster"
 
   name = var.name
   environment = var.environment
@@ -35,15 +32,14 @@ module "cluster" {
 }
 
 module "core_dependency_services" {
-  source = "./modules/core-services"
+  source = "../core-services"
 
   cluster_info = module.cluster.cluster_info
   assets_bucket_url_name = var.ASSETS_BUCKET_NAME
-  HONEYCOMB_API_KEY = var.HONEYCOMB_API_KEY
 }
 
 module "service_core" {
-  source = "./modules/container-generic"
+  source = "../container-generic"
 
   service_name = "core"
   cluster_info = module.cluster.cluster_info
@@ -107,7 +103,7 @@ module "service_core" {
 }
 
 module "service_flock" {
-  source = "./modules/container-generic"
+  source = "../container-generic"
 
   service_name = "jobs"
   cluster_info = module.cluster.cluster_info
@@ -133,7 +129,7 @@ module "service_flock" {
 }
 
  module "service_intg_submissions" {
-   source = "./modules/container-generic"
+   source = "../container-generic"
 
    service_name = "integration-submissions"
    cluster_info = module.cluster.cluster_info
@@ -166,7 +162,7 @@ module "service_flock" {
  }
 
  module "service_intg_evaluations" {
-   source = "./modules/container-generic"
+   source = "../container-generic"
 
    service_name = "integration-evaluations"
    cluster_info = module.cluster.cluster_info
@@ -199,7 +195,7 @@ module "service_flock" {
  }
 
  module "service_bastion" {
-   source = "./modules/container-generic"
+   source = "../container-generic"
 
    service_name = "bastion"
    cluster_info = module.cluster.cluster_info
@@ -230,9 +226,26 @@ module "service_flock" {
    }
  }
 
+
+# N.B. This invocation means that the deployment including honeycomb cannot succeed
+#   until after you have inserted the secret into the AWS console. This only happens
+#   in this one case because with things like ECS, you can successfully "apply"
+#   even if secrets are not present; the containers will simply fail to start.
+#   However, this last section of TF code can be commented out for a first apply,
+#   then go and insert secret in console, then reapply with this.
+#
+#   This is the result of an awkward design pattern, where instead of the
+#   Honeycomb provider being configured to search for an API key in the env,
+#   the modules themselves expect an API key as an inline var and fail if
+#   it is not set. This is probably because the API keys are different for
+#   different environments, rather than per account/user/etc.
+data "aws_secretsmanager_secret_version" "honeycomb_api_key" {
+  secret_id = module.core_dependency_services.secrets.honeycomb_api_key
+}
+
 module "observability_honeycomb_integration" {
-  source = "./modules/honeycomb-integration"
+  source = "../honeycomb-integration"
 
   cluster_info = module.cluster.cluster_info
-  HONEYCOMB_API_KEY = var.HONEYCOMB_API_KEY
+  HONEYCOMB_API_KEY = data.aws_secretsmanager_secret_version.honeycomb_api_key.secret_string
 }

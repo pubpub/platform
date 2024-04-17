@@ -28,15 +28,9 @@ Both `act` commands (for container version updates) and `terraform` commands
 Usually this means setting a file at `~/.aws/credentials` and `~/.aws/config`:
 see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 
+## aws:tf:plan
 
-## aws:tf:apply
-
-> Runs the named infrastructure script interactively using the environment specified.
-
-REQUIRES an environment variable setting:
- TF_VAR_HONEYCOMB_API_KEY
-for secrets that don't exist in this repository
-
+> Runs the plan (diff showing) command interactively using the environment specified.
 
 **OPTIONS**
 
@@ -50,36 +44,53 @@ for secrets that don't exist in this repository
 
 ```bash
 (
-    cd terraform/aws
-
-    echo "checking for environment configuration files..."
-
-    tf_var_file="./environments/${proper_name}/variables.tfvars"
-
-    if [ ! -f ${tf_var_file} ]; then
-        echo "REQUIRED var file missing: ${tf_var_file}"
-        exit 1
-    fi
-
-    echo "checking environment setup..."
-    if [ -z "${TF_VAR_HONEYCOMB_API_KEY}" ]; then
-        echo "REQURED env secret TF_VAR_HONEYCOMB_API_KEY missing"
-        exit 1
-    fi
+    cd terraform/aws/environments/${proper_name}
 
     export AWS_PAGER=""
     if aws sts get-caller-identity; then
         echo "AWS identity check succeeded."
     else
-        echo "AWS CLI misconfigured; see Maskfile.md for info"
+        echo "AWS CLI misconfigured; see maskfile.md for info"
+        exit 1
+    fi
+
+    echo "showing env diff for $proper_name from $(pwd)"
+
+    terraform plan \
+        -input=false
+)
+```
+
+## aws:tf:apply
+
+> Runs the apply command interactively, still asking for confirmation, using the environment specified.
+
+**OPTIONS**
+
+-   proper_name
+    -   flags: -n --proper-name
+    -   type: string
+    -   desc: proper name of AWS environment (see `./aws` module); e.g. blake
+    -   required
+
+<!-- A code block defines the script to be executed -->
+
+```bash
+(
+    cd terraform/aws/environments/${proper_name}
+
+    export AWS_PAGER=""
+    if aws sts get-caller-identity; then
+        echo "AWS identity check succeeded."
+    else
+        echo "AWS CLI misconfigured; see maskfile.md for info"
         exit 1
     fi
 
     echo "applying $proper_name from $(pwd)"
 
     terraform apply \
-        -input=false \
-        -var-file=${tf_var_file}
+        -input=false
 )
 ```
 
@@ -98,18 +109,9 @@ for secrets that don't exist in this repository
 ```bash
 
 (
-    cd terraform/aws
-    echo "checking for environment configuration files..."
+    cd terraform/aws/environments/${proper_name}
 
-    tf_backend_file="./environments/${proper_name}/${proper_name}.s3.tfbackend"
-
-    if [ ! -f ${tf_backend_file} ]; then
-        echo "REQUIRED backend file missing: ${tf_backend_file}"
-        exit 1
-    fi
-
-    terraform init \
-        -backend-config ${tf_backend_file}
+    terraform init
 )
 ```
 

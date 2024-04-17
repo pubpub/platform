@@ -1,3 +1,0 @@
-bucket = "pubpub-tfstates"
-key    = "ecs-blake.tfstate"
-region = "us-east-1"
