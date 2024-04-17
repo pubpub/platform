@@ -13,6 +13,7 @@ import { toast } from "ui/use-toast";
 
 import type { Users } from "~/kysely/types/public/Users";
 import { useServerAction } from "~/lib/serverActions";
+import { UserLoginData } from "~/lib/types";
 import * as actions from "./actions";
 
 export const userInfoFormSchema = z.object({
@@ -28,7 +29,7 @@ export const userInfoFormSchema = z.object({
 		.or(z.null()),
 });
 
-export function UserInfoForm({ user }: { user: Users }) {
+export function UserInfoForm({ user }: { user: UserLoginData }) {
 	const runUpdateUserInfo = useServerAction(actions.updateUserInfo);
 
 	const form = useForm<z.infer<typeof userInfoFormSchema>>({

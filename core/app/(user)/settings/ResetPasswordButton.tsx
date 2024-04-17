@@ -6,11 +6,11 @@ import { Button } from "ui/button";
 import { Loader2 } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { Users } from "~/kysely/types/public/Users";
+import type { UserLoginData } from "~/lib/types";
 import { env } from "~/lib/env/env.mjs";
 import { supabase } from "~/lib/supabase";
 
-export const ResetPasswordButton = ({ user }: { user: Users }) => {
+export const ResetPasswordButton = ({ user }: { user: UserLoginData }) => {
 	const status = useFormStatus();
 
 	const onSubmit = async () => {
