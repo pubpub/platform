@@ -16,15 +16,16 @@ export default async function Page() {
 		return null;
 	}
 
-	// const communities = await prisma.community.findMany();
-	const fields = [
-		"communities.id",
-		"communities.name",
-		"communities.slug",
-		"communities.avatar",
-		"communities.created_at as createdAt",
-	] as const;
-	const communities = await db.selectFrom("communities").select(fields).execute();
+	const communities = await db
+		.selectFrom("communities")
+		.select([
+			"communities.id",
+			"communities.name",
+			"communities.slug",
+			"communities.avatar",
+			"communities.created_at as createdAt",
+		])
+		.execute();
 
 	const tableMembers = communities.map((community) => {
 		const { id, name, slug, avatar, createdAt } = community;

@@ -16,6 +16,7 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
+import { UserAndMemberships } from "~/lib/types";
 import { RemoveCommunityButton } from "./RemoveCommunityButton";
 
 export type TableCommunity = {
@@ -26,7 +27,7 @@ export type TableCommunity = {
 	created: Date;
 };
 
-export const getCommunityTableColumns = ({ user }: { user: any }) =>
+export const getCommunityTableColumns = ({ user }: { user: UserAndMemberships }) =>
 	[
 		{
 			id: "select",

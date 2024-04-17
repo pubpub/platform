@@ -6,9 +6,10 @@ import { expect } from "utils";
 
 import { db } from "~/kysely/database";
 import { CommunitiesId } from "~/kysely/types/public/Communities";
+import { UsersId } from "~/kysely/types/public/Users";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
-import prisma from "~/prisma/db";
+import { UserAndMemberships } from "~/lib/types";
 import { crocCrocId } from "~/prisma/exampleCommunitySeeds/croccroc";
 import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
 import { TableCommunity } from "./getCommunityTableColumns";
@@ -22,7 +23,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 	name: string;
 	slug: string;
 	avatar?: string;
-	user: any;
+	user: UserAndMemberships;
 }) {
 	if (!user.isSuperAdmin) {
 		return {
@@ -30,46 +31,58 @@ export const createCommunity = defineServerAction(async function createCommunity
 			error: "User is not a super admin",
 		};
 	}
+	if (slug === "unjournal" || slug === "croccroc") {
+		return {
+			title: "Failed to remove community",
+			error: "Cannot remove example community",
+		};
+	}
+	let descriptionOverload: string;
 	try {
-		// const communityExists = await db
-		// 	.selectFrom("communities")
-		// 	.where("slug", "=", `${slug}`)
-		// 	.executeTakeFirst();
-
-		const communityExists = await prisma.community.findFirst({
-			where: {
-				slug,
-			},
-		});
-		if (communityExists) {
-			return {
-				title: "Failed to create community",
-				error: "Community already exists",
-			};
-		}
-
-		const c = expect(
-			await db
-				.insertInto("communities")
-				.values({
-					name,
-					slug: slugifyString(slug),
-					avatar,
-				})
-				.returning(["id", "name", "slug", "avatar", "created_at as createdAt"])
-				.executeTakeFirst()
-		);
-
-		await db
-			.insertInto("members")
-			.values({
-				user_id: user.id,
-				community_id: c.id as CommunitiesId,
-				canAdmin: true,
-			})
+		const communityExists = await db
+			.selectFrom("communities")
+			.select("id") // or `selectAll()` etc
+			.where("slug", "=", `${slug}`)
 			.executeTakeFirst();
-		revalidatePath("/");
-		return c;
+
+		if (communityExists) {
+			await db
+				.updateTable("communities")
+				.set({
+					name,
+					avatar,
+					slug: slugifyString(slug),
+				})
+				.where("id", "=", communityExists.id as CommunitiesId)
+				.executeTakeFirst();
+
+			descriptionOverload = "Community updated";
+		} else {
+			const c = expect(
+				await db
+					.insertInto("communities")
+					.values({
+						name,
+						slug: slugifyString(slug),
+						avatar,
+					})
+					.returning(["id", "name", "slug", "avatar", "created_at as createdAt"])
+					.executeTakeFirst()
+			);
+
+			await db
+				.insertInto("members")
+				.values({
+					user_id: user.id as UsersId,
+					community_id: c.id as CommunitiesId,
+					canAdmin: true,
+				})
+				.executeTakeFirst();
+
+			descriptionOverload = "Community updated";
+			revalidatePath("/");
+		}
+		return descriptionOverload;
 	} catch (error) {
 		return {
 			title: "Failed to create community",
@@ -83,7 +96,7 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 	user,
 	community,
 }: {
-	user: any;
+	user: UserAndMemberships;
 	community: TableCommunity;
 }) {
 	if (!user.isSuperAdmin) {
@@ -92,13 +105,13 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 			error: "User is not a super admin",
 		};
 	}
+	if (community.id === unJournalId || community.id === crocCrocId) {
+		return {
+			title: "Failed to remove community",
+			error: "Cannot remove example community",
+		};
+	}
 	try {
-		if (community.id === unJournalId || community.id === crocCrocId) {
-			return {
-				title: "Failed to remove community",
-				error: "Cannot remove example community",
-			};
-		}
 		await db
 			.deleteFrom("communities")
 			.where("id", "=", community.id as CommunitiesId)

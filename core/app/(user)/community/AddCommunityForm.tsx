@@ -29,16 +29,11 @@ export const AddCommunityForm = (props: Props) => {
 
 	async function onSubmit(data: z.infer<typeof communityCreateFormSchema>) {
 		const result = await runCreateCommunity({ ...data, user: props.user });
-		if (typeof result === "boolean") {
-			toast({
-				title: "Falied to Create Community",
-				description: "User is not a super admin",
-				variant: "destructive",
-			});
-		} else if (didSucceed(result)) {
+
+		if (didSucceed(result) && typeof result === "string") {
 			toast({
 				title: "Success",
-				description: "Community created",
+				description: result,
 			});
 		}
 	}
@@ -55,6 +50,9 @@ export const AddCommunityForm = (props: Props) => {
 		<>
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
+					<FormDescription>
+						You can update the name and avatar of your community by using your communities slug
+					</FormDescription>
 					<FormField
 						control={form.control}
 						name="name"
@@ -77,7 +75,7 @@ export const AddCommunityForm = (props: Props) => {
 								<FormLabel>Slug</FormLabel>
 								<Input {...field} />
 								<FormDescription>
-									Name the string you want your community to route to
+									Name the string you want your community to route to be
 								</FormDescription>
 								<FormMessage />
 							</FormItem>
