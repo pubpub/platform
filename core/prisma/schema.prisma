@@ -12,16 +12,17 @@ generator client {
 }
 
 model User {
-  id         String   @id @default(dbgenerated("gen_random_uuid()"))
-  supabaseId String?  @unique
-  slug       String   @unique
-  email      String   @unique
-  firstName  String
-  lastName   String?
-  orcid      String?
-  avatar     String?
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
+  supabaseId   String?  @unique
+  slug         String   @unique
+  email        String   @unique
+  firstName    String
+  lastName     String?
+  orcid        String?
+  avatar       String?
+  createdAt    DateTime @default(now()) @map(name: "created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  isSuperAdmin Boolean  @default(false)
 
   claims       ActionClaim[]
   moves        ActionMove[]
@@ -232,7 +233,7 @@ model Member {
   // If admin, the permissions are irrelevant because they have acccess to everything, but we
   // may want to keep the permissions around (though grayed our and with a note?) in case their
   // admin status is ever removed.
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String    @map(name: "community_id")
   user        User      @relation(fields: [userId], references: [id])
   userId      String    @map(name: "user_id")
