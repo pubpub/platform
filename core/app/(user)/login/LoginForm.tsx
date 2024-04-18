@@ -91,7 +91,7 @@ export default function LoginForm() {
 					</CardContent>
 					<CardFooter className="flex flex-col gap-y-4">
 						<Button
-							className="w-full"
+							className="flex w-full items-center gap-x-2"
 							disabled={form.formState.isSubmitting || !form.formState.isValid}
 						>
 							{form.formState.isSubmitting ? (
