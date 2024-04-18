@@ -7,6 +7,13 @@ import prisma from "~/prisma/db";
 import { MemberInviteForm } from "./MemberInviteForm";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
+/**
+ * Create a cached function to get a user by email
+ * @param email
+ * @param currentEmail
+ * @param community
+ * @returns error state and user state
+ */
 const createCachedGetUser = ({
 	email,
 	currentEmail,
