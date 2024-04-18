@@ -21,7 +21,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<div className="-m-2 mb-10 flex cursor-pointer items-center rounded p-2 hover:bg-gray-200">
+				<div className="flex cursor-pointer items-center rounded p-1 hover:bg-gray-200 md:p-2">
 					<Avatar className={avatarClasses}>
 						<AvatarImage src={community.avatar || undefined} />
 						<AvatarFallback>{community.name[0]}</AvatarFallback>
@@ -30,7 +30,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 					<img className="" src="/icons/chevron-vertical.svg" alt="" />
 				</div>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className=" w-56 bg-white">
+			<DropdownMenuContent className="w-56 bg-white">
 				{availableCommunities
 					.filter((option) => {
 						return option?.slug !== community.slug;
