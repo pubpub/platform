@@ -2,9 +2,13 @@
 
 import { revalidateTag } from "next/cache";
 
+import { logger } from "logger";
+
 import type Action from "~/kysely/types/public/Action";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import Event from "~/kysely/types/public/Event";
+import { RulesId } from "~/kysely/types/public/Rules";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
 
@@ -222,6 +226,44 @@ export const deleteAction = defineServerAction(async function deleteAction(
 	} catch (error) {
 		return {
 			error: "Failed to delete action",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const addRule = defineServerAction(async function addRule(
+	event: Event,
+	actionInstanceId: ActionInstancesId,
+	communityId: string
+) {
+	try {
+		await db
+			.insertInto("rules")
+			.values({ action_instance_id: actionInstanceId, event })
+			.executeTakeFirstOrThrow();
+	} catch (error) {
+		logger.error(error);
+		return {
+			error: "Failed to add rule",
+			cause: error,
+		};
+	} finally {
+		revalidateTag(`community-stages_${communityId}`);
+	}
+});
+
+export const deleteRule = defineServerAction(async function deleteRule(
+	ruleId: RulesId,
+	communityId: string
+) {
+	try {
+		await db.deleteFrom("rules").where("id", "=", ruleId).executeTakeFirst();
+	} catch (error) {
+		logger.error(error);
+		return {
+			error: "Failed to delete rule",
 			cause: error,
 		};
 	} finally {

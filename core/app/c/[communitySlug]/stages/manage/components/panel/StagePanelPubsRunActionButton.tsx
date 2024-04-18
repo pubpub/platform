@@ -1,6 +1,6 @@
 "use client";
 
-import type { Action, ActionInstance, Pub } from "@prisma/client";
+import type { Pub } from "@prisma/client";
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { ZodObject } from "zod";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Check, Loader2, Play, X } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/server";
@@ -22,7 +22,7 @@ export const StagePanelPubsRunActionButton = ({
 	actionInstance,
 	pub,
 }: {
-	actionInstance: ActionInstance & { action: Action };
+	actionInstance: ActionInstances;
 	pub: Pub;
 }) => {
 	const runAction = useServerAction(runActionInstance);

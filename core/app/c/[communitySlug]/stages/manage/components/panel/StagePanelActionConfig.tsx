@@ -7,13 +7,12 @@ import { useCallback } from "react";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 
 import type { Action } from "~/actions/types";
-import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type { StagePayloadActionInstance } from "~/lib/types";
+import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { updateAction } from "../../actions";
 
 export type Props = {
 	action: Action;
-	instance: StagePayloadActionInstance;
+	instance: ActionInstances;
 	communityId: string;
 };
 
