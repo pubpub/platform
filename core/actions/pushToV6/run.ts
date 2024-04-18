@@ -6,9 +6,10 @@ import { defaultMarkdownParser } from "prosemirror-markdown";
 import { logger } from "logger";
 
 import type { action } from "./action";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
-import { PubsId } from "~/kysely/types/public/Pubs";
-import { ClientExceptionOptions, isClientExceptionOptions } from "~/lib/serverActions";
+import { isClientExceptionOptions } from "~/lib/serverActions";
 import * as corePubFields from "../corePubFields";
 import { defineRun } from "../types";
 
@@ -178,7 +179,7 @@ const updateV6PubId = async (pubId: string, v6PubId: string) => {
 		.execute();
 };
 
-export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) => {
+export const run = defineRun<typeof action>(async ({ pub, config, runParameters }) => {
 	try {
 		const v6Community = await getV6Community(config.communitySlug, config.authToken);
 
@@ -241,7 +242,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) =
 		};
 	}
 
-	logger.info({ msg: "pub pushed to v6", pub, config, pubConfig });
+	logger.info({ msg: "pub pushed to v6", pub, config, runParameters });
 
 	return {
 		success: true,

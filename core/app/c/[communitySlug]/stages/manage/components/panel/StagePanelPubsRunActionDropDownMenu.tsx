@@ -1,6 +1,6 @@
 "use client";
 
-import type { Action, ActionInstance, Pub } from "@prisma/client";
+import type { Pub } from "@prisma/client";
 
 import { Button } from "ui/button";
 import {
@@ -11,13 +11,14 @@ import {
 } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
+import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
 
 export const StagePanelPubsRunActionDropDownMenu = ({
 	actionInstances,
 	pub,
 }: {
-	actionInstances: (ActionInstance & { action: Action })[];
+	actionInstances: ActionInstances[];
 	pub: Pub;
 }) => {
 	if (!actionInstances.length) {
