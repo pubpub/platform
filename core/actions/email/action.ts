@@ -10,7 +10,7 @@ export const action = defineAction({
 	config: z.object({
 		email: z.string().email().describe("Email address"),
 		subject: z.string().describe("Email subject"),
-		body: z.string().min(0).max(1_000).describe("Email body"),
+		body: z.string().min(0).max(1_000).describe("Email body||textarea"),
 	}),
 	description: "Send an email to one or more users",
 	runParameters: z
@@ -19,18 +19,18 @@ export const action = defineAction({
 				.string()
 				.email()
 				.describe(
-					"Email address. Overrides the email address specified in the action config."
+					"Email address|Overrides the email address specified in the action config."
 				)
 				.optional(),
 			subject: z
 				.string()
-				.describe("Email subject. Overrides the subject specified in the action config.")
+				.describe("Email subject|Overrides the subject specified in the action config.")
 				.optional(),
 			body: z
 				.string()
 				.min(0)
 				.max(1_000)
-				.describe("Email body. Overrides the body specified in the action config.")
+				.describe("Email body|Overrides the body specified in the action config.|textarea")
 				.optional(),
 		})
 		.optional(),

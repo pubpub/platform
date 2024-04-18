@@ -58,6 +58,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 				item = handleIfZodNumber(item) as z.ZodAny;
 				const zodBaseType = getBaseType(item);
 				const itemName = item._def.description ?? beautifyObjectName(name);
+				const [title, description, additionalType] = itemName.split("|");
 				const key = [...path, name].join(".");
 
 				const {
@@ -73,7 +74,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 				if (zodBaseType === "ZodObject") {
 					return (
 						<AccordionItem value={name} key={key} className="border-none">
-							<AccordionTrigger>{itemName}</AccordionTrigger>
+							<AccordionTrigger>{title}</AccordionTrigger>
 							<AccordionContent className="p-2">
 								<AutoFormObject
 									schema={item as unknown as z.ZodObject<any, any>}
@@ -93,7 +94,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 					return (
 						<AutoFormArray
 							key={key}
-							name={name}
+							name={title}
 							item={item as unknown as z.ZodArray<any>}
 							form={form}
 							fieldConfig={fieldConfig?.[name] ?? {}}
@@ -125,10 +126,15 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 								DEFAULT_ZOD_HANDLERS[zodBaseType] ??
 								"fallback";
 
+							const typeToUse =
+								additionalType && additionalType in INPUT_COMPONENTS
+									? (additionalType as keyof typeof INPUT_COMPONENTS)
+									: inputType;
+
 							const InputComponent =
-								typeof inputType === "function"
-									? inputType
-									: INPUT_COMPONENTS[inputType];
+								typeof typeToUse === "function"
+									? typeToUse
+									: INPUT_COMPONENTS[typeToUse];
 
 							const ParentElement = fieldConfigItem.renderParent ?? DefaultParent;
 
@@ -154,7 +160,8 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 										zodInputProps={zodInputProps}
 										field={field}
 										fieldConfigItem={fieldConfigItem}
-										label={itemName}
+										label={title}
+										description={description}
 										isRequired={isRequired}
 										zodItem={item}
 										fieldProps={fieldProps}

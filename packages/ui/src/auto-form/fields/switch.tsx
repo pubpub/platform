@@ -2,12 +2,14 @@ import * as React from "react";
 
 import { FormControl, FormItem } from "../../form";
 import { Switch } from "../../switch";
+import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
 import { AutoFormInputComponentProps } from "../types";
 
 export default function AutoFormSwitch({
 	label,
+	description,
 	isRequired,
 	field,
 	fieldConfigItem,
@@ -26,6 +28,7 @@ export default function AutoFormSwitch({
 					</FormControl>
 					<AutoFormLabel label={label} isRequired={isRequired} />
 				</div>
+				{description && <AutoFormDescription description={description} />}
 			</FormItem>
 			<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 		</div>

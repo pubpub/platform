@@ -21,7 +21,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 }: {
 	pubId: PubsId;
 	actionInstanceId: ActionInstancesId;
-	runParameters;
+	runParameters?: Record<string, unknown>;
 }) {
 	const pubPromise = getPub(pubId);
 

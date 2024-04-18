@@ -4,12 +4,14 @@ import { Trash2 } from "lucide-react";
 
 import { FormControl, FormItem, FormMessage } from "../../form";
 import { Input } from "../../input";
+import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
 import { AutoFormInputComponentProps } from "../types";
 
 export default function AutoFormFile({
 	label,
+	description,
 	isRequired,
 	fieldConfigItem,
 	fieldProps,
@@ -39,7 +41,13 @@ export default function AutoFormFile({
 
 	return (
 		<FormItem>
-			{showLabel && <AutoFormLabel label={label} isRequired={isRequired} />}
+			{showLabel && (
+				<>
+					<AutoFormLabel label={label} isRequired={isRequired} />
+					{description && <AutoFormDescription description={description} />}
+				</>
+			)}
+
 			{!file && (
 				<FormControl>
 					<Input

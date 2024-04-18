@@ -3,6 +3,7 @@ import * as z from "zod";
 
 import { FormControl, FormItem, FormMessage } from "../../form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../select";
+import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
 import { AutoFormInputComponentProps } from "../types";
@@ -10,6 +11,7 @@ import { getBaseSchema } from "../utils";
 
 export default function AutoFormEnum({
 	label,
+	description,
 	isRequired,
 	field,
 	fieldConfigItem,
@@ -32,6 +34,7 @@ export default function AutoFormEnum({
 	return (
 		<FormItem>
 			<AutoFormLabel label={label} isRequired={isRequired} />
+			{description && <AutoFormDescription description={description} />}
 			<FormControl>
 				<Select onValueChange={field.onChange} defaultValue={field.value} {...fieldProps}>
 					<SelectTrigger className={fieldProps.className}>

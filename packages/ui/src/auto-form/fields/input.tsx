@@ -2,12 +2,14 @@ import * as React from "react";
 
 import { FormControl, FormItem, FormMessage } from "../../form";
 import { Input } from "../../input";
+import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
 import { AutoFormInputComponentProps } from "../types";
 
 export default function AutoFormInput({
 	label,
+	description,
 	isRequired,
 	fieldConfigItem,
 	fieldProps,
@@ -19,7 +21,12 @@ export default function AutoFormInput({
 	return (
 		<div className="flex flex-row  items-center space-x-2">
 			<FormItem className="flex w-full flex-col justify-start">
-				{showLabel && <AutoFormLabel label={label} isRequired={isRequired} />}
+				{showLabel && (
+					<>
+						<AutoFormLabel label={label} isRequired={isRequired} />
+						{description && <AutoFormDescription description={description} />}
+					</>
+				)}
 				<FormControl>
 					<Input type={type} {...fieldPropsWithoutShowLabel} />
 				</FormControl>
