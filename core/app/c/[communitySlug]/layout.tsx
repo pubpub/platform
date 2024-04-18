@@ -41,9 +41,9 @@ export default async function MainLayout({ children, params }: Props) {
 
 	const availableCommunities = await getAvailableCommunities(loginData);
 	return (
-		<div className="flex min-h-screen">
+		<div className="flex min-h-screen flex-col md:flex-row">
 			<SideNav community={community} availableCommunities={availableCommunities} />
-			<div className="relative ml-[250px] flex-auto px-12 py-4">{children}</div>
+			<div className="relative flex-auto px-4 py-4 md:ml-[250px] md:px-12">{children}</div>
 		</div>
 	);
 }

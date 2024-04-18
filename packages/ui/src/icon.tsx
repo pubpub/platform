@@ -15,6 +15,7 @@ export {
 	LogOut,
 	ListPlus,
 	Mail,
+	Menu,
 	MoreVertical,
 	Pencil,
 	Plus,
