@@ -13,6 +13,7 @@ export {
 	FileText,
 	Loader2,
 	LogOut,
+	ListPlus,
 	Mail,
 	MoreVertical,
 	Pencil,

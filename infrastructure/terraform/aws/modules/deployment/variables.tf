@@ -50,9 +50,3 @@ variable "ASSETS_BUCKET_NAME" {
   description = "Name of the S3 bucket to store assets"
   type = string
 }
-
-variable "HONEYCOMB_API_KEY" {
-  description = "API Key for Honeycomb integration"
-  type = string
-  sensitive = true
-}

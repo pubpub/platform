@@ -30,15 +30,6 @@ resource "aws_secretsmanager_secret" "honeycomb_api_key" {
   name = "honeycombio-apikey-${var.cluster_info.name}-${var.cluster_info.environment}"
 }
 
-# N.B. since we have to tell terraform about this secret in order to
-#   configure the Honeycomb module, we might as well set it up automatically
-#   for Secrets Manager too. This pattern is not ideal design on the part of
-#   Honeycomb.
-resource "aws_secretsmanager_secret_version" "honeycomb_api_key" {
-  secret_id     = aws_secretsmanager_secret.honeycomb_api_key.id
-  secret_string = var.HONEYCOMB_API_KEY
-}
-
 # generate password and make it accessible through aws secrets manager
 resource "random_password" "rds_db_password" {
   length           = 16
