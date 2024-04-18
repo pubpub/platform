@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect } from "kysely";
+import { Kysely, LogEvent, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 
 import { logger } from "logger";
@@ -14,7 +14,8 @@ const dialect = new PostgresDialect({
 
 const kyselyLogger =
 	env.LOG_LEVEL === "debug"
-		? (event) => logger.debug({ msg: "Kysely event log" }, event)
+		? ({ query: { sql, parameters }, ...event }: LogEvent) =>
+				logger.debug({ event }, "--Kysely query:\n%s; --Parameters: %o", sql, parameters)
 		: undefined;
 
 // Database interface is passed to Kysely's constructor, and from now on, Kysely
