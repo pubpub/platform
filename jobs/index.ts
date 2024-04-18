@@ -1,7 +1,10 @@
+import { initClient } from "@ts-rest/core";
 import { JobHelpers, run, Task } from "graphile-worker";
 
 import { Client, makeClient, SendEmailRequestBody } from "@pubpub/sdk";
 import { logger } from "logger";
+
+import { api } from "../packages/contracts/src";
 
 const client = makeClient({});
 
@@ -34,8 +37,35 @@ const makeTaskList = (client: Client<{}>) => {
 		logger.info({ msg: `Sent email`, info, job: helpers.job });
 	}) as Task;
 
-	const emitEvent = ((payload: DBTriggerEventPayload<PubInStagesRow>) => {
-		logger.info({ msg: "Emitting event", payload });
+	const emitEvent = (async (payload: DBTriggerEventPayload<PubInStagesRow>) => {
+		logger.debug({ msg: "Starting emitEvent", payload });
+		const client = initClient(api.internal, {
+			baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
+			baseHeaders: { authorization: `Bearer ${process.env.API_KEY}` },
+			jsonQuery: true,
+		});
+		let event: "pubLeftStage" | "pubEnteredStage" | "" = "";
+		let stageId: string = "";
+		let pubId: string = "";
+		if (payload.operation === "INSERT") {
+			event = "pubEnteredStage";
+			stageId = payload.new.stageId;
+			pubId = payload.new.pubId;
+		} else if (payload.operation === "DELETE") {
+			event = "pubLeftStage";
+			stageId = payload.old.stageId;
+			pubId = payload.old.pubId;
+		}
+
+		if (!event || !pubId || !stageId) {
+			logger.debug({ msg: "No event emitted", event, payload });
+			return;
+		}
+
+		logger.debug({ msg: "Emitting event", event, payload });
+		const results = await client.triggerAction({ params: { stageId }, body: { event, pubId } });
+
+		logger.debug({ msg: "Action run results", results });
 	}) as Task;
 
 	return { sendEmail, emitEvent };

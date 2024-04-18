@@ -22,7 +22,6 @@ export default async function main(db: typeof kyselyDb, communityUUID: Communiti
 		logger.info(`Registering core field ${corePubField.slug}`);
 		await registerCorePubField(corePubField);
 	}
-
 	await db
 		.insertInto("communities")
 		.values({
@@ -36,11 +35,10 @@ export default async function main(db: typeof kyselyDb, communityUUID: Communiti
 	const submissionTypeId = "a8a92307-ec90-41e6-9905-30ba3d06e08e" as PubTypesId;
 
 	const corePubSlugs = corePubFields.map((field) => field.slug);
-
-	const [title] = await db
+	const persistedCorePubFields = await db
 		.selectFrom("pub_fields")
 		.selectAll()
-		.where("pub_fields.slug", "=", corePubSlugs)
+		.where("pub_fields.slug", "in", corePubSlugs)
 		.execute();
 
 	await db
@@ -55,10 +53,12 @@ export default async function main(db: typeof kyselyDb, communityUUID: Communiti
 				.returning("id")
 		)
 		.insertInto("_PubFieldToPubType")
-		.values((eb) => ({
-			A: title.id,
-			B: eb.selectFrom("submission_pub_type").select("id"),
-		}))
+		.values((eb) =>
+			persistedCorePubFields.map((field) => ({
+				A: field.id,
+				B: eb.selectFrom("submission_pub_type").select("id"),
+			}))
+		)
 		.execute();
 
 	const users = await db
@@ -107,7 +107,6 @@ export default async function main(db: typeof kyselyDb, communityUUID: Communiti
 			A: eb.selectFrom("new_member_group").select("id"),
 			B: users[1].id,
 		}))
-
 		.returning("A")
 		.executeTakeFirst();
 
@@ -234,8 +233,14 @@ export default async function main(db: typeof kyselyDb, communityUUID: Communiti
 		.values((eb) => [
 			{
 				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				field_id: title.id,
+				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
 				value: '"Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
+			},
+			{
+				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
+					.id,
+				value: '"# Abstract"',
 			},
 		])
 		.execute();

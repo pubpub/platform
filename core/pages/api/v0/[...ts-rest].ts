@@ -3,11 +3,15 @@ import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "contracts";
 import { logger } from "logger";
 
+import { runInstancesForEvent } from "~/actions/api/server";
+import Event from "~/kysely/types/public/Event";
 import { PubsId } from "~/kysely/types/public/Pubs";
+import { StagesId } from "~/kysely/types/public/Stages";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
 	_getPubType,
+	BadRequestError,
 	createPub,
 	deletePub,
 	generateSignedAssetUploadUrl,
@@ -157,8 +161,27 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 });
 
+const internalRouter = createNextRoute(api.internal, {
+	triggerAction: async ({ headers, params, body }) => {
+		checkAuthentication(headers.authorization);
+		const { event, pubId } = body;
+
+		const { stageId } = params;
+		const actionRunResults = await runInstancesForEvent(
+			pubId as PubsId,
+			stageId as StagesId,
+			event as Event
+		);
+		return {
+			status: 200,
+			body: actionRunResults,
+		};
+	},
+});
+
 const router = {
 	integrations: integrationsRouter,
+	internal: internalRouter,
 };
 
 export default createNextRouter(api, router, {

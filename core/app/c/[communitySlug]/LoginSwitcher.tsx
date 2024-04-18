@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
+import { Settings } from "ui/icon";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import LogoutButton from "../../components/LogoutButton";
@@ -12,7 +13,7 @@ export default async function LoginSwitcher() {
 		return null;
 	}
 	return (
-		<div className="w-max-[100%] flex flex-wrap rounded-lg border border-gray-100 bg-white p-2">
+		<div className="w-max-[100%] flex flex-col gap-y-2 rounded-lg border border-gray-100 bg-white p-2">
 			<div className="flex items-center">
 				<Avatar className="mr-2 h-9 w-9">
 					<Link className="w-full" href="/settings">
@@ -27,13 +28,14 @@ export default async function LoginSwitcher() {
 					<div className="text-xs text-gray-400">{loginData.email}</div>
 				</div>
 			</div>
-			<div className="items- mt-1 flex flex-row">
+			<div className="mt-1 flex flex-row items-center">
 				<LogoutButton />
-				<Link className="ml-2" href="/settings">
-					<Button variant="outline" size="sm">
+				<Button variant="outline" size="sm" asChild>
+					<Link className="ml-2 flex items-center gap-1" href="/settings">
+						<Settings size="14" />
 						Settings
-					</Button>
-				</Link>
+					</Link>
+				</Button>
 			</div>
 		</div>
 	);

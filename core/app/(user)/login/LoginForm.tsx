@@ -3,28 +3,36 @@
 import React, { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { supabase } from "lib/supabase";
 import { Button } from "ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
+import { Check, Loader2 } from "ui/icon";
+import { Input } from "ui/input";
+
+const loginFormSchema = z.object({
+	email: z.string().email(),
+	password: z.string().min(1),
+});
 
 export default function LoginForm() {
 	const router = useRouter();
-	const [password, setPassword] = useState("");
-	const [email, setEmail] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
-	const [failure, setFailure] = useState(false);
 
-	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
-		setIsLoading(true);
-		setFailure(false);
-		evt.preventDefault();
+	const form = useForm({
+		resolver: zodResolver(loginFormSchema),
+	});
+
+	const handleSubmit = async () => {
 		const { data, error } = await supabase.auth.signInWithPassword({
-			email,
-			password,
+			email: form.getValues().email,
+			password: form.getValues().password,
 		});
 		if (error) {
-			setIsLoading(false);
-			setFailure(true);
+			form.setError("password", { message: "Incorrect password or email" });
 		} else if (data) {
 			// check if user is in a community
 			const response = await fetch(`/api/member?email=${data.user.email}`, {
@@ -32,7 +40,6 @@ export default function LoginForm() {
 				headers: { "content-type": "application/json" },
 			});
 			const { member } = await response.json();
-			setIsLoading(false);
 			router.refresh();
 			if (member) {
 				router.push(`/c/${member.community.slug}/stages`);
@@ -43,50 +50,67 @@ export default function LoginForm() {
 	};
 
 	return (
-		<div className="border p-4">
-			<div className="my-10">
-				<form onSubmit={handleSubmit}>
-					<div>
-						<label htmlFor="email">Email</label>
-					</div>
-					<div>
-						<input
-							id="email"
-							className="w-full"
-							placeholder="Enter your email address"
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(handleSubmit)}>
+				<Card className="w-full max-w-sm">
+					<CardHeader>
+						<CardTitle className="text-2xl">Login</CardTitle>
+						<CardDescription>
+							Enter your email below to login to your account.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="grid gap-4">
+						<FormField
+							control={form.control}
 							name="email"
-							value={email}
-							onChange={(evt) => setEmail(evt.target.value)}
+							render={({ field, fieldState }) => (
+								<div className="grid gap-2">
+									<FormItem>
+										<FormLabel>Email</FormLabel>
+										<FormControl>
+											<Input placeholder="m@example.com" {...field} />
+										</FormControl>
+									</FormItem>
+								</div>
+							)}
 						/>
-					</div>
-					<div className="mt-2">
-						<label htmlFor="password">Password</label>
-					</div>
-					<div>
-						<input
-							id="password"
-							className="w-full"
-							placeholder="Enter your password"
+						<FormField
+							control={form.control}
 							name="password"
-							value={password}
-							type="password"
-							onChange={(evt) => setPassword(evt.target.value)}
+							render={({ field, fieldState }) => (
+								<div className="grid gap-2">
+									<FormItem>
+										<FormLabel>Password</FormLabel>
+										<FormControl>
+											<Input type="password" {...field} />
+										</FormControl>
+									</FormItem>
+								</div>
+							)}
 						/>
-					</div>
-
-					<div className="my-6 text-center">
-						<Button className="mr-4" type="submit" disabled={!email || !password}>
-							Login
+					</CardContent>
+					<CardFooter className="flex flex-col gap-y-4">
+						<Button
+							className="flex w-full items-center gap-x-2"
+							disabled={form.formState.isSubmitting || !form.formState.isValid}
+						>
+							{form.formState.isSubmitting ? (
+								<Loader2 className="animate-spin" />
+							) : form.formState.isSubmitSuccessful ? (
+								<>
+									<Check className="h-4 w-4" />
+									<span>Success</span>
+								</>
+							) : (
+								"Sign in"
+							)}
 						</Button>
 						<Link href="/forgot" className="text-sm text-gray-600 hover:underline">
 							Forgot Password
 						</Link>
-					</div>
-					{failure && (
-						<div className={"my-4 text-red-700"}>Incorrect password or email</div>
-					)}
-				</form>
-			</div>
-		</div>
+					</CardFooter>
+				</Card>
+			</form>
+		</Form>
 	);
 }

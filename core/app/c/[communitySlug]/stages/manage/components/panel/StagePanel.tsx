@@ -5,8 +5,8 @@ import { StagePanelActions } from "./StagePanelActions";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
+import { StagePanelRules } from "./StagePanelRules";
 import { StagePanelSheet } from "./StagePanelSheet";
-import { StagePanelTriggers } from "./StagePanelTriggers";
 
 type Props = {
 	stageId: string | undefined;
@@ -39,7 +39,7 @@ export const StagePanel = async (props: Props) => {
 				</TabsContent>
 				<TabsContent value="actions" className="space-y-2">
 					<StagePanelActions stageId={props.stageId} />
-					<StagePanelTriggers stageId={props.stageId} />
+					<StagePanelRules stageId={props.stageId} />
 				</TabsContent>
 				<TabsContent value="members">
 					<StagePanelMembers stageId={props.stageId} />
