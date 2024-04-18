@@ -14,6 +14,7 @@ export {
 	Loader2,
 	ListPlus,
 	Mail,
+	Menu,
 	MoreVertical,
 	Pencil,
 	Plus,
