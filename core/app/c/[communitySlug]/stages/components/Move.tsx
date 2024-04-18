@@ -53,7 +53,7 @@ export default function Move(props: Props) {
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<Button size="sm" variant="outline" className="ml-1">
+				<Button size="sm" variant="outline">
 					Move
 				</Button>
 			</PopoverTrigger>

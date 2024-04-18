@@ -10,6 +10,7 @@ import { StagesId } from "~/kysely/types/public/Stages";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
+	_getPubType,
 	BadRequestError,
 	createPub,
 	deletePub,
@@ -44,7 +45,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 	getPubType: async ({ headers, params }) => {
 		checkAuthentication(headers.authorization);
-		const pub = await getPubType(params.pubTypeId);
+		const pub = await _getPubType(params.pubTypeId);
 		return { status: 200, body: pub };
 	},
 	createPub: async ({ headers, params, body }) => {

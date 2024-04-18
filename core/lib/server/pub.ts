@@ -371,7 +371,7 @@ export const deletePub = async (pubId: string) => {
 	await prisma.pub.delete({ where: { id: pubId } });
 };
 
-export const getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseBody> => {
+export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseBody> => {
 	const pubType = await prisma.pubType.findUnique({
 		where: { id: pubTypeId },
 		select: {
@@ -400,3 +400,44 @@ export const getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseB
 	}
 	return pubType;
 };
+
+export const getPubType = async (pubTypeId: PubTypesId) =>
+	db
+		.selectFrom("pub_types")
+		.select((eb) => [
+			"id",
+			"description",
+			"name",
+			"community_id as communityId",
+			"created_at as createdAt",
+			"updated_at as updatedAt",
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_fields")
+					.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
+					.select((eb) => [
+						"pub_fields.id",
+						"pub_fields.name",
+						//	"pub_fields.pubFieldSchemaId",
+						"pub_fields.slug",
+						jsonObjectFrom(
+							eb
+								.selectFrom("PubFieldSchema")
+								.select([
+									"PubFieldSchema.id",
+									"PubFieldSchema.namespace",
+									"PubFieldSchema.name",
+									"PubFieldSchema.schema",
+								])
+								.whereRef(
+									"PubFieldSchema.id",
+									"=",
+									eb.ref("pub_fields.pubFieldSchemaId")
+								)
+						).as("schema"),
+					])
+					.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
+			).as("fields"),
+		])
+		.where("pub_types.id", "=", pubTypeId)
+		.executeTakeFirst();
