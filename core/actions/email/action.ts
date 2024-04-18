@@ -13,7 +13,7 @@ export const action = defineAction({
 		body: z.string().min(0).max(1_000).describe("Email body"),
 	}),
 	description: "Send an email to one or more users",
-	pubConfig: z.object({}),
+	runParameters: z.object({}),
 	pubFields: [corePubFields.title],
 	icon: Mail,
 });

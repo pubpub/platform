@@ -17,11 +17,11 @@ import { validatePubValues } from "./validateFields";
 export const runActionInstance = defineServerAction(async function runActionInstance({
 	pubId,
 	actionInstanceId,
-	pubConfig = {},
+	runParameters = {},
 }: {
 	pubId: PubsId;
 	actionInstanceId: ActionInstancesId;
-	pubConfig;
+	runParameters;
 }) {
 	const pubPromise = getPub(pubId);
 
@@ -86,11 +86,11 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		};
 	}
 
-	const parsedPubConfig = action.pubConfig.safeParse(pubConfig ?? {});
-	if (!parsedPubConfig.success) {
+	const parsedrunParameters = action.runParameters.safeParse(runParameters ?? {});
+	if (!parsedrunParameters.success) {
 		return {
 			title: "Invalid pub config",
-			error: parsedPubConfig.error,
+			error: parsedrunParameters.error,
 		};
 	}
 
@@ -112,7 +112,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 				id: pubId,
 				values: values as any,
 			},
-			pubConfig: pubConfig,
+			runParameters: runParameters,
 		});
 
 		return result;

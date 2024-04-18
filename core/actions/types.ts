@@ -17,7 +17,7 @@ export type ActionPub<T extends ActionPubType> = {
 
 export type RunProps<T extends Action> =
 	T extends Action<infer PT, infer AC, infer PC>
-		? { config: AC; pub: ActionPub<PT>; pubConfig: PC }
+		? { config: AC; pub: ActionPub<PT>; runParameters: PC }
 		: never;
 
 export type ConfigProps<C> = {
@@ -34,7 +34,7 @@ export type Action<
 	name: N;
 	description: string;
 	config: z.ZodType<AC>;
-	pubConfig: z.ZodType<PC>;
+	runParameters: z.ZodType<PC>;
 	pubFields: PT;
 	icon: (typeof Icons)[keyof typeof Icons];
 };

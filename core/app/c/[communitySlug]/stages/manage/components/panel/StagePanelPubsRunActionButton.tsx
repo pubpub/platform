@@ -7,7 +7,7 @@ import { useEffect, useState, useTransition } from "react";
 import { logger } from "logger";
 import AutoForm from "ui/auto-form";
 import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Check, Loader2, Play, X } from "ui/icon";
 import { toast } from "ui/use-toast";
 
@@ -65,23 +65,7 @@ export const StagePanelPubsRunActionButton = ({
 			</span>
 			<Dialog>
 				<DialogTrigger asChild>
-					<Button
-						variant="default"
-						type="button"
-						size="sm"
-						// onClick={async (evt) => {
-						// 	if (isPending || result) return;
-						// 	startTransition(async () => {
-						// 		setResult(undefined);
-						// 		const res = await runAction({
-						// 			actionInstanceId: actionInstance.id as ActionInstancesId,
-						// 			pubId: pub.id as PubsId,
-						// 			pubConfig: {},
-						// 		});
-						// 		setResult(res);
-						// 	});
-						// }}
-					>
+					<Button variant="default" type="button" size="sm">
 						{isPending ? (
 							<Loader2 size="14" className="animate-spin" />
 						) : result ? (
@@ -96,7 +80,10 @@ export const StagePanelPubsRunActionButton = ({
 					</Button>
 				</DialogTrigger>
 				<DialogContent>
-					<AutoForm formSchema={action.pubConfig} />
+					<DialogHeader>
+						<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
+					</DialogHeader>
+					<AutoForm formSchema={action.runParameters} />
 				</DialogContent>
 			</Dialog>
 		</div>
