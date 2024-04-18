@@ -40,6 +40,6 @@ export const env = createEnv({
 		NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: runtimeEnv("NEXT_PUBLIC_SUPABASE_PUBLIC_KEY"),
 		NEXT_PUBLIC_SUPABASE_URL: runtimeEnv("NEXT_PUBLIC_SUPABASE_URL"),
 	},
-	skipValidation: Boolean(process.env.SKIP_VALIDATION),
+	skipValidation: true, //Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
 });

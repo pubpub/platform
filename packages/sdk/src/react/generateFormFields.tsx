@@ -1,6 +1,8 @@
+"use client";
+
 import * as React from "react";
 // this import causes a cyclic dependency in pnpm but here we are
-import Ajv, { JSONSchemaType } from "ajv";
+import Ajv, { JSONSchemaType, JSONType } from "ajv";
 import { Control, ControllerRenderProps } from "react-hook-form";
 
 import { GetPubTypeResponseBody } from "contracts";
@@ -12,6 +14,8 @@ import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 import { Textarea } from "ui/textarea";
 import { cn } from "utils";
+
+import type { PubValues } from "..";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
 type AnySchema = {};
@@ -124,6 +128,7 @@ type ScalarFieldProps = {
 	title: string;
 	schema: JSONSchemaType<AnySchema>;
 	control: Control;
+	defaultValue?: unknown;
 };
 
 const ScalarField = (props: ScalarFieldProps) => {
@@ -131,7 +136,7 @@ const ScalarField = (props: ScalarFieldProps) => {
 		<FormField
 			control={props.control}
 			name={props.title}
-			defaultValue={props.schema.default ?? ""}
+			defaultValue={props.defaultValue ?? props.schema.default ?? ""}
 			render={({ field }) => getFormField(props.schema, field)}
 		/>
 	);
@@ -250,6 +255,8 @@ const getDereferencedSchema = (
 	}
 };
 
+// type NestedPubValues = PubValues; //| { [key: string]: NestedPubValues };
+
 type SchemaBasedFormFieldsProps = {
 	compiledSchema: Ajv;
 	control: Control;
@@ -257,6 +264,7 @@ type SchemaBasedFormFieldsProps = {
 	path?: string;
 	fieldSchema?: JSONSchemaType<AnySchema>;
 	schemaPath?: string;
+	existingValues?: Record<string, unknown>;
 };
 
 /**
@@ -290,6 +298,8 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 					: props.schemaPath
 				: `${resolvedSchema.$id}#/properties`;
 
+			const existingValue = props.existingValues?.[fieldKey];
+
 			const fieldContent = isObjectSchema(fieldSchema)
 				? [
 						<div key={fieldKey} className="mb-12">
@@ -312,6 +322,7 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 					]
 				: [
 						<SchemaBasedFormFields
+							key={fieldKey}
 							{...props}
 							path={fieldPath}
 							fieldSchema={fieldSchema}
@@ -343,6 +354,9 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 					schema={scalarSchema}
 					control={props.control}
 					key={resolvedSchema.$id ?? props.path}
+					defaultValue={
+						props.existingValues?.[props.path ?? resolvedSchema.$id!.split("#")[1]]
+					}
 				/>
 			)
 		);
