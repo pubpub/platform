@@ -9,9 +9,11 @@ import { defineRun } from "../types";
 export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) => {
 	logger.info({ msg: "email", pub, config, pubConfig });
 
+	
+
 	// query for community?
 	const { accepted, rejected } = await smtpclient.sendMail({
-		from: `<hello@mg.pubpub.org>`,
+		from: "hello@pubpub.org",
 		to: config.email,
 		replyTo: "hello@pubpub.org",
 		html: config.body,
