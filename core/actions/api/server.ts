@@ -1,1 +1,1 @@
-export { runActionInstance } from "../_lib/runActionInstance";
+export { runActionInstance, runInstancesForEvent } from "../_lib/runActionInstance";

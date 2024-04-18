@@ -6,7 +6,9 @@ import { sql } from "kysely";
 import { logger } from "logger";
 
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type Event from "~/kysely/types/public/Event";
 import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
 import { getPub } from "~/lib/server";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -14,7 +16,7 @@ import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
 import { validatePubValues } from "./validateFields";
 
-export const runActionInstance = defineServerAction(async function runActionInstance({
+const _runActionInstance = async ({
 	pubId,
 	actionInstanceId,
 	pubConfig = {},
@@ -22,7 +24,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 	pubId: PubsId;
 	actionInstanceId: ActionInstancesId;
 	pubConfig;
-}) {
+}) => {
 	const pubPromise = getPub(pubId);
 
 	const actionInstancePromise = db
@@ -124,4 +126,42 @@ export const runActionInstance = defineServerAction(async function runActionInst
 			error: error.message,
 		};
 	}
+};
+
+export const runActionInstance = defineServerAction(async function runActionInstance({
+	pubId,
+	actionInstanceId,
+	pubConfig = {},
+}: {
+	pubId: PubsId;
+	actionInstanceId: ActionInstancesId;
+	pubConfig;
+}) {
+	return _runActionInstance({ pubId, actionInstanceId, pubConfig });
 });
+
+export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {
+	const instances = await db
+		.selectFrom("action_instances")
+		.where("action_instances.stage_id", "=", stageId)
+		.innerJoin("rules", "rules.action_instance_id", "action_instances.id")
+		.where("rules.event", "=", event)
+		.selectAll()
+		.execute();
+
+	const results = await Promise.all(
+		instances.map(async (instance) => {
+			return {
+				actionInstanceId: instance.action_instance_id,
+				actionInstanceName: instance.name,
+				result: await _runActionInstance({
+					pubId,
+					actionInstanceId: instance.action_instance_id,
+					pubConfig: instance.config,
+				}),
+			};
+		})
+	);
+
+	return results;
+};
