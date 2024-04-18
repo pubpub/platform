@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
+import { Settings } from "ui/icon";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import LogoutButton from "../../components/LogoutButton";
@@ -29,11 +30,12 @@ export default async function LoginSwitcher() {
 			</div>
 			<div className="mt-1 flex flex-row items-center">
 				<LogoutButton />
-				<Link className="ml-2" href="/settings">
-					<Button variant="outline" size="sm">
+				<Button variant="outline" size="sm" asChild>
+					<Link className="ml-2 flex items-center gap-1" href="/settings">
+						<Settings size="14" />
 						Settings
-					</Button>
-				</Link>
+					</Link>
+				</Button>
 			</div>
 		</div>
 	);

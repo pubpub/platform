@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { Button } from "ui/button";
+import { LogOut } from "ui/icon";
 
 import { supabase } from "~/lib/supabase";
 
@@ -15,7 +16,13 @@ export default function LogoutButton() {
 		router.push("/");
 	};
 	return (
-		<Button onClick={handleSignout} variant="outline" size="sm">
+		<Button
+			onClick={handleSignout}
+			variant="outline"
+			size="sm"
+			className="flex items-center gap-1"
+		>
+			<LogOut size="14" />
 			Logout
 		</Button>
 	);
