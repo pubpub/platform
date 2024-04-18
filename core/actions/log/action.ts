@@ -11,8 +11,9 @@ export const action = defineAction({
 		debounce: z.number().optional().describe("Debounce time in milliseconds."),
 	}),
 	description: "Log a pub to the console",
-	pubConfig: z.object({}),
+	pubConfig: z.object({
+		text: z.string().optional(),
+	}),
 	pubFields: [corePubFields.title],
 	icon: Terminal,
 });
-// export { run } from "./run";

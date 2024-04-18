@@ -27,22 +27,24 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
 						<span>A pub</span>
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button variant="secondary" size="sm">
-									Run action
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent>
-								{actions.map((action) => (
-									<StagePanelPubsRunActionButton
-										key={action.id}
-										actionInstance={action}
-										pub={pub}
-									/>
-								))}
-							</PopoverContent>
-						</Popover>
+						{actions?.length > 0 && (
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button variant="secondary" size="sm">
+										Run action
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent>
+									{actions.map((action) => (
+										<StagePanelPubsRunActionButton
+											key={action.id}
+											actionInstance={action}
+											pub={pub}
+										/>
+									))}
+								</PopoverContent>
+							</Popover>
+						)}
 					</div>
 				))}
 			</CardContent>

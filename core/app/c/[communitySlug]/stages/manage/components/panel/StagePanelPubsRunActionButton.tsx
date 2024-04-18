@@ -5,7 +5,9 @@ import type { Action, ActionInstance, Pub } from "@prisma/client";
 import { useEffect, useState, useTransition } from "react";
 
 import { logger } from "logger";
+import AutoForm from "ui/auto-form";
 import { Button } from "ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
 import { Check, Loader2, Play, X } from "ui/icon";
 import { toast } from "ui/use-toast";
 
@@ -61,35 +63,42 @@ export const StagePanelPubsRunActionButton = ({
 			<span className="flex-grow overflow-auto text-ellipsis">
 				{actionInstance.name || action.name}
 			</span>
-			<Button
-				variant="default"
-				type="button"
-				size="sm"
-				onClick={async (evt) => {
-					if (isPending || result) return;
-					startTransition(async () => {
-						setResult(undefined);
-						const res = await runAction({
-							actionInstanceId: actionInstance.id as ActionInstancesId,
-							pubId: pub.id as PubsId,
-							pubConfig: {},
-						});
-						setResult(res);
-					});
-				}}
-			>
-				{isPending ? (
-					<Loader2 size="14" className="animate-spin" />
-				) : result ? (
-					"error" in result ? (
-						<X size="14" />
-					) : (
-						<Check size="14" />
-					)
-				) : (
-					<Play size="14" />
-				)}
-			</Button>
+			<Dialog>
+				<DialogTrigger asChild>
+					<Button
+						variant="default"
+						type="button"
+						size="sm"
+						// onClick={async (evt) => {
+						// 	if (isPending || result) return;
+						// 	startTransition(async () => {
+						// 		setResult(undefined);
+						// 		const res = await runAction({
+						// 			actionInstanceId: actionInstance.id as ActionInstancesId,
+						// 			pubId: pub.id as PubsId,
+						// 			pubConfig: {},
+						// 		});
+						// 		setResult(res);
+						// 	});
+						// }}
+					>
+						{isPending ? (
+							<Loader2 size="14" className="animate-spin" />
+						) : result ? (
+							"error" in result ? (
+								<X size="14" />
+							) : (
+								<Check size="14" />
+							)
+						) : (
+							<Play size="14" />
+						)}
+					</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<AutoForm formSchema={action.pubConfig} />
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 };
