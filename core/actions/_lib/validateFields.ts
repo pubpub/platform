@@ -18,29 +18,23 @@ export const validatePubValues = ({
 }) => {
 	const validator = new Ajv();
 
-	return fields.reduce(
-		(acc, field) => {
-			if (acc.error) {
-				return acc;
-			}
+	for (const field of fields) {
+		const value = values[field.slug];
 
-			const value = values[field.slug];
+		if (!value) {
+			return { error: `Field ${field.slug} not found in pub values` };
+		}
 
-			if (!value) {
-				return { error: `Field ${field.slug} not found in pub values` };
-			}
-
-			try {
-				const val = validator.validate(field.schema.schema, value);
-				if (val !== true) {
-					return { error: `Field ${field.slug} failed schema validation` };
-				}
-				return { ...acc, [field.slug]: value };
-			} catch (e) {
-				logger.error(e);
+		try {
+			const val = validator.validate(field.schema.schema, value);
+			if (val !== true) {
 				return { error: `Field ${field.slug} failed schema validation` };
 			}
-		},
-		{} as { error: string } | Record<string, unknown>
-	);
+		} catch (e) {
+			logger.error(e);
+			return { error: `Field ${field.slug} failed schema validation` };
+		}
+	}
+
+	return values;
 };

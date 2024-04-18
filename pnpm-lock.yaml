@@ -222,6 +222,9 @@ importers:
       pg:
         specifier: ^8.11.3
         version: 8.11.3
+      prosemirror-markdown:
+        specifier: ^1.12.0
+        version: 1.12.0
       react:
         specifier: 18.2.0
         version: 18.2.0
@@ -13828,6 +13831,12 @@ packages:
   /lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
+  /linkify-it@5.0.0:
+    resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
+    dependencies:
+      uc.micro: 2.1.0
+    dev: false
+
   /lint-staged@13.2.2:
     resolution: {integrity: sha512-71gSwXKy649VrSU09s10uAT0rWCcY3aewhMaHyl2N84oBk4Xs9HgxvUp3AYu+bNsK4NrOYYxvSgg7FyGJ+jGcA==}
     engines: {node: ^14.13.1 || >=16.0.0}
@@ -14102,6 +14111,18 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
+  /markdown-it@14.1.0:
+    resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
+    hasBin: true
+    dependencies:
+      argparse: 2.0.1
+      entities: 4.5.0
+      linkify-it: 5.0.0
+      mdurl: 2.0.0
+      punycode.js: 2.3.1
+      uc.micro: 2.1.0
+    dev: false
+
   /markdown-table@2.0.0:
     resolution: {integrity: sha512-Ezda85ToJUBhM6WGaG6veasyym+Tbs3cMAw/ZhOPqXiYsr0jgocBV3j3nx+4lk47plLlIqjwuTm/ywVI+zjJ/A==}
     dependencies:
@@ -14231,6 +14252,10 @@ packages:
 
   /mdurl@1.0.1:
     resolution: {integrity: sha512-/sKlQJCBYVY9Ers9hqzKou4H6V5UWc/M59TH2dvkt+84itfnq7uFOMLpOiOS4ujvHP4etln18fmIxA5R5fll0g==}
+    dev: false
+
+  /mdurl@2.0.0:
+    resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
     dev: false
 
   /media-typer@0.3.0:
@@ -15003,6 +15028,10 @@ packages:
       wcwidth: 1.0.1
     dev: true
 
+  /orderedmap@2.1.1:
+    resolution: {integrity: sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g==}
+    dev: false
+
   /os-tmpdir@1.0.2:
     resolution: {integrity: sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==}
     engines: {node: '>=0.10.0'}
@@ -15768,6 +15797,19 @@ packages:
     resolution: {integrity: sha512-gVNZ74nqhRMiIUYWGQdosYetaKc83x8oT41a0LlV3AAFCAZwCpg4vmGkq8t34+cUhp3cnM4XDiU/7xlgK7HGrg==}
     dev: false
 
+  /prosemirror-markdown@1.12.0:
+    resolution: {integrity: sha512-6F5HS8Z0HDYiS2VQDZzfZP6A0s/I0gbkJy8NCzzDMtcsz3qrfqyroMMeoSjAmOhDITyon11NbXSzztfKi+frSQ==}
+    dependencies:
+      markdown-it: 14.1.0
+      prosemirror-model: 1.20.0
+    dev: false
+
+  /prosemirror-model@1.20.0:
+    resolution: {integrity: sha512-q7AY7vMjKYqDCeoedgUiAgrLabliXxndJuuFmcmc2+YU1SblvnOiG2WEACF2lwAZsMlfLpiAilA3L+TWlDqIsQ==}
+    dependencies:
+      orderedmap: 2.1.1
+    dev: false
+
   /protobufjs@7.2.6:
     resolution: {integrity: sha512-dgJaEDDL6x8ASUZ1YqWciTRrdOuYNzoOf27oHNfdyvKqHr5i0FV7FSLU+aIeFjyFgVxrpTOtQUi0BLLBymZaBw==}
     engines: {node: '>=12.0.0'}
@@ -15820,6 +15862,11 @@ packages:
       end-of-stream: 1.4.4
       once: 1.4.0
     dev: true
+
+  /punycode.js@2.3.1:
+    resolution: {integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==}
+    engines: {node: '>=6'}
+    dev: false
 
   /punycode@2.3.0:
     resolution: {integrity: sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==}
@@ -17755,6 +17802,10 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
     dev: true
+
+  /uc.micro@2.1.0:
+    resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
+    dev: false
 
   /ufo@1.5.3:
     resolution: {integrity: sha512-Y7HYmWaFwPUmkoQCUIAYpKqkOf+SbVj/2fJJZ4RJMCfZp0rTGwRbzQD+HghfnhKOjL9E01okqz+ncJskGYfBNw==}

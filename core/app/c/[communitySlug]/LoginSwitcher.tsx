@@ -13,7 +13,7 @@ export default async function LoginSwitcher() {
 		return null;
 	}
 	return (
-		<div className="w-max-[100%] flex flex-wrap rounded-lg border border-gray-100 bg-white p-2">
+		<div className="w-max-[100%] flex flex-col gap-y-2 rounded-lg border border-gray-100 bg-white p-2">
 			<div className="flex items-center">
 				<Avatar className="mr-2 h-9 w-9">
 					<Link className="w-full" href="/settings">
@@ -28,7 +28,7 @@ export default async function LoginSwitcher() {
 					<div className="text-xs text-gray-400">{loginData.email}</div>
 				</div>
 			</div>
-			<div className="items- mt-1 flex flex-row">
+			<div className="mt-1 flex flex-row items-center">
 				<LogoutButton />
 				<Button variant="outline" size="sm" asChild>
 					<Link className="ml-2 flex items-center gap-1" href="/settings">

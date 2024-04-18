@@ -346,6 +346,7 @@ enum Action {
   log
   pdf
   email
+  pushToV6
 }
 
 model Rule {
