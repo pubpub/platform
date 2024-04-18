@@ -25,10 +25,23 @@ import { type default as PubsTable } from "./Pubs";
 import { type default as PubsInStagesTable } from "./PubsInStages";
 import { type default as PubTypesTable } from "./PubTypes";
 import { type default as PubValuesTable } from "./PubValues";
+import { type default as RulesTable } from "./Rules";
 import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
+	_prisma_migrations: PrismaMigrationsTable;
+
+	users: UsersTable;
+
+	pubs: PubsTable;
+
+	pub_types: PubTypesTable;
+
+	stages: StagesTable;
+
+	members: MembersTable;
+
 	member_groups: MemberGroupsTable;
 
 	integrations: IntegrationsTable;
@@ -69,15 +82,5 @@ export default interface PublicSchema {
 
 	PubsInStages: PubsInStagesTable;
 
-	_prisma_migrations: PrismaMigrationsTable;
-
-	users: UsersTable;
-
-	pubs: PubsTable;
-
-	pub_types: PubTypesTable;
-
-	stages: StagesTable;
-
-	members: MembersTable;
+	rules: RulesTable;
 }

@@ -337,6 +337,7 @@ model ActionInstance {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
   config    Json?
+  rules     Rule[]
 
   @@map(name: "action_instances")
 }
@@ -345,4 +346,19 @@ enum Action {
   log
   pdf
   email
+}
+
+model Rule {
+  id               String         @id @default(dbgenerated("gen_random_uuid()"))
+  event            Event
+  actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId String         @map(name: "action_instance_id")
+
+  @@unique([actionInstanceId, event])
+  @@map(name: "rules")
+}
+
+enum Event {
+  pubEnteredStage
+  pubLeftStage
 }
