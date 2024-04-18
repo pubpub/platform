@@ -158,24 +158,17 @@ const updateV6PubText = async (
 	}
 };
 
-const getFieldId = unstable_cache(async (fieldSlug: string) => {
-	const field = await db
-		.selectFrom("pub_fields")
-		.select("id")
-		.where("slug", "=", fieldSlug)
-		.executeTakeFirstOrThrow();
-	return field.id;
-});
-
 const updateV6PubId = async (pubId: string, v6PubId: string) => {
-	const fieldId = await getFieldId(corePubFields.v6PubId.slug);
 	await db
+		.with("field", (db) =>
+			db.selectFrom("pub_fields").select("id").where("slug", "=", corePubFields.v6PubId.slug)
+		)
 		.insertInto("pub_values")
-		.values({
-			field_id: fieldId,
+		.values((eb) => ({
+			field_id: eb.selectFrom("field").select("field.id"),
 			pub_id: pubId as PubsId,
 			value: `"${v6PubId}"`,
-		})
+		}))
 		.execute();
 };
 
