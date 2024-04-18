@@ -9,15 +9,14 @@ import { ChevronUp, Pencil, Trash } from "ui/icon";
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 
-import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type { StagePayloadActionInstance } from "~/lib/types";
+import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { getActionByName } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "../../actions";
 import { StagePanelActionConfig } from "./StagePanelActionConfig";
 
 type Props = {
-	actionInstance: StagePayloadActionInstance;
+	actionInstance: ActionInstances;
 	onDelete: (actionInstanceId: string) => Promise<unknown>;
 	communityId: string;
 };
