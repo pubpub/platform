@@ -14,7 +14,7 @@ type PropsInner = {
 
 const StagePanelRulesInner = async (props: PropsInner) => {
 	const stage = await getStage(props.stageId);
-	if (stage === null) {
+	if (!stage) {
 		return <SkeletonCard />;
 	}
 
