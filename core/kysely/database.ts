@@ -1,8 +1,10 @@
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 
+import { logger } from "logger";
+
+import type Database from "./types/Database";
 import { env } from "~/lib/env/env.mjs";
-import Database from "./types/Database";
 
 const dialect = new PostgresDialect({
 	pool: new Pool({
@@ -10,16 +12,16 @@ const dialect = new PostgresDialect({
 	}),
 });
 
+const kyselyLogger =
+	env.LOG_LEVEL === "debug"
+		? (event) => logger.debug({ msg: "Kysely event log" }, event)
+		: undefined;
+
 // Database interface is passed to Kysely's constructor, and from now on, Kysely
 // knows your database structure.
 // Dialect is passed to Kysely's constructor, and from now on, Kysely knows how
 // to communicate with your database.
 export const db = new Kysely<Database>({
 	dialect,
-	// log(event) {
-	// 	if (event.level === "query") {
-	// 		console.log(event.query.sql);
-	// 		console.log(event.query.parameters);
-	// 	}
-	// },
+	log: kyselyLogger,
 });
