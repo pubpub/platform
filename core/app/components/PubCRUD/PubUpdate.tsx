@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import { db } from "~/kysely/database";
 import { getPub, getPubType } from "~/lib/server";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 
@@ -21,6 +23,37 @@ const PubUpdateForm = dynamic(
 
 export async function PubUpdate({ pubId }: PubUpdateProps) {
 	const pub = await getPub(pubId);
+	const availableStagesAndCurrentStage = await db
+		.with("currentStageId", (db) =>
+			db
+				.selectFrom("PubsInStages")
+				.select((eb) => ["stageId as currentStageId"])
+				.where("PubsInStages.pubId", "=", pubId)
+		)
+		.selectFrom("stages")
+		.select((eb) => [
+			jsonObjectFrom(
+				eb
+					.selectFrom("stages")
+					.select(["id", "name", "order"])
+					.whereRef(
+						"stages.id",
+						"=",
+						eb.selectFrom("currentStageId").select("currentStageId")
+					)
+			).as("currentStage"),
+			jsonArrayFrom(
+				eb.selectFrom("stages").select(["id", "name", "order"]).orderBy("order desc").where(
+					"stages.community_id",
+					"=",
+					// @ts-expect-error does exist
+					pub.communityId
+				)
+			).as("availableStages"),
+		])
+		.executeTakeFirst();
+
+	const { availableStages = [], currentStage } = availableStagesAndCurrentStage ?? {};
 
 	const pubType = await getPubType(pub.pubTypeId as PubTypesId);
 	if (!pubType) {
@@ -30,7 +63,12 @@ export async function PubUpdate({ pubId }: PubUpdateProps) {
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
-				<PubUpdateForm pub={pub} pubType={pubType} />
+				<PubUpdateForm
+					pub={pub}
+					pubType={pubType}
+					availableStages={availableStages}
+					currentStage={currentStage}
+				/>
 			</Suspense>
 		</>
 	);

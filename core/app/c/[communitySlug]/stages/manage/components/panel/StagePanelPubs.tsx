@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubUpdateButton } from "~/app/components/PubCRUD/PubUpdateButton";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageActions, getStagePubs } from "./queries";
@@ -60,26 +61,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 									))}
 								</PopoverContent>
 							</Popover>
-
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="sm">
-										<MoreVertical size="12" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent className="width">
-									<DropdownMenuItem asChild>
-										<PubUpdateButton
-											button={{
-												variant: "ghost",
-												title: "Edit Pub",
-												className: "w-full justify-start",
-											}}
-											pubId={pub.id as PubsId}
-										/>
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
+							<PubDropDown pubId={pub.id as PubsId} />
 						</div>
 					</div>
 				))}

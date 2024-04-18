@@ -92,11 +92,13 @@ export const updatePub = defineServerAction(async function updatePub({
 	pubId,
 	fields,
 	path,
+	stageId,
 }: {
 	communityId: CommunitiesId;
 	pubId: PubsId;
 	fields: { [id: PubFieldsId]: { slug: string; value: JsonValue } };
 	path?: string | null;
+	stageId?: StagesId;
 }) {
 	const loginData = await getLoginData();
 	if (!loginData) {
@@ -120,16 +122,23 @@ export const updatePub = defineServerAction(async function updatePub({
 			.execute();
 
 		const updatePub = await Promise.allSettled(
-			pubValues.map(async (pubValue) =>
+			[
 				db
-					.updateTable("pub_values")
-					.set({
-						value: JSON.stringify(fields[pubValue.field_id].value),
-					})
-					.where("pub_values.id", "=", pubValue.id)
-					.returningAll()
-					.execute()
-			)
+					.updateTable("PubsInStages")
+					.set({ stageId })
+					.where("PubsInStages.pubId", "=", pubId)
+					.execute(),
+				pubValues.map(async (pubValue) =>
+					db
+						.updateTable("pub_values")
+						.set({
+							value: JSON.stringify(fields[pubValue.field_id].value),
+						})
+						.where("pub_values.id", "=", pubValue.id)
+						.returningAll()
+						.execute()
+				),
+			].flat()
 		);
 
 		const errors = updatePub.filter(
@@ -157,6 +166,60 @@ export const updatePub = defineServerAction(async function updatePub({
 		logger.debug(error);
 		return {
 			error: "Failed to update pub",
+			cause: error,
+		};
+	}
+});
+
+export const removePub = defineServerAction(async function removePub({
+	pubId,
+	path,
+}: {
+	pubId: PubsId;
+	path?: string | null;
+}) {
+	const loginData = await getLoginData();
+
+	if (!loginData) {
+		throw new Error("Not logged in");
+	}
+	const pub = await db
+		.selectFrom("pubs")
+		.selectAll()
+		.where("pubs.id", "=", pubId)
+		.executeTakeFirst();
+
+	if (!pub) {
+		return {
+			error: "Pub not found",
+		};
+	}
+
+	if (
+		!loginData.memberships.find((m) => m.communityId === pub.community_id)?.canAdmin &&
+		!loginData.isSuperAdmin
+	) {
+		return {
+			error: "You need to be an admin of this community to remove this pub.",
+		};
+	}
+
+	try {
+		await db.deleteFrom("pubs").where("pubs.id", "=", pubId).executeTakeFirst();
+
+		if (path) {
+			revalidatePath(path);
+		}
+		revalidateTag(`community-stages_${pub.community_id}`);
+
+		return {
+			success: true,
+			report: `Successfully removed the pub`,
+		};
+	} catch (error) {
+		logger.debug(error);
+		return {
+			error: "Failed to remove pub",
 			cause: error,
 		};
 	}

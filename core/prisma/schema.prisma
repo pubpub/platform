@@ -175,9 +175,9 @@ model Stage {
 }
 
 model PubsInStages {
-  pub     Pub    @relation(fields: [pubId], references: [id])
+  pub     Pub    @relation(fields: [pubId], references: [id], onDelete: Cascade)
   pubId   String
-  stage   Stage  @relation(fields: [stageId], references: [id])
+  stage   Stage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
   stageId String
 
   @@id([pubId, stageId])

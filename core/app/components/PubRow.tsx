@@ -8,6 +8,7 @@ import { cn } from "utils";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
+import { PubDropDown } from "./PubCRUD/PubDropDown";
 import { PubUpdateButton } from "./PubCRUD/PubUpdateButton";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
@@ -79,9 +80,9 @@ const PubRow: React.FC<Props> = function (props: Props) {
 						{props.pub.pubType.name}
 					</div>
 					<div className="flex flex-row gap-x-2">
-						<PubUpdateButton pubId={props.pub.id as PubsId} button={{ title: null }} />
 						<IntegrationActions pub={props.pub} token={props.token} />
 						<div>{props.actions}</div>
+						<PubDropDown pubId={props.pub.id as PubsId} />
 					</div>
 				</div>
 			</RowHeader>
