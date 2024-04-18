@@ -128,7 +128,7 @@ type ScalarFieldProps = {
 	title: string;
 	schema: JSONSchemaType<AnySchema>;
 	control: Control;
-	defaultValue?: JSONType;
+	defaultValue?: unknown;
 };
 
 const ScalarField = (props: ScalarFieldProps) => {
@@ -255,7 +255,7 @@ const getDereferencedSchema = (
 	}
 };
 
-type NestedPubValues = PubValues | { [key: string]: NestedPubValues };
+// type NestedPubValues = PubValues; //| { [key: string]: NestedPubValues };
 
 type SchemaBasedFormFieldsProps = {
 	compiledSchema: Ajv;
@@ -264,7 +264,7 @@ type SchemaBasedFormFieldsProps = {
 	path?: string;
 	fieldSchema?: JSONSchemaType<AnySchema>;
 	schemaPath?: string;
-	existingValues?: NestedPubValues;
+	existingValues?: Record<string, unknown>;
 };
 
 /**
