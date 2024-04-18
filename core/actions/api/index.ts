@@ -1,6 +1,6 @@
 // shared actions between server and client
 
-import type { Action } from "../types";
+import type Event from "~/kysely/types/public/Event";
 import * as email from "../email/action";
 import * as log from "../log/action";
 import * as pdf from "../pdf/action";
@@ -11,10 +11,20 @@ export const actions = {
 	[email.action.name]: email.action,
 } as const;
 
-export const getActionByName = (name: keyof typeof actions): Action | undefined => {
+export const getActionByName = (name: keyof typeof actions) => {
 	return actions[name];
 };
 
 export const getActionNames = () => {
 	return Object.keys(actions) as (keyof typeof actions)[];
 };
+
+const humanReadableEvents: Record<Event, string> = {
+	pubEnteredStage: "a pub enters this stage",
+	pubLeftStage: "a pub leaves this stage",
+};
+
+export const humanReadableEvent = (event: Event) => humanReadableEvents[event];
+
+export const serializeRule = (event: Event, instanceName: string) =>
+	`${instanceName} will run when ${humanReadableEvent(event)}`;
