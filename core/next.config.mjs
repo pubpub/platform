@@ -85,6 +85,7 @@ const modifiedConfig = withPreconstruct(
 );
 
 export default (phase, { defaultConfig }) => {
+	// return modifiedConfig;
 	if (phase !== "phase-development-server") {
 		return modifiedConfig;
 	}

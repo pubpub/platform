@@ -177,6 +177,9 @@ importers:
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
+      ajv-formats:
+        specifier: ^2.1.1
+        version: 2.1.1(ajv@8.12.0)
       clsx:
         specifier: ^2.0.0
         version: 2.0.0
@@ -9210,7 +9213,7 @@ packages:
   /@types/type-is@1.6.4:
     resolution: {integrity: sha512-2ONCAm+KdTDcSZdYj3xWT+GAfgLNXpEUIyCMYofzwoVYORXf7tqq2jDf3dd4J+4y96YVcTXbZsdJf4LSGGUc/A==}
     dependencies:
-      '@types/node': 20.3.1
+      '@types/node': 20.12.7
     dev: false
 
   /@types/unist@2.0.7:

@@ -1,5 +1,3 @@
-"use client";
-
 import React, { Fragment } from "react";
 import Link from "next/link";
 
@@ -7,9 +5,10 @@ import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { cn } from "utils";
 
-import { PubPayload } from "~/lib/types";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
-import MembersAvatars from "./MemberAvatar";
+import { PubUpdateButton } from "./PubCRUD/PubUpdateButton";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 
@@ -39,7 +38,7 @@ const groupPubChildrenByPubType = (pubs: PubPayload["children"]) => {
 
 const getTitle = (pub: PubPayload["children"][number]) => {
 	const title = pub.values.find((value) => {
-		return value.field.slug === "unjournal:title";
+		return value.field.slug === "unjournal:title" || value.field.slug === "pubpub:title";
 	});
 	return title?.value as string;
 };
@@ -79,9 +78,10 @@ const PubRow: React.FC<Props> = function (props: Props) {
 					<div className="text-sm font-semibold text-gray-500">
 						{props.pub.pubType.name}
 					</div>
-					<div className="flex flex-row">
+					<div className="flex flex-row gap-x-2">
+						<PubUpdateButton pubId={props.pub.id as PubsId} button={{ title: null }} />
 						<IntegrationActions pub={props.pub} token={props.token} />
-						<div className="ml-1">{props.actions}</div>
+						<div>{props.actions}</div>
 					</div>
 				</div>
 			</RowHeader>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import Ajv from "ajv";
+import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
@@ -26,7 +27,7 @@ import type { Stages } from "~/kysely/types/public/Stages";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 
-export const CreatePubForm = ({
+export const PubCreateForm = ({
 	communityId,
 	availableStages,
 	availablePubTypes,
@@ -59,22 +60,35 @@ export const CreatePubForm = ({
 			selectedPubType,
 			[]
 		);
-		const compiledSchema = new Ajv().addSchema(uncompiledSchema, "schema");
+		const compiledSchema = new Ajv({
+			formats: fullFormats,
+		}).addSchema(uncompiledSchema, "schema");
 		return { compiledSchema, uncompiledSchema };
 	}, [selectedPubType]);
 
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-		resolver: uncompiledSchema ? ajvResolver(uncompiledSchema) : undefined,
+		resolver: uncompiledSchema
+			? ajvResolver(uncompiledSchema, {
+					formats: fullFormats,
+				})
+			: undefined,
 	});
 
 	const runCreatePub = useServerAction(actions.createPub);
 
 	const path = usePathname();
 	const searchParams = useSearchParams();
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 	const router = useRouter();
+
+	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
+	urlSearchParams.delete("create-pub-form");
+	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
+
+	const closeForm = useCallback(() => {
+		router.replace(pathWithoutFormParam);
+	}, [pathWithoutFormParam]);
 
 	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
 		if (!selectedStage) {
@@ -91,10 +105,9 @@ export const CreatePubForm = ({
 			return;
 		}
 
-		urlSearchParams.delete("create-pub-form");
 		const result = await runCreatePub({
 			communityId,
-			path: `${path}?${urlSearchParams.toString()}`,
+			path: pathWithoutFormParam,
 			stageId: selectedStage?.id,
 			pubTypeId: selectedPubType?.id,
 			fields: Object.entries(values).reduce((acc, [key, value]) => {
@@ -111,9 +124,23 @@ export const CreatePubForm = ({
 				title: "Success",
 				description: result.report,
 			});
-			router.replace(`${path}?${urlSearchParams.toString()}`);
+			closeForm();
 		}
 	};
+
+	const memoizedForm = useMemo(() => {
+		if (!selectedPubType || !compiledSchema) {
+			return null;
+		}
+		return (
+			<SchemaBasedFormFields
+				compiledSchema={compiledSchema}
+				key={selectedPubType.id}
+				control={form.control}
+				upload={() => {}}
+			/>
+		);
+	}, [selectedPubType, compiledSchema]);
 
 	return (
 		<Form {...form}>
@@ -200,16 +227,10 @@ export const CreatePubForm = ({
 						)}
 					/>
 				)}
-				{selectedPubType && compiledSchema && (
-					<SchemaBasedFormFields
-						compiledSchema={compiledSchema}
-						key={selectedPubType.id}
-						control={form.control}
-						upload={() => {}}
-					/>
-				)}
+				{memoizedForm}
 				<Button
 					type="submit"
+					className="flex items-center gap-x-2"
 					disabled={
 						form.formState.isSubmitting ||
 						!selectedStage ||
@@ -222,7 +243,7 @@ export const CreatePubForm = ({
 					) : (
 						<>
 							<Plus size="12" />
-							"Create"
+							Create Pub
 						</>
 					)}
 				</Button>

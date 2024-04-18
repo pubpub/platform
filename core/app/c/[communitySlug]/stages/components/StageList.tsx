@@ -1,14 +1,12 @@
-"use client";
-
 import { Fragment } from "react";
 import Link from "next/link";
 
 import { Button } from "ui/button";
 
+import type { CommunityMemberPayload, StagePayload, StagesById, UserLoginData } from "~/lib/types";
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
 import { moveConstraintSourcesForStage } from "~/lib/stages";
-import { CommunityMemberPayload, StagePayload, StagesById, UserLoginData } from "~/lib/types";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = {

@@ -8,7 +8,7 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type PublicSchema from "~/kysely/types/public/PublicSchema";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
-import { SkeletonCard } from "./skeletons/SkeletonCard";
+import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 export type CreatePubProps =
 	| {
@@ -98,16 +98,16 @@ const getStage = (stageId: StagesId) => {
 		.where("stages.id", "=", stageId);
 };
 
-const CreatePubForm = dynamic(
+const PubCreateForm = dynamic(
 	async () => {
-		return import("./CreatePubForm").then((mod) => ({
-			default: mod.CreatePubForm,
+		return import("./PubCreateForm").then((mod) => ({
+			default: mod.PubCreateForm,
 		}));
 	},
 	{ ssr: false, loading: () => <SkeletonCard /> }
 );
 
-export async function CreatePub({ communityId, stageId }: CreatePubProps) {
+export async function PubCreate({ communityId, stageId }: CreatePubProps) {
 	const query = stageId
 		? getStage(stageId)
 		: getCommunityById(
@@ -127,7 +127,7 @@ export async function CreatePub({ communityId, stageId }: CreatePubProps) {
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
-				<CreatePubForm
+				<PubCreateForm
 					currentStage={currentStage}
 					communityId={community.id}
 					availableStages={community.stages}

@@ -1,9 +1,7 @@
-"use client";
-
 import { cn } from "utils";
 
+import type { PubPayload } from "~/lib/types";
 import PubRow from "~/app/components/PubRow";
-import { PubPayload } from "~/lib/types";
 
 type Props = { pubs: PubPayload[]; token: string };
 

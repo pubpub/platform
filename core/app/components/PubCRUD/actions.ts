@@ -32,7 +32,10 @@ export const createPub = defineServerAction(async function createPub({
 		throw new Error("Not logged in");
 	}
 
-	if (!loginData.memberships.find((m) => m.communityId === communityId)?.canAdmin) {
+	if (
+		!loginData.memberships.find((m) => m.communityId === communityId)?.canAdmin &&
+		!loginData.isSuperAdmin
+	) {
 		return {
 			error: "You need to be an admin",
 		};
@@ -86,13 +89,11 @@ export const createPub = defineServerAction(async function createPub({
 
 export const updatePub = defineServerAction(async function updatePub({
 	communityId,
-	stageId,
 	pubId,
 	fields,
 	path,
 }: {
 	communityId: CommunitiesId;
-	stageId: StagesId;
 	pubId: PubsId;
 	fields: { [id: PubFieldsId]: { slug: string; value: JsonValue } };
 	path?: string | null;
@@ -102,7 +103,10 @@ export const updatePub = defineServerAction(async function updatePub({
 		throw new Error("Not logged in");
 	}
 
-	if (!loginData.memberships.find((m) => m.communityId === communityId)?.canAdmin) {
+	if (
+		!loginData.memberships.find((m) => m.communityId === communityId)?.canAdmin &&
+		!loginData.isSuperAdmin
+	) {
 		return {
 			error: "You need to be an admin",
 		};
@@ -123,6 +127,7 @@ export const updatePub = defineServerAction(async function updatePub({
 						value: JSON.stringify(fields[pubValue.field_id].value),
 					})
 					.where("pub_values.id", "=", pubValue.id)
+					.returningAll()
 					.execute()
 			)
 		);
