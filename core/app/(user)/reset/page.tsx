@@ -22,7 +22,7 @@ export default async function Page({
 
 	return (
 		<>
-			<div className="m-auto max-w-lg">
+			<div className="mx-auto max-w-sm">
 				<Card className="w-full max-w-sm">
 					<CardHeader>
 						<CardTitle className="text-2xl">Reset password</CardTitle>

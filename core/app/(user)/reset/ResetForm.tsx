@@ -70,7 +70,7 @@ export default function ResetForm() {
 						render={({ field }) => (
 							<FormItem aria-label="Password">
 								<FormLabel>New Password</FormLabel>
-								<Input {...field} />
+								<Input {...field} type="password" />
 								<FormMessage />
 							</FormItem>
 						)}
