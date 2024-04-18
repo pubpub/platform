@@ -4,8 +4,8 @@ import { cache } from "react";
 
 import { expect } from "utils";
 
+import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
-import { StagesId } from "~/kysely/types/public/Stages";
 import prisma from "~/prisma/db";
 
 export const getStage = cache(async (stageId: string) => {
@@ -24,11 +24,11 @@ export const getStage = cache(async (stageId: string) => {
 });
 
 export const getStageActions = cache(async (stageId: string) => {
-	return await prisma.actionInstance.findMany({
-		where: {
-			stageId,
-		},
-	});
+	return await db
+		.selectFrom("action_instances")
+		.selectAll()
+		.where("stage_id", "=", stageId as StagesId)
+		.execute();
 });
 
 export const getStagePubs = cache(async (stageId: string) => {
@@ -75,4 +75,19 @@ export const getStageMembers = cache(async (stageId: string) => {
 	}, new Map<string, User>());
 
 	return members;
+});
+
+export const getStageRules = cache(async (stageId: string) => {
+	const stages = await db
+		.selectFrom("action_instances")
+		.where("stage_id", "=", stageId as StagesId)
+		.innerJoin("rules", "rules.action_instance_id", "action_instances.id")
+		.select([
+			"rules.id",
+			"rules.event",
+			"action_instances.name as instanceName",
+			"action_instances.action",
+		])
+		.execute();
+	return stages;
 });

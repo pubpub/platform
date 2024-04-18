@@ -549,6 +549,9 @@ importers:
       '@pubpub/sdk':
         specifier: workspace:*
         version: link:../packages/sdk
+      '@ts-rest/core':
+        specifier: ^3.28.0
+        version: 3.28.0(zod@3.22.4)
       contracts:
         specifier: workspace:*
         version: link:../packages/contracts
