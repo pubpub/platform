@@ -16,8 +16,8 @@ export type ActionPub<T extends ActionPubType> = {
 };
 
 export type RunProps<T extends Action> =
-	T extends Action<infer PT, infer AC, infer PC>
-		? { config: AC; pub: ActionPub<PT>; runParameters: PC }
+	T extends Action<infer PT, infer AC, infer RP>
+		? { config: AC; pub: ActionPub<PT>; runParameters: RP }
 		: never;
 
 export type ConfigProps<C> = {
@@ -27,25 +27,44 @@ export type ConfigProps<C> = {
 export type Action<
 	PT extends ActionPubType = ActionPubType,
 	AC extends object = {},
-	PC extends object = {},
+	RP extends object | undefined = {} | undefined,
 	N extends string = string,
 > = {
 	id?: string;
 	name: N;
 	description: string;
+	/**
+	 * The action's configuration
+	 *
+	 * These are the "statically known" parameters for this action.
+	 */
 	config: z.ZodType<AC>;
-	runParameters: z.ZodType<PC>;
+	/**
+	 * The run parameters for this action
+	 *
+	 * These are the parameters you can specify when manually running the action.
+	 *
+	 * Defining this as an optional Zod schema (e.g. `z.object({/*...*\/}).optional()`) means that the action can be automatically run
+	 * through a rule.
+	 */
+	runParameters: z.ZodType<RP>;
+	/**
+	 * The core pub fields that this action requires in order to run.
+	 */
 	pubFields: PT;
+	/**
+	 * The icon to display for this action. Used in the UI.
+	 */
 	icon: (typeof Icons)[keyof typeof Icons];
 };
 
 export const defineAction = <
 	T extends ActionPubType,
 	AC extends object,
-	PC extends object,
+	RP extends object | undefined,
 	N extends string,
 >(
-	action: Action<T, AC, PC, N>
+	action: Action<T, AC, RP, N>
 ) => action;
 
 type ActionSuccess = {
