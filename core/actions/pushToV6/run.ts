@@ -183,7 +183,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, runParameters 
 		let v6Pub: { id: string };
 
 		// Fetch the pub if the v7 pub already had a v6 pub id
-		if (corePubFields.v6PubId.slug in pub.values) {
+		if (pub.values[corePubFields.v6PubId.slug]) {
 			const v6PubId = pub.values[corePubFields.v6PubId.slug] as string;
 			const v6PubResult = await getV6Pub(v6PubId, config.communitySlug, config.authToken);
 
