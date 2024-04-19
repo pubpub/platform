@@ -2,20 +2,13 @@ import { Suspense } from "react";
 
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
-import { PubUpdateButton } from "~/app/components/PubCRUD/PubUpdateButton";
+import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageActions, getStagePubs } from "./queries";
 import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
@@ -43,7 +36,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				</div>
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
-						<span>A pub</span>
+						<PubTitle pub={pub} />
 						<div className="flex items-center gap-x-2">
 							<Popover>
 								<PopoverTrigger asChild>
