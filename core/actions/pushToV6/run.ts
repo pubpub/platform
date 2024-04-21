@@ -6,9 +6,10 @@ import { defaultMarkdownParser } from "prosemirror-markdown";
 import { logger } from "logger";
 
 import type { action } from "./action";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
-import { PubsId } from "~/kysely/types/public/Pubs";
-import { ClientExceptionOptions, isClientExceptionOptions } from "~/lib/serverActions";
+import { isClientExceptionOptions } from "~/lib/serverActions";
 import * as corePubFields from "../corePubFields";
 import { defineRun } from "../types";
 
@@ -157,28 +158,21 @@ const updateV6PubText = async (
 	}
 };
 
-const getFieldId = unstable_cache(async (fieldSlug: string) => {
-	const field = await db
-		.selectFrom("pub_fields")
-		.select("id")
-		.where("slug", "=", fieldSlug)
-		.executeTakeFirstOrThrow();
-	return field.id;
-});
-
 const updateV6PubId = async (pubId: string, v6PubId: string) => {
-	const fieldId = await getFieldId(corePubFields.v6PubId.slug);
 	await db
+		.with("field", (db) =>
+			db.selectFrom("pub_fields").select("id").where("slug", "=", corePubFields.v6PubId.slug)
+		)
 		.insertInto("pub_values")
-		.values({
-			field_id: fieldId,
+		.values((eb) => ({
+			field_id: eb.selectFrom("field").select("field.id"),
 			pub_id: pubId as PubsId,
 			value: `"${v6PubId}"`,
-		})
+		}))
 		.execute();
 };
 
-export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) => {
+export const run = defineRun<typeof action>(async ({ pub, config, runParameters }) => {
 	try {
 		const v6Community = await getV6Community(config.communitySlug, config.authToken);
 
@@ -189,7 +183,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) =
 		let v6Pub: { id: string };
 
 		// Fetch the pub if the v7 pub already had a v6 pub id
-		if (corePubFields.v6PubId.slug in pub.values) {
+		if (pub.values[corePubFields.v6PubId.slug]) {
 			const v6PubId = pub.values[corePubFields.v6PubId.slug] as string;
 			const v6PubResult = await getV6Pub(v6PubId, config.communitySlug, config.authToken);
 
@@ -241,7 +235,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, pubConfig }) =
 		};
 	}
 
-	logger.info({ msg: "pub pushed to v6", pub, config, pubConfig });
+	logger.info({ msg: "pub pushed to v6", pub, config, runParameters });
 
 	return {
 		success: true,

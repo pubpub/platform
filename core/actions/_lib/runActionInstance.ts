@@ -16,15 +16,17 @@ import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
 import { validatePubValues } from "./validateFields";
 
+type ActionInstanceArgs = {
+	pubId: PubsId;
+	actionInstanceId: ActionInstancesId;
+	runParameters?: Record<string, unknown>;
+};
+
 const _runActionInstance = async ({
 	pubId,
 	actionInstanceId,
-	pubConfig = {},
-}: {
-	pubId: PubsId;
-	actionInstanceId: ActionInstancesId;
-	pubConfig;
-}) => {
+	runParameters = {},
+}: ActionInstanceArgs) => {
 	const pubPromise = getPub(pubId);
 
 	const actionInstancePromise = db
@@ -88,11 +90,11 @@ const _runActionInstance = async ({
 		};
 	}
 
-	const parsedPubConfig = action.pubConfig.safeParse(pubConfig ?? {});
-	if (!parsedPubConfig.success) {
+	const parsedrunParameters = action.runParameters.safeParse(runParameters ?? {});
+	if (!parsedrunParameters.success) {
 		return {
 			title: "Invalid pub config",
-			error: parsedPubConfig.error,
+			error: parsedrunParameters.error,
 		};
 	}
 
@@ -114,7 +116,7 @@ const _runActionInstance = async ({
 				id: pubId,
 				values: values as any,
 			},
-			pubConfig: pubConfig,
+			runParameters: runParameters,
 		});
 
 		return result;
@@ -131,13 +133,9 @@ const _runActionInstance = async ({
 export const runActionInstance = defineServerAction(async function runActionInstance({
 	pubId,
 	actionInstanceId,
-	pubConfig = {},
-}: {
-	pubId: PubsId;
-	actionInstanceId: ActionInstancesId;
-	pubConfig;
-}) {
-	return _runActionInstance({ pubId, actionInstanceId, pubConfig });
+	runParameters = {},
+}: ActionInstanceArgs) {
+	return _runActionInstance({ pubId, actionInstanceId, runParameters });
 });
 
 export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {
@@ -157,7 +155,6 @@ export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, eve
 				result: await _runActionInstance({
 					pubId,
 					actionInstanceId: instance.action_instance_id,
-					pubConfig: instance.config,
 				}),
 			};
 		})

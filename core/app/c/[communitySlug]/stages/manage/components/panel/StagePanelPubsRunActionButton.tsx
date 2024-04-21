@@ -1,12 +1,14 @@
 "use client";
 
 import type { Pub } from "@prisma/client";
+import type { ZodObject } from "zod";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 
 import { logger } from "logger";
+import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
-import { Check, Loader2, Play, X } from "ui/icon";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { toast } from "ui/use-toast";
 
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
@@ -25,9 +27,6 @@ export const StagePanelPubsRunActionButton = ({
 	const runAction = useServerAction(runActionInstance);
 
 	const [isPending, startTransition] = useTransition();
-	const [result, setResult] = useState<Awaited<ReturnType<typeof runAction>> | undefined>(
-		undefined
-	);
 
 	const action = getActionByName(actionInstance.action);
 
@@ -35,61 +34,63 @@ export const StagePanelPubsRunActionButton = ({
 		logger.info(`Invalid action name ${actionInstance.action}`);
 		return null;
 	}
-	useEffect(() => {
-		if (!result) {
-			return;
-		}
 
-		if ("success" in result) {
-			toast({
-				title: "Action ran successfully!",
-				variant: "default",
-				description: result.report,
+	const onSubmit = useCallback(
+		async (values) => {
+			startTransition(async () => {
+				const result = await runAction({
+					actionInstanceId: actionInstance.id as ActionInstancesId,
+					pubId: pub.id as PubsId,
+					runParameters: values,
+				});
+
+				if ("success" in result) {
+					toast({
+						title: "Action ran successfully!",
+						variant: "default",
+						description: result.report,
+					});
+				}
 			});
-		}
-
-		const timeout = setTimeout(() => {
-			setResult(undefined);
-		}, 2000);
-
-		return () => clearTimeout(timeout);
-	}, [result]);
+		},
+		[runAction, actionInstance.id, pub.id]
+	);
 
 	return (
-		<div className="flex w-full items-center justify-between space-x-2 px-4 py-2">
-			<action.icon size="14" className="flex-shrink-0" />
-			<span className="flex-grow overflow-auto text-ellipsis">
-				{actionInstance.name || action.name}
-			</span>
-			<Button
-				variant="default"
-				type="button"
-				size="sm"
-				onClick={async (evt) => {
-					if (isPending || result) return;
-					startTransition(async () => {
-						setResult(undefined);
-						const res = await runAction({
-							actionInstanceId: actionInstance.id as ActionInstancesId,
-							pubId: pub.id as PubsId,
-							pubConfig: {},
-						});
-						setResult(res);
-					});
-				}}
-			>
-				{isPending ? (
-					<Loader2 size="14" className="animate-spin" />
-				) : result ? (
-					"error" in result ? (
-						<X size="14" />
-					) : (
-						<Check size="14" />
-					)
-				) : (
-					<Play size="14" />
-				)}
-			</Button>
-		</div>
+		<Dialog>
+			<DialogTrigger asChild>
+				<Button
+					variant="ghost"
+					className="flex w-full items-center justify-start gap-x-4 px-4 py-2"
+				>
+					<action.icon size="14" className="flex-shrink-0" />
+					<span className="overflow-auto text-ellipsis">
+						{actionInstance.name || action.name}
+					</span>
+				</Button>
+			</DialogTrigger>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
+				</DialogHeader>
+				<AutoForm formSchema={action.runParameters as ZodObject<{}>} onSubmit={onSubmit}>
+					<AutoFormSubmit disabled={isPending}>Run</AutoFormSubmit>
+				</AutoForm>
+			</DialogContent>
+		</Dialog>
 	);
 };
+
+// <Button variant="default" type="button" size="sm">
+// 	{isPending ? (
+// 		<Loader2 size="14" className="animate-spin" />
+// 	) : result ? (
+// 		"error" in result ? (
+// 			<X size="14" />
+// 		) : (
+// 			<Check size="14" />
+// 		)
+// 	) : (
+// 		<Play size="14" />
+// 	)}
+// </Button>

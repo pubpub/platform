@@ -1,14 +1,16 @@
 "use server";
 
+import type { Action as PrismaAction } from "@prisma/client";
+
 import { revalidateTag } from "next/cache";
 
 import { logger } from "logger";
 
 import type Action from "~/kysely/types/public/Action";
+import type Event from "~/kysely/types/public/Event";
+import type { RulesId } from "~/kysely/types/public/Rules";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import Event from "~/kysely/types/public/Event";
-import { RulesId } from "~/kysely/types/public/Rules";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
 
@@ -174,7 +176,7 @@ export const addAction = defineServerAction(async function addAction(
 		await prisma.actionInstance.create({
 			data: {
 				name: actionName,
-				action: actionName,
+				action: actionName as PrismaAction,
 				stage: {
 					connect: {
 						id: stageId,

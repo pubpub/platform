@@ -64,5 +64,6 @@ export type AutoFormInputComponentProps = {
 	isRequired: boolean;
 	fieldProps: any;
 	zodItem: z.ZodAny;
+	description?: string;
 	className?: string;
 };

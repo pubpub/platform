@@ -1,8 +1,6 @@
 import { Suspense } from "react";
 
-import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
@@ -11,7 +9,7 @@ import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageActions, getStagePubs } from "./queries";
-import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
+import { StagePanelPubsRunActionDropDownMenu } from "./StagePanelPubsRunActionDropDownMenu";
 
 type PropsInner = {
 	stageId: string;
@@ -38,22 +36,10 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 					<div key={pub.id} className="flex items-center justify-between">
 						<PubTitle pub={pub} />
 						<div className="flex items-center gap-x-2">
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button variant="secondary" size="sm">
-										Run action
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent>
-									{actions.map((action) => (
-										<StagePanelPubsRunActionButton
-											key={action.id}
-											actionInstance={action}
-											pub={pub}
-										/>
-									))}
-								</PopoverContent>
-							</Popover>
+							<StagePanelPubsRunActionDropDownMenu
+								actionInstances={actions}
+								pub={pub}
+							/>
 							<PubDropDown pubId={pub.id as PubsId} />
 						</div>
 					</div>

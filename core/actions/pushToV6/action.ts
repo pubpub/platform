@@ -12,7 +12,7 @@ export const action = defineAction({
 		authToken: z.string().describe("PubPub v6 API auth token"),
 	}),
 	description: "Sync a PubPub v7 pub to v6",
-	pubConfig: z.object({}),
+	runParameters: z.object({}).optional(),
 	pubFields: [corePubFields.title, corePubFields.content],
 	icon: FileText,
 });

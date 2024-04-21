@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { captureException } from "@sentry/nextjs";
 
+import { logger } from "logger";
 import { toast } from "ui/use-toast";
 
 export type ClientException = {
@@ -23,6 +24,7 @@ export function makeClientException(
 	if (typeof message === "object") {
 		if ("cause" in message) {
 			const { cause, ...messageWithoutCause } = message;
+			logger.debug(cause);
 			const id = captureException(cause);
 			return { ...messageWithoutCause, isClientException: true, id };
 		}

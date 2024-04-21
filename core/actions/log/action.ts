@@ -11,8 +11,15 @@ export const action = defineAction({
 		debounce: z.number().optional().describe("Debounce time in milliseconds."),
 	}),
 	description: "Log a pub to the console",
-	pubConfig: z.object({}),
+	runParameters: z
+		.object({
+			debounce: z.number().optional().describe("Debounce time in milliseconds."),
+			text: z
+				.string()
+				.describe("The string to log out in addition to the default parameters")
+				.optional(),
+		})
+		.optional(),
 	pubFields: [corePubFields.title],
 	icon: Terminal,
 });
-// export { run } from "./run";

@@ -121,25 +121,34 @@ export const updatePub = defineServerAction(async function updatePub({
 			.where("pub_values.pub_id", "=", pubId)
 			.execute();
 
-		const updatePub = await Promise.allSettled(
-			[
+		const stageMoveQuery =
+			stageId &&
+			db
+				.with("leave-stage", (db) =>
+					db.deleteFrom("PubsInStages").where("pubId", "=", pubId)
+				)
+				.insertInto("PubsInStages")
+				.values({ pubId, stageId })
+				.execute();
+
+		const queries: Promise<any>[] = [
+			pubValues.map(async (pubValue) =>
 				db
-					.updateTable("PubsInStages")
-					.set({ stageId })
-					.where("PubsInStages.pubId", "=", pubId)
-					.execute(),
-				pubValues.map(async (pubValue) =>
-					db
-						.updateTable("pub_values")
-						.set({
-							value: JSON.stringify(fields[pubValue.field_id].value),
-						})
-						.where("pub_values.id", "=", pubValue.id)
-						.returningAll()
-						.execute()
-				),
-			].flat()
-		);
+					.updateTable("pub_values")
+					.set({
+						value: JSON.stringify(fields[pubValue.field_id].value),
+					})
+					.where("pub_values.id", "=", pubValue.id)
+					.returningAll()
+					.execute()
+			),
+		].flat();
+
+		if (stageMoveQuery) {
+			queries.push(stageMoveQuery);
+		}
+
+		const updatePub = await Promise.allSettled(queries);
 
 		const errors = updatePub.filter(
 			(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>

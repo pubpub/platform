@@ -20,6 +20,7 @@ export const env = createEnv({
 		ASSETS_UPLOAD_SECRET_KEY: z.string(),
 		DATABASE_URL: z.string().url(),
 		JWT_SECRET: z.string(),
+		LOG_LEVEL: z.string().optional(),
 		MAILGUN_SMTP_PASSWORD: z.string(),
 		MAILGUN_SMTP_USERNAME: z.string(),
 		SUPABASE_SERVICE_ROLE_KEY: z.string(),

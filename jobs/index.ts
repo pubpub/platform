@@ -38,7 +38,8 @@ const makeTaskList = (client: Client<{}>) => {
 	}) as Task;
 
 	const emitEvent = (async (payload: DBTriggerEventPayload<PubInStagesRow>) => {
-		logger.debug({ msg: "Starting emitEvent", payload });
+		const eventLogger = logger.child({ payload });
+		eventLogger.debug({ msg: "Starting emitEvent", payload });
 		const client = initClient(api.internal, {
 			baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
 			baseHeaders: { authorization: `Bearer ${process.env.API_KEY}` },
@@ -58,14 +59,14 @@ const makeTaskList = (client: Client<{}>) => {
 		}
 
 		if (!event || !pubId || !stageId) {
-			logger.debug({ msg: "No event emitted", event, payload });
+			eventLogger.debug({ msg: "No event emitted" });
 			return;
 		}
 
-		logger.debug({ msg: "Emitting event", event, payload });
+		eventLogger.debug({ msg: "Emitting event", event });
 		const results = await client.triggerAction({ params: { stageId }, body: { event, pubId } });
 
-		logger.debug({ msg: "Action run results", results });
+		eventLogger.debug({ msg: "Action run results", results, event });
 	}) as Task;
 
 	return { sendEmail, emitEvent };
