@@ -6,6 +6,7 @@ import { expect } from "utils";
 
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
+import { pubValuesInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 
 export const getStage = cache(async (stageId: string) => {
@@ -38,6 +39,7 @@ export const getStagePubs = cache(async (stageId: string) => {
 				some: { stage: { id: stageId } },
 			},
 		},
+		include: pubValuesInclude,
 	});
 });
 

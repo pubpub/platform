@@ -6,6 +6,7 @@ import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
+import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageActions, getStagePubs } from "./queries";
 import { StagePanelPubsRunActionDropDownMenu } from "./StagePanelPubsRunActionDropDownMenu";
@@ -33,7 +34,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				</div>
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
-						<span>A pub</span>
+						<PubTitle pub={pub} />
 						<div className="flex items-center gap-x-2">
 							<StagePanelPubsRunActionDropDownMenu
 								actionInstances={actions}

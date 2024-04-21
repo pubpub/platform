@@ -92,6 +92,8 @@ export const pubInclude = {
 	permissions: { include: permissionInclude },
 } satisfies Prisma.PubInclude;
 
+export type PubValuesPayload = Prisma.PubGetPayload<{ include: typeof pubValuesInclude }>;
+
 export type PubPayload = Prisma.PubGetPayload<{ include: typeof pubInclude }>;
 
 export type UserAndMemberships = {
