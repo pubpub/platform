@@ -1,12 +1,14 @@
+import type { useForm } from "react-hook-form";
+
 import * as React from "react";
-import { useForm, useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import * as z from "zod";
 
+import type { Dependency, FieldConfig, FieldConfigItem } from "../types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion";
 import { FormField } from "../../form";
 import { DEFAULT_ZOD_HANDLERS, INPUT_COMPONENTS } from "../config";
 import resolveDependencies from "../dependencies";
-import { Dependency, FieldConfig, FieldConfigItem } from "../types";
 import { beautifyObjectName, getBaseSchema, getBaseType, zodToHtmlInputProps } from "../utils";
 import AutoFormArray from "./array";
 
@@ -71,7 +73,6 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 					return null;
 				}
 
-				console.log(zodBaseType, fieldConfig);
 				if (zodBaseType === "ZodObject") {
 					return (
 						<AccordionItem value={name} key={key} className="border-none">

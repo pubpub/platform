@@ -1,11 +1,9 @@
 import * as z from "zod";
 
 import { DependencyType } from "ui/auto-form";
-import { FileText, Globe } from "ui/icon";
+import { Globe } from "ui/icon";
 
-import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
-import { configOverride } from "./configOverride";
 import { OutputMapFieldType } from "./outputMapFieldType";
 
 export const action = defineAction({

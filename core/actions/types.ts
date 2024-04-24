@@ -63,7 +63,7 @@ export type Action<
 		| {
 				schema: z.ZodType<RP>;
 				fieldConfig?: {
-					[K in keyof F]: Omit<F[K], "fieldType"> & {
+					[K in keyof F]: Omit<FieldConfigItem, "fieldType"> & {
 						fieldType?: RunParameterFieldTypeOverride;
 					};
 				};

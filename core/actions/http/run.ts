@@ -69,7 +69,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, runParameters 
 	const result = await res.json();
 
 	const setRunParameters = runParameters?.outputMap
-		? Object.entries(runParameters.outputMap).filter(([key, val]) => Boolean(val))
+		? Object.entries(runParameters.outputMap).filter((entry): entry is [string, string] =>
+				Boolean(entry[1])
+			)
 		: [];
 
 	if (setRunParameters.length > 0) {
