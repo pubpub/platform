@@ -1,9 +1,11 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
+import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
+import type { StagePub } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 
 export type ActionPubType = CorePubField[];
@@ -16,19 +18,26 @@ export type ActionPub<T extends ActionPubType> = {
 };
 
 export type RunProps<T extends Action> =
-	T extends Action<infer PT, infer AC, infer RP>
-		? { config: AC; pub: ActionPub<PT>; runParameters: RP }
+	T extends Action<infer PT, infer AC, infer RP extends Record<string, unknown> | undefined>
+		? {
+				pub: ActionPub<PT>;
+				config: AC;
+				runParameters: RP;
+			}
 		: never;
 
 export type ConfigProps<C> = {
 	config: C;
 };
 
+export type RunParameterFieldTypeOverride = (pub: StagePub) => FieldConfigItem["fieldType"];
+
 export type Action<
 	PT extends ActionPubType = ActionPubType,
-	AC extends object = {},
-	RP extends object | undefined = {} | undefined,
+	AC extends Record<string, unknown> = Record<string, unknown>,
+	RP extends Record<string, unknown> | undefined = Record<string, unknown> | undefined,
 	N extends string = string,
+	F extends FieldConfig<NonNullable<RP>> = FieldConfig<NonNullable<RP>>,
 > = {
 	id?: string;
 	name: N;
@@ -38,7 +47,9 @@ export type Action<
 	 *
 	 * These are the "statically known" parameters for this action.
 	 */
-	config: z.ZodType<AC>;
+	config:
+		| z.ZodType<AC>
+		| { schema: z.ZodType<AC>; fieldConfig?: FieldConfig<AC>; dependencies?: Dependency<AC>[] };
 	/**
 	 * The run parameters for this action
 	 *
@@ -47,7 +58,17 @@ export type Action<
 	 * Defining this as an optional Zod schema (e.g. `z.object({/*...*\/}).optional()`) means that the action can be automatically run
 	 * through a rule.
 	 */
-	runParameters: z.ZodType<RP>;
+	runParameters:
+		| z.ZodType<RP>
+		| {
+				schema: z.ZodType<RP>;
+				fieldConfig?: {
+					[K in keyof F]: Omit<F[K], "fieldType"> & {
+						fieldType?: RunParameterFieldTypeOverride;
+					};
+				};
+				dependencies?: Dependency<NonNullable<RP>>[];
+		  };
 	/**
 	 * The core pub fields that this action requires in order to run.
 	 */
@@ -60,8 +81,8 @@ export type Action<
 
 export const defineAction = <
 	T extends ActionPubType,
-	AC extends object,
-	RP extends object | undefined,
+	AC extends Record<string, unknown>,
+	RP extends Record<string, unknown> | undefined,
 	N extends string,
 >(
 	action: Action<T, AC, RP, N>

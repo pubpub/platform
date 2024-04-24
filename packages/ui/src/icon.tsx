@@ -11,6 +11,7 @@ export {
 	CircleEllipsis,
 	Download,
 	FileText,
+	Globe,
 	Loader2,
 	LogOut,
 	ListPlus,

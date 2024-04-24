@@ -11,6 +11,7 @@ import {
 } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
+import type { StagePub } from "./queries";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
 
@@ -19,7 +20,7 @@ export const StagePanelPubsRunActionDropDownMenu = ({
 	pub,
 }: {
 	actionInstances: ActionInstances[];
-	pub: Pub;
+	pub: StagePub;
 }) => {
 	if (!actionInstances.length) {
 		return null;

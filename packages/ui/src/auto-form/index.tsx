@@ -104,4 +104,16 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	);
 }
 
+export type {
+	AutoFormInputComponentProps,
+	FieldConfig,
+	FieldConfigItem,
+	Dependency,
+	ValueDependency,
+	EnumValues,
+	OptionsDependency,
+} from "./types";
+
+export { DependencyType } from "./types";
+
 export default AutoForm;

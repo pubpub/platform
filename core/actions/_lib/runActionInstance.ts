@@ -1,8 +1,10 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 
+import type { GetPubResponseBody } from "contracts";
 import { logger } from "logger";
 
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
@@ -17,17 +19,26 @@ import { getActionRunByName } from "./getRuns";
 import { validatePubValues } from "./validateFields";
 
 type ActionInstanceArgs = {
-	pubId: PubsId;
 	actionInstanceId: ActionInstancesId;
 	runParameters?: Record<string, unknown>;
-};
+} & (
+	| {
+			pubId: PubsId;
+			pub?: undefined;
+	  }
+	| {
+			pub: GetPubResponseBody;
+			pubId?: undefined;
+	  }
+);
 
-const _runActionInstance = async ({
-	pubId,
-	actionInstanceId,
-	runParameters = {},
-}: ActionInstanceArgs) => {
-	const pubPromise = getPub(pubId);
+const _runActionInstance = async (props: ActionInstanceArgs) => {
+	const { actionInstanceId, runParameters = {} } = props;
+
+	const pubPromise =
+		"pubId" in props && props.pubId
+			? getPub(props.pubId)
+			: Promise.resolve(props.pub as GetPubResponseBody);
 
 	const actionInstancePromise = db
 		.selectFrom("action_instances")
@@ -82,7 +93,11 @@ const _runActionInstance = async ({
 		};
 	}
 
-	const parsedConfig = action.config.safeParse(actionInstance.config ?? {});
+	const parsedConfig =
+		"_def" in action.config
+			? action.config.safeParse(actionInstance.config ?? {})
+			: action.config.schema.safeParse(actionInstance.config ?? {});
+
 	if (!parsedConfig.success) {
 		return {
 			error: "Invalid config",
@@ -90,7 +105,10 @@ const _runActionInstance = async ({
 		};
 	}
 
-	const parsedrunParameters = action.runParameters.safeParse(runParameters ?? {});
+	const parsedrunParameters =
+		"_def" in action.runParameters
+			? action.runParameters.safeParse(runParameters ?? {})
+			: action.runParameters.schema.safeParse(runParameters ?? {});
 	if (!parsedrunParameters.success) {
 		return {
 			title: "Invalid pub config",
@@ -113,7 +131,7 @@ const _runActionInstance = async ({
 		const result = await actionRun({
 			config: parsedConfig.data as any,
 			pub: {
-				id: pubId,
+				id: props.pubId ?? props.pub.id,
 				values: values as any,
 			},
 			runParameters: runParameters,
@@ -134,8 +152,14 @@ export const runActionInstance = defineServerAction(async function runActionInst
 	pubId,
 	actionInstanceId,
 	runParameters = {},
-}: ActionInstanceArgs) {
-	return _runActionInstance({ pubId, actionInstanceId, runParameters });
+}: ActionInstanceArgs & { pubId: PubsId }) {
+	const pub = await getPub(pubId);
+
+	const result = await _runActionInstance({ pub, actionInstanceId, runParameters });
+
+	logger.info({ msg: `Revalidating community-stages_${pub.communityId}` });
+	revalidateTag(`community-stages_${pub.communityId}`);
+	return result;
 });
 
 export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {

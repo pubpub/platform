@@ -21,7 +21,7 @@ export const validatePubValues = ({
 	for (const field of fields) {
 		const value = values[field.slug];
 
-		if (!value) {
+		if (value === undefined) {
 			return { error: `Field ${field.slug} not found in pub values` };
 		}
 

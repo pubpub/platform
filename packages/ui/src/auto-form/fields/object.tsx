@@ -71,6 +71,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 					return null;
 				}
 
+				console.log(zodBaseType, fieldConfig);
 				if (zodBaseType === "ZodObject") {
 					return (
 						<AccordionItem value={name} key={key} className="border-none">

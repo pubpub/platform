@@ -9,6 +9,7 @@ import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import type { Action } from "~/actions/types";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { updateAction } from "../../actions";
+import { MapFieldConfig } from "./StagePanelPubsRunActionButton";
 
 export type Props = {
 	action: Action;
@@ -29,7 +30,17 @@ export const StagePanelActionConfig = (props: Props) => {
 	return (
 		<AutoForm
 			values={props.instance.config ?? {}}
-			formSchema={props.action.config as ZodObject<{}>}
+			fieldConfig={
+				"fieldConfig" in props.action.config ? props.action.config.fieldConfig : undefined
+			}
+			formSchema={
+				"schema" in props.action.config
+					? (props.action.config.schema as ZodObject<{}>)
+					: (props.action.config as ZodObject<{}>)
+			}
+			dependencies={
+				"dependencies" in props.action.config ? props.action.config.dependencies : undefined
+			}
 			onSubmit={onSubmit}
 		>
 			<AutoFormSubmit>Update config</AutoFormSubmit>

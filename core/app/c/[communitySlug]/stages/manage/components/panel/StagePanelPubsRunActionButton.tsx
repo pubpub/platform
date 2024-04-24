@@ -9,20 +9,41 @@ import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Loader2, Play } from "ui/icon";
+import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
+import type { StagePub } from "./queries";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/server";
 import { useServerAction } from "~/lib/serverActions";
 
+export const MapFieldConfig = ({
+	pub,
+	fieldConfig,
+}: {
+	pub: StagePub;
+	fieldConfig: Record<string, any>;
+}) =>
+	Object.fromEntries(
+		Object.entries(fieldConfig).map(([key, value]) => [
+			key,
+			{
+				...value,
+				fieldType: "fieldType" in value ? value.fieldType(pub) : undefined,
+			},
+		])
+	);
+
 export const StagePanelPubsRunActionButton = ({
 	actionInstance,
 	pub,
 }: {
 	actionInstance: ActionInstances;
-	pub: Pub;
+	pub: StagePub;
 }) => {
 	const runAction = useServerAction(runActionInstance);
 
@@ -48,7 +69,10 @@ export const StagePanelPubsRunActionButton = ({
 					toast({
 						title: "Action ran successfully!",
 						variant: "default",
-						description: result.report,
+						// TODO: SHOULD ABSOLUTELY BE SANITIZED
+						description: (
+							<div dangerouslySetInnerHTML={{ __html: result.report ?? "" }} />
+						),
 					});
 				}
 			});
@@ -69,28 +93,42 @@ export const StagePanelPubsRunActionButton = ({
 					</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent className="max-h-full overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
-				<AutoForm formSchema={action.runParameters as ZodObject<{}>} onSubmit={onSubmit}>
-					<AutoFormSubmit disabled={isPending}>Run</AutoFormSubmit>
+				<AutoForm
+					formSchema={
+						"schema" in action.runParameters
+							? action.runParameters.schema
+							: action.runParameters
+					}
+					onSubmit={onSubmit}
+					dependencies={
+						"dependencies" in action.runParameters
+							? action.runParameters.dependencies
+							: undefined
+					}
+					fieldConfig={{
+						...("fieldConfig" in action.runParameters
+							? MapFieldConfig({
+									pub,
+									fieldConfig: action.runParameters.fieldConfig ?? {},
+								})
+							: undefined),
+					}}
+				>
+					<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
+						{isPending ? (
+							<Loader2 size="14" className="animate-spin" />
+						) : (
+							<>
+								<Play size="14" /> Run
+							</>
+						)}
+					</AutoFormSubmit>
 				</AutoForm>
 			</DialogContent>
 		</Dialog>
 	);
 };
-
-// <Button variant="default" type="button" size="sm">
-// 	{isPending ? (
-// 		<Loader2 size="14" className="animate-spin" />
-// 	) : result ? (
-// 		"error" in result ? (
-// 			<X size="14" />
-// 		) : (
-// 			<Check size="14" />
-// 		)
-// 	) : (
-// 		<Play size="14" />
-// 	)}
-// </Button>
