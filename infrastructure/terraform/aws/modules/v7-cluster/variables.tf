@@ -58,3 +58,13 @@ variable "container_ingress_port" {
   description = "port to allow traffic in private security group"
   type = number
 }
+
+variable "pubpub_hostname" {
+  description = "domain name where this will be served by ALB"
+  type = string
+}
+
+variable "route53_zone_id" {
+  description = "Zone ID of route53 zone that is already configured as the NS for your subdomain"
+  type = string
+}

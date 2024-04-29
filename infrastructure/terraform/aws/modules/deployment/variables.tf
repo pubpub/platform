@@ -14,10 +14,15 @@ variable "environment" {
   type = string
 }
 
-# variable "pubpub_url" {
-#   description = "URL where pubpub will be addressable (include https://)"
-#   type = string
-# }
+variable "pubpub_hostname" {
+  description = "hostname where pubpub will be addressable (DO NOT include https://)"
+  type = string
+}
+
+variable "route53_zone_id" {
+  description = "Zone ID of route53 zone that is already configured as the NS for your subdomain"
+  type = string
+}
 
 variable "MAILGUN_SMTP_USERNAME" {
   description = "SMTP Username for Mailgun service"
