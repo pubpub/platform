@@ -43,7 +43,7 @@ module "core_dependency_services" {
 }
 
 locals {
-  PUBPUB_URL = "http://${var.pubpub_hostname}"
+  PUBPUB_URL = "https://${var.pubpub_hostname}"
 }
 
 module "service_core" {
