@@ -1,13 +1,22 @@
 import { faker } from "@faker-js/faker";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, PubType } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
+import type { db as kyselyDb } from "~/kysely/database";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import { corePubFields } from "~/actions/corePubFields";
+import { StagesId } from "~/kysely/types/public/Stages";
 import { env } from "../../lib/env/env.mjs";
 import { FileUpload } from "../../lib/fields/fileUpload";
 
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 
-export default async function main(prisma: PrismaClient, communityUUID: string) {
+export default async function main(
+	db: typeof kyselyDb,
+	prisma: PrismaClient,
+	communityUUID: string
+) {
 	await prisma.community.create({
 		data: {
 			id: communityUUID,
@@ -627,7 +636,45 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 	});
-
+	const corePubSlugs = corePubFields.map((field) => field.slug);
+	const persistedCorePubFields = await db
+		.selectFrom("pub_fields")
+		.selectAll()
+		.where("pub_fields.slug", "in", corePubSlugs)
+		.execute();
+	await db
+		.with("new_pubs", (db) =>
+			db
+				.insertInto("pubs")
+				.values({
+					community_id: communityUUID as CommunitiesId,
+					pub_type_id: submissionTypeId as PubTypesId,
+				})
+				.returning("id")
+		)
+		.with("pubs_in_stages", (db) =>
+			db.insertInto("PubsInStages").values((eb) => [
+				{
+					pubId: eb.selectFrom("new_pubs").select("id"),
+					stageId: stageIds[3] as StagesId,
+				},
+			])
+		)
+		.insertInto("pub_values")
+		.values((eb) => [
+			{
+				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
+				value: '"It Aint Ease Bein Cheese"',
+			},
+			{
+				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
+					.id,
+				value: '"# Abstract"',
+			},
+		])
+		.execute();
 	// await prisma.pub.update({
 	// 	where: { id: submission.id },
 	// 	data: {
@@ -776,32 +823,4 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			});
 		})
 	);
-
-	// const pubIds = [...Array(7)].map((x) => uuidv4());
-	// const submissionToEvaluate = await prisma.pub.create({
-	// 	data: {
-	// 		pubTypeId: submissionTypeId,
-	// 		communityId: communityUUID,
-	// 		stages: { connect: { id: stageIds[3] } },
-
-	// 		values: {
-	// 			createMany: {
-	// 				data: [
-	// 					{
-	// 						fieldId: fieldIds[0],
-	// 						value: "When Celebrities Speak: A Nationwide Twitter Experiment Promoting Vaccination In Indonesia",
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[1],
-	// 						value: "Celebrity endorsements are often sought to influence public opinion. We ask whether celebrity endorsement per se has an effect beyond the fact that their statements are seen by many, and whether on net their statements actually lead people to change their beliefs. To do so, we conducted a nationwide Twitter experiment in Indonesia with 46 high-profile celebrities and organizations, with a total of 7.8 million followers, who agreed to let us randomly tweet or retweet content promoting immunization from their accounts. Our design exploits the structure of what information is passed on along a retweet chain on Twitter to parse reach versus endorsement effects. Endorsements matter: tweets that users can identify as being originated by a celebrity are far more likely to be liked or retweeted by users than similar tweets seen by the same users but without the celebrities' imprimatur. By contrast, explicitly citing sources in the tweets actually reduces diffusion. By randomizing which celebrities tweeted when, we find suggestive evidence that overall exposure to the campaign may influence beliefs about vaccination and knowledge of immunization-seeking behavior by one's network. Taken together, the findings suggest an important role for celebrity endorsement.",
-	// 					},
-	// 					{
-	// 						fieldId: fieldIds[8],
-	// 						value: "10.3386/w25589",
-	// 					},
-	// 				],
-	// 			},
-	// 		},
-	// 	},
-	// });
 }
