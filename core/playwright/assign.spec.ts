@@ -12,8 +12,8 @@ test("Assigning members to a pub", async ({ page }) => {
 	// Sometimes login flow sets cookies in the process of several redirects.
 	// Wait for the final URL to ensure that the cookies are actually set.
 	await page.waitForURL("/c/unjournal/stages");
-	await page.getByRole("button", { name: "Assign" }).click();
+	await page.getByRole("combobox").click();
 	await page.getByRole("option", { name: "Jill Admin" }).click();
-	await page.getByText("Succes").waitFor({ state: "hidden" });
+	await page.getByText("Success", { exact: true });
 	await page.context().storageState({ path: authFile });
 });

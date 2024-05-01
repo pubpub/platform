@@ -107,6 +107,7 @@ export default function Assign(props: Props) {
 					size="sm"
 					variant="outline"
 					role="combobox"
+					name="Assign"
 					aria-expanded={open}
 					className="w-[150px] justify-between"
 				>
