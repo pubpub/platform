@@ -29,6 +29,7 @@ test("Logout", async ({ page }) => {
 	// Sometimes login flow sets cookies in the process of several redirects.
 	// Wait for the final URL to ensure that the cookies are actually set.
 	await page.waitForURL("/c/unjournal/stages");
+	await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
 	await page.getByRole("button", { name: "Logout" }).click();
 	await page.waitForURL("/login");
 	await page.context().storageState({ path: authFile });
