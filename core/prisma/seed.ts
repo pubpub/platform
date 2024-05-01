@@ -67,7 +67,7 @@ async function main() {
 	logger.info("build crocroc");
 	await buildCrocCroc(db, crocCrocId);
 	logger.info("build unjournal");
-	await buildUnjournal(prisma, unJournalId);
+	await buildUnjournal(db, prisma, unJournalId);
 
 	try {
 		await createUserMembers(

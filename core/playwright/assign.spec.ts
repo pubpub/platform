@@ -3,11 +3,17 @@ import { expect, test } from "@playwright/test";
 const authFile = "playwright/.auth/user.json";
 
 test("Assigning members to a pub", async ({ page }) => {
-	// move a pub to to evaluate or just add it there in seed???
-	await page.goto("/c/unjournal/stages");
-	await page.getByRole("button", { name: "Create stage" }).click();
-	await page.getByRole("textbox", { name: "title" }).fill("Test stage");
-	await page.getByRole("button", { name: "Create" }).click();
-	await page.waitForURL("/c/unjournal/stages/test-stage");
+	await page.goto("/login");
+	await page.getByLabel("email").fill("all@pubpub.org");
+	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
+	await page.getByRole("button", { name: "Sign in" }).click();
+	// Wait until the page receives the cookies.
+	//
+	// Sometimes login flow sets cookies in the process of several redirects.
+	// Wait for the final URL to ensure that the cookies are actually set.
+	await page.waitForURL("/c/unjournal/stages");
+	await page.getByRole("button", { name: "Assign" }).click();
+	await page.getByRole("option", { name: "Jill Admin" }).click();
+	await page.getByText("Succes").waitFor({ state: "hidden" });
 	await page.context().storageState({ path: authFile });
 });
