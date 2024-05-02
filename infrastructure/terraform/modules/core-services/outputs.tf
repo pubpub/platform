@@ -2,7 +2,6 @@ locals {
   db_user = aws_db_instance.core_postgres.username
   db_name = aws_db_instance.core_postgres.db_name
   db_host = aws_db_instance.core_postgres.address
-  db_sslmode = "require"
 }
 
 output "secrets" {
@@ -23,17 +22,12 @@ output "asset_uploader_key_id" {
   value = aws_iam_access_key.asset_uploader.id
 }
 
-output "rds_connection_string_sans_password" {
-  value = "postgresql://${local.db_user}@${local.db_host}:5432/${local.db_name}?sslmode=${local.db_sslmode}"
-}
-
 output "rds_connection_components" {
   value = {
     user = local.db_user
     database = local.db_name
     host = local.db_host
     port = "5432"
-    sslmode = local.db_sslmode
     id = aws_db_instance.core_postgres.id
   }
 }
