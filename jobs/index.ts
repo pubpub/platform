@@ -2,9 +2,8 @@ import { initClient } from "@ts-rest/core";
 import { JobHelpers, run, Task } from "graphile-worker";
 
 import { Client, makeClient, SendEmailRequestBody } from "@pubpub/sdk";
+import { api } from "contracts";
 import { logger } from "logger";
-
-import { api } from "../packages/contracts/src";
 
 const client = makeClient({});
 
