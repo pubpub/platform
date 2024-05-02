@@ -28,7 +28,16 @@ Both `act` commands (for container version updates) and `terraform` commands
 Usually this means setting a file at `~/.aws/credentials` and `~/.aws/config`:
 see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 
-## aws:tf:plan
+`terraform` commands for the `global` workspace require write-access API token
+to Cloudflare. Since this is one of the highest-security-profile accounts, it
+is not assumed all developers have access to this. To run these commands, set
+`CLOUDFLARE_API_TOKEN` environment variable.
+
+## tf
+
+> Terraform-related commands to run in one workspace or another
+
+### tf plan
 
 > Runs the plan (diff showing) command interactively using the environment specified.
 
@@ -61,7 +70,7 @@ see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 )
 ```
 
-## aws:tf:apply
+### tf apply
 
 > Runs the apply command interactively, still asking for confirmation, using the environment specified.
 
@@ -94,7 +103,7 @@ see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 )
 ```
 
-## aws:tf:init
+### tf init
 
 > Runs the initialization for the environment
 
@@ -115,7 +124,11 @@ see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 )
 ```
 
-## aws:ecs:deploy:all
+## ecs
+
+> commands that manage AWS containers
+
+### ecs deploy:all
 
 > Use `act` CLI to deploy all containers to a given SHA (or HEAD).
 
@@ -160,7 +173,7 @@ see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 )
 ```
 
-## aws:ecs:deploy:one
+### ecs deploy:one
 
 > Use `act` CLI to deploy ONE container/service to a given SHA (or HEAD).
 
@@ -211,7 +224,7 @@ see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 )
 ```
 
-## aws:ecr:build:all
+### ecs build:all
 
 > Use `act` CLI to build and push all containers with local code, tagged with the HEAD (or HEAD-dirty) SHA
 
@@ -235,7 +248,7 @@ No options are required -- the workflow infers them all.
 )
 ```
 
-## aws:bastion
+### ecs bastion
 
 > Opens an interactive shell on the bastion container in AWS
 
@@ -286,7 +299,7 @@ aws ecs \
 
 <!-- build nginx container -->
 
-## nginx:build
+### ecs nginx:build
 
 > Builds the nginx container used in AWS ECS for inbound traffic
 
@@ -298,7 +311,7 @@ docker build \
   ./nginx
 ```
 
-## nginx:push
+### ecs nginx:push
 
 > Pushes the locally built latest nginx container
 

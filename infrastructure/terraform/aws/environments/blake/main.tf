@@ -16,11 +16,6 @@ terraform {
       source  = "honeycombio/honeycombio"
       version = ">= 0.22.0"
     }
-
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "~> 4.0"
-    }
   }
   backend "s3" {
     bucket = "pubpub-tfstates"
@@ -44,8 +39,8 @@ locals {
   environment = "staging"
   region = "us-east-1"
 
-  pubpub_domain = "duqduq.org"
-  pubpub_hostname = "${local.name}.${local.pubpub_domain}"
+  pubpub_hostname = "blake.duqduq.org"
+  route53_zone_id = "Z059164612717GL8VGM95"
 
   MAILGUN_SMTP_USERNAME = "v7@mg.pubpub.org"
   NEXT_PUBLIC_SUPABASE_URL = "https://dsleqjuvzuoycpeotdws.supabase.co"
@@ -53,25 +48,6 @@ locals {
   ASSETS_BUCKET_NAME = "assets.blake.pubpub.org"
 }
 
-data "cloudflare_zone" "host" {
-  name = local.pubpub_domain
-}
-
-resource "aws_route53_zone" "main" {
-  name = local.pubpub_domain
-}
-
-resource "cloudflare_record" "ns" {
-  for_each = toset(["0", "1", "2", "3"])
-  type    = "NS"
-
-  zone_id = data.cloudflare_zone.host.id
-
-  # Only set NS records for subdomains of this cluster
-  name    = local.pubpub_hostname
-
-  value   = aws_route53_zone.main.name_servers[tonumber(each.key)]
-}
 
 ######
 ##
@@ -81,19 +57,13 @@ resource "cloudflare_record" "ns" {
 
 module "deployment" {
   source = "../../modules/deployment"
-  depends_on = [
-    cloudflare_record.ns[0],
-    cloudflare_record.ns[1],
-    cloudflare_record.ns[2],
-    cloudflare_record.ns[3],
-  ]
 
   name = local.name
   environment = local.environment
   region = local.region
 
   pubpub_hostname = local.pubpub_hostname
-  route53_zone_id = aws_route53_zone.main.zone_id
+  route53_zone_id = local.route53_zone_id
 
   MAILGUN_SMTP_USERNAME = local.MAILGUN_SMTP_USERNAME
   NEXT_PUBLIC_SUPABASE_URL = local.NEXT_PUBLIC_SUPABASE_URL
