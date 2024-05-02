@@ -1,6 +1,6 @@
 const baseConfig = {
-	basePath: "/intg/evaluations",
-	assetPrefix: "/intg/evaluations",
+	basePath: "/intg/submissions",
+	assetPrefix: "/intg/submissions",
 	experimental: {
 		serverActions: true,
 		instrumentationHook: true,
