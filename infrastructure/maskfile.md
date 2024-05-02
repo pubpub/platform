@@ -53,7 +53,7 @@ is not assumed all developers have access to this. To run these commands, set
 
 ```bash
 (
-    cd terraform/aws/environments/${proper_name}
+    cd terraform/environments/${proper_name}
 
     export AWS_PAGER=""
     if aws sts get-caller-identity; then
@@ -86,7 +86,7 @@ is not assumed all developers have access to this. To run these commands, set
 
 ```bash
 (
-    cd terraform/aws/environments/${proper_name}
+    cd terraform/environments/${proper_name}
 
     export AWS_PAGER=""
     if aws sts get-caller-identity; then
@@ -118,7 +118,7 @@ is not assumed all developers have access to this. To run these commands, set
 ```bash
 
 (
-    cd terraform/aws/environments/${proper_name}
+    cd terraform/environments/${proper_name}
 
     terraform init
 )
