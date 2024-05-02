@@ -1,7 +1,9 @@
-# Global terraform state module
+# Global configurations
 
 This module should generally be created by an admin,
 and not applied or updated by a machine user.
+
+## Creation of the terraform state bucket
 
 1. Uncomment the code creating this bucket; comment the backend block
 1. terraform init
@@ -13,3 +15,4 @@ and not applied or updated by a machine user.
 1. destroy local copies of the state file
 
 This bucket name can now be in your s3.tfbackend files everywhere.
+
