@@ -65,7 +65,7 @@ export const StagePanelActionEditor = (props: Props) => {
 				</div>
 				<div className="flex gap-1">
 					<CollapsibleTrigger asChild>
-						<Button variant="ghost" size="sm">
+						<Button variant="ghost" size="sm" aria-label="edit-button">
 							{isOpen ? <ChevronUp size={16} /> : <Pencil size={16} />}
 						</Button>
 					</CollapsibleTrigger>
