@@ -1,6 +1,5 @@
 const baseConfig = {
 	experimental: {
-		serverActions: true,
 		instrumentationHook: true,
 	},
 };
