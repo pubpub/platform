@@ -17,6 +17,7 @@ export {
 	Mail,
 	Menu,
 	MoreVertical,
+	MoveHorizontal,
 	Pencil,
 	Plus,
 	Play,
