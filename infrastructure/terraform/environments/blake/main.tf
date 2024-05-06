@@ -39,14 +39,15 @@ locals {
   environment = "staging"
   region = "us-east-1"
 
-  # TODO: Resume using this once we also Terraform the Route53
-  # pubpub_url = "https://v7.pubpub.org"
+  pubpub_hostname = "blake.duqduq.org"
+  route53_zone_id = "Z059164612717GL8VGM95"
 
   MAILGUN_SMTP_USERNAME = "v7@mg.pubpub.org"
   NEXT_PUBLIC_SUPABASE_URL = "https://dsleqjuvzuoycpeotdws.supabase.co"
   NEXT_PUBLIC_SUPABASE_PUBLIC_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzbGVxanV2enVveWNwZW90ZHdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODIzNTE0MjEsImV4cCI6MTk5NzkyNzQyMX0.3HHC0f7zlFXP77N0U8cS3blr7n6hhjqdYI6_ciQJams"
   ASSETS_BUCKET_NAME = "assets.blake.pubpub.org"
 }
+
 
 ######
 ##
@@ -60,6 +61,9 @@ module "deployment" {
   name = local.name
   environment = local.environment
   region = local.region
+
+  pubpub_hostname = local.pubpub_hostname
+  route53_zone_id = local.route53_zone_id
 
   MAILGUN_SMTP_USERNAME = local.MAILGUN_SMTP_USERNAME
   NEXT_PUBLIC_SUPABASE_URL = local.NEXT_PUBLIC_SUPABASE_URL

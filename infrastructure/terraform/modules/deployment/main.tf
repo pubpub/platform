@@ -26,6 +26,10 @@ module "cluster" {
   environment = var.environment
   region = var.region
 
+  pubpub_hostname = var.pubpub_hostname
+
+  route53_zone_id = var.route53_zone_id
+
   container_ingress_port = 8080
 
   availability_zones = ["us-east-1a", "us-east-1c"]
@@ -36,6 +40,10 @@ module "core_dependency_services" {
 
   cluster_info = module.cluster.cluster_info
   assets_bucket_url_name = var.ASSETS_BUCKET_NAME
+}
+
+locals {
+  PUBPUB_URL = "https://${var.pubpub_hostname}"
 }
 
 module "service_core" {
@@ -79,10 +87,10 @@ module "service_core" {
       { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
       { name = "MAILGUN_SMTP_HOST", value = var.MAILGUN_SMTP_HOST },
       { name = "MAILGUN_SMTP_PORT", value = var.MAILGUN_SMTP_PORT },
-      { name = "NEXT_PUBLIC_PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+      { name = "NEXT_PUBLIC_PUBPUB_URL", value = local.PUBPUB_URL },
       { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
-      { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+      { name = "PUBPUB_URL", value = local.PUBPUB_URL },
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
     ]
@@ -113,7 +121,7 @@ module "service_flock" {
   configuration = {
     container_port = 3000
     environment = [
-      { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+      { name = "PUBPUB_URL", value = local.PUBPUB_URL },
       { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
       { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
@@ -150,7 +158,7 @@ module "service_flock" {
 
    configuration = {
      environment = [
-       { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
      ]
 
      secrets = [
@@ -183,7 +191,7 @@ module "service_flock" {
 
    configuration = {
      environment = [
-       { name = "PUBPUB_URL", value = "http://${module.cluster.cluster_info.alb_dns_name}" },
+       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
      ]
 
      secrets = [
