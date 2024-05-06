@@ -16,7 +16,14 @@ FROM node:${NODE_VERSION}-alpine as base
 ARG PNPM_VERSION=8.14.3
 
 # Install python deps for node-gyp
-RUN apk add g++ make py3-pip
+RUN apk add g++ make py3-pip ca-certificates curl
+
+# Setup RDS CA Certificates
+
+RUN curl -L \
+      -o  /usr/local/share/ca-certificates/rds-global-bundle.pem \
+      https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+    && update-ca-certificates
 
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
