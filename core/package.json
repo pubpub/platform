@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"playwright:👀": "npx playwright test",
+		"playwright:test": "npx playwright test",
 		"playwright:ui": "npx playwright test --ui",
 		"dev": "next dev -p 3000 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
