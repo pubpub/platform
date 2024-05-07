@@ -3,30 +3,26 @@
 import { logger } from "logger";
 
 import type { action } from "./action";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
-import { PubsId } from "~/kysely/types/public/Pubs";
-import { StagesId } from "~/kysely/types/public/Stages";
 import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ pub, config, stageId }) => {
 	try {
-		await db.transaction().execute(async (trx) => {
-			// Remove the pub from the current stage.
-			await trx
-				.deleteFrom("PubsInStages")
-				.where("pubId", "=", pub.id as PubsId)
-				.where("stageId", "=", stageId)
-				.execute();
-
-			// Add the pub to the destination stage.
-			return await trx
-				.insertInto("PubsInStages")
-				.values({
-					pubId: pub.id as PubsId,
-					stageId: config.stage as StagesId,
-				})
-				.execute();
-		});
+		await db
+			.with("leave-stage", (db) =>
+				db
+					.deleteFrom("PubsInStages")
+					.where("pubId", "=", pub.id as PubsId)
+					.where("stageId", "=", stageId)
+			)
+			.insertInto("PubsInStages")
+			.values({
+				pubId: pub.id as PubsId,
+				stageId: config.stage as StagesId,
+			})
+			.execute();
 	} catch (error) {
 		logger.error({ msg: "move", error });
 		return {
