@@ -11,6 +11,6 @@ test("Assigning members to a pub", async ({ page }) => {
 	await page.waitForURL("/c/unjournal/stages");
 	await page.getByRole("combobox").click();
 	await page.getByRole("option", { name: "Jill Admin" }).click();
-	await page.getByText("Success", { exact: true });
+	await expect(page.getByText("Success", { exact: true })).toBeVisible();
 	await page.context().storageState({ path: authFile });
 });
