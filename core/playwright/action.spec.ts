@@ -5,17 +5,15 @@ const authFile = "playwright/.auth/user.json";
 
 test("Email action", async ({ page }) => {
 	test.setTimeout(120000);
+	/* Pattern for authentication. */
 	await page.goto("/login");
 	await page.getByLabel("email").fill("all@pubpub.org");
 	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
 	await page.getByRole("button", { name: "Sign in" }).click();
-	// Wait until the page receives the cookies.
-	//
-	// Sometimes login flow sets cookies in the process of several redirects.
-	// Wait for the final URL to ensure that the cookies are actually set.
 	await page.waitForURL("/c/unjournal/stages");
-	await page.goto("/c/unjournal/stages/manage");
 
+	/* Pattern for creating actions test*/
+	await page.goto("/c/unjournal/stages/manage");
 	await page.getByRole("button", { name: "Under Evaluation" }).getByRole("link").click();
 	const link = await page
 		.getByRole("button", { name: "Under Evaluation" })
@@ -29,10 +27,10 @@ test("Email action", async ({ page }) => {
 	await page.waitForSelector(
 		"text=Under Evaluation has no actions. Use the button below to add one."
 	);
-
 	await page.getByRole("button", { name: "Add an action" }).click();
 	await page.getByRole("button", { name: "email" }).click();
 
+	/* Pattern for running email action test */
 	await page.waitForSelector("text=Actions");
 	await page.getByLabel("edit-button").click();
 	await page.getByLabel("Email address *").fill("test@rec.org");
@@ -40,10 +38,10 @@ test("Email action", async ({ page }) => {
 	await page.getByLabel("Email body *").fill("This, test email");
 	await page.getByRole("button", { name: "Update config" }).click();
 	await page.getByRole("tab", { name: "Pubs" }).click();
-
 	await page.getByRole("button", { name: "Run action" }).click();
 	await page.getByRole("button", { name: "email" }).click();
 	await page.getByRole("button", { name: "Run" }).click();
+	
 	await expect(page.getByText("Action ran successfully!", { exact: true }));
 	await page.context().storageState({ path: authFile });
 });
