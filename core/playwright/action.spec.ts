@@ -41,7 +41,8 @@ test("Email action", async ({ page }) => {
 	await page.getByRole("button", { name: "Run action" }).click();
 	await page.getByRole("button", { name: "email" }).click();
 	await page.getByRole("button", { name: "Run" }).click();
-	
+
 	await expect(page.getByText("Action ran successfully!", { exact: true }));
+	// can i query inbucket for the email?
 	await page.context().storageState({ path: authFile });
 });
