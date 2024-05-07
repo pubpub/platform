@@ -33,6 +33,7 @@ provider "aws" {
 
 locals {
   duqduq_domain = "duqduq.org"
+  pubpub_domain = "pubpub.org"
 }
 
 data "cloudflare_zone" "duqduq" {
@@ -53,4 +54,23 @@ resource "cloudflare_record" "ns" {
   name    = "blake.${local.duqduq_domain}"
 
   value   = aws_route53_zone.duqduq.name_servers[tonumber(each.key)]
+}
+
+
+data "cloudflare_zone" "pubpub" {
+  name = local.pubpub_domain
+}
+
+resource "aws_route53_zone" "pubpub" {
+  name = local.pubpub_domain
+}
+resource "cloudflare_record" "ns_pubpub" {
+  for_each = toset(["0", "1", "2", "3"])
+  type    = "NS"
+
+  zone_id = data.cloudflare_zone.pubpub.id
+
+  name    = "app.${local.pubpub_domain}"
+
+  value   = aws_route53_zone.pubpub.name_servers[tonumber(each.key)]
 }
