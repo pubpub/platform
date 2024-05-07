@@ -52,8 +52,8 @@ module "service_core" {
   service_name = "core"
   cluster_info = module.cluster.cluster_info
 
-  repository_url = module.cluster.ecr_repository_urls.core
-  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
+  repository_url = var.ecr_repository_urls.core
+  nginx_image = "${var.ecr_repository_urls.nginx}:latest"
 
   listener = {
     service_name = "core"
@@ -67,7 +67,7 @@ module "service_core" {
 
   init_containers = [{
     name = "migrations"
-    image = "${module.cluster.ecr_repository_urls.root}:latest"
+    image = "${var.ecr_repository_urls.root}:latest"
     command = [
       "pnpm", "--filter", "core", "migrate-docker",
     ]
@@ -116,7 +116,7 @@ module "service_flock" {
   service_name = "jobs"
   cluster_info = module.cluster.cluster_info
 
-  repository_url = module.cluster.ecr_repository_urls.jobs
+  repository_url = var.ecr_repository_urls.jobs
 
   configuration = {
     container_port = 3000
@@ -142,8 +142,8 @@ module "service_flock" {
    service_name = "integration-submissions"
    cluster_info = module.cluster.cluster_info
 
-   repository_url = module.cluster.ecr_repository_urls.intg_submissions
-  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
+   repository_url = var.ecr_repository_urls.intg_submissions
+  nginx_image = "${var.ecr_repository_urls.nginx}:latest"
 
    listener = {
      service_name = "submissions"
@@ -175,8 +175,8 @@ module "service_flock" {
    service_name = "integration-evaluations"
    cluster_info = module.cluster.cluster_info
 
-   repository_url = module.cluster.ecr_repository_urls.intg_evaluations
-  nginx_image = "${module.cluster.ecr_repository_urls.nginx}:latest"
+   repository_url = var.ecr_repository_urls.intg_evaluations
+  nginx_image = "${var.ecr_repository_urls.nginx}:latest"
 
    listener = {
      service_name = "evaluations"
@@ -208,7 +208,7 @@ module "service_flock" {
    service_name = "bastion"
    cluster_info = module.cluster.cluster_info
 
-   repository_url = module.cluster.ecr_repository_urls.root
+   repository_url = var.ecr_repository_urls.root
    # TODO: add command
 
    configuration = {

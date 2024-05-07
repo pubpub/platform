@@ -24,6 +24,18 @@ variable "route53_zone_id" {
   type = string
 }
 
+variable "ecr_repository_urls" {
+  description = "URLs for ECR repositories created at a global level"
+  type = object({
+    core = string
+    intg_evaluations = string
+    intg_submissions = string
+    jobs = string
+    nginx = string
+    root = string
+  })
+}
+
 variable "MAILGUN_SMTP_USERNAME" {
   description = "SMTP Username for Mailgun service"
   type = string

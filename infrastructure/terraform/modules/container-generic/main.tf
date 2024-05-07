@@ -134,7 +134,7 @@ module "ecs_service" {
 
 resource "aws_lb_target_group" "this" {
   count       = local.public ? 1 : 0
-  name        = "tg-${var.cluster_info.name}-${var.service_name}"
+  name        = "${var.cluster_info.name}-${var.service_name}"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = var.cluster_info.vpc_id
