@@ -218,10 +218,14 @@ module "service_flock" {
        { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
        { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
        { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
+       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
      ]
 
      secrets = [
        { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+
+       # Bastion needs  supabase creds in case of seed script
+       { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
      ]
    }
 
