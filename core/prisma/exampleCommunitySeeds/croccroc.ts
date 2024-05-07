@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { PubType } from "@prisma/client";
-import { v4 as uuidv4, v4 } from "uuid";
 
 import { logger } from "logger";
 
@@ -8,15 +6,11 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { registerCorePubField } from "~/actions/_lib/init";
 import { corePubFields } from "~/actions/corePubFields";
-// import { PrismaClient } from "@prisma/client";
-import { type db as kyselyDb } from "~/kysely/database";
-import { env } from "../../lib/env/env.mjs";
-
-// import { FileUpload } from "../../lib/fields/fileUpload";
+import { db } from "~/kysely/database";
 
 export const crocCrocId = "758ba348-92c7-46ec-9612-7afda81e2d70" as CommunitiesId;
 
-export default async function main(db: typeof kyselyDb, communityUUID: CommunitiesId) {
+export default async function main(communityUUID: CommunitiesId) {
 	logger.info("Registering core fields");
 	for (const corePubField of corePubFields) {
 		logger.info(`Registering core field ${corePubField.slug}`);

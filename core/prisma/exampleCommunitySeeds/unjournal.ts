@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { PrismaClient, PubType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
@@ -12,10 +12,7 @@ import { FileUpload } from "../../lib/fields/fileUpload";
 
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 
-export default async function main(
-	prisma: PrismaClient,
-	communityUUID: string
-) {
+export default async function main(prisma: PrismaClient, communityUUID: string) {
 	await prisma.community.create({
 		data: {
 			id: communityUUID,
