@@ -2,10 +2,10 @@ import { faker } from "@faker-js/faker";
 import { PrismaClient, PubType } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
-import type { db as kyselyDb } from "~/kysely/database";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { corePubFields } from "~/actions/corePubFields";
+import { db } from "~/kysely/database";
 import { StagesId } from "~/kysely/types/public/Stages";
 import { env } from "../../lib/env/env.mjs";
 import { FileUpload } from "../../lib/fields/fileUpload";
@@ -13,7 +13,6 @@ import { FileUpload } from "../../lib/fields/fileUpload";
 export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
 
 export default async function main(
-	db: typeof kyselyDb,
 	prisma: PrismaClient,
 	communityUUID: string
 ) {
