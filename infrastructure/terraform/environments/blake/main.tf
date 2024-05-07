@@ -41,6 +41,14 @@ locals {
 
   pubpub_hostname = "blake.duqduq.org"
   route53_zone_id = "Z059164612717GL8VGM95"
+  ecr_repository_urls = {
+    core = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
+    intg_evaluations = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-integration-evaluations"
+    intg_submissions = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-integration-submissions"
+    jobs = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
+    nginx = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
+    root = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
+  }
 
   MAILGUN_SMTP_USERNAME = "v7@mg.pubpub.org"
   NEXT_PUBLIC_SUPABASE_URL = "https://dsleqjuvzuoycpeotdws.supabase.co"
@@ -64,14 +72,7 @@ module "deployment" {
 
   pubpub_hostname = local.pubpub_hostname
   route53_zone_id = local.route53_zone_id
-  ecr_repository_urls = {
-    core = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
-    intg_evaluations = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-integration-evaluations"
-    intg_submissions = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-integration-submissions"
-    jobs = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
-    nginx = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
-    root = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
-  }
+  ecr_repository_urls = local.ecr_repository_urls
 
   MAILGUN_SMTP_USERNAME = local.MAILGUN_SMTP_USERNAME
   NEXT_PUBLIC_SUPABASE_URL = local.NEXT_PUBLIC_SUPABASE_URL

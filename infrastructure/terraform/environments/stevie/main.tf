@@ -72,6 +72,7 @@ module "deployment" {
 
   pubpub_hostname = local.pubpub_hostname
   route53_zone_id = local.route53_zone_id
+  ecr_repository_urls = local.ecr_repository_urls
 
   MAILGUN_SMTP_USERNAME = local.MAILGUN_SMTP_USERNAME
   NEXT_PUBLIC_SUPABASE_URL = local.NEXT_PUBLIC_SUPABASE_URL
