@@ -347,6 +347,7 @@ enum Action {
   pdf
   email
   pushToV6
+  move
 }
 
 model Rule {

@@ -3,6 +3,7 @@
 import type Event from "~/kysely/types/public/Event";
 import * as email from "../email/action";
 import * as log from "../log/action";
+import * as move from "../move/action";
 import * as pdf from "../pdf/action";
 import * as pushToV6 from "../pushToV6/action";
 
@@ -11,6 +12,7 @@ export const actions = {
 	[pdf.action.name]: pdf.action,
 	[email.action.name]: email.action,
 	[pushToV6.action.name]: pushToV6.action,
+	[move.action.name]: move.action,
 } as const;
 
 export const getActionByName = (name: keyof typeof actions) => {
