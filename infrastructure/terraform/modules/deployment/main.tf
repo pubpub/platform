@@ -76,7 +76,6 @@ module "service_core" {
   configuration = {
     container_port = 3000
     environment = [
-      # { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
       { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
       { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
@@ -213,7 +212,6 @@ module "service_flock" {
 
    configuration = {
      environment = [
-       # { name = "DATABASE_URL", value = module.core_dependency_services.rds_connection_string_sans_password },
        { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
        { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
        { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },

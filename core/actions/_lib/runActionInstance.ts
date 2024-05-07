@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 
@@ -117,7 +118,10 @@ const _runActionInstance = async ({
 				values: values as any,
 			},
 			runParameters: runParameters,
+			stageId: actionInstance.stageId,
 		});
+
+		revalidateTag(`community-stages_${pub.communityId}`);
 
 		return result;
 	} catch (error) {

@@ -5,6 +5,7 @@ import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
+import { StagesId } from "~/kysely/types/public/Stages";
 
 export type ActionPubType = CorePubField[];
 
@@ -17,7 +18,7 @@ export type ActionPub<T extends ActionPubType> = {
 
 export type RunProps<T extends Action> =
 	T extends Action<infer PT, infer AC, infer RP>
-		? { config: AC; pub: ActionPub<PT>; runParameters: RP }
+		? { config: AC; pub: ActionPub<PT>; runParameters: RP; stageId: StagesId }
 		: never;
 
 export type ConfigProps<C> = {
