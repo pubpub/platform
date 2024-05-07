@@ -41,6 +41,18 @@ services:
       startCommand: pnpm start --filter integration-evaluations
       envVars:
           - fromGroup: pubpub-integration-prod-env
+    # integration-submissions-proxy
+    - type: web
+      name: integration-submissions-proxy
+      env: docker
+      rootDir: ./integrations/submissions-proxy
+      dockerfilePath: ./Dockerfile
+    # integration-evaluations-proxy
+    - type: web
+      name: integration-evaluations-proxy
+      env: docker
+      rootDir: ./integrations/evaluations-proxy
+      dockerfilePath: ./Dockerfile
 databases:
     - name: core
       plan: standard
