@@ -18,6 +18,7 @@ import { MoreVertical } from "ui/icon";
 
 import { UserAndMemberships } from "~/lib/types";
 import { RemoveCommunityButton } from "./RemoveCommunityButton";
+import Link from "next/link";
 
 export type TableCommunity = {
 	id: string;
@@ -72,6 +73,7 @@ export const getCommunityTableColumns = ({ user }: { user: UserAndMemberships })
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Slug" />,
 			accessorKey: "slug",
+			cell: ({ row }) => <Link href={`/communities/${row.getValue("slug")}`}>{row.original.slug}</Link>,
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,

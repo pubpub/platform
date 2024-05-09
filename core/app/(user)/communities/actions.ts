@@ -66,7 +66,12 @@ export const createCommunity = defineServerAction(async function createCommunity
 					.executeTakeFirst()
 			);
 			const communityUUID = c.id as CommunitiesId;
-			const member = await db
+
+			const pubTypeId: string = uuidv4();
+
+			const corePubSlugs = corePubFields.map((field) => field.slug);
+
+			const memberPromise = db
 				.insertInto("members")
 				.values({
 					user_id: user.id as UsersId,
@@ -76,33 +81,33 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.returning("id")
 				.executeTakeFirst();
 
-			const pubTypeId: string = uuidv4();
-
-			const corePubSlugs = corePubFields.map((field) => field.slug);
-
-			const [title] = await db
+			const pubFieldsPromise = db
 				.selectFrom("pub_fields")
 				.selectAll()
 				.where("pub_fields.slug", "in", corePubSlugs)
 				.execute();
 
+			const [fields, member] = await Promise.all([pubFieldsPromise, memberPromise]);
 			await db
 				.with("core_pub_type", (db) =>
 					db
 						.insertInto("pub_types")
 						.values({
 							id: pubTypeId as PubTypesId,
-							name: "Title Pub That Only List Titles",
+							name: "Submission ",
 							community_id: c.id as CommunitiesId,
 						})
 						.returning("id")
 				)
 				.insertInto("_PubFieldToPubType")
-				.values((eb) => ({
-					A: title.id,
-					B: eb.selectFrom("core_pub_type").select("id"),
-				}))
+				.values((eb) =>
+					fields.map((fields) => ({
+						A: fields.id,
+						B: eb.selectFrom("core_pub_type").select("id"),
+					}))
+				)
 				.execute();
+
 			const stages = (
 				await db
 					.insertInto("stages")
@@ -226,8 +231,13 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.values((eb) => [
 					{
 						pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-						field_id: title.id,
+						field_id: fields.find((field) => field.slug === "pubpub:title")!.id,
 						value: '"The Activity of Slugs I. The Induction of Activity by Changing Temperatures"',
+					},
+					{
+						pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
+						field_id: fields.find((field) => field.slug === "pubpub:content")!.id,
+						value: '"LONG LIVE THE SLUGS"',
 					},
 				])
 				.execute();
