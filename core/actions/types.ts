@@ -68,7 +68,7 @@ export const defineAction = <
 	action: Action<T, AC, RP, N>
 ) => action;
 
-type ActionSuccess = {
+export type ActionSuccess = {
 	success: true;
 	/**
 	 * Optionally provide a report to be displayed to the user

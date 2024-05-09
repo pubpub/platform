@@ -87,6 +87,7 @@ model Pub {
   integrationInstances     IntegrationInstance[]
   permissions              Permission[]
   IntegrationInstanceState IntegrationInstanceState[]
+  actionRuns               ActionRun[]
 
   @@map(name: "pubs")
 }
@@ -329,15 +330,16 @@ model IntegrationInstanceState {
 }
 
 model ActionInstance {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
-  name      String   @default("")
+  id        String      @id @default(dbgenerated("gen_random_uuid()"))
+  name      String      @default("")
   action    Action
-  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId   String   @map(name: "stage_id")
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  stage     Stage       @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId   String      @map(name: "stage_id")
+  createdAt DateTime    @default(now()) @map(name: "created_at")
+  updatedAt DateTime    @default(now()) @updatedAt @map(name: "updated_at")
   config    Json?
   rules     Rule[]
+  runs      ActionRun[]
 
   @@map(name: "action_instances")
 }
@@ -348,6 +350,27 @@ enum Action {
   email
   pushToV6
   move
+}
+
+model ActionRun {
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
+  actionInstance   ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId String          @map(name: "action_instance_id")
+  pub              Pub             @relation(fields: [pubId], references: [id])
+  pubId            String          @map(name: "pub_id")
+  config           Json?
+  event            Event?
+  params           Json?
+  status           ActionRunStatus
+  createdAt        DateTime        @default(now()) @map(name: "created_at")
+  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "action_runs")
+}
+
+enum ActionRunStatus {
+  success
+  failure
 }
 
 model Rule {

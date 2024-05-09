@@ -4,6 +4,7 @@
 import { type default as ActionClaimTable } from "./ActionClaim";
 import { type default as ActionInstancesTable } from "./ActionInstances";
 import { type default as ActionMoveTable } from "./ActionMove";
+import { type default as ActionRunsTable } from "./ActionRuns";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
 import { type default as IntegrationInstancesTable } from "./IntegrationInstances";
@@ -83,4 +84,6 @@ export default interface PublicSchema {
 	PubsInStages: PubsInStagesTable;
 
 	rules: RulesTable;
+
+	action_runs: ActionRunsTable;
 }
