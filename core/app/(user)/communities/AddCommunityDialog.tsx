@@ -11,12 +11,13 @@ import { AddCommunityForm } from "./AddCommunityForm";
 
 type Props = { user: any };
 export const AddCommunity = (props: Props) => {
+	const [open, setOpen] = React.useState(false);
 	return (
-		<Dialog>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<TooltipProvider>
 				<Tooltip>
 					<TooltipContent> Create a new community</TooltipContent>
-					<TooltipTrigger asChild>
+					<TooltipTrigger>
 						<DialogTrigger asChild>
 							<Button variant="outline" className="flex items-center gap-x-2">
 								<ListPlus size="16" /> Create Community
@@ -26,7 +27,7 @@ export const AddCommunity = (props: Props) => {
 				</Tooltip>
 			</TooltipProvider>
 			<DialogContent>
-				<AddCommunityForm user={props.user} />
+				<AddCommunityForm user={props.user} setOpen={setOpen} />
 			</DialogContent>
 		</Dialog>
 	);

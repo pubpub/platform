@@ -44,7 +44,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 	try {
 		const communityExists = await db
 			.selectFrom("communities")
-			.selectAll() // or `selectAll()` etc
+			.selectAll()
 			.where("slug", "=", `${slug}`)
 			.executeTakeFirst();
 
@@ -88,7 +88,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.execute();
 
 			const [fields, member] = await Promise.all([pubFieldsPromise, memberPromise]);
-			await db
+			const pubTypesPromise = db
 				.with("core_pub_type", (db) =>
 					db
 						.insertInto("pub_types")
@@ -108,51 +108,52 @@ export const createCommunity = defineServerAction(async function createCommunity
 				)
 				.execute();
 
-			const stages = (
-				await db
-					.insertInto("stages")
-					.values([
-						{
-							community_id: communityUUID,
-							name: "Submitted",
-							order: "aa",
-						},
-						{
-							community_id: communityUUID,
-							name: "Ask Author for Consent",
-							order: "bb",
-						},
-						{
-							community_id: communityUUID,
-							name: "To Evaluate",
-							order: "cc",
-						},
-						{
-							community_id: communityUUID,
-							name: "Under Evaluation",
-							order: "dd",
-						},
-						{
-							community_id: communityUUID,
-							name: "In Production",
-							order: "ff",
-						},
-						{
-							community_id: communityUUID,
-							name: "Published",
-							order: "gg",
-						},
-						{
-							community_id: communityUUID,
-							name: "Shelved",
-							order: "hh",
-						},
-					])
-					.returning("id")
-					.execute()
-			).map((x) => x.id);
+			const stagesPromise = db
+				.insertInto("stages")
+				.values([
+					{
+						community_id: communityUUID,
+						name: "Submitted",
+						order: "aa",
+					},
+					{
+						community_id: communityUUID,
+						name: "Ask Author for Consent",
+						order: "bb",
+					},
+					{
+						community_id: communityUUID,
+						name: "To Evaluate",
+						order: "cc",
+					},
+					{
+						community_id: communityUUID,
+						name: "Under Evaluation",
+						order: "dd",
+					},
+					{
+						community_id: communityUUID,
+						name: "In Production",
+						order: "ff",
+					},
+					{
+						community_id: communityUUID,
+						name: "Published",
+						order: "gg",
+					},
+					{
+						community_id: communityUUID,
+						name: "Shelved",
+						order: "hh",
+					},
+				])
+				.returning("id")
+				.execute();
 
-			await db
+			const [_, stagesReturn] = await Promise.all([pubTypesPromise, stagesPromise]);
+			const stages = stagesReturn.map((stage) => stage.id);
+
+			const permissionPromise = db
 				.with("new_permission", (db) =>
 					db
 						.insertInto("permissions")
@@ -182,7 +183,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 				])
 				.execute();
 
-			await db
+			const moveConstraintPromise = db
 				.insertInto("move_constraint")
 				.values([
 					{
@@ -209,7 +210,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 				])
 				.execute();
 
-			await db
+			const createPubPromise = db
 				.with("new_pubs", (db) =>
 					db
 						.insertInto("pubs")
@@ -241,6 +242,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 					},
 				])
 				.execute();
+			await Promise.all([permissionPromise, moveConstraintPromise, createPubPromise]);
 		}
 		revalidatePath("/");
 	} catch (error) {

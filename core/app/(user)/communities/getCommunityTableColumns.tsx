@@ -2,6 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
+import Link from "next/link";
+
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -18,7 +20,6 @@ import { MoreVertical } from "ui/icon";
 
 import { UserAndMemberships } from "~/lib/types";
 import { RemoveCommunityButton } from "./RemoveCommunityButton";
-import Link from "next/link";
 
 export type TableCommunity = {
 	id: string;
@@ -73,7 +74,9 @@ export const getCommunityTableColumns = ({ user }: { user: UserAndMemberships })
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Slug" />,
 			accessorKey: "slug",
-			cell: ({ row }) => <Link href={`/communities/${row.getValue("slug")}`}>{row.original.slug}</Link>,
+			cell: ({ row }) => (
+				<Link href={`/c/${row.getValue("slug")}/pubs`}>{row.original.slug}</Link>
+			),
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
