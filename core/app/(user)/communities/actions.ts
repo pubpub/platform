@@ -83,7 +83,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 			const [title] = await db
 				.selectFrom("pub_fields")
 				.selectAll()
-				.where("pub_fields.slug", "=", corePubSlugs)
+				.where("pub_fields.slug", "in", corePubSlugs)
 				.execute();
 
 			await db
