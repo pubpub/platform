@@ -17,7 +17,7 @@ export const AddCommunity = (props: Props) => {
 			<TooltipProvider>
 				<Tooltip>
 					<TooltipContent> Create a new community</TooltipContent>
-					<TooltipTrigger>
+					<TooltipTrigger asChild>
 						<DialogTrigger asChild>
 							<Button variant="outline" className="flex items-center gap-x-2">
 								<ListPlus size="16" /> Create Community
