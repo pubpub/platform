@@ -27,30 +27,7 @@ type ActionInstanceRunResult = ClientException | ClientExceptionOptions | Action
 type ActionInstanceArgs = {
 	pubId: PubsId;
 	actionInstanceId: ActionInstancesId;
-	runParameters?: Record<string, unknown>;
-};
-
-const recordActionRun = async (
-	actionInstanceId: ActionInstancesId,
-	pubId: PubsId,
-	result: ActionInstanceRunResult,
-	config?: unknown,
-	params?: unknown,
-	event?: Event
-) => {
-	const actionRun = await db
-		.insertInto("action_runs")
-		.values({
-			action_instance_id: actionInstanceId,
-			pub_id: pubId,
-			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
-			config,
-			params,
-			event,
-		})
-		.execute();
-
-	return actionRun;
+	args?: Record<string, unknown>;
 };
 
 const _runActionInstance = async (
@@ -63,7 +40,7 @@ const _runActionInstance = async (
 		stageId: StagesId;
 	},
 	pub: GetPubResponseBody,
-	runParameters = {}
+	args = {}
 ): Promise<ActionInstanceRunResult> => {
 	if (!actionInstance.action) {
 		return {
@@ -89,11 +66,11 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedrunParameters = action.runParameters.safeParse(runParameters ?? {});
-	if (!parsedrunParameters.success) {
+	const parsedArgs = action.params.safeParse(args ?? {});
+	if (!parsedArgs.success) {
 		return {
 			title: "Invalid pub config",
-			cause: parsedrunParameters.error,
+			cause: parsedArgs.error,
 			error: "The action was run with invalid parameters",
 		};
 	}
@@ -116,7 +93,7 @@ const _runActionInstance = async (
 				id: pub.id,
 				values: pub.values as any,
 			},
-			runParameters: runParameters,
+			args: args,
 			stageId: actionInstance.stageId,
 		});
 
@@ -134,7 +111,7 @@ const _runActionInstance = async (
 };
 
 const runAndRecordActionInstance = async (
-	{ pubId, actionInstanceId, runParameters = {} }: ActionInstanceArgs,
+	{ pubId, actionInstanceId, args = {} }: ActionInstanceArgs,
 	event?: Event
 ) => {
 	let result: ActionInstanceRunResult;
@@ -171,21 +148,23 @@ const runAndRecordActionInstance = async (
 			cause: actionInstanceResult.reason,
 		};
 	} else {
-		result = await _runActionInstance(
-			actionInstanceResult.value,
-			pubResult.value,
-			runParameters
-		);
+		result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
 	}
 
-	await recordActionRun(
-		actionInstanceId,
-		pubId,
-		result,
-		actionInstanceResult.status === "fulfilled" ? actionInstanceResult.value.config : undefined,
-		runParameters,
-		event
-	);
+	await db
+		.insertInto("action_runs")
+		.values({
+			action_instance_id: actionInstanceId,
+			pub_id: pubId,
+			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
+			config:
+				actionInstanceResult.status === "fulfilled"
+					? actionInstanceResult.value.config
+					: undefined,
+			params: args,
+			event,
+		})
+		.execute();
 
 	return result;
 };
@@ -193,9 +172,9 @@ const runAndRecordActionInstance = async (
 export const runActionInstance = defineServerAction(async function runActionInstance({
 	pubId,
 	actionInstanceId,
-	runParameters = {},
+	args = {},
 }: ActionInstanceArgs) {
-	return runAndRecordActionInstance({ pubId, actionInstanceId, runParameters });
+	return runAndRecordActionInstance({ pubId, actionInstanceId, args });
 });
 
 export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {

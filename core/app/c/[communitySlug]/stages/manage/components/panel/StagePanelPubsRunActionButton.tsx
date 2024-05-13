@@ -41,7 +41,7 @@ export const StagePanelPubsRunActionButton = ({
 				const result = await runAction({
 					actionInstanceId: actionInstance.id as ActionInstancesId,
 					pubId: pub.id as PubsId,
-					runParameters: values,
+					args: values,
 				});
 
 				if ("success" in result) {
@@ -73,7 +73,7 @@ export const StagePanelPubsRunActionButton = ({
 				<DialogHeader>
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
-				<AutoForm formSchema={action.runParameters as ZodObject<{}>} onSubmit={onSubmit}>
+				<AutoForm formSchema={action.params as ZodObject<{}>} onSubmit={onSubmit}>
 					<AutoFormSubmit disabled={isPending}>Run</AutoFormSubmit>
 				</AutoForm>
 			</DialogContent>
