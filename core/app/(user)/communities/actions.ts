@@ -5,18 +5,17 @@ import { v4 as uuidv4 } from "uuid";
 
 import { expect } from "utils";
 
+import type { TableCommunity } from "./getCommunityTableColumns";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import type { UsersId } from "~/kysely/types/public/Users";
+import type { UserAndMemberships } from "~/lib/types";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
-import { PubTypesId } from "~/kysely/types/public/PubTypes";
-import { UsersId } from "~/kysely/types/public/Users";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
-import { UserAndMemberships } from "~/lib/types";
-import prisma from "~/prisma/db";
 import { crocCrocId } from "~/prisma/exampleCommunitySeeds/croccroc";
 import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
-import { TableCommunity } from "./getCommunityTableColumns";
 
 export const createCommunity = defineServerAction(async function createCommunity({
 	user,
@@ -101,8 +100,8 @@ export const createCommunity = defineServerAction(async function createCommunity
 				)
 				.insertInto("_PubFieldToPubType")
 				.values((eb) =>
-					fields.map((fields) => ({
-						A: fields.id,
+					fields.map((field) => ({
+						A: field.id,
 						B: eb.selectFrom("core_pub_type").select("id"),
 					}))
 				)
