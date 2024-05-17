@@ -673,7 +673,7 @@ export const scheduleFinalEvaluationReminderEmail = async (
 			subject: `[Unjournal] Final Reminder: Evaluation due tomorrow`,
 			message: `<p>{{extra.disclaimer}}</p><hr/><br/>
 	  <p>Hi {{user.firstName}},</p>
-	  <p>This note is a final reminder that your evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" is due tomorrow. Please make sure to submit your evaluation by the deadline.</p>
+	  <p>This note is a final reminder that your evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}" is due tomorrow. Please make sure to submit your evaluation by the deadline, in line with our <a href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#what-we-would-like-you-to-do" target="_blank">expected standards</a>.</p>
 	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
