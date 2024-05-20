@@ -14,7 +14,8 @@
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache", 
     "lint:ws": "pnpm dlx sherif@latest",
     "test": "turbo test",
-    "fix": "pnpm run lint:fix && pnpm run format:fix"
+    "fix": "pnpm run lint:fix && pnpm run format:fix",
+    "test-env": "sudo docker compose -f docker-compose.test.yml up -d"
   },
   "devDependencies": {
     "@babel/core": "^7.22.17",
