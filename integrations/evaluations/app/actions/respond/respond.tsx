@@ -121,15 +121,8 @@ const EvaluationProcess = () => {
 						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#overall-assessment"
 					>
 						The Unjournal's emphases
-					</a>
-					as well as{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
-					>
-						standard guidelines
-					</a>
-					.
+					</a>{" "}
+					as well as standard guidelines.
 				</li>
 				<li>
 					Rate the paper using{" "}
@@ -284,16 +277,18 @@ export const Respond = (props: Props) => {
 						To agree to take on this assignment, please click the ‘Accept’ button below.
 						If you have questions at this point, please select ‘Contact Evaluation
 						Manager’. If you cannot accept our invitation, please choose ‘Decline’
-						below. We strongly encourage evaluators to complete evaluations relatively
-						quickly, for the benefit of authors, research-users, and the evaluation
-						ecosystem. If you submit the evaluation within that window (by{" "}
+						below. If you complete the evaluation in line with our{" "}
+						<a target="_blank" href="">
+							expected standards
+						</a>
+						, and you submit by{" "}
 						<strong>
 							{new Date(
 								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 							).toLocaleDateString()}
 						</strong>
-						), you will receive a $100 “prompt evaluation bonus,” in addition to the
-						baseline $300 honorarium, as well as other potential evaluator incentives
+						, you will receive a $100 “prompt evaluation bonus,” in addition to the
+						baseline $300 honorarium. You will also be eligible for further incentives
 						and prizes. After{" "}
 						<strong>{new Date(deadline.getTime()).toLocaleDateString()}</strong>, we
 						will consider re-assigning the evaluation, and later submissions may not be

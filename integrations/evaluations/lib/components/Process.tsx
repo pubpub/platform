@@ -9,12 +9,15 @@ export const Process = (props: Props) => {
 	return (
 		<>
 			<p>
-				Early deadline, for $100 prompt evaluation bonus (+$300 base):{" "}
+				Early deadline, to be eligible for $100 prompt evaluation bonus (+$300 base):{" "}
 				{new Date(
 					props.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
 				).toLocaleDateString()}
 			</p>
-			<p>Final deadline, for $300 base honorarium: {props.deadline.toLocaleDateString()}</p>
+			<p>
+				Final deadline, to be eligible for $300 base honorarium:{" "}
+				{props.deadline.toLocaleDateString()}
+			</p>
 			{props.managersNotes && (
 				<>
 					<h2>Manager's Notes</h2>
@@ -31,21 +34,15 @@ export const Process = (props: Props) => {
 			<p>We ask evaluators to:</p>
 			<ol>
 				<li>
-					Write an evaluation: essentially a high-quality referee report. Consider{" "}
-					<a
-						target="_blank"
-						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators/conventional-guidelines-for-referee-reports"
-					>
-						standard guidelines
-					</a>{" "}
-					as well as{" "}
+					Write an evaluation: essentially a high-quality referee report. Consider
+					standard guidelines, as well as
 					<a
 						target="_blank"
 						href="https://globalimpact.gitbook.io/the-unjournal-project-and-communication-space/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#overall-assessment"
 					>
 						The Unjournal's emphases
 					</a>
-					.
+					and the “Manager’s Notes,” if any (see above).
 				</li>
 				<li>
 					Give a set of{" "}
@@ -69,7 +66,7 @@ export const Process = (props: Props) => {
 						here
 					</a>
 				</em>
-				.
+				, which outline our expected standards.
 			</p>
 			<p>
 				We compensate evaluators as a sign that we{" "}
@@ -84,7 +81,7 @@ export const Process = (props: Props) => {
 			</p>
 			<p>
 				Your evaluation will be made public and given a DOI, but you have the option to
-				remain anonymous or to be identified as the author .
+				remain anonymous or to be identified as the author.
 			</p>
 		</>
 	);
