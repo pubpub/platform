@@ -3,6 +3,8 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
+		"playwright:test": "playwright test",
+		"playwright:ui": "playwright test --ui",
 		"dev": "next dev -p 3000 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
@@ -81,6 +83,7 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.43.1",
 		"@preconstruct/next": "^4.0.0",
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",

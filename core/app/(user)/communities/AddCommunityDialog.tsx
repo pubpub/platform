@@ -11,8 +11,9 @@ import { AddCommunityForm } from "./AddCommunityForm";
 
 type Props = { user: any };
 export const AddCommunity = (props: Props) => {
+	const [open, setOpen] = React.useState(false);
 	return (
-		<Dialog>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<TooltipProvider>
 				<Tooltip>
 					<TooltipContent> Create a new community</TooltipContent>
@@ -26,7 +27,7 @@ export const AddCommunity = (props: Props) => {
 				</Tooltip>
 			</TooltipProvider>
 			<DialogContent>
-				<AddCommunityForm user={props.user} />
+				<AddCommunityForm user={props.user} setOpen={setOpen} />
 			</DialogContent>
 		</Dialog>
 	);
