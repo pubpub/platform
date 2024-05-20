@@ -1,13 +1,18 @@
-import type { PubValuesPayload } from "~/lib/types";
-
 type Props = {
-	pub: PubValuesPayload;
+	pub: {
+		id: string;
+		values: { field: { slug: string }; value: unknown }[] | Record<string, unknown>;
+		createdAt: Date;
+	};
 };
 export const PubTitle: React.FC<Props> = function (props: Props) {
-	const titleValue = props.pub.values.find((value) => {
-		return value.field.slug.includes("title") && value.value;
-	});
-	const title = titleValue?.value as string;
+	const title = (
+		Array.isArray(props.pub.values)
+			? props.pub.values.find((value) => {
+					return value.field.slug.includes("title") && value.value;
+				})?.value
+			: props.pub.values["pubpub:title"]
+	) as string | undefined;
 	return (
 		<h3 className="text-md font-semibold">
 			{title ?? `Untitled Pub - ${props.pub.createdAt.toDateString()}`}{" "}

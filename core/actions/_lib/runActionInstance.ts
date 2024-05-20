@@ -14,6 +14,7 @@ import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
 import Action from "~/kysely/types/public/Action";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
+import { getLoginData } from "~/lib/auth/loginData";
 import { getPub } from "~/lib/server";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
@@ -114,8 +115,6 @@ const runAndRecordActionInstance = async (
 	{ pubId, actionInstanceId, args = {} }: ActionInstanceArgs,
 	event?: Event
 ) => {
-	let result: ActionInstanceRunResult;
-
 	const pubPromise = getPub(pubId);
 
 	const actionInstancePromise = db
@@ -137,19 +136,29 @@ const runAndRecordActionInstance = async (
 	]);
 
 	if (pubResult.status === "rejected") {
-		result = {
+		return {
 			error: "Pub not found",
 			cause: pubResult.reason,
 		};
-	} else if (actionInstanceResult.status === "rejected") {
+	}
+
+	if (actionInstanceResult.status === "rejected") {
 		logger.debug({ msg: actionInstanceResult.reason });
-		result = {
+		return {
 			error: "Action instance not found",
 			cause: actionInstanceResult.reason,
 		};
-	} else {
-		result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
 	}
+
+	if (!event) {
+		// If the action was not run by a rule, we record the initiating member.
+		const loginData = await getLoginData();
+		const member = loginData?.memberships.find(
+			(m) => m.communityId === pubResult.value.communityId
+		);
+	}
+
+	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
 
 	await db
 		.insertInto("action_runs")
@@ -157,14 +166,13 @@ const runAndRecordActionInstance = async (
 			action_instance_id: actionInstanceId,
 			pub_id: pubId,
 			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
-			config:
-				actionInstanceResult.status === "fulfilled"
-					? actionInstanceResult.value.config
-					: undefined,
+			config: actionInstanceResult.value.config,
 			params: args,
 			event,
 		})
 		.execute();
+
+	revalidateTag(`action_runs_${pubResult.value.communityId}`);
 
 	return result;
 };

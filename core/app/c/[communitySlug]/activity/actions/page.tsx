@@ -8,6 +8,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { pubValuesByRef } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { ActionRunsTable } from "./ActionRunsTable";
 
 export default async function Page({
 	params: { communitySlug },
@@ -49,6 +50,14 @@ export default async function Page({
 					"action_runs.params",
 					"action_runs.status",
 					"action_runs.created_at as createdAt",
+					jsonObjectFrom(
+						eb
+							.selectFrom("action_instances")
+							.whereRef("action_instances.id", "=", "action_runs.action_instance_id")
+							.select(["name", "action"])
+					)
+						.$notNull()
+						.as("actionInstance"),
 					// Include the action run's stage and pub. $notNull is used to narrow
 					// the type to exclude null values, which is safe because actions
 					// must be run in the context of both a pub and stage.
@@ -56,7 +65,7 @@ export default async function Page({
 						eb
 							.selectFrom("stages")
 							.whereRef("stages.id", "=", "action_instances.stage_id")
-							.select(["stages.id", "stages.name"])
+							.select(["id", "name"])
 					)
 						.$notNull()
 						.as("stage"),
@@ -64,7 +73,7 @@ export default async function Page({
 						eb
 							.selectFrom("pubs")
 							.whereRef("pubs.id", "=", "action_runs.pub_id")
-							.select(["id"])
+							.select(["id", "created_at as createdAt"])
 							.select(pubValuesByRef("action_runs.pub_id"))
 					)
 						.$notNull()
@@ -77,5 +86,5 @@ export default async function Page({
 
 	logger.info("Action runs", actionRuns);
 
-	return <p>Action runs</p>;
+	return <ActionRunsTable actionRuns={actionRuns} />;
 }
