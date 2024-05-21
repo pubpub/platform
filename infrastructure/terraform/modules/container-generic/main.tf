@@ -2,6 +2,9 @@ locals {
   # null-guard here is annoying but necessary
   public = var.listener != null ? var.listener.public : false
 
+  # a shortname for placaes where name lengths are constrained
+  shortname = substr(sha1(var.service_name),  0, 4)
+
   # a block to DRY out
   log_configuration = {
     logDriver = "awslogs",
@@ -93,6 +96,8 @@ module "ecs_service" {
       }] : []
 
       environment = [
+        { name = "OTEL_SERVICE_NAME",
+          value = "${var.service_name}.nginx" },
         { name = "NGINX_LISTEN_PORT",
           value = "8080" },
         { name = "NGINX_PREFIX",
@@ -129,12 +134,16 @@ module "ecs_service" {
   tags = {
     Environment = "${var.cluster_info.name}-${var.cluster_info.environment}"
     Project     = "Pubpub-v7"
+    LogicalName = var.service_name
+    Shortname = local.shortname
+    ShortnameAnnotation = "Shortname is calculated as first four characters of the sha1sum of the Logical Name."
   }
 }
 
 resource "aws_lb_target_group" "this" {
   count       = local.public ? 1 : 0
-  name        = "tg-${var.cluster_info.name}-${var.service_name}"
+  # use shortname here because this string is max 32 chars
+  name        = "${var.cluster_info.name}-${local.shortname}"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = var.cluster_info.vpc_id

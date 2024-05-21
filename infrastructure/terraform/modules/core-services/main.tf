@@ -90,6 +90,8 @@ module "assets_bucket" {
 
   block_public_acls = false
   bucket        = var.assets_bucket_url_name
+  control_object_ownership = true
+  object_ownership         = "ObjectWriter"
   acl = "public-read"
 }
 

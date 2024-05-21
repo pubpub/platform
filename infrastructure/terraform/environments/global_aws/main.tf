@@ -41,3 +41,7 @@ provider "aws" {
 #      enabled = true
 #    }
 #  }
+
+module "ecr_repositories" {
+  source = "../../modules/ecr-repositories"
+}

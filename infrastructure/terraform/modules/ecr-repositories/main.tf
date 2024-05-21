@@ -1,3 +1,16 @@
+# aws terraform provider config
+
+terraform {
+  required_version = ">= 0.12.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.0"
+    }
+  }
+}
+
+
 # ecr repositories for all containers
 resource "aws_ecr_repository" "pubpub_v7" {
   name                 = "pubpub-v7"
@@ -53,3 +66,4 @@ resource "aws_ecr_repository" "nginx" {
     scan_on_push = false # can set this to true if we want
   }
 }
+
