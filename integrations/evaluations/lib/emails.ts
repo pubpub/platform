@@ -27,17 +27,17 @@ export function calculateDeadline(
 	deadline: Pick<InstanceConfig, "deadlineLength" | "deadlineUnit">,
 	date: Date
 ): Date {
-	const futureDate = new Date()
+	const futureDate = new Date();
 	switch (deadline.deadlineUnit) {
 		case "days":
-		  futureDate.setDate(date.getDate() + deadline.deadlineLength)
-		  return futureDate;
+			futureDate.setDate(date.getDate() + deadline.deadlineLength);
+			return futureDate;
 		case "months":
-		  futureDate.setMonth(date.getMonth() + deadline.deadlineLength)
-		  return futureDate;
+			futureDate.setMonth(date.getMonth() + deadline.deadlineLength);
+			return futureDate;
 		default:
-		  throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
-	  }
+			throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
+	}
 }
 
 export function getDeadline(instanceConfig: InstanceConfig, evaluator: EvaluatorWhoAccepted): Date {
