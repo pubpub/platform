@@ -14,7 +14,7 @@ import { toast } from "ui/use-toast";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
-import { runActionInstance } from "~/actions/api/server";
+import { runActionInstanceServerAction } from "~/actions/api/server";
 import { useServerAction } from "~/lib/serverActions";
 
 export const StagePanelPubsRunActionButton = ({
@@ -24,7 +24,7 @@ export const StagePanelPubsRunActionButton = ({
 	actionInstance: ActionInstances;
 	pub: Pub;
 }) => {
-	const runAction = useServerAction(runActionInstance);
+	const runAction = useServerAction(runActionInstanceServerAction);
 
 	const [isPending, startTransition] = useTransition();
 
@@ -41,7 +41,7 @@ export const StagePanelPubsRunActionButton = ({
 				const result = await runAction({
 					actionInstanceId: actionInstance.id as ActionInstancesId,
 					pubId: pub.id as PubsId,
-					args: values,
+					actionInstanceArgs: values,
 				});
 
 				if ("success" in result) {
@@ -80,17 +80,3 @@ export const StagePanelPubsRunActionButton = ({
 		</Dialog>
 	);
 };
-
-// <Button variant="default" type="button" size="sm">
-// 	{isPending ? (
-// 		<Loader2 size="14" className="animate-spin" />
-// 	) : result ? (
-// 		"error" in result ? (
-// 			<X size="14" />
-// 		) : (
-// 			<Check size="14" />
-// 		)
-// 	) : (
-// 		<Play size="14" />
-// 	)}
-// </Button>

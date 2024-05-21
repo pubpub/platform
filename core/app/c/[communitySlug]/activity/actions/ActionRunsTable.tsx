@@ -7,5 +7,7 @@ import { ActionRun, getActionRunsTableColumns } from "./getActionRunsTableColumn
 
 export const ActionRunsTable = ({ actionRuns }: { actionRuns: ActionRun[] }) => {
 	const actionRunsColumns = getActionRunsTableColumns();
-	return <DataTable columns={actionRunsColumns} data={actionRuns} searchBy="id" />;
+	return (
+		<DataTable columns={actionRunsColumns} data={actionRuns} searchBy="actionInstance.name" />
+	);
 };

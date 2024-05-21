@@ -30,6 +30,7 @@ model User {
   memberGroups MemberGroup[]
   AuthToken    AuthToken[]
   assignedPubs Pub[]
+  actionRuns   ActionRun[]
 
   @@map(name: "users")
 }
@@ -242,7 +243,6 @@ model Member {
   updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
 
   permissions Permission[]
-  actionRuns  ActionRun[]
 
   @@map(name: "members")
 }
@@ -354,22 +354,19 @@ enum Action {
 }
 
 model ActionRun {
-  id                 String          @id @default(dbgenerated("gen_random_uuid()"))
-  actionInstance     ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId   String?         @map(name: "action_instance_id")
-  actionInstanceName String
-  stageName          String
-  pub                Pub             @relation(fields: [pubId], references: [id])
-  pubId              String          @map(name: "pub_id")
-  config             Json?
-  event              Event?
-  params             Json?
-  status             ActionRunStatus
-  initiator          Member?         @relation(fields: [initiatorId], references: [id])
-  initiatorId        String?         @map(name: "initiator_id")
-  initiatorName      String?
-  createdAt          DateTime        @default(now()) @map(name: "created_at")
-  updatedAt          DateTime        @default(now()) @updatedAt @map(name: "updated_at")
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
+  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId String?         @map(name: "action_instance_id")
+  pub              Pub?            @relation(fields: [pubId], references: [id])
+  pubId            String?         @map(name: "pub_id")
+  config           Json?
+  event            Event?
+  params           Json?
+  status           ActionRunStatus
+  user             User?           @relation(fields: [userId], references: [id])
+  userId           String?         @map(name: "user_id")
+  createdAt        DateTime        @default(now()) @map(name: "created_at")
+  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updated_at")
 
   @@map(name: "action_runs")
 }

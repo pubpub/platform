@@ -9,6 +9,7 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { pubValuesByRef } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { ActionRunsTable } from "./ActionRunsTable";
+import { ActionRun } from "./getActionRunsTableColumns";
 
 export default async function Page({
 	params: { communitySlug },
@@ -37,16 +38,18 @@ export default async function Page({
 	}
 
 	const page = parseInt(searchParams.page ?? "1", 10);
-	const actionRuns = await unstable_cache(
+	const actionRuns = (await unstable_cache(
 		() =>
 			db
 				.selectFrom("stages")
 				.where("stages.community_id", "=", community.id)
 				.innerJoin("action_instances", "stages.id", "action_instances.stage_id")
 				.innerJoin("action_runs", "action_instances.id", "action_runs.action_instance_id")
+				.innerJoin("users", "action_runs.user_id", "users.id")
 				.select((eb) => [
 					"action_runs.id",
 					"action_runs.config",
+					"action_runs.event",
 					"action_runs.params",
 					"action_runs.status",
 					"action_runs.created_at as createdAt",
@@ -55,34 +58,31 @@ export default async function Page({
 							.selectFrom("action_instances")
 							.whereRef("action_instances.id", "=", "action_runs.action_instance_id")
 							.select(["name", "action"])
-					)
-						.$notNull()
-						.as("actionInstance"),
-					// Include the action run's stage and pub. $notNull is used to narrow
-					// the type to exclude null values, which is safe because actions
-					// must be run in the context of both a pub and stage.
+					).as("actionInstance"),
 					jsonObjectFrom(
 						eb
 							.selectFrom("stages")
 							.whereRef("stages.id", "=", "action_instances.stage_id")
 							.select(["id", "name"])
-					)
-						.$notNull()
-						.as("stage"),
+					).as("stage"),
 					jsonObjectFrom(
 						eb
 							.selectFrom("pubs")
 							.whereRef("pubs.id", "=", "action_runs.pub_id")
 							.select(["id", "created_at as createdAt"])
 							.select(pubValuesByRef("action_runs.pub_id"))
-					)
-						.$notNull()
-						.as("pub"),
+					).as("pub"),
+					jsonObjectFrom(
+						eb
+							.selectFrom("users")
+							.whereRef("users.id", "=", "action_runs.user_id")
+							.select(["id", "firstName", "lastName"])
+					).as("user"),
 				])
 				.execute(),
 		[community.id],
 		{ tags: [`action_runs_${community.id}`] }
-	)();
+	)()) as ActionRun[];
 
 	logger.info("Action runs", actionRuns);
 

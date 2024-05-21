@@ -7,6 +7,7 @@ import { type ActionInstancesId } from "./ActionInstances";
 import { type default as ActionRunStatus } from "./ActionRunStatus";
 import { type default as Event } from "./Event";
 import { type PubsId } from "./Pubs";
+import { type UsersId } from "./Users";
 
 /** Identifier type for public.action_runs */
 export type ActionRunsId = string & { __brand: "ActionRunsId" };
@@ -15,7 +16,13 @@ export type ActionRunsId = string & { __brand: "ActionRunsId" };
 export default interface ActionRunsTable {
 	id: ColumnType<ActionRunsId, ActionRunsId | undefined, ActionRunsId>;
 
-	action_instance_id: ColumnType<ActionInstancesId, ActionInstancesId, ActionInstancesId>;
+	action_instance_id: ColumnType<
+		ActionInstancesId | null,
+		ActionInstancesId | null,
+		ActionInstancesId | null
+	>;
+
+	pub_id: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 
@@ -25,11 +32,11 @@ export default interface ActionRunsTable {
 
 	status: ColumnType<ActionRunStatus, ActionRunStatus, ActionRunStatus>;
 
+	user_id: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
+
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
-
-	pub_id: ColumnType<PubsId, PubsId, PubsId>;
 }
 
 export type ActionRuns = Selectable<ActionRunsTable>;

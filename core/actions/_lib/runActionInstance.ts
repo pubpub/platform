@@ -14,22 +14,21 @@ import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
 import Action from "~/kysely/types/public/Action";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
-import { getLoginData } from "~/lib/auth/loginData";
+import { UsersId } from "~/kysely/types/public/Users";
 import { getPub } from "~/lib/server";
-import { defineServerAction } from "~/lib/server/defineServerAction";
 import { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
 import { ActionSuccess } from "../types";
 import { getActionRunByName } from "./getRuns";
 import { validatePubValues } from "./validateFields";
 
-type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
+export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
 
-type ActionInstanceArgs = {
+export type RunActionInstanceArgs = {
 	pubId: PubsId;
 	actionInstanceId: ActionInstancesId;
-	args?: Record<string, unknown>;
-};
+	actionInstanceArgs?: Record<string, unknown>;
+} & ({ event: Event } | { userId: UsersId });
 
 const _runActionInstance = async (
 	actionInstance: {
@@ -111,15 +110,12 @@ const _runActionInstance = async (
 	}
 };
 
-const runAndRecordActionInstance = async (
-	{ pubId, actionInstanceId, args = {} }: ActionInstanceArgs,
-	event?: Event
-) => {
-	const pubPromise = getPub(pubId);
+export async function runActionInstance(args: RunActionInstanceArgs) {
+	const pubPromise = getPub(args.pubId);
 
 	const actionInstancePromise = db
 		.selectFrom("action_instances")
-		.where("action_instances.id", "=", actionInstanceId)
+		.where("action_instances.id", "=", args.actionInstanceId)
 		.select((eb) => [
 			"id",
 			eb.fn.coalesce("config", sql`'{}'`).as("config"),
@@ -150,40 +146,25 @@ const runAndRecordActionInstance = async (
 		};
 	}
 
-	if (!event) {
-		// If the action was not run by a rule, we record the initiating member.
-		const loginData = await getLoginData();
-		const member = loginData?.memberships.find(
-			(m) => m.communityId === pubResult.value.communityId
-		);
-	}
-
 	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
 
 	await db
 		.insertInto("action_runs")
 		.values({
-			action_instance_id: actionInstanceId,
-			pub_id: pubId,
+			action_instance_id: args.actionInstanceId,
+			pub_id: args.pubId,
+			user_id: "userId" in args ? args.userId : null,
 			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
 			config: actionInstanceResult.value.config,
 			params: args,
-			event,
+			event: "userId" in args ? undefined : args.event,
 		})
 		.execute();
 
 	revalidateTag(`action_runs_${pubResult.value.communityId}`);
 
 	return result;
-};
-
-export const runActionInstance = defineServerAction(async function runActionInstance({
-	pubId,
-	actionInstanceId,
-	args = {},
-}: ActionInstanceArgs) {
-	return runAndRecordActionInstance({ pubId, actionInstanceId, args });
-});
+}
 
 export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {
 	const instances = await db
@@ -199,13 +180,11 @@ export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, eve
 			return {
 				actionInstanceId: instance.action_instance_id,
 				actionInstanceName: instance.name,
-				result: await runAndRecordActionInstance(
-					{
-						pubId,
-						actionInstanceId: instance.action_instance_id,
-					},
-					event
-				),
+				result: await runActionInstance({
+					pubId,
+					actionInstanceId: instance.action_instance_id,
+					event,
+				}),
 			};
 		})
 	);
