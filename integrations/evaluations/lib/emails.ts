@@ -35,8 +35,6 @@ export function calculateDeadline(
 		case "months":
 			futureDate.setMonth(date.getMonth() + deadline.deadlineLength);
 			return futureDate;
-		default:
-			throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
 	}
 }
 
