@@ -29,7 +29,7 @@ export function calculateDeadline(
 ): Date {
 	switch (deadline.deadlineUnit) {
 		case "days":
-			return new Date(date.setMinutes(date.getMinutes() + deadline.deadlineLength * 24 * 60));
+			return new Date(date.setMinutes(date.getMinutes() + deadline.deadlineLength));
 		case "months":
 			return new Date(date.setMonth(date.getMonth() + deadline.deadlineLength));
 		default:
