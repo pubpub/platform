@@ -803,7 +803,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 				titleFieldSlug: "unjournal:title",
 				evaluatorFieldSlug: "unjournal:evaluator",
-				deadlineLength: 21,
+				deadlineLength: 35,
 				deadlineUnit: "days",
 			},
 		},
