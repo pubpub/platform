@@ -18,38 +18,18 @@ services:
       runtime: node
       rootDir: .
       buildCommand: ./bin/render-build.sh jobs
-      startCommand: pnpm --filter jobs start 
+      startCommand: pnpm --filter jobs start
       envVars:
           - fromGroup: pubpub-flock-prod-env
     # integration-submissions
     - type: web
       name: integration-submissions
-      region: ohio
-      runtime: node
-      rootDir: .
-      buildCommand: ./bin/render-build.sh integration-submissions
-      startCommand: pnpm start --filter integration-submissions
-      envVars:
-          - fromGroup: pubpub-integration-prod-env
-    # integration-evaluations
-    - type: web
-      name: integration-evaluations
-      region: ohio
-      runtime: node
-      rootDir: .
-      buildCommand: ./bin/render-build.sh integration-evaluations
-      startCommand: pnpm start --filter integration-evaluations
-      envVars:
-          - fromGroup: pubpub-integration-prod-env
-    # integration-submissions-proxy
-    - type: web
-      name: integration-submissions-proxy
       env: docker
       rootDir: ./integrations/submissions-proxy
       dockerfilePath: ./Dockerfile
-    # integration-evaluations-proxy
+    # integration-evaluations
     - type: web
-      name: integration-evaluations-proxy
+      name: integration-evaluations
       env: docker
       rootDir: ./integrations/evaluations-proxy
       dockerfilePath: ./Dockerfile
