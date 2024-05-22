@@ -37,7 +37,8 @@ export default async function Page({
 		return null;
 	}
 
-	const page = parseInt(searchParams.page ?? "1", 10);
+	const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+	const limit = 20;
 	const actionRuns = (await unstable_cache(
 		() =>
 			db
@@ -79,6 +80,9 @@ export default async function Page({
 							.select(["id", "firstName", "lastName"])
 					).as("user"),
 				])
+				.orderBy("action_runs.created_at", "desc")
+				.limit(limit)
+				.offset(page * limit - limit)
 				.execute(),
 		[community.id],
 		{ tags: [`action_runs_${community.id}`] }
