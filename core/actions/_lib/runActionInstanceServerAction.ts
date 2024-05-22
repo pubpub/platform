@@ -1,3 +1,5 @@
+"use server";
+
 import { UsersId } from "~/kysely/types/public/Users";
 import { getLoginData } from "~/lib/auth/loginData";
 import {
