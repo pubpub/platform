@@ -26,6 +26,7 @@ export const getActionNames = () => {
 const humanReadableEvents: Record<Event, string> = {
 	pubEnteredStage: "a pub enters this stage",
 	pubLeftStage: "a pub leaves this stage",
+	pubInStageForDuration: "a pub stays in this stage for a duration",
 };
 
 export const humanReadableEvent = (event: Event) => humanReadableEvents[event];
