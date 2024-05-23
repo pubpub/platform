@@ -4,8 +4,9 @@ import type * as z from "zod";
 import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
+import type Event from "~/kysely/types/public/Event";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
-import { StagesId } from "~/kysely/types/public/Stages";
 
 export type ActionPubType = CorePubField[];
 
@@ -82,3 +83,18 @@ export const defineRun = <T extends Action = Action>(
 ) => run;
 
 export type Run = ReturnType<typeof defineRun>;
+
+export type EventRuleOptionsBase<
+	E extends Event,
+	AC extends Record<string, any> | undefined = undefined,
+> = {
+	event: E;
+	canBeRunAfterAddingRule?: boolean;
+	additionalConfig?: AC extends Record<string, any> ? z.ZodObject<AC> : undefined;
+};
+
+export const defineRule = <E extends Event, AC extends Record<string, any> | undefined = undefined>(
+	options: EventRuleOptionsBase<E, AC>
+) => options;
+
+export type { RuleConfig, RuleConfigs } from "./_lib/rules";
