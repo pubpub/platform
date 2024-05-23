@@ -25,6 +25,54 @@ type DBTriggerEventPayload<T> = {
 	old: T;
 };
 
+type ScheduledEventPayload = {
+	event: Event.pubInStageForDuration;
+	duration: number;
+	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
+	runAt: Date;
+	stageId: string;
+	pubId: string;
+	actionInstanceId: string;
+};
+
+enum Event {
+	pubEnteredStage = "pubEnteredStage",
+	pubLeftStage = "pubLeftStage",
+	pubInStageForDuration = "pubInStageForDuration",
+}
+
+const apiClient = initClient(api.internal, {
+	baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
+	baseHeaders: { authorization: `Bearer ${process.env.API_KEY}` },
+	jsonQuery: true,
+});
+
+const normalizeEventPayload = <T>(payload: DBTriggerEventPayload<T> | ScheduledEventPayload) => {
+	// pubInStageForDuration event, triggered after being scheduled for a while
+	if ("event" in payload) {
+		return payload;
+	}
+
+	// pubInStageForDuration event, triggered after being scheduled for a while
+	if (payload.operation === "INSERT") {
+		return {
+			event: Event.pubEnteredStage,
+			...payload.new,
+		};
+	}
+
+	// pubInStageForDuration event, triggered after being scheduled for a while
+	if (payload.operation === "DELETE") {
+		return {
+			event: Event.pubLeftStage,
+			...payload.old,
+		};
+	}
+
+	// strange null case, should not really happen
+	return null;
+};
+
 const makeTaskList = (client: Client<{}>) => {
 	const sendEmail = (async (
 		payload: InstanceJobPayload<SendEmailRequestBody>,
@@ -36,36 +84,93 @@ const makeTaskList = (client: Client<{}>) => {
 		logger.info({ msg: `Sent email`, info, job: helpers.job });
 	}) as Task;
 
-	const emitEvent = (async (payload: DBTriggerEventPayload<PubInStagesRow>) => {
+	const emitEvent = (async (
+		payload: DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload
+	) => {
 		const eventLogger = logger.child({ payload });
-		eventLogger.debug({ msg: "Starting emitEvent", payload });
-		const client = initClient(api.internal, {
-			baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
-			baseHeaders: { authorization: `Bearer ${process.env.API_KEY}` },
-			jsonQuery: true,
-		});
-		let event: "pubLeftStage" | "pubEnteredStage" | "" = "";
-		let stageId: string = "";
-		let pubId: string = "";
-		if (payload.operation === "INSERT") {
-			event = "pubEnteredStage";
-			stageId = payload.new.stageId;
-			pubId = payload.new.pubId;
-		} else if (payload.operation === "DELETE") {
-			event = "pubLeftStage";
-			stageId = payload.old.stageId;
-			pubId = payload.old.pubId;
+		eventLogger.info({ msg: "Starting emitEvent", payload });
+
+		let schedulePromise: ReturnType<typeof apiClient.scheduleAction> | null = null;
+
+		// try to schedule actions when a pub enters a stage
+		if ("operation" in payload && payload.operation === "INSERT") {
+			const { stageId, pubId } = payload.new;
+
+			schedulePromise = apiClient.scheduleAction({
+				params: { stageId },
+				body: { pubId },
+			});
 		}
 
-		if (!event || !pubId || !stageId) {
-			eventLogger.debug({ msg: "No event emitted" });
+		const normalizedEventPayload = normalizeEventPayload(payload);
+
+		if (!normalizedEventPayload) {
+			eventLogger.info({ msg: "No event emitted" });
 			return;
 		}
 
-		eventLogger.debug({ msg: "Emitting event", event });
-		const results = await client.triggerAction({ params: { stageId }, body: { event, pubId } });
+		const { event, stageId, pubId, ...extra } = normalizedEventPayload;
 
-		eventLogger.debug({ msg: "Action run results", results, event });
+		eventLogger.info({ msg: `Emitting event ${event}`, extra });
+
+		const resultsPromise = apiClient.triggerAction({
+			params: { stageId },
+			body: { event, pubId },
+		});
+
+		const [scheduleResult, resultsResult] = await Promise.allSettled([
+			schedulePromise,
+			resultsPromise,
+		]);
+
+		if (scheduleResult.status === "rejected") {
+			eventLogger.error({
+				msg: "Error scheduling action",
+				error: scheduleResult.reason,
+				scheduleResult,
+				stageId,
+				pubId,
+				event,
+				...extra,
+			});
+		} else if (scheduleResult.value && scheduleResult.value?.status > 400) {
+			eventLogger.error({
+				msg: `API error scheduling action`,
+				error: scheduleResult.value?.body,
+				scheduleResult,
+				stageId,
+				pubId,
+				event,
+				...extra,
+			});
+		} else if (scheduleResult.value !== null) {
+			eventLogger.info({
+				msg: "Action scheduled",
+				results: scheduleResult.value,
+				stageId,
+				pubId,
+				event,
+				...extra,
+			});
+		}
+
+		if (resultsResult.status === "rejected") {
+			eventLogger.error({
+				msg: "Error running action",
+				error: resultsResult.reason,
+				stageId,
+				pubId,
+				event,
+			});
+		} else {
+			eventLogger.info({
+				msg: "Action run results",
+				results: resultsResult.value,
+				stageId,
+				pubId,
+				event,
+			});
+		}
 	}) as Task;
 
 	return { sendEmail, emitEvent };

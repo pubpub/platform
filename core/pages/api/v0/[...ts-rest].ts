@@ -3,10 +3,13 @@ import { createNextRoute, createNextRouter } from "@ts-rest/next";
 import { api } from "contracts";
 import { logger } from "logger";
 
-import { runInstancesForEvent } from "~/actions/api/server";
-import Event from "~/kysely/types/public/Event";
-import { PubsId } from "~/kysely/types/public/Pubs";
-import { StagesId } from "~/kysely/types/public/Stages";
+import type Event from "~/kysely/types/public/Event";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
+import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
+import {
+	runInstancesForEvent, // scheduleActionInstances
+} from "~/actions/api/serverActions";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
@@ -103,7 +106,7 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	unscheduleEmail: async ({ headers, params }) => {
 		checkAuthentication(headers.authorization);
 		const jobs = await getJobsClient();
-		await jobs.unscheduleEmail(params.key);
+		await jobs.unscheduleJob(params.key);
 		return {
 			status: 200,
 			body: {
@@ -175,6 +178,21 @@ const internalRouter = createNextRoute(api.internal, {
 		return {
 			status: 200,
 			body: actionRunResults,
+		};
+	},
+	scheduleAction: async ({ headers, params, body }) => {
+		checkAuthentication(headers.authorization);
+		const { pubId } = body;
+		const { stageId } = params;
+
+		const actionScheduleResults = await scheduleActionInstances({
+			pubId: pubId as PubsId,
+			stageId: stageId as StagesId,
+		});
+
+		return {
+			status: 200,
+			body: actionScheduleResults,
 		};
 	},
 });

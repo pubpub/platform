@@ -1,6 +1,7 @@
 // shared actions between server and client
 
 import type Event from "~/kysely/types/public/Event";
+import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
 import * as email from "../email/action";
 import * as log from "../log/action";
 import * as move from "../move/action";
@@ -21,6 +22,16 @@ export const getActionByName = (name: keyof typeof actions) => {
 
 export const getActionNames = () => {
 	return Object.keys(actions) as (keyof typeof actions)[];
+};
+
+export const rules = {
+	[pubInStageForDuration.event]: pubInStageForDuration,
+	[pubEnteredStage.event]: pubEnteredStage,
+	[pubLeftStage.event]: pubLeftStage,
+} as const;
+
+export const getRuleByName = (name: keyof typeof rules) => {
+	return rules[name];
 };
 
 const humanReadableEvents: Record<Event, string> = {

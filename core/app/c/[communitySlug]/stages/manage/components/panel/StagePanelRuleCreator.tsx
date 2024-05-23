@@ -16,20 +16,22 @@ import {
 	DialogTrigger,
 } from "ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
+import type { Rules } from "~/actions/_lib/rules";
 import type Action from "~/kysely/types/public/Action";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import { actions, humanReadableEvent } from "~/actions/api";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api";
 import Event from "~/kysely/types/public/Event";
 import { useServerAction } from "~/lib/serverActions";
+import AutoFormObject from "../../../../../../../../packages/ui/src/auto-form/fields/object";
 import { addRule } from "../../actions";
 
 type Props = {
 	// onAdd: (event: Event, actionInstanceId: ActionInstancesId) => Promise<unknown>;
 	actionInstances: ActionInstances[];
-	communityId: string;
+	communityId: CommunitiesId;
 	rules: {
 		id: string;
 		event: Event;
@@ -39,25 +41,41 @@ type Props = {
 	}[];
 };
 
-const schema = z.object({
-	event: z.nativeEnum(Event),
-	actionInstanceId: z.string(),
-	additionalConfiguration: z
-		.object({
-			duration: z.number(),
-			interval: z.enum(["hour", "day", "week", "month"]),
-		})
-		.optional(),
-});
+const schema = z.discriminatedUnion("event", [
+	z.object({
+		event: z.literal(Event.pubEnteredStage),
+		actionInstanceId: z.string().uuid(),
+	}),
+	z.object({
+		event: z.literal(Event.pubLeftStage),
+		actionInstanceId: z.string().uuid(),
+	}),
+	...Object.values(rules)
+		.filter(
+			(rule): rule is Exclude<Rules, { event: Event.pubEnteredStage | Event.pubLeftStage }> =>
+				rule.event !== Event.pubEnteredStage && rule.event !== Event.pubLeftStage
+		)
+		.map((rule) =>
+			z.object({
+				event: z.literal(rule.event),
+				actionInstanceId: z.string().uuid(),
+				additionalConfiguration: rule.additionalConfig
+					? rule.additionalConfig
+					: z.null().optional(),
+			})
+		),
+]);
+
+export type CreateRuleSchema = z.infer<typeof schema>;
 
 export const StagePanelRuleCreator = (props: Props) => {
 	// const runOnAdd = useServerAction(props.onAdd);
 	const runAddRule = useServerAction(addRule);
 	const [isOpen, setIsOpen] = useState(false);
 	const onSubmit = useCallback(
-		async ({ event, actionInstanceId }: z.infer<typeof schema>) => {
+		async (data: CreateRuleSchema) => {
 			setIsOpen(false);
-			runAddRule(event, actionInstanceId as ActionInstancesId, props.communityId);
+			runAddRule({ data, communityId: props.communityId });
 			// runOnAdd(event, actionInstanceId as ActionInstancesId);
 		},
 		[props.communityId] // [props.onAdd, runOnAdd]
@@ -79,6 +97,8 @@ export const StagePanelRuleCreator = (props: Props) => {
 		.filter((rule) => rule.actionInstanceId === selectedAction)
 		.map((rule) => rule.event);
 	const allowedEvents = Object.values(Event).filter((event) => !disallowedEvents.includes(event));
+
+	const rule = getRuleByName(event);
 
 	return (
 		<div className="space-y-2 py-2">
@@ -174,55 +194,17 @@ export const StagePanelRuleCreator = (props: Props) => {
 										</FormItem>
 									)}
 								/>
-								{event === Event.pubInStageForDuration && (
-									<FormField
-										control={form.control}
+								{rule?.additionalConfig && (
+									<AutoFormObject
+										// @ts-expect-error FIXME: this fails because AutoFormObject
+										// expects the schema for `form` to be the same as the one for
+										// `schema`.
+										// Could be fixed by changing AutoFormObject to look at the schema of `form` at `path` for
+										// the schema at `schema`.
+										form={form}
+										path={["additionalConfiguration"]}
 										name="additionalConfiguration"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Additional Config</FormLabel>
-												<div className="flex flex-row items-center gap-x-2">
-													<Input
-														type="number"
-														onChange={(val) =>
-															field.onChange({
-																...field.value,
-																duration: val.target.valueAsNumber,
-															})
-														}
-														defaultValue={5}
-													/>
-													<Select
-														onValueChange={(val) =>
-															field.onChange({
-																...field.value,
-																interval: val,
-															})
-														}
-														defaultValue={"day"}
-													>
-														<SelectTrigger>
-															<SelectValue placeholder="days" />
-														</SelectTrigger>
-														<SelectContent>
-															{["hour", "day", "week", "month"].map(
-																(interval) => (
-																	<SelectItem
-																		key={interval}
-																		value={interval}
-																		className="hover:bg-gray-100"
-																	>
-																		{interval}
-																		{"s "}
-																	</SelectItem>
-																)
-															)}
-														</SelectContent>
-													</Select>
-												</div>
-												<FormMessage />
-											</FormItem>
-										)}
+										schema={rule.additionalConfig}
 									/>
 								)}
 							</div>

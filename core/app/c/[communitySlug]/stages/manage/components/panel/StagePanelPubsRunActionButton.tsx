@@ -14,7 +14,7 @@ import { toast } from "ui/use-toast";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
-import { runActionInstance } from "~/actions/api/server";
+import { runActionInstance } from "~/actions/api/serverActions";
 import { useServerAction } from "~/lib/serverActions";
 
 export const StagePanelPubsRunActionButton = ({

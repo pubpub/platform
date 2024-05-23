@@ -56,7 +56,7 @@ const _runActionInstance = async ({
 	}
 
 	if (actionInstanceResult.status === "rejected") {
-		logger.debug({ msg: actionInstanceResult.reason });
+		logger.error({ msg: actionInstanceResult.reason });
 		return {
 			error: "Action instance not found",
 			cause: actionInstanceResult.reason,
@@ -105,6 +105,7 @@ const _runActionInstance = async ({
 	});
 
 	if (values.error) {
+		logger.error(values.error);
 		return {
 			error: values.error,
 		};
@@ -121,7 +122,7 @@ const _runActionInstance = async ({
 			stageId: actionInstance.stageId,
 		});
 
-		revalidateTag(`community-stages_${pub.communityId}`);
+		// revalidateTag(`community-stages_${pub.communityId}`);
 
 		return result;
 	} catch (error) {

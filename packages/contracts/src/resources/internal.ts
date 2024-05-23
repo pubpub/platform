@@ -5,6 +5,30 @@ const contract = initContract();
 
 export const internalApi = contract.router(
 	{
+		scheduleAction: {
+			method: "POST",
+			path: "/actions/:stageId/schedule",
+			summary: "Schedule an action to run",
+			description: "Schedule an action to run on a Pub in a stage to run at a later time.",
+			pathParams: z.object({
+				stageId: z.string(),
+			}),
+			body: z.object({
+				pubId: z.string(),
+			}),
+			responses: {
+				200: z
+					.array(
+						z.object({
+							actionInstanceName: z.string(),
+							actionInstanceId: z.string(),
+							runAt: z.string(),
+							result: z.any(),
+						})
+					)
+					.optional(),
+			},
+		},
 		triggerAction: {
 			method: "POST",
 			path: "/actions/:stageId/trigger",
@@ -15,7 +39,7 @@ export const internalApi = contract.router(
 				stageId: z.string(),
 			}),
 			body: z.object({
-				event: z.enum(["pubLeftStage", "pubEnteredStage"]),
+				event: z.enum(["pubLeftStage", "pubEnteredStage", "pubInStageForDuration"]),
 				pubId: z.string(),
 			}),
 			responses: {

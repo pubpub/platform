@@ -12,8 +12,10 @@ import type { RulesId } from "~/kysely/types/public/Rules";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
+import { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
 
 async function deleteStages(stageIds: string[]) {
 	await prisma.stage.deleteMany({
@@ -236,24 +238,31 @@ export const deleteAction = defineServerAction(async function deleteAction(
 	}
 });
 
-export const addRule = defineServerAction(async function addRule(
-	event: Event,
-	actionInstanceId: ActionInstancesId,
-	communityId: string
-) {
+export const addRule = defineServerAction(async function addRule({
+	data,
+	communityId,
+}: {
+	data: CreateRuleSchema;
+	communityId: CommunitiesId;
+}) {
 	try {
 		await db
 			.insertInto("rules")
-			.values({ action_instance_id: actionInstanceId, event })
+			.values({
+				action_instance_id: data.actionInstanceId as ActionInstancesId,
+				event: data.event,
+				config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
+			})
+
 			.executeTakeFirstOrThrow();
 	} catch (error) {
 		logger.error(error);
 		if (error.message?.includes("unique constraint")) {
 			return {
 				title: "Rule already exists",
-				error: `A rule for '${humanReadableEvent(event)}' and this action already exists. Please add another action
+				error: `A rule for '${humanReadableEvent(data.event)}' and this action already exists. Please add another action
 						of the same type to this stage in order to have the same action trigger
-						multiple times for '${humanReadableEvent(event)}'.`,
+						multiple times for '${humanReadableEvent(data.event)}'.`,
 				cause: error,
 			};
 		}
