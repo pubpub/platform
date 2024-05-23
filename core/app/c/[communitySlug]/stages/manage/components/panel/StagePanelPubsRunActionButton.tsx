@@ -14,7 +14,7 @@ import { toast } from "ui/use-toast";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
-import { runActionInstanceServerAction } from "~/actions/api/server";
+import { runActionInstance } from "~/actions/api/serverAction";
 import { useServerAction } from "~/lib/serverActions";
 
 export const StagePanelPubsRunActionButton = ({
@@ -24,7 +24,7 @@ export const StagePanelPubsRunActionButton = ({
 	actionInstance: ActionInstances;
 	pub: Pub;
 }) => {
-	const runAction = useServerAction(runActionInstanceServerAction);
+	const runAction = useServerAction(runActionInstance);
 
 	const [isPending, startTransition] = useTransition();
 

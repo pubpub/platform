@@ -1,5 +1,5 @@
 import { Button } from "ui/button";
-import { Menu } from "ui/icon";
+import { Activity, Menu } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { CommunityData } from "./layout";
@@ -47,18 +47,13 @@ const Links = ({
 					icon={<img src="/icons/members.svg" alt="" />}
 				/>
 			)}
-
-			{/* <NavLink
-			href={`${prefix}/search`}
-			text={"Search"}
-			icon={<img src="/icons/search.svg" />}
-		/>
-		<NavLink
-			href={`${prefix}/`}
-			text={"Dashboard"}
-			icon={<img src="/icons/dashboard.svg" />}
-			count={8}
-		/> */}
+			{isAdmin && (
+				<NavLink
+					href={`${prefix}/activity/actions`}
+					text="Activity"
+					icon={<Activity className="w-4" />}
+				/>
+			)}
 		</>
 	);
 };

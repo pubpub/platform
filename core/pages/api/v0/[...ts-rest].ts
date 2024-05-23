@@ -11,7 +11,6 @@ import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
 	_getPubType,
-	BadRequestError,
 	createPub,
 	deletePub,
 	generateSignedAssetUploadUrl,
@@ -19,7 +18,6 @@ import {
 	getIntegrationInstanceState,
 	getMembers,
 	getPub,
-	getPubType,
 	getSuggestedMembers,
 	setIntegrationInstanceConfig,
 	setIntegrationInstanceState,

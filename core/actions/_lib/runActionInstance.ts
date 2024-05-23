@@ -97,8 +97,6 @@ const _runActionInstance = async (
 			stageId: actionInstance.stageId,
 		});
 
-		revalidateTag(`community-stages_${pub.communityId}`);
-
 		return result;
 	} catch (error) {
 		captureException(error);
@@ -160,8 +158,6 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 			event: "userId" in args ? undefined : args.event,
 		})
 		.execute();
-
-	revalidateTag(`action_runs_${pubResult.value.communityId}`);
 
 	return result;
 }

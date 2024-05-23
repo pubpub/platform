@@ -20,7 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "u
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
-	searchBy: string;
+	searchBy?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -51,20 +51,22 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<div>
-			<div className="flex flex-col items-start gap-y-2 py-4">
-				<Label htmlFor="email-filter" className="flex items-center gap-x-1">
-					<Search className="h-4 w-4" /> Search by {searchBy}
-				</Label>
-				<Input
-					name={`${searchBy}-filter`}
-					placeholder={`Search table by ${searchBy}`}
-					value={(table.getColumn(`${searchBy}`)?.getFilterValue() as string) ?? ""}
-					onChange={(event) =>
-						table.getColumn(`${searchBy}`)?.setFilterValue(event.target.value)
-					}
-					className="max-w-sm"
-				/>
-			</div>
+			{searchBy && (
+				<div className="flex flex-col items-start gap-y-2 py-4">
+					<Label htmlFor="email-filter" className="flex items-center gap-x-1">
+						<Search className="h-4 w-4" /> Search by {searchBy}
+					</Label>
+					<Input
+						name={`${searchBy}-filter`}
+						placeholder={`Search table by ${searchBy}`}
+						value={(table.getColumn(`${searchBy}`)?.getFilterValue() as string) ?? ""}
+						onChange={(event) =>
+							table.getColumn(`${searchBy}`)?.setFilterValue(event.target.value)
+						}
+						className="max-w-sm"
+					/>
+				</div>
+			)}
 			<div className="mb-2 rounded-md border">
 				<Table>
 					<TableHeader>

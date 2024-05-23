@@ -13,13 +13,9 @@ import { ActionRun } from "./getActionRunsTableColumns";
 
 export default async function Page({
 	params: { communitySlug },
-	searchParams,
 }: {
 	params: {
 		communitySlug: string;
-	};
-	searchParams: {
-		page?: string;
 	};
 }) {
 	const community = await findCommunityBySlug(communitySlug);
@@ -37,8 +33,6 @@ export default async function Page({
 		return null;
 	}
 
-	const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
-	const limit = 20;
 	const actionRuns = (await unstable_cache(
 		() =>
 			db
@@ -46,7 +40,7 @@ export default async function Page({
 				.where("stages.community_id", "=", community.id)
 				.innerJoin("action_instances", "stages.id", "action_instances.stage_id")
 				.innerJoin("action_runs", "action_instances.id", "action_runs.action_instance_id")
-				.innerJoin("users", "action_runs.user_id", "users.id")
+				.leftJoin("users", "action_runs.user_id", "users.id")
 				.select((eb) => [
 					"action_runs.id",
 					"action_runs.config",
@@ -81,14 +75,17 @@ export default async function Page({
 					).as("user"),
 				])
 				.orderBy("action_runs.created_at", "desc")
-				.limit(limit)
-				.offset(page * limit - limit)
 				.execute(),
 		[community.id],
-		{ tags: [`action_runs_${community.id}`] }
+		{ tags: [`community-action-runs_${community.id}`] }
 	)()) as ActionRun[];
 
-	logger.info("Action runs", actionRuns);
-
-	return <ActionRunsTable actionRuns={actionRuns} />;
+	return (
+		<>
+			<div className="mb-16 flex items-center justify-between">
+				<h1 className="text-xl font-bold">Action Activity</h1>
+			</div>
+			<ActionRunsTable actionRuns={actionRuns} />
+		</>
+	);
 }
