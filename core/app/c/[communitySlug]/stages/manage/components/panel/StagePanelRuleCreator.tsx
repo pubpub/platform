@@ -142,7 +142,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 										<FormItem>
 											<FormLabel></FormLabel>
 
-											{allowedEvents.length > 1 ? (
+											{allowedEvents.length > 0 ? (
 												<>
 													<Select
 														onValueChange={field.onChange}
