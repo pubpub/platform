@@ -3,7 +3,7 @@
 
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
-import { type RuleConfigs } from "../../../actions/types";
+import { type RuleConfigs } from "~/actions/types";
 import { type ActionInstancesId } from "./ActionInstances";
 import { type default as Event } from "./Event";
 
