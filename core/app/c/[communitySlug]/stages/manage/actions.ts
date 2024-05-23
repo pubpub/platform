@@ -9,6 +9,7 @@ import { logger } from "logger";
 import type Action from "~/kysely/types/public/Action";
 import type Event from "~/kysely/types/public/Event";
 import type { RulesId } from "~/kysely/types/public/Rules";
+import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -247,6 +248,16 @@ export const addRule = defineServerAction(async function addRule(
 			.executeTakeFirstOrThrow();
 	} catch (error) {
 		logger.error(error);
+		if (error.message?.includes("unique constraint")) {
+			return {
+				title: "Rule already exists",
+				error: `A rule for '${humanReadableEvent(event)}' and this action already exists. Please add another action
+						of the same type to this stage in order to have the same action trigger
+						multiple times for '${humanReadableEvent(event)}'.`,
+				cause: error,
+			};
+		}
+
 		return {
 			error: "Failed to add rule",
 			cause: error,

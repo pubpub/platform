@@ -23,29 +23,13 @@ export const getActionNames = () => {
 	return Object.keys(actions) as (keyof typeof actions)[];
 };
 
-const humanReadableEvents = {
+const humanReadableEvents: Record<Event, string> = {
 	pubEnteredStage: "a pub enters this stage",
 	pubLeftStage: "a pub leaves this stage",
-	pubInStageForDuration: ({
-		duration,
-		interval,
-	}: {
-		duration: number;
-		interval: "hour" | "day" | "week" | "month";
-	}) => `a pub stays in this stage for ${duration} ${duration === 1 ? interval : interval + "s"}`,
-} as const satisfies Record<Event, string | ((ruleConfig: Record<string, any>) => string)>;
-
-export const humanReadableEvent = (event: Event, ruleConfig?: Record<string, any>) => {
-	const humanReadableEvent = humanReadableEvents[event];
-	if (typeof humanReadableEvent === "string") {
-		return humanReadableEvent;
-	}
-
-	return humanReadableEvent(ruleConfig);
+	pubInStageForDuration: "a pub stays in this stage for ...",
 };
 
-export const serializeRule = (
-	event: Event,
-	instanceName: string,
-	ruleConfig?: Record<string, any>
-) => `${instanceName} will run when ${humanReadableEvent(event, ruleConfig)}`;
+export const humanReadableEvent = (event: Event) => humanReadableEvents[event];
+
+export const serializeRule = (event: Event, instanceName: string) =>
+	`${instanceName} will run when ${humanReadableEvent(event)}`;
