@@ -363,4 +363,5 @@ model Rule {
 enum Event {
   pubEnteredStage
   pubLeftStage
+  pubInStageForDuration
 }
