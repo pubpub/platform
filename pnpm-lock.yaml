@@ -340,9 +340,6 @@ importers:
       prisma:
         specifier: ^5.2.0
         version: 5.2.0
-      prisma-json-types-generator:
-        specifier: ^3.0.4
-        version: 3.0.4(prisma@5.2.0)(typescript@5.4.2)
       supabase:
         specifier: ^1.68.6
         version: 1.68.6
@@ -5319,10 +5316,6 @@ packages:
     resolution: {integrity: sha512-iq56qBZuFfX3fCxoxT8gBX33lQzomBU0qIUaEj1RebsKVz1ob/BVH1XSBwwwvRVtZEV1b7Fxx2eVu34Ge/mg3w==}
     dev: true
 
-  /@prisma/debug@5.9.1:
-    resolution: {integrity: sha512-yAHFSFCg8KVoL0oRUno3m60GAjsUKYUDkQ+9BA2X2JfVR3kRVSJFc/GpQ2fSORi4pSHZR9orfM4UC9OVXIFFTA==}
-    dev: true
-
   /@prisma/engines-version@5.14.0-25.e9771e62de70f79a5e1c604a2d7c8e2a0a874b48:
     resolution: {integrity: sha512-ip6pNkRo1UxWv+6toxNcYvItNYaqQjXdFNGJ+Nuk2eYtRoEdoF13wxo7/jsClJFFenMPVNVqXQDV0oveXnR1cA==}
     dev: true
@@ -5357,12 +5350,6 @@ packages:
     resolution: {integrity: sha512-xVc71cmTnPZ0lnSs4FAY6Ta72vFJ3webrQwKMQ2ujr6hDG1VPIEf820T1TOS3ZZQd/OKigNKXnq3co8biz9/qw==}
     dependencies:
       '@prisma/debug': 5.14.0
-    dev: true
-
-  /@prisma/generator-helper@5.9.1:
-    resolution: {integrity: sha512-WMdEUPpPYxUGruRQM6e6IVTWXFjt1hHdF/m2TO7pWxhPo7/ZeoTOF9fH8JsvVSV78DYLOQkx9osjFLXZu447Kw==}
-    dependencies:
-      '@prisma/debug': 5.9.1
     dev: true
 
   /@prisma/get-platform@5.14.0:
@@ -15896,20 +15883,6 @@ packages:
     dependencies:
       react: 18.2.0
     dev: false
-
-  /prisma-json-types-generator@3.0.4(prisma@5.2.0)(typescript@5.4.2):
-    resolution: {integrity: sha512-W53OpjBdGZxCsYv7MlUX69d7TPA9lEsQbDf9ddF0J93FX5EvaIRDMexdFPe0KTxiuquGvZTDJgeNXb3gIqEhJw==}
-    engines: {node: '>=14.0'}
-    hasBin: true
-    peerDependencies:
-      prisma: ^5.1
-      typescript: ^5.1
-    dependencies:
-      '@prisma/generator-helper': 5.9.1
-      prisma: 5.2.0
-      tslib: 2.6.2
-      typescript: 5.4.2
-    dev: true
 
   /prisma@5.2.0:
     resolution: {integrity: sha512-FfFlpjVCkZwrqxDnP4smlNYSH1so+CbfjgdpioFzGGqlQAEm6VHAYSzV7jJgC3ebtY9dNOhDMS2+4/1DDSM7bQ==}

@@ -11,14 +11,6 @@ generator client {
   previewFeatures = ["fullTextSearch"]
 }
 
-/// Always after the prisma-client-js generator
-generator json {
-  provider = "prisma-json-types-generator"
-  // namespace = "PrismaJson"
-  // clientOutput = "<finds it automatically>"
-  // (./ -> relative to schema, or an importable path to require() it)
-}
-
 generator comments {
   provider = "tsx prisma/comment-generator.ts"
 }
