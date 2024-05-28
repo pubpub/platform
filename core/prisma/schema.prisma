@@ -12,7 +12,7 @@ generator client {
 }
 
 generator comments {
-  provider = "tsx prisma/comment-generator.ts"
+  provider = "pnpm exec tsx prisma/comment-generator.ts"
 }
 
 model User {
