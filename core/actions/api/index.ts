@@ -1,5 +1,7 @@
 // shared actions between server and client
 
+import type * as z from "zod";
+
 import type Event from "~/kysely/types/public/Event";
 import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
 import * as email from "../email/action";
@@ -30,17 +32,28 @@ export const rules = {
 	[pubLeftStage.event]: pubLeftStage,
 } as const;
 
-export const getRuleByName = (name: keyof typeof rules) => {
+export const getRuleByName = <T extends Event>(name: T) => {
 	return rules[name];
 };
 
-const humanReadableEvents: Record<Event, string> = {
-	pubEnteredStage: "a pub enters this stage",
-	pubLeftStage: "a pub leaves this stage",
-	pubInStageForDuration: "a pub stays in this stage for ...",
+export const humanReadableEvent = <T extends Event>(
+	event: T,
+	config?: (typeof rules)[T]["additionalConfig"] extends undefined
+		? never
+		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>
+) => {
+	const rule = getRuleByName(event);
+	if (config && rule.additionalConfig) {
+		return rule.display.withConfig(config);
+	}
+
+	return rule.display.base;
 };
 
-export const humanReadableEvent = (event: Event) => humanReadableEvents[event];
-
-export const serializeRule = (event: Event, instanceName: string) =>
-	`${instanceName} will run when ${humanReadableEvent(event)}`;
+export const serializeRule = <T extends Event>(
+	event: T,
+	instanceName: string,
+	config?: (typeof rules)[T]["additionalConfig"] extends undefined
+		? never
+		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>
+) => `${instanceName} will run when ${humanReadableEvent(event, config)}`;

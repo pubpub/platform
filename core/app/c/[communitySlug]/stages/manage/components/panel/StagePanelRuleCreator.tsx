@@ -204,6 +204,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 										form={form}
 										path={["additionalConfiguration"]}
 										name="additionalConfiguration"
+										// @ts-expect-error FIXME: rule.additionalConfig is a typed as a ZodType, not a ZodObject, even though it is.
 										schema={rule.additionalConfig}
 									/>
 								)}

@@ -87,6 +87,7 @@ export const getStageRules = cache(async (stageId: string) => {
 		.select([
 			"rules.id",
 			"rules.event",
+			"rules.config",
 			"action_instances.name as instanceName",
 			"action_instances.action",
 			"action_instance_id as actionInstanceId",
