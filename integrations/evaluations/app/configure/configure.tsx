@@ -64,13 +64,11 @@ const defaultEmailTemplate = {
 	message: "Please reach out if you have any questions.",
 };
 
-const defaultFormValues: InstanceConfig = {
+const defaultFormValues: Omit<InstanceConfig, "deadlineUnit" | "deadlineLength"> = {
 	pubTypeId: "",
 	evaluatorFieldSlug: "",
 	titleFieldSlug: "",
 	emailTemplate: defaultEmailTemplate,
-	deadlineLength: 35,
-	deadlineUnit: "days",
 };
 
 export function Configure(props: Props) {

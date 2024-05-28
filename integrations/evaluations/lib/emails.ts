@@ -10,7 +10,12 @@ import {
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
-
+const FIRST_BONUS_EMAIL_NOTIFICATION = 14;
+const FINAL_BONUS_EMAIL_NOTIFICATION = 21;
+const FIRST_REMINDER_EMAIL_NOTIFICATION = 28;
+const FINAL_REMINDER_EMAIL_NOTIFICATION = 1;
+const FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION = 6;
+const FINAL_NOTIFICATION = 8;
 // Use the submission pub's assigned user if available, otherwise use the
 // invitor's (person who clicked "Invite") name.
 const evaluationManagerName =
@@ -337,7 +342,7 @@ ${notificationFooter}`,
 // emails sent to the evaluator
 /**
  *
- * Sends an email to the evaluator with the invitation to evaluate the pub.
+ * Immediately sends an email to the evaluator with the invitation to evaluate the pub.
  * @param instanceId
  * @param pubId
  * @param evaluator
@@ -372,7 +377,7 @@ export const sendInviteEmail = async (
 };
 
 /**
- * Schedules an email to the evaluator as a reminder to accept the invitation to evaluate the pub.
+ * Schedules an email to the evaluator as a reminder to accept the invitation to evaluate the pub ten days from the acceptance date.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -432,7 +437,7 @@ export const unscheduleInvitationReminderEmail = (
 };
 
 /**
- * Sends an email to the evaluator to inform them that their invitation to evaluate the pub has been accepted.
+ * Immediately sends an email to the evaluator to inform them that their invitation to evaluate the pub has been accepted.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -484,7 +489,7 @@ export const sendAcceptedEmail = async (
 };
 
 /**
- * Schedules a reminder email to an evaluator for prompt evaluation bonus.
+ * Schedules a reminder to submit an evaluation for the prompt evaluation bonus 2 weeks after the acceptance date.
  * @param instanceId - The ID of the instance.
  * @param instanceConfig - The configuration of the instance.
  * @param pubId - The ID of the publication.
@@ -498,7 +503,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
-	const reminderDeadline = new Date(deadline.getTime() - 21 * (1000 * 60 * 60 * 24));
+	const reminderDeadline = new Date(evaluator.acceptedAt + FIRST_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
 	const jobKey = makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
 	const runAt = reminderDeadline;
 
@@ -541,7 +546,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 };
 
 /**
- * Schedules a final reminder email to an evaluator for prompt evaluation bonus.
+ * Schedules a final reminder email to an evaluator for prompt evaluation bonus 3 weeks after the acceptance date.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -555,7 +560,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
-	const reminderDeadline = new Date(deadline.getTime() - 14 * (1000 * 60 * 60 * 24));
+	const reminderDeadline = new Date(deadline.getTime() + FINAL_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
 	const jobKey = makeFinalPromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
 	const runAt = reminderDeadline;
 
@@ -595,7 +600,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 };
 
 /**
- * Schedules a reminder email to an evaluator to submit their evaluation.
+ * Schedules a reminder email to an evaluator to submit their evaluation 4 weeks after the acceptance date.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -610,7 +615,7 @@ export const scheduleEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() - 7 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(deadline.getTime() + FIRST_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
@@ -650,7 +655,7 @@ export const scheduleEvaluationReminderEmail = async (
 };
 
 /**
- * Schedules a final reminder email to an evaluator to submit their evaluation.
+ * Schedules a final reminder email to an evaluator to submit their evaluation one day before the deadline.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -665,7 +670,7 @@ export const scheduleFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() - 1 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(deadline.getTime() - FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
@@ -701,7 +706,7 @@ export const scheduleFinalEvaluationReminderEmail = async (
 };
 
 /**
- * Schedules a follow-up to evaluation reminder email to an evaluator.
+ * Schedules a follow-up to evaluation reminder email to an evaluator 6 days after the deadline .
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -716,7 +721,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFollowUpToFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() + 6 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
@@ -731,7 +736,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}" is overdue. We are now planning to reassign the evaluation to another evaluator.</p>
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
-			deadline.getTime() + 7 * (1000 * 60 * 60 * 24)
+			deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
@@ -755,7 +760,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 };
 
 /**
- * Schedules a notice of no submit email to an evaluator.
+ * Schedules a notice of no submit email to an evaluator 8 days after the deadline.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -770,7 +775,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeNoticeOfNoSubmitJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() + 8 * (1000 * 60 * 60 * 24));
+	const runAt = new Date(deadline.getTime() + FINAL_NOTIFICATION * (1000 * 60 * 60 * 24));
 
 	return client.scheduleEmail(
 		instanceId,
