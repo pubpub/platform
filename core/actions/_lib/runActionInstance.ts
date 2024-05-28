@@ -72,6 +72,26 @@ const _runActionInstance = async ({
 		};
 	}
 
+	const pubInStage = await db
+		.selectFrom("PubsInStages")
+		.where("pubId", "=", pubId)
+		.where("stageId", "=", actionInstance.stageId)
+		.selectAll()
+		.executeTakeFirst();
+
+	if (!pubInStage) {
+		logger.warn({
+			msg: `Pub ${pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
+			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+			pubId,
+			actionInstanceId,
+		});
+		return {
+			error: `Pub ${pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
+			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+		};
+	}
+
 	logger.info(actionInstance.action);
 	const action = getActionByName(actionInstance.action);
 

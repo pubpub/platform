@@ -192,7 +192,7 @@ const internalRouter = createNextRoute(api.internal, {
 
 		return {
 			status: 200,
-			body: actionScheduleResults,
+			body: actionScheduleResults ?? [],
 		};
 	},
 });

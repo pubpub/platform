@@ -3,19 +3,21 @@
 import type { Action as PrismaAction } from "@prisma/client";
 
 import { revalidateTag } from "next/cache";
+import { captureException } from "@sentry/nextjs";
 
 import { logger } from "logger";
 
+import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
 import type Action from "~/kysely/types/public/Action";
-import type Event from "~/kysely/types/public/Event";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { RulesId } from "~/kysely/types/public/Rules";
+import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
+import Event from "~/kysely/types/public/Event";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
-import { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
 
 async function deleteStages(stageIds: string[]) {
 	await prisma.stage.deleteMany({
@@ -281,7 +283,60 @@ export const deleteRule = defineServerAction(async function deleteRule(
 	communityId: string
 ) {
 	try {
-		await db.deleteFrom("rules").where("id", "=", ruleId).executeTakeFirst();
+		const deletedRule = await db
+			.deleteFrom("rules")
+			.where("id", "=", ruleId)
+			.returningAll()
+			.executeTakeFirst();
+
+		if (!deletedRule) {
+			return {
+				error: "Failed to delete rule",
+				cause: `Rule with id ${ruleId} not found`,
+			};
+		}
+
+		if (deletedRule.event !== Event.pubInStageForDuration) {
+			return;
+		}
+
+		const actionInstance = await db
+			.selectFrom("action_instances")
+			.select(["id", "action", "stage_id"])
+			.where("id", "=", deletedRule.action_instance_id)
+			.executeTakeFirst();
+
+		if (!actionInstance) {
+			// something is wrong here
+			captureException(
+				new Error(
+					`Action instance not found for rule ${ruleId} while trying to unschedule jobs`
+				)
+			);
+			return;
+		}
+
+		const pubsInStage = await db
+			.selectFrom("PubsInStages")
+			.select(["pubId", "stageId"])
+			.where("stageId", "=", actionInstance.stage_id)
+			.execute();
+
+		if (!pubsInStage) {
+			// we don't need to unschedule any jobs, as there are no pubs this rule could have been applied to
+			return;
+		}
+
+		logger.debug(`Unscheduling jobs for rule ${ruleId}`);
+		await Promise.all(
+			pubsInStage.map(async (pubInStage) =>
+				unscheduleAction({
+					actionInstanceId: actionInstance.id,
+					pubId: pubInStage.pubId,
+					stageId: pubInStage.stageId,
+				})
+			)
+		);
 	} catch (error) {
 		logger.error(error);
 		return {

@@ -7,13 +7,25 @@ import { logger } from "logger";
 
 import type { ClientExceptionOptions } from "../serverActions";
 import { env } from "../env/env.mjs";
-import { ClientException } from "../serverActions";
 
 import "date-fns";
 
 import type { Interval } from "~/actions/_lib/rules";
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import Event from "~/kysely/types/public/Event";
 import { addDuration } from "../dates";
+
+export const getScheduledActionJobKey = ({
+	stageId,
+	actionInstanceId,
+	pubId,
+}: {
+	stageId: StagesId;
+	actionInstanceId: ActionInstancesId;
+	pubId: PubsId;
+}) => `scheduled-action-${stageId}-${actionInstanceId}-${pubId}`;
 
 export type JobsClient = {
 	scheduleEmail(
@@ -23,11 +35,11 @@ export type JobsClient = {
 	): Promise<Job>;
 	unscheduleJob(jobKey: string): Promise<void>;
 	scheduleAction(options: {
-		actionInstanceId: string;
-		stageId: string;
+		actionInstanceId: ActionInstancesId;
+		stageId: StagesId;
 		duration: number;
 		interval: Interval;
-		pubId: string;
+		pubId: PubsId;
 	}): Promise<Job | ClientExceptionOptions>;
 };
 
@@ -57,13 +69,19 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 			return job;
 		},
 		async unscheduleJob(jobKey: string) {
-			logger.info({ msg: `Unscheduling email with key: ${jobKey}`, job: { key: jobKey } });
+			logger.info({ msg: `Unscheduling job with key: ${jobKey}`, job: { key: jobKey } });
 			await workerUtils.withPgClient(async (pg) => {
 				await pg.query(`SELECT graphile_worker.remove_job($1);`, [jobKey]);
+			});
+
+			logger.info({
+				msg: `Successfully unscheduled job with key: ${jobKey}`,
+				job: { key: jobKey },
 			});
 		},
 		async scheduleAction({ actionInstanceId, stageId, duration, interval, pubId }) {
 			const runAt = addDuration({ duration, interval });
+			const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
 
 			logger.info({
 				msg: `Scheduling action with key: ${actionInstanceId} to run at ${runAt}`,
@@ -88,6 +106,8 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					},
 					{
 						runAt,
+						jobKey,
+						jobKeyMode: "replace",
 					}
 				);
 

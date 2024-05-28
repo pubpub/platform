@@ -17,16 +17,14 @@ export const internalApi = contract.router(
 				pubId: z.string(),
 			}),
 			responses: {
-				200: z
-					.array(
-						z.object({
-							actionInstanceName: z.string(),
-							actionInstanceId: z.string(),
-							runAt: z.string(),
-							result: z.any(),
-						})
-					)
-					.optional(),
+				200: z.array(
+					z.object({
+						actionInstanceName: z.string(),
+						actionInstanceId: z.string(),
+						runAt: z.string(),
+						result: z.any(),
+					})
+				),
 			},
 		},
 		triggerAction: {

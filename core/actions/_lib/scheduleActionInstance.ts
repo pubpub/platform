@@ -4,13 +4,14 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import { logger } from "logger";
 
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { Rules } from "~/kysely/types/public/Rules";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
 import Event from "~/kysely/types/public/Event";
 import { addDuration } from "~/lib/dates";
-import { getJobsClient } from "~/lib/server/jobs";
+import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs";
 
 export const scheduleActionInstances = async ({
 	pubId,
@@ -47,8 +48,8 @@ export const scheduleActionInstances = async ({
 		.execute();
 
 	if (!instances.length) {
-		logger.warn({
-			msg: `No action instances found for stage ${stageId}`,
+		logger.debug({
+			msg: `No action instances found for stage ${stageId}. Most likely this is because a Pub is moved into a stage without action instances.`,
 			pubId,
 			stageId,
 			instances,
@@ -93,4 +94,27 @@ export const scheduleActionInstances = async ({
 	);
 
 	return results;
+};
+
+export const unscheduleAction = async ({
+	actionInstanceId,
+	stageId,
+	pubId,
+}: {
+	actionInstanceId: ActionInstancesId;
+	stageId: StagesId;
+	pubId: PubsId;
+}) => {
+	const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
+	try {
+		const jobsClient = await getJobsClient();
+		await jobsClient.unscheduleJob(jobKey);
+		logger.debug({ msg: "Unscheduled action", actionInstanceId, stageId, pubId });
+	} catch (error) {
+		logger.error(error);
+		return {
+			error: "Failed to unschedule action",
+			cause: error,
+		};
+	}
 };

@@ -96,6 +96,7 @@ const makeTaskList = (client: Client<{}>) => {
 		if ("operation" in payload && payload.operation === "INSERT") {
 			const { stageId, pubId } = payload.new;
 
+			eventLogger.info({ msg: "Attempting to schedule action", stageId, pubId });
 			schedulePromise = apiClient.scheduleAction({
 				params: { stageId },
 				body: { pubId },
@@ -143,7 +144,11 @@ const makeTaskList = (client: Client<{}>) => {
 				event,
 				...extra,
 			});
-		} else if (scheduleResult.value !== null) {
+		} else if (
+			scheduleResult.value &&
+			scheduleResult.value.status === 200 &&
+			scheduleResult.value.body?.length > 0
+		) {
 			eventLogger.info({
 				msg: "Action scheduled",
 				results: scheduleResult.value,
