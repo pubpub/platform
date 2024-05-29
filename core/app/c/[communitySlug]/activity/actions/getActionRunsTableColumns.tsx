@@ -101,7 +101,7 @@ export const getActionRunsTableColumns = () =>
 				return (
 					<HoverCard>
 						<HoverCardTrigger className="cursor-default">{badge}</HoverCardTrigger>
-						<HoverCardContent>
+						<HoverCardContent className="overflow-scroll">
 							<pre>
 								<code>{JSON.stringify(row.original.result, null, 2)}</code>
 							</pre>
