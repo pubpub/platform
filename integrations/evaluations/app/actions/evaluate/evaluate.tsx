@@ -113,8 +113,8 @@ export function Evaluate(props: Props) {
 	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
 	const submissionAbstract = pub.values["unjournal:description"] as string;
 	const managersNotes = pub.values["unjournal:managers-notes"] as string;
-	const deadline = getDeadline(props.instanceConfig, props.evaluator);
-
+	const deadline = props.evaluator.deadline!; // if we have an eval page we have a deadline
+	
 	return (
 		<>
 			<div className="prose max-w-none">

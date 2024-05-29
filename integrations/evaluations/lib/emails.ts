@@ -45,16 +45,7 @@ export function calculateDeadline(
 	}
 }
 
-export function makeDeadline(instanceConfig: InstanceConfig, evaluator: EvaluatorWhoAccepted): Date {
-		return calculateDeadline(
-				{
-					deadlineLength: instanceConfig.deadlineLength,
-					deadlineUnit: instanceConfig.deadlineUnit,
-				},
-				new Date(evaluator.acceptedAt)
-			);
-}
-
+// if an evaluator has accepted we do not need to calculate the deadline
 export function getDeadline(instanceConfig: InstanceConfig, evaluator: EvaluatorWhoAccepted): Date {
 	return evaluator.deadline
 		? new Date(evaluator.deadline)
@@ -513,7 +504,9 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
-	const reminderDeadline = new Date(evaluator.acceptedAt + FIRST_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
+	const reminderDeadline = new Date(
+		evaluator.acceptedAt + FIRST_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	);
 	const jobKey = makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
 	const runAt = reminderDeadline;
 
@@ -570,7 +563,9 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
-	const reminderDeadline = new Date(deadline.getTime() + FINAL_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
+	const reminderDeadline = new Date(
+		deadline.getTime() + FINAL_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	);
 	const jobKey = makeFinalPromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
 	const runAt = reminderDeadline;
 
@@ -625,7 +620,9 @@ export const scheduleEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() + FIRST_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
+	const runAt = new Date(
+		deadline.getTime() + FIRST_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	);
 
 	return client.scheduleEmail(
 		instanceId,
@@ -680,7 +677,9 @@ export const scheduleFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() - FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
+	const runAt = new Date(
+		deadline.getTime() - FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	);
 
 	return client.scheduleEmail(
 		instanceId,
@@ -731,7 +730,9 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFollowUpToFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24));
+	const runAt = new Date(
+		deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	);
 
 	return client.scheduleEmail(
 		instanceId,
@@ -746,7 +747,8 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}" is overdue. We are now planning to reassign the evaluation to another evaluator.</p>
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
-			deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+			deadline.getTime() +
+				FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
