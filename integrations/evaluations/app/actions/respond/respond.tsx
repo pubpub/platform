@@ -6,7 +6,7 @@ import { GetPubResponseBody, User } from "@pubpub/sdk";
 import { Button } from "ui/button";
 import { toast } from "ui/use-toast";
 
-import { calculateDeadline } from "~/lib/emails";
+import { calculateDeadline, DAYS_TO_SUBTRACT_FROM_DEADLINE_FOR_BONUS } from "~/lib/emails";
 import { InstanceConfig } from "~/lib/types";
 import { accept, decline } from "./actions";
 
@@ -237,7 +237,7 @@ export const Respond = (props: Props) => {
 						submit the evaluation on our preferred schedule (by{" "}
 						<strong>
 							{new Date(
-								deadline.setDate(deadline.getDate() - 14)
+								deadline.setDate(deadline.getDate() - DAYS_TO_SUBTRACT_FROM_DEADLINE_FOR_BONUS)
 							).toLocaleDateString()}
 						</strong>
 						), you will receive a $100 “prompt evaluation bonus,” in addition to the
@@ -284,7 +284,7 @@ export const Respond = (props: Props) => {
 						, and you submit by{" "}
 						<strong>
 							{new Date(
-								deadline.setDate(deadline.getDate() - 14)
+								deadline.setDate(deadline.getDate() - DAYS_TO_SUBTRACT_FROM_DEADLINE_FOR_BONUS)
 							).toLocaleDateString()}
 						</strong>
 						, you will receive a $100 “prompt evaluation bonus,” in addition to the

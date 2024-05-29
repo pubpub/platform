@@ -1,3 +1,5 @@
+import { DAYS_TO_SUBTRACT_FROM_DEADLINE_FOR_BONUS } from "../emails";
+
 type Props = {
 	deadline: Date;
 	managersNotes: string;
@@ -9,7 +11,7 @@ export const Process = (props: Props) => {
 			<p>
 				Early deadline, to be eligible for $100 prompt evaluation bonus (+$300 base):{" "}
 				{new Date(
-					props.deadline.setDate(props.deadline.getDate() - 14)
+					props.deadline.setDate(props.deadline.getDate() - DAYS_TO_SUBTRACT_FROM_DEADLINE_FOR_BONUS)
 				).toLocaleDateString()}
 			</p>
 			<p>
