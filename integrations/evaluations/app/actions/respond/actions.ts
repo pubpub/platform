@@ -66,6 +66,7 @@ export const accept = async (
 						status: "accepted",
 						acceptedAt: new Date().toString(),
 					};
+					// after this code path is reached we can be sure this it set
 					const deadline = calculateDeadline(
 						instanceConfig,
 						new Date(evaluator.acceptedAt)

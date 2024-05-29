@@ -16,7 +16,6 @@ import { useToast } from "ui/use-toast";
 
 import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
-import { getDeadline } from "~/lib/emails";
 import { EvaluatorWhoAccepted, InstanceConfig } from "~/lib/types";
 import { submit, upload } from "./actions";
 
@@ -114,7 +113,7 @@ export function Evaluate(props: Props) {
 	const submissionAbstract = pub.values["unjournal:description"] as string;
 	const managersNotes = pub.values["unjournal:managers-notes"] as string;
 	const deadline = props.evaluator.deadline!; // if we have an eval page we have a deadline
-	
+
 	return (
 		<>
 			<div className="prose max-w-none">

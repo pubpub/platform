@@ -1,6 +1,7 @@
 import { User } from "@pubpub/sdk";
 
 import { client } from "~/lib/pubpub";
+import { accept } from '../app/actions/respond/actions';
 import {
 	EvaluatorWhoAccepted,
 	EvaluatorWhoEvaluated,
@@ -10,6 +11,7 @@ import {
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
+const FIRST_BONUS_EMAIL_NOTIFICATION = 14;
 const FINAL_BONUS_EMAIL_NOTIFICATION = 21;
 const FIRST_REMINDER_EMAIL_NOTIFICATION = 28;
 const FINAL_REMINDER_EMAIL_NOTIFICATION = 1;
@@ -171,7 +173,7 @@ export const unscheduleNoReplyNotificationEmail = (
 };
 
 /**
- * Schedules an email to the evaluation manager to notify them that an evaluator has not submitted their evaluation.
+ * Schedules an email to the evaluation manager that notifies them an evaluator has not submitted their evaluation. This runs at the deadline.
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -186,8 +188,7 @@ export const scheduleNoSubmitNotificationEmail = async (
 	assignee?: User
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
-	const deadline = getDeadline(instanceConfig, evaluator);
-	const runAt = deadline;
+	const runAt = evaluator.deadline!; // deadline has been set before these are sent
 
 	await client.scheduleEmail(
 		instanceId,
@@ -207,7 +208,7 @@ ${notificationFooter}`,
 				},
 			},
 			extra: {
-				due_at: deadline.toLocaleDateString(),
+				due_at: evaluator.deadline!.toLocaleDateString(),
 				manage_link: `<a href="{{instance.actions.manage}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">Invite Evaluators page</a>`,
 			},
 		},
@@ -452,6 +453,11 @@ export const sendAcceptedEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
+	const acceptanceDate = new Date(evaluator.acceptedAt);
+	const bonusSubmissionDeadline = new Date(
+		acceptanceDate.setDate(acceptanceDate.getDate() + FINAL_BONUS_EMAIL_NOTIFICATION)
+	);
+
 	await client.sendEmail(instanceId, {
 		to: {
 			userId: evaluator.userId,
@@ -462,9 +468,7 @@ export const sendAcceptedEmail = async (
 		<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
-		<p>We strongly encourage evaluators to complete evaluations within three weeks; quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
-			deadline.getTime() + FINAL_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
-		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus,” in addition to the baseline $300 honorarium, as well as other potential evaluator incentives and prizes. After ${new Date(
+		<p>We strongly encourage evaluators to complete evaluations within three weeks; quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(bonusSubmissionDeadline.getTime()).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus,” in addition to the baseline $300 honorarium, as well as other potential evaluator incentives and prizes. After ${new Date(
 			deadline.getTime()
 		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 		<p>If you have any questions, please contact me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
@@ -504,11 +508,12 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	evaluator: EvaluatorWhoAccepted
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
-	const reminderDeadline = new Date(
-		evaluator.acceptedAt + FIRST_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	const acceptanceDate = new Date(evaluator.acceptedAt);
+	const bonusReminder = new Date(
+		acceptanceDate.setDate(acceptanceDate.getDate() + FIRST_BONUS_EMAIL_NOTIFICATION)
 	);
 	const jobKey = makePromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = reminderDeadline;
+	const runAt = bonusReminder;
 
 	return client.scheduleEmail(
 		instanceId,
@@ -522,8 +527,8 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	  <p>Thanks again for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for The Unjournal.</p>
-	  <p>This note is a reminder to submit your evaluation by ${reminderDeadline.toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${new Date(
-			deadline
+	  <p>This note is a reminder to submit your evaluation by ${new Date(bonusReminder.getTime()).toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${new Date(
+			deadline.getTime()
 		).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
@@ -550,6 +555,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 
 /**
  * Schedules a final reminder email to an evaluator for prompt evaluation bonus 3 weeks after the acceptance date.
+ *
  * @param instanceId
  * @param instanceConfig
  * @param pubId
@@ -562,12 +568,12 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const deadline = getDeadline(instanceConfig, evaluator);
-	const reminderDeadline = new Date(
-		deadline.getTime() + FINAL_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	const acceptanceDate = new Date(evaluator.acceptedAt);
+	const finalBonusReminder = new Date(
+		acceptanceDate.setDate(acceptanceDate.getDate() + FINAL_BONUS_EMAIL_NOTIFICATION)
 	);
 	const jobKey = makeFinalPromptEvalBonusReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = reminderDeadline;
+	const runAt = finalBonusReminder;
 
 	return client.scheduleEmail(
 		instanceId,
@@ -580,7 +586,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	  <p>Hi {{user.firstName}},</p>
 	  <p>This is a final reminder to submit your evaluation for "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
-		}"]}}" by the deadline ${reminderDeadline.toLocaleDateString()} to receive the $100 “prompt evaluation bonus.”</p>
+		}"]}}" by the deadline ${new Date(finalBonusReminder.getTime()).toLocaleDateString()} to receive the $100 “prompt evaluation bonus.”</p>
 	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
@@ -620,9 +626,11 @@ export const scheduleEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(
-		deadline.getTime() + FIRST_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+	const acceptanceDate = new Date(evaluator.acceptedAt);
+	const evaluationReminder = new Date(
+		acceptanceDate.setDate(acceptanceDate.getDate() + FIRST_REMINDER_EMAIL_NOTIFICATION)
 	);
+	const runAt = evaluationReminder;
 
 	return client.scheduleEmail(
 		instanceId,
@@ -677,9 +685,10 @@ export const scheduleFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(
+	const finalEvaluationReminder = new Date(
 		deadline.getTime() - FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
 	);
+	const runAt = finalEvaluationReminder;
 
 	return client.scheduleEmail(
 		instanceId,
@@ -730,9 +739,10 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeFollowUpToFinalEvalReminderJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(
+	const followUp = new Date(
 		deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
 	);
+	const runAt = followUp;
 
 	return client.scheduleEmail(
 		instanceId,
@@ -747,8 +757,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}" is overdue. We are now planning to reassign the evaluation to another evaluator.</p>
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
-			deadline.getTime() +
-				FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
+			followUp.getTime()
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
@@ -787,7 +796,8 @@ export const sendNoticeOfNoSubmitEmail = async (
 ) => {
 	const deadline = getDeadline(instanceConfig, evaluator);
 	const jobKey = makeNoticeOfNoSubmitJobKey(instanceId, pubId, evaluator);
-	const runAt = new Date(deadline.getTime() + FINAL_NOTIFICATION * (1000 * 60 * 60 * 24));
+	const finalDate = new Date(deadline.getTime() + FINAL_NOTIFICATION * (1000 * 60 * 60 * 24));
+	const runAt = finalDate;
 
 	return client.scheduleEmail(
 		instanceId,
@@ -802,7 +812,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}", which was due on ${new Date(deadline.getTime()).toLocaleDateString()}.</p>
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
-			deadline.getTime()
+			finalDate.getTime()
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
