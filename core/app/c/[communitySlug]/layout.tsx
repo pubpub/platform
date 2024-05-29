@@ -1,3 +1,4 @@
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 
@@ -28,13 +29,17 @@ export default async function MainLayout({ children, params }: Props) {
 	if (!loginData) {
 		redirect("/login");
 	}
+
 	const community = await getCommunity(params.communitySlug);
 	if (!community) {
 		return null;
 	}
-	const member = await prisma.member.findFirst({
-		where: { userId: loginData.id, communityId: community.id },
-	});
+	const header = headers().get("x-pathname");
+	console.log(header);
+
+	// const member = await prisma.member.findFirst({
+	// 	where: { userId: loginData.id, communityId: community.id },
+	// });
 	// if (!member) {
 	// 	redirect("/settings");
 	// }

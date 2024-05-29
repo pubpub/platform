@@ -1,8 +1,12 @@
 import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Community } from "@prisma/client";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
+import { db } from "~/kysely/database";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { getLoginData } from "~/lib/auth/loginData";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import prisma from "~/prisma/db";
 import { AddMember } from "./AddMember";
 import { AddMemberDialog } from "./AddMemberDialog";
@@ -10,18 +14,50 @@ import { TableMember } from "./getMemberTableColumns";
 import { MemberTable } from "./MemberTable";
 
 const getCachedMembers = async (community: Community) =>
-	await unstable_cache(
-		async () => {
-			const members = await prisma.member.findMany({
-				where: { community: { id: community.id } },
-				include: { user: true },
-			});
+	autoCache(
+		db
+			.selectFrom("members")
+			.select((eb) => [
+				"members.id as id",
+				"canAdmin",
+				"members.community_id as community_id",
+				"created_at as createdAt",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select([
+							"user_id as id",
+							"users.firstName as firstName",
+							"users.lastName as lastName",
+							"users.avatar as avatar",
+							"users.email as email",
+							"users.created_at as createdAt",
+							"users.isSuperAdmin as isSuperAdmin",
+							"users.slug as slug",
+							"users.supabaseId as supabaseId",
+						])
+						.whereRef("users.id", "=", "members.user_id")
+				).as("user"),
+			])
+			.where("community_id", "=", community.id as CommunitiesId),
+		community.id as CommunitiesId,
+		{
+			logid: "hey",
+			log: ["verbose", "datacache", "dedupe"],
+		}
+	);
+// await unstable_cache(
+// 	async () => {
+// 		const members = await prisma.member.findMany({
+// 			where: { community: { id: community.id } },
+// 			include: { user: true },
+// 		});
 
-			return members;
-		},
-		[community.id],
-		{ tags: [`members_${community.id}`] }
-	)();
+// 		return members;
+// 	},
+// 	[community.id],
+// 	{ tags: [`members_${community.id}`] }
+// )();
 
 export default async function Page({
 	params: { communitySlug, add },

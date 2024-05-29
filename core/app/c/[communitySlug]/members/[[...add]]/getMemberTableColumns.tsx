@@ -27,7 +27,7 @@ export type TableMember = {
 	firstName: string;
 	lastName: string | null;
 	admin: boolean;
-	joined: Date;
+	joined: string;
 };
 
 export const getMemberTableColumns = ({ community }: { community: Community }) =>
@@ -99,7 +99,7 @@ export const getMemberTableColumns = ({ community }: { community: Community }) =
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Joined" />,
 			accessorKey: "joined",
 			cell: ({ getValue }) => {
-				return (getValue() as Date).toLocaleDateString();
+				return new Date(getValue() as string).toLocaleDateString();
 			},
 		},
 		{
