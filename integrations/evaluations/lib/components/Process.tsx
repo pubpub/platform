@@ -1,5 +1,3 @@
-import { EvaluatorWhoAccepted } from "../types";
-
 type Props = {
 	deadline: Date;
 	managersNotes: string;
@@ -11,7 +9,7 @@ export const Process = (props: Props) => {
 			<p>
 				Early deadline, to be eligible for $100 prompt evaluation bonus (+$300 base):{" "}
 				{new Date(
-					props.deadline.getTime() + 21 * (1000 * 60 * 60 * 24)
+					props.deadline.setDate(props.deadline.getDate() - 14)
 				).toLocaleDateString()}
 			</p>
 			<p>
