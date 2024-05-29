@@ -386,7 +386,7 @@ model FormInput {
   label    String
   required Boolean
   form     Form     @relation(fields: [formId], references: [id])
-  isSubmit Boolean  @map(name: "is_submit") // TODO: add partial index so only one of these can be true per formId
+  isSubmit Boolean  @map(name: "is_submit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
 
   @@map(name: "form_inputs")
 }

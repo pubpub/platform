@@ -28,3 +28,6 @@ ALTER TABLE "form_inputs" ADD CONSTRAINT "form_inputs_field_id_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "form_inputs" ADD CONSTRAINT "form_inputs_form_id_fkey" FOREIGN KEY ("form_id") REFERENCES "forms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Only allow one is_submit = true column per form_id
+CREATE UNIQUE INDEX form_inputs_is_submit_unique ON "form_inputs" ("form_id") WHERE "is_submit" = true;
