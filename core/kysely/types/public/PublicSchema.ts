@@ -6,6 +6,8 @@ import { type default as ActionInstancesTable } from "./ActionInstances";
 import { type default as ActionMoveTable } from "./ActionMove";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
+import { type default as FormInputsTable } from "./FormInputs";
+import { type default as FormsTable } from "./Forms";
 import { type default as IntegrationInstancesTable } from "./IntegrationInstances";
 import { type default as IntegrationInstanceStateTable } from "./IntegrationInstanceState";
 import { type default as IntegrationInstanceToPubTable } from "./IntegrationInstanceToPub";
@@ -83,4 +85,8 @@ export default interface PublicSchema {
 	PubsInStages: PubsInStagesTable;
 
 	rules: RulesTable;
+
+	forms: FormsTable;
+
+	form_inputs: FormInputsTable;
 }
