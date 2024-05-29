@@ -237,7 +237,7 @@ export const Respond = (props: Props) => {
 						submit the evaluation on our preferred schedule (by{" "}
 						<strong>
 							{new Date(
-								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+								deadline.getTime() + 21 * (1000 * 60 * 60 * 24)
 							).toLocaleDateString()}
 						</strong>
 						), you will receive a $100 “prompt evaluation bonus,” in addition to the
@@ -284,7 +284,7 @@ export const Respond = (props: Props) => {
 						, and you submit by{" "}
 						<strong>
 							{new Date(
-								deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+								deadline.getTime() + 21 * (1000 * 60 * 60 * 24)
 							).toLocaleDateString()}
 						</strong>
 						, you will receive a $100 “prompt evaluation bonus,” in addition to the

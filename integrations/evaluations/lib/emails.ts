@@ -10,12 +10,12 @@ import {
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;
-const FIRST_BONUS_EMAIL_NOTIFICATION = 14;
 const FINAL_BONUS_EMAIL_NOTIFICATION = 21;
 const FIRST_REMINDER_EMAIL_NOTIFICATION = 28;
 const FINAL_REMINDER_EMAIL_NOTIFICATION = 1;
 const FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION = 6;
 const FINAL_NOTIFICATION = 8;
+
 // Use the submission pub's assigned user if available, otherwise use the
 // invitor's (person who clicked "Invite") name.
 const evaluationManagerName =
@@ -43,6 +43,16 @@ export function calculateDeadline(
 		default:
 			throw new Error('Invalid time unit. Use "days", "weeks", or "months".');
 	}
+}
+
+export function makeDeadline(instanceConfig: InstanceConfig, evaluator: EvaluatorWhoAccepted): Date {
+		return calculateDeadline(
+				{
+					deadlineLength: instanceConfig.deadlineLength,
+					deadlineUnit: instanceConfig.deadlineUnit,
+				},
+				new Date(evaluator.acceptedAt)
+			);
 }
 
 export function getDeadline(instanceConfig: InstanceConfig, evaluator: EvaluatorWhoAccepted): Date {
@@ -462,7 +472,7 @@ export const sendAcceptedEmail = async (
 			instanceConfig.titleFieldSlug
 		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
 		<p>We strongly encourage evaluators to complete evaluations within three weeks; quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(
-			deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+			deadline.getTime() + FINAL_BONUS_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
 		).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus,” in addition to the baseline $300 honorarium, as well as other potential evaluator incentives and prizes. After ${new Date(
 			deadline.getTime()
 		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>

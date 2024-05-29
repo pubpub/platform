@@ -11,7 +11,7 @@ export const Process = (props: Props) => {
 			<p>
 				Early deadline, to be eligible for $100 prompt evaluation bonus (+$300 base):{" "}
 				{new Date(
-					props.deadline.getTime() - 21 * (1000 * 60 * 60 * 24)
+					props.deadline.getTime() + 21 * (1000 * 60 * 60 * 24)
 				).toLocaleDateString()}
 			</p>
 			<p>
