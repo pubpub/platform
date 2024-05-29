@@ -15,6 +15,7 @@ const FINAL_BONUS_EMAIL_NOTIFICATION = 21;
 const FIRST_REMINDER_EMAIL_NOTIFICATION = 28;
 const FINAL_REMINDER_EMAIL_NOTIFICATION = 1;
 const FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION = 6;
+const FINAL_DAY_TO_SUBMIT = 7;
 const FINAL_NOTIFICATION = 8;
 
 // Use the submission pub's assigned user if available, otherwise use the
@@ -328,6 +329,7 @@ ${notificationFooter}`,
 };
 
 // emails sent to the evaluator
+
 /**
  *
  * Immediately sends an email to the evaluator with the invitation to evaluate the pub.
@@ -454,9 +456,7 @@ export const sendAcceptedEmail = async (
 		<p>Thank you for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for <a href="https://unjournal.org/">The Unjournal</a>. Please submit your evaluation and ratings using {{extra.evaluate_link}}. The form includes general instructions as well as (potentially) specific considerations for this research and particular issues and priorities for this evaluation.</p>
-		<p>We strongly encourage evaluators to complete evaluations within three weeks; quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by ${new Date(bonusSubmissionDeadline.getTime()).toLocaleDateString()}), you will receive a $100 “prompt evaluation bonus,” in addition to the baseline $300 honorarium, as well as other potential evaluator incentives and prizes. After ${new Date(
-			deadline.getTime()
-		).toLocaleDateString()}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+		<p>We strongly encourage evaluators to complete evaluations within three weeks; quick turnaround is an important part of The Unjournal model, for the benefit of authors, research-users, and the evaluation ecosystem. If you submit the evaluation within that window (by {{extra.bonus_submission_deadline}}), you will receive a $100 “prompt evaluation bonus,” in addition to the baseline $300 honorarium, as well as other potential evaluator incentives and prizes. After {{extra.due_at}}, we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 		<p>If you have any questions, please contact me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 		<p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
 		<p>Thank you again for your important contribution to the future of science.</p>
@@ -475,6 +475,7 @@ export const sendAcceptedEmail = async (
 			evaluate_link: `<a href="{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}">this evaluation form</a>`,
 			due_at: deadline.toLocaleDateString(),
 			disclaimer: userLinkDisclaimer,
+			bonus_submission_deadline: bonusSubmissionDeadline.toLocaleDateString(),
 		},
 	});
 };
@@ -513,9 +514,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	  <p>Thanks again for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for The Unjournal.</p>
-	  <p>This note is a reminder to submit your evaluation by ${new Date(bonusReminder.getTime()).toLocaleDateString()} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after ${new Date(
-			deadline.getTime()
-		).toLocaleDateString()} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+	  <p>This note is a reminder to submit your evaluation by {{extra.bonus_reminder}} to receive a $100 “prompt evaluation bonus,” in addition to your baseline compensation. Please note that after {{extra.due_at}} we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
@@ -533,6 +532,8 @@ export const schedulePromptEvalBonusReminderEmail = async (
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 				disclaimer: userLinkDisclaimer,
+				due_at: deadline.toLocaleDateString(),
+				bonus_reminder: bonusReminder.toLocaleDateString(),
 			},
 		},
 		{ jobKey, runAt }
@@ -572,7 +573,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 	  <p>Hi {{user.firstName}},</p>
 	  <p>This is a final reminder to submit your evaluation for "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
-		}"]}}" by the deadline ${new Date(finalBonusReminder.getTime()).toLocaleDateString()} to receive the $100 “prompt evaluation bonus.”</p>
+		}"]}}" by the deadline {{extra.final_bonus_reminder}} to receive the $100 “prompt evaluation bonus.”</p>
 	  <p>If you haven't already, please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
@@ -590,6 +591,7 @@ export const scheduleFinalPromptEvalBonusReminderEmail = async (
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 				disclaimer: userLinkDisclaimer,
+				final_bonus_reminder: finalBonusReminder.toLocaleDateString(),
 			},
 		},
 		{ jobKey, runAt }
@@ -629,9 +631,7 @@ export const scheduleEvaluationReminderEmail = async (
 	  <p>Thank you again for agreeing to evaluate "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" for The Unjournal.</p>
-	  <p>This note is a reminder that your evaluation should be submitted by ${new Date(
-			deadline.getTime()
-		).toLocaleDateString()} (next week). Please note that after that date we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
+	  <p>This note is a reminder that your evaluation should be submitted by {{extra.due_at}} (next week). Please note that after that date we will consider re-assigning the evaluation, and later submissions may not be eligible for the full baseline compensation.</p>
 	  <p>Please submit your evaluation and rating, as well as any specific considerations, using <a href="{{extra.evaluate_link}}">this evaluation form</a>. The form includes instructions and information about the paper/project.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Once your evaluation has been submitted and reviewed, we will follow up with details about payment and next steps.</p>
@@ -649,6 +649,7 @@ export const scheduleEvaluationReminderEmail = async (
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 				disclaimer: userLinkDisclaimer,
+				due_at: deadline.toLocaleDateString(),
 			},
 		},
 		{ jobKey, runAt }
@@ -728,6 +729,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 	const followUp = new Date(
 		deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
 	);
+	const finalDate = new Date(deadline.getTime() + FINAL_DAY_TO_SUBMIT * (1000 * 60 * 60 * 24));
 	const runAt = followUp;
 
 	return client.scheduleEmail(
@@ -742,9 +744,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 	  <p>This note is a reminder that your evaluation for "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
 		}"]}}" is overdue. We are now planning to reassign the evaluation to another evaluator.</p>
-	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
-			followUp.getTime()
-		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
+	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of {{extra.final_date}}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
 	  <p>${evaluationManagerName}</p>
@@ -760,6 +760,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 				disclaimer: userLinkDisclaimer,
+				final_date: finalDate.toLocaleDateString(),
 			},
 		},
 		{ jobKey, runAt }
@@ -796,7 +797,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 	  <p>Hi {{user.firstName}},</p>
 	  <p>This is to inform you that you have not submitted an evaluation for "{{pubs.submission.values["${
 			instanceConfig.titleFieldSlug
-		}"]}}", which was due on ${new Date(deadline.getTime()).toLocaleDateString()}.</p>
+		}"]}}", which was due on {{extra.due_at}}.</p>
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of ${new Date(
 			finalDate.getTime()
 		).toLocaleDateString()}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
@@ -815,6 +816,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 			extra: {
 				evaluate_link: `{{instance.actions.evaluate}}?instanceId={{instance.id}}&pubId={{pubs.submission.id}}&token={{user.token}}`,
 				disclaimer: userLinkDisclaimer,
+				due_at: deadline.toLocaleDateString(),
 			},
 		},
 		{ jobKey, runAt }
