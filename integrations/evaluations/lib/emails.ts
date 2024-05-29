@@ -1,7 +1,6 @@
 import { User } from "@pubpub/sdk";
 
 import { client } from "~/lib/pubpub";
-import { accept } from '../app/actions/respond/actions';
 import {
 	EvaluatorWhoAccepted,
 	EvaluatorWhoEvaluated,
