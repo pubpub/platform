@@ -372,7 +372,7 @@ model Form {
   name      String
   pubType   PubType     @relation(fields: [pubTypeId], references: [id])
   pubTypeId String      @map(name: "pub_type_id")
-  FormInput FormInput[]
+  inputs    FormInput[]
 
   @@map(name: "forms")
 }
