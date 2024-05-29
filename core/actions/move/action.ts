@@ -10,7 +10,7 @@ export const action = defineAction({
 		stage: z.string().describe("Destination stage"),
 	}),
 	description: "Move a pub to a different stage",
-	runParameters: z.object({}).optional(),
+	params: z.object({}).optional(),
 	pubFields: [],
 	icon: MoveHorizontal,
 });
