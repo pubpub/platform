@@ -47,6 +47,7 @@ export default async function Page({
 					"action_runs.event",
 					"action_runs.params",
 					"action_runs.status",
+					"action_runs.result",
 					"action_runs.created_at as createdAt",
 					jsonObjectFrom(
 						eb

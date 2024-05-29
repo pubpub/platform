@@ -37,6 +37,8 @@ export default interface ActionRunsTable {
 	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	result: ColumnType<unknown, unknown, unknown>;
 }
 
 export type ActionRuns = Selectable<ActionRunsTable>;

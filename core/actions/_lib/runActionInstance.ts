@@ -153,6 +153,7 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 			pub_id: args.pubId,
 			user_id: "userId" in args ? args.userId : null,
 			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
+			result,
 			config: actionInstanceResult.value.config,
 			params: args,
 			event: "userId" in args ? undefined : args.event,

@@ -6,6 +6,7 @@ import { Event } from "@prisma/client";
 
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 
 import { PubTitle } from "~/app/components/PubTitle";
 
@@ -19,6 +20,7 @@ export type ActionRun = {
 		values: { field: { slug: string }; value: unknown }[] | Record<string, unknown>;
 		createdAt: Date;
 	} | null;
+	result: unknown;
 } & (
 	| {
 			event: Event;
@@ -83,15 +85,29 @@ export const getActionRunsTableColumns = () =>
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
 			accessorKey: "status",
-			cell: ({ getValue }) => {
+			cell: ({ row, getValue }) => {
+				let badge: React.ReactNode;
 				switch (getValue()) {
 					case "success":
-						return <Badge>success</Badge>;
+						badge = <Badge>success</Badge>;
+						break;
 					case "failure":
-						return <Badge variant="destructive">failure</Badge>;
+						badge = <Badge variant="destructive">failure</Badge>;
+						break;
 					default:
-						return <Badge variant="outline">unknown</Badge>;
+						badge = <Badge variant="outline">unknown</Badge>;
+						break;
 				}
+				return (
+					<HoverCard>
+						<HoverCardTrigger className="cursor-default">{badge}</HoverCardTrigger>
+						<HoverCardContent>
+							<pre>
+								<code>{JSON.stringify(row.original.result, null, 2)}</code>
+							</pre>
+						</HoverCardContent>
+					</HoverCard>
+				);
 			},
 		},
 	] as const satisfies ColumnDef<ActionRun, unknown>[];

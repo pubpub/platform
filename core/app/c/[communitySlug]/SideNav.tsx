@@ -51,7 +51,7 @@ const Links = ({
 				<NavLink
 					href={`${prefix}/activity/actions`}
 					text="Activity"
-					icon={<Activity className="w-4" />}
+					icon={<Activity className="h-4 w-4" />}
 				/>
 			)}
 		</>
