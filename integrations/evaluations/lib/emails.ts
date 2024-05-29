@@ -786,9 +786,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 			subject: `[Unjournal] Evaluation not submitted for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}"`,
 			message: `<p>{{extra.disclaimer}}</p><hr/><br/>
 	  <p>Hi {{user.firstName}},</p>
-	  <p>This is to inform you that you have not submitted an evaluation for "{{pubs.submission.values["${
-			instanceConfig.titleFieldSlug
-		}"]}}", which was due on {{extra.due_at}}.</p>
+	  <p>This is to inform you that you have not submitted an evaluation for "{{pubs.submission.values["${instanceConfig.titleFieldSlug}"]}}", which was due on {{extra.due_at}}.</p>
 	  <p>If you have completed the evaluation but forgot to submit it, please submit your evaluation and rating today using <a href="{{extra.evaluate_link}}">this evaluation form</a>. If we don't hear from you by the end of {{extra.final_date}}, we will remove you from this assignment and you will no longer be eligible for compensation.</p>
 	  <p>If you have any questions, do not hesitate to reach out to me at <a href="mailto:${evaluationManagerEmail}">${evaluationManagerEmail}</a>.</p>
 	  <p>Thanks and best wishes,</p>
