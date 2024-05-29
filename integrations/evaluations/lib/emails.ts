@@ -46,19 +46,6 @@ export function calculateDeadline(
 	}
 }
 
-// if an evaluator has accepted we do not need to calculate the deadline
-export function getDeadline(instanceConfig: InstanceConfig, evaluator: EvaluatorWhoAccepted): Date {
-	return evaluator.deadline
-		? new Date(evaluator.deadline)
-		: calculateDeadline(
-				{
-					deadlineLength: instanceConfig.deadlineLength,
-					deadlineUnit: instanceConfig.deadlineUnit,
-				},
-				new Date(evaluator.acceptedAt)
-			);
-}
-
 const notificationFooter =
 	'<p><em>This is an automated email sent from Unjournal. Please contact <a href="mailto:contact@unjournal.org">contact@unjournal.org</a> with any questions.</em></p>';
 
@@ -451,7 +438,7 @@ export const sendAcceptedEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const deadline = getDeadline(instanceConfig, evaluator);
+	const deadline = new Date(evaluator.deadline!);
 	const acceptanceDate = new Date(evaluator.acceptedAt);
 	const bonusSubmissionDeadline = new Date(
 		acceptanceDate.setDate(acceptanceDate.getDate() + FINAL_BONUS_EMAIL_NOTIFICATION)
@@ -506,7 +493,7 @@ export const schedulePromptEvalBonusReminderEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const deadline = getDeadline(instanceConfig, evaluator);
+	const deadline = new Date(evaluator.deadline!);
 	const acceptanceDate = new Date(evaluator.acceptedAt);
 	const bonusReminder = new Date(
 		acceptanceDate.setDate(acceptanceDate.getDate() + FIRST_BONUS_EMAIL_NOTIFICATION)
@@ -623,7 +610,7 @@ export const scheduleEvaluationReminderEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const deadline = getDeadline(instanceConfig, evaluator);
+	const deadline = new Date(evaluator.deadline!);
 	const jobKey = makeEvalReminderJobKey(instanceId, pubId, evaluator);
 	const acceptanceDate = new Date(evaluator.acceptedAt);
 	const evaluationReminder = new Date(
@@ -682,7 +669,7 @@ export const scheduleFinalEvaluationReminderEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const deadline = getDeadline(instanceConfig, evaluator);
+	const deadline = new Date(evaluator.deadline!);
 	const jobKey = makeFinalEvalReminderJobKey(instanceId, pubId, evaluator);
 	const finalEvaluationReminder = new Date(
 		deadline.getTime() - FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
@@ -736,7 +723,7 @@ export const scheduleFollowUpToFinalEvaluationReminderEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const deadline = getDeadline(instanceConfig, evaluator);
+	const deadline = new Date(evaluator.deadline!);
 	const jobKey = makeFollowUpToFinalEvalReminderJobKey(instanceId, pubId, evaluator);
 	const followUp = new Date(
 		deadline.getTime() + FOLLOW_UP_TO_FINAL_REMINDER_EMAIL_NOTIFICATION * (1000 * 60 * 60 * 24)
@@ -793,7 +780,7 @@ export const sendNoticeOfNoSubmitEmail = async (
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted
 ) => {
-	const deadline = getDeadline(instanceConfig, evaluator);
+	const deadline = new Date(evaluator.deadline!);
 	const jobKey = makeNoticeOfNoSubmitJobKey(instanceId, pubId, evaluator);
 	const finalDate = new Date(deadline.getTime() + FINAL_NOTIFICATION * (1000 * 60 * 60 * 24));
 	const runAt = finalDate;
