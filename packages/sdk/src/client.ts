@@ -140,7 +140,7 @@ export type Client<T extends Manifest> = {
  */
 export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 	const client = initClient(api.integrations, {
-		baseUrl: `${process.env.PUBPUB_URL}/api/v0/integrations`,
+		baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
 		baseHeaders: {},
 		jsonQuery: true,
 	});

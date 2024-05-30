@@ -159,7 +159,7 @@ const handler = createNextHandler(
 	},
 	{
 		handlerType: "app-router",
-		basePath: "/api/v0/integrations",
+		basePath: "/api/v0",
 		jsonQuery: true,
 		errorHandler: tsRestHandleErrors,
 	}

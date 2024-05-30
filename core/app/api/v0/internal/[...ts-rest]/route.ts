@@ -79,7 +79,7 @@ const handler = createNextHandler(
 		// handlerType: 'pages-router-edge',
 
 		// rest of options
-		basePath: "/api/v0x/internal",
+		basePath: "/api/v0",
 		jsonQuery: true,
 	}
 );
