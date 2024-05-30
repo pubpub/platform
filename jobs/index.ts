@@ -42,7 +42,7 @@ enum Event {
 }
 
 const apiClient = initClient(api.internal, {
-	baseUrl: `${process.env.PUBPUB_URL}/api/v0x/internal`,
+	baseUrl: `${process.env.PUBPUB_URL}/api/v0/internal`,
 	baseHeaders: { authorization: `Bearer ${process.env.API_KEY}` },
 	jsonQuery: true,
 });
