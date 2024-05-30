@@ -94,6 +94,13 @@ export const getActionRunsTableColumns = () =>
 					case "failure":
 						badge = <Badge variant="destructive">failure</Badge>;
 						break;
+					case "scheduled":
+						badge = (
+							<Badge variant="default" className="bg-orange-500">
+								scheduled
+							</Badge>
+						);
+						break;
 					default:
 						badge = <Badge variant="outline">unknown</Badge>;
 						break;

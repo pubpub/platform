@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 
 import { api } from "contracts";
@@ -25,6 +26,7 @@ import {
 	tsRestHandleErrors,
 	updatePub,
 } from "~/lib/server";
+import { findCommunityIdByPubId } from "~/lib/server/community";
 import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
@@ -166,11 +168,25 @@ const internalRouter = createNextRoute(api.internal, {
 		const { event, pubId } = body;
 
 		const { stageId } = params;
-		const actionRunResults = await runInstancesForEvent(
+
+		const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
+
+		const actionRunResultsPromise = runInstancesForEvent(
 			pubId as PubsId,
 			stageId as StagesId,
 			event as Event
 		);
+
+		const [communityId, actionRunResults] = await Promise.all([
+			communityIdPromise,
+			actionRunResultsPromise,
+		]);
+
+		if (communityId) {
+			(() => {
+				revalidateTag(`community-action-runs_${communityId}`);
+			})();
+		}
 
 		return {
 			status: 200,
@@ -182,10 +198,22 @@ const internalRouter = createNextRoute(api.internal, {
 		const { pubId } = body;
 		const { stageId } = params;
 
-		const actionScheduleResults = await scheduleActionInstances({
+		const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
+		const actionScheduleResultsPromise = scheduleActionInstances({
 			pubId: pubId as PubsId,
 			stageId: stageId as StagesId,
 		});
+
+		const [communityId, actionScheduleResults] = await Promise.all([
+			communityIdPromise,
+			actionScheduleResultsPromise,
+		]);
+
+		if (communityId) {
+			(() => {
+				revalidateTag(`community-action-runs_${communityId}`);
+			})();
+		}
 
 		return {
 			status: 200,

@@ -9,6 +9,7 @@ import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { Rules } from "~/kysely/types/public/Rules";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
+import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
 import Event from "~/kysely/types/public/Event";
 import { addDuration } from "~/lib/dates";
 import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs";
@@ -27,11 +28,11 @@ export const scheduleActionInstances = async ({
 	const instances = await db
 		.selectFrom("action_instances")
 		.where("action_instances.stage_id", "=", stageId)
-		// .innerJoin("rules", "rules.action_instance_id", "action_instances.id")
-		// .where("rules.event", "=", Event.pubInStageForDuration)
 		.select((eb) => [
 			"action_instances.id as id",
 			"action_instances.name as name",
+			"action_instances.config as config",
+			"action_instances.stage_id as stageId",
 			jsonArrayFrom(
 				eb
 					.selectFrom("rules")
@@ -62,7 +63,11 @@ export const scheduleActionInstances = async ({
 			.filter((rule): rule is Rules & { config: { duration: number } } =>
 				Boolean(rule.config?.duration && rule.config.interval)
 			)
-			.map((rule) => ({ ...rule, actionName: instance.name }))
+			.map((rule) => ({
+				...rule,
+				actionName: instance.name,
+				actionInstanceConfig: instance.config,
+			}))
 	);
 
 	if (!validRules.length) {
@@ -81,14 +86,31 @@ export const scheduleActionInstances = async ({
 				stageId: stageId,
 				pubId,
 			});
+
+			const runAt = addDuration({
+				duration: rule.config.duration,
+				interval: rule.config.interval,
+			}).toISOString();
+
+			if (job.id) {
+				await db
+					.insertInto("action_runs")
+					.values({
+						action_instance_id: rule.action_instance_id,
+						pub_id: pubId,
+						status: ActionRunStatus.scheduled,
+						config: rule.actionInstanceConfig,
+						result: { scheduled: `Action scheduled for ${runAt}` },
+						event: Event.pubInStageForDuration,
+					})
+					.execute();
+			}
+
 			return {
 				result: job,
 				actionInstanceId: rule.action_instance_id,
 				actionInstanceName: rule.actionName,
-				runAt: addDuration({
-					duration: rule.config.duration,
-					interval: rule.config.interval,
-				}).toISOString(),
+				runAt,
 			};
 		})
 	);
