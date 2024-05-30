@@ -1,24 +1,23 @@
 services:
-    app:
-        build:
-            context: .
-            args:
-                - PACKAGE=core
-        image: core
-        env_file:
-            - core/.env.testing
-        restart: unless-stopped
-        depends_on:
-            - postgres
-        ports:
-            - 8000:8000
-    postgres:
-        image: postgres:15.1
-        restart: unless-stopped
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: testing
-            POSTGRE_HOST_AUTH_METHOD: trust
-        ports:
-            - 5432:5432
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+      args:
+        - PACKAGE=core
+    image: core
+    env_file:
+      - core/.env.testing
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - 8000:8000
+  postgres:
+    image: postgres:15.1
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
