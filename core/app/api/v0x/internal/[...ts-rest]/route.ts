@@ -40,9 +40,7 @@ const handler = createNextHandler(
 			]);
 
 			if (communityId) {
-				(() => {
-					revalidateTag(`community-action-runs_${communityId}`);
-				})();
+				revalidateTag(`community-action-runs_${communityId}`);
 			}
 
 			return {
@@ -67,9 +65,7 @@ const handler = createNextHandler(
 			]);
 
 			if (communityId) {
-				(() => {
-					revalidateTag(`community-action-runs_${communityId}`);
-				})();
+				revalidateTag(`community-action-runs_${communityId}`);
 			}
 
 			return {
