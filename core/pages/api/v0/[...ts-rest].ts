@@ -14,7 +14,6 @@ import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
 	_getPubType,
-	BadRequestError,
 	createPub,
 	deletePub,
 	generateSignedAssetUploadUrl,
@@ -22,7 +21,6 @@ import {
 	getIntegrationInstanceState,
 	getMembers,
 	getPub,
-	getPubType,
 	getSuggestedMembers,
 	setIntegrationInstanceConfig,
 	setIntegrationInstanceState,
@@ -175,6 +173,7 @@ const internalRouter = createNextRoute(api.internal, {
 			stageId as StagesId,
 			event as Event
 		);
+
 		return {
 			status: 200,
 			body: actionRunResults,

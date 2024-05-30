@@ -1,26 +1,5 @@
 previewsEnabled: false
 services:
-    # core
-    - type: web
-      name: core
-      region: ohio
-      runtime: node
-      rootDir: .
-      buildCommand: ./bin/render-build.sh core
-      startCommand: pnpm --filter core start
-      preDeployCommand: pnpm --filter core migrate-deploy
-      envVars:
-          - fromGroup: pubpub-core-prod-env
-    # flock
-    - type: worker
-      name: flock
-      region: ohio
-      runtime: node
-      rootDir: .
-      buildCommand: ./bin/render-build.sh jobs
-      startCommand: pnpm --filter jobs start
-      envVars:
-          - fromGroup: pubpub-flock-prod-env
     # integration-submissions
     - type: web
       name: integration-submissions
@@ -33,8 +12,3 @@ services:
       env: docker
       rootDir: ./integrations/evaluations-proxy
       dockerfilePath: ./Dockerfile
-databases:
-    - name: core
-      plan: standard
-      postgresMajorVersion: 15
-      region: ohio

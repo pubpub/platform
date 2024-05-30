@@ -1,4 +1,5 @@
 export {
+	Activity,
 	Calendar,
 	BadgeCheck,
 	Check,
