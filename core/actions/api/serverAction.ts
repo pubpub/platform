@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
 import type { UsersId } from "~/kysely/types/public/Users";

@@ -1,14 +1,9 @@
-import { revalidateTag } from "next/cache";
 import { createNextRoute, createNextRouter } from "@ts-rest/next";
 
 import { api } from "contracts";
 import { logger } from "logger";
 
-import type Event from "~/kysely/types/public/Event";
 import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { StagesId } from "~/kysely/types/public/Stages";
-import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
-import { runInstancesForEvent } from "~/actions/api/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {
@@ -26,7 +21,6 @@ import {
 	tsRestHandleErrors,
 	updatePub,
 } from "~/lib/server";
-import { findCommunityIdByPubId } from "~/lib/server/community";
 import { emailUser } from "~/lib/server/email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
@@ -162,72 +156,11 @@ const integrationsRouter = createNextRoute(api.integrations, {
 	},
 });
 
-const internalRouter = createNextRoute(api.internal, {
-	triggerAction: async ({ headers, params, body }) => {
-		checkAuthentication(headers.authorization);
-		const { event, pubId } = body;
-
-		const { stageId } = params;
-
-		const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
-
-		const actionRunResultsPromise = runInstancesForEvent(
-			pubId as PubsId,
-			stageId as StagesId,
-			event as Event
-		);
-
-		const [communityId, actionRunResults] = await Promise.all([
-			communityIdPromise,
-			actionRunResultsPromise,
-		]);
-
-		if (communityId) {
-			(() => {
-				revalidateTag(`community-action-runs_${communityId}`);
-			})();
-		}
-
-		return {
-			status: 200,
-			body: actionRunResults,
-		};
-	},
-	scheduleAction: async ({ headers, params, body }) => {
-		checkAuthentication(headers.authorization);
-		const { pubId } = body;
-		const { stageId } = params;
-
-		const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
-		const actionScheduleResultsPromise = scheduleActionInstances({
-			pubId: pubId as PubsId,
-			stageId: stageId as StagesId,
-		});
-
-		const [communityId, actionScheduleResults] = await Promise.all([
-			communityIdPromise,
-			actionScheduleResultsPromise,
-		]);
-
-		if (communityId) {
-			(() => {
-				revalidateTag(`community-action-runs_${communityId}`);
-			})();
-		}
-
-		return {
-			status: 200,
-			body: actionScheduleResults ?? [],
-		};
-	},
-});
-
 const router = {
 	integrations: integrationsRouter,
-	internal: internalRouter,
 };
 
-export default createNextRouter(api, router, {
+export default createNextRouter({ integrations: api.integrations }, router, {
 	errorHandler: tsRestHandleErrors,
 	jsonQuery: true,
 });

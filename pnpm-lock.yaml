@@ -166,14 +166,17 @@ importers:
         specifier: ^8.13.2
         version: 8.13.2(react-dom@18.2.0)(react@18.2.0)
       '@ts-rest/core':
-        specifier: ^3.28.0
-        version: 3.28.0(zod@3.22.4)
+        specifier: ^3.45.2
+        version: 3.45.2(zod@3.22.4)
       '@ts-rest/next':
-        specifier: ^3.33.1
-        version: 3.33.1(next@14.2.3)(zod@3.22.4)
+        specifier: ^3.45.2
+        version: 3.45.2(next@14.2.3)(zod@3.22.4)
       '@ts-rest/open-api':
-        specifier: ^3.28.0
-        version: 3.28.0(@ts-rest/core@3.28.0)(zod@3.22.4)
+        specifier: ^3.45.2
+        version: 3.45.2(zod@3.22.4)
+      '@ts-rest/serverless':
+        specifier: ^3.45.2
+        version: 3.45.2(next@14.2.3)(zod@3.22.4)
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
@@ -568,8 +571,8 @@ importers:
         specifier: workspace:*
         version: link:../packages/sdk
       '@ts-rest/core':
-        specifier: ^3.28.0
-        version: 3.28.0(zod@3.22.4)
+        specifier: ^3.45.2
+        version: 3.45.2(zod@3.22.4)
       contracts:
         specifier: workspace:*
         version: link:../packages/contracts
@@ -609,8 +612,8 @@ importers:
         specifier: workspace:*
         version: link:../../config/prettier
       '@ts-rest/core':
-        specifier: ^3.28.0
-        version: 3.28.0(zod@3.22.4)
+        specifier: ^3.45.2
+        version: 3.45.2(zod@3.22.4)
       tsconfig:
         specifier: workspace:*
         version: link:../../config/tsconfig
@@ -646,8 +649,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1(react-hook-form@7.46.1)
       '@ts-rest/core':
-        specifier: ^3.28.0
-        version: 3.28.0(zod@3.22.4)
+        specifier: ^3.45.2
+        version: 3.45.2(zod@3.22.4)
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
@@ -8686,18 +8689,18 @@ packages:
       zod: 3.22.4
     dev: false
 
-  /@ts-rest/core@3.28.0(zod@3.22.4):
-    resolution: {integrity: sha512-m0Wn2DgO3O57dsGT5fqxvF/WNFPx/8/dxbqLMV9TYXwLBgaJG4vDgR7qXVIYss/c5vlHTQ0oB9X+PwxhI3ksMg==}
+  /@ts-rest/core@3.45.2(zod@3.22.4):
+    resolution: {integrity: sha512-Eiv+Sa23MbsAd1Gx9vNJ+IFCDyLZNdJ+UuGMKbFvb+/NmgcBR1VL1UIVtEkd5DJxpYMMd8SLvW91RgB2TS8iPw==}
     peerDependencies:
-      zod: ^3.21.0
+      zod: ^3.22.3
     peerDependenciesMeta:
       zod:
         optional: true
     dependencies:
       zod: 3.22.4
 
-  /@ts-rest/next@3.33.1(next@14.2.3)(zod@3.22.4):
-    resolution: {integrity: sha512-/QhxcCbwxthxDBsKUaYc209S0j/fIP6m8RrFGVDTPXkKtCCZMLeo+nlDPfSwYdUZSiI+tw807S4st1Nn4t8Cwg==}
+  /@ts-rest/next@3.45.2(next@14.2.3)(zod@3.22.4):
+    resolution: {integrity: sha512-UDWV+QBr9Kcq62b7zAL/VwVI9gwEFkxIfLlw/8LaYFDvDdUw9IlLPfSAPdhztwk+AOxUbMqQhw1do2Yrk4nhEw==}
     peerDependencies:
       next: ^12.0.0 || ^13.0.0 || ^14.0.0
       zod: ^3.22.3
@@ -8709,15 +8712,33 @@ packages:
       zod: 3.22.4
     dev: false
 
-  /@ts-rest/open-api@3.28.0(@ts-rest/core@3.28.0)(zod@3.22.4):
-    resolution: {integrity: sha512-9EG1mWxzcTriWAQGLNLXvpRT5VLKIQGPcBfTndRDsHUQe9jor+GtjEP8ttuoTfo3GlhkND9V6Qrikda1/kM0tg==}
+  /@ts-rest/open-api@3.45.2(zod@3.22.4):
+    resolution: {integrity: sha512-TG5GvD0eyicMR3HjEAMTO2ulO7x/ADSn5bfLF/ZDdVXla48PiQdwhG4NsjVbsUDCghwx+6y5u2aTYjypzdiXQg==}
     peerDependencies:
-      '@ts-rest/core': 3.28.0
-      zod: ^3.21.0
+      zod: ^3.22.3
     dependencies:
       '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@3.22.4)
-      '@ts-rest/core': 3.28.0(zod@3.22.4)
       openapi3-ts: 2.0.2
+      zod: 3.22.4
+    dev: false
+
+  /@ts-rest/serverless@3.45.2(next@14.2.3)(zod@3.22.4):
+    resolution: {integrity: sha512-7+37i9s9j/5OfdzLB17/PDQBco9v38WYn3fbYLr6x/zHYQqq8RfXXbmHYGvFdE+y3eizat2J0pM2Djqsb4Uppg==}
+    peerDependencies:
+      '@types/aws-lambda': ^8.10.115
+      next: ^12.0.0 || ^13.0.0 || ^14.0.0
+      zod: ^3.22.3
+    peerDependenciesMeta:
+      '@types/aws-lambda':
+        optional: true
+      next:
+        optional: true
+      zod:
+        optional: true
+    dependencies:
+      '@ts-rest/core': 3.45.2(zod@3.22.4)
+      itty-router: 5.0.17
+      next: 14.2.3(@babel/core@7.24.3)(@opentelemetry/api@1.7.0)(@playwright/test@1.43.1)(react-dom@18.2.0)(react@18.2.0)
       zod: 3.22.4
     dev: false
 
@@ -13598,6 +13619,10 @@ packages:
       has-symbols: 1.0.3
       reflect.getprototypeof: 1.0.6
       set-function-name: 2.0.2
+    dev: false
+
+  /itty-router@5.0.17:
+    resolution: {integrity: sha512-ZHnPI0OOyTTLuNp2FdciejYaK4Wl3ZV3O0yEm8njOGggh/k/ek3BL7X2I5YsCOfc5vLhIJgj3Z4pUtLs6k9Ucg==}
     dev: false
 
   /jackspeak@2.3.6:

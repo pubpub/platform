@@ -16,7 +16,7 @@
 		"@honeycombio/opentelemetry-node": "^0.6.1",
 		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
 		"@pubpub/sdk": "workspace:*",
-		"@ts-rest/core": "^3.28.0",
+		"@ts-rest/core": "^3.45.2",
 		"contracts": "workspace:*",
 		"graphile-worker": "^0.16.5",
 		"logger": "workspace:*",
