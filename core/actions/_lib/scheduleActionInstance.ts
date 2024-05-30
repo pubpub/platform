@@ -131,6 +131,15 @@ export const unscheduleAction = async ({
 	try {
 		const jobsClient = await getJobsClient();
 		await jobsClient.unscheduleJob(jobKey);
+
+		// TODO: this should probably be set to "canceled" instead of deleting the run
+		await db
+			.deleteFrom("action_runs")
+			.where("action_instance_id", "=", actionInstanceId)
+			.where("pub_id", "=", pubId)
+			.where("action_runs.status", "=", ActionRunStatus.scheduled)
+			.execute();
+
 		logger.debug({ msg: "Unscheduled action", actionInstanceId, stageId, pubId });
 	} catch (error) {
 		logger.error(error);
