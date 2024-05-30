@@ -3,13 +3,16 @@ import { createNextHandler } from "@ts-rest/serverless/next";
 
 import { api } from "contracts";
 
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type Event from "~/kysely/types/public/Event";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";
 import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
+import { runActionInstance } from "~/actions/api/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
+import { tsRestHandleErrors } from "~/lib/server";
 import { findCommunityIdByPubId } from "~/lib/server/community";
 
 const checkAuthentication = (authHeader: string) => {
@@ -21,6 +24,35 @@ const handler = createNextHandler(
 	api.internal,
 	{
 		triggerAction: async ({ headers, params, body }) => {
+			checkAuthentication(headers.authorization);
+			const { pubId, event } = body;
+
+			const { actionInstanceId } = params;
+
+			const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
+
+			const actionRunResultsPromise = runActionInstance({
+				pubId: pubId as PubsId,
+				event: event as Event,
+				actionInstanceId: actionInstanceId as ActionInstancesId,
+			});
+
+			const [communityId, actionRunResults] = await Promise.all([
+				communityIdPromise,
+				actionRunResultsPromise,
+			]);
+
+			if (communityId) {
+				revalidateTag(`community-action-runs_${communityId}`);
+				revalidateTag(`community-stages_${communityId}`);
+			}
+
+			return {
+				status: 200,
+				body: { result: actionRunResults, actionInstanceId },
+			};
+		},
+		triggerActions: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
 			const { event, pubId } = body;
 
@@ -41,6 +73,7 @@ const handler = createNextHandler(
 
 			if (communityId) {
 				revalidateTag(`community-action-runs_${communityId}`);
+				revalidateTag(`community-stages_${communityId}`);
 			}
 
 			return {
@@ -66,6 +99,7 @@ const handler = createNextHandler(
 
 			if (communityId) {
 				revalidateTag(`community-action-runs_${communityId}`);
+				// no community stages as scheduling an action cannot changes the pubs in a stage
 			}
 
 			return {
@@ -76,11 +110,9 @@ const handler = createNextHandler(
 	},
 	{
 		handlerType: "app-router",
-		// handlerType: 'pages-router-edge',
-
-		// rest of options
 		basePath: "/api/v0",
 		jsonQuery: true,
+		errorHandler: tsRestHandleErrors,
 	}
 );
 

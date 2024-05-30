@@ -1,2 +1,2 @@
 export { scheduleActionInstances } from "../_lib/scheduleActionInstance";
-export { runInstancesForEvent } from "../_lib/runActionInstance";
+export { runInstancesForEvent, runActionInstance } from "../_lib/runActionInstance";

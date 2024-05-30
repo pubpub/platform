@@ -29,7 +29,28 @@ export const internalApi = contract.router(
 		},
 		triggerAction: {
 			method: "POST",
-			path: "/actions/:stageId/trigger",
+			path: "/actions/:actionInstanceId/trigger/",
+			summary: "Run a specific action instance in a stage for a specific pub",
+			description:
+				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
+			pathParams: z.object({
+				actionInstanceId: z.string(),
+			}),
+			body: z.object({
+				pubId: z.string(),
+				event: z.enum(["pubLeftStage", "pubEnteredStage", "pubInStageForDuration"]),
+			}),
+			responses: {
+				200: z.object({
+					// actionInstanceName: z.string(),
+					actionInstanceId: z.string(),
+					result: z.any(),
+				}),
+			},
+		},
+		triggerActions: {
+			method: "POST",
+			path: "/stages/:stageId/actions/trigger",
 			summary: "Run all actions in a stage whose rules match the event",
 			description:
 				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
@@ -39,6 +60,7 @@ export const internalApi = contract.router(
 			body: z.object({
 				event: z.enum(["pubLeftStage", "pubEnteredStage", "pubInStageForDuration"]),
 				pubId: z.string(),
+				actionInstanceId: z.string().optional(),
 			}),
 			responses: {
 				200: z.array(

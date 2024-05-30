@@ -114,10 +114,22 @@ const makeTaskList = (client: Client<{}>) => {
 
 		eventLogger.info({ msg: `Emitting event ${event}`, extra });
 
-		const resultsPromise = apiClient.triggerAction({
-			params: { stageId },
-			body: { event, pubId },
-		});
+		const resultsPromise =
+			"actionInstanceId" in extra
+				? apiClient.triggerAction({
+						params: { actionInstanceId: extra.actionInstanceId },
+						body: {
+							pubId,
+							event,
+						},
+					})
+				: apiClient.triggerActions({
+						params: { stageId },
+						body: {
+							event,
+							pubId,
+						},
+					});
 
 		const [scheduleResult, resultsResult] = await Promise.allSettled([
 			schedulePromise,
