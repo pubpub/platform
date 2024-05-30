@@ -7,9 +7,7 @@ import type Event from "~/kysely/types/public/Event";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
-import {
-	runInstancesForEvent, // scheduleActionInstances
-} from "~/actions/api/serverActions";
+import { runInstancesForEvent } from "~/actions/api/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {

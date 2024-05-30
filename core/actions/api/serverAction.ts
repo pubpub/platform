@@ -2,15 +2,12 @@
 
 import { revalidateTag, unstable_cache } from "next/cache";
 
+import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
+import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
-import { UsersId } from "~/kysely/types/public/Users";
 import { getLoginData } from "~/lib/auth/loginData";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import {
-	ActionInstanceRunResult,
-	RunActionInstanceArgs,
-	runActionInstance as runActionInstanceInner,
-} from "../_lib/runActionInstance";
+import { runActionInstance as runActionInstanceInner } from "../_lib/runActionInstance";
 
 export const runActionInstance = defineServerAction(async function runActionInstance(
 	args: Omit<RunActionInstanceArgs, "userId" | "event">
