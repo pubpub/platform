@@ -15,7 +15,7 @@ export const PubTitle: React.FC<Props> = function (props: Props) {
 	) as string | undefined;
 	return (
 		<h3 className="text-md font-semibold">
-			{title ?? `Untitled Pub - ${props.pub.createdAt.toDateString()}`}{" "}
+			{title ?? `Untitled Pub - ${new Date(props.pub.createdAt).toDateString()}`}{" "}
 		</h3>
 	);
 };
