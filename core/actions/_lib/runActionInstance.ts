@@ -2,6 +2,7 @@
 
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { GetPubResponseBody } from "contracts";
 import { logger } from "logger";
@@ -120,6 +121,15 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 			"updated_at as updatedAt",
 			"stage_id as stageId",
 			"action",
+			// this is to check whether the pub is still in the stage the actionInstance is in
+			// often happens when an action is scheduled but a pub is moved before the action runs
+			jsonObjectFrom(
+				eb
+					.selectFrom("PubsInStages")
+					.select(["pubId", "stageId"])
+					.where("pubId", "=", args.pubId)
+					.whereRef("stageId", "=", "action_instances.stage_id")
+			).as("pubInStage"),
 		])
 		.executeTakeFirstOrThrow();
 
@@ -143,14 +153,7 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 		};
 	}
 
-	const pubInStage = await db
-		.selectFrom("PubsInStages")
-		.where("pubId", "=", args.pubId)
-		.where("stageId", "=", actionInstanceResult.value.stageId)
-		.selectAll()
-		.executeTakeFirst();
-
-	if (!pubInStage) {
+	if (!actionInstanceResult.value.pubInStage) {
 		logger.warn({
 			msg: `Pub ${args.pubId} is not in stage ${actionInstanceResult.value.stageId}, even though the action instance is.
 			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
