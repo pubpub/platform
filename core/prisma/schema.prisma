@@ -377,6 +377,7 @@ model ActionRun {
 }
 
 enum ActionRunStatus {
+  scheduled
   success
   failure
 }
