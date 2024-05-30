@@ -6,7 +6,7 @@ import type { action } from "./action";
 import { smtpclient } from "~/lib/server/mailgun";
 import { defineRun } from "../types";
 
-export const run = defineRun<typeof action>(async ({ pub, config, runParameters }) => {
+export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	try {
 		await smtpclient.sendMail({
 			from: "hello@pubpub.org",
@@ -24,7 +24,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, runParameters 
 		};
 	}
 
-	logger.info({ msg: "email", pub, config, runParameters });
+	logger.info({ msg: "email", pub, config, args });
 
 	return {
 		success: true,

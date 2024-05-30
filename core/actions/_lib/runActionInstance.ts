@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 
+import { GetPubResponseBody } from "contracts";
 import { logger } from "logger";
 
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
@@ -11,28 +12,108 @@ import type Event from "~/kysely/types/public/Event";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
+import Action from "~/kysely/types/public/Action";
+import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
+import { UsersId } from "~/kysely/types/public/Users";
 import { getPub } from "~/lib/server";
-import { defineServerAction } from "~/lib/server/defineServerAction";
+import { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
+import { ActionSuccess } from "../types";
 import { getActionRunByName } from "./getRuns";
 import { validatePubValues } from "./validateFields";
 
-type ActionInstanceArgs = {
+export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
+
+export type RunActionInstanceArgs = {
 	pubId: PubsId;
 	actionInstanceId: ActionInstancesId;
-	runParameters?: Record<string, unknown>;
+	actionInstanceArgs?: Record<string, unknown>;
+} & ({ event: Event } | { userId: UsersId });
+
+const _runActionInstance = async (
+	actionInstance: {
+		id: ActionInstancesId;
+		action: Action;
+		config: unknown;
+		createdAt: Date;
+		updatedAt: Date;
+		stageId: StagesId;
+	},
+	pub: GetPubResponseBody,
+	args = {}
+): Promise<ActionInstanceRunResult> => {
+	if (!actionInstance.action) {
+		return {
+			error: "Action not found",
+		};
+	}
+
+	logger.info(actionInstance.action);
+	const action = getActionByName(actionInstance.action);
+	const actionRun = await getActionRunByName(actionInstance.action);
+
+	if (!actionRun || !action) {
+		return {
+			error: "Action not found",
+		};
+	}
+
+	const parsedConfig = action.config.safeParse(actionInstance.config ?? {});
+	if (!parsedConfig.success) {
+		return {
+			error: "Invalid config",
+			cause: parsedConfig.error,
+		};
+	}
+
+	const parsedArgs = action.params.safeParse(args ?? {});
+	if (!parsedArgs.success) {
+		return {
+			title: "Invalid pub config",
+			cause: parsedArgs.error,
+			error: "The action was run with invalid parameters",
+		};
+	}
+
+	const pubValuesValidationResult = validatePubValues({
+		fields: action.pubFields,
+		values: pub.values,
+	});
+
+	if (pubValuesValidationResult?.error) {
+		return {
+			error: pubValuesValidationResult.error,
+		};
+	}
+
+	try {
+		const result = await actionRun({
+			config: parsedConfig.data as any,
+			pub: {
+				id: pub.id,
+				values: pub.values as any,
+			},
+			args: args,
+			stageId: actionInstance.stageId,
+		});
+
+		return result;
+	} catch (error) {
+		captureException(error);
+		logger.error(error);
+		return {
+			title: "Failed to run action",
+			error: error.message,
+		};
+	}
 };
 
-const _runActionInstance = async ({
-	pubId,
-	actionInstanceId,
-	runParameters = {},
-}: ActionInstanceArgs) => {
-	const pubPromise = getPub(pubId);
+export async function runActionInstance(args: RunActionInstanceArgs) {
+	const pubPromise = getPub(args.pubId);
 
 	const actionInstancePromise = db
 		.selectFrom("action_instances")
-		.where("action_instances.id", "=", actionInstanceId)
+		.where("action_instances.id", "=", args.actionInstanceId)
 		.select((eb) => [
 			"id",
 			eb.fn.coalesce("config", sql`'{}'`).as("config"),
@@ -63,84 +144,24 @@ const _runActionInstance = async ({
 		};
 	}
 
-	const actionInstance = actionInstanceResult.value;
-	const pub = pubResult.value;
+	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
 
-	if (!actionInstance.action) {
-		return {
-			error: "Action not found",
-		};
-	}
+	await db
+		.insertInto("action_runs")
+		.values({
+			action_instance_id: args.actionInstanceId,
+			pub_id: args.pubId,
+			user_id: "userId" in args ? args.userId : null,
+			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
+			result,
+			config: actionInstanceResult.value.config,
+			params: args,
+			event: "userId" in args ? undefined : args.event,
+		})
+		.execute();
 
-	logger.info(actionInstance.action);
-	const action = getActionByName(actionInstance.action);
-
-	const actionRun = await getActionRunByName(actionInstance.action);
-
-	if (!actionRun || !action) {
-		return {
-			error: "Action not found",
-		};
-	}
-
-	const parsedConfig = action.config.safeParse(actionInstance.config ?? {});
-	if (!parsedConfig.success) {
-		return {
-			error: "Invalid config",
-			cause: parsedConfig.error,
-		};
-	}
-
-	const parsedrunParameters = action.runParameters.safeParse(runParameters ?? {});
-	if (!parsedrunParameters.success) {
-		return {
-			title: "Invalid pub config",
-			error: parsedrunParameters.error,
-		};
-	}
-
-	const values = validatePubValues({
-		fields: action.pubFields,
-		values: pub.values,
-	});
-
-	if (values.error) {
-		return {
-			error: values.error,
-		};
-	}
-
-	try {
-		const result = await actionRun({
-			config: parsedConfig.data as any,
-			pub: {
-				id: pubId,
-				values: values as any,
-			},
-			runParameters: runParameters,
-			stageId: actionInstance.stageId,
-		});
-
-		revalidateTag(`community-stages_${pub.communityId}`);
-
-		return result;
-	} catch (error) {
-		captureException(error);
-		logger.error(error);
-		return {
-			title: "Failed to run action",
-			error: error.message,
-		};
-	}
-};
-
-export const runActionInstance = defineServerAction(async function runActionInstance({
-	pubId,
-	actionInstanceId,
-	runParameters = {},
-}: ActionInstanceArgs) {
-	return _runActionInstance({ pubId, actionInstanceId, runParameters });
-});
+	return result;
+}
 
 export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {
 	const instances = await db
@@ -156,9 +177,10 @@ export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, eve
 			return {
 				actionInstanceId: instance.action_instance_id,
 				actionInstanceName: instance.name,
-				result: await _runActionInstance({
+				result: await runActionInstance({
 					pubId,
 					actionInstanceId: instance.action_instance_id,
+					event,
 				}),
 			};
 		})

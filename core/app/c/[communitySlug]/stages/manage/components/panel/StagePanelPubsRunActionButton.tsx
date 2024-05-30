@@ -14,7 +14,7 @@ import { toast } from "ui/use-toast";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
-import { runActionInstance } from "~/actions/api/server";
+import { runActionInstance } from "~/actions/api/serverAction";
 import { useServerAction } from "~/lib/serverActions";
 
 export const StagePanelPubsRunActionButton = ({
@@ -41,7 +41,7 @@ export const StagePanelPubsRunActionButton = ({
 				const result = await runAction({
 					actionInstanceId: actionInstance.id as ActionInstancesId,
 					pubId: pub.id as PubsId,
-					runParameters: values,
+					actionInstanceArgs: values,
 				});
 
 				if ("success" in result) {
@@ -73,24 +73,10 @@ export const StagePanelPubsRunActionButton = ({
 				<DialogHeader>
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
-				<AutoForm formSchema={action.runParameters as ZodObject<{}>} onSubmit={onSubmit}>
+				<AutoForm formSchema={action.params as ZodObject<{}>} onSubmit={onSubmit}>
 					<AutoFormSubmit disabled={isPending}>Run</AutoFormSubmit>
 				</AutoForm>
 			</DialogContent>
 		</Dialog>
 	);
 };
-
-// <Button variant="default" type="button" size="sm">
-// 	{isPending ? (
-// 		<Loader2 size="14" className="animate-spin" />
-// 	) : result ? (
-// 		"error" in result ? (
-// 			<X size="14" />
-// 		) : (
-// 			<Check size="14" />
-// 		)
-// 	) : (
-// 		<Play size="14" />
-// 	)}
-// </Button>

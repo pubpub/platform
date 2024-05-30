@@ -1,6 +1,5 @@
 "use server";
 
-import { unstable_cache } from "next/cache";
 import { defaultMarkdownParser } from "prosemirror-markdown";
 
 import { logger } from "logger";
@@ -172,7 +171,7 @@ const updateV6PubId = async (pubId: string, v6PubId: string) => {
 		.execute();
 };
 
-export const run = defineRun<typeof action>(async ({ pub, config, runParameters }) => {
+export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	try {
 		const v6Community = await getV6Community(config.communitySlug, config.authToken);
 
@@ -235,7 +234,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, runParameters 
 		};
 	}
 
-	logger.info({ msg: "pub pushed to v6", pub, config, runParameters });
+	logger.info({ msg: "pub pushed to v6", pub, config, args });
 
 	return {
 		success: true,
