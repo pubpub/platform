@@ -84,11 +84,9 @@ const scheduleTask = async (
 
 		if (status === 200 && body?.length > 0) {
 			logger.info({ msg: "Action scheduled", results: body, ...context });
-			return;
 		}
 	} catch (e) {
 		logger.error({ msg: "Error scheduling action", error: e, ...context });
-		return;
 	}
 };
 
@@ -143,7 +141,6 @@ const triggerAction = async (
 
 		if (status === 200) {
 			logger.info({ msg: "Action run results", results: body, ...context });
-			return;
 		}
 	} catch (e) {
 		logger.error({
@@ -227,7 +224,6 @@ export const emitEvent = defineJob(
 					msg: "Unexpected error running emitEvent action",
 					error: action.reason,
 				});
-				return;
 			}
 		});
 	}
