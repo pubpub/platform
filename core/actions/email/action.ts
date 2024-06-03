@@ -2,7 +2,7 @@ import * as z from "zod";
 
 import { Mail } from "ui/icon";
 
-import { markdown } from "../_lib/types";
+import { markdown } from "../_lib/zodTypes";
 import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
 
@@ -34,7 +34,7 @@ export const action = defineAction({
 				.optional(),
 		})
 		.optional(),
-	pubFields: [corePubFields.title],
+	pubFields: [],
 	icon: Mail,
 });
 

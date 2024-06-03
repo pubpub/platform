@@ -49,3 +49,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.editor .token {
+	color: blue;
+}
+
+.editor.markdown {
+	min-height: 200px;
+}

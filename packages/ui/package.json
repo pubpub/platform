@@ -250,6 +250,7 @@
 		"@lexical/markdown": "^0.15.0",
 		"@lexical/react": "^0.15.0",
 		"@lexical/rich-text": "^0.15.0",
+		"@lexical/utils": "^0.15.0",
 		"@radix-ui/react-accordion": "^1.1.2",
 		"@radix-ui/react-alert-dialog": "^1.0.5",
 		"@radix-ui/react-avatar": "^1.0.3",
