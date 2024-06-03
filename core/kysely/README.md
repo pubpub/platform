@@ -19,6 +19,9 @@ We use Kanel to generate these types, which can be configured via [.kanelrc.js](
 
 ### Generating types for JSON fields
 
+> [!NOTE]
+> You might need to run `pnpm --filter core migrate-dev` twice to get the types to update properly.
+
 It is possible to generate more specific types for JSON fields defined.
 
 This is done in the Prisma schema, by adding an annotation to the field which will add a comment to the database.
@@ -55,6 +58,33 @@ import type { RuleConfigs } from "~/actions/types";
 
 config: RuleConfigs | null;
 // ...
+```
+
+Alernatively, you can also specify a type directly:
+
+```prisma
+config           Json? /// @type:string
+```
+
+or use global types
+
+```prisma
+config           Json? /// @type:DBTypes.RuleConfig
+```
+
+and then specify those types in some file like `globals.ts`:
+
+```ts
+declare global {
+	namespace DBTypes {
+		type RuleConfig = {
+			// ...
+		};
+	}
+}
+
+// necessary to make `declare global` work with or without using `import`s
+export {};
 ```
 
 ## Maintainability
