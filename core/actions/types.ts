@@ -4,8 +4,9 @@ import type * as z from "zod";
 import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
+import type Event from "~/kysely/types/public/Event";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
-import { StagesId } from "~/kysely/types/public/Stages";
 
 export type ActionPubType = CorePubField[];
 
@@ -82,3 +83,40 @@ export const defineRun = <T extends Action = Action>(
 ) => run;
 
 export type Run = ReturnType<typeof defineRun>;
+
+type ValueType<T extends Record<string, { optional: boolean }>> = { [K in keyof T]?: string } & {
+	[K in keyof T as T[K]["optional"] extends false ? K : never]-?: string;
+} extends infer O
+	? { [K in keyof O]: O[K] }
+	: never;
+
+declare const x: ValueType<{ a: { optional: false } }>;
+
+export type EventRuleOptionsBase<
+	E extends Event,
+	AC extends Record<string, any> | undefined = undefined,
+> = {
+	event: E;
+	canBeRunAfterAddingRule?: boolean;
+	additionalConfig?: AC extends Record<string, any> ? z.ZodType<AC> : undefined;
+	/**
+	 * The display name options for this event
+	 */
+	display: {
+		/**
+		 * The base display name for this rule, shown e.g. when selecting the event for a rule
+		 */
+		base: string;
+	} & {
+		/**
+		 * The display name for this event when used in a rule
+		 */
+		[K in "withConfig" as AC extends Record<string, any> ? K : never]: (options: AC) => string;
+	};
+};
+
+export const defineRule = <E extends Event, AC extends Record<string, any> | undefined = undefined>(
+	options: EventRuleOptionsBase<E, AC>
+) => options;
+
+export type { RuleConfig, RuleConfigs } from "./_lib/rules";

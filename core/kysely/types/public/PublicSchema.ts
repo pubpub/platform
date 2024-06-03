@@ -33,8 +33,6 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
-	action_runs: ActionRunsTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -88,6 +86,8 @@ export default interface PublicSchema {
 	PubsInStages: PubsInStagesTable;
 
 	rules: RulesTable;
+
+	action_runs: ActionRunsTable;
 
 	forms: FormsTable;
 

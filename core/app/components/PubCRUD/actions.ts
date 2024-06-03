@@ -79,7 +79,7 @@ export const createPub = defineServerAction(async function createPub({
 			report: `Successfully created a new Pub`,
 		};
 	} catch (error) {
-		logger.debug(error);
+		logger.error(error);
 		return {
 			error: "Failed to create pub",
 			cause: error,
@@ -131,24 +131,33 @@ export const updatePub = defineServerAction(async function updatePub({
 				.values({ pubId, stageId })
 				.execute();
 
-		const queries: Promise<any>[] = [
-			pubValues.map(async (pubValue) =>
-				db
+		const queries = [
+			pubValues.map(async (pubValue) => {
+				const field = fields[pubValue.field_id];
+				if (!field) {
+					logger.debug({
+						msg: `Field ${pubValue.field_id} not found in fields`,
+						fields,
+						pubValue,
+					});
+					return;
+				}
+				const { value } = field;
+
+				return db
 					.updateTable("pub_values")
 					.set({
-						value: JSON.stringify(fields[pubValue.field_id].value),
+						value: JSON.stringify(value),
 					})
 					.where("pub_values.id", "=", pubValue.id)
 					.returningAll()
-					.execute()
-			),
-		].flat();
+					.execute();
+			}),
+		]
+			.filter((x) => x != null)
+			.flat();
 
-		if (stageMoveQuery) {
-			queries.push(stageMoveQuery);
-		}
-
-		const updatePub = await Promise.allSettled(queries);
+		const updatePub = await Promise.allSettled([...queries, ...([stageMoveQuery] || [])]);
 
 		const errors = updatePub.filter(
 			(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>
@@ -172,7 +181,7 @@ export const updatePub = defineServerAction(async function updatePub({
 			report: `Successfully updated the Pub`,
 		};
 	} catch (error) {
-		logger.debug(error);
+		logger.error(error);
 		return {
 			error: "Failed to update pub",
 			cause: error,

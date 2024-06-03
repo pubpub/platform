@@ -38,7 +38,12 @@ const nextConfig = {
 	},
 	experimental: {
 		instrumentationHook: true,
-		serverComponentsExternalPackages: ["@aws-sdk"],
+		serverComponentsExternalPackages: [
+			"@aws-sdk",
+			// without this here, next will sort of implode and no longer compile and serve pages properly
+			// if graphile-worker is used in server actions
+			"graphile-worker",
+		],
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173

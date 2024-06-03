@@ -1,24 +1,24 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { GetPubResponseBody } from "contracts";
+import type { GetPubResponseBody } from "contracts";
 import { logger } from "logger";
 
+import type { ActionSuccess } from "../types";
+import type Action from "~/kysely/types/public/Action";
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type Event from "~/kysely/types/public/Event";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
+import type { UsersId } from "~/kysely/types/public/Users";
+import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
-import Action from "~/kysely/types/public/Action";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
-import { UsersId } from "~/kysely/types/public/Users";
+import Event from "~/kysely/types/public/Event";
 import { getPub } from "~/lib/server";
-import { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
-import { ActionSuccess } from "../types";
 import { getActionRunByName } from "./getRuns";
 import { validatePubValues } from "./validateFields";
 
@@ -31,17 +31,68 @@ export type RunActionInstanceArgs = {
 } & ({ event: Event } | { userId: UsersId });
 
 const _runActionInstance = async (
-	actionInstance: {
-		id: ActionInstancesId;
-		action: Action;
-		config: unknown;
-		createdAt: Date;
-		updatedAt: Date;
-		stageId: StagesId;
-	},
-	pub: GetPubResponseBody,
-	args = {}
+	args: RunActionInstanceArgs
 ): Promise<ActionInstanceRunResult> => {
+	const pubPromise = getPub(args.pubId);
+
+	const actionInstancePromise = db
+		.selectFrom("action_instances")
+		.where("action_instances.id", "=", args.actionInstanceId)
+		.select((eb) => [
+			"id",
+			eb.fn.coalesce("config", sql`'{}'`).as("config"),
+			"created_at as createdAt",
+			"updated_at as updatedAt",
+			"stage_id as stageId",
+			"action",
+			// this is to check whether the pub is still in the stage the actionInstance is in
+			// often happens when an action is scheduled but a pub is moved before the action runs
+			jsonObjectFrom(
+				eb
+					.selectFrom("PubsInStages")
+					.select(["pubId", "stageId"])
+					.where("pubId", "=", args.pubId)
+					.whereRef("stageId", "=", "action_instances.stage_id")
+			).as("pubInStage"),
+		])
+		.executeTakeFirstOrThrow();
+
+	const [pubResult, actionInstanceResult] = await Promise.allSettled([
+		pubPromise,
+		actionInstancePromise,
+	]);
+
+	if (pubResult.status === "rejected") {
+		return {
+			error: "Pub not found",
+			cause: pubResult.reason,
+		};
+	}
+
+	if (actionInstanceResult.status === "rejected") {
+		logger.error({ msg: actionInstanceResult.reason });
+		return {
+			error: "Action instance not found",
+			cause: actionInstanceResult.reason,
+		};
+	}
+
+	const actionInstance = actionInstanceResult.value;
+	const pub = pubResult.value;
+
+	if (!actionInstance.pubInStage) {
+		logger.warn({
+			msg: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
+			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+			pubId: args.pubId,
+			actionInstanceId: args.actionInstanceId,
+		});
+		return {
+			error: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
+			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+		};
+	}
+
 	if (!actionInstance.action) {
 		return {
 			error: "Action not found",
@@ -108,56 +159,59 @@ const _runActionInstance = async (
 	}
 };
 
+// export async function runActionInstancel(args: RunActionInstanceArgs) {
+
+// 	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
+
+// 	return result;
+// }
+
 export async function runActionInstance(args: RunActionInstanceArgs) {
-	const pubPromise = getPub(args.pubId);
+	const result = await _runActionInstance(args);
 
-	const actionInstancePromise = db
-		.selectFrom("action_instances")
-		.where("action_instances.id", "=", args.actionInstanceId)
-		.select((eb) => [
-			"id",
-			eb.fn.coalesce("config", sql`'{}'`).as("config"),
-			"created_at as createdAt",
-			"updated_at as updatedAt",
-			"stage_id as stageId",
-			"action",
-		])
-		.executeTakeFirstOrThrow();
-
-	const [pubResult, actionInstanceResult] = await Promise.allSettled([
-		pubPromise,
-		actionInstancePromise,
-	]);
-
-	if (pubResult.status === "rejected") {
-		return {
-			error: "Pub not found",
-			cause: pubResult.reason,
-		};
-	}
-
-	if (actionInstanceResult.status === "rejected") {
-		logger.debug({ msg: actionInstanceResult.reason });
-		return {
-			error: "Action instance not found",
-			cause: actionInstanceResult.reason,
-		};
-	}
-
-	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
+	const isActionUserInitiated = "userId" in args;
 
 	await db
+		.with(
+			"existingScheduledActionRun",
+			(db) =>
+				db
+					.selectFrom("action_runs")
+					.selectAll()
+					.where("action_instance_id", "=", args.actionInstanceId)
+					.where("pub_id", "=", args.pubId)
+					.where("status", "=", ActionRunStatus.scheduled)
+			// this should be guaranteed to be unique, as only one actionInstance should be scheduled per pub
+		)
 		.insertInto("action_runs")
-		.values({
+		.values((eb) => ({
+			id:
+				isActionUserInitiated || args.event !== Event.pubInStageForDuration
+					? undefined
+					: eb.selectFrom("existingScheduledActionRun").select("id"),
 			action_instance_id: args.actionInstanceId,
 			pub_id: args.pubId,
-			user_id: "userId" in args ? args.userId : null,
+			user_id: isActionUserInitiated ? args.userId : null,
 			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
 			result,
-			config: actionInstanceResult.value.config,
+			// this is a bit hacky, would be better to pass this around methinks
+			config: eb
+				.selectFrom("action_instances")
+				.select("config")
+				.where("action_instances.id", "=", args.actionInstanceId),
 			params: args,
-			event: "userId" in args ? undefined : args.event,
-		})
+			event: isActionUserInitiated ? undefined : args.event,
+		}))
+		// conflict should only happen if a scheduled action is excecuted
+		// not on user initiated actions or on other events
+		.onConflict((oc) =>
+			oc.column("id").doUpdateSet({
+				result,
+				params: args,
+				event: "userId" in args ? undefined : args.event,
+				status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
+			})
+		)
 		.execute();
 
 	return result;

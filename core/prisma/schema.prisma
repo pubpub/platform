@@ -11,6 +11,10 @@ generator client {
   previewFeatures = ["fullTextSearch"]
 }
 
+generator comments {
+  provider = "pnpm exec tsx prisma/comment-generator.ts"
+}
+
 model User {
   id           String   @id @default(dbgenerated("gen_random_uuid()"))
   supabaseId   String?  @unique
@@ -375,6 +379,7 @@ model ActionRun {
 }
 
 enum ActionRunStatus {
+  scheduled
   success
   failure
 }
@@ -384,6 +389,7 @@ model Rule {
   event            Event
   actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String         @map(name: "action_instance_id")
+  config           Json? /// @type(RuleConfigs, '~/actions/types', true, false, true)
 
   @@unique([actionInstanceId, event])
   @@map(name: "rules")
@@ -392,6 +398,7 @@ model Rule {
 enum Event {
   pubEnteredStage
   pubLeftStage
+  pubInStageForDuration
 }
 
 model Form {

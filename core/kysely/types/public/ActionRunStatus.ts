@@ -5,6 +5,7 @@
 enum ActionRunStatus {
 	success = "success",
 	failure = "failure",
+	scheduled = "scheduled",
 }
 
 export default ActionRunStatus;

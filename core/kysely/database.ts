@@ -15,7 +15,7 @@ const dialect = new PostgresDialect({
 });
 
 const kyselyLogger =
-	env.LOG_LEVEL === "debug"
+	env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true"
 		? ({ query: { sql, parameters }, ...event }: LogEvent) =>
 				logger.debug({ event }, "Kysely query:\n%s; --Parameters: %o", sql, parameters)
 		: undefined;

@@ -5,6 +5,8 @@ import { useCallback } from "react";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 
+import type { RuleForEvent } from "~/actions/_lib/rules";
+import type { RuleConfig } from "~/actions/types";
 import type Action from "~/kysely/types/public/Action";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type Event from "~/kysely/types/public/Event";
@@ -20,6 +22,7 @@ type Props = {
 		event: Event;
 		instanceName: string;
 		action: Action;
+		config?: RuleConfig<RuleForEvent<Event>> | null;
 	};
 };
 
@@ -46,7 +49,7 @@ export const StagePanelRule = (props: Props) => {
 						</span>{" "}
 						will run when{" "}
 						<span className="italic underline decoration-dotted">
-							{humanReadableEvent(rule.event)}
+							{humanReadableEvent(rule.event, rule.config ?? undefined)}
 						</span>
 					</span>
 				</div>

@@ -59,6 +59,8 @@ export const getActionRunsTableColumns = () =>
 						return "Rule (Pub entered stage)";
 					case "pubLeftStage":
 						return "Rule (Pub exited stage)";
+					case "pubInStageForDuration":
+						return "Rule (Pub in stage for duration)";
 				}
 			},
 		},
@@ -93,6 +95,13 @@ export const getActionRunsTableColumns = () =>
 						break;
 					case "failure":
 						badge = <Badge variant="destructive">failure</Badge>;
+						break;
+					case "scheduled":
+						badge = (
+							<Badge variant="default" className="bg-orange-500">
+								scheduled
+							</Badge>
+						);
 						break;
 					default:
 						badge = <Badge variant="outline">unknown</Badge>;
