@@ -48,7 +48,7 @@ interface OperationConfig<P extends EmitEventPayload, N extends NormalizedEventP
 	type: string;
 	check: (payload: any) => payload is P;
 	normalize: (payload: P) => N;
-	actions: ((client: InternalClient, payload: N, logger: Logger) => Promise<any>)[];
+	effects: ((client: InternalClient, payload: N, logger: Logger) => Promise<any>)[];
 }
 
 const defineConfig = <P extends EmitEventPayload, N extends NormalizedEventPayload>(
@@ -149,12 +149,12 @@ const triggerAction = async (
 	}
 };
 
-const operationConfigs = [
+const eventConfigs = [
 	defineConfig({
 		type: "ScheduledEvent",
 		check: (payload: any): payload is ScheduledEventPayload => "event" in payload,
 		normalize: (payload: ScheduledEventPayload) => payload,
-		actions: [triggerAction],
+		effects: [triggerAction],
 	}),
 	defineConfig({
 		type: "InsertOperation",
@@ -164,7 +164,7 @@ const operationConfigs = [
 			event: Event.pubEnteredStage,
 			...payload.new,
 		}),
-		actions: [scheduleTask, triggerActions],
+		effects: [scheduleTask, triggerActions],
 	}),
 	defineConfig({
 		type: "DeleteOperation",
@@ -174,7 +174,7 @@ const operationConfigs = [
 			event: Event.pubLeftStage,
 			...payload.old,
 		}),
-		actions: [triggerActions],
+		effects: [triggerActions],
 	}),
 ];
 
@@ -183,7 +183,7 @@ const processEventPayload = (
 	payload: EmitEventPayload,
 	eventLogger: Logger
 ) => {
-	for (const config of operationConfigs) {
+	for (const config of eventConfigs) {
 		if (!config.check(payload)) {
 			continue;
 		}
@@ -197,7 +197,7 @@ const processEventPayload = (
 			continue;
 		}
 
-		return config.actions.map((action) =>
+		return config.effects.map((action) =>
 			action(
 				client,
 				// this is guaranteed to be a valid payload
