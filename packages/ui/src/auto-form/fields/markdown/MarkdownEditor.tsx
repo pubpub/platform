@@ -18,15 +18,16 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { EditorState } from "lexical";
+import { TestTube } from "lucide-react";
 
 import { cn } from "utils";
 
 import { FormControl, FormItem, FormMessage } from "../../../form";
+import { useTokenContext } from "../../../tokens";
 import AutoFormDescription from "../../common/description";
 import AutoFormLabel from "../../common/label";
 import AutoFormTooltip from "../../common/tooltip";
 import { AutoFormInputComponentProps } from "../../types";
-import { TokenProvider } from "./TokenContext";
 import { TokenNode } from "./TokenNode";
 import { TokenPlugin } from "./TokenPlugin";
 
@@ -70,6 +71,7 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 			nodes: NODES,
 		};
 	}, [initialValue]);
+	const tokens = useTokenContext();
 
 	const onChange = React.useCallback(
 		(editorState: EditorState) => {
@@ -92,41 +94,31 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 						)}
 					</>
 				)}
-				<TokenProvider
-					staticTokens={[
-						"user.token",
-						"user.id",
-						"user.firstName",
-						"user.lastName",
-						"instance.id",
-					]}
-					dynamicTokens={null}
-				>
-					<FormControl>
-						<LexicalComposer initialConfig={initialConfig}>
-							<RichTextPlugin
-								contentEditable={
-									<ContentEditable
-										className={cn(
-											"editor",
-											"markdown",
-											// Copied from ui/src/input.tsx
-											"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-										)}
-									/>
-								}
-								placeholder={null}
-								ErrorBoundary={LexicalErrorBoundary}
-							/>
-							<OnChangePlugin onChange={onChange} />
-							<HistoryPlugin />
-							<AutoFocusPlugin />
-							<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-							<TokenPlugin />
-						</LexicalComposer>
-					</FormControl>
-					<AutoFormTooltip fieldConfigItem={props.fieldConfigItem} />
-				</TokenProvider>
+				<FormControl>
+					<LexicalComposer initialConfig={initialConfig}>
+						<RichTextPlugin
+							contentEditable={
+								<ContentEditable
+									className={cn(
+										"editor",
+										"markdown",
+										"prose prose-sm",
+										// Copied from ui/src/input.tsx
+										"w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									)}
+								/>
+							}
+							placeholder={null}
+							ErrorBoundary={LexicalErrorBoundary}
+						/>
+						<OnChangePlugin onChange={onChange} />
+						<HistoryPlugin />
+						<AutoFocusPlugin />
+						<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+						<TokenPlugin tokens={Object.keys(tokens[props.field.name] ?? {})} />
+					</LexicalComposer>
+				</FormControl>
+				<AutoFormTooltip fieldConfigItem={props.fieldConfigItem} />
 				<FormMessage />
 			</FormItem>
 		</div>

@@ -14,7 +14,6 @@ export class TokenNode extends TextNode {
 
 	constructor(text: string, key?: NodeKey) {
 		super(text, key);
-		console.log(text, key);
 	}
 
 	createDOM(config: EditorConfig): HTMLElement {

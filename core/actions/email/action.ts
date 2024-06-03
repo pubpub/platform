@@ -36,6 +36,16 @@ export const action = defineAction({
 		.optional(),
 	pubFields: [],
 	icon: Mail,
+	tokens: {
+		body: {
+			"recipient.firstName": {
+				description: "The first name of the email recipient",
+			},
+			"recipient.lastName": {
+				description: "The last name of the email recipient",
+			},
+		},
+	},
 });
 
 // export { run } from "./run";

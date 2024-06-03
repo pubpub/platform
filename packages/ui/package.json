@@ -153,6 +153,10 @@
 			"module": "./context-menu/dist/ui-context-menu.esm.js",
 			"default": "./context-menu/dist/ui-context-menu.cjs.js"
 		},
+		"./tokens": {
+			"module": "./tokens/dist/ui-tokens.esm.js",
+			"default": "./tokens/dist/ui-tokens.cjs.js"
+		},
 		"./dropdown-menu": {
 			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
 			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
@@ -232,6 +236,7 @@
 		"textarea",
 		"toast",
 		"toaster",
+		"tokens",
 		"tooltip",
 		"use-toast",
 		"hooks",
@@ -274,6 +279,7 @@
 		"@radix-ui/react-tabs": "^1.0.4",
 		"@radix-ui/react-toast": "^1.1.4",
 		"@radix-ui/react-tooltip": "^1.0.6",
+		"@tailwindcss/typography": "^0.5.10",
 		"@tanstack/react-table": "^8.13.2",
 		"@uppy/aws-s3": "^3.4.0",
 		"@uppy/core": "^3.6.1",
@@ -371,6 +377,7 @@
 			"textarea.tsx",
 			"toast.tsx",
 			"toaster.tsx",
+			"tokens/index.tsx",
 			"tooltip.tsx",
 			"use-toast.tsx",
 			"hooks/index.ts",

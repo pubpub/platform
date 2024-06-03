@@ -26,6 +26,12 @@ export type ConfigProps<C> = {
 	config: C;
 };
 
+export type TokenDef = {
+	[key: string]: {
+		description: string;
+	};
+};
+
 export type Action<
 	P extends ActionPubType = ActionPubType,
 	C extends object = {},
@@ -58,6 +64,13 @@ export type Action<
 	 * The icon to display for this action. Used in the UI.
 	 */
 	icon: (typeof Icons)[keyof typeof Icons];
+	/**
+	 * Optionally provide a list of tokens that can be used in the
+	 * action's config or arguments.
+	 */
+	tokens?: {
+		[K in keyof C]?: TokenDef;
+	};
 };
 
 export const defineAction = <
