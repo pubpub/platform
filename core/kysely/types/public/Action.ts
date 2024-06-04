@@ -8,6 +8,7 @@ enum Action {
 	email = "email",
 	pushToV6 = "pushToV6",
 	http = "http",
+	move = "move",
 }
 
 export default Action;

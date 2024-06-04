@@ -1,4 +1,5 @@
 export {
+	Activity,
 	Calendar,
 	BadgeCheck,
 	Check,
@@ -18,6 +19,7 @@ export {
 	Mail,
 	Menu,
 	MoreVertical,
+	MoveHorizontal,
 	Pencil,
 	Plus,
 	Play,

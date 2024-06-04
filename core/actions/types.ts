@@ -6,9 +6,14 @@ import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
 import type { StagePub } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
+import type Event from "~/kysely/types/public/Event";
+import type { Stages, StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 
 export type ActionPubType = CorePubField[];
+
+type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
+type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
 export type ActionPub<T extends ActionPubType> = {
 	id: string;
@@ -18,26 +23,26 @@ export type ActionPub<T extends ActionPubType> = {
 };
 
 export type RunProps<T extends Action> =
-	T extends Action<infer PT, infer AC, infer RP extends Record<string, unknown> | undefined>
-		? {
-				pub: ActionPub<PT>;
-				config: AC;
-				runParameters: RP;
-			}
+	T extends Action<
+		infer P extends ActionPubType,
+		infer C,
+		infer A extends ZodObjectOrWrappedOrOptional
+	>
+		? { config: C["_output"]; pub: ActionPub<P>; args: A["_output"]; stageId: StagesId }
 		: never;
 
 export type ConfigProps<C> = {
 	config: C;
 };
 
-export type RunParameterFieldTypeOverride = (pub: StagePub) => FieldConfigItem["fieldType"];
+export type ParamsFieldTypeOverride = (pub: StagePub) => FieldConfigItem["fieldType"];
+export type ConfigFieldTypeOverride = (stags: Stages) => FieldConfigItem["fieldType"];
 
 export type Action<
-	PT extends ActionPubType = ActionPubType,
-	AC extends Record<string, unknown> = Record<string, unknown>,
-	RP extends Record<string, unknown> | undefined = Record<string, unknown> | undefined,
+	P extends ActionPubType = ActionPubType,
+	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
+	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
 	N extends string = string,
-	F extends FieldConfig<NonNullable<RP>> = FieldConfig<NonNullable<RP>>,
 > = {
 	id?: string;
 	name: N;
@@ -48,8 +53,16 @@ export type Action<
 	 * These are the "statically known" parameters for this action.
 	 */
 	config:
-		| z.ZodType<AC>
-		| { schema: z.ZodType<AC>; fieldConfig?: FieldConfig<AC>; dependencies?: Dependency<AC>[] };
+		| C
+		| {
+				schema: C;
+				fieldConfig?: {
+					[K in keyof FieldConfig<C["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
+						fieldType?: ParamsFieldTypeOverride;
+					};
+				};
+				dependencies?: Dependency<C["_output"]>[];
+		  };
 	/**
 	 * The run parameters for this action
 	 *
@@ -58,21 +71,21 @@ export type Action<
 	 * Defining this as an optional Zod schema (e.g. `z.object({/*...*\/}).optional()`) means that the action can be automatically run
 	 * through a rule.
 	 */
-	runParameters:
-		| z.ZodType<RP>
+	params:
+		| A
 		| {
-				schema: z.ZodType<RP>;
+				schema: A;
 				fieldConfig?: {
-					[K in keyof F]: Omit<FieldConfigItem, "fieldType"> & {
-						fieldType?: RunParameterFieldTypeOverride;
+					[K in keyof NonNullable<A["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
+						fieldType?: ParamsFieldTypeOverride;
 					};
 				};
-				dependencies?: Dependency<NonNullable<RP>>[];
+				dependencies?: Dependency<NonNullable<A["_output"]>>[];
 		  };
 	/**
 	 * The core pub fields that this action requires in order to run.
 	 */
-	pubFields: PT;
+	pubFields: P;
 	/**
 	 * The icon to display for this action. Used in the UI.
 	 */
@@ -81,14 +94,14 @@ export type Action<
 
 export const defineAction = <
 	T extends ActionPubType,
-	AC extends Record<string, unknown>,
-	RP extends Record<string, unknown> | undefined,
+	C extends ZodObjectOrWrapped,
+	A extends ZodObjectOrWrappedOrOptional,
 	N extends string,
 >(
-	action: Action<T, AC, RP, N>
+	action: Action<T, C, A, N>
 ) => action;
 
-type ActionSuccess = {
+export type ActionSuccess = {
 	success: true;
 	/**
 	 * Optionally provide a report to be displayed to the user
@@ -102,3 +115,40 @@ export const defineRun = <T extends Action = Action>(
 ) => run;
 
 export type Run = ReturnType<typeof defineRun>;
+
+type ValueType<T extends Record<string, { optional: boolean }>> = { [K in keyof T]?: string } & {
+	[K in keyof T as T[K]["optional"] extends false ? K : never]-?: string;
+} extends infer O
+	? { [K in keyof O]: O[K] }
+	: never;
+
+declare const x: ValueType<{ a: { optional: false } }>;
+
+export type EventRuleOptionsBase<
+	E extends Event,
+	AC extends Record<string, any> | undefined = undefined,
+> = {
+	event: E;
+	canBeRunAfterAddingRule?: boolean;
+	additionalConfig?: AC extends Record<string, any> ? z.ZodType<AC> : undefined;
+	/**
+	 * The display name options for this event
+	 */
+	display: {
+		/**
+		 * The base display name for this rule, shown e.g. when selecting the event for a rule
+		 */
+		base: string;
+	} & {
+		/**
+		 * The display name for this event when used in a rule
+		 */
+		[K in "withConfig" as AC extends Record<string, any> ? K : never]: (options: AC) => string;
+	};
+};
+
+export const defineRule = <E extends Event, AC extends Record<string, any> | undefined = undefined>(
+	options: EventRuleOptionsBase<E, AC>
+) => options;
+
+export type { RuleConfig, RuleConfigs } from "./_lib/rules";

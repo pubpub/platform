@@ -39,7 +39,7 @@ export const action = defineAction({
 			}
 		}),
 	description: "Make an arbitrary HTTP request",
-	runParameters: {
+	params: {
 		schema: z
 			.object({
 				test: z.boolean().optional().describe("Test|Run the action in test mode"),
@@ -66,7 +66,6 @@ export const action = defineAction({
 					.optional()
 					.describe("Output map|Map of JSON paths to pub fields"),
 			})
-			.optional()
 			.superRefine((value, ctx) => {
 				if (value?.method === "GET" && value?.body) {
 					return ctx.addIssue({
@@ -75,7 +74,8 @@ export const action = defineAction({
 						path: ["body"],
 					});
 				}
-			}),
+			})
+			.optional(),
 		dependencies: [
 			{
 				sourceField: "method",

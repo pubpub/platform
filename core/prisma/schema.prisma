@@ -11,6 +11,10 @@ generator client {
   previewFeatures = ["fullTextSearch"]
 }
 
+generator comments {
+  provider = "pnpm exec tsx prisma/comment-generator.ts"
+}
+
 model User {
   id           String   @id @default(dbgenerated("gen_random_uuid()"))
   supabaseId   String?  @unique
@@ -30,6 +34,7 @@ model User {
   memberGroups MemberGroup[]
   AuthToken    AuthToken[]
   assignedPubs Pub[]
+  actionRuns   ActionRun[]
 
   @@map(name: "users")
 }
@@ -87,6 +92,7 @@ model Pub {
   integrationInstances     IntegrationInstance[]
   permissions              Permission[]
   IntegrationInstanceState IntegrationInstanceState[]
+  actionRuns               ActionRun[]
 
   @@map(name: "pubs")
 }
@@ -102,8 +108,9 @@ model PubField {
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
   pubFieldSchemaId String?
 
-  values   PubValue[]
-  pubTypes PubType[]
+  values    PubValue[]
+  pubTypes  PubType[]
+  FormInput FormInput[]
 
   @@map(name: "pub_fields")
 }
@@ -148,6 +155,7 @@ model PubType {
 
   fields PubField[]
   pubs   Pub[]
+  Form   Form[]
 
   @@map(name: "pub_types")
 }
@@ -329,15 +337,16 @@ model IntegrationInstanceState {
 }
 
 model ActionInstance {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
-  name      String   @default("")
+  id        String      @id @default(dbgenerated("gen_random_uuid()"))
+  name      String      @default("")
   action    Action
-  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId   String   @map(name: "stage_id")
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  stage     Stage       @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId   String      @map(name: "stage_id")
+  createdAt DateTime    @default(now()) @map(name: "created_at")
+  updatedAt DateTime    @default(now()) @updatedAt @map(name: "updated_at")
   config    Json?
   rules     Rule[]
+  runs      ActionRun[]
 
   @@map(name: "action_instances")
 }
@@ -348,6 +357,32 @@ enum Action {
   email
   pushToV6
   http
+  move
+}
+
+model ActionRun {
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
+  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId String?         @map(name: "action_instance_id")
+  pub              Pub?            @relation(fields: [pubId], references: [id])
+  pubId            String?         @map(name: "pub_id")
+  config           Json?
+  event            Event?
+  params           Json?
+  status           ActionRunStatus
+  result           Json
+  user             User?           @relation(fields: [userId], references: [id])
+  userId           String?         @map(name: "user_id")
+  createdAt        DateTime        @default(now()) @map(name: "created_at")
+  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updated_at")
+
+  @@map(name: "action_runs")
+}
+
+enum ActionRunStatus {
+  scheduled
+  success
+  failure
 }
 
 model Rule {
@@ -355,6 +390,7 @@ model Rule {
   event            Event
   actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String         @map(name: "action_instance_id")
+  config           Json? /// @type(RuleConfigs, '~/actions/types', true, false, true)
 
   @@unique([actionInstanceId, event])
   @@map(name: "rules")
@@ -363,4 +399,29 @@ model Rule {
 enum Event {
   pubEnteredStage
   pubLeftStage
+  pubInStageForDuration
+}
+
+model Form {
+  id        String      @id @default(dbgenerated("gen_random_uuid()"))
+  name      String
+  pubType   PubType     @relation(fields: [pubTypeId], references: [id])
+  pubTypeId String      @map(name: "pub_type_id")
+  inputs    FormInput[]
+
+  @@map(name: "forms")
+}
+
+model FormInput {
+  id       String   @id @default(dbgenerated("gen_random_uuid()"))
+  fieldId  String   @map(name: "field_id")
+  field    PubField @relation(fields: [fieldId], references: [id])
+  formId   String   @map(name: "form_id")
+  order    String
+  label    String
+  required Boolean
+  form     Form     @relation(fields: [formId], references: [id])
+  isSubmit Boolean  @map(name: "is_submit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
+
+  @@map(name: "form_inputs")
 }

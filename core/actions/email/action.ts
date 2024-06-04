@@ -13,7 +13,7 @@ export const action = defineAction({
 		body: z.string().min(0).max(1_000).describe("Email body||textarea"),
 	}),
 	description: "Send an email to one or more users",
-	runParameters: z
+	params: z
 		.object({
 			email: z
 				.string()

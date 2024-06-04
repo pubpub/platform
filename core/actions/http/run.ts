@@ -32,12 +32,12 @@ const updateField = async ({
 		.execute();
 };
 
-export const run = defineRun<typeof action>(async ({ pub, config, runParameters }) => {
+export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	const { url, method, authToken, body } = {
-		url: runParameters?.url ?? config.url,
-		method: runParameters?.method ?? config.method,
-		authToken: runParameters?.authToken ?? config.authToken,
-		body: runParameters?.body ?? config.body,
+		url: args?.url ?? config.url,
+		method: args?.method ?? config.method,
+		authToken: args?.authToken ?? config.authToken,
+		body: args?.body ?? config.body,
 	};
 
 	const res = await fetch(url, {
@@ -56,10 +56,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, runParameters 
 		};
 	}
 
-	if (
-		runParameters?.outputMap &&
-		!res.headers.get("content-type")?.includes("application/json")
-	) {
+	if (args?.outputMap && !res.headers.get("content-type")?.includes("application/json")) {
 		return {
 			title: "Error",
 			error: `Expected application/json response, got ${res.headers.get("content-type")}`,
@@ -68,16 +65,14 @@ export const run = defineRun<typeof action>(async ({ pub, config, runParameters 
 
 	const result = await res.json();
 
-	const setRunParameters = runParameters?.outputMap
-		? Object.entries(runParameters.outputMap).filter((entry): entry is [string, string] =>
+	const setRunParameters = args?.outputMap
+		? Object.entries(args.outputMap).filter((entry): entry is [string, string] =>
 				Boolean(entry[1])
 			)
 		: [];
 
 	if (setRunParameters.length > 0) {
-		logger.info({ msg: "setRunParameters", setRunParameters });
-
-		if (runParameters?.test) {
+		if (args?.test) {
 			return {
 				success: true,
 				report: `<div>
@@ -131,7 +126,7 @@ ${setRunParameters.map(([fieldSlug, value]) => `<p>${fieldSlug}: ${pub.values[fi
 		};
 	}
 
-	logger.info({ msg: "ran http", pub, config, runParameters });
+	logger.info({ msg: "ran http", pub, config, args });
 
 	return {
 		success: true,

@@ -17,7 +17,7 @@ jobs:
             - name: Install Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version: 20.13.1
 
             - name: Install pnpm
               uses: pnpm/action-setup@v3
@@ -42,6 +42,10 @@ jobs:
             - name: install dependencies
               run: pnpm install
 
+            # this makes sure all the packages are properly linked
+            - name: preconstruct build
+              run: pnpm p:build
+
             - name: generate prisma types
               run: pnpm --filter core prisma generate
 
@@ -50,10 +54,6 @@ jobs:
 
             - name: lint
               run: pnpm run lint
-
-            # this makes sure all the packages are properly linked
-            - name: preconstruct build
-              run: pnpm p:build
 
             - name: type-check
               run: pnpm run type-check

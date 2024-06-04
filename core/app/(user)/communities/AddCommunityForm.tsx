@@ -22,6 +22,7 @@ export const communityCreateFormSchema = z.object({
 
 type Props = {
 	user: any;
+	setOpen: (open: false) => void;
 };
 
 export const AddCommunityForm = (props: Props) => {
@@ -30,6 +31,7 @@ export const AddCommunityForm = (props: Props) => {
 	async function onSubmit(data: z.infer<typeof communityCreateFormSchema>) {
 		const result = await runCreateCommunity({ ...data, user: props.user });
 		if (didSucceed(result)) {
+			props.setOpen(false);
 			toast({
 				title: "Success",
 				description: "Community created",

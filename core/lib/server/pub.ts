@@ -150,6 +150,7 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 				"avatar",
 				"created_at as createdAt",
 				"email",
+				"community_id as communityId",
 			])
 	).as("assignee");
 

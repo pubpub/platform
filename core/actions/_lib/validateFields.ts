@@ -35,6 +35,4 @@ export const validatePubValues = ({
 			return { error: `Field ${field.slug} failed schema validation` };
 		}
 	}
-
-	return values;
 };

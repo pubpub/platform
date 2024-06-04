@@ -4,8 +4,11 @@
 import { type default as ActionClaimTable } from "./ActionClaim";
 import { type default as ActionInstancesTable } from "./ActionInstances";
 import { type default as ActionMoveTable } from "./ActionMove";
+import { type default as ActionRunsTable } from "./ActionRuns";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
+import { type default as FormInputsTable } from "./FormInputs";
+import { type default as FormsTable } from "./Forms";
 import { type default as IntegrationInstancesTable } from "./IntegrationInstances";
 import { type default as IntegrationInstanceStateTable } from "./IntegrationInstanceState";
 import { type default as IntegrationInstanceToPubTable } from "./IntegrationInstanceToPub";
@@ -30,24 +33,6 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
-	_prisma_migrations: PrismaMigrationsTable;
-
-	users: UsersTable;
-
-	pubs: PubsTable;
-
-	pub_types: PubTypesTable;
-
-	stages: StagesTable;
-
-	members: MembersTable;
-
-	member_groups: MemberGroupsTable;
-
-	integrations: IntegrationsTable;
-
-	communities: CommunitiesTable;
-
 	move_constraint: MoveConstraintTable;
 
 	action_claim: ActionClaimTable;
@@ -83,4 +68,28 @@ export default interface PublicSchema {
 	PubsInStages: PubsInStagesTable;
 
 	rules: RulesTable;
+
+	action_runs: ActionRunsTable;
+
+	forms: FormsTable;
+
+	form_inputs: FormInputsTable;
+
+	_prisma_migrations: PrismaMigrationsTable;
+
+	users: UsersTable;
+
+	pubs: PubsTable;
+
+	pub_types: PubTypesTable;
+
+	stages: StagesTable;
+
+	members: MembersTable;
+
+	member_groups: MemberGroupsTable;
+
+	integrations: IntegrationsTable;
+
+	communities: CommunitiesTable;
 }

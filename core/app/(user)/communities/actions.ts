@@ -5,18 +5,17 @@ import { v4 as uuidv4 } from "uuid";
 
 import { expect } from "utils";
 
+import type { TableCommunity } from "./getCommunityTableColumns";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import type { UsersId } from "~/kysely/types/public/Users";
+import type { UserAndMemberships } from "~/lib/types";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
-import { PubTypesId } from "~/kysely/types/public/PubTypes";
-import { UsersId } from "~/kysely/types/public/Users";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
-import { UserAndMemberships } from "~/lib/types";
-import prisma from "~/prisma/db";
 import { crocCrocId } from "~/prisma/exampleCommunitySeeds/croccroc";
 import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
-import { TableCommunity } from "./getCommunityTableColumns";
 
 export const createCommunity = defineServerAction(async function createCommunity({
 	user,
@@ -44,7 +43,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 	try {
 		const communityExists = await db
 			.selectFrom("communities")
-			.selectAll() // or `selectAll()` etc
+			.selectAll()
 			.where("slug", "=", `${slug}`)
 			.executeTakeFirst();
 
@@ -66,7 +65,12 @@ export const createCommunity = defineServerAction(async function createCommunity
 					.executeTakeFirst()
 			);
 			const communityUUID = c.id as CommunitiesId;
-			const member = await db
+
+			const pubTypeId: string = uuidv4();
+
+			const corePubSlugs = corePubFields.map((field) => field.slug);
+
+			const memberPromise = db
 				.insertInto("members")
 				.values({
 					user_id: user.id as UsersId,
@@ -76,78 +80,79 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.returning("id")
 				.executeTakeFirst();
 
-			const pubTypeId: string = uuidv4();
-
-			const corePubSlugs = corePubFields.map((field) => field.slug);
-
-			const [title] = await db
+			const pubFieldsPromise = db
 				.selectFrom("pub_fields")
 				.selectAll()
-				.where("pub_fields.slug", "=", corePubSlugs)
+				.where("pub_fields.slug", "in", corePubSlugs)
 				.execute();
 
-			await db
+			const [fields, member] = await Promise.all([pubFieldsPromise, memberPromise]);
+			const pubTypesPromise = db
 				.with("core_pub_type", (db) =>
 					db
 						.insertInto("pub_types")
 						.values({
 							id: pubTypeId as PubTypesId,
-							name: "Title Pub That Only List Titles",
+							name: "Submission ",
 							community_id: c.id as CommunitiesId,
 						})
 						.returning("id")
 				)
 				.insertInto("_PubFieldToPubType")
-				.values((eb) => ({
-					A: title.id,
-					B: eb.selectFrom("core_pub_type").select("id"),
-				}))
+				.values((eb) =>
+					fields.map((field) => ({
+						A: field.id,
+						B: eb.selectFrom("core_pub_type").select("id"),
+					}))
+				)
 				.execute();
-			const stages = (
-				await db
-					.insertInto("stages")
-					.values([
-						{
-							community_id: communityUUID,
-							name: "Submitted",
-							order: "aa",
-						},
-						{
-							community_id: communityUUID,
-							name: "Ask Author for Consent",
-							order: "bb",
-						},
-						{
-							community_id: communityUUID,
-							name: "To Evaluate",
-							order: "cc",
-						},
-						{
-							community_id: communityUUID,
-							name: "Under Evaluation",
-							order: "dd",
-						},
-						{
-							community_id: communityUUID,
-							name: "In Production",
-							order: "ff",
-						},
-						{
-							community_id: communityUUID,
-							name: "Published",
-							order: "gg",
-						},
-						{
-							community_id: communityUUID,
-							name: "Shelved",
-							order: "hh",
-						},
-					])
-					.returning("id")
-					.execute()
-			).map((x) => x.id);
 
-			await db
+			const stagesPromise = db
+				.insertInto("stages")
+				.values([
+					{
+						community_id: communityUUID,
+						name: "Submitted",
+						order: "aa",
+					},
+					{
+						community_id: communityUUID,
+						name: "Ask Author for Consent",
+						order: "bb",
+					},
+					{
+						community_id: communityUUID,
+						name: "To Evaluate",
+						order: "cc",
+					},
+					{
+						community_id: communityUUID,
+						name: "Under Evaluation",
+						order: "dd",
+					},
+					{
+						community_id: communityUUID,
+						name: "In Production",
+						order: "ff",
+					},
+					{
+						community_id: communityUUID,
+						name: "Published",
+						order: "gg",
+					},
+					{
+						community_id: communityUUID,
+						name: "Shelved",
+						order: "hh",
+					},
+				])
+				.returning("id")
+				.execute();
+
+			const [_, stagesReturn] = await Promise.all([pubTypesPromise, stagesPromise]);
+			const stages = stagesReturn.map((stage) => stage.id);
+
+			const permissionPromise = db
 				.with("new_permission", (db) =>
 					db
 						.insertInto("permissions")
@@ -177,7 +182,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 				])
 				.execute();
 
-			await db
+			const moveConstraintPromise = db
 				.insertInto("move_constraint")
 				.values([
 					{
@@ -204,7 +209,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 				])
 				.execute();
 
-			await db
+			const createPubPromise = db
 				.with("new_pubs", (db) =>
 					db
 						.insertInto("pubs")
@@ -226,11 +231,17 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.values((eb) => [
 					{
 						pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-						field_id: title.id,
+						field_id: fields.find((field) => field.slug === "pubpub:title")!.id,
 						value: '"The Activity of Slugs I. The Induction of Activity by Changing Temperatures"',
+					},
+					{
+						pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
+						field_id: fields.find((field) => field.slug === "pubpub:content")!.id,
+						value: '"LONG LIVE THE SLUGS"',
 					},
 				])
 				.execute();
+			await Promise.all([permissionPromise, moveConstraintPromise, createPubPromise]);
 		}
 		revalidatePath("/");
 	} catch (error) {

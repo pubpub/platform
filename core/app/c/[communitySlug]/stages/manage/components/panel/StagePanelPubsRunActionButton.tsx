@@ -18,7 +18,7 @@ import type { StagePub } from "./queries";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
-import { runActionInstance } from "~/actions/api/server";
+import { runActionInstance } from "~/actions/api/serverAction";
 import { useServerAction } from "~/lib/serverActions";
 
 export const MapFieldConfig = ({
@@ -62,7 +62,7 @@ export const StagePanelPubsRunActionButton = ({
 				const result = await runAction({
 					actionInstanceId: actionInstance.id as ActionInstancesId,
 					pubId: pub.id as PubsId,
-					runParameters: values,
+					actionInstanceArgs: values,
 				});
 
 				if ("success" in result) {
@@ -98,22 +98,16 @@ export const StagePanelPubsRunActionButton = ({
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
 				<AutoForm
-					formSchema={
-						"schema" in action.runParameters
-							? action.runParameters.schema
-							: action.runParameters
-					}
+					formSchema={"schema" in action.params ? action.params.schema : action.params}
 					onSubmit={onSubmit}
 					dependencies={
-						"dependencies" in action.runParameters
-							? action.runParameters.dependencies
-							: undefined
+						"dependencies" in action.params ? action.params.dependencies : undefined
 					}
 					fieldConfig={{
-						...("fieldConfig" in action.runParameters
+						...("fieldConfig" in action.params
 							? MapFieldConfig({
 									pub,
-									fieldConfig: action.runParameters.fieldConfig ?? {},
+									fieldConfig: action.params.fieldConfig ?? {},
 								})
 							: undefined),
 					}}

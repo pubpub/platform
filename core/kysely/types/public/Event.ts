@@ -5,6 +5,7 @@
 enum Event {
 	pubEnteredStage = "pubEnteredStage",
 	pubLeftStage = "pubLeftStage",
+	pubInStageForDuration = "pubInStageForDuration",
 }
 
 export default Event;

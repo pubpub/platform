@@ -47,6 +47,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 						<StagePanelRuleCreator
 							actionInstances={actionInstances}
 							communityId={stage.communityId}
+							rules={rules}
 						/>
 					</>
 				) : (

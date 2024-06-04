@@ -82,16 +82,18 @@ export const getStageMembers = cache(async (stageId: string) => {
 });
 
 export const getStageRules = cache(async (stageId: string) => {
-	const stages = await db
+	const rules = await db
 		.selectFrom("action_instances")
 		.where("stage_id", "=", stageId as StagesId)
 		.innerJoin("rules", "rules.action_instance_id", "action_instances.id")
 		.select([
 			"rules.id",
 			"rules.event",
+			"rules.config",
 			"action_instances.name as instanceName",
 			"action_instances.action",
+			"action_instance_id as actionInstanceId",
 		])
 		.execute();
-	return stages;
+	return rules;
 });
