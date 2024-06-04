@@ -158,12 +158,12 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	// These aliases are used to make sure the JSON object returned matches
 	// the old prisma query's return value
 	const pubColumns = [
-		"id",
-		"communityId",
-		"createdAt",
-		"parentId",
-		"pubTypeId",
-		"updatedAt",
+		"pubs.id",
+		"pubs.communityId",
+		"pubs.createdAt",
+		"pubs.parentId",
+		"pubs.pubTypeId",
+		"pubs.updatedAt",
 	] as const satisfies SelectExpression<Database, "pubs">[];
 
 	const pub = await withPubChildren({ pubId })

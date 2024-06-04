@@ -48,24 +48,24 @@ export default async function Page({
 					"action_runs.params",
 					"action_runs.status",
 					"action_runs.result",
-					"createdAt",
+					"action_runs.createdAt",
 					jsonObjectFrom(
 						eb
 							.selectFrom("action_instances")
 							.whereRef("action_instances.id", "=", "action_runs.actionInstanceId")
-							.select(["name", "action"])
+							.select(["action_instances.name", "action_instances.action"])
 					).as("actionInstance"),
 					jsonObjectFrom(
 						eb
 							.selectFrom("stages")
 							.whereRef("stages.id", "=", "action_instances.stageId")
-							.select(["id", "name"])
+							.select(["stages.id", "stages.name"])
 					).as("stage"),
 					jsonObjectFrom(
 						eb
 							.selectFrom("pubs")
 							.whereRef("pubs.id", "=", "action_runs.pubId")
-							.select(["id", "createdAt"])
+							.select(["pubs.id", "pubs.createdAt"])
 							.select(pubValuesByRef("action_runs.pubId"))
 					).as("pub"),
 					jsonObjectFrom(
