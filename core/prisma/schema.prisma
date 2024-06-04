@@ -199,7 +199,7 @@ model MoveConstraint {
   createdAt     DateTime @default(now()) @map(name: "createdAt")
   updatedAt     DateTime @default(now()) @updatedAt @map(name: "updatedAt")
 
-  @@id([stageId, destinationId], name: "move_constraint_id")
+  @@id([stageId, destinationId], name: "moveConstraintId")
   @@map(name: "move_constraint")
 }
 
