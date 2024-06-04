@@ -7,13 +7,13 @@ import { type StagesId } from "./Stages";
 
 /** Represents the table public.move_constraint */
 export default interface MoveConstraintTable {
-	stage_id: ColumnType<StagesId, StagesId, StagesId>;
+	stageId: ColumnType<StagesId, StagesId, StagesId>;
 
-	destination_id: ColumnType<StagesId, StagesId, StagesId>;
+	destinationId: ColumnType<StagesId, StagesId, StagesId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type MoveConstraint = Selectable<MoveConstraintTable>;

@@ -13,17 +13,13 @@ export type PermissionsId = string & { __brand: "PermissionsId" };
 export default interface PermissionsTable {
 	id: ColumnType<PermissionsId, PermissionsId | undefined, PermissionsId>;
 
-	member_id: ColumnType<MembersId | null, MembersId | null, MembersId | null>;
+	memberId: ColumnType<MembersId | null, MembersId | null, MembersId | null>;
 
-	member_group_id: ColumnType<
-		MemberGroupsId | null,
-		MemberGroupsId | null,
-		MemberGroupsId | null
-	>;
+	memberGroupId: ColumnType<MemberGroupsId | null, MemberGroupsId | null, MemberGroupsId | null>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type Permissions = Selectable<PermissionsTable>;

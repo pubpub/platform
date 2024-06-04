@@ -14,7 +14,7 @@ export default interface FormsTable {
 
 	name: ColumnType<string, string, string>;
 
-	pub_type_id: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
+	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
 }
 
 export type Forms = Selectable<FormsTable>;

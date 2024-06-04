@@ -16,9 +16,9 @@ export default interface PubFieldSchemaTable {
 
 	schema: ColumnType<unknown, unknown, unknown>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type PubFieldSchema = Selectable<PubFieldSchemaTable>;

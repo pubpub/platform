@@ -12,13 +12,13 @@ export type MemberGroupsId = string & { __brand: "MemberGroupsId" };
 export default interface MemberGroupsTable {
 	id: ColumnType<MemberGroupsId, MemberGroupsId | undefined, MemberGroupsId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	canAdmin: ColumnType<boolean, boolean, boolean>;
 
-	community_id: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 }
 
 export type MemberGroups = Selectable<MemberGroupsTable>;

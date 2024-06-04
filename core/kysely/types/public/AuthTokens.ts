@@ -14,13 +14,13 @@ export default interface AuthTokensTable {
 
 	hash: ColumnType<string, string, string>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	expiresAt: ColumnType<Date, Date | string, Date | string>;
 
 	isUsed: ColumnType<boolean, boolean | undefined, boolean>;
 
-	user_id: ColumnType<UsersId, UsersId, UsersId>;
+	userId: ColumnType<UsersId, UsersId, UsersId>;
 }
 
 export type AuthTokens = Selectable<AuthTokensTable>;
