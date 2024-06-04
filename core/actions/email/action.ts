@@ -5,6 +5,7 @@ import { Mail } from "ui/icon";
 import { markdown } from "../_lib/zodTypes";
 import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
+import * as directives from "./directives";
 
 export const action = defineAction({
 	name: "email",
@@ -38,11 +39,8 @@ export const action = defineAction({
 	icon: Mail,
 	tokens: {
 		body: {
-			"recipient.firstName": {
-				description: "The first name of the email recipient",
-			},
-			"recipient.lastName": {
-				description: "The last name of the email recipient",
+			formLink: {
+				description: "Create a link to a form.",
 			},
 		},
 	},

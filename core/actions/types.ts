@@ -7,6 +7,7 @@ import type { CorePubField } from "./corePubFields";
 import type Event from "~/kysely/types/public/Event";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 
 export type ActionPubType = CorePubField[];
 
@@ -19,7 +20,7 @@ export type ActionPub<T extends ActionPubType> = {
 
 export type RunProps<T extends Action> =
 	T extends Action<infer P, infer C, infer A>
-		? { config: C; pub: ActionPub<P>; args: A; stageId: StagesId }
+		? { config: C; pub: ActionPub<P>; args: A; stageId: StagesId; communityId: CommunitiesId }
 		: never;
 
 export type ConfigProps<C> = {

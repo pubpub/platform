@@ -64,6 +64,8 @@
 		"kysely": "^0.27.2",
 		"logger": "workspace:*",
 		"lucide-react": "^0.356.0",
+		"marked": "^12.0.2",
+		"marked-directive": "^1.0.5",
 		"next": "14.2.3",
 		"next-connect": "^1.0.0",
 		"next-runtime-env": "^3.2.0",

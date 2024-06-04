@@ -15,13 +15,13 @@ type Props = {
 	tokens: string[];
 };
 
+const getRegex = (tokens: string[]) => {
+	return new RegExp(`(^|$|[^&/.*])\\:(${tokens.join("|")})(\\[.*?\\])?(\\{.*?\\})?`, "i");
+};
+
 export function TokenPlugin(props: Props) {
 	const [editor] = useLexicalComposerContext();
-
-	const REGEX = useMemo(
-		() => new RegExp(`(${boundary})\{(${props.tokens.join("|")})\}`, "i"),
-		[props.tokens]
-	);
+	const REGEX = useMemo(() => getRegex(props.tokens), [props.tokens]);
 
 	useEffect(() => {
 		if (!editor.hasNodes([TokenNode])) {
@@ -30,20 +30,22 @@ export function TokenPlugin(props: Props) {
 	}, [editor]);
 
 	const getTokenMatch = useCallback((text: string) => {
-		const matchArr = REGEX.exec(text);
-
-		if (matchArr === null) {
+		const match = REGEX.exec(text);
+		if (match === null) {
 			return null;
 		}
-
-		const tokenLength = matchArr[2].length + 2; // add two for the curly braces
-		const startOffset = matchArr.index + matchArr[1].length;
-		const endOffset = startOffset + tokenLength;
-
-		return {
-			end: endOffset,
-			start: startOffset,
-		};
+		const length =
+			// directive name
+			match[2].length +
+			// add one for the colon
+			1 +
+			// content
+			(match[3]?.length ?? 0) +
+			// attributes
+			(match[4]?.length ?? 0);
+		const start = match.index + match[1].length;
+		const end = start + length;
+		return { start, end };
 	}, []);
 
 	useLexicalTextEntity<TokenNode>(getTokenMatch, TokenNode, $createTokenNode_);
