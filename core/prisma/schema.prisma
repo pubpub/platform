@@ -24,8 +24,8 @@ model User {
   lastName     String?
   orcid        String?
   avatar       String?
-  createdAt    DateTime @default(now()) @map(name: "created_at")
-  updatedAt    DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  createdAt    DateTime @default(now()) @map(name: "createdAt")
+  updatedAt    DateTime @default(now()) @updatedAt @map(name: "updatedAt")
   isSuperAdmin Boolean  @default(false)
 
   claims       ActionClaim[]
@@ -42,11 +42,11 @@ model User {
 model AuthToken {
   id        String   @id @default(cuid())
   hash      String
-  createdAt DateTime @default(now()) @map(name: "created_at")
+  createdAt DateTime @default(now()) @map(name: "createdAt")
   expiresAt DateTime // Tokens expire within 1 week...
   isUsed    Boolean  @default(false) // ...or after one use
   user      User     @relation(fields: [userId], references: [id])
-  userId    String   @map(name: "user_id")
+  userId    String   @map(name: "userId")
 
   @@map(name: "auth_tokens")
 }
@@ -56,8 +56,8 @@ model Community {
   name      String
   slug      String   @unique
   avatar    String?
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  createdAt DateTime @default(now()) @map(name: "createdAt")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updatedAt")
 
   pubTypes             PubType[]
   pubs                 Pub[]
@@ -73,16 +73,16 @@ model Pub {
   id          String    @id @default(dbgenerated("gen_random_uuid()"))
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
-  pubTypeId   String    @map(name: "pub_type_id")
+  pubTypeId   String    @map(name: "pubTypeId")
   community   Community @relation(fields: [communityId], references: [id])
-  communityId String    @map(name: "community_id")
-  assigneeId  String?   @map(name: "assignee_id")
+  communityId String    @map(name: "communityId")
+  assigneeId  String?   @map(name: "assigneeId")
   assignee    User?     @relation(fields: [assigneeId], references: [id])
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  createdAt   DateTime  @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updatedAt")
 
   parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id], onDelete: Cascade)
-  parentId String? @map(name: "parent_id")
+  parentId String? @map(name: "parentId")
   children Pub[]   @relation("pub_parent")
 
   values                   PubValue[]
@@ -102,9 +102,9 @@ model PubField {
   name             String
   slug             String          @unique
   integration      Integration?    @relation(fields: [integrationId], references: [id])
-  integrationId    String?         @map(name: "integration_id")
-  createdAt        DateTime        @default(now()) @map(name: "created_at")
-  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updated_at")
+  integrationId    String?         @map(name: "integrationId")
+  createdAt        DateTime        @default(now()) @map(name: "createdAt")
+  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updatedAt")
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
   pubFieldSchemaId String?
 
@@ -119,8 +119,8 @@ model PubFieldSchema {
   id        String   @id @default(dbgenerated("gen_random_uuid()"))
   namespace String
   name      String
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  createdAt DateTime @default(now()) @map(name: "createdAt")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updatedAt")
 
   // This must be a dereferenced JSONSchema. We should find a way to validate.
   schema    Json
@@ -132,12 +132,12 @@ model PubFieldSchema {
 model PubValue {
   id        String   @id @default(dbgenerated("gen_random_uuid()"))
   field     PubField @relation(fields: [fieldId], references: [id])
-  fieldId   String   @map(name: "field_id")
+  fieldId   String   @map(name: "fieldId")
   value     Json
   pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId     String   @map(name: "pub_id")
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  pubId     String   @map(name: "pubId")
+  createdAt DateTime @default(now()) @map(name: "createdAt")
+  updatedAt DateTime @default(now()) @updatedAt @map(name: "updatedAt")
 
   // Add userId and integrationId to track who created the value
 
@@ -149,9 +149,9 @@ model PubType {
   name        String
   description String?
   community   Community @relation(fields: [communityId], references: [id])
-  communityId String    @map(name: "community_id")
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  communityId String    @map(name: "communityId")
+  createdAt   DateTime  @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updatedAt")
 
   fields PubField[]
   pubs   Pub[]
@@ -165,9 +165,9 @@ model Stage {
   name        String
   order       String
   community   Community @relation(fields: [communityId], references: [id])
-  communityId String    @map(name: "community_id")
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  communityId String    @map(name: "communityId")
+  createdAt   DateTime  @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updatedAt")
 
   pubs                  PubsInStages[]
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
@@ -193,11 +193,11 @@ model PubsInStages {
 
 model MoveConstraint {
   stage         Stage    @relation("move_constraint", fields: [stageId], references: [id], onDelete: Cascade)
-  stageId       String   @map(name: "stage_id")
+  stageId       String   @map(name: "stageId")
   destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id], onDelete: Cascade)
-  destinationId String   @map(name: "destination_id")
-  createdAt     DateTime @default(now()) @map(name: "created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  destinationId String   @map(name: "destinationId")
+  createdAt     DateTime @default(now()) @map(name: "createdAt")
+  updatedAt     DateTime @default(now()) @updatedAt @map(name: "updatedAt")
 
   @@id([stageId, destinationId], name: "move_constraint_id")
   @@map(name: "move_constraint")
@@ -206,14 +206,14 @@ model MoveConstraint {
 model ActionClaim {
   id         String    @id @default(dbgenerated("gen_random_uuid()"))
   stage      Stage     @relation(fields: [stageId], references: [id])
-  stageId    String    @map(name: "stage_id")
+  stageId    String    @map(name: "stageId")
   pub        Pub       @relation(fields: [pubId], references: [id])
-  pubId      String    @map(name: "pub_id")
+  pubId      String    @map(name: "pubId")
   user       User      @relation(fields: [userId], references: [id])
-  userId     String    @map(name: "user_id")
+  userId     String    @map(name: "userId")
   releasedAt DateTime?
-  createdAt  DateTime  @default(now()) @map(name: "created_at")
-  updatedAt  DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  createdAt  DateTime  @default(now()) @map(name: "createdAt")
+  updatedAt  DateTime  @default(now()) @updatedAt @map(name: "updatedAt")
 
   @@map(name: "action_claim")
 }
@@ -221,16 +221,16 @@ model ActionClaim {
 model ActionMove {
   id                 String   @id @default(dbgenerated("gen_random_uuid()"))
   sourceStage        Stage    @relation("move_source_stage", fields: [sourceStageId], references: [id])
-  sourceStageId      String   @map(name: "source_stage_id")
+  sourceStageId      String   @map(name: "sourceStageId")
   destinationStage   Stage    @relation("move_destination_stage", fields: [destinationStageId], references: [id])
-  destinationStageId String   @map(name: "destination_stage_id")
+  destinationStageId String   @map(name: "destinationStageId")
   pub                Pub      @relation(fields: [pubId], references: [id])
-  pubId              String   @map(name: "pub_id")
+  pubId              String   @map(name: "pubId")
   user               User     @relation(fields: [userId], references: [id])
-  userId             String   @map(name: "user_id")
+  userId             String   @map(name: "userId")
   note               String
-  createdAt          DateTime @default(now()) @map(name: "created_at")
-  updatedAt          DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  createdAt          DateTime @default(now()) @map(name: "createdAt")
+  updatedAt          DateTime @default(now()) @updatedAt @map(name: "updatedAt")
 
   @@map(name: "action_move")
 }
@@ -242,11 +242,11 @@ model Member {
   // may want to keep the permissions around (though grayed our and with a note?) in case their
   // admin status is ever removed.
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String    @map(name: "community_id")
+  communityId String    @map(name: "communityId")
   user        User      @relation(fields: [userId], references: [id])
-  userId      String    @map(name: "user_id")
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  userId      String    @map(name: "userId")
+  createdAt   DateTime  @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updatedAt")
 
   permissions Permission[]
 
@@ -257,9 +257,9 @@ model MemberGroup {
   id          String    @id @default(dbgenerated("gen_random_uuid()"))
   canAdmin    Boolean // Community-wide administrator
   community   Community @relation(fields: [communityId], references: [id])
-  communityId String    @map(name: "community_id")
-  createdAt   DateTime  @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updated_at")
+  communityId String    @map(name: "communityId")
+  createdAt   DateTime  @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime  @default(now()) @updatedAt @map(name: "updatedAt")
 
   permissions Permission[]
   users       User[]
@@ -277,11 +277,11 @@ model Permission {
   // integrations - if empty array, all integrations
   // workflow actions? - can they move and claim?
   member        Member?      @relation(fields: [memberId], references: [id])
-  memberId      String?      @map(name: "member_id")
+  memberId      String?      @map(name: "memberId")
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id])
-  memberGroupId String?      @map(name: "member_group_id")
-  createdAt     DateTime     @default(now()) @map(name: "created_at")
-  updatedAt     DateTime     @default(now()) @updatedAt @map(name: "updated_at")
+  memberGroupId String?      @map(name: "memberGroupId")
+  createdAt     DateTime     @default(now()) @map(name: "createdAt")
+  updatedAt     DateTime     @default(now()) @updatedAt @map(name: "updatedAt")
   // We don't have a way in this right now to say 'All pubs in a community' or 'all pubs in a workflow'.
   // Our assumption is that the former should just be a community admin, and the latter should just have
   // access to some parent pub whose children are the contents of a workflow. If that winds up being
@@ -298,8 +298,8 @@ model Integration {
   name        String
   actions     Json
   settingsUrl String
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map(name: "updated_at")
+  createdAt   DateTime @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime @default(now()) @updatedAt @map(name: "updatedAt")
 
   instances IntegrationInstance[]
   pubFields PubField[]
@@ -311,13 +311,13 @@ model IntegrationInstance {
   id            String      @id @default(dbgenerated("gen_random_uuid()"))
   name          String
   integration   Integration @relation(fields: [integrationId], references: [id])
-  integrationId String      @map(name: "integration_id")
+  integrationId String      @map(name: "integrationId")
   community     Community   @relation(fields: [communityId], references: [id])
-  communityId   String      @map(name: "community_id")
-  createdAt     DateTime    @default(now()) @map(name: "created_at")
-  updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updated_at")
+  communityId   String      @map(name: "communityId")
+  createdAt     DateTime    @default(now()) @map(name: "createdAt")
+  updatedAt     DateTime    @default(now()) @updatedAt @map(name: "updatedAt")
   stage         Stage?      @relation(fields: [stageId], references: [id])
-  stageId       String?     @map(name: "stage_id")
+  stageId       String?     @map(name: "stageId")
   config        Json?
 
   pubs                     Pub[]
@@ -328,9 +328,9 @@ model IntegrationInstance {
 
 model IntegrationInstanceState {
   pub        Pub                 @relation(fields: [pubId], references: [id])
-  pubId      String              @map(name: "pub_id")
+  pubId      String              @map(name: "pubId")
   instance   IntegrationInstance @relation(fields: [instanceId], references: [id])
-  instanceId String              @map(name: "instance_id")
+  instanceId String              @map(name: "instanceId")
   state      Json
 
   @@unique([pubId, instanceId], name: "pub_instance")
@@ -341,9 +341,9 @@ model ActionInstance {
   name      String      @default("")
   action    Action
   stage     Stage       @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId   String      @map(name: "stage_id")
-  createdAt DateTime    @default(now()) @map(name: "created_at")
-  updatedAt DateTime    @default(now()) @updatedAt @map(name: "updated_at")
+  stageId   String      @map(name: "stageId")
+  createdAt DateTime    @default(now()) @map(name: "createdAt")
+  updatedAt DateTime    @default(now()) @updatedAt @map(name: "updatedAt")
   config    Json?
   rules     Rule[]
   runs      ActionRun[]
@@ -362,18 +362,18 @@ enum Action {
 model ActionRun {
   id               String          @id @default(dbgenerated("gen_random_uuid()"))
   actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId String?         @map(name: "action_instance_id")
+  actionInstanceId String?         @map(name: "actionInstanceId")
   pub              Pub?            @relation(fields: [pubId], references: [id])
-  pubId            String?         @map(name: "pub_id")
+  pubId            String?         @map(name: "pubId")
   config           Json?
   event            Event?
   params           Json?
   status           ActionRunStatus
   result           Json
   user             User?           @relation(fields: [userId], references: [id])
-  userId           String?         @map(name: "user_id")
-  createdAt        DateTime        @default(now()) @map(name: "created_at")
-  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updated_at")
+  userId           String?         @map(name: "userId")
+  createdAt        DateTime        @default(now()) @map(name: "createdAt")
+  updatedAt        DateTime        @default(now()) @updatedAt @map(name: "updatedAt")
 
   @@map(name: "action_runs")
 }
@@ -388,7 +388,7 @@ model Rule {
   id               String         @id @default(dbgenerated("gen_random_uuid()"))
   event            Event
   actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId String         @map(name: "action_instance_id")
+  actionInstanceId String         @map(name: "actionInstanceId")
   config           Json? /// @type(RuleConfigs, '~/actions/types', true, false, true)
 
   @@unique([actionInstanceId, event])
@@ -405,7 +405,7 @@ model Form {
   id        String      @id @default(dbgenerated("gen_random_uuid()"))
   name      String
   pubType   PubType     @relation(fields: [pubTypeId], references: [id])
-  pubTypeId String      @map(name: "pub_type_id")
+  pubTypeId String      @map(name: "pubTypeId")
   inputs    FormInput[]
 
   @@map(name: "forms")
@@ -413,14 +413,14 @@ model Form {
 
 model FormInput {
   id       String   @id @default(dbgenerated("gen_random_uuid()"))
-  fieldId  String   @map(name: "field_id")
+  fieldId  String   @map(name: "fieldId")
   field    PubField @relation(fields: [fieldId], references: [id])
-  formId   String   @map(name: "form_id")
+  formId   String   @map(name: "formId")
   order    String
   label    String
   required Boolean
   form     Form     @relation(fields: [formId], references: [id])
-  isSubmit Boolean  @map(name: "is_submit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
+  isSubmit Boolean  @map(name: "isSubmit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
 
   @@map(name: "form_inputs")
 }
