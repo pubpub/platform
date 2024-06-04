@@ -57,6 +57,29 @@ pnpm --filter core reset
 pnpm --filter core migrate-dev
 ```
 
+## Docker Compose
+
+Docker-compose provides a means to run all the code components as containers, more realistically emulating the setting where this code is run in production.
+This is useful for end-to-end tests and locally verifying that the code works when removed from some of the fast-iteration features of `next.js`, such as
+JIT compilation.
+
+A slightly modified version of `.env.local` is required, where we remove the DATABASE_URL (this is built out of parts in docker envs):
+```
+grep -v DATABASE_URL \
+    <./core/.env.local \
+    >./.env.docker-compose
+```
+
+This cluster will address the local supabase and postgres just like when you are running with `pnpm dev`, so no need to take extra steps for migrations (though the same ones are needed).
+
+To run the full cluster as local docker-compose, first initialize supabase as you would for development; then do:
+```
+docker compose -f docker-compose.dev.yml up
+```
+
+you can now address on `localhost:3000` as before. note that `pnpm dev` uses the same ports and cannot be running at the same time.
+
+
 ## Prettier
 
 At the moment, the repo simply uses prettier before adding any additional complexity with ESLint configs. Just auto-format (either on save, or on commit), and let the .prettierrc hold the small subset of decisions.
