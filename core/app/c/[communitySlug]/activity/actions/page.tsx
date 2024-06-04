@@ -37,10 +37,10 @@ export default async function Page({
 		() =>
 			db
 				.selectFrom("stages")
-				.where("stages.community_id", "=", community.id)
-				.innerJoin("action_instances", "stages.id", "action_instances.stage_id")
-				.innerJoin("action_runs", "action_instances.id", "action_runs.action_instance_id")
-				.leftJoin("users", "action_runs.user_id", "users.id")
+				.where("stages.communityId", "=", community.id)
+				.innerJoin("action_instances", "stages.id", "action_instances.stageId")
+				.innerJoin("action_runs", "action_instances.id", "action_runs.actionInstanceId")
+				.leftJoin("users", "action_runs.userId", "users.id")
 				.select((eb) => [
 					"action_runs.id",
 					"action_runs.config",
@@ -48,34 +48,34 @@ export default async function Page({
 					"action_runs.params",
 					"action_runs.status",
 					"action_runs.result",
-					"action_runs.created_at as createdAt",
+					"createdAt",
 					jsonObjectFrom(
 						eb
 							.selectFrom("action_instances")
-							.whereRef("action_instances.id", "=", "action_runs.action_instance_id")
+							.whereRef("action_instances.id", "=", "action_runs.actionInstanceId")
 							.select(["name", "action"])
 					).as("actionInstance"),
 					jsonObjectFrom(
 						eb
 							.selectFrom("stages")
-							.whereRef("stages.id", "=", "action_instances.stage_id")
+							.whereRef("stages.id", "=", "action_instances.stageId")
 							.select(["id", "name"])
 					).as("stage"),
 					jsonObjectFrom(
 						eb
 							.selectFrom("pubs")
-							.whereRef("pubs.id", "=", "action_runs.pub_id")
-							.select(["id", "created_at as createdAt"])
-							.select(pubValuesByRef("action_runs.pub_id"))
+							.whereRef("pubs.id", "=", "action_runs.pubId")
+							.select(["id", "createdAt"])
+							.select(pubValuesByRef("action_runs.pubId"))
 					).as("pub"),
 					jsonObjectFrom(
 						eb
 							.selectFrom("users")
-							.whereRef("users.id", "=", "action_runs.user_id")
+							.whereRef("users.id", "=", "action_runs.userId")
 							.select(["id", "firstName", "lastName"])
 					).as("user"),
 				])
-				.orderBy("action_runs.created_at", "desc")
+				.orderBy("action_runs.createdAt", "desc")
 				.execute(),
 		[community.id],
 		{ tags: [`community-action-runs_${community.id}`] }

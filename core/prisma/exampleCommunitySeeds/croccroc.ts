@@ -42,7 +42,7 @@ export default async function main(communityUUID: CommunitiesId) {
 				.values({
 					id: submissionTypeId,
 					name: "Submission",
-					community_id: communityUUID,
+					communityId: communityUUID,
 				})
 				.returning("id")
 		)
@@ -79,8 +79,8 @@ export default async function main(communityUUID: CommunitiesId) {
 	const member = await db
 		.insertInto("members")
 		.values({
-			user_id: users[0].id,
-			community_id: communityUUID,
+			userId: users[0].id,
+			communityId: communityUUID,
 			canAdmin: true,
 		})
 		.returning("id")
@@ -92,7 +92,7 @@ export default async function main(communityUUID: CommunitiesId) {
 				.insertInto("member_groups")
 				.values({
 					canAdmin: false,
-					community_id: communityUUID,
+					communityId: communityUUID,
 				})
 				.returning("id")
 		)
@@ -109,37 +109,37 @@ export default async function main(communityUUID: CommunitiesId) {
 			.insertInto("stages")
 			.values([
 				{
-					community_id: communityUUID,
+					communityId: communityUUID,
 					name: "Submitted",
 					order: "aa",
 				},
 				{
-					community_id: communityUUID,
+					communityId: communityUUID,
 					name: "Ask Author for Consent",
 					order: "bb",
 				},
 				{
-					community_id: communityUUID,
+					communityId: communityUUID,
 					name: "To Evaluate",
 					order: "cc",
 				},
 				{
-					community_id: communityUUID,
+					communityId: communityUUID,
 					name: "Under Evaluation",
 					order: "dd",
 				},
 				{
-					community_id: communityUUID,
+					communityId: communityUUID,
 					name: "In Production",
 					order: "ff",
 				},
 				{
-					community_id: communityUUID,
+					communityId: communityUUID,
 					name: "Published",
 					order: "gg",
 				},
 				{
-					community_id: communityUUID,
+					communityId: communityUUID,
 					name: "Shelved",
 					order: "hh",
 				},
@@ -153,7 +153,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			db
 				.insertInto("permissions")
 				.values({
-					member_id: member?.id,
+					memberId: member?.id,
 				})
 				.returning("id")
 		)
@@ -183,24 +183,24 @@ export default async function main(communityUUID: CommunitiesId) {
 		.values([
 			{
 				//  Submitted can be moved to: Consent, To Evaluate, Under Evaluation, Shelved
-				stage_id: stages[0],
-				destination_id: stages[1],
+				stageId: stages[0],
+				destinationId: stages[1],
 			},
 			{
-				stage_id: stages[1],
-				destination_id: stages[2],
+				stageId: stages[1],
+				destinationId: stages[2],
 			},
 			{
-				stage_id: stages[2],
-				destination_id: stages[3],
+				stageId: stages[2],
+				destinationId: stages[3],
 			},
 			{
-				stage_id: stages[3],
-				destination_id: stages[4],
+				stageId: stages[3],
+				destinationId: stages[4],
 			},
 			{
-				stage_id: stages[4],
-				destination_id: stages[5],
+				stageId: stages[4],
+				destinationId: stages[5],
 			},
 		])
 		.execute();
@@ -210,8 +210,8 @@ export default async function main(communityUUID: CommunitiesId) {
 			db
 				.insertInto("pubs")
 				.values({
-					community_id: communityUUID,
-					pub_type_id: submissionTypeId,
+					communityId: communityUUID,
+					pubTypeId: submissionTypeId,
 				})
 				.returning("id")
 		)
@@ -226,13 +226,13 @@ export default async function main(communityUUID: CommunitiesId) {
 		.insertInto("pub_values")
 		.values((eb) => [
 			{
-				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
+				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
 				value: '"Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
 			},
 			{
-				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
+				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
 					.id,
 				value: '"# Abstract"',
 			},

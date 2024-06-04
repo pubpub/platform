@@ -20,12 +20,12 @@ export const getCommunityStages = async (communitySlug: string) => {
 
 	const stages = await db
 		.selectFrom("stages")
-		.where("community_id", "=", community.id)
+		.where("communityId", "=", community.id)
 		.select((eb) =>
 			jsonArrayFrom(
 				eb
 					.selectFrom("move_constraint")
-					.whereRef("move_constraint.stage_id", "=", "stages.id")
+					.whereRef("move_constraint.stageId", "=", "stages.id")
 					.selectAll()
 			).as("move_constraints")
 		)
@@ -33,7 +33,7 @@ export const getCommunityStages = async (communitySlug: string) => {
 			jsonArrayFrom(
 				eb
 					.selectFrom("move_constraint")
-					.whereRef("move_constraint.destination_id", "=", "stages.id")
+					.whereRef("move_constraint.destinationId", "=", "stages.id")
 					.selectAll()
 			).as("move_constraint_sources")
 		)
@@ -50,18 +50,18 @@ export const getCommunityStages = async (communitySlug: string) => {
 			jsonArrayFrom(
 				eb
 					.selectFrom("integration_instances")
-					.whereRef("integration_instances.stage_id", "=", "stages.id")
+					.whereRef("integration_instances.stageId", "=", "stages.id")
 					.innerJoin(
 						"integrations",
 						"integrations.id",
-						"integration_instances.integration_id"
+						"integration_instances.integrationId"
 					)
 					.select([
-						"integration_instances.id as instance_id",
+						"integration_instances.id as instanceId",
 						"integration_instances.config",
 						"integration_instances.name as instance_name",
 						"integrations.name as integration_name",
-						"integration_instances.integration_id",
+						"integration_instances.integrationId",
 						"integrations.actions",
 						"integrations.settingsUrl",
 					])

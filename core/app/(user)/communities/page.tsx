@@ -23,7 +23,7 @@ export default async function Page() {
 			"communities.name",
 			"communities.slug",
 			"communities.avatar",
-			"communities.created_at as createdAt",
+			"createdAt",
 		])
 		.execute();
 

@@ -40,7 +40,7 @@ type FlatPub = PubNoChildren & {
 };
 
 // pubValuesByRef adds a JSON object of pub_values keyed by their field name under the `fields` key to the output of a query
-// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parent_id or PubsInStages.pubId
+// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parentId or PubsInStages.pubId
 // It doesn't seem to work if you've aliased the table or column (although you can probably work around that with a cast)
 export const pubValuesByRef = (pubIdRef: StringReference<Database, keyof Database>) => {
 	return (eb: ExpressionBuilder<Database, keyof Database>) => pubValues(eb, { pubIdRef });
@@ -76,16 +76,16 @@ const pubValues = (
 	return jsonObjAgg(
 		eb
 			.selectFrom("pub_values")
-			.distinctOn("pub_values.field_id")
+			.distinctOn("pub_values.fieldId")
 			.selectAll("pub_values")
 			.select("slug")
 			.leftJoinLateral(
 				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
-				(join) => join.onRef("fields.id", "=", "pub_values.field_id")
+				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
-			.orderBy(["pub_values.field_id", "pub_values.created_at desc"])
-			.$if(!!pubId, (qb) => qb.where("pub_values.pub_id", "=", pubId!))
-			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pub_id", "=", ref(pubIdRef!)))
+			.orderBy(["pub_values.fieldId", "pub_values.createdAt desc"])
+			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))
+			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pubId", "=", ref(pubIdRef!)))
 			.as(alias)
 	).as("values");
 };
@@ -123,15 +123,15 @@ const withPubChildren = ({
 	return db.withRecursive("children", (qc) => {
 		return qc
 			.selectFrom("pubs")
-			.select(["id", "parent_id"])
+			.select(["id", "parentId"])
 			.select(pubValuesByRef("pubs.id"))
-			.$if(!!pubId, (qb) => qb.where("pubs.parent_id", "=", pubId!))
-			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parent_id", "=", ref(pubIdRef!)))
+			.$if(!!pubId, (qb) => qb.where("pubs.parentId", "=", pubId!))
+			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parentId", "=", ref(pubIdRef!)))
 			.unionAll((eb) => {
 				return eb
 					.selectFrom("children")
-					.innerJoin("pubs", "pubs.parent_id", "children.id")
-					.select(["pubs.id", "pubs.parent_id"])
+					.innerJoin("pubs", "pubs.parentId", "children.id")
+					.select(["pubs.id", "pubs.parentId"])
 					.select(pubValuesByRef("pubs.id"));
 			});
 	});
@@ -141,16 +141,16 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonObjectFrom(
 		eb
 			.selectFrom("users")
-			.whereRef("users.id", "=", "pubs.assignee_id")
+			.whereRef("users.id", "=", "pubs.assigneeId")
 			.select([
 				"users.id",
 				"slug",
 				"firstName",
 				"lastName",
 				"avatar",
-				"created_at as createdAt",
+				"createdAt",
 				"email",
-				"community_id as communityId",
+				"communityId",
 			])
 	).as("assignee");
 
@@ -159,11 +159,11 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	// the old prisma query's return value
 	const pubColumns = [
 		"id",
-		"community_id as communityId",
-		"created_at as createdAt",
-		"parent_id as parentId",
-		"pub_type_id as pubTypeId",
-		"updated_at as updatedAt",
+		"communityId",
+		"createdAt",
+		"parentId",
+		"pubTypeId",
+		"updatedAt",
 	] as const satisfies SelectExpression<Database, "pubs">[];
 
 	const pub = await withPubChildren({ pubId })
@@ -409,9 +409,9 @@ export const getPubType = async (pubTypeId: PubTypesId) =>
 			"id",
 			"description",
 			"name",
-			"community_id as communityId",
-			"created_at as createdAt",
-			"updated_at as updatedAt",
+			"communityId",
+			"createdAt",
+			"updatedAt",
 			jsonArrayFrom(
 				eb
 					.selectFrom("pub_fields")

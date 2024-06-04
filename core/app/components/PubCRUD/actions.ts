@@ -47,8 +47,8 @@ export const createPub = defineServerAction(async function createPub({
 				db
 					.insertInto("pubs")
 					.values({
-						community_id: communityId,
-						pub_type_id: pubTypeId,
+						communityId: communityId,
+						pubTypeId: pubTypeId,
 					})
 					.returning("id")
 			)
@@ -62,8 +62,8 @@ export const createPub = defineServerAction(async function createPub({
 			.insertInto("pub_values")
 			.values((eb) =>
 				Object.entries(fields).map(([key, value]) => ({
-					field_id: key as PubFieldsId,
-					pub_id: eb.selectFrom("new_pub").select("new_pub.id"),
+					fieldId: key as PubFieldsId,
+					pubId: eb.selectFrom("new_pub").select("new_pub.id"),
 					value: JSON.stringify(value.value),
 				}))
 			)
@@ -118,7 +118,7 @@ export const updatePub = defineServerAction(async function updatePub({
 		const pubValues = await db
 			.selectFrom("pub_values")
 			.selectAll()
-			.where("pub_values.pub_id", "=", pubId)
+			.where("pub_values.pubId", "=", pubId)
 			.execute();
 
 		const stageMoveQuery =
@@ -133,10 +133,10 @@ export const updatePub = defineServerAction(async function updatePub({
 
 		const queries = [
 			pubValues.map(async (pubValue) => {
-				const field = fields[pubValue.field_id];
+				const field = fields[pubValue.fieldId];
 				if (!field) {
 					logger.debug({
-						msg: `Field ${pubValue.field_id} not found in fields`,
+						msg: `Field ${pubValue.fieldId} not found in fields`,
 						fields,
 						pubValue,
 					});
@@ -214,7 +214,7 @@ export const removePub = defineServerAction(async function removePub({
 	}
 
 	if (
-		!loginData.memberships.find((m) => m.communityId === pub.community_id)?.canAdmin &&
+		!loginData.memberships.find((m) => m.communityId === pub.communityId)?.canAdmin &&
 		!loginData.isSuperAdmin
 	) {
 		return {
@@ -228,7 +228,7 @@ export const removePub = defineServerAction(async function removePub({
 		if (path) {
 			revalidatePath(path);
 		}
-		revalidateTag(`community-stages_${pub.community_id}`);
+		revalidateTag(`community-stages_${pub.communityId}`);
 
 		return {
 			success: true,
