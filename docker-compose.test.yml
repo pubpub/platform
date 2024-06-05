@@ -18,6 +18,22 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
       - 5432:5432
+  migrations:
+    build:
+      context: .
+      args:
+        - PACKAGE=core
+    command: pnpm --filter core migrate-docker
+    image: core
+    env_file:
+      - core/.env.testing
+    ports:
+      - 8022:8022
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - app
