@@ -1,6 +1,3 @@
-version: '3'
-
-
 services:
   core:
     build:
@@ -67,41 +64,6 @@ services:
   # jobs-nginx:
   # No Nginx for jobs, because it does not take requests
 
-  integration-submissions:
-    build:
-      context: .
-      args:
-        - PACKAGE=integration-submissions
-    container_name: integration-submissions
-    env_file: ./.env.docker-compose
-    environment:
-      - SENTRY_AUTH_TOKEN=omitted
-
-      - OTEL_SERVICE_NAME=integration-submissions.integration-submissions
-      - PUBPUB_URL=http://localhost:8080
-    depends_on:
-      - core
-    networks:
-      - app-network
-    ports:
-      - "30001:3000"
-
-  integration-submissions-nginx:
-    build: ./infrastructure/nginx
-    container_name: integration-submissions-nginx
-    environment:
-      - NGINX_LISTEN_PORT=8080
-      - NGINX_PREFIX=/intg/submissions/
-      - NGINX_UPSTREAM_HOST=integration-submissions
-      - NGINX_UPSTREAM_PORT=3000
-      - OTEL_SERVICE_NAME=integration-submissions.nginx
-    depends_on:
-      - integration-submissions
-    networks:
-      - app-network
-    ports:
-      - "3001:8080"
-
   integration-evaluations:
     build:
       context: .
@@ -119,14 +81,14 @@ services:
     networks:
       - app-network
     ports:
-      - "30002:3000"
+      - "30001:3000"
 
   integration-evaluations-nginx:
     build: ./infrastructure/nginx
     container_name: integration-evaluations-nginx
     environment:
       - NGINX_LISTEN_PORT=8080
-      - NGINX_PREFIX=/intg/evaluations/
+      - NGINX_PREFIX=/
       - NGINX_UPSTREAM_HOST=integration-evaluations
       - NGINX_UPSTREAM_PORT=3000
       - OTEL_SERVICE_NAME=integration-evaluations.nginx
@@ -135,24 +97,42 @@ services:
     networks:
       - app-network
     ports:
+      - "3001:8080"
+
+  integration-submissions:
+    build:
+      context: .
+      args:
+        - PACKAGE=integration-submissions
+    container_name: integration-submissions
+    env_file: ./.env.docker-compose
+    environment:
+      - SENTRY_AUTH_TOKEN=omitted
+
+      - OTEL_SERVICE_NAME=integration-submissions.integration-submissions
+      - PUBPUB_URL=http://localhost:8080
+    depends_on:
+      - core
+    networks:
+      - app-network
+    ports:
+      - "30002:3000"
+
+  integration-submissions-nginx:
+    build: ./infrastructure/nginx
+    container_name: integration-submissions-nginx
+    environment:
+      - NGINX_LISTEN_PORT=8080
+      - NGINX_PREFIX=/
+      - NGINX_UPSTREAM_HOST=integration-submissions
+      - NGINX_UPSTREAM_PORT=3000
+      - OTEL_SERVICE_NAME=integration-submissions.nginx
+    depends_on:
+      - integration-submissions
+    networks:
+      - app-network
+    ports:
       - "3002:8080"
-
-  # postgres:
-  #   image: postgres:15
-  #   container_name: postgres
-  #   environment:
-  #     - POSTGRES_USER=byron
-  #     - POSTGRES_PASSWORD=byron
-  #     - POSTGRES_DB=byron_test_core_postgres
-  #   volumes:
-  #     - byron-postgres-data:/var/lib/postgresql/data
-  #   networks:
-  #     - app-network
-  #   ports:
-  #     - "54320:5432"
-
-# volumes:
-  # byron-postgres-data:
 
 networks:
   app-network:
