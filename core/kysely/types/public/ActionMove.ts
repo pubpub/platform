@@ -14,19 +14,19 @@ export type ActionMoveId = string & { __brand: "ActionMoveId" };
 export default interface ActionMoveTable {
 	id: ColumnType<ActionMoveId, ActionMoveId | undefined, ActionMoveId>;
 
-	source_stage_id: ColumnType<StagesId, StagesId, StagesId>;
+	sourceStageId: ColumnType<StagesId, StagesId, StagesId>;
 
-	destination_stage_id: ColumnType<StagesId, StagesId, StagesId>;
+	destinationStageId: ColumnType<StagesId, StagesId, StagesId>;
 
-	pub_id: ColumnType<PubsId, PubsId, PubsId>;
+	pubId: ColumnType<PubsId, PubsId, PubsId>;
 
-	user_id: ColumnType<UsersId, UsersId, UsersId>;
+	userId: ColumnType<UsersId, UsersId, UsersId>;
 
 	note: ColumnType<string, string, string>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type ActionMove = Selectable<ActionMoveTable>;

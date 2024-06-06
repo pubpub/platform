@@ -12,15 +12,15 @@ export type StagesId = string & { __brand: "StagesId" };
 export default interface StagesTable {
 	id: ColumnType<StagesId, StagesId | undefined, StagesId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	name: ColumnType<string, string, string>;
 
 	order: ColumnType<string, string, string>;
 
-	community_id: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 }
 
 export type Stages = Selectable<StagesTable>;

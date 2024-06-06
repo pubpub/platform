@@ -27,12 +27,12 @@ export const scheduleActionInstances = async ({
 
 	const instances = await db
 		.selectFrom("action_instances")
-		.where("action_instances.stage_id", "=", stageId)
+		.where("action_instances.stageId", "=", stageId)
 		.select((eb) => [
-			"action_instances.id as id",
-			"action_instances.name as name",
-			"action_instances.config as config",
-			"action_instances.stage_id as stageId",
+			"id",
+			"name",
+			"config",
+			"stageId",
 			jsonArrayFrom(
 				eb
 					.selectFrom("rules")
@@ -40,9 +40,9 @@ export const scheduleActionInstances = async ({
 						"rules.id as id",
 						"rules.event as event",
 						"rules.config as config",
-						"rules.action_instance_id as action_instance_id",
+						"actionInstanceId",
 					])
-					.where("rules.action_instance_id", "=", eb.ref("action_instances.id"))
+					.where("rules.actionInstanceId", "=", eb.ref("action_instances.id"))
 					.where("rules.event", "=", Event.pubInStageForDuration)
 			).as("rules"),
 		])
@@ -80,7 +80,7 @@ export const scheduleActionInstances = async ({
 	const results = await Promise.all(
 		validRules.flatMap(async (rule) => {
 			const job = await jobsClient.scheduleAction({
-				actionInstanceId: rule.action_instance_id,
+				actionInstanceId: rule.actionInstanceId,
 				duration: rule.config.duration,
 				interval: rule.config.interval,
 				stageId: stageId,
@@ -96,8 +96,8 @@ export const scheduleActionInstances = async ({
 				await db
 					.insertInto("action_runs")
 					.values({
-						action_instance_id: rule.action_instance_id,
-						pub_id: pubId,
+						actionInstanceId: rule.actionInstanceId,
+						pubId: pubId,
 						status: ActionRunStatus.scheduled,
 						config: rule.actionInstanceConfig,
 						result: { scheduled: `Action scheduled for ${runAt}` },
@@ -108,7 +108,7 @@ export const scheduleActionInstances = async ({
 
 			return {
 				result: job,
-				actionInstanceId: rule.action_instance_id,
+				actionInstanceId: rule.actionInstanceId,
 				actionInstanceName: rule.actionName,
 				runAt,
 			};
@@ -135,8 +135,8 @@ export const unscheduleAction = async ({
 		// TODO: this should probably be set to "canceled" instead of deleting the run
 		await db
 			.deleteFrom("action_runs")
-			.where("action_instance_id", "=", actionInstanceId)
-			.where("pub_id", "=", pubId)
+			.where("actionInstanceId", "=", actionInstanceId)
+			.where("pubId", "=", pubId)
 			.where("action_runs.status", "=", ActionRunStatus.scheduled)
 			.execute();
 
