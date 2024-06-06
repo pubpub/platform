@@ -12,7 +12,3 @@ export function expect<T>(value: T | null | undefined, message?: string): T {
 	assert(value, message);
 	return value;
 }
-
-export const isAssertionError = (error: unknown): error is AssertionError => {
-	return error instanceof AssertionError;
-};
