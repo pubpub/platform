@@ -4,6 +4,7 @@ import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { addAction, deleteAction } from "../../actions";
+import { ActionConfigFormContextWrapper } from "./ActionConfigFormContextWrapper";
 import { getStage, getStageActions } from "./queries";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
@@ -44,7 +45,12 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 							actionInstance={actionInstance}
 							onDelete={onDeleteAction}
 							communityId={stage.communityId}
-						/>
+						>
+							<ActionConfigFormContextWrapper
+								stage={stage}
+								actionInstance={actionInstance}
+							/>
+						</StagePanelActionEditor>
 					))}
 				</div>
 				<StagePanelActionCreator onAdd={onAddAction} />

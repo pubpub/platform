@@ -5,7 +5,9 @@ import { z } from "zod";
 import { FieldConfig } from "./types";
 
 // TODO: This should support recursive ZodEffects but TypeScript doesn't allow circular type definitions.
-export type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
+type ZodObjectOrWrappedBase = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
+type ZodObjectOrWrappedBaseOptional = z.ZodOptional<ZodObjectOrWrappedBase>;
+export type ZodObjectOrWrapped = ZodObjectOrWrappedBase | ZodObjectOrWrappedBaseOptional;
 
 /**
  * Beautify a camelCase string.
@@ -108,6 +110,9 @@ export function getDefaultValues<Schema extends z.ZodObject<any, any>>(
 }
 
 export function getObjectFormSchema(schema: ZodObjectOrWrapped): z.ZodObject<any, any> {
+	if (schema?._def.typeName === "ZodOptional") {
+		return getObjectFormSchema(schema._def.innerType);
+	}
 	if (schema?._def.typeName === "ZodEffects") {
 		const typedSchema = schema as z.ZodEffects<z.ZodObject<any, any>>;
 		return getObjectFormSchema(typedSchema._def.schema);

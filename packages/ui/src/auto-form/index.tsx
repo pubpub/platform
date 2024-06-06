@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DefaultValues, useForm } from "react-hook-form";
+import { DefaultValues, useForm, useFormContext, useFormState } from "react-hook-form";
 import { z } from "zod";
 
 import { cn } from "utils";
 
 import { Button } from "../button";
 import { Form } from "../form";
+import { Check, Loader2, X } from "../icon";
 import AutoFormObject from "./fields/object";
 import { Dependency, FieldConfig } from "./types";
 import { getDefaultValues, getObjectFormSchema, ZodObjectOrWrapped } from "./utils";
@@ -22,9 +23,23 @@ export function AutoFormSubmit({
 	className?: string;
 	disabled?: boolean;
 }) {
+	const form = useFormState();
+
+	const { isSubmitting, isValid, isSubmitSuccessful, isLoading } = form;
+
 	return (
-		<Button type="submit" disabled={disabled} className={className}>
-			{children ?? "Submit"}
+		<Button
+			type="submit"
+			disabled={disabled ?? (isSubmitting || !isValid)}
+			className={className}
+		>
+			{isLoading ? (
+				<Loader2 className="animate-spin" />
+			) : isSubmitSuccessful ? (
+				<Check className="h-4 w-4" />
+			) : (
+				children ?? "Submit"
+			)}
 		</Button>
 	);
 }
@@ -45,10 +60,10 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	onValuesChange?: (values: Partial<z.infer<SchemaType>>) => void;
 	onParsedValuesChange?: (values: Partial<z.infer<SchemaType>>) => void;
 	onSubmit?: (values: z.infer<SchemaType>) => void;
-	fieldConfig?: FieldConfig<z.infer<SchemaType>>;
+	fieldConfig?: FieldConfig<NonNullable<z.infer<SchemaType>>>;
 	children?: React.ReactNode;
 	className?: string;
-	dependencies?: Dependency<z.infer<SchemaType>>[];
+	dependencies?: Dependency<NonNullable<z.infer<SchemaType>>>[];
 }) {
 	const objectFormSchema = getObjectFormSchema(formSchema);
 	const defaultValues: DefaultValues<z.infer<typeof objectFormSchema>> | null = getDefaultValues(
@@ -60,6 +75,9 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 		resolver: zodResolver(formSchema),
 		defaultValues: defaultValues ?? undefined,
 		values: valuesProp,
+		reValidateMode: "onBlur",
+		mode: "onBlur",
+		shouldFocusError: true,
 	});
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
@@ -76,7 +94,9 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	React.useEffect(() => {
 		onValuesChangeProp?.(values);
 		const parsedValues = formSchema.safeParse(values);
-		if (parsedValues.success) {
+		if (parsedValues.success === false) {
+		}
+		if (parsedValues.success && parsedValues.data !== undefined) {
 			onParsedValuesChange?.(parsedValues.data);
 		}
 	}, [valuesString]);

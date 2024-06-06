@@ -1,44 +1,24 @@
 "use client";
 
-import type { Pub } from "@prisma/client";
-import type { ZodObject } from "zod";
+import React, { Suspense, use, useCallback, useMemo, useTransition } from "react";
 
-import { useCallback, useTransition } from "react";
-
+import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
-import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2, Play } from "ui/icon";
-import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
 import type { StagePub } from "./queries";
+import type { Action } from "~/actions/types";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
+import { resolveFieldConfig } from "~/actions/_lib/resolveFieldConfig";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { useServerAction } from "~/lib/serverActions";
-
-export const mapFieldConfig = ({
-	pub,
-	fieldConfig,
-}: {
-	pub: StagePub;
-	fieldConfig?: Record<string, any>;
-}) =>
-	fieldConfig
-		? Object.fromEntries(
-				Object.entries(fieldConfig).map(([key, value]) => [
-					key,
-					{
-						...value,
-						fieldType: "fieldType" in value ? value.fieldType(pub) : undefined,
-					},
-				])
-			)
-		: undefined;
 
 export const StagePanelPubsRunActionButton = ({
 	actionInstance,
@@ -82,6 +62,11 @@ export const StagePanelPubsRunActionButton = ({
 		[runAction, actionInstance.id, pub.id]
 	);
 
+	const resolvedFieldConfigPromise = useMemo(
+		() => resolveFieldConfig(action, "config"),
+		[action]
+	);
+
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -99,26 +84,54 @@ export const StagePanelPubsRunActionButton = ({
 				<DialogHeader>
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
-				<AutoForm
-					formSchema={action.params.schema}
-					onSubmit={onSubmit}
-					dependencies={action.params.dependencies}
-					fieldConfig={mapFieldConfig({
-						pub,
-						fieldConfig: action.params.fieldConfig,
-					})}
-				>
-					<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
-						{isPending ? (
-							<Loader2 size="14" className="animate-spin" />
-						) : (
-							<>
-								<Play size="14" /> Run
-							</>
-						)}
-					</AutoFormSubmit>
-				</AutoForm>
+				<Suspense fallback={<SkeletonCard />}>
+					<ActionRunFormInner
+						action={action}
+						isPending={isPending}
+						onSubmit={onSubmit}
+						resolvedFieldConfigPromise={resolvedFieldConfigPromise}
+						instance={actionInstance}
+					/>
+				</Suspense>
 			</DialogContent>
 		</Dialog>
 	);
 };
+
+const ActionRunFormInner = React.memo(
+	({
+		resolvedFieldConfigPromise,
+		action,
+		onSubmit,
+		instance,
+		isPending,
+	}: {
+		action: Action;
+		resolvedFieldConfigPromise: Promise<FieldConfig<any> | undefined>;
+		onSubmit;
+		instance: ActionInstances;
+		isPending: boolean;
+	}) => {
+		const resolvedConfig = use(resolvedFieldConfigPromise);
+
+		return (
+			<AutoForm
+				values={instance.config ?? {}}
+				fieldConfig={resolvedConfig}
+				formSchema={action.config.schema}
+				dependencies={action.config.dependencies}
+				onSubmit={onSubmit}
+			>
+				<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
+					{isPending ? (
+						<Loader2 size="14" className="animate-spin" />
+					) : (
+						<>
+							<Play size="14" /> Run
+						</>
+					)}
+				</AutoFormSubmit>
+			</AutoForm>
+		);
+	}
+);

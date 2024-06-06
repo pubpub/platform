@@ -210,11 +210,16 @@ export const updateAction = defineServerAction(async function updateAction(
 		| { name: string; config?: undefined }
 ) {
 	try {
-		await db
+		const result = await db
 			.updateTable("action_instances")
 			.set(props.name ? { name: props.name } : { config: props.config })
 			.where("id", "=", actionInstanceId)
 			.executeTakeFirstOrThrow();
+
+		return {
+			success: true,
+			report: "Action updated",
+		};
 	} finally {
 		revalidateTag(`community-stages_${communityId}`);
 	}

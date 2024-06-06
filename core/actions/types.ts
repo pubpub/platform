@@ -43,6 +43,7 @@ export type Action<
 	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
 	N extends string = string,
+	CO extends z.ZodObject<any, any> = z.ZodObject<any, any>,
 > = {
 	id?: string;
 	name: N;
@@ -52,17 +53,25 @@ export type Action<
 	 *
 	 * These are the "statically known" parameters for this action.
 	 */
-	config:
-		| C
-		| {
-				schema: C;
-				fieldConfig?: {
-					[K in keyof FieldConfig<C["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
-						fieldType?: ParamsFieldTypeOverride;
-					};
-				};
-				dependencies?: Dependency<C["_output"]>[];
-		  };
+	config: {
+		schema: C;
+		context?: CO;
+		fieldConfig?: {
+			[K in keyof FieldConfig<C["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
+				/**
+				 * The type of the field.
+				 * Either choose one of the predefined types, define a type inline, or use `custom`.
+				 *
+				 * `custom` indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
+				 */
+				fieldType?:
+					| FieldConfigItem["fieldType"]
+					/**I am provid*/
+					| "custom" /** hey */;
+			};
+		};
+		dependencies?: Dependency<z.infer<C>>[];
+	};
 	/**
 	 * The run parameters for this action
 	 *
@@ -71,17 +80,19 @@ export type Action<
 	 * Defining this as an optional Zod schema (e.g. `z.object({/*...*\/}).optional()`) means that the action can be automatically run
 	 * through a rule.
 	 */
-	params:
-		| A
-		| {
-				schema: A;
-				fieldConfig?: {
-					[K in keyof NonNullable<A["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
-						fieldType?: ParamsFieldTypeOverride;
-					};
-				};
-				dependencies?: Dependency<NonNullable<A["_output"]>>[];
-		  };
+	params: {
+		schema: A;
+		context?: CO;
+		fieldConfig?: {
+			[K in keyof NonNullable<A["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
+				/**
+				 * Custom indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
+				 */
+				fieldType?: FieldConfigItem["fieldType"] | "custom";
+			};
+		};
+		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
+	};
 	/**
 	 * The core pub fields that this action requires in order to run.
 	 */
@@ -97,8 +108,9 @@ export const defineAction = <
 	C extends ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional,
 	N extends string,
+	CO extends z.ZodObject<any, any>,
 >(
-	action: Action<T, C, A, N>
+	action: Action<T, C, A, N, CO>
 ) => action;
 
 export type ActionSuccess = {
@@ -115,14 +127,6 @@ export const defineRun = <T extends Action = Action>(
 ) => run;
 
 export type Run = ReturnType<typeof defineRun>;
-
-type ValueType<T extends Record<string, { optional: boolean }>> = { [K in keyof T]?: string } & {
-	[K in keyof T as T[K]["optional"] extends false ? K : never]-?: string;
-} extends infer O
-	? { [K in keyof O]: O[K] }
-	: never;
-
-declare const x: ValueType<{ a: { optional: false } }>;
 
 export type EventRuleOptionsBase<
 	E extends Event,

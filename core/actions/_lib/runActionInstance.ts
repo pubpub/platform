@@ -110,10 +110,7 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedConfig =
-		"_def" in action.config
-			? action.config.safeParse(actionInstance.config ?? {})
-			: action.config.schema.safeParse(actionInstance.config ?? {});
+	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {});
 
 	if (!parsedConfig.success) {
 		return {
@@ -122,10 +119,7 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedArgs =
-		"_def" in action.params
-			? action.params.safeParse(args ?? {})
-			: action.params.schema.safeParse(args ?? {});
+	const parsedArgs = action.params.schema.safeParse(args ?? {});
 
 	if (!parsedArgs.success) {
 		return {

@@ -23,14 +23,17 @@ export const OutputMapFieldType =
 						<FormField
 							key={value.id}
 							name={`${field.name}.${value.field.slug}`}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>{value.field.name}</FormLabel>
-									<FormDescription>{value.field.slug}</FormDescription>
-									<Input required={false} {...field}></Input>
-									<FormMessage />
-								</FormItem>
-							)}
+							render={(pr) => {
+								const { field } = pr;
+								return (
+									<FormItem>
+										<FormLabel>{value.field.name}</FormLabel>
+										<FormDescription>{value.field.slug}</FormDescription>
+										<Input required={false} {...field}></Input>
+										<FormMessage />
+									</FormItem>
+								);
+							}}
 						/>
 					);
 				}) ?? []}

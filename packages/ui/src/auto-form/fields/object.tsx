@@ -16,6 +16,14 @@ function DefaultParent({ children }: { children: React.ReactNode }) {
 	return <>{children}</>;
 }
 
+const isFieldConfigItem = (item: any): item is FieldConfigItem => {
+	if (item.fieldType) {
+		return true;
+	}
+
+	return false;
+};
+
 export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>({
 	schema,
 	form,
@@ -34,8 +42,9 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 	if (!schema) {
 		return null;
 	}
-	const { shape } = getBaseSchema<SchemaType>(schema) || {};
+	const item = getBaseSchema<SchemaType>(schema) || ({} as SchemaType);
 
+	const { shape } = item;
 	if (!shape) {
 		return null;
 	}
@@ -52,6 +61,26 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 
 		return item;
 	};
+
+	// the whole object is overridden by the itemType
+	if (isFieldConfigItem(fieldConfig)) {
+		const itemName = schema._def.description ?? beautifyObjectName(path[0]);
+		const [title, description, additionalType] = itemName.split("|");
+
+		return (
+			<FormFieldObject
+				form={form}
+				k={path.join(".")}
+				fieldConfigItem={fieldConfig}
+				zodBaseType={getBaseType(item)}
+				item={item}
+				isDisabled={fieldConfig.inputProps?.disabled}
+				title={fieldConfig.inputProps?.label}
+				description={fieldConfig.description || description}
+				isRequired={fieldConfig.inputProps?.required}
+			/>
+		);
+	}
 
 	return (
 		<Accordion type="multiple" className="space-y-5 border-none">
@@ -118,63 +147,102 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 				}
 
 				return (
-					<FormField
-						control={form.control}
-						name={key}
+					<FormFieldObject
 						key={key}
-						render={({ field }) => {
-							const inputType =
-								fieldConfigItem.fieldType ??
-								DEFAULT_ZOD_HANDLERS[zodBaseType] ??
-								"fallback";
-
-							const typeToUse =
-								additionalType && additionalType in INPUT_COMPONENTS
-									? (additionalType as keyof typeof INPUT_COMPONENTS)
-									: inputType;
-
-							const InputComponent =
-								typeof typeToUse === "function"
-									? typeToUse
-									: INPUT_COMPONENTS[typeToUse];
-
-							const ParentElement = fieldConfigItem.renderParent ?? DefaultParent;
-
-							const defaultValue = fieldConfigItem.inputProps?.defaultValue;
-							const value = field.value ?? defaultValue ?? "";
-
-							const fieldProps = {
-								...zodToHtmlInputProps(item),
-								...field,
-								...fieldConfigItem.inputProps,
-								disabled: fieldConfigItem.inputProps?.disabled || isDisabled,
-								ref: undefined,
-								value: value,
-							};
-
-							if (InputComponent === undefined) {
-								return <></>;
-							}
-
-							return (
-								<ParentElement key={`${key}.parent`}>
-									<InputComponent
-										zodInputProps={zodInputProps}
-										field={field}
-										fieldConfigItem={fieldConfigItem}
-										label={title}
-										description={description}
-										isRequired={isRequired}
-										zodItem={item}
-										fieldProps={fieldProps}
-										className={fieldProps.className}
-									/>
-								</ParentElement>
-							);
+						{...{
+							form,
+							k: key,
+							fieldConfigItem,
+							zodBaseType,
+							additionalType,
+							item,
+							isDisabled,
+							zodInputProps,
+							title,
+							description,
+							isRequired,
 						}}
 					/>
 				);
 			})}
 		</Accordion>
+	);
+}
+function FormFieldObject({
+	form,
+	k: key,
+	fieldConfigItem,
+	zodBaseType,
+	additionalType,
+	item,
+	isDisabled,
+	title,
+	description,
+	isRequired,
+}: {
+	form: ReturnType<typeof useForm>;
+	k: string;
+	fieldConfigItem: FieldConfigItem;
+	zodBaseType: string;
+	additionalType?: string;
+	item: z.ZodAny;
+	isDisabled?: boolean;
+	title: string;
+	description?: string;
+	isRequired?: boolean;
+}): React.JSX.Element | null {
+	const zodInputProps = zodToHtmlInputProps(item);
+
+	return (
+		<FormField
+			control={form.control}
+			name={key}
+			render={({ field }) => {
+				const inputType =
+					fieldConfigItem.fieldType ?? DEFAULT_ZOD_HANDLERS[zodBaseType] ?? "fallback";
+
+				const typeToUse =
+					additionalType && additionalType in INPUT_COMPONENTS
+						? (additionalType as keyof typeof INPUT_COMPONENTS)
+						: inputType;
+
+				const InputComponent =
+					typeof typeToUse === "function" ? typeToUse : INPUT_COMPONENTS[typeToUse];
+
+				const ParentElement = fieldConfigItem.renderParent ?? DefaultParent;
+
+				const defaultValue = fieldConfigItem.inputProps?.defaultValue;
+				const value = field.value ?? defaultValue ?? "";
+
+				const fieldProps = {
+					...zodInputProps,
+					...field,
+					...fieldConfigItem.inputProps,
+					disabled: fieldConfigItem.inputProps?.disabled || isDisabled,
+					ref: undefined,
+					value: value,
+				};
+
+				if (InputComponent === undefined) {
+					return <></>;
+				}
+
+				return (
+					<ParentElement key={`${key}.parent`}>
+						<InputComponent
+							zodInputProps={zodInputProps}
+							field={field}
+							fieldConfigItem={fieldConfigItem}
+							label={title}
+							description={description}
+							isRequired={Boolean(isRequired)}
+							zodItem={item}
+							fieldProps={fieldProps}
+							className={fieldProps.className}
+						/>
+					</ParentElement>
+				);
+			}}
+		/>
 	);
 }

@@ -1,7 +1,5 @@
 "use client";
 
-import type { Pub } from "@prisma/client";
-
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -11,16 +9,14 @@ import {
 } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
-import type { StagePub } from "./queries";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
-import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
 
 export const StagePanelPubsRunActionDropDownMenu = ({
 	actionInstances,
-	pub,
+	children,
 }: {
 	actionInstances: ActionInstances[];
-	pub: StagePub;
+	children: React.ReactNode;
 }) => {
 	if (!actionInstances.length) {
 		return null;
@@ -44,7 +40,7 @@ export const StagePanelPubsRunActionDropDownMenu = ({
 							evt.preventDefault();
 						}}
 					>
-						<StagePanelPubsRunActionButton actionInstance={actionInstance} pub={pub} />
+						{children}
 					</DropdownMenuItem>
 				))}
 			</DropdownMenuContent>

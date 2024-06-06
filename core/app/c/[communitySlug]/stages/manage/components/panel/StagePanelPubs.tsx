@@ -8,7 +8,8 @@ import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStageActions, getStagePubs } from "./queries";
+import { ActionRunFormContextWrapper } from "./ActionRunFormContextWrapper";
+import { getStage, getStageActions, getStagePubs } from "./queries";
 import { StagePanelPubsRunActionDropDownMenu } from "./StagePanelPubsRunActionDropDownMenu";
 
 type PropsInner = {
@@ -16,8 +17,11 @@ type PropsInner = {
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
-	const stagePubs = await getStagePubs(props.stageId);
-	const stageActions = await getStageActions(props.stageId);
+	const [stagePubs, stageActions] = await Promise.all([
+		getStagePubs(props.stageId),
+		getStageActions(props.stageId),
+		getStage(props.stageId),
+	]);
 
 	const actions = stageActions.map((action) => ({
 		...action,
@@ -39,7 +43,14 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 							<StagePanelPubsRunActionDropDownMenu
 								actionInstances={actions}
 								pub={pub}
-							/>
+								stage={props.stage}
+							>
+								{/* <ActionRunFormContextWrapper
+									stage={props.stage}
+									pub={pub}
+									actionInstance={props.actionInstance}
+								/> */}
+							</StagePanelPubsRunActionDropDownMenu>
 							<PubDropDown pubId={pub.id as PubsId} />
 						</div>
 					</div>
