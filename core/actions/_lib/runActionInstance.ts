@@ -144,6 +144,7 @@ const _runActionInstance = async (
 			pub: {
 				id: pub.id,
 				values: pub.values as any,
+				assignee: pub.assignee,
 			},
 			args: args,
 			stageId: actionInstance.stageId,

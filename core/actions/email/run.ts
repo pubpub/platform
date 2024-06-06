@@ -1,66 +1,71 @@
 "use server";
 
-import { Marked } from "marked";
-import { createDirectives } from "marked-directive";
+import rehypeFormat from "rehype-format";
+import rehypeStringify from "rehype-stringify";
+import remarkDirective from "remark-directive";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 
 import { logger } from "logger";
-import { assert, expect, isAssertionError } from "utils";
+import { expect } from "utils";
 
 import type { action } from "./action";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { UsersId } from "~/kysely/types/public/Users";
 import { smtpclient } from "~/lib/server/mailgun";
-import { createToken } from "~/lib/server/token";
 import { defineRun } from "../types";
-import { directiveUsesAuth, formLink, isDirective, isValidEmailDirective } from "./directives";
-
-const INVALID_EMAIL_DIRECTIVE_ERROR = "Invalid email directive";
+import { emailDirectives } from "./plugin";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
-	const community = await db
-		.selectFrom("communities")
-		.where("id", "=", communityId)
-		.select(["slug"])
-		.executeTakeFirstOrThrow();
-	// The user should be already authenticated by `runServerAction` at this point.
-	const user = expect(await getLoginData());
-	const emailContext = { community };
-	const emailDirectives = createDirectives([formLink(emailContext)]);
 	try {
-		const html = await new Marked().use(emailDirectives).parse(config.body, {
-			async: true,
-			async walkTokens(token) {
-				// For directive tokens
-				if (isDirective(token)) {
-					// Assert they are defined, valid tokens
-					assert(isValidEmailDirective(token), INVALID_EMAIL_DIRECTIVE_ERROR);
-					// If the directive uses auth, attach an auth token to the marked token
-					// for use in the directive's renderer (e.g. in a link).
-					if (directiveUsesAuth(token)) {
-						token.auth = await createToken(user.id);
-					}
-				}
-			},
-		});
+		const community = await db
+			.selectFrom("communities")
+			.where("id", "=", communityId)
+			.select(["slug"])
+			.executeTakeFirstOrThrow();
+
+		// TODO: the pub must currently have an assignee to send an email. This
+		// should be set at the action instance level—it should be possible to
+		// use the pub assignee, a pub field, a static email address, a member, or
+		// a member group as the sender.
+		const sender = expect(pub.assignee, "No assignee found for pub");
+
+		// TODO: similar to the assignee, the recipient args/config should accept
+		// the pub assignee, a pub field, a static email address, a member, or a
+		// member group.
+		const recipient = await db
+			.selectFrom("users")
+			.select(["id", "email", "firstName", "lastName"])
+			.where("id", "=", expect(args?.recipient ?? config.recipient) as UsersId)
+			.executeTakeFirstOrThrow();
+
+		const emailDirectivesContext = { community, sender, recipient, pub };
+
+		const html = (
+			await unified()
+				.use(remarkParse)
+				.use(remarkDirective)
+				.use(emailDirectives, emailDirectivesContext)
+				.use(remarkRehype)
+				.use(rehypeFormat)
+				.use(rehypeStringify)
+				.process(config.body)
+		).toString();
+
 		await smtpclient.sendMail({
 			from: "hello@pubpub.org",
-			to: config.email,
+			to: recipient.email,
 			replyTo: "hello@pubpub.org",
 			html,
 			subject: config.subject,
 		});
 	} catch (error) {
 		logger.error({ msg: "email", error });
-		if (isAssertionError(error) && error.message.includes(INVALID_EMAIL_DIRECTIVE_ERROR)) {
-			return {
-				title: "Failed to Send Email",
-				error: error.message,
-				cause: error,
-			};
-		}
+
 		return {
 			title: "Failed to Send Email",
-			error: "An error occured while sending the email",
+			error: error.message,
 			cause: error,
 		};
 	}

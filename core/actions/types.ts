@@ -16,6 +16,12 @@ export type ActionPub<T extends ActionPubType> = {
 	values: {
 		[key in T[number]["slug"]]: JTDDataType<T[number]["schema"]["schema"]>;
 	};
+	assignee?: {
+		id: string;
+		firstName: string;
+		lastName: string | null;
+		email: string;
+	};
 };
 
 export type RunProps<T extends Action> =
