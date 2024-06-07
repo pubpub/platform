@@ -1,10 +1,10 @@
+import dynamic from "next/dynamic";
 import * as z from "zod";
 
 import { DependencyType } from "ui/auto-form";
 import { Globe } from "ui/icon";
 
 import { defineAction } from "../types";
-import { OutputMapFieldType } from "./outputMapFieldType";
 
 export const action = defineAction({
 	name: "http",
@@ -54,6 +54,7 @@ export const action = defineAction({
 		fieldConfig: {
 			outputMap: {
 				fieldType: "custom",
+				//dynamic(() => import("./config-component"), { ssr: false }),
 				description: "AAAAA",
 			},
 		},
@@ -120,7 +121,9 @@ export const action = defineAction({
 		],
 		fieldConfig: {
 			outputMap: {
-				fieldType: OutputMapFieldType,
+				fieldType: dynamic(() =>
+					import("./outputMapFieldType").then((m) => m.OutputMapFieldType)
+				),
 			},
 		},
 	},

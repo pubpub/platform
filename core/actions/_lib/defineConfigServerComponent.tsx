@@ -15,9 +15,9 @@ import { CustomServerComponentClientBoundary } from "./customServerComponentClie
 type ConfigServerComponentProps<T extends Action> =
 	T extends Action<any, infer C, any> ? { action: T; config: C } : never;
 
-export const defineActionConfigServerComponent = <T extends Action>(
+export const defineActionFormFieldServerComponent = <T extends Action>(
 	action: T,
-	getFieldConfig: ({
+	FormField: ({
 		action,
 		actionInstance,
 		stageId,
@@ -38,30 +38,32 @@ export const defineActionConfigServerComponent = <T extends Action>(
 		communityId: CommunitiesId;
 		stageId: StagesId;
 	}) => {
-		const fieldConfig = await getFieldConfig({
+		const F = await FormField({
 			action,
 			actionInstance,
 			stageId,
 			communityId,
 		});
 
-		const updateConfigAction = updateAction.bind(null, communityId, actionInstance.id);
+		return F;
 
-		return (
-			<CustomServerComponentClientBoundary
-				instance={actionInstance}
-				communityId={communityId}
-				onUpdateAction={updateConfigAction}
-				config={actionInstance.config}
-				fieldConfig={fieldConfig}
-				actionName={actionInstance.action}
-			/>
-		);
+		// const updateConfigAction = updateAction.bind(null, communityId, actionInstance.id);
+
+		// return (
+		// 	<CustomServerComponentClientBoundary
+		// 		instance={actionInstance}
+		// 		communityId={communityId}
+		// 		onUpdateAction={updateConfigAction}
+		// 		config={actionInstance.config}
+		// 		fieldConfig={fieldConfig}
+		// 		actionName={actionInstance.action}
+		// 	/>
+		// );
 	};
 
 	return serverComponent;
 };
 
 export type ActionConfigServerComponent<T extends Action> = ReturnType<
-	typeof defineActionConfigServerComponent<T>
+	typeof defineActionFormFieldServerComponent<T>
 >;

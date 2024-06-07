@@ -1,21 +1,9 @@
-import { sql } from "kysely";
-
-import { AutoFormInputComponentProps } from "ui/auto-form";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-
 import { db } from "~/kysely/database";
-import { defineActionConfigServerComponent } from "../_lib/defineConfigServerComponent";
+import { defineActionFormFieldServerComponent } from "../_lib/defineConfigServerComponent";
 import { action } from "./action";
-import { Thingy } from "./dropDown";
+import { Thingy } from "./config/outputMap.field";
 
-const component = defineActionConfigServerComponent(
+const component = defineActionFormFieldServerComponent(
 	action,
 	async ({ action, actionInstance, stageId, communityId }) => {
 		const communityPubFields = await db
@@ -63,30 +51,7 @@ const component = defineActionConfigServerComponent(
 			.distinct()
 			.execute();
 
-		const OutputMapField = ({ field, ...props }: AutoFormInputComponentProps) => {
-			return (
-				<>
-					<hr />
-					<h3>Output map</h3>
-					<span className="text-sm text-gray-500">gore kankerhoer</span>
-					<Thingy props={{ ...props, field }} pubFields={communityPubFields} />
-				</>
-			);
-		};
-
-		return (
-			<>
-				<hr />
-				<h3>Output map</h3>
-				<span className="text-sm text-gray-500">gore kankerhoer</span>
-				<Thingy fieldName="outputMap" pubFields={communityPubFields} />
-			</>
-		);
-		return {
-			outputMap: {
-				// fieldType: outputMapField,
-			},
-		};
+		return <Thingy pubFields={communityPubFields} fieldName="outputMap" />;
 	}
 );
 

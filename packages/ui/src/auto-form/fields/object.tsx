@@ -102,6 +102,13 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 					return null;
 				}
 
+				const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {};
+
+				// fully rendered (server) component
+				if (typeof fieldConfigItem.fieldType === "object") {
+					return fieldConfigItem.fieldType;
+				}
+
 				if (zodBaseType === "ZodObject") {
 					return (
 						<AccordionItem value={name} key={key} className="border-none">
@@ -111,9 +118,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 									schema={item as unknown as z.ZodObject<any, any>}
 									form={form}
 									fieldConfig={
-										(fieldConfig?.[name] ?? {}) as FieldConfig<
-											z.infer<typeof item>
-										>
+										fieldConfigItem as FieldConfig<z.infer<typeof item>>
 									}
 									path={[...path, name]}
 								/>
@@ -128,13 +133,12 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 							name={title}
 							item={item as unknown as z.ZodArray<any>}
 							form={form}
-							fieldConfig={fieldConfig?.[name] ?? {}}
+							fieldConfig={fieldConfigItem}
 							path={[...path, name]}
 						/>
 					);
 				}
 
-				const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {};
 				const zodInputProps = zodToHtmlInputProps(item);
 				const isRequired =
 					isRequiredByDependency ||
@@ -201,15 +205,22 @@ function FormFieldObject({
 				const inputType =
 					fieldConfigItem.fieldType ?? DEFAULT_ZOD_HANDLERS[zodBaseType] ?? "fallback";
 
+				console.log(inputType);
+
 				const typeToUse =
 					additionalType && additionalType in INPUT_COMPONENTS
 						? (additionalType as keyof typeof INPUT_COMPONENTS)
 						: inputType;
 
+				const ParentElement = fieldConfigItem.renderParent ?? DefaultParent;
+
+				// fully rendered component
+				if (typeof typeToUse === "object" && "$$typeof" in typeToUse) {
+					return <ParentElement key={`${key}.parent`}>{typeToUse}</ParentElement>;
+				}
+
 				const InputComponent =
 					typeof typeToUse === "function" ? typeToUse : INPUT_COMPONENTS[typeToUse];
-
-				const ParentElement = fieldConfigItem.renderParent ?? DefaultParent;
 
 				const defaultValue = fieldConfigItem.inputProps?.defaultValue;
 				const value = field.value ?? defaultValue ?? "";

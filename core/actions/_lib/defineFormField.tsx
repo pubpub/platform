@@ -28,7 +28,6 @@ export function defineCustomFormField<
 		path: F;
 	}>
 ) {
-	console.log("heu");
 	return (props: { field: ControllerRenderProps<S, F> }) => {
 		const form = useFormContext<S>();
 		return <FormField {...props} action={action} path={path} form={form} />;

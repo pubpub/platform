@@ -19,9 +19,11 @@ export type Props = {
 	actionName: ActionName;
 	instance: ActionInstances;
 	communityId: string;
+	fieldConfig;
 };
 
 export const ActionConfigForm = (props: Props) => {
+	console.log(props.fieldConfig);
 	const action = getActionByName(props.actionName);
 
 	const runUpdateAction = useServerAction(updateAction);
@@ -50,17 +52,18 @@ export const ActionConfigForm = (props: Props) => {
 		[runUpdateAction, props.instance.id, props.communityId]
 	);
 
-	const resolvedFieldConfigPromise = useMemo(
-		() => resolveFieldConfig(action, "config"),
-		[action]
-	);
+	// const resolvedFieldConfigPromise = useMemo(
+	// 	() => resolveFieldConfig(action, "config"),
+	// 	[action]
+	// );
 
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
 			<ActionConfigFormInner
 				action={action}
 				onSubmit={onSubmit}
-				resolvedFieldConfigPromise={resolvedFieldConfigPromise}
+				fieldConfig={props.fieldConfig}
+				//		resolvedFieldConfigPromise={resolvedFieldConfigPromise}
 				instance={props.instance}
 			/>
 		</Suspense>
@@ -68,22 +71,24 @@ export const ActionConfigForm = (props: Props) => {
 };
 
 const ActionConfigFormInner = ({
-	resolvedFieldConfigPromise,
+	// resolvedFieldConfigPromise,
 	action,
 	onSubmit,
+	fieldConfig,
 	instance,
 }: {
 	action: Action;
-	resolvedFieldConfigPromise: Promise<FieldConfig<any> | undefined>;
+	// resolvedFieldConfigPromise: Promise<FieldConfig<any> | undefined>;
 	onSubmit;
+	fieldConfig;
 	instance: ActionInstances;
 }) => {
-	const resolvedConfig = use(resolvedFieldConfigPromise);
+	//	const resolvedConfig = use(resolvedFieldConfigPromise);
 
 	return (
 		<AutoForm
 			values={instance.config ?? {}}
-			fieldConfig={resolvedConfig}
+			fieldConfig={fieldConfig}
 			formSchema={action.config.schema}
 			dependencies={action.config.dependencies}
 			onSubmit={onSubmit}
