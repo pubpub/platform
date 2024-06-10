@@ -7,6 +7,7 @@ import type { CorePubField } from "./corePubFields";
 import type Event from "~/kysely/types/public/Event";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 
 export type ActionPubType = CorePubField[];
 
@@ -15,15 +16,27 @@ export type ActionPub<T extends ActionPubType> = {
 	values: {
 		[key in T[number]["slug"]]: JTDDataType<T[number]["schema"]["schema"]>;
 	};
+	assignee?: {
+		id: string;
+		firstName: string;
+		lastName: string | null;
+		email: string;
+	};
 };
 
 export type RunProps<T extends Action> =
 	T extends Action<infer P, infer C, infer A>
-		? { config: C; pub: ActionPub<P>; args: A; stageId: StagesId }
+		? { config: C; pub: ActionPub<P>; args: A; stageId: StagesId; communityId: CommunitiesId }
 		: never;
 
 export type ConfigProps<C> = {
 	config: C;
+};
+
+export type TokenDef = {
+	[key: string]: {
+		description: string;
+	};
 };
 
 export type Action<
@@ -58,6 +71,13 @@ export type Action<
 	 * The icon to display for this action. Used in the UI.
 	 */
 	icon: (typeof Icons)[keyof typeof Icons];
+	/**
+	 * Optionally provide a list of tokens that can be used in the
+	 * action's config or arguments.
+	 */
+	tokens?: {
+		[K in keyof C]?: TokenDef;
+	};
 };
 
 export const defineAction = <

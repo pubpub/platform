@@ -9,6 +9,7 @@ import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
+import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
@@ -73,9 +74,11 @@ export const StagePanelPubsRunActionButton = ({
 				<DialogHeader>
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
-				<AutoForm formSchema={action.params as ZodObject<{}>} onSubmit={onSubmit}>
-					<AutoFormSubmit disabled={isPending}>Run</AutoFormSubmit>
-				</AutoForm>
+				<TokenProvider tokens={action.tokens ?? {}}>
+					<AutoForm formSchema={action.params as ZodObject<{}>} onSubmit={onSubmit}>
+						<AutoFormSubmit disabled={isPending}>Run</AutoFormSubmit>
+					</AutoForm>
+				</TokenProvider>
 			</DialogContent>
 		</Dialog>
 	);

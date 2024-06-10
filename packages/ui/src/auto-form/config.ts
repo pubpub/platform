@@ -3,6 +3,7 @@ import AutoFormDate from "./fields/date";
 import AutoFormEnum from "./fields/enum";
 import AutoFormFile from "./fields/file";
 import AutoFormInput from "./fields/input";
+import MarkdownEditor from "./fields/markdown";
 import AutoFormNumber from "./fields/number";
 import AutoFormRadioGroup from "./fields/radio-group";
 import AutoFormSwitch from "./fields/switch";
@@ -18,6 +19,7 @@ export const INPUT_COMPONENTS = {
 	number: AutoFormNumber,
 	file: AutoFormFile,
 	fallback: AutoFormInput,
+	markdown: MarkdownEditor,
 };
 
 /**
@@ -32,4 +34,5 @@ export const DEFAULT_ZOD_HANDLERS: {
 	ZodEnum: "select",
 	ZodNativeEnum: "select",
 	ZodNumber: "number",
+	Markdown: "markdown",
 };

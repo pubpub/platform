@@ -16,6 +16,7 @@ import type { UsersId } from "~/kysely/types/public/Users";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 import Event from "~/kysely/types/public/Event";
 import { getPub } from "~/lib/server";
 import { getActionByName } from "../api";
@@ -143,9 +144,11 @@ const _runActionInstance = async (
 			pub: {
 				id: pub.id,
 				values: pub.values as any,
+				assignee: pub.assignee,
 			},
 			args: args,
 			stageId: actionInstance.stageId,
+			communityId: pub.communityId as CommunitiesId,
 		});
 
 		return result;
