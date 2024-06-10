@@ -22,18 +22,12 @@ services:
             POSTGRES_DB: postgres
         ports:
             - 5432:5432
-    # migrations:
-    #   build:
-    #     context: .
-    #     args:
-    #       - PACKAGE=core
-    #   command: pnpm --filter core migrate-docker
-    #   image: core
-    #   env_file:
-    #     - core/.env.testing
-    #   ports:
-    #     - 8022:8022
-    #   restart: unless-stopped
-    #   depends_on:
-    #     - postgres
-    #     - app
+    pgadmin:
+        image: dpage/pgadmin4
+        environment:
+            PGADMIN_DEFAULT_EMAIL: admin@example.com
+            PGADMIN_DEFAULT_PASSWORD: admin
+        ports:
+            - "5050:80"
+        depends_on:
+            - postgres
