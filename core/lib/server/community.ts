@@ -19,7 +19,7 @@ export const findCommunityIdByPubId = async (pubId: PubsId) => {
 			async () =>
 				db
 					.selectFrom("pubs")
-					.select(["community_id as communityId"])
+					.select(["communityId"])
 					.where("id", "=", pubId)
 					.executeTakeFirst(),
 			[pubId],

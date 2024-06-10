@@ -14,17 +14,17 @@ export type ActionClaimId = string & { __brand: "ActionClaimId" };
 export default interface ActionClaimTable {
 	id: ColumnType<ActionClaimId, ActionClaimId | undefined, ActionClaimId>;
 
-	stage_id: ColumnType<StagesId, StagesId, StagesId>;
+	stageId: ColumnType<StagesId, StagesId, StagesId>;
 
-	pub_id: ColumnType<PubsId, PubsId, PubsId>;
+	pubId: ColumnType<PubsId, PubsId, PubsId>;
 
-	user_id: ColumnType<UsersId, UsersId, UsersId>;
+	userId: ColumnType<UsersId, UsersId, UsersId>;
 
 	releasedAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type ActionClaim = Selectable<ActionClaimTable>;

@@ -42,9 +42,9 @@ const _runActionInstance = async (
 		.select((eb) => [
 			"id",
 			eb.fn.coalesce("config", sql`'{}'`).as("config"),
-			"created_at as createdAt",
-			"updated_at as updatedAt",
-			"stage_id as stageId",
+			"createdAt",
+			"updatedAt",
+			"stageId",
 			"action",
 			// this is to check whether the pub is still in the stage the actionInstance is in
 			// often happens when an action is scheduled but a pub is moved before the action runs
@@ -53,7 +53,7 @@ const _runActionInstance = async (
 					.selectFrom("PubsInStages")
 					.select(["pubId", "stageId"])
 					.where("pubId", "=", args.pubId)
-					.whereRef("stageId", "=", "action_instances.stage_id")
+					.whereRef("stageId", "=", "action_instances.stageId")
 			).as("pubInStage"),
 		])
 		.executeTakeFirstOrThrow();
@@ -181,8 +181,8 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 				db
 					.selectFrom("action_runs")
 					.selectAll()
-					.where("action_instance_id", "=", args.actionInstanceId)
-					.where("pub_id", "=", args.pubId)
+					.where("actionInstanceId", "=", args.actionInstanceId)
+					.where("pubId", "=", args.pubId)
 					.where("status", "=", ActionRunStatus.scheduled)
 			// this should be guaranteed to be unique, as only one actionInstance should be scheduled per pub
 		)
@@ -192,9 +192,9 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 				isActionUserInitiated || args.event !== Event.pubInStageForDuration
 					? undefined
 					: eb.selectFrom("existingScheduledActionRun").select("id"),
-			action_instance_id: args.actionInstanceId,
-			pub_id: args.pubId,
-			user_id: isActionUserInitiated ? args.userId : null,
+			actionInstanceId: args.actionInstanceId,
+			pubId: args.pubId,
+			userId: isActionUserInitiated ? args.userId : null,
 			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
 			result,
 			// this is a bit hacky, would be better to pass this around methinks
@@ -223,8 +223,8 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {
 	const instances = await db
 		.selectFrom("action_instances")
-		.where("action_instances.stage_id", "=", stageId)
-		.innerJoin("rules", "rules.action_instance_id", "action_instances.id")
+		.where("action_instances.stageId", "=", stageId)
+		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
 		.where("rules.event", "=", event)
 		.selectAll()
 		.execute();
@@ -232,11 +232,11 @@ export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, eve
 	const results = await Promise.all(
 		instances.map(async (instance) => {
 			return {
-				actionInstanceId: instance.action_instance_id,
+				actionInstanceId: instance.actionInstanceId,
 				actionInstanceName: instance.name,
 				result: await runActionInstance({
 					pubId,
-					actionInstanceId: instance.action_instance_id,
+					actionInstanceId: instance.actionInstanceId,
 					event,
 				}),
 			};

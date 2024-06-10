@@ -65,14 +65,14 @@ const getCommunityById = <
 							.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 					).as("fields"),
 				])
-				.whereRef("pub_types.community_id", "=", eb.ref("communities.id"))
+				.whereRef("pub_types.communityId", "=", eb.ref("communities.id"))
 		).as("pubTypes"),
 		jsonArrayFrom(
 			eb
 				.selectFrom("stages")
 				.select(["stages.id", "stages.name", "stages.order"])
 				.orderBy("stages.order desc")
-				.where("stages.community_id", "=", communityId)
+				.where("stages.communityId", "=", communityId)
 		).as("stages"),
 	]);
 
@@ -90,10 +90,10 @@ const getStage = (stageId: StagesId) => {
 		.selectFrom("stages")
 		.select((eb) => [
 			"stages.id",
-			"stages.community_id",
+			"stages.communityId",
 			"stages.name",
 			"stages.order",
-			jsonObjectFrom(getCommunityById(eb, eb.ref("stages.community_id"))).as("community"),
+			jsonObjectFrom(getCommunityById(eb, eb.ref("stages.communityId"))).as("community"),
 		])
 		.where("stages.id", "=", stageId);
 };
@@ -117,7 +117,7 @@ export async function PubCreate({ communityId, stageId }: CreatePubProps) {
 			);
 	const result = await query.executeTakeFirstOrThrow();
 
-	const { community, ...stage } = "community_id" in result ? result : { community: result };
+	const { community, ...stage } = "communityId" in result ? result : { community: result };
 	const currentStage = "id" in stage ? stage : null;
 
 	if (!community) {

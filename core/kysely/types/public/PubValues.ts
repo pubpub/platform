@@ -13,15 +13,15 @@ export type PubValuesId = string & { __brand: "PubValuesId" };
 export default interface PubValuesTable {
 	id: ColumnType<PubValuesId, PubValuesId | undefined, PubValuesId>;
 
-	field_id: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;
+	fieldId: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;
 
 	value: ColumnType<unknown, unknown, unknown>;
 
-	pub_id: ColumnType<PubsId, PubsId, PubsId>;
+	pubId: ColumnType<PubsId, PubsId, PubsId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type PubValues = Selectable<PubValuesTable>;

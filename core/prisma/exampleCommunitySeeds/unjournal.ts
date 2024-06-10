@@ -643,8 +643,8 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			db
 				.insertInto("pubs")
 				.values({
-					community_id: communityUUID as CommunitiesId,
-					pub_type_id: submissionTypeId as PubTypesId,
+					communityId: communityUUID as CommunitiesId,
+					pubTypeId: submissionTypeId as PubTypesId,
 				})
 				.returning("id")
 		)
@@ -659,13 +659,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		.insertInto("pub_values")
 		.values((eb) => [
 			{
-				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
+				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
 				value: '"It Aint Ease Bein Cheese"',
 			},
 			{
-				pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				field_id: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
+				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
 					.id,
 				value: '"# Abstract"',
 			},

@@ -16,7 +16,7 @@ export default interface RulesTable {
 
 	event: ColumnType<Event, Event, Event>;
 
-	action_instance_id: ColumnType<ActionInstancesId, ActionInstancesId, ActionInstancesId>;
+	actionInstanceId: ColumnType<ActionInstancesId, ActionInstancesId, ActionInstancesId>;
 
 	config: ColumnType<RuleConfigs | null, RuleConfigs | null, RuleConfigs | null>;
 }

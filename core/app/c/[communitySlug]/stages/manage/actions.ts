@@ -33,7 +33,7 @@ async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
 	const ops = moveConstraintIds.map(([stageId, destinationId]) =>
 		prisma.moveConstraint.delete({
 			where: {
-				move_constraint_id: {
+				moveConstraintId: {
 					stageId,
 					destinationId,
 				},
@@ -256,7 +256,7 @@ export const addRule = defineServerAction(async function addRule({
 		await db
 			.insertInto("rules")
 			.values({
-				action_instance_id: data.actionInstanceId as ActionInstancesId,
+				actionInstanceId: data.actionInstanceId as ActionInstancesId,
 				event: data.event,
 				config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
 			})
@@ -307,8 +307,8 @@ export const deleteRule = defineServerAction(async function deleteRule(
 
 		const actionInstance = await db
 			.selectFrom("action_instances")
-			.select(["id", "action", "stage_id"])
-			.where("id", "=", deletedRule.action_instance_id)
+			.select(["id", "action", "stageId"])
+			.where("id", "=", deletedRule.actionInstanceId)
 			.executeTakeFirst();
 
 		if (!actionInstance) {
@@ -324,7 +324,7 @@ export const deleteRule = defineServerAction(async function deleteRule(
 		const pubsInStage = await db
 			.selectFrom("PubsInStages")
 			.select(["pubId", "stageId"])
-			.where("stageId", "=", actionInstance.stage_id)
+			.where("stageId", "=", actionInstance.stageId)
 			.execute();
 
 		if (!pubsInStage) {

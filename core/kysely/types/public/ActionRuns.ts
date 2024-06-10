@@ -16,13 +16,13 @@ export type ActionRunsId = string & { __brand: "ActionRunsId" };
 export default interface ActionRunsTable {
 	id: ColumnType<ActionRunsId, ActionRunsId | undefined, ActionRunsId>;
 
-	action_instance_id: ColumnType<
+	actionInstanceId: ColumnType<
 		ActionInstancesId | null,
 		ActionInstancesId | null,
 		ActionInstancesId | null
 	>;
 
-	pub_id: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
+	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 
@@ -32,11 +32,11 @@ export default interface ActionRunsTable {
 
 	status: ColumnType<ActionRunStatus, ActionRunStatus, ActionRunStatus>;
 
-	user_id: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
+	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	result: ColumnType<unknown, unknown, unknown>;
 }

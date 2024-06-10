@@ -14,19 +14,19 @@ export type PubsId = string & { __brand: "PubsId" };
 export default interface PubsTable {
 	id: ColumnType<PubsId, PubsId | undefined, PubsId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	pub_type_id: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
+	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
 
-	community_id: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
 	valuesBlob: ColumnType<unknown | null, unknown | null, unknown | null>;
 
-	parent_id: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
+	parentId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 
-	assignee_id: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
+	assigneeId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 }
 
 export type Pubs = Selectable<PubsTable>;

@@ -13,9 +13,9 @@ export type FormInputsId = string & { __brand: "FormInputsId" };
 export default interface FormInputsTable {
 	id: ColumnType<FormInputsId, FormInputsId | undefined, FormInputsId>;
 
-	field_id: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;
+	fieldId: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;
 
-	form_id: ColumnType<FormsId, FormsId, FormsId>;
+	formId: ColumnType<FormsId, FormsId, FormsId>;
 
 	order: ColumnType<string, string, string>;
 
@@ -23,7 +23,7 @@ export default interface FormInputsTable {
 
 	required: ColumnType<boolean, boolean, boolean>;
 
-	is_submit: ColumnType<boolean, boolean, boolean>;
+	isSubmit: ColumnType<boolean, boolean, boolean>;
 }
 
 export type FormInputs = Selectable<FormInputsTable>;

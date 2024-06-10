@@ -12,11 +12,11 @@ export type PubTypesId = string & { __brand: "PubTypesId" };
 export default interface PubTypesTable {
 	id: ColumnType<PubTypesId, PubTypesId | undefined, PubTypesId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	community_id: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
 	name: ColumnType<string, string, string>;
 

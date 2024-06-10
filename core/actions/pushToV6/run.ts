@@ -164,8 +164,8 @@ const updateV6PubId = async (pubId: string, v6PubId: string) => {
 		)
 		.insertInto("pub_values")
 		.values((eb) => ({
-			field_id: eb.selectFrom("field").select("field.id"),
-			pub_id: pubId as PubsId,
+			fieldId: eb.selectFrom("field").select("field.id"),
+			pubId: pubId as PubsId,
 			value: `"${v6PubId}"`,
 		}))
 		.execute();

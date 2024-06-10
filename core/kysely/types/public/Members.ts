@@ -13,15 +13,15 @@ export type MembersId = string & { __brand: "MembersId" };
 export default interface MembersTable {
 	id: ColumnType<MembersId, MembersId | undefined, MembersId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	canAdmin: ColumnType<boolean, boolean, boolean>;
 
-	community_id: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
-	user_id: ColumnType<UsersId, UsersId, UsersId>;
+	userId: ColumnType<UsersId, UsersId, UsersId>;
 }
 
 export type Members = Selectable<MembersTable>;
