@@ -93,4 +93,4 @@ USER node
 # Expose the port that the application listens on.
 EXPOSE $PORT
 # Run the application.
-CMD pnpm start
+CMD pnpm run-integration-tests
