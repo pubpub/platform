@@ -40,13 +40,15 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		body: args?.body ?? config.body,
 	};
 
+	const finalOutputMap = args?.outputMap ?? config?.outputMap ?? [];
+
 	const res = await fetch(url, {
 		method: method,
 		headers: {
 			...(authToken && { Authorization: `Bearer ${authToken}` }),
 			"Content-Type": "application/json",
 		},
-		body: body && method !== "GET" ? JSON.stringify(body) : undefined,
+		body: body && method !== "GET" ? body : undefined,
 	});
 
 	if (res.status !== 200) {
@@ -56,7 +58,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		};
 	}
 
-	if (args?.outputMap && !res.headers.get("content-type")?.includes("application/json")) {
+	if (
+		finalOutputMap.length > 0 &&
+		!res.headers.get("content-type")?.includes("application/json")
+	) {
 		return {
 			title: "Error",
 			error: `Expected application/json response, got ${res.headers.get("content-type")}`,
@@ -65,13 +70,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 
 	const result = await res.json();
 
-	const setRunParameters = args?.outputMap
-		? Object.entries(args.outputMap).filter((entry): entry is [string, string] =>
-				Boolean(entry[1])
-			)
-		: [];
-
-	if (setRunParameters.length > 0) {
+	if (finalOutputMap.length > 0) {
 		if (args?.test) {
 			return {
 				success: true,
@@ -79,22 +78,22 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			<p>HTTP request ran successfully</p>
 			<p>The resulting mapping would have been:</p>
 			<div>
-${setRunParameters.map(([fieldSlug, value]) => `<p>${fieldSlug}: ${pub.values[fieldSlug]} ➡️ ${result[value]}</p>`).join("\n")}
+${finalOutputMap.map(({ pubField, responseField }) => `<p>${pubField}: ${pub.values[pubField]} ➡️ ${result[responseField]}</p>`).join("\n")}
 			</div>`,
 				data: { result },
 			};
 		}
 
 		const updates = await Promise.allSettled(
-			setRunParameters.map(async ([fieldSlug, value]) => {
-				if (value === undefined) {
-					throw new Error(`Field ${fieldSlug} was not provided in the output map`);
+			finalOutputMap.map(async ({ pubField, responseField }) => {
+				if (responseField === undefined) {
+					throw new Error(`Field ${pubField} was not provided in the output map`);
 				}
-				const resValue = result[value];
+				const resValue = result[responseField];
 				if (resValue === undefined) {
-					throw new Error(`Field ${value} not found in response`);
+					throw new Error(`Field ${responseField} not found in response`);
 				}
-				await updateField({ pubId: pub.id, fieldSlug, value: resValue });
+				await updateField({ pubId: pub.id, fieldSlug: pubField, value: resValue });
 			})
 		);
 
@@ -117,11 +116,9 @@ ${setRunParameters.map(([fieldSlug, value]) => `<p>${fieldSlug}: ${pub.values[fi
 
 		return {
 			success: true,
-			report: `<div>
-			<p>Successfully updated fields</p>
+			report: `<p>Successfully updated fields</p>
 			<div>
-${setRunParameters.map(([fieldSlug, value]) => `<p>${fieldSlug}: ${pub.values[fieldSlug]} ➡️ ${result[value]}</p>`).join("\n")}
-			</div>`,
+${finalOutputMap.map(({ pubField, responseField }) => `<p>${pubField}: ${pub.values[pubField]} ➡️ ${result[responseField]}</p>`).join("\n")}`,
 			data: { result },
 		};
 	}
@@ -130,7 +127,10 @@ ${setRunParameters.map(([fieldSlug, value]) => `<p>${fieldSlug}: ${pub.values[fi
 
 	return {
 		success: true,
-		report: "The pub was successfully pushed to v6",
+		report: `<p>The HTTP request ran successfully</p>
+  <pre> 
+		${JSON.stringify(result, null, 2)}
+  </pre>`,
 		data: {},
 	};
 });

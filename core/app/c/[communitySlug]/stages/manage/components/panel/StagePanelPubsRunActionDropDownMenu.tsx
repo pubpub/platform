@@ -1,22 +1,25 @@
-"use client";
+// "use client";
+
+import React from "react";
 
 import { Button } from "ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
+import type { StagePub } from "./queries";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
+import type { Stages } from "~/kysely/types/public/Stages";
+import { ActionRunFormContextWrapper } from "./ActionRunFormWrapper";
+import { StagePanelPubsRunActionDropDownMenuItem } from "./StagePanelPubsRunActionDropDownMenuItem";
 
 export const StagePanelPubsRunActionDropDownMenu = ({
 	actionInstances,
-	children,
+	pub,
+	stage,
 }: {
 	actionInstances: ActionInstances[];
-	children: React.ReactNode;
+	pub: StagePub;
+	stage: Stages;
 }) => {
 	if (!actionInstances.length) {
 		return null;
@@ -33,15 +36,13 @@ export const StagePanelPubsRunActionDropDownMenu = ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
-					<DropdownMenuItem
-						key={actionInstance.id}
-						onSelect={(evt) => {
-							// prevents the dropdown from closing when clicking on the action
-							evt.preventDefault();
-						}}
-					>
-						{children}
-					</DropdownMenuItem>
+					<StagePanelPubsRunActionDropDownMenuItem key={actionInstance.id}>
+						<ActionRunFormContextWrapper
+							stage={stage}
+							pub={pub}
+							actionInstance={actionInstance}
+						/>
+					</StagePanelPubsRunActionDropDownMenuItem>
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>

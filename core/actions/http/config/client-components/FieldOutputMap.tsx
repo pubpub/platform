@@ -62,6 +62,7 @@ export const FieldOutputMap = defineCustomFormField(
 	"outputMap",
 	function FieldOutputMap({ pubFields, form }) {
 		const values = form.watch();
+		console.log(values);
 
 		const name = "outputMap";
 

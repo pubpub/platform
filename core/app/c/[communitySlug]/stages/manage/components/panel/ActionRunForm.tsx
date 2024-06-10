@@ -1,31 +1,30 @@
 "use client";
 
-import React, { Suspense, use, useCallback, useMemo, useTransition } from "react";
+import React, { Suspense, useCallback, useTransition } from "react";
 
-import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
+import AutoForm, { AutoFormSubmit, FieldConfig } from "ui/auto-form";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Loader2, Play } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import type { StagePub } from "./queries";
-import type { Action } from "~/actions/types";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
-import { resolveFieldConfig } from "~/actions/_lib/resolveFieldConfig";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { useServerAction } from "~/lib/serverActions";
 
-export const StagePanelPubsRunActionButton = ({
+export const ActionRunForm = ({
 	actionInstance,
 	pub,
+	fieldConfig,
 }: {
 	actionInstance: ActionInstances;
 	pub: StagePub;
+	fieldConfig: FieldConfig<any>;
 }) => {
 	const runAction = useServerAction(runActionInstance);
 
@@ -53,18 +52,16 @@ export const StagePanelPubsRunActionButton = ({
 						variant: "default",
 						// TODO: SHOULD ABSOLUTELY BE SANITIZED
 						description: (
-							<div dangerouslySetInnerHTML={{ __html: result.report ?? "" }} />
+							<div
+								className="h-40 w-80 overflow-auto"
+								dangerouslySetInnerHTML={{ __html: result.report ?? "" }}
+							/>
 						),
 					});
 				}
 			});
 		},
 		[runAction, actionInstance.id, pub.id]
-	);
-
-	const resolvedFieldConfigPromise = useMemo(
-		() => resolveFieldConfig(action, "config"),
-		[action]
 	);
 
 	return (
@@ -85,53 +82,25 @@ export const StagePanelPubsRunActionButton = ({
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
 				<Suspense fallback={<SkeletonCard />}>
-					<ActionRunFormInner
-						action={action}
-						isPending={isPending}
+					<AutoForm
+						values={actionInstance.config ?? {}}
+						fieldConfig={fieldConfig}
+						formSchema={action.params.schema}
+						dependencies={action.params.dependencies}
 						onSubmit={onSubmit}
-						resolvedFieldConfigPromise={resolvedFieldConfigPromise}
-						instance={actionInstance}
-					/>
+					>
+						<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
+							{isPending ? (
+								<Loader2 size="14" className="animate-spin" />
+							) : (
+								<>
+									<Play size="14" /> Run
+								</>
+							)}
+						</AutoFormSubmit>
+					</AutoForm>
 				</Suspense>
 			</DialogContent>
 		</Dialog>
 	);
 };
-
-const ActionRunFormInner = React.memo(
-	({
-		resolvedFieldConfigPromise,
-		action,
-		onSubmit,
-		instance,
-		isPending,
-	}: {
-		action: Action;
-		resolvedFieldConfigPromise: Promise<FieldConfig<any> | undefined>;
-		onSubmit;
-		instance: ActionInstances;
-		isPending: boolean;
-	}) => {
-		const resolvedConfig = use(resolvedFieldConfigPromise);
-
-		return (
-			<AutoForm
-				values={instance.config ?? {}}
-				fieldConfig={resolvedConfig}
-				formSchema={action.config.schema}
-				dependencies={action.config.dependencies}
-				onSubmit={onSubmit}
-			>
-				<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
-					{isPending ? (
-						<Loader2 size="14" className="animate-spin" />
-					) : (
-						<>
-							<Play size="14" /> Run
-						</>
-					)}
-				</AutoFormSubmit>
-			</AutoForm>
-		);
-	}
-);

@@ -6,9 +6,9 @@ import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { toast } from "ui/use-toast";
 
 import type { Action } from "~/actions/types";
+import type { default as ActionName } from "~/kysely/types/public/Action";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { getActionByName } from "~/actions/api";
-import { default as ActionName } from "~/kysely/types/public/Action";
 import { useServerAction } from "~/lib/serverActions";
 import { updateAction } from "../../actions";
 

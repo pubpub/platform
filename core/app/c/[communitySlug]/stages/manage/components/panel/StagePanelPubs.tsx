@@ -8,7 +8,6 @@ import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { ActionRunFormContextWrapper } from "./ActionRunFormContextWrapper";
 import { getStage, getStageActions, getStagePubs } from "./queries";
 import { StagePanelPubsRunActionDropDownMenu } from "./StagePanelPubsRunActionDropDownMenu";
 
@@ -17,15 +16,15 @@ type PropsInner = {
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
-	const [stagePubs, stageActions] = await Promise.all([
+	const [stagePubs, stageActionInstances, stage] = await Promise.all([
 		getStagePubs(props.stageId),
 		getStageActions(props.stageId),
 		getStage(props.stageId),
 	]);
 
-	const actions = stageActions.map((action) => ({
-		...action,
-	}));
+	if (!stage) {
+		throw new Error("Stage not found");
+	}
 
 	return (
 		<Card>
@@ -41,16 +40,10 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 						<PubTitle pub={pub} />
 						<div className="flex items-center gap-x-2">
 							<StagePanelPubsRunActionDropDownMenu
-								actionInstances={actions}
+								actionInstances={stageActionInstances}
 								pub={pub}
-								stage={props.stage}
-							>
-								{/* <ActionRunFormContextWrapper
-									stage={props.stage}
-									pub={pub}
-									actionInstance={props.actionInstance}
-								/> */}
-							</StagePanelPubsRunActionDropDownMenu>
+								stage={stage}
+							/>
 							<PubDropDown pubId={pub.id as PubsId} />
 						</div>
 					</div>

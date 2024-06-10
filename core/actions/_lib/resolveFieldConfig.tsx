@@ -1,12 +1,17 @@
-import { use, useEffect, useState } from "react";
+import { logger } from "logger";
 
-import { FieldConfig } from "ui/auto-form";
+import type Action from "~/kysely/types/public/Action";
+import { getActionByName } from "../api";
+import { getCustomConfigComponentByActionName } from "./getCustomConfigComponent";
 
-import { Action } from "../types";
+export const resolveFieldConfig = async <A extends Action, T extends "config" | "params">(
+	actionName: A,
+	type: T,
+	props
+) => {
+	const action = getActionByName(actionName);
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-export const resolveFieldConfig = async (action: Action, type: "config" | "params") => {
-	const fieldConfig = action.config.fieldConfig;
+	const fieldConfig = action[type].fieldConfig;
 
 	if (!fieldConfig) {
 		return undefined;
@@ -14,33 +19,35 @@ export const resolveFieldConfig = async (action: Action, type: "config" | "param
 
 	const resolvedFields = await Promise.all(
 		Object.entries(fieldConfig).map(async ([fieldName, fieldConfig]) => {
+			logger.info(fieldConfig);
 			if (fieldConfig.fieldType !== "custom") {
 				return [fieldName, fieldConfig] as const;
 			}
-			await sleep(1000);
 
-			const path = `~/actions/${action.name}/${type}/${fieldName}.field.tsx` as const;
-			console.log(path);
 			try {
-				const customComponent = await import(
-					`../${action.name}/${type}/${fieldName}.field.tsx`
+				const CustomComponent = await getCustomConfigComponentByActionName(
+					actionName,
+					type,
+					fieldName
 				);
-				console.log(customComponent);
-				if (!customComponent.default) {
+
+				if (!CustomComponent) {
 					throw new Error(
 						`Custom field ${fieldName} for action ${action.name} does not export a default component`
 					);
 				}
 
+				const fullComponent = <CustomComponent {...props} />;
+
 				return [
 					fieldName,
 					{
 						...fieldConfig,
-						fieldType: customComponent.default,
+						fieldType: fullComponent,
 					},
 				] as const;
 			} catch (error) {
-				console.log(error);
+				logger.error(error);
 				throw error;
 			}
 		})
@@ -48,21 +55,3 @@ export const resolveFieldConfig = async (action: Action, type: "config" | "param
 
 	return Object.fromEntries(resolvedFields);
 };
-
-//  export const useResolvedFieldConfig = async (action: Action, type: "config" | "params") => {
-
-//     const [pending, setPending] = useState(true);
-// 	const [resolvedConfig, setResolvedConfig] = useState<FieldConfig | undefined>(undefined);
-
-//     useEffect(() => {
-
-//         const resolve = async () => {
-//             const resolvedConfig = await resolveFieldConfig(action, type);
-//             setResolvedConfig(resolvedConfig);
-//         };
-
-//         resolve();
-//     }, []);
-
-//     return resolvedConfig;
-// };

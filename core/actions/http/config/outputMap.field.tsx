@@ -5,6 +5,7 @@ import { FieldOutputMap } from "./client-components/FieldOutputMap";
 
 const component = defineActionFormFieldServerComponent(
 	action,
+	"config",
 	async ({ action, actionInstance, stageId, communityId }) => {
 		const communityPubFields = await db
 			.with("combined_results", (db) =>

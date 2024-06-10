@@ -17,7 +17,7 @@ function DefaultParent({ children }: { children: React.ReactNode }) {
 }
 
 const isFieldConfigItem = (item: any): item is FieldConfigItem => {
-	if (item.fieldType) {
+	if (item?.fieldType) {
 		return true;
 	}
 

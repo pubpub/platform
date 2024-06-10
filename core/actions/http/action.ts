@@ -92,12 +92,20 @@ export const action = defineAction({
 					),
 				body: z
 					.string()
+					.transform((str, ctx) => {
+						try {
+							return JSON.parse(str);
+						} catch (e) {
+							ctx.addIssue({ code: "custom", message: "Invalid JSON" });
+							return z.NEVER;
+						}
+					})
 					.optional()
 					.describe(
 						"Body|Body to send with the request. Only sent for non-GET requests.|textarea"
 					),
 				outputMap: z
-					.record(z.string().optional())
+					.array(z.object({ pubField: z.string(), responseField: z.string() }))
 					.optional()
 					.describe("Output map|Map of JSON paths to pub fields"),
 			})
@@ -120,13 +128,11 @@ export const action = defineAction({
 				type: DependencyType.HIDES,
 			},
 		],
-		// fieldConfig: {
-		// 	outputMap: {
-		// 		fieldType: dynamic(() =>
-		// 			import("./outputMapFieldType").then((m) => m.OutputMapFieldType)
-		// 		),
-		// 	},
-		// },
+		fieldConfig: {
+			outputMap: {
+				fieldType: "custom",
+			},
+		},
 	},
 	pubFields: [],
 	icon: Globe,

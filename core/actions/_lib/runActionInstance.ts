@@ -100,7 +100,6 @@ const _runActionInstance = async (
 		};
 	}
 
-	logger.info(actionInstance.action);
 	const action = getActionByName(actionInstance.action);
 	const actionRun = await getActionRunByName(actionInstance.action);
 
@@ -119,7 +118,7 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedArgs = action.params.schema.safeParse(args ?? {});
+	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
 
 	if (!parsedArgs.success) {
 		return {
@@ -147,7 +146,7 @@ const _runActionInstance = async (
 				id: pub.id,
 				values: pub.values as any,
 			},
-			args: args,
+			args: parsedArgs.data,
 			stageId: actionInstance.stageId,
 		});
 
@@ -161,13 +160,6 @@ const _runActionInstance = async (
 		};
 	}
 };
-
-// export async function runActionInstancel(args: RunActionInstanceArgs) {
-
-// 	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
-
-// 	return result;
-// }
 
 export async function runActionInstance(args: RunActionInstanceArgs) {
 	const result = await _runActionInstance(args);
