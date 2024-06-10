@@ -1,15 +1,12 @@
 "use client";
 
-import type { ZodObject } from "zod";
+import { startTransition, Suspense, useCallback } from "react";
 
-import { startTransition, Suspense, use, useCallback, useMemo } from "react";
-
-import AutoForm, { AutoFormSubmit, FieldConfig } from "ui/auto-form";
+import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { toast } from "ui/use-toast";
 
 import type { Action } from "~/actions/types";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import { resolveFieldConfig } from "~/actions/_lib/resolveFieldConfig";
 import { getActionByName } from "~/actions/api";
 import { default as ActionName } from "~/kysely/types/public/Action";
 import { useServerAction } from "~/lib/serverActions";
@@ -23,7 +20,6 @@ export type Props = {
 };
 
 export const ActionConfigForm = (props: Props) => {
-	console.log(props.fieldConfig);
 	const action = getActionByName(props.actionName);
 
 	const runUpdateAction = useServerAction(updateAction);

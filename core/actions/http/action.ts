@@ -111,6 +111,7 @@ export const action = defineAction({
 				}
 			})
 			.optional(),
+
 		dependencies: [
 			{
 				sourceField: "method",
@@ -119,13 +120,13 @@ export const action = defineAction({
 				type: DependencyType.HIDES,
 			},
 		],
-		fieldConfig: {
-			outputMap: {
-				fieldType: dynamic(() =>
-					import("./outputMapFieldType").then((m) => m.OutputMapFieldType)
-				),
-			},
-		},
+		// fieldConfig: {
+		// 	outputMap: {
+		// 		fieldType: dynamic(() =>
+		// 			import("./outputMapFieldType").then((m) => m.OutputMapFieldType)
+		// 		),
+		// 	},
+		// },
 	},
 	pubFields: [],
 	icon: Globe,

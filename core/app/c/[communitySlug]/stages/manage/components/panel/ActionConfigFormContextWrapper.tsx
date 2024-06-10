@@ -33,7 +33,11 @@ export const ActionConfigFormContextWrapper = async ({
 		const full = `~/actions/http/config-component`;
 
 		// console.log({ path, full: `~/actions/${action.name}/config-component.tsx` });
-		const RenderedOutputMap = await getCustomConfigComponentByActionName(action.name);
+		const RenderedOutputMap = await getCustomConfigComponentByActionName(
+			action.name,
+			"config",
+			"outputMap"
+		);
 		// .then(
 		// 	(m) => m.default
 		// );

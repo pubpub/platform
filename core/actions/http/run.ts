@@ -25,8 +25,8 @@ const updateField = async ({
 		)
 		.insertInto("pub_values")
 		.values((eb) => ({
-			field_id: eb.selectFrom("field").select("field.id"),
-			pub_id: pubId as PubsId,
+			fieldId: eb.selectFrom("field").select("field.id"),
+			pubId: pubId as PubsId,
 			value: JSON.stringify(value),
 		}))
 		.execute();

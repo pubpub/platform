@@ -20,16 +20,19 @@ export function defineCustomFormField<
 	 * options are "config" or "params", for the action config or the action run params form
 	 */
 	type: T,
-	path: F,
+	fieldName: F,
 	FormField: React.FC<{
 		form: UseFormReturn<S>;
 		field: ControllerRenderProps<S, F>;
 		action: A;
-		path: F;
+		fieldName: F;
 	}>
 ) {
-	return (props: { field: ControllerRenderProps<S, F> }) => {
+	const CustomFormFieldComponent = (props: { field: ControllerRenderProps<S, F> }) => {
 		const form = useFormContext<S>();
-		return <FormField {...props} action={action} path={path} form={form} />;
+
+		return <FormField {...props} action={action} fieldName={fieldName} form={form} />;
 	};
+
+	return CustomFormFieldComponent;
 }
