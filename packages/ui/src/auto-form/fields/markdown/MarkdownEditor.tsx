@@ -18,7 +18,6 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { EditorState } from "lexical";
-import { TestTube } from "lucide-react";
 
 import { cn } from "utils";
 
