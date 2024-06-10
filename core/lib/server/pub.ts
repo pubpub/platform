@@ -111,16 +111,19 @@ const nestChildren = (pub: FlatPub): NestedPub => {
 
 // TODO: make this usable in a subquery, possibly by turning it into a view
 // Create a CTE ("children") with the pub's children and their values
-const withPubChildren = ({
-	pubId,
-	pubIdRef,
-}: {
-	pubId?: PubsId;
-	pubIdRef?: StringReference<Database, keyof Database>;
-}) => {
-	const { ref } = db.dynamic;
+const withPubChildren = (
+	database: typeof db,
+	{
+		pubId,
+		pubIdRef,
+	}: {
+		pubId?: PubsId;
+		pubIdRef?: StringReference<Database, keyof Database>;
+	}
+) => {
+	const { ref } = database.dynamic;
 
-	return db.withRecursive("children", (qc) => {
+	return database.withRecursive("children", (qc) => {
 		return qc
 			.selectFrom("pubs")
 			.select(["id", "parentId"])
@@ -154,19 +157,18 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 			])
 	).as("assignee");
 
-export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	// These aliases are used to make sure the JSON object returned matches
-	// the old prisma query's return value
-	const pubColumns = [
-		"pubs.id",
-		"pubs.communityId",
-		"pubs.createdAt",
-		"pubs.parentId",
-		"pubs.pubTypeId",
-		"pubs.updatedAt",
-	] as const satisfies SelectExpression<Database, "pubs">[];
+const pubColumns = [
+	"pubs.id",
+	"pubs.communityId",
+	"pubs.parentId",
+	"pubs.pubTypeId",
+	"pubs.assigneeId",
+	"pubs.createdAt",
+	"pubs.updatedAt",
+] as const satisfies SelectExpression<Database, "pubs">[];
 
-	const pub = await withPubChildren({ pubId })
+export const getPub = async (pubId: PubsId) => {
+	const pub = await withPubChildren(db, { pubId })
 		.selectFrom("pubs")
 		.where("pubs.id", "=", pubId)
 		.select(pubColumns)
@@ -188,6 +190,201 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	}
 
 	return nestChildren(pub);
+};
+
+const DEFAULTS = {
+	limit: 10,
+	offset: 0,
+	orderBy: "createdAt",
+	orderDirection: "desc",
+	select: pubColumns,
+} as const;
+
+export const getPubs = async (
+	communityId: CommunitiesId,
+	{
+		limit = DEFAULTS.limit,
+		offset = DEFAULTS.offset,
+		orderBy = DEFAULTS.orderBy,
+		orderDirection = DEFAULTS.orderDirection,
+		select = DEFAULTS.select,
+	}: {
+		limit?: number;
+		offset?: number;
+		orderBy?: string;
+		orderDirection?: string;
+		select?: (typeof DEFAULTS.select)[number][];
+	} = DEFAULTS
+) => {
+	// 	const { ref } = db.dynamic;
+	// 	const pubs = await db
+	// 		// .with("topLevelPubs", (db) =>
+	// 		// 	db
+	// 		// 		.selectFrom("pubs")
+	// 		// 		.select(pubColumns)
+	// 		// 		.select(pubValuesByRef("pubs.id"))
+	// 		// 		.where("pubs.communityId", "=", communityId)
+	// 		// 		.where("pubs.parentId", "is", null)
+	// 		// 		.limit(limit)
+	// 		// 		.offset(offset)
+	// 		// 		.orderBy(orderBy, orderDirection)
+	// 		// )
+	// 		.withRecursive("pub_tree", (db) =>
+	// 			db
+	// 				.selectFrom("pubs")
+	// 				.select((eb) => [
+	// 					"id",
+	// 					"parentId",
+	// 					pubValuesByRef("pubs.id"),
+	// 					sql`ARRAY[]::json[] AS children`,
+	// 				])
+	// 				.where("pubs.parentId", "is", null)
+	// 				.where("pubs.communityId", "=", communityId)
+	// 				.unionAll(
+	// 					(eb) =>
+	// 						eb
+	// 							.selectFrom("pubs as p")
+	// 							.select([
+	// 								"p.id",
+	// 								"p.parentId",
+	// 								pubValuesByRef("p.id"),
+	// 								sql`ARRAY[]::json[]`.as("children"),
+	// 							])
+	// 							.innerJoin("pub_tree as pt", "p.parentId", "pt.id")
+	// 					//.select(pubValuesByRef("p.id"))
+	// 				)
+	// 		)
+	// 		// withPubChildren({ pubIdRef: "pubs.id" })
+	// 		.selectFrom("pub_tree")
+	// 		//.selectAll()
+	// 		// .limit(limit)
+	// 		// .selectAll()
+	// 		// .select((eb) => pubAssignee(eb))
+	// 		// .$narrowType<{ values: PubValues }>()
+	// 		// .select((eb) =>
+	// 		.select((eb) => [
+	// 			"pub_tree.id",
+	// 			"pub_tree.parentId",
+	// 			"pub_tree.values",
+	// 			jsonArrayFrom(
+	// 				eb
+	// 					// .selectFrom("pub_tree")
+	// 					// .selectAll()
+	// 					// .$narrowType<{ values: PubValues }>()
+	// 					.selectFrom("pub_tree as pt2")
+	// 					.select(["pt2.id", "pt2.parentId", "pt2.values", "pt2.children"])
+	// 					.whereRef("pub_tree.id", "=", eb.ref("pub_tree.parentId"))
+	// 			).as("children"),
+	// 		])
+	// 		.where("pub_tree.parentId", "is", null)
+	// 		// )
+	// 		.execute();
+
+	// 	const hihi = await sql`WITH RECURSIVE pub_tree AS (
+	//     SELECT
+	//         id,
+	//         "parentId",
+	//         (SELECT json_object_agg(latest_values.slug, latest_values.value)
+	//          FROM (
+	//              SELECT DISTINCT ON (pub_values."fieldId") pub_values.*, fields.slug
+	//              FROM pub_values
+	//              LEFT JOIN LATERAL (
+	//                  SELECT slug, id
+	//                  FROM pub_fields
+	//              ) AS fields ON fields.id = pub_values."fieldId"
+	//              WHERE pub_values."pubId" = pubs.id
+	//              ORDER BY pub_values."fieldId", pub_values."createdAt" DESC
+	//          ) AS latest_values
+	//         ) AS values,
+	//         ARRAY[]::json[] AS children
+	//     FROM
+	//         pubs
+	//     WHERE
+	//         pubs."parentId" IS NULL
+	//         AND pubs."communityId" = ${communityId}
+	//     UNION ALL
+	//     SELECT
+	//         p.id,
+	//         p."parentId",
+	//         (SELECT json_object_agg(latest_values.slug, latest_values.value)
+	//          FROM (
+	//              SELECT DISTINCT ON (pub_values."fieldId") pub_values.*, fields.slug
+	//              FROM pub_values
+	//              LEFT JOIN LATERAL (
+	//                  SELECT slug, id
+	//                  FROM pub_fields
+	//              ) AS fields ON fields.id = pub_values."fieldId"
+	//              WHERE pub_values."pubId" = p.id
+	//              ORDER BY pub_values."fieldId", pub_values."createdAt" DESC
+	//          ) AS latest_values
+	//         ) AS values,
+	//         ARRAY[]::json[] AS children
+	//     FROM
+	//         pubs p
+	//     INNER JOIN
+	//         pub_tree pt
+	//     ON
+	//         p."parentId" = pt.id
+	// )
+	// SELECT
+	//     pt1.id,
+	//     pt1."parentId",
+	//     pt1.values,
+	//     (SELECT coalesce(json_agg(
+	//         json_build_object(
+	//             'id', pt2.id,
+	//             'parentId', pt2."parentId",
+	//             'values', pt2.values,
+	//             'children', pt2.children
+	//         )), '[]')
+	//      FROM pub_tree pt2
+	//      WHERE pt2."parentId" = pt1.id
+	//     ) AS children
+	// FROM
+	//     pub_tree pt1
+	// WHERE
+	//     pt1."parentId" IS NULL;
+	// `.execute(db);
+
+	const pubber = await db
+		.withRecursive("pub_tree", (db) =>
+			db
+				.selectFrom("pubs")
+				.select(["id", "parentId"])
+				.select(pubValuesByRef("pubs.id"))
+				.where("pubs.parentId", "is", null)
+				.where("pubs.communityId", "=", communityId)
+				.unionAll((eb) =>
+					eb
+						.selectFrom("pubs as p")
+						.select(["p.id", "p.parentId"])
+						.innerJoin("pub_tree as pt", "p.parentId", "pt.id")
+						.select(pubValuesByRef("p.id"))
+				)
+		)
+		// withPubChildren({ pubIdRef: "pubs.id" })
+		.selectFrom("pub_tree")
+		//.selectAll()
+		// .limit(limit)
+		// .selectAll()
+		// .select((eb) => pubAssignee(eb))
+		// .$narrowType<{ values: PubValues }>()
+		// .select((eb) =>
+		.select((eb) => [
+			"pub_tree.id",
+			"pub_tree.parentId",
+			"pub_tree.values",
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_tree as pt2")
+					.selectAll()
+					.whereRef("pt2.parentId", "=", "pub_tree.id")
+			).as("children"),
+		])
+		.where("pub_tree.parentId", "is", null)
+		.execute();
+
+	return pubber;
 };
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
@@ -308,6 +505,30 @@ const makeRecursivePubUpdateInput = async (
 		},
 		...(body.parentId && { parent: { connect: { id: body.parentId } } }),
 	};
+};
+
+export const createPubNew = async (
+	communityId: CommunitiesId,
+	body: CreatePubRequestBodyWithNulls
+) => {
+	const updateDepth = getUpdateDepth(body);
+	const updateInput = await makeRecursivePubUpdateInput(body, communityId);
+	const createArgs = {
+		data: {
+			...updateInput,
+			...(!body.parentId && {
+				stages: {
+					create: {
+						stageId: instance.stageId,
+					},
+				},
+			}),
+		},
+		...makeRecursiveInclude("children", {}, updateDepth),
+	};
+	const pub = await prisma.pub.create(createArgs);
+
+	return pub;
 };
 
 export const createPub = async (instanceId: string, body: CreatePubRequestBodyWithNulls) => {

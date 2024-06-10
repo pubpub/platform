@@ -29,6 +29,7 @@ export default async function MainLayout({ children, params }: Props) {
 		redirect("/login");
 	}
 	const community = await getCommunity(params.communitySlug);
+	console.log(community);
 	if (!community) {
 		return null;
 	}

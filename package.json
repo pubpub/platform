@@ -11,7 +11,7 @@
     "format": "turbo format --continue -- --cache --cache-location node_modules/.cache/.prettiercache",
     "format:fix": "turbo format --continue -- --write --cache --cache-location node_modules/.cache/.prettiercache",
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
-    "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache", 
+    "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:ws": "pnpm dlx sherif@latest",
     "test": "turbo test",
     "fix": "pnpm run lint:fix && pnpm run format:fix"
@@ -22,7 +22,7 @@
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.22.15",
     "@changesets/cli": "^2.26.2",
-    "@preconstruct/cli": "^2.8.3",
+    "@preconstruct/cli": "^2.8.4",
     "@pubpub/prettier-config": "workspace:*",
     "@turbo/gen": "^1.13.2",
     "husky": "^8.0.3",

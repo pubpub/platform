@@ -2,7 +2,7 @@ import type { ErrorHttpStatusCode } from "@ts-rest/core";
 import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
-import { TsRestResponse } from "@ts-rest/serverless";
+import { RequestValidationError, TsRestResponse } from "@ts-rest/serverless";
 
 import { logger } from "logger";
 
@@ -55,6 +55,12 @@ export const handleErrors = async (routeHandler) => {
 };
 
 export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestResponse => {
+	if (error instanceof RequestValidationError) {
+		return TsRestResponse.fromJson({
+			status: 400,
+			body: error.body,
+		});
+	}
 	if (error instanceof HTTPStatusError) {
 		return TsRestResponse.fromJson({
 			status: error.status,
@@ -65,6 +71,7 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 	if (error instanceof Error) {
 		logger.error(error.message);
 	}
+	logger.error(error);
 	return TsRestResponse.fromJson({
 		status: 500,
 		body: { message: "Internal Server Error" },
