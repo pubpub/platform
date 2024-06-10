@@ -1,32 +1,22 @@
-# syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
+# project node version
 ARG NODE_VERSION=20.13.1
 
+# package to be built
 ARG PACKAGE
+
+# port to expose the app on 
 ARG PORT=3000
 
 ################################################################################
-# Use node image for base image for all stages.
+# Create the base image using node alpine
 FROM node:${NODE_VERSION}-alpine as base
 
+# pnpm version to install
 ARG PNPM_VERSION=8.14.3
 
-# Install python deps for node-gyp
-RUN apk add g++ make py3-pip ca-certificates curl
-
-# Setup RDS CA Certificates
-
-RUN curl -L \
-      -o  /usr/local/share/ca-certificates/rds-global-bundle.pem \
-      https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
-    && update-ca-certificates
-
 # Set working directory for all build stages.
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Install pnpm.
 RUN --mount=type=cache,target=/root/.npm \
@@ -34,12 +24,11 @@ RUN --mount=type=cache,target=/root/.npm \
 
 ################################################################################
 # Create a stage for building the application.
-FROM base as monorepo
+FROM base as build
 
-# install postgres utilities for scripts
+# Beccause we use the alpine package we need to install postgres utilities for scripts
 RUN apk add postgresql
-# if booting without a command, just sit and wait forever for a term signal
-CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
+
 
 # Copy the rest of the source files into the image.
 COPY . .
@@ -48,7 +37,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm p:build
 
-FROM monorepo AS withpackage
+FROM build AS withpackage
 ARG PACKAGE
 
 RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && false)
