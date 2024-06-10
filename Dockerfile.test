@@ -92,5 +92,9 @@ USER node
 
 # Expose the port that the application listens on.
 EXPOSE $PORT
+
+# RUN pnpm --filter $PACKAGE prisma migrate deploy
+# RUN pnpm --filter $PACKAGE prisma db seed 
+
 # Run the application.
 CMD pnpm run-integration-tests

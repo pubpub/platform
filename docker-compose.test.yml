@@ -22,8 +22,8 @@ services:
             POSTGRES_DB: postgres
         ports:
             - 5432:5432
-    # dbeaver:
-    #     image: dbeaver/cloudbeaver
-    #     restart: always
-    #     ports:
-    #     - '5051:8978'
+    dbeaver:
+        image: dbeaver/cloudbeaver
+        restart: always
+        ports:
+        - '5051:8978'
