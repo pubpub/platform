@@ -12,7 +12,7 @@ services:
         depends_on:
             - postgres
         ports:
-            - 8000:8000
+            - 3000:3000
     postgres:
         image: postgres:15.1
         restart: unless-stopped
@@ -28,6 +28,6 @@ services:
             PGADMIN_DEFAULT_EMAIL: admin@example.com
             PGADMIN_DEFAULT_PASSWORD: admin
         ports:
-            - "5050:80"
+            - 5050:80
         depends_on:
             - postgres
