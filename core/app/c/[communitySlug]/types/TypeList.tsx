@@ -1,17 +1,20 @@
 "use client";
 
-import { TypesData } from "./page";
+import type { PubTypeWithFields } from "~/lib/types";
 import TypeBlock from "./TypeBlock";
 
-type Props = { types: NonNullable<TypesData> };
+type Props = {
+	types: PubTypeWithFields[];
+	superadmin: boolean;
+};
 
-const TypeList: React.FC<Props> = function ({ types }) {
+const TypeList: React.FC<Props> = function ({ types, superadmin }) {
 	return (
 		<div>
 			{types.map((type) => {
 				return (
 					<div key={type.id} className="mb-5">
-						<TypeBlock type={type} />
+						<TypeBlock type={type} superadmin={superadmin} />
 					</div>
 				);
 			})}
