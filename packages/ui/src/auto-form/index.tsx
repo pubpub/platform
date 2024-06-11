@@ -8,7 +8,7 @@ import { z } from "zod";
 import { cn } from "utils";
 
 import { Button } from "../button";
-import { Form } from "../form";
+import { Form, FormMessage } from "../form";
 import { Check, Loader2, X } from "../icon";
 import AutoFormObject from "./fields/object";
 import { Dependency, FieldConfig } from "./types";
@@ -25,21 +25,15 @@ export function AutoFormSubmit({
 }) {
 	const form = useFormState();
 
-	const { isSubmitting, isValid, isSubmitSuccessful, isLoading } = form;
+	const { isSubmitting, isValid } = form;
 
 	return (
 		<Button
 			type="submit"
-			disabled={disabled ?? (isSubmitting || !isValid)}
+			// disabled={disabled && (isSubmitting || !isValid)}
 			className={className}
 		>
-			{isLoading ? (
-				<Loader2 className="animate-spin" />
-			) : isSubmitSuccessful ? (
-				<Check className="h-4 w-4" />
-			) : (
-				children ?? "Submit"
-			)}
+			{children ?? "Submit"}
 		</Button>
 	);
 }
@@ -84,7 +78,15 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 		const parsedValues = formSchema.safeParse(values);
 		if (parsedValues.success) {
 			onSubmitProp?.(parsedValues.data);
+			return;
 		}
+
+		const { issues } = parsedValues.error;
+		issues.forEach((issue) => {
+			form.setError(issue.path.join("."), {
+				message: issue.message,
+			});
+		});
 	}
 
 	const values = form.watch();

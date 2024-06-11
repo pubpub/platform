@@ -1,5 +1,6 @@
 export {
 	Activity,
+	ArrowRight,
 	Calendar,
 	BadgeCheck,
 	Check,
@@ -13,6 +14,7 @@ export {
 	Download,
 	FileText,
 	Globe,
+	Info,
 	Loader2,
 	LogOut,
 	ListPlus,

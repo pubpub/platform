@@ -49,7 +49,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 		return null;
 	}
 
-	const handleIfZodNumber = (item: z.ZodAny) => {
+	const handleIfZodNumber = (item: z.ZodType<any>) => {
 		const isZodNumber = (item as any)._def.typeName === "ZodNumber";
 		const isInnerZodNumber = (item._def as any).innerType?._def?.typeName === "ZodNumber";
 
@@ -63,6 +63,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 	};
 
 	// the whole object is overridden by the itemType
+	// probably used when rendering a server component
 	if (isFieldConfigItem(fieldConfig)) {
 		const itemName = schema._def.description ?? beautifyObjectName(path[0]);
 		const [title, description, additionalType] = itemName.split("|");
@@ -75,8 +76,8 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 				zodBaseType={getBaseType(item)}
 				item={item}
 				isDisabled={fieldConfig.inputProps?.disabled}
-				title={fieldConfig.inputProps?.label}
-				description={fieldConfig.description || description}
+				title={title}
+				description={description}
 				isRequired={fieldConfig.inputProps?.required}
 			/>
 		);
@@ -85,8 +86,8 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 	return (
 		<Accordion type="multiple" className="space-y-5 border-none">
 			{Object.keys(shape).map((name) => {
-				let item = shape[name] as z.ZodAny;
-				item = handleIfZodNumber(item) as z.ZodAny;
+				let item = shape[name] as z.ZodType<any>;
+				item = handleIfZodNumber(item) as z.ZodType<any>;
 				const zodBaseType = getBaseType(item);
 				const itemName = item._def.description ?? beautifyObjectName(name);
 				const [title, description, additionalType] = itemName.split("|");
@@ -147,7 +148,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 					false;
 
 				if (overrideOptions) {
-					item = z.enum(overrideOptions) as unknown as z.ZodAny;
+					item = z.enum(overrideOptions) as unknown as z.ZodType<any>;
 				}
 
 				return (
@@ -189,7 +190,7 @@ function FormFieldObject({
 	fieldConfigItem: FieldConfigItem;
 	zodBaseType: string;
 	additionalType?: string;
-	item: z.ZodAny;
+	item: z.ZodType<any>;
 	isDisabled?: boolean;
 	title: string;
 	description?: string;
@@ -204,8 +205,6 @@ function FormFieldObject({
 			render={({ field }) => {
 				const inputType =
 					fieldConfigItem.fieldType ?? DEFAULT_ZOD_HANDLERS[zodBaseType] ?? "fallback";
-
-				console.log(inputType);
 
 				const typeToUse =
 					additionalType && additionalType in INPUT_COMPONENTS
