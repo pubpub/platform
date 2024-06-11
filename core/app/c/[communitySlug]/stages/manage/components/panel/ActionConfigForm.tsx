@@ -2,6 +2,7 @@
 
 import { startTransition, useCallback } from "react";
 
+import type { FieldConfig } from "ui/auto-form";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
@@ -16,7 +17,7 @@ export type Props = {
 	actionName: ActionName;
 	instance: ActionInstances;
 	communityId: string;
-	fieldConfig;
+	fieldConfig: FieldConfig<any>;
 };
 
 export const ActionConfigForm = (props: Props) => {
