@@ -32,8 +32,13 @@ export const action = defineAction({
 					.string()
 					// this makes sure that the body is valid JSON
 					.transform((str, ctx) => {
+						if (!str) {
+							return undefined;
+						}
 						try {
-							return JSON.parse(str);
+							// we just want to check if it can be parsed
+							const parsed = JSON.parse(str);
+							return str;
 						} catch (e) {
 							ctx.addIssue({ code: "custom", message: "Invalid JSON" });
 							return z.NEVER;
@@ -41,7 +46,7 @@ export const action = defineAction({
 					})
 					.optional()
 					.describe(
-						"Body|Body to send with the request. Only sent for non-GET requests.|textarea"
+						"Body|Body to send with the request. Only sent for non-GET requests."
 					),
 				outputMap: z
 					.array(z.object({ pubField: z.string(), responseField: z.string() }))
@@ -63,8 +68,12 @@ export const action = defineAction({
 		fieldConfig: {
 			outputMap: {
 				fieldType: "custom",
-				//dynamic(() => import("./config-component"), { ssr: false }),
-				description: "AAAAA",
+			},
+			body: {
+				fieldType: "textarea",
+				inputProps: {
+					className: "font-mono text-gray-700",
+				},
 			},
 		},
 		dependencies: [
@@ -78,7 +87,7 @@ export const action = defineAction({
 				sourceField: "response",
 				targetField: "outputMap",
 				when: (response) => response !== "json",
-				type: DependencyType.HIDES,
+				type: DependencyType.DISABLES,
 			},
 		],
 	},
@@ -102,8 +111,13 @@ export const action = defineAction({
 				body: z
 					.string()
 					.transform((str, ctx) => {
+						if (!str) {
+							return undefined;
+						}
 						try {
-							return JSON.parse(str);
+							// we just want to check if it can be parsed
+							const parsed = JSON.parse(str);
+							return str;
 						} catch (e) {
 							ctx.addIssue({ code: "custom", message: "Invalid JSON" });
 							return z.NEVER;
@@ -111,7 +125,7 @@ export const action = defineAction({
 					})
 					.optional()
 					.describe(
-						"Body|Body to send with the request. Only sent for non-GET requests.|textarea"
+						"Body|Body to send with the request. Only sent for non-GET requests."
 					),
 				outputMap: z
 					.array(z.object({ pubField: z.string(), responseField: z.string() }))
@@ -138,6 +152,12 @@ export const action = defineAction({
 			},
 		],
 		fieldConfig: {
+			body: {
+				fieldType: "textarea",
+				inputProps: {
+					className: "font-mono text-gray-700",
+				},
+			},
 			outputMap: {
 				fieldType: "custom",
 			},

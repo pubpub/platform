@@ -77,12 +77,9 @@ export type Action<
 				 * The type of the field.
 				 * Either choose one of the predefined types, define a type inline, or use `custom`.
 				 *
-				 * `custom` indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
+				 * `custom` indicates you are defining the component yourself in `[action]/[config|params]/[fieldName].field.tsx`
 				 */
-				fieldType?:
-					| FieldConfigItem["fieldType"]
-					/**I am provid*/
-					| "custom" /** hey */;
+				fieldType?: FieldConfigItem["fieldType"] | "custom";
 			};
 		};
 		dependencies?: Dependency<z.infer<C>>[];

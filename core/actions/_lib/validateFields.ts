@@ -2,7 +2,7 @@ import Ajv from "ajv";
 
 import { logger } from "logger";
 
-import type { CorePubField } from "../corePubFields";
+import type { BasePubField, CorePubField } from "../corePubFields";
 
 /**
  * TODO: Replace this with a more robust validation implementation
@@ -13,7 +13,7 @@ export const validatePubValues = ({
 	fields,
 	values,
 }: {
-	fields: CorePubField[];
+	fields: BasePubField[];
 	values: Record<string, unknown>;
 }) => {
 	const validator = new Ajv();
@@ -28,7 +28,9 @@ export const validatePubValues = ({
 		try {
 			const val = validator.validate(field.schema.schema, value);
 			if (val !== true) {
-				return { error: `Field ${field.slug} failed schema validation` };
+				return {
+					error: `Field ${field.slug} failed schema validation. Field "${field.name}" of type "${field.slug}" cannot be assigned to value: ${value} of type ${typeof value}`,
+				};
 			}
 		} catch (e) {
 			logger.error(e);

@@ -42,7 +42,6 @@ export const resolveFieldConfig = async <
 
 	const resolvedFields = await Promise.all(
 		Object.entries(fieldConfig).map(async ([fieldName, fieldConfig]) => {
-			logger.info(fieldConfig);
 			if (fieldConfig.fieldType !== "custom") {
 				return [fieldName, fieldConfig] as const;
 			}

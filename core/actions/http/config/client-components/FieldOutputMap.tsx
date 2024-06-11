@@ -1,14 +1,15 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray } from "react-hook-form";
 
 import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
 import { Button } from "ui/button";
-import { FormControl, FormField, FormItem, FormMessage } from "ui/form";
-import { Plus, Trash } from "ui/icon";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { ArrowRight, Info, Plus, Trash } from "ui/icon";
 import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { Separator } from "ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubFieldSchemaId } from "~/kysely/types/public/PubFieldSchema";
@@ -29,40 +30,81 @@ const OutputMapField = ({
 	unselectedPubFields: PubField[];
 	fieldName: string;
 }) => (
-	<div className="flex gap-x-2">
-		<FormField
-			name={`${fieldName}.pubField`}
-			render={({ field }) => {
-				return (
-					<FormItem>
-						<FormControl>
-							<Select onValueChange={field.onChange} {...field}>
-								<SelectTrigger>
-									<SelectValue>{field.value || "Select an option"}</SelectValue>
-								</SelectTrigger>
-								<SelectContent>
-									{unselectedPubFields.map(({ name, slug }) => (
-										<SelectItem value={slug} key={name}>
-											{name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</FormControl>
+	<TooltipProvider>
+		<div className="flex items-end gap-x-2 overflow-visible">
+			<FormField
+				name={`${fieldName}.responseField`}
+				render={({ field }) => (
+					<FormItem className="flex w-1/2 flex-col gap-y-1">
+						<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
+							<span>Response field</span>
+							<Tooltip>
+								<TooltipTrigger>
+									<Info size="12" />
+								</TooltipTrigger>
+								<TooltipContent className="prose prose-sm max-w-sm">
+									You can use{" "}
+									<a
+										href="https://goessner.net/articles/JsonPath/"
+										target="_blank"
+										rel="noreferrer"
+										className="font-bold underline"
+									>
+										JSONPath
+									</a>{" "}
+									syntax to select a field from the JSON body.
+								</TooltipContent>
+							</Tooltip>
+						</FormLabel>
+						<Input {...field} className="font-mono" />
+						<FormMessage />
 					</FormItem>
-				);
-			}}
-		/>
-		<FormField
-			name={`${fieldName}.responseField`}
-			render={({ field }) => (
-				<FormItem className="flex flex-col gap-y-2">
-					<Input {...field} />
-					<FormMessage />
-				</FormItem>
-			)}
-		/>
-	</div>
+				)}
+			/>
+			<ArrowRight className="mb-3 h-4 w-4" />
+			<FormField
+				name={`${fieldName}.pubField`}
+				render={({ field }) => {
+					return (
+						<FormItem className="flex w-1/2 flex-col gap-y-1">
+							<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
+								<span> Pub field</span>
+
+								<Tooltip>
+									<TooltipTrigger>
+										<Info size="12" />
+									</TooltipTrigger>
+									<TooltipContent className="prose prose-sm max-w-sm">
+										The pub field to overwrite with the specified field of the
+										response. When configuring the action, you can select any
+										pub field that is used in your community. When running the
+										action manually, only the pub fields on the pub are
+										available to select.
+									</TooltipContent>
+								</Tooltip>
+							</FormLabel>
+							<FormControl>
+								<Select onValueChange={field.onChange} {...field}>
+									<SelectTrigger>
+										<SelectValue placeholder="Select a field">
+											{field.value}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										{unselectedPubFields.map(({ name, slug }) => (
+											<SelectItem value={slug} key={name}>
+												{name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</FormControl>
+						</FormItem>
+					);
+				}}
+			/>
+		</div>
+	</TooltipProvider>
 );
 
 export const FieldOutputMap = defineCustomFormField(
@@ -98,6 +140,9 @@ export const FieldOutputMap = defineCustomFormField(
 			<AccordionItem value={"a"} className="border-none">
 				<AccordionTrigger>{title}</AccordionTrigger>
 				<AccordionContent className="flex flex-col gap-y-4">
+					<p className="text-sm text-zinc-500">
+						Maps the response field to the specified pub fields.
+					</p>
 					{alreadySelectedPubFields.map((_field, index) => {
 						return (
 							<div className="flex flex-col gap-y-2" key={`outputMap.${index}`}>
@@ -105,14 +150,15 @@ export const FieldOutputMap = defineCustomFormField(
 									name={`outputMap.[${index}]`}
 									render={() => {
 										return (
-											<div>
-												<FormItem className="flex flex-col gap-y-2">
-													<OutputMapField
-														unselectedPubFields={unselectedPubFields}
-														fieldName={`outputMap.[${index}]`}
-													/>
-												</FormItem>
-											</div>
+											<FormItem
+												className="flex flex-col gap-y-2"
+												key={`outputMap.${index}`}
+											>
+												<OutputMapField
+													unselectedPubFields={unselectedPubFields}
+													fieldName={`outputMap.[${index}]`}
+												/>
+											</FormItem>
 										);
 									}}
 								/>
