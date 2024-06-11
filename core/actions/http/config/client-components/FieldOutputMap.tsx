@@ -31,7 +31,7 @@ const OutputMapField = ({
 	fieldName: string;
 }) => (
 	<TooltipProvider>
-		<div className="flex items-end gap-x-2 overflow-visible">
+		<div className="flex items-start gap-x-2 overflow-visible">
 			<FormField
 				name={`${fieldName}.responseField`}
 				render={({ field }) => (
@@ -42,7 +42,7 @@ const OutputMapField = ({
 								<TooltipTrigger>
 									<Info size="12" />
 								</TooltipTrigger>
-								<TooltipContent className="prose prose-sm max-w-sm">
+								<TooltipContent className="prose max-w-sm text-xs">
 									You can use{" "}
 									<a
 										href="https://goessner.net/articles/JsonPath/"
@@ -61,10 +61,11 @@ const OutputMapField = ({
 					</FormItem>
 				)}
 			/>
-			<ArrowRight className="mb-3 h-4 w-4" />
+			<ArrowRight className="mt-10 h-4 w-4" />
 			<FormField
 				name={`${fieldName}.pubField`}
 				render={({ field }) => {
+					console.log(field.value);
 					return (
 						<FormItem className="flex w-1/2 flex-col gap-y-1">
 							<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
@@ -74,12 +75,19 @@ const OutputMapField = ({
 									<TooltipTrigger>
 										<Info size="12" />
 									</TooltipTrigger>
-									<TooltipContent className="prose prose-sm max-w-sm">
+									<TooltipContent className="prose max-w-sm text-xs">
 										The pub field to overwrite with the specified field of the
-										response. When configuring the action, you can select any
-										pub field that is used in your community. When running the
-										action manually, only the pub fields on the pub are
-										available to select.
+										response.{" "}
+										<ul>
+											<li>
+												When configuring the action, you can select any pub
+												field that is used in your community.{" "}
+											</li>
+											<li>
+												When running the action manually, only the pub
+												fields on the pub are available to select.
+											</li>
+										</ul>
 									</TooltipContent>
 								</Tooltip>
 							</FormLabel>
@@ -87,13 +95,14 @@ const OutputMapField = ({
 								<Select onValueChange={field.onChange} {...field}>
 									<SelectTrigger>
 										<SelectValue placeholder="Select a field">
-											{field.value}
+											{/* without the {" "} the field.value sometimes doesn't render, weird */}
+											{field.value}{" "}
 										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										{unselectedPubFields.map(({ name, slug }) => (
 											<SelectItem value={slug} key={name}>
-												{name}
+												{slug}
 											</SelectItem>
 										))}
 									</SelectContent>
@@ -112,7 +121,7 @@ export const FieldOutputMap = defineCustomFormField(
 	"config",
 	"outputMap",
 	function FieldOutputMap(
-		{ form },
+		{ form, fieldName },
 		context: {
 			pubFields: PubField[];
 		}
@@ -120,17 +129,15 @@ export const FieldOutputMap = defineCustomFormField(
 		const pubFields = context.pubFields;
 		const values = form.watch();
 
-		const name = "outputMap";
-
 		const { fields, append, remove } = useFieldArray({
 			control: form.control,
-			name,
+			name: fieldName,
 		});
 		const itemName = "Output Map";
 
 		const [title] = itemName.split("|");
 
-		const alreadySelectedPubFields = values[name] ?? [];
+		const alreadySelectedPubFields = values[fieldName] ?? [];
 		const unselectedPubFields = pubFields.filter(
 			(pubField) =>
 				!alreadySelectedPubFields.some((field) => field.pubField === pubField.slug)
