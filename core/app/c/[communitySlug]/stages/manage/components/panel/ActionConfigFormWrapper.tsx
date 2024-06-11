@@ -20,7 +20,6 @@ export const ActionConfigFormWrapper = async ({
 	};
 	actionInstance: ActionInstances;
 }) => {
-	logger.info("im running now");
 	const resolvedFieldConfig = await resolveFieldConfig(actionInstance.action, "config", {
 		stageId: stage.id,
 		communityId: stage.communityId,
