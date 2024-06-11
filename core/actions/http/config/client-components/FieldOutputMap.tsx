@@ -65,7 +65,6 @@ const OutputMapField = ({
 			<FormField
 				name={`${fieldName}.pubField`}
 				render={({ field }) => {
-					console.log(field.value);
 					return (
 						<FormItem className="flex w-1/2 flex-col gap-y-1">
 							<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">

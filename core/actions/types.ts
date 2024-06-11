@@ -58,7 +58,6 @@ export type Action<
 	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
 	N extends string = string,
-	CO extends z.ZodObject<any, any> = z.ZodObject<any, any>,
 > = {
 	id?: string;
 	name: N;
@@ -70,7 +69,6 @@ export type Action<
 	 */
 	config: {
 		schema: C;
-		context?: CO;
 		fieldConfig?: {
 			[K in keyof FieldConfig<C["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
 				/**
@@ -94,7 +92,6 @@ export type Action<
 	 */
 	params: {
 		schema: A;
-		context?: CO;
 		fieldConfig?: {
 			[K in keyof NonNullable<A["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
 				/**
@@ -133,9 +130,8 @@ export const defineAction = <
 	C extends ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional,
 	N extends string,
-	CO extends z.ZodObject<any, any>,
 >(
-	action: Action<T, C, A, N, CO>
+	action: Action<T, C, A, N>
 ) => action;
 
 export type ActionSuccess = {

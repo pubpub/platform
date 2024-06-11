@@ -62,9 +62,6 @@ export const action = defineAction({
 					});
 				}
 			}),
-		context: z.object({
-			pubFields: z.array(z.object({ id: z.string(), name: z.string(), slug: z.string() })),
-		}),
 		fieldConfig: {
 			outputMap: {
 				fieldType: "custom",
