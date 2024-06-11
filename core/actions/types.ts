@@ -121,7 +121,7 @@ export type Action<
 	 * action's config or arguments.
 	 */
 	tokens?: {
-		[K in keyof C]?: TokenDef;
+		[K in keyof C["_output"]]?: TokenDef;
 	};
 };
 
