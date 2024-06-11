@@ -10,8 +10,17 @@ import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { Separator } from "ui/separator";
 
-import { defineCustomFormField } from "~/actions/_lib/defineFormField";
+import type { PubFieldsId } from "~/kysely/types/public/PubFields";
+import type { PubFieldSchemaId } from "~/kysely/types/public/PubFieldSchema";
+import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField";
 import { action } from "../../action";
+
+type PubField = {
+	id: PubFieldsId;
+	name: string;
+	slug: string;
+	pubFieldSchemaId: PubFieldSchemaId | null;
+};
 
 const OutputMapField = ({
 	unselectedPubFields,
@@ -60,7 +69,13 @@ export const FieldOutputMap = defineCustomFormField(
 	action,
 	"config",
 	"outputMap",
-	function FieldOutputMap({ pubFields, form }) {
+	function FieldOutputMap(
+		{ form },
+		context: {
+			pubFields: PubField[];
+		}
+	) {
+		const pubFields = context.pubFields;
 		const values = form.watch();
 
 		const name = "outputMap";

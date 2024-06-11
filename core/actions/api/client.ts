@@ -1,3 +1,3 @@
 "use client";
 
-export { resolveFieldConfig } from "../_lib/resolveFieldConfig";
+export { resolveFieldConfig } from "../_lib/custom-form-field/resolveFieldConfig";

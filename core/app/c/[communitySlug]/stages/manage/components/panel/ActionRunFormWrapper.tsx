@@ -1,7 +1,7 @@
 import type { StagePub } from "./queries";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { Stages } from "~/kysely/types/public/Stages";
-import { resolveFieldConfig } from "~/actions/_lib/resolveFieldConfig";
+import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
 import { ActionRunForm } from "./ActionRunForm";
 
 export const ActionRunFormContextWrapper = async ({

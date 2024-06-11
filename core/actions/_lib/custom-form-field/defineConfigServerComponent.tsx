@@ -1,6 +1,6 @@
 import type React from "react";
 
-import type { Action } from "../types";
+import type { Action } from "../../types";
 import type ActionInstances from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
@@ -29,7 +29,7 @@ export const defineActionFormFieldServerComponent = <
 		communityId,
 	}: ActionFormFieldBaseProps<Type> & {
 		action: T;
-	}) => Promise<React.ReactNode>
+	}) => Promise<React.AwaitedReactNode>
 ) => {
 	const serverComponent = async (props: ActionFormFieldBaseProps<Type>) => {
 		const F = await FormField({
@@ -47,3 +47,6 @@ export type ActionConfigServerComponent<
 	T extends Action,
 	Type extends "config" | "params",
 > = ReturnType<typeof defineActionFormFieldServerComponent<T, Type>>;
+
+export type ActionConfigServerComponentProps<Type extends "config" | "params"> =
+	ActionFormFieldBaseProps<Type>;

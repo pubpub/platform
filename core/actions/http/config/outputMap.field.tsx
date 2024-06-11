@@ -1,5 +1,5 @@
 import { db } from "~/kysely/database";
-import { defineActionFormFieldServerComponent } from "../../_lib/defineConfigServerComponent";
+import { defineActionFormFieldServerComponent } from "../../_lib/custom-form-field/defineConfigServerComponent";
 import { action } from "../action";
 import { FieldOutputMap } from "./client-components/FieldOutputMap";
 
@@ -52,7 +52,7 @@ const component = defineActionFormFieldServerComponent(
 			.distinct()
 			.execute();
 
-		return <FieldOutputMap pubFields={communityPubFields} />;
+		return <FieldOutputMap context={{ pubFields: communityPubFields }} />;
 	}
 );
 

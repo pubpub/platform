@@ -1,5 +1,5 @@
 import { db } from "~/kysely/database";
-import { defineActionFormFieldServerComponent } from "../../_lib/defineConfigServerComponent";
+import { defineActionFormFieldServerComponent } from "../../_lib/custom-form-field/defineConfigServerComponent";
 import { action } from "../action";
 import { FieldOutputMap } from "../config/client-components/FieldOutputMap";
 
@@ -22,7 +22,7 @@ const component = defineActionFormFieldServerComponent(
 
 			.execute();
 
-		return <FieldOutputMap pubFields={pubFields} />;
+		return <FieldOutputMap context={{ pubFields }} />;
 	}
 );
 

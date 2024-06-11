@@ -3,7 +3,7 @@ import { logger } from "logger";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { StagesId } from "~/kysely/types/public/Stages";
-import { resolveFieldConfig } from "~/actions/_lib/resolveFieldConfig";
+import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
 import { ActionConfigForm } from "./ActionConfigForm";
 
 export const ActionConfigFormWrapper = async ({

@@ -13,7 +13,7 @@ import type { ClientExceptionOptions } from "~/lib/serverActions";
 export type ActionPubType = CorePubField[];
 
 type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
-type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
+export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
 export type ActionPub<T extends ActionPubType> = {
 	id: string;
