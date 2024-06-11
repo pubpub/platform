@@ -2,11 +2,13 @@
 
 import React, { Suspense, useCallback, useTransition } from "react";
 
+import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
-import AutoForm, { AutoFormSubmit, FieldConfig } from "ui/auto-form";
+import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Loader2, Play } from "ui/icon";
+import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import type { StagePub } from "./queries";
@@ -82,23 +84,28 @@ export const ActionRunForm = ({
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
 				<Suspense fallback={<SkeletonCard />}>
-					<AutoForm
-						values={actionInstance.config ?? {}}
-						fieldConfig={fieldConfig}
-						formSchema={action.params.schema}
-						dependencies={action.params.dependencies}
-						onSubmit={onSubmit}
-					>
-						<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
-							{isPending ? (
-								<Loader2 size="14" className="animate-spin" />
-							) : (
-								<>
-									<Play size="14" /> Run
-								</>
-							)}
-						</AutoFormSubmit>
-					</AutoForm>
+					<TokenProvider tokens={action.tokens ?? {}}>
+						<AutoForm
+							values={actionInstance.config ?? {}}
+							fieldConfig={fieldConfig}
+							formSchema={action.params.schema}
+							dependencies={action.params.dependencies}
+							onSubmit={onSubmit}
+						>
+							<AutoFormSubmit
+								disabled={isPending}
+								className="flex items-center gap-x-2"
+							>
+								{isPending ? (
+									<Loader2 size="14" className="animate-spin" />
+								) : (
+									<>
+										<Play size="14" /> Run
+									</>
+								)}
+							</AutoFormSubmit>
+						</AutoForm>
+					</TokenProvider>
 				</Suspense>
 			</DialogContent>
 		</Dialog>

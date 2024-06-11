@@ -27,7 +27,9 @@ export const StagePanelSheet = (props: Props) => {
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
-			<SheetContent className="max-h-100vh overflow-y-auto">{props.children}</SheetContent>
+			<SheetContent className="max-h-100vh overflow-y-auto sm:max-w-md">
+				{props.children}
+			</SheetContent>
 		</Sheet>
 	);
 };

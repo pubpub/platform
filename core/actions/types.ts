@@ -5,9 +5,9 @@ import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
-import type { StagePub } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type Event from "~/kysely/types/public/Event";
-import type { Stages, StagesId } from "~/kysely/types/public/Stages";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 
 export type ActionPubType = CorePubField[];
@@ -20,6 +20,12 @@ export type ActionPub<T extends ActionPubType> = {
 	values: {
 		[key in T[number]["slug"]]: JTDDataType<T[number]["schema"]["schema"]>;
 	};
+	assignee?: {
+		id: string;
+		firstName: string;
+		lastName: string | null;
+		email: string;
+	};
 };
 
 export type RunProps<T extends Action> =
@@ -28,15 +34,24 @@ export type RunProps<T extends Action> =
 		infer C,
 		infer A extends ZodObjectOrWrappedOrOptional
 	>
-		? { config: C["_output"]; pub: ActionPub<P>; args: A["_output"]; stageId: StagesId }
+		? {
+				config: C["_output"];
+				pub: ActionPub<P>;
+				args: A["_output"];
+				stageId: StagesId;
+				communityId: CommunitiesId;
+			}
 		: never;
 
 export type ConfigProps<C> = {
 	config: C;
 };
 
-export type ParamsFieldTypeOverride = (pub: StagePub) => FieldConfigItem["fieldType"];
-export type ConfigFieldTypeOverride = (stags: Stages) => FieldConfigItem["fieldType"];
+export type TokenDef = {
+	[key: string]: {
+		description: string;
+	};
+};
 
 export type Action<
 	P extends ActionPubType = ActionPubType,
@@ -101,6 +116,13 @@ export type Action<
 	 * The icon to display for this action. Used in the UI.
 	 */
 	icon: (typeof Icons)[keyof typeof Icons];
+	/**
+	 * Optionally provide a list of tokens that can be used in the
+	 * action's config or arguments.
+	 */
+	tokens?: {
+		[K in keyof C]?: TokenDef;
+	};
 };
 
 export const defineAction = <

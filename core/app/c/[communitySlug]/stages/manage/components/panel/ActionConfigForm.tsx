@@ -1,11 +1,11 @@
 "use client";
 
-import { startTransition, Suspense, useCallback } from "react";
+import { startTransition, useCallback } from "react";
 
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
+import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
-import type { Action } from "~/actions/types";
 import type { default as ActionName } from "~/kysely/types/public/Action";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { getActionByName } from "~/actions/api";
@@ -48,48 +48,17 @@ export const ActionConfigForm = (props: Props) => {
 		[runUpdateAction, props.instance.id, props.communityId]
 	);
 
-	// const resolvedFieldConfigPromise = useMemo(
-	// 	() => resolveFieldConfig(action, "config"),
-	// 	[action]
-	// );
-
 	return (
-		<Suspense fallback={<div>Loading...</div>}>
-			<ActionConfigFormInner
-				action={action}
-				onSubmit={onSubmit}
+		<TokenProvider tokens={action.tokens ?? {}}>
+			<AutoForm
+				values={props.instance.config ?? {}}
 				fieldConfig={props.fieldConfig}
-				//		resolvedFieldConfigPromise={resolvedFieldConfigPromise}
-				instance={props.instance}
-			/>
-		</Suspense>
-	);
-};
-
-const ActionConfigFormInner = ({
-	// resolvedFieldConfigPromise,
-	action,
-	onSubmit,
-	fieldConfig,
-	instance,
-}: {
-	action: Action;
-	// resolvedFieldConfigPromise: Promise<FieldConfig<any> | undefined>;
-	onSubmit;
-	fieldConfig;
-	instance: ActionInstances;
-}) => {
-	//	const resolvedConfig = use(resolvedFieldConfigPromise);
-
-	return (
-		<AutoForm
-			values={instance.config ?? {}}
-			fieldConfig={fieldConfig}
-			formSchema={action.config.schema}
-			dependencies={action.config.dependencies}
-			onSubmit={onSubmit}
-		>
-			<AutoFormSubmit>Update config</AutoFormSubmit>
-		</AutoForm>
+				formSchema={action.config.schema}
+				dependencies={action.config.dependencies}
+				onSubmit={onSubmit}
+			>
+				<AutoFormSubmit>Update config</AutoFormSubmit>
+			</AutoForm>
+		</TokenProvider>
 	);
 };
