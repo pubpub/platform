@@ -145,4 +145,5 @@ export const action = defineAction({
 	},
 	pubFields: [],
 	icon: Globe,
+	experimental: true,
 });

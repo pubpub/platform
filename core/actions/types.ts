@@ -123,6 +123,12 @@ export type Action<
 	tokens?: {
 		[K in keyof C["_output"]]?: TokenDef;
 	};
+	/**
+	 * Optionally mark this action as experimental
+	 * At the moment this will simply show an "experimental" badge in the UI when creating
+	 * and configuring this action
+	 */
+	experimental?: boolean;
 };
 
 export const defineAction = <
