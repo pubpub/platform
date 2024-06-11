@@ -42,7 +42,6 @@ export default async function Page({
 				...pubInclude,
 			},
 		});
-
 	const pub = await getPub(params.pubId);
 	if (!pub) {
 		return null;
@@ -140,7 +139,7 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
+			<Suspense fallback={<SkeletonTable />}>
 				<PubChildrenTableWrapper pub={pub} />
 			</Suspense>
 		</div>
