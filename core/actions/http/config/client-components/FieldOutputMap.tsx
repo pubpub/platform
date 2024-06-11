@@ -62,7 +62,6 @@ export const FieldOutputMap = defineCustomFormField(
 	"outputMap",
 	function FieldOutputMap({ pubFields, form }) {
 		const values = form.watch();
-		console.log(values);
 
 		const name = "outputMap";
 
@@ -122,7 +121,7 @@ export const FieldOutputMap = defineCustomFormField(
 						<Button
 							type="button"
 							variant="secondary"
-							onClick={() => append({})}
+							onClick={() => append({} as any)}
 							className="mt-4 flex items-center"
 						>
 							<Plus className="mr-2" size={16} />
