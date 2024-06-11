@@ -1,7 +1,7 @@
 import type React from "react";
 
 import type { Action } from "../../types";
-import type ActionInstances from "~/kysely/types/public/ActionInstances";
+import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";

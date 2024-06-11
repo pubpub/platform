@@ -24,7 +24,7 @@ export const ActionConfigFormWrapper = async ({
 	const resolvedFieldConfig = await resolveFieldConfig(actionInstance.action, "config", {
 		stageId: stage.id,
 		communityId: stage.communityId,
-		actionInstanceId: actionInstance.id,
+		actionInstance: actionInstance,
 	});
 
 	return (

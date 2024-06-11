@@ -9,7 +9,7 @@ import { ChevronDown, Play } from "ui/icon";
 import type { StagePub } from "./queries";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { Stages } from "~/kysely/types/public/Stages";
-import { ActionRunFormContextWrapper } from "./ActionRunFormWrapper";
+import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
 import { StagePanelPubsRunActionDropDownMenuItem } from "./StagePanelPubsRunActionDropDownMenuItem";
 
 export const StagePanelPubsRunActionDropDownMenu = ({
@@ -37,7 +37,7 @@ export const StagePanelPubsRunActionDropDownMenu = ({
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
 					<StagePanelPubsRunActionDropDownMenuItem key={actionInstance.id}>
-						<ActionRunFormContextWrapper
+						<ActionRunFormWrapper
 							stage={stage}
 							pub={pub}
 							actionInstance={actionInstance}
