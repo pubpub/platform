@@ -30,7 +30,7 @@ WORKDIR /usr/src/app
 
 # Install pnpm.
 RUN --mount=type=cache,target=/root/.npm \
-    npm install -g pnpm@${PNPM_VERSION}
+    npm install -g pnpm@${PNPM_VERSION} ts-node typescript
 
 ################################################################################
 # Create a stage for building the application.
@@ -85,7 +85,7 @@ ENV NODE_ENV production
 
 # Copy the deployed contents
 COPY --from=withpackage /tmp/app ./
-COPY --from=withpackage /usr/src/app/core/prisma /prisma
+COPY --from=withpackage /usr/src/app/core/prisma ./
 
 # Run the application as a non-root user.
 USER node
