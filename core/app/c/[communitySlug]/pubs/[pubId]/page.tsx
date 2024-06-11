@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
-import { AnySchema, JSONSchemaType } from "ajv";
+import type { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
+import type { AnySchema, JSONSchemaType } from "ajv";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
@@ -13,20 +13,12 @@ import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
 import cn from "~/lib/cn";
-import { FileUpload } from "~/lib/fields/fileUpload";
+import type { FileUpload } from "~/lib/fields/fileUpload";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
-
-const getPub = async (pubId: string) => {
-	return await prisma.pub.findUnique({
-		where: { id: pubId },
-		include: {
-			...pubInclude,
-		},
-	});
-};
+import { PubChildrenTable } from "./PubChildrenTable";
 
 interface PubFieldWithValue extends PubField {
 	schema: PubFieldSchema | null;
@@ -142,6 +134,14 @@ export default async function Page({
 	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}
+	const getPub = async (pubId: string) => {
+		return await prisma.pub.findUnique({
+			where: { id: pubId },
+			include: {
+				...pubInclude,
+			},
+		});
+	};
 	const pub = await getPub(params.pubId);
 	if (!pub) {
 		return null;
@@ -209,6 +209,8 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
+			Hello New Worlds
+			<PubChildrenTable communities={[]} />
 		</div>
 	);
 }
