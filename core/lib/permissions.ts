@@ -1,4 +1,4 @@
-import { PermissionPayload, PermissionPayloadUser } from "./types";
+import type { PermissionPayload, PermissionPayloadUser } from "./types";
 
 export const getPubUsers = (permissions: PermissionPayload[]) => {
 	const users: PermissionPayloadUser[] = [];

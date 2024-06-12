@@ -1,6 +1,7 @@
-import Link from "next/link";
 import type { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import type { AnySchema, JSONSchemaType } from "ajv";
+
+import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
@@ -8,12 +9,12 @@ import { CardContent, CardHeader, CardTitle } from "ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { Separator } from "ui/separator";
 
+import type { FileUpload } from "~/lib/fields/fileUpload";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
 import cn from "~/lib/cn";
-import type { FileUpload } from "~/lib/fields/fileUpload";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
@@ -149,52 +150,56 @@ export default async function Page({
 	const users = getPubUsers(pub.permissions);
 
 	return (
-		<div className="mb-20">
+		<div className="container mx-auto p-4">
 			<div className="pb-6">
 				<Link href={`/c/${params.communitySlug}/pubs`}>
-					<Button>View all pubs</Button>
+					<Button className="transition-colors hover:bg-white hover:text-black">
+						View all pubs
+					</Button>
 				</Link>
 			</div>
-			<div className="flex flex-col pb-8">
-				<h3>{pub.pubType.name}</h3>
+			<div className="mb-8">
+				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
 				<PubTitle pub={pub} />
 			</div>
-			<div className="flex max-w-[100%] flex-row space-x-2">
-				<div>
+			<div className="flex flex-wrap space-x-4">
+				<div className="flex-1">
 					{pub.values
 						.filter((value) => {
 							return value.field.name !== "Title";
 						})
 						.map((value) => {
 							return (
-								<div className="" key={value.id}>
+								<div className="mb-4" key={value.id}>
 									{/* What does this div actually look like if a value could be a PDF? */}
 									<div>{renderField(value)}</div>
 								</div>
 							);
 						})}
 				</div>
-				<div className="h-100% flex min-w-[250px] flex-col bg-gray-50 p-2 font-semibold shadow-inner">
-					<div className="pb-3">
+				<div className="w-64 rounded-lg bg-gray-50 p-4 font-semibold shadow-inner">
+					<div className="mb-4">
 						{/* TODO: build workflow as series of move constraints? */}
-						<div>Current Stage</div>
-						<div className="indent-4 font-medium">
+						<div className="mb-1 text-lg font-bold">Current Stage</div>
+						<div className="ml-4 font-medium">
 							{pub.stages.map(({ stage }) => {
 								return <div key={stage.id}>{stage.name}</div>;
 							})}
 						</div>
 					</div>
-					<MembersAvatars pub={pub} />
-					<div className="pb-3">
-						<div>Integrations</div>
+					<div className="mb-4">
+						<MembersAvatars pub={pub} />
+					</div>
+					<div className="mb-4">
+						<div className="mb-1 text-lg font-bold">Integrations</div>
 						<div>
 							<IntegrationActions pub={pub} token={token} />
 						</div>
 					</div>
 
-					<div className="pb-3">
-						<div>Members</div>
-						<div className="flex flex-row">
+					<div className="mb-4">
+						<div className="mb-1 text-lg font-bold">Members</div>
+						<div className="flex flex-row flex-wrap">
 							{users.map((user) => {
 								return (
 									<div key={user.id}>
@@ -209,7 +214,6 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			Hello New Worlds
 			<PubChildrenTable communities={[]} />
 		</div>
 	);
