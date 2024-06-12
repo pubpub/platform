@@ -16,6 +16,7 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
+import { StageActions } from "~/app/components/ActionButton";
 
 import type { UserAndMemberships } from "~/lib/types";
 
@@ -84,6 +85,21 @@ export const getPubChildrenTableColumns = () =>
 						<DropdownMenuContent align="end">
 							<DropdownMenuLabel>Menu</DropdownMenuLabel>
 							<DropdownMenuSeparator />
+                            <div className="w-full">
+								<Button>buuton</Button>
+							</div>
+                            <DropdownMenuSeparator />
+                            <div className="w-full">
+								<Button>buuton</Button>
+							</div>
+                            <DropdownMenuSeparator />
+                            <div className="w-full">
+								<Button>buuton</Button>
+							</div>
+                            <div>
+                                {row.getValue("stage") !== "" ? <div>Hiiii</div> : "No stage"}    
+                            </div>
+                            {/* <StageActions stageId={row.getValue("stage")} /> */}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);
