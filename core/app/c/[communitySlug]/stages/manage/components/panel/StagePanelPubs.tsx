@@ -2,11 +2,8 @@ import { Suspense } from "react";
 
 import { Card, CardContent } from "ui/card";
 
-import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
-import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
-import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "./queries";
 import {
@@ -30,6 +27,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		throw new Error("Stage not found");
 	}
 
+const StagePanelPubsInner = async (props: { stageId: StagesId }) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">

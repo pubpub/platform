@@ -153,7 +153,7 @@ export default async function Page({
 		return {
 			id: child.id,
 			title: child.values.find((value) => value.field.name === "Title")?.value as string || "Evaluation",
-			stage: child.stages[0]?.stage.name || "No stage",
+			stage: child.stages[0]?.stageId,
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
 		};
