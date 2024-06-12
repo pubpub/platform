@@ -12,14 +12,21 @@ import type { Stages } from "~/kysely/types/public/Stages";
 import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
 import { StagePanelPubsRunActionDropDownMenuItem } from "./StagePanelPubsRunActionDropDownMenuItem";
 
+export type PageContext = {
+	params: Record<string, unknown>;
+	searchParams: Record<string, unknown>;
+};
+
 export const StagePanelPubsRunActionDropDownMenu = ({
 	actionInstances,
 	pub,
 	stage,
+	pageContext,
 }: {
 	actionInstances: ActionInstances[];
 	pub: StagePub;
 	stage: Stages;
+	pageContext: PageContext;
 }) => {
 	if (!actionInstances.length) {
 		return null;
@@ -41,6 +48,7 @@ export const StagePanelPubsRunActionDropDownMenu = ({
 							stage={stage}
 							pub={pub}
 							actionInstance={actionInstance}
+							pageContext={pageContext}
 						/>
 					</StagePanelPubsRunActionDropDownMenuItem>
 				))}

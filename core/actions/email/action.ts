@@ -37,6 +37,11 @@ export const action = defineAction({
 					.optional(),
 			})
 			.optional(),
+		fieldConfig: {
+			recipient: {
+				fieldType: "custom",
+			},
+		},
 	},
 	pubFields: [],
 	icon: Mail,
