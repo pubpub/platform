@@ -1,4 +1,7 @@
 import { revalidateTag } from "next/cache";
+import { staticGenerationAsyncStorage } from "next/dist/client/components/static-generation-async-storage.external";
+import { cookies, headers } from "next/headers";
+import { NextRequest } from "next/server";
 import { createNextHandler } from "@ts-rest/serverless/next";
 
 import { api } from "contracts";
@@ -14,7 +17,7 @@ import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import { getPub, getPubs, tsRestHandleErrors } from "~/lib/server";
-import { findCommunityIdByPubId } from "~/lib/server/community";
+import { findCommunityBySlug, findCommunityIdByPubId } from "~/lib/server/community";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
@@ -35,12 +38,21 @@ const handler = createNextHandler(
 					body: pub,
 				};
 			},
-			getMany: async (req, res) => {
-				const { communityId, ...rest } = req.query;
-				console.log(rest);
+			getMany: async (req, args) => {
+				const getCommunityIdFromHeaders = () => {
+					const setCookies = headers().getSetCookie();
+					const communityIdCookie = setCookies?.find((cookie) =>
+						cookie.startsWith("x-pubpub-community-id")
+					);
+					if (communityIdCookie) {
+						return communityIdCookie.split(";")[0].split("=")[1];
+					}
+					return null;
+				};
 
-				const pubs = await getPubs(communityId as CommunitiesId, rest);
-				console.log(pubs);
+				const communityId = getCommunityIdFromHeaders(args.nextRequest);
+
+				const pubs = await getPubs(communityId as CommunitiesId, req.query);
 
 				return {
 					status: 200,
@@ -51,8 +63,15 @@ const handler = createNextHandler(
 	},
 	{
 		handlerType: "app-router",
-		basePath: "/api/v0",
+		basePath: "/api/v0/c/:communitySlug",
 		jsonQuery: true,
+
+		requestMiddleware: [
+			async (req, args) => {
+				// console.log(args.nextRequest);
+				// console.log(req);
+			},
+		],
 		errorHandler: tsRestHandleErrors,
 	}
 );
