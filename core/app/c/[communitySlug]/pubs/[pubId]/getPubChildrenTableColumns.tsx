@@ -5,7 +5,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
@@ -55,20 +54,20 @@ export const getPubChildrenTableColumns = () =>
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
-			accessorKey: "stsge",
+			accessorKey: "stage",
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Assginee" />,
 			accessorKey: "assignee",
 			cell: ({ row, getValue }) => {
-                const name = row.getValue("name") as string;
+				const name = row.getValue("name") as string;
 				return (
 					<Avatar className="h-8 w-8">
 						<AvatarImage src={(getValue() as string) ?? undefined} alt={`${name}`} />
 						<AvatarFallback>{name[0]}</AvatarFallback>
 					</Avatar>
 				);
-            },
+			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
