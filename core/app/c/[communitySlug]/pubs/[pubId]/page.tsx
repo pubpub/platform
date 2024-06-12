@@ -59,7 +59,7 @@ export default async function Page({
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
 				<Link href={`/c/${params.communitySlug}/pubs`}>
-					<Button className="transition-colors hover:bg-white hover:text-black">
+					<Button>
 						View all pubs
 					</Button>
 				</Link>

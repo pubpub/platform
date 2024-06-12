@@ -21,9 +21,9 @@ import type { UserAndMemberships } from "~/lib/types";
 
 export type TablePubChild = {
 	id: string;
-	name: string;
-	slug: string;
-	avatar: string | null;
+	title: string;
+	stage: string;
+	assignee: string | null;
 	created: Date;
 };
 
@@ -53,21 +53,16 @@ export const getPubChildrenTableColumns = () =>
 			enableHiding: false,
 		},
 		{
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
+			accessorKey: "title",
+		},
+        {
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Assginee" />,
 			accessorKey: "assignee",
-			cell: ({ row, getValue }) => {
-				const name = row.getValue("name") as string;
-				return (
-					<Avatar className="h-8 w-8">
-						<AvatarImage src={(getValue() as string) ?? undefined} alt={`${name}`} />
-						<AvatarFallback>{name[0]}</AvatarFallback>
-					</Avatar>
-				);
-			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
