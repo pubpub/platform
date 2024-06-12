@@ -149,11 +149,23 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 
+	const x = pub.children.map((child) => {
+		return {
+			id: child.id,
+			title: child.values.find((value) => value.field.name === "Title")?.value as string || "Evaluation",
+			stage: child.stages[0]?.stage.name || "No stage",
+			assignee: child.assigneeId,
+			created: new Date(child.createdAt),
+		};
+	})
+
+
+	
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
 				<Link href={`/c/${params.communitySlug}/pubs`}>
-					<Button className="transition-colors hover:bg-white hover:text-black">
+					<Button>
 						View all pubs
 					</Button>
 				</Link>
@@ -214,7 +226,7 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			<PubChildrenTable communities={[]} />
+			<PubChildrenTable communities={x} />
 		</div>
 	);
 }

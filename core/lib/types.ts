@@ -86,6 +86,7 @@ export const pubInclude = {
 			{
 				pubType: true,
 				values: { include: { field: true } },
+				stages: { include: { stage: true } },
 			},
 			3
 		),
