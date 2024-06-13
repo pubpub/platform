@@ -1,5 +1,3 @@
-"use client";
-
 import type { ColumnDef } from "@tanstack/react-table";
 
 import Link from "next/link";
@@ -19,6 +17,7 @@ import { MoreVertical } from "ui/icon";
 import { StageActions } from "~/app/components/ActionButton";
 
 import type { UserAndMemberships } from "~/lib/types";
+import { StagePanelPubsRunActionDropDownMenu } from "../../stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
 
 export type PubChild = {
 	id: string;
@@ -74,6 +73,7 @@ export const getPubChildrenTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row, table }) => {
+
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -100,8 +100,11 @@ export const getPubChildrenTableColumns = () =>
                                 {row.getValue("stage") !== "" ? <div>Hiiii</div> : "No stage"}    
                             </div> 
                             {/* <div>
-                                {row.getValue("stage") !== "" ? <StageActions stageId={row.getValue("stage")} /> : "No stage"}    
-                            </div> */}
+                                {row.getValue("stage") !== "" ? <StagePanelPubsRunActionDropDownMenu
+									actionInstances={actions}
+									pub={pub}
+								/> : "No stage"}    
+										</div> */}
                             {/* <StageActions stageId={row.getValue("stage")} /> */}
 						</DropdownMenuContent>
 					</DropdownMenu>
