@@ -3,7 +3,8 @@
 import * as React from "react";
 
 import { DataTable } from "~/app/components/DataTable";
-import { ActionRun, getActionRunsTableColumns } from "./getActionRunsTableColumns";
+import type { ActionRun} from "./getActionRunsTableColumns";
+import { getActionRunsTableColumns } from "./getActionRunsTableColumns";
 
 export const ActionRunsTable = ({ actionRuns }: { actionRuns: ActionRun[] }) => {
 	const actionRunsColumns = getActionRunsTableColumns();

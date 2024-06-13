@@ -20,6 +20,7 @@ import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { PubChildrenTable } from "./PubChildrenTable";
+import { getStagePubs } from "../../stages/manage/components/panel/queries";
 
 interface PubFieldWithValue extends PubField {
 	schema: PubFieldSchema | null;
@@ -149,7 +150,7 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 
-	const x = pub.children.map((child) => {
+	const pubChildren = pub.children.map((child) => {
 		return {
 			id: child.id,
 			title: child.values.find((value) => value.field.name === "Title")?.value as string || "Evaluation",
@@ -159,7 +160,8 @@ export default async function Page({
 		};
 	})
 
-
+	// const stagePubs = await getStagePubs(pub.stageId);
+	// const actions = await getActionsForStage(props.stageId);
 	
 	return (
 		<div className="container mx-auto p-4">
@@ -226,7 +228,7 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			<PubChildrenTable communities={x} />
+			<PubChildrenTable children={pubChildren}/>
 		</div>
 	);
 }
