@@ -18,6 +18,7 @@ import { MoreVertical } from "ui/icon";
 import type { UserAndMemberships } from "~/lib/types";
 import { StageActions } from "~/app/components/ActionButton";
 import { StagePanelPubsRunActionDropDownMenu } from "../../stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
+import { actions } from '~/actions/api';
 
 export type PubChild = {
 	id: string;
@@ -25,6 +26,7 @@ export type PubChild = {
 	stage: string;
 	assignee: string | null;
 	created: Date;
+	actions: JSX.Element;
 };
 
 export const getPubChildrenTableColumns = () =>
@@ -70,44 +72,9 @@ export const getPubChildrenTableColumns = () =>
 			cell: ({ row }) => row.original.created.toLocaleDateString(),
 		},
 		{
-			id: "actions",
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
 			enableHiding: false,
-			cell: ({ row, table }) => {
-				return (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="h-8 w-8 p-0">
-								<span className="sr-only">Open menu</span>
-								<MoreVertical className="h-4 w-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuLabel>Menu</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<div className="w-full">
-								<Button>buuton</Button>
-							</div>
-							<DropdownMenuSeparator />
-							<div className="w-full">
-								<Button>buuton</Button>
-							</div>
-							<DropdownMenuSeparator />
-							<div className="w-full">
-								<Button>buuton</Button>
-							</div>
-							<div>
-								{row.getValue("stage") !== "" ? <div>Hiiii</div> : "No stage"}
-							</div>
-							{/* <div>
-                                {row.getValue("stage") !== "" ? <StagePanelPubsRunActionDropDownMenu
-									actionInstances={actions}
-									pub={pub}
-								/> : "No stage"}    
-										</div> */}
-							{/* <StageActions stageId={row.getValue("stage")} /> */}
-						</DropdownMenuContent>
-					</DropdownMenu>
-				);
-			},
+			accessorKey: "actions",
+			cell: ({ row }) => row.original.actions,
 		},
 	] as const satisfies ColumnDef<PubChild, unknown>[];

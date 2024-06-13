@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
-import { X } from "ui/icon";
 
 import { getActionsForStage } from "~/app/components/ActionButton";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -50,7 +49,8 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 
-	const pubChildren = pub.children.map((child) => {
+	const pubChildren = pub.children.map(async (child) => {
+		const actions = child.stages[0] ? await getActionsForStage(child.stages[0].stageId) : null;
 		return {
 			id: child.id,
 			title:
@@ -59,10 +59,15 @@ export default async function Page({
 			stage: child.stages[0]?.stageId,
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
+			actions: actions ? (
+				<StagePanelPubsRunActionDropDownMenu actionInstances={actions} pub={child} />
+			) : (
+				<div>No actions exist on the pub</div>
+			),
 		};
 	});
-
-	const actions = await getActionsForStage(pub.stages[0].stageId);
+	const children = await Promise.all(pubChildren);
+	const actions = pub.stages[0] ? await getActionsForStage(pub.stages[0].stageId) : null;
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
@@ -111,10 +116,14 @@ export default async function Page({
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						<div>
-							<StagePanelPubsRunActionDropDownMenu
-								actionInstances={actions}
-								pub={pub}
-							/>
+							{actions ? (
+								<StagePanelPubsRunActionDropDownMenu
+									actionInstances={actions}
+									pub={pub}
+								/>
+							) : (
+								<div>No actions exist on the pub</div>
+							)}
 						</div>
 					</div>
 
@@ -135,7 +144,7 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			<PubChildrenTable children={pubChildren} />
+			<PubChildrenTable children={children} />
 		</div>
 	);
 }
