@@ -20,7 +20,7 @@ import { StageActions } from "~/app/components/ActionButton";
 
 import type { UserAndMemberships } from "~/lib/types";
 
-export type TablePubChild = {
+export type PubChild = {
 	id: string;
 	title: string;
 	stage: string;
@@ -98,11 +98,14 @@ export const getPubChildrenTableColumns = () =>
 							</div>
                             <div>
                                 {row.getValue("stage") !== "" ? <div>Hiiii</div> : "No stage"}    
-                            </div>
+                            </div> 
+                            {/* <div>
+                                {row.getValue("stage") !== "" ? <StageActions stageId={row.getValue("stage")} /> : "No stage"}    
+                            </div> */}
                             {/* <StageActions stageId={row.getValue("stage")} /> */}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);
 			},
 		},
-	] as const satisfies ColumnDef<TablePubChild, unknown>[];
+	] as const satisfies ColumnDef<PubChild, unknown>[];

@@ -2,11 +2,11 @@
 
 import React from "react";
 
-import type { TablePubChild } from "./getPubChildrenTableColumns";
+import type { PubChild } from "./getPubChildrenTableColumns";
 import { DataTable } from "~/app/components/DataTable";
 import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
 
-export const PubChildrenTable = ({ communities }: { communities: TablePubChild[] }) => {
+export const PubChildrenTable = ({ children }: {  children: PubChild[] }) => {
 	const communityTableColumns = getPubChildrenTableColumns();
-	return <DataTable columns={communityTableColumns} data={communities} searchBy="assignee" />;
+	return <DataTable columns={communityTableColumns} data={children} searchBy="assignee" />;
 };
