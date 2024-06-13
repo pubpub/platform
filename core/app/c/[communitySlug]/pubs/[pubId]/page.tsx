@@ -10,11 +10,14 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { PubChildrenTable } from "./PubChildrenTable";
-import { getPub } from "./queries";
 import { renderField } from "./components/Helpers";
 import { unstable_cache } from "next/cache";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
+import { getActionsForStage } from "~/app/components/ActionButton";
+import { getStagePubs } from "../../stages/manage/components/panel/queries";
+import { StagePanelPubsRunActionDropDownMenu } from "../../stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
+import { X } from "ui/icon";
 
 export default async function Page({
 	params,
@@ -56,9 +59,7 @@ export default async function Page({
 		};
 	})
 
-	// const stagePubs = await getStagePubs(pub.stageId);
-	// const actions = await getActionsForStage(props.stageId);
-	
+	const actions = await getActionsForStage(pub.stages[0].stageId);
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
@@ -104,6 +105,15 @@ export default async function Page({
 						<div className="mb-1 text-lg font-bold">Integrations</div>
 						<div>
 							<IntegrationActions pub={pub} token={token} />
+						</div>
+					</div>
+					<div className="mb-4">
+						<div className="mb-1 text-lg font-bold">Actions</div>
+						<div>
+							<StagePanelPubsRunActionDropDownMenu
+								actionInstances={actions}
+								pub={pub}
+							/>
 						</div>
 					</div>
 

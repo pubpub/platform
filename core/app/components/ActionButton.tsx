@@ -5,7 +5,7 @@ import { PubDropDown } from "./PubCRUD/PubDropDown";
 import { getStageActions, getStagePubs } from "../c/[communitySlug]/stages/manage/components/panel/queries";
 import { PubTitle } from "./PubTitle";
 
-const getActionsForStage = async (stageId: string) => {
+export const getActionsForStage = async (stageId: string) => {
 	const stageActions = await getStageActions(stageId);
 
 	return stageActions.map((action) => ({
