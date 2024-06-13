@@ -59,9 +59,20 @@ pnpm --filter core migrate-dev
 
 ## Docker Compose
 
-Docker-compose provides a means to run all the code components as containers, more realistically emulating the setting where this code is run in production.
-This is useful for end-to-end tests and locally verifying that the code works when removed from some of the fast-iteration features of `next.js`, such as
-JIT compilation.
+Docker-compose provides a means to run all the code components as containers. It has these advantages:
+
+- more realistically emulating the setting where this code is run in production.
+- less contamination of environment, so spurious failures (or successes) can be avoided.
+- easy to boot from nothing without system dependencies except Docker
+
+With disadvantages:
+
+- doesn't support hot-reloading
+- slightly slower iteration due to `docker build` between runs
+
+With these properties, this is useful for end-to-end tests and locally verifying that the code works when removed from some of the fast-iteration features of `next.js`, such as
+JIT compilation. Because a `docker build` is needed to build the containers to run, hot-reloading is not available in this environment; so faster iteration
+with `pnpm dev` is recommended until you are ready to run battery of tests or need to verify behavior in an isolated environment.
 
 A slightly modified version of `.env.local` is required, where we remove the DATABASE_URL (this is built out of parts in docker envs):
 ```
