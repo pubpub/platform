@@ -14,9 +14,9 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
-import { StageActions } from "~/app/components/ActionButton";
 
 import type { UserAndMemberships } from "~/lib/types";
+import { StageActions } from "~/app/components/ActionButton";
 import { StagePanelPubsRunActionDropDownMenu } from "../../stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
 
 export type PubChild = {
@@ -56,7 +56,7 @@ export const getPubChildrenTableColumns = () =>
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
 		},
-        {
+		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",
 		},
@@ -73,7 +73,6 @@ export const getPubChildrenTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row, table }) => {
-
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -85,27 +84,27 @@ export const getPubChildrenTableColumns = () =>
 						<DropdownMenuContent align="end">
 							<DropdownMenuLabel>Menu</DropdownMenuLabel>
 							<DropdownMenuSeparator />
-                            <div className="w-full">
+							<div className="w-full">
 								<Button>buuton</Button>
 							</div>
-                            <DropdownMenuSeparator />
-                            <div className="w-full">
+							<DropdownMenuSeparator />
+							<div className="w-full">
 								<Button>buuton</Button>
 							</div>
-                            <DropdownMenuSeparator />
-                            <div className="w-full">
+							<DropdownMenuSeparator />
+							<div className="w-full">
 								<Button>buuton</Button>
 							</div>
-                            <div>
-                                {row.getValue("stage") !== "" ? <div>Hiiii</div> : "No stage"}    
-                            </div> 
-                            {/* <div>
+							<div>
+								{row.getValue("stage") !== "" ? <div>Hiiii</div> : "No stage"}
+							</div>
+							{/* <div>
                                 {row.getValue("stage") !== "" ? <StagePanelPubsRunActionDropDownMenu
 									actionInstances={actions}
 									pub={pub}
 								/> : "No stage"}    
 										</div> */}
-                            {/* <StageActions stageId={row.getValue("stage")} /> */}
+							{/* <StageActions stageId={row.getValue("stage")} /> */}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);

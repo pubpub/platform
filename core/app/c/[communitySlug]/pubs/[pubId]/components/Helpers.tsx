@@ -1,11 +1,13 @@
 import type { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
-import type { JSONSchemaType, AnySchema } from "ajv";
+import type { AnySchema, JSONSchemaType } from "ajv";
+
 import { Button } from "ui/button";
-import { CardHeader, CardTitle, CardContent } from "ui/card";
-import type { FileUpload } from "~/lib/fields/fileUpload";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "ui/hover-card";
+import { CardContent, CardHeader, CardTitle } from "ui/card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { Separator } from "ui/separator";
 import { cn } from "utils";
+
+import type { FileUpload } from "~/lib/fields/fileUpload";
 
 interface PubFieldWithValue extends PubField {
 	schema: PubFieldSchema | null;
@@ -46,7 +48,10 @@ export function FileUploadPreview({ files }: { files: FileUpload }) {
 	);
 }
 
-export function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, value: Prisma.JsonValue) {
+export function recursivelyGetScalarFields(
+	schema: JSONSchemaType<AnySchema>,
+	value: Prisma.JsonValue
+) {
 	const fields: any[] = [];
 	if (schema.$id === "pubpub:fileUpload") {
 		return <FileUploadPreview files={value as FileUpload} />;

@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
+import { X } from "ui/icon";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -59,9 +60,7 @@ export default async function Page({
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
 				<Link href={`/c/${params.communitySlug}/pubs`}>
-					<Button>
-						View all pubs
-					</Button>
+					<Button>View all pubs</Button>
 				</Link>
 			</div>
 			<div className="mb-8">
