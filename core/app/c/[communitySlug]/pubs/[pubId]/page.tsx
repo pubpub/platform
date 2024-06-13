@@ -1,23 +1,23 @@
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
+import { X } from "ui/icon";
 
+import { getActionsForStage } from "~/app/components/ActionButton";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
-import { PubChildrenTable } from "./PubChildrenTable";
-import { renderField } from "./components/Helpers";
-import { unstable_cache } from "next/cache";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
-import { getActionsForStage } from "~/app/components/ActionButton";
 import { getStagePubs } from "../../stages/manage/components/panel/queries";
 import { StagePanelPubsRunActionDropDownMenu } from "../../stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
-import { X } from "ui/icon";
+import { renderField } from "./components/Helpers";
+import { PubChildrenTable } from "./PubChildrenTable";
 
 export default async function Page({
 	params,
@@ -34,15 +34,16 @@ export default async function Page({
 		return null;
 	}
 	const getPub = unstable_cache(
-		(pubId: string) => prisma.pub.findUnique({
-			where: { id: pubId },
-			include: {
-				...pubInclude,
-			},
-		}) ,
-		undefined, 
-		{ tags: [`pubs_${params.pubId}`]}
-	)
+		(pubId: string) =>
+			prisma.pub.findUnique({
+				where: { id: pubId },
+				include: {
+					...pubInclude,
+				},
+			}),
+		undefined,
+		{ tags: [`pubs_${params.pubId}`] }
+	);
 	const pub = await getPub(params.pubId);
 	if (!pub) {
 		return null;
@@ -52,21 +53,21 @@ export default async function Page({
 	const pubChildren = pub.children.map((child) => {
 		return {
 			id: child.id,
-			title: child.values.find((value) => value.field.name === "Title")?.value as string || "Evaluation",
+			title:
+				(child.values.find((value) => value.field.name === "Title")?.value as string) ||
+				"Evaluation",
 			stage: child.stages[0]?.stageId,
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
 		};
-	})
+	});
 
 	const actions = await getActionsForStage(pub.stages[0].stageId);
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
 				<Link href={`/c/${params.communitySlug}/pubs`}>
-					<Button>
-						View all pubs
-					</Button>
+					<Button>View all pubs</Button>
 				</Link>
 			</div>
 			<div className="mb-8">
@@ -134,7 +135,7 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			<PubChildrenTable children={pubChildren}/>
+			<PubChildrenTable children={pubChildren} />
 		</div>
 	);
 }

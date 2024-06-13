@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Card, CardContent } from "ui/card";
 
 import type { StagesId } from "~/kysely/types/public/Stages";
+import { StageActions } from "~/app/components/ActionButton";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "./queries";
