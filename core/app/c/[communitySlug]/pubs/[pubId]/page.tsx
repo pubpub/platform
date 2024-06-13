@@ -12,10 +12,9 @@ import { createToken } from "~/lib/server/token";
 import { PubChildrenTable } from "./PubChildrenTable";
 import { getPub } from "./queries";
 import { renderField } from "./components/Helpers";
-
-
-
-
+import { unstable_cache } from "next/cache";
+import { pubInclude } from "~/lib/types";
+import prisma from "~/prisma/db";
 
 export default async function Page({
 	params,
@@ -31,7 +30,16 @@ export default async function Page({
 	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}
-
+	const getPub = unstable_cache(
+		(pubId: string) => prisma.pub.findUnique({
+			where: { id: pubId },
+			include: {
+				...pubInclude,
+			},
+		}) ,
+		undefined, 
+		{ tags: [`pubs_${params.pubId}`]}
+	)
 	const pub = await getPub(params.pubId);
 	if (!pub) {
 		return null;
