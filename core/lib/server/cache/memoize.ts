@@ -6,7 +6,9 @@ import { unstable_cache } from "next/cache";
 
 import { logger } from "logger";
 
-import type { ValidTag } from "./cacheTags";
+import type { CacheTag } from "./cacheTags";
+import { env } from "~/lib/env/env.mjs";
+import { ONE_YEAR } from "./constants";
 
 type Callback<Parameters extends unknown[], ReturnType> = (
 	...args: Parameters
@@ -17,7 +19,7 @@ export type MemoizeOptionType<Parameters extends unknown[]> = {
 	duration?: number;
 	log?: ("dedupe" | "datacache" | "verbose")[];
 	logid?: string;
-	revalidateTags?: ((...params: Parameters) => ValidTag[]) | ValidTag[];
+	revalidateTags?: ((...params: Parameters) => CacheTag[]) | CacheTag[];
 	additionalCacheKey?: ((...params: Parameters) => string[]) | string[];
 	suppressWarnings?: boolean;
 	/**
@@ -57,14 +59,14 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 	const {
 		// default values
 		persist = true,
-		duration = Infinity,
+		duration = ONE_YEAR,
 		log = [],
 		revalidateTags: revalidateTagsFn,
 		additionalCacheKey: additionalCacheKeyFn,
 	} = opts ?? {};
-	const logDataCache = log.includes("datacache");
-	const logDedupe = log.includes("dedupe");
-	const logVerbose = log.includes("verbose");
+	const logDataCache = log.includes("datacache") || env.CACHE_LOG;
+	const logDedupe = log.includes("dedupe") || env.CACHE_LOG;
+	const logVerbose = log.includes("verbose") || env.CACHE_LOG;
 	const logID = opts?.logid ? `${opts.logid} ` : "";
 
 	let oldData: any;
@@ -106,7 +108,10 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 				logger.debug(
 					`Data Cache - ${logID}${cb.name} ${dataCacheMiss ? "MISS" : "HIT"} ${time.toPrecision(3)}s ${dataCacheMiss ? (isSame ? "background-revalidation" : "on-demand revalidation") : ""} `
 				);
-				if (logVerbose) logger.info(` └ ${cb.name ?? "Anon Func"} ${JSON.stringify(args)}`);
+				if (logVerbose)
+					logger.info(
+						` └ Function: ${cb.name || "Anon Func"} | args: ${JSON.stringify(args)} | tags: ${nextOpts.tags} | cacheKey: ${cacheKey}`
+					);
 				oldData = data;
 				return data;
 			} else {

@@ -1,9 +1,23 @@
 import type Database from "~/kysely/types/Database";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
 
-export type ValidTag<K extends keyof Database = keyof Database> = `community-${K}_${CommunitiesId}`;
+export type CacheScope<K extends keyof Database = keyof Database> = "slug" | "all" | K;
 
-export const createCacheTag = <K extends keyof Database>(
-	key: K,
-	communityId: CommunitiesId
-): ValidTag<K> => `community-${key}_${communityId}`;
+export type CacheTag<S extends CacheScope = CacheScope> =
+	| `community-${S}_${string}`
+	| `all-${S}`
+	| `all`;
+
+/**
+ * Creates a valid cache tag for a given community.
+ * @param key - The cache scope key.
+ * @param communitySlug - The slug of the community.
+ * @returns A cache tag for the specified community of
+ * the form `community-${key}_${communitySlug}`.
+ */
+export const createCommunityCacheTag = <S extends CacheScope>(key: S, communitySlug: string) =>
+	`community-${key}_${communitySlug}` satisfies CacheTag<S>;
+
+/**
+ * Manually create a valid typesafe cache tag
+ */
+export const createCacheTag = <T extends CacheTag>(tag: T) => tag;

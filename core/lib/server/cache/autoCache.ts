@@ -1,77 +1,88 @@
-import type { InferResult, OperationNode, QueryResult, SelectQueryBuilder } from "kysely";
+import type {
+	AutoCacheOptions,
+	CallbackAutoOutput,
+	DirectAutoOutput,
+	ExecuteFn,
+	QueryBuilderFunction,
+	SQB,
+} from "./types";
+import { createCommunityCacheTag } from "./cacheTags";
+import { getCommunitySlug } from "./getCommunitySlug";
+import { memoize } from "./memoize";
+import { cachedFindTables, callbackAutoOutput, directAutoOutput } from "./sharedAuto";
 
-import { TableNode } from "kysely";
-
-import type Database from "~/kysely/types/Database";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import { db } from "~/kysely/database";
-import { createCacheTag, ValidTag } from "./cacheTags";
-import { memoize, MemoizeOptionType } from "./memoize";
-
-const findTablesRaw = (sql: string) =>
-	Array.from(sql.matchAll(/from\s+"(\w+)"/gi)).map((m) => m[2]);
-
-export function findTables<T extends OperationNode>(
-	node: T | T[],
-	tables = new Set<string>()
-): Set<string> {
-	if (Array.isArray(node)) {
-		for (const item of node) {
-			findTables(item, tables);
-		}
-		return tables;
-	}
-
-	if (typeof node !== "object") {
-		return tables;
-	}
-
-	for (const [key, value] of Object.entries(node)) {
-		if (typeof value !== "object") {
-			continue;
-		}
-
-		if (TableNode.is(value)) {
-			tables.add(value.table.identifier.name);
-			continue;
-		}
-
-		findTables(value, tables);
-	}
-
-	return tables;
-}
-
-export const autoCache = async <T extends SelectQueryBuilder<Database, keyof Database, any>>(
-	query: T,
-	communityId: CommunitiesId, //| ((result: Awaited<Result>) => string),
-	options?: Omit<MemoizeOptionType<any[]>, "revalidateTags" | "additionalCacheKey"> & {
-		revalidateTags?: ValidTag[];
-		additionalCacheKey?: string[];
-	}
+const executeWithCache = <
+	Q extends SQB,
+	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
+>(
+	qb: Q,
+	method: M,
+	options?: AutoCacheOptions
 ) => {
-	const compiledQuery = query.compile();
+	const executeFn = async () => {
+		const communitySlug = options?.communitySlug ?? getCommunitySlug();
 
-	const tables = Array.from(findTables(compiledQuery.query));
+		const compiledQuery = qb.compile();
 
-	const res = memoize(
-		() =>
-			db.executeQuery(compiledQuery) as Promise<
-				QueryResult<InferResult<typeof query>[number]>
-			>,
-		{
-			...options,
-			revalidateTags: [
-				...tables.map((table) => createCacheTag(table, communityId)),
-				...(options?.revalidateTags ?? []),
-			],
-			additionalCacheKey: [
-				...(compiledQuery.parameters as string[]),
-				...(options?.additionalCacheKey ?? []),
-				compiledQuery.sql,
-			],
-		}
-	);
+		const tables = await cachedFindTables(compiledQuery);
 
-	return (await res()).rows;
+		const cachedExecute = memoize(
+			async <M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow">(
+				method: M
+			) => {
+				// TODO: possible improvement: just execute the compiled query rather than calling the method again
+				// saves one compile cycle
+				// necessary assertion here due to
+				// https://github.com/microsoft/TypeScript/issues/241
+				return qb[method]() as ReturnType<Q[M]>;
+			},
+			{
+				...options,
+				revalidateTags: [
+					...tables.map((table) => createCommunityCacheTag(table, communitySlug)),
+					...(options?.additionalRevalidateTags ?? []),
+				],
+				additionalCacheKey: [
+					...(compiledQuery.parameters as string[]),
+					...(options?.additionalCacheKey ?? []),
+					// very important, this is really then only thing
+					// that uniquely identifies the query
+					compiledQuery.sql,
+				],
+			}
+		);
+
+		const result = await cachedExecute(method);
+
+		return result;
+	};
+
+	// we are reaching the limit of typescript's type inference here
+	// without this cast, the return type of the function
+	// is missing an `Awaited`
+	// possibly an instance of this 10(!) year old issue, as when
+	// i leave out the type in qb[method], you get ()=>any
+	// https://github.com/microsoft/TypeScript/issues/241
+	return executeFn as ExecuteFn<Q, M>;
 };
+
+/**
+ * ***AUTO CACHE***
+ *
+ * Automatically caches the result of a query.
+ */
+export function autoCache<Q extends SQB>(qb: Q, options?: AutoCacheOptions): DirectAutoOutput<Q>; // this kind of short-circuits typescripts type inference, while it's kind of lying as it doesn't really have anything to do what happens in the function, it's a lot faster
+export function autoCache<QBF extends QueryBuilderFunction<any, any>>(
+	queryFn: QBF,
+	options?: AutoCacheOptions
+): CallbackAutoOutput<QBF>;
+export function autoCache<P extends any[], Q extends SQB>(
+	queryFnOrQb: Q | QueryBuilderFunction<Q, P>,
+	options?: AutoCacheOptions
+) {
+	if (typeof queryFnOrQb !== "function") {
+		return directAutoOutput(queryFnOrQb, executeWithCache, options);
+	}
+
+	return callbackAutoOutput(queryFnOrQb, executeWithCache, options);
+}

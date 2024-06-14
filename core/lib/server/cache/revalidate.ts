@@ -1,53 +1,41 @@
-import type {
-	DeleteQueryBuilder,
-	InferResult,
-	InsertQueryBuilder,
-	QueryResult,
-	UpdateQueryBuilder,
-} from "kysely";
-
 import { revalidateTag } from "next/cache";
-import { cookies } from "next/headers";
 
-import type Database from "~/kysely/types/Database";
-import { db } from "~/kysely/database";
-import { createCacheTag } from "./cacheTags";
+import { logger } from "logger";
 
-export const revalidate = async <
-	T extends
-		| InsertQueryBuilder<Database, keyof Database, any>
-		| UpdateQueryBuilder<Database, keyof Database, keyof Database, any>
-		| DeleteQueryBuilder<Database, keyof Database, any>,
->(
-	mutation: T,
-	communityId:
-		| string
-		| ((result: QueryResult<InferResult<typeof mutation>>["rows"][number]) => string),
-	extra?: { tags?: string[] }
-) => {
-	const c = cookies().get("communityId");
+import type { CacheScope } from "./cacheTags";
+import { env } from "~/lib/env/env.mjs";
+import { createCommunityCacheTag } from "./cacheTags";
+import { getCommunitySlug } from "./getCommunitySlug";
 
-	const compiledQuery = mutation.compile();
+/**
+ * Revalidates cache tags for a given community scope.
+ *
+ * **NOTE**: Only works when the current request is within
+ * a community context, i.e. on a page or route with a
+ * `communitySlug` param, like in `/c/[communitySlug]`.
+ *
+ * To use this outside of a community context, you can
+ * pass the community slug as an option.
+ *
+ *
+ * @param scope - The cache scope or an array of cache scopes.
+ * @param communitySlug - Optionally, the slug of the community to revalidate tags for.
+ *
+ * @returns void
+ */
+export const revalidateTagForCommunity = <S extends CacheScope>(
+	scope: S | S[],
+	communitySlug?: string
+): void => {
+	const slug = communitySlug ?? getCommunitySlug();
 
-	const table = new Set(
-		Array.from(compiledQuery.sql.matchAll(/(insert into|delete from|update) "(\w+)"/g)).map(
-			([, , table]) => table
-		)
-	);
+	const scopes = Array.isArray(scope) ? scope : [scope];
 
-	const result = (await db.executeQuery(compiledQuery)) as QueryResult<
-		InferResult<typeof mutation>
-	>;
-
-	const cId = typeof communityId === "function" ? communityId(result.rows[0]) : communityId;
-
-	Array.from(table).forEach((table) => {
-		revalidateTag(createCacheTag(table, cId));
+	scopes.forEach((scope) => {
+		const tag = createCommunityCacheTag(scope, slug);
+		if (env.CACHE_LOG) {
+			logger.debug(`MANUAL REVALIDATE: revalidating tag: ${tag}`);
+		}
+		revalidateTag(tag);
 	});
-	return result;
 };
-
-revalidate(
-	db.updateTable("pubs").set({ valuesBlob: "s" }).returning("community_id"),
-	(result) => result[0].community_id
-);
