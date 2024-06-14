@@ -1,6 +1,3 @@
-//@ts-expect-error
-import type { cache as cacheType } from "react/canary.d.ts";
-
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 
@@ -25,15 +22,17 @@ export type MemoizeOptionType<Parameters extends unknown[]> = {
 	/**
 	 * Whether or not to wrap the function in `React.cache`
 	 *
-	 * Set to `false` when calling this function from a route handler, as `React.cache` is not supported there.
+	 * Set to `false` when calling this function from a route handler, as `React.cache` is not
+	 * supported there.
 	 */
 	reactCache?: boolean;
 };
 
-/**   ###  MEMOIZE: unstable_cache() + cache()
-         A way to generalize the data caching function in Next.js     
-**/
-
+/**
+ * ### MEMOIZE: unstable_cache() + cache()
+ *
+ * A way to generalize the data caching function in Next.js
+ */
 export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: MemoizeOptionType<P>) {
 	if (typeof window !== "undefined") {
 		// Fallback to original function if window is defined (client side)

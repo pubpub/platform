@@ -2,6 +2,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 import { logger } from "logger";
 
+import type { autoCache } from "./autoCache";
 import type {
 	AutoCacheOptions,
 	AutoRevalidateOptions,
@@ -66,13 +67,15 @@ const executeWithRevalidate = <
 };
 
 /**
- * ***AUTO CACHE***
+ * **🪄 autoRevalidate**
  *
- * Automatically caches the result of a query.
+ * Automatically revalidates the cache tags of a mutation query after it's executed.
+ *
+ * See {@link autoCache} for a more detailed explanation of the API.
  */
 export function autoRevalidate<Q extends MQB>(
 	qb: Q,
-	options?: AutoCacheOptions
+	options?: AutoRevalidateOptions
 ): {
 	qb: Q;
 	execute: Q["execute"];
@@ -81,7 +84,7 @@ export function autoRevalidate<Q extends MQB>(
 };
 export function autoRevalidate<P extends any[], Q extends MQB>(
 	queryFn: QueryBuilderFunction<Q, P>,
-	options?: AutoCacheOptions
+	options?: AutoRevalidateOptions
 ): {
 	getQb: (args: P[]) => Q;
 	execute: Q["execute"];
@@ -90,7 +93,7 @@ export function autoRevalidate<P extends any[], Q extends MQB>(
 };
 export function autoRevalidate<P extends any[], Q extends MQB>(
 	queryFnOrQb: Q | QueryBuilderFunction<Q, P>,
-	options?: AutoCacheOptions
+	options?: AutoRevalidateOptions
 ) {
 	if (typeof queryFnOrQb !== "function") {
 		return directAutoOutput(queryFnOrQb, executeWithRevalidate, options);

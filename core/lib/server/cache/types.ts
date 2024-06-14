@@ -9,22 +9,16 @@ import type { CacheTag } from "./cacheTags";
 import type { MemoizeOptionType } from "./memoize";
 import type Database from "~/kysely/types/Database";
 
-/**
- * Select Query Builder
- */
+/** Select Query Builder */
 export type SQB = SelectQueryBuilder<Database, keyof Database, any>;
 
-/**
- * Mutation Query Builder
- */
+/** Mutation Query Builder */
 export type MQB =
 	| InsertQueryBuilder<Database, keyof Database, any>
 	| UpdateQueryBuilder<Database, keyof Database, keyof Database, any>
 	| DeleteQueryBuilder<Database, keyof Database, any>;
 
-/**
- * Any query builder
- */
+/** Any query builder */
 export type QB = SQB | MQB;
 
 export type AutoCacheOptions = Omit<
@@ -33,30 +27,24 @@ export type AutoCacheOptions = Omit<
 > & {
 	additionalRevalidateTags?: CacheTag[];
 	additionalCacheKey?: string[];
-	/**
-	 * The slug of the community, in case the query
-	 * is being made outside of a scoped community path
-	 */
+	/** The slug of the community, in case the query is being made outside of a scoped community path */
 	communitySlug?: string;
 };
 
 export type AutoRevalidateOptions = {
 	additionalRevalidateTags?: CacheTag[];
 	additionalRevalidatePaths?: string[];
-
-	/**
-	 * The slug of the community, in case the query
-	 * is being made outside of a scoped community path
-	 */
+	/** The slug of the community, in case the query is being made outside of a scoped community path */
 	communitySlug?: string;
 };
+
+export type AutoOptions<Q extends QB> = Q extends SQB ? AutoCacheOptions : AutoRevalidateOptions;
 
 /**
  * A function (possibly async) that returns a query builder
  *
- * Has to return a query builder like `{ qb: Q }`, as Kysely annoyingly
- * patches the querybuilder to prevent it from being awaited, even
- * if it's just being returned from a function
+ * Has to return a query builder like `{ qb: Q }`, as Kysely annoyingly patches the querybuilder to
+ * prevent it from being awaited, even if it's just being returned from a function
  *
  * https://github.com/kysely-org/kysely/blob/873671b758fd70679f440057595399d73813c0cc/src/util/prevent-await.ts#L4
  */
@@ -87,7 +75,8 @@ export type ExecuteFnFromQueryBuilderFunction<
 export type ExecuteCreatorFn<
 	Q extends QB,
 	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
-> = (qb: Q, method: M, options?: AutoCacheOptions) => ExecuteFn<Q, M>;
+	O extends AutoOptions<Q> = AutoOptions<Q>,
+> = (qb: Q, method: M, options?: O) => ExecuteFn<Q, M>;
 
 export type DirectAutoOutput<Q extends QB> = {
 	qb: Q;

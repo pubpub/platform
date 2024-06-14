@@ -66,14 +66,15 @@ export const cachedFindTables = // memoize(
 
 /**
  * For when using
+ *
  * ```ts
- * autoCache(db.selectFrom("...").select("*"))
+ * autoCache(db.selectFrom("...").select("*"));
  * ```
  *
- * rather than the callback version, e.g.
+ * Rather than the callback version, e.g.
  *
  * ```ts
- * autoCache((userId) => db.selectFrom("...").where("id", "=", userId))
+ * autoCache((userId) => db.selectFrom("...").where("id", "=", userId));
  * ```
  */
 export const directAutoOutput = <Q extends QB>(
@@ -117,15 +118,16 @@ export const callbackExecute = <
 
 /**
  * For when using
- * ```ts
- * autoCache((userId) => db.selectFrom("...").where("id", "=", userId))
- * ```
- * rather than the direct version, e.g.
  *
  * ```ts
- * autoCache(db.selectFrom("...").select("*"))
+ * autoCache((userId) => db.selectFrom("...").where("id", "=", userId));
  * ```
  *
+ * Rather than the direct version, e.g.
+ *
+ * ```ts
+ * autoCache(db.selectFrom("...").select("*"));
+ * ```
  */
 export const callbackAutoOutput = <Q extends QB, P extends any[]>(
 	queryFn: QueryBuilderFunction<Q, P>,
