@@ -8,11 +8,8 @@ import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageActions, getStagePubs } from "./queries";
-import {
-	PageContext,
-	StagePanelPubsRunActionDropDownMenu,
-} from "./StagePanelPubsRunActionDropDownMenu";
+import { PageContext, StagePanelPubsRunActionDropDownMenu } from "./StagePanelPubsRunActionDropDownMenu";
+import { getStageActions, getStagePubs, getStage } from "~/lib/queries/pub";
 
 type PropsInner = {
 	stageId: string;
@@ -74,11 +71,7 @@ export const StagePanelPubs = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-<<<<<<< HEAD
 			<StagePanelPubsInner stageId={props.stageId} pageContext={props.pageContext} />
-=======
-			<StagePanelPubsInner stageId={props.stageId} />
->>>>>>> ab04633 (undo chng)
 		</Suspense>
 	);
 };

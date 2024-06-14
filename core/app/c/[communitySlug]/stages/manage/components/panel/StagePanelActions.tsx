@@ -5,10 +5,13 @@ import { Card, CardContent } from "ui/card";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { addAction, deleteAction } from "../../actions";
 import { ActionConfigFormWrapper } from "./ActionConfigFormWrapper";
-import { getStage, getStageActions } from "./queries";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
+<<<<<<< HEAD
 import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
+=======
+import { getStage, getStageActions } from "~/lib/queries/pub";
+>>>>>>> c8c25f1 ('https://www.youtube.com/watch?v=uGaEo1kTrJA&t=1041s&ab_channel=Ken-chan')
 
 type PropsInner = {
 	stageId: string;
