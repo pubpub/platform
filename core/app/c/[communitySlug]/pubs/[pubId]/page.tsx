@@ -12,7 +12,7 @@ import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
-import { getStagePubs } from "../../stages/manage/components/panel/queries";
+import { getStageActions, getStagePubs } from "~/lib/queries/pub";
 import { StagePanelPubsRunActionDropDownMenu } from "../../stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
 import { renderField } from "./components/Helpers";
 import { PubChildrenTable } from "./PubChildrenTable";
@@ -49,7 +49,7 @@ export default async function Page({
 	const users = getPubUsers(pub.permissions);
 
 	const pubChildren = pub.children.map(async (child) => {
-		const actions = child.stages[0] ? await getActionsForStage(child.stages[0].stageId) : null;
+		const actions = child.stages[0] ? await getStageActions(child.stages[0].stageId) : null;
 		return {
 			id: child.id,
 			title:
@@ -66,7 +66,7 @@ export default async function Page({
 		};
 	});
 	const children = await Promise.all(pubChildren);
-	const actions = pub.stages[0] ? await getActionsForStage(pub.stages[0].stageId) : null;
+	const actions = pub.stages[0] ? await getStageActions(pub.stages[0].stageId) : null;
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
