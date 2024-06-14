@@ -7,7 +7,6 @@ import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-
 export type PubChild = {
 	id: string;
 	title: string;
