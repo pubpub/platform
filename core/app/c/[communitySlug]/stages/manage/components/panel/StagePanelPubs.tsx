@@ -7,6 +7,8 @@ import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
+import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
 
@@ -26,7 +28,10 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		throw new Error("Stage not found");
 	}
 
-const StagePanelPubsInner = async (props: { stageId: StagesId }) => {
+	const actions = stageActionInstances.map((action) => ({
+		...action,
+	}));
+
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
