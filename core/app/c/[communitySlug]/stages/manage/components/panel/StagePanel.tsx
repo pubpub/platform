@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
+import { getStage } from "~/lib/queries/pub";
 import { StagePanelActions } from "./StagePanelActions";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
@@ -7,7 +8,6 @@ import { StagePanelPubs } from "./StagePanelPubs";
 import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
 import { StagePanelRules } from "./StagePanelRules";
 import { StagePanelSheet } from "./StagePanelSheet";
-import { getStage } from "~/lib/queries/pub";
 
 type Props = {
 	stageId: string | undefined;
