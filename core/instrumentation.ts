@@ -1,14 +1,10 @@
 import { logger } from "logger";
 
-import { registerCorePubField } from "./actions/_lib/init";
-import { corePubFields } from "./actions/corePubFields";
-
 export async function register() {
-	logger.info("Registering core fields");
-	for (const corePubField of corePubFields) {
-		logger.info(`Registering core field ${corePubField.slug}`);
-		await registerCorePubField(corePubField);
+	if (process.env.NEXT_RUNTIME === "edge") {
+		return;
 	}
+
 	logger.info(`Registering instrumentation hook for ${process.env.NEXT_RUNTIME}`);
 	if (process.env.NEXT_RUNTIME === "nodejs") {
 		if (process.env.NODE_ENV === "development") {
@@ -17,7 +13,7 @@ export async function register() {
 			);
 			return;
 		}
-		await import("./instrumentation.node");
+		await import("./instrumentation.node.mts");
 	} else {
 		logger.info("NEXT_RUNTIME is not `nodejs`; skipping OTEL registration.");
 	}
