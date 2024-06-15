@@ -13,11 +13,12 @@ import type {
 	QueryBuilderFunction,
 } from "./types";
 import type Database from "~/kysely/types/Database";
+import { databaseTables } from "~/kysely/table-names";
 
 export function findTables<T extends OperationNode>(
 	node: T | T[],
-	tables = new Set<keyof Database>()
-): Set<keyof Database> {
+	tables = new Set<string>()
+): Set<string> {
 	// console.log({ node });
 	if (Array.isArray(node)) {
 		for (const item of node) {
@@ -53,9 +54,16 @@ export function findTables<T extends OperationNode>(
 }
 
 export const cachedFindTables = // memoize(
-	async <T extends CompiledQuery<Simplify<any>>>(query: T) => {
+	async <T extends CompiledQuery<Simplify<any>>>(query: T): Promise<(keyof Database)[]> => {
 		const tables = findTables(query.query);
-		return Array.from(tables ?? []);
+		const tableArray = Array.from(tables ?? []);
+
+		const filteredTables = tableArray.filter(
+			(table): table is (typeof databaseTables)[number] =>
+				databaseTables.some((dbTable) => dbTable === table)
+		);
+
+		return filteredTables;
 	};
 //     ,
 // 	{
@@ -77,7 +85,7 @@ export const cachedFindTables = // memoize(
  * autoCache((userId) => db.selectFrom("...").where("id", "=", userId));
  * ```
  */
-export const directAutoOutput = <Q extends QB>(
+export const directAutoOutput = <Q extends QB<any>>(
 	qb: Q,
 	executeCreatorFn: ExecuteCreatorFn<
 		Q,
@@ -129,7 +137,7 @@ export const callbackExecute = <
  * autoCache(db.selectFrom("...").select("*"));
  * ```
  */
-export const callbackAutoOutput = <Q extends QB, P extends any[]>(
+export const callbackAutoOutput = <Q extends QB<any>, P extends any[]>(
 	queryFn: QueryBuilderFunction<Q, P>,
 	executeCreatorFn: ExecuteCreatorFn<
 		Q,

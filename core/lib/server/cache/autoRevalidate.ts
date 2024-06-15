@@ -10,13 +10,14 @@ import type {
 	MQB,
 	QueryBuilderFunction,
 } from "./types";
+import Database from "~/kysely/types/Database";
 import { env } from "~/lib/env/env.mjs";
-import { createCommunityCacheTag } from "./cacheTags";
+import { createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { cachedFindTables, callbackAutoOutput, directAutoOutput } from "./sharedAuto";
 
 const executeWithRevalidate = <
-	Q extends MQB,
+	Q extends MQB<any>,
 	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
 >(
 	qb: Q,
@@ -34,7 +35,7 @@ const executeWithRevalidate = <
 		// https://github.com/microsoft/TypeScript/issues/241
 		const result = await (qb[method]() as ReturnType<Q[M]>);
 
-		const tableTags = tables.map((table) => createCommunityCacheTag(table, communitySlug));
+		const tableTags = createCommunityCacheTags(tables, communitySlug);
 
 		const tagsToRevalidate = [...tableTags, ...(options?.additionalRevalidateTags ?? [])];
 
@@ -73,7 +74,7 @@ const executeWithRevalidate = <
  *
  * See {@link autoCache} for a more detailed explanation of the API.
  */
-export function autoRevalidate<Q extends MQB>(
+export function autoRevalidate<K extends keyof Database, Q extends MQB<K>>(
 	qb: Q,
 	options?: AutoRevalidateOptions
 ): {
@@ -82,7 +83,7 @@ export function autoRevalidate<Q extends MQB>(
 	executeTakeFirst: Q["executeTakeFirst"];
 	executeTakeFirstOrThrow: Q["executeTakeFirstOrThrow"];
 };
-export function autoRevalidate<P extends any[], Q extends MQB>(
+export function autoRevalidate<P extends any[], K extends keyof Database, Q extends MQB<K>>(
 	queryFn: QueryBuilderFunction<Q, P>,
 	options?: AutoRevalidateOptions
 ): {
@@ -91,7 +92,7 @@ export function autoRevalidate<P extends any[], Q extends MQB>(
 	executeTakeFirst: Q["executeTakeFirst"];
 	executeTakeFirstOrThrow: Q["executeTakeFirstOrThrow"];
 };
-export function autoRevalidate<P extends any[], Q extends MQB>(
+export function autoRevalidate<P extends any[], K extends keyof Database, Q extends MQB<K>>(
 	queryFnOrQb: Q | QueryBuilderFunction<Q, P>,
 	options?: AutoRevalidateOptions
 ) {
