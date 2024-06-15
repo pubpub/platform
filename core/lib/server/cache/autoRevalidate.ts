@@ -3,14 +3,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "logger";
 
 import type { autoCache } from "./autoCache";
-import type {
-	AutoCacheOptions,
-	AutoRevalidateOptions,
-	ExecuteFn,
-	MQB,
-	QueryBuilderFunction,
-} from "./types";
-import Database from "~/kysely/types/Database";
+import type { AutoRevalidateOptions, ExecuteFn, MQB, QueryBuilderFunction } from "./types";
+import type Database from "~/kysely/types/Database";
 import { env } from "~/lib/env/env.mjs";
 import { createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
@@ -29,7 +23,7 @@ const executeWithRevalidate = <
 
 		const compiledQuery = qb.compile();
 
-		const tables = await cachedFindTables(compiledQuery);
+		const tables = await cachedFindTables(compiledQuery, "mutation");
 
 		// necessary assertion here due to
 		// https://github.com/microsoft/TypeScript/issues/241

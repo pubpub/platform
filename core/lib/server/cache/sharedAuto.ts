@@ -1,6 +1,6 @@
 import type { CompiledQuery, OperationNode, Simplify } from "kysely";
 
-import { TableNode } from "kysely";
+import { SelectQueryNode, TableNode } from "kysely";
 
 import type {
 	AutoCacheOptions,
@@ -15,19 +15,28 @@ import type {
 import type Database from "~/kysely/types/Database";
 import { databaseTables } from "~/kysely/table-names";
 
+// import { ONE_DAY } from "./constants";
+// import { memoize } from "./memoize";
+
 export function findTables<T extends OperationNode>(
 	node: T | T[],
+	type: "select" | "mutation",
 	tables = new Set<string>()
 ): Set<string> {
-	// console.log({ node });
 	if (Array.isArray(node)) {
 		for (const item of node) {
-			findTables(item, tables);
+			findTables(item, type, tables);
 		}
 		return tables;
 	}
 
 	if (typeof node !== "object") {
+		return tables;
+	}
+
+	// we do not want to invalidate the cache for select queries made
+	// during mutations, as they are not (per se) affected by the mutation
+	if (type === "mutation" && SelectQueryNode.is(node)) {
 		return tables;
 	}
 
@@ -47,30 +56,35 @@ export function findTables<T extends OperationNode>(
 			continue;
 		}
 
-		findTables(value, tables);
+		findTables(value, type, tables);
 	}
 
 	return tables;
 }
 
-export const cachedFindTables = // memoize(
-	async <T extends CompiledQuery<Simplify<any>>>(query: T): Promise<(keyof Database)[]> => {
-		const tables = findTables(query.query);
-		const tableArray = Array.from(tables ?? []);
+export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
+	query: T,
+	type: "select" | "mutation"
+): Promise<(keyof Database)[]> => {
+	const getTables = async () => findTables(query.query, type);
+	// TODO: benchmark whether memoization is worth it
 
-		const filteredTables = tableArray.filter(
-			(table): table is (typeof databaseTables)[number] =>
-				databaseTables.some((dbTable) => dbTable === table)
-		);
+	// const getTables = memoize(() => findTables(query.query, type), {
+	// 	additionalCacheKey: [query.sql],
+	// 	// since this is just a computation of the tables from a query,
+	// 	// we don't really need to revalidate it
+	// 	duration: ONE_DAY,
+	// });
 
-		return filteredTables;
-	};
-//     ,
-// 	{
-// 		additionalCacheKey: (query) => [query.sql],
-// 		duration: 60 * 60,
-// 	}
-// );
+	const tables = await getTables();
+	const tableArray = Array.from(tables ?? []);
+
+	const filteredTables = tableArray.filter((table): table is (typeof databaseTables)[number] =>
+		databaseTables.some((dbTable) => dbTable === table)
+	);
+
+	return filteredTables;
+};
 
 /**
  * For when using

@@ -25,7 +25,7 @@ const executeWithCache = <
 
 		const compiledQuery = qb.compile();
 
-		const tables = await cachedFindTables(compiledQuery);
+		const tables = await cachedFindTables(compiledQuery, "select");
 
 		const cachedExecute = memoize(
 			async <M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow">(
