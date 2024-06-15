@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 /** @typedef {import("prettier-plugin-tailwindcss").PluginOptions} TailwindConfig */
 /** @typedef {import("@ianvs/prettier-plugin-sort-imports").PluginConfig} SortImportsConfig */
 
-/** @type { PrettierConfig | SortImportsConfig | TailwindConfig } */
+/** @type {PrettierConfig | SortImportsConfig | TailwindConfig} */
 const config = {
 	arrowParens: "always",
 	printWidth: 100,
@@ -12,7 +12,11 @@ const config = {
 	trailingComma: "es5",
 	useTabs: true,
 	singleQuote: false,
-	plugins: ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
+	plugins: [
+		"@ianvs/prettier-plugin-sort-imports",
+		"prettier-plugin-tailwindcss",
+		"prettier-plugin-jsdoc",
+	],
 	// tailwindConfig: fileURLToPath(
 	//   new URL("../../tooling/tailwind/web.ts", import.meta.url),
 	// ),
@@ -39,6 +43,8 @@ const config = {
 	],
 	importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
 	importOrderTypeScriptVersion: "4.5.0",
+	jsdocPreferCodeFences: true,
+	tsdoc: true,
 };
 
 export default config;
