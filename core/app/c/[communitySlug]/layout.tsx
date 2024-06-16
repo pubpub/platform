@@ -1,4 +1,3 @@
-import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 
@@ -34,8 +33,6 @@ export default async function MainLayout({ children, params }: Props) {
 	if (!community) {
 		return null;
 	}
-	const header = headers().get("x-pathname");
-	console.log(header);
 
 	// const member = await prisma.member.findFirst({
 	// 	where: { userId: loginData.id, communityId: community.id },
