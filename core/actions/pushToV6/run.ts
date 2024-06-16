@@ -9,6 +9,7 @@ import type { action } from "./action";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { isClientExceptionOptions } from "~/lib/serverActions";
 import * as corePubFields from "../corePubFields";
 import { defineRun } from "../types";
@@ -159,17 +160,21 @@ const updateV6PubText = async (
 };
 
 const updateV6PubId = async (pubId: string, v6PubId: string) => {
-	await db
-		.with("field", (db) =>
-			db.selectFrom("pub_fields").select("id").where("slug", "=", corePubFields.v6PubId.slug)
-		)
-		.insertInto("pub_values")
-		.values((eb) => ({
-			field_id: eb.selectFrom("field").select("field.id"),
-			pub_id: pubId as PubsId,
-			value: `"${v6PubId}"`,
-		}))
-		.execute();
+	await autoRevalidate(
+		db
+			.with("field", (db) =>
+				db
+					.selectFrom("pub_fields")
+					.select("id")
+					.where("slug", "=", corePubFields.v6PubId.slug)
+			)
+			.insertInto("pub_values")
+			.values((eb) => ({
+				field_id: eb.selectFrom("field").select("field.id"),
+				pub_id: pubId as PubsId,
+				value: `"${v6PubId}"`,
+			}))
+	).execute();
 };
 
 export const run = defineRun<typeof action>(async ({ pub, config, runParameters }) => {

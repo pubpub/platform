@@ -1,63 +1,47 @@
-import { unstable_cache } from "next/cache";
+import type { Community } from "@prisma/client";
+
 import { notFound } from "next/navigation";
-import { Community } from "@prisma/client";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { TableMember } from "./getMemberTableColumns";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { db } from "~/kysely/database";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import prisma from "~/prisma/db";
 import { AddMember } from "./AddMember";
 import { AddMemberDialog } from "./AddMemberDialog";
-import { TableMember } from "./getMemberTableColumns";
 import { MemberTable } from "./MemberTable";
 
-const getCachedMembers = async (community: Community) =>
-	autoCache(
-		db
-			.selectFrom("members")
-			.select((eb) => [
-				"members.id as id",
-				"canAdmin",
-				"members.community_id as community_id",
-				"created_at as createdAt",
-				jsonObjectFrom(
-					eb
-						.selectFrom("users")
-						.select([
-							"user_id as id",
-							"users.firstName as firstName",
-							"users.lastName as lastName",
-							"users.avatar as avatar",
-							"users.email as email",
-							"users.created_at as createdAt",
-							"users.isSuperAdmin as isSuperAdmin",
-							"users.slug as slug",
-							"users.supabaseId as supabaseId",
-						])
-						.whereRef("users.id", "=", "members.user_id")
-				).as("user"),
-			])
-			.where("community_id", "=", community.id as CommunitiesId),
-		community.id as CommunitiesId,
-		{
-			logid: "hey",
-			log: ["verbose", "datacache", "dedupe"],
-		}
-	);
-// await unstable_cache(
-// 	async () => {
-// 		const members = await prisma.member.findMany({
-// 			where: { community: { id: community.id } },
-// 			include: { user: true },
-// 		});
-
-// 		return members;
-// 	},
-// 	[community.id],
-// 	{ tags: [`members_${community.id}`] }
-// )();
+const getCachedMembers = autoCache((community: Community) => ({
+	qb: db
+		.selectFrom("members")
+		.select((eb) => [
+			"members.id as id",
+			"canAdmin",
+			"members.community_id as community_id",
+			"created_at as createdAt",
+			jsonObjectFrom(
+				eb
+					.selectFrom("users")
+					.select([
+						"user_id as id",
+						"users.firstName as firstName",
+						"users.lastName as lastName",
+						"users.avatar as avatar",
+						"users.email as email",
+						"users.created_at as createdAt",
+						"users.isSuperAdmin as isSuperAdmin",
+						"users.slug as slug",
+						"users.supabaseId as supabaseId",
+					])
+					.whereRef("users.id", "=", "members.user_id")
+			)
+				.$notNull()
+				.as("user"),
+		])
+		.where("community_id", "=", community.id as CommunitiesId),
+}));
 
 export default async function Page({
 	params: { communitySlug, add },
@@ -97,7 +81,7 @@ export default async function Page({
 
 	const page = parseInt(searchParams.page ?? "1", 10);
 
-	const members = await getCachedMembers(community);
+	const members = await getCachedMembers.execute(community);
 
 	if (!members.length && page !== 1) {
 		return notFound();
@@ -112,7 +96,7 @@ export default async function Page({
 			lastName: user.lastName,
 			admin: canAdmin,
 			email: user.email,
-			joined: new Date(createdAt),
+			joined: new Date(createdAt).toLocaleString(),
 		} satisfies TableMember;
 	});
 

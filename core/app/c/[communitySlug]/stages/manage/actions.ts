@@ -2,8 +2,6 @@
 
 import type { Action as PrismaAction } from "@prisma/client";
 
-import { revalidateTag } from "next/cache";
-
 import { logger } from "logger";
 
 import type Action from "~/kysely/types/public/Action";
@@ -11,6 +9,8 @@ import type Event from "~/kysely/types/public/Event";
 import type { RulesId } from "~/kysely/types/public/Rules";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { revalidateTagForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
 
@@ -22,6 +22,7 @@ async function deleteStages(stageIds: string[]) {
 			},
 		},
 	});
+	revalidateTagForCommunity(["stages", "PubsInStages"]);
 }
 
 async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
@@ -57,7 +58,7 @@ export const createStage = defineServerAction(async function createStage(communi
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagForCommunity(["stages", "PubsInStages"]);
 	}
 });
 
@@ -77,7 +78,7 @@ export const deleteStage = defineServerAction(async function deleteStage(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagForCommunity(["stages", "PubsInStages"]);
 	}
 });
 
@@ -107,7 +108,7 @@ export const createMoveConstraint = defineServerAction(async function createMove
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagForCommunity(["move_constraint"]);
 	}
 });
 
@@ -132,7 +133,7 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 				cause: error,
 			};
 		} finally {
-			revalidateTag(`community-stages_${communityId}`);
+			revalidateTagForCommunity(["move_constraint"]);
 		}
 	}
 );
@@ -157,14 +158,12 @@ export const updateStageName = defineServerAction(async function updateStageName
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagForCommunity(["stages"]);
 	}
 });
 
-export const revalidateStages = defineServerAction(async function revalidateStages(
-	communityId: string
-) {
-	revalidateTag(`community-stages_${communityId}`);
+export const revalidateStages = defineServerAction(async function revalidateStages() {
+	revalidateTagForCommunity(["stages", "PubsInStages"]);
 });
 
 export const addAction = defineServerAction(async function addAction(
@@ -190,7 +189,7 @@ export const addAction = defineServerAction(async function addAction(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagForCommunity(["stages", "PubsInStages", "action_instances"]);
 	}
 });
 
@@ -204,15 +203,12 @@ export const updateAction = defineServerAction(async function updateAction(
 		  }
 		| { name: string; config?: undefined }
 ) {
-	try {
-		await db
+	await autoRevalidate(
+		db
 			.updateTable("action_instances")
 			.set(props.name ? { name: props.name } : { config: props.config })
 			.where("id", "=", actionInstanceId)
-			.executeTakeFirstOrThrow();
-	} finally {
-		revalidateTag(`community-stages_${communityId}`);
-	}
+	).executeTakeFirstOrThrow();
 });
 
 export const deleteAction = defineServerAction(async function deleteAction(
@@ -231,7 +227,7 @@ export const deleteAction = defineServerAction(async function deleteAction(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagForCommunity(["action_instances"]);
 	}
 });
 
@@ -241,10 +237,9 @@ export const addRule = defineServerAction(async function addRule(
 	communityId: string
 ) {
 	try {
-		await db
-			.insertInto("rules")
-			.values({ action_instance_id: actionInstanceId, event })
-			.executeTakeFirstOrThrow();
+		await autoRevalidate(
+			db.insertInto("rules").values({ action_instance_id: actionInstanceId, event })
+		).executeTakeFirstOrThrow();
 	} catch (error) {
 		logger.error(error);
 		return {
@@ -252,7 +247,6 @@ export const addRule = defineServerAction(async function addRule(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
 	}
 });
 
@@ -261,7 +255,7 @@ export const deleteRule = defineServerAction(async function deleteRule(
 	communityId: string
 ) {
 	try {
-		await db.deleteFrom("rules").where("id", "=", ruleId).executeTakeFirst();
+		await autoRevalidate(db.deleteFrom("rules").where("id", "=", ruleId)).execute();
 	} catch (error) {
 		logger.error(error);
 		return {
@@ -269,6 +263,5 @@ export const deleteRule = defineServerAction(async function deleteRule(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
 	}
 });

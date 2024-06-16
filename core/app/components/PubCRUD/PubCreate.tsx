@@ -8,6 +8,7 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type PublicSchema from "~/kysely/types/public/PublicSchema";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 export type CreatePubProps =
@@ -20,83 +21,87 @@ export type CreatePubProps =
 			communityId?: never;
 	  };
 
-const getCommunityById = <
-	K extends keyof PublicSchema,
-	EB extends ExpressionBuilder<PublicSchema, keyof PublicSchema>,
->(
-	eb: EB,
-	communityId: CommunitiesId | ExpressionWrapper<PublicSchema, "stages", CommunitiesId>
-) => {
-	const query = eb.selectFrom("communities").select((eb) => [
-		"communities.id",
-		jsonArrayFrom(
-			eb
-				.selectFrom("pub_types")
-				.select((eb) => [
-					"pub_types.id",
-					"pub_types.name",
-					"pub_types.description",
-					jsonArrayFrom(
-						eb
-							.selectFrom("pub_fields")
-							.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
-							.select((eb) => [
-								"pub_fields.id",
-								"pub_fields.name",
-								"pub_fields.pubFieldSchemaId",
-								"pub_fields.slug",
-								"pub_fields.name",
-								jsonObjectFrom(
-									eb
-										.selectFrom("PubFieldSchema")
-										.select([
-											"PubFieldSchema.id",
-											"PubFieldSchema.namespace",
-											"PubFieldSchema.name",
-											"PubFieldSchema.schema",
-										])
-										.whereRef(
-											"PubFieldSchema.id",
-											"=",
-											eb.ref("pub_fields.pubFieldSchemaId")
-										)
-								).as("schema"),
-							])
-							.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
-					).as("fields"),
-				])
-				.whereRef("pub_types.community_id", "=", eb.ref("communities.id"))
-		).as("pubTypes"),
-		jsonArrayFrom(
-			eb
-				.selectFrom("stages")
-				.select(["stages.id", "stages.name", "stages.order"])
-				.orderBy("stages.order desc")
-				.where("stages.community_id", "=", communityId)
-		).as("stages"),
-	]);
+const getCommunityById = autoCache(
+	<EB extends ExpressionBuilder<PublicSchema, keyof PublicSchema>>(
+		eb: EB,
+		communityId: CommunitiesId | ExpressionWrapper<PublicSchema, "stages", CommunitiesId>
+	) => {
+		const query = eb.selectFrom("communities").select((eb) => [
+			"communities.id",
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_types")
+					.select((eb) => [
+						"pub_types.id",
+						"pub_types.name",
+						"pub_types.updated_at",
+						"pub_types.description",
+						jsonArrayFrom(
+							eb
+								.selectFrom("pub_fields")
+								.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
+								.select((eb) => [
+									"pub_fields.id",
+									"pub_fields.name",
+									"pub_fields.pubFieldSchemaId",
+									"pub_fields.slug",
+									"pub_fields.name",
+									jsonObjectFrom(
+										eb
+											.selectFrom("PubFieldSchema")
+											.select([
+												"PubFieldSchema.id",
+												"PubFieldSchema.namespace",
+												"PubFieldSchema.name",
+												"PubFieldSchema.schema",
+											])
+											.whereRef(
+												"PubFieldSchema.id",
+												"=",
+												eb.ref("pub_fields.pubFieldSchemaId")
+											)
+									).as("schema"),
+								])
+								.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
+						).as("fields"),
+					])
+					.whereRef("pub_types.community_id", "=", eb.ref("communities.id"))
+			).as("pubTypes"),
+			jsonArrayFrom(
+				eb
+					.selectFrom("stages")
+					.select(["stages.id", "stages.name", "stages.order"])
+					.orderBy("stages.order desc")
+					.where("stages.community_id", "=", communityId)
+			).as("stages"),
+		]);
 
-	const completeQuery =
-		typeof communityId === "string"
-			? query.where("communities.id", "=", communityId)
-			: query.whereRef("communities.id", "=", communityId);
+		const completeQuery =
+			typeof communityId === "string"
+				? query.where("communities.id", "=", communityId)
+				: query.whereRef("communities.id", "=", communityId);
 
-	return completeQuery;
-	// .executeTakeFirstOrThrow();
-};
+		return { qb: completeQuery };
+		// .executeTakeFirstOrThrow();
+	}
+);
 
-const getStage = (stageId: StagesId) => {
-	return db
-		.selectFrom("stages")
-		.select((eb) => [
-			"stages.id",
-			"stages.community_id",
-			"stages.name",
-			"stages.order",
-			jsonObjectFrom(getCommunityById(eb, eb.ref("stages.community_id"))).as("community"),
-		])
-		.where("stages.id", "=", stageId);
-};
+const getStage = autoCache((stageId: StagesId) => {
+	return {
+		qb: db
+			.selectFrom("stages")
+			.select((eb) => [
+				"stages.id",
+				"stages.community_id",
+				"stages.name",
+				"stages.order",
+				jsonObjectFrom(getCommunityById.getQb(eb, eb.ref("stages.community_id")).qb).as(
+					"community"
+				),
+			])
+			.where("stages.id", "=", stageId),
+	};
+});
 
 const PubCreateForm = dynamic(
 	async () => {
@@ -109,13 +114,14 @@ const PubCreateForm = dynamic(
 
 export async function PubCreate({ communityId, stageId }: CreatePubProps) {
 	const query = stageId
-		? getStage(stageId)
-		: getCommunityById(
+		? getStage.executeTakeFirstOrThrow(stageId)
+		: getCommunityById.executeTakeFirstOrThrow(
 				// @ts-expect-error FIXME: I don't know how to fix this
 				db,
 				communityId
 			);
-	const result = await query.executeTakeFirstOrThrow();
+
+	const result = await query;
 
 	const { community, ...stage } = "community_id" in result ? result : { community: result };
 	const currentStage = "id" in stage ? stage : null;
