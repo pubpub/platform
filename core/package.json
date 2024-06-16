@@ -5,6 +5,7 @@
 	"scripts": {
 		"playwright:test": "playwright test",
 		"playwright:ui": "playwright test --ui",
+		"clear-cache": "rm -rf .next/cache/fetch-cache",
 		"dev": "next dev -p 3000 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
@@ -21,7 +22,7 @@
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
 		"prebuild": "prisma generate",
 		"start": "next start",
-		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature",
+		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",
 		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch"
@@ -61,7 +62,7 @@
 		"eta": "^3.1.1",
 		"graphile-worker": "^0.16.5",
 		"jsonwebtoken": "^9.0.0",
-		"kysely": "^0.27.2",
+		"kysely": "^0.27.3",
 		"logger": "workspace:*",
 		"lucide-react": "^0.356.0",
 		"next": "14.2.4",
