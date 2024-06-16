@@ -15,7 +15,7 @@ const config = {
 	plugins: [
 		"@ianvs/prettier-plugin-sort-imports",
 		"prettier-plugin-tailwindcss",
-		"prettier-plugin-jsdoc",
+		//		"prettier-plugin-jsdoc",
 	],
 	// tailwindConfig: fileURLToPath(
 	//   new URL("../../tooling/tailwind/web.ts", import.meta.url),
@@ -43,8 +43,8 @@ const config = {
 	],
 	importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
 	importOrderTypeScriptVersion: "4.5.0",
-	jsdocPreferCodeFences: true,
-	tsdoc: true,
+	// jsdocPreferCodeFences: true,
+	// tsdoc: true,
 };
 
 export default config;
