@@ -56,9 +56,9 @@ export type QueryBuilderFunction<Q extends QB<any>, P extends any[]> = (
 
 export type QueryBuilderFromQueryBuilderFunction<QBF extends QueryBuilderFunction<any, any>> =
 	QBF extends (...args: infer P) => infer MaybePromiseQ
-		? MaybePromiseQ extends Promise<{ qb: infer Q extends QB }>
+		? MaybePromiseQ extends Promise<{ qb: infer Q extends QB<any> }>
 			? Q
-			: MaybePromiseQ extends { qb: infer Q extends QB }
+			: MaybePromiseQ extends { qb: infer Q extends QB<any> }
 				? Q
 				: never
 		: never;

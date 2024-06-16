@@ -6,6 +6,9 @@ import { expect, it, vitest } from "vitest";
 
 import type { QB } from "./types";
 import type Database from "~/kysely/types/Database";
+import type { UsersId } from "~/kysely/types/public/Users";
+import type { Equal, Expect } from "~/lib/types";
+import { autoRevalidate } from "./autoRevalidate";
 import { cachedFindTables } from "./sharedAuto";
 
 const mockedDb = new Kysely<Database>({
@@ -216,5 +219,77 @@ describe("cachedFindTables", () => {
 		const tables = await compileAndFindTables(query, "mutation");
 
 		expect(tables).toEqual(["members"]);
+
+		// function here to make sure the query is not executed
+		() => {
+			const revalidatedQuery = autoRevalidate(query);
+
+			type CorrectQuery = Expect<Equal<(typeof revalidatedQuery)["qb"], typeof query>>;
+			type CorrectExecuteResult = Expect<
+				Equal<
+					ReturnType<(typeof revalidatedQuery)["execute"]>,
+					ReturnType<(typeof query)["execute"]>
+				>
+			>;
+		};
+	});
+
+	it("should find the tables for a delete query", async () => {
+		const query = mockedDb.deleteFrom("users").where("users.id", "=", "x" as UsersId);
+
+		const tables = await compileAndFindTables(query, "mutation");
+
+		expect(tables).toEqual(["users"]);
+
+		() => {
+			const revalidateQuery = autoRevalidate(query);
+
+			type CorrectQuery = Expect<
+				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
+			>;
+
+			const queryWithReturning = query.returning("id");
+			const revalidateQueryWithReturning = autoRevalidate(queryWithReturning);
+
+			type CorrectReturningQuery = Expect<
+				Equal<
+					(typeof revalidateQueryWithReturning)["execute"],
+					(typeof queryWithReturning)["execute"]
+				>
+			>;
+
+			const revalidateCallbackQuery = autoRevalidate(() => ({ qb: query }));
+			type CorrectCallbackQuery = Expect<
+				Equal<(typeof revalidateCallbackQuery)["execute"], (typeof query)["execute"]>
+			>;
+
+			const revalidateCallbackQueryWithReturning = autoRevalidate(() => ({
+				qb: queryWithReturning,
+			}));
+
+			type CorrectCallbackQueryWithReturning = Expect<
+				Equal<
+					(typeof revalidateCallbackQueryWithReturning)["execute"],
+					(typeof queryWithReturning)["execute"]
+				>
+			>;
+
+			const revalidateCallbackAsyncQuery = autoRevalidate(async () => ({ qb: query }));
+
+			type CorrectCallbackAsyncQuery = Expect<
+				Equal<(typeof revalidateCallbackAsyncQuery)["execute"], (typeof query)["execute"]>
+			>;
+
+			const revalidateCallbackAsyncQueryWithReturning = autoRevalidate(async () => ({
+				qb: queryWithReturning,
+			}));
+
+			type CorrectCallbackAsyncQueryWithReturning = Expect<
+				Equal<
+					(typeof revalidateCallbackAsyncQueryWithReturning)["execute"],
+					(typeof queryWithReturning)["execute"]
+				>
+			>;
+		};
 	});
 });

@@ -3,7 +3,14 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "logger";
 
 import type { autoCache } from "./autoCache";
-import type { AutoRevalidateOptions, ExecuteFn, MQB, QueryBuilderFunction } from "./types";
+import type {
+	AutoRevalidateOptions,
+	CallbackAutoOutput,
+	DirectAutoOutput,
+	ExecuteFn,
+	MQB,
+	QueryBuilderFunction,
+} from "./types";
 import type Database from "~/kysely/types/Database";
 import { env } from "~/lib/env/env.mjs";
 import { createCommunityCacheTags } from "./cacheTags";
@@ -68,25 +75,15 @@ const executeWithRevalidate = <
  *
  * See {@link autoCache} for a more detailed explanation of the API.
  */
-export function autoRevalidate<K extends keyof Database, Q extends MQB<K>>(
+export function autoRevalidate<Q extends MQB<any>>(
 	qb: Q,
 	options?: AutoRevalidateOptions
-): {
-	qb: Q;
-	execute: Q["execute"];
-	executeTakeFirst: Q["executeTakeFirst"];
-	executeTakeFirstOrThrow: Q["executeTakeFirstOrThrow"];
-};
-export function autoRevalidate<P extends any[], K extends keyof Database, Q extends MQB<K>>(
-	queryFn: QueryBuilderFunction<Q, P>,
+): DirectAutoOutput<Q>;
+export function autoRevalidate<QF extends QueryBuilderFunction<any, any>>(
+	queryFn: QF,
 	options?: AutoRevalidateOptions
-): {
-	getQb: (args: P[]) => Q;
-	execute: Q["execute"];
-	executeTakeFirst: Q["executeTakeFirst"];
-	executeTakeFirstOrThrow: Q["executeTakeFirstOrThrow"];
-};
-export function autoRevalidate<P extends any[], K extends keyof Database, Q extends MQB<K>>(
+): CallbackAutoOutput<QF>;
+export function autoRevalidate<P extends any[], Q extends MQB<any>>(
 	queryFnOrQb: Q | QueryBuilderFunction<Q, P>,
 	options?: AutoRevalidateOptions
 ) {
