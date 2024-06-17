@@ -19,28 +19,28 @@ const getCachedMembers = autoCache((community: Community) => ({
 		.select((eb) => [
 			"members.id as id",
 			"canAdmin",
-			"members.community_id as community_id",
-			"created_at as createdAt",
+			"members.communityId",
+			"createdAt",
 			jsonObjectFrom(
 				eb
 					.selectFrom("users")
 					.select([
-						"user_id as id",
+						"userId as id",
 						"users.firstName as firstName",
 						"users.lastName as lastName",
 						"users.avatar as avatar",
 						"users.email as email",
-						"users.created_at as createdAt",
+						"users.createdAt as createdAt",
 						"users.isSuperAdmin as isSuperAdmin",
 						"users.slug as slug",
 						"users.supabaseId as supabaseId",
 					])
-					.whereRef("users.id", "=", "members.user_id")
+					.whereRef("users.id", "=", "members.userId")
 			)
 				.$notNull()
 				.as("user"),
 		])
-		.where("community_id", "=", community.id as CommunitiesId),
+		.where("communityId", "=", community.id as CommunitiesId),
 }));
 
 export default async function Page({

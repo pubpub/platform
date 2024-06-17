@@ -38,8 +38,8 @@ export const updateUserInfo = defineServerAction(async function updateUserInfo({
 				// properly, which is obviously impossible
 				db
 					.selectFrom("members")
-					.where("user_id", "=", data.id as UsersId)
-					.innerJoin("communities", "members.community_id", "communities.id")
+					.where("userId", "=", data.id as UsersId)
+					.innerJoin("communities", "members.communityId", "communities.id")
 					.select(["communities.slug"])
 			)
 			.with("updatedUser", (db) =>

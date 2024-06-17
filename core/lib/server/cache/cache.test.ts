@@ -59,7 +59,7 @@ describe("cachedFindTables", () => {
 		const qb = mockedDb
 			.selectFrom("users")
 			.select(["id", "firstName"])
-			.where("id", "=", mockedDb.selectFrom("members").select("user_id").limit(1));
+			.where("id", "=", mockedDb.selectFrom("members").select("userId").limit(1));
 
 		const tables = await compileAndFindTables(qb, "select");
 
@@ -70,7 +70,7 @@ describe("cachedFindTables", () => {
 		const qb = mockedDb
 			.selectFrom("users")
 			.select(["id", "firstName"])
-			.where("id", "=", [mockedDb.selectFrom("members").select("user_id").limit(1)]);
+			.where("id", "=", [mockedDb.selectFrom("members").select("userId").limit(1)]);
 
 		const tables = await compileAndFindTables(qb, "select");
 
@@ -88,8 +88,8 @@ describe("cachedFindTables", () => {
 			// members SHOULD be included in the to be invalidated tags
 			.insertInto("members")
 			.values((eb) => ({
-				user_id: eb.selectFrom("firstUser").select("firstUser.id"),
-				community_id: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
+				userId: eb.selectFrom("firstUser").select("firstUser.id"),
+				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
 				canAdmin: true,
 			}));
 
@@ -110,8 +110,8 @@ describe("cachedFindTables", () => {
 			.with("firstCommunity", (qb) => qb.selectFrom("communities").selectAll().limit(1))
 			.insertInto("members")
 			.values((eb) => ({
-				user_id: eb.selectFrom("firstUser").select("firstUser.id"),
-				community_id: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
+				userId: eb.selectFrom("firstUser").select("firstUser.id"),
+				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
 				canAdmin: true,
 			}));
 
@@ -159,7 +159,7 @@ describe("cachedFindTables", () => {
 								.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 						).as("fields"),
 					])
-					.whereRef("pub_types.community_id", "=", eb.ref("communities.id"))
+					.whereRef("pub_types.communityId", "=", eb.ref("communities.id"))
 			).as("pubTypes"),
 			jsonArrayFrom(
 				eb
@@ -207,12 +207,12 @@ describe("cachedFindTables", () => {
 
 	it("should not include joins in mutation queries", async () => {
 		const query = mockedDb.insertInto("members").values((eb) => ({
-			user_id: eb
+			userId: eb
 				.selectFrom("users")
-				.innerJoin("members", "members.user_id", "users.id")
-				.innerJoin("communities", "communities.id", "members.community_id")
+				.innerJoin("members", "members.userId", "users.id")
+				.innerJoin("communities", "communities.id", "members.communityId")
 				.select("users.id"),
-			community_id: eb.selectFrom("communities").select("communities.id"),
+			communityId: eb.selectFrom("communities").select("communities.id"),
 			canAdmin: true,
 		}));
 

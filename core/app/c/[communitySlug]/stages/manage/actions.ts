@@ -337,10 +337,7 @@ export const deleteRule = defineServerAction(async function deleteRule(
 			cause: error,
 		};
 	} finally {
-		// <<<<<<< HEAD
-		// =======
 		// 		revalidateTag(`community-stages_${communityId}`);
 		// 		revalidateTag(`community-action-runs_${communityId}`);
-		// >>>>>>> main
 	}
 });
