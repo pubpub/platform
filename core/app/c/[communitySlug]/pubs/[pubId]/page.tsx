@@ -132,18 +132,18 @@ export default async function Page({
 						</div>
 					</div>
 					<div className="mb-4">
-						<div className="mb-1 text-lg font-bold">Actions</div>
-						<div>
-							{actions ? (
-								<PubsRunActionDropDownMenu
-									actionInstances={actions}
-									pub={pub}
-									stage={stage!}
-								/>
+							{actions.length > 0 ? (
+								<div>
+									<div className="mb-1 text-lg font-bold">Actions</div>
+									<PubsRunActionDropDownMenu
+										actionInstances={actions}
+										pub={pub}
+										stage={stage!}
+									/>
+								</div>
 							) : (
-								<div>No actions exist on the pub</div>
+								null
 							)}
-						</div>
 					</div>
 
 					<div className="mb-4">
