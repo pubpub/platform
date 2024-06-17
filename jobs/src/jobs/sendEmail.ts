@@ -6,10 +6,10 @@ import { InstanceJobPayload } from "../types";
 
 export const sendEmail = defineJob(
 	async (
-		client: IntegrationClient,
 		payload: InstanceJobPayload<SendEmailRequestBody>,
 		logger,
-		job
+		job,
+		client: IntegrationClient
 	) => {
 		const { instanceId, body } = payload;
 		logger.info({ msg: `Sending email` });

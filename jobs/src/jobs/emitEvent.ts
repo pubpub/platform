@@ -1,6 +1,7 @@
 import type { logger } from "logger";
 
 import type { InternalClient } from "../clients";
+import { createInternalClient } from "../clients";
 import { defineJob } from "../defineJob";
 
 enum Event {
@@ -20,6 +21,9 @@ type DBTriggerEventPayload<T> = {
 	operation: string;
 	new: T;
 	old: T;
+	community: {
+		slug: string;
+	};
 };
 
 type ScheduledEventPayload = {
@@ -30,6 +34,9 @@ type ScheduledEventPayload = {
 	stageId: string;
 	pubId: string;
 	actionInstanceId: string;
+	community: {
+		slug: string;
+	};
 };
 
 type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
@@ -210,21 +217,28 @@ const processEventPayload = (
 	return [];
 };
 
-export const emitEvent = defineJob(
-	async (client: InternalClient, payload: EmitEventPayload, eventLogger, job) => {
-		eventLogger.info({ msg: "Starting emitEvent", payload });
+export const emitEvent = defineJob(async (payload: EmitEventPayload, eventLogger, job) => {
+	eventLogger.info({ msg: "Starting emitEvent", payload });
 
-		const completedActions = await Promise.allSettled(
-			processEventPayload(client, payload, eventLogger)
-		);
-
-		completedActions.forEach((action) => {
-			if (action.status === "rejected") {
-				eventLogger.error({
-					msg: "Unexpected error running emitEvent action",
-					error: action.reason,
-				});
-			}
+	if (!payload.community.slug) {
+		eventLogger.error({
+			msg: "No community slug found in payload, probably an old scheduled job",
+			payload,
 		});
+		return;
 	}
-);
+	const client = createInternalClient(payload.community.slug);
+
+	const completedActions = await Promise.allSettled(
+		processEventPayload(client, payload, eventLogger)
+	);
+
+	completedActions.forEach((action) => {
+		if (action.status === "rejected") {
+			eventLogger.error({
+				msg: "Unexpected error running emitEvent action",
+				error: action.reason,
+			});
+		}
+	});
+});

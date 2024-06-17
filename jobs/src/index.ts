@@ -8,7 +8,7 @@ import { sendEmail } from "./jobs/sendEmail";
 
 const makeTaskList = (clients: Clients): GraphileWorker.Tasks => ({
 	sendEmail: sendEmail(clients.integrationClient),
-	emitEvent: emitEvent(clients.internalClient),
+	emitEvent: emitEvent(),
 });
 
 const main = async () => {

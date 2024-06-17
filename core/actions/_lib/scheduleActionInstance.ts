@@ -12,6 +12,9 @@ import { db } from "~/kysely/database";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
 import Event from "~/kysely/types/public/Event";
 import { addDuration } from "~/lib/dates";
+import { autoCache } from "~/lib/server/cache/autoCache";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs";
 
 export const scheduleActionInstances = async ({
@@ -25,28 +28,29 @@ export const scheduleActionInstances = async ({
 		throw new Error("pubId and stageId are required");
 	}
 
-	const instances = await db
-		.selectFrom("action_instances")
-		.where("action_instances.stageId", "=", stageId)
-		.select((eb) => [
-			"id",
-			"name",
-			"config",
-			"stageId",
-			jsonArrayFrom(
-				eb
-					.selectFrom("rules")
-					.select([
-						"rules.id as id",
-						"rules.event as event",
-						"rules.config as config",
-						"actionInstanceId",
-					])
-					.where("rules.actionInstanceId", "=", eb.ref("action_instances.id"))
-					.where("rules.event", "=", Event.pubInStageForDuration)
-			).as("rules"),
-		])
-		.execute();
+	const instances = await autoCache(
+		db
+			.selectFrom("action_instances")
+			.where("action_instances.stageId", "=", stageId)
+			.select((eb) => [
+				"id",
+				"name",
+				"config",
+				"stageId",
+				jsonArrayFrom(
+					eb
+						.selectFrom("rules")
+						.select([
+							"rules.id as id",
+							"rules.event as event",
+							"rules.config as config",
+							"actionInstanceId",
+						])
+						.where("rules.actionInstanceId", "=", eb.ref("action_instances.id"))
+						.where("rules.event", "=", Event.pubInStageForDuration)
+				).as("rules"),
+			])
+	).execute();
 
 	if (!instances.length) {
 		logger.debug({
@@ -71,7 +75,12 @@ export const scheduleActionInstances = async ({
 	);
 
 	if (!validRules.length) {
-		logger.warn({ msg: "No action instances found for pub", pubId, stageId, instances });
+		logger.debug({
+			msg: "No action instances connected to a pubInStageForDuration rule found for pub",
+			pubId,
+			stageId,
+			instances,
+		});
 		return;
 	}
 
@@ -85,6 +94,9 @@ export const scheduleActionInstances = async ({
 				interval: rule.config.interval,
 				stageId: stageId,
 				pubId,
+				community: {
+					slug: getCommunitySlug(),
+				},
 			});
 
 			const runAt = addDuration({
@@ -93,9 +105,8 @@ export const scheduleActionInstances = async ({
 			}).toISOString();
 
 			if (job.id) {
-				await db
-					.insertInto("action_runs")
-					.values({
+				await autoRevalidate(
+					db.insertInto("action_runs").values({
 						actionInstanceId: rule.actionInstanceId,
 						pubId: pubId,
 						status: ActionRunStatus.scheduled,
@@ -103,7 +114,7 @@ export const scheduleActionInstances = async ({
 						result: { scheduled: `Action scheduled for ${runAt}` },
 						event: Event.pubInStageForDuration,
 					})
-					.execute();
+				).execute();
 			}
 
 			return {
@@ -133,12 +144,13 @@ export const unscheduleAction = async ({
 		await jobsClient.unscheduleJob(jobKey);
 
 		// TODO: this should probably be set to "canceled" instead of deleting the run
-		await db
-			.deleteFrom("action_runs")
-			.where("actionInstanceId", "=", actionInstanceId)
-			.where("pubId", "=", pubId)
-			.where("action_runs.status", "=", ActionRunStatus.scheduled)
-			.execute();
+		await autoRevalidate(
+			db
+				.deleteFrom("action_runs")
+				.where("actionInstanceId", "=", actionInstanceId)
+				.where("pubId", "=", pubId)
+				.where("action_runs.status", "=", ActionRunStatus.scheduled)
+		).execute();
 
 		logger.debug({ msg: "Unscheduled action", actionInstanceId, stageId, pubId });
 	} catch (error) {

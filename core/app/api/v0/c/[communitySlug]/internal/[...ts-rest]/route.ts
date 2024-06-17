@@ -1,4 +1,3 @@
-import { revalidateTag } from "next/cache";
 import { createNextHandler } from "@ts-rest/serverless/next";
 
 import { api } from "contracts";
@@ -13,7 +12,6 @@ import { runActionInstance } from "~/actions/api/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import { tsRestHandleErrors } from "~/lib/server";
-import { findCommunityIdByPubId } from "~/lib/server/community";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
@@ -29,23 +27,11 @@ const handler = createNextHandler(
 
 			const { actionInstanceId } = params;
 
-			const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
-
-			const actionRunResultsPromise = runActionInstance({
+			const actionRunResults = await runActionInstance({
 				pubId: pubId as PubsId,
 				event: event as Event,
 				actionInstanceId: actionInstanceId as ActionInstancesId,
 			});
-
-			const [communityId, actionRunResults] = await Promise.all([
-				communityIdPromise,
-				actionRunResultsPromise,
-			]);
-
-			if (communityId) {
-				revalidateTag(`community-action-runs_${communityId}`);
-				revalidateTag(`community-stages_${communityId}`);
-			}
 
 			return {
 				status: 200,
@@ -58,23 +44,11 @@ const handler = createNextHandler(
 
 			const { stageId } = params;
 
-			const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
-
-			const actionRunResultsPromise = runInstancesForEvent(
+			const actionRunResults = await runInstancesForEvent(
 				pubId as PubsId,
 				stageId as StagesId,
 				event as Event
 			);
-
-			const [communityId, actionRunResults] = await Promise.all([
-				communityIdPromise,
-				actionRunResultsPromise,
-			]);
-
-			if (communityId) {
-				revalidateTag(`community-action-runs_${communityId}`);
-				revalidateTag(`community-stages_${communityId}`);
-			}
 
 			return {
 				status: 200,
@@ -86,21 +60,10 @@ const handler = createNextHandler(
 			const { pubId } = body;
 			const { stageId } = params;
 
-			const communityIdPromise = findCommunityIdByPubId(pubId as PubsId);
-			const actionScheduleResultsPromise = scheduleActionInstances({
+			const actionScheduleResults = await scheduleActionInstances({
 				pubId: pubId as PubsId,
 				stageId: stageId as StagesId,
 			});
-
-			const [communityId, actionScheduleResults] = await Promise.all([
-				communityIdPromise,
-				actionScheduleResultsPromise,
-			]);
-
-			if (communityId) {
-				revalidateTag(`community-action-runs_${communityId}`);
-				// no community stages as scheduling an action cannot changes the pubs in a stage
-			}
 
 			return {
 				status: 200,
@@ -110,7 +73,7 @@ const handler = createNextHandler(
 	},
 	{
 		handlerType: "app-router",
-		basePath: "/api/v0",
+		basePath: "/api/v0/c/:communitySlug",
 		jsonQuery: true,
 		errorHandler: tsRestHandleErrors,
 	}
