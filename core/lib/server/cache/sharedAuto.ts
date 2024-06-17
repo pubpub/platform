@@ -3,7 +3,7 @@ import type { CompiledQuery, OperationNode, Simplify } from "kysely";
 import { SelectQueryNode, TableNode } from "kysely";
 
 import type {
-	AutoCacheOptions,
+	AutoOptions,
 	CallbackAutoOutput,
 	DirectAutoOutput,
 	ExecuteCreatorFn,
@@ -14,9 +14,6 @@ import type {
 } from "./types";
 import type Database from "~/kysely/types/Database";
 import { databaseTables } from "~/kysely/table-names";
-
-// import { ONE_DAY } from "./constants";
-// import { memoize } from "./memoize";
 
 export function findTables<T extends OperationNode>(
 	node: T | T[],
@@ -105,7 +102,7 @@ export const directAutoOutput = <Q extends QB<any>>(
 		Q,
 		"execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"
 	>,
-	options?: AutoCacheOptions
+	options?: AutoOptions<Q>
 ) => {
 	return {
 		qb,
@@ -123,7 +120,7 @@ export const callbackExecute = <
 	queryFn: QBF,
 	method: M,
 	executeCreatorFn: ECF,
-	options?: AutoCacheOptions
+	options?: AutoOptions<QueryBuilderFromQueryBuilderFunction<QBF>>
 ) => {
 	const callbackExecuteFn = async (...args: Parameters<QBF>) => {
 		const { qb } = await queryFn(...args);
@@ -157,7 +154,7 @@ export const callbackAutoOutput = <Q extends QB<any>, P extends any[]>(
 		Q,
 		"execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"
 	>,
-	options?: AutoCacheOptions
+	options?: AutoOptions<Q>
 ) => {
 	return {
 		getQb: queryFn,

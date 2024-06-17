@@ -16,22 +16,26 @@ import { getCommunitySlug } from "./getCommunitySlug";
  * To use this outside of a community context, you can pass the community slug as an option.
  *
  * @param scope - The cache scope or an array of cache scopes.
- * @param communitySlug - Optionally, the slug of the community to revalidate tags for.
+ * @param communitySlug - Optionally, the slug of the community to revalidate tags for. can also be an array, in case you want to revalidate tags for multiple communities.
  * @returns Void
  */
-export const revalidateTagForCommunity = <S extends CacheScope>(
+export const revalidateTagsForCommunity = <S extends CacheScope>(
 	scope: S | S[],
-	communitySlug?: string
+	communitySlug?: string | string[]
 ): void => {
 	const slug = communitySlug ?? getCommunitySlug();
 
 	const scopes = Array.isArray(scope) ? scope : [scope];
 
-	const tags = createCommunityCacheTags(scopes, slug);
-	tags.forEach((tag) => {
-		if (env.CACHE_LOG) {
-			logger.debug(`MANUAL REVALIDATE: revalidating tag: ${tag}`);
-		}
-		revalidateTag(tag);
+	const slugs = Array.isArray(slug) ? slug : [slug];
+
+	slugs.forEach((slug) => {
+		const tags = createCommunityCacheTags(scopes, slug);
+		tags.forEach((tag) => {
+			if (env.CACHE_LOG) {
+				logger.debug(`MANUAL REVALIDATE: revalidating tag: ${tag}`);
+			}
+			revalidateTag(tag);
+		});
 	});
 };

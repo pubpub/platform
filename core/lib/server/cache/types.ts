@@ -34,8 +34,8 @@ export type AutoCacheOptions = Omit<
 export type AutoRevalidateOptions = {
 	additionalRevalidateTags?: CacheTag[];
 	additionalRevalidatePaths?: string[];
-	/** The slug of the community, in case the query is being made outside of a scoped community path */
-	communitySlug?: string;
+	/** The slug(s) of the community(ies), in case the query is being made outside of a scoped community path */
+	communitySlug?: string | string[];
 };
 
 export type AutoOptions<Q extends QB<any>> = Q extends SQB

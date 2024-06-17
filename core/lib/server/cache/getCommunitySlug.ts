@@ -8,7 +8,6 @@ import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME } from "./constants";
  * Experimental and likely unstable way to get the community slug.
  *
  * Under the hood this uses `next`s undocumented (probably for a reason)
- *
  */
 export const _experimental_getCommunitySlug = cache(() => {
 	const params = getParams();
@@ -24,9 +23,7 @@ export class NotInCommunityError extends Error {
 	message = "Not in route scoped under a community";
 }
 
-/**
- * This requires the middleware to be correctly configured
- */
+/** This requires the middleware to be correctly configured */
 export const getCommunitySlug = cache(() => {
 	const cookie = cookies().get(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
 

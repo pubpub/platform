@@ -7,7 +7,7 @@ import type {
 	QueryBuilderFunction,
 	SQB,
 } from "./types";
-import { createCommunityCacheTags } from "./cacheTags";
+import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { memoize } from "./memoize";
 import { cachedFindTables, callbackAutoOutput, directAutoOutput } from "./sharedAuto";
@@ -41,6 +41,7 @@ const executeWithCache = <
 				...options,
 				revalidateTags: [
 					...createCommunityCacheTags(tables, communitySlug),
+					createCacheTag(`community-all_${communitySlug}`),
 					...(options?.additionalRevalidateTags ?? []),
 				],
 				additionalCacheKey: [

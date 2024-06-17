@@ -8,7 +8,7 @@ import type { userInfoFormSchema } from "./UserInfoForm";
 import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
-import { revalidateTagForCommunity } from "~/lib/server/cache/revalidate";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
 export const updateUserInfo = defineServerAction(async function updateUserInfo({
@@ -29,35 +29,32 @@ export const updateUserInfo = defineServerAction(async function updateUserInfo({
 	try {
 		// since a user is one of the few entities that exist cross-community,
 		// we need to manually invalidate all the communities they are a part of
+		// it's also not a good idea to cache this query
+		// as, again, this query sits outside of the community scope
+		// and thus is hard to invalidate using only community scoped tags
+		// as we would need to know the result of this query in order to tag it
+		// properly, which is obviously impossible
 		const communitySlugs = await db
-			.with("userCommunitieSlugs", (db) =>
-				// it's also not a good idea to cache this query
-				// as, again, this query sits outside of the community scope
-				// and thus is hard to invalidate using only community scoped tags
-				// as we would need to know the result of this query in order to tag it
-				// properly, which is obviously impossible
-				db
-					.selectFrom("members")
-					.where("userId", "=", data.id as UsersId)
-					.innerJoin("communities", "members.communityId", "communities.id")
-					.select(["communities.slug"])
-			)
-			.with("updatedUser", (db) =>
-				db
-					.updateTable("users")
-					.set({
-						firstName,
-						lastName,
-						email,
-						avatar,
-					})
-					.where("id", "=", data.id as UsersId)
-			)
-			.selectFrom("userCommunitieSlugs")
-			.select("userCommunitieSlugs.slug")
+			.selectFrom("members")
+			.where("userId", "=", data.id as UsersId)
+			.innerJoin("communities", "members.communityId", "communities.id")
+			.select(["communities.slug"])
 			.execute();
 
-		communitySlugs.forEach(({ slug }) => revalidateTagForCommunity("users", slug));
+		await autoRevalidate(
+			db
+				.updateTable("users")
+				.set({
+					firstName,
+					lastName,
+					email,
+					avatar,
+				})
+				.where("id", "=", data.id as UsersId),
+			{
+				communitySlug: communitySlugs.map((slug) => slug.slug),
+			}
+		).execute();
 
 		revalidatePath("/settings");
 		return { success: true };

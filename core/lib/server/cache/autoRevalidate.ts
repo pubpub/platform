@@ -15,6 +15,7 @@ import type Database from "~/kysely/types/Database";
 import { env } from "~/lib/env/env.mjs";
 import { createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
+import { revalidateTagsForCommunity } from "./revalidate";
 import { cachedFindTables, callbackAutoOutput, directAutoOutput } from "./sharedAuto";
 
 const executeWithRevalidate = <
@@ -28,6 +29,8 @@ const executeWithRevalidate = <
 	const executeFn = async () => {
 		const communitySlug = options?.communitySlug ?? getCommunitySlug();
 
+		const communitySlugs = Array.isArray(communitySlug) ? communitySlug : [communitySlug];
+
 		const compiledQuery = qb.compile();
 
 		const tables = await cachedFindTables(compiledQuery, "mutation");
@@ -36,11 +39,12 @@ const executeWithRevalidate = <
 		// https://github.com/microsoft/TypeScript/issues/241
 		const result = await (qb[method]() as ReturnType<Q[M]>);
 
-		const tableTags = createCommunityCacheTags(tables, communitySlug);
+		revalidateTagsForCommunity(tables, communitySlugs);
 
-		const tagsToRevalidate = [...tableTags, ...(options?.additionalRevalidateTags ?? [])];
+		// const tableTags = createCommunityCacheTags(tables, communitySlug);
 
-		tagsToRevalidate.forEach((tag) => {
+		// const tagsToRevalidate = [...tableTags, ...(options?.additionalRevalidateTags ?? [])];
+		[...(options?.additionalRevalidateTags ?? [])].forEach((tag) => {
 			if (env.CACHE_LOG) {
 				logger.debug(`AUTOREVALIDATE: Revalidating tag: ${tag}`);
 			}
