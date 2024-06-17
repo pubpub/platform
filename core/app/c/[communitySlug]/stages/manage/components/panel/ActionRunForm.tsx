@@ -55,7 +55,7 @@ export const ActionRunForm = ({
 						// TODO: SHOULD ABSOLUTELY BE SANITIZED
 						description: (
 							<div
-								className="h-40 w-80 overflow-auto"
+								className="max-h-40 max-w-sm overflow-auto"
 								dangerouslySetInnerHTML={{ __html: result.report ?? "" }}
 							/>
 						),
