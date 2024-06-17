@@ -14,6 +14,7 @@ type Job<C extends Client, Payload, Output> = (
 export const defineJob = <C extends Client, Payload, Output>(job: Job<C, Payload, Output>) => {
 	return (client?: C) => (payload: Payload, helpers: JobHelpers) => {
 		const jobLogger = baseLogger.child({
+			payload,
 			job: helpers.job,
 		});
 

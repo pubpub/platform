@@ -220,10 +220,10 @@ const processEventPayload = (
 export const emitEvent = defineJob(async (payload: EmitEventPayload, eventLogger, job) => {
 	eventLogger.info({ msg: "Starting emitEvent", payload });
 
-	if (!payload.community.slug) {
+	if (!payload?.community?.slug) {
 		eventLogger.error({
 			msg: "No community slug found in payload, probably an old scheduled job",
-			payload,
+			job,
 		});
 		return;
 	}
