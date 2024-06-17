@@ -2,9 +2,7 @@
 
 import { DropdownMenuItem } from "ui/dropdown-menu";
 
-export const PubsRunActionDropDownMenuItem = (
-	props: Parameters<typeof DropdownMenuItem>[0]
-) => {
+export const PubsRunActionDropDownMenuItem = (props: Parameters<typeof DropdownMenuItem>[0]) => {
 	return (
 		<DropdownMenuItem
 			{...props}

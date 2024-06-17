@@ -4,12 +4,13 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 
+import type { StagePub } from "~/lib/db/queries";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
-import { getStageActions, getStage } from "~/lib/db/queries";
+import { getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
@@ -48,9 +49,18 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 
-	const stage = await getStage(pub.stages[0].stageId);
 	const pubChildren = pub.children.map(async (child) => {
-		const actions = child.stages[0] ? await getStageActions(child.stages[0].stageId) : null;
+		const [stageActionInstances, stage] = await Promise.all([
+			getStageActions(child.stages[0].stageId),
+			getStage(child.stages[0].stageId),
+		]);
+
+		if (!stage) {
+			throw new Error("Stage not found");
+		}
+		const actions = stageActionInstances.map((action) => ({
+			...action,
+		}));
 		return {
 			id: child.id,
 			title:
@@ -60,14 +70,22 @@ export default async function Page({
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
 			actions: actions ? (
-				<PubsRunActionDropDownMenu actionInstances={actions} pub={child} stage={stage}/>
+				<PubsRunActionDropDownMenu
+					actionInstances={actions}
+					pub={child as unknown as StagePub}
+					stage={stage!}
+				/>
 			) : (
 				<div>No actions exist on the pub</div>
 			),
 		};
 	});
 	const children = await Promise.all(pubChildren);
-	const actions = pub.stages[0] ? await getStageActions(pub.stages[0].stageId) : null;
+
+	const [actions, stage] = await Promise.all([
+		getStageActions(pub.stages[0].stageId),
+		getStage(pub.stages[0].stageId),
+	]);
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
@@ -117,7 +135,11 @@ export default async function Page({
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						<div>
 							{actions ? (
-								<PubsRunActionDropDownMenu actionInstances={actions} pub={pub}/>
+								<PubsRunActionDropDownMenu
+									actionInstances={actions}
+									pub={pub}
+									stage={stage!}
+								/>
 							) : (
 								<div>No actions exist on the pub</div>
 							)}
