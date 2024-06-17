@@ -1,6 +1,5 @@
-
-import type { StagePub } from "~/lib/queries/pub";
-import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { StagePub } from "~/lib/db/queries";
+import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { Stages } from "~/kysely/types/public/Stages";

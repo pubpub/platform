@@ -9,7 +9,7 @@ import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getLoginData } from "~/lib/auth/loginData";
-import { getStageActions } from "~/lib/db/queries";
+import { getStageActions, getStage } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
@@ -48,6 +48,7 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 
+	const stage = await getStage(pub.stages[0].stageId);
 	const pubChildren = pub.children.map(async (child) => {
 		const actions = child.stages[0] ? await getStageActions(child.stages[0].stageId) : null;
 		return {
@@ -59,7 +60,7 @@ export default async function Page({
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
 			actions: actions ? (
-				<PubsRunActionDropDownMenu actionInstances={actions} pub={child} />
+				<PubsRunActionDropDownMenu actionInstances={actions} pub={child} stage={stage}/>
 			) : (
 				<div>No actions exist on the pub</div>
 			),
