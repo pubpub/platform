@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
@@ -13,9 +14,8 @@ import { getStageActions } from "~/lib/queries/pub";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
-import { StagePanelPubsRunActionDropDownMenu } from "../../stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
 import { renderField } from "./components/Helpers";
-import { PubChildrenTable } from "./PubChildrenTable";
+import { PubChildrenTable } from "./components/PubChildrenTable";
 
 export default async function Page({
 	params,
@@ -59,7 +59,7 @@ export default async function Page({
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
 			actions: actions ? (
-				<StagePanelPubsRunActionDropDownMenu actionInstances={actions} pub={child} />
+				<PubsRunActionDropDownMenu actionInstances={actions} pub={child} />
 			) : (
 				<div>No actions exist on the pub</div>
 			),
@@ -116,10 +116,7 @@ export default async function Page({
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						<div>
 							{actions ? (
-								<StagePanelPubsRunActionDropDownMenu
-									actionInstances={actions}
-									pub={pub}
-								/>
+								<PubsRunActionDropDownMenu actionInstances={actions} pub={pub}/>
 							) : (
 								<div>No actions exist on the pub</div>
 							)}

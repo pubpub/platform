@@ -1,12 +1,13 @@
-import type { StagePub } from "./queries";
-import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
+
+import type { StagePub } from "~/lib/queries/pub";
+import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { Stages } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
-import { Action, ActionInstanceOf } from "~/actions/types";
+import type { Action, ActionInstanceOf } from "~/actions/types";
 import { ActionRunForm } from "./ActionRunForm";
-import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
+import type { PageContext } from "./PubsRunActionDropDownMenu";
 
 export const ActionRunFormWrapper = async ({
 	actionInstance,

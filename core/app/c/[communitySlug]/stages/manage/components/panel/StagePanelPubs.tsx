@@ -4,12 +4,13 @@ import { Card, CardContent } from "ui/card";
 
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
+import type { PageContext} from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { PageContext, StagePanelPubsRunActionDropDownMenu } from "./StagePanelPubsRunActionDropDownMenu";
-import { getStageActions, getStagePubs, getStage } from "~/lib/queries/pub";
+import { getStage, getStageActions, getStagePubs } from "~/lib/queries/pub";
 
 type PropsInner = {
 	stageId: string;
@@ -44,7 +45,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 					<div key={pub.id} className="flex items-center justify-between">
 						<PubTitle pub={pub} />
 						<div className="flex items-center gap-x-2">
-							<StagePanelPubsRunActionDropDownMenu
+							<PubsRunActionDropDownMenu
 								actionInstances={stageActionInstances}
 								pub={pub}
 								stage={stage}
