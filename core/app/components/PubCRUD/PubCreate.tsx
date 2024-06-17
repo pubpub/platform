@@ -22,7 +22,7 @@ export type CreatePubProps =
 	  };
 
 const getCommunityById = autoCache(
-	<EB extends ExpressionBuilder<PublicSchema, keyof PublicSchema>>(
+	<K extends keyof PublicSchema, EB extends ExpressionBuilder<PublicSchema, keyof PublicSchema>>(
 		eb: EB,
 		communityId: CommunitiesId | ExpressionWrapper<PublicSchema, "stages", CommunitiesId>
 	) => {
@@ -34,7 +34,6 @@ const getCommunityById = autoCache(
 					.select((eb) => [
 						"pub_types.id",
 						"pub_types.name",
-						"pub_types.updated_at",
 						"pub_types.description",
 						jsonArrayFrom(
 							eb
@@ -65,14 +64,14 @@ const getCommunityById = autoCache(
 								.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 						).as("fields"),
 					])
-					.whereRef("pub_types.community_id", "=", eb.ref("communities.id"))
+					.whereRef("pub_types.communityId", "=", eb.ref("communities.id"))
 			).as("pubTypes"),
 			jsonArrayFrom(
 				eb
 					.selectFrom("stages")
 					.select(["stages.id", "stages.name", "stages.order"])
 					.orderBy("stages.order desc")
-					.where("stages.community_id", "=", communityId)
+					.where("stages.communityId", "=", communityId)
 			).as("stages"),
 		]);
 
@@ -92,10 +91,10 @@ const getStage = autoCache((stageId: StagesId) => {
 			.selectFrom("stages")
 			.select((eb) => [
 				"stages.id",
-				"stages.community_id",
+				"stages.communityId",
 				"stages.name",
 				"stages.order",
-				jsonObjectFrom(getCommunityById.getQb(eb, eb.ref("stages.community_id")).qb).as(
+				jsonObjectFrom(getCommunityById.getQb(eb, eb.ref("stages.communityId")).qb).as(
 					"community"
 				),
 			])
@@ -123,7 +122,7 @@ export async function PubCreate({ communityId, stageId }: CreatePubProps) {
 
 	const result = await query;
 
-	const { community, ...stage } = "community_id" in result ? result : { community: result };
+	const { community, ...stage } = "communityId" in result ? result : { community: result };
 	const currentStage = "id" in stage ? stage : null;
 
 	if (!community) {

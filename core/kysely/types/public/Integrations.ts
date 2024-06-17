@@ -10,9 +10,9 @@ export type IntegrationsId = string & { __brand: "IntegrationsId" };
 export default interface IntegrationsTable {
 	id: ColumnType<IntegrationsId, IntegrationsId | undefined, IntegrationsId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	actions: ColumnType<unknown, unknown, unknown>;
 

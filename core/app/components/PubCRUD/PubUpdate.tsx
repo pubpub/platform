@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
@@ -43,12 +44,11 @@ export async function PubUpdate({ pubId }: PubUpdateProps) {
 					)
 			).as("currentStage"),
 			jsonArrayFrom(
-				eb.selectFrom("stages").select(["id", "name", "order"]).orderBy("order desc").where(
-					"stages.community_id",
-					"=",
-					// @ts-expect-error does exist
-					pub.communityId
-				)
+				eb
+					.selectFrom("stages")
+					.select(["id", "name", "order"])
+					.orderBy("order desc")
+					.where("stages.communityId", "=", pub.communityId as CommunitiesId)
 			).as("availableStages"),
 		])
 		.executeTakeFirst();

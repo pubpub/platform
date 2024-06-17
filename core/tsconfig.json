@@ -29,5 +29,5 @@
 		"instrumentation.node.mts",
 		"kysely/scripts/generateDatabaseObject.mts"
 	],
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }

@@ -13,11 +13,11 @@ export type ActionInstancesId = string & { __brand: "ActionInstancesId" };
 export default interface ActionInstancesTable {
 	id: ColumnType<ActionInstancesId, ActionInstancesId | undefined, ActionInstancesId>;
 
-	stage_id: ColumnType<StagesId, StagesId, StagesId>;
+	stageId: ColumnType<StagesId, StagesId, StagesId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 

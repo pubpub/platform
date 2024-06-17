@@ -15,11 +15,11 @@ export default interface PubFieldsTable {
 
 	name: ColumnType<string, string, string>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	integration_id: ColumnType<IntegrationsId | null, IntegrationsId | null, IntegrationsId | null>;
+	integrationId: ColumnType<IntegrationsId | null, IntegrationsId | null, IntegrationsId | null>;
 
 	pubFieldSchemaId: ColumnType<
 		PubFieldSchemaId | null,

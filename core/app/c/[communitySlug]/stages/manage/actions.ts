@@ -2,13 +2,20 @@
 
 import type { Action as PrismaAction } from "@prisma/client";
 
+import { revalidateTag } from "next/cache";
+import { captureException } from "@sentry/nextjs";
+
 import { logger } from "logger";
 
+import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
 import type Action from "~/kysely/types/public/Action";
-import type Event from "~/kysely/types/public/Event";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { RulesId } from "~/kysely/types/public/Rules";
+import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
+import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import Event from "~/kysely/types/public/Event";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -29,7 +36,7 @@ async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
 	const ops = moveConstraintIds.map(([stageId, destinationId]) =>
 		prisma.moveConstraint.delete({
 			where: {
-				move_constraint_id: {
+				moveConstraintId: {
 					stageId,
 					destinationId,
 				},
@@ -231,17 +238,33 @@ export const deleteAction = defineServerAction(async function deleteAction(
 	}
 });
 
-export const addRule = defineServerAction(async function addRule(
-	event: Event,
-	actionInstanceId: ActionInstancesId,
-	communityId: string
-) {
+export const addRule = defineServerAction(async function addRule({
+	data,
+	communityId,
+}: {
+	data: CreateRuleSchema;
+	communityId: CommunitiesId;
+}) {
 	try {
 		await autoRevalidate(
-			db.insertInto("rules").values({ action_instance_id: actionInstanceId, event })
+			db.insertInto("rules").values({
+				actionInstanceId: data.actionInstanceId as ActionInstancesId,
+				event: data.event,
+				config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
+			})
 		).executeTakeFirstOrThrow();
 	} catch (error) {
 		logger.error(error);
+		if (error.message?.includes("unique constraint")) {
+			return {
+				title: "Rule already exists",
+				error: `A rule for '${humanReadableEvent(data.event)}' and this action already exists. Please add another action
+						of the same type to this stage in order to have the same action trigger
+						multiple times for '${humanReadableEvent(data.event)}'.`,
+				cause: error,
+			};
+		}
+
 		return {
 			error: "Failed to add rule",
 			cause: error,
@@ -255,7 +278,58 @@ export const deleteRule = defineServerAction(async function deleteRule(
 	communityId: string
 ) {
 	try {
-		await autoRevalidate(db.deleteFrom("rules").where("id", "=", ruleId)).execute();
+		const deletedRule = await autoRevalidate(
+			db.deleteFrom("rules").where("id", "=", ruleId).returningAll()
+		).executeTakeFirst();
+
+		if (!deletedRule) {
+			return {
+				error: "Failed to delete rule",
+				cause: `Rule with id ${ruleId} not found`,
+			};
+		}
+
+		if (deletedRule.event !== Event.pubInStageForDuration) {
+			return;
+		}
+
+		const actionInstance = await db
+			.selectFrom("action_instances")
+			.select(["id", "action", "stageId"])
+			.where("id", "=", deletedRule.actionInstanceId)
+			.executeTakeFirst();
+
+		if (!actionInstance) {
+			// something is wrong here
+			captureException(
+				new Error(
+					`Action instance not found for rule ${ruleId} while trying to unschedule jobs`
+				)
+			);
+			return;
+		}
+
+		const pubsInStage = await db
+			.selectFrom("PubsInStages")
+			.select(["pubId", "stageId"])
+			.where("stageId", "=", actionInstance.stageId)
+			.execute();
+
+		if (!pubsInStage) {
+			// we don't need to unschedule any jobs, as there are no pubs this rule could have been applied to
+			return;
+		}
+
+		logger.debug(`Unscheduling jobs for rule ${ruleId}`);
+		await Promise.all(
+			pubsInStage.map(async (pubInStage) =>
+				unscheduleAction({
+					actionInstanceId: actionInstance.id,
+					pubId: pubInStage.pubId,
+					stageId: pubInStage.stageId,
+				})
+			)
+		);
 	} catch (error) {
 		logger.error(error);
 		return {
@@ -263,5 +337,10 @@ export const deleteRule = defineServerAction(async function deleteRule(
 			cause: error,
 		};
 	} finally {
+		// <<<<<<< HEAD
+		// =======
+		// 		revalidateTag(`community-stages_${communityId}`);
+		// 		revalidateTag(`community-action-runs_${communityId}`);
+		// >>>>>>> main
 	}
 });

@@ -8,9 +8,9 @@ import { type PubsId } from "./Pubs";
 
 /** Represents the table public.IntegrationInstanceState */
 export default interface IntegrationInstanceStateTable {
-	pub_id: ColumnType<PubsId, PubsId, PubsId>;
+	pubId: ColumnType<PubsId, PubsId, PubsId>;
 
-	instance_id: ColumnType<IntegrationInstancesId, IntegrationInstancesId, IntegrationInstancesId>;
+	instanceId: ColumnType<IntegrationInstancesId, IntegrationInstancesId, IntegrationInstancesId>;
 
 	state: ColumnType<unknown, unknown, unknown>;
 }

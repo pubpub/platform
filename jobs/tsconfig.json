@@ -5,6 +5,6 @@
 		"lib": ["ESNext"],
 		"types": ["node"]
 	},
-	"include": ["./*.ts"],
+	"include": ["./**/*.ts"],
 	"exclude": ["dist", "build", "node_modules", ".turbo"]
 }

@@ -61,7 +61,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 						slug: slugifyString(slug),
 						avatar,
 					})
-					.returning(["id", "name", "slug", "avatar", "created_at as createdAt"])
+					.returning(["id", "name", "slug", "avatar", "createdAt"])
 					.executeTakeFirst()
 			);
 			const communityUUID = c.id as CommunitiesId;
@@ -73,8 +73,8 @@ export const createCommunity = defineServerAction(async function createCommunity
 			const memberPromise = db
 				.insertInto("members")
 				.values({
-					user_id: user.id as UsersId,
-					community_id: c.id as CommunitiesId,
+					userId: user.id as UsersId,
+					communityId: c.id as CommunitiesId,
 					canAdmin: true,
 				})
 				.returning("id")
@@ -94,7 +94,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 						.values({
 							id: pubTypeId as PubTypesId,
 							name: "Submission ",
-							community_id: c.id as CommunitiesId,
+							communityId: c.id as CommunitiesId,
 						})
 						.returning("id")
 				)
@@ -111,37 +111,37 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.insertInto("stages")
 				.values([
 					{
-						community_id: communityUUID,
+						communityId: communityUUID,
 						name: "Submitted",
 						order: "aa",
 					},
 					{
-						community_id: communityUUID,
+						communityId: communityUUID,
 						name: "Ask Author for Consent",
 						order: "bb",
 					},
 					{
-						community_id: communityUUID,
+						communityId: communityUUID,
 						name: "To Evaluate",
 						order: "cc",
 					},
 					{
-						community_id: communityUUID,
+						communityId: communityUUID,
 						name: "Under Evaluation",
 						order: "dd",
 					},
 					{
-						community_id: communityUUID,
+						communityId: communityUUID,
 						name: "In Production",
 						order: "ff",
 					},
 					{
-						community_id: communityUUID,
+						communityId: communityUUID,
 						name: "Published",
 						order: "gg",
 					},
 					{
-						community_id: communityUUID,
+						communityId: communityUUID,
 						name: "Shelved",
 						order: "hh",
 					},
@@ -157,7 +157,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 					db
 						.insertInto("permissions")
 						.values({
-							member_id: member?.id,
+							memberId: member?.id,
 						})
 						.returning("id")
 				)
@@ -187,24 +187,24 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.values([
 					{
 						//  Submitted can be moved to: Consent, To Evaluate, Under Evaluation, Shelved
-						stage_id: stages[0],
-						destination_id: stages[1],
+						stageId: stages[0],
+						destinationId: stages[1],
 					},
 					{
-						stage_id: stages[1],
-						destination_id: stages[2],
+						stageId: stages[1],
+						destinationId: stages[2],
 					},
 					{
-						stage_id: stages[2],
-						destination_id: stages[3],
+						stageId: stages[2],
+						destinationId: stages[3],
 					},
 					{
-						stage_id: stages[3],
-						destination_id: stages[4],
+						stageId: stages[3],
+						destinationId: stages[4],
 					},
 					{
-						stage_id: stages[4],
-						destination_id: stages[5],
+						stageId: stages[4],
+						destinationId: stages[5],
 					},
 				])
 				.execute();
@@ -214,8 +214,8 @@ export const createCommunity = defineServerAction(async function createCommunity
 					db
 						.insertInto("pubs")
 						.values({
-							community_id: communityUUID,
-							pub_type_id: pubTypeId as PubTypesId,
+							communityId: communityUUID,
+							pubTypeId: pubTypeId as PubTypesId,
 						})
 						.returning("id")
 				)
@@ -230,13 +230,13 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.insertInto("pub_values")
 				.values((eb) => [
 					{
-						pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-						field_id: fields.find((field) => field.slug === "pubpub:title")!.id,
+						pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+						fieldId: fields.find((field) => field.slug === "pubpub:title")!.id,
 						value: '"The Activity of Slugs I. The Induction of Activity by Changing Temperatures"',
 					},
 					{
-						pub_id: eb.selectFrom("new_pubs").select("new_pubs.id"),
-						field_id: fields.find((field) => field.slug === "pubpub:content")!.id,
+						pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+						fieldId: fields.find((field) => field.slug === "pubpub:content")!.id,
 						value: '"LONG LIVE THE SLUGS"',
 					},
 				])

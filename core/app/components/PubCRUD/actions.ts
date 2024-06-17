@@ -49,8 +49,8 @@ export const createPub = defineServerAction(async function createPub({
 					db
 						.insertInto("pubs")
 						.values({
-							community_id: communityId,
-							pub_type_id: pubTypeId,
+							communityId: communityId,
+							pubTypeId: pubTypeId,
 						})
 						.returning("id")
 				)
@@ -60,11 +60,12 @@ export const createPub = defineServerAction(async function createPub({
 						stageId,
 					}))
 				)
+
 				.insertInto("pub_values")
 				.values((eb) =>
 					Object.entries(fields).map(([key, value]) => ({
-						field_id: key as PubFieldsId,
-						pub_id: eb.selectFrom("new_pub").select("new_pub.id"),
+						fieldId: key as PubFieldsId,
+						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
 						value: JSON.stringify(value.value),
 					}))
 				)
@@ -80,7 +81,7 @@ export const createPub = defineServerAction(async function createPub({
 			report: `Successfully created a new Pub`,
 		};
 	} catch (error) {
-		logger.debug(error);
+		logger.error(error);
 		return {
 			error: "Failed to create pub",
 			cause: error,
@@ -119,7 +120,7 @@ export const updatePub = defineServerAction(async function updatePub({
 		const pubValues = await db
 			.selectFrom("pub_values")
 			.selectAll()
-			.where("pub_values.pub_id", "=", pubId)
+			.where("pub_values.pubId", "=", pubId)
 			.execute();
 
 		const stageMoveQuery =
@@ -133,25 +134,34 @@ export const updatePub = defineServerAction(async function updatePub({
 					.values({ pubId, stageId })
 			).execute();
 
-		const queries: Promise<any>[] = [
-			pubValues.map(async (pubValue) =>
-				autoRevalidate(
+		const queries = [
+			pubValues.map(async (pubValue) => {
+				const field = fields[pubValue.fieldId];
+				if (!field) {
+					logger.debug({
+						msg: `Field ${pubValue.fieldId} not found in fields`,
+						fields,
+						pubValue,
+					});
+					return;
+				}
+				const { value } = field;
+
+				return autoRevalidate(
 					db
 						.updateTable("pub_values")
 						.set({
-							value: JSON.stringify(fields[pubValue.field_id].value),
+							value: JSON.stringify(value),
 						})
 						.where("pub_values.id", "=", pubValue.id)
 						.returningAll()
-				).execute()
-			),
-		].flat();
+				).execute();
+			}),
+		]
+			.filter((x) => x != null)
+			.flat();
 
-		if (stageMoveQuery) {
-			queries.push(stageMoveQuery);
-		}
-
-		const updatePub = await Promise.allSettled(queries);
+		const updatePub = await Promise.allSettled([...queries, ...([stageMoveQuery] || [])]);
 
 		const errors = updatePub.filter(
 			(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>
@@ -175,7 +185,7 @@ export const updatePub = defineServerAction(async function updatePub({
 			report: `Successfully updated the Pub`,
 		};
 	} catch (error) {
-		logger.debug(error);
+		logger.error(error);
 		return {
 			error: "Failed to update pub",
 			cause: error,
@@ -208,7 +218,7 @@ export const removePub = defineServerAction(async function removePub({
 	}
 
 	if (
-		!loginData.memberships.find((m) => m.communityId === pub.community_id)?.canAdmin &&
+		!loginData.memberships.find((m) => m.communityId === pub.communityId)?.canAdmin &&
 		!loginData.isSuperAdmin
 	) {
 		return {

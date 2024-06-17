@@ -10,9 +10,9 @@ export type CommunitiesId = string & { __brand: "CommunitiesId" };
 export default interface CommunitiesTable {
 	id: ColumnType<CommunitiesId, CommunitiesId | undefined, CommunitiesId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	name: ColumnType<string, string, string>;
 

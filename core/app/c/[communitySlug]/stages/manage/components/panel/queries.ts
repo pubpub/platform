@@ -14,11 +14,11 @@ export const getStage = cache(async (stageId: string) => {
 		.selectFrom("stages")
 		.select([
 			"stages.id",
-			"stages.community_id as communityId",
+			"communityId",
 			"stages.name",
 			"stages.order",
-			"stages.created_at as createdAt",
-			"stages.updated_at as updatedAt",
+			"createdAt",
+			"updatedAt",
 		])
 		.where("stages.id", "=", stageId as StagesId)
 		.executeTakeFirst();
@@ -28,7 +28,7 @@ export const getStageActions = cache(async (stageId: string) => {
 	return await db
 		.selectFrom("action_instances")
 		.selectAll()
-		.where("stage_id", "=", stageId as StagesId)
+		.where("stageId", "=", stageId as StagesId)
 		.execute();
 });
 
@@ -80,16 +80,18 @@ export const getStageMembers = cache(async (stageId: string) => {
 });
 
 export const getStageRules = cache(async (stageId: string) => {
-	const stages = await db
+	const rules = await db
 		.selectFrom("action_instances")
-		.where("stage_id", "=", stageId as StagesId)
-		.innerJoin("rules", "rules.action_instance_id", "action_instances.id")
+		.where("stageId", "=", stageId as StagesId)
+		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
 		.select([
 			"rules.id",
 			"rules.event",
+			"rules.config",
 			"action_instances.name as instanceName",
 			"action_instances.action",
+			"actionInstanceId",
 		])
 		.execute();
-	return stages;
+	return rules;
 });

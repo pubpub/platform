@@ -24,6 +24,7 @@ export const env = createEnv({
 		CACHE_LOG: z.boolean().optional(),
 		DATABASE_URL: z.string().url(),
 		JWT_SECRET: z.string(),
+		KYSELY_DEBUG: z.string().optional(),
 		LOG_LEVEL: z.string().optional(),
 		MAILGUN_SMTP_PASSWORD: z.string(),
 		MAILGUN_SMTP_USERNAME: z.string(),

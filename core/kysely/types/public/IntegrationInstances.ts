@@ -20,15 +20,15 @@ export default interface IntegrationInstancesTable {
 
 	name: ColumnType<string, string, string>;
 
-	integration_id: ColumnType<IntegrationsId, IntegrationsId, IntegrationsId>;
+	integrationId: ColumnType<IntegrationsId, IntegrationsId, IntegrationsId>;
 
-	created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	community_id: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
-	stage_id: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
+	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 }

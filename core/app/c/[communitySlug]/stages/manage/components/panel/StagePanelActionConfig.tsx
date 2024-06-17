@@ -5,6 +5,7 @@ import type { ZodObject } from "zod";
 import { useCallback } from "react";
 
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
+import { TokenProvider } from "ui/tokens";
 
 import type { Action } from "~/actions/types";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
@@ -27,12 +28,14 @@ export const StagePanelActionConfig = (props: Props) => {
 	);
 
 	return (
-		<AutoForm
-			values={props.instance.config ?? {}}
-			formSchema={props.action.config as ZodObject<{}>}
-			onSubmit={onSubmit}
-		>
-			<AutoFormSubmit>Update config</AutoFormSubmit>
-		</AutoForm>
+		<TokenProvider tokens={props.action.tokens ?? {}}>
+			<AutoForm
+				values={props.instance.config ?? {}}
+				formSchema={props.action.config as ZodObject<{}>}
+				onSubmit={onSubmit}
+			>
+				<AutoFormSubmit>Update config</AutoFormSubmit>
+			</AutoForm>
+		</TokenProvider>
 	);
 };
