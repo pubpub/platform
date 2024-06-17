@@ -8,6 +8,10 @@ import type { QB } from "./types";
 import type Database from "~/kysely/types/Database";
 import type { UsersId } from "~/kysely/types/public/Users";
 import type { Equal, Expect } from "~/lib/types";
+import { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
+import Event from "~/kysely/types/public/Event";
+import { PubsId } from "~/kysely/types/public/Pubs";
 import { autoRevalidate } from "./autoRevalidate";
 import { cachedFindTables } from "./sharedAuto";
 
@@ -22,6 +26,10 @@ const mockedDb = new Kysely<Database>({
 
 vitest.mock("./memoize", () => ({
 	memoize: vitest.fn((fn) => fn),
+}));
+
+vitest.mock("react", () => ({
+	cache: vitest.fn((fn) => fn),
 }));
 
 const compileAndFindTables = (qb: QB<any>, type: "select" | "mutation") => {
@@ -289,6 +297,69 @@ describe("cachedFindTables", () => {
 					(typeof revalidateCallbackAsyncQueryWithReturning)["execute"],
 					(typeof queryWithReturning)["execute"]
 				>
+			>;
+		};
+	});
+
+	it("should be able to handle null inserts", async () => {
+		const query = mockedDb.insertInto("users").values({
+			firstName: "Croc",
+			email: "croc@crocy.com",
+			slug: "croc",
+			avatar: null,
+		});
+		const tables = await compileAndFindTables(query, "mutation");
+		expect(tables).toEqual(["users"]);
+	});
+
+	it("should be able to handle conflicts", async () => {
+		const query = mockedDb
+			.with(
+				"existingScheduledActionRun",
+				(db) =>
+					db
+						.selectFrom("action_runs")
+						.selectAll()
+						.where("actionInstanceId", "=", "x" as ActionInstancesId)
+						.where("pubId", "=", "x" as PubsId)
+						.where("status", "=", ActionRunStatus.scheduled)
+				// this should be guaranteed to be unique, as only one actionInstance should be scheduled per pub
+			)
+			.insertInto("action_runs")
+			.values((eb) => ({
+				id: eb.selectFrom("existingScheduledActionRun").select("id"),
+				actionInstanceId: "id" as ActionInstancesId,
+				pubId: "id" as PubsId,
+				userId: null,
+				status: ActionRunStatus.scheduled,
+				result: {},
+				config: eb
+					.selectFrom("action_instances")
+					.select("config")
+					.where("action_instances.id", "=", "id" as ActionInstancesId),
+				params: {},
+				event: Event.pubInStageForDuration,
+			}))
+			// conflict should only happen if a scheduled action is excecuted
+			// not on user initiated actions or on other events
+			.onConflict((oc) =>
+				oc.column("id").doUpdateSet({
+					result: {},
+					params: {},
+					event: Event.pubInStageForDuration,
+					status: ActionRunStatus.failure,
+				})
+			);
+
+		const tables = await compileAndFindTables(query, "mutation");
+
+		expect(tables).toEqual(["action_runs"]);
+
+		() => {
+			const revalidateQuery = autoRevalidate(query);
+
+			type CorrectQuery = Expect<
+				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
 			>;
 		};
 	});

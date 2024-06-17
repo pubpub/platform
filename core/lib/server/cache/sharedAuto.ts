@@ -30,7 +30,7 @@ export function findTables<T extends OperationNode>(
 		return tables;
 	}
 
-	if (typeof node !== "object") {
+	if (typeof node !== "object" || node === null || node === undefined) {
 		return tables;
 	}
 
@@ -46,7 +46,7 @@ export function findTables<T extends OperationNode>(
 	}
 
 	for (const [key, value] of Object.entries(node)) {
-		if (typeof value !== "object") {
+		if (typeof value !== "object" || value === null || value === undefined) {
 			continue;
 		}
 
