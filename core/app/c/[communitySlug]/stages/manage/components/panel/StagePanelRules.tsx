@@ -4,7 +4,7 @@ import { Card, CardContent } from "ui/card";
 
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageActions, getStageRules } from "~/lib/queries/pub";
+import { getStage, getStageActions, getStageRules } from "~/lib/db/queries";
 import { StagePanelRule } from "./StagePanelRule";
 import { StagePanelRuleCreator } from "./StagePanelRuleCreator";
 

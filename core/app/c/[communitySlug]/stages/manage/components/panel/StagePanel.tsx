@@ -1,13 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { getStage } from "~/lib/queries/pub";
 import { StagePanelActions } from "./StagePanelActions";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
 import { StagePanelRules } from "./StagePanelRules";
 import { StagePanelSheet } from "./StagePanelSheet";
+import { getStage } from "~/lib/db/queries";
 
 type Props = {
 	stageId: string | undefined;

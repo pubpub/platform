@@ -7,6 +7,7 @@ export const PubsRunActionDropDownMenuItem = (props: Parameters<typeof DropdownM
 		<DropdownMenuItem
 			{...props}
 			onSelect={(evt) => {
+
 				evt.preventDefault();
 			}}
 		></DropdownMenuItem>
