@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
-import { getStage } from "~/lib/queries/pub";
+import { getStage } from "~/lib/db/queries";
 import { StagePanelActions } from "./StagePanelActions";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";

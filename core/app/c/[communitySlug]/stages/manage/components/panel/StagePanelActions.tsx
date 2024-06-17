@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageActions } from "~/lib/queries/pub";
+import { getStage, getStageActions } from "~/lib/db/queries";
 import { addAction, deleteAction } from "../../actions";
 import { ActionConfigFormWrapper } from "./ActionConfigFormWrapper";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";

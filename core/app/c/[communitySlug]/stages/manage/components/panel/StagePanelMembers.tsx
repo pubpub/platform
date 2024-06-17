@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStageMembers } from "~/lib/queries/pub";
+import { getStageMembers } from "~/lib/db/queries";
 
 type PropsInner = {
 	stageId: string;
