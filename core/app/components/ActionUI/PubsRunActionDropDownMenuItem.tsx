@@ -7,7 +7,6 @@ export const PubsRunActionDropDownMenuItem = (props: Parameters<typeof DropdownM
 		<DropdownMenuItem
 			{...props}
 			onSelect={(evt) => {
-				// prevents the dropdown from closing when clicking on the action
 				evt.preventDefault();
 			}}
 		></DropdownMenuItem>
