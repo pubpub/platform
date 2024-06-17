@@ -49,7 +49,10 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 
+	console.log("THE CHILDREN ARE HEREEEE",pub)
+	
 	const pubChildren = pub.children.map(async (child) => {
+
 		const [stageActionInstances, stage] = await Promise.all([
 			getStageActions(child.stages[0].stageId),
 			getStage(child.stages[0].stageId),
@@ -60,7 +63,7 @@ export default async function Page({
 		}
 		const actions = stageActionInstances.map((action) => ({
 			...action,
-		}));
+		}))
 		return {
 			id: child.id,
 			title:
@@ -82,10 +85,23 @@ export default async function Page({
 	});
 	const children = await Promise.all(pubChildren);
 
-	const [actions, stage] = await Promise.all([
-		getStageActions(pub.stages[0].stageId),
-		getStage(pub.stages[0].stageId),
-	]);
+	const ActionRunDropdown = async () => {
+		const [actions, stage] = await Promise.all([
+			getStageActions(pub.stages[0].stageId),
+			getStage(pub.stages[0].stageId),
+		]);
+		return (
+			<div>
+				<div className="mb-1 text-lg font-bold">Actions</div>
+				<PubsRunActionDropDownMenu
+					actionInstances={actions}
+					pub={pub}
+					stage={stage!}
+				/>
+			</div>
+		);
+	}
+	const ActionDropwdown = pub.stages[0] ? await <ActionRunDropdown/> : null;
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
@@ -132,20 +148,9 @@ export default async function Page({
 						</div>
 					</div>
 					<div className="mb-4">
-							{actions.length > 0 ? (
-								<div>
-									<div className="mb-1 text-lg font-bold">Actions</div>
-									<PubsRunActionDropDownMenu
-										actionInstances={actions}
-										pub={pub}
-										stage={stage!}
-									/>
-								</div>
-							) : (
-								null
-							)}
+						{ActionDropwdown}
 					</div>
-
+	
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Members</div>
 						<div className="flex flex-row flex-wrap">
