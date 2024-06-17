@@ -34,7 +34,7 @@ export const PubUpdateForm = ({
 	currentStage = null,
 }: {
 	pub: GetPubResponseBody;
-	pubType: NonNullable<Awaited<ReturnType<typeof getPubType>>>;
+	pubType: NonNullable<Awaited<ReturnType<(typeof getPubType)["executeTakeFirst"]>>>;
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) => {

@@ -72,7 +72,7 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 	let renderCacheHit: boolean;
 	renderCacheHit = false;
 
-	const cachedFn = async (...args: P) => {
+	const cachedFn = cache(async (...args: P) => {
 		renderCacheHit = true;
 		if (persist) {
 			// Initialize unstable_cache
@@ -121,6 +121,7 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 					[cb.toString(), JSON.stringify(args), ...additionalCacheKey],
 					{
 						revalidate: duration,
+						// we always cache "all"
 						tags: ["all", ...revalidateTags],
 					}
 				)();
@@ -130,7 +131,7 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 			// return callback directly
 			return cb(...args);
 		}
-	};
+	});
 
 	const returnFunc = async (...args: P) => {
 		if (logDedupe) {
@@ -147,7 +148,7 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 		}
 	};
 
-	return opts?.reactCache ? cache(returnFunc) : returnFunc;
+	return returnFunc;
 }
 
 class Audit {

@@ -1,23 +1,15 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ajvResolver } from "@hookform/resolvers/ajv";
-import Ajv from "ajv";
-import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
-import type { GetPubResponseBody } from "contracts";
-import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import { Form } from "ui/form";
-import { Loader2, Pencil, Trash } from "ui/icon";
+import { Loader2, Trash } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { Stages } from "~/kysely/types/public/Stages";
-import type { getPubType } from "~/lib/server/pub";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 

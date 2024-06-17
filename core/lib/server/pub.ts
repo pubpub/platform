@@ -17,6 +17,7 @@ import { PubsId } from "~/kysely/types/public/Pubs";
 import { PubTypesId } from "~/kysely/types/public/PubTypes";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
+import { autoCache } from "./cache/autoCache";
 import { ForbiddenError, NotFoundError } from "./errors";
 
 type PubValues = Record<string, JsonValue>;
@@ -190,6 +191,43 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	return nestChildren(pub);
 };
 
+export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+	// These aliases are used to make sure the JSON object returned matches
+	// the old prisma query's return value
+	const pubColumns = [
+		"pubs.id",
+		"pubs.communityId",
+		"pubs.createdAt",
+		"pubs.parentId",
+		"pubs.pubTypeId",
+		"pubs.updatedAt",
+	] as const satisfies SelectExpression<Database, "pubs">[];
+
+	const pub = await autoCache(
+		withPubChildren({ pubId })
+			.selectFrom("pubs")
+			.where("pubs.id", "=", pubId)
+			.select(pubColumns)
+			.select(pubValuesByVal(pubId))
+			.select((eb) => pubAssignee(eb))
+			.$narrowType<{ values: PubValues }>()
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("children")
+						.select([...pubColumns, "values"])
+						.$narrowType<{ values: PubValues }>()
+				).as("children")
+			)
+	).executeTakeFirst();
+
+	if (!pub) {
+		throw PubNotFoundError;
+	}
+
+	return nestChildren(pub);
+};
+
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
@@ -280,9 +318,7 @@ const makePubChildrenConnectOptions = (body: CreatePubRequestBodyWithNulls) => {
 	return connect;
 };
 
-/**
- * Build a Prisma `PubCreateInput` object used to create a pub with descendants.
- */
+/** Build a Prisma `PubCreateInput` object used to create a pub with descendants. */
 const makeRecursivePubUpdateInput = async (
 	body: CreatePubRequestBodyWithNulls,
 	communityId: string
@@ -402,8 +438,8 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 	return pubType;
 };
 
-export const getPubType = async (pubTypeId: PubTypesId) =>
-	db
+export const getPubType = autoCache(async (pubTypeId: PubTypesId) => ({
+	qb: db
 		.selectFrom("pub_types")
 		.select((eb) => [
 			"id",
@@ -440,5 +476,5 @@ export const getPubType = async (pubTypeId: PubTypesId) =>
 					.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 			).as("fields"),
 		])
-		.where("pub_types.id", "=", pubTypeId)
-		.executeTakeFirst();
+		.where("pub_types.id", "=", pubTypeId),
+}));

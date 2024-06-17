@@ -6,7 +6,8 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
-import { getPub, getPubType } from "~/lib/server";
+import { getPub, getPubCached, getPubType } from "~/lib/server";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 export type PubUpdateProps = {
@@ -23,39 +24,40 @@ const PubUpdateForm = dynamic(
 );
 
 export async function PubUpdate({ pubId }: PubUpdateProps) {
-	const pub = await getPub(pubId);
-	const availableStagesAndCurrentStage = await db
-		.with("currentStageId", (db) =>
-			db
-				.selectFrom("PubsInStages")
-				.select((eb) => ["stageId as currentStageId"])
-				.where("PubsInStages.pubId", "=", pubId)
-		)
-		.selectFrom("stages")
-		.select((eb) => [
-			jsonObjectFrom(
-				eb
-					.selectFrom("stages")
-					.select(["id", "name", "order"])
-					.whereRef(
-						"stages.id",
-						"=",
-						eb.selectFrom("currentStageId").select("currentStageId")
-					)
-			).as("currentStage"),
-			jsonArrayFrom(
-				eb
-					.selectFrom("stages")
-					.select(["id", "name", "order"])
-					.orderBy("order desc")
-					.where("stages.communityId", "=", pub.communityId as CommunitiesId)
-			).as("availableStages"),
-		])
-		.executeTakeFirst();
+	const pub = await getPubCached(pubId);
+	const availableStagesAndCurrentStage = await autoCache(
+		db
+			.with("currentStageId", (db) =>
+				db
+					.selectFrom("PubsInStages")
+					.select((eb) => ["stageId as currentStageId"])
+					.where("PubsInStages.pubId", "=", pubId)
+			)
+			.selectFrom("stages")
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name", "order"])
+						.whereRef(
+							"stages.id",
+							"=",
+							eb.selectFrom("currentStageId").select("currentStageId")
+						)
+				).as("currentStage"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name", "order"])
+						.orderBy("order desc")
+						.where("stages.communityId", "=", pub.communityId as CommunitiesId)
+				).as("availableStages"),
+			])
+	).executeTakeFirst();
 
 	const { availableStages = [], currentStage } = availableStagesAndCurrentStage ?? {};
 
-	const pubType = await getPubType(pub.pubTypeId as PubTypesId);
+	const pubType = await getPubType.executeTakeFirst(pub.pubTypeId as PubTypesId);
 	if (!pubType) {
 		throw new Error("Pub type not found");
 	}
