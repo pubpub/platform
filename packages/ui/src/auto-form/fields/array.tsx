@@ -1,7 +1,9 @@
+import type { useForm } from "react-hook-form";
+import type * as z from "zod";
+
 import * as React from "react";
 import { Plus, Trash } from "lucide-react";
-import { useFieldArray, useForm } from "react-hook-form";
-import * as z from "zod";
+import { useFieldArray } from "react-hook-form";
 
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion";
 import { Button } from "../../button";
@@ -10,11 +12,13 @@ import { beautifyObjectName } from "../utils";
 import AutoFormObject from "./object";
 
 function isZodArray(item: z.ZodArray<any> | z.ZodDefault<any>): item is z.ZodArray<any> {
-	return item instanceof z.ZodArray;
+	return item._def.typeName === "ZodArray";
 }
 
-function isZodDefault(item: z.ZodArray<any> | z.ZodDefault<any>): item is z.ZodDefault<any> {
-	return item instanceof z.ZodDefault;
+function isZodDefaultOrOptional<Z extends z.ZodArray<any> | z.ZodDefault<any> | z.ZodOptional<any>>(
+	item: Z
+): item is Exclude<Z, z.ZodArray<any>> {
+	return item._def.typeName === "ZodDefault" || item._def.typeName === "ZodOptional";
 }
 
 export default function AutoFormArray({
@@ -34,29 +38,31 @@ export default function AutoFormArray({
 		control: form.control,
 		name,
 	});
-	const title = item._def.description ?? beautifyObjectName(name);
+	const itemName = item._def.description ?? beautifyObjectName(name);
+
+	const [title, description, additionalType] = itemName.split("|");
 
 	const itemDefType = isZodArray(item)
 		? item._def.type
-		: isZodDefault(item)
+		: isZodDefaultOrOptional(item)
 			? item._def.innerType._def.type
 			: null;
 
 	return (
 		<AccordionItem value={name} className="border-none">
 			<AccordionTrigger>{title}</AccordionTrigger>
-			<AccordionContent>
+			<AccordionContent className="flex flex-col gap-y-4">
 				{fields.map((_field, index) => {
 					const key = _field.id;
 					return (
-						<div className="mt-4 flex flex-col" key={`${key}`}>
+						<div className="flex flex-col gap-y-2" key={`${key}`}>
 							<AutoFormObject
 								schema={itemDefType as z.ZodObject<any, any>}
 								form={form}
 								fieldConfig={fieldConfig}
 								path={[...path, index.toString()]}
 							/>
-							<div className="my-4 flex justify-end">
+							<div className="flex justify-end">
 								<Button
 									variant="secondary"
 									size="icon"
@@ -64,7 +70,7 @@ export default function AutoFormArray({
 									className="hover:bg-zinc-300 hover:text-black focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-white dark:text-black dark:hover:bg-zinc-300 dark:hover:text-black dark:hover:ring-0 dark:hover:ring-offset-0 dark:focus-visible:ring-0 dark:focus-visible:ring-offset-0"
 									onClick={() => remove(index)}
 								>
-									<Trash className="size-4 " />
+									<Trash size="12" />
 								</Button>
 							</div>
 

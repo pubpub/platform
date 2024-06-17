@@ -13,12 +13,12 @@ import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/A
 import { getActionByName } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "../../actions";
-import { StagePanelActionConfig } from "./StagePanelActionConfig";
 
 type Props = {
 	actionInstance: ActionInstances;
 	onDelete: (actionInstanceId: string) => Promise<unknown>;
 	communityId: string;
+	children: React.ReactNode;
 };
 
 export const StagePanelActionEditor = (props: Props) => {
@@ -75,11 +75,7 @@ export const StagePanelActionEditor = (props: Props) => {
 				<Separator />
 				<p>{action.description}</p>
 				<div className="flex flex-col gap-2 py-2">
-					<StagePanelActionConfig
-						instance={props.actionInstance}
-						action={action}
-						communityId={props.communityId}
-					/>
+					{props.children}
 					<div className="flex justify-end">
 						<Button
 							variant="secondary"

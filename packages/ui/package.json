@@ -109,6 +109,10 @@
 			"module": "./textarea/dist/ui-textarea.esm.js",
 			"default": "./textarea/dist/ui-textarea.cjs.js"
 		},
+		"./accordion": {
+			"module": "./accordion/dist/ui-accordion.esm.js",
+			"default": "./accordion/dist/ui-accordion.cjs.js"
+		},
 		"./separator": {
 			"module": "./separator/dist/ui-separator.esm.js",
 			"default": "./separator/dist/ui-separator.cjs.js"
@@ -198,6 +202,7 @@
 	"files": [
 		"dist",
 		"styles.css",
+		"accordion",
 		"alert",
 		"alert-dialog",
 		"auto-form",
@@ -340,6 +345,7 @@
 			}
 		},
 		"entrypoints": [
+			"accordion.tsx",
 			"alert.tsx",
 			"alert-dialog.tsx",
 			"auto-form/index.tsx",

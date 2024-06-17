@@ -1,15 +1,17 @@
 import type { JSONSchemaType } from "ajv";
 
-export type CorePubField = {
+export type BasePubField<Namespace extends string = string> = {
 	id?: string;
 	name: string;
 	slug: string;
 	schema: {
 		name: string;
-		namespace: "pubpub";
+		namespace: Namespace;
 		schema: JSONSchemaType<any>;
 	};
 };
+
+export type CorePubField = BasePubField<"pubpub">;
 
 export const title = {
 	name: "Title",

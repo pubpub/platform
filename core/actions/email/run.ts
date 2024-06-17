@@ -11,8 +11,8 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
+import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
-import { UsersId } from "~/kysely/types/public/Users";
 import { smtpclient } from "~/lib/server/mailgun";
 import { defineRun } from "../types";
 import { emailDirectives } from "./plugin";
@@ -38,7 +38,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			.selectFrom("users")
 			.select(["id", "email", "firstName", "lastName"])
 			.where("id", "=", expect(args?.recipient ?? config.recipient) as UsersId)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow(
+				() =>
+					new Error(`Could not find user with ID ${args?.recipient ?? config.recipient}`)
+			);
 
 		const emailDirectivesContext = { community, sender, recipient, pub };
 
@@ -50,7 +53,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 				.use(remarkRehype)
 				.use(rehypeFormat)
 				.use(rehypeStringify)
-				.process(config.body)
+				.process(args?.body ?? config.body)
 		).toString();
 
 		await smtpclient.sendMail({
@@ -58,7 +61,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			to: recipient.email,
 			replyTo: "hello@pubpub.org",
 			html,
-			subject: config.subject,
+			subject: args?.subject ?? config.subject,
 		});
 	} catch (error) {
 		logger.error({ msg: "email", error });

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 
+import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -11,7 +12,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog";
-import { FileText, Mail, Terminal } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import type { Action } from "~/actions/types";
 import { actions } from "~/actions/api";
@@ -47,7 +48,28 @@ const ActionCell = (props: ActionCellProps) => {
 			<div className="flex space-x-4">
 				<props.action.icon />
 				<div className="space-y-1">
-					<h4 className="text-sm font-semibold">{props.action.name}</h4>
+					<div className="flex items-center gap-2">
+						<h4 className="text-sm font-semibold">{props.action.name}</h4>
+						{props.action.experimental && (
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger>
+										<Badge variant="outline" className="bg-rose-200 text-xs">
+											α
+										</Badge>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>
+											This action is experimental and may not work as
+											expected, and can change at any time.
+										</p>
+										<p> Please use at your own risk.</p>
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						)}
+					</div>
+
 					<p className="text-sm leading-tight text-muted-foreground">
 						{props.action.description}
 					</p>

@@ -6,11 +6,13 @@ import { defineAction } from "../types";
 
 export const action = defineAction({
 	name: "move",
-	config: z.object({
-		stage: z.string().describe("Destination stage"),
-	}),
+	config: {
+		schema: z.object({
+			stage: z.string().describe("Destination stage"),
+		}),
+	},
 	description: "Move a pub to a different stage",
-	params: z.object({}).optional(),
+	params: { schema: z.object({}).optional() },
 	pubFields: [],
 	icon: MoveHorizontal,
 });

@@ -5,6 +5,7 @@ import type * as z from "zod";
 import type Event from "~/kysely/types/public/Event";
 import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
 import * as email from "../email/action";
+import * as http from "../http/action";
 import * as log from "../log/action";
 import * as move from "../move/action";
 import * as pdf from "../pdf/action";
@@ -15,6 +16,7 @@ export const actions = {
 	[pdf.action.name]: pdf.action,
 	[email.action.name]: email.action,
 	[pushToV6.action.name]: pushToV6.action,
+	[http.action.name]: http.action,
 	[move.action.name]: move.action,
 } as const;
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -100,7 +101,6 @@ const _runActionInstance = async (
 		};
 	}
 
-	logger.info(actionInstance.action);
 	const action = getActionByName(actionInstance.action);
 	const actionRun = await getActionRunByName(actionInstance.action);
 
@@ -110,7 +110,8 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedConfig = action.config.safeParse(actionInstance.config ?? {});
+	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {});
+
 	if (!parsedConfig.success) {
 		return {
 			error: "Invalid config",
@@ -118,7 +119,8 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedArgs = action.params.safeParse(args ?? {});
+	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
+
 	if (!parsedArgs.success) {
 		return {
 			title: "Invalid pub config",
@@ -146,7 +148,7 @@ const _runActionInstance = async (
 				values: pub.values as any,
 				assignee: pub.assignee,
 			},
-			args: args,
+			args: parsedArgs.data,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
 		});
@@ -161,13 +163,6 @@ const _runActionInstance = async (
 		};
 	}
 };
-
-// export async function runActionInstancel(args: RunActionInstanceArgs) {
-
-// 	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
-
-// 	return result;
-// }
 
 export async function runActionInstance(args: RunActionInstanceArgs) {
 	const result = await _runActionInstance(args);

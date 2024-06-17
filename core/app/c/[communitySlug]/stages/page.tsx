@@ -34,7 +34,9 @@ export default async function Page({ params }: Props) {
 	}
 	const token = await createToken(loginData.id);
 	const stageWorkflows = getStageWorkflows(community.stages);
+
 	const stageById = makeStagesById(community.stages);
+
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">

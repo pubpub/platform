@@ -32,6 +32,8 @@ export const getStageActions = cache(async (stageId: string) => {
 		.execute();
 });
 
+export type StagePub = Awaited<ReturnType<typeof getStagePubs>>[number];
+
 export const getStagePubs = cache(async (stageId: string) => {
 	return await prisma.pub.findMany({
 		where: {
