@@ -13,35 +13,36 @@ import { AddMember } from "./AddMember";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { MemberTable } from "./MemberTable";
 
-const getCachedMembers = autoCache((community: Community) => ({
-	qb: db
-		.selectFrom("members")
-		.select((eb) => [
-			"members.id as id",
-			"canAdmin",
-			"members.communityId",
-			"createdAt",
-			jsonObjectFrom(
-				eb
-					.selectFrom("users")
-					.select([
-						"userId as id",
-						"users.firstName as firstName",
-						"users.lastName as lastName",
-						"users.avatar as avatar",
-						"users.email as email",
-						"users.createdAt as createdAt",
-						"users.isSuperAdmin as isSuperAdmin",
-						"users.slug as slug",
-						"users.supabaseId as supabaseId",
-					])
-					.whereRef("users.id", "=", "members.userId")
-			)
-				.$notNull()
-				.as("user"),
-		])
-		.where("communityId", "=", community.id as CommunitiesId),
-}));
+const getCachedMembers = (community: Community) =>
+	autoCache(
+		db
+			.selectFrom("members")
+			.select((eb) => [
+				"members.id as id",
+				"canAdmin",
+				"members.communityId",
+				"createdAt",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select([
+							"userId as id",
+							"users.firstName as firstName",
+							"users.lastName as lastName",
+							"users.avatar as avatar",
+							"users.email as email",
+							"users.createdAt as createdAt",
+							"users.isSuperAdmin as isSuperAdmin",
+							"users.slug as slug",
+							"users.supabaseId as supabaseId",
+						])
+						.whereRef("users.id", "=", "members.userId")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.where("communityId", "=", community.id as CommunitiesId)
+	);
 
 export default async function Page({
 	params: { communitySlug, add },
@@ -81,7 +82,7 @@ export default async function Page({
 
 	const page = parseInt(searchParams.page ?? "1", 10);
 
-	const members = await getCachedMembers.execute(community);
+	const members = await getCachedMembers(community).execute();
 
 	if (!members.length && page !== 1) {
 		return notFound();

@@ -21,86 +21,86 @@ export type CreatePubProps =
 			communityId?: never;
 	  };
 
-const getCommunityById = autoCache(
-	<K extends keyof PublicSchema, EB extends ExpressionBuilder<PublicSchema, keyof PublicSchema>>(
-		eb: EB,
-		communityId: CommunitiesId | ExpressionWrapper<PublicSchema, "stages", CommunitiesId>
-	) => {
-		const query = eb.selectFrom("communities").select((eb) => [
-			"communities.id",
-			jsonArrayFrom(
-				eb
-					.selectFrom("pub_types")
-					.select((eb) => [
-						"pub_types.id",
-						"pub_types.name",
-						"pub_types.description",
-						jsonArrayFrom(
-							eb
-								.selectFrom("pub_fields")
-								.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
-								.select((eb) => [
-									"pub_fields.id",
-									"pub_fields.name",
-									"pub_fields.pubFieldSchemaId",
-									"pub_fields.slug",
-									"pub_fields.name",
-									jsonObjectFrom(
-										eb
-											.selectFrom("PubFieldSchema")
-											.select([
-												"PubFieldSchema.id",
-												"PubFieldSchema.namespace",
-												"PubFieldSchema.name",
-												"PubFieldSchema.schema",
-											])
-											.whereRef(
-												"PubFieldSchema.id",
-												"=",
-												eb.ref("pub_fields.pubFieldSchemaId")
-											)
-									).as("schema"),
-								])
-								.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
-						).as("fields"),
-					])
-					.whereRef("pub_types.communityId", "=", eb.ref("communities.id"))
-			).as("pubTypes"),
-			jsonArrayFrom(
-				eb
-					.selectFrom("stages")
-					.select(["stages.id", "stages.name", "stages.order"])
-					.orderBy("stages.order desc")
-					.where("stages.communityId", "=", communityId)
-			).as("stages"),
-		]);
+const getCommunityById = <
+	K extends keyof PublicSchema,
+	EB extends ExpressionBuilder<PublicSchema, keyof PublicSchema>,
+>(
+	eb: EB,
+	communityId: CommunitiesId | ExpressionWrapper<PublicSchema, "stages", CommunitiesId>
+) => {
+	const query = eb.selectFrom("communities").select((eb) => [
+		"communities.id",
+		jsonArrayFrom(
+			eb
+				.selectFrom("pub_types")
+				.select((eb) => [
+					"pub_types.id",
+					"pub_types.name",
+					"pub_types.description",
+					jsonArrayFrom(
+						eb
+							.selectFrom("pub_fields")
+							.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
+							.select((eb) => [
+								"pub_fields.id",
+								"pub_fields.name",
+								"pub_fields.pubFieldSchemaId",
+								"pub_fields.slug",
+								"pub_fields.name",
+								jsonObjectFrom(
+									eb
+										.selectFrom("PubFieldSchema")
+										.select([
+											"PubFieldSchema.id",
+											"PubFieldSchema.namespace",
+											"PubFieldSchema.name",
+											"PubFieldSchema.schema",
+										])
+										.whereRef(
+											"PubFieldSchema.id",
+											"=",
+											eb.ref("pub_fields.pubFieldSchemaId")
+										)
+								).as("schema"),
+							])
+							.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
+					).as("fields"),
+				])
+				.whereRef("pub_types.communityId", "=", eb.ref("communities.id"))
+		).as("pubTypes"),
+		jsonArrayFrom(
+			eb
+				.selectFrom("stages")
+				.select(["stages.id", "stages.name", "stages.order"])
+				.orderBy("stages.order desc")
+				.where("stages.communityId", "=", communityId)
+		).as("stages"),
+	]);
 
-		const completeQuery =
-			typeof communityId === "string"
-				? query.where("communities.id", "=", communityId)
-				: query.whereRef("communities.id", "=", communityId);
+	const completeQuery =
+		typeof communityId === "string"
+			? query.where("communities.id", "=", communityId)
+			: query.whereRef("communities.id", "=", communityId);
 
-		return { qb: completeQuery };
-		// .executeTakeFirstOrThrow();
-	}
-);
+	return autoCache(completeQuery);
+	// .executeTakeFirstOrThrow();
+};
 
-const getStage = autoCache((stageId: StagesId) => {
-	return {
-		qb: db
+const getStage = (stageId: StagesId) =>
+	autoCache(
+		db
 			.selectFrom("stages")
 			.select((eb) => [
 				"stages.id",
 				"stages.communityId",
 				"stages.name",
 				"stages.order",
-				jsonObjectFrom(getCommunityById.getQb(eb, eb.ref("stages.communityId")).qb).as(
+				jsonObjectFrom(getCommunityById(eb, eb.ref("stages.communityId")).qb).as(
 					"community"
 				),
 			])
-			.where("stages.id", "=", stageId),
-	};
-});
+			.where("stages.id", "=", stageId)
+	);
 
 const PubCreateForm = dynamic(
 	async () => {
@@ -113,12 +113,13 @@ const PubCreateForm = dynamic(
 
 export async function PubCreate({ communityId, stageId }: CreatePubProps) {
 	const query = stageId
-		? getStage.executeTakeFirstOrThrow(stageId)
-		: getCommunityById.executeTakeFirstOrThrow(
-				// @ts-expect-error FIXME: I don't know how to fix this
+		? getStage(stageId).executeTakeFirstOrThrow()
+		: getCommunityById(
+				// @ts-expect-error FIXME: I don't know how to fix this,
+				// not sure what the common type between EB and the DB is
 				db,
 				communityId
-			);
+			).executeTakeFirstOrThrow();
 
 	const result = await query;
 

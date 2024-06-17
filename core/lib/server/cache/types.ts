@@ -38,41 +38,13 @@ export type AutoRevalidateOptions = {
 	communitySlug?: string | string[];
 };
 
-export type AutoOptions<Q extends QB<any>> = Q extends SQB
-	? AutoCacheOptions
-	: AutoRevalidateOptions;
-
-/**
- * A function (possibly async) that returns a query builder
- *
- * Has to return a query builder like `{ qb: Q }`, as Kysely annoyingly patches the querybuilder to
- * prevent it from being awaited, even if it's just being returned from a function
- *
- * https://github.com/kysely-org/kysely/blob/873671b758fd70679f440057595399d73813c0cc/src/util/prevent-await.ts#L4
- */
-export type QueryBuilderFunction<Q extends QB<any>, P extends any[]> = (
-	...args: P
-) => { qb: Q } | Promise<{ qb: Q }>;
-
-export type QueryBuilderFromQueryBuilderFunction<QBF extends QueryBuilderFunction<any, any>> =
-	QBF extends (...args: infer P) => infer MaybePromiseQ
-		? MaybePromiseQ extends Promise<{ qb: infer Q extends QB<any> }>
-			? Q
-			: MaybePromiseQ extends { qb: infer Q extends QB<any> }
-				? Q
-				: never
-		: never;
+export type AutoOptions<Q extends QB<any>> =
+	Q extends MQB<any> ? AutoRevalidateOptions : AutoCacheOptions;
 
 export type ExecuteFn<
 	Q extends QB<any>,
 	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
 > = () => Promise<Awaited<ReturnType<Q[M]>>>;
-
-export type ExecuteFnFromQueryBuilderFunction<
-	QBF extends QueryBuilderFunction<any, any>,
-	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
-	Q extends QueryBuilderFromQueryBuilderFunction<QBF> = QueryBuilderFromQueryBuilderFunction<QBF>,
-> = (...args: Parameters<QBF>) => Promise<Awaited<ReturnType<Q[M]>>>;
 
 export type ExecuteCreatorFn<
 	Q extends QB<any>,
@@ -85,11 +57,4 @@ export type DirectAutoOutput<Q extends QB<any>> = {
 	execute: ExecuteFn<Q, "execute">;
 	executeTakeFirst: ExecuteFn<Q, "executeTakeFirst">;
 	executeTakeFirstOrThrow: ExecuteFn<Q, "executeTakeFirstOrThrow">;
-};
-
-export type CallbackAutoOutput<QBF extends QueryBuilderFunction<any, any>> = {
-	getQb: QBF;
-	execute: ExecuteFnFromQueryBuilderFunction<QBF, "execute">;
-	executeTakeFirst: ExecuteFnFromQueryBuilderFunction<QBF, "executeTakeFirst">;
-	executeTakeFirstOrThrow: ExecuteFnFromQueryBuilderFunction<QBF, "executeTakeFirstOrThrow">;
 };

@@ -6,12 +6,12 @@ import { expect, it, vitest } from "vitest";
 
 import type { QB } from "./types";
 import type Database from "~/kysely/types/Database";
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { UsersId } from "~/kysely/types/public/Users";
 import type { Equal, Expect } from "~/lib/types";
-import { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
 import Event from "~/kysely/types/public/Event";
-import { PubsId } from "~/kysely/types/public/Pubs";
 import { autoRevalidate } from "./autoRevalidate";
 import { cachedFindTables } from "./sharedAuto";
 
@@ -262,39 +262,6 @@ describe("cachedFindTables", () => {
 			type CorrectReturningQuery = Expect<
 				Equal<
 					(typeof revalidateQueryWithReturning)["execute"],
-					(typeof queryWithReturning)["execute"]
-				>
-			>;
-
-			const revalidateCallbackQuery = autoRevalidate(() => ({ qb: query }));
-			type CorrectCallbackQuery = Expect<
-				Equal<(typeof revalidateCallbackQuery)["execute"], (typeof query)["execute"]>
-			>;
-
-			const revalidateCallbackQueryWithReturning = autoRevalidate(() => ({
-				qb: queryWithReturning,
-			}));
-
-			type CorrectCallbackQueryWithReturning = Expect<
-				Equal<
-					(typeof revalidateCallbackQueryWithReturning)["execute"],
-					(typeof queryWithReturning)["execute"]
-				>
-			>;
-
-			const revalidateCallbackAsyncQuery = autoRevalidate(async () => ({ qb: query }));
-
-			type CorrectCallbackAsyncQuery = Expect<
-				Equal<(typeof revalidateCallbackAsyncQuery)["execute"], (typeof query)["execute"]>
-			>;
-
-			const revalidateCallbackAsyncQueryWithReturning = autoRevalidate(async () => ({
-				qb: queryWithReturning,
-			}));
-
-			type CorrectCallbackAsyncQueryWithReturning = Expect<
-				Equal<
-					(typeof revalidateCallbackAsyncQueryWithReturning)["execute"],
 					(typeof queryWithReturning)["execute"]
 				>
 			>;

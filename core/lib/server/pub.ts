@@ -438,43 +438,44 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 	return pubType;
 };
 
-export const getPubType = autoCache(async (pubTypeId: PubTypesId) => ({
-	qb: db
-		.selectFrom("pub_types")
-		.select((eb) => [
-			"id",
-			"description",
-			"name",
-			"communityId",
-			"createdAt",
-			"updatedAt",
-			jsonArrayFrom(
-				eb
-					.selectFrom("pub_fields")
-					.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
-					.select((eb) => [
-						"pub_fields.id",
-						"pub_fields.name",
-						//	"pub_fields.pubFieldSchemaId",
-						"pub_fields.slug",
-						jsonObjectFrom(
-							eb
-								.selectFrom("PubFieldSchema")
-								.select([
-									"PubFieldSchema.id",
-									"PubFieldSchema.namespace",
-									"PubFieldSchema.name",
-									"PubFieldSchema.schema",
-								])
-								.whereRef(
-									"PubFieldSchema.id",
-									"=",
-									eb.ref("pub_fields.pubFieldSchemaId")
-								)
-						).as("schema"),
-					])
-					.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
-			).as("fields"),
-		])
-		.where("pub_types.id", "=", pubTypeId),
-}));
+export const getPubType = async (pubTypeId: PubTypesId) =>
+	autoCache(
+		db
+			.selectFrom("pub_types")
+			.select((eb) => [
+				"id",
+				"description",
+				"name",
+				"communityId",
+				"createdAt",
+				"updatedAt",
+				jsonArrayFrom(
+					eb
+						.selectFrom("pub_fields")
+						.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
+						.select((eb) => [
+							"pub_fields.id",
+							"pub_fields.name",
+							//	"pub_fields.pubFieldSchemaId",
+							"pub_fields.slug",
+							jsonObjectFrom(
+								eb
+									.selectFrom("PubFieldSchema")
+									.select([
+										"PubFieldSchema.id",
+										"PubFieldSchema.namespace",
+										"PubFieldSchema.name",
+										"PubFieldSchema.schema",
+									])
+									.whereRef(
+										"PubFieldSchema.id",
+										"=",
+										eb.ref("pub_fields.pubFieldSchemaId")
+									)
+							).as("schema"),
+						])
+						.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
+				).as("fields"),
+			])
+			.where("pub_types.id", "=", pubTypeId)
+	);

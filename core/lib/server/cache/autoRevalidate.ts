@@ -3,20 +3,12 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "logger";
 
 import type { autoCache } from "./autoCache";
-import type {
-	AutoRevalidateOptions,
-	CallbackAutoOutput,
-	DirectAutoOutput,
-	ExecuteFn,
-	MQB,
-	QueryBuilderFunction,
-} from "./types";
-import type Database from "~/kysely/types/Database";
+import type { AutoOptions, AutoRevalidateOptions, DirectAutoOutput, ExecuteFn, MQB } from "./types";
+import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
-import { createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { revalidateTagsForCommunity } from "./revalidate";
-import { cachedFindTables, callbackAutoOutput, directAutoOutput } from "./sharedAuto";
+import { cachedFindTables, directAutoOutput } from "./sharedAuto";
 
 const executeWithRevalidate = <
 	Q extends MQB<any>,
@@ -82,18 +74,12 @@ const executeWithRevalidate = <
 export function autoRevalidate<Q extends MQB<any>>(
 	qb: Q,
 	options?: AutoRevalidateOptions
-): DirectAutoOutput<Q>;
-export function autoRevalidate<QF extends QueryBuilderFunction<any, any>>(
-	queryFn: QF,
-	options?: AutoRevalidateOptions
-): CallbackAutoOutput<QF>;
-export function autoRevalidate<P extends any[], Q extends MQB<any>>(
-	queryFnOrQb: Q | QueryBuilderFunction<Q, P>,
-	options?: AutoRevalidateOptions
-) {
-	if (typeof queryFnOrQb !== "function") {
-		return directAutoOutput(queryFnOrQb, executeWithRevalidate, options);
-	}
-
-	return callbackAutoOutput(queryFnOrQb, executeWithRevalidate, options);
+): DirectAutoOutput<Q> {
+	return directAutoOutput(
+		qb,
+		executeWithRevalidate,
+		// @ts-expect-error FIXME: this should just work, no clue
+		// why typescript is being so difficult
+		options
+	);
 }
