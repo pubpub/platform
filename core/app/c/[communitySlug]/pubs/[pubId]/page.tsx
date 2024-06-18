@@ -51,14 +51,15 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 
-	
 	const pubChildren = pub.children.map(async (child) => {
+		const [stageActionInstances, stage] =
+			child.stages.length > 0
+				? await Promise.all([
+						getStageActions(child.stages[0].stageId),
+						getStage(child.stages[0].stageId),
+					])
+				: [null, null];
 
-		const [stageActionInstances, stage] = child.stages.length > 0 ? await Promise.all([
-			getStageActions(child.stages[0].stageId),
-			getStage(child.stages[0].stageId),
-		]) : [null, null];
-		
 		return {
 			id: child.id,
 			title:
@@ -67,26 +68,30 @@ export default async function Page({
 			stage: child.stages[0]?.stageId,
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
-			actions: stageActionInstances && stageActionInstances.length > 0 ? (
-				<PubsRunActionDropDownMenu
-					actionInstances={stageActionInstances.map((action) => ({
-						...action,
-					}))}
-					pub={child as unknown as StagePub}
-					stage={stage!}
-				/>
-			) : (
-				<div>No actions exist on the pub</div>
-			),
+			actions:
+				stageActionInstances && stageActionInstances.length > 0 ? (
+					<PubsRunActionDropDownMenu
+						actionInstances={stageActionInstances.map((action) => ({
+							...action,
+						}))}
+						pub={child as unknown as StagePub}
+						stage={stage!}
+					/>
+				) : (
+					<div>No actions exist on the pub</div>
+				),
 		};
 	});
 	const children = await Promise.all(pubChildren);
 
-	const [actions, stage] = pub.stages.length > 0 ? await Promise.all([
-		getStageActions(pub.stages[0].stageId),
-		getStage(pub.stages[0].stageId),
-	]) : [null, null];
-	
+	const [actions, stage] =
+		pub.stages.length > 0
+			? await Promise.all([
+					getStageActions(pub.stages[0].stageId),
+					getStage(pub.stages[0].stageId),
+				])
+			: [null, null];
+
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
@@ -134,17 +139,17 @@ export default async function Page({
 					</div>
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Actions</div>
-							{actions && actions.length > 0 ? (
-								<div>
-									<PubsRunActionDropDownMenu
-										actionInstances={actions}
-										pub={pub}
-										stage={stage!}
-									/>
-								</div>
-							) : (
-								<div className="ml-4 font-medium">No actions exist for this Pub</div>
-							)}
+						{actions && actions.length > 0 ? (
+							<div>
+								<PubsRunActionDropDownMenu
+									actionInstances={actions}
+									pub={pub}
+									stage={stage!}
+								/>
+							</div>
+						) : (
+							<div className="ml-4 font-medium">No actions exist for this Pub</div>
+						)}
 					</div>
 
 					<div className="mb-4">
