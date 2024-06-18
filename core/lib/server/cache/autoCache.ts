@@ -6,7 +6,7 @@ import { memoize } from "./memoize";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";
 
 const executeWithCache = <
-	Q extends SQB,
+	Q extends SQB<any>,
 	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
 >(
 	qb: Q,
@@ -153,7 +153,7 @@ const executeWithCache = <
  * new query.
  *
  */
-export function autoCache<Q extends SQB>(
+export function autoCache<Q extends SQB<any>>(
 	qb: Q,
 	options?: AutoCacheOptions // this kind of short-circuits typescripts type inference, while it's kind of lying as it doesn't really have anything to do what happens in the function, it's a lot faster
 ): DirectAutoOutput<Q> {

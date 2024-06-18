@@ -7,11 +7,13 @@ import { expect, it, vitest } from "vitest";
 import type { QB } from "./types";
 import type Database from "~/kysely/types/Database";
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { UsersId } from "~/kysely/types/public/Users";
 import type { Equal, Expect } from "~/lib/types";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
 import Event from "~/kysely/types/public/Event";
+import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
 import { cachedFindTables } from "./sharedAuto";
 
@@ -327,6 +329,71 @@ describe("cachedFindTables", () => {
 
 			type CorrectQuery = Expect<
 				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
+			>;
+		};
+	});
+
+	it("should handle complex unions", async () => {
+		const query = mockedDb
+			.with("combined_results", (db) =>
+				db
+					.selectFrom("pub_fields")
+					.distinctOn("pub_fields.id")
+					.innerJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+					.innerJoin("pubs", "pubs.id", "pub_values.pubId")
+					.where("pubs.communityId", "=", "x" as CommunitiesId)
+					.select([
+						"pub_fields.id",
+						"pub_fields.name",
+						"pub_fields.pubFieldSchemaId",
+						"pub_fields.slug",
+					])
+
+					.unionAll(
+						db
+							.selectFrom("pub_fields")
+							.distinctOn("pub_fields.id")
+							.innerJoin(
+								"_PubFieldToPubType",
+								"pub_fields.id",
+								"_PubFieldToPubType.A"
+							)
+							.innerJoin("pub_types", "pub_types.id", "_PubFieldToPubType.B")
+							.innerJoin("communities", "communities.id", "pub_types.communityId")
+							.where("communities.id", "=", "x" as CommunitiesId)
+							.select([
+								"pub_fields.id",
+								"pub_fields.name",
+								"pub_fields.pubFieldSchemaId",
+								"pub_fields.slug",
+							])
+					)
+			)
+			.selectFrom("combined_results")
+			.select([
+				"combined_results.id",
+				"combined_results.name",
+				"combined_results.pubFieldSchemaId",
+				"combined_results.slug",
+			])
+			.distinct();
+
+		const tables = await compileAndFindTables(query, "select");
+
+		expect(tables).toEqual([
+			"pub_fields",
+			"pub_values",
+			"pubs",
+			"_PubFieldToPubType",
+			"pub_types",
+			"communities",
+		]);
+
+		() => {
+			const cachedQuery = autoCache(query);
+
+			type CorrectQuery = Expect<
+				Equal<(typeof cachedQuery)["execute"], (typeof query)["execute"]>
 			>;
 		};
 	});
