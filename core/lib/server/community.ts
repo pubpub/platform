@@ -9,7 +9,10 @@ export function findCommunityBySlug(communitySlug?: string) {
 	const slug = communitySlug ?? getCommunitySlug();
 	return memoize(
 		() => db.selectFrom("communities").select("id").where("slug", "=", slug).executeTakeFirst(),
-		{ additionalCacheKey: [createCacheTag(`community-all_${slug}`)] }
+		{
+			additionalCacheKey: [slug],
+			revalidateTags: [createCacheTag(`community-all_${slug}`)],
+		}
 	)();
 }
 
