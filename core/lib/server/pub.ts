@@ -438,7 +438,7 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 	return pubType;
 };
 
-export const getPubType = async (pubTypeId: PubTypesId) =>
+export const getPubType = (pubTypeId: PubTypesId) =>
 	autoCache(
 		db
 			.selectFrom("pub_types")

@@ -57,7 +57,7 @@ export async function PubUpdate({ pubId }: PubUpdateProps) {
 
 	const { availableStages = [], currentStage } = availableStagesAndCurrentStage ?? {};
 
-	const pubType = await getPubType.executeTakeFirst(pub.pubTypeId as PubTypesId);
+	const pubType = await getPubType(pub.pubTypeId as PubTypesId).executeTakeFirst();
 	if (!pubType) {
 		throw new Error("Pub type not found");
 	}
