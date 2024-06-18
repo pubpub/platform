@@ -6,6 +6,8 @@ import { CardContent, CardHeader, CardTitle } from "ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { Separator } from "ui/separator";
 import { cn } from "utils";
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { StagePub, getStageActions, getStage } from "~/lib/db/queries";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
 
@@ -110,4 +112,9 @@ export function renderField(fieldValue: PubValueWithFieldAndSchema) {
 			<CardContent>{renderedField}</CardContent>
 		</>
 	);
+}
+
+export async function ActionRunDropdown({ stageId, pub }: { stageId: string; pub: StagePub }) {
+	const [actions, stage] = await Promise.all([getStageActions(stageId), getStage(stageId)]);
+	return <PubsRunActionDropDownMenu actionInstances={actions} pub={pub} stage={stage!} />;
 }

@@ -32,38 +32,39 @@ export default async function Page({
 	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}
-	const getPub = unstable_cache(
-		(pubId: string) =>
+	// const getPub = unstable_cache(
+	// 	(pubId: string) =>
+	// 		prisma.pub.findUnique({
+	// 			where: { id: pubId },
+	// 			include: {
+	// 				...pubInclude,
+	// 			},
+	// 		}),
+	// 	undefined,
+	// 	{ tags: [`pubs_${params.pubId}`] }
+	// );
+	const getPub = (pubId: string) =>
 			prisma.pub.findUnique({
 				where: { id: pubId },
 				include: {
 					...pubInclude,
 				},
-			}),
-		undefined,
-		{ tags: [`pubs_${params.pubId}`] }
-	);
+			});
+	
 	const pub = await getPub(params.pubId);
 	if (!pub) {
 		return null;
 	}
 	const users = getPubUsers(pub.permissions);
 
-	console.log("THE CHILDREN ARE HEREEEE",pub)
 	
 	const pubChildren = pub.children.map(async (child) => {
 
-		const [stageActionInstances, stage] = await Promise.all([
+		const [stageActionInstances, stage] = child.stages.length > 0 ? await Promise.all([
 			getStageActions(child.stages[0].stageId),
 			getStage(child.stages[0].stageId),
-		]);
-
-		if (!stage) {
-			throw new Error("Stage not found");
-		}
-		const actions = stageActionInstances.map((action) => ({
-			...action,
-		}))
+		]) : [null, null];
+		
 		return {
 			id: child.id,
 			title:
@@ -72,9 +73,11 @@ export default async function Page({
 			stage: child.stages[0]?.stageId,
 			assignee: child.assigneeId,
 			created: new Date(child.createdAt),
-			actions: actions ? (
+			actions: stageActionInstances && stageActionInstances.length > 0 ? (
 				<PubsRunActionDropDownMenu
-					actionInstances={actions}
+					actionInstances={stageActionInstances.map((action) => ({
+						...action,
+					}))}
 					pub={child as unknown as StagePub}
 					stage={stage!}
 				/>
@@ -85,23 +88,11 @@ export default async function Page({
 	});
 	const children = await Promise.all(pubChildren);
 
-	const ActionRunDropdown = async () => {
-		const [actions, stage] = await Promise.all([
-			getStageActions(pub.stages[0].stageId),
-			getStage(pub.stages[0].stageId),
-		]);
-		return (
-			<div>
-				<div className="mb-1 text-lg font-bold">Actions</div>
-				<PubsRunActionDropDownMenu
-					actionInstances={actions}
-					pub={pub}
-					stage={stage!}
-				/>
-			</div>
-		);
-	}
-	const ActionDropwdown = pub.stages[0] ? await <ActionRunDropdown/> : null;
+	const [actions, stage] = pub.stages.length > 0 ? await Promise.all([
+		getStageActions(pub.stages[0].stageId),
+		getStage(pub.stages[0].stageId),
+	]) : [null, null];
+	
 	return (
 		<div className="container mx-auto p-4">
 			<div className="pb-6">
@@ -148,9 +139,20 @@ export default async function Page({
 						</div>
 					</div>
 					<div className="mb-4">
-						{ActionDropwdown}
+						<div className="mb-1 text-lg font-bold">Actions</div>
+							{actions && actions.length > 0 ? (
+								<div>
+									<PubsRunActionDropDownMenu
+										actionInstances={actions}
+										pub={pub}
+										stage={stage!}
+									/>
+								</div>
+							) : (
+								<div className="ml-4 font-medium">No actions exist for this Pub</div>
+							)}
 					</div>
-	
+
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Members</div>
 						<div className="flex flex-row flex-wrap">
