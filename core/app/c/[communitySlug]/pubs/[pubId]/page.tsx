@@ -121,7 +121,7 @@ export default async function Page({
 							</div>
 						)}
 					</div>
-	
+
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Members</div>
 						<div className="flex flex-row flex-wrap">
