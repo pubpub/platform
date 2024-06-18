@@ -32,6 +32,7 @@ export default async function Page({
 	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}
+	// TODO: use unstable_cache without chidren not rendereing
 	// const getPub = unstable_cache(
 	// 	(pubId: string) =>
 	// 		prisma.pub.findUnique({
