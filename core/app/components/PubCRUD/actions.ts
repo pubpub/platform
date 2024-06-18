@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 
 import type { JsonValue } from "contracts";
 import { logger } from "logger";
@@ -74,7 +74,6 @@ export const createPub = defineServerAction(async function createPub({
 		if (path) {
 			revalidatePath(path);
 		}
-		// revalidateTag(`community-stages_${communityId}`);
 
 		return {
 			success: true,
@@ -178,7 +177,6 @@ export const updatePub = defineServerAction(async function updatePub({
 		if (path) {
 			revalidatePath(path);
 		}
-		// revalidateTag(`community-stages_${communityId}`);
 
 		return {
 			success: true,

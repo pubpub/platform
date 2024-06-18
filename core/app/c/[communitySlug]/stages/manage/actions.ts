@@ -29,7 +29,6 @@ async function deleteStages(stageIds: string[]) {
 			},
 		},
 	});
-	revalidateTagsForCommunity(["stages", "PubsInStages"]);
 }
 
 async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
@@ -210,12 +209,17 @@ export const updateAction = defineServerAction(async function updateAction(
 		  }
 		| { name: string; config?: undefined }
 ) {
-	await autoRevalidate(
+	const result = await autoRevalidate(
 		db
 			.updateTable("action_instances")
 			.set(props.name ? { name: props.name } : { config: props.config })
 			.where("id", "=", actionInstanceId)
 	).executeTakeFirstOrThrow();
+
+	return {
+		success: true,
+		report: "Action updated",
+	};
 });
 
 export const deleteAction = defineServerAction(async function deleteAction(
