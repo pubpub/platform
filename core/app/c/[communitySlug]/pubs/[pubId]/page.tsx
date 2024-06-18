@@ -33,25 +33,18 @@ export default async function Page({
 		return null;
 	}
 	// TODO: use unstable_cache without chidren not rendereing
-	// const getPub = unstable_cache(
-	// 	(pubId: string) =>
-	// 		prisma.pub.findUnique({
-	// 			where: { id: pubId },
-	// 			include: {
-	// 				...pubInclude,
-	// 			},
-	// 		}),
-	// 	undefined,
-	// 	{ tags: [`pubs_${params.pubId}`] }
-	// );
-	const getPub = (pubId: string) =>
+	const getPub = unstable_cache(
+		(pubId: string) =>
 			prisma.pub.findUnique({
 				where: { id: pubId },
 				include: {
 					...pubInclude,
 				},
-			});
-	
+			}),
+		undefined,
+		{ tags: [`pubs_${params.pubId}`] }
+	);
+
 	const pub = await getPub(params.pubId);
 	if (!pub) {
 		return null;
