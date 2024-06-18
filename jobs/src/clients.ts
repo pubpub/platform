@@ -6,17 +6,17 @@ import { api } from "contracts";
 export const integrationClient = makeClient({});
 export type IntegrationClient = typeof integrationClient;
 
-export const createInternalClient = (communitySlug: string, apiKey?: string) =>
-	initClient(api.internal, {
-		baseUrl: `${process.env.PUBPUB_URL}/api/v0/c/${communitySlug}`,
-		baseHeaders: { authorization: `Bearer ${apiKey ?? process.env.API_KEY}` },
-		jsonQuery: true,
-	});
+export const internalClient = initClient(api.internal, {
+	baseUrl: `${process.env.PUBPUB_URL}`,
+	baseHeaders: { authorization: `Bearer ${process.env.API_KEY}` },
+	jsonQuery: true,
+});
 
-export type InternalClient = ReturnType<typeof createInternalClient>;
+export type InternalClient = typeof internalClient;
 
 export const clients = {
 	integrationClient,
+	internalClient,
 } as const;
 
 export type Clients = typeof clients;
