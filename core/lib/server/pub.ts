@@ -155,18 +155,18 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 			])
 	).as("assignee");
 
-export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	// These aliases are used to make sure the JSON object returned matches
-	// the old prisma query's return value
-	const pubColumns = [
-		"pubs.id",
-		"pubs.communityId",
-		"pubs.createdAt",
-		"pubs.parentId",
-		"pubs.pubTypeId",
-		"pubs.updatedAt",
-	] as const satisfies SelectExpression<Database, "pubs">[];
+// These aliases are used to make sure the JSON object returned matches
+// the old prisma query's return value
+const pubColumns = [
+	"pubs.id",
+	"pubs.communityId",
+	"pubs.createdAt",
+	"pubs.parentId",
+	"pubs.pubTypeId",
+	"pubs.updatedAt",
+] as const satisfies SelectExpression<Database, "pubs">[];
 
+export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	const pub = await withPubChildren({ pubId })
 		.selectFrom("pubs")
 		.where("pubs.id", "=", pubId)
@@ -178,7 +178,7 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 			jsonArrayFrom(
 				eb
 					.selectFrom("children")
-					.select([...pubColumns, "values"])
+					.select([...pubColumns, "children.values"])
 					.$narrowType<{ values: PubValues }>()
 			).as("children")
 		)
@@ -192,17 +192,6 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 };
 
 export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	// These aliases are used to make sure the JSON object returned matches
-	// the old prisma query's return value
-	const pubColumns = [
-		"pubs.id",
-		"pubs.communityId",
-		"pubs.createdAt",
-		"pubs.parentId",
-		"pubs.pubTypeId",
-		"pubs.updatedAt",
-	] as const satisfies SelectExpression<Database, "pubs">[];
-
 	const pub = await autoCache(
 		withPubChildren({ pubId })
 			.selectFrom("pubs")
@@ -215,7 +204,7 @@ export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> =
 				jsonArrayFrom(
 					eb
 						.selectFrom("children")
-						.select([...pubColumns, "values"])
+						.select([...pubColumns, "children.values"])
 						.$narrowType<{ values: PubValues }>()
 				).as("children")
 			)
