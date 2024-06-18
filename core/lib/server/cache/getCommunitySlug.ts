@@ -7,7 +7,7 @@ import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME } from "./constants";
 /**
  * Experimental and likely unstable way to get the community slug.
  *
- * Under the hood this uses `next`s undocumented (probably for a reason)
+ * Under the hood this uses `next`s undocumented (probably for a reason) asyncStaticGenerationStore api
  */
 export const _experimental_getCommunitySlug = cache(() => {
 	const params = getParams();
@@ -23,7 +23,13 @@ export class NotInCommunityError extends Error {
 	message = "Not in route scoped under a community";
 }
 
-/** This requires the middleware to be correctly configured */
+/**
+ * Retrieve the community slug from the cookie or the headers.
+ *
+ * These cookies/headers are set by the middleware, so this function will only work
+ * when called from a route that is scoped under a community,
+ * i.e. `/c/[communitySlug]` or `/api/v0/c/[communitySlug]`.
+ */
 export const getCommunitySlug = cache(() => {
 	const cookie = cookies().get(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
 

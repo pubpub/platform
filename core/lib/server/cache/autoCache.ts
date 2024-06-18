@@ -40,6 +40,7 @@ const executeWithCache = <
 				additionalCacheKey: [
 					...(compiledQuery.parameters as string[]),
 					...(options?.additionalCacheKey ?? []),
+					communitySlug,
 					// very important, this is really then only thing
 					// that uniquely identifies the query
 					compiledQuery.sql,
@@ -64,7 +65,7 @@ const executeWithCache = <
 /**
  * **✨ autoCache**
  *
- * Automagically caches and properly tags the result of a `kysely` query!
+ * Automagically caches and properly tags the result of a `kysely` query, scoped to a community!
  *
  * You can either pass a complete Kysely query excluding the final execute call, or a(n async)
  * function that returns a query builder as an object `{ qb: Q }`.
@@ -76,7 +77,16 @@ const executeWithCache = <
  *
  * These are in addition to the same options for {@link memoize}
  *
- * Cache key in addition to the query parameters and the query itself.
+ * **⚠️ WARNING**
+ *
+ * Only works in a `communitySlug` context. If you are not in a community context, so when calling this
+ * from a requests originating from `/c/[communitySlug]` or `/api/v0/c/[communitySlug]`.
+ *
+ * If you are calling `autoCache` from outside such a context, you WILL NEED to pass the `communitySlug`
+ * option to `autoCache` to make sure the cache is tagged properly.
+ *
+ * `autoCache` automatically retrieves the communitySlug from a header/cookie using {@link getCommunitySlug},
+ * which in turn uses the `communitySlug` cookie set by middleware, which only works when in a `communitySlug` context.
  *
  * **Usage**
  *
@@ -85,7 +95,7 @@ const executeWithCache = <
  * The most obvious useage is simply immediately passing the query you want to cache to `autoCache`.
  *
  * ```ts
- * const getUsersWithMemberships = await autoCache(
+ * const getUsersWithMemberships = autoCache(
  * 	db.selectFrom("users").select((eb) => [
  * 		"id",
  * 		"firstName",
@@ -107,7 +117,7 @@ const executeWithCache = <
  * const cachedResult = await getUsersWithMemberships.execute();
  * ```
  *
- * This will cache the query _and_ tag it properly.
+ * This will cache the query _and_ tag it properly!
  *
  * The tagging strategy is very simple: it tags every table mentioned in the query with the
  * community slug.
@@ -117,15 +127,13 @@ const executeWithCache = <
  *
  * This works with almost any query, even recursive ones or CTEs.
  *
- * ### Modifying the query
+ * *Modifying the query*
  *
  * As mentioned above, the query builder is available on the `qb` property of the result object, so
  * you could do something like this:
  *
  * ```ts
  * const getAllUsers = autoCache(db.selectFrom("users").selectAll());
- *
- * const allUsers = await getAllUsers.execute();
  *
  * const firstUserWithMembership = autoCache(
  * 	getAllUsers.qb.clearSelect().select((eb) => [
@@ -152,6 +160,16 @@ const executeWithCache = <
  * As you can see above, you will need to wrap the querybuilder in `autoCache` again to cache the
  * new query.
  *
+ *
+ * **How it works**
+ *
+ * Roughly, `autoCache` works by
+ *
+ * 1. Compiling the query to get the SQL and the parameters
+ * 2. Finding all tables mentioned in the query
+ * 3. Creating a cache key from the SQL, the parameters, and the tables
+ * 4. Tagging the cache with the community slug and the tables
+ * 5. Caching the result using {@link memoize}
  */
 export function autoCache<Q extends SQB<any>>(
 	qb: Q,
