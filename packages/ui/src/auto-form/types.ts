@@ -50,8 +50,15 @@ export type OptionsDependency<SchemaType extends z.infer<z.ZodObject<any, any>>>
 	};
 
 export type Dependency<SchemaType extends z.infer<z.ZodObject<any, any>>> =
-	| ValueDependency<SchemaType>
-	| OptionsDependency<SchemaType>;
+	// we pass in a union often, otherwise this does not get mapped correctly
+	// (you get `keyof ({} | {option1: string} | {option2: string})`)
+	// instead of `keyof {option1: string} | keyof {option2: string} | keyof {}`
+	SchemaType extends SchemaType
+		? // this is the case for z.object({})
+			keyof SchemaType extends never
+			? never
+			: ValueDependency<SchemaType> | OptionsDependency<SchemaType>
+		: never;
 
 /**
  * A FormInput component can handle a specific Zod type (e.g. "ZodBoolean")
@@ -63,7 +70,7 @@ export type AutoFormInputComponentProps = {
 	label: string;
 	isRequired: boolean;
 	fieldProps: any;
-	zodItem: z.ZodAny;
+	zodItem: z.ZodType<any>;
 	description?: string;
 	className?: string;
 };

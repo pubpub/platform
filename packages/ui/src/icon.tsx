@@ -1,5 +1,6 @@
 export {
 	Activity,
+	ArrowRight,
 	Calendar,
 	BadgeCheck,
 	Check,
@@ -12,6 +13,8 @@ export {
 	CircleEllipsis,
 	Download,
 	FileText,
+	Globe,
+	Info,
 	Loader2,
 	LogOut,
 	ListPlus,

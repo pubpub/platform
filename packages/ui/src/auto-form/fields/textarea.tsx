@@ -13,6 +13,7 @@ export default function AutoFormTextarea({
 	isRequired,
 	fieldConfigItem,
 	fieldProps,
+	zodInputProps,
 }: AutoFormInputComponentProps) {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
@@ -25,7 +26,12 @@ export default function AutoFormTextarea({
 				</>
 			)}
 			<FormControl>
-				<Textarea {...fieldPropsWithoutShowLabel} />
+				<Textarea
+					{...{
+						//...zodInputProps,
+						...fieldPropsWithoutShowLabel,
+					}}
+				/>
 			</FormControl>
 			<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 			<FormMessage />

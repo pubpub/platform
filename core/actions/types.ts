@@ -1,15 +1,19 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
+import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type Event from "~/kysely/types/public/Event";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
 
 export type ActionPubType = CorePubField[];
+
+type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
+export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
 export type ActionPub<T extends ActionPubType> = {
 	id: string;
@@ -25,8 +29,18 @@ export type ActionPub<T extends ActionPubType> = {
 };
 
 export type RunProps<T extends Action> =
-	T extends Action<infer P, infer C, infer A>
-		? { config: C; pub: ActionPub<P>; args: A; stageId: StagesId; communityId: CommunitiesId }
+	T extends Action<
+		infer P extends ActionPubType,
+		infer C,
+		infer A extends ZodObjectOrWrappedOrOptional
+	>
+		? {
+				config: C["_output"];
+				pub: ActionPub<P>;
+				args: A["_output"];
+				stageId: StagesId;
+				communityId: CommunitiesId;
+			}
 		: never;
 
 export type ConfigProps<C> = {
@@ -41,8 +55,8 @@ export type TokenDef = {
 
 export type Action<
 	P extends ActionPubType = ActionPubType,
-	C extends object = {},
-	A extends object | undefined = {} | undefined,
+	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
+	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
 	N extends string = string,
 > = {
 	id?: string;
@@ -53,7 +67,21 @@ export type Action<
 	 *
 	 * These are the "statically known" parameters for this action.
 	 */
-	config: z.ZodType<C>;
+	config: {
+		schema: C;
+		fieldConfig?: {
+			[K in keyof FieldConfig<C["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
+				/**
+				 * The type of the field.
+				 * Either choose one of the predefined types, define a type inline, or use `custom`.
+				 *
+				 * `custom` indicates you are defining the component yourself in `[action]/[config|params]/[fieldName].field.tsx`
+				 */
+				fieldType?: FieldConfigItem["fieldType"] | "custom";
+			};
+		};
+		dependencies?: Dependency<z.infer<C>>[];
+	};
 	/**
 	 * The run parameters for this action
 	 *
@@ -62,7 +90,18 @@ export type Action<
 	 * Defining this as an optional Zod schema (e.g. `z.object({/*...*\/}).optional()`) means that the action can be automatically run
 	 * through a rule.
 	 */
-	params: z.ZodType<A>;
+	params: {
+		schema: A;
+		fieldConfig?: {
+			[K in keyof NonNullable<A["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
+				/**
+				 * Custom indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
+				 */
+				fieldType?: FieldConfigItem["fieldType"] | "custom";
+			};
+		};
+		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
+	};
 	/**
 	 * The core pub fields that this action requires in order to run.
 	 */
@@ -76,14 +115,20 @@ export type Action<
 	 * action's config or arguments.
 	 */
 	tokens?: {
-		[K in keyof C]?: TokenDef;
+		[K in keyof C["_output"]]?: TokenDef;
 	};
+	/**
+	 * Optionally mark this action as experimental
+	 * At the moment this will simply show an "experimental" badge in the UI when creating
+	 * and configuring this action
+	 */
+	experimental?: boolean;
 };
 
 export const defineAction = <
 	T extends ActionPubType,
-	C extends object,
-	A extends object | undefined,
+	C extends ZodObjectOrWrapped,
+	A extends ZodObjectOrWrappedOrOptional,
 	N extends string,
 >(
 	action: Action<T, C, A, N>
@@ -103,14 +148,6 @@ export const defineRun = <T extends Action = Action>(
 ) => run;
 
 export type Run = ReturnType<typeof defineRun>;
-
-type ValueType<T extends Record<string, { optional: boolean }>> = { [K in keyof T]?: string } & {
-	[K in keyof T as T[K]["optional"] extends false ? K : never]-?: string;
-} extends infer O
-	? { [K in keyof O]: O[K] }
-	: never;
-
-declare const x: ValueType<{ a: { optional: false } }>;
 
 export type EventRuleOptionsBase<
 	E extends Event,

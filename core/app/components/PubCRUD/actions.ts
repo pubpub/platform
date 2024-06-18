@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { JSONSchemaType } from "ajv";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { JsonValue } from "contracts";
 import { logger } from "logger";
@@ -10,6 +12,7 @@ import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import type { StagesId } from "~/kysely/types/public/Stages";
+import { validatePubValues } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
@@ -88,6 +91,135 @@ export const createPub = defineServerAction(async function createPub({
 	}
 });
 
+export const _updatePub = async ({
+	stageId,
+	pubId,
+	fields,
+}: {
+	stageId?: StagesId;
+	pubId: PubsId;
+	fields: { slug: string; value: JsonValue }[];
+}) => {
+	const toBeUpdatedPubFieldSlugs = fields.map(({ slug }) => slug);
+
+	const toBeUpdatedPubValues = await db
+		.selectFrom("pub_values")
+		.select((eb) => [
+			"id",
+			"value",
+			"pubId",
+			"pub_values.fieldId",
+			jsonObjectFrom(
+				eb
+					.selectFrom("pub_fields")
+					.select((eb) => [
+						"pub_fields.id",
+						"pub_fields.name",
+						"pub_fields.pubFieldSchemaId",
+						"pub_fields.slug",
+						jsonObjectFrom(
+							eb
+								.selectFrom("PubFieldSchema")
+								.selectAll()
+								.whereRef("PubFieldSchema.id", "=", "pub_fields.pubFieldSchemaId")
+						).as("schema"),
+					])
+					.whereRef("pub_fields.id", "=", "pub_values.fieldId")
+					.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
+			).as("field"),
+		])
+		.where("pub_values.pubId", "=", pubId)
+		.execute();
+
+	const stageMoveQuery =
+		stageId &&
+		autoRevalidate(
+			db
+				.with("leave-stage", (db) =>
+					db.deleteFrom("PubsInStages").where("pubId", "=", pubId)
+				)
+				.insertInto("PubsInStages")
+				.values({ pubId, stageId })
+		).execute();
+
+	const newValues = Object.fromEntries(
+		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])
+	);
+
+	const pubFields = toBeUpdatedPubValues
+		.map((pubValue) => pubValue.field)
+		.filter(
+			(
+				field
+			): // bless this mess
+			field is NonNullable<
+				typeof field & {
+					schema: NonNullable<NonNullable<typeof field>["schema"]> & {
+						schema: JSONSchemaType<any>;
+					};
+				}
+			> => field !== null && field.schema !== null && field.schema.schema !== null
+		);
+
+	const validated = validatePubValues({
+		fields: pubFields,
+		values: newValues,
+	});
+
+	if (validated && validated.error) {
+		return {
+			error: validated.error,
+			cause: validated.error,
+		};
+	}
+
+	const queries = [
+		toBeUpdatedPubValues.map(async (pubValue) => {
+			const field = fields.find((f) => f.slug === pubValue.field?.slug);
+			if (!field) {
+				logger.debug({
+					msg: `Field ${pubValue.field?.slug} not found in fields`,
+					fields,
+					pubValue,
+				});
+				return;
+			}
+			const { value } = field;
+
+			return autoRevalidate(
+				db
+					.updateTable("pub_values")
+					.set({
+						value: JSON.stringify(value),
+					})
+					.where("pub_values.id", "=", pubValue.id)
+					.returningAll()
+			).execute();
+		}),
+	]
+		.filter((x) => x != null)
+		.flat();
+
+	const updatePub = await Promise.allSettled([...queries, ...([stageMoveQuery] || [])]);
+
+	const errors = updatePub.filter(
+		(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>
+			pubValue.status === "rejected"
+	);
+	if (errors.length > 0) {
+		return {
+			title: "Failed to update pub",
+			error: `${errors[0]?.reason}`,
+			cause: errors,
+		};
+	}
+
+	return {
+		success: true,
+		report: `Successfully updated the Pub`,
+	};
+};
+
 export const updatePub = defineServerAction(async function updatePub({
 	communityId,
 	pubId,
@@ -102,6 +234,7 @@ export const updatePub = defineServerAction(async function updatePub({
 	stageId?: StagesId;
 }) {
 	const loginData = await getLoginData();
+
 	if (!loginData) {
 		throw new Error("Not logged in");
 	}
@@ -115,73 +248,18 @@ export const updatePub = defineServerAction(async function updatePub({
 		};
 	}
 
+	const mappedFields = Object.values(fields).map(({ slug, value }) => ({
+		slug,
+		value,
+	}));
+
 	try {
-		const pubValues = await db
-			.selectFrom("pub_values")
-			.selectAll()
-			.where("pub_values.pubId", "=", pubId)
-			.execute();
-
-		const stageMoveQuery =
-			stageId &&
-			autoRevalidate(
-				db
-					.with("leave-stage", (db) =>
-						db.deleteFrom("PubsInStages").where("pubId", "=", pubId)
-					)
-					.insertInto("PubsInStages")
-					.values({ pubId, stageId })
-			).execute();
-
-		const queries = [
-			pubValues.map(async (pubValue) => {
-				const field = fields[pubValue.fieldId];
-				if (!field) {
-					logger.debug({
-						msg: `Field ${pubValue.fieldId} not found in fields`,
-						fields,
-						pubValue,
-					});
-					return;
-				}
-				const { value } = field;
-
-				return autoRevalidate(
-					db
-						.updateTable("pub_values")
-						.set({
-							value: JSON.stringify(value),
-						})
-						.where("pub_values.id", "=", pubValue.id)
-						.returningAll()
-				).execute();
-			}),
-		]
-			.filter((x) => x != null)
-			.flat();
-
-		const updatePub = await Promise.allSettled([...queries, ...([stageMoveQuery] || [])]);
-
-		const errors = updatePub.filter(
-			(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>
-				pubValue.status === "rejected"
-		);
-		if (errors.length > 0) {
-			return {
-				title: "Failed to update pub",
-				error: `${errors[0]?.reason}`,
-				cause: errors,
-			};
-		}
-
+		const result = await _updatePub({ stageId, pubId, fields: mappedFields });
 		if (path) {
 			revalidatePath(path);
 		}
 
-		return {
-			success: true,
-			report: `Successfully updated the Pub`,
-		};
+		return result;
 	} catch (error) {
 		logger.error(error);
 		return {

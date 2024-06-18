@@ -1,25 +1,23 @@
-"use client";
-
-import type { Pub } from "@prisma/client";
+import React from "react";
 
 import { Button } from "ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
+import type { StagePub } from "./queries";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
-import { StagePanelPubsRunActionButton } from "./StagePanelPubsRunActionButton";
+import type { Stages } from "~/kysely/types/public/Stages";
+import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
+import { StagePanelPubsRunActionDropDownMenuItem } from "./StagePanelPubsRunActionDropDownMenuItem";
 
 export const StagePanelPubsRunActionDropDownMenu = ({
 	actionInstances,
 	pub,
+	stage,
 }: {
 	actionInstances: ActionInstances[];
-	pub: Pub;
+	pub: StagePub;
+	stage: Stages;
 }) => {
 	if (!actionInstances.length) {
 		return null;
@@ -36,15 +34,13 @@ export const StagePanelPubsRunActionDropDownMenu = ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
-					<DropdownMenuItem
-						key={actionInstance.id}
-						onSelect={(evt) => {
-							// prevents the dropdown from closing when clicking on the action
-							evt.preventDefault();
-						}}
-					>
-						<StagePanelPubsRunActionButton actionInstance={actionInstance} pub={pub} />
-					</DropdownMenuItem>
+					<StagePanelPubsRunActionDropDownMenuItem key={actionInstance.id}>
+						<ActionRunFormWrapper
+							stage={stage}
+							pub={pub}
+							actionInstance={actionInstance}
+						/>
+					</StagePanelPubsRunActionDropDownMenuItem>
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>

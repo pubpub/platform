@@ -2,9 +2,9 @@ import assert from "assert";
 
 import type { Node as NodeMdast, Parent as ParentMdast } from "mdast";
 import type { Directive } from "micromark-extension-directive";
+import type { Plugin } from "unified";
 import type { Node } from "unist";
 
-import { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 
 import { expect } from "utils";
