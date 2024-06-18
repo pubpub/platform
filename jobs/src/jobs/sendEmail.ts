@@ -1,16 +1,12 @@
 import { SendEmailRequestBody } from "contracts";
 
-import { IntegrationClient } from "../clients";
+import { integrationClient } from "../clients";
 import { defineJob } from "../defineJob";
 import { InstanceJobPayload } from "../types";
 
 export const sendEmail = defineJob(
-	async (
-		payload: InstanceJobPayload<SendEmailRequestBody>,
-		logger,
-		job,
-		client: IntegrationClient
-	) => {
+	integrationClient,
+	async (payload: InstanceJobPayload<SendEmailRequestBody>, logger, job, client) => {
 		const { instanceId, body } = payload;
 		logger.info({ msg: `Sending email` });
 		const info = await client.sendEmail(instanceId, body);

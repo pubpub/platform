@@ -2,13 +2,12 @@ import { run } from "graphile-worker";
 
 import { logger } from "logger";
 
-import { clients, Clients } from "./clients";
 import { emitEvent } from "./jobs/emitEvent";
 import { sendEmail } from "./jobs/sendEmail";
 
-const makeTaskList = (clients: Clients): GraphileWorker.Tasks => ({
-	sendEmail: sendEmail(clients.integrationClient),
-	emitEvent: emitEvent(),
+const makeTaskList = (): GraphileWorker.Tasks => ({
+	sendEmail: sendEmail,
+	emitEvent: emitEvent,
 });
 
 const main = async () => {
@@ -19,7 +18,7 @@ const main = async () => {
 			concurrency: 5,
 			noHandleSignals: false,
 			pollInterval: 1000,
-			taskList: makeTaskList(clients),
+			taskList: makeTaskList(),
 		});
 
 		logger.info({ msg: `Successfully started graphile worker`, runner });
