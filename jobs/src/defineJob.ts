@@ -16,7 +16,6 @@ export const defineJob = <C extends Client, Payload, Output>(
 ) => {
 	return (payload: Payload, helpers: JobHelpers) => {
 		const jobLogger = baseLogger.child({
-			payload,
 			job: helpers.job,
 		});
 
