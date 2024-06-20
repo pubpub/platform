@@ -10,34 +10,40 @@ const kanelZodCastRegex = /as unknown as z.Schema<(.*?)(Mutator|Initializer)>/;
  * 1. `as unknown as z.Schema<TableMutator>` into `as unknown as z.Schema<TableUpdate>`
  * 2. `as unknown as z.Schema<TableInitializer>` into `as unknown as z.Schema<NewTable>`
  */
-function kanelKyselyZodCompatibilityHook(path, lines, instantiatedConfig) {
-	return lines.map((line) => {
-		// if (line.includes("export const")) {
-		// 	return line.replace(/export const (.*?) = z/, "export const $1Schema = z");
-		// }
-
-		if (!line.includes("as unknown as z.Schema")) {
-			return line;
-		}
-
-		const replacedLine = line.replace(
-			kanelZodCastRegex,
-			(_, typeName, mutatorOrInitializer) => {
-				if (!mutatorOrInitializer) {
-					return `as unknown as z.Schema<${typeName}>`;
-				}
-
-				if (mutatorOrInitializer === "Mutator") {
-					return `as unknown as z.Schema<${typeName}Update>`;
-				}
-
-				return `as unknown as z.Schema<New${typeName}>`;
-			}
-		);
-
-		return replacedLine;
-	});
-}
+// function kanelKyselyZodCompatibilityHook(path, lines, instantiatedConfig) {
+// 	return lines;
+// 	return lines.map((line) => {
+// 		// if (line.includes("export const")) {
+// 		// 	return line.replace(/export const (.*?) = z/, "export const $1Schema = z");
+// 		// }
+// 		// if (line.includes("import {")) {
+// 		// 	const imports = line.replace(
+// 		// 		/import \{(.*?)\} (from '\.\/.*?')/,
+// 		// 		(_, imports, from) => {
+// 		// 			const fix = `import {${imports.replace(/ (\w+), type/, " $1Schema, type")}} ${from}`;
+// 		// 			return fix;
+// 		// 		}
+// 		// 	);
+// 		// 	return imports;
+// 		// }
+// 		// if (!line.includes("as unknown as z.Schema")) {
+// 		// 	return line;
+// 		// }
+// 		// const replacedLine = line.replace(
+// 		// 	kanelZodCastRegex,
+// 		// 	(_, typeName, mutatorOrInitializer) => {
+// 		// 		if (!mutatorOrInitializer) {
+// 		// 			return `satisfies z.Schema<${typeName}>`;
+// 		// 		}
+// 		// 		if (mutatorOrInitializer === "Mutator") {
+// 		// 			return `satisfies z.Schema<${typeName}Update>`;
+// 		// 		}
+// 		// 		return `satisfies z.Schema<New${typeName}>`;
+// 		// 	}
+// 		// );
+// 		// return replacedLine;
+// 	});
+// }
 
 /**
  * @type {import("kanel").PreRenderHook}
@@ -60,8 +66,59 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 							return declaration;
 						}
 
+						// enum
+						if (declaration.comment?.[0]?.startsWith("Zod schema for ")) {
+							const enumName =
+								declaration.comment?.[0].match(/Zod schema for (.*)/)?.[1];
+
+							if (enumName) {
+								declaration.value = [`z.nativeEnum(${enumName})`];
+							}
+						}
+
+						const imports = declaration.typeImports?.map((typeImport) => {
+							const { importAsType, isDefault, name, isAbsolute, path } = typeImport;
+							const isSchemaImport = !isAbsolute && !isDefault && !importAsType;
+							if (!isSchemaImport) {
+								return typeImport;
+							}
+
+							return {
+								...typeImport,
+								name: `${name}Schema`,
+							};
+						});
+
+						const declValue = Array.isArray(declaration.value)
+							? declaration.value.map((line) => {
+									line = line.replace(/(\w+?: [^z][^.]\w+)/, "$1Schema");
+
+									if (!line.includes("as unknown as z.Schema")) {
+										return line;
+									}
+
+									const replacedLine = line.replace(
+										kanelZodCastRegex,
+										(_, typeName, mutatorOrInitializer) => {
+											if (!mutatorOrInitializer) {
+												return `satisfies z.Schema<${typeName}>`;
+											}
+
+											if (mutatorOrInitializer === "Mutator") {
+												return `satisfies z.Schema<${typeName}Update>`;
+											}
+
+											return `satisfies z.Schema<New${typeName}>`;
+										}
+									);
+									return replacedLine;
+								})
+							: declaration.value;
+
 						return {
 							...declaration,
+							typeImports: imports,
+							value: declValue,
 							name: `${declaration.name}Schema`,
 						};
 					}),
@@ -73,4 +130,4 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 	return renamedSchemas;
 }
 
-module.exports = { kanelKyselyZodCompatibilityHook, kanelKyselyZodCompatibilityPreRenderHook };
+module.exports = { kanelKyselyZodCompatibilityPreRenderHook };

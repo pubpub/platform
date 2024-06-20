@@ -3,12 +3,10 @@ const { makeKyselyHook } = require("kanel-kysely");
 const {
 	generateZodSchemas,
 	makeGenerateZodSchemas,
-	defaultZodTypeMap,
-	defaultGetZodSchemaMetadata,
 	defaultGetZodIdentifierMetadata,
+	defaultGetZodSchemaMetadata,
 } = require("kanel-zod");
 const {
-	kanelKyselyZodCompatibilityHook,
 	kanelKyselyZodCompatibilityPreRenderHook,
 } = require("./prisma/kanel-kysely-zod-compatibility-hook.cjs");
 
@@ -18,19 +16,12 @@ module.exports = {
 	schemas: ["public"],
 
 	preDeleteOutputFolder: true,
+	enumStyle: "enum",
 	preRenderHooks: [
 		makeKyselyHook(),
-		// makeGenerateZodSchemas({
-		// 	castToSchema: true,
-		// 	zodTypeMap: defaultZodTypeMap,
-		// 	getZodSchemaMetadata: (d, generateFor, instantiatedConfig) => {
-		// 		return defaultGetZodSchemaMetadata(d, generateFor, instantiatedConfig);
-		// 	},
-		// 	getZodIdentifierMetadata: defaultGetZodIdentifierMetadata,
-		// }),
-		// kanelKyselyZodCompatibilityPreRenderHook,
+		generateZodSchemas,
+		kanelKyselyZodCompatibilityPreRenderHook,
 	],
-	// postRenderHooks: [kanelKyselyZodCompatibilityHook],
 	outputPath: "../packages/db/src",
 
 	customTypeMap: {

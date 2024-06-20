@@ -122,8 +122,7 @@ model PubFieldSchema {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  // This must be a dereferenced JSONSchema. We should find a way to validate.
-  schema    Json
+  schema    Json /// @type(JSONSchemaType<any>, 'ajv', true, false, true)
   PubFields PubField[]
 
   @@unique([name, namespace], name: "schema_identifier")
