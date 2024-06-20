@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -16,6 +17,7 @@ import type { UsersId } from "~/kysely/types/public/Users";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 import Event from "~/kysely/types/public/Event";
 import { getPub } from "~/lib/server";
 import { getActionByName } from "../api";
@@ -99,7 +101,6 @@ const _runActionInstance = async (
 		};
 	}
 
-	logger.info(actionInstance.action);
 	const action = getActionByName(actionInstance.action);
 	const actionRun = await getActionRunByName(actionInstance.action);
 
@@ -109,7 +110,8 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedConfig = action.config.safeParse(actionInstance.config ?? {});
+	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {});
+
 	if (!parsedConfig.success) {
 		return {
 			error: "Invalid config",
@@ -117,7 +119,8 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedArgs = action.params.safeParse(args ?? {});
+	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
+
 	if (!parsedArgs.success) {
 		return {
 			title: "Invalid pub config",
@@ -143,9 +146,11 @@ const _runActionInstance = async (
 			pub: {
 				id: pub.id,
 				values: pub.values as any,
+				assignee: pub.assignee,
 			},
-			args: args,
+			args: parsedArgs.data,
 			stageId: actionInstance.stageId,
+			communityId: pub.communityId as CommunitiesId,
 		});
 
 		return result;
@@ -158,13 +163,6 @@ const _runActionInstance = async (
 		};
 	}
 };
-
-// export async function runActionInstancel(args: RunActionInstanceArgs) {
-
-// 	const result = await _runActionInstance(actionInstanceResult.value, pubResult.value, args);
-
-// 	return result;
-// }
 
 export async function runActionInstance(args: RunActionInstanceArgs) {
 	const result = await _runActionInstance(args);

@@ -36,7 +36,8 @@ export const siteApi = contract.router(
 		},
 	},
 	{
-		//		pathPrefix: "/site",
+		pathPrefix: "/site",
+
 		baseHeaders: z.object({
 			authorization: z.string(),
 		}),

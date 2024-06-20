@@ -109,6 +109,10 @@
 			"module": "./textarea/dist/ui-textarea.esm.js",
 			"default": "./textarea/dist/ui-textarea.cjs.js"
 		},
+		"./accordion": {
+			"module": "./accordion/dist/ui-accordion.esm.js",
+			"default": "./accordion/dist/ui-accordion.cjs.js"
+		},
 		"./separator": {
 			"module": "./separator/dist/ui-separator.esm.js",
 			"default": "./separator/dist/ui-separator.cjs.js"
@@ -153,6 +157,10 @@
 			"module": "./context-menu/dist/ui-context-menu.esm.js",
 			"default": "./context-menu/dist/ui-context-menu.cjs.js"
 		},
+		"./tokens": {
+			"module": "./tokens/dist/ui-tokens.esm.js",
+			"default": "./tokens/dist/ui-tokens.cjs.js"
+		},
 		"./dropdown-menu": {
 			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
 			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
@@ -194,6 +202,7 @@
 	"files": [
 		"dist",
 		"styles.css",
+		"accordion",
 		"alert",
 		"alert-dialog",
 		"auto-form",
@@ -232,6 +241,7 @@
 		"textarea",
 		"toast",
 		"toaster",
+		"tokens",
 		"tooltip",
 		"use-toast",
 		"hooks",
@@ -244,6 +254,13 @@
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.1",
+		"@lexical/code": "^0.15.0",
+		"@lexical/link": "^0.15.0",
+		"@lexical/list": "^0.15.0",
+		"@lexical/markdown": "^0.15.0",
+		"@lexical/react": "^0.15.0",
+		"@lexical/rich-text": "^0.15.0",
+		"@lexical/utils": "^0.15.0",
 		"@radix-ui/react-accordion": "^1.1.2",
 		"@radix-ui/react-alert-dialog": "^1.0.5",
 		"@radix-ui/react-avatar": "^1.0.3",
@@ -267,6 +284,7 @@
 		"@radix-ui/react-tabs": "^1.0.4",
 		"@radix-ui/react-toast": "^1.1.4",
 		"@radix-ui/react-tooltip": "^1.0.6",
+		"@tailwindcss/typography": "^0.5.10",
 		"@tanstack/react-table": "^8.13.2",
 		"@uppy/aws-s3": "^3.4.0",
 		"@uppy/core": "^3.6.1",
@@ -279,6 +297,7 @@
 		"clsx": "^2.0.0",
 		"cmdk": "^1.0.0",
 		"date-fns": "^3.6.0",
+		"lexical": "^0.15.0",
 		"lucide-react": "^0.357.0",
 		"next": "14.2.1",
 		"react-day-picker": "^8.10.0",
@@ -326,6 +345,7 @@
 			}
 		},
 		"entrypoints": [
+			"accordion.tsx",
 			"alert.tsx",
 			"alert-dialog.tsx",
 			"auto-form/index.tsx",
@@ -363,6 +383,7 @@
 			"textarea.tsx",
 			"toast.tsx",
 			"toaster.tsx",
+			"tokens/index.tsx",
 			"tooltip.tsx",
 			"use-toast.tsx",
 			"hooks/index.ts",
