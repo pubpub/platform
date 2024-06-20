@@ -5,11 +5,13 @@ import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
+import { PageContext } from "~/app/c/[communitySlug]/stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
 
 export type ActionFormFieldBaseProps<Type extends "config" | "params"> = {
 	actionInstance: ActionInstances;
 	communityId: CommunitiesId;
 	stageId: StagesId;
+	pageContext: PageContext;
 } & (Type extends "params"
 	? {
 			pubId: PubsId;
@@ -27,6 +29,7 @@ export const defineActionFormFieldServerComponent = <
 		actionInstance,
 		stageId,
 		communityId,
+		pageContext,
 	}: ActionFormFieldBaseProps<Type> & {
 		action: T;
 	}) => Promise<React.AwaitedReactNode>

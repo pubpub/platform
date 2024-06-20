@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-autocomplete.cjs.js",
+	"module": "dist/ui-autocomplete.esm.js"
+}

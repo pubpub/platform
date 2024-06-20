@@ -153,6 +153,10 @@
 			"module": "./alert-dialog/dist/ui-alert-dialog.esm.js",
 			"default": "./alert-dialog/dist/ui-alert-dialog.cjs.js"
 		},
+		"./autocomplete": {
+			"module": "./autocomplete/dist/ui-autocomplete.esm.js",
+			"default": "./autocomplete/dist/ui-autocomplete.cjs.js"
+		},
 		"./context-menu": {
 			"module": "./context-menu/dist/ui-context-menu.esm.js",
 			"default": "./context-menu/dist/ui-context-menu.cjs.js"
@@ -206,6 +210,7 @@
 		"alert",
 		"alert-dialog",
 		"auto-form",
+		"autocomplete",
 		"avatar",
 		"badge",
 		"button",
@@ -349,6 +354,7 @@
 			"alert.tsx",
 			"alert-dialog.tsx",
 			"auto-form/index.tsx",
+			"autocomplete.tsx",
 			"avatar.tsx",
 			"badge.tsx",
 			"button.tsx",
