@@ -14,6 +14,11 @@ export const action = defineAction({
 			subject: z.string().describe("Email subject"),
 			body: markdown().min(0).max(2_000).describe("Email body"),
 		}),
+		fieldConfig: {
+			recipient: {
+				fieldType: "custom",
+			},
+		},
 	},
 	description: "Send an email to one or more users",
 	params: {

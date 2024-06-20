@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useCallback, useTransition } from "react";
+import { Suspense, useCallback, useTransition } from "react";
 
 import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
