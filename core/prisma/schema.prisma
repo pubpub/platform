@@ -4,11 +4,14 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  
 }
 
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+
 }
 
 generator comments {

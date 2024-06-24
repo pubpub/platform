@@ -20,7 +20,7 @@
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
 		"prebuild": "prisma generate",
 		"start": "next start",
-		"run-integration-tests" : "npx prisma migrate deploy && npx tsx prisma db seed && next start",
+		"run-integration-tests" : "npx prisma migrate deploy && npx prisma db seed && next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature",
 		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",
 		"type-check": "tsc --noEmit",

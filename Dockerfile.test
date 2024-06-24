@@ -95,4 +95,5 @@ EXPOSE $PORT
 
 
 # Run the application.
-CMD pnpm run-integration-tests
+CMD pnpx prisma migrate deploy && pnpx prisma db seed && next start
+
