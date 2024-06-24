@@ -6,8 +6,11 @@ import { logger } from "logger";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
 import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
+import {
+	default as buildTestCommunities,
+	testCommunityId,
+} from "./exampleCommunitySeeds/testcommunity";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
-import { default as buildTestCommunities, testCommunityId } from "./exampleCommunitySeeds/testcommunity";
 
 const supabaseUrl = env.SUPABASE_URL;
 const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -59,9 +62,7 @@ async function createUserMembers(
 async function main() {
 	let prismaCommunityIds;
 	if (env.NODE_ENV === "production") {
-		prismaCommunityIds = [
-			{ communityId: testCommunityId, canAdmin: true },
-		];
+		prismaCommunityIds = [{ communityId: testCommunityId, canAdmin: true }];
 		logger.error("Seeding production");
 		await buildTestCommunities(testCommunityId);
 	} else {
