@@ -41,17 +41,17 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
 
 const CommandInput = React.forwardRef<
 	React.ElementRef<typeof CommandPrimitive.Input>,
-	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
+	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & { icon?: React.ReactNode }
+>(({ className, icon, ...props }, ref) => (
 	<div
-		className="flex items-center rounded-lg border px-3 focus-within:border-blue-500"
+		className="flex items-center rounded-lg border bg-background px-3 focus-within:border-blue-500"
 		cmdk-input-wrapper=""
 	>
-		<Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+		{icon ?? <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />}
 		<CommandPrimitive.Input
 			ref={ref}
 			className={cn(
-				"flex h-11 w-full rounded-md border-none border-transparent bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 focus:border-transparent focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50",
+				"flex h-10 w-full rounded-md border-none border-transparent bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 focus:border-transparent focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50",
 				className
 			)}
 			{...props}

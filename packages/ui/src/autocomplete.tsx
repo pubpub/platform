@@ -10,7 +10,7 @@ import { cn } from "utils";
 import { CommandGroup, CommandInput, CommandItem, CommandList } from "./command";
 import { Skeleton } from "./skeleton";
 
-export type Option = Record<"value" | "label", string> & Record<string, string>;
+export type Option = { value: string; label: string; node?: React.ReactNode };
 
 type AutoCompleteProps = {
 	options: Option[];
@@ -18,9 +18,11 @@ type AutoCompleteProps = {
 	value?: Option;
 	onValueChange?: (value: Option) => void;
 	onInputValueChange?: (value: string) => void;
+	onClose?: () => void;
 	isLoading?: boolean;
 	disabled?: boolean;
 	placeholder?: string;
+	icon?: React.ReactNode;
 };
 
 export const AutoComplete = ({
@@ -30,8 +32,10 @@ export const AutoComplete = ({
 	value,
 	onValueChange,
 	onInputValueChange,
+	onClose,
 	disabled,
 	isLoading = false,
+	icon,
 }: AutoCompleteProps) => {
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +50,11 @@ export const AutoComplete = ({
 		},
 		[onInputValueChange, setInputValue]
 	);
+
+	const close = useCallback(() => {
+		setOpen(false);
+		onClose?.();
+	}, [onClose]);
 
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent<HTMLDivElement>) => {
@@ -69,18 +78,11 @@ export const AutoComplete = ({
 			}
 
 			if (event.key === "Escape") {
-				input.blur();
+				close();
 			}
 		},
-		[isOpen, options, onValueChange]
+		[isOpen, options, onValueChange, close]
 	);
-
-	const handleBlur = useCallback(() => {
-		setOpen(false);
-		if (selected) {
-			_setInputValue(selected.label);
-		}
-	}, [selected, _setInputValue]);
 
 	const handleSelectOption = useCallback(
 		(selectedOption: Option) => {
@@ -92,34 +94,50 @@ export const AutoComplete = ({
 			// This is a hack to prevent the input from being focused after the user selects an option
 			// We can call this hack: "The next tick"
 			setTimeout(() => {
-				inputRef?.current?.blur();
+				close();
 			}, 0);
 		},
-		[onValueChange, _setInputValue]
+		[onValueChange, _setInputValue, close]
 	);
 
+	const commandRef = useRef<HTMLDivElement>(null);
+
+	React.useEffect(() => {
+		const handler = (event: MouseEvent) => {
+			if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
+				close();
+				if (selected) {
+					_setInputValue(selected.label);
+				}
+			}
+		};
+
+		document.addEventListener("click", handler);
+
+		return () => {
+			document.removeEventListener("click", handler);
+		};
+	}, [selected, _setInputValue, close]);
+
 	return (
-		<CommandPrimitive onKeyDown={handleKeyDown}>
-			<div>
-				<CommandInput
-					ref={inputRef}
-					value={inputValue}
-					onValueChange={isLoading ? undefined : _setInputValue}
-					onBlur={handleBlur}
-					onFocus={() => setOpen(true)}
-					placeholder={placeholder}
-					disabled={disabled}
-					className="text-base"
-				/>
-			</div>
+		<CommandPrimitive onKeyDown={handleKeyDown} ref={commandRef}>
+			<CommandInput
+				ref={inputRef}
+				value={inputValue}
+				onValueChange={isLoading ? undefined : _setInputValue}
+				onFocus={() => setOpen(true)}
+				placeholder={placeholder}
+				disabled={disabled}
+				icon={icon}
+			/>
 			<div className="relative mt-1">
 				<div
 					className={cn(
-						"absolute top-0 z-10 w-full rounded-xl bg-white outline-none animate-in fade-in-0 zoom-in-95",
+						"absolute top-0 z-10 w-full rounded-xl bg-background shadow-lg outline-none animate-in fade-in-0 zoom-in-95",
 						isOpen ? "block" : "hidden"
 					)}
 				>
-					<CommandList className="max-w-xs rounded-lg ring-1 ring-slate-200">
+					<CommandList className="rounded-lg ring-1 ring-slate-200">
 						{isLoading ? (
 							<CommandPrimitive.Loading>
 								<div className="p-1">
@@ -141,19 +159,22 @@ export const AutoComplete = ({
 											}}
 											onSelect={() => handleSelectOption(option)}
 											className={cn(
-												"flex w-full items-center gap-2",
+												"flex w-full items-center gap-2 rounded-lg",
 												!isSelected ? "pl-8" : null
 											)}
 										>
 											{isSelected ? <Check className="w-4" /> : null}
-											{option.label}
+											{option.node ?? option.label}
 										</CommandItem>
 									);
 								})}
 							</CommandGroup>
 						) : null}
 						{!isLoading ? (
-							<CommandPrimitive.Empty className="select-none rounded-sm px-2 py-3 text-center text-sm">
+							<CommandPrimitive.Empty
+								asChild
+								className="select-none rounded-sm px-2 py-3 text-center text-sm"
+							>
 								{empty}
 							</CommandPrimitive.Empty>
 						) : null}

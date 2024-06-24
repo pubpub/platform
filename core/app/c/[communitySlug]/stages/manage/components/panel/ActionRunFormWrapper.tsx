@@ -4,6 +4,7 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { Stages } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
+import { Action, ActionInstanceOf } from "~/actions/types";
 import { ActionRunForm } from "./ActionRunForm";
 import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
 
@@ -22,8 +23,8 @@ export const ActionRunFormWrapper = async ({
 		pubId: pub.id as PubsId,
 		stageId: stage.id,
 		communityId: pub.communityId as CommunitiesId,
-		actionInstance: actionInstance,
-		pageContext: pageContext,
+		actionInstance: actionInstance as ActionInstanceOf<Action>,
+		pageContext,
 	});
 
 	return (
