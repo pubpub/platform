@@ -1,5 +1,6 @@
+import type { Prisma } from "@prisma/client";
+
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import prisma from "~/prisma/db";
@@ -29,7 +30,7 @@ export default async function MainLayout({ children, params }: Props) {
 		redirect("/login");
 	}
 	const community = await getCommunity(params.communitySlug);
-	console.log(community);
+
 	if (!community) {
 		return null;
 	}

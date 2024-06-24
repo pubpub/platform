@@ -137,7 +137,7 @@ export const siteApi = contract.router(
 	{
 		pathPrefix: "/site",
 		baseHeaders: z.object({
-			authorization: z.string(),
+			authorization: z.string().regex(/^Bearer /),
 		}),
 	}
 );

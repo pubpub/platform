@@ -1,5 +1,5 @@
 import { Button } from "ui/button";
-import { Activity, Menu } from "ui/icon";
+import { Activity, Menu, Settings } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { CommunityData } from "./layout";
@@ -16,12 +16,17 @@ type Props = {
 const Links = ({
 	prefix,
 	isAdmin,
+	isSuperAdmin,
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
 	prefix: string;
 	/* Whether the user is an admin */
 	isAdmin?: boolean;
+	/**
+	 * Whether the user is a super admin
+	 */
+	isSuperAdmin?: boolean;
 }) => {
 	return (
 		<>
@@ -52,6 +57,13 @@ const Links = ({
 					href={`${prefix}/activity/actions`}
 					text="Activity"
 					icon={<Activity className="h-4 w-4" />}
+				/>
+			)}
+			{isSuperAdmin && (
+				<NavLink
+					href={`${prefix}/settings`}
+					text={"Settings"}
+					icon={<Settings className="h-4 w-4" />}
 				/>
 			)}
 		</>
@@ -108,7 +120,11 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 					<div className="flex h-full max-h-screen flex-col gap-2">
 						<div className="flex-1">
 							<nav className="grid items-start pr-2 text-sm font-medium">
-								<Links prefix={prefix} isAdmin={isAdmin} />
+								<Links
+									prefix={prefix}
+									isAdmin={isAdmin}
+									isSuperAdmin={loginData?.isSuperAdmin}
+								/>
 							</nav>
 						</div>
 					</div>
