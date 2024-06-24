@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useContext } from "react";
+import { useState } from "react";
 
 import { Button } from "ui/button";
 import {
@@ -11,32 +11,29 @@ import {
 	CommandItem,
 	CommandList,
 } from "ui/command";
-import { Check, ChevronsUpDown } from "ui/icon";
+import { ChevronsUpDown } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { cn } from "utils";
 
-import { type PubFieldsId } from "~/kysely/types/public/PubFields";
-import { type PubTypesId } from "~/kysely/types/public/PubTypes";
-import { useServerAction } from "~/lib/serverActions";
-import { addPubField } from "./actions";
+import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import { useFields } from "./FieldsProvider";
 
-export type AddFieldProps = {
-	pubTypeId: PubTypesId;
+export type FieldSelectProps = {
 	excludedFields: PubFieldsId[];
+	onFieldSelect: (fieldId: PubFieldsId, name: string, slug: string) => void;
 };
 
-export function AddField({ pubTypeId, excludedFields }: AddFieldProps) {
-	const [open, setOpen] = React.useState(false);
-	const runAddPubField = useServerAction(addPubField);
-	const onSelect = useCallback(
-		(fieldId: string) => {
-			runAddPubField(pubTypeId, fieldId as PubFieldsId);
-			setOpen(false);
-		},
-		[pubTypeId]
+export function FieldSelect({ excludedFields, onFieldSelect }: FieldSelectProps) {
+	const [open, setOpen] = useState(false);
+
+	const fields = useFields();
+	const availableFields = Object.values(fields).filter(
+		(field) => !excludedFields.includes(field.id)
 	);
-	const fields = useFields().filter((field) => !excludedFields.includes(field.id));
+	const onSelect = (fieldId: PubFieldsId) => {
+		const field = fields[fieldId];
+		onFieldSelect(fieldId, field.name, field.slug);
+		setOpen(false);
+	};
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -45,11 +42,10 @@ export function AddField({ pubTypeId, excludedFields }: AddFieldProps) {
 					size="sm"
 					variant="outline"
 					role="combobox"
-					name="Assign"
 					aria-expanded={open}
 					className="w-[150px] justify-between"
 				>
-					Select a field to add
+					Search fields
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
@@ -59,7 +55,7 @@ export function AddField({ pubTypeId, excludedFields }: AddFieldProps) {
 					<CommandEmpty>No matching field found.</CommandEmpty>
 					<CommandList>
 						<CommandGroup>
-							{fields.map((field) => {
+							{availableFields.map((field) => {
 								const keywords = [field.name, field.slug];
 								return (
 									<CommandItem

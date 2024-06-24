@@ -1,6 +1,6 @@
 import type { Community, Member, Prisma } from "@prisma/client";
 
-import type { PubFields } from "~/kysely/types/public/PubFields";
+import type { PubFields, PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubTypes } from "~/kysely/types/public/PubTypes";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
@@ -173,6 +173,8 @@ export type Equal<a, b> =
 	(<T>() => T extends a ? 1 : 2) extends <T>() => T extends b ? 1 : 2 ? true : false;
 
 export type Expect<a extends true> = a;
-export type PubTypeWithFields = PubTypes & {
-	fields: PubFields[];
+
+export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> & {
+	fields: PubFieldsId[];
 };
+export type PubField = Pick<PubFields, "id" | "name" | "slug">;
