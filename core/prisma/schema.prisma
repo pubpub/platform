@@ -28,13 +28,14 @@ model User {
   updatedAt    DateTime @default(now()) @updatedAt
   isSuperAdmin Boolean  @default(false)
 
-  claims       ActionClaim[]
-  moves        ActionMove[]
-  memberships  Member[]
-  memberGroups MemberGroup[]
-  AuthToken    AuthToken[]
-  assignedPubs Pub[]
-  actionRuns   ActionRun[]
+  claims         ActionClaim[]
+  moves          ActionMove[]
+  memberships    Member[]
+  memberGroups   MemberGroup[]
+  AuthToken      AuthToken[]
+  assignedPubs   Pub[]
+  actionRuns     ActionRun[]
+  ApiAccessToken ApiAccessToken[]
 
   @@map(name: "users")
 }
@@ -427,18 +428,20 @@ model FormInput {
 }
 
 model ApiAccessToken {
-  id          String          @id @default(dbgenerated("gen_random_uuid()"))
-  token       String          @unique
+  id          String                @id @default(dbgenerated("gen_random_uuid()"))
+  token       String                @unique
   name        String
+  description String?
   communityId String
-  community   Community       @relation(fields: [communityId], references: [id])
+  community   Community             @relation(fields: [communityId], references: [id])
   expiration  DateTime
-  revoked     Boolean         @default(false)
-  issuedBy    String
-  issuedAt    DateTime        @default(now())
+  revoked     Boolean               @default(false)
+  issuedBy    User                  @relation(fields: [issuedById], references: [id])
+  issuedById  String
+  issuedAt    DateTime              @default(now())
   usageLimit  Int? // Optional limit on the number of uses
-  usages      Int             @default(0)
-  accessRules ApiAccessRule[]
+  usages      Int                   @default(0)
+  accessRules ApiAccessPermission[]
   logs        ApiAccessLog[]
 
   @@index([token], name: "token_idx")
@@ -461,22 +464,25 @@ enum ApiAccessType {
   archive
 }
 
-model ApiAccessRule {
-  id               String              @id @default(dbgenerated("gen_random_uuid()"))
+// A permission existing for a scope means that the user has access to that scope
+// notwithstanding the contraints
+model ApiAccessPermission {
+  id               String         @id @default(dbgenerated("gen_random_uuid()"))
   apiAccessTokenId String
-  apiAccessToken   ApiAccessToken      @relation(fields: [apiAccessTokenId], references: [id])
-  objectType       ApiAccessTokenScope
-  objectId         Int?
+  apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id])
+  scope            ApiAccessScope
   accessType       ApiAccessType
-  constraints      Json? /// @type(ApiAccessRuleConstraints, '../types', true, false, true)
+  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)
 
-  @@index([apiAccessTokenId, objectType, objectId], name: "api_access_rule_idx")
-  @@map(name: "api_access_rules")
+  // this ensures that only one permission per token and scope and access type exists
+  @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")
+  @@map(name: "api_access_permissions")
 }
 
-enum ApiAccessTokenScope {
+enum ApiAccessScope {
   community
   pub
   stage
   member
+  pubType
 }

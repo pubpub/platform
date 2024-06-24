@@ -6,7 +6,7 @@ import { type default as ActionInstancesTable } from "./ActionInstances";
 import { type default as ActionMoveTable } from "./ActionMove";
 import { type default as ActionRunsTable } from "./ActionRuns";
 import { type default as ApiAccessLogsTable } from "./ApiAccessLogs";
-import { type default as ApiAccessRulesTable } from "./ApiAccessRules";
+import { type default as ApiAccessPermissionsTable } from "./ApiAccessPermissions";
 import { type default as ApiAccessTokensTable } from "./ApiAccessTokens";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
@@ -36,24 +36,6 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
-	integration_instances: IntegrationInstancesTable;
-
-	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
-
-	permissions: PermissionsTable;
-
-	_PermissionToPub: PermissionToPubTable;
-
-	_PermissionToStage: PermissionToStageTable;
-
-	_MemberGroupToUser: MemberGroupToUserTable;
-
-	auth_tokens: AuthTokensTable;
-
-	PubFieldSchema: PubFieldSchemaTable;
-
-	IntegrationInstanceState: IntegrationInstanceStateTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -84,6 +66,24 @@ export default interface PublicSchema {
 
 	_PubFieldToPubType: PubFieldToPubTypeTable;
 
+	integration_instances: IntegrationInstancesTable;
+
+	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
+
+	permissions: PermissionsTable;
+
+	_PermissionToPub: PermissionToPubTable;
+
+	_PermissionToStage: PermissionToStageTable;
+
+	_MemberGroupToUser: MemberGroupToUserTable;
+
+	auth_tokens: AuthTokensTable;
+
+	PubFieldSchema: PubFieldSchemaTable;
+
+	IntegrationInstanceState: IntegrationInstanceStateTable;
+
 	action_instances: ActionInstancesTable;
 
 	PubsInStages: PubsInStagesTable;
@@ -100,5 +100,5 @@ export default interface PublicSchema {
 
 	api_access_logs: ApiAccessLogsTable;
 
-	api_access_rules: ApiAccessRulesTable;
+	api_access_permissions: ApiAccessPermissionsTable;
 }

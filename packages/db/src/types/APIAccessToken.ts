@@ -1,6 +1,6 @@
-import type { ApiAccessRule as NonGenericApiAccessRule } from "../public/ApiAccessRule";
+import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "../public/ApiAccessPermissions";
 import type { StagesId } from "../public/Stages";
-import ApiAccessTokenScope from "../public/ApiAccessTokenScope";
+import ApiAccessScope from "../public/ApiAccessScope";
 import ApiAccessType from "../public/ApiAccessType";
 
 /**
@@ -14,11 +14,11 @@ import ApiAccessType from "../public/ApiAccessType";
  * If an access type is false, it means that the token can do nothing with the object
  *
  */
-export type ApiAccessRuleConstraintsShape = {
+export type ApiAccessPermissionConstraintsShape = {
 	/**
 	 * Mostly to make creating a discriminated union easier
 	 */
-	scope: ApiAccessTokenScope;
+	scope: ApiAccessScope;
 	[ApiAccessType.read]?: Record<string, unknown>;
 	[ApiAccessType.write]?: Record<string, unknown>;
 	[ApiAccessType.archive]?: Record<string, unknown>;
@@ -27,8 +27,8 @@ export type ApiAccessRuleConstraintsShape = {
 /**
  * The shape of the ApiAccessTokenScopesObject
  */
-export type ApiAccessRuleContraintsObjectShape = {
-	[key in ApiAccessTokenScope]: ApiAccessRuleConstraintsShape;
+export type ApiAccessPermissionContraintsObjectShape = {
+	[key in ApiAccessScope]: ApiAccessPermissionConstraintsShape;
 };
 
 /**
@@ -36,12 +36,12 @@ export type ApiAccessRuleContraintsObjectShape = {
  *
  * You need to change this if you want to add additional constraints
  */
-export type ApiAccessRuleConstraintsConfig = [
+export type ApiAccessPermissionConstraintsConfig = [
 	{
-		scope: ApiAccessTokenScope.community;
+		scope: ApiAccessScope.community;
 	},
 	{
-		scope: ApiAccessTokenScope.stage;
+		scope: ApiAccessScope.stage;
 		[ApiAccessType.read]: {
 			/**
 			 * Which stages are readable by this token
@@ -50,7 +50,7 @@ export type ApiAccessRuleConstraintsConfig = [
 		};
 	},
 	{
-		scope: ApiAccessTokenScope.pub;
+		scope: ApiAccessScope.pub;
 		[ApiAccessType.write]: {
 			/**
 			 * In which stages Pubs can be written to by this token
@@ -59,14 +59,17 @@ export type ApiAccessRuleConstraintsConfig = [
 		};
 	},
 	{
-		scope: ApiAccessTokenScope.member;
+		scope: ApiAccessScope.member;
+	},
+	{
+		scope: ApiAccessScope.pubType;
 	},
 ];
 
-export type Config = ApiAccessRuleConstraintsConfig[number];
+export type Config = ApiAccessPermissionConstraintsConfig[number];
 
-export type ApiAccessRuleConstraints<
-	T extends ApiAccessTokenScope = ApiAccessTokenScope,
+export type ApiAccessPermissionConstraints<
+	T extends ApiAccessScope = ApiAccessScope,
 	AT extends ApiAccessType = ApiAccessType,
 	C extends Config = Config,
 > = T extends T
@@ -88,16 +91,16 @@ export type ApiAccessRuleConstraints<
 								}
 							: never)
 				? R
-				: never
+				: undefined
 			: never
 		: never
 	: never;
 
 /**
- * Use this instead of the standard ApiAccessRule for better type inference
+ * Use this instead of the standard ApiAccessPermission for better type inference
  */
-export type ApiAccessRule<
-	T extends ApiAccessTokenScope = ApiAccessTokenScope,
+export type ApiAccessPermission<
+	T extends ApiAccessScope = ApiAccessScope,
 	AT extends ApiAccessType = ApiAccessType,
 > =
 	// this "spreading" is necessary to create a discriminated union
@@ -107,10 +110,10 @@ export type ApiAccessRule<
 	// which is much harder to work with
 	T extends T
 		? AT extends AT
-			? Omit<NonGenericApiAccessRule, "objectType" | "constraints" | "accessType"> & {
+			? Omit<NonGenericApiAccessPermissions, "objectType" | "constraints" | "accessType"> & {
 					accessType: AT;
 					objectType: T;
-					constraints: ApiAccessRuleConstraints<T, AT>;
+					constraints: ApiAccessPermissionConstraints<T, AT>;
 				}
 			: never
 		: never;

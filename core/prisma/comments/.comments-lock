@@ -106,6 +106,6 @@ COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', t
 
 
 
--- Model api_access_rules comments
+-- Model api_access_permissions comments
 
-COMMENT ON COLUMN "api_access_rules"."constraints" IS '@type(ApiAccessRuleConstraints, ''../types'', true, false, true)';
+COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../types'', true, false, true)';
