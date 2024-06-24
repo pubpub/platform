@@ -22,7 +22,7 @@ export type PubsInStagesUpdate = Updateable<PubsInStagesTable>;
 export const pubsInStagesSchema = z.object({
   pubId: pubsIdSchema,
   stageId: stagesIdSchema,
-}) as unknown as z.Schema<PubsInStages>;
+}) satisfies z.Schema<PubsInStages>;
 
 export const pubsInStagesInitializerSchema = z.object({
   pubId: pubsIdSchema,

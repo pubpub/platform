@@ -46,7 +46,7 @@ export const integrationInstancesSchema = z.object({
   communityId: communitiesIdSchema,
   stageId: stagesIdSchema.nullable(),
   config: z.unknown().nullable(),
-}) as unknown as z.Schema<IntegrationInstances>;
+}) satisfies z.Schema<IntegrationInstances>;
 
 export const integrationInstancesInitializerSchema = z.object({
   id: integrationInstancesIdSchema.optional(),

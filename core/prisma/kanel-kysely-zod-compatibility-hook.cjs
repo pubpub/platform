@@ -1,6 +1,6 @@
 // @ts-check
 
-const kanelZodCastRegex = /as unknown as z.Schema<(.*?)(Mutator|Initializer)>/;
+const kanelZodCastRegex = /as unknown as z.Schema<(.*?)(Mutator|Initializer)?>/;
 
 /**
  * @type {import("kanel").PostRenderHook}

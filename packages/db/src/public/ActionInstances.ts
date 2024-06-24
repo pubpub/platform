@@ -42,7 +42,7 @@ export const actionInstancesSchema = z.object({
   config: z.unknown().nullable(),
   name: z.string(),
   action: actionSchema,
-}) as unknown as z.Schema<ActionInstances>;
+}) satisfies z.Schema<ActionInstances>;
 
 export const actionInstancesInitializerSchema = z.object({
   id: actionInstancesIdSchema.optional(),

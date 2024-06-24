@@ -29,7 +29,7 @@ export const formsSchema = z.object({
   id: formsIdSchema,
   name: z.string(),
   pubTypeId: pubTypesIdSchema,
-}) as unknown as z.Schema<Forms>;
+}) satisfies z.Schema<Forms>;
 
 export const formsInitializerSchema = z.object({
   id: formsIdSchema.optional(),

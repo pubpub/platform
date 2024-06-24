@@ -38,7 +38,7 @@ export const authTokensSchema = z.object({
   expiresAt: z.date(),
   isUsed: z.boolean(),
   userId: usersIdSchema,
-}) as unknown as z.Schema<AuthTokens>;
+}) satisfies z.Schema<AuthTokens>;
 
 export const authTokensInitializerSchema = z.object({
   id: authTokensIdSchema,

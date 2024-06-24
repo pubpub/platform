@@ -42,7 +42,7 @@ export const formInputsSchema = z.object({
   label: z.string(),
   required: z.boolean(),
   isSubmit: z.boolean(),
-}) as unknown as z.Schema<FormInputs>;
+}) satisfies z.Schema<FormInputs>;
 
 export const formInputsInitializerSchema = z.object({
   id: formInputsIdSchema.optional(),

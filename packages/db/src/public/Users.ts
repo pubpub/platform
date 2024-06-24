@@ -52,7 +52,7 @@ export const usersSchema = z.object({
   orcid: z.string().nullable(),
   supabaseId: z.string().nullable(),
   isSuperAdmin: z.boolean(),
-}) as unknown as z.Schema<Users>;
+}) satisfies z.Schema<Users>;
 
 export const usersInitializerSchema = z.object({
   id: usersIdSchema.optional(),

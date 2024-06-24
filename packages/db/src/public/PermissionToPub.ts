@@ -22,7 +22,7 @@ export type PermissionToPubUpdate = Updateable<PermissionToPubTable>;
 export const permissionToPubSchema = z.object({
   A: permissionsIdSchema,
   B: pubsIdSchema,
-}) as unknown as z.Schema<PermissionToPub>;
+}) satisfies z.Schema<PermissionToPub>;
 
 export const permissionToPubInitializerSchema = z.object({
   A: permissionsIdSchema,

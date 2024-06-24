@@ -36,7 +36,7 @@ export const permissionsSchema = z.object({
   memberGroupId: memberGroupsIdSchema.nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
-}) as unknown as z.Schema<Permissions>;
+}) satisfies z.Schema<Permissions>;
 
 export const permissionsInitializerSchema = z.object({
   id: permissionsIdSchema.optional(),

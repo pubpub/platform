@@ -34,7 +34,7 @@ export const rulesSchema = z.object({
   event: eventSchema,
   actionInstanceId: actionInstancesIdSchema,
   config: z.unknown().nullable(),
-}) as unknown as z.Schema<Rules>;
+}) satisfies z.Schema<Rules>;
 
 export const rulesInitializerSchema = z.object({
   id: rulesIdSchema.optional(),

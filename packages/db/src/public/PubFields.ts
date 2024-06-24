@@ -42,7 +42,7 @@ export const pubFieldsSchema = z.object({
   integrationId: integrationsIdSchema.nullable(),
   pubFieldSchemaId: pubFieldSchemaIdSchema.nullable(),
   slug: z.string(),
-}) as unknown as z.Schema<PubFields>;
+}) satisfies z.Schema<PubFields>;
 
 export const pubFieldsInitializerSchema = z.object({
   id: pubFieldsIdSchema.optional(),

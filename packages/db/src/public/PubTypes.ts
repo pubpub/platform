@@ -38,7 +38,7 @@ export const pubTypesSchema = z.object({
   communityId: communitiesIdSchema,
   name: z.string(),
   description: z.string().nullable(),
-}) as unknown as z.Schema<PubTypes>;
+}) satisfies z.Schema<PubTypes>;
 
 export const pubTypesInitializerSchema = z.object({
   id: pubTypesIdSchema.optional(),

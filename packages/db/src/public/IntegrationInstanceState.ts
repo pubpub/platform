@@ -25,7 +25,7 @@ export const integrationInstanceStateSchema = z.object({
   pubId: pubsIdSchema,
   instanceId: integrationInstancesIdSchema,
   state: z.unknown(),
-}) as unknown as z.Schema<IntegrationInstanceState>;
+}) satisfies z.Schema<IntegrationInstanceState>;
 
 export const integrationInstanceStateInitializerSchema = z.object({
   pubId: pubsIdSchema,

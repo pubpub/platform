@@ -39,7 +39,7 @@ export const membersSchema = z.object({
   canAdmin: z.boolean(),
   communityId: communitiesIdSchema,
   userId: usersIdSchema,
-}) as unknown as z.Schema<Members>;
+}) satisfies z.Schema<Members>;
 
 export const membersInitializerSchema = z.object({
   id: membersIdSchema.optional(),

@@ -27,7 +27,7 @@ export const moveConstraintSchema = z.object({
   destinationId: stagesIdSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
-}) as unknown as z.Schema<MoveConstraint>;
+}) satisfies z.Schema<MoveConstraint>;
 
 export const moveConstraintInitializerSchema = z.object({
   stageId: stagesIdSchema,

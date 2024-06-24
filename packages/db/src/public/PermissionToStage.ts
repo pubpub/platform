@@ -22,7 +22,7 @@ export type PermissionToStageUpdate = Updateable<PermissionToStageTable>;
 export const permissionToStageSchema = z.object({
   A: permissionsIdSchema,
   B: stagesIdSchema,
-}) as unknown as z.Schema<PermissionToStage>;
+}) satisfies z.Schema<PermissionToStage>;
 
 export const permissionToStageInitializerSchema = z.object({
   A: permissionsIdSchema,

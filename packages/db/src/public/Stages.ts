@@ -38,7 +38,7 @@ export const stagesSchema = z.object({
   name: z.string(),
   order: z.string(),
   communityId: communitiesIdSchema,
-}) as unknown as z.Schema<Stages>;
+}) satisfies z.Schema<Stages>;
 
 export const stagesInitializerSchema = z.object({
   id: stagesIdSchema.optional(),

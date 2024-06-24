@@ -46,7 +46,7 @@ export const pubsSchema = z.object({
   valuesBlob: z.unknown().nullable(),
   parentId: pubsIdSchema.nullable(),
   assigneeId: usersIdSchema.nullable(),
-}) as unknown as z.Schema<Pubs>;
+}) satisfies z.Schema<Pubs>;
 
 export const pubsInitializerSchema = z.object({
   id: pubsIdSchema.optional(),

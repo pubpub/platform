@@ -57,7 +57,7 @@ export const actionRunsSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   result: z.unknown(),
-}) as unknown as z.Schema<ActionRuns>;
+}) satisfies z.Schema<ActionRuns>;
 
 export const actionRunsInitializerSchema = z.object({
   id: actionRunsIdSchema.optional(),

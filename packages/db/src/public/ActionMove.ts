@@ -46,7 +46,7 @@ export const actionMoveSchema = z.object({
   note: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-}) as unknown as z.Schema<ActionMove>;
+}) satisfies z.Schema<ActionMove>;
 
 export const actionMoveInitializerSchema = z.object({
   id: actionMoveIdSchema.optional(),

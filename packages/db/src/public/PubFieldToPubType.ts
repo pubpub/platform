@@ -22,7 +22,7 @@ export type PubFieldToPubTypeUpdate = Updateable<PubFieldToPubTypeTable>;
 export const pubFieldToPubTypeSchema = z.object({
   A: pubFieldsIdSchema,
   B: pubTypesIdSchema,
-}) as unknown as z.Schema<PubFieldToPubType>;
+}) satisfies z.Schema<PubFieldToPubType>;
 
 export const pubFieldToPubTypeInitializerSchema = z.object({
   A: pubFieldsIdSchema,

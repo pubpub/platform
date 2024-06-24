@@ -38,7 +38,7 @@ export const pubFieldSchemaSchema = z.object({
   schema: z.unknown(),
   createdAt: z.date(),
   updatedAt: z.date(),
-}) as unknown as z.Schema<PubFieldSchema>;
+}) satisfies z.Schema<PubFieldSchema>;
 
 export const pubFieldSchemaInitializerSchema = z.object({
   id: pubFieldSchemaIdSchema.optional(),

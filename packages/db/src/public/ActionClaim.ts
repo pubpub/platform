@@ -43,7 +43,7 @@ export const actionClaimSchema = z.object({
   releasedAt: z.date().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
-}) as unknown as z.Schema<ActionClaim>;
+}) satisfies z.Schema<ActionClaim>;
 
 export const actionClaimInitializerSchema = z.object({
   id: actionClaimIdSchema.optional(),

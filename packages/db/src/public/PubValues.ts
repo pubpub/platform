@@ -39,7 +39,7 @@ export const pubValuesSchema = z.object({
   pubId: pubsIdSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
-}) as unknown as z.Schema<PubValues>;
+}) satisfies z.Schema<PubValues>;
 
 export const pubValuesInitializerSchema = z.object({
   id: pubValuesIdSchema.optional(),

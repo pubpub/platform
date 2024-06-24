@@ -37,7 +37,7 @@ export const integrationsSchema = z.object({
   actions: z.unknown(),
   name: z.string(),
   settingsUrl: z.string(),
-}) as unknown as z.Schema<Integrations>;
+}) satisfies z.Schema<Integrations>;
 
 export const integrationsInitializerSchema = z.object({
   id: integrationsIdSchema.optional(),

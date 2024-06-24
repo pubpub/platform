@@ -35,7 +35,7 @@ export const memberGroupsSchema = z.object({
   updatedAt: z.date(),
   canAdmin: z.boolean(),
   communityId: communitiesIdSchema,
-}) as unknown as z.Schema<MemberGroups>;
+}) satisfies z.Schema<MemberGroups>;
 
 export const memberGroupsInitializerSchema = z.object({
   id: memberGroupsIdSchema.optional(),

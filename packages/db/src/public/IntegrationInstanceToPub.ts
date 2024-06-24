@@ -22,7 +22,7 @@ export type IntegrationInstanceToPubUpdate = Updateable<IntegrationInstanceToPub
 export const integrationInstanceToPubSchema = z.object({
   A: integrationInstancesIdSchema,
   B: pubsIdSchema,
-}) as unknown as z.Schema<IntegrationInstanceToPub>;
+}) satisfies z.Schema<IntegrationInstanceToPub>;
 
 export const integrationInstanceToPubInitializerSchema = z.object({
   A: integrationInstancesIdSchema,

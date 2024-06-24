@@ -37,7 +37,7 @@ export const communitiesSchema = z.object({
   name: z.string(),
   avatar: z.string().nullable(),
   slug: z.string(),
-}) as unknown as z.Schema<Communities>;
+}) satisfies z.Schema<Communities>;
 
 export const communitiesInitializerSchema = z.object({
   id: communitiesIdSchema.optional(),

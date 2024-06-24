@@ -43,7 +43,7 @@ export const prismaMigrationsSchema = z.object({
   rolled_back_at: z.date().nullable(),
   started_at: z.date(),
   applied_steps_count: z.number(),
-}) as unknown as z.Schema<PrismaMigrations>;
+}) satisfies z.Schema<PrismaMigrations>;
 
 export const prismaMigrationsInitializerSchema = z.object({
   id: prismaMigrationsIdSchema,

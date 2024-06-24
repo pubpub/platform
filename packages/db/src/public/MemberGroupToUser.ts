@@ -22,7 +22,7 @@ export type MemberGroupToUserUpdate = Updateable<MemberGroupToUserTable>;
 export const memberGroupToUserSchema = z.object({
   A: memberGroupsIdSchema,
   B: usersIdSchema,
-}) as unknown as z.Schema<MemberGroupToUser>;
+}) satisfies z.Schema<MemberGroupToUser>;
 
 export const memberGroupToUserInitializerSchema = z.object({
   A: memberGroupsIdSchema,
