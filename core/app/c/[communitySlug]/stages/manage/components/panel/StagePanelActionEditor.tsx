@@ -35,17 +35,13 @@ export const StagePanelActionEditor = (props: Props) => {
 	}
 
 	return (
-		<Collapsible
-			open={isOpen}
-			onOpenChange={setIsOpen}
-			className="w-full space-y-2 border px-3 py-2"
-		>
-			<div className="flex w-full items-center justify-between space-x-4 text-sm">
+		<Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+			<div className="flex w-full items-center justify-between space-x-4 bg-slate-100 px-3 py-2 text-sm">
 				<div className="flex items-center gap-2 overflow-auto">
 					<action.icon size="14" className="flex-shrink-0" />
 					{isOpen ? (
 						<Input
-							className="flex-grow-1 -ml-1 h-8 p-0 pl-1"
+							className="flex-grow-1 ml-1 h-8 p-0 pl-1"
 							defaultValue={props.actionInstance.name || action.name}
 							onBlur={async (evt) => {
 								await actions.updateAction(
@@ -58,7 +54,7 @@ export const StagePanelActionEditor = (props: Props) => {
 							}}
 						/>
 					) : (
-						<span className="flex-grow-0 overflow-auto text-ellipsis">
+						<span className="ml-2 flex-grow-0 overflow-auto text-ellipsis">
 							{props.actionInstance.name || action.name}
 						</span>
 					)}
@@ -71,8 +67,7 @@ export const StagePanelActionEditor = (props: Props) => {
 					</CollapsibleTrigger>
 				</div>
 			</div>
-			<CollapsibleContent className="space-y-4 text-sm">
-				<Separator />
+			<CollapsibleContent className="space-y-4 bg-slate-50 px-3 py-2 text-sm">
 				<p>{action.description}</p>
 				<div className="flex flex-col gap-2 py-2">
 					{props.children}

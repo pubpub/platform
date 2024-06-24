@@ -1,14 +1,13 @@
 import type React from "react";
 
-import type { Action } from "../../types";
-import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
+import type { Action, ActionInstanceOf } from "../../types";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { PageContext } from "~/app/c/[communitySlug]/stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
 
-export type ActionFormFieldBaseProps<Type extends "config" | "params"> = {
-	actionInstance: ActionInstances;
+export type ActionFormFieldBaseProps<T extends Action, Type extends "config" | "params"> = {
+	actionInstance: ActionInstanceOf<T>;
 	communityId: CommunitiesId;
 	stageId: StagesId;
 	pageContext: PageContext;
@@ -30,11 +29,11 @@ export const defineActionFormFieldServerComponent = <
 		stageId,
 		communityId,
 		pageContext,
-	}: ActionFormFieldBaseProps<Type> & {
+	}: ActionFormFieldBaseProps<T, Type> & {
 		action: T;
 	}) => Promise<React.AwaitedReactNode>
 ) => {
-	const serverComponent = async (props: ActionFormFieldBaseProps<Type>) => {
+	const serverComponent = async (props: ActionFormFieldBaseProps<T, Type>) => {
 		const F = await FormField({
 			action,
 			...props,
@@ -51,5 +50,7 @@ export type ActionConfigServerComponent<
 	Type extends "config" | "params",
 > = ReturnType<typeof defineActionFormFieldServerComponent<T, Type>>;
 
-export type ActionConfigServerComponentProps<Type extends "config" | "params"> =
-	ActionFormFieldBaseProps<Type>;
+export type ActionConfigServerComponentProps<
+	T extends Action,
+	Type extends "config" | "params",
+> = ActionFormFieldBaseProps<T, Type>;

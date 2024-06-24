@@ -1,6 +1,6 @@
 import { logger } from "logger";
 
-import type { ZodObjectOrWrappedOrOptional } from "../../types";
+import type { Action, ZodObjectOrWrappedOrOptional } from "../../types";
 import type { ActionConfigServerComponentProps } from "./defineConfigServerComponent";
 import type ActionName from "~/kysely/types/public/Action";
 import { getActionByName } from "../../api";
@@ -26,7 +26,10 @@ const isSchemaKey = <S extends ZodObjectOrWrappedOrOptional>(
 export const resolveFieldConfig = async <
 	A extends ActionName,
 	T extends "config" | "params",
-	C extends ActionConfigServerComponentProps<T> = ActionConfigServerComponentProps<T>,
+	C extends ActionConfigServerComponentProps<Action, T> = ActionConfigServerComponentProps<
+		Action,
+		T
+	>,
 >(
 	actionName: A,
 	type: T,

@@ -2,6 +2,7 @@ import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
+import { Action, ActionInstanceOf } from "~/actions/types";
 import { ActionConfigForm } from "./ActionConfigForm";
 import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
 
@@ -24,7 +25,7 @@ export const ActionConfigFormWrapper = async ({
 	const resolvedFieldConfig = await resolveFieldConfig(actionInstance.action, "config", {
 		stageId: stage.id,
 		communityId: stage.communityId,
-		actionInstance,
+		actionInstance: actionInstance as ActionInstanceOf<Action>,
 		pageContext,
 	});
 

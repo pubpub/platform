@@ -37,7 +37,7 @@ export const StagePanel = async (props: Props) => {
 					<StagePanelOverview stageId={props.stageId} />
 				</TabsContent>
 				<TabsContent value="pubs">
-					<StagePanelPubs stageId={props.stageId} />
+					<StagePanelPubs stageId={props.stageId} pageContext={props.pageContext} />
 				</TabsContent>
 				<TabsContent value="actions" className="space-y-2">
 					<StagePanelActions stageId={props.stageId} pageContext={props.pageContext} />
