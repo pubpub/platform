@@ -1,7 +1,8 @@
 import { unstable_cache } from "next/cache";
 
+import type { PubsId } from "db/public/Pubs";
+
 import { db } from "~/kysely/database";
-import { PubsId } from "~/kysely/types/public/Pubs";
 
 export function findCommunityBySlug(communitySlug: string) {
 	return db
