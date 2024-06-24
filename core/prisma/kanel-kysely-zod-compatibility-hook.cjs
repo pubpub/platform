@@ -66,7 +66,7 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 							return declaration;
 						}
 
-						// enum
+						// change enum into native enum
 						if (declaration.comment?.[0]?.startsWith("Zod schema for ")) {
 							const enumName =
 								declaration.comment?.[0].match(/Zod schema for (.*)/)?.[1];
@@ -76,6 +76,9 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 							}
 						}
 
+						/**
+						 * rename all the imports to use the Schema suffix
+						 */
 						const imports = declaration.typeImports?.map((typeImport) => {
 							const { importAsType, isDefault, name, isAbsolute, path } = typeImport;
 							const isSchemaImport = !isAbsolute && !isDefault && !importAsType;
@@ -101,19 +104,23 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 										kanelZodCastRegex,
 										(_, typeName, mutatorOrInitializer) => {
 											if (!mutatorOrInitializer) {
-												return `satisfies z.Schema<${typeName}>`;
+												return `as z.Schema<${typeName}>`;
 											}
 
 											if (mutatorOrInitializer === "Mutator") {
-												return `satisfies z.Schema<${typeName}Update>`;
+												return `as z.Schema<${typeName}Update>`;
 											}
 
-											return `satisfies z.Schema<New${typeName}>`;
+											return `as z.Schema<New${typeName}>`;
 										}
 									);
 									return replacedLine;
 								})
-							: declaration.value;
+							: // these are all the id schemas.
+								// even though they are not enforced to be uuids in the database
+								// for backwards compatibility reasons, we still want to enforce them
+								// to be uuids when parsing, as we use uuids everywhere
+								declaration.value.replace(/z.string\(\) /, "z.string().uuid() ");
 
 						return {
 							...declaration,

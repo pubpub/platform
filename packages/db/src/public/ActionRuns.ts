@@ -53,7 +53,7 @@ export type NewActionRuns = Insertable<ActionRunsTable>;
 
 export type ActionRunsUpdate = Updateable<ActionRunsTable>;
 
-export const actionRunsIdSchema = z.string() as unknown as z.Schema<ActionRunsId>;
+export const actionRunsIdSchema = z.string().uuid() as unknown as z.Schema<ActionRunsId>;
 
 export const actionRunsSchema = z.object({
 	id: actionRunsIdSchema,

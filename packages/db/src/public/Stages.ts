@@ -31,7 +31,7 @@ export type NewStages = Insertable<StagesTable>;
 
 export type StagesUpdate = Updateable<StagesTable>;
 
-export const stagesIdSchema = z.string() as unknown as z.Schema<StagesId>;
+export const stagesIdSchema = z.string().uuid() as unknown as z.Schema<StagesId>;
 
 export const stagesSchema = z.object({
 	id: stagesIdSchema,

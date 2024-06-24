@@ -38,7 +38,7 @@ export type NewUsers = Insertable<UsersTable>;
 
 export type UsersUpdate = Updateable<UsersTable>;
 
-export const usersIdSchema = z.string() as unknown as z.Schema<UsersId>;
+export const usersIdSchema = z.string().uuid() as unknown as z.Schema<UsersId>;
 
 export const usersSchema = z.object({
 	id: usersIdSchema,

@@ -39,7 +39,7 @@ export type NewActionMove = Insertable<ActionMoveTable>;
 
 export type ActionMoveUpdate = Updateable<ActionMoveTable>;
 
-export const actionMoveIdSchema = z.string() as unknown as z.Schema<ActionMoveId>;
+export const actionMoveIdSchema = z.string().uuid() as unknown as z.Schema<ActionMoveId>;
 
 export const actionMoveSchema = z.object({
 	id: actionMoveIdSchema,

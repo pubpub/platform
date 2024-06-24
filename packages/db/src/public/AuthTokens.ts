@@ -31,7 +31,7 @@ export type NewAuthTokens = Insertable<AuthTokensTable>;
 
 export type AuthTokensUpdate = Updateable<AuthTokensTable>;
 
-export const authTokensIdSchema = z.string() as unknown as z.Schema<AuthTokensId>;
+export const authTokensIdSchema = z.string().uuid() as unknown as z.Schema<AuthTokensId>;
 
 export const authTokensSchema = z.object({
 	id: authTokensIdSchema,

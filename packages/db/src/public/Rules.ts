@@ -30,7 +30,7 @@ export type NewRules = Insertable<RulesTable>;
 
 export type RulesUpdate = Updateable<RulesTable>;
 
-export const rulesIdSchema = z.string() as unknown as z.Schema<RulesId>;
+export const rulesIdSchema = z.string().uuid() as unknown as z.Schema<RulesId>;
 
 export const rulesSchema = z.object({
 	id: rulesIdSchema,

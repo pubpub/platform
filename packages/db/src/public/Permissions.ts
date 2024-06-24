@@ -31,7 +31,7 @@ export type NewPermissions = Insertable<PermissionsTable>;
 
 export type PermissionsUpdate = Updateable<PermissionsTable>;
 
-export const permissionsIdSchema = z.string() as unknown as z.Schema<PermissionsId>;
+export const permissionsIdSchema = z.string().uuid() as unknown as z.Schema<PermissionsId>;
 
 export const permissionsSchema = z.object({
 	id: permissionsIdSchema,

@@ -35,7 +35,7 @@ export type NewActionInstances = Insertable<ActionInstancesTable>;
 
 export type ActionInstancesUpdate = Updateable<ActionInstancesTable>;
 
-export const actionInstancesIdSchema = z.string() as unknown as z.Schema<ActionInstancesId>;
+export const actionInstancesIdSchema = z.string().uuid() as unknown as z.Schema<ActionInstancesId>;
 
 export const actionInstancesSchema = z.object({
 	id: actionInstancesIdSchema,

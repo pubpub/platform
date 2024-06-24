@@ -29,7 +29,7 @@ export type NewPubFieldSchema = Insertable<PubFieldSchemaTable>;
 
 export type PubFieldSchemaUpdate = Updateable<PubFieldSchemaTable>;
 
-export const pubFieldSchemaIdSchema = z.string() as unknown as z.Schema<PubFieldSchemaId>;
+export const pubFieldSchemaIdSchema = z.string().uuid() as unknown as z.Schema<PubFieldSchemaId>;
 
 export const pubFieldSchemaSchema = z.object({
 	id: pubFieldSchemaIdSchema,

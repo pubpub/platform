@@ -31,7 +31,7 @@ export type NewPubTypes = Insertable<PubTypesTable>;
 
 export type PubTypesUpdate = Updateable<PubTypesTable>;
 
-export const pubTypesIdSchema = z.string() as unknown as z.Schema<PubTypesId>;
+export const pubTypesIdSchema = z.string().uuid() as unknown as z.Schema<PubTypesId>;
 
 export const pubTypesSchema = z.object({
 	id: pubTypesIdSchema,

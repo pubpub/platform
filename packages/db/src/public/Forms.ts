@@ -25,7 +25,7 @@ export type NewForms = Insertable<FormsTable>;
 
 export type FormsUpdate = Updateable<FormsTable>;
 
-export const formsIdSchema = z.string() as unknown as z.Schema<FormsId>;
+export const formsIdSchema = z.string().uuid() as unknown as z.Schema<FormsId>;
 
 export const formsSchema = z.object({
 	id: formsIdSchema,

@@ -33,7 +33,7 @@ export type NewPubValues = Insertable<PubValuesTable>;
 
 export type PubValuesUpdate = Updateable<PubValuesTable>;
 
-export const pubValuesIdSchema = z.string() as unknown as z.Schema<PubValuesId>;
+export const pubValuesIdSchema = z.string().uuid() as unknown as z.Schema<PubValuesId>;
 
 export const pubValuesSchema = z.object({
 	id: pubValuesIdSchema,

@@ -43,8 +43,9 @@ export type NewIntegrationInstances = Insertable<IntegrationInstancesTable>;
 
 export type IntegrationInstancesUpdate = Updateable<IntegrationInstancesTable>;
 
-export const integrationInstancesIdSchema =
-	z.string() as unknown as z.Schema<IntegrationInstancesId>;
+export const integrationInstancesIdSchema = z
+	.string()
+	.uuid() as unknown as z.Schema<IntegrationInstancesId>;
 
 export const integrationInstancesSchema = z.object({
 	id: integrationInstancesIdSchema,

@@ -29,7 +29,7 @@ export type NewMemberGroups = Insertable<MemberGroupsTable>;
 
 export type MemberGroupsUpdate = Updateable<MemberGroupsTable>;
 
-export const memberGroupsIdSchema = z.string() as unknown as z.Schema<MemberGroupsId>;
+export const memberGroupsIdSchema = z.string().uuid() as unknown as z.Schema<MemberGroupsId>;
 
 export const memberGroupsSchema = z.object({
 	id: memberGroupsIdSchema,

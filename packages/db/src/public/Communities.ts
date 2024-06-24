@@ -28,7 +28,7 @@ export type NewCommunities = Insertable<CommunitiesTable>;
 
 export type CommunitiesUpdate = Updateable<CommunitiesTable>;
 
-export const communitiesIdSchema = z.string() as unknown as z.Schema<CommunitiesId>;
+export const communitiesIdSchema = z.string().uuid() as unknown as z.Schema<CommunitiesId>;
 
 export const communitiesSchema = z.object({
 	id: communitiesIdSchema,

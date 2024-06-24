@@ -32,7 +32,9 @@ export type NewPrismaMigrations = Insertable<PrismaMigrationsTable>;
 
 export type PrismaMigrationsUpdate = Updateable<PrismaMigrationsTable>;
 
-export const prismaMigrationsIdSchema = z.string() as unknown as z.Schema<PrismaMigrationsId>;
+export const prismaMigrationsIdSchema = z
+	.string()
+	.uuid() as unknown as z.Schema<PrismaMigrationsId>;
 
 export const prismaMigrationsSchema = z.object({
 	id: prismaMigrationsIdSchema,

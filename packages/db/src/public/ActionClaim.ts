@@ -37,7 +37,7 @@ export type NewActionClaim = Insertable<ActionClaimTable>;
 
 export type ActionClaimUpdate = Updateable<ActionClaimTable>;
 
-export const actionClaimIdSchema = z.string() as unknown as z.Schema<ActionClaimId>;
+export const actionClaimIdSchema = z.string().uuid() as unknown as z.Schema<ActionClaimId>;
 
 export const actionClaimSchema = z.object({
 	id: actionClaimIdSchema,
