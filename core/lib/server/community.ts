@@ -1,4 +1,8 @@
+import type { Prisma } from "@prisma/client";
+
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
 import { createCacheTag } from "./cache/cacheTags";
 import { ONE_DAY } from "./cache/constants";
@@ -39,3 +43,22 @@ export const findCommunityByPubId = memoize(
 	},
 	{ revalidateTags: ["all", "all-pubs"], duration: ONE_DAY }
 );
+
+export const getCommunityData = async (slug: CommunitiesId) => {
+	return await db
+		.selectFrom("communities")
+		.where("slug", "=", slug)
+		.selectAll()
+		.executeTakeFirst();
+};
+
+export type CommunityData = Prisma.PromiseReturnType<typeof getCommunityData>;
+
+export const getAvailableCommunities = async (userId: UsersId) => {
+	return await db
+		.selectFrom("members")
+		.where("members.userId", "=", userId)
+		.innerJoin("communities", "communities.id", "members.communityId")
+		.selectAll("communities")
+		.execute();
+};

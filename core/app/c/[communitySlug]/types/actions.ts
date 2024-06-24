@@ -50,16 +50,30 @@ export const removePubType = defineServerAction(async function removePubType(
 	).execute();
 });
 
-export const addPubType = defineServerAction(async function addPubType(
+export const createPubType = defineServerAction(async function addPubType(
 	name: string,
 	communityId: CommunitiesId,
-	description: string
+	description: string | undefined,
+	fields: PubFieldsId[]
 ) {
-	await autoRevalidate(
-		db.insertInto("pub_types").values({
-			communityId,
-			name,
-			description,
-		})
+	const pubType = await autoRevalidate(
+		db
+			.with("newType", (db) =>
+				db
+					.insertInto("pub_types")
+					.values({
+						communityId,
+						name,
+						description,
+					})
+					.returning("pub_types.id")
+			)
+			.insertInto("_PubFieldToPubType")
+			.values((eb) =>
+				fields.map((id) => ({
+					A: id,
+					B: eb.selectFrom("newType").select("id"),
+				}))
+			)
 	).executeTakeFirst();
 });

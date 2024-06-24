@@ -3,12 +3,12 @@
 import { useCallback } from "react";
 
 import { Button } from "ui/button";
-import { Trash } from "ui/icon";
+import { X } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { useServerAction } from "~/lib/serverActions";
 import { removePubField } from "./actions";
 
 type Props = {
@@ -19,11 +19,8 @@ type Props = {
 export const RemoveFieldButton = ({ pubFieldId, pubTypeId }: Props) => {
 	const runRemoveField = useServerAction(removePubField);
 	const handleRemove = useCallback(async () => {
-		const result = await runRemoveField(pubTypeId as PubTypesId, pubFieldId as PubFieldsId);
-		if (didSucceed(result)) {
-			// delete from parent
-		}
-	}, []);
+		await runRemoveField(pubTypeId as PubTypesId, pubFieldId as PubFieldsId);
+	}, [pubTypeId, pubFieldId]);
 	return (
 		<TooltipProvider>
 			<Tooltip>
@@ -31,10 +28,10 @@ export const RemoveFieldButton = ({ pubFieldId, pubTypeId }: Props) => {
 					<Button
 						variant="secondary"
 						size="sm"
-						className="flex gap-2"
+						className="flex h-5 gap-2 px-2"
 						onClick={handleRemove}
 					>
-						<Trash size={14} />
+						<X size={10} />
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent>

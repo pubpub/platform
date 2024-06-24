@@ -5,35 +5,41 @@ import { useState } from "react";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
 import { Pencil } from "ui/icon";
+import { Label } from "ui/label";
 
-import type { PubTypeWithFields } from "~/lib/types";
-import { AddField } from "./AddField";
+import type { PubTypeWithFieldIds } from "~/lib/types";
+import { useServerAction } from "~/lib/serverActions";
+import { addPubField } from "./actions";
+import { FieldSelect } from "./FieldSelect";
+import { useFields } from "./FieldsProvider";
 import { RemoveFieldButton } from "./RemoveFieldButton";
 import { RemoveTypeButton } from "./RemoveTypeButton";
 
 type Props = {
-	type: PubTypeWithFields;
+	type: PubTypeWithFieldIds;
 	superadmin: boolean;
 };
 
 const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 	const [expanded, setExpanded] = useState(false);
 	const [editing, setEditing] = useState(false);
+	const runAddPubField = useServerAction(addPubField);
+	const fields = useFields();
 	return (
 		<Card>
 			<CardContent className="px-6 py-2">
 				<div className="flex items-center justify-between">
-					<div className="flex-grow font-bold">
+					<h2 className="flex-grow font-bold">
 						{type.name}
 						{editing && (
 							<div className="ml-1 inline-flex font-normal">
 								<RemoveTypeButton pubTypeId={type.id} />
 							</div>
 						)}
-					</div>
+					</h2>
 					<Button
 						size="icon"
-						variant="ghost"
+						variant={expanded ? "secondary" : "ghost"}
 						aria-label="Expand"
 						onClick={() => {
 							setExpanded(!expanded);
@@ -42,36 +48,37 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 						<img src="/icons/chevron-vertical.svg" alt="" />
 					</Button>
 					{superadmin && (
-						<>
-							<Button
-								size="icon"
-								variant={editing ? "secondary" : "ghost"}
-								aria-label="Edit"
-								onClick={() => {
-									setEditing(!editing);
-								}}
-							>
-								<Pencil size="12" />
-							</Button>
-						</>
+						<Button
+							className="ml-1"
+							size="icon"
+							variant={editing ? "secondary" : "ghost"}
+							aria-label="Edit"
+							onClick={() => {
+								setEditing(!editing);
+							}}
+						>
+							<Pencil size="12" />
+						</Button>
 					)}
 				</div>
 				<div className="text-sm">{type.description}</div>
 				{(expanded || editing) && (
 					<div className="ml-4 mt-4">
+						<h3 className="mb-2 font-semibold">Fields</h3>
 						<ul>
-							{type.fields.map((field) => {
+							{Object.values(type.fields).map((fieldId) => {
+								const field = fields[fieldId];
 								return (
 									<li key={field.id}>
-										{field.name}
 										{editing && (
-											<div className="ml-1 inline-flex">
+											<div className="mr-1 inline-flex">
 												<RemoveFieldButton
 													pubFieldId={field.id}
 													pubTypeId={type.id}
 												/>
 											</div>
 										)}
+										{field.name}
 									</li>
 								);
 							})}
@@ -79,10 +86,15 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 					</div>
 				)}
 				{editing && (
-					<AddField
-						excludedFields={type.fields.map((field) => field.id)}
-						pubTypeId={type.id}
-					/>
+					<div className="m-4">
+						<Label className="my-1 block">
+							Add additional fields to <span className="italic">{type.name}</span>
+						</Label>
+						<FieldSelect
+							excludedFields={type.fields}
+							onFieldSelect={(fieldId) => runAddPubField(type.id, fieldId)}
+						/>
+					</div>
 				)}
 			</CardContent>
 		</Card>

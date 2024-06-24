@@ -32,7 +32,7 @@ export const RemoveTypeButton = ({ pubTypeId }: Props) => {
 						className="flex gap-2"
 						onClick={handleRemove}
 					>
-						<Trash size={14} />
+						<Trash size={12} />
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent>

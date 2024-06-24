@@ -1,10 +1,10 @@
 "use client";
 
-import type { PubTypeWithFields } from "~/lib/types";
+import type { PubTypeWithFieldIds } from "~/lib/types";
 import TypeBlock from "./TypeBlock";
 
 type Props = {
-	types: PubTypeWithFields[];
+	types: PubTypeWithFieldIds[];
 	superadmin: boolean;
 };
 
