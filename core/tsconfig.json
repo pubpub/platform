@@ -20,6 +20,13 @@
 			"module": "CommonJS"
 		}
 	},
-	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+	"include": [
+		"next-env.d.ts",
+		"**/*.ts",
+		"**/*.tsx",
+		".next/types/**/*.ts",
+		"instrumentation.node.mts",
+		"instrumentation.registerCorePubFields.mts"
+	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }
