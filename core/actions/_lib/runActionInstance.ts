@@ -1,20 +1,19 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
+import { captureException } from "@sentry/nextjs";
+import { sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+
+import type { GetPubResponseBody } from "contracts";
 import type Action from "db/public/Action";
 import type { ActionInstancesId } from "db/public/ActionInstances";
 import type { PubsId } from "db/public/Pubs";
 import type { StagesId } from "db/public/Stages";
 import type { UsersId } from "db/public/Users";
-
-import { revalidateTag } from "next/cache";
-import { captureException } from "@sentry/nextjs";
 import ActionRunStatus from "db/public/ActionRunStatus";
 import { CommunitiesId } from "db/public/Communities";
 import Event from "db/public/Event";
-import { sql } from "kysely";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
-
-import type { GetPubResponseBody } from "contracts";
 import { logger } from "logger";
 
 import type { ActionSuccess } from "../types";
@@ -143,11 +142,13 @@ const _runActionInstance = async (
 
 	try {
 		const result = await actionRun({
+			// FIXME: get rid of any
 			config: parsedConfig.data as any,
 			pub: {
 				id: pub.id,
+				// FIXME: get rid of any
 				values: pub.values as any,
-				assignee: pub.assignee,
+				assignee: pub.assignee ?? undefined,
 			},
 			args: parsedArgs.data,
 			stageId: actionInstance.stageId,
