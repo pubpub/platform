@@ -1,5 +1,11 @@
 "use server";
 
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubFieldsId } from "db/public/PubFields";
+import type { PubsId } from "db/public/Pubs";
+import type { PubTypesId } from "db/public/PubTypes";
+import type { StagesId } from "db/public/Stages";
+
 import { revalidatePath, revalidateTag } from "next/cache";
 import { JSONSchemaType } from "ajv";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -7,11 +13,6 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type { JsonValue } from "contracts";
 import { logger } from "logger";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import type { StagesId } from "~/kysely/types/public/Stages";
 import { validatePubValues } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";

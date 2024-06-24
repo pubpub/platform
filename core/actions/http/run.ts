@@ -1,11 +1,12 @@
 "use server";
 
+import type { PubsId } from "db/public/Pubs";
+
 import { JSONPath } from "jsonpath-plus";
 
 import { logger } from "logger";
 
 import type { action } from "./action";
-import type { PubsId } from "~/kysely/types/public/Pubs";
 import { _updatePub } from "~/app/components/PubCRUD/actions";
 import { defineRun } from "../types";
 

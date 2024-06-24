@@ -1,5 +1,7 @@
 "use client";
 
+import type { Users } from "db/public/Users";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -11,7 +13,6 @@ import { Loader2, Undo2, X, XCircle } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
-import type { Users } from "~/kysely/types/public/Users";
 import { useServerAction } from "~/lib/serverActions";
 import { UserLoginData } from "~/lib/types";
 import * as actions from "./actions";

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
+
 import { useCallback, useState } from "react";
 
 import { logger } from "logger";
@@ -9,7 +11,6 @@ import { ChevronUp, Pencil, Trash } from "ui/icon";
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 
-import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { getActionByName } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "../../actions";

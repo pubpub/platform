@@ -1,7 +1,8 @@
+import type { PubsId } from "db/public/Pubs";
+
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
-import type { PubsId } from "~/kysely/types/public/Pubs";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 export type PubRemoveProps = {

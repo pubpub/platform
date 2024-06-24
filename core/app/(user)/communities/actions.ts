@@ -1,14 +1,15 @@
 "use server";
 
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubTypesId } from "db/public/PubTypes";
+import type { UsersId } from "db/public/Users";
+
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
 import { expect } from "utils";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import type { UsersId } from "~/kysely/types/public/Users";
 import type { UserAndMemberships } from "~/lib/types";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";

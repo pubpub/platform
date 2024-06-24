@@ -1,5 +1,8 @@
 "use client";
 
+import type { PubFieldsId } from "db/public/PubFields";
+import type { PubFieldSchemaId } from "db/public/PubFieldSchema";
+
 import { useFieldArray } from "react-hook-form";
 
 import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
@@ -11,8 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubFieldSchemaId } from "~/kysely/types/public/PubFieldSchema";
 import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField";
 import { action } from "../../action";
 

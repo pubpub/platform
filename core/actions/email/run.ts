@@ -1,5 +1,7 @@
 "use server";
 
+import type { UsersId } from "db/public/Users";
+
 import rehypeFormat from "rehype-format";
 import rehypeStringify from "rehype-stringify";
 import remarkDirective from "remark-directive";
@@ -11,7 +13,6 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
-import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
 import { smtpclient } from "~/lib/server/mailgun";
 import { defineRun } from "../types";

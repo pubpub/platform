@@ -1,8 +1,9 @@
+import type { CommunitiesId } from "db/public/Communities";
+
 import { Suspense } from "react";
 
 import { Card, CardContent } from "ui/card";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStageRules } from "./queries";
 import { StagePanelRule } from "./StagePanelRule";

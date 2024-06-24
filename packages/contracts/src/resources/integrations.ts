@@ -105,6 +105,18 @@ export const CreatePubRequestBodyWithNulls: z.ZodType<CreatePubRequestBodyWithNu
 		children: z.lazy(() => CreatePubRequestBodyWithNulls.array().optional()),
 	});
 
+export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
+	stageId: string;
+	children?: CreatePubRequestBodyWithNulls[];
+};
+export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
+	CreatePubRequestBodyWithNullsBase.extend({
+		stageId: z.string().uuid(),
+		children: z.lazy(() =>
+			CreatePubRequestBodyWithNullsNew.partial({ stageId: true }).array().optional()
+		),
+	});
+
 export const CreatePubResponseBodyBase = commonPubFields.extend({
 	id: z.string(),
 });

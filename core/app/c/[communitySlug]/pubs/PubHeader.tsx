@@ -1,8 +1,9 @@
+import type { CommunitiesId } from "db/public/Communities";
+
 import Link from "next/link";
 
 import { Button } from "ui/button";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 
 type Props = {

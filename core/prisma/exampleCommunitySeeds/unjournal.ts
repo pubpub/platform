@@ -1,12 +1,14 @@
+import type { PrismaClient } from "@prisma/client";
+
 import { faker } from "@faker-js/faker";
-import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubTypesId } from "db/public/PubTypes";
+import type { StagesId } from "db/public/Stages";
+
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
-import { StagesId } from "~/kysely/types/public/Stages";
 import { env } from "../../lib/env/env.mjs";
 import { FileUpload } from "../../lib/fields/fileUpload";
 

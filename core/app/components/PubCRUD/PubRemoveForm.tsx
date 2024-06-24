@@ -1,5 +1,9 @@
 "use client";
 
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubsId } from "db/public/Pubs";
+import type { Stages } from "db/public/Stages";
+
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ajvResolver } from "@hookform/resolvers/ajv";
@@ -14,9 +18,6 @@ import { Form } from "ui/form";
 import { Loader2, Pencil, Trash } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { Stages } from "~/kysely/types/public/Stages";
 import type { getPubType } from "~/lib/server/pub";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";

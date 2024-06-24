@@ -1,6 +1,4 @@
-import type { Community, Member } from "@prisma/client";
-
-import { Prisma } from "@prisma/client";
+import type { Community, Member, Prisma } from "@prisma/client";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
 	include: {
@@ -162,8 +160,28 @@ export type StagePayloadMoveConstraintDestination =
 	StagePayloadMoveConstraint[number]["destination"];
 export type IntegrationAction = { name: string; url: string; href: string };
 
+export type Prettify<T> = {
+	[P in keyof T]: T[P];
+} & {};
+
 export type DeepPartial<T> = T extends object
 	? {
 			[P in keyof T]?: DeepPartial<T[P]>;
 		}
 	: T;
+
+export type MaybeHas<T extends Record<string, unknown>, K extends keyof T> = T extends T
+	? Prettify<
+			Omit<T, K> & {
+				[P in K]?: T[P];
+			}
+		>
+	: never;
+
+export type DefinitelyHas<T, K extends keyof T> = T extends T
+	? Prettify<
+			Omit<T, K> & {
+				[P in K]: T[P];
+			}
+		>
+	: never;

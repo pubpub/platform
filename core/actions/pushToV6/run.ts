@@ -1,11 +1,12 @@
 "use server";
 
+import type { PubsId } from "db/public/Pubs";
+
 import { defaultMarkdownParser } from "prosemirror-markdown";
 
 import { logger } from "logger";
 
 import type { action } from "./action";
-import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import { isClientExceptionOptions } from "~/lib/serverActions";
