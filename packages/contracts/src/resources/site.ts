@@ -1,17 +1,31 @@
 import { initContract } from "@ts-rest/core";
-import { pubsSchema } from "db/public/Pubs";
 import { z } from "zod";
 
-import { CreatePubRequestBodyWithNulls, CreatePubRequestBodyWithNullsNew } from "./integrations";
+import { pubsSchema } from "db/public/Pubs";
+import { stagesSchema } from "db/public/Stages";
+import { pubTypesSchema } from "db/src/public/PubTypes";
 
+import { CreatePubRequestBodyWithNulls, CreatePubRequestBodyWithNullsBase } from "./integrations";
+
+export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
+	stageId: string;
+	children?: CreatePubRequestBodyWithNulls[];
+};
+export const CreatePubRequestBodyWithNullsNew: z.Schema<CreatePubRequestBodyWithNullsNew> =
+	CreatePubRequestBodyWithNullsBase.extend({
+		stageId: z.string().uuid(),
+		children: z.lazy(() =>
+			CreatePubRequestBodyWithNullsNew.partial({ stageId: true }).array().optional()
+		),
+	});
 const contract = initContract();
 
 type PubWithChildren = z.infer<typeof pubsSchema> & {
 	children?: PubWithChildren[];
 };
 
-const pubsWithChildren: z.ZodType<PubWithChildren> = pubsSchema.extend({
-	chilren: z.lazy(() => z.array(pubsWithChildren).optional()),
+const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.extend({
+	children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
 });
 
 export const siteApi = contract.router(
@@ -22,12 +36,12 @@ export const siteApi = contract.router(
 				path: "/pubs/:pubId",
 				summary: "Gets a pub",
 				description:
-					"Get a pub by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
+					"Get a pub and its children by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
 				pathParams: z.object({
 					pubId: z.string().uuid(),
 				}),
 				responses: {
-					200: z.any(),
+					200: pubWithChildrenSchema,
 				},
 			},
 			getMany: {
@@ -37,11 +51,13 @@ export const siteApi = contract.router(
 				description:
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
 				query: z.object({
-					page: z.number().optional(),
-					perPage: z.number().optional(),
+					limit: z.number().default(10).optional(),
+					offset: z.number().default(0).optional(),
+					orderBy: z.string().optional(),
+					orderDirection: z.enum(["ASC", "DESC"]).optional(),
 				}),
 				responses: {
-					200: z.array(pubsWithChildren),
+					200: z.array(pubWithChildrenSchema),
 				},
 			},
 			create: {
@@ -65,7 +81,7 @@ export const siteApi = contract.router(
 					pubTypeId: z.string().uuid(),
 				}),
 				responses: {
-					200: z.any(),
+					200: pubTypesSchema,
 				},
 			},
 			getMany: {
@@ -81,7 +97,7 @@ export const siteApi = contract.router(
 					orderDirection: z.enum(["ASC", "DESC"]).optional(),
 				}),
 				responses: {
-					200: z.any(),
+					200: pubTypesSchema.array(),
 				},
 			},
 		},
@@ -96,7 +112,7 @@ export const siteApi = contract.router(
 					stageId: z.string().uuid(),
 				}),
 				responses: {
-					200: z.any(),
+					200: stagesSchema,
 				},
 			},
 			getMany: {
@@ -113,7 +129,7 @@ export const siteApi = contract.router(
 					orderDirection: z.enum(["ASC", "DESC"]).optional(),
 				}),
 				responses: {
-					200: z.any(),
+					200: stagesSchema.array(),
 				},
 			},
 		},

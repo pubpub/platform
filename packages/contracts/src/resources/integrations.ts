@@ -91,7 +91,7 @@ export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
 	});
 
 // TODO: there has to be a better way to allow the API requests to include nulls in json fields
-const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
+export const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(jsonSchema),
 	assigneeId: z.string().optional(),
@@ -103,18 +103,6 @@ export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyW
 export const CreatePubRequestBodyWithNulls: z.ZodType<CreatePubRequestBodyWithNulls> =
 	CreatePubRequestBodyWithNullsBase.extend({
 		children: z.lazy(() => CreatePubRequestBodyWithNulls.array().optional()),
-	});
-
-export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
-	stageId: string;
-	children?: CreatePubRequestBodyWithNulls[];
-};
-export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
-	CreatePubRequestBodyWithNullsBase.extend({
-		stageId: z.string().uuid(),
-		children: z.lazy(() =>
-			CreatePubRequestBodyWithNullsNew.partial({ stageId: true }).array().optional()
-		),
 	});
 
 export const CreatePubResponseBodyBase = commonPubFields.extend({
