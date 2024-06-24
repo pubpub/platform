@@ -45,7 +45,7 @@ export const prismaMigrationsSchema = z.object({
 	rolled_back_at: z.date().nullable(),
 	started_at: z.date(),
 	applied_steps_count: z.number(),
-}) as z.Schema<PrismaMigrations>;
+}) as z.ZodObject<{ [K in keyof PrismaMigrations]: z.Schema<PrismaMigrations[K]> }>;
 
 export const prismaMigrationsInitializerSchema = z.object({
 	id: prismaMigrationsIdSchema,
@@ -56,7 +56,7 @@ export const prismaMigrationsInitializerSchema = z.object({
 	rolled_back_at: z.date().optional().nullable(),
 	started_at: z.date().optional(),
 	applied_steps_count: z.number().optional(),
-}) as z.Schema<NewPrismaMigrations>;
+}) as z.ZodObject<{ [K in keyof NewPrismaMigrations]: z.Schema<NewPrismaMigrations[K]> }>;
 
 export const prismaMigrationsMutatorSchema = z.object({
 	id: prismaMigrationsIdSchema.optional(),
@@ -67,4 +67,4 @@ export const prismaMigrationsMutatorSchema = z.object({
 	rolled_back_at: z.date().optional().nullable(),
 	started_at: z.date().optional(),
 	applied_steps_count: z.number().optional(),
-}) as z.Schema<PrismaMigrationsUpdate>;
+}) as z.ZodObject<{ [K in keyof PrismaMigrationsUpdate]: z.Schema<PrismaMigrationsUpdate[K]> }>;

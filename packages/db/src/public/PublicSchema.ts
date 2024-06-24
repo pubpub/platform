@@ -5,9 +5,9 @@ import { type default as ActionClaimTable } from "./ActionClaim";
 import { type default as ActionInstancesTable } from "./ActionInstances";
 import { type default as ActionMoveTable } from "./ActionMove";
 import { type default as ActionRunsTable } from "./ActionRuns";
-import { type default as APIAccessLogTable } from "./APIAccessLog";
-import { type default as APIAccessRuleTable } from "./APIAccessRule";
-import { type default as APIAccessTokenTable } from "./APIAccessToken";
+import { type default as ApiAccessLogsTable } from "./ApiAccessLogs";
+import { type default as ApiAccessRulesTable } from "./ApiAccessRules";
+import { type default as ApiAccessTokensTable } from "./ApiAccessTokens";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
 import { type default as FormInputsTable } from "./FormInputs";
@@ -36,28 +36,6 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
-	APIAccessToken: APIAccessTokenTable;
-
-	APIAccessLog: APIAccessLogTable;
-
-	APIAccessRule: APIAccessRuleTable;
-
-	integrations: IntegrationsTable;
-
-	communities: CommunitiesTable;
-
-	move_constraint: MoveConstraintTable;
-
-	action_claim: ActionClaimTable;
-
-	action_move: ActionMoveTable;
-
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
 	integration_instances: IntegrationInstancesTable;
 
 	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
@@ -76,18 +54,6 @@ export default interface PublicSchema {
 
 	IntegrationInstanceState: IntegrationInstanceStateTable;
 
-	action_instances: ActionInstancesTable;
-
-	PubsInStages: PubsInStagesTable;
-
-	rules: RulesTable;
-
-	action_runs: ActionRunsTable;
-
-	forms: FormsTable;
-
-	form_inputs: FormInputsTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -101,4 +67,38 @@ export default interface PublicSchema {
 	members: MembersTable;
 
 	member_groups: MemberGroupsTable;
+
+	integrations: IntegrationsTable;
+
+	communities: CommunitiesTable;
+
+	move_constraint: MoveConstraintTable;
+
+	action_claim: ActionClaimTable;
+
+	action_move: ActionMoveTable;
+
+	pub_fields: PubFieldsTable;
+
+	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
+
+	action_instances: ActionInstancesTable;
+
+	PubsInStages: PubsInStagesTable;
+
+	rules: RulesTable;
+
+	action_runs: ActionRunsTable;
+
+	forms: FormsTable;
+
+	form_inputs: FormInputsTable;
+
+	api_access_tokens: ApiAccessTokensTable;
+
+	api_access_logs: ApiAccessLogsTable;
+
+	api_access_rules: ApiAccessRulesTable;
 }

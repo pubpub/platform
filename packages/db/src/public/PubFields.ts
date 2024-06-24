@@ -49,7 +49,7 @@ export const pubFieldsSchema = z.object({
 	integrationId: integrationsIdSchema.nullable(),
 	pubFieldSchemaId: pubFieldSchemaIdSchema.nullable(),
 	slug: z.string(),
-}) as z.Schema<PubFields>;
+}) as z.ZodObject<{ [K in keyof PubFields]: z.Schema<PubFields[K]> }>;
 
 export const pubFieldsInitializerSchema = z.object({
 	id: pubFieldsIdSchema.optional(),
@@ -59,7 +59,7 @@ export const pubFieldsInitializerSchema = z.object({
 	integrationId: integrationsIdSchema.optional().nullable(),
 	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string(),
-}) as z.Schema<NewPubFields>;
+}) as z.ZodObject<{ [K in keyof NewPubFields]: z.Schema<NewPubFields[K]> }>;
 
 export const pubFieldsMutatorSchema = z.object({
 	id: pubFieldsIdSchema.optional(),
@@ -69,4 +69,4 @@ export const pubFieldsMutatorSchema = z.object({
 	integrationId: integrationsIdSchema.optional().nullable(),
 	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string().optional(),
-}) as z.Schema<PubFieldsUpdate>;
+}) as z.ZodObject<{ [K in keyof PubFieldsUpdate]: z.Schema<PubFieldsUpdate[K]> }>;

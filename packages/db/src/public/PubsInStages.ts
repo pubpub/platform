@@ -25,14 +25,14 @@ export type PubsInStagesUpdate = Updateable<PubsInStagesTable>;
 export const pubsInStagesSchema = z.object({
 	pubId: pubsIdSchema,
 	stageId: stagesIdSchema,
-}) as z.Schema<PubsInStages>;
+}) as z.ZodObject<{ [K in keyof PubsInStages]: z.Schema<PubsInStages[K]> }>;
 
 export const pubsInStagesInitializerSchema = z.object({
 	pubId: pubsIdSchema,
 	stageId: stagesIdSchema,
-}) as z.Schema<NewPubsInStages>;
+}) as z.ZodObject<{ [K in keyof NewPubsInStages]: z.Schema<NewPubsInStages[K]> }>;
 
 export const pubsInStagesMutatorSchema = z.object({
 	pubId: pubsIdSchema.optional(),
 	stageId: stagesIdSchema.optional(),
-}) as z.Schema<PubsInStagesUpdate>;
+}) as z.ZodObject<{ [K in keyof PubsInStagesUpdate]: z.Schema<PubsInStagesUpdate[K]> }>;

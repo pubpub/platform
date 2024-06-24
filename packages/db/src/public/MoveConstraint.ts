@@ -29,18 +29,18 @@ export const moveConstraintSchema = z.object({
 	destinationId: stagesIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
-}) as z.Schema<MoveConstraint>;
+}) as z.ZodObject<{ [K in keyof MoveConstraint]: z.Schema<MoveConstraint[K]> }>;
 
 export const moveConstraintInitializerSchema = z.object({
 	stageId: stagesIdSchema,
 	destinationId: stagesIdSchema,
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.Schema<NewMoveConstraint>;
+}) as z.ZodObject<{ [K in keyof NewMoveConstraint]: z.Schema<NewMoveConstraint[K]> }>;
 
 export const moveConstraintMutatorSchema = z.object({
 	stageId: stagesIdSchema.optional(),
 	destinationId: stagesIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.Schema<MoveConstraintUpdate>;
+}) as z.ZodObject<{ [K in keyof MoveConstraintUpdate]: z.Schema<MoveConstraintUpdate[K]> }>;

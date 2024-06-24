@@ -45,7 +45,7 @@ export const formInputsSchema = z.object({
 	label: z.string(),
 	required: z.boolean(),
 	isSubmit: z.boolean(),
-}) as z.Schema<FormInputs>;
+}) as z.ZodObject<{ [K in keyof FormInputs]: z.Schema<FormInputs[K]> }>;
 
 export const formInputsInitializerSchema = z.object({
 	id: formInputsIdSchema.optional(),
@@ -55,7 +55,7 @@ export const formInputsInitializerSchema = z.object({
 	label: z.string(),
 	required: z.boolean(),
 	isSubmit: z.boolean(),
-}) as z.Schema<NewFormInputs>;
+}) as z.ZodObject<{ [K in keyof NewFormInputs]: z.Schema<NewFormInputs[K]> }>;
 
 export const formInputsMutatorSchema = z.object({
 	id: formInputsIdSchema.optional(),
@@ -65,4 +65,4 @@ export const formInputsMutatorSchema = z.object({
 	label: z.string().optional(),
 	required: z.boolean().optional(),
 	isSubmit: z.boolean().optional(),
-}) as z.Schema<FormInputsUpdate>;
+}) as z.ZodObject<{ [K in keyof FormInputsUpdate]: z.Schema<FormInputsUpdate[K]> }>;

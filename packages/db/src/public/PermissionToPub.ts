@@ -25,14 +25,14 @@ export type PermissionToPubUpdate = Updateable<PermissionToPubTable>;
 export const permissionToPubSchema = z.object({
 	A: permissionsIdSchema,
 	B: pubsIdSchema,
-}) as z.Schema<PermissionToPub>;
+}) as z.ZodObject<{ [K in keyof PermissionToPub]: z.Schema<PermissionToPub[K]> }>;
 
 export const permissionToPubInitializerSchema = z.object({
 	A: permissionsIdSchema,
 	B: pubsIdSchema,
-}) as z.Schema<NewPermissionToPub>;
+}) as z.ZodObject<{ [K in keyof NewPermissionToPub]: z.Schema<NewPermissionToPub[K]> }>;
 
 export const permissionToPubMutatorSchema = z.object({
 	A: permissionsIdSchema.optional(),
 	B: pubsIdSchema.optional(),
-}) as z.Schema<PermissionToPubUpdate>;
+}) as z.ZodObject<{ [K in keyof PermissionToPubUpdate]: z.Schema<PermissionToPubUpdate[K]> }>;

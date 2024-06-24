@@ -37,7 +37,7 @@ export const integrationsSchema = z.object({
 	actions: z.unknown(),
 	name: z.string(),
 	settingsUrl: z.string(),
-}) as z.Schema<Integrations>;
+}) as z.ZodObject<{ [K in keyof Integrations]: z.Schema<Integrations[K]> }>;
 
 export const integrationsInitializerSchema = z.object({
 	id: integrationsIdSchema.optional(),
@@ -46,7 +46,7 @@ export const integrationsInitializerSchema = z.object({
 	actions: z.unknown(),
 	name: z.string(),
 	settingsUrl: z.string(),
-}) as z.Schema<NewIntegrations>;
+}) as z.ZodObject<{ [K in keyof NewIntegrations]: z.Schema<NewIntegrations[K]> }>;
 
 export const integrationsMutatorSchema = z.object({
 	id: integrationsIdSchema.optional(),
@@ -55,4 +55,4 @@ export const integrationsMutatorSchema = z.object({
 	actions: z.unknown().optional(),
 	name: z.string().optional(),
 	settingsUrl: z.string().optional(),
-}) as z.Schema<IntegrationsUpdate>;
+}) as z.ZodObject<{ [K in keyof IntegrationsUpdate]: z.Schema<IntegrationsUpdate[K]> }>;

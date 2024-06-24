@@ -37,7 +37,7 @@ export const memberGroupsSchema = z.object({
 	updatedAt: z.date(),
 	canAdmin: z.boolean(),
 	communityId: communitiesIdSchema,
-}) as z.Schema<MemberGroups>;
+}) as z.ZodObject<{ [K in keyof MemberGroups]: z.Schema<MemberGroups[K]> }>;
 
 export const memberGroupsInitializerSchema = z.object({
 	id: memberGroupsIdSchema.optional(),
@@ -45,7 +45,7 @@ export const memberGroupsInitializerSchema = z.object({
 	updatedAt: z.date().optional(),
 	canAdmin: z.boolean(),
 	communityId: communitiesIdSchema,
-}) as z.Schema<NewMemberGroups>;
+}) as z.ZodObject<{ [K in keyof NewMemberGroups]: z.Schema<NewMemberGroups[K]> }>;
 
 export const memberGroupsMutatorSchema = z.object({
 	id: memberGroupsIdSchema.optional(),
@@ -53,4 +53,4 @@ export const memberGroupsMutatorSchema = z.object({
 	updatedAt: z.date().optional(),
 	canAdmin: z.boolean().optional(),
 	communityId: communitiesIdSchema.optional(),
-}) as z.Schema<MemberGroupsUpdate>;
+}) as z.ZodObject<{ [K in keyof MemberGroupsUpdate]: z.Schema<MemberGroupsUpdate[K]> }>;

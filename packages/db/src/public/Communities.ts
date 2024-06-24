@@ -37,7 +37,7 @@ export const communitiesSchema = z.object({
 	name: z.string(),
 	avatar: z.string().nullable(),
 	slug: z.string(),
-}) as z.Schema<Communities>;
+}) as z.ZodObject<{ [K in keyof Communities]: z.Schema<Communities[K]> }>;
 
 export const communitiesInitializerSchema = z.object({
 	id: communitiesIdSchema.optional(),
@@ -46,7 +46,7 @@ export const communitiesInitializerSchema = z.object({
 	name: z.string(),
 	avatar: z.string().optional().nullable(),
 	slug: z.string(),
-}) as z.Schema<NewCommunities>;
+}) as z.ZodObject<{ [K in keyof NewCommunities]: z.Schema<NewCommunities[K]> }>;
 
 export const communitiesMutatorSchema = z.object({
 	id: communitiesIdSchema.optional(),
@@ -55,4 +55,4 @@ export const communitiesMutatorSchema = z.object({
 	name: z.string().optional(),
 	avatar: z.string().optional().nullable(),
 	slug: z.string().optional(),
-}) as z.Schema<CommunitiesUpdate>;
+}) as z.ZodObject<{ [K in keyof CommunitiesUpdate]: z.Schema<CommunitiesUpdate[K]> }>;

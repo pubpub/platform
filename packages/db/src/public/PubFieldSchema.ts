@@ -38,7 +38,7 @@ export const pubFieldSchemaSchema = z.object({
 	schema: z.unknown(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-}) as z.Schema<PubFieldSchema>;
+}) as z.ZodObject<{ [K in keyof PubFieldSchema]: z.Schema<PubFieldSchema[K]> }>;
 
 export const pubFieldSchemaInitializerSchema = z.object({
 	id: pubFieldSchemaIdSchema.optional(),
@@ -47,7 +47,7 @@ export const pubFieldSchemaInitializerSchema = z.object({
 	schema: z.unknown(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.Schema<NewPubFieldSchema>;
+}) as z.ZodObject<{ [K in keyof NewPubFieldSchema]: z.Schema<NewPubFieldSchema[K]> }>;
 
 export const pubFieldSchemaMutatorSchema = z.object({
 	id: pubFieldSchemaIdSchema.optional(),
@@ -56,4 +56,4 @@ export const pubFieldSchemaMutatorSchema = z.object({
 	schema: z.unknown().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.Schema<PubFieldSchemaUpdate>;
+}) as z.ZodObject<{ [K in keyof PubFieldSchemaUpdate]: z.Schema<PubFieldSchemaUpdate[K]> }>;

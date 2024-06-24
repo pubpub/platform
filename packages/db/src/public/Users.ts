@@ -52,7 +52,7 @@ export const usersSchema = z.object({
 	orcid: z.string().nullable(),
 	supabaseId: z.string().nullable(),
 	isSuperAdmin: z.boolean(),
-}) as z.Schema<Users>;
+}) as z.ZodObject<{ [K in keyof Users]: z.Schema<Users[K]> }>;
 
 export const usersInitializerSchema = z.object({
 	id: usersIdSchema.optional(),
@@ -66,7 +66,7 @@ export const usersInitializerSchema = z.object({
 	orcid: z.string().optional().nullable(),
 	supabaseId: z.string().optional().nullable(),
 	isSuperAdmin: z.boolean().optional(),
-}) as z.Schema<NewUsers>;
+}) as z.ZodObject<{ [K in keyof NewUsers]: z.Schema<NewUsers[K]> }>;
 
 export const usersMutatorSchema = z.object({
 	id: usersIdSchema.optional(),
@@ -80,4 +80,4 @@ export const usersMutatorSchema = z.object({
 	orcid: z.string().optional().nullable(),
 	supabaseId: z.string().optional().nullable(),
 	isSuperAdmin: z.boolean().optional(),
-}) as z.Schema<UsersUpdate>;
+}) as z.ZodObject<{ [K in keyof UsersUpdate]: z.Schema<UsersUpdate[K]> }>;

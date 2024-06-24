@@ -25,14 +25,14 @@ export type PermissionToStageUpdate = Updateable<PermissionToStageTable>;
 export const permissionToStageSchema = z.object({
 	A: permissionsIdSchema,
 	B: stagesIdSchema,
-}) as z.Schema<PermissionToStage>;
+}) as z.ZodObject<{ [K in keyof PermissionToStage]: z.Schema<PermissionToStage[K]> }>;
 
 export const permissionToStageInitializerSchema = z.object({
 	A: permissionsIdSchema,
 	B: stagesIdSchema,
-}) as z.Schema<NewPermissionToStage>;
+}) as z.ZodObject<{ [K in keyof NewPermissionToStage]: z.Schema<NewPermissionToStage[K]> }>;
 
 export const permissionToStageMutatorSchema = z.object({
 	A: permissionsIdSchema.optional(),
 	B: stagesIdSchema.optional(),
-}) as z.Schema<PermissionToStageUpdate>;
+}) as z.ZodObject<{ [K in keyof PermissionToStageUpdate]: z.Schema<PermissionToStageUpdate[K]> }>;

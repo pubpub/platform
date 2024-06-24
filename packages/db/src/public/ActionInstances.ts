@@ -45,7 +45,7 @@ export const actionInstancesSchema = z.object({
 	config: z.unknown().nullable(),
 	name: z.string(),
 	action: actionSchema,
-}) as z.Schema<ActionInstances>;
+}) as z.ZodObject<{ [K in keyof ActionInstances]: z.Schema<ActionInstances[K]> }>;
 
 export const actionInstancesInitializerSchema = z.object({
 	id: actionInstancesIdSchema.optional(),
@@ -55,7 +55,7 @@ export const actionInstancesInitializerSchema = z.object({
 	config: z.unknown().optional().nullable(),
 	name: z.string().optional(),
 	action: actionSchema,
-}) as z.Schema<NewActionInstances>;
+}) as z.ZodObject<{ [K in keyof NewActionInstances]: z.Schema<NewActionInstances[K]> }>;
 
 export const actionInstancesMutatorSchema = z.object({
 	id: actionInstancesIdSchema.optional(),
@@ -65,4 +65,4 @@ export const actionInstancesMutatorSchema = z.object({
 	config: z.unknown().optional().nullable(),
 	name: z.string().optional(),
 	action: actionSchema.optional(),
-}) as z.Schema<ActionInstancesUpdate>;
+}) as z.ZodObject<{ [K in keyof ActionInstancesUpdate]: z.Schema<ActionInstancesUpdate[K]> }>;

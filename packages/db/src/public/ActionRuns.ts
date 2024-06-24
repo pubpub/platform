@@ -67,7 +67,7 @@ export const actionRunsSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	result: z.unknown(),
-}) as z.Schema<ActionRuns>;
+}) as z.ZodObject<{ [K in keyof ActionRuns]: z.Schema<ActionRuns[K]> }>;
 
 export const actionRunsInitializerSchema = z.object({
 	id: actionRunsIdSchema.optional(),
@@ -81,7 +81,7 @@ export const actionRunsInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown(),
-}) as z.Schema<NewActionRuns>;
+}) as z.ZodObject<{ [K in keyof NewActionRuns]: z.Schema<NewActionRuns[K]> }>;
 
 export const actionRunsMutatorSchema = z.object({
 	id: actionRunsIdSchema.optional(),
@@ -95,4 +95,4 @@ export const actionRunsMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown().optional(),
-}) as z.Schema<ActionRunsUpdate>;
+}) as z.ZodObject<{ [K in keyof ActionRunsUpdate]: z.Schema<ActionRunsUpdate[K]> }>;

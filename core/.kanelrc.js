@@ -15,7 +15,10 @@ module.exports = {
 	connection: process.env["DATABASE_URL"],
 	schemas: ["public"],
 
-	preDeleteOutputFolder: true,
+	/**
+	 * otherwise e.g. the `packages/db/src/types` folder will be deleted before the build
+	 */
+	preDeleteOutputFolder: false,
 	enumStyle: "enum",
 	preRenderHooks: [
 		makeKyselyHook(),

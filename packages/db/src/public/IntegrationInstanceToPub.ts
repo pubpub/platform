@@ -25,14 +25,18 @@ export type IntegrationInstanceToPubUpdate = Updateable<IntegrationInstanceToPub
 export const integrationInstanceToPubSchema = z.object({
 	A: integrationInstancesIdSchema,
 	B: pubsIdSchema,
-}) as z.Schema<IntegrationInstanceToPub>;
+}) as z.ZodObject<{ [K in keyof IntegrationInstanceToPub]: z.Schema<IntegrationInstanceToPub[K]> }>;
 
 export const integrationInstanceToPubInitializerSchema = z.object({
 	A: integrationInstancesIdSchema,
 	B: pubsIdSchema,
-}) as z.Schema<NewIntegrationInstanceToPub>;
+}) as z.ZodObject<{
+	[K in keyof NewIntegrationInstanceToPub]: z.Schema<NewIntegrationInstanceToPub[K]>;
+}>;
 
 export const integrationInstanceToPubMutatorSchema = z.object({
 	A: integrationInstancesIdSchema.optional(),
 	B: pubsIdSchema.optional(),
-}) as z.Schema<IntegrationInstanceToPubUpdate>;
+}) as z.ZodObject<{
+	[K in keyof IntegrationInstanceToPubUpdate]: z.Schema<IntegrationInstanceToPubUpdate[K]>;
+}>;

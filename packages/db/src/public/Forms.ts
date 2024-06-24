@@ -31,16 +31,16 @@ export const formsSchema = z.object({
 	id: formsIdSchema,
 	name: z.string(),
 	pubTypeId: pubTypesIdSchema,
-}) as z.Schema<Forms>;
+}) as z.ZodObject<{ [K in keyof Forms]: z.Schema<Forms[K]> }>;
 
 export const formsInitializerSchema = z.object({
 	id: formsIdSchema.optional(),
 	name: z.string(),
 	pubTypeId: pubTypesIdSchema,
-}) as z.Schema<NewForms>;
+}) as z.ZodObject<{ [K in keyof NewForms]: z.Schema<NewForms[K]> }>;
 
 export const formsMutatorSchema = z.object({
 	id: formsIdSchema.optional(),
 	name: z.string().optional(),
 	pubTypeId: pubTypesIdSchema.optional(),
-}) as z.Schema<FormsUpdate>;
+}) as z.ZodObject<{ [K in keyof FormsUpdate]: z.Schema<FormsUpdate[K]> }>;

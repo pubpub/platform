@@ -56,7 +56,7 @@ export const integrationInstancesSchema = z.object({
 	communityId: communitiesIdSchema,
 	stageId: stagesIdSchema.nullable(),
 	config: z.unknown().nullable(),
-}) as z.Schema<IntegrationInstances>;
+}) as z.ZodObject<{ [K in keyof IntegrationInstances]: z.Schema<IntegrationInstances[K]> }>;
 
 export const integrationInstancesInitializerSchema = z.object({
 	id: integrationInstancesIdSchema.optional(),
@@ -67,7 +67,7 @@ export const integrationInstancesInitializerSchema = z.object({
 	communityId: communitiesIdSchema,
 	stageId: stagesIdSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
-}) as z.Schema<NewIntegrationInstances>;
+}) as z.ZodObject<{ [K in keyof NewIntegrationInstances]: z.Schema<NewIntegrationInstances[K]> }>;
 
 export const integrationInstancesMutatorSchema = z.object({
 	id: integrationInstancesIdSchema.optional(),
@@ -78,4 +78,6 @@ export const integrationInstancesMutatorSchema = z.object({
 	communityId: communitiesIdSchema.optional(),
 	stageId: stagesIdSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
-}) as z.Schema<IntegrationInstancesUpdate>;
+}) as z.ZodObject<{
+	[K in keyof IntegrationInstancesUpdate]: z.Schema<IntegrationInstancesUpdate[K]>;
+}>;
