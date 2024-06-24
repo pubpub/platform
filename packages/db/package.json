@@ -12,6 +12,11 @@
 		"public/ActionMove",
 		"public/ActionRunStatus",
 		"public/ActionRuns",
+		"public/ApiAccessLogs",
+		"public/ApiAccessRules",
+		"public/ApiAccessTokens",
+		"public/ApiAccessTokenScope",
+		"public/ApiAccessType",
 		"public/AuthTokens",
 		"public/Communities",
 		"public/Event",
@@ -39,7 +44,8 @@
 		"public/PubsInStages",
 		"public/Rules",
 		"public/Stages",
-		"public/Users"
+		"public/Users",
+		"types"
 	],
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
@@ -72,6 +78,11 @@
 			"./public/ActionMove.ts",
 			"./public/ActionRunStatus.ts",
 			"./public/ActionRuns.ts",
+			"./public/ApiAccessLogs.ts",
+			"./public/ApiAccessRules.ts",
+			"./public/ApiAccessTokens.ts",
+			"./public/ApiAccessTokenScope.ts",
+			"./public/ApiAccessType.ts",
 			"./public/AuthTokens.ts",
 			"./public/Communities.ts",
 			"./public/Event.ts",
@@ -99,7 +110,8 @@
 			"./public/PubsInStages.ts",
 			"./public/Rules.ts",
 			"./public/Stages.ts",
-			"./public/Users.ts"
+			"./public/Users.ts",
+			"./types/index.ts"
 		]
 	}
 }

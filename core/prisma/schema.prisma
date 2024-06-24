@@ -65,6 +65,7 @@ model Community {
   members              Member[]
   memberGroups         MemberGroup[]
   stages               Stage[]
+  APIAccessToken       ApiAccessToken[]
 
   @@map(name: "communities")
 }
@@ -423,4 +424,59 @@ model FormInput {
   isSubmit Boolean  @map(name: "isSubmit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
 
   @@map(name: "form_inputs")
+}
+
+model ApiAccessToken {
+  id          String          @id @default(dbgenerated("gen_random_uuid()"))
+  token       String          @unique
+  name        String
+  communityId String
+  community   Community       @relation(fields: [communityId], references: [id])
+  expiration  DateTime
+  revoked     Boolean         @default(false)
+  issuedBy    String
+  issuedAt    DateTime        @default(now())
+  usageLimit  Int? // Optional limit on the number of uses
+  usages      Int             @default(0)
+  accessRules ApiAccessRule[]
+  logs        ApiAccessLog[]
+
+  @@index([token], name: "token_idx")
+  @@map(name: "api_access_tokens")
+}
+
+model ApiAccessLog {
+  id            String         @id @default(dbgenerated("gen_random_uuid()"))
+  accessTokenId String
+  accessToken   ApiAccessToken @relation(fields: [accessTokenId], references: [id])
+  timestamp     DateTime       @default(now())
+  action        String
+
+  @@map(name: "api_access_logs")
+}
+
+enum ApiAccessType {
+  read
+  write
+  archive
+}
+
+model ApiAccessRule {
+  id               String              @id @default(dbgenerated("gen_random_uuid()"))
+  apiAccessTokenId String
+  apiAccessToken   ApiAccessToken      @relation(fields: [apiAccessTokenId], references: [id])
+  objectType       ApiAccessTokenScope
+  objectId         Int?
+  accessType       ApiAccessType
+  constraints      Json? /// @type(ApiAccessRuleConstraints, '../types', true, false, true)
+
+  @@index([apiAccessTokenId, objectType, objectId], name: "api_access_rule_idx")
+  @@map(name: "api_access_rules")
+}
+
+enum ApiAccessTokenScope {
+  community
+  pub
+  stage
+  member
 }
