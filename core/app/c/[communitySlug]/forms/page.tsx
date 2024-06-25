@@ -4,6 +4,7 @@ import { Button } from "ui/button";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { FormTable } from "./FormTable";
+import { ClipboardPenLine } from "ui/icon";
 
 export default async function Page() {
 	const loginData = await getLoginData();
@@ -56,10 +57,14 @@ export default async function Page() {
 
 
 	return (
-		<div className="min-h-screen bg-gray-50 p-8">
+		<div className="min-h-screen p-8">
             <div className="max-w-7xl mx-auto bg-white shadow-md rounded-lg">
                 <header className="flex justify-between items-center p-4 border-b">
-                    <h1 className="text-lg font-semibold">Forms</h1>
+                    <h1 className="text-lg font-semibold"> 
+                        <div className="flex flex-row items-center">
+                            <ClipboardPenLine size={14} className="mr-2"/> Forms
+                        </div>
+                    </h1>
                     <Button className="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600">
                         + New Form
                     </Button>

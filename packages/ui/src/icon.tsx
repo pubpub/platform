@@ -2,6 +2,7 @@ export {
 	Activity,
 	ArrowRight,
 	Calendar,
+	ClipboardPenLine,
 	BadgeCheck,
 	Check,
 	CheckCircle,
