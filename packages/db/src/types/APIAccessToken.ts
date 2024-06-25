@@ -36,65 +36,53 @@ export type ApiAccessPermissionContraintsObjectShape = {
  *
  * You need to change this if you want to add additional constraints
  */
-export type ApiAccessPermissionConstraintsConfig = [
-	{
-		scope: ApiAccessScope.community;
-	},
-	{
-		scope: ApiAccessScope.stage;
+export type ApiAccessPermissionConstraintsConfig = {
+	[ApiAccessScope.community]: never;
+	[ApiAccessScope.stage]: {
 		[ApiAccessType.read]: {
 			/**
 			 * Which stages are readable by this token
 			 */
 			stages: StagesId[];
 		};
-	},
-	{
-		scope: ApiAccessScope.pub;
+	};
+	[ApiAccessScope.pub]: {
 		[ApiAccessType.write]: {
 			/**
 			 * In which stages Pubs can be written to by this token
 			 */
 			stages: StagesId[];
 		};
-	},
-	{
-		scope: ApiAccessScope.member;
-	},
-	{
-		scope: ApiAccessScope.pubType;
-	},
-];
-
-export type Config = ApiAccessPermissionConstraintsConfig[number];
+	};
+	[ApiAccessScope.member]: never;
+	[ApiAccessScope.pubType]: never;
+};
 
 export type ApiAccessPermissionConstraints<
 	T extends ApiAccessScope = ApiAccessScope,
 	AT extends ApiAccessType = ApiAccessType,
-	C extends Config = Config,
+	C extends ApiAccessPermissionConstraintsConfig = ApiAccessPermissionConstraintsConfig,
 > = T extends T
-	? C extends C
-		? C extends { scope: T }
-			? C extends {
-					scope: T;
-				} & (AT extends ApiAccessType.read
-					? {
-							[ApiAccessType.write]: infer R;
-						}
-					: AT extends ApiAccessType.write
-						? {
-								[ApiAccessType.write]: infer R;
-							}
-						: AT extends ApiAccessType.archive
-							? {
-									[ApiAccessType.archive]: infer R;
-								}
-							: never)
+	? C[T] extends never
+		? undefined
+		: AT extends AT
+			? C[T] extends {
+					[K in AT]: infer R;
+				}
 				? R
 				: undefined
 			: never
-		: never
 	: never;
+
+export type ApiAccessPermissionConstraintsInput = {
+	[K in ApiAccessScope]: {
+		[L in ApiAccessType]?: ApiAccessPermissionConstraintsConfig[K] extends never
+			? boolean
+			: L extends keyof ApiAccessPermissionConstraintsConfig[K]
+				? ApiAccessPermissionConstraintsConfig[K][L] | boolean
+				: boolean;
+	};
+};
 
 /**
  * Use this instead of the standard ApiAccessPermission for better type inference

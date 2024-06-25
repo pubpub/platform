@@ -3,32 +3,132 @@
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-import { apiAccessRulesInitializerSchema } from "db/public/ApiAccessRules";
+import type { Stages } from "db/public/Stages";
+import ApiAccessScope from "db/public/ApiAccessScope";
 import { apiAccessTokensInitializerSchema } from "db/public/ApiAccessTokens";
+import { stagesIdSchema } from "db/public/Stages";
+import {
+	ApiAccessPermissionConstraintsConfig,
+	ApiAccessPermissionConstraintsInput,
+} from "db/types";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
-import { Checkbox } from "ui/checkbox";
-import { Form, FormField, FormItem, FormLabel } from "ui/form";
+import { CopyButton } from "ui/copy-button";
+import { DatePicker } from "ui/date-picker";
+import { Dialog, DialogContent, DialogTitle } from "ui/dialog";
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { Separator } from "ui/separator";
 
-const schema = apiAccessTokensInitializerSchema.extend({
-	permissions: apiAccessRulesInitializerSchema.array(),
-});
+import { useServerAction } from "~/lib/serverActions";
+import * as actions from "./actions";
+import { PermissionField } from "./PermissionField";
 
-export const CreateTokenForm = () => {
-	const form = useForm<typeof schema>({
-		resolver: zodResolver(schema),
+export const permissionsSchema = z.object({
+	[ApiAccessScope.community]: z.object({
+		read: z.boolean().optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.stage]: z.object({
+		read: z
+			.object({
+				stages: z.array(stagesIdSchema),
+			})
+			.or(z.boolean())
+			.optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.pub]: z.object({
+		read: z.boolean().optional(),
+		write: z
+			.object({
+				stages: z.array(stagesIdSchema),
+			})
+			.or(z.boolean())
+			.optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.member]: z.object({
+		read: z.boolean().optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.pubType]: z.object({
+		read: z.boolean().optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+}) satisfies z.Schema<ApiAccessPermissionConstraintsInput>;
+
+const createTokenFormSchema = apiAccessTokensInitializerSchema
+	.omit({
+		communityId: true,
+		usageLimit: true,
+		issuedById: true,
+	})
+	.extend({
+		description: z.string().max(255).optional(),
+		token: apiAccessTokensInitializerSchema.shape.token.optional(),
+		expiration: z
+			.date()
+			.max(
+				new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+				"Maximum expiration date is 1 year in the future"
+			)
+			.min(new Date(), "Expiry date cannot be in the past"),
+		permissions: permissionsSchema,
+	})
+	.superRefine((data, ctx) => {
+		if (
+			Object.values(data.permissions)
+				.flatMap((scope) => Object.values(scope))
+				.filter((value) => value).length > 0
+		) {
+			return true;
+		}
+		ctx.addIssue({
+			path: ["permissions"],
+			code: z.ZodIssueCode.custom,
+
+			message: "At least one permission must be selected",
+		});
+		return false;
 	});
+
+export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
+export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
+
+export type CreateTokenFormContext = {
+	stages: Stages[];
+};
+
+export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
+	const form = useForm<CreateTokenFormSchema>({
+		resolver: zodResolver(createTokenFormSchema),
+	});
+
+	const createToken = useServerAction(actions.createToken);
+
+	const onSubmit = async (data: CreateTokenFormSchema) => {
+		const result = await createToken(data);
+
+		if ("success" in result) {
+			form.setValue("token" as const, result.data.token);
+		}
+	};
+	// this `as const` should not be necessary, not sure why it is
+	const token = form.watch("token" as const);
 
 	return (
 		<Form {...form}>
-			<form className="grid gap-2">
+			<form className="grid gap-2" onSubmit={form.handleSubmit(onSubmit)}>
 				<h2 className="text-xl font-semibold">Create New Token</h2>
 				<Card>
-					<CardContent className="grid gap-4">
+					<CardContent className="flex flex-col gap-4 gap-y-4 py-8">
 						<FormField
 							name="name"
 							control={form.control}
@@ -36,6 +136,7 @@ export const CreateTokenForm = () => {
 								<FormItem className="grid gap-2">
 									<FormLabel>Token Name</FormLabel>
 									<Input placeholder="Enter a name" {...field} />
+									<FormMessage />
 								</FormItem>
 							)}
 						/>
@@ -46,6 +147,25 @@ export const CreateTokenForm = () => {
 								<FormItem className="grid gap-2">
 									<FormLabel>Description</FormLabel>
 									<Input placeholder="Enter a description" {...field} />
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							name="expiration"
+							control={form.control}
+							render={({ field }) => (
+								<FormItem className="grid gap-2">
+									<FormLabel>Expiry date</FormLabel>
+									<FormDescription>
+										The date when this token expires. Maximum expiration date is
+										1 year in the future
+									</FormDescription>
+									<DatePicker
+										date={field.value}
+										setDate={(date) => field.onChange(date)}
+									/>
+									<FormMessage />
 								</FormItem>
 							)}
 						/>
@@ -54,147 +174,34 @@ export const CreateTokenForm = () => {
 							control={form.control}
 							render={({ field }) => {
 								return (
-									<>
+									<FormItem>
 										<FormLabel>Permissions</FormLabel>
-										<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-											<div className="space-y-2">
-												<h3 className="text-lg font-semibold">Pubs</h3>
-												<div className="grid grid-cols-3 gap-2">
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-pubs-read" />
-														<Label htmlFor="permission-pubs-read">
-															Read
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-pubs-write" />
-														<Label htmlFor="permission-pubs-write">
-															Write
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-pubs-archive" />
-														<Label htmlFor="permission-pubs-archive">
-															Archive
-														</Label>
-													</div>
-												</div>
-												<div className="grid gap-2">
-													<Label htmlFor="permission-pubs-stages">
-														Stages
-													</Label>
-													<Select id="permission-pubs-stages" multiple>
-														<SelectTrigger className="w-full">
-															<SelectValue placeholder="Select stages" />
-														</SelectTrigger>
-														<SelectContent>
-															<SelectItem value="draft">
-																Draft
-															</SelectItem>
-															<SelectItem value="published">
-																Published
-															</SelectItem>
-															<SelectItem value="archived">
-																Archived
-															</SelectItem>
-														</SelectContent>
-													</Select>
-												</div>
-											</div>
-											<div className="space-y-2">
-												<h3 className="text-lg font-semibold">Community</h3>
-												<div className="grid grid-cols-3 gap-2">
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-community-read" />
-														<Label htmlFor="permission-community-read">
-															Read
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-community-write" />
-														<Label htmlFor="permission-community-write">
-															Write
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-community-archive" />
-														<Label htmlFor="permission-community-archive">
-															Archive
-														</Label>
-													</div>
-												</div>
-											</div>
-											<div className="space-y-2">
-												<h3 className="text-lg font-semibold">Stages</h3>
-												<div className="grid grid-cols-3 gap-2">
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-stages-read" />
-														<Label htmlFor="permission-stages-read">
-															Read
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-stages-write" />
-														<Label htmlFor="permission-stages-write">
-															Write
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-stages-archive" />
-														<Label htmlFor="permission-stages-archive">
-															Archive
-														</Label>
-													</div>
-												</div>
-											</div>
-											<div className="space-y-2">
-												<h3 className="text-lg font-semibold">Pub Types</h3>
-												<div className="grid grid-cols-3 gap-2">
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-pub-types-read" />
-														<Label htmlFor="permission-pub-types-read">
-															Read
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-pub-types-write" />
-														<Label htmlFor="permission-pub-types-write">
-															Write
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-pub-types-archive" />
-														<Label htmlFor="permission-pub-types-archive">
-															Archive
-														</Label>
-													</div>
-												</div>
-											</div>
-											<div className="space-y-2">
-												<h3 className="text-lg font-semibold">Members</h3>
-												<div className="grid grid-cols-3 gap-2">
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-members-read" />
-														<Label htmlFor="permission-members-read">
-															Read
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-members-write" />
-														<Label htmlFor="permission-members-write">
-															Write
-														</Label>
-													</div>
-													<div className="flex items-center gap-2">
-														<Checkbox id="permission-members-archive" />
-														<Label htmlFor="permission-members-archive">
-															Archive
-														</Label>
-													</div>
-												</div>
-											</div>
+										<div className="flex flex-col gap-4">
+											{Object.values(ApiAccessScope).map((scope) => (
+												<React.Fragment key={scope}>
+													<Separator />
+													<PermissionField
+														key={scope}
+														name={scope}
+														form={form}
+														context={context}
+														prettyName={`${scope[0].toUpperCase()}${scope.slice(1)}`}
+													/>
+												</React.Fragment>
+											))}
 										</div>
-									</>
+
+										{form.formState.errors?.permissions && (
+											<div className="text-sm text-red-500">
+												<p>
+													{
+														form.formState.errors?.permissions?.root
+															?.message
+													}
+												</p>
+											</div>
+										)}
+									</FormItem>
 								);
 							}}
 						/>
@@ -205,6 +212,22 @@ export const CreateTokenForm = () => {
 					</CardContent>
 				</Card>
 			</form>
+			<Dialog open={token !== undefined} onOpenChange={(open) => !open && form.reset()}>
+				{token !== undefined && (
+					<DialogContent>
+						<DialogTitle>Token created!</DialogTitle>
+						<div className="flex flex-col gap-2">
+							<div className="flex items-center gap-x-4">
+								<span className="text-lg font-semibold">{token}</span>
+								<CopyButton value={token} />
+							</div>
+							<p>
+								Be sure to save this token, as you will not be able to see it again!
+							</p>
+						</div>
+					</DialogContent>
+				)}
+			</Dialog>
 		</Form>
 	);
 };
