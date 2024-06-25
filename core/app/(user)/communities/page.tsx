@@ -4,7 +4,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { AddCommunity } from "./AddCommunityDialog";
 import { CommunityTable } from "./CommunityTable";
-import { TableCommunity } from "./getCommunityTableColumns";
+import type { TableCommunity } from "./getCommunityTableColumns";
 
 export default async function Page() {
 	const loginData = await getLoginData();

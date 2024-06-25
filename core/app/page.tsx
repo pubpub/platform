@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { logger } from "logger";
-
 import { getLoginData } from "~/lib/auth/loginData";
 import prisma from "~/prisma/db";
 
