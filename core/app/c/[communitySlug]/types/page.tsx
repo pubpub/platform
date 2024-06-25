@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { sql } from "kysely";
 import { jsonBuildObject } from "kysely/helpers/postgres";
 
-import { logger } from "logger";
 import { Button } from "ui/button";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
@@ -65,41 +64,6 @@ const getTypes = async (communitySlug: string) =>
 			.$narrowType<{ fields: PubFieldsId[] }>()
 	).execute();
 
-// const getTypes = async (communitySlug: string) =>
-// 	await autoCache(
-// 		db
-// 			.selectFrom("pub_types")
-// 			.innerJoin("communities", "communities.id", "pub_types.communityId")
-// 			.where("communities.slug", "=", communitySlug)
-// 			.select([
-// 				"pub_types.id",
-// 				"pub_types.name",
-// 				"pub_types.description",
-// 				(eb) =>
-// 					sql<
-// 						Record<PubFieldsId, PubField>
-// 					>`(select json_object_agg(fields_inner."B", field) from ${eb
-// 						.selectFrom("_PubFieldToPubType")
-// 						.whereRef("B", "=", "pub_types.id")
-// 						.select([
-// 							"B",
-// 							(eb) =>
-// 								eb
-// 									.selectFrom("pub_fields")
-// 									.whereRef("pub_fields.id", "=", "A")
-// 									.select((eb) => [
-// 										jsonBuildObject({
-// 											id: eb.ref("pub_fields.id"),
-// 											name: eb.ref("pub_fields.name"),
-// 											slug: eb.ref("pub_fields.slug"),
-// 										}).as("field_inner"),
-// 									])
-// 									.as("field"),
-// 						])
-// 						.as("fields_inner")})`.as("fields"),
-// 			])
-// 	).execute();
-
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
@@ -109,7 +73,6 @@ export default async function Page({ params }: Props) {
 	}
 
 	const types = await getTypes(params.communitySlug);
-	logger.debug(types);
 	const { fields } = await getFields();
 
 	if (!types || !fields) {
@@ -121,14 +84,11 @@ export default async function Page({ params }: Props) {
 				<div className="mb-16 flex items-center justify-between">
 					<h1 className="flex-grow text-xl font-bold">Pub Types</h1>
 					<div className="flex items-center gap-x-2">
-						<Button variant="outline" size="sm" asChild>
-							<Link href="types">Manage Types</Link>
-						</Button>
 						<CreatePubType />
 					</div>
 				</div>
 
-				<TypeList types={types} superadmin={!!loginData?.isSuperAdmin} />
+				<TypeList types={types} superadmin={loginData.isSuperAdmin} />
 			</>
 		</FieldsProvider>
 	);
