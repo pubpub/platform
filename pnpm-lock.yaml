@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@ts-rest/serverless@3.45.2':
+    hash: znbav3zmed5xvtnqsqmjdgpowi
+    path: patches/@ts-rest__serverless@3.45.2.patch
+
 importers:
 
   .:
@@ -179,7 +184,7 @@ importers:
         version: 3.45.2(zod@3.22.4)
       '@ts-rest/serverless':
         specifier: ^3.45.2
-        version: 3.45.2(next@14.2.3)(zod@3.22.4)
+        version: 3.45.2(patch_hash=znbav3zmed5xvtnqsqmjdgpowi)(next@14.2.3)(zod@3.22.4)
       '@types/mdast':
         specifier: ^4.0.4
         version: 4.0.4
@@ -9046,7 +9051,7 @@ packages:
       zod: 3.22.4
     dev: false
 
-  /@ts-rest/serverless@3.45.2(next@14.2.3)(zod@3.22.4):
+  /@ts-rest/serverless@3.45.2(patch_hash=znbav3zmed5xvtnqsqmjdgpowi)(next@14.2.3)(zod@3.22.4):
     resolution: {integrity: sha512-7+37i9s9j/5OfdzLB17/PDQBco9v38WYn3fbYLr6x/zHYQqq8RfXXbmHYGvFdE+y3eizat2J0pM2Djqsb4Uppg==}
     peerDependencies:
       '@types/aws-lambda': ^8.10.115
@@ -9065,6 +9070,7 @@ packages:
       next: 14.2.3(@babel/core@7.24.3)(@opentelemetry/api@1.7.0)(@playwright/test@1.43.1)(react-dom@18.2.0)(react@18.2.0)
       zod: 3.22.4
     dev: false
+    patched: true
 
   /@tsconfig/node10@1.0.9:
     resolution: {integrity: sha512-jNsYVVxU8v5g43Erja32laIDHXeoNvFEpX33OK4d6hljo3jDhCBDhx5dhCCTMWUojscpAagGiRkBKxpdl9fxqA==}
