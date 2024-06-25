@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-copy-button.cjs.js",
+	"module": "dist/ui-copy-button.esm.js"
+}
