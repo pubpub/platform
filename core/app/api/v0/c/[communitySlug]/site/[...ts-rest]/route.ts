@@ -70,14 +70,17 @@ const getAutorization = async () => {
 		.selectFrom("api_access_tokens")
 		.where("api_access_tokens.token", "=", apiKey)
 		.selectAll()
-		.executeTakeFirstOrThrow(() => new Error("No such token"));
+		.executeTakeFirstOrThrow(() => new UnauthorizedError("Invalid token"));
 
+	console.log(matchedAccessToken, community);
 	if (matchedAccessToken.communityId !== community.id) {
-		throw new Error(`Access token ${matchedAccessToken.name} is not valid for this community`);
+		throw new UnauthorizedError(
+			`Access token ${matchedAccessToken.name} is not valid for this community`
+		);
 	}
 
-	if (new Date(matchedAccessToken.expiration) > new Date()) {
-		throw new Error(`Access token ${matchedAccessToken.name} has expired`);
+	if (new Date(matchedAccessToken.expiration) < new Date()) {
+		throw new UnauthorizedError(`Access token ${matchedAccessToken.name} has expired`);
 	}
 
 	const rules = (await db
@@ -88,13 +91,14 @@ const getAutorization = async () => {
 
 	return {
 		authorization: rules.reduce((acc, curr) => {
-			const { objectType, constraints, accessType } = curr;
+			console.log("curr", curr, "acc", acc);
+			const { scope, constraints, accessType } = curr;
 			if (!constraints) {
-				acc[objectType][accessType] = true;
+				acc[scope][accessType] = true;
 				return acc;
 			}
 
-			acc[objectType][accessType] = constraints ?? true;
+			acc[scope][accessType] = constraints ?? true;
 			return acc;
 		}, baseAuthorizationObject),
 		community,
