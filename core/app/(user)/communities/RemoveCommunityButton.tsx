@@ -11,7 +11,7 @@ import {
 } from "ui/alert-dialog";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
 
 import { didSucceed, useServerAction } from "~/lib/serverActions";
@@ -28,20 +28,19 @@ export const RemoveCommunityButton = ({
 	const runRemoveCommunity = useServerAction(removeCommunity);
 	return (
 		<AlertDialog>
-			<TooltipProvider>
-				<Tooltip>
-					<TooltipContent>
-						<span>Remove Community</span>
-					</TooltipContent>
-					<TooltipTrigger asChild>
-						<AlertDialogTrigger asChild>
-							<Button variant="ghost">
-								Remove community <Trash size="14" className="ml-2" />
-							</Button>
-						</AlertDialogTrigger>
-					</TooltipTrigger>
-				</Tooltip>
-			</TooltipProvider>
+			<Tooltip>
+				<TooltipContent>
+					<span>Remove Community</span>
+				</TooltipContent>
+				<TooltipTrigger asChild>
+					<AlertDialogTrigger asChild>
+						<Button variant="ghost">
+							Remove community <Trash size="14" className="ml-2" />
+						</Button>
+					</AlertDialogTrigger>
+				</TooltipTrigger>
+			</Tooltip>
+
 			<AlertDialogContent>
 				<AlertDialogHeader>Remove Member</AlertDialogHeader>
 				<p>
