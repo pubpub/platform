@@ -2,17 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 
 import { AutoComplete, Option } from "ui/autocomplete";
-import { Button } from "ui/button";
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { TooltipProvider } from "ui/tooltip";
 
+import { Communities } from "~/kysely/types/public/Communities";
 import { Users } from "~/kysely/types/public/Users";
-import cn from "~/lib/cn";
 import { UserAvatar } from "../UserAvatar";
-import { UserSelectAddUser } from "./UserSelectAddUser";
+import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
 
 const makeOptionFromUser = (user: Users): Option => ({
 	value: user.id,
@@ -27,32 +27,15 @@ const makeOptionFromUser = (user: Users): Option => ({
 	),
 });
 
-type Props = { user?: Users; users: Users[]; fieldName: string; fieldLabel: string };
-
-const UserSelectAddUserButton = () => {
-	const [open, setOpen] = useState(false);
-
-	const onClick = useCallback((e) => {
-		e.preventDefault();
-		setOpen(true);
-	}, []);
-
-	return (
-		<>
-			<Button
-				variant="ghost"
-				onClick={onClick}
-				className={cn(open && "hidden", "h-12 w-full flex-col items-start")}
-			>
-				<span>Member not found</span>
-				<p className="text-xs font-normal">Click to add a user to your community</p>
-			</Button>
-			{open && <UserSelectAddUser />}
-		</>
-	);
+type Props = {
+	user?: Users;
+	users: Users[];
+	fieldName: string;
+	fieldLabel: string;
+	community: Communities;
 };
 
-export function UserSelectClient({ user, users, fieldName, fieldLabel }: Props) {
+export function UserSelectClient({ user, users, fieldName, fieldLabel, community }: Props) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
@@ -69,16 +52,9 @@ export function UserSelectClient({ user, users, fieldName, fieldLabel }: Props) 
 		}
 	}, [users]);
 
-	const onInputValueChange = useDebouncedCallback((value: string) => {
-		const newParams = new URLSearchParams(params);
-		newParams.set("query", value);
-		router.replace(`${pathname}?${newParams.toString()}`);
-	}, 400);
-
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
 	const [addUserButtonKey, setAddUserButtonKey] = useState(0);
-	const addUserButton = <UserSelectAddUserButton key={addUserButtonKey} />;
 	const resetAddUserButton = useCallback(() => setAddUserButtonKey((x) => x + 1), []);
 
 	// User selection state/logic.
@@ -89,6 +65,14 @@ export function UserSelectClient({ user, users, fieldName, fieldLabel }: Props) 
 			setSelectedUser(user);
 		}
 	}, []);
+
+	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
+	const onInputValueChange = useDebouncedCallback((value: string) => {
+		const newParams = new URLSearchParams(params);
+		newParams.set("query", value);
+		router.replace(`${pathname}?${newParams.toString()}`);
+		setInputValue(value);
+	}, 400);
 
 	return (
 		<TooltipProvider>
@@ -106,7 +90,13 @@ export function UserSelectClient({ user, users, fieldName, fieldLabel }: Props) 
 							<AutoComplete
 								value={selectedUserOption}
 								options={options}
-								empty={addUserButton}
+								empty={
+									<UserSelectAddUserButton
+										key={addUserButtonKey}
+										community={community}
+										email={inputValue}
+									/>
+								}
 								onInputValueChange={onInputValueChange}
 								onValueChange={(option) => {
 									field.onChange(option.value);
