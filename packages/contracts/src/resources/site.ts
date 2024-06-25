@@ -2,22 +2,27 @@ import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
 import { pubsSchema } from "db/public/Pubs";
-import { stagesSchema } from "db/public/Stages";
+import { StagesId, stagesIdSchema, stagesSchema } from "db/public/Stages";
 import { pubTypesSchema } from "db/src/public/PubTypes";
 
 import { CreatePubRequestBodyWithNulls, CreatePubRequestBodyWithNullsBase } from "./integrations";
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
-	stageId: string;
-	children?: CreatePubRequestBodyWithNulls[];
+	stageId: StagesId;
+	children?: (Omit<CreatePubRequestBodyWithNulls, "stageId"> & { stageId?: StagesId })[];
 };
-export const CreatePubRequestBodyWithNullsNew: z.Schema<CreatePubRequestBodyWithNullsNew> =
-	CreatePubRequestBodyWithNullsBase.extend({
-		stageId: z.string().uuid(),
+
+const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
+	stageId: stagesIdSchema,
+});
+
+export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
+	CreatePubRequestBodyWithNullsWithStageId.extend({
 		children: z.lazy(() =>
-			CreatePubRequestBodyWithNullsNew.partial({ stageId: true }).array().optional()
+			CreatePubRequestBodyWithNullsWithStageId.partial({ stageId: true }).array().optional()
 		),
 	});
+
 const contract = initContract();
 
 type PubWithChildren = z.infer<typeof pubsSchema> & {
@@ -53,8 +58,8 @@ export const siteApi = contract.router(
 				query: z.object({
 					limit: z.number().default(10).optional(),
 					offset: z.number().default(0).optional(),
-					orderBy: z.string().optional(),
-					orderDirection: z.enum(["ASC", "DESC"]).optional(),
+					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+					orderDirection: z.enum(["asc", "desc"]).optional(),
 				}),
 				responses: {
 					200: z.array(pubWithChildrenSchema),
@@ -66,7 +71,7 @@ export const siteApi = contract.router(
 				summary: "Creates a pub",
 				body: CreatePubRequestBodyWithNullsNew,
 				responses: {
-					201: z.any(),
+					201: z.array(pubWithChildrenSchema),
 				},
 			},
 		},
@@ -93,8 +98,8 @@ export const siteApi = contract.router(
 				query: z.object({
 					limit: z.number().default(10).optional(),
 					offset: z.number().default(0).optional(),
-					orderBy: z.string().optional(),
-					orderDirection: z.enum(["ASC", "DESC"]).optional(),
+					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+					orderDirection: z.enum(["asc", "desc"]).optional(),
 				}),
 				responses: {
 					200: pubTypesSchema.array(),
@@ -124,9 +129,8 @@ export const siteApi = contract.router(
 				query: z.object({
 					limit: z.number().default(10).optional(),
 					offset: z.number().default(0).optional(),
-
-					orderBy: z.string().optional(),
-					orderDirection: z.enum(["ASC", "DESC"]).optional(),
+					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+					orderDirection: z.enum(["asc", "desc"]).optional(),
 				}),
 				responses: {
 					200: stagesSchema.array(),

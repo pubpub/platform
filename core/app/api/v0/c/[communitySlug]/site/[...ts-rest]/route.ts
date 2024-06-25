@@ -6,25 +6,20 @@ import type { CommunitiesId } from "db/public/Communities";
 import type { PubsId } from "db/public/Pubs";
 import type { PubTypesId } from "db/public/PubTypes";
 import type { StagesId } from "db/public/Stages";
-import type {
-	ApiAccessPermission,
-	ApiAccessPermissionConstraints,
-	ApiAccessPermissionConstraintsInput,
-} from "db/types";
+import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
 import { api } from "contracts";
 import ApiAccessScope from "db/public/ApiAccessScope";
 import ApiAccessType from "db/public/ApiAccessType";
 
 import { getStage } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
 import { db } from "~/kysely/database";
-import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
-import { env } from "~/lib/env/env.mjs";
 import {
-	createPubNew,
+	createPubRecursiveNew,
 	getPub,
 	getPubs,
 	getPubType,
 	getPubTypesForCommunity,
+	NotFoundError,
 	tsRestHandleErrors,
 	UnauthorizedError,
 } from "~/lib/server";
@@ -72,7 +67,6 @@ const getAutorization = async () => {
 		.selectAll()
 		.executeTakeFirstOrThrow(() => new UnauthorizedError("Invalid token"));
 
-	console.log(matchedAccessToken, community);
 	if (matchedAccessToken.communityId !== community.id) {
 		throw new UnauthorizedError(
 			`Access token ${matchedAccessToken.name} is not valid for this community`
@@ -91,7 +85,6 @@ const getAutorization = async () => {
 
 	return {
 		authorization: rules.reduce((acc, curr) => {
-			console.log("curr", curr, "acc", acc);
 			const { scope, constraints, accessType } = curr;
 			if (!constraints) {
 				acc[scope][accessType] = true;
@@ -153,13 +146,19 @@ const handler = createNextHandler(
 					ApiAccessType.write
 				);
 
-				if (authorization !== true && !authorization.stages.includes(body.stageId)) {
+				if (
+					authorization !== true &&
+					!authorization.stages.includes(body.stageId as StagesId)
+				) {
 					throw new UnauthorizedError(
 						`You are not authorized to create a pub in stage ${body.stageId}`
 					);
 				}
 
-				const createdPub = await createPubNew(community?.id, body);
+				const createdPub = await createPubRecursiveNew({
+					communityId: community?.id,
+					body,
+				});
 
 				return {
 					status: 201,
@@ -171,20 +170,30 @@ const handler = createNextHandler(
 			get: async (req) => {
 				await checkAuthorization(ApiAccessScope.pubType, ApiAccessType.read);
 
+				const pubType = await getPubType(req.params.pubTypeId as PubTypesId);
+
+				if (!pubType) {
+					throw new NotFoundError("No pub type found");
+				}
+
 				return {
 					status: 200,
-					body: await getPubType(req.params.pubTypeId as PubTypesId),
+					body: pubType,
 				};
 			},
 			getMany: async (req, args) => {
-				const { community } = checkAuthorization(
+				const { community } = await checkAuthorization(
 					ApiAccessScope.pubType,
 					ApiAccessType.read
 				);
 
+				const pubTypes = await getPubTypesForCommunity(
+					community.id as CommunitiesId,
+					req.query
+				);
 				return {
 					status: 200,
-					body: await getPubTypesForCommunity(community.id as CommunitiesId, req.query),
+					body: pubTypes,
 				};
 			},
 		},
@@ -192,6 +201,9 @@ const handler = createNextHandler(
 			get: async (req) => {
 				await checkAuthorization(ApiAccessScope.stage, ApiAccessType.read);
 				const stage = await getStage(req.params.stageId as StagesId);
+				if (!stage) {
+					throw new NotFoundError("No stage found");
+				}
 
 				return {
 					status: 200,

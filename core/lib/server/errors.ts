@@ -3,6 +3,8 @@ import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
 import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-rest/serverless";
+import { NoResultError } from "kysely";
+import { DatabaseError } from "pg";
 
 import { logger } from "logger";
 
@@ -54,6 +56,33 @@ export const handleErrors = async (routeHandler) => {
 	}
 };
 
+export const handleDatabaseErrors = (error: DatabaseError, req: TsRestRequest) => {
+	// foreign key violation
+	if (error.code === "23503") {
+		return TsRestResponse.fromJson(
+			{
+				status: 400,
+				body: { message: error.detail },
+			},
+			{
+				status: 404,
+			}
+		);
+	}
+
+	logger.error(error);
+	return TsRestResponse.fromJson(
+		{
+			status: 500,
+			body: { message: "Internal Server Error" },
+		},
+		{
+			status: 500,
+		}
+	);
+	// panic
+};
+
 export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestResponse => {
 	if (error instanceof RequestValidationError) {
 		return TsRestResponse.fromJson(
@@ -75,6 +104,10 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 				status: error.status,
 			}
 		);
+	}
+
+	if (error instanceof DatabaseError) {
+		return handleDatabaseErrors(error, req);
 	}
 
 	if (error instanceof TsRestHttpError) {
