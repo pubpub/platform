@@ -4,7 +4,7 @@ import { useCallback } from "react";
 
 import { Button } from "ui/button";
 import { X } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
@@ -22,22 +22,20 @@ export const RemoveFieldButton = ({ pubFieldId, pubTypeId }: Props) => {
 		await runRemoveField(pubTypeId as PubTypesId, pubFieldId as PubFieldsId);
 	}, [pubTypeId, pubFieldId]);
 	return (
-		<TooltipProvider>
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<Button
-						variant="secondary"
-						size="sm"
-						className="flex h-5 gap-2 px-2"
-						onClick={handleRemove}
-					>
-						<X size={10} />
-					</Button>
-				</TooltipTrigger>
-				<TooltipContent>
-					<p>Remove field</p>
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Button
+					variant="secondary"
+					size="sm"
+					className="flex h-5 gap-2 px-2"
+					onClick={handleRemove}
+				>
+					<X size={10} />
+				</Button>
+			</TooltipTrigger>
+			<TooltipContent>
+				<p>Remove field</p>
+			</TooltipContent>
+		</Tooltip>
 	);
 };
