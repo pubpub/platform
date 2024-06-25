@@ -60,24 +60,9 @@ async function createUserMembers(
 }
 
 async function main() {
-	let prismaCommunityIds;
-	if (env.NODE_ENV === "production") {
-		prismaCommunityIds = [{ communityId: testCommunityId, canAdmin: true }];
-		logger.error("Seeding production");
-		await buildTestCommunities(testCommunityId);
-	} else {
-		prismaCommunityIds = [
-			{ communityId: unJournalId, canAdmin: true },
-			{
-				communityId: crocCrocId,
-				canAdmin: true,
-			},
-		];
-		logger.info("build crocroc");
-		await buildCrocCroc(crocCrocId);
-		logger.info("build unjournal");
-		await buildUnjournal(prisma, unJournalId);
-	}
+	const prismaCommunityIds = [{ communityId: testCommunityId, canAdmin: true }];
+	logger.error("Seeding production");
+	await buildTestCommunities(testCommunityId);
 	try {
 		await createUserMembers(
 			"all@pubpub.org",

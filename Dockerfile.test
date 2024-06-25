@@ -30,7 +30,7 @@ WORKDIR /usr/src/app
 
 # Install pnpm.
 RUN --mount=type=cache,target=/root/.npm \
-    npm install -g pnpm@${PNPM_VERSION} prisma@5.2.0
+    npm install -g pnpm@${PNPM_VERSION} prisma@5.2.0 tsx
 
 ################################################################################
 # Create a stage for building the application.
@@ -88,7 +88,7 @@ COPY --from=withpackage /tmp/app ./
 
 # Copy the deployed contents
 COPY --from=withpackage /tmp/app ./
-COPY --from=withpackage /usr/src/app/core/prisma ./
+COPY --from=withpackage /usr/src/app/core/prisma ./prisma
 
 # Run the application as a non-root user.
 USER node
@@ -96,4 +96,4 @@ USER node
 # Expose the port that the application listens on.
 EXPOSE $PORT
 
-CMD npx prisma migrate deploy && pnpm start
+CMD npx prisma migrate deploy && npx prisma db seed && pnpm start
