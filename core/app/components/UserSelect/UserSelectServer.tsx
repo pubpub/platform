@@ -1,18 +1,17 @@
 import { db } from "~/kysely/database";
+import { Communities } from "~/kysely/types/public/Communities";
 import { Users, UsersId } from "~/kysely/types/public/Users";
 import { UserSelectClient } from "./UserSelectClient";
 
-export async function UserSelectServer({
-	query,
-	value,
-	fieldName,
-	fieldLabel,
-}: {
+type Props = {
 	query?: string;
 	value?: UsersId;
 	fieldName: string;
 	fieldLabel: string;
-}) {
+	community: Communities;
+};
+
+export async function UserSelectServer({ query, value, fieldName, fieldLabel, community }: Props) {
 	let user: Users | undefined;
 
 	if (value !== undefined) {
@@ -20,7 +19,14 @@ export async function UserSelectServer({
 	}
 
 	if (!Boolean(query) && user === undefined) {
-		return <UserSelectClient users={[]} fieldName={fieldName} fieldLabel={fieldLabel} />;
+		return (
+			<UserSelectClient
+				users={[]}
+				fieldName={fieldName}
+				fieldLabel={fieldLabel}
+				community={community}
+			/>
+		);
 	}
 
 	const users = await db
@@ -31,6 +37,12 @@ export async function UserSelectServer({
 		.execute();
 
 	return (
-		<UserSelectClient user={user} users={users} fieldName={fieldName} fieldLabel={fieldLabel} />
+		<UserSelectClient
+			user={user}
+			users={users}
+			fieldName={fieldName}
+			fieldLabel={fieldLabel}
+			community={community}
+		/>
 	);
 }
