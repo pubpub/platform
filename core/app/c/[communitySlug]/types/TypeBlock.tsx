@@ -78,7 +78,8 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 												/>
 											</div>
 										)}
-										{field.name}
+										{field.name} (
+										<span className="bg-gray-100 font-mono">{field.slug}</span>)
 									</li>
 								);
 							})}
