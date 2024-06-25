@@ -33,15 +33,15 @@ export const removePubType = defineServerAction(async function removePubType(
 ) {
 	const pubs = await db
 		.selectFrom("pubs")
-		.select(({ fn }) => [fn.countAll().as("count")])
+		.select(({ fn }) => [fn.countAll<string>().as("count")])
 		.where("pubTypeId", "=", pubTypeId)
-		.$narrowType<{ count: number }>()
-		.executeTakeFirst();
-
-	if (pubs?.count) {
+		.executeTakeFirstOrThrow();
+	const count = parseInt(pubs.count);
+	if (count) {
+		const fragment = count > 1 ? "pubs still use" : "pub still uses";
 		return {
 			title: "Unable to delete type",
-			error: `${pubs.count} pubs still use this type so it can't be deleted.`,
+			error: `${count} ${fragment} this type so it can't be deleted.`,
 		};
 	}
 
