@@ -1,5 +1,3 @@
-"use client";
-
 import type { PubTypeWithFieldIds } from "~/lib/types";
 import TypeBlock from "./TypeBlock";
 
