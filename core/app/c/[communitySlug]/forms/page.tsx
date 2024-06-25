@@ -3,6 +3,7 @@ import { Button } from "ui/button";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { FormTable } from "./FormTable";
 
 export default async function Page() {
 	const loginData = await getLoginData();
@@ -26,12 +27,13 @@ export default async function Page() {
 		.execute();
 
     const tableForms = forms.map((form) => {
-        const { formName, pubType, updatedAt } = form;
+        const { id, formName, pubType, updatedAt } = form;
         return {
+            id,
             formName,
             pubType,
             updated: new Date(updatedAt),
-            };
+        };
     });
 
     
@@ -67,11 +69,7 @@ export default async function Page() {
                         <NoFormsState />
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
-                            {forms.map((form) => (
-                                <div key={form.id} className="bg-white shadow-md rounded-lg p-4">
-                                    <h2 className="text-lg font-semibold">{form.formName}</h2>
-                                </div>
-                            ))}
+                            <FormTable forms={tableForms}/>
                         </div>
                     )}
                 </div>

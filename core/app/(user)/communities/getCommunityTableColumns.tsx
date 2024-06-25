@@ -5,7 +5,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
@@ -18,7 +17,7 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
-import { UserAndMemberships } from "~/lib/types";
+import type { UserAndMemberships } from "~/lib/types";
 import { RemoveCommunityButton } from "./RemoveCommunityButton";
 
 export type TableCommunity = {
@@ -86,7 +85,7 @@ export const getCommunityTableColumns = ({ user }: { user: UserAndMemberships })
 		{
 			id: "actions",
 			enableHiding: false,
-			cell: ({ row, table }) => {
+			cell: ({ row }) => {
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
