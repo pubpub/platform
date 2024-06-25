@@ -1,8 +1,8 @@
 import type { User } from "@prisma/client";
-import type { StagesId } from "db/public/Stages";
 
 import { cache } from "react";
 
+import type { StagesId } from "db/public/Stages";
 import { expect } from "utils";
 
 import { db } from "~/kysely/database";

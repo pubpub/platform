@@ -1,8 +1,7 @@
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
-
 import { Suspense } from "react";
 
+import type { PubsId } from "db/public/Pubs";
+import type { StagesId } from "db/public/Stages";
 import { Card, CardContent } from "ui/card";
 
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";

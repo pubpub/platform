@@ -1,7 +1,6 @@
 import type { ActionInstances } from "db/public/ActionInstances";
 import type { CommunitiesId } from "db/public/Communities";
 import type { StagesId } from "db/public/Stages";
-
 import { logger } from "logger";
 
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";

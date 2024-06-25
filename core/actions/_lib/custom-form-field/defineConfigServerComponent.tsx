@@ -1,8 +1,9 @@
+import type React from "react";
+
 import type { ActionInstances } from "db/public/ActionInstances";
 import type { CommunitiesId } from "db/public/Communities";
 import type { PubsId } from "db/public/Pubs";
 import type { StagesId } from "db/public/Stages";
-import type React from "react";
 
 import type { Action } from "../../types";
 

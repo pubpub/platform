@@ -1,5 +1,4 @@
 import type { PubsId } from "db/public/Pubs";
-
 import { Button } from "ui/button";
 import {
 	DropdownMenu,

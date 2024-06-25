@@ -1,10 +1,9 @@
 "use client";
 
-import type { PubFieldsId } from "db/public/PubFields";
-import type { PubFieldSchemaId } from "db/public/PubFieldSchema";
-
 import { useFieldArray } from "react-hook-form";
 
+import type { PubFieldsId } from "db/public/PubFields";
+import type { PubFieldSchemaId } from "db/public/PubFieldSchema";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
 import { Button } from "ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";

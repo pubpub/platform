@@ -1,12 +1,11 @@
 "use client";
 
+import { useCallback } from "react";
+
 import type Action from "db/public/Action";
 import type { CommunitiesId } from "db/public/Communities";
 import type Event from "db/public/Event";
 import type { RulesId } from "db/public/Rules";
-
-import { useCallback } from "react";
-
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 

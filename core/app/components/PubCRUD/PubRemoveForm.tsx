@@ -1,9 +1,5 @@
 "use client";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { Stages } from "db/public/Stages";
-
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ajvResolver } from "@hookform/resolvers/ajv";
@@ -12,6 +8,9 @@ import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
 import type { GetPubResponseBody } from "contracts";
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubsId } from "db/public/Pubs";
+import type { Stages } from "db/public/Stages";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import { Form } from "ui/form";

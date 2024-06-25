@@ -1,12 +1,12 @@
 import * as React from "react";
-import * as z from "zod";
+import type * as z from "zod";
 
 import { FormControl, FormItem, FormMessage } from "../../form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../select";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
-import { AutoFormInputComponentProps } from "../types";
+import type { AutoFormInputComponentProps } from "../types";
 import { getBaseSchema } from "../utils";
 
 export default function AutoFormEnum({

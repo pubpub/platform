@@ -1,8 +1,7 @@
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubTypesId } from "db/public/PubTypes";
-
 import { faker } from "@faker-js/faker";
 
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubTypesId } from "db/public/PubTypes";
 import { logger } from "logger";
 
 import { registerCorePubField } from "~/actions/_lib/init";

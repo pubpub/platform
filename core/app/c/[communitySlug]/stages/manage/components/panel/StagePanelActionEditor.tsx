@@ -1,9 +1,8 @@
 "use client";
 
-import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
-
 import { useCallback, useState } from "react";
 
+import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";

@@ -5,7 +5,7 @@ import { Switch } from "../../switch";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
-import { AutoFormInputComponentProps } from "../types";
+import type { AutoFormInputComponentProps } from "../types";
 
 export default function AutoFormSwitch({
 	label,

@@ -1,5 +1,6 @@
-import Event from "db/public/Event";
 import { z } from "zod";
+
+import Event from "db/public/Event";
 
 import { defineRule } from "~/actions/types";
 
