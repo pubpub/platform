@@ -32,5 +32,4 @@ export default async function Page() {
 	} else {
 		redirect("/login");
 	}
-	return <>Home...</>;
 }

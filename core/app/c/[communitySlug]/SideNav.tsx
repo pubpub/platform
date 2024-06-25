@@ -35,6 +35,13 @@ const Links = ({
 				text={"Stages"}
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
+			{isAdmin && (
+				<NavLink
+					href={`${prefix}/forms`}
+					text={"Forms"}
+					icon={<img src="/icons/form.svg" alt="" />}
+				/>
+			)}
 			<NavLink
 				href={`${prefix}/integrations`}
 				text={"Integrations"}
