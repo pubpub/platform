@@ -6,9 +6,13 @@ import type { CommunitiesId } from "db/public/Communities";
 import type { PubsId } from "db/public/Pubs";
 import type { PubTypesId } from "db/public/PubTypes";
 import type { StagesId } from "db/public/Stages";
-import type { ApiAccessRule, ApiAccessRuleConstraints } from "db/types";
+import type {
+	ApiAccessPermission,
+	ApiAccessPermissionConstraints,
+	ApiAccessPermissionConstraintsInput,
+} from "db/types";
 import { api } from "contracts";
-import ApiAccessTokenScope from "db/public/ApiAccessTokenScope";
+import ApiAccessScope from "db/public/ApiAccessScope";
 import ApiAccessType from "db/public/ApiAccessType";
 
 import { getStage } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
@@ -29,7 +33,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
 
 const baseAuthorizationObject = Object.fromEntries(
-	Object.keys(ApiAccessTokenScope).map(
+	Object.keys(ApiAccessScope).map(
 		(scope) =>
 			[
 				scope,
@@ -38,11 +42,7 @@ const baseAuthorizationObject = Object.fromEntries(
 				),
 			] as const
 	)
-) as {
-	[K in ApiAccessTokenScope]: {
-		[A in ApiAccessType]: ApiAccessRuleConstraints<K, A> | false | true;
-	};
-};
+) as ApiAccessPermissionConstraintsInput;
 
 const bearerRegex = /Bearer ([^\s+])/;
 const bearerSchema = z
@@ -81,10 +81,10 @@ const getAutorization = async () => {
 	}
 
 	const rules = (await db
-		.selectFrom("api_access_rules")
+		.selectFrom("api_access_permissions")
 		.selectAll()
-		.where("api_access_rules.apiAccessTokenId", "=", matchedAccessToken.id)
-		.execute()) as ApiAccessRule[];
+		.where("api_access_permissions.apiAccessTokenId", "=", matchedAccessToken.id)
+		.execute()) as ApiAccessPermission[];
 
 	return {
 		authorization: rules.reduce((acc, curr) => {
@@ -101,7 +101,7 @@ const getAutorization = async () => {
 	};
 };
 
-const checkAuthorization = async <T extends ApiAccessTokenScope, AT extends ApiAccessType>(
+const checkAuthorization = async <T extends ApiAccessScope, AT extends ApiAccessType>(
 	scope: T,
 	type: AT
 ) => {
@@ -120,7 +120,7 @@ const handler = createNextHandler(
 	{
 		pubs: {
 			get: async (req, res) => {
-				await checkAuthorization(ApiAccessTokenScope.pub, ApiAccessType.read);
+				await checkAuthorization(ApiAccessScope.pub, ApiAccessType.read);
 				const { pubId } = req.params;
 
 				const pub = await getPub(pubId as PubsId);
@@ -132,7 +132,7 @@ const handler = createNextHandler(
 			},
 			getMany: async (req, args) => {
 				const { community } = await checkAuthorization(
-					ApiAccessTokenScope.pub,
+					ApiAccessScope.pub,
 					ApiAccessType.read
 				);
 
@@ -145,7 +145,7 @@ const handler = createNextHandler(
 			},
 			create: async ({ body }) => {
 				const { authorization, community } = await checkAuthorization(
-					ApiAccessTokenScope.pub,
+					ApiAccessScope.pub,
 					ApiAccessType.write
 				);
 
@@ -165,7 +165,7 @@ const handler = createNextHandler(
 		},
 		pubTypes: {
 			get: async (req) => {
-				await checkAuthorization(ApiAccessTokenScope.pubType, ApiAccessType.read);
+				await checkAuthorization(ApiAccessScope.pubType, ApiAccessType.read);
 
 				return {
 					status: 200,
@@ -174,7 +174,7 @@ const handler = createNextHandler(
 			},
 			getMany: async (req, args) => {
 				const { community } = checkAuthorization(
-					ApiAccessTokenScope.pubType,
+					ApiAccessScope.pubType,
 					ApiAccessType.read
 				);
 
@@ -186,7 +186,7 @@ const handler = createNextHandler(
 		},
 		stages: {
 			get: async (req) => {
-				await checkAuthorization(ApiAccessTokenScope.stage, ApiAccessType.read);
+				await checkAuthorization(ApiAccessScope.stage, ApiAccessType.read);
 				const stage = await getStage(req.params.stageId as StagesId);
 
 				return {
@@ -196,7 +196,7 @@ const handler = createNextHandler(
 			},
 			getMany: async (req) => {
 				const { community, authorization } = await checkAuthorization(
-					ApiAccessTokenScope.stage,
+					ApiAccessScope.stage,
 					ApiAccessType.read
 				);
 
