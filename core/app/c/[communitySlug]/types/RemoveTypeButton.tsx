@@ -7,7 +7,7 @@ import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { useServerAction } from "~/lib/serverActions";
 import { removePubType } from "./actions";
 
 type Props = {
@@ -17,11 +17,8 @@ type Props = {
 export const RemoveTypeButton = ({ pubTypeId }: Props) => {
 	const runRemoveType = useServerAction(removePubType);
 	const handleRemove = useCallback(async () => {
-		const result = await runRemoveType(pubTypeId as PubTypesId);
-		if (didSucceed(result)) {
-			// delete from parent?
-		}
-	}, []);
+		await runRemoveType(pubTypeId as PubTypesId);
+	}, [pubTypeId]);
 	return (
 		<TooltipProvider>
 			<Tooltip>
