@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import { sql } from "kysely";
 import { jsonBuildObject } from "kysely/helpers/postgres";
 
-import { Button } from "ui/button";
-
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
