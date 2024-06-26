@@ -75,7 +75,7 @@ export const getFormTableColumns = () =>
 						<DropdownMenuContent align="end">
 							<DropdownMenuLabel>Menu</DropdownMenuLabel>
 							<DropdownMenuSeparator />
-							<div className="w-full">Do something here</div>
+							<div className="w-full">Archive</div>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);

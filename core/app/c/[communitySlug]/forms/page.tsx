@@ -1,7 +1,9 @@
 import React from "react";
 
 import { Button } from "ui/button";
-import { ClipboardPenLine } from "ui/icon";
+import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import { ClipboardPenLine, ListPlus } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -9,6 +11,7 @@ import { FormTable } from "./FormTable";
 
 export default async function Page() {
 	const loginData = await getLoginData();
+	// const [open, setOpen] = React.useState(false);
 
 	if (!loginData) {
 		return null;
@@ -48,10 +51,25 @@ export default async function Page() {
 					Forms are templates of questions used to collect information from users via a
 					response submission process.
 				</p>
-				<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
-					+ New Form
-				</Button>
+				<StoopidButton />
 			</div>
+		);
+	}
+		
+	function StoopidButton() {
+		return (
+			<Dialog>
+				<TooltipProvider>
+					<DialogTrigger asChild>
+						<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
+							<ListPlus size="16" /> New Form
+						</Button>
+					</DialogTrigger>
+				</TooltipProvider>
+				<DialogContent>
+					imma potato
+				</DialogContent>
+			</Dialog>
 		);
 	}
 
@@ -64,15 +82,13 @@ export default async function Page() {
 							<ClipboardPenLine size={14} className="mr-2" /> Forms
 						</div>
 					</h1>
-					<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
-						+ New Form
-					</Button>
+					<StoopidButton />
 				</header>
 				<div className="p-4">
 					{forms.length === 0 ? (
 						<NoFormsState />
 					) : (
-						<div className="grid grid-cols-1 gap-4">
+						<div>
 							<FormTable forms={tableForms} />
 						</div>
 					)}

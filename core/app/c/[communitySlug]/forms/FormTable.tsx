@@ -8,5 +8,5 @@ import { getFormTableColumns } from "./getFormTableColumns";
 
 export const FormTable = ({ forms }: { forms: TableForm[] }) => {
 	const communityTableColumns = getFormTableColumns();
-	return <DataTable columns={communityTableColumns} data={forms} searchBy="slug" />;
+	return <DataTable columns={communityTableColumns} data={forms} searchBy="pubType" />;
 };
