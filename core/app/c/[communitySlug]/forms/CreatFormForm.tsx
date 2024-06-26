@@ -56,9 +56,7 @@ const CreateFormForm = () => {
 							<FormItem>
 								<FormLabel>Name</FormLabel>
 								<Input {...field} />
-								<FormDescription>
-									What is the name of your form
-								</FormDescription>
+								<FormDescription>What is the name of your form</FormDescription>
 								<FormMessage />
 							</FormItem>
 						)}

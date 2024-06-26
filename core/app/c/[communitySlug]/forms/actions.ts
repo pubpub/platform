@@ -26,5 +26,5 @@ export const createForm = defineServerAction(async function createForm({
 });
 
 export const deleteForm = defineServerAction(async function deleteForm(id: FormsId) {
-	console.log("you can no longer access this form");
+	throw new Error("Not implemented");
 });
