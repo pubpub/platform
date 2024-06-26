@@ -177,3 +177,11 @@ export const defineRule = <E extends Event, AC extends Record<string, any> | und
 ) => options;
 
 export type { RuleConfig, RuleConfigs } from "./_lib/rules";
+
+export type ConfigOf<T extends Action> =
+	T extends Action<infer _, infer C, any> ? z.infer<C> : never;
+
+export type ActionInstanceOf<T extends Action> = {
+	id: string;
+	config?: ConfigOf<T>;
+};

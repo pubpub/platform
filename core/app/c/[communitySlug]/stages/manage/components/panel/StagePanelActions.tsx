@@ -8,9 +8,11 @@ import { ActionConfigFormWrapper } from "./ActionConfigFormWrapper";
 import { getStage, getStageActions } from "./queries";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
+import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
 
 type PropsInner = {
 	stageId: string;
+	pageContext: PageContext;
 };
 
 const StagePanelActionsInner = async (props: PropsInner) => {
@@ -50,6 +52,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 								<ActionConfigFormWrapper
 									stage={stage}
 									actionInstance={actionInstance}
+									pageContext={props.pageContext}
 								/>
 							</Suspense>
 						</StagePanelActionEditor>
@@ -63,6 +66,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 
 type Props = {
 	stageId?: string;
+	pageContext: PageContext;
 };
 
 export const StagePanelActions = async (props: Props) => {
@@ -72,7 +76,7 @@ export const StagePanelActions = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelActionsInner stageId={props.stageId} />
+			<StagePanelActionsInner stageId={props.stageId} pageContext={props.pageContext} />
 		</Suspense>
 	);
 };

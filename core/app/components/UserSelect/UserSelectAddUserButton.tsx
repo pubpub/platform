@@ -1,0 +1,36 @@
+import { MutableRefObject, useCallback, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+
+import { Button } from "ui/button";
+import { cn } from "utils";
+
+import { Communities } from "~/kysely/types/public/Communities";
+import { UserSelectAddUserForm } from "./UserSelectAddUserForm";
+
+type Props = {
+	community: Communities;
+	email: string;
+};
+
+export const UserSelectAddUserButton = (props: Props) => {
+	const [open, setOpen] = useState(false);
+
+	const onClick = useCallback((e) => {
+		e.preventDefault();
+		setOpen(true);
+	}, []);
+
+	return (
+		<>
+			<Button
+				variant="ghost"
+				onClick={onClick}
+				className={cn(open && "hidden", "h-12 w-full flex-col items-start")}
+			>
+				<span>Member not found</span>
+				<p className="text-xs font-normal">Click to add a user to your community</p>
+			</Button>
+			{open && <UserSelectAddUserForm email={props.email} community={props.community} />}
+		</>
+	);
+};
