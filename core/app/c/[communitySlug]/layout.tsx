@@ -34,13 +34,6 @@ export default async function MainLayout({ children, params }: Props) {
 		return null;
 	}
 
-	// const member = await prisma.member.findFirst({
-	// 	where: { userId: loginData.id, communityId: community.id },
-	// });
-	// if (!member) {
-	// 	redirect("/settings");
-	// }
-
 	const availableCommunities = await getAvailableCommunities(loginData);
 	return (
 		<div className="flex min-h-screen flex-col md:flex-row">
