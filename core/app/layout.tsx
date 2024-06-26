@@ -17,17 +17,17 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<TooltipProvider>
-			<html lang="en">
-				<head>
-					<PublicEnvScript />
-				</head>
-				<body>
-					<InitClient />
+		<html lang="en">
+			<head>
+				<PublicEnvScript />
+			</head>
+			<body>
+				<InitClient />
+				<TooltipProvider>
 					{children}
 					<Toaster />
-				</body>
-			</html>
-		</TooltipProvider>
+				</TooltipProvider>
+			</body>
+		</html>
 	);
 }
