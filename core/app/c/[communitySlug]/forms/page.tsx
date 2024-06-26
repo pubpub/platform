@@ -3,15 +3,14 @@ import React from "react";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
 import { ClipboardPenLine, ListPlus } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import CreateFormForm from "./CreatFormForm";
 import { FormTable } from "./FormTable";
 
 export default async function Page() {
 	const loginData = await getLoginData();
-	// const [open, setOpen] = React.useState(false);
 
 	if (!loginData) {
 		return null;
@@ -55,19 +54,17 @@ export default async function Page() {
 			</div>
 		);
 	}
-		
+
 	function StoopidButton() {
 		return (
 			<Dialog>
-				<TooltipProvider>
-					<DialogTrigger asChild>
-						<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
-							<ListPlus size="16" /> New Form
-						</Button>
-					</DialogTrigger>
-				</TooltipProvider>
+				<DialogTrigger asChild>
+					<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
+						<ListPlus size="16" /> New Form
+					</Button>
+				</DialogTrigger>
 				<DialogContent>
-					imma potato
+					<CreateFormForm />
 				</DialogContent>
 			</Dialog>
 		);
