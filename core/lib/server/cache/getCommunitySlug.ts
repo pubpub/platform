@@ -20,7 +20,8 @@ export const _experimental_getCommunitySlug = cache(() => {
 });
 
 export class NotInCommunityError extends Error {
-	message = "Not in route scoped under a community";
+	message =
+		"Unexpected use of `getCommunitySlug` outside of a community route. You can only use this function in a route that is scoped under a community, i.e. `/c/[communitySlug]` or `/api/v0/c/[communitySlug]`.";
 }
 
 /**

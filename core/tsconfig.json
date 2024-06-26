@@ -2,6 +2,7 @@
 	"extends": "tsconfig/nextjs.json",
 	"compilerOptions": {
 		"moduleResolution": "Bundler",
+		"allowImportingTsExtensions": true,
 		"noErrorTruncation": true,
 		"plugins": [
 			{
@@ -26,7 +27,8 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
-		"instrumentation.registerCorePubFields.mts"
+		"instrumentation.registerCorePubFields.mts",
+		"kysely/scripts/generateDatabaseObject.mts"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }

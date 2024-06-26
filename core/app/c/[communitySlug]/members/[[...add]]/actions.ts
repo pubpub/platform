@@ -2,7 +2,6 @@
 
 import { cache } from "react";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { headers } from "next/headers";
 import { Community } from "@prisma/client";
 import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { User } from "@supabase/supabase-js";
@@ -42,8 +41,8 @@ const isCommunityAdmin = cache(async (community: Community) => {
 /**
  * Add someone as a user to supabase and send them an invite by email
  *
- * By default will reinvite the user if they already exist in supabase
- * by deleting them and trying again
+ * By default will reinvite the user if they already exist in supabase by deleting them and trying
+ * again
  */
 const addSupabaseUser = async ({
 	email,
@@ -59,8 +58,8 @@ const addSupabaseUser = async ({
 	community: Community;
 	canAdmin?: boolean;
 	/**
-	 * If true, the user will be reinvited even if they already exist in supabase
-	 * by deleting them and trying again
+	 * If true, the user will be reinvited even if they already exist in supabase by deleting them
+	 * and trying again
 	 *
 	 * @default true
 	 */
@@ -140,15 +139,17 @@ const addSupabaseUser = async ({
 /**
  * Adds a member to a community.
  *
- * First checks if the user is already a member of the community.
- * If not, creates a new member in the db and revalidates the member list.
+ * First checks if the user is already a member of the community. If not, creates a new member in
+ * the db and revalidates the member list.
  *
- * It will then double check to see if the user exists in supabase. If not, it will send an invite to do so
+ * It will then double check to see if the user exists in supabase. If not, it will send an invite
+ * to do so
  *
  * @param user - The user to add as a member.
  * @param canAdmin - Optional. Specifies whether the user has admin privileges in the community.
  * @param community - The community to add the member to.
- * @returns A Promise that resolves to the newly created member object, or an error object if an error occurs.
+ * @returns A Promise that resolves to the newly created member object, or an error object if an
+ *   error occurs.
  */
 export const addMember = defineServerAction(async function addMember({
 	user,
@@ -234,8 +235,8 @@ export const addMember = defineServerAction(async function addMember({
 });
 
 /**
- * Create a new user and add them as a member to a community
- * Will also add them as a user to supabase
+ * Create a new user and add them as a member to a community Will also add them as a user to
+ * supabase
  */
 export const createUserWithMembership = defineServerAction(async function createUserWithMembership({
 	firstName,

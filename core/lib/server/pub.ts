@@ -23,8 +23,9 @@ import { BasePubField } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
 import { NewPubs } from "~/kysely/types/public/Pubs";
 import prisma from "~/prisma/db";
-import { DeepPartial, makeRecursiveInclude } from "../types";
-import { BadRequestError, ForbiddenError, NotFoundError } from "./errors";
+import { makeRecursiveInclude } from "../types";
+import { autoCache } from "./cache/autoCache";
+import { ForbiddenError, NotFoundError } from "./errors";
 
 type PubValues = Record<string, JsonValue>;
 
@@ -164,18 +165,19 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 			])
 	).as("assignee");
 
+// These aliases are used to make sure the JSON object returned matches
+// the old prisma query's return value
 const pubColumns = [
 	"pubs.id",
 	"pubs.communityId",
+	"pubs.createdAt",
 	"pubs.parentId",
 	"pubs.pubTypeId",
-	"pubs.assigneeId",
-	"pubs.createdAt",
 	"pubs.updatedAt",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
-export const getPub = async (pubId: PubsId) => {
-	const pub = await withPubChildren(db, { pubId })
+export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+	const pub = await withPubChildren({ pubId })
 		.selectFrom("pubs")
 		.where("pubs.id", "=", pubId)
 		.select(pubColumns)
@@ -186,7 +188,7 @@ export const getPub = async (pubId: PubsId) => {
 			jsonArrayFrom(
 				eb
 					.selectFrom("children")
-					.select([...pubColumns, "values"])
+					.select([...pubColumns, "children.values"])
 					.$narrowType<{ values: PubValues }>()
 			).as("children")
 		)
@@ -299,6 +301,32 @@ export const getPubs = async (
 	return pubber;
 };
 
+export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+	const pub = await autoCache(
+		withPubChildren({ pubId })
+			.selectFrom("pubs")
+			.where("pubs.id", "=", pubId)
+			.select(pubColumns)
+			.select(pubValuesByVal(pubId))
+			.select((eb) => pubAssignee(eb))
+			.$narrowType<{ values: PubValues }>()
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("children")
+						.select([...pubColumns, "children.values"])
+						.$narrowType<{ values: PubValues }>()
+				).as("children")
+			)
+	).executeTakeFirst();
+
+	if (!pub) {
+		throw PubNotFoundError;
+	}
+
+	return nestChildren(pub);
+};
+
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
 const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
@@ -389,9 +417,7 @@ const makePubChildrenConnectOptions = (body: CreatePubRequestBodyWithNulls) => {
 	return connect;
 };
 
-/**
- * Build a Prisma `PubCreateInput` object used to create a pub with descendants.
- */
+/** Build a Prisma `PubCreateInput` object used to create a pub with descendants. */
 const makeRecursivePubUpdateInput = async (
 	body: CreatePubRequestBodyWithNulls,
 	communityId: string
@@ -419,15 +445,9 @@ const makeRecursivePubUpdateInput = async (
 	};
 };
 
-// type CreatePubRequestBodyWithNullsNew = {
-// 	values: Record<string, JsonValue>;
-// 	assigneeId?: UsersId;
-// 	children?: MaybeHas<CreatePubRequestBodyWithNullsNew, "stageId">[];
-// 	parentId?: PubsId;
-// 	pubTypeId: PubTypesId;
-// 	stageId: StagesId;
-// };
-
+/**
+ * For recursive transations
+ */
 const maybeWithTrx = async <T>(
 	trx: Transaction<Database> | undefined,
 	fn: (trx: Transaction<Database>) => Promise<T>
@@ -717,7 +737,7 @@ export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
 ]);
 
 export const getPubType = async (pubTypeId: PubTypesId) =>
-	getPubTypeBase.where("pub_types.id", "=", pubTypeId).executeTakeFirst();
+	autoCache(getPubTypeBase.where("pub_types.id", "=", pubTypeId)).executeTakeFirst();
 
 export const getPubTypesForCommunity = async (
 	communityId: CommunitiesId,
@@ -728,9 +748,10 @@ export const getPubTypesForCommunity = async (
 		orderDirection = GET_PUBS_DEFAULT.orderDirection,
 	}: GetManyParams = GET_MANY_DEFAULT
 ) =>
-	getPubTypeBase
-		.where("pub_types.communityId", "=", communityId)
-		.orderBy(orderBy, orderDirection)
-		.limit(limit)
-		.offset(offset)
-		.execute();
+	autoCache(
+		getPubTypeBase
+			.where("pub_types.communityId", "=", communityId)
+			.orderBy(orderBy, orderDirection)
+			.limit(limit)
+			.offset(offset)
+	).execute();

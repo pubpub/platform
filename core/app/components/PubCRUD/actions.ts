@@ -15,6 +15,7 @@ import type { StagesId } from "~/kysely/types/public/Stages";
 import { validatePubValues } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
 export const createPub = defineServerAction(async function createPub({
@@ -45,37 +46,37 @@ export const createPub = defineServerAction(async function createPub({
 	}
 
 	try {
-		const createNewPub = await db
-			.with("new_pub", (db) =>
-				db
-					.insertInto("pubs")
-					.values({
-						communityId: communityId,
-						pubTypeId: pubTypeId,
-					})
-					.returning("id")
-			)
-			.with("stage_create", (db) =>
-				db.insertInto("PubsInStages").values((eb) => ({
-					pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-					stageId,
-				}))
-			)
+		const createNewPub = await autoRevalidate(
+			db
+				.with("new_pub", (db) =>
+					db
+						.insertInto("pubs")
+						.values({
+							communityId: communityId,
+							pubTypeId: pubTypeId,
+						})
+						.returning("id")
+				)
+				.with("stage_create", (db) =>
+					db.insertInto("PubsInStages").values((eb) => ({
+						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+						stageId,
+					}))
+				)
 
-			.insertInto("pub_values")
-			.values((eb) =>
-				Object.entries(fields).map(([key, value]) => ({
-					fieldId: key as PubFieldsId,
-					pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-					value: JSON.stringify(value.value),
-				}))
-			)
-			.execute();
+				.insertInto("pub_values")
+				.values((eb) =>
+					Object.entries(fields).map(([key, value]) => ({
+						fieldId: key as PubFieldsId,
+						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+						value: JSON.stringify(value.value),
+					}))
+				)
+		).execute();
 
 		if (path) {
 			revalidatePath(path);
 		}
-		revalidateTag(`community-stages_${communityId}`);
 
 		return {
 			success: true,
@@ -132,11 +133,14 @@ export const _updatePub = async ({
 
 	const stageMoveQuery =
 		stageId &&
-		db
-			.with("leave-stage", (db) => db.deleteFrom("PubsInStages").where("pubId", "=", pubId))
-			.insertInto("PubsInStages")
-			.values({ pubId, stageId })
-			.execute();
+		autoRevalidate(
+			db
+				.with("leave-stage", (db) =>
+					db.deleteFrom("PubsInStages").where("pubId", "=", pubId)
+				)
+				.insertInto("PubsInStages")
+				.values({ pubId, stageId })
+		).execute();
 
 	const newValues = Object.fromEntries(
 		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])
@@ -182,14 +186,15 @@ export const _updatePub = async ({
 			}
 			const { value } = field;
 
-			return db
-				.updateTable("pub_values")
-				.set({
-					value: JSON.stringify(value),
-				})
-				.where("pub_values.id", "=", pubValue.id)
-				.returningAll()
-				.execute();
+			return autoRevalidate(
+				db
+					.updateTable("pub_values")
+					.set({
+						value: JSON.stringify(value),
+					})
+					.where("pub_values.id", "=", pubValue.id)
+					.returningAll()
+			).execute();
 		}),
 	]
 		.filter((x) => x != null)
@@ -253,7 +258,6 @@ export const updatePub = defineServerAction(async function updatePub({
 		if (path) {
 			revalidatePath(path);
 		}
-		revalidateTag(`community-stages_${communityId}`);
 
 		return result;
 	} catch (error) {
@@ -299,12 +303,11 @@ export const removePub = defineServerAction(async function removePub({
 	}
 
 	try {
-		await db.deleteFrom("pubs").where("pubs.id", "=", pubId).executeTakeFirst();
+		await autoRevalidate(db.deleteFrom("pubs").where("pubs.id", "=", pubId)).executeTakeFirst();
 
 		if (path) {
 			revalidatePath(path);
 		}
-		revalidateTag(`community-stages_${pub.communityId}`);
 
 		return {
 			success: true,

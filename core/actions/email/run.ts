@@ -19,6 +19,7 @@ import { emailDirectives } from "./plugin";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
+		// FIXME: could be replaced with `getCommunitySlug`
 		const community = await db
 			.selectFrom("communities")
 			.where("id", "=", communityId)

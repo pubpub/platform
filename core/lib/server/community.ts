@@ -1,32 +1,41 @@
-import { unstable_cache } from "next/cache";
-
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import { db } from "~/kysely/database";
+import { createCacheTag } from "./cache/cacheTags";
+import { ONE_DAY } from "./cache/constants";
+import { getCommunitySlug } from "./cache/getCommunitySlug";
+import { memoize } from "./cache/memoize";
 
-export function findCommunityBySlug(communitySlug: string) {
-	return db
-		.selectFrom("communities")
-		.select("id")
-		.where("slug", "=", communitySlug)
-		.executeTakeFirst();
+export function findCommunityBySlug(communitySlug?: string) {
+	const slug = communitySlug ?? getCommunitySlug();
+	return memoize(
+		() => db.selectFrom("communities").select("id").where("slug", "=", slug).executeTakeFirst(),
+		{
+			additionalCacheKey: [slug],
+			revalidateTags: [createCacheTag(`community-all_${slug}`)],
+		}
+	)();
 }
 
 // Retrieve the pub's community id in order to revalidate the next server
 // cache after the action is run.
-export const findCommunityIdByPubId = async (pubId: PubsId) => {
-	const { communityId } =
-		(await unstable_cache(
-			async () =>
-				db
-					.selectFrom("pubs")
-					.select(["communityId"])
-					.where("id", "=", pubId)
-					.executeTakeFirst(),
-			[pubId],
-			{
-				revalidate: 60 * 60 * 24 * 7,
-			}
-		)()) ?? {};
+export const findCommunityByPubId = memoize(
+	async (pubId: PubsId) => {
+		const community = db
+			.selectFrom("pubs")
+			.where("pubs.id", "=", pubId)
+			.innerJoin("communities", "communities.id", "pubs.communityId")
+			.select([
+				"communities.id",
+				"communities.slug",
+				"communities.avatar",
+				"communities.name",
+				"communities.slug",
+				"communities.createdAt",
+				"communities.updatedAt",
+			])
+			.executeTakeFirst();
 
-	return communityId;
-};
+		return community;
+	},
+	{ revalidateTags: ["all", "all-pubs"], duration: ONE_DAY }
+);

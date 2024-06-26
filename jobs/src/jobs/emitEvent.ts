@@ -20,6 +20,9 @@ type DBTriggerEventPayload<T> = {
 	operation: string;
 	new: T;
 	old: T;
+	community: {
+		slug: string;
+	};
 };
 
 type ScheduledEventPayload = {
@@ -30,12 +33,21 @@ type ScheduledEventPayload = {
 	stageId: string;
 	pubId: string;
 	actionInstanceId: string;
+	community: {
+		slug: string;
+	};
 };
 
 type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
 
-type PubEnteredStageEventPayload = PubInStagesRow & { event: Event.pubEnteredStage };
-type PubLeftStageEventPayload = PubInStagesRow & { event: Event.pubLeftStage };
+type PubEnteredStageEventPayload = PubInStagesRow & {
+	event: Event.pubEnteredStage;
+	community: { slug: string };
+};
+type PubLeftStageEventPayload = PubInStagesRow & {
+	event: Event.pubLeftStage;
+	community: { slug: string };
+};
 
 type NormalizedEventPayload =
 	| PubEnteredStageEventPayload
@@ -43,6 +55,10 @@ type NormalizedEventPayload =
 	| ScheduledEventPayload;
 
 type Logger = typeof logger;
+
+const makeBaseURL = (communitySlug: string) => {
+	return `${process.env.PUBPUB_URL}/api/v0/${communitySlug}`;
+};
 
 interface OperationConfig<P extends EmitEventPayload, N extends NormalizedEventPayload> {
 	type: string;
@@ -72,6 +88,9 @@ const scheduleTask = async (
 		const { status, body } = await client.scheduleAction({
 			params: { stageId },
 			body: { pubId },
+			overrideClientOptions: {
+				baseUrl: makeBaseURL(payload.community.slug),
+			},
 		});
 		if (status > 400) {
 			logger.error({
@@ -101,6 +120,9 @@ const triggerActions = async (
 		const { status, body } = await client.triggerActions({
 			params: { stageId },
 			body: { event, pubId },
+			overrideClientOptions: {
+				baseUrl: makeBaseURL(payload.community.slug),
+			},
 		});
 
 		if (status > 300) {
@@ -121,7 +143,7 @@ const triggerAction = async (
 	payload: ScheduledEventPayload,
 	logger: Logger
 ) => {
-	const { stageId, event, pubId, actionInstanceId, ...context } = payload;
+	const { stageId, event, pubId, actionInstanceId, community, ...context } = payload;
 
 	try {
 		const { status, body } = await client.triggerAction({
@@ -131,6 +153,9 @@ const triggerAction = async (
 			body: {
 				pubId,
 				event,
+			},
+			overrideClientOptions: {
+				baseUrl: makeBaseURL(community.slug),
 			},
 		});
 
@@ -161,6 +186,7 @@ const eventConfigs = [
 		check: (payload: any): payload is DBTriggerEventPayload<PubInStagesRow> =>
 			payload.operation === "INSERT",
 		normalize: (payload: DBTriggerEventPayload<PubInStagesRow>) => ({
+			community: payload.community,
 			event: Event.pubEnteredStage,
 			...payload.new,
 		}),
@@ -171,6 +197,7 @@ const eventConfigs = [
 		check: (payload: any): payload is DBTriggerEventPayload<PubInStagesRow> =>
 			payload.operation === "DELETE",
 		normalize: (payload: DBTriggerEventPayload<PubInStagesRow>) => ({
+			community: payload.community,
 			event: Event.pubLeftStage,
 			...payload.old,
 		}),
@@ -214,15 +241,23 @@ export const emitEvent = defineJob(
 	async (client: InternalClient, payload: EmitEventPayload, eventLogger, job) => {
 		eventLogger.info({ msg: "Starting emitEvent", payload });
 
-		const completedActions = await Promise.allSettled(
+		if (!payload?.community?.slug) {
+			eventLogger.error({
+				msg: "No community slug found in payload, probably an old scheduled job",
+				job,
+			});
+			return;
+		}
+
+		const completedEffects = await Promise.allSettled(
 			processEventPayload(client, payload, eventLogger)
 		);
 
-		completedActions.forEach((action) => {
-			if (action.status === "rejected") {
+		completedEffects.forEach((effect) => {
+			if (effect.status === "rejected") {
 				eventLogger.error({
 					msg: "Unexpected error running emitEvent action",
-					error: action.reason,
+					error: effect.reason,
 				});
 			}
 		});

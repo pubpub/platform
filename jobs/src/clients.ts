@@ -7,10 +7,11 @@ export const integrationClient = makeClient({});
 export type IntegrationClient = typeof integrationClient;
 
 export const internalClient = initClient(api.internal, {
-	baseUrl: `${process.env.PUBPUB_URL}/api/v0`,
+	baseUrl: `${process.env.PUBPUB_URL}`,
 	baseHeaders: { authorization: `Bearer ${process.env.API_KEY}` },
 	jsonQuery: true,
 });
+
 export type InternalClient = typeof internalClient;
 
 export const clients = {

@@ -16,6 +16,8 @@ import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import Event from "~/kysely/types/public/Event";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import prisma from "~/prisma/db";
 
@@ -62,7 +64,7 @@ export const createStage = defineServerAction(async function createStage(communi
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagsForCommunity(["stages", "PubsInStages"]);
 	}
 });
 
@@ -82,7 +84,7 @@ export const deleteStage = defineServerAction(async function deleteStage(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagsForCommunity(["stages", "PubsInStages"]);
 	}
 });
 
@@ -112,7 +114,7 @@ export const createMoveConstraint = defineServerAction(async function createMove
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagsForCommunity(["move_constraint"]);
 	}
 });
 
@@ -137,7 +139,7 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 				cause: error,
 			};
 		} finally {
-			revalidateTag(`community-stages_${communityId}`);
+			revalidateTagsForCommunity(["move_constraint"]);
 		}
 	}
 );
@@ -162,14 +164,12 @@ export const updateStageName = defineServerAction(async function updateStageName
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagsForCommunity(["stages"]);
 	}
 });
 
-export const revalidateStages = defineServerAction(async function revalidateStages(
-	communityId: string
-) {
-	revalidateTag(`community-stages_${communityId}`);
+export const revalidateStages = defineServerAction(async function revalidateStages() {
+	revalidateTagsForCommunity(["stages", "PubsInStages"]);
 });
 
 export const addAction = defineServerAction(async function addAction(
@@ -195,7 +195,7 @@ export const addAction = defineServerAction(async function addAction(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagsForCommunity(["stages", "PubsInStages", "action_instances"]);
 	}
 });
 
@@ -209,20 +209,17 @@ export const updateAction = defineServerAction(async function updateAction(
 		  }
 		| { name: string; config?: undefined }
 ) {
-	try {
-		const result = await db
+	const result = await autoRevalidate(
+		db
 			.updateTable("action_instances")
 			.set(props.name ? { name: props.name } : { config: props.config })
 			.where("id", "=", actionInstanceId)
-			.executeTakeFirstOrThrow();
+	).executeTakeFirstOrThrow();
 
-		return {
-			success: true,
-			report: "Action updated",
-		};
-	} finally {
-		revalidateTag(`community-stages_${communityId}`);
-	}
+	return {
+		success: true,
+		report: "Action updated",
+	};
 });
 
 export const deleteAction = defineServerAction(async function deleteAction(
@@ -241,7 +238,7 @@ export const deleteAction = defineServerAction(async function deleteAction(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
+		revalidateTagsForCommunity(["action_instances"]);
 	}
 });
 
@@ -253,15 +250,13 @@ export const addRule = defineServerAction(async function addRule({
 	communityId: CommunitiesId;
 }) {
 	try {
-		await db
-			.insertInto("rules")
-			.values({
+		await autoRevalidate(
+			db.insertInto("rules").values({
 				actionInstanceId: data.actionInstanceId as ActionInstancesId,
 				event: data.event,
 				config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
 			})
-
-			.executeTakeFirstOrThrow();
+		).executeTakeFirstOrThrow();
 	} catch (error) {
 		logger.error(error);
 		if (error.message?.includes("unique constraint")) {
@@ -279,7 +274,6 @@ export const addRule = defineServerAction(async function addRule({
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
 	}
 });
 
@@ -288,11 +282,9 @@ export const deleteRule = defineServerAction(async function deleteRule(
 	communityId: string
 ) {
 	try {
-		const deletedRule = await db
-			.deleteFrom("rules")
-			.where("id", "=", ruleId)
-			.returningAll()
-			.executeTakeFirst();
+		const deletedRule = await autoRevalidate(
+			db.deleteFrom("rules").where("id", "=", ruleId).returningAll()
+		).executeTakeFirst();
 
 		if (!deletedRule) {
 			return {
@@ -349,7 +341,7 @@ export const deleteRule = defineServerAction(async function deleteRule(
 			cause: error,
 		};
 	} finally {
-		revalidateTag(`community-stages_${communityId}`);
-		revalidateTag(`community-action-runs_${communityId}`);
+		// 		revalidateTag(`community-stages_${communityId}`);
+		// 		revalidateTag(`community-action-runs_${communityId}`);
 	}
 });

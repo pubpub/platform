@@ -253,7 +253,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	);
 
 	const fetchStages = useCallback(() => {
-		actions.revalidateStages(props.communityId);
+		actions.revalidateStages();
 	}, [props.communityId]);
 
 	useEffect(() => {
