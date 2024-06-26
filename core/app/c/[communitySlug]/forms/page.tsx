@@ -40,36 +40,6 @@ export default async function Page() {
 		};
 	});
 
-	function CreateForm() {
-		return (
-			<Dialog>
-				<DialogTrigger asChild>
-					<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
-						<Plus size="16" className="mr-2" /> New Form
-					</Button>
-				</DialogTrigger>
-				<DialogContent>
-					<CreateFormForm />
-				</DialogContent>
-			</Dialog>
-		);
-	}
-
-	function NoFormsState() {
-		return (
-			<div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
-				<h2 className="mb-2 text-2xl font-semibold text-gray-800">
-					You don’t have any forms yet
-				</h2>
-				<p className="mb-6 text-center text-gray-600">
-					Forms are templates of questions used to collect information from users via a
-					response submission process.
-				</p>
-				<CreateForm />
-			</div>
-		);
-	}
-
 	return (
 		<div className="min-h-screen">
 			<div className="mx-auto max-w-7xl rounded-lg bg-white shadow-md">
@@ -79,11 +49,18 @@ export default async function Page() {
 							<ClipboardPenLine size={14} className="mr-2" /> Forms
 						</div>
 					</h1>
-					<CreateForm />
 				</header>
 				<div className="p-4">
 					{forms.length === 0 ? (
-						<NoFormsState />
+						<div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+							<h2 className="mb-2 text-2xl font-semibold text-gray-800">
+								You don’t have any forms yet
+							</h2>
+							<p className="mb-6 text-center text-gray-600">
+								Forms are templates of questions used to collect information from
+								users via a response submission process.
+							</p>
+						</div>
 					) : (
 						<div>
 							<FormTable forms={tableForms} />
