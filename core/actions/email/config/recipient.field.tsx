@@ -20,7 +20,7 @@ const component = defineActionFormFieldServerComponent(
 				fieldLabel="Recipient email address"
 				community={community}
 				query={pageContext.searchParams?.query as string | undefined}
-				value={actionInstance.config.recipient as UsersId}
+				value={actionInstance.config?.recipient as UsersId}
 			/>
 		);
 	}
