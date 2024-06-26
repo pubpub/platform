@@ -27,7 +27,7 @@ const Links = ({
 		<>
 			<NavLink
 				href={`${prefix}/pubs`}
-				text={"Pubs"}
+				text={"All Pubs"}
 				icon={<img src="/icons/pub.svg" alt="" />}
 			/>
 		</>
@@ -148,6 +148,7 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 						<div className="flex-1">
 							<nav className="grid items-start pr-2 text-sm font-medium">
 								<Links prefix={prefix} isAdmin={isAdmin} />
+								{divider}
 								Views
 								<ViewLinks prefix={prefix} isAdmin={isAdmin} />
 							</nav>

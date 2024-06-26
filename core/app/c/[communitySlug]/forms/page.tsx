@@ -2,7 +2,7 @@ import React from "react";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
-import { ClipboardPenLine, ListPlus } from "ui/icon";
+import { ClipboardPenLine, Plus } from "ui/icon";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -40,6 +40,21 @@ export default async function Page() {
 		};
 	});
 
+	function CreateForm() {
+		return (
+			<Dialog>
+				<DialogTrigger asChild>
+					<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
+						<Plus size="16" className="mr-2" /> New Form
+					</Button>
+				</DialogTrigger>
+				<DialogContent>
+					<CreateFormForm />
+				</DialogContent>
+			</Dialog>
+		);
+	}
+
 	function NoFormsState() {
 		return (
 			<div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
@@ -50,28 +65,13 @@ export default async function Page() {
 					Forms are templates of questions used to collect information from users via a
 					response submission process.
 				</p>
-				<StoopidButton />
+				<CreateForm />
 			</div>
 		);
 	}
 
-	function StoopidButton() {
-		return (
-			<Dialog>
-				<DialogTrigger asChild>
-					<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
-						<ListPlus size="16" /> New Form
-					</Button>
-				</DialogTrigger>
-				<DialogContent>
-					<CreateFormForm />
-				</DialogContent>
-			</Dialog>
-		);
-	}
-
 	return (
-		<div className="min-h-screen p-8">
+		<div className="min-h-screen">
 			<div className="mx-auto max-w-7xl rounded-lg bg-white shadow-md">
 				<header className="flex items-center justify-between border-b p-4">
 					<h1 className="text-lg font-semibold">
@@ -79,7 +79,7 @@ export default async function Page() {
 							<ClipboardPenLine size={14} className="mr-2" /> Forms
 						</div>
 					</h1>
-					<StoopidButton />
+					<CreateForm />
 				</header>
 				<div className="p-4">
 					{forms.length === 0 ? (
