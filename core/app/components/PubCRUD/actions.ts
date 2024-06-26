@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
 import type { JSONSchemaType } from "ajv";
+
+import { revalidatePath, revalidateTag } from "next/cache";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { JsonValue } from "contracts";

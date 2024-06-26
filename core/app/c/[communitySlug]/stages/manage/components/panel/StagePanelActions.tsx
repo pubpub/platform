@@ -2,20 +2,13 @@ import { Suspense } from "react";
 
 import { Card, CardContent } from "ui/card";
 
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions } from "~/lib/db/queries";
 import { addAction, deleteAction } from "../../actions";
 import { ActionConfigFormWrapper } from "./ActionConfigFormWrapper";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
-=======
-import { getStage, getStageActions } from "~/lib/queries/pub";
->>>>>>> c8c25f1 ('https://www.youtube.com/watch?v=uGaEo1kTrJA&t=1041s&ab_channel=Ken-chan')
-=======
->>>>>>> a853c9e (format)
 
 type PropsInner = {
 	stageId: string;
