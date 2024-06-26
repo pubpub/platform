@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
-import type { GetPubResponseBody } from "contracts";
+import type { GetPubResponseBody, GetPubTypeResponseBody } from "contracts";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {
@@ -30,24 +30,39 @@ import * as actions from "./actions";
 export const PubUpdateForm = ({
 	pub,
 	pubType,
+	pseudoPubType,
 	availableStages,
 	currentStage = null,
 }: {
 	pub: GetPubResponseBody;
-	pubType: NonNullable<Awaited<ReturnType<ReturnType<typeof getPubType>["executeTakeFirst"]>>>;
+	pubType: GetPubTypeResponseBody;
+	/**
+	 * The pseudo pub type is used to render the fields that are not part of the pub type.
+	 */
+	pseudoPubType?: GetPubTypeResponseBody;
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) => {
 	const { compiledSchema, uncompiledSchema } = useMemo(() => {
-		const uncompiledSchema = buildSchemaFromPubFields(
-			//  @ts-expect-error FIXME: Schema types are different
-			pubType,
-			[]
-		);
+		const uncompiledSchema = buildSchemaFromPubFields(pubType, []);
 		const compiledSchema = new Ajv({
 			formats: fullFormats,
 		}).addSchema(uncompiledSchema, "schema");
 		return { compiledSchema, uncompiledSchema };
+	}, [pubType]);
+
+	/**
+	 * The schema for the pubfields/values that are not part of the pub type.
+	 */
+	const { compiledPseudoSchema, uncompiledPseudoSchema } = useMemo(() => {
+		if (!pseudoPubType) {
+			return { compiledPseudoSchema: undefined, uncompiledPseudoSchema: undefined };
+		}
+		const uncompiledSchema = buildSchemaFromPubFields(pseudoPubType, []);
+		const compiledSchema = new Ajv({
+			formats: fullFormats,
+		}).addSchema(uncompiledSchema, "schema");
+		return { compiledPseudoSchema: compiledSchema, uncompiledPseudoSchema: uncompiledSchema };
 	}, [pubType]);
 
 	const form = useForm({
@@ -98,18 +113,33 @@ export const PubUpdateForm = ({
 		}
 	};
 
+	console.log({ values: pub.values, pseudoPubType });
 	const memoizedForm = useMemo(() => {
 		if (!compiledSchema) {
 			return null;
 		}
 		return (
-			<SchemaBasedFormFields
-				compiledSchema={compiledSchema}
-				key={pubType.id}
-				existingValues={pub.values}
-				control={form.control}
-				upload={() => {}}
-			/>
+			<>
+				<SchemaBasedFormFields
+					compiledSchema={compiledSchema}
+					key={pubType.id}
+					existingValues={pub.values}
+					control={form.control}
+					upload={() => {}}
+				/>
+				{compiledPseudoSchema && (
+					<>
+						<h3>Non-pub type fields</h3>
+						<SchemaBasedFormFields
+							compiledSchema={compiledPseudoSchema}
+							key={pubType.id}
+							existingValues={pub.values}
+							control={form.control}
+							upload={() => {}}
+						/>
+					</>
+				)}
+			</>
 		);
 	}, [compiledSchema]);
 
