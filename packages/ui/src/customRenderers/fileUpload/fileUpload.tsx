@@ -1,8 +1,7 @@
 "use client";
 
 import React, { forwardRef, useEffect } from "react";
-import type { UppyFile } from "@uppy/core";
-import Uppy from "@uppy/core";
+import Uppy, { UppyFile } from "@uppy/core";
 import { Dashboard } from "@uppy/react";
 
 // import "./fileUpload.css";

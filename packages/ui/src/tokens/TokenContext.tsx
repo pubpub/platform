@@ -1,5 +1,4 @@
-import type { PropsWithChildren} from "react";
-import React, { createContext, useContext } from "react";
+import React, { createContext, PropsWithChildren, useContext } from "react";
 
 export type TokenContext = {
 	[scope: string]: {
