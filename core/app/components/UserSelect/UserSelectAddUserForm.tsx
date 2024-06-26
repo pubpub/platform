@@ -37,6 +37,9 @@ export const UserSelectAddUserForm = ({ email, community }: Props) => {
 		},
 	});
 
+	// NOTE: We run `form.handleSubmit` manually here because the UserSelect
+	// component may be used within a <form> and that breaks HTML semantics/
+	// a11y practices.
 	const onSubmitClick = useCallback(
 		(e: SyntheticEvent) => {
 			e.preventDefault();
