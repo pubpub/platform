@@ -6,19 +6,23 @@ import { action } from "../action";
 const component = defineActionFormFieldServerComponent(
 	action,
 	"params",
-	async ({ pageContext, communityId }) => {
+	async ({ pageContext, communityId, actionInstance }) => {
 		const community = await db
 			.selectFrom("communities")
 			.selectAll()
 			.where("id", "=", communityId)
 			.executeTakeFirstOrThrow();
 
+		const queryParamName = `recipient-${actionInstance.id}`;
+		const query = pageContext.searchParams?.[queryParamName] as string | undefined;
+
 		return (
 			<UserSelectServer
 				fieldName="recipient"
 				fieldLabel="Recipient email address"
-				query={pageContext.searchParams?.query as string | undefined}
 				community={community}
+				query={query}
+				queryParamName={queryParamName}
 			/>
 		);
 	}

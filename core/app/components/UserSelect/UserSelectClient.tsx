@@ -33,9 +33,17 @@ type Props = {
 	fieldName: string;
 	fieldLabel: string;
 	community: Communities;
+	queryParamName: string;
 };
 
-export function UserSelectClient({ user, users, fieldName, fieldLabel, community }: Props) {
+export function UserSelectClient({
+	queryParamName,
+	user,
+	users,
+	fieldName,
+	fieldLabel,
+	community,
+}: Props) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
@@ -69,7 +77,7 @@ export function UserSelectClient({ user, users, fieldName, fieldLabel, community
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
 	const onInputValueChange = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
-		newParams.set("query", value);
+		newParams.set(queryParamName, value);
 		router.replace(`${pathname}?${newParams.toString()}`);
 		setInputValue(value);
 	}, 400);
