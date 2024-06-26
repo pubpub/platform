@@ -20,6 +20,7 @@ import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
 import { CommunitiesId } from "~/kysely/types/public/Communities";
 import Event from "~/kysely/types/public/Event";
 import { getPub } from "~/lib/server";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
 import { validatePubValues } from "./validateFields";
@@ -169,48 +170,49 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 
 	const isActionUserInitiated = "userId" in args;
 
-	await db
-		.with(
-			"existingScheduledActionRun",
-			(db) =>
-				db
-					.selectFrom("action_runs")
-					.selectAll()
-					.where("actionInstanceId", "=", args.actionInstanceId)
-					.where("pubId", "=", args.pubId)
-					.where("status", "=", ActionRunStatus.scheduled)
-			// this should be guaranteed to be unique, as only one actionInstance should be scheduled per pub
-		)
-		.insertInto("action_runs")
-		.values((eb) => ({
-			id:
-				isActionUserInitiated || args.event !== Event.pubInStageForDuration
-					? undefined
-					: eb.selectFrom("existingScheduledActionRun").select("id"),
-			actionInstanceId: args.actionInstanceId,
-			pubId: args.pubId,
-			userId: isActionUserInitiated ? args.userId : null,
-			status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
-			result,
-			// this is a bit hacky, would be better to pass this around methinks
-			config: eb
-				.selectFrom("action_instances")
-				.select("config")
-				.where("action_instances.id", "=", args.actionInstanceId),
-			params: args,
-			event: isActionUserInitiated ? undefined : args.event,
-		}))
-		// conflict should only happen if a scheduled action is excecuted
-		// not on user initiated actions or on other events
-		.onConflict((oc) =>
-			oc.column("id").doUpdateSet({
-				result,
-				params: args,
-				event: "userId" in args ? undefined : args.event,
+	await autoRevalidate(
+		db
+			.with(
+				"existingScheduledActionRun",
+				(db) =>
+					db
+						.selectFrom("action_runs")
+						.selectAll()
+						.where("actionInstanceId", "=", args.actionInstanceId)
+						.where("pubId", "=", args.pubId)
+						.where("status", "=", ActionRunStatus.scheduled)
+				// this should be guaranteed to be unique, as only one actionInstance should be scheduled per pub
+			)
+			.insertInto("action_runs")
+			.values((eb) => ({
+				id:
+					isActionUserInitiated || args.event !== Event.pubInStageForDuration
+						? undefined
+						: eb.selectFrom("existingScheduledActionRun").select("id"),
+				actionInstanceId: args.actionInstanceId,
+				pubId: args.pubId,
+				userId: isActionUserInitiated ? args.userId : null,
 				status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
-			})
-		)
-		.execute();
+				result,
+				// this is a bit hacky, would be better to pass this around methinks
+				config: eb
+					.selectFrom("action_instances")
+					.select("config")
+					.where("action_instances.id", "=", args.actionInstanceId),
+				params: args,
+				event: isActionUserInitiated ? undefined : args.event,
+			}))
+			// conflict should only happen if a scheduled action is excecuted
+			// not on user initiated actions or on other events
+			.onConflict((oc) =>
+				oc.column("id").doUpdateSet({
+					result,
+					params: args,
+					event: "userId" in args ? undefined : args.event,
+					status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
+				})
+			)
+	).execute();
 
 	return result;
 }

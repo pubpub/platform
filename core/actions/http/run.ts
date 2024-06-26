@@ -34,7 +34,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			...(authToken && { Authorization: `Bearer ${authToken}` }),
 			"Content-Type": "application/json",
 		},
+
 		body: body && method !== "GET" ? body : undefined,
+		cache: "no-store",
 	});
 
 	if (res.status !== 200) {

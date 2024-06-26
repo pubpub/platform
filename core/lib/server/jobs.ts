@@ -40,6 +40,9 @@ export type JobsClient = {
 		duration: number;
 		interval: Interval;
 		pubId: PubsId;
+		community: {
+			slug: string;
+		};
 	}): Promise<Job | ClientExceptionOptions>;
 };
 
@@ -79,7 +82,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				job: { key: jobKey },
 			});
 		},
-		async scheduleAction({ actionInstanceId, stageId, duration, interval, pubId }) {
+		async scheduleAction({ actionInstanceId, stageId, duration, interval, pubId, community }) {
 			const runAt = addDuration({ duration, interval });
 			const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
 
@@ -103,6 +106,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						actionInstanceId,
 						stageId,
 						pubId,
+						community,
 					},
 					{
 						runAt,

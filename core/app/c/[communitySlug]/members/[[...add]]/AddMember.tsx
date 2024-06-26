@@ -1,18 +1,20 @@
-import { unstable_cache } from "next/cache";
 import { Community } from "@prisma/client";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { getSuggestedMembers } from "~/lib/server";
+import { createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
+import { memoize } from "~/lib/server/cache/memoize";
 import prisma from "~/prisma/db";
 import { MemberInviteForm } from "./MemberInviteForm";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 /**
  * Create a cached function to get a user by email
+ *
  * @param email
  * @param currentEmail
  * @param community
- * @returns error state and user state
+ * @returns Error state and user state
  */
 const createCachedGetUser = ({
 	email,
@@ -48,7 +50,7 @@ const createCachedGetUser = ({
 		});
 	}
 
-	return unstable_cache(
+	return memoize(
 		async ({ email, currentEmail }: { email?: string; currentEmail?: string }) => {
 			if (email === currentEmail) {
 				return {
@@ -81,9 +83,8 @@ const createCachedGetUser = ({
 
 			return { user, state: "user-found" as const, error: null };
 		},
-		undefined,
 		{
-			tags: [`members_${community.id}`],
+			revalidateTags: createCommunityCacheTags(["members", "users"], community.slug),
 		}
 	);
 };

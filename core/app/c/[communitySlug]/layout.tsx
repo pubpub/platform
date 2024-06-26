@@ -28,16 +28,11 @@ export default async function MainLayout({ children, params }: Props) {
 	if (!loginData) {
 		redirect("/login");
 	}
+
 	const community = await getCommunity(params.communitySlug);
 	if (!community) {
 		return null;
 	}
-	const member = await prisma.member.findFirst({
-		where: { userId: loginData.id, communityId: community.id },
-	});
-	// if (!member) {
-	// 	redirect("/settings");
-	// }
 
 	const availableCommunities = await getAvailableCommunities(loginData);
 	return (

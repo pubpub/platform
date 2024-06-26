@@ -8,6 +8,7 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type PublicSchema from "~/kysely/types/public/PublicSchema";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 export type CreatePubProps =
@@ -81,22 +82,25 @@ const getCommunityById = <
 			? query.where("communities.id", "=", communityId)
 			: query.whereRef("communities.id", "=", communityId);
 
-	return completeQuery;
+	return autoCache(completeQuery);
 	// .executeTakeFirstOrThrow();
 };
 
-const getStage = (stageId: StagesId) => {
-	return db
-		.selectFrom("stages")
-		.select((eb) => [
-			"stages.id",
-			"stages.communityId",
-			"stages.name",
-			"stages.order",
-			jsonObjectFrom(getCommunityById(eb, eb.ref("stages.communityId"))).as("community"),
-		])
-		.where("stages.id", "=", stageId);
-};
+const getStage = (stageId: StagesId) =>
+	autoCache(
+		db
+			.selectFrom("stages")
+			.select((eb) => [
+				"stages.id",
+				"stages.communityId",
+				"stages.name",
+				"stages.order",
+				jsonObjectFrom(getCommunityById(eb, eb.ref("stages.communityId")).qb).as(
+					"community"
+				),
+			])
+			.where("stages.id", "=", stageId)
+	);
 
 const PubCreateForm = dynamic(
 	async () => {
@@ -109,13 +113,15 @@ const PubCreateForm = dynamic(
 
 export async function PubCreate({ communityId, stageId }: CreatePubProps) {
 	const query = stageId
-		? getStage(stageId)
+		? getStage(stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
-				// @ts-expect-error FIXME: I don't know how to fix this
+				// @ts-expect-error FIXME: I don't know how to fix this,
+				// not sure what the common type between EB and the DB is
 				db,
 				communityId
-			);
-	const result = await query.executeTakeFirstOrThrow();
+			).executeTakeFirstOrThrow();
+
+	const result = await query;
 
 	const { community, ...stage } = "communityId" in result ? result : { community: result };
 	const currentStage = "id" in stage ? stage : null;

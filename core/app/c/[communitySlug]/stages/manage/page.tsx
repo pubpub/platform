@@ -4,6 +4,8 @@ import "reactflow/dist/style.css";
 
 import { LocalStorageProvider } from "ui/hooks";
 
+import { createCacheTag, createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
+import { memoize } from "~/lib/server/cache/memoize";
 import { stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { StageEditor } from "./components/editor/StageEditor";
@@ -27,14 +29,26 @@ export default async function Page({ params, searchParams }: Props) {
 		return null;
 	}
 
-	const getCommunityStages = unstable_cache(
+	const getCommunityStages = memoize(
 		(communityId: string) =>
 			prisma.stage.findMany({
 				where: { communityId },
 				include: stageInclude,
 			}),
-		undefined,
-		{ tags: [`community-stages_${community.id}`] }
+		{
+			revalidateTags: createCommunityCacheTags(
+				[
+					"stages",
+					"pubs",
+					"PubsInStages",
+					"action_instances",
+					"move_constraint",
+					"permissions",
+					"integrations",
+				],
+				params.communitySlug
+			),
+		}
 	);
 
 	const stages = await getCommunityStages(community.id);

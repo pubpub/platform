@@ -18,6 +18,10 @@ export const env = createEnv({
 		ASSETS_REGION: z.string(),
 		ASSETS_UPLOAD_KEY: z.string(),
 		ASSETS_UPLOAD_SECRET_KEY: z.string(),
+		/**
+		 * Whether or not to verbosely log `memoize` cache hits and misses
+		 */
+		CACHE_LOG: z.boolean().optional(),
 		DATABASE_URL: z.string().url(),
 		JWT_SECRET: z.string(),
 		KYSELY_DEBUG: z.string().optional(),
