@@ -27,14 +27,60 @@ const Links = ({
 		<>
 			<NavLink
 				href={`${prefix}/pubs`}
-				text={"Pubs"}
+				text={"All Pubs"}
 				icon={<img src="/icons/pub.svg" alt="" />}
 			/>
+		</>
+	);
+};
+
+const ViewLinks = ({
+	prefix,
+	isAdmin,
+}: {
+	/* The community prefix, e.g. "/c/community-slug"
+	 */
+	prefix: string;
+	/* Whether the user is an admin */
+	isAdmin?: boolean;
+}) => {
+	return (
+		<>
+			{isAdmin && (
+				<NavLink
+					href={`${prefix}/activity/actions`}
+					text="Action Log"
+					icon={<Activity className="h-4 w-4" />}
+				/>
+			)}
+		</>
+	);
+};
+
+const ManageLinks = ({
+	prefix,
+	isAdmin,
+}: {
+	/* The community prefix, e.g. "/c/community-slug"
+	 */
+	prefix: string;
+	/* Whether the user is an admin */
+	isAdmin?: boolean;
+}) => {
+	return (
+		<>
 			<NavLink
 				href={`${prefix}/stages`}
-				text={"Stages"}
+				text={"Workflows"}
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
+			{isAdmin && (
+				<NavLink
+					href={`${prefix}/forms`}
+					text={"Forms"}
+					icon={<img src="/icons/form.svg" alt="" />}
+				/>
+			)}
 			<NavLink
 				href={`${prefix}/integrations`}
 				text={"Integrations"}
@@ -45,13 +91,6 @@ const Links = ({
 					href={`${prefix}/members`}
 					text={"Members"}
 					icon={<img src="/icons/members.svg" alt="" />}
-				/>
-			)}
-			{isAdmin && (
-				<NavLink
-					href={`${prefix}/activity/actions`}
-					text="Activity"
-					icon={<Activity className="h-4 w-4" />}
 				/>
 			)}
 		</>
@@ -109,6 +148,13 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 						<div className="flex-1">
 							<nav className="grid items-start pr-2 text-sm font-medium">
 								<Links prefix={prefix} isAdmin={isAdmin} />
+								{divider}
+								Views
+								<ViewLinks prefix={prefix} isAdmin={isAdmin} />
+							</nav>
+							<nav className="grid items-start pr-2 text-sm font-medium">
+								Manage
+								<ManageLinks prefix={prefix} isAdmin={isAdmin} />
 							</nav>
 						</div>
 					</div>
