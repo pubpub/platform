@@ -10,15 +10,15 @@ export async function middleware(request: NextRequest) {
 
 	if (!matched) {
 		request.cookies.delete(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
+		// TODO: Handle strange case where no community slug is found.
 		return NextResponse.next();
-		return NextResponse.redirect(new URL("/", request.url));
 	}
 	const communitySlug = matched[1] || matched[2];
 
 	if (!communitySlug) {
 		request.cookies.delete(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
+		// TODO: Handle strange case where no community slug is found.
 		return NextResponse.next();
-		//		return NextResponse.redirect(new URL("/", request.url));
 	}
 
 	const response = NextResponse.next();
@@ -30,7 +30,6 @@ export async function middleware(request: NextRequest) {
 	return response;
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
 	matcher: ["/c/:path*", "/api/v0/c/:path*"],
 };
