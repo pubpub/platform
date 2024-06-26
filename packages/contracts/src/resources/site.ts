@@ -29,19 +29,17 @@ const pubTypesSchema = z.object({
 const stagesSchema = z.record(z.unknown());
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
-	stageId: StagesId;
+	stageId?: StagesId;
 	children?: (Omit<CreatePubRequestBodyWithNulls, "stageId"> & { stageId?: StagesId })[];
 };
 
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
-	stageId: stagesIdSchema,
+	stageId: stagesIdSchema.optional(),
 });
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
 	CreatePubRequestBodyWithNullsWithStageId.extend({
-		children: z.lazy(() =>
-			CreatePubRequestBodyWithNullsWithStageId.partial({ stageId: true }).array().optional()
-		),
+		children: z.lazy(() => CreatePubRequestBodyWithNullsNew.array().optional()),
 	});
 
 const contract = initContract();

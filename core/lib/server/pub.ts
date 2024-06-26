@@ -25,6 +25,7 @@ import { NewPubs } from "~/kysely/types/public/Pubs";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
 import { ForbiddenError, NotFoundError } from "./errors";
 
 type PubValues = Record<string, JsonValue>;
@@ -119,31 +120,31 @@ const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
 
 // TODO: make this usable in a subquery, possibly by turning it into a view
 // Create a CTE ("children") with the pub's children and their values
-const withPubChildren = (
-	database: typeof db,
-	{
-		pubId,
-		pubIdRef,
-	}: {
-		pubId?: PubsId;
-		pubIdRef?: StringReference<Database, keyof Database>;
-	}
-) => {
-	const { ref } = database.dynamic;
+const withPubChildren = ({
+	pubId,
+	pubIdRef,
+	communityId,
+}: {
+	pubId?: PubsId;
+	pubIdRef?: StringReference<Database, keyof Database>;
+	communityId?: CommunitiesId;
+}) => {
+	const { ref } = db.dynamic;
 
-	return database.withRecursive("children", (qc) => {
+	return db.withRecursive("children", (qc) => {
 		return qc
 			.selectFrom("pubs")
-			.select(["id", "parentId"])
-			.select(pubValuesByRef("pubs.id"))
+			.select(["id", "parentId", pubValuesByRef("pubs.id")])
 			.$if(!!pubId, (qb) => qb.where("pubs.parentId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parentId", "=", ref(pubIdRef!)))
+			.$if(!!communityId, (qb) =>
+				qb.where("pubs.communityId", "=", communityId!).where("pubs.parentId", "is", null)
+			)
 			.unionAll((eb) => {
 				return eb
-					.selectFrom("children")
-					.innerJoin("pubs", "pubs.parentId", "children.id")
-					.select(["pubs.id", "pubs.parentId"])
-					.select(pubValuesByRef("pubs.id"));
+					.selectFrom("pubs")
+					.innerJoin("children", "pubs.parentId", "children.id")
+					.select(["pubs.id", "pubs.parentId", pubValuesByRef("pubs.id")]);
 			});
 	});
 };
@@ -168,31 +169,63 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 // These aliases are used to make sure the JSON object returned matches
 // the old prisma query's return value
 const pubColumns = [
-	"pubs.id",
-	"pubs.communityId",
-	"pubs.createdAt",
-	"pubs.parentId",
-	"pubs.pubTypeId",
-	"pubs.updatedAt",
+	"id",
+	"communityId",
+	"createdAt",
+	"parentId",
+	"pubTypeId",
+	"updatedAt",
+	"assigneeId",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
-export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	const pub = await withPubChildren({ pubId })
+export const getPubBase = (
+	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
+) =>
+	withPubChildren(props)
 		.selectFrom("pubs")
-		.where("pubs.id", "=", pubId)
-		.select(pubColumns)
-		.select(pubValuesByVal(pubId))
-		.select((eb) => pubAssignee(eb))
-		.$narrowType<{ values: PubValues }>()
-		.select((eb) =>
+		.select((eb) => [
+			...pubColumns,
+			pubAssignee(eb),
+			jsonArrayFrom(
+				eb
+					.selectFrom("PubsInStages")
+					.select(["PubsInStages.stageId as id"])
+					.whereRef("PubsInStages.pubId", "=", "pubs.id")
+			).as("stages"),
 			jsonArrayFrom(
 				eb
 					.selectFrom("children")
-					.select([...pubColumns, "children.values"])
+					.select((eb) => [
+						...pubColumns,
+						"children.values",
+						jsonArrayFrom(
+							eb
+								.selectFrom("PubsInStages")
+								.select(["PubsInStages.stageId as id"])
+								.whereRef("PubsInStages.pubId", "=", "children.id")
+						).as("stages"),
+					])
 					.$narrowType<{ values: PubValues }>()
-			).as("children")
-		)
-		.executeTakeFirst();
+			).as("children"),
+		])
+		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
+		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
+		.$narrowType<{ values: PubValues }>();
+
+export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+	const pub = await getPubBase({ pubId }).where("pubs.id", "=", pubId).executeTakeFirst();
+
+	if (!pub) {
+		throw PubNotFoundError;
+	}
+
+	return nestChildren(pub);
+};
+
+export const getPubCached = async (pubId: PubsId) => {
+	const pub = await autoCache(
+		getPubBase({ pubId }).where("pubs.id", "=", pubId)
+	).executeTakeFirst();
 
 	if (!pub) {
 		throw PubNotFoundError;
@@ -220,111 +253,25 @@ const GET_PUBS_DEFAULT = {
 	select: pubColumns,
 } as const;
 
+/**
+ * Get a nested array of pubs and their children
+ */
 export const getPubs = async (
 	communityId: CommunitiesId,
-	{
-		limit = GET_PUBS_DEFAULT.limit,
-		offset = GET_PUBS_DEFAULT.offset,
-		orderBy = GET_PUBS_DEFAULT.orderBy,
-		orderDirection = GET_PUBS_DEFAULT.orderDirection,
-	}: GetManyParams = GET_PUBS_DEFAULT
+	params: GetManyParams = GET_PUBS_DEFAULT
 ) => {
-	const pubber = await db
-		.withRecursive("pub_tree", (db) =>
-			db
-				.selectFrom("pubs")
-				.select((eb) => [
-					"id",
-					"parentId",
-					"assigneeId",
-					"communityId",
-					"pubTypeId",
-					"createdAt",
-					"updatedAt",
-					jsonArrayFrom(
-						eb
-							.selectFrom("PubsInStages")
-							.select("stageId as id")
-							.whereRef("PubsInStages.pubId", "=", "pubs.id")
-					).as("stages"),
-				])
-				.select(pubValuesByRef("pubs.id"))
-				.where("pubs.parentId", "is", null)
-				.where("pubs.communityId", "=", communityId)
-				.unionAll((eb) =>
-					eb
-						.selectFrom("pubs as p")
-						.select((eb) => [
-							"p.id",
-							"p.parentId",
-							"p.assigneeId",
-							"p.communityId",
-							"p.pubTypeId",
-							"p.createdAt",
-							"p.updatedAt",
-							jsonArrayFrom(
-								eb
-									.selectFrom("PubsInStages")
-									.select("stageId as id")
-									.whereRef("PubsInStages.pubId", "=", "p.id")
-							).as("stages"),
-						])
-						.innerJoin("pub_tree as pt", "p.parentId", "pt.id")
-						// FIXME: Fix the pubValuesByRef subquery types
-						.select(pubValuesByRef("p.id" as any))
-				)
-		)
-		.selectFrom("pub_tree")
-		.limit(limit)
-		.offset(offset)
-		.orderBy(orderBy, orderDirection)
-		.select((eb) => [
-			"pub_tree.id",
-			"pub_tree.parentId",
-			"pub_tree.assigneeId",
-			"pub_tree.communityId",
-			"pub_tree.pubTypeId",
-			"pub_tree.createdAt",
-			"pub_tree.updatedAt",
-			"pub_tree.values",
-			"pub_tree.stages",
-			jsonArrayFrom(
-				eb
-					.selectFrom("pub_tree as pt2")
-					.selectAll()
-					.whereRef("pt2.parentId", "=", "pub_tree.id")
-			).as("children"),
-		])
-		.where("pub_tree.parentId", "is", null)
-		.execute();
+	const { limit, offset, orderBy, orderDirection } = { ...GET_PUBS_DEFAULT, ...params };
 
-	return pubber;
-};
+	const pubs = await autoCache(
+		getPubBase({ communityId })
+			.where("pubs.communityId", "=", communityId)
+			.where("pubs.parentId", "is", null)
+			.limit(limit)
+			.offset(offset)
+			.orderBy(orderBy, orderDirection)
+	).execute();
 
-export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	const pub = await autoCache(
-		withPubChildren({ pubId })
-			.selectFrom("pubs")
-			.where("pubs.id", "=", pubId)
-			.select(pubColumns)
-			.select(pubValuesByVal(pubId))
-			.select((eb) => pubAssignee(eb))
-			.$narrowType<{ values: PubValues }>()
-			.select((eb) =>
-				jsonArrayFrom(
-					eb
-						.selectFrom("children")
-						.select([...pubColumns, "children.values"])
-						.$narrowType<{ values: PubValues }>()
-				).as("children")
-			)
-	).executeTakeFirst();
-
-	if (!pub) {
-		throw PubNotFoundError;
-	}
-
-	return nestChildren(pub);
+	return pubs.map(nestChildren);
 };
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
@@ -547,16 +494,17 @@ export const createPubRecursiveNew = async ({
 	 * Could maybe be CTE
 	 */
 	const result = await maybeWithTrx(trx, async (trx) => {
-		const newPub = await trx
-			.insertInto("pubs")
-			.values({
-				communityId: communityId,
-				pubTypeId: body.pubTypeId as PubTypesId,
-				assigneeId: body.assigneeId as UsersId,
-				...(parent && { parentId: parentId as PubsId }),
-			})
-			.returningAll()
-			.executeTakeFirstOrThrow();
+		const newPub = await autoRevalidate(
+			trx
+				.insertInto("pubs")
+				.values({
+					communityId: communityId,
+					pubTypeId: body.pubTypeId as PubTypesId,
+					assigneeId: body.assigneeId as UsersId,
+					...(parent && { parentId: parentId as PubsId }),
+				})
+				.returningAll()
+		).executeTakeFirstOrThrow();
 
 		if (stageId) {
 			await trx
@@ -579,7 +527,7 @@ export const createPubRecursiveNew = async ({
 				}))
 			)
 			.returningAll()
-			.executeTakeFirstOrThrow();
+			.execute();
 
 		if (!body.children) {
 			return {
@@ -736,8 +684,8 @@ export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
 	).as("fields"),
 ]);
 
-export const getPubType = async (pubTypeId: PubTypesId) =>
-	autoCache(getPubTypeBase.where("pub_types.id", "=", pubTypeId)).executeTakeFirst();
+export const getPubType = (pubTypeId: PubTypesId) =>
+	autoCache(getPubTypeBase.where("pub_types.id", "=", pubTypeId));
 
 export const getPubTypesForCommunity = async (
 	communityId: CommunitiesId,

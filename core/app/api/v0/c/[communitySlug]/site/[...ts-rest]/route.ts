@@ -19,6 +19,7 @@ import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import {
 	createPubRecursiveNew,
 	getPub,
+	getPubCached,
 	getPubs,
 	getPubType,
 	getPubTypesForCommunity,
@@ -123,7 +124,7 @@ const handler = createNextHandler(
 				await checkAuthorization(ApiAccessScope.pub, ApiAccessType.read);
 				const { pubId } = req.params;
 
-				const pub = await getPub(pubId as PubsId);
+				const pub = await getPubCached(pubId as PubsId);
 
 				return {
 					status: 200,
@@ -173,7 +174,9 @@ const handler = createNextHandler(
 			get: async (req) => {
 				await checkAuthorization(ApiAccessScope.pubType, ApiAccessType.read);
 
-				const pubType = await getPubType(req.params.pubTypeId as PubTypesId);
+				const pubType = await getPubType(
+					req.params.pubTypeId as PubTypesId
+				).executeTakeFirst();
 
 				if (!pubType) {
 					throw new NotFoundError("No pub type found");
