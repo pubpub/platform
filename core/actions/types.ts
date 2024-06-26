@@ -184,4 +184,4 @@ export type ConfigOf<T extends Action> =
 export type ActionInstanceOf<T extends Action> = {
 	id: string;
 	config: ConfigOf<T>;
-};
+	config?: ConfigOf<T>;
