@@ -1,8 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
-import Link from "next/link";
-
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
