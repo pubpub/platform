@@ -5,7 +5,14 @@ import { NextResponse } from "next/server";
 import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME } from "./lib/server/cache/constants";
 
 const communityRouteRegexp = /^\/c\/([^/]*?)(?:$|\/)|\/api\/v\d\/c\/([^/]*?)\//;
-export async function middleware(request: NextRequest) {
+
+/**
+ * if you are in /c/[communitySlug] or in /api/v0/c/[communitySlug],
+ * we add a `pubpub_community_slug=${communitySlug}` cookie.
+ * That way we can at any depth of server component/api route/server action
+ * use the communitySlug to tag or invalidate cached queries.
+ */
+const communitySlugMiddleware = async (request: NextRequest) => {
 	const matched = request.nextUrl.pathname.match(communityRouteRegexp);
 
 	if (!matched) {
@@ -27,6 +34,11 @@ export async function middleware(request: NextRequest) {
 		maxAge: 60 * 60 * 24,
 	});
 
+	return response;
+};
+
+export async function middleware(request: NextRequest) {
+	const response = await communitySlugMiddleware(request);
 	return response;
 }
 
