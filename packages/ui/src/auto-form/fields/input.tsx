@@ -5,7 +5,7 @@ import { Input } from "../../input";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
-import type { AutoFormInputComponentProps } from "../types";
+import { AutoFormInputComponentProps } from "../types";
 
 export default function AutoFormInput({
 	label,

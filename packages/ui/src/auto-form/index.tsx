@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { DefaultValues} from "react-hook-form";
-import { useForm, useFormContext, useFormState } from "react-hook-form";
-import type { z } from "zod";
+import { DefaultValues, useForm, useFormContext, useFormState } from "react-hook-form";
+import { z } from "zod";
 
 import { cn } from "utils";
 
@@ -12,9 +11,8 @@ import { Button } from "../button";
 import { Form, FormMessage } from "../form";
 import { Check, Loader2, X } from "../icon";
 import AutoFormObject from "./fields/object";
-import type { Dependency, FieldConfig } from "./types";
-import type { ZodObjectOrWrapped } from "./utils";
-import { getDefaultValues, getObjectFormSchema } from "./utils";
+import { Dependency, FieldConfig } from "./types";
+import { getDefaultValues, getObjectFormSchema, ZodObjectOrWrapped } from "./utils";
 
 export function AutoFormSubmit({
 	children,

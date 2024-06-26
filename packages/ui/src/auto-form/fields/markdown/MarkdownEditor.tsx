@@ -17,7 +17,7 @@ import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPl
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import type { EditorState } from "lexical";
+import { EditorState } from "lexical";
 
 import { cn } from "utils";
 
@@ -26,7 +26,7 @@ import { useTokenContext } from "../../../tokens";
 import AutoFormDescription from "../../common/description";
 import AutoFormLabel from "../../common/label";
 import AutoFormTooltip from "../../common/tooltip";
-import type { AutoFormInputComponentProps } from "../../types";
+import { AutoFormInputComponentProps } from "../../types";
 import { TokenNode } from "./TokenNode";
 import { TokenPlugin } from "./TokenPlugin";
 
