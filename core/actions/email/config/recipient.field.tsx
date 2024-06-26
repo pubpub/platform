@@ -2,17 +2,16 @@ import { defineActionFormFieldServerComponent } from "~/actions/_lib/custom-form
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";
 import { db } from "~/kysely/database";
 import { UsersId } from "~/kysely/types/public/Users";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { action } from "../action";
 
 const component = defineActionFormFieldServerComponent(
 	action,
 	"config",
 	async ({ pageContext, actionInstance, communityId }) => {
-		const community = await db
-			.selectFrom("communities")
-			.selectAll()
-			.where("id", "=", communityId)
-			.executeTakeFirstOrThrow();
+		const community = await autoCache(
+			db.selectFrom("communities").selectAll().where("id", "=", communityId)
+		).executeTakeFirstOrThrow();
 
 		const queryParamName = `recipient-${actionInstance.id}`;
 		const query = pageContext.searchParams?.[queryParamName] as string | undefined;

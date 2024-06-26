@@ -1,6 +1,7 @@
 import { db } from "~/kysely/database";
 import { Communities } from "~/kysely/types/public/Communities";
 import { Users, UsersId } from "~/kysely/types/public/Users";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { UserSelectClient } from "./UserSelectClient";
 
 type Props = {
@@ -29,7 +30,9 @@ export async function UserSelectServer({
 	let user: Users | undefined;
 
 	if (value !== undefined) {
-		user = await db.selectFrom("users").selectAll().where("id", "=", value).executeTakeFirst();
+		user = await autoCache(
+			db.selectFrom("users").selectAll().where("id", "=", value)
+		).executeTakeFirst();
 	}
 
 	if (!Boolean(query) && user === undefined) {
@@ -44,12 +47,9 @@ export async function UserSelectServer({
 		);
 	}
 
-	const users = await db
-		.selectFrom("users")
-		.selectAll()
-		.where("email", "ilike", `${query}%`)
-		.limit(10)
-		.execute();
+	const users = await autoCache(
+		db.selectFrom("users").selectAll().where("email", "ilike", `${query}%`).limit(10)
+	).execute();
 
 	return (
 		<UserSelectClient
