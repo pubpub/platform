@@ -303,14 +303,11 @@ export const removePub = defineServerAction(async function removePub({
 	}
 
 	try {
-		const guy = await autoRevalidate(
-			db.deleteFrom("pubs").where("pubs.id", "=", pubId).returningAll()
-		).executeTakeFirst();
+		await autoRevalidate(db.deleteFrom("pubs").where("pubs.id", "=", pubId)).executeTakeFirst();
 
 		if (path) {
 			revalidatePath(path);
 		}
-		// revalidateTag(`community-stages_${pub.community_id}`);
 
 		return {
 			success: true,
