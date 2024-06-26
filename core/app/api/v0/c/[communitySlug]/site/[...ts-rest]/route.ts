@@ -4,14 +4,14 @@ import { object, z } from "zod";
 
 import { api } from "contracts";
 
+import type {
+	ApiAccessPermission,
+	ApiAccessPermissionConstraintsInput,
+} from "~/kysely/ApiAccessToken";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import type { StagesId } from "~/kysely/types/public/Stages";
-import type {
-	ApiAccessPermission,
-	ApiAccessPermissionConstraintsInput,
-} from "~/kysely/types/types";
 import { getStage } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
 import { db } from "~/kysely/database";
 import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";

@@ -5,11 +5,11 @@ import { randomUUID } from "crypto";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 import type { CreateTokenFormSchema } from "./CreateTokenForm";
+import type { NewApiAccessPermissions } from "~/kysely/types/public/ApiAccessPermissions";
+import type ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
+import type ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
-import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
-import ApiAccessType from "~/kysely/types/public/ApiAccessType";
-import { NewApiAccessPermissions } from "~/kysely/types/src/public/ApiAccessPermissions";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -25,7 +25,7 @@ export const createToken = defineServerAction(async function createToken(
 		throw new Error("You must be a super admin to create tokens");
 	}
 
-	const communitySlug = await getCommunitySlug();
+	const communitySlug = getCommunitySlug();
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {

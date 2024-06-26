@@ -7,7 +7,8 @@ import { MultiSelect } from "ui/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { CreateTokenForm, CreateTokenFormContext } from "./CreateTokenForm";
-import type { ApiAccessPermissionConstraintsConfig } from "~/kysely/types/types";
+import type { ApiAccessPermissionConstraintsConfig } from "~/kysely/ApiAccessToken";
+import type ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 
 type PermissionContraintMap = {
@@ -101,7 +102,7 @@ export const PermissionField = ({
 	context,
 }: {
 	form: CreateTokenForm;
-	name: string;
+	name: ApiAccessScope;
 	prettyName: string;
 	context: CreateTokenFormContext;
 }) => {

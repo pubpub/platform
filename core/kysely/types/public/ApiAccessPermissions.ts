@@ -3,7 +3,7 @@
 
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
-import { type ApiAccessPermissionConstraints } from "../types";
+import { type ApiAccessPermissionConstraints } from "../../ApiAccessToken";
 import { type default as ApiAccessScope } from "./ApiAccessScope";
 import { type ApiAccessTokensId } from "./ApiAccessTokens";
 import { type default as ApiAccessType } from "./ApiAccessType";

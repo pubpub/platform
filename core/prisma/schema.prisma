@@ -124,6 +124,7 @@ model PubFieldSchema {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
+  // This must be a dereferenced JSONSchema. We should find a way to validate.
   schema    Json /// @type(JSONSchemaType<any>, 'ajv', true, false, true)
   PubFields PubField[]
 
@@ -472,7 +473,7 @@ model ApiAccessPermission {
   apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id])
   scope            ApiAccessScope
   accessType       ApiAccessType
-  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)
+  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../../ApiAccessToken', true, false, true)
 
   // this ensures that only one permission per token and scope and access type exists
   @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")

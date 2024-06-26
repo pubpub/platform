@@ -1,4 +1,4 @@
-import type { ErrorLogEvent, LogEvent } from "kysely";
+import type { LogEvent } from "kysely";
 
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";

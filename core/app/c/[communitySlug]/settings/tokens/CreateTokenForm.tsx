@@ -14,17 +14,35 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 
-import type { Stages } from "~/kysely/types/public/Stages";
+// import { apiAccessTokensInitializerSchema } from "~/kysely/types/public/ApiAccessTokens";
+import type { ApiAccessPermissionConstraintsInput } from "~/kysely/ApiAccessToken";
+import type { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { Stages, StagesId } from "~/kysely/types/public/Stages";
+import type { UsersId } from "~/kysely/types/public/Users";
 import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
-import { apiAccessTokensInitializerSchema } from "~/kysely/types/public/ApiAccessTokens";
-import { stagesIdSchema } from "~/kysely/types/public/Stages";
-import {
-	ApiAccessPermissionConstraintsConfig,
-	ApiAccessPermissionConstraintsInput,
-} from "~/kysely/types/types";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { PermissionField } from "./PermissionField";
+
+const stagesIdSchema = z.string().uuid() as unknown as z.Schema<StagesId>;
+const communitiesIdSchema = z.string().uuid() as unknown as z.Schema<CommunitiesId>;
+const usersIdSchema = z.string().uuid() as unknown as z.Schema<UsersId>;
+const apiAccessTokensIdSchema = z.string().uuid() as unknown as z.Schema<ApiAccessTokensId>;
+
+export const apiAccessTokensInitializerSchema = z.object({
+	id: apiAccessTokensIdSchema.optional(),
+	token: z.string(),
+	name: z.string(),
+	description: z.string().optional().nullable(),
+	communityId: communitiesIdSchema,
+	expiration: z.date(),
+	revoked: z.boolean().optional(),
+	issuedById: usersIdSchema,
+	issuedAt: z.date().optional(),
+	usageLimit: z.number().optional().nullable(),
+	usages: z.number().optional(),
+});
 
 export const permissionsSchema = z.object({
 	[ApiAccessScope.community]: z.object({
