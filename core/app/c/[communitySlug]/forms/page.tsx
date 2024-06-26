@@ -1,12 +1,14 @@
 import React from "react";
 
-import { ClipboardPenLine, Plus } from "ui/icon";
+import { ClipboardPenLine } from "ui/icon";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { getTypes } from "~/lib/server/pubtype";
 import { FormTable } from "./FormTable";
+import { NewFormButton } from "./NewFormButton";
 
-export default async function Page() {
+export default async function Page({ params: { communitySlug } }) {
 	const loginData = await getLoginData();
 
 	if (!loginData) {
@@ -37,6 +39,8 @@ export default async function Page() {
 		};
 	});
 
+	const pubTypes = await getTypes(communitySlug).execute();
+
 	return (
 		<div className="absolute inset-0 w-full">
 			<div className="flex h-full flex-col">
@@ -51,6 +55,7 @@ export default async function Page() {
 							Forms
 						</div>
 					</h1>
+					<NewFormButton pubTypes={pubTypes} />
 				</header>
 				<div className="h-full flex-1 overflow-auto">
 					{forms.length === 0 ? (
@@ -63,6 +68,7 @@ export default async function Page() {
 									Forms are templates of questions used to collect information
 									from users via a response submission process.
 								</p>
+								<NewFormButton pubTypes={pubTypes} />
 							</div>
 						</div>
 					) : (

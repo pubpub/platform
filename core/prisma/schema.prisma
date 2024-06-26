@@ -406,7 +406,8 @@ enum Event {
 
 model Form {
   id        String      @id @default(dbgenerated("gen_random_uuid()"))
-  name      String
+  name      String      @unique
+  slug      String      @unique
   pubType   PubType     @relation(fields: [pubTypeId], references: [id])
   pubTypeId String
   inputs    FormInput[]

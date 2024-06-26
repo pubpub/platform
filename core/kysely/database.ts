@@ -2,6 +2,7 @@ import type { LogEvent } from "kysely";
 
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
+import { z } from "zod";
 
 import { logger } from "logger";
 
@@ -28,3 +29,18 @@ export const db = new Kysely<Database>({
 	dialect,
 	log: kyselyLogger,
 });
+
+const PostgresError = z.object({
+	code: z.string(),
+	detail: z.string(),
+	table: z.string(),
+	schema: z.string(),
+	constraint: z.string().optional(),
+});
+type PostgresError = z.infer<typeof PostgresError>;
+
+export const isPostgresError = (error: unknown): error is PostgresError =>
+	PostgresError.safeParse(error).success;
+
+export const isUniqueConstraintError = (error: unknown) =>
+	isPostgresError(error) && error.code === "23505";

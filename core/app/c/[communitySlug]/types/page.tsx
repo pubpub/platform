@@ -8,6 +8,7 @@ import type { PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { getTypes } from "~/lib/server/pubtype";
 import { CreatePubType } from "./CreatePubType";
 import { FieldsProvider } from "./FieldsProvider";
 import TypeList from "./TypeList";
@@ -39,29 +40,6 @@ const getFields = async () =>
 			])
 	).executeTakeFirstOrThrow();
 
-const getTypes = async (communitySlug: string) =>
-	await autoCache(
-		db
-			.selectFrom("pub_types")
-			.innerJoin("communities", "communities.id", "pub_types.communityId")
-			.where("communities.slug", "=", communitySlug)
-			.select([
-				"pub_types.id",
-				"pub_types.name",
-				"pub_types.description",
-				(eb) =>
-					eb
-						.selectFrom("_PubFieldToPubType")
-						.whereRef("B", "=", "pub_types.id")
-						.select((eb) =>
-							eb.fn.coalesce(eb.fn.agg("array_agg", ["A"]), sql`'{}'`).as("fields")
-						)
-						.as("fields"),
-			])
-			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
-			.$narrowType<{ fields: PubFieldsId[] }>()
-	).execute();
-
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
@@ -70,7 +48,7 @@ export default async function Page({ params }: Props) {
 		return notFound();
 	}
 
-	const types = await getTypes(params.communitySlug);
+	const types = await getTypes(params.communitySlug).execute();
 	const { fields } = await getFields();
 
 	if (!types || !fields) {
