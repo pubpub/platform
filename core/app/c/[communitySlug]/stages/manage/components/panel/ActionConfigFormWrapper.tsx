@@ -1,8 +1,8 @@
-import type { ActionInstances } from "db/public/ActionInstances";
-import type { CommunitiesId } from "db/public/Communities";
-import type { StagesId } from "db/public/Stages";
 import { logger } from "logger";
 
+import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
 import { ActionConfigForm } from "./ActionConfigForm";
 

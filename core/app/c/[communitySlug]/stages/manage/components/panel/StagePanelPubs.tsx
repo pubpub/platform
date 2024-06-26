@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
 import { Card, CardContent } from "ui/card";
 
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";

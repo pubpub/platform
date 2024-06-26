@@ -1,11 +1,11 @@
 import React, { Fragment } from "react";
 import Link from "next/link";
 
-import type { PubsId } from "db/public/Pubs";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { cn } from "utils";
 
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubPayload } from "~/lib/types";
 import IntegrationActions from "./IntegrationActions";
 import { PubDropDown } from "./PubCRUD/PubDropDown";

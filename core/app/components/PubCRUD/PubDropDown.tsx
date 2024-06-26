@@ -1,4 +1,3 @@
-import type { PubsId } from "db/public/Pubs";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -8,6 +7,7 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import { PubRemoveButton } from "./PubRemoveButton";
 import { PubUpdateButton } from "./PubUpdateButton";
 

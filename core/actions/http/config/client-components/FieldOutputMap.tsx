@@ -2,8 +2,6 @@
 
 import { useFieldArray } from "react-hook-form";
 
-import type { PubFieldsId } from "db/public/PubFields";
-import type { PubFieldSchemaId } from "db/public/PubFieldSchema";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
 import { Button } from "ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -13,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
+import type { PubFieldsId } from "~/kysely/types/public/PubFields";
+import type { PubFieldSchemaId } from "~/kysely/types/public/PubFieldSchema";
 import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField";
 import { action } from "../../action";
 

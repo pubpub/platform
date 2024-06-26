@@ -4,13 +4,12 @@ import { randomUUID } from "crypto";
 
 import { revalidatePath, revalidateTag } from "next/cache";
 
-import type { UsersId } from "db/public/Users";
-import ApiAccessScope from "db/public/ApiAccessScope";
-import ApiAccessType from "db/public/ApiAccessType";
-import { NewApiAccessPermissions } from "db/src/public/ApiAccessPermissions";
-
 import type { CreateTokenFormSchema } from "./CreateTokenForm";
+import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
+import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
+import ApiAccessType from "~/kysely/types/public/ApiAccessType";
+import { NewApiAccessPermissions } from "~/kysely/types/src/public/ApiAccessPermissions";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";

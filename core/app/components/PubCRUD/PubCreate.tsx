@@ -4,10 +4,9 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type PublicSchema from "db/public/PublicSchema";
-import type { StagesId } from "db/public/Stages";
-
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type PublicSchema from "~/kysely/types/public/PublicSchema";
+import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 

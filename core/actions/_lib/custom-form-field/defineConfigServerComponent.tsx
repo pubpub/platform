@@ -1,11 +1,10 @@
 import type React from "react";
 
-import type { ActionInstances } from "db/public/ActionInstances";
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
-
 import type { Action } from "../../types";
+import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
 
 export type ActionFormFieldBaseProps<Type extends "config" | "params"> = {
 	actionInstance: ActionInstances;

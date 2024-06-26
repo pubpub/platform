@@ -10,12 +10,11 @@ import { env } from "../env/env.mjs";
 
 import "date-fns";
 
-import type { ActionInstancesId } from "db/public/ActionInstances";
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
-import Event from "db/public/Event";
-
 import type { Interval } from "~/actions/_lib/rules";
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
+import Event from "~/kysely/types/public/Event";
 import { addDuration } from "../dates";
 
 export const getScheduledActionJobKey = ({

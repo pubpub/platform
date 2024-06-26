@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-import Event from "db/public/Event";
-
 import { defineRule } from "~/actions/types";
+import Event from "~/kysely/types/public/Event";
 
 export const intervals = ["minute", "hour", "day", "week", "month", "year"] as const;
 export type Interval = (typeof intervals)[number];

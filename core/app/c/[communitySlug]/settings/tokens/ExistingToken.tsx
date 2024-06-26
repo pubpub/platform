@@ -1,11 +1,11 @@
-import { ApiAccessTokens } from "db/public/ApiAccessTokens";
-import { ApiAccessPermission } from "db/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
 import { Button } from "ui/button";
 import { Card } from "ui/card";
 import { ChevronDown, ChevronUp, Trash } from "ui/icon";
 
 import type { FullApiAccessToken } from "~/lib/server/apiAccessTokens";
+import { ApiAccessTokens } from "~/kysely/types/public/ApiAccessTokens";
+import { ApiAccessPermission } from "~/kysely/types/types";
 
 export const ExistingToken = ({ token }: { token: FullApiAccessToken }) => {
 	return (

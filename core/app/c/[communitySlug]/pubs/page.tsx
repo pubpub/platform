@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
-import type { CommunitiesId } from "db/public/Communities";
-
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import { pubInclude, stageInclude } from "~/lib/types";

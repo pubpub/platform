@@ -71,7 +71,7 @@ After running `npx supabase start` the Supabase dashboard is accessible at `http
 
 The Prisma [Quickstart guide](https://www.prisma.io/docs/getting-started/quickstart) is how our prisma folder was initially created. That set of instructions has useful pointers for doing things like db migrations.
 
-The `db/seed.ts` file will initiate the database with a set of data. This seed is run using `npm run reset`. You will have to run this each time you stop and start supabase since doing so clears the database.
+The `~/kysely/types/seed.ts` file will initiate the database with a set of data. This seed is run using `npm run reset`. You will have to run this each time you stop and start supabase since doing so clears the database.
 
 Explore with `npm run prisma-studio`.
 

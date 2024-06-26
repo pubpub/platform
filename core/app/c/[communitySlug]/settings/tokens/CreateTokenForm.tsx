@@ -5,14 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { Stages } from "db/public/Stages";
-import ApiAccessScope from "db/public/ApiAccessScope";
-import { apiAccessTokensInitializerSchema } from "db/public/ApiAccessTokens";
-import { stagesIdSchema } from "db/public/Stages";
-import {
-	ApiAccessPermissionConstraintsConfig,
-	ApiAccessPermissionConstraintsInput,
-} from "db/types";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
 import { CopyButton } from "ui/copy-button";
@@ -22,6 +14,14 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 
+import type { Stages } from "~/kysely/types/public/Stages";
+import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
+import { apiAccessTokensInitializerSchema } from "~/kysely/types/public/ApiAccessTokens";
+import { stagesIdSchema } from "~/kysely/types/public/Stages";
+import {
+	ApiAccessPermissionConstraintsConfig,
+	ApiAccessPermissionConstraintsInput,
+} from "~/kysely/types/types";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { PermissionField } from "./PermissionField";

@@ -1,7 +1,5 @@
 "use client";
 
-import type { ApiAccessPermissionConstraintsConfig } from "db/types";
-import ApiAccessType from "db/public/ApiAccessType";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -9,6 +7,8 @@ import { MultiSelect } from "ui/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { CreateTokenForm, CreateTokenFormContext } from "./CreateTokenForm";
+import type { ApiAccessPermissionConstraintsConfig } from "~/kysely/types/types";
+import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 
 type PermissionContraintMap = {
 	[K in keyof ApiAccessPermissionConstraintsConfig as ApiAccessPermissionConstraintsConfig[K] extends never

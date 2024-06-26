@@ -2,9 +2,8 @@
 
 import { revalidateTag } from "next/cache";
 
-import type { UsersId } from "db/public/Users";
-
 import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
+import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { findCommunityIdByPubId } from "~/lib/server/community";

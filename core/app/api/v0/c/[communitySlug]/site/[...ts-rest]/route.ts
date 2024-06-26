@@ -2,17 +2,20 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { object, z } from "zod";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { PubTypesId } from "db/public/PubTypes";
-import type { StagesId } from "db/public/Stages";
-import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
 import { api } from "contracts";
-import ApiAccessScope from "db/public/ApiAccessScope";
-import ApiAccessType from "db/public/ApiAccessType";
 
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import type { StagesId } from "~/kysely/types/public/Stages";
+import type {
+	ApiAccessPermission,
+	ApiAccessPermissionConstraintsInput,
+} from "~/kysely/types/types";
 import { getStage } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
 import { db } from "~/kysely/database";
+import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
+import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import {
 	createPubRecursiveNew,
 	getPub,

@@ -6,19 +6,19 @@ import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { GetPubResponseBody } from "contracts";
-import type Action from "db/public/Action";
-import type { ActionInstancesId } from "db/public/ActionInstances";
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
-import type { UsersId } from "db/public/Users";
-import ActionRunStatus from "db/public/ActionRunStatus";
-import { CommunitiesId } from "db/public/Communities";
-import Event from "db/public/Event";
 import { logger } from "logger";
 
 import type { ActionSuccess } from "../types";
+import type Action from "~/kysely/types/public/Action";
+import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagesId } from "~/kysely/types/public/Stages";
+import type { UsersId } from "~/kysely/types/public/Users";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
+import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
+import Event from "~/kysely/types/public/Event";
 import { getPub } from "~/lib/server";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";

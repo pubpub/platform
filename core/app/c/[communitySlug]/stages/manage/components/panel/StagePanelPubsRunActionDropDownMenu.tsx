@@ -1,12 +1,12 @@
 import React from "react";
 
-import type { ActionInstances } from "db/public/ActionInstances";
-import type { Stages } from "db/public/Stages";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
 import type { StagePub } from "./queries";
+import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
+import type { Stages } from "~/kysely/types/public/Stages";
 import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
 import { StagePanelPubsRunActionDropDownMenuItem } from "./StagePanelPubsRunActionDropDownMenuItem";
 

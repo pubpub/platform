@@ -1,8 +1,7 @@
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { CommunitiesId } from "db/public/Communities";
-
 import { db } from "~/kysely/database";
+import { CommunitiesId } from "~/kysely/types/public/Communities";
 
 const getTokenBase = db
 	.selectFrom("api_access_tokens")

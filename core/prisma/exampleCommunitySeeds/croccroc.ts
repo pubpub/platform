@@ -1,9 +1,9 @@
 import { faker } from "@faker-js/faker";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubTypesId } from "db/public/PubTypes";
 import { logger } from "logger";
 
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { registerCorePubField } from "~/actions/_lib/init";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";

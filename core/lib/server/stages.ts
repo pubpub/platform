@@ -1,10 +1,9 @@
 import { StringReference } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "db/public/Communities";
-import Database from "db/Database";
-
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { db } from "~/kysely/database";
+import Database from "~/kysely/types/Database";
 import { pubValuesByRef } from "./pub";
 
 // TODO: Finish making this output match the type of getCommunityStages in

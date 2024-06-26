@@ -2,8 +2,6 @@
 
 import React, { Suspense, useCallback, useTransition } from "react";
 
-import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
-import type { PubsId } from "db/public/Pubs";
 import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
@@ -14,6 +12,8 @@ import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import type { StagePub } from "./queries";
+import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
