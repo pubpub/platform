@@ -28,48 +28,55 @@ const makeOptionFromUser = (user: Users): Option => ({
 });
 
 type Props = {
+	community: Communities;
+	fieldLabel: string;
+	fieldName: string;
+	queryParamName: string;
 	user?: Users;
 	users: Users[];
-	fieldName: string;
-	fieldLabel: string;
-	community: Communities;
 };
 
-export function UserSelectClient({ user, users, fieldName, fieldLabel, community }: Props) {
+export function UserSelectClient({
+	community,
+	fieldLabel,
+	fieldName,
+	queryParamName,
+	user,
+	users,
+}: Props) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
-	const previouslyFetchedUsers = useRef<Map<string, Users>>();
-
-	useEffect(() => {
-		if (previouslyFetchedUsers.current === undefined) {
-			previouslyFetchedUsers.current = new Map(users.map((user) => [user.id, user]));
-		} else {
-			for (const user of users) {
-				previouslyFetchedUsers.current.set(user.id, user);
-			}
-		}
-	}, [users]);
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
 	const [addUserButtonKey, setAddUserButtonKey] = useState(0);
-	const resetAddUserButton = useCallback(() => setAddUserButtonKey((x) => x + 1), []);
+	const resetAddUserButton = useCallback(() => {
+		// clear search param
+		const newParams = new URLSearchParams(params);
+		newParams.delete(queryParamName);
+		router.replace(`${pathname}?${newParams.toString()}`);
+
+		setAddUserButtonKey((x) => x + 1);
+	}, []);
 
 	// User selection state/logic.
 	const [selectedUser, setSelectedUser] = useState(user);
-	const selectUserOption = useCallback((option: Option) => {
-		const user = previouslyFetchedUsers.current?.get(option.value);
-		if (user) {
-			setSelectedUser(user);
-		}
-	}, []);
+	const selectUserOption = useCallback(
+		(option: Option) => {
+			const user = users.find((user) => user.id === option.value);
+			if (user) {
+				setSelectedUser(user);
+			}
+		},
+		[users]
+	);
 
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
 	const onInputValueChange = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
-		newParams.set("query", value);
+		newParams.set(queryParamName, value);
 		router.replace(`${pathname}?${newParams.toString()}`);
 		setInputValue(value);
 	}, 400);

@@ -4,14 +4,28 @@ import { Users, UsersId } from "~/kysely/types/public/Users";
 import { UserSelectClient } from "./UserSelectClient";
 
 type Props = {
-	query?: string;
-	value?: UsersId;
-	fieldName: string;
-	fieldLabel: string;
 	community: Communities;
+	fieldLabel: string;
+	fieldName: string;
+	query?: string;
+	/**
+	 * unique name of the query parameter that holds the to-be-looked-up user's email address
+	 *
+	 * Necessary, because otherwise having multiple instances of the same component on the same page
+	 * would result in the same query parameter being used for all instances.
+	 */
+	queryParamName: string;
+	value?: UsersId;
 };
 
-export async function UserSelectServer({ query, value, fieldName, fieldLabel, community }: Props) {
+export async function UserSelectServer({
+	community,
+	fieldLabel,
+	fieldName,
+	query,
+	queryParamName,
+	value,
+}: Props) {
 	let user: Users | undefined;
 
 	if (value !== undefined) {
@@ -21,10 +35,11 @@ export async function UserSelectServer({ query, value, fieldName, fieldLabel, co
 	if (!Boolean(query) && user === undefined) {
 		return (
 			<UserSelectClient
-				users={[]}
-				fieldName={fieldName}
-				fieldLabel={fieldLabel}
 				community={community}
+				fieldLabel={fieldLabel}
+				fieldName={fieldName}
+				queryParamName={queryParamName}
+				users={[]}
 			/>
 		);
 	}
@@ -38,11 +53,12 @@ export async function UserSelectServer({ query, value, fieldName, fieldLabel, co
 
 	return (
 		<UserSelectClient
+			community={community}
+			fieldLabel={fieldLabel}
+			fieldName={fieldName}
+			queryParamName={queryParamName}
 			user={user}
 			users={users}
-			fieldName={fieldName}
-			fieldLabel={fieldLabel}
-			community={community}
 		/>
 	);
 }

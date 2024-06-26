@@ -14,13 +14,17 @@ const component = defineActionFormFieldServerComponent(
 			.where("id", "=", communityId)
 			.executeTakeFirstOrThrow();
 
+		const queryParamName = `recipient-${actionInstance.id}`;
+		const query = pageContext.searchParams?.[queryParamName] as string | undefined;
+
 		return (
 			<UserSelectServer
 				fieldName="recipient"
 				fieldLabel="Recipient email address"
 				community={community}
-				query={pageContext.searchParams?.query as string | undefined}
 				value={actionInstance.config?.recipient as UsersId}
+				query={query}
+				queryParamName={queryParamName}
 			/>
 		);
 	}
