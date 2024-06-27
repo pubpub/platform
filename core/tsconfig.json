@@ -2,6 +2,7 @@
 	"extends": "tsconfig/nextjs.json",
 	"compilerOptions": {
 		"moduleResolution": "Bundler",
+		"verbatimModuleSyntax": true,
 		"allowImportingTsExtensions": true,
 		"noErrorTruncation": true,
 		"plugins": [

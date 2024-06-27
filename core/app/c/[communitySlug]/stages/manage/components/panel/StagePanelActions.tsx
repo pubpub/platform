@@ -3,10 +3,10 @@ import { Suspense } from "react";
 import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions } from "~/lib/db/queries";
 import { addAction, deleteAction } from "../../actions";
-import { ActionConfigFormWrapper } from "./ActionConfigFormWrapper";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
 

@@ -1,16 +1,12 @@
 import type { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import type { AnySchema, JSONSchemaType } from "ajv";
 
-import { Button } from "ui/button";
 import { CardContent, CardHeader, CardTitle } from "ui/card";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { Separator } from "ui/separator";
 import { cn } from "utils";
 
-import type { StagePub } from "~/lib/db/queries";
 import type { FileUpload } from "~/lib/fields/fileUpload";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { getStage, getStageActions } from "~/lib/db/queries";
+import { FileUploadPreview } from "./FileUpload";
 
 interface PubFieldWithValue extends PubField {
 	schema: PubFieldSchema | null;
@@ -19,43 +15,10 @@ interface PubValueWithFieldAndSchema extends PubValue {
 	field: PubFieldWithValue;
 }
 
-export function FileUploadPreview({ files }: { files: FileUpload }) {
-	return (
-		<ul>
-			{files.map((file) => {
-				return (
-					<li key={file.fileName}>
-						<HoverCard>
-							<HoverCardTrigger asChild>
-								<Button variant="link">{file.fileName}</Button>
-							</HoverCardTrigger>
-							<HoverCardContent className=" m-auto w-auto space-y-1">
-								<h4 className="text-sm font-semibold">
-									{file.fileName} <br />
-								</h4>
-								<p className="pb-2 text-sm">
-									The file is <strong>{file.fileSize}</strong> bytes in size. Its
-									MIME type is <strong>{file.fileType}</strong>.
-								</p>
-								<Button variant="secondary">
-									<a target="_blank" href={file.fileUploadUrl}>
-										Open file in new tab
-									</a>
-								</Button>
-							</HoverCardContent>
-						</HoverCard>
-					</li>
-				);
-			})}
-		</ul>
-	);
-}
-
 export function recursivelyGetScalarFields(
 	schema: JSONSchemaType<AnySchema>,
 	value: Prisma.JsonValue
 ) {
-	const fields: any[] = [];
 	if (schema.$id === "pubpub:fileUpload") {
 		return <FileUploadPreview files={value as FileUpload} />;
 	}
@@ -63,19 +26,16 @@ export function recursivelyGetScalarFields(
 	if (!schema.properties) {
 		switch (schema.type) {
 			case "boolean":
-				fields.push(<p>{JSON.stringify(value)}</p>);
-				break;
+				return <p>{JSON.stringify(value)}</p>;
 			case "string":
-				fields.push(<p>{value as string}</p>);
-				break;
+				return <p>{value as string}</p>;
 			default:
-				fields.push(<p>{JSON.stringify(value)}</p>);
-				break;
+				return <p>{JSON.stringify(value)}</p>;
 		}
 	} else {
 		const objectSchema = schema.properties as JSONSchemaType<AnySchema>;
-		for (const [fieldKey, fieldSchema] of Object.entries(objectSchema)) {
-			fields.push(
+		const fields = Object.entries(objectSchema).map(([fieldKey, fieldSchema]) => {
+			return (
 				<>
 					{fieldSchema.title && (
 						<CardHeader>
@@ -90,9 +50,9 @@ export function recursivelyGetScalarFields(
 					</CardContent>
 				</>
 			);
-		}
+		});
+		return fields;
 	}
-	return fields;
 }
 
 export function renderField(fieldValue: PubValueWithFieldAndSchema) {
@@ -100,7 +60,6 @@ export function renderField(fieldValue: PubValueWithFieldAndSchema) {
 		? (fieldValue.field.schema.schema as JSONSchemaType<AnySchema>)
 		: null;
 	const fieldTitle = (JSONSchema && JSONSchema.title) || fieldValue.field.name;
-	// if there's no schema we assume it's a string
 	const renderedField = JSONSchema
 		? recursivelyGetScalarFields(JSONSchema, fieldValue.value)
 		: fieldValue.value && fieldValue.value.toString();
@@ -113,9 +72,4 @@ export function renderField(fieldValue: PubValueWithFieldAndSchema) {
 			<CardContent>{renderedField}</CardContent>
 		</>
 	);
-}
-
-export async function ActionRunDropdown({ stageId, pub }: { stageId: string; pub: StagePub }) {
-	const [actions, stage] = await Promise.all([getStageActions(stageId), getStage(stageId)]);
-	return <PubsRunActionDropDownMenu actionInstances={actions} pub={pub} stage={stage!} />;
 }

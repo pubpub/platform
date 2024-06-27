@@ -1,6 +1,9 @@
+"use client";
+
 import type { ColumnDef } from "@tanstack/react-table";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Checkbox } from "ui/checkbox";
@@ -43,13 +46,22 @@ export const getPubChildrenTableColumns = () =>
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
+			cell: ({ row }) => {
+				const pathname = usePathname();
+				const path = pathname.split("/").slice(0, 4).join("/");
+				return (
+					<Link className="underline" href={`${path}/${row.original.id}`}>
+						{row.original.title}
+					</Link>
+				);
+			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Assginee" />,
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Assignee" />,
 			accessorKey: "assignee",
 		},
 		{
