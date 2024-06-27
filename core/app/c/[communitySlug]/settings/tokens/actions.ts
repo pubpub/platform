@@ -1,18 +1,13 @@
 "use server";
 
-import { randomUUID } from "crypto";
-
-import { revalidatePath, revalidateTag } from "next/cache";
-
 import type { CreateTokenFormSchema } from "./CreateTokenForm";
 import type { NewApiAccessPermissions } from "~/kysely/types/public/ApiAccessPermissions";
 import type ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
+import type { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
 import type ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import type { UsersId } from "~/kysely/types/public/Users";
-import { db } from "~/kysely/database";
-import { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
 import { getLoginData } from "~/lib/auth/loginData";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { createApiAccessToken, deleteApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -47,36 +42,16 @@ export const createToken = defineServerAction(async function createToken(
 				)
 	);
 
-	const token = randomUUID();
-
-	const newToken = await autoRevalidate(
-		db
-			.with("new_token", (db) =>
-				db
-					.insertInto("api_access_tokens")
-					.values({
-						token,
-						communityId: community.id,
-						name: data.name,
-						description: data.description,
-						expiration: data.expiration,
-						issuedById: loginData.id as UsersId,
-					})
-					.returning(["id", "token"])
-			)
-			.with("permissions", (db) =>
-				db.insertInto("api_access_permissions").values((eb) =>
-					permissions.map((permission) => ({
-						...permission,
-						apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
-					}))
-				)
-			)
-			.selectFrom("new_token")
-			.select("new_token.token")
-	).executeTakeFirstOrThrow();
-
-	//	revalidatePath(`/c/${communitySlug}/settings/tokens`);
+	const newToken = await createApiAccessToken({
+		token: {
+			communityId: community.id,
+			name: data.name,
+			description: data.description,
+			expiration: data.expiration,
+			issuedById: loginData.id as UsersId,
+		},
+		permissions,
+	}).executeTakeFirstOrThrow();
 
 	return { success: true, data: { token: newToken.token } };
 });
@@ -99,18 +74,5 @@ export const deleteToken = defineServerAction(async function deleteToken({
 		throw new Error("Community not found");
 	}
 
-	await autoRevalidate(
-		db
-			.with("token", (db) =>
-				db
-					.deleteFrom("api_access_tokens")
-					.where("id", "=", id)
-					.where("communityId", "=", community.id)
-			)
-			.with("permissions", (db) =>
-				db.deleteFrom("api_access_permissions").where("apiAccessTokenId", "=", id)
-			)
-			.deleteFrom("api_access_logs")
-			.where("accessTokenId", "=", id)
-	).execute();
+	await deleteApiAccessToken({ id }).execute();
 });

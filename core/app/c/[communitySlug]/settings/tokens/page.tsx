@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getTokensByCommunity } from "~/lib/server/apiAccessTokens";
+import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
 import { CreateTokenForm } from "./CreateTokenForm";
@@ -12,9 +12,10 @@ export default async function Page({ params }: { params: { communitySlug: string
 		return notFound();
 	}
 
-	const stages = await getCommunityStages(community.id);
-
-	const existingTokens = await getTokensByCommunity(community.id);
+	const [stages, existingTokens] = await Promise.all([
+		getCommunityStages(community.id).execute(),
+		getApiAccessTokensByCommunity(community.id).execute(),
+	]);
 
 	return (
 		<div className="container mx-auto px-4 py-12 md:px-6">
@@ -39,7 +40,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 					)}
 					<CreateTokenForm
 						context={{
-							stages: stages,
+							stages,
 						}}
 					/>
 				</div>

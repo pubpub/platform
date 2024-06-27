@@ -1,12 +1,10 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
-import { Button } from "ui/button";
 import { Card } from "ui/card";
-import { Trash } from "ui/icon";
 
-import type { FullApiAccessToken } from "~/lib/server/apiAccessTokens";
+import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { RevokeTokenButton } from "./RevokeTokenButton";
 
-export const ExistingToken = ({ token }: { token: FullApiAccessToken }) => {
+export const ExistingToken = ({ token }: { token: SafeApiAccessToken }) => {
 	return (
 		<Card className="p-4">
 			<div className="grid grid-cols-[1fr_auto] gap-4">

@@ -27,6 +27,7 @@ import {
 	tsRestHandleErrors,
 	UnauthorizedError,
 } from "~/lib/server";
+import { getApiAccessTokenByToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
@@ -54,7 +55,7 @@ const getAutorization = async () => {
 
 	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
 	if (!apiKeyParse.success) {
-		throw new Error("a");
+		throw new Error("Invalid token");
 	}
 	const apiKey = apiKeyParse.data;
 
@@ -65,11 +66,11 @@ const getAutorization = async () => {
 		throw new Error(`No community found for slug ${communitySlug}`);
 	}
 
-	const matchedAccessToken = await db
-		.selectFrom("api_access_tokens")
-		.where("api_access_tokens.token", "=", apiKey)
-		.selectAll()
-		.executeTakeFirstOrThrow(() => new UnauthorizedError("Invalid token"));
+	const matchedAccessToken = await getApiAccessTokenByToken(apiKey).executeTakeFirst();
+
+	if (!matchedAccessToken) {
+		throw new UnauthorizedError("Invalid token");
+	}
 
 	if (matchedAccessToken.communityId !== community.id) {
 		throw new UnauthorizedError(
@@ -222,7 +223,7 @@ const handler = createNextHandler(
 					ApiAccessType.read
 				);
 
-				const stages = await getCommunityStages(community.id);
+				const stages = await getCommunityStages(community.id).execute();
 				return {
 					status: 200,
 					body: stages,

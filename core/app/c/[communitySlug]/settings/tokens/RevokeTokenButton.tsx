@@ -12,15 +12,14 @@ import {
 	AlertDialogTrigger,
 } from "ui/alert-dialog";
 import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
-import type { FullApiAccessToken } from "~/lib/server/apiAccessTokens";
+import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 
-export const RevokeTokenButton = ({ token }: { token: FullApiAccessToken }) => {
+export const RevokeTokenButton = ({ token }: { token: SafeApiAccessToken }) => {
 	const revokeToken = useServerAction(actions.deleteToken);
 
 	return (

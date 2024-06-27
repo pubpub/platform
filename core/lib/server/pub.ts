@@ -1,27 +1,26 @@
 import type { ExpressionBuilder, SelectExpression, StringReference, Transaction } from "kysely";
 
 import { Prisma } from "@prisma/client";
-import { JSONSchemaType } from "ajv";
-import { QueryCreator, sql } from "kysely";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CreatePubRequestBodyWithNulls, GetPubTypeResponseBody, JsonValue } from "contracts";
-import { GetPubResponseBody } from "contracts";
-import { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
-import { logger } from "logger";
-import { expect } from "utils";
+import type {
+	CreatePubRequestBodyWithNulls,
+	GetPubResponseBody,
+	GetPubTypeResponseBody,
+	JsonValue,
+} from "contracts";
+import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 
 import type { MaybeHas } from "../types";
+import type { BasePubField } from "~/actions/corePubFields";
 import type Database from "~/kysely/types/Database";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import type { StagesId } from "~/kysely/types/public/Stages";
 import type { UsersId } from "~/kysely/types/public/Users";
 import { validatePubValues } from "~/actions/_lib/validateFields";
-import { BasePubField } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
-import { NewPubs } from "~/kysely/types/public/Pubs";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
@@ -507,27 +506,27 @@ export const createPubRecursiveNew = async ({
 		).executeTakeFirstOrThrow();
 
 		if (stageId) {
-			await trx
-				.insertInto("PubsInStages")
-				.values((eb) => ({
+			await autoRevalidate(
+				trx.insertInto("PubsInStages").values((eb) => ({
 					pubId: newPub.id,
 					stageId: stageId,
 				}))
-				.executeTakeFirstOrThrow();
+			).executeTakeFirstOrThrow();
 		}
 
-		const pubValues = await trx
-			.insertInto("pub_values")
-			.values(
-				valueIdsWithValues.map(({ id, value }, index) => ({
-					// not sure this is the best way to do this
-					fieldId: id,
-					pubId: newPub.id,
-					value: value,
-				}))
-			)
-			.returningAll()
-			.execute();
+		const pubValues = await autoRevalidate(
+			trx
+				.insertInto("pub_values")
+				.values(
+					valueIdsWithValues.map(({ id, value }, index) => ({
+						// not sure this is the best way to do this
+						fieldId: id,
+						pubId: newPub.id,
+						value: value,
+					}))
+				)
+				.returningAll()
+		).execute();
 
 		if (!body.children) {
 			return {
