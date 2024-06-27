@@ -9,6 +9,7 @@ import type Database from "~/kysely/types/Database";
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import type { UsersId } from "~/kysely/types/public/Users";
 import type { Equal, Expect } from "~/lib/types";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
@@ -17,7 +18,7 @@ import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import Event from "~/kysely/types/public/Event";
 import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
-import { cachedFindTables } from "./sharedAuto";
+import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto";
 
 const mockedDb = new Kysely<Database>({
 	dialect: new PostgresDialect({
@@ -400,7 +401,7 @@ describe("cachedFindTables", () => {
 		};
 	});
 
-	it("should handle a mutation CTE with a selct query at the end", async () => {
+	it("should handle autorevalide with a mutation CTE with a select query at the end", async () => {
 		const query = mockedDb
 			.with("new_token", (db) =>
 				db
@@ -437,6 +438,58 @@ describe("cachedFindTables", () => {
 		const tables = await compileAndFindTables(query, "mutation");
 
 		expect(tables).toEqual(["api_access_tokens", "api_access_permissions"]);
+
+		() => {
+			const revalidateQuery = autoRevalidate(query);
+
+			type CorrectQuery = Expect<
+				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
+			>;
+		};
+	});
+
+	it("should throw an error when using autoCache with a mutation", async () => {
+		// imagine this wrapped with `autoCache` for some reason
+		// this is valid type-wise, but you should not do this
+
+		const query = mockedDb
+			.with("new_pub", (db) =>
+				db
+					.insertInto("pubs")
+					.values({
+						communityId: "id" as CommunitiesId,
+						pubTypeId: "id" as PubTypesId,
+					})
+					.returningAll()
+			)
+			.selectFrom("new_pub")
+			.selectAll();
+
+		await expect(() => compileAndFindTables(query, "select")).rejects.toThrowError(/Insert/);
+
+		await expect(compileAndFindTables(query, "mutation")).resolves.not.toThrow();
+
+		() => {
+			const cachedQuery = autoCache(query);
+
+			type CorrectQuery = Expect<
+				Equal<(typeof cachedQuery)["execute"], (typeof query)["execute"]>
+			>;
+		};
+	});
+
+	it("should throw an error when using autoRevalidate without a mutation", async () => {
+		// imagine this wrapped with `autoRevalidate` for some reason.
+		// this is valid type-wise, as we need to account for the CTE case
+		// but you should not do this
+
+		const query = mockedDb.selectFrom("pubs").selectAll();
+
+		await expect(compileAndFindTables(query, "select")).resolves.not.toThrow();
+
+		await expect(() => compileAndFindTables(query, "mutation")).rejects.toThrowError(
+			/Invalid use of `autoRevalidate`/
+		);
 
 		() => {
 			const revalidateQuery = autoRevalidate(query);
