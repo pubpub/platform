@@ -113,14 +113,17 @@ export default async function Page({
 									stage={stage!}
 									pageContext={
 										{
-											params: undefined,
+											params: params,
 											searchParams: undefined,
 										} as unknown as PageContext // still need to figure this out
 									}
 								/>
 							</div>
 						) : (
-							<div className="ml-4 font-medium">No actions exist for this Pub</div>
+							<div className="ml-4 font-medium">
+								This Pub does not belong to any stage. Add this Pub to stage to{" "}
+								configure actions to run for this Pub
+							</div>
 						)}
 					</div>
 
