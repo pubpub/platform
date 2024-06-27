@@ -28,10 +28,6 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		throw new Error("Stage not found");
 	}
 
-	const actions = stageActionInstances.map((action) => ({
-		...action,
-	}));
-
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
