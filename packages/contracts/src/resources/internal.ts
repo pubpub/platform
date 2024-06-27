@@ -74,7 +74,7 @@ export const internalApi = contract.router(
 		},
 	},
 	{
-		pathPrefix: "/internal",
+		pathPrefix: "/api/v0/c/:communitySlug/internal",
 		baseHeaders: z.object({
 			authorization: z.string(),
 		}),

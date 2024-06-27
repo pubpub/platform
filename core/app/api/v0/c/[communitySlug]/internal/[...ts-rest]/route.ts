@@ -73,7 +73,6 @@ const handler = createNextHandler(
 	},
 	{
 		handlerType: "app-router",
-		basePath: "/api/v0/c/:communitySlug",
 		jsonQuery: true,
 		errorHandler: tsRestHandleErrors,
 	}
