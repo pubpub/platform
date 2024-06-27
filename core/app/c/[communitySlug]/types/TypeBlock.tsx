@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
-import { Pencil } from "ui/icon";
+import { ChevronDown, ChevronUp, Pencil } from "ui/icon";
 import { Label } from "ui/label";
 
 import type { PubTypeWithFieldIds } from "~/lib/types";
@@ -39,13 +39,13 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 					</h2>
 					<Button
 						size="icon"
-						variant={expanded ? "secondary" : "ghost"}
+						variant={"ghost"}
 						aria-label="Expand"
 						onClick={() => {
 							setExpanded(!expanded);
 						}}
 					>
-						<img src="/icons/chevron-vertical.svg" alt="" />
+						{expanded ? <ChevronDown /> : <ChevronUp />}
 					</Button>
 					{superadmin && (
 						<Button
@@ -66,7 +66,7 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 					<div className="ml-4 mt-4">
 						<h3 className="mb-2 font-semibold">Fields</h3>
 						<ul>
-							{Object.values(type.fields).map((fieldId) => {
+							{type.fields.map((fieldId) => {
 								const field = fields[fieldId];
 								return (
 									<li key={field.id}>
