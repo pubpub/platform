@@ -45,7 +45,7 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 							setExpanded(!expanded);
 						}}
 					>
-						{expanded ? <ChevronDown /> : <ChevronUp />}
+						{expanded ? <ChevronUp /> : <ChevronDown />}
 					</Button>
 					{superadmin && (
 						<Button
