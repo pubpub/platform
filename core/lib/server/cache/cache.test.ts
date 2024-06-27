@@ -12,6 +12,8 @@ import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { UsersId } from "~/kysely/types/public/Users";
 import type { Equal, Expect } from "~/lib/types";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
+import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
+import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import Event from "~/kysely/types/public/Event";
 import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
@@ -394,6 +396,53 @@ describe("cachedFindTables", () => {
 
 			type CorrectQuery = Expect<
 				Equal<(typeof cachedQuery)["execute"], (typeof query)["execute"]>
+			>;
+		};
+	});
+
+	it("should handle a mutation CTE with a selct query at the end", async () => {
+		const query = mockedDb
+			.with("new_token", (db) =>
+				db
+					.insertInto("api_access_tokens")
+					.values({
+						token: "token",
+						communityId: "id" as CommunitiesId,
+						name: "name",
+						description: "description",
+						expiration: new Date(),
+						issuedById: "id" as UsersId,
+					})
+					.returning(["id", "token"])
+			)
+			.with("new_permissions", (db) =>
+				db.insertInto("api_access_permissions").values((eb) => ({
+					apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
+					scope: ApiAccessScope.pub,
+					accessType: ApiAccessType.read,
+					constraints: null,
+				}))
+			)
+			.selectFrom("api_access_logs")
+			.selectAll()
+			.where(({ eb, exists }) =>
+				exists(
+					eb
+						.selectFrom("new_token")
+						.select("new_token.id")
+						.whereRef("new_token.id", "=", "api_access_logs.accessTokenId")
+				)
+			);
+
+		const tables = await compileAndFindTables(query, "mutation");
+
+		expect(tables).toEqual(["api_access_tokens", "api_access_permissions"]);
+
+		() => {
+			const revalidateQuery = autoRevalidate(query);
+
+			type CorrectQuery = Expect<
+				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
 			>;
 		};
 	});

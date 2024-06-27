@@ -32,6 +32,16 @@ export function findTables<T extends OperationNode>(
 	// we do not want to invalidate the cache for select queries made
 	// during mutations, as they are not (per se) affected by the mutation
 	if (type === "mutation" && SelectQueryNode.is(node)) {
+		// the only situation in which a SelectQueryBuilder
+		// is passed to autoRevalidate is when it is a mutating
+		// CTE where you want to return the result of the CTE
+		// in the same query, like this:
+		// db.with('cte', db => db.insertInto('x')
+		// .returningAll()...).selectFrom('cte').selectAll()
+		if (node.with) {
+			findTables(node.with, type, tables);
+		}
+
 		return tables;
 	}
 
