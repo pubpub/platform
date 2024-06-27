@@ -98,13 +98,6 @@ const ManageLinks = ({
 					icon={<img src="/icons/members.svg" alt="" />}
 				/>
 			)}
-			{isAdmin && (
-				<NavLink
-					href={`${prefix}/activity/actions`}
-					text="Activity"
-					icon={<Activity className="h-4 w-4" />}
-				/>
-			)}
 			{isSuperAdmin && (
 				<NavLink
 					href={`${prefix}/settings`}
