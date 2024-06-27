@@ -164,15 +164,17 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 					/>
 					{divider}
 					<div className="flex h-full max-h-screen flex-col gap-2">
-						<div className="flex-1">
+						<div className="flex flex-1 flex-col gap-y-2">
 							<nav className="grid items-start pr-2 text-sm font-medium">
 								<Links prefix={prefix} isAdmin={isAdmin} />
 								{divider}
-								Views
+								<span className="my-2 text-xs font-semibold uppercase text-muted-foreground">
+									Views
+								</span>
 								<ViewLinks prefix={prefix} isAdmin={isAdmin} />
-							</nav>
-							<nav className="grid items-start pr-2 text-sm font-medium">
-								Manage
+								<span className="my-2 text-xs font-semibold uppercase text-muted-foreground">
+									Manage
+								</span>
 								<ManageLinks
 									prefix={prefix}
 									isAdmin={isAdmin}
