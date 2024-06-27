@@ -3,7 +3,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "ui/button";
@@ -12,7 +12,6 @@ import { Loader2, X } from "ui/icon";
 import { Input } from "ui/input";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubField } from "~/lib/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
 import { createPubType } from "./actions";
@@ -25,7 +24,7 @@ type Props = {
 const schema = z.object({
 	name: z.string(),
 	description: z.string().optional(),
-	fields: z.array(z.string()), // array of field ids
+	pubFields: z.array(z.object({ fieldId: z.string(), name: z.string(), slug: z.string() })),
 });
 
 export const TypeEditor = ({ onTypeCreation }: Props) => {
@@ -33,17 +32,17 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 		resolver: zodResolver(schema),
 	});
 
-	const [selectedFields, setSelectedFields] = React.useState<Record<PubFieldsId, PubField>>({});
+	const {
+		fields: pubFields,
+		append,
+		remove,
+	} = useFieldArray({
+		control: form.control,
+		name: "pubFields",
+	});
 
 	const onFieldSelect = (fieldId: PubFieldsId, name: string, slug: string) => {
-		form.setValue("fields", [...Object.keys(selectedFields), fieldId]);
-		setSelectedFields({ ...selectedFields, [fieldId]: { id: fieldId, name, slug } });
-	};
-
-	const removeField = (fieldId: string) => () => {
-		const { [fieldId as PubFieldsId]: removed, ...remaining } = selectedFields;
-		form.setValue("fields", Object.keys(remaining));
-		setSelectedFields(remaining);
+		append({ fieldId, name, slug });
 	};
 
 	const community = useCommunity();
@@ -51,8 +50,13 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 		return notFound();
 	}
 	const runCreatePubType = useServerAction(createPubType);
-	const onSubmit = async ({ name, description, fields }: z.infer<typeof schema>) => {
-		runCreatePubType(name, community.id, description, fields as PubFieldsId[]);
+	const onSubmit = async ({ name, description, pubFields }: z.infer<typeof schema>) => {
+		runCreatePubType(
+			name,
+			community.id,
+			description,
+			pubFields.map((f) => f.fieldId as PubFieldsId)
+		);
 		onTypeCreation();
 	};
 
@@ -87,35 +91,27 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 						)}
 					/>
 					<div className="text-md mb-1 mt-4 font-semibold">Fields</div>
-					{Object.values(selectedFields).map((pubField) => (
-						<FormField
-							key={pubField.id}
-							control={form.control}
-							name="fields"
-							render={({ field }) => (
-								<FormItem>
-									<FormControl>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="inline-flex h-6 px-1"
-											onClick={removeField(pubField.id)}
-											aria-label="Remove field"
-										>
-											<X size={14} />
-										</Button>
-									</FormControl>
-									<FormLabel className="font-normal">
-										{pubField.name} ({pubField.slug})
-									</FormLabel>
-									<FormMessage />
-								</FormItem>
-							)}
-						></FormField>
-					))}
+					<ul>
+						{pubFields.map((pubField, index) => (
+							<li key={index}>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="inline-flex h-6 px-1"
+									onClick={() => remove(index)}
+									aria-label="Remove field"
+								>
+									<X size={14} />
+								</Button>
+								<FormLabel className="font-normal">
+									{pubField.name} ({pubField.slug})
+								</FormLabel>
+							</li>
+						))}
+					</ul>
 					<FormField
 						control={form.control}
-						name="fields"
+						name="pubFields"
 						render={() => (
 							<FormItem className="my-4">
 								<FormLabel className="mb-1 block">
@@ -123,9 +119,9 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 								</FormLabel>
 								<FormControl>
 									<FieldSelect
-										excludedFields={
-											Object.keys(selectedFields) as PubFieldsId[]
-										}
+										excludedFields={pubFields.map(
+											(f) => f.fieldId as PubFieldsId
+										)}
 										onFieldSelect={onFieldSelect}
 										modal={true}
 									/>
