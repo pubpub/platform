@@ -35,17 +35,13 @@ export default async function Page({
 		return null;
 	}
 	// TODO: use unstable_cache without chidren not rendereing
-	const getPub = unstable_cache(
-		(pubId: string) =>
-			prisma.pub.findUnique({
-				where: { id: pubId },
-				include: {
-					...pubInclude,
-				},
-			}),
-		undefined,
-		{ tags: [`pubs_${params.pubId}`] }
-	);
+	const getPub = (pubId: string) =>
+		prisma.pub.findUnique({
+			where: { id: pubId },
+			include: {
+				...pubInclude,
+			},
+		});
 
 	const pub = await getPub(params.pubId);
 	if (!pub) {
@@ -121,8 +117,7 @@ export default async function Page({
 							</div>
 						) : (
 							<div className="ml-4 font-medium">
-								This Pub does not belong to any stage. Add this Pub to stage to{" "}
-								configure actions to run for this Pub
+								Configure actions to run for this Pub in the stage management settings
 							</div>
 						)}
 					</div>
