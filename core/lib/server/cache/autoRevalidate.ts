@@ -3,15 +3,14 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { logger } from "logger";
 
 import type { autoCache } from "./autoCache";
-import type { AutoOptions, AutoRevalidateOptions, DirectAutoOutput, ExecuteFn, MQB } from "./types";
-import { db } from "~/kysely/database";
+import type { AutoRevalidateOptions, DirectAutoOutput, ExecuteFn, QB } from "./types";
 import { env } from "~/lib/env/env.mjs";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { revalidateTagsForCommunity } from "./revalidate";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";
 
 const executeWithRevalidate = <
-	Q extends MQB<any>,
+	Q extends QB<any>,
 	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
 >(
 	qb: Q,
@@ -71,7 +70,7 @@ const executeWithRevalidate = <
  *
  * See {@link autoCache} for a more detailed explanation of the API.
  */
-export function autoRevalidate<Q extends MQB<any>>(
+export function autoRevalidate<Q extends QB<any>>(
 	qb: Q,
 	options?: AutoRevalidateOptions
 ): DirectAutoOutput<Q> {

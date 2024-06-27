@@ -10,7 +10,9 @@ import type ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import type ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
+import { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
 import { getLoginData } from "~/lib/auth/loginData";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -18,7 +20,6 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 export const createToken = defineServerAction(async function createToken(
 	data: CreateTokenFormSchema
 ) {
-	// validate
 	const loginData = await getLoginData();
 
 	if (!loginData?.isSuperAdmin) {
@@ -48,33 +49,68 @@ export const createToken = defineServerAction(async function createToken(
 
 	const token = randomUUID();
 
-	const newToken = await db
-		.with("new_token", (db) =>
-			db
-				.insertInto("api_access_tokens")
-				.values({
-					token,
-					communityId: community.id,
-					name: data.name,
-					description: data.description,
-					expiration: data.expiration,
-					issuedById: loginData.id as UsersId,
-				})
-				.returning(["id", "token"])
-		)
-		.with("permissions", (db) =>
-			db.insertInto("api_access_permissions").values((eb) =>
-				permissions.map((permission) => ({
-					...permission,
-					apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
-				}))
+	const newToken = await autoRevalidate(
+		db
+			.with("new_token", (db) =>
+				db
+					.insertInto("api_access_tokens")
+					.values({
+						token,
+						communityId: community.id,
+						name: data.name,
+						description: data.description,
+						expiration: data.expiration,
+						issuedById: loginData.id as UsersId,
+					})
+					.returning(["id", "token"])
 			)
-		)
-		.selectFrom("new_token")
-		.select("new_token.token")
-		.executeTakeFirstOrThrow();
+			.with("permissions", (db) =>
+				db.insertInto("api_access_permissions").values((eb) =>
+					permissions.map((permission) => ({
+						...permission,
+						apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
+					}))
+				)
+			)
+			.selectFrom("new_token")
+			.select("new_token.token")
+	).executeTakeFirstOrThrow();
 
-	revalidatePath(`/c/${communitySlug}/settings/tokens`);
+	//	revalidatePath(`/c/${communitySlug}/settings/tokens`);
 
 	return { success: true, data: { token: newToken.token } };
+});
+
+export const deleteToken = defineServerAction(async function deleteToken({
+	id,
+}: {
+	id: ApiAccessTokensId;
+}) {
+	const loginData = await getLoginData();
+
+	if (!loginData?.isSuperAdmin) {
+		throw new Error("You must be a super admin to delete tokens");
+	}
+
+	const communitySlug = getCommunitySlug();
+	const community = await findCommunityBySlug(communitySlug);
+
+	if (!community) {
+		throw new Error("Community not found");
+	}
+
+	await autoRevalidate(
+		db
+			.with("token", (db) =>
+				db
+					.deleteFrom("api_access_tokens")
+					.where("id", "=", id)
+					.where("communityId", "=", community.id)
+			)
+			.with("permissions", (db) =>
+				db.deleteFrom("api_access_permissions").where("apiAccessTokenId", "=", id)
+			)
+			.deleteFrom("api_access_logs")
+			.where("accessTokenId", "=", id)
+	).execute();
 });

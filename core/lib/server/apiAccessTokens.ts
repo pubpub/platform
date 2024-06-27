@@ -2,6 +2,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import { db } from "~/kysely/database";
 import { CommunitiesId } from "~/kysely/types/public/Communities";
+import { autoCache } from "./cache/autoCache";
 
 const getTokenBase = db
 	.selectFrom("api_access_tokens")
@@ -27,16 +28,16 @@ const getTokenBase = db
 	]);
 
 export const getTokenByToken = async (token: string) => {
-	const tokenData = await getTokenBase
-		.where("api_access_tokens.token", "=", token)
-		.executeTakeFirstOrThrow();
+	const tokenData = await autoCache(
+		getTokenBase.where("api_access_tokens.token", "=", token)
+	).executeTakeFirstOrThrow();
 	return tokenData;
 };
 
 export const getTokensByCommunity = async (communityId: CommunitiesId) => {
-	const tokens = await getTokenBase
-		.where("api_access_tokens.communityId", "=", communityId)
-		.execute();
+	const tokens = await autoCache(
+		getTokenBase.where("api_access_tokens.communityId", "=", communityId)
+	).execute();
 	return tokens;
 };
 

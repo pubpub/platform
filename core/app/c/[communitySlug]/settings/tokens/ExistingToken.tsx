@@ -4,6 +4,7 @@ import { Card } from "ui/card";
 import { Trash } from "ui/icon";
 
 import type { FullApiAccessToken } from "~/lib/server/apiAccessTokens";
+import { RevokeTokenButton } from "./RevokeTokenButton";
 
 export const ExistingToken = ({ token }: { token: FullApiAccessToken }) => {
 	return (
@@ -16,25 +17,18 @@ export const ExistingToken = ({ token }: { token: FullApiAccessToken }) => {
 					)}
 				</div>
 				<div className="flex items-center justify-end">
-					<Button
-						variant="ghost"
-						size="icon"
-						className="text-muted-foreground hover:text-destructive"
-					>
-						<Trash className="h-5 w-5" />
-						<span className="sr-only">Revoke token</span>
-					</Button>
+					<RevokeTokenButton token={token} />
 				</div>
 			</div>
 			<div className="mt-4 flex flex-col gap-4">
 				<div className="flex items-center justify-between gap-2">
 					<div>
 						<p className="text-xs text-muted-foreground">Created on</p>
-						<p className="text-sm">{token.issuedAt.toLocaleDateString()}</p>
+						<p className="text-sm">{new Date(token.issuedAt).toLocaleDateString()}</p>
 					</div>
 					<div>
 						<p className="text-xs text-muted-foreground">Expires on</p>
-						<p className="text-sm"> {token.expiration.toLocaleDateString()}</p>
+						<p className="text-sm">{new Date(token.expiration).toLocaleDateString()}</p>
 					</div>
 					<div>
 						<p className="text-xs text-muted-foreground">Issued by</p>
