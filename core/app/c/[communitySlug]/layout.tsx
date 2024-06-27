@@ -4,7 +4,7 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { UsersId } from "~/kysely/types/public/Users";
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
 import { getLoginData } from "~/lib/auth/loginData";
-import { getAvailableCommunities, getCommunityData } from "~/lib/server/community";
+import { findCommunityBySlug, getAvailableCommunities } from "~/lib/server/community";
 import SideNav from "./SideNav";
 
 type Props = { children: React.ReactNode; params: { communitySlug: string } };
@@ -15,7 +15,7 @@ export default async function MainLayout({ children, params }: Props) {
 		redirect("/login");
 	}
 
-	const community = await getCommunityData(params.communitySlug as CommunitiesId);
+	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
 		return null;
 	}

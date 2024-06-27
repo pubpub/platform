@@ -12,7 +12,7 @@ import { memoize } from "./cache/memoize";
 export function findCommunityBySlug(communitySlug?: string) {
 	const slug = communitySlug ?? getCommunitySlug();
 	return memoize(
-		() => db.selectFrom("communities").select("id").where("slug", "=", slug).executeTakeFirst(),
+		() => db.selectFrom("communities").selectAll().where("slug", "=", slug).executeTakeFirst(),
 		{
 			additionalCacheKey: [slug],
 			revalidateTags: [createCacheTag(`community-all_${slug}`)],
@@ -44,15 +44,7 @@ export const findCommunityByPubId = memoize(
 	{ revalidateTags: ["all", "all-pubs"], duration: ONE_DAY }
 );
 
-export const getCommunityData = async (slug: CommunitiesId) => {
-	return await db
-		.selectFrom("communities")
-		.where("slug", "=", slug)
-		.selectAll()
-		.executeTakeFirst();
-};
-
-export type CommunityData = Prisma.PromiseReturnType<typeof getCommunityData>;
+export type CommunityData = Prisma.PromiseReturnType<typeof findCommunityBySlug>;
 
 export const getAvailableCommunities = async (userId: UsersId) => {
 	return await db

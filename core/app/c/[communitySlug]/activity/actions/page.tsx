@@ -1,16 +1,13 @@
-import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { logger } from "logger";
-
+import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { ActionRunsTable } from "./ActionRunsTable";
-import { ActionRun } from "./getActionRunsTableColumns";
 
 export default async function Page({
 	params: { communitySlug },
@@ -19,14 +16,13 @@ export default async function Page({
 		communitySlug: string;
 	};
 }) {
+	const loginData = await getLoginData();
 	const community = await findCommunityBySlug(communitySlug);
-
-	if (!community) {
+	if (!community || !loginData) {
 		return notFound();
 	}
 
-	const loginData = await getLoginData();
-	const currentCommunityMembership = loginData?.memberships?.find(
+	const currentCommunityMembership = loginData.memberships.find(
 		(m) => m.community.slug === communitySlug
 	);
 
