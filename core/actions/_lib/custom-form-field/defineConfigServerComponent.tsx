@@ -4,7 +4,7 @@ import type { Action, ActionInstanceOf } from "../../types";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
-import { PageContext } from "~/app/c/[communitySlug]/stages/manage/components/panel/StagePanelPubsRunActionDropDownMenu";
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 
 export type ActionFormFieldBaseProps<T extends Action, Type extends "config" | "params"> = {
 	actionInstance: ActionInstanceOf<T>;

@@ -1,11 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { getStage } from "~/lib/db/queries";
 import { StagePanelActions } from "./StagePanelActions";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
-import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
 import { StagePanelRules } from "./StagePanelRules";
 import { StagePanelSheet } from "./StagePanelSheet";
 
