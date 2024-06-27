@@ -6,16 +6,19 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { MultiSelect } from "ui/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
-import type { CreateTokenForm, CreateTokenFormContext } from "./CreateTokenForm";
-import type { ApiAccessPermissionConstraintsConfig } from "~/kysely/ApiAccessToken";
+import type {
+	ApiAccessPermissionConstraintsInput,
+	CreateTokenForm,
+	CreateTokenFormContext,
+} from "~/kysely/ApiAccessToken";
 import type ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 
 type PermissionContraintMap = {
-	[K in keyof ApiAccessPermissionConstraintsConfig as ApiAccessPermissionConstraintsConfig[K] extends never
+	[K in keyof ApiAccessPermissionConstraintsInput as ApiAccessPermissionConstraintsInput[K] extends never
 		? never
 		: K]: {
-		[T in keyof ApiAccessPermissionConstraintsConfig[K] as ApiAccessPermissionConstraintsConfig[K][T] extends never
+		[T in keyof ApiAccessPermissionConstraintsInput[K] as boolean extends ApiAccessPermissionConstraintsInput[K][T]
 			? never
 			: T]: ({
 			form,
@@ -24,7 +27,7 @@ type PermissionContraintMap = {
 		}: {
 			form: CreateTokenForm;
 			context: CreateTokenFormContext;
-			value: boolean | ApiAccessPermissionConstraintsConfig[K][T];
+			value: boolean | ApiAccessPermissionConstraintsInput[K][T];
 			onChange: (...args: any[]) => void;
 		}) => JSX.Element;
 	};
@@ -34,6 +37,7 @@ type PermissionContraintMap = {
  * Here you configure the specific form elements for each permission type
  */
 const permissionContraintMap: PermissionContraintMap = {
+	community: {},
 	pub: {
 		write: ({ context, form, value, onChange }) => (
 			<div className="flex flex-col gap-2">
@@ -94,6 +98,8 @@ const permissionContraintMap: PermissionContraintMap = {
 			</div>
 		),
 	},
+	member: {},
+	pubType: {},
 };
 export const PermissionField = ({
 	form,

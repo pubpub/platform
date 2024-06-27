@@ -14,115 +14,22 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 
-// import { apiAccessTokensInitializerSchema } from "~/kysely/types/public/ApiAccessTokens";
-import type { ApiAccessPermissionConstraintsInput } from "~/kysely/ApiAccessToken";
+import type {
+	ApiAccessPermissionConstraintsInput,
+	CreateTokenFormContext,
+	CreateTokenFormSchema,
+} from "~/kysely/ApiAccessToken";
 import type { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { Stages, StagesId } from "~/kysely/types/public/Stages";
 import type { UsersId } from "~/kysely/types/public/Users";
+import { createTokenFormSchema } from "~/kysely/ApiAccessToken";
 import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { PermissionField } from "./PermissionField";
 
-const stagesIdSchema = z.string().uuid() as unknown as z.Schema<StagesId>;
-const communitiesIdSchema = z.string().uuid() as unknown as z.Schema<CommunitiesId>;
-const usersIdSchema = z.string().uuid() as unknown as z.Schema<UsersId>;
-const apiAccessTokensIdSchema = z.string().uuid() as unknown as z.Schema<ApiAccessTokensId>;
-
-export const apiAccessTokensInitializerSchema = z.object({
-	id: apiAccessTokensIdSchema.optional(),
-	token: z.string(),
-	name: z.string(),
-	description: z.string().optional().nullable(),
-	communityId: communitiesIdSchema,
-	expiration: z.date(),
-	revoked: z.boolean().optional(),
-	issuedById: usersIdSchema,
-	issuedAt: z.date().optional(),
-	usageLimit: z.number().optional().nullable(),
-	usages: z.number().optional(),
-});
-
-export const permissionsSchema = z.object({
-	[ApiAccessScope.community]: z.object({
-		read: z.boolean().optional(),
-		write: z.boolean().optional(),
-		archive: z.boolean().optional(),
-	}),
-	[ApiAccessScope.stage]: z.object({
-		read: z
-			.object({
-				stages: z.array(stagesIdSchema),
-			})
-			.or(z.boolean())
-			.optional(),
-		write: z.boolean().optional(),
-		archive: z.boolean().optional(),
-	}),
-	[ApiAccessScope.pub]: z.object({
-		read: z.boolean().optional(),
-		write: z
-			.object({
-				stages: z.array(stagesIdSchema),
-			})
-			.or(z.boolean())
-			.optional(),
-		archive: z.boolean().optional(),
-	}),
-	[ApiAccessScope.member]: z.object({
-		read: z.boolean().optional(),
-		write: z.boolean().optional(),
-		archive: z.boolean().optional(),
-	}),
-	[ApiAccessScope.pubType]: z.object({
-		read: z.boolean().optional(),
-		write: z.boolean().optional(),
-		archive: z.boolean().optional(),
-	}),
-}) satisfies z.Schema<ApiAccessPermissionConstraintsInput>;
-
-const createTokenFormSchema = apiAccessTokensInitializerSchema
-	.omit({
-		communityId: true,
-		usageLimit: true,
-		issuedById: true,
-	})
-	.extend({
-		description: z.string().max(255).optional(),
-		token: apiAccessTokensInitializerSchema.shape.token.optional(),
-		expiration: z
-			.date()
-			.max(
-				new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
-				"Maximum expiration date is 1 year in the future"
-			)
-			.min(new Date(), "Expiry date cannot be in the past"),
-		permissions: permissionsSchema,
-	})
-	.superRefine((data, ctx) => {
-		if (
-			Object.values(data.permissions)
-				.flatMap((scope) => Object.values(scope))
-				.filter((value) => value).length > 0
-		) {
-			return true;
-		}
-		ctx.addIssue({
-			path: ["permissions"],
-			code: z.ZodIssueCode.custom,
-
-			message: "At least one permission must be selected",
-		});
-		return false;
-	});
-
-export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
-export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
-
-export type CreateTokenFormContext = {
-	stages: Stages[];
-};
+// import { apiAccessTokensInitializerSchema } from "~/kysely/types/public/ApiAccessTokens";
 
 export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
 	const form = useForm<CreateTokenFormSchema>({

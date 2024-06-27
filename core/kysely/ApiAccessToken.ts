@@ -1,9 +1,16 @@
 // temporary until the db types are moved to a separate package again
 
+import type { useForm } from "react-hook-form";
+
+import { z } from "zod";
+
 import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "./types/public/ApiAccessPermissions";
-import type ApiAccessScope from "./types/public/ApiAccessScope";
+import type { ApiAccessTokensId } from "./types/public/ApiAccessTokens";
 import type ApiAccessType from "./types/public/ApiAccessType";
-import type { StagesId } from "./types/public/Stages";
+import type { CommunitiesId } from "./types/public/Communities";
+import type { Stages, StagesId } from "./types/public/Stages";
+import type { UsersId } from "./types/public/Users";
+import ApiAccessScope from "./types/public/ApiAccessScope";
 
 /**
  * General shape of a generic ApiAccessToken constraint,
@@ -20,10 +27,10 @@ export type ApiAccessPermissionConstraintsShape = {
 	/**
 	 * Mostly to make creating a discriminated union easier
 	 */
-	scope: ApiAccessScope;
-	[ApiAccessType.read]?: Record<string, unknown>;
-	[ApiAccessType.write]?: Record<string, unknown>;
-	[ApiAccessType.archive]?: Record<string, unknown>;
+	//	scope: ApiAccessScope;
+	[ApiAccessType.read]?: Record<string, unknown> | boolean;
+	[ApiAccessType.write]?: Record<string, unknown> | boolean;
+	[ApiAccessType.archive]?: Record<string, unknown> | boolean;
 };
 
 /**
@@ -32,6 +39,107 @@ export type ApiAccessPermissionConstraintsShape = {
 export type ApiAccessPermissionContraintsObjectShape = {
 	[key in ApiAccessScope]: ApiAccessPermissionConstraintsShape;
 };
+
+const stagesIdSchema = z.string().uuid() as unknown as z.Schema<StagesId>;
+const communitiesIdSchema = z.string().uuid() as unknown as z.Schema<CommunitiesId>;
+const usersIdSchema = z.string().uuid() as unknown as z.Schema<UsersId>;
+const apiAccessTokensIdSchema = z.string().uuid() as unknown as z.Schema<ApiAccessTokensId>;
+
+export const apiAccessTokensInitializerSchema = z.object({
+	id: apiAccessTokensIdSchema.optional(),
+	token: z.string(),
+	name: z.string(),
+	description: z.string().optional().nullable(),
+	communityId: communitiesIdSchema,
+	expiration: z.date(),
+	revoked: z.boolean().optional(),
+	issuedById: usersIdSchema,
+	issuedAt: z.date().optional(),
+	usageLimit: z.number().optional().nullable(),
+	usages: z.number().optional(),
+});
+
+export const permissionsSchema = z.object({
+	[ApiAccessScope.community]: z.object({
+		read: z.boolean().optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.stage]: z.object({
+		read: z
+			.object({
+				stages: z.array(stagesIdSchema),
+			})
+			.or(z.boolean())
+			.optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.pub]: z.object({
+		read: z.boolean().optional(),
+		write: z
+			.object({
+				stages: z.array(stagesIdSchema),
+			})
+			.or(z.boolean())
+			.optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.member]: z.object({
+		read: z.boolean().optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+	[ApiAccessScope.pubType]: z.object({
+		read: z.boolean().optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
+}) satisfies z.Schema<ApiAccessPermissionContraintsObjectShape>;
+
+export const createTokenFormSchema = apiAccessTokensInitializerSchema
+	.omit({
+		communityId: true,
+		usageLimit: true,
+		issuedById: true,
+	})
+	.extend({
+		description: z.string().max(255).optional(),
+		token: apiAccessTokensInitializerSchema.shape.token.optional(),
+		expiration: z
+			.date()
+			.max(
+				new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+				"Maximum expiration date is 1 year in the future"
+			)
+			.min(new Date(), "Expiry date cannot be in the past"),
+		permissions: permissionsSchema,
+	})
+	.superRefine((data, ctx) => {
+		if (
+			Object.values(data.permissions)
+				.flatMap((scope) => Object.values(scope))
+				.filter((value) => value).length > 0
+		) {
+			return true;
+		}
+		ctx.addIssue({
+			path: ["permissions"],
+			code: z.ZodIssueCode.custom,
+
+			message: "At least one permission must be selected",
+		});
+		return false;
+	});
+
+export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
+export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
+
+export type CreateTokenFormContext = {
+	stages: Stages[];
+};
+
+export type ApiAccessPermissionConstraintsInput = z.infer<typeof permissionsSchema>;
 
 /**
  * The specific constraints for a given ApiAccessTokenScope
@@ -75,16 +183,6 @@ export type ApiAccessPermissionConstraints<
 				: undefined
 			: never
 	: never;
-
-export type ApiAccessPermissionConstraintsInput = {
-	[K in ApiAccessScope]: {
-		[L in ApiAccessType]?: ApiAccessPermissionConstraintsConfig[K] extends never
-			? boolean
-			: L extends keyof ApiAccessPermissionConstraintsConfig[K]
-				? ApiAccessPermissionConstraintsConfig[K][L] | boolean
-				: boolean;
-	};
-};
 
 /**
  * Use this instead of the standard ApiAccessPermission for better type inference

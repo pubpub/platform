@@ -1,6 +1,6 @@
 "use server";
 
-import type { CreateTokenFormSchema } from "./CreateTokenForm";
+import type { CreateTokenFormSchema } from "~/kysely/ApiAccessToken";
 import type { NewApiAccessPermissions } from "~/kysely/types/public/ApiAccessPermissions";
 import type ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import type { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
