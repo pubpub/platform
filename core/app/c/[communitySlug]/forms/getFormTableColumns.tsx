@@ -1,10 +1,5 @@
-"use client";
-
 import type { ColumnDef } from "@tanstack/react-table";
 
-import Link from "next/link";
-
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
@@ -17,18 +12,14 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
-import type { UserAndMemberships } from "~/lib/types";
-import { RemoveCommunityButton } from "./RemoveCommunityButton";
-
-export type TableCommunity = {
+export type TableForm = {
 	id: string;
-	name: string;
-	slug: string;
-	avatar: string | null;
-	created: Date;
+	formName: string;
+	pubType: string;
+	updated: Date;
 };
 
-export const getCommunityTableColumns = ({ user }: { user: UserAndMemberships }) =>
+export const getFormTableColumns = () =>
 	[
 		{
 			id: "select",
@@ -54,33 +45,17 @@ export const getCommunityTableColumns = ({ user }: { user: UserAndMemberships })
 			enableHiding: false,
 		},
 		{
-			header: "",
-			accessorKey: "avatar",
-			cell: ({ row, getValue }) => {
-				const name = row.getValue("name") as string;
-				return (
-					<Avatar className="h-8 w-8">
-						<AvatarImage src={(getValue() as string) ?? undefined} alt={`${name}`} />
-						<AvatarFallback>{name[0]}</AvatarFallback>
-					</Avatar>
-				);
-			},
-		},
-		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
-			accessorKey: "name",
+			accessorKey: "formName",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Slug" />,
-			accessorKey: "slug",
-			cell: ({ row }) => (
-				<Link href={`/c/${row.getValue("slug")}/pubs`}>{row.original.slug}</Link>
-			),
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+			accessorKey: "pubType",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
-			accessorKey: "created",
-			cell: ({ row }) => row.original.created.toLocaleDateString(),
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Updated" />,
+			accessorKey: "updated",
+			cell: ({ row }) => row.original.updated.toLocaleDateString(),
 		},
 		{
 			id: "actions",
@@ -97,12 +72,10 @@ export const getCommunityTableColumns = ({ user }: { user: UserAndMemberships })
 						<DropdownMenuContent align="end">
 							<DropdownMenuLabel>Menu</DropdownMenuLabel>
 							<DropdownMenuSeparator />
-							<div className="w-full">
-								<RemoveCommunityButton user={user} community={row.original} />
-							</div>
+							<div className="w-full">Archive</div>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);
 			},
 		},
-	] as const satisfies ColumnDef<TableCommunity, unknown>[];
+	] as const satisfies ColumnDef<TableForm, unknown>[];
