@@ -20,9 +20,10 @@ import { useFields } from "./FieldsProvider";
 export type FieldSelectProps = {
 	excludedFields: PubFieldsId[];
 	onFieldSelect: (fieldId: PubFieldsId, name: string, slug: string) => void;
+	modal?: boolean;
 };
 
-export function FieldSelect({ excludedFields, onFieldSelect }: FieldSelectProps) {
+export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: FieldSelectProps) {
 	const [open, setOpen] = useState(false);
 
 	const fields = useFields();
@@ -36,7 +37,7 @@ export function FieldSelect({ excludedFields, onFieldSelect }: FieldSelectProps)
 	};
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover open={open} onOpenChange={setOpen} modal={modal}>
 			<PopoverTrigger asChild>
 				<Button
 					size="sm"

@@ -127,6 +127,7 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 											Object.keys(selectedFields) as PubFieldsId[]
 										}
 										onFieldSelect={onFieldSelect}
+										modal={true}
 									/>
 								</FormControl>
 								<FormMessage />
