@@ -117,7 +117,8 @@ export default async function Page({
 							</div>
 						) : (
 							<div className="ml-4 font-medium">
-								Configure actions to run for this Pub in the stage management settings
+								Configure actions to run for this Pub in the stage management
+								settings
 							</div>
 						)}
 					</div>
