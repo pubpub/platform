@@ -3,7 +3,6 @@
 	"compilerOptions": {
 		"moduleResolution": "Bundler",
 		"verbatimModuleSyntax": true,
-		"allowImportingTsExtensions": true,
 		"noErrorTruncation": true,
 		"plugins": [
 			{
