@@ -30,6 +30,7 @@ export const RemoveFieldButton = ({ pubFieldId, pubTypeId }: Props) => {
 					className="flex h-5 gap-2 px-2"
 					onClick={handleRemove}
 				>
+					<span className="sr-only">Remove field</span>
 					<X size={10} />
 				</Button>
 			</TooltipTrigger>
