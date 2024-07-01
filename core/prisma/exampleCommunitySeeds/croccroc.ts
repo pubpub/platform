@@ -250,7 +250,7 @@ export default async function main(communityUUID: CommunitiesId) {
 				.values((eb) => [
 					{
 						communityId: communityUUID,
-						pubTypeId: submissionTypeId,
+						pubTypeId: evaluationTypeId,
 						parentId: eb.selectFrom("new_pubs").select("id"),
 					},
 				])
