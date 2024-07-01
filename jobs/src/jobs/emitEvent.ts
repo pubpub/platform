@@ -57,7 +57,7 @@ type NormalizedEventPayload =
 type Logger = typeof logger;
 
 const makeBaseURL = (communitySlug: string) => {
-	return `${process.env.PUBPUB_URL}/api/v0/${communitySlug}`;
+	return `${process.env.PUBPUB_URL}/api/v0/c/${communitySlug}`;
 };
 
 interface OperationConfig<P extends EmitEventPayload, N extends NormalizedEventPayload> {
@@ -86,11 +86,8 @@ const scheduleTask = async (
 
 	try {
 		const { status, body } = await client.scheduleAction({
-			params: { stageId },
+			params: { stageId, communitySlug: payload.community.slug },
 			body: { pubId },
-			overrideClientOptions: {
-				baseUrl: makeBaseURL(payload.community.slug),
-			},
 		});
 		if (status > 400) {
 			logger.error({
@@ -118,11 +115,8 @@ const triggerActions = async (
 
 	try {
 		const { status, body } = await client.triggerActions({
-			params: { stageId },
+			params: { stageId, communitySlug: payload.community.slug },
 			body: { event, pubId },
-			overrideClientOptions: {
-				baseUrl: makeBaseURL(payload.community.slug),
-			},
 		});
 
 		if (status > 300) {
@@ -148,14 +142,12 @@ const triggerAction = async (
 	try {
 		const { status, body } = await client.triggerAction({
 			params: {
+				communitySlug: community.slug,
 				actionInstanceId,
 			},
 			body: {
 				pubId,
 				event,
-			},
-			overrideClientOptions: {
-				baseUrl: makeBaseURL(community.slug),
 			},
 		});
 
