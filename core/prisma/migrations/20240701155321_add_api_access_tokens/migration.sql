@@ -15,8 +15,6 @@ CREATE TABLE "api_access_tokens" (
     "revoked" BOOLEAN NOT NULL DEFAULT false,
     "issuedById" TEXT NOT NULL,
     "issuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "usageLimit" INTEGER,
-    "usages" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "api_access_tokens_pkey" PRIMARY KEY ("id")
 );
