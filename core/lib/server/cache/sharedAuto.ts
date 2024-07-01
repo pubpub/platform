@@ -98,6 +98,29 @@ export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
 
 	const { tables, operations } = await getTables();
 
+	/**
+	 * basically, you should not be able to `autoRevalidate` select queries
+	 *
+	 * ```ts
+	 * autoRevalidate(db.selectFrom('pubs').selectAll())
+	 * ```
+	 *
+	 * or cache mutation queries
+	 *
+	 * ```ts
+	 * autoCache(db.with('new_pub', db=>db
+	 *		.insertInto('pubs')
+	 *		.values({ //...
+	 *		})
+	 *		.returningAll()
+	 *    )
+	 *	.selectFrom('new_pub')
+	 *	.selectAll()
+	 * )
+	 * ```
+	 *
+	 * Typescript will allow either of these, so we catch them at runtime instead. I also added tests to make sure these kinds of usages do throw
+	 */
 	if (type === "mutation" && operations.has("SelectQueryNode") && operations.size === 1) {
 		throw new AutoRevalidateWithoutMutationError();
 	}
