@@ -27,6 +27,7 @@ export default async function main(communityUUID: CommunitiesId) {
 		.execute();
 
 	const submissionTypeId = "a8a92307-ec90-41e6-9905-30ba3d06e08e" as PubTypesId;
+	const evaluationTypeId = "9bc8a68c-5b75-4c7c-a691-4f9c1daf8bb6" as PubTypesId;
 
 	const corePubSlugs = corePubFields.map((field) => field.slug);
 	const persistedCorePubFields = await db
@@ -51,6 +52,26 @@ export default async function main(communityUUID: CommunitiesId) {
 			persistedCorePubFields.map((field) => ({
 				A: field.id,
 				B: eb.selectFrom("submission_pub_type").select("id"),
+			}))
+		)
+		.execute();
+
+	await db
+		.with("evaluation_pub_type", (db) =>
+			db
+				.insertInto("pub_types")
+				.values({
+					id: evaluationTypeId,
+					name: "Evaluation",
+					communityId: communityUUID,
+				})
+				.returning("id")
+		)
+		.insertInto("_PubFieldToPubType")
+		.values((eb) =>
+			persistedCorePubFields.map((field) => ({
+				A: field.id,
+				B: eb.selectFrom("evaluation_pub_type").select("id"),
 			}))
 		)
 		.execute();
@@ -223,6 +244,18 @@ export default async function main(communityUUID: CommunitiesId) {
 				},
 			])
 		)
+		.with("pubs_children", (db) =>
+			db
+				.insertInto("pubs")
+				.values((eb) => [
+					{
+						communityId: communityUUID,
+						pubTypeId: evaluationTypeId,
+						parentId: eb.selectFrom("new_pubs").select("id"),
+					},
+				])
+				.returning("id")
+		)
 		.insertInto("pub_values")
 		.values((eb) => [
 			{
@@ -235,6 +268,11 @@ export default async function main(communityUUID: CommunitiesId) {
 				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
 					.id,
 				value: '"# Abstract"',
+			},
+			{
+				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
+				value: '"Evaluation of Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
 			},
 		])
 		.execute();

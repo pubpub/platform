@@ -1,0 +1,19 @@
+{
+	"name": "schemas",
+	"version": "0.0.1",
+	"main": "dist/schemas.cjs.js",
+	"module": "dist/schemas.esm.js",
+	"scripts": {
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"type-check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@sinclair/typebox": "^0.32.34"
+	},
+	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
+		"tsconfig": "workspace:*",
+		"typescript": "^5.4.2"
+	},
+	"prettier": "@pubpub/prettier-config"
+}

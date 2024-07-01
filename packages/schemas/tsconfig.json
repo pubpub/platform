@@ -1,0 +1,9 @@
+{
+	"extends": "tsconfig/react-library.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+	},
+	"include": ["."],
+	"exclude": ["dist", "build", "node_modules"]
+}
