@@ -160,6 +160,9 @@ export type StagePayloadMoveConstraintDestination =
 	StagePayloadMoveConstraint[number]["destination"];
 export type IntegrationAction = { name: string; url: string; href: string };
 
+/**
+ * https://www.totaltypescript.com/concepts/the-prettify-helper
+ */
 export type Prettify<T> = {
 	[P in keyof T]: T[P];
 } & {};
