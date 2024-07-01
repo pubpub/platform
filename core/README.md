@@ -12,7 +12,7 @@ npx supabase db reset
 cp .env.template .env.local
 ```
 
-Copy the relevant values output from `supabase start` into `.env.local`.
+Copy the relevant values output from `supabase start` into `.env.local`. The `anon key` from `supabase`'s output should map to `NEXT_PUBLIC_SUPABASE_PUBLIC_KEY` in `.env.local`.
 
 Populate the database by running:
 
