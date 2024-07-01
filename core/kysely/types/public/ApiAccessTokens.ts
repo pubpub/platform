@@ -28,10 +28,6 @@ export default interface ApiAccessTokensTable {
 	issuedById: ColumnType<UsersId, UsersId, UsersId>;
 
 	issuedAt: ColumnType<Date, Date | string | undefined, Date | string>;
-
-	usageLimit: ColumnType<number | null, number | null, number | null>;
-
-	usages: ColumnType<number, number | undefined, number>;
 }
 
 export type ApiAccessTokens = Selectable<ApiAccessTokensTable>;

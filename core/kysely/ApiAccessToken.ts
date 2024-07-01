@@ -4,6 +4,7 @@ import type { useForm } from "react-hook-form";
 
 import { z } from "zod";
 
+import type { Prettify } from "../lib/types";
 import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "./types/public/ApiAccessPermissions";
 import type { ApiAccessTokensId } from "./types/public/ApiAccessTokens";
 import type ApiAccessType from "./types/public/ApiAccessType";
@@ -141,46 +142,19 @@ export type CreateTokenFormContext = {
 
 export type ApiAccessPermissionConstraintsInput = z.infer<typeof permissionsSchema>;
 
-/**
- * The specific constraints for a given ApiAccessTokenScope
- *
- * You need to change this if you want to add additional constraints
- */
-export type ApiAccessPermissionConstraintsConfig = {
-	[ApiAccessScope.community]: never;
-	[ApiAccessScope.stage]: {
-		[ApiAccessType.read]: {
-			/**
-			 * Which stages are readable by this token
-			 */
-			stages: StagesId[];
-		};
-	};
-	[ApiAccessScope.pub]: {
-		[ApiAccessType.write]: {
-			/**
-			 * In which stages Pubs can be written to by this token
-			 */
-			stages: StagesId[];
-		};
-	};
-	[ApiAccessScope.member]: never;
-	[ApiAccessScope.pubType]: never;
-};
-
 export type ApiAccessPermissionConstraints<
 	T extends ApiAccessScope = ApiAccessScope,
 	AT extends ApiAccessType = ApiAccessType,
-	C extends ApiAccessPermissionConstraintsConfig = ApiAccessPermissionConstraintsConfig,
+	C extends z.infer<typeof permissionsSchema> = z.infer<typeof permissionsSchema>,
 > = T extends T
-	? C[T] extends never
+	? C[T] extends boolean | undefined
 		? undefined
 		: AT extends AT
 			? C[T] extends {
-					[K in AT]: infer R;
+					[K in AT]?: infer R;
 				}
-				? R
-				: undefined
+				? Exclude<R, boolean | undefined>
+				: C[T]
 			: never
 	: never;
 
@@ -198,10 +172,15 @@ export type ApiAccessPermission<
 	// which is much harder to work with
 	T extends T
 		? AT extends AT
-			? Omit<NonGenericApiAccessPermissions, "objectType" | "constraints" | "accessType"> & {
-					accessType: AT;
-					objectType: T;
-					constraints: ApiAccessPermissionConstraints<T, AT>;
-				}
+			? Prettify<
+					Omit<
+						NonGenericApiAccessPermissions,
+						"objectType" | "constraints" | "accessType"
+					> & {
+						accessType: AT;
+						objectType: T;
+						constraints: ApiAccessPermissionConstraints<T, AT> | null;
+					}
+				>
 			: never
 		: never;
