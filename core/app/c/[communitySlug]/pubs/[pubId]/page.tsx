@@ -59,7 +59,7 @@ export default async function Page({
 
 	const [actionsPromise, stagePromise] =
 		pub.stages.length > 0
-			? [getStageActions(pub.stages[0].stageId), getStage(pub.stages[0].stageId)]
+			? [getStageActions(pub2.stages[0].stageId), getStage(pub.stages[0].stageId)]
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);

@@ -15,6 +15,7 @@ import Database from "~/kysely/types/Database";
 import { CommunitiesId } from "~/kysely/types/public/Communities";
 import { PubsId } from "~/kysely/types/public/Pubs";
 import { PubTypesId } from "~/kysely/types/public/PubTypes";
+import { StagesId } from "~/kysely/types/public/Stages";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
@@ -34,6 +35,7 @@ type PubNoChildren = {
 
 type NestedPub = PubNoChildren & {
 	children: NestedPub[];
+	stages: [{ stageId: string }];
 };
 
 type FlatPub = PubNoChildren & {
@@ -199,13 +201,31 @@ export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> =
 			.select(pubColumns)
 			.select(pubValuesByVal(pubId))
 			.select((eb) => pubAssignee(eb))
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("PubsInStages")
+						.where("PubsInStages.pubId", "=", pubId)
+						.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+						.selectAll()
+				).as("stages")
+			)
 			.$narrowType<{ values: PubValues }>()
 			.select((eb) =>
 				jsonArrayFrom(
 					eb
 						.selectFrom("children")
-						.select([...pubColumns, "children.values"])
+						.selectAll()
 						.$narrowType<{ values: PubValues }>()
+						.select((eb) =>
+							jsonArrayFrom(
+								eb
+									.selectFrom("PubsInStages")
+									.where("PubsInStages.pubId", "=", eb.ref("children.id"))
+									.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+									.selectAll()
+							).as("stages")
+						)
 				).as("children")
 			)
 	).executeTakeFirst();
