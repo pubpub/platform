@@ -10,8 +10,8 @@ import { toast } from "ui/use-toast";
 import type { default as ActionName } from "~/kysely/types/public/Action";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { getActionByName } from "~/actions/api";
+import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
 import { useServerAction } from "~/lib/serverActions";
-import { updateAction } from "../../actions";
 
 export type Props = {
 	actionName: ActionName;

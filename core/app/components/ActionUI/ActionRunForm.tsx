@@ -11,9 +11,9 @@ import { Loader2, Play } from "ui/icon";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
-import type { StagePub } from "./queries";
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagePub } from "~/lib/db/queries";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
