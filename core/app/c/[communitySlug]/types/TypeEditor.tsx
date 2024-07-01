@@ -101,6 +101,7 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 									onClick={() => remove(index)}
 									aria-label="Remove field"
 								>
+									<span className="sr-only">Remove field</span>
 									<X size={14} />
 								</Button>
 								<FormLabel className="font-normal">

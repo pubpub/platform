@@ -57,6 +57,7 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 								setEditing(!editing);
 							}}
 						>
+							<span className="sr-only">Edit Pub Type</span>
 							<Pencil size="12" />
 						</Button>
 					)}
