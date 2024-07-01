@@ -12,7 +12,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import type { Action } from "~/actions/types";
 import { actions } from "~/actions/api";
@@ -51,22 +51,20 @@ const ActionCell = (props: ActionCellProps) => {
 					<div className="flex items-center gap-2">
 						<h4 className="text-sm font-semibold">{props.action.name}</h4>
 						{props.action.experimental && (
-							<TooltipProvider>
-								<Tooltip>
-									<TooltipTrigger>
-										<Badge variant="outline" className="bg-rose-200 text-xs">
-											α
-										</Badge>
-									</TooltipTrigger>
-									<TooltipContent>
-										<p>
-											This action is experimental and may not work as
-											expected, and can change at any time.
-										</p>
-										<p> Please use at your own risk.</p>
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger>
+									<Badge variant="outline" className="bg-rose-200 text-xs">
+										α
+									</Badge>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>
+										This action is experimental and may not work as expected,
+										and can change at any time.
+									</p>
+									<p> Please use at your own risk.</p>
+								</TooltipContent>
+							</Tooltip>
 						)}
 					</div>
 
