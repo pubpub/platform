@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
@@ -14,6 +15,7 @@ import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
+import { getPubCached } from "~/lib/server";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -43,9 +45,16 @@ export default async function Page({
 			},
 		});
 	const pub = await getPub(params.pubId);
+	const pub2 = await getPubCached(params.pubId as PubsId);
 	if (!pub) {
 		return null;
 	}
+	if (!pub2) {
+		return null;
+	}
+	console.log("PUB is here with the pubinclude type", pub);
+	console.log("PUB here is the kysely query", pub2);
+
 	const users = getPubUsers(pub.permissions);
 
 	const [actionsPromise, stagePromise] =
