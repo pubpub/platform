@@ -6,7 +6,8 @@
 			"type": "node-terminal",
 			"request": "launch",
 			"command": "pnpm run dev",
-			"cwd": "${workspaceFolder}/core"
+			"cwd": "${workspaceFolder}",
+			"skipFiles": ["<node_internals>/**"]
 		},
 		{
 			"name": "Next.js: debug client-side",
