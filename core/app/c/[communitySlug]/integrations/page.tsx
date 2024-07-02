@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";

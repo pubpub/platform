@@ -1,16 +1,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
+
+import TableActionDropDown from "~/app/components/DataTable/DataTableDropDown";
 
 export type TableForm = {
 	id: string;
@@ -45,37 +38,31 @@ export const getFormTableColumns = () =>
 			enableHiding: false,
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader className="w-52" column={column} title="Name" />
+			),
 			accessorKey: "formName",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader className="w-52" column={column} title="Type" />
+			),
 			accessorKey: "pubType",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Updated" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader className="w-52" column={column} title="Updated" />
+			),
 			accessorKey: "updated",
-			cell: ({ row }) => row.original.updated.toLocaleDateString(),
+			cell: ({ row }) => {
+				return <div className="pr-10">{row.original.updated.toLocaleDateString()}</div>;
+			},
 		},
 		{
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
-				return (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="h-8 w-8 p-0">
-								<span className="sr-only">Open menu</span>
-								<MoreVertical className="h-4 w-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuLabel>Menu</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<div className="w-full">Archive</div>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				);
+				return <TableActionDropDown />;
 			},
 		},
 	] as const satisfies ColumnDef<TableForm, unknown>[];

@@ -1,5 +1,6 @@
 export {
 	Activity,
+	Archive,
 	ArrowRight,
 	Calendar,
 	ClipboardPenLine,

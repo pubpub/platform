@@ -3,10 +3,10 @@
 import React from "react";
 
 import type { PubChild } from "./getPubChildrenTableColumns";
-import { DataTable } from "~/app/components/DataTable";
+import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
 
 export const PubChildrenTable = ({ children }: { children: PubChild[] }) => {
 	const communityTableColumns = getPubChildrenTableColumns();
-	return <DataTable columns={communityTableColumns} data={children}/>;
+	return <DataTable columns={communityTableColumns} data={children} />;
 };
