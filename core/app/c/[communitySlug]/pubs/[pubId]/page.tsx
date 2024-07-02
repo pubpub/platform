@@ -143,7 +143,9 @@ export default async function Page({
 					</div>
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Assignee</div>
-						<Assign members={communityMembers} pub={pub} />
+						<div className="ml-4">
+							<Assign members={communityMembers} pub={pub} />
+						</div>
 					</div>
 				</div>
 			</div>
