@@ -22,7 +22,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "./dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 
 interface DataTablePaginationProps<TData> {
 	table: Table<TData>;
@@ -81,12 +80,14 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
 	column: Column<TData, TValue>;
 	title: string;
+	icon?: React.ReactNode;
 }
 
 export function DataTableColumnHeader<TData, TValue>({
 	column,
 	title,
 	className,
+	icon,
 }: DataTableColumnHeaderProps<TData, TValue>) {
 	if (!column.getCanSort()) {
 		return <div className={cn(className)}>{title}</div>;
@@ -101,7 +102,10 @@ export function DataTableColumnHeader<TData, TValue>({
 						size="sm"
 						className="-ml-3 flex h-8 w-full min-w-fit items-center justify-between gap-x-1 data-[state=open]:bg-accent"
 					>
-						<span>{title}</span>
+						<span className="flex flex-row items-center">
+							<div className="pr-1">{icon}</div>
+							{title}
+						</span>
 						{column.getIsSorted() === "desc" ? (
 							<ArrowDownIcon className="h-4 w-4" />
 						) : column.getIsSorted() === "asc" ? (

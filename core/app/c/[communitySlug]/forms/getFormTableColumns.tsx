@@ -2,6 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
+import { History, ToyBrick } from "ui/icon";
 
 import TableActionDropDown from "~/app/components/DataTable/DataTableDropDown";
 
@@ -45,13 +46,23 @@ export const getFormTableColumns = () =>
 		},
 		{
 			header: ({ column }) => (
-				<DataTableColumnHeader className="w-52" column={column} title="Type" />
+				<DataTableColumnHeader
+					className="w-52"
+					column={column}
+					title="Type"
+					icon={<ToyBrick size={15} />}
+				/>
 			),
 			accessorKey: "pubType",
 		},
 		{
 			header: ({ column }) => (
-				<DataTableColumnHeader className="w-52" column={column} title="Updated" />
+				<DataTableColumnHeader
+					className="w-52"
+					column={column}
+					title="Updated"
+					icon={<History size={15} />}
+				/>
 			),
 			accessorKey: "updated",
 			cell: ({ row }) => {

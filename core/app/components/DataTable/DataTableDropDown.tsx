@@ -1,14 +1,8 @@
 import React from "react";
 
 import { Button } from "ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { Archive, MoreVertical } from "ui/icon";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
+import { Archive, Ellipsis } from "ui/icon";
 
 function TableActionDropDown() {
 	return (
@@ -16,7 +10,7 @@ function TableActionDropDown() {
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" className="h-8 w-8 p-0">
 					<span className="sr-only">Open menu</span>
-					<MoreVertical className="h-4 w-4" />
+					<Ellipsis className="h-4 w-4" />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="p-0">
