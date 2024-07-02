@@ -1,10 +1,10 @@
+import type { PageContext } from "./PubsRunActionDropDownMenu";
+import type { Action, ActionInstanceOf } from "~/actions/types";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
-import { Action, ActionInstanceOf } from "~/actions/types";
 import { ActionConfigForm } from "./ActionConfigForm";
-import { PageContext } from "./StagePanelPubsRunActionDropDownMenu";
 
 export const ActionConfigFormWrapper = async ({
 	stage,

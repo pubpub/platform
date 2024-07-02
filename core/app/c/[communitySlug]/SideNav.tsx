@@ -2,7 +2,7 @@ import { Button } from "ui/button";
 import { Activity, Menu, Settings } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
-import type { CommunityData } from "./layout";
+import type { CommunityData } from "~/lib/server/community";
 import { getLoginData } from "~/lib/auth/loginData";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";

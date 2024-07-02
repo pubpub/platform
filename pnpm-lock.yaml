@@ -685,6 +685,22 @@ importers:
         specifier: ^5.3.3
         version: 5.4.2
 
+  packages/schemas:
+    dependencies:
+      '@sinclair/typebox':
+        specifier: ^0.32.34
+        version: 0.32.34
+    devDependencies:
+      '@pubpub/prettier-config':
+        specifier: workspace:*
+        version: link:../../config/prettier
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../config/tsconfig
+      typescript:
+        specifier: ^5.4.2
+        version: 5.4.5
+
   packages/sdk:
     dependencies:
       '@hookform/resolvers':
@@ -8027,6 +8043,10 @@ packages:
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
     dev: true
+
+  /@sinclair/typebox@0.32.34:
+    resolution: {integrity: sha512-a3Z3ytYl6R/+7ldxx04PO1semkwWlX/8pTqxsPw4quIcIXDFPZhOc1Wx8azWmkU26ccK3mHwcWenn0avNgAKQg==}
+    dev: false
 
   /@smithy/abort-controller@2.0.14:
     resolution: {integrity: sha512-zXtteuYLWbSXnzI3O6xq3FYvigYZFW8mdytGibfarLL2lxHto9L3ILtGVnVGmFZa7SDh62l39EnU5hesLN87Fw==}

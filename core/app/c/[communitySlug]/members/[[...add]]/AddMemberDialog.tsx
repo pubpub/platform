@@ -7,7 +7,7 @@ import { Community } from "@prisma/client";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
 import { UserPlus } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 export const AddMemberDialog = ({
 	open,
@@ -35,18 +35,17 @@ export const AddMemberDialog = ({
 				router.push(`/c/${community.slug}/members${open ? "/add" : ""}`);
 			}}
 		>
-			<TooltipProvider>
-				<Tooltip>
-					<TooltipContent> Add a user to your community</TooltipContent>
-					<TooltipTrigger asChild>
-						<DialogTrigger asChild>
-							<Button variant="outline" className="flex items-center gap-x-2">
-								<UserPlus size="16" /> Add Member
-							</Button>
-						</DialogTrigger>
-					</TooltipTrigger>
-				</Tooltip>
-			</TooltipProvider>
+			<Tooltip>
+				<TooltipContent> Add a user to your community</TooltipContent>
+				<TooltipTrigger asChild>
+					<DialogTrigger asChild>
+						<Button variant="outline" className="flex items-center gap-x-2">
+							<UserPlus size="16" /> Add Member
+						</Button>
+					</DialogTrigger>
+				</TooltipTrigger>
+			</Tooltip>
+
 			<DialogContent>{content}</DialogContent>
 		</Dialog>
 	);

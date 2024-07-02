@@ -8,7 +8,7 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 
-import { CommunityData } from "./layout";
+import type { CommunityData } from "~/lib/server/community";
 
 type Props = {
 	community: NonNullable<CommunityData>;

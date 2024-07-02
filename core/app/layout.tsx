@@ -8,6 +8,8 @@ import InitClient from "./InitClient";
 
 import "./globals.css";
 
+import { TooltipProvider } from "ui/tooltip";
+
 export const metadata = {
 	title: "PubPub v7",
 	description: "A more flexible PubPub",
@@ -21,8 +23,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			</head>
 			<body>
 				<InitClient />
-				{children}
-				<Toaster />
+				<TooltipProvider>
+					{children}
+					<Toaster />
+				</TooltipProvider>
 			</body>
 		</html>
 	);

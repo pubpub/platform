@@ -1,7 +1,8 @@
 "use server";
 
+import type { JSONSchemaType } from "ajv";
+
 import { revalidatePath, revalidateTag } from "next/cache";
-import { JSONSchemaType } from "ajv";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { JsonValue } from "contracts";
@@ -213,6 +214,7 @@ export const _updatePub = async ({
 			cause: errors,
 		};
 	}
+	revalidateTag(`pubs_${pubId}`);
 
 	return {
 		success: true,
@@ -308,7 +310,6 @@ export const removePub = defineServerAction(async function removePub({
 		if (path) {
 			revalidatePath(path);
 		}
-
 		return {
 			success: true,
 			report: `Successfully removed the pub`,
