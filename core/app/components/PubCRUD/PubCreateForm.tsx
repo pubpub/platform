@@ -55,7 +55,11 @@ export const PubCreateForm = ({
 			return { compiledSchema: null, uncompiledSchema: null };
 		}
 
-		const uncompiledSchema = buildSchemaFromPubFields(selectedPubType, []);
+		const uncompiledSchema = buildSchemaFromPubFields(
+			//  @ts-expect-error FIXME: Schema types are different
+			selectedPubType,
+			[]
+		);
 		const compiledSchema = new Ajv({
 			formats: fullFormats,
 		}).addSchema(uncompiledSchema, "schema");
