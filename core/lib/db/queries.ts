@@ -6,7 +6,7 @@ import { expect } from "utils";
 
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
-import { pubValuesInclude } from "~/lib/types";
+import { communityMemberInclude, pubValuesInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 
 export const getStage = cache(async (stageId: string) => {
@@ -97,3 +97,17 @@ export const getStageRules = cache(async (stageId: string) => {
 		.execute();
 	return rules;
 });
+
+export const getCommunityBySlug = async (communitySlug: string) => {
+	return await prisma.community.findUnique({
+		where: { slug: communitySlug },
+		include: {
+			stages: {
+				include: stageInclude,
+			},
+			members: {
+				include: communityMemberInclude,
+			},
+		},
+	});
+};
