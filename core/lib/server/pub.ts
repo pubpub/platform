@@ -1,8 +1,10 @@
+import type { ExpressionBuilder, SelectExpression, StringReference } from "kysely";
+
 import { Prisma } from "@prisma/client";
-import { ExpressionBuilder, SelectExpression, sql, StringReference } from "kysely";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import {
+import type {
 	CreatePubRequestBodyWithNulls,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
@@ -10,11 +12,11 @@ import {
 } from "contracts";
 import { expect } from "utils";
 
+import type Database from "~/kysely/types/Database";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
-import Database from "~/kysely/types/Database";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
-import { PubsId } from "~/kysely/types/public/Pubs";
-import { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { StagesId } from "~/kysely/types/public/Stages";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
@@ -209,6 +211,30 @@ export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> =
 						.innerJoin("stages", "stages.id", "PubsInStages.stageId")
 						.selectAll()
 				).as("stages")
+			)
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("action_claim")
+						.where("action_claim.pubId", "=", eb.ref("pubs.id"))
+						.selectAll()
+				).as("claims")
+			)
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("integration_instances")
+						.where("integration_instances.communityId", "=", eb.ref("pubs.communityId"))
+						.selectAll()
+				).as("integrationInstances")
+			)
+			.select((eb) =>
+				jsonObjectFrom(
+					eb
+						.selectFrom("pub_types")
+						.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
+						.selectAll()
+				).as("pubType")
 			)
 			.$narrowType<{ values: PubValues }>()
 			.select((eb) =>
