@@ -47,9 +47,9 @@ export default async function Page() {
 						</div>
 					</h1>
 				</header>
-				<div className="p-4">
+				<div>
 					{forms.length === 0 ? (
-						<div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+						<div className=" max-w-{444px} flex min-h-screen flex-col items-center justify-center">
 							<h2 className="mb-2 text-2xl font-semibold text-gray-800">
 								You don’t have any forms yet
 							</h2>

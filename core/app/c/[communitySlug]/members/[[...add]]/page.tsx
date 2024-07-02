@@ -102,7 +102,7 @@ export default async function Page({
 	});
 
 	return (
-		<>
+		<div className="p-4">
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Members</h1>
 				<AddMemberDialog
@@ -112,6 +112,6 @@ export default async function Page({
 				/>
 			</div>
 			<MemberTable members={tableMembers} community={community} />
-		</>
+		</div>
 	);
 }

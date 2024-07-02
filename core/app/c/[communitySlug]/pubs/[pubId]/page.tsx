@@ -60,12 +60,7 @@ export default async function Page({
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
 
 	return (
-		<div className="container mx-auto p-4">
-			<div className="pb-6">
-				<Link href={`/c/${params.communitySlug}/pubs`}>
-					<Button>View all pubs</Button>
-				</Link>
-			</div>
+		<div className="p-4">
 			<div className="mb-8">
 				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
 				<PubTitle pub={pub} />

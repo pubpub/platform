@@ -8,5 +8,5 @@ import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
 
 export const PubChildrenTable = ({ children }: { children: PubChild[] }) => {
 	const communityTableColumns = getPubChildrenTableColumns();
-	return <DataTable columns={communityTableColumns} data={children} searchBy="assignee" />;
+	return <DataTable columns={communityTableColumns} data={children}/>;
 };
