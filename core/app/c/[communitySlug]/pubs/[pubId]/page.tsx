@@ -150,7 +150,7 @@ export default async function Page({
 				</div>
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper pub={pub} />
+				<PubChildrenTableWrapper pub={pub} members={communityMembers} />
 			</Suspense>
 		</div>
 	);

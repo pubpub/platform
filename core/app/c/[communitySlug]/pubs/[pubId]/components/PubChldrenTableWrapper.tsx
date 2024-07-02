@@ -1,11 +1,17 @@
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { StagePub } from "~/lib/db/queries";
-import type { PubPayload } from "~/lib/types";
+import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { getStage, getStageActions } from "~/lib/db/queries";
 import { PubChildrenTable } from "./PubChildrenTable";
 
-async function PubChildrenTableWrapper({ pub }: { pub: PubPayload }) {
+async function PubChildrenTableWrapper({
+	pub,
+	members,
+}: {
+	pub: PubPayload;
+	members: CommunityMemberPayload[];
+}) {
 	const pubChildren = pub.children.map(async (child) => {
 		const [stageActionInstances, stage] =
 			child.stages.length > 0
@@ -14,6 +20,7 @@ async function PubChildrenTableWrapper({ pub }: { pub: PubPayload }) {
 						getStage(child.stages[0].stageId),
 					])
 				: [null, null];
+		const assigneeUser = members.find((m) => m.userId === child.assigneeId)?.user;
 
 		return {
 			id: child.id,
@@ -21,7 +28,7 @@ async function PubChildrenTableWrapper({ pub }: { pub: PubPayload }) {
 				(child.values.find((value) => value.field.name === "Title")?.value as string) ||
 				"Evaluation",
 			stage: child.stages[0]?.stageId,
-			assignee: child.assigneeId,
+			assignee: assigneeUser ? `${assigneeUser.firstName} ${assigneeUser.lastName}` : null,
 			created: new Date(child.createdAt),
 			actions:
 				stageActionInstances && stageActionInstances.length > 0 ? (
