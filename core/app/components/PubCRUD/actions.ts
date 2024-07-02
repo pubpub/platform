@@ -3,7 +3,7 @@
 import type { JSONSchemaType } from "ajv";
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { JsonValue } from "contracts";
 import { logger } from "logger";
@@ -103,34 +103,40 @@ export const _updatePub = async ({
 }) => {
 	const toBeUpdatedPubFieldSlugs = fields.map(({ slug }) => slug);
 
-	const toBeUpdatedPubValues = await db
-		.selectFrom("pub_values")
-		.select((eb) => [
-			"id",
-			"value",
-			"pubId",
-			"pub_values.fieldId",
-			jsonObjectFrom(
-				eb
-					.selectFrom("pub_fields")
-					.select((eb) => [
-						"pub_fields.id",
-						"pub_fields.name",
-						"pub_fields.pubFieldSchemaId",
-						"pub_fields.slug",
-						jsonObjectFrom(
-							eb
-								.selectFrom("PubFieldSchema")
-								.selectAll()
-								.whereRef("PubFieldSchema.id", "=", "pub_fields.pubFieldSchemaId")
-						).as("schema"),
-					])
-					.whereRef("pub_fields.id", "=", "pub_values.fieldId")
-					.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-			).as("field"),
-		])
+	// get all values and field schemas for the slugs in fields
+	const existingPubValues = await db
+		.selectFrom("pub_fields")
+		.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+		.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
 		.where("pub_values.pubId", "=", pubId)
+		.distinctOn("pub_fields.id")
+		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+		.select((eb) => [
+			"pub_values.value",
+			jsonBuildObject({
+				slug: eb.ref("pub_fields.slug"),
+				id: eb.ref("pub_fields.id"),
+				name: eb.ref("name"),
+				schema: jsonObjectFrom(
+					eb
+						.selectFrom("PubFieldSchema")
+						.selectAll("PubFieldSchema")
+						.whereRef("PubFieldSchema.id", "=", "pub_fields.pubFieldSchemaId")
+				),
+			}).as("field"),
+		])
 		.execute();
+
+	const valueUpdates = fields.filter((field) => {
+		const existingValue = existingPubValues.find(
+			(pubValue) => pubValue.field.slug === field.slug
+		);
+		if (!field.value) {
+			return !!existingValue; // If "" is returned, update existing value to ""
+		}
+
+		return field.value !== existingValue;
+	});
 
 	const stageMoveQuery =
 		stageId &&
@@ -147,7 +153,7 @@ export const _updatePub = async ({
 		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])
 	);
 
-	const pubFields = toBeUpdatedPubValues
+	const pubFields = existingPubValues
 		.map((pubValue) => pubValue.field)
 		.filter(
 			(
@@ -174,34 +180,23 @@ export const _updatePub = async ({
 		};
 	}
 
-	const queries = [
-		toBeUpdatedPubValues.map(async (pubValue) => {
-			const field = fields.find((f) => f.slug === pubValue.field?.slug);
-			if (!field) {
-				logger.debug({
-					msg: `Field ${pubValue.field?.slug} not found in fields`,
-					fields,
-					pubValue,
-				});
-				return;
-			}
-			const { value } = field;
+	const valueQuery = autoRevalidate(
+		db
+			.insertInto("pub_values")
+			.values((eb) =>
+				valueUpdates.map(({ value, slug }) => ({
+					value: JSON.stringify(value),
+					pubId,
+					fieldId: eb
+						.selectFrom("pub_fields")
+						.where("pub_fields.slug", "=", slug)
+						.select("pub_fields.id"),
+				}))
+			)
+			.returningAll()
+	).execute();
 
-			return autoRevalidate(
-				db
-					.updateTable("pub_values")
-					.set({
-						value: JSON.stringify(value),
-					})
-					.where("pub_values.id", "=", pubValue.id)
-					.returningAll()
-			).execute();
-		}),
-	]
-		.filter((x) => x != null)
-		.flat();
-
-	const updatePub = await Promise.allSettled([...queries, ...([stageMoveQuery] || [])]);
+	const updatePub = await Promise.allSettled([valueQuery, ...([stageMoveQuery] || [])]);
 
 	const errors = updatePub.filter(
 		(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>

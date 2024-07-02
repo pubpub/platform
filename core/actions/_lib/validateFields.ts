@@ -2,7 +2,7 @@ import Ajv from "ajv";
 
 import { logger } from "logger";
 
-import type { BasePubField, CorePubField } from "../corePubFields";
+import type { BasePubField } from "../corePubFields";
 
 /**
  * TODO: Replace this with a more robust validation implementation

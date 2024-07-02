@@ -45,7 +45,7 @@ export async function PubUpdate({ pubId }: PubUpdateProps) {
 			.with("currentStageId", (db) =>
 				db
 					.selectFrom("PubsInStages")
-					.select((eb) => ["stageId as currentStageId"])
+					.select("stageId as currentStageId")
 					.where("PubsInStages.pubId", "=", pubId)
 			)
 			.selectFrom("stages")
@@ -110,7 +110,10 @@ export async function PubUpdate({ pubId }: PubUpdateProps) {
 			<Suspense fallback={<div>Loading...</div>}>
 				<PubUpdateForm
 					pub={pub}
-					pubType={pubType}
+					pubType={{
+						...pubType,
+						fields: pubType.fields as GetPubTypeResponseBody["fields"],
+					}}
 					pseudoPubType={pseudoPubType}
 					availableStages={availableStages}
 					currentStage={currentStage}

@@ -89,14 +89,16 @@ export const PubUpdateForm = ({
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
+	const combinedFields = [...(pubType.fields || []), ...(pseudoPubType?.fields || [])];
+
 	const onSubmit = async ({ stage, ...values }: { pubType: string; stage: string }) => {
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
-			communityId: pubType.communityId as CommunitiesId,
+			communityId: pub.communityId as CommunitiesId,
 			path: pathWithoutFormParam,
 			stageId: stage as StagesId,
 			fields: Object.entries(values).reduce((acc, [key, value]) => {
-				const id = pubType?.fields.find((f) => f.slug === key)?.id;
+				const id = combinedFields.find((f) => f.slug === key)?.id;
 				if (id) {
 					acc[id] = { slug: key, value };
 				}
@@ -113,7 +115,6 @@ export const PubUpdateForm = ({
 		}
 	};
 
-	console.log({ values: pub.values, pseudoPubType });
 	const memoizedForm = useMemo(() => {
 		if (!compiledSchema) {
 			return null;
