@@ -78,13 +78,15 @@ export default async function Page({ params }: Props) {
 	}
 	return (
 		<FieldsProvider fields={fields}>
-			<div className="mb-16 flex items-center justify-between">
-				<h1 className="flex-grow text-xl font-bold">Pub Types</h1>
-				<div className="flex items-center gap-x-2">
-					<CreatePubType />
+			<div className="p-4">
+				<div className="mb-16 flex items-center justify-between">
+					<h1 className="flex-grow text-xl font-bold">Pub Types</h1>
+					<div className="flex items-center gap-x-2">
+						<CreatePubType />
+					</div>
 				</div>
+				<TypeList types={types} superadmin={loginData.isSuperAdmin} />
 			</div>
-			<TypeList types={types} superadmin={loginData.isSuperAdmin} />
 		</FieldsProvider>
 	);
 }

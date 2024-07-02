@@ -33,6 +33,7 @@ export {
 	Settings,
 	Table,
 	Terminal,
+	ToyBrick,
 	Trash,
 	Undo2,
 	UserCircle2,

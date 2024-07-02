@@ -1,5 +1,5 @@
 import { Button } from "ui/button";
-import { Activity, Menu, Settings } from "ui/icon";
+import { Activity, Menu,  ToyBrick,Settings } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { CommunityData } from "~/lib/server/community";
@@ -80,6 +80,9 @@ const ManageLinks = ({
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
 			{isAdmin && (
+				<NavLink href={`${prefix}/types`} text={"Types"} icon={<ToyBrick size={16} />} />
+			)}
+			{isAdmin && (
 				<NavLink
 					href={`${prefix}/forms`}
 					text={"Forms"}
@@ -157,22 +160,16 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 					/>
 					{divider}
 					<div className="flex h-full max-h-screen flex-col gap-2">
-						<div className="flex flex-1 flex-col gap-y-2">
-							<nav className="grid items-start pr-2 text-sm font-medium">
+						<div className="flex-1">
+							<nav className="grid items-start pr-2 pt-2 text-sm font-medium ">
 								<Links prefix={prefix} isAdmin={isAdmin} />
 								{divider}
-								<span className="my-2 text-xs font-semibold uppercase text-muted-foreground">
-									Views
-								</span>
+								<span className="font-semibold text-gray-500">VIEWS</span>
 								<ViewLinks prefix={prefix} isAdmin={isAdmin} />
-								<span className="my-2 text-xs font-semibold uppercase text-muted-foreground">
-									Manage
-								</span>
-								<ManageLinks
-									prefix={prefix}
-									isAdmin={isAdmin}
-									isSuperAdmin={loginData?.isSuperAdmin}
-								/>
+							</nav>
+							<nav className="grid items-start pr-2 pt-4 text-sm font-medium">
+								<span className="font-semibold text-gray-500">MANAGE</span>
+								<ManageLinks prefix={prefix} isAdmin={isAdmin} />
 							</nav>
 						</div>
 					</div>
