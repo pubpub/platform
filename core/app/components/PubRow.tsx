@@ -7,9 +7,9 @@ import { cn } from "utils";
 
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubPayload } from "~/lib/types";
+import { getPubTitle } from "~/lib/pubs";
 import IntegrationActions from "./IntegrationActions";
 import { PubDropDown } from "./PubCRUD/PubDropDown";
-import { PubUpdateButton } from "./PubCRUD/PubUpdateButton";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 
@@ -37,13 +37,6 @@ const groupPubChildrenByPubType = (pubs: PubPayload["children"]) => {
 	return Object.values(pubTypes);
 };
 
-const getTitle = (pub: PubPayload["children"][number]) => {
-	const title = pub.values.find((value) => {
-		return value.field.slug === "unjournal:title" || value.field.slug === "pubpub:title";
-	});
-	return title?.value as string;
-};
-
 const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 	return (
 		<ul className={cn("ml-4 text-sm")}>
@@ -59,7 +52,7 @@ const ChildHierarchy = ({ pub }: { pub: PubPayload["children"][number] }) => {
 									href={`/pubs/${child.id}`}
 									className="text-sm hover:underline"
 								>
-									{getTitle(child)}
+									{getPubTitle(child)}
 								</Link>
 							</div>
 							{pub.children?.length > 0 && <ChildHierarchy pub={child} />}

@@ -17,21 +17,12 @@ import { useToast } from "ui/use-toast";
 import { cn, expect } from "utils";
 
 import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
+import { getPubTitle } from "~/lib/pubs";
 import { assign } from "./lib/actions";
 
 type Props = {
 	members: CommunityMemberPayload[];
 	pub: PubPayload;
-};
-
-const getTitle = (pub: Props["pub"]) => {
-	const unjournalTitleValue = pub.values.find((value) => {
-		return value.field.slug === "unjournal:title";
-	});
-	const pubpubTitleValue = pub.values.find((value) => {
-		return value.field.slug === "pubpub:title";
-	});
-	return (pubpubTitleValue?.value || unjournalTitleValue?.value) as string;
 };
 
 export default function Assign(props: Props) {
@@ -40,7 +31,7 @@ export default function Assign(props: Props) {
 	const [selectedUserId, setSelectedUserId] = React.useState<string | undefined>(
 		props.pub.assigneeId ?? undefined
 	);
-	const title = useMemo(() => getTitle(props.pub), [props.pub]);
+	const title = useMemo(() => getPubTitle(props.pub), [props.pub]);
 	const users = useMemo(() => props.members.map((member) => member.user), [props.members]);
 	const user = useMemo(
 		() => users.find((user) => user.id === selectedUserId),
