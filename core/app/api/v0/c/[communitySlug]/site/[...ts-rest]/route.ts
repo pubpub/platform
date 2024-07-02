@@ -12,10 +12,10 @@ import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import type { StagesId } from "~/kysely/types/public/Stages";
-import { getStage } from "~/app/c/[communitySlug]/stages/manage/components/panel/queries";
 import { db } from "~/kysely/database";
 import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import ApiAccessType from "~/kysely/types/public/ApiAccessType";
+import { getStage } from "~/lib/db/queries";
 import {
 	createPubRecursiveNew,
 	getPub,
