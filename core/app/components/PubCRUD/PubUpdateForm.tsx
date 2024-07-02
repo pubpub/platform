@@ -39,11 +39,7 @@ export const PubUpdateForm = ({
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) => {
 	const { compiledSchema, uncompiledSchema } = useMemo(() => {
-		const uncompiledSchema = buildSchemaFromPubFields(
-			//  @ts-expect-error FIXME: Schema types are different
-			pubType,
-			[]
-		);
+		const uncompiledSchema = buildSchemaFromPubFields(pubType, []);
 		const compiledSchema = new Ajv({
 			formats: fullFormats,
 		}).addSchema(uncompiledSchema, "schema");
