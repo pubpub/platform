@@ -6,6 +6,7 @@ import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type CoreSchemaType from "~/kysely/types/public/CoreSchemaType";
 import type Event from "~/kysely/types/public/Event";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
@@ -98,6 +99,10 @@ export type Action<
 				 * Custom indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
 				 */
 				fieldType?: FieldConfigItem["fieldType"] | "custom";
+				/**
+				 * TODO: Document this
+				 */
+				allowedSchemas?: CoreSchemaType[];
 			};
 		};
 		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
