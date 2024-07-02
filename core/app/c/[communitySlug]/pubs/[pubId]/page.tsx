@@ -6,13 +6,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { getLoginData } from "~/lib/auth/loginData";
-import { getStage, getStageActions } from "~/lib/db/queries";
+import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
@@ -48,6 +49,8 @@ export default async function Page({
 		return null;
 	}
 	const users = getPubUsers(pub.permissions);
+	const community = await getCommunityBySlug(params.communitySlug);
+	const communityMembers = community?.members || [];
 
 	const [actionsPromise, stagePromise] =
 		pub.stages.length > 0
@@ -137,6 +140,10 @@ export default async function Page({
 								);
 							})}
 						</div>
+					</div>
+					<div className="mb-4">
+						<div className="mb-1 text-lg font-bold">Assignee</div>
+						<Assign members={communityMembers} pub={pub} />
 					</div>
 				</div>
 			</div>
