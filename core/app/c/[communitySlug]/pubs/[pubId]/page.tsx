@@ -52,12 +52,6 @@ export default async function Page({
 	if (!pub2) {
 		return null;
 	}
-	// console.log("\n\n");
-	// console.log("PUB is here with the pubinclude type", pub);
-	// console.log("\n\n");
-	// console.log("PUB here is the kysely query", pub2);
-	// console.log("\n\n");
-	// console.log("Valulesa", pub2.values);
 	const users = getPubUsers([]);
 
 	const [actionsPromise, stagePromise] =
