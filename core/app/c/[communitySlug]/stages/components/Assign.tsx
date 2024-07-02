@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { cn, expect } from "utils";
 
-import {
+import type {
 	CommunityMemberPayload,
 	PubPayload,
 	StagePayload,
@@ -34,10 +34,13 @@ type Props = {
 };
 
 const getTitle = (pub: Props["pub"]) => {
-	const titleValue = pub.values.find((value) => {
+	const unjournalTitleValue = pub.values.find((value) => {
 		return value.field.slug === "unjournal:title";
 	});
-	return titleValue?.value as string;
+	const pubpubTitleValue = pub.values.find((value) => {
+		return value.field.slug === "pubpub:title";
+	});
+	return (pubpubTitleValue?.value || unjournalTitleValue?.value) as string;
 };
 
 export default function Assign(props: Props) {
