@@ -1,4 +1,4 @@
-import {
+import type {
 	CommunityMemberPayload,
 	PubPayload,
 	StagePayload,
@@ -26,13 +26,7 @@ export const StagePubActions = (props: Props) => {
 				moveTo={props.moveTo}
 				moveFrom={props.moveFrom}
 			/>
-			<Assign
-				loginData={props.loginData}
-				members={props.members}
-				pub={props.pub}
-				stage={props.stage}
-				stages={props.moveTo}
-			/>
+			<Assign members={props.members} pub={props.pub} />
 		</div>
 	);
 };

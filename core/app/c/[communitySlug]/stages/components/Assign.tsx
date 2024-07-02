@@ -16,21 +16,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { cn, expect } from "utils";
 
-import type {
-	CommunityMemberPayload,
-	PubPayload,
-	StagePayload,
-	StagePayloadMoveConstraintDestination,
-	UserLoginData,
-} from "~/lib/types";
+import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
 import { assign } from "./lib/actions";
 
 type Props = {
-	loginData: UserLoginData;
 	members: CommunityMemberPayload[];
 	pub: PubPayload;
-	stage: StagePayload;
-	stages: StagePayloadMoveConstraintDestination[];
 };
 
 const getTitle = (pub: Props["pub"]) => {
