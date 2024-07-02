@@ -85,25 +85,6 @@ export async function PubUpdate({ pubId }: PubUpdateProps) {
 	const pseudoPubType = nonPubTypeFields.length
 		? buildPseudoPubTypeFromValues(nonPubTypeFields)
 		: undefined;
-	if (true) {
-		//pubType.name === "Submission") {
-		console.log({
-			pub,
-			pubFields: pubType.fields,
-			actualPubFields: pub.values,
-			pubFieldsForPub: pubFields,
-		});
-	}
-	const pubvaluesFieldsSlugs = JSON.stringify(Object.keys(pub.values).sort());
-
-	const pubFieldsSlugs = JSON.stringify(pubFields.map((field) => field.slug).sort());
-	if (pubvaluesFieldsSlugs !== pubFieldsSlugs) {
-		console.log({
-			pubvaluesFieldsSlugs,
-			pubFieldsSlugs,
-		});
-		throw new Error("Pub values and pseudo pub type fields do not match");
-	}
 
 	return (
 		<>

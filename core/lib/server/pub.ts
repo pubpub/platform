@@ -1,20 +1,21 @@
+import type { ExpressionBuilder, SelectExpression, StringReference } from "kysely";
+
 import { Prisma } from "@prisma/client";
-import { ExpressionBuilder, SelectExpression, sql, StringReference } from "kysely";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import {
+import type {
 	CreatePubRequestBodyWithNulls,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
 	JsonValue,
 } from "contracts";
-import { expect } from "utils";
 
+import type Database from "~/kysely/types/Database";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
-import Database from "~/kysely/types/Database";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
-import { PubsId } from "~/kysely/types/public/Pubs";
-import { PubTypesId } from "~/kysely/types/public/PubTypes";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
@@ -468,6 +469,7 @@ export const getPubType = (pubTypeId: PubTypesId) =>
 			.where("pub_types.id", "=", pubTypeId)
 	);
 
+// Selects fields/schemas for all existing values on a pub
 export const getPubFieldsForPub = (pubId: PubsId) =>
 	db
 		.selectFrom("pub_fields")
