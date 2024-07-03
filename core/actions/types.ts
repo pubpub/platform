@@ -36,9 +36,9 @@ export type RunProps<T extends Action> =
 		infer A extends ZodObjectOrWrappedOrOptional
 	>
 		? {
-				config: C["_output"];
+				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
 				pub: ActionPub<P>;
-				args: A["_output"];
+				args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
 				stageId: StagesId;
 				communityId: CommunitiesId;
 			}

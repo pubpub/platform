@@ -73,4 +73,5 @@ export type AutoFormInputComponentProps = {
 	zodItem: z.ZodType<any>;
 	description?: string;
 	className?: string;
+	canUsePubField?: boolean;
 };

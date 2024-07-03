@@ -13,6 +13,11 @@ export const action = defineAction({
 			recipient: z.string().uuid().describe("Recipient"),
 			subject: z.string().describe("Email subject"),
 			body: markdown().min(0).max(2_000).describe("Email body"),
+			pubFields: z
+				.object({
+					subject: z.string().optional(),
+				})
+				.optional(),
 		}),
 		fieldConfig: {
 			recipient: {

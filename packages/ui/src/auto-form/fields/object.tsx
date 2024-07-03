@@ -240,6 +240,8 @@ function FormFieldObject({
 				return (
 					<ParentElement key={`${key}.parent`}>
 						<InputComponent
+							// @ts-expect-error
+							canUsePubField={true}
 							zodInputProps={zodInputProps}
 							field={field}
 							fieldConfigItem={fieldConfigItem}
