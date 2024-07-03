@@ -44,8 +44,10 @@ export default async function Page({ params }: Props) {
 		return notFound();
 	}
 
-	const types = await getTypes(params.communitySlug);
-	const { fields } = await getPubFields().executeTakeFirstOrThrow();
+	const [types, { fields }] = await Promise.all([
+		getTypes(params.communitySlug),
+		getPubFields().executeTakeFirstOrThrow(),
+	]);
 
 	if (!types || !fields) {
 		return null;
