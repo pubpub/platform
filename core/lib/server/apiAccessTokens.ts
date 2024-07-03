@@ -1,14 +1,17 @@
-import { randomUUID } from "crypto";
+import crypto from "crypto";
 
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+import { logger } from "logger";
+
+import type { NewApiAccessPermissions } from "~/kysely/types/public/ApiAccessPermissions";
+import type { ApiAccessTokensId, NewApiAccessTokens } from "~/kysely/types/public/ApiAccessTokens";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { db } from "~/kysely/database";
-import { NewApiAccessPermissions } from "~/kysely/types/public/ApiAccessPermissions";
-import { ApiAccessTokensId, NewApiAccessTokens } from "~/kysely/types/public/ApiAccessTokens";
-import { MaybeHas } from "../types";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
+import { UnauthorizedError } from "./errors";
+import { generateToken } from "./token";
 
 const getTokenBase = db
 	.selectFrom("api_access_tokens")
@@ -18,7 +21,6 @@ const getTokenBase = db
 		"api_access_tokens.description",
 		"api_access_tokens.expiration",
 		"api_access_tokens.issuedAt",
-		"api_access_tokens.revoked",
 		"api_access_tokens.communityId",
 		jsonObjectFrom(
 			eb
@@ -34,34 +36,78 @@ const getTokenBase = db
 		).as("permissions"),
 	]);
 
-export const getApiAccessTokenByToken = (token: string) =>
-	autoCache(getTokenBase.where("api_access_tokens.token", "=", token));
+export const validateApiAccessToken = async (token: string, communityId: CommunitiesId) => {
+	// Parse the token's id and plaintext value from the input
+	// Format: "<token id>.<token plaintext>"
+	const [tokenId, tokenString] = token.split(".");
+
+	// Retrieve the token's hash, metadata, and associated user
+	const dbToken = await autoCache(
+		getApiAccessToken(tokenId as ApiAccessTokensId).qb.select("token")
+	).executeTakeFirstOrThrow(() => new UnauthorizedError("Token not found"));
+
+	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
+	// different expiration periods
+	if (dbToken.expiration < new Date()) {
+		throw new UnauthorizedError("Expired token");
+	}
+
+	if (dbToken.communityId !== communityId) {
+		throw new UnauthorizedError(`Access token ${dbToken.name} is not valid for this community`);
+	}
+
+	// This comparison isn't actually constant time if the two items are of different lengths,
+	// because timingSafeEqual throws an error in that case, which could leak the length of the key.
+	// We aren't worried about that because we're hashing the values first (so they're constant
+	// length) and because our tokens are all the same length anyways, unlike a password.
+	let isEqual = false;
+	try {
+		isEqual = crypto.timingSafeEqual(Buffer.from(tokenString), Buffer.from(dbToken.token));
+	} catch (e) {
+		// token is probably formatted incorrectly, the two strings are not equal in length
+		if (e.type === "RangeError") {
+			throw new UnauthorizedError("Invalid token");
+		}
+		logger.error(e);
+		throw e;
+	}
+	if (!isEqual) {
+		throw new UnauthorizedError("Invalid token");
+	}
+
+	return dbToken;
+};
+
+export const getApiAccessToken = (token: ApiAccessTokensId) =>
+	autoCache(getTokenBase.where("api_access_tokens.id", "=", token));
 
 export const getApiAccessTokensByCommunity = (communityId: CommunitiesId) =>
 	autoCache(getTokenBase.where("api_access_tokens.communityId", "=", communityId));
 
 export type SafeApiAccessToken = Awaited<
-	ReturnType<ReturnType<typeof getApiAccessTokenByToken>["executeTakeFirstOrThrow"]>
+	ReturnType<ReturnType<typeof getApiAccessToken>["executeTakeFirstOrThrow"]>
 >;
 
 /**
  * Create a new API access token with the given permissions
  */
 export const createApiAccessToken = ({
-	token: { token: token = randomUUID(), ...tokenData },
+	token,
 	permissions,
 }: {
-	token: MaybeHas<NewApiAccessTokens, "token">;
+	token: Omit<NewApiAccessTokens, "token">;
 	permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
 }) => {
+	const tokenString = generateToken();
+
 	return autoRevalidate(
 		db
 			.with("new_token", (db) =>
 				db
 					.insertInto("api_access_tokens")
 					.values({
-						token,
-						...tokenData,
+						token: tokenString,
+						...token,
 					})
 					.returning(["id", "token"])
 			)
@@ -74,7 +120,15 @@ export const createApiAccessToken = ({
 				)
 			)
 			.selectFrom("new_token")
-			.select("new_token.token")
+			.select((eb) => [
+				eb
+					.fn<string>("concat", [
+						eb.selectFrom("new_token").select("new_token.id"),
+						eb.cast<string>(eb.val("."), "text"),
+						eb.selectFrom("new_token").select("new_token.token"),
+					])
+					.as("token"),
+			])
 	);
 };
 

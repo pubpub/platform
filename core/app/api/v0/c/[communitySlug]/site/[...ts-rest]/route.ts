@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
-import { object, z } from "zod";
+import { z } from "zod";
 
 import { api } from "contracts";
 
@@ -18,7 +18,6 @@ import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import { getStage } from "~/lib/db/queries";
 import {
 	createPubRecursiveNew,
-	getPub,
 	getPubCached,
 	getPubs,
 	getPubType,
@@ -27,7 +26,7 @@ import {
 	tsRestHandleErrors,
 	UnauthorizedError,
 } from "~/lib/server";
-import { getApiAccessTokenByToken } from "~/lib/server/apiAccessTokens";
+import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
@@ -66,26 +65,12 @@ const getAuthorization = async () => {
 		throw new Error(`No community found for slug ${communitySlug}`);
 	}
 
-	const matchedAccessToken = await getApiAccessTokenByToken(apiKey).executeTakeFirst();
-
-	if (!matchedAccessToken) {
-		throw new UnauthorizedError("Invalid token");
-	}
-
-	if (matchedAccessToken.communityId !== community.id) {
-		throw new UnauthorizedError(
-			`Access token ${matchedAccessToken.name} is not valid for this community`
-		);
-	}
-
-	if (new Date(matchedAccessToken.expiration) < new Date()) {
-		throw new UnauthorizedError(`Access token ${matchedAccessToken.name} has expired`);
-	}
+	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
 
 	const rules = (await db
 		.selectFrom("api_access_permissions")
 		.selectAll()
-		.where("api_access_permissions.apiAccessTokenId", "=", matchedAccessToken.id)
+		.where("api_access_permissions.apiAccessTokenId", "=", validatedAccessToken.id)
 		.execute()) as ApiAccessPermission[];
 
 	return {
