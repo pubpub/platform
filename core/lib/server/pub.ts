@@ -1,8 +1,10 @@
+import type { ExpressionBuilder, SelectExpression, StringReference } from "kysely";
+
 import { Prisma } from "@prisma/client";
-import { ExpressionBuilder, SelectExpression, sql, StringReference } from "kysely";
+import { createRawBuilder, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import {
+import type {
 	CreatePubRequestBodyWithNulls,
 	GetPubResponseBody,
 	GetPubTypeResponseBody,
@@ -10,11 +12,12 @@ import {
 } from "contracts";
 import { expect } from "utils";
 
+import type Database from "~/kysely/types/Database";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
-import Database from "~/kysely/types/Database";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
-import { PubsId } from "~/kysely/types/public/Pubs";
-import { PubTypesId } from "~/kysely/types/public/PubTypes";
+import { StagesId } from "~/kysely/types/public/Stages";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
@@ -34,6 +37,7 @@ type PubNoChildren = {
 
 type NestedPub = PubNoChildren & {
 	children: NestedPub[];
+	stages: [{ stageId: string }];
 };
 
 type FlatPub = PubNoChildren & {
@@ -172,6 +176,14 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 		.where("pubs.id", "=", pubId)
 		.select(pubColumns)
 		.select(pubValuesByVal(pubId))
+		.select((eb) =>
+			jsonObjectFrom(
+				eb
+					.selectFrom("pub_types")
+					.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
+					.selectAll()
+			).as("pubType")
+		)
 		.select((eb) => pubAssignee(eb))
 		.$narrowType<{ values: PubValues }>()
 		.select((eb) =>
@@ -199,13 +211,67 @@ export const getPubCached = async (pubId: PubsId): Promise<GetPubResponseBody> =
 			.select(pubColumns)
 			.select(pubValuesByVal(pubId))
 			.select((eb) => pubAssignee(eb))
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("PubsInStages")
+						.where("PubsInStages.pubId", "=", pubId)
+						.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+						.select((eb) =>
+							jsonArrayFrom(
+								eb
+									.selectFrom("integration_instances")
+									.where(
+										"integration_instances.stageId",
+										"=",
+										eb.ref("stages.id")
+									)
+									.selectAll()
+							).as("integrationInstances")
+						)
+						.selectAll()
+				).as("stages")
+			)
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("action_claim")
+						.where("action_claim.pubId", "=", eb.ref("pubs.id"))
+						.selectAll()
+				).as("claims")
+			)
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("integration_instances")
+						.where("integration_instances.communityId", "=", eb.ref("pubs.communityId"))
+						.selectAll()
+				).as("integrationInstances")
+			)
+			.select((eb) =>
+				jsonObjectFrom(
+					eb
+						.selectFrom("pub_types")
+						.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
+						.selectAll()
+				).as("pubType")
+			)
 			.$narrowType<{ values: PubValues }>()
 			.select((eb) =>
 				jsonArrayFrom(
 					eb
 						.selectFrom("children")
-						.select([...pubColumns, "children.values"])
+						.selectAll()
 						.$narrowType<{ values: PubValues }>()
+						.select((eb) =>
+							jsonArrayFrom(
+								eb
+									.selectFrom("PubsInStages")
+									.where("PubsInStages.pubId", "=", eb.ref("children.id"))
+									.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+									.selectAll()
+							).as("stages")
+						)
 				).as("children")
 			)
 	).executeTakeFirst();

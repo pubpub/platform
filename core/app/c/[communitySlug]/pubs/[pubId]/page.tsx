@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
@@ -14,6 +15,7 @@ import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
+import { getPubCached } from "~/lib/server";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -42,16 +44,25 @@ export default async function Page({
 				...pubInclude,
 			},
 		});
-
 	const pub = await getPub(params.pubId);
+	const pub2 = await getPubCached(params.pubId as PubsId);
 	if (!pub) {
 		return null;
 	}
-	const users = getPubUsers(pub.permissions);
+	if (!pub2) {
+		return null;
+	}
+	console.log("\n\n");
+	console.log("PUB is here with the pubinclude type", pub);
+	console.log("\n\n");
+	console.log("PUB here is the kysely query", pub2);
+	console.log("\n\n");
+	
+	const users = getPubUsers([]);
 
 	const [actionsPromise, stagePromise] =
 		pub.stages.length > 0
-			? [getStageActions(pub.stages[0].stageId), getStage(pub.stages[0].stageId)]
+			? [getStageActions(pub2.stages[0].stageId), getStage(pub2.stages[0].stageId)]
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
@@ -64,8 +75,8 @@ export default async function Page({
 				</Link>
 			</div>
 			<div className="mb-8">
-				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
-				<PubTitle pub={pub} />
+				<h3 className="mb-2 text-xl font-bold">{pub2.pubType.name}</h3>
+				<PubTitle pub={pub2} />
 			</div>
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
@@ -140,7 +151,7 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
+			<Suspense fallback={<SkeletonTable />}>
 				<PubChildrenTableWrapper pub={pub} />
 			</Suspense>
 		</div>
