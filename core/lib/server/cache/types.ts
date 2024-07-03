@@ -44,7 +44,7 @@ export type AutoOptions<Q extends QB<any>> =
 export type ExecuteFn<
 	Q extends QB<any>,
 	M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow",
-> = () => Promise<Awaited<ReturnType<Q[M]>>>;
+> = (...args: Parameters<Q[M]>) => Promise<Awaited<ReturnType<Q[M]>>>;
 
 export type ExecuteCreatorFn<
 	Q extends QB<any>,
