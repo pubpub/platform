@@ -50,7 +50,7 @@ const bearerSchema = z
 	.regex(bearerRegex)
 	.transform((string) => string.replace(bearerRegex, "$1"));
 
-const getAutorization = async () => {
+const getAuthorization = async () => {
 	const authorizationTokenWithBearer = headers().get("Authorization");
 
 	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
@@ -107,7 +107,7 @@ const checkAuthorization = async <T extends ApiAccessScope, AT extends ApiAccess
 	scope: T,
 	type: AT
 ) => {
-	const { authorization, community } = await getAutorization();
+	const { authorization, community } = await getAuthorization();
 
 	const constraints = authorization[scope][type];
 	if (!constraints) {
