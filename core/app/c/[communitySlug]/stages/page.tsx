@@ -23,7 +23,7 @@ export default async function Page({ params }: Props) {
 	const stageById = makeStagesById(community.stages);
 
 	return (
-		<div className="p-4">
+		<>
 			<div className="mb-16 flex items-center justify-between ">
 				<h1 className="text-xl font-bold">Stages</h1>
 			</div>
@@ -34,6 +34,6 @@ export default async function Page({ params }: Props) {
 				token={token}
 				loginData={loginData}
 			/>
-		</div>
+		</>
 	);
 }

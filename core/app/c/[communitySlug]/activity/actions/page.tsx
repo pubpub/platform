@@ -75,11 +75,11 @@ export default async function Page({
 	).execute()) as ActionRun[];
 
 	return (
-		<div className="p-4">
+		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Action Activity</h1>
 			</div>
 			<ActionRunsTable actionRuns={actionRuns} />
-		</div>
+		</>
 	);
 }

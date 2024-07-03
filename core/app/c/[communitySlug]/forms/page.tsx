@@ -38,9 +38,9 @@ export default async function Page() {
 	});
 
 	return (
-		<div className="absolute inset-0 min-h-screen">
-			<div className="mx-auto max-w-7xl rounded-lg bg-white">
-				<header className="flex items-center justify-between border-b p-4">
+		<div className="min-w-max ">
+			<div>
+				<header className="absolute inset-0 flex items-center justify-between border-b bg-gray-50 shadow-md">
 					<h1 className="text-lg font-semibold">
 						<div className="flex flex-row items-center">
 							<ClipboardPenLine size={24} className="mr-2" /> Forms

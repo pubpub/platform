@@ -38,11 +38,11 @@ export default async function Page({ params }: Props) {
 		token = await createToken(loginData.id);
 	}
 	return (
-		<div className="p-4">
+		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Integrations</h1>
 			</div>
 			<IntegrationsList instances={integrations} token={token} />
-		</div>
+		</>
 	);
 }

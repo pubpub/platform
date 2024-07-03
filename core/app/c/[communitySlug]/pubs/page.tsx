@@ -48,9 +48,9 @@ export default async function Page({ params }: Props) {
 	]);
 
 	return (
-		<div className="p-4">
+		<>
 			<PubHeader communityId={community.id as CommunitiesId} />
 			<PubList pubs={pubs} token={token} />
-		</div>
+		</>
 	);
 }
