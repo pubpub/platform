@@ -24,7 +24,7 @@ export default async function Page({ params }: Props) {
 
 	return (
 		<>
-			<div className="mb-16 flex items-center justify-between ">
+			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Stages</h1>
 			</div>
 			<StageList
