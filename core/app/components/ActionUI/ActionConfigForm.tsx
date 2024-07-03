@@ -4,7 +4,6 @@ import { startTransition, useCallback } from "react";
 
 import type { FieldConfig } from "ui/auto-form";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
-import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import type { default as ActionName } from "~/kysely/types/public/Action";
@@ -50,16 +49,14 @@ export const ActionConfigForm = (props: Props) => {
 	);
 
 	return (
-		<TokenProvider tokens={action.tokens ?? {}}>
-			<AutoForm
-				values={props.instance.config ?? {}}
-				fieldConfig={props.fieldConfig}
-				formSchema={action.config.schema}
-				dependencies={action.config.dependencies}
-				onSubmit={onSubmit}
-			>
-				<AutoFormSubmit>Update config</AutoFormSubmit>
-			</AutoForm>
-		</TokenProvider>
+		<AutoForm
+			values={props.instance.config ?? {}}
+			fieldConfig={props.fieldConfig}
+			formSchema={action.config.schema}
+			dependencies={action.config.dependencies}
+			onSubmit={onSubmit}
+		>
+			<AutoFormSubmit>Update config</AutoFormSubmit>
+		</AutoForm>
 	);
 };

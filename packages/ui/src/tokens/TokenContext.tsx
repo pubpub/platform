@@ -1,3 +1,5 @@
+"use client";
+
 import type { PropsWithChildren } from "react";
 
 import React, { createContext, useContext } from "react";
