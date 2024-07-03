@@ -38,7 +38,7 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 		remove,
 	} = useFieldArray({
 		control: form.control,
-		name: "fields",
+		name: "pubFields",
 	});
 
 	const onFieldSelect = (fieldId: PubFieldsId, name: string, slug: string) => {
@@ -112,7 +112,7 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 					</ul>
 					<FormField
 						control={form.control}
-						name="fields"
+						name="pubFields"
 						render={() => (
 							<FormItem className="my-4">
 								<FormLabel className="mb-1 block">

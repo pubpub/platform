@@ -1,10 +1,11 @@
+import { PubFieldProvider } from "ui/pubFields";
+
 import type { PageContext } from "./PubsRunActionDropDownMenu";
 import type { Action, ActionInstanceOf } from "~/actions/types";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
-import { FieldsProvider } from "~/app/c/[communitySlug]/types/FieldsProvider";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ActionConfigForm } from "./ActionConfigForm";
 
@@ -39,13 +40,13 @@ export const ActionConfigFormWrapper = async ({
 	]);
 
 	return (
-		<FieldsProvider fields={fields}>
+		<PubFieldProvider pubFields={fields}>
 			<ActionConfigForm
 				instance={actionInstance}
 				communityId={stage.communityId}
 				actionName={actionInstance.action}
 				fieldConfig={resolvedFieldConfig}
 			/>
-		</FieldsProvider>
+		</PubFieldProvider>
 	);
 };

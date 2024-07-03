@@ -1,16 +1,14 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "kysely";
-import { jsonBuildObject } from "kysely/helpers/postgres";
+
+import { PubFieldProvider } from "ui/pubFields";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getPubFields } from "~/lib/server/pubFields";
 import { CreatePubType } from "./CreatePubType";
-import { FieldsProvider } from "./FieldsProvider";
 import TypeList from "./TypeList";
 
 const getTypes = async (communitySlug: string) =>
@@ -53,7 +51,7 @@ export default async function Page({ params }: Props) {
 		return null;
 	}
 	return (
-		<FieldsProvider fields={fields}>
+		<PubFieldProvider pubFields={fields}>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="flex-grow text-xl font-bold">Pub Types</h1>
 				<div className="flex items-center gap-x-2">
@@ -61,6 +59,6 @@ export default async function Page({ params }: Props) {
 				</div>
 			</div>
 			<TypeList types={types} superadmin={loginData.isSuperAdmin} />
-		</FieldsProvider>
+		</PubFieldProvider>
 	);
 }

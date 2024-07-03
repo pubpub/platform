@@ -177,6 +177,10 @@
 			"module": "./navigation-menu/dist/ui-navigation-menu.esm.js",
 			"default": "./navigation-menu/dist/ui-navigation-menu.cjs.js"
 		},
+		"./pubFields": {
+			"module": "./pubFields/dist/ui-pubFields.esm.js",
+			"default": "./pubFields/dist/ui-pubFields.cjs.js"
+		},
 		"./customRenderers/confidence/confidence": {
 			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
 			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
@@ -235,6 +239,7 @@
 		"navigation-menu",
 		"pagination",
 		"popover",
+		"pubFields",
 		"radio-group",
 		"select",
 		"separator",
@@ -378,6 +383,7 @@
 			"navigation-menu.tsx",
 			"pagination.tsx",
 			"popover.tsx",
+			"pubFields/index.tsx",
 			"radio-group.tsx",
 			"select.tsx",
 			"separator.tsx",

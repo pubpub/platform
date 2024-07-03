@@ -7,6 +7,7 @@ import { Button } from "ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ArrowRight, Info, Plus, Trash } from "ui/icon";
 import { Input } from "ui/input";
+import { usePubFieldContext } from "ui/pubFields";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
@@ -14,7 +15,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubFieldSchemaId } from "~/kysely/types/public/PubFieldSchema";
 import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField";
-import { useFields } from "~/app/c/[communitySlug]/types/FieldsProvider";
 import { action } from "../../action";
 
 type PubField = {
@@ -126,7 +126,7 @@ export const FieldOutputMap = defineCustomFormField(
 		// 	pubFields: PubField[];
 		// }
 	) {
-		const pubFields = Object.values(useFields());
+		const pubFields = Object.values(usePubFieldContext());
 		const values = form.watch();
 
 		const { fields, append, remove } = useFieldArray({

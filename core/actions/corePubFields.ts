@@ -6,7 +6,7 @@ export type BasePubField<Namespace extends string = string> = {
 	id?: string;
 	name: string;
 	slug: string;
-	schemaName: CoreSchemaType;
+	schemaName?: CoreSchemaType;
 	schema: {
 		name: string;
 		namespace: Namespace;

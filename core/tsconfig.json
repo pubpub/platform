@@ -27,7 +27,8 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
-		"kysely/scripts/generateDatabaseObject.mts"
+		"kysely/scripts/generateDatabaseObject.mts",
+		"actions/_lib/zodTypesToCoreSchemas.mts"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }

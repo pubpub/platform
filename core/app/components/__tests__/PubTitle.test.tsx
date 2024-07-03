@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/types";
 import { PubTitle } from "../PubTitle";
 
 test("PubTitle component includes the pub title", async () => {
@@ -39,6 +39,7 @@ test("PubTitle component includes the pub title", async () => {
 					updatedAt: new Date(),
 					pubFieldSchemaId: null,
 					schema: null,
+					schemaName: "String",
 				},
 			},
 			{
@@ -57,6 +58,7 @@ test("PubTitle component includes the pub title", async () => {
 					updatedAt: new Date(),
 					pubFieldSchemaId: null,
 					schema: null,
+					schemaName: "String",
 				},
 			},
 			{
@@ -75,6 +77,7 @@ test("PubTitle component includes the pub title", async () => {
 					updatedAt: new Date(),
 					pubFieldSchemaId: null,
 					schema: null,
+					schemaName: "URL",
 				},
 			},
 		],
