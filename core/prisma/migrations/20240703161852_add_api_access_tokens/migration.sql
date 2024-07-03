@@ -12,7 +12,6 @@ CREATE TABLE "api_access_tokens" (
     "description" TEXT,
     "communityId" TEXT NOT NULL,
     "expiration" TIMESTAMP(3) NOT NULL,
-    "revoked" BOOLEAN NOT NULL DEFAULT false,
     "issuedById" TEXT NOT NULL,
     "issuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

@@ -23,8 +23,6 @@ export default interface ApiAccessTokensTable {
 
 	expiration: ColumnType<Date, Date | string, Date | string>;
 
-	revoked: ColumnType<boolean, boolean | undefined, boolean>;
-
 	issuedById: ColumnType<UsersId, UsersId, UsersId>;
 
 	issuedAt: ColumnType<Date, Date | string | undefined, Date | string>;

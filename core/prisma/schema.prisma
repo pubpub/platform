@@ -436,7 +436,6 @@ model ApiAccessToken {
   communityId String
   community   Community             @relation(fields: [communityId], references: [id])
   expiration  DateTime
-  revoked     Boolean               @default(false)
   issuedBy    User                  @relation(fields: [issuedById], references: [id])
   issuedById  String
   issuedAt    DateTime              @default(now())
