@@ -4,6 +4,8 @@ import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
+import { FieldsProvider } from "~/app/c/[communitySlug]/types/FieldsProvider";
+import { getPubFields } from "~/lib/server/pubFields";
 import { ActionConfigForm } from "./ActionConfigForm";
 
 export const ActionConfigFormWrapper = async ({
@@ -22,19 +24,28 @@ export const ActionConfigFormWrapper = async ({
 	actionInstance: ActionInstances;
 	pageContext: PageContext;
 }) => {
-	const resolvedFieldConfig = await resolveFieldConfig(actionInstance.action, "config", {
+	const fieldPromise = getPubFields().executeTakeFirstOrThrow();
+
+	const resolvedFieldConfigPromise = resolveFieldConfig(actionInstance.action, "config", {
 		stageId: stage.id,
 		communityId: stage.communityId,
 		actionInstance: actionInstance as ActionInstanceOf<Action>,
 		pageContext,
 	});
 
+	const [{ fields }, resolvedFieldConfig] = await Promise.all([
+		fieldPromise,
+		resolvedFieldConfigPromise,
+	]);
+
 	return (
-		<ActionConfigForm
-			instance={actionInstance}
-			communityId={stage.communityId}
-			actionName={actionInstance.action}
-			fieldConfig={resolvedFieldConfig}
-		/>
+		<FieldsProvider fields={fields}>
+			<ActionConfigForm
+				instance={actionInstance}
+				communityId={stage.communityId}
+				actionName={actionInstance.action}
+				fieldConfig={resolvedFieldConfig}
+			/>
+		</FieldsProvider>
 	);
 };

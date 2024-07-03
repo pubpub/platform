@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubFieldSchemaId } from "~/kysely/types/public/PubFieldSchema";
 import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField";
+import { useFields } from "~/app/c/[communitySlug]/types/FieldsProvider";
 import { action } from "../../action";
 
 type PubField = {
@@ -120,12 +121,12 @@ export const FieldOutputMap = defineCustomFormField(
 	"config",
 	"outputMap",
 	function FieldOutputMap(
-		{ form, fieldName },
-		context: {
-			pubFields: PubField[];
-		}
+		{ form, fieldName }
+		// context: {
+		// 	pubFields: PubField[];
+		// }
 	) {
-		const pubFields = context.pubFields;
+		const pubFields = Object.values(useFields());
 		const values = form.watch();
 
 		const { fields, append, remove } = useFieldArray({

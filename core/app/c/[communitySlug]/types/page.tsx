@@ -8,7 +8,7 @@ import type { PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { getFields } from "~/lib/server/pubFields";
+import { getPubFields } from "~/lib/server/pubFields";
 import { CreatePubType } from "./CreatePubType";
 import { FieldsProvider } from "./FieldsProvider";
 import TypeList from "./TypeList";
@@ -45,7 +45,7 @@ export default async function Page({ params }: Props) {
 	}
 
 	const types = await getTypes(params.communitySlug);
-	const { fields } = await getFields().executeTakeFirstOrThrow();
+	const { fields } = await getPubFields().executeTakeFirstOrThrow();
 
 	if (!types || !fields) {
 		return null;
