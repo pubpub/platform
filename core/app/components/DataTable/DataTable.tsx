@@ -1,3 +1,7 @@
+/**
+ * Original DataTable component, you may want to use v2/DataTable.tsx instead which encapsulates updated designs
+ */
+
 import type { ColumnDef, ColumnFiltersState, Row, SortingState } from "@tanstack/react-table";
 
 import * as React from "react";
