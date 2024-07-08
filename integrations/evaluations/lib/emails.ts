@@ -113,7 +113,7 @@ export const scheduleNoReplyNotificationEmail = async (
 	instanceConfig: InstanceConfig,
 	pubId: string,
 	evaluator: EvaluatorWithInvite,
-	assignee?: User
+	assignee?: User | null
 ) => {
 	const jobKey = makeNoReplyJobKey(instanceId, pubId, evaluator);
 	const runAt = new Date(evaluator.invitedAt);
@@ -174,7 +174,7 @@ export const scheduleNoSubmitNotificationEmail = async (
 	instanceConfig: InstanceConfig,
 	pubId: string,
 	evaluator: EvaluatorWhoAccepted,
-	assignee?: User
+	assignee?: User | null
 ) => {
 	const jobKey = makeNoSubmitJobKey(instanceId, pubId, evaluator);
 	const deadline = getDeadline(instanceConfig, evaluator);
@@ -235,7 +235,7 @@ export const sendAcceptedNotificationEmail = (
 	instanceConfig: InstanceConfig,
 	pubId: string,
 	evaluator: EvaluatorWithInvite,
-	assignee?: User
+	assignee?: User | null
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {
@@ -271,7 +271,7 @@ export const sendDeclinedNotificationEmail = async (
 	instanceConfig: InstanceConfig,
 	pubId: string,
 	evaluator: EvaluatorWithInvite,
-	assignee?: User
+	assignee?: User | null
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {
@@ -307,7 +307,7 @@ export const sendSubmittedNotificationEmail = async (
 	instanceConfig: InstanceConfig,
 	pubId: string,
 	evaluator: EvaluatorWhoEvaluated,
-	assignee?: User
+	assignee?: User | null
 ) => {
 	return client.sendEmail(instanceId, {
 		to: {

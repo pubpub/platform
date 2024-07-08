@@ -13,7 +13,7 @@ const executeWithCache = <
 	method: M,
 	options?: AutoCacheOptions
 ) => {
-	const executeFn = async () => {
+	const executeFn = async (...args: Parameters<Q[M]>) => {
 		const communitySlug = options?.communitySlug ?? getCommunitySlug();
 
 		const compiledQuery = qb.compile();
@@ -28,7 +28,7 @@ const executeWithCache = <
 				// saves one compile cycle
 				// necessary assertion here due to
 				// https://github.com/microsoft/TypeScript/issues/241
-				return qb[method]() as ReturnType<Q[M]>;
+				return qb[method](...args) as ReturnType<Q[M]>;
 			},
 			{
 				...options,

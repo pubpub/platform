@@ -7,12 +7,12 @@ const hashAlgorithm = "sha3-512";
 const encoding = "base64url";
 
 // Generate a 128 bit token with a CSPRNG and encode to base64url
-const generateToken = () => {
+export const generateToken = () => {
 	const bytesLength = 16;
 	return crypto.randomBytes(bytesLength).toString("base64url");
 };
 
-const createHash = (input: string) => {
+export const createHash = (input: string) => {
 	return crypto.createHash(hashAlgorithm).update(input);
 };
 

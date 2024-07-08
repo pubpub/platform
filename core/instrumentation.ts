@@ -1,3 +1,4 @@
+/* eslint-disable n/no-process-env */
 import { logger } from "logger";
 
 export async function register() {
@@ -19,4 +20,3 @@ export async function register() {
 		logger.info("NEXT_RUNTIME is not `nodejs`; skipping OTEL registration.");
 	}
 }
-// Uses environment variables named HONEYCOMB_API_KEY and OTEL_SERVICE_NAME

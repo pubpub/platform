@@ -14,6 +14,7 @@ export default interface PubFieldSchemaTable {
 
 	name: ColumnType<string, string, string>;
 
+	/** (JSONSchemaType<any>, 'ajv', true, false, true) */
 	schema: ColumnType<unknown, unknown, unknown>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

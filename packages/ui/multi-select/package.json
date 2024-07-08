@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-multi-select.cjs.js",
+	"module": "dist/ui-multi-select.esm.js"
+}

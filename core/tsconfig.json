@@ -27,6 +27,7 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
+		"instrumentation.registerCorePubFields.mts",
 		"kysely/scripts/generateDatabaseObject.mts"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
