@@ -1,5 +1,7 @@
 "use client";
 
+import type { Row } from "@tanstack/react-table";
+
 import React from "react";
 
 import type { TableForm } from "./getFormTableColumns";
@@ -8,5 +10,17 @@ import { getFormTableColumns } from "./getFormTableColumns";
 
 export const FormTable = ({ forms }: { forms: TableForm[] }) => {
 	const formTableColumns = getFormTableColumns();
-	return <DataTable columns={formTableColumns} data={forms} />;
+	const handleRowClick = (row: Row<TableForm>) => {
+		// Form data available in row.original
+		// TODO: route to individual form page when available
+	};
+
+	return (
+		<DataTable
+			columns={formTableColumns}
+			data={forms}
+			onRowClick={handleRowClick}
+			hidePaginationWhenSinglePage
+		/>
+	);
 };

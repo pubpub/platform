@@ -1,4 +1,4 @@
-import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
+import type { ColumnDef, ColumnFiltersState, Row, SortingState } from "@tanstack/react-table";
 
 import * as React from "react";
 import {
@@ -15,17 +15,22 @@ import { Search } from "ui/icon";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
+import { cn } from "utils";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	searchBy?: string;
+	hidePaginationWhenSinglePage?: boolean;
+	onRowClick?: (row: Row<TData>) => void;
 }
 
 export function DataTable<TData, TValue>({
 	columns,
 	data,
 	searchBy,
+	hidePaginationWhenSinglePage,
+	onRowClick,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -47,6 +52,23 @@ export function DataTable<TData, TValue>({
 			rowSelection,
 		},
 	});
+
+	const showPagination = hidePaginationWhenSinglePage ? table.getPageCount() > 1 : true;
+
+	const handleRowClick = (
+		evt: React.MouseEvent<HTMLTableRowElement, MouseEvent>,
+		row: Row<TData>
+	) => {
+		if (!onRowClick) {
+			return;
+		}
+		// Do not activate the row click if the element already has a click handler
+		// Ex: a button inside a table cell should still be clickable
+		if ((evt.target as HTMLTableRowElement).onclick) {
+			return;
+		}
+		onRowClick(row);
+	};
 
 	return (
 		<div>
@@ -92,6 +114,10 @@ export function DataTable<TData, TValue>({
 								<TableRow
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
+									onClick={(evt) => {
+										handleRowClick(evt, row);
+									}}
+									className={cn({ "cursor-pointer": onRowClick })}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell
@@ -116,7 +142,7 @@ export function DataTable<TData, TValue>({
 					</TableBody>
 				</Table>
 			</div>
-			<DataTablePagination table={table} />
+			{showPagination ? <DataTablePagination table={table} /> : null}
 		</div>
 	);
 }
