@@ -29,7 +29,7 @@ interface DataTablePaginationProps<TData> {
 
 export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
 	return (
-		<div className="flex items-center justify-between px-2">
+		<div className="flex items-center justify-between px-2" data-testid="data-table-pagination">
 			<div className="flex items-center space-x-2">
 				<Button
 					variant="outline"
