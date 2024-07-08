@@ -17,7 +17,7 @@ import { Label } from "ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
 import { cn } from "utils";
 
-interface DataTableProps<TData, TValue> {
+export interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	searchBy?: string;

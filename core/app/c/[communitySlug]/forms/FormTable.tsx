@@ -5,7 +5,7 @@ import type { Row } from "@tanstack/react-table";
 import React from "react";
 
 import type { TableForm } from "./getFormTableColumns";
-import { DataTable } from "~/app/components/DataTable/DataTable";
+import { DataTable } from "~/app/components/DataTable/v2/DataTable";
 import { getFormTableColumns } from "./getFormTableColumns";
 
 export const FormTable = ({ forms }: { forms: TableForm[] }) => {
@@ -15,13 +15,5 @@ export const FormTable = ({ forms }: { forms: TableForm[] }) => {
 		// TODO: route to individual form page when available
 	};
 
-	return (
-		<DataTable
-			columns={formTableColumns}
-			data={forms}
-			onRowClick={handleRowClick}
-			hidePaginationWhenSinglePage
-			className="border-none"
-		/>
-	);
+	return <DataTable columns={formTableColumns} data={forms} onRowClick={handleRowClick} />;
 };
