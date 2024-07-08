@@ -1,25 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { getLoginData } from "~/lib/auth/loginData";
+import { getCommunityBySlug } from "~/lib/db/queries";
 import { createToken } from "~/lib/server/token";
 import { getStageWorkflows, makeStagesById } from "~/lib/stages";
-import { communityMemberInclude, stageInclude } from "~/lib/types";
-import prisma from "~/prisma/db";
 import StageList from "./components/StageList";
-
-const getCommunityBySlug = async (communitySlug: string) => {
-	return await prisma.community.findUnique({
-		where: { slug: communitySlug },
-		include: {
-			stages: {
-				include: stageInclude,
-			},
-			members: {
-				include: communityMemberInclude,
-			},
-		},
-	});
-};
 
 type Props = { params: { communitySlug: string } };
 

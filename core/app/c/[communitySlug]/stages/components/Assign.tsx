@@ -16,28 +16,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { cn, expect } from "utils";
 
-import {
-	CommunityMemberPayload,
-	PubPayload,
-	StagePayload,
-	StagePayloadMoveConstraintDestination,
-	UserLoginData,
-} from "~/lib/types";
+import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
+import { getPubTitle } from "~/lib/pubs";
 import { assign } from "./lib/actions";
 
 type Props = {
-	loginData: UserLoginData;
 	members: CommunityMemberPayload[];
 	pub: PubPayload;
-	stage: StagePayload;
-	stages: StagePayloadMoveConstraintDestination[];
-};
-
-const getTitle = (pub: Props["pub"]) => {
-	const titleValue = pub.values.find((value) => {
-		return value.field.slug === "unjournal:title";
-	});
-	return titleValue?.value as string;
 };
 
 export default function Assign(props: Props) {
@@ -46,7 +31,7 @@ export default function Assign(props: Props) {
 	const [selectedUserId, setSelectedUserId] = React.useState<string | undefined>(
 		props.pub.assigneeId ?? undefined
 	);
-	const title = useMemo(() => getTitle(props.pub), [props.pub]);
+	const title = useMemo(() => getPubTitle(props.pub), [props.pub]);
 	const users = useMemo(() => props.members.map((member) => member.user), [props.members]);
 	const user = useMemo(
 		() => users.find((user) => user.id === selectedUserId),
