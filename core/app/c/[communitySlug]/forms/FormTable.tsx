@@ -21,6 +21,7 @@ export const FormTable = ({ forms }: { forms: TableForm[] }) => {
 			data={forms}
 			onRowClick={handleRowClick}
 			hidePaginationWhenSinglePage
+			className="border-none"
 		/>
 	);
 };

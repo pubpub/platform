@@ -23,6 +23,7 @@ interface DataTableProps<TData, TValue> {
 	searchBy?: string;
 	hidePaginationWhenSinglePage?: boolean;
 	onRowClick?: (row: Row<TData>) => void;
+	className?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -31,6 +32,7 @@ export function DataTable<TData, TValue>({
 	searchBy,
 	hidePaginationWhenSinglePage,
 	onRowClick,
+	className,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -88,7 +90,7 @@ export function DataTable<TData, TValue>({
 					/>
 				</div>
 			)}
-			<div className="mb-2 rounded-md border">
+			<div className={cn("mb-2 rounded-md border", className)}>
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
