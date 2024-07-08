@@ -64,7 +64,7 @@ export default async function Page() {
 							</p>
 						</div>
 					) : (
-						<div>
+						<div className="p-4">
 							<FormTable forms={tableForms} />
 						</div>
 					)}
