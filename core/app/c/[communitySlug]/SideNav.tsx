@@ -1,5 +1,5 @@
 import { Button } from "ui/button";
-import { Activity, Menu, ToyBrick } from "ui/icon";
+import { Activity, Menu, Settings, ToyBrick } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { CommunityData } from "~/lib/server/community";
