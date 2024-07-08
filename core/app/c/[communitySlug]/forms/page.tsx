@@ -43,7 +43,12 @@ export default async function Page() {
 				<header className="flex items-center justify-between border-b bg-gray-50 p-4 shadow-md">
 					<h1 className="text-lg font-semibold">
 						<div className="flex flex-row items-center">
-							<ClipboardPenLine size={24} className="mr-2" /> Forms
+							<ClipboardPenLine
+								size={24}
+								strokeWidth={1}
+								className="mr-2 text-slate-500"
+							/>{" "}
+							Forms
 						</div>
 					</h1>
 				</header>
