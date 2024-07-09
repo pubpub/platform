@@ -1,11 +1,17 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
+import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
-import { History, ToyBrick } from "ui/icon";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { Ellipsis, History, ToyBrick } from "ui/icon";
 
 import type { FormsId } from "~/kysely/types/public/Forms";
-import TableActionDropDown from "~/app/components/DataTable/DataTableDropDown";
 import { ArchiveFormButton } from "./ArchiveFormButton";
 
 export type TableForm = {
@@ -76,11 +82,19 @@ export const getFormTableColumns = () =>
 			enableHiding: false,
 			cell: ({ row }) => {
 				return (
-					<TableActionDropDown
-						dropdownButtons={[
-							<ArchiveFormButton key={row.original.id} id={row.original.id} />,
-						]}
-					/>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="ghost" className="h-8 w-8 p-0">
+								<span className="sr-only">Open menu</span>
+								<Ellipsis className="h-4 w-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="p-0">
+							<DropdownMenuItem asChild key={row.original.id}>
+								<ArchiveFormButton id={row.original.id} />
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				);
 			},
 		},
