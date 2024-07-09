@@ -141,6 +141,10 @@
 			"module": "./collapsible/dist/ui-collapsible.esm.js",
 			"default": "./collapsible/dist/ui-collapsible.cjs.js"
 		},
+		"./copy-button": {
+			"module": "./copy-button/dist/ui-copy-button.esm.js",
+			"default": "./copy-button/dist/ui-copy-button.cjs.js"
+		},
 		"./date-picker": {
 			"module": "./date-picker/dist/ui-date-picker.esm.js",
 			"default": "./date-picker/dist/ui-date-picker.cjs.js"
@@ -160,6 +164,10 @@
 		"./context-menu": {
 			"module": "./context-menu/dist/ui-context-menu.esm.js",
 			"default": "./context-menu/dist/ui-context-menu.cjs.js"
+		},
+		"./multi-select": {
+			"module": "./multi-select/dist/ui-multi-select.esm.js",
+			"default": "./multi-select/dist/ui-multi-select.cjs.js"
 		},
 		"./tokens": {
 			"module": "./tokens/dist/ui-tokens.esm.js",
@@ -225,6 +233,7 @@
 		"combobox",
 		"command",
 		"context-menu",
+		"copy-button",
 		"data-table",
 		"date-picker",
 		"dialog",
@@ -236,6 +245,7 @@
 		"input",
 		"label",
 		"menubar",
+		"multi-select",
 		"navigation-menu",
 		"pagination",
 		"popover",
@@ -371,6 +381,7 @@
 			"combobox.tsx",
 			"command.tsx",
 			"context-menu.tsx",
+			"copy-button.tsx",
 			"data-table.tsx",
 			"date-picker.tsx",
 			"dialog.tsx",
@@ -381,6 +392,7 @@
 			"input.tsx",
 			"label.tsx",
 			"menubar.tsx",
+			"multi-select.tsx",
 			"navigation-menu.tsx",
 			"pagination.tsx",
 			"popover.tsx",

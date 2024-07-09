@@ -140,11 +140,13 @@ const _runActionInstance = async (
 
 	try {
 		const result = await actionRun({
+			// FIXME: get rid of any
 			config: parsedConfig.data as any,
 			pub: {
 				id: pub.id,
+				// FIXME: get rid of any
 				values: pub.values as any,
-				assignee: pub.assignee,
+				assignee: pub.assignee ?? undefined,
 			},
 			args: parsedArgs.data,
 			stageId: actionInstance.stageId,

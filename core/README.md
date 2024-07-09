@@ -12,7 +12,7 @@ npx supabase db reset
 cp .env.template .env.local
 ```
 
-Copy the relevant values output from `supabase start` into `.env.local`.
+Copy the relevant values output from `supabase start` into `.env.local`. The `anon key` from `supabase`'s output should map to `NEXT_PUBLIC_SUPABASE_PUBLIC_KEY` in `.env.local`.
 
 Populate the database by running:
 
@@ -71,16 +71,19 @@ After running `npx supabase start` the Supabase dashboard is accessible at `http
 
 The Prisma [Quickstart guide](https://www.prisma.io/docs/getting-started/quickstart) is how our prisma folder was initially created. That set of instructions has useful pointers for doing things like db migrations.
 
-The `db/seed.ts` file will initiate the database with a set of data. This seed is run using `npm run reset`. You will have to run this each time you stop and start supabase since doing so clears the database.
+The `~/prisma/seed.ts` file will initiate the database with a set of data. This seed is run using `pnpm reset`. You will have to run this each time you stop and start supabase since doing so clears the database.
 
-Explore with `npm run prisma-studio`.
+Explore with `pnpm prisma-studio`.
 
 ## Folder structure
 
+-   `/actions` Configuration/lib for the action framework.
 -   `/app` The Next.JS [app directory](https://nextjs.org/docs/app/building-your-application/routing).
 -   `/lib` Functions that are re-used in multiple locations throughout the codebase. Akin to a `/utils` folder.
 -   `/prisma` Config and functions for using Prisma
+-   `/kysely` Config and functions for using Kysely
 -   `/public` Static files that will be publicly available at `https://[URL]/<filename>`.
+-   `/playwright` End-to-end tests
 -   `/supabase` Files generated for use when running Supabase locally. Likely won't have to touch anything in here, with the exception of `seed.sql` which has been edited to support our Authentication setup, as described below.
 
 ## Authentication

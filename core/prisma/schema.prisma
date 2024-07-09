@@ -28,13 +28,14 @@ model User {
   updatedAt    DateTime @default(now()) @updatedAt
   isSuperAdmin Boolean  @default(false)
 
-  claims       ActionClaim[]
-  moves        ActionMove[]
-  memberships  Member[]
-  memberGroups MemberGroup[]
-  AuthToken    AuthToken[]
-  assignedPubs Pub[]
-  actionRuns   ActionRun[]
+  claims         ActionClaim[]
+  moves          ActionMove[]
+  memberships    Member[]
+  memberGroups   MemberGroup[]
+  AuthToken      AuthToken[]
+  assignedPubs   Pub[]
+  actionRuns     ActionRun[]
+  ApiAccessToken ApiAccessToken[]
 
   @@map(name: "users")
 }
@@ -65,6 +66,7 @@ model Community {
   members              Member[]
   memberGroups         MemberGroup[]
   stages               Stage[]
+  APIAccessToken       ApiAccessToken[]
 
   @@map(name: "communities")
 }
@@ -135,7 +137,7 @@ model PubFieldSchema {
   updatedAt DateTime @default(now()) @updatedAt
 
   // This must be a dereferenced JSONSchema. We should find a way to validate.
-  schema    Json
+  schema    Json /// @type(JSONSchemaType<any>, 'ajv', true, false, true)
   PubFields PubField[]
 
   @@unique([name, namespace], name: "schema_identifier")
@@ -436,4 +438,61 @@ model FormInput {
   isSubmit Boolean  @map(name: "isSubmit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
 
   @@map(name: "form_inputs")
+}
+
+model ApiAccessToken {
+  id          String                @id @default(dbgenerated("gen_random_uuid()"))
+  token       String                @unique
+  name        String
+  description String?
+  communityId String
+  community   Community             @relation(fields: [communityId], references: [id])
+  expiration  DateTime
+  issuedBy    User                  @relation(fields: [issuedById], references: [id])
+  issuedById  String
+  issuedAt    DateTime              @default(now())
+  accessRules ApiAccessPermission[]
+  logs        ApiAccessLog[]
+
+  @@index([token], name: "token_idx")
+  @@map(name: "api_access_tokens")
+}
+
+model ApiAccessLog {
+  id            String         @id @default(dbgenerated("gen_random_uuid()"))
+  accessTokenId String
+  accessToken   ApiAccessToken @relation(fields: [accessTokenId], references: [id])
+  timestamp     DateTime       @default(now())
+  action        String
+
+  @@map(name: "api_access_logs")
+}
+
+enum ApiAccessType {
+  read
+  write
+  archive
+}
+
+// A permission existing for a scope means that the user has access to that scope
+// notwithstanding the contraints
+model ApiAccessPermission {
+  id               String         @id @default(dbgenerated("gen_random_uuid()"))
+  apiAccessTokenId String
+  apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id])
+  scope            ApiAccessScope
+  accessType       ApiAccessType
+  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../../ApiAccessToken', true, false, true)
+
+  // this ensures that only one permission per token and scope and access type exists
+  @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")
+  @@map(name: "api_access_permissions")
+}
+
+enum ApiAccessScope {
+  community
+  pub
+  stage
+  member
+  pubType
 }

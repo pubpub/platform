@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { makeWorkerUtils } from "graphile-worker";
 
 import { logger } from "logger";
 
@@ -63,6 +64,12 @@ async function main() {
 			canAdmin: true,
 		},
 	];
+
+	logger.info("migrate graphile");
+	const workerUtils = await makeWorkerUtils({
+		connectionString: env.DATABASE_URL,
+	});
+	await workerUtils.migrate();
 
 	logger.info("build crocroc");
 	await buildCrocCroc(crocCrocId);

@@ -121,7 +121,7 @@
 		"dotenv-cli": "^7.2.1",
 		"jsdom": "^24.0.0",
 		"kanel": "^3.8.2",
-		"kanel-kysely": "^0.3.2",
+		"kanel-kysely": "^0.4.0",
 		"postcss": "^8.4.27",
 		"prisma": "^5.2.0",
 		"supabase": "^1.68.6",

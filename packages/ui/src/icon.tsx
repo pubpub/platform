@@ -12,6 +12,7 @@ export {
 	CircleDashed,
 	CircleDollarSign,
 	CircleEllipsis,
+	Clipboard,
 	Download,
 	FileText,
 	Globe,

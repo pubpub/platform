@@ -63,7 +63,7 @@ const commonPubFields = z.object({
 export const GetPubResponseBodyBase = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
-	assignee: User.optional(),
+	assignee: User.nullish(),
 	communityId: z.string(),
 });
 export type GetPubResponseBodyBase = z.infer<typeof GetPubResponseBodyBase>;
@@ -91,7 +91,7 @@ export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
 	});
 
 // TODO: there has to be a better way to allow the API requests to include nulls in json fields
-const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
+export const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(jsonSchema),
 	assigneeId: z.string().optional(),

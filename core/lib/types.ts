@@ -164,12 +164,34 @@ export type StagePayloadMoveConstraintDestination =
 	StagePayloadMoveConstraint[number]["destination"];
 export type IntegrationAction = { name: string; url: string; href: string };
 
+/**
+ * https://www.totaltypescript.com/concepts/the-prettify-helper
+ */
+export type Prettify<T> = {
+	[P in keyof T]: T[P];
+} & {};
+
 export type DeepPartial<T> = T extends object
 	? {
 			[P in keyof T]?: DeepPartial<T[P]>;
 		}
 	: T;
 
+export type MaybeHas<T extends Record<string, unknown>, K extends keyof T> = T extends T
+	? Prettify<
+			Omit<T, K> & {
+				[P in K]?: T[P];
+			}
+		>
+	: never;
+
+export type DefinitelyHas<T, K extends keyof T> = T extends T
+	? Prettify<
+			Omit<T, K> & {
+				[P in K]: T[P];
+			}
+		>
+	: never;
 export type Equal<a, b> =
 	(<T>() => T extends a ? 1 : 2) extends <T>() => T extends b ? 1 : 2 ? true : false;
 

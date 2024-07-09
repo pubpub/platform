@@ -3,12 +3,8 @@ import { withServerActionInstrumentation } from "@sentry/nextjs";
 
 import { logger } from "logger";
 
-import {
-	ClientException,
-	ClientExceptionOptions,
-	isClientExceptionOptions,
-	makeClientException,
-} from "../serverActions";
+import type { ClientExceptionOptions } from "../serverActions";
+import { ClientException, isClientExceptionOptions, makeClientException } from "../serverActions";
 
 /**
  * Wraps a Next.js server action function with Sentry instrumentation. Additionally

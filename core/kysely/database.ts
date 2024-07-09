@@ -5,7 +5,7 @@ import { Pool } from "pg";
 
 import { logger } from "logger";
 
-import type Database from "./types/Database";
+import type Database from "~/kysely/types/Database";
 import { env } from "~/lib/env/env.mjs";
 
 const dialect = new PostgresDialect({

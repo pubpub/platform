@@ -38,8 +38,8 @@ export default async function Page() {
 	});
 
 	return (
-		<div className="min-h-screen">
-			<div className="mx-auto max-w-7xl rounded-lg bg-white shadow-md">
+		<div className="absolute inset-0 min-h-screen">
+			<div className="mx-auto max-w-7xl rounded-lg bg-white">
 				<header className="flex items-center justify-between border-b p-4">
 					<h1 className="text-lg font-semibold">
 						<div className="flex flex-row items-center">

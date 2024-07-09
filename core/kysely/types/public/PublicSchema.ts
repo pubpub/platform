@@ -5,6 +5,9 @@ import { type default as ActionClaimTable } from "./ActionClaim";
 import { type default as ActionInstancesTable } from "./ActionInstances";
 import { type default as ActionMoveTable } from "./ActionMove";
 import { type default as ActionRunsTable } from "./ActionRuns";
+import { type default as ApiAccessLogsTable } from "./ApiAccessLogs";
+import { type default as ApiAccessPermissionsTable } from "./ApiAccessPermissions";
+import { type default as ApiAccessTokensTable } from "./ApiAccessTokens";
 import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
 import { type default as FormInputsTable } from "./FormInputs";
@@ -33,6 +36,16 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
+	_prisma_migrations: PrismaMigrationsTable;
+
+	users: UsersTable;
+
+	pubs: PubsTable;
+
+	pub_types: PubTypesTable;
+
+	stages: StagesTable;
+
 	members: MembersTable;
 
 	member_groups: MemberGroupsTable;
@@ -75,16 +88,6 @@ export default interface PublicSchema {
 
 	PubsInStages: PubsInStagesTable;
 
-	_prisma_migrations: PrismaMigrationsTable;
-
-	users: UsersTable;
-
-	pubs: PubsTable;
-
-	pub_types: PubTypesTable;
-
-	stages: StagesTable;
-
 	rules: RulesTable;
 
 	action_runs: ActionRunsTable;
@@ -92,4 +95,10 @@ export default interface PublicSchema {
 	forms: FormsTable;
 
 	form_inputs: FormInputsTable;
+
+	api_access_tokens: ApiAccessTokensTable;
+
+	api_access_logs: ApiAccessLogsTable;
+
+	api_access_permissions: ApiAccessPermissionsTable;
 }

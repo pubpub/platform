@@ -4,6 +4,7 @@
 	"extends": "./base.json",
 	"compilerOptions": {
 		"plugins": [{ "name": "next" }],
+		"allowImportingTsExtensions": true,
 		"target": "es2018",
 		"lib": ["dom", "dom.iterable", "esnext"],
 		"allowJs": true,
