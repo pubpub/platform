@@ -14,7 +14,7 @@ export default defineConfig({
 			"**/.{idea,git,cache,output,temp}/**",
 			"**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
 		],
-		// Clean up DOM between test runs https://github.com/testing-library/vue-testing-library/issues/296
+		// Clean up DOM between test runs https://testing-library.com/docs/vue-testing-library/setup/
 		globals: true,
 	},
 });
