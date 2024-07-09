@@ -32,7 +32,11 @@ export default function AutoFormInput({
 	const type = fieldProps.type || "text";
 
 	return (
-		<PubFieldSelectorProvider field={field} fieldConfigItem={fieldConfigItem} zodItem={zodItem}>
+		<PubFieldSelectorProvider
+			field={field}
+			allowedSchemas={fieldConfigItem.allowedSchemas}
+			zodItem={zodItem}
+		>
 			<div className="flex w-full flex-row items-center space-x-2">
 				<FormItem className="flex w-full flex-col justify-start">
 					{showLabel && (

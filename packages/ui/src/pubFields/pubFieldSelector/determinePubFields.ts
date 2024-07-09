@@ -38,6 +38,10 @@ export type AllowedSchemasOrZodItem =
 	| {
 			allowedSchemas?: never;
 			zodItem: z.ZodType<any>;
+	  }
+	| {
+			allowedSchemas: FieldConfigItem["allowedSchemas"];
+			zodItem: z.ZodType<any>;
 	  };
 
 /**
