@@ -16,10 +16,11 @@ import type { ClientException, ClientExceptionOptions } from "~/lib/serverAction
 import { db } from "~/kysely/database";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
 import Event from "~/kysely/types/public/Event";
-import { getPub } from "~/lib/server";
+import { getPub, getPubCached } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
+import { resolveWithPubfields } from "./resolvePubfields";
 import { validatePubValues } from "./validateFields";
 
 export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
@@ -33,7 +34,7 @@ export type RunActionInstanceArgs = {
 const _runActionInstance = async (
 	args: RunActionInstanceArgs
 ): Promise<ActionInstanceRunResult> => {
-	const pubPromise = getPub(args.pubId);
+	const pubPromise = getPubCached(args.pubId);
 
 	const actionInstancePromise = db
 		.selectFrom("action_instances")
@@ -138,17 +139,23 @@ const _runActionInstance = async (
 		};
 	}
 
+	const argsWithPubfields = resolveWithPubfields(args.actionInstanceArgs ?? {}, pub.values);
+	const configWithPubfields = resolveWithPubfields(
+		{ ...parsedConfig.data, pubFields: actionInstance.config?.pubFields },
+		pub.values
+	);
+
 	try {
 		const result = await actionRun({
 			// FIXME: get rid of any
-			config: parsedConfig.data as any,
+			config: configWithPubfields as any,
 			pub: {
 				id: pub.id,
 				// FIXME: get rid of any
 				values: pub.values as any,
 				assignee: pub.assignee ?? undefined,
 			},
-			args: parsedArgs.data,
+			args: argsWithPubfields,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
 		});
