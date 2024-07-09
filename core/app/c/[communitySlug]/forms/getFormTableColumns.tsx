@@ -58,7 +58,7 @@ export const getFormTableColumns = () =>
 					className="w-52"
 					column={column}
 					title="Type"
-					icon={<ToyBrick size={15} />}
+					icon={<ToyBrick size={15} strokeWidth={1} />}
 				/>
 			),
 			accessorKey: "pubType",
@@ -69,7 +69,7 @@ export const getFormTableColumns = () =>
 					className="w-52"
 					column={column}
 					title="Updated"
-					icon={<History size={15} />}
+					icon={<History size={15} strokeWidth={1} />}
 				/>
 			),
 			accessorKey: "updated",
