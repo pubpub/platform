@@ -25,7 +25,7 @@ export const getAllowedSchemaNames = ({
 
 	const res = zodTypeToCoreSchemaType(zodItem);
 
-	if (!res) {
+	if (res == null) {
 		return [];
 	}
 

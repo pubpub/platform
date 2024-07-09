@@ -4,6 +4,7 @@ import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 import type { z } from "zod";
 
 import * as React from "react";
+import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useFormContext } from "react-hook-form";
 
 import type { FieldConfigItem } from "../../auto-form/types";
@@ -127,13 +128,15 @@ export const PubFieldSelectorToggleButton = () => {
 					{shouldReadFromPubField ? <Minus size="12" /> : <Plus size="12" />}
 				</Button>
 			</TooltipTrigger>
-			<TooltipContent>
-				<p className="text-sm text-gray-500 dark:text-white">
-					{shouldReadFromPubField
-						? "Do not read from pubfields"
-						: "Also specify pubfields this value will be read from"}
-				</p>
-			</TooltipContent>
+			<TooltipPortal>
+				<TooltipContent>
+					<p className="text-sm text-gray-500 dark:text-white">
+						{shouldReadFromPubField
+							? "Do not read from pubfields"
+							: "Also specify pubfields this value will be read from"}
+					</p>
+				</TooltipContent>
+			</TooltipPortal>
 		</Tooltip>
 	);
 };
@@ -146,18 +149,20 @@ export const PubFieldSelectorHider = ({ children }: { children: React.ReactNode 
 	}
 
 	return (
-		<div className="gay-y-2 flex flex-col items-start">
+		<div className="flex flex-col items-start gap-y-2">
 			<span className="flex flex-row items-center space-x-2">
 				<h4 className="text-sm">Pubfields</h4>
 				<Tooltip>
 					<TooltipTrigger>
 						<Info className="h-4 w-4 text-gray-500" />
 					</TooltipTrigger>
-					<TooltipContent className="max-w-md">
-						When running this action, the pubfields specified below will be read and
-						used to fill in this field. If no corresponding pubfield is found on the Pub
-						this action is run on, the value above will be used as a fallback.
-					</TooltipContent>
+					<TooltipPortal>
+						<TooltipContent className="max-w-md">
+							When running this action, the pubfields specified below will be read and
+							used to fill in this field. If no corresponding pubfield is found on the
+							Pub this action is run on, the value above will be used as a fallback.
+						</TooltipContent>
+					</TooltipPortal>
 				</Tooltip>
 			</span>
 			{children}
