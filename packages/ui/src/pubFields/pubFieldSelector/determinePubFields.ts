@@ -5,32 +5,40 @@ import { CoreSchemaType, zodTypeToCoreSchemaType } from "schemas";
 import type { FieldConfigItem } from "../../auto-form/types";
 import type { PubFieldContext } from "../PubFieldContext";
 
-export const getAllowedSchemaNames = ({
-	allowedSchemas,
-	zodItem,
-}: {
-	zodItem: z.ZodType<any>;
-	allowedSchemas: FieldConfigItem["allowedSchemas"];
-}) => {
-	if (allowedSchemas === false) {
+export const getAllowedSchemaNames = (allowedSchemasOrZodItem: AllowedSchemasOrZodItem) => {
+	if (allowedSchemasOrZodItem.zodItem) {
+		const res = zodTypeToCoreSchemaType(allowedSchemasOrZodItem.zodItem);
+
+		if (res == null) {
+			return [];
+		}
+
+		return [CoreSchemaType[res]];
+	}
+	const allowedSchemas = allowedSchemasOrZodItem.allowedSchemas;
+
+	if (!allowedSchemas) {
 		return [];
 	}
 
-	if (allowedSchemas?.length) {
-		// just to make sure
-		return allowedSchemas
-			.filter((schema) => Boolean(CoreSchemaType[schema]))
-			.map((schema) => CoreSchemaType[schema]);
-	}
-
-	const res = zodTypeToCoreSchemaType(zodItem);
-
-	if (res == null) {
+	if (allowedSchemas?.length === 0) {
 		return [];
 	}
-
-	return [CoreSchemaType[res]];
+	// just to make sure
+	return allowedSchemas
+		.filter((schema) => Boolean(CoreSchemaType[schema]))
+		.map((schema) => CoreSchemaType[schema]);
 };
+
+export type AllowedSchemasOrZodItem =
+	| {
+			allowedSchemas: FieldConfigItem["allowedSchemas"];
+			zodItem?: never;
+	  }
+	| {
+			allowedSchemas?: never;
+			zodItem: z.ZodType<any>;
+	  };
 
 /**
  * Returns all pub fields that match the schema of the current field,
@@ -38,17 +46,11 @@ export const getAllowedSchemaNames = ({
  */
 export const determineAllowedPubFields = ({
 	allPubFields,
-	fieldConfigItem,
-	zodItem,
+	...allowedSchemasOrZodItem
 }: {
 	allPubFields: PubFieldContext;
-	fieldConfigItem: FieldConfigItem;
-	zodItem: z.ZodType<any>;
-}) => {
-	const allowedSchemas = getAllowedSchemaNames({
-		allowedSchemas: fieldConfigItem.allowedSchemas,
-		zodItem,
-	});
+} & AllowedSchemasOrZodItem) => {
+	const allowedSchemas = getAllowedSchemaNames(allowedSchemasOrZodItem);
 
 	return Object.values(allPubFields).filter((pubField) => {
 		if (!pubField.schemaName) {

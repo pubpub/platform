@@ -14,7 +14,7 @@ import { Button } from "../../button";
 import { Info, Minus, Plus } from "../../icon";
 import { MultiSelect } from "../../multiselect";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
-import { determineAllowedPubFields } from "./determinePubFields";
+import { AllowedSchemasOrZodItem, determineAllowedPubFields } from "./determinePubFields";
 
 const PubFieldSelectorContext = React.createContext<{
 	shouldReadFromPubField: boolean;
@@ -22,7 +22,6 @@ const PubFieldSelectorContext = React.createContext<{
 	pubFields: string[];
 	setPubFields: (pubFields: string[]) => void;
 	parentField: ControllerRenderProps<FieldValues, any>;
-	parentFieldConfigItem: FieldConfigItem;
 	allowedPubFields: PubField[];
 }>({
 	shouldReadFromPubField: false,
@@ -36,7 +35,6 @@ const PubFieldSelectorContext = React.createContext<{
 		ref: () => null,
 		value: "",
 	},
-	parentFieldConfigItem: {},
 	allowedPubFields: [],
 });
 
@@ -45,14 +43,11 @@ const usePubFieldSelectorContext = () => React.useContext(PubFieldSelectorContex
 export const PubFieldSelectorProvider = ({
 	children,
 	field,
-	fieldConfigItem,
-	zodItem,
+	...allowedSchemasOrZodItem
 }: {
 	children: React.ReactNode;
 	field: ControllerRenderProps<FieldValues, any>;
-	fieldConfigItem: FieldConfigItem;
-	zodItem: z.ZodType<any>;
-}) => {
+} & AllowedSchemasOrZodItem) => {
 	const form = useFormContext();
 	const allPubFields = usePubFieldContext();
 
@@ -64,8 +59,7 @@ export const PubFieldSelectorProvider = ({
 
 	const allowedPubFields = determineAllowedPubFields({
 		allPubFields,
-		fieldConfigItem,
-		zodItem,
+		...allowedSchemasOrZodItem,
 	});
 
 	const setPubFields = React.useCallback(
@@ -89,7 +83,6 @@ export const PubFieldSelectorProvider = ({
 				pubFields,
 				setPubFields,
 				parentField: field,
-				parentFieldConfigItem: fieldConfigItem,
 				allowedPubFields,
 			}}
 		>

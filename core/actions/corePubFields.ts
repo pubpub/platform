@@ -61,4 +61,52 @@ export const v6PubId = {
 	},
 } as const satisfies CorePubField;
 
-export const corePubFields = [title, content, v6PubId] as const;
+// these are just to play around with the pubfields in actions for now
+export const email = {
+	name: "Email",
+	slug: "pubpub:email",
+	schemaName: CoreSchemaType.Email,
+	schema: {
+		name: "email",
+		namespace: "pubpub",
+		schema: {
+			$id: "pubpub:email",
+			title: "Email",
+			format: "email",
+			type: "string",
+		} satisfies JSONSchemaType<string>,
+	},
+} as const satisfies CorePubField;
+
+export const url = {
+	name: "URL",
+	slug: "pubpub:url",
+	schemaName: CoreSchemaType.URL,
+	schema: {
+		name: "url",
+		namespace: "pubpub",
+		schema: {
+			$id: "pubpub:url",
+			title: "URL",
+			format: "url",
+			type: "string",
+		} satisfies JSONSchemaType<string>,
+	},
+} as const satisfies CorePubField;
+
+export const userId = {
+	name: "User ID",
+	slug: "pubpub:user-id",
+	schemaName: CoreSchemaType.UserId,
+	schema: {
+		name: "userId",
+		namespace: "pubpub",
+		schema: {
+			$id: "pubpub:user-id",
+			title: "User ID",
+			type: "string",
+		} satisfies JSONSchemaType<string>,
+	},
+} as const satisfies CorePubField;
+
+export const corePubFields = [title, content, v6PubId, email, url, userId] as const;

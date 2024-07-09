@@ -239,19 +239,17 @@ function FormFieldObject({
 
 				return (
 					<ParentElement key={`${key}.parent`}>
-						<div className="flex flex-row items-center space-x-2">
-							<InputComponent
-								zodInputProps={zodInputProps}
-								field={field}
-								fieldConfigItem={fieldConfigItem}
-								label={title}
-								description={description}
-								isRequired={Boolean(isRequired)}
-								zodItem={item}
-								fieldProps={fieldProps}
-								className={fieldProps.className}
-							/>
-						</div>
+						<InputComponent
+							zodInputProps={zodInputProps}
+							field={field}
+							fieldConfigItem={fieldConfigItem}
+							label={title}
+							description={description}
+							isRequired={Boolean(isRequired)}
+							zodItem={item}
+							fieldProps={fieldProps}
+							className={fieldProps.className}
+						/>
 					</ParentElement>
 				);
 			}}

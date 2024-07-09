@@ -288,6 +288,9 @@ importers:
       remove:
         specifier: ^0.1.5
         version: 0.1.5
+      schemas:
+        specifier: workspace:*
+        version: link:../packages/schemas
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -4510,18 +4513,6 @@ packages:
       react-dom: '>= 18.2.0'
     dependencies:
       next: 14.2.4(@babel/core@7.24.3)(@opentelemetry/api@1.7.0)(@playwright/test@1.43.1)(react-dom@18.2.0)(react@18.2.0)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@nimpl/getters@1.4.1(next@14.2.3)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-eSzcBwDFTPYsUPWEBzD0diYv/d+Wx6YkzshjVxBZJmz9ZuqTjRDbyiQAVy3cknqKgN9kGPAQ58dnMS5R6pwmJQ==}
-    peerDependencies:
-      next: '>= 14.0.0'
-      react: '>= 18.2.0'
-      react-dom: '>= 18.2.0'
-    dependencies:
-      next: 14.2.3(@babel/core@7.24.3)(@opentelemetry/api@1.7.0)(@playwright/test@1.43.1)(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
@@ -9735,7 +9726,6 @@ packages:
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
-    dev: false
 
   /@types/node@20.14.2:
     resolution: {integrity: sha512-xyu6WAMVwv6AKFLB+e/7ySZVr/0zLCzOa7rSpq6jNwpqOrUbcACDWC+53d4n2QHOnDou0fbIsg8wZu/sxrnI4Q==}
