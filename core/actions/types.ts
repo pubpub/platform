@@ -79,6 +79,10 @@ export type Action<
 				 * `custom` indicates you are defining the component yourself in `[action]/[config|params]/[fieldName].field.tsx`
 				 */
 				fieldType?: FieldConfigItem["fieldType"] | "custom";
+				/**
+				 * TODO: Document this
+				 */
+				allowedSchemas?: CoreSchemaType[] | false;
 			};
 		};
 		dependencies?: Dependency<z.infer<C>>[];
@@ -102,7 +106,7 @@ export type Action<
 				/**
 				 * TODO: Document this
 				 */
-				allowedSchemas?: CoreSchemaType[];
+				allowedSchemas?: CoreSchemaType[] | false;
 			};
 		};
 		dependencies?: Dependency<NonNullable<z.infer<A>>>[];

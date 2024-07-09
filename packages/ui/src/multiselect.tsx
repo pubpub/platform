@@ -129,7 +129,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			}
 		};
 
-		console.log(isPopoverOpen);
 		return (
 			<Popover
 				open={isPopoverOpen}
@@ -139,7 +138,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 				// 	setIsPopoverOpen(open);
 				// }}
 				onOpenChange={(open) => {
-					console.log("GOING TO", open);
 					if (isPopoverOpen && !open) {
 						return;
 					}
@@ -152,7 +150,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 						{...props}
 						onClick={handleTogglePopover}
 						className={cn(
-							"min-h-10 flex h-auto w-full items-center justify-between rounded-md border bg-inherit p-1 hover:bg-inherit",
+							"min-h-10 flex h-auto w-full items-center justify-between rounded-md border bg-inherit px-3 py-2 hover:bg-inherit",
 							className
 						)}
 					>

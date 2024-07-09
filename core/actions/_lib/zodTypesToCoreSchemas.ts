@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import { CoreSchemaType } from "@prisma/client";
+import CoreSchemaType from "~/kysely/types/public/CoreSchemaType";
 
 const zodStringTypes = ["ZodString", "ZodLiteral", "ZodEnum"];
 

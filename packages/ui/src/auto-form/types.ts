@@ -9,8 +9,8 @@ export type FieldConfigItem = {
 		showLabel?: boolean;
 	};
 	fieldType?: keyof typeof INPUT_COMPONENTS | React.FC<AutoFormInputComponentProps>;
-
 	renderParent?: (props: { children: React.ReactNode }) => React.ReactElement | null;
+	allowedSchemas?: string[] | false;
 };
 
 export type FieldConfig<SchemaType extends z.infer<z.ZodObject<any, any>>> = {

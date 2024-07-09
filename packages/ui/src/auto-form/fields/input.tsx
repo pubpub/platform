@@ -1,51 +1,58 @@
 import * as React from "react";
+import { useFormContext } from "react-hook-form";
 
+import type { AutoFormInputComponentProps } from "../types";
 import { Button } from "../../button";
 import { FormControl, FormItem, FormMessage } from "../../form";
+import { Info, Minus, Plus } from "../../icon";
 import { Input } from "../../input";
+import {
+	PubFieldSelector,
+	PubFieldSelectorHider,
+	PubFieldSelectorProvider,
+	PubFieldSelectorToggleButton,
+} from "../../pubFields/pubFieldSelector";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
-import { AutoFormInputComponentProps } from "../types";
-import { PubFieldSelector } from "./pubFieldSelector";
 
+// TODO: All inputs should have pubField and labels work the same way, makes it easier to standardize
 export default function AutoFormInput({
-	label,
 	field,
-	description,
 	isRequired,
-	fieldConfigItem,
+	label,
 	fieldProps,
-	canUsePubField,
+	fieldConfigItem,
+	description,
 }: AutoFormInputComponentProps) {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
 	const type = fieldProps.type || "text";
 
-	const [shouldReadFromPubField, setShouldReadFromPubField] = React.useState(false);
-
 	return (
-		<div className="flex flex-row  items-center space-x-2">
-			<FormItem className="flex w-full flex-col justify-start">
-				{showLabel && (
-					<>
-						<AutoFormLabel label={label} isRequired={isRequired} />
-						{description && <AutoFormDescription description={description} />}
-					</>
-				)}
-				<span className="flex flex-row items-center space-x-2">
+		<PubFieldSelectorProvider field={field} fieldConfigItem={fieldConfigItem}>
+			<div className="flex w-full flex-row items-center space-x-2">
+				<FormItem className="flex w-full flex-col justify-start">
+					{showLabel && (
+						<>
+							<span className="flex flex-row items-center  justify-between space-x-2">
+								<AutoFormLabel label={label} isRequired={isRequired} />
+								<PubFieldSelectorToggleButton />
+							</span>
+							{description && <AutoFormDescription description={description} />}
+						</>
+					)}
 					<FormControl>
 						<Input type={type} {...fieldPropsWithoutShowLabel} />
 					</FormControl>
-				</span>
-				<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
-				<FormMessage />
-			</FormItem>
-			{shouldReadFromPubField ? (
-				<PubFieldSelector field={field} fieldConfigItem={fieldConfigItem} />
-			) : (
-				<Button onClick={() => setShouldReadFromPubField(true)}>:</Button>
-			)}
-		</div>
+					<PubFieldSelectorHider>
+						<PubFieldSelector />
+					</PubFieldSelectorHider>
+					<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
+					<FormMessage />
+				</FormItem>
+			</div>
+		</PubFieldSelectorProvider>
 	);
 }

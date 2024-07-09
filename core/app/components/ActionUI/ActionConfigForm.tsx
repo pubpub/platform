@@ -27,6 +27,7 @@ export const ActionConfigForm = (props: Props) => {
 	const onSubmit = useCallback(
 		async (values) => {
 			startTransition(async () => {
+				console.log(values);
 				const result = await runUpdateAction(
 					props.communityId,
 					props.instance.id as ActionInstancesId,

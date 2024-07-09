@@ -21,6 +21,7 @@ export {
 	ListPlus,
 	Mail,
 	Menu,
+	Minus,
 	MoreVertical,
 	MoveHorizontal,
 	Pencil,

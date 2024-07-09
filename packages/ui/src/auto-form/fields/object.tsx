@@ -93,17 +93,17 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 				const [title, description, additionalType] = itemName.split("|");
 				const key = [...path, name].join(".");
 
+				const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {};
+
 				const {
 					isHidden,
 					isDisabled,
 					isRequired: isRequiredByDependency,
 					overrideOptions,
-				} = resolveDependencies(dependencies, name, watch);
+				} = resolveDependencies(dependencies, name, watch, fieldConfigItem);
 				if (isHidden) {
 					return null;
 				}
-
-				const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {};
 
 				// fully rendered (server) component
 				if (typeof fieldConfigItem.fieldType === "object") {
@@ -239,19 +239,19 @@ function FormFieldObject({
 
 				return (
 					<ParentElement key={`${key}.parent`}>
-						<InputComponent
-							// @ts-expect-error
-							canUsePubField={true}
-							zodInputProps={zodInputProps}
-							field={field}
-							fieldConfigItem={fieldConfigItem}
-							label={title}
-							description={description}
-							isRequired={Boolean(isRequired)}
-							zodItem={item}
-							fieldProps={fieldProps}
-							className={fieldProps.className}
-						/>
+						<div className="flex flex-row items-center space-x-2">
+							<InputComponent
+								zodInputProps={zodInputProps}
+								field={field}
+								fieldConfigItem={fieldConfigItem}
+								label={title}
+								description={description}
+								isRequired={Boolean(isRequired)}
+								zodItem={item}
+								fieldProps={fieldProps}
+								className={fieldProps.className}
+							/>
+						</div>
 					</ParentElement>
 				);
 			}}
