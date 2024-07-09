@@ -4,10 +4,12 @@ import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 import { History, ToyBrick } from "ui/icon";
 
+import type { FormsId } from "~/kysely/types/public/Forms";
 import TableActionDropDown from "~/app/components/DataTable/DataTableDropDown";
+import { ArchiveFormButton } from "./ArchiveFormButton";
 
 export type TableForm = {
-	id: string;
+	id: FormsId;
 	formName: string;
 	pubType: string;
 	updated: Date;
@@ -73,7 +75,13 @@ export const getFormTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
-				return <TableActionDropDown />;
+				return (
+					<TableActionDropDown
+						dropdownButtons={[
+							<ArchiveFormButton key={row.original.id} id={row.original.id} />,
+						]}
+					/>
+				);
 			},
 		},
 	] as const satisfies ColumnDef<TableForm, unknown>[];

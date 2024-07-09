@@ -4,7 +4,11 @@ import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { Archive, Ellipsis } from "ui/icon";
 
-function TableActionDropDown() {
+type Props = {
+	dropdownButtons: React.ReactNode[];
+};
+
+function TableActionDropDown(props: Props) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -14,13 +18,9 @@ function TableActionDropDown() {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="p-0">
-				<Button
-					variant="outline"
-					className=" min-w-full rounded-lg font-semibold shadow-md"
-				>
-					<Archive size={16} className="mr-2" />
-					<div>Archive</div>
-				</Button>
+				{props.dropdownButtons.map((button, index) => (
+					<React.Fragment key={index}>{button}</React.Fragment>
+				))}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
