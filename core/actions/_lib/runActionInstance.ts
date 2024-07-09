@@ -139,9 +139,12 @@ const _runActionInstance = async (
 		};
 	}
 
-	const argsWithPubfields = resolveWithPubfields(args.actionInstanceArgs ?? {}, pub.values);
+	const argsWithPubfields = resolveWithPubfields(
+		{ ...parsedArgs.data, ...args.actionInstanceArgs },
+		pub.values
+	);
 	const configWithPubfields = resolveWithPubfields(
-		{ ...parsedConfig.data, pubFields: actionInstance.config?.pubFields },
+		{ ...(actionInstance.config as {}), ...parsedConfig.data },
 		pub.values
 	);
 
@@ -155,7 +158,8 @@ const _runActionInstance = async (
 				values: pub.values as any,
 				assignee: pub.assignee ?? undefined,
 			},
-			args: argsWithPubfields,
+			// FIXME: get rid of any
+			args: argsWithPubfields as any,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
 		});

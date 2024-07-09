@@ -13,7 +13,7 @@ export const getAllowedSchemaNames = (allowedSchemasOrZodItem: AllowedSchemasOrZ
 			return [];
 		}
 
-		return [CoreSchemaType[res]];
+		return [res];
 	}
 	const allowedSchemas = allowedSchemasOrZodItem.allowedSchemas;
 
@@ -25,9 +25,7 @@ export const getAllowedSchemaNames = (allowedSchemasOrZodItem: AllowedSchemasOrZ
 		return [];
 	}
 	// just to make sure
-	return allowedSchemas
-		.filter((schema) => Boolean(CoreSchemaType[schema]))
-		.map((schema) => CoreSchemaType[schema]);
+	return allowedSchemas.filter((schema) => Boolean(CoreSchemaType[schema]));
 };
 
 export type AllowedSchemasOrZodItem =
@@ -60,15 +58,6 @@ export const determineAllowedPubFields = ({
 		if (!pubField.schemaName) {
 			return false;
 		}
-		return allowedSchemas.some(
-			(allowedSchema) =>
-				allowedSchema ===
-				// this cast is necessary because pubField.schemaName when all the way here is something like
-				// 'String' or 'URL'. It's not really an Enum, as that's a typescript construct, and somewhere along the way
-				// the "enumness" is lost
-				// this is also why above we do `CoreSchemaType[schema]` instead of just `schema`
-				// as `schema` _actually_ is something like `0` or `1`, as that's how the enum values get translated to JS
-				(pubField.schemaName as string | null)
-		);
+		return allowedSchemas.includes(pubField.schemaName);
 	});
 };
