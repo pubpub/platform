@@ -28,7 +28,10 @@ export interface DataTableProps<TData, TValue> {
 	hidePaginationWhenSinglePage?: boolean;
 	onRowClick?: (row: Row<TData>) => void;
 	className?: string;
+	striped?: boolean;
 }
+
+const STRIPED_ROW_STYLING = "hover:bg-slate-100 data-[state=selected]:bg-sky-50";
 
 export function DataTable<TData, TValue>({
 	columns,
@@ -37,6 +40,7 @@ export function DataTable<TData, TValue>({
 	hidePaginationWhenSinglePage,
 	onRowClick,
 	className,
+	striped,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -116,14 +120,18 @@ export function DataTable<TData, TValue>({
 					</TableHeader>
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
+							table.getRowModel().rows.map((row, idx) => (
 								<TableRow
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
 									onClick={(evt) => {
 										handleRowClick(evt, row);
 									}}
-									className={cn({ "cursor-pointer": onRowClick })}
+									className={cn({
+										"cursor-pointer": onRowClick,
+										"bg-slate-100/50": striped && idx % 2,
+										[STRIPED_ROW_STYLING]: striped,
+									})}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell

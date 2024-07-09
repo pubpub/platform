@@ -16,6 +16,7 @@ export function DataTable<TData, TValue>({
 			onRowClick={onRowClick}
 			hidePaginationWhenSinglePage
 			className="border-none"
+			striped
 		/>
 	);
 }
