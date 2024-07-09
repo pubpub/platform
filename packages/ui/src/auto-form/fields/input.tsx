@@ -25,13 +25,14 @@ export default function AutoFormInput({
 	fieldProps,
 	fieldConfigItem,
 	description,
+	zodItem,
 }: AutoFormInputComponentProps) {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
 	const type = fieldProps.type || "text";
 
 	return (
-		<PubFieldSelectorProvider field={field} fieldConfigItem={fieldConfigItem}>
+		<PubFieldSelectorProvider field={field} fieldConfigItem={fieldConfigItem} zodItem={zodItem}>
 			<div className="flex w-full flex-row items-center space-x-2">
 				<FormItem className="flex w-full flex-col justify-start">
 					{showLabel && (

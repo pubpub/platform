@@ -1,17 +1,19 @@
 "use client";
 
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+import type { z } from "zod";
 
 import * as React from "react";
 import { useFormContext } from "react-hook-form";
 
 import type { FieldConfigItem } from "../../auto-form/types";
+import type { PubField } from "../PubFieldContext";
 import { usePubFieldContext } from "..";
-import { AutoFormInputComponentProps } from "../../auto-form/types";
 import { Button } from "../../button";
 import { Info, Minus, Plus } from "../../icon";
 import { MultiSelect } from "../../multiselect";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
+import { determineAllowedPubFields } from "./determinePubFields";
 
 const PubFieldSelectorContext = React.createContext<{
 	shouldReadFromPubField: boolean;
@@ -20,6 +22,7 @@ const PubFieldSelectorContext = React.createContext<{
 	setPubFields: (pubFields: string[]) => void;
 	parentField: ControllerRenderProps<FieldValues, any>;
 	parentFieldConfigItem: FieldConfigItem;
+	allowedPubFields: PubField[];
 }>({
 	shouldReadFromPubField: false,
 	setShouldReadFromPubField: () => {},
@@ -33,6 +36,7 @@ const PubFieldSelectorContext = React.createContext<{
 		value: "",
 	},
 	parentFieldConfigItem: {},
+	allowedPubFields: [],
 });
 
 const usePubFieldSelectorContext = () => React.useContext(PubFieldSelectorContext);
@@ -41,17 +45,40 @@ export const PubFieldSelectorProvider = ({
 	children,
 	field,
 	fieldConfigItem,
+	zodItem,
 }: {
 	children: React.ReactNode;
 	field: ControllerRenderProps<FieldValues, any>;
 	fieldConfigItem: FieldConfigItem;
+	zodItem: z.ZodType<any>;
 }) => {
 	const form = useFormContext();
+	const allPubFields = usePubFieldContext();
+
 	const pubFields = form.watch("pubFields")?.[field.name];
 
 	const hasPubFields = pubFields !== undefined && pubFields.length > 0;
 
 	const [shouldReadFromPubField, setShouldReadFromPubField] = React.useState(hasPubFields);
+
+	const allowedPubFields = determineAllowedPubFields({
+		allPubFields,
+		fieldConfigItem,
+		zodItem,
+	});
+
+	const setPubFields = React.useCallback(
+		(pubFields: string[]) => form.setValue(`pubFields.${field.name}`, pubFields),
+		[field.name]
+	);
+
+	// this makes sure that when you resave a form after you edit the pubfields to no longer
+	// match this field, the pubfields are reset to an empty array when you save it again
+	React.useEffect(() => {
+		if (!allowedPubFields.length) {
+			setPubFields([]);
+		}
+	}, []);
 
 	return (
 		<PubFieldSelectorContext.Provider
@@ -59,10 +86,10 @@ export const PubFieldSelectorProvider = ({
 				shouldReadFromPubField,
 				setShouldReadFromPubField,
 				pubFields,
-				setPubFields: (pubFields: string[]) =>
-					form.setValue(`pubFields.${field.name}`, pubFields),
+				setPubFields,
 				parentField: field,
 				parentFieldConfigItem: fieldConfigItem,
+				allowedPubFields,
 			}}
 		>
 			{children}
@@ -71,8 +98,12 @@ export const PubFieldSelectorProvider = ({
 };
 
 export const PubFieldSelectorToggleButton = () => {
-	const { shouldReadFromPubField, setShouldReadFromPubField, setPubFields } =
+	const { shouldReadFromPubField, setShouldReadFromPubField, setPubFields, allowedPubFields } =
 		usePubFieldSelectorContext();
+
+	if (!allowedPubFields.length) {
+		return null;
+	}
 
 	return (
 		<Tooltip>
@@ -108,11 +139,12 @@ export const PubFieldSelectorToggleButton = () => {
 };
 
 export const PubFieldSelectorHider = ({ children }: { children: React.ReactNode }) => {
-	const { shouldReadFromPubField } = usePubFieldSelectorContext();
+	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectorContext();
 
-	if (!shouldReadFromPubField) {
+	if (!shouldReadFromPubField || allowedPubFields.length === 0) {
 		return null;
 	}
+
 	return (
 		<div className="gay-y-2 flex flex-col items-start">
 			<span className="flex flex-row items-center space-x-2">
@@ -134,17 +166,13 @@ export const PubFieldSelectorHider = ({ children }: { children: React.ReactNode 
 };
 
 export const PubFieldSelector = () => {
-	const allPubFields = usePubFieldContext();
-	const { parentFieldConfigItem, setPubFields, pubFields } = usePubFieldSelectorContext();
-	if (parentFieldConfigItem.allowedSchemas === false) {
-		return null;
-	}
+	const { setPubFields, pubFields, allowedPubFields } = usePubFieldSelectorContext();
 
 	return (
 		<MultiSelect
 			className="bg-white"
 			value={[]}
-			options={Object.values(allPubFields).map((pubField) => ({
+			options={allowedPubFields.map((pubField) => ({
 				value: pubField.slug,
 				label: pubField.slug,
 				node: (
