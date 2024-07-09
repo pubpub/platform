@@ -17,6 +17,8 @@ export default interface FormsTable {
 	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
 
 	slug: ColumnType<string, string, string>;
+
+	isArchived: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Forms = Selectable<FormsTable>;

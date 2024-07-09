@@ -1,6 +1,8 @@
 import React from "react";
+import partition from "lodash.partition";
 
 import { ClipboardPenLine } from "ui/icon";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -21,23 +23,29 @@ export default async function Page({ params: { communitySlug } }) {
 	const forms = await db
 		.selectFrom("forms")
 		.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
+		.innerJoin("communities", "communities.id", "pub_types.communityId")
 		.select([
 			"forms.id as id",
 			"forms.name as formName",
 			"pub_types.name as pubType",
-			"updatedAt",
+			"pub_types.updatedAt", // TODO: this should be the form's updatedAt
+			"forms.isArchived",
 		])
+		.where("communities.slug", "=", communitySlug)
 		.execute();
 
-	const tableForms = forms.map((form) => {
-		const { id, formName, pubType, updatedAt } = form;
-		return {
-			id,
-			formName,
-			pubType,
-			updated: new Date(updatedAt),
-		};
-	});
+	const [active, archived] = partition(forms, (form) => !form.isArchived);
+
+	const tableForms = (formList) =>
+		formList.map((form) => {
+			const { id, formName, pubType, updatedAt } = form;
+			return {
+				id,
+				formName,
+				pubType,
+				updated: new Date(updatedAt),
+			};
+		});
 
 	const pubTypes = await getTypes(communitySlug).execute();
 
@@ -71,9 +79,22 @@ export default async function Page({ params: { communitySlug } }) {
 								<NewFormButton pubTypes={pubTypes} />
 							</div>
 						</div>
+					) : archived.length > 0 ? (
+						<Tabs defaultValue="active" className="">
+							<TabsList>
+								<TabsTrigger value="active">Active</TabsTrigger>
+								<TabsTrigger value="archived">Archived</TabsTrigger>
+							</TabsList>
+							<TabsContent value="active">
+								<FormTable forms={tableForms(active)} />
+							</TabsContent>
+							<TabsContent value="archived">
+								<FormTable forms={tableForms(archived)} />
+							</TabsContent>
+						</Tabs>
 					) : (
-						<div className="p-4">
-							<FormTable forms={tableForms} />
+						<div>
+							<FormTable forms={tableForms(active)} />
 						</div>
 					)}
 				</div>

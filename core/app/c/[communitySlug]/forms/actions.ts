@@ -2,6 +2,7 @@
 
 import { logger } from "logger";
 
+import type { FormsId } from "~/kysely/types/public/Forms";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
@@ -31,5 +32,16 @@ export const createForm = defineServerAction(async function createForm(
 		}
 		logger.error({ msg: "error creating form", error });
 		return { error: "Form creation failed" };
+	}
+});
+
+export const archiveForm = defineServerAction(async function archiveForm(id: FormsId) {
+	try {
+		await autoRevalidate(
+			db.updateTable("forms").set({ isArchived: true }).where("forms.id", "=", id)
+		).executeTakeFirstOrThrow();
+	} catch (error) {
+		logger.error({ msg: "error archiving form", error });
+		return { error: "Unable to archive form" };
 	}
 });
