@@ -141,6 +141,7 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 								}}
 								variant="outline"
 								className="mr-4"
+								type="button"
 							>
 								Cancel
 							</Button>
