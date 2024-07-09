@@ -12,7 +12,7 @@ import type { PubField } from "../PubFieldContext";
 import { usePubFieldContext } from "..";
 import { Button } from "../../button";
 import { Info, Minus, Plus } from "../../icon";
-import { MultiSelect } from "../../multiselect";
+import { MultiSelect } from "../../multi-select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
 import { AllowedSchemasOrZodItem, determineAllowedPubFields } from "./determinePubFields";
 

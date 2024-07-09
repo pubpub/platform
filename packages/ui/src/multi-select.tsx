@@ -46,6 +46,7 @@ interface MultiSelectProps
 		label: string;
 		value: string;
 		icon?: React.ComponentType<{ className?: string }>;
+		node?: React.ReactNode;
 	}[];
 	onValueChange: (value: string[]) => void;
 	defaultValue: string[];
@@ -54,6 +55,7 @@ interface MultiSelectProps
 	maxCount?: number;
 	asChild?: boolean;
 	className?: string;
+	badgeClassName?: string;
 }
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
@@ -68,6 +70,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			maxCount = 3,
 			asChild = false,
 			className,
+			badgeClassName,
 			...props
 		},
 		ref
@@ -127,14 +130,27 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 		};
 
 		return (
-			<Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+			<Popover
+				open={isPopoverOpen}
+				// open={isPopoverOpen}
+				// onOpenChange={(open) => {
+				// 	console.log("GOING TO", open);
+				// 	setIsPopoverOpen(open);
+				// }}
+				onOpenChange={(open) => {
+					if (isPopoverOpen && !open) {
+						return;
+					}
+					setIsPopoverOpen(open);
+				}}
+			>
 				<PopoverTrigger asChild>
 					<Button
 						ref={ref}
 						{...props}
 						onClick={handleTogglePopover}
 						className={cn(
-							"min-h-10 flex h-auto w-full items-center justify-between rounded-md border bg-inherit p-1 hover:bg-inherit",
+							"min-h-10 flex h-auto w-full items-center justify-between rounded-md border bg-inherit px-3 py-2 hover:bg-inherit",
 							className
 						)}
 					>
@@ -149,7 +165,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 												key={value}
 												className={cn(
 													isAnimating ? "animate-bounce" : "",
-													multiSelectVariants({ variant, className })
+													multiSelectVariants({
+														variant,
+														className: badgeClassName,
+													}),
+													badgeClassName
 												)}
 												style={{ animationDuration: `${animation}s` }}
 											>
@@ -172,7 +192,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											className={cn(
 												"border-foreground/1 bg-transparent text-foreground hover:bg-transparent",
 												isAnimating ? "animate-bounce" : "",
-												multiSelectVariants({ variant, className })
+												multiSelectVariants({
+													variant,
+													className: badgeClassName,
+												}),
+												badgeClassName
 											)}
 											style={{ animationDuration: `${animation}s` }}
 										>
@@ -260,7 +284,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											{option.icon && (
 												<option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
 											)}
-											<span>{option.label}</span>
+											{option.node ?? <span>{option.label}</span>}
 										</CommandItem>
 									);
 								})}
