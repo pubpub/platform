@@ -1,6 +1,7 @@
-import type { z } from "zod";
+import { z } from "zod";
 
-import CoreSchemaType from "~/kysely/types/public/CoreSchemaType";
+// TODO: replace with import from db
+import { CoreSchemaType } from "./CoreSchemaType";
 
 const zodStringTypes = ["ZodString", "ZodLiteral", "ZodEnum"];
 
@@ -8,7 +9,7 @@ const isZodString = (zodType: z.ZodTypeAny): zodType is z.ZodString => {
 	return zodType._def.typeName === "ZodString";
 };
 
-export const zodTypeToCoreSchemaType = <Z extends z.ZodTypeAny>(zodType: Z) => {
+export const zodTypeToCoreSchemaType = <Z extends z.ZodTypeAny>(zodType: Z): CoreSchemaType => {
 	if (
 		"typeName" in zodType._def &&
 		["ZodOptional", "ZodNullable", "ZodDefault"].includes(zodType._def.typeName)

@@ -1,9 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import CoreSchemaType from "~/kysely/types/public/CoreSchemaType";
-import { markdown } from "./zodTypes";
+import { CoreSchemaType } from "./CoreSchemaType";
 import { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
+
+class Markdown extends z.ZodString {
+	static create = () =>
+		new Markdown({
+			typeName: "Markdown" as z.ZodFirstPartyTypeKind.ZodString,
+			checks: [],
+			coerce: false,
+		});
+
+	_parse(): z.ParseReturnType<string> {
+		return {
+			status: "valid",
+			value: "",
+		};
+	}
+}
 
 describe("zodTypeToCoreSchemaType", () => {
 	it("should return String for ZodString", () => {
@@ -52,7 +67,7 @@ describe("zodTypeToCoreSchemaType", () => {
 	});
 
 	it("should handle markdown", () => {
-		const schema = markdown();
+		const schema = Markdown.create();
 		expect(zodTypeToCoreSchemaType(schema)).toBe(CoreSchemaType.String);
 	});
 });

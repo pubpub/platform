@@ -1,15 +1,5 @@
+import { CoreSchemaType } from "./CoreSchemaType";
 import { Boolean, DateTime, Email, FileUpload, String, URL, UserId, Vector3 } from "./schemas";
-
-export enum CoreSchemaType {
-	String,
-	Boolean,
-	Vector3,
-	DateTime,
-	Email,
-	URL,
-	UserId,
-	FileUpload,
-}
 
 export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 	switch (coreSchemaType) {
@@ -31,3 +21,5 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 			return FileUpload;
 	}
 }
+
+export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
