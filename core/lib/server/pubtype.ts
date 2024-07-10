@@ -10,31 +10,9 @@ import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { autoCache } from "./cache/autoCache";
+import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { NotFoundError } from "./errors";
 import { GET_MANY_DEFAULT } from "./pub";
-
-export const getTypes = (communitySlug: string) =>
-	autoCache(
-		db
-			.selectFrom("pub_types")
-			.innerJoin("communities", "communities.id", "pub_types.communityId")
-			.where("communities.slug", "=", communitySlug)
-			.select([
-				"pub_types.id",
-				"pub_types.name",
-				"pub_types.description",
-				(eb) =>
-					eb
-						.selectFrom("_PubFieldToPubType")
-						.whereRef("B", "=", "pub_types.id")
-						.select((eb) =>
-							eb.fn.coalesce(eb.fn.agg("array_agg", ["A"]), sql`'{}'`).as("fields")
-						)
-						.as("fields"),
-			])
-			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
-			.$narrowType<{ fields: PubFieldsId[] }>()
-	);
 
 export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseBody> => {
 	const pubType = await prisma.pubType.findUnique({
@@ -116,3 +94,28 @@ export const getPubTypesForCommunity = async (
 			.limit(limit)
 			.offset(offset)
 	).execute();
+
+export const getAllPubTypesForCommunity = () => {
+	const communitySlug = getCommunitySlug();
+	return autoCache(
+		db
+			.selectFrom("pub_types")
+			.innerJoin("communities", "communities.id", "pub_types.communityId")
+			.where("communities.slug", "=", communitySlug)
+			.select([
+				"pub_types.id",
+				"pub_types.name",
+				"pub_types.description",
+				(eb) =>
+					eb
+						.selectFrom("_PubFieldToPubType")
+						.whereRef("B", "=", "pub_types.id")
+						.select((eb) =>
+							eb.fn.coalesce(eb.fn.agg("array_agg", ["A"]), sql`'{}'`).as("fields")
+						)
+						.as("fields"),
+			])
+			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
+			.$narrowType<{ fields: PubFieldsId[] }>()
+	);
+};

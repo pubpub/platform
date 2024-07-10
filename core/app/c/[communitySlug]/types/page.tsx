@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "kysely";
 import { jsonBuildObject } from "kysely/helpers/postgres";
@@ -8,7 +7,7 @@ import type { PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { getTypes } from "~/lib/server/pubtype";
+import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { CreatePubType } from "./CreatePubType";
 import { FieldsProvider } from "./FieldsProvider";
 import TypeList from "./TypeList";
@@ -40,15 +39,13 @@ const getFields = async () =>
 			])
 	).executeTakeFirstOrThrow();
 
-type Props = { params: { communitySlug: string } };
-
-export default async function Page({ params }: Props) {
+export default async function Page() {
 	const loginData = await getLoginData();
 	if (!loginData) {
 		return notFound();
 	}
 
-	const types = await getTypes(params.communitySlug).execute();
+	const types = await getAllPubTypesForCommunity().execute();
 	const { fields } = await getFields();
 
 	if (!types || !fields) {

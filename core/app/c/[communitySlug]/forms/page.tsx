@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
-import { getTypes } from "~/lib/server/pubtype";
+import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
 
@@ -47,7 +47,7 @@ export default async function Page({ params: { communitySlug } }) {
 			};
 		});
 
-	const pubTypes = await getTypes(communitySlug).execute();
+	const pubTypes = await getAllPubTypesForCommunity().execute();
 
 	return (
 		<div className="absolute inset-0 w-full">
