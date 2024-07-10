@@ -9,10 +9,19 @@ import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 
 // TODO: this should probably filter by the community, but fields aren't actually scoped to a community yet!
+/**
+ * Get pub fields
+ *
+ * @param props  - When nothing is supplied, return all the pub fields
+ * @param props.pubId - When supplied, return all the pub fields associated with the pub through pub values and the pub type of that pub
+ * When props.valuesOnly is true, only return the pub fields associated with the pub through pub values, not through the pub type
+ * @param props.pubTypeId - When supplied, return all the pub fields associated with the pub type
+ *
+ */
 export const getPubFields = (
 	props:
 		| { pubId?: never; pubTypeId?: never }
-		| { pubId: PubsId; pubTypeId?: never }
+		| { pubId: PubsId; valuesOnly?: boolean; pubTypeId?: never }
 		| {
 				pubId?: never;
 				pubTypeId: PubTypesId;
@@ -38,17 +47,19 @@ export const getPubFields = (
 							.innerJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
 							.innerJoin("pubs", "pubs.id", "pub_values.pubId")
 							.where("pubs.id", "=", props.pubId!)
-							// all the pubfields associated with the pubtype of the pub
-							.union(
-								eb
-									.selectFrom("pubs")
-									.innerJoin(
-										"_PubFieldToPubType",
-										"pubs.pubTypeId",
-										"_PubFieldToPubType.B"
-									)
-									.where("pubs.id", "=", props.pubId!)
-									.select("_PubFieldToPubType.A as id")
+							// all the pubfields associated with the pubtype of the pub, as long as we're not asking for values only
+							.$if(props.pubId !== undefined && props.valuesOnly !== true, (qb) =>
+								qb.union(
+									eb
+										.selectFrom("pubs")
+										.innerJoin(
+											"_PubFieldToPubType",
+											"pubs.pubTypeId",
+											"_PubFieldToPubType.B"
+										)
+										.where("pubs.id", "=", props.pubId!)
+										.select("_PubFieldToPubType.A as id")
+								)
 							)
 					)
 			)
