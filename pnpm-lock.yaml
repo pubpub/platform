@@ -4,6 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@radix-ui/react-dismissable-layer': ^1.0.5
+  '@radix-ui/react-focus-scope': ^1.0.4
+
 importers:
 
   .:
@@ -4560,18 +4564,6 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@nimpl/getters@1.4.1(next@14.2.3)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-eSzcBwDFTPYsUPWEBzD0diYv/d+Wx6YkzshjVxBZJmz9ZuqTjRDbyiQAVy3cknqKgN9kGPAQ58dnMS5R6pwmJQ==}
-    peerDependencies:
-      next: '>= 14.0.0'
-      react: '>= 18.2.0'
-      react-dom: '>= 18.2.0'
-    dependencies:
-      next: 14.2.3(@babel/core@7.24.3)(@opentelemetry/api@1.7.0)(@playwright/test@1.43.1)(react-dom@18.2.0)(react@18.2.0)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -6271,9 +6263,9 @@ packages:
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.5(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-focus-guards': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-focus-scope': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-focus-scope': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-id': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-portal': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-presence': 1.0.1(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
@@ -6332,30 +6324,6 @@ packages:
       '@babel/runtime': 7.23.5
       '@types/react': 18.2.78
       react: 18.2.0
-    dev: false
-
-  /@radix-ui/react-dismissable-layer@1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-7UpBa/RKMoHJYjie1gkF1DlK8l1fdU/VKDpoS3rCCo8YBJR294GwcEHyxHw72yvphJ7ld0AXEcSLAzY2F/WyCg==}
-    peerDependencies:
-      '@types/react': '*'
-      '@types/react-dom': '*'
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      '@types/react-dom':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.23.5
-      '@radix-ui/primitive': 1.0.1
-      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-primitive': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-use-escape-keydown': 1.0.3(@types/react@18.2.78)(react@18.2.0)
-      '@types/react': 18.2.78
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /@radix-ui/react-dismissable-layer@1.0.5(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0):
@@ -6420,28 +6388,6 @@ packages:
       '@babel/runtime': 7.23.5
       '@types/react': 18.2.78
       react: 18.2.0
-    dev: false
-
-  /@radix-ui/react-focus-scope@1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-upXdPfqI4islj2CslyfUBNlaJCPybbqRHAi1KER7Isel9Q2AtSJ0zRBZv8mWQiFXD2nyAJ4BhC3yXgZ6kMBSrQ==}
-    peerDependencies:
-      '@types/react': '*'
-      '@types/react-dom': '*'
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      '@types/react-dom':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.23.5
-      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-primitive': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@types/react': 18.2.78
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /@radix-ui/react-focus-scope@1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0):
@@ -6556,9 +6502,9 @@ packages:
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-direction': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.5(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-focus-guards': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-focus-scope': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-focus-scope': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-id': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-popper': 1.1.2(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-portal': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
@@ -6690,9 +6636,9 @@ packages:
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.5(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-focus-guards': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-focus-scope': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-focus-scope': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-id': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-popper': 1.1.2(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-portal': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
@@ -7079,7 +7025,7 @@ packages:
       '@radix-ui/react-collection': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.5(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-portal': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-presence': 1.0.1(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
@@ -7109,7 +7055,7 @@ packages:
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.2.78)(react@18.2.0)
-      '@radix-ui/react-dismissable-layer': 1.0.4(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-dismissable-layer': 1.0.5(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-id': 1.0.1(@types/react@18.2.78)(react@18.2.0)
       '@radix-ui/react-popper': 1.1.2(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-portal': 1.0.3(@types/react@18.2.78)(react-dom@18.2.0)(react@18.2.0)
@@ -9791,7 +9737,6 @@ packages:
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
-    dev: false
 
   /@types/node@20.14.2:
     resolution: {integrity: sha512-xyu6WAMVwv6AKFLB+e/7ySZVr/0zLCzOa7rSpq6jNwpqOrUbcACDWC+53d4n2QHOnDou0fbIsg8wZu/sxrnI4Q==}
