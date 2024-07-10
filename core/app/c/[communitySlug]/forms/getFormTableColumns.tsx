@@ -6,14 +6,16 @@ import { DataTableColumnHeader } from "ui/data-table";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
+	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
+import { Ellipsis, History, ToyBrick } from "ui/icon";
+
+import type { FormsId } from "~/kysely/types/public/Forms";
+import { ArchiveFormButton } from "./ArchiveFormButton";
 
 export type TableForm = {
-	id: string;
+	id: FormsId;
 	formName: string;
 	pubType: string;
 	updated: Date;
@@ -45,17 +47,35 @@ export const getFormTableColumns = () =>
 			enableHiding: false,
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader className="w-52" column={column} title="Name" />
+			),
 			accessorKey: "formName",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader
+					className="w-52"
+					column={column}
+					title="Type"
+					icon={<ToyBrick size={15} />}
+				/>
+			),
 			accessorKey: "pubType",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Updated" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader
+					className="w-52"
+					column={column}
+					title="Updated"
+					icon={<History size={15} />}
+				/>
+			),
 			accessorKey: "updated",
-			cell: ({ row }) => row.original.updated.toLocaleDateString(),
+			cell: ({ row }) => {
+				return <div className="pr-10">{row.original.updated.toLocaleDateString()}</div>;
+			},
 		},
 		{
 			id: "actions",
@@ -66,13 +86,13 @@ export const getFormTableColumns = () =>
 						<DropdownMenuTrigger asChild>
 							<Button variant="ghost" className="h-8 w-8 p-0">
 								<span className="sr-only">Open menu</span>
-								<MoreVertical className="h-4 w-4" />
+								<Ellipsis className="h-4 w-4" />
 							</Button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuLabel>Menu</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<div className="w-full">Archive</div>
+						<DropdownMenuContent align="end" className="p-0">
+							<DropdownMenuItem asChild key={row.original.id}>
+								<ArchiveFormButton id={row.original.id} />
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				);

@@ -38,18 +38,23 @@ export default async function Page() {
 	});
 
 	return (
-		<div className="absolute inset-0 min-h-screen">
-			<div className="mx-auto max-w-7xl rounded-lg bg-white">
-				<header className="flex items-center justify-between border-b p-4">
+		<div className="absolute inset-0 min-w-max">
+			<div>
+				<header className="flex items-center justify-between border-b bg-gray-50 p-4 shadow-md">
 					<h1 className="text-lg font-semibold">
 						<div className="flex flex-row items-center">
-							<ClipboardPenLine size={14} className="mr-2" /> Forms
+							<ClipboardPenLine
+								size={24}
+								strokeWidth={1}
+								className="mr-2 text-slate-500"
+							/>{" "}
+							Forms
 						</div>
 					</h1>
 				</header>
-				<div className="p-4">
+				<div>
 					{forms.length === 0 ? (
-						<div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+						<div className=" max-w-{444px} flex min-h-screen flex-col items-center justify-center">
 							<h2 className="mb-2 text-2xl font-semibold text-gray-800">
 								You don’t have any forms yet
 							</h2>
