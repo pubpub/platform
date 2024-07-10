@@ -71,7 +71,7 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 				description: "Form created",
 			});
 			form.reset();
-			router.push(`/c/${community.slug}/forms/${slug}`);
+			router.push(`/c/${community.slug}/forms/edit/${slug}`);
 			setIsOpen(false);
 		}
 	};
