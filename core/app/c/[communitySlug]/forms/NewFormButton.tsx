@@ -78,13 +78,12 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 	return (
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen}>
 			<DialogOverlay />
-			<DialogTrigger asChild>
-				<Button className="rounded bg-green-500 px-4 py-2 text-white shadow hover:bg-green-600">
-					+ New Form
+				<Button className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow hover:bg-emerald-600">
+					<Plus size="16" /> <span>New Form</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
-				<DialogTitle>Create New Form</DialogTitle>
+			<DialogContent className="max-h-full min-w-[20rem] max-w-fit overflow-auto md:min-w-[32rem]">
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 						<FormField
@@ -93,10 +92,6 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Select a pub type</FormLabel>
-									<FormDescription>
-										Your form will be populated using all fields defined in this
-										type, with submitted responses also adopting it.
-									</FormDescription>
 									<FormControl>
 										<Select onValueChange={field.onChange} {...field}>
 											<SelectTrigger>
@@ -116,6 +111,10 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 											</SelectContent>
 										</Select>
 									</FormControl>
+                                    <FormDescription>
+										Your form will be populated using all fields defined in this
+										type, with submitted responses also adopting it.
+									</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -134,13 +133,13 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 							)}
 						/>
 						<DialogFooter className="mt-8">
+						<DialogFooter className="mt-8 gap-y-1">
 							<Button
 								onClick={() => {
 									form.reset();
 									setIsOpen(false);
 								}}
 								variant="outline"
-								className="mr-4"
 								type="button"
 							>
 								Cancel
