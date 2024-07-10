@@ -120,12 +120,7 @@ export const FieldOutputMap = defineCustomFormField(
 	action,
 	"config",
 	"outputMap",
-	function FieldOutputMap(
-		{ form, fieldName }
-		// context: {
-		// 	pubFields: PubField[];
-		// }
-	) {
+	function FieldOutputMap({ form, fieldName }) {
 		const pubFields = Object.values(usePubFieldContext());
 		const values = form.watch();
 
