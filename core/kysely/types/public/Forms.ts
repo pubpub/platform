@@ -3,6 +3,7 @@
 
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
+import { type CommunitiesId } from "./Communities";
 import { type PubTypesId } from "./PubTypes";
 
 /** Identifier type for public.forms */
@@ -16,9 +17,11 @@ export default interface FormsTable {
 
 	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
 
-	slug: ColumnType<string, string, string>;
-
 	isArchived: ColumnType<boolean, boolean | undefined, boolean>;
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+
+	slug: ColumnType<string, string, string>;
 }
 
 export type Forms = Selectable<FormsTable>;
