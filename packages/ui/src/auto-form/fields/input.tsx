@@ -7,11 +7,11 @@ import { FormControl, FormItem, FormMessage } from "../../form";
 import { Info, Minus, Plus } from "../../icon";
 import { Input } from "../../input";
 import {
-	PubFieldSelector,
-	PubFieldSelectorHider,
-	PubFieldSelectorProvider,
-	PubFieldSelectorToggleButton,
-} from "../../pubFields/pubFieldSelector";
+	PubFieldSelect,
+	PubFieldSelectProvider,
+	PubFieldSelectToggleButton,
+	PubFieldSelectWrapper,
+} from "../../pubFields/pubFieldSelect";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
@@ -32,7 +32,7 @@ export default function AutoFormInput({
 	const type = fieldProps.type || "text";
 
 	return (
-		<PubFieldSelectorProvider
+		<PubFieldSelectProvider
 			field={field}
 			allowedSchemas={fieldConfigItem.allowedSchemas}
 			zodItem={zodItem}
@@ -43,7 +43,7 @@ export default function AutoFormInput({
 						<>
 							<span className="flex flex-row items-center  justify-between space-x-2">
 								<AutoFormLabel label={label} isRequired={isRequired} />
-								<PubFieldSelectorToggleButton />
+								<PubFieldSelectToggleButton />
 							</span>
 							{description && <AutoFormDescription description={description} />}
 						</>
@@ -51,13 +51,13 @@ export default function AutoFormInput({
 					<FormControl>
 						<Input type={type} {...fieldPropsWithoutShowLabel} />
 					</FormControl>
-					<PubFieldSelectorHider>
-						<PubFieldSelector />
-					</PubFieldSelectorHider>
+					<PubFieldSelectWrapper>
+						<PubFieldSelect />
+					</PubFieldSelectWrapper>
 					<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 					<FormMessage />
 				</FormItem>
 			</div>
-		</PubFieldSelectorProvider>
+		</PubFieldSelectProvider>
 	);
 }

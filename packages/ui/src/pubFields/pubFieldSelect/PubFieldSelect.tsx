@@ -1,22 +1,21 @@
 "use client";
 
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
-import type { z } from "zod";
 
 import * as React from "react";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useFormContext } from "react-hook-form";
 
-import type { FieldConfigItem } from "../../auto-form/types";
 import type { PubField } from "../PubFieldContext";
+import type { AllowedSchemasOrZodItem } from "./determinePubFields";
 import { usePubFieldContext } from "..";
 import { Button } from "../../button";
 import { Info, Minus, Plus } from "../../icon";
 import { MultiSelect } from "../../multi-select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
-import { AllowedSchemasOrZodItem, determineAllowedPubFields } from "./determinePubFields";
+import { determineAllowedPubFields } from "./determinePubFields";
 
-const PubFieldSelectorContext = React.createContext<{
+const PubFieldSelectContext = React.createContext<{
 	shouldReadFromPubField: boolean;
 	setShouldReadFromPubField: React.Dispatch<React.SetStateAction<boolean>>;
 	pubFields: string[];
@@ -38,9 +37,9 @@ const PubFieldSelectorContext = React.createContext<{
 	allowedPubFields: [],
 });
 
-const usePubFieldSelectorContext = () => React.useContext(PubFieldSelectorContext);
+const usePubFieldSelectContext = () => React.useContext(PubFieldSelectContext);
 
-export const PubFieldSelectorProvider = ({
+export const PubFieldSelectProvider = ({
 	children,
 	field,
 	...allowedSchemasOrZodItem
@@ -76,7 +75,7 @@ export const PubFieldSelectorProvider = ({
 	}, []);
 
 	return (
-		<PubFieldSelectorContext.Provider
+		<PubFieldSelectContext.Provider
 			value={{
 				shouldReadFromPubField,
 				setShouldReadFromPubField,
@@ -87,13 +86,13 @@ export const PubFieldSelectorProvider = ({
 			}}
 		>
 			{children}
-		</PubFieldSelectorContext.Provider>
+		</PubFieldSelectContext.Provider>
 	);
 };
 
-export const PubFieldSelectorToggleButton = () => {
+export const PubFieldSelectToggleButton = () => {
 	const { shouldReadFromPubField, setShouldReadFromPubField, setPubFields, allowedPubFields } =
-		usePubFieldSelectorContext();
+		usePubFieldSelectContext();
 
 	if (!allowedPubFields.length) {
 		return null;
@@ -134,8 +133,8 @@ export const PubFieldSelectorToggleButton = () => {
 	);
 };
 
-export const PubFieldSelectorHider = ({ children }: { children: React.ReactNode }) => {
-	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectorContext();
+export const PubFieldSelectWrapper = ({ children }: { children: React.ReactNode }) => {
+	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectContext();
 
 	if (!shouldReadFromPubField || allowedPubFields.length === 0) {
 		return null;
@@ -163,8 +162,8 @@ export const PubFieldSelectorHider = ({ children }: { children: React.ReactNode 
 	);
 };
 
-export const PubFieldSelector = () => {
-	const { setPubFields, pubFields, allowedPubFields } = usePubFieldSelectorContext();
+export const PubFieldSelect = () => {
+	const { setPubFields, pubFields, allowedPubFields } = usePubFieldSelectContext();
 
 	return (
 		<MultiSelect

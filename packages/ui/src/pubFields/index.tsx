@@ -1,8 +1,8 @@
 export { type PubFieldContext, PubFieldProvider, usePubFieldContext } from "./PubFieldContext";
 
 export {
-	PubFieldSelector,
-	PubFieldSelectorHider,
-	PubFieldSelectorProvider,
-	PubFieldSelectorToggleButton,
-} from "./pubFieldSelector";
+	PubFieldSelect as PubFieldSelector,
+	PubFieldSelectWrapper as PubFieldSelectorHider,
+	PubFieldSelectProvider as PubFieldSelectorProvider,
+	PubFieldSelectToggleButton as PubFieldSelectorToggleButton,
+} from "./pubFieldSelect";
