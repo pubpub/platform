@@ -38,8 +38,8 @@ export default async function Page() {
 	});
 
 	return (
-		<div className="absolute inset-0 min-w-max">
-			<div>
+		<div className="absolute inset-0 w-full">
+			<div className="flex h-full flex-col">
 				<header className="flex items-center justify-between border-b bg-gray-50 p-4 shadow-md">
 					<h1 className="text-lg font-semibold">
 						<div className="flex flex-row items-center">
@@ -52,16 +52,18 @@ export default async function Page() {
 						</div>
 					</h1>
 				</header>
-				<div>
+				<div className="h-full flex-1 overflow-auto">
 					{forms.length === 0 ? (
-						<div className=" max-w-{444px} flex min-h-screen flex-col items-center justify-center">
-							<h2 className="mb-2 text-2xl font-semibold text-gray-800">
-								You don’t have any forms yet
-							</h2>
-							<p className="mb-6 text-center text-gray-600">
-								Forms are templates of questions used to collect information from
-								users via a response submission process.
-							</p>
+						<div className="flex h-full items-center justify-center">
+							<div className="flex max-w-[444px] flex-col items-center justify-center">
+								<h2 className="mb-2 text-2xl font-semibold text-gray-800">
+									You don’t have any forms yet
+								</h2>
+								<p className="mb-6 text-center text-gray-600">
+									Forms are templates of questions used to collect information
+									from users via a response submission process.
+								</p>
+							</div>
 						</div>
 					) : (
 						<div className="p-4">
