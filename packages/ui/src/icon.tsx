@@ -15,6 +15,7 @@ export {
 	CircleDollarSign,
 	CircleEllipsis,
 	Clipboard,
+	CurlyBraces,
 	Download,
 	Ellipsis,
 	FileText,

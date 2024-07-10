@@ -1,17 +1,12 @@
 import { notFound } from "next/navigation";
-import { sql } from "kysely";
-import { jsonBuildObject } from "kysely/helpers/postgres";
 
 import { FormInput } from "ui/icon";
 
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubField } from "~/lib/types";
 import ContentLayout from "~/app/c/[communitySlug]/ContentLayout";
 import { FieldsProvider } from "~/app/c/[communitySlug]/types/FieldsProvider";
-import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
-import { autoCache } from "~/lib/server/cache/autoCache";
 import { getFields } from "~/lib/server/fields";
+import FieldsTable from "./FieldsTable";
 
 type Props = { params: { communitySlug: string } };
 
@@ -26,6 +21,7 @@ export default async function Page({ params }: Props) {
 	if (!fields) {
 		return null;
 	}
+
 	return (
 		<FieldsProvider fields={fields}>
 			<ContentLayout
@@ -36,7 +32,9 @@ export default async function Page({ params }: Props) {
 					</>
 				}
 			>
-				<div className="m-4">TODO: table</div>
+				<div className="m-4">
+					<FieldsTable fields={fields} />
+				</div>
 			</ContentLayout>
 		</FieldsProvider>
 	);

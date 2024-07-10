@@ -19,6 +19,8 @@ export const getFields = async () =>
 							id: eb.ref("id"),
 							name: eb.ref("name"),
 							slug: eb.ref("slug"),
+							updatedAt: eb.ref("updatedAt"),
+							pubFieldSchemaId: eb.ref("pubFieldSchemaId"),
 						}).as("json"),
 					])
 			)
