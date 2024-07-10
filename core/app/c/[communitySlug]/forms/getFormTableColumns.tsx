@@ -95,7 +95,10 @@ export const getFormTableColumns = () =>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="p-0">
 							<DropdownMenuItem asChild key={row.original.id}>
-								<ArchiveFormButton id={row.original.id} />
+								<ArchiveFormButton
+									className="w-full justify-start pl-3"
+									id={row.original.id}
+								/>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
