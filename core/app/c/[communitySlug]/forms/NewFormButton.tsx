@@ -24,6 +24,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "ui/form";
+import { Plus } from "ui/icon";
 import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
@@ -76,14 +77,15 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 	};
 
 	return (
-		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen}>
+		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen} modal={true}>
 			<DialogOverlay />
+			<DialogTrigger asChild>
 				<Button className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow hover:bg-emerald-600">
 					<Plus size="16" /> <span>New Form</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
 			<DialogContent className="max-h-full min-w-[20rem] max-w-fit overflow-auto md:min-w-[32rem]">
+				<DialogTitle>Create New Form</DialogTitle>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 						<FormField
@@ -92,26 +94,27 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Select a pub type</FormLabel>
-									<FormControl>
-										<Select onValueChange={field.onChange} {...field}>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
+										<FormControl>
 											<SelectTrigger>
-												<SelectValue placeholder="Select a type">
-													{field.value}{" "}
-												</SelectValue>
+												<SelectValue placeholder="Select a type" />
 											</SelectTrigger>
-											<SelectContent>
-												{pubTypes.map((pubType) => (
-													<SelectItem
-														key={pubType.id}
-														value={pubType.name}
-													>
-														{pubType.name}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</FormControl>
-                                    <FormDescription>
+										</FormControl>
+										<SelectContent>
+											{pubTypes.map((pubType) => (
+												<SelectItem
+													key={pubType.id}
+													value={pubType.name.toString()}
+												>
+													{pubType.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									<FormDescription>
 										Your form will be populated using all fields defined in this
 										type, with submitted responses also adopting it.
 									</FormDescription>
@@ -132,7 +135,6 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 								</FormItem>
 							)}
 						/>
-						<DialogFooter className="mt-8">
 						<DialogFooter className="mt-8 gap-y-1">
 							<Button
 								onClick={() => {
