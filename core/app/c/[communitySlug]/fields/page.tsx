@@ -6,38 +6,12 @@ import { FormInput } from "ui/icon";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubField } from "~/lib/types";
+import ContentLayout from "~/app/c/[communitySlug]/ContentLayout";
 import { FieldsProvider } from "~/app/c/[communitySlug]/types/FieldsProvider";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import ContentLayout from "../ContentLayout";
-
-// TODO: this should probably filter by the community, but fields aren't actually scoped to a community yet!
-const getFields = async () =>
-	await autoCache(
-		db
-			.with("f", (eb) =>
-				eb
-					.selectFrom("pub_fields")
-					.select("id")
-					.select((eb) => [
-						jsonBuildObject({
-							id: eb.ref("id"),
-							name: eb.ref("name"),
-							slug: eb.ref("slug"),
-						}).as("json"),
-					])
-			)
-			.selectFrom("f")
-			.select((eb) => [
-				eb.fn
-					.coalesce(
-						sql<Record<PubFieldsId, PubField>>`json_object_agg(f.id, f.json)`,
-						sql`'{}'`
-					)
-					.as("fields"),
-			])
-	).executeTakeFirstOrThrow();
+import { getFields } from "~/lib/server/fields";
 
 type Props = { params: { communitySlug: string } };
 
