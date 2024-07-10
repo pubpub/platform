@@ -5,6 +5,7 @@ export {
 	Calendar,
 	ClipboardPenLine,
 	BadgeCheck,
+	Bookmark,
 	Check,
 	CheckCircle,
 	ChevronsUpDown,
