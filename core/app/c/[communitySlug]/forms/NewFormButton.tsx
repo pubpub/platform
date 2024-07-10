@@ -63,7 +63,7 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 			});
 			return;
 		}
-		const slug = await runCreateForm(pubTypeId, name);
+		const slug = await runCreateForm(pubTypeId, name, community.id);
 		if (didSucceed(slug)) {
 			toast({
 				title: "Success",

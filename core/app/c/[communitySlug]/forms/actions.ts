@@ -2,6 +2,7 @@
 
 import { logger } from "logger";
 
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { FormsId } from "~/kysely/types/public/Forms";
 import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db, isUniqueConstraintError } from "~/kysely/database";
@@ -11,7 +12,8 @@ import { slugifyString } from "~/lib/string";
 
 export const createForm = defineServerAction(async function createForm(
 	pubTypeId: PubTypesId,
-	name: string
+	name: string,
+	communityId: CommunitiesId
 ) {
 	try {
 		const { slug } = await autoRevalidate(
@@ -21,6 +23,7 @@ export const createForm = defineServerAction(async function createForm(
 					name,
 					pubTypeId,
 					slug: slugifyString(name),
+					communityId,
 				})
 				.returning("slug")
 		).executeTakeFirstOrThrow();
