@@ -240,7 +240,6 @@ export default async function main(communityUUID: CommunitiesId) {
 		.with("pubs_in_stages", (db) =>
 			db.insertInto("PubsInStages").values((eb) => [
 				{
-					assigneeId: users[0].id,
 					pubId: eb.selectFrom("new_pubs").select("id"),
 					stageId: stages[0],
 				},
@@ -251,6 +250,7 @@ export default async function main(communityUUID: CommunitiesId) {
 				.insertInto("pubs")
 				.values((eb) => [
 					{
+						assigneeId: users[0].id,
 						communityId: communityUUID,
 						pubTypeId: evaluationTypeId,
 						parentId: eb.selectFrom("new_pubs").select("id"),
