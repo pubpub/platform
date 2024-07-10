@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
@@ -20,30 +21,32 @@ export default async function Page({ params: { communitySlug } }) {
 		return null;
 	}
 
-	const forms = await db
-		.selectFrom("forms")
-		.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
-		.innerJoin("communities", "communities.id", "pub_types.communityId")
-		.select([
-			"forms.id as id",
-			"forms.name as formName",
-			"pub_types.name as pubType",
-			"pub_types.updatedAt", // TODO: this should be the form's updatedAt
-			"forms.isArchived",
-		])
-		.where("communities.slug", "=", communitySlug)
-		.execute();
+	const forms = await autoCache(
+		db
+			.selectFrom("forms")
+			.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
+			.innerJoin("communities", "communities.id", "pub_types.communityId")
+			.select([
+				"forms.id as id",
+				"forms.name as formName",
+				"pub_types.name as pubType",
+				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
+				"forms.isArchived",
+			])
+			.where("communities.slug", "=", communitySlug)
+	).execute();
 
 	const [active, archived] = partition(forms, (form) => !form.isArchived);
 
-	const tableForms = (formList) =>
+	const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
-			const { id, formName, pubType, updatedAt } = form;
+			const { id, formName, pubType, updatedAt, isArchived } = form;
 			return {
 				id,
 				formName,
 				pubType,
 				updated: new Date(updatedAt),
+				isArchived,
 			};
 		});
 
