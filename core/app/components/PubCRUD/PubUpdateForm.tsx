@@ -23,7 +23,7 @@ import { toast } from "ui/use-toast";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { Stages, StagesId } from "~/kysely/types/public/Stages";
-import type { getPubType } from "~/lib/server/pub";
+import type { getPubType } from "~/lib/server/pubtype";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 
