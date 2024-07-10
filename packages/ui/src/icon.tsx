@@ -18,6 +18,7 @@ export {
 	Download,
 	Ellipsis,
 	FileText,
+	FormInput,
 	Globe,
 	History,
 	Info,
