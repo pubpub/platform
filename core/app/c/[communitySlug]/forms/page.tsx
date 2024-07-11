@@ -84,7 +84,7 @@ export default async function Page({ params: { communitySlug } }) {
 						</div>
 					) : archived.length > 0 ? (
 						<Tabs defaultValue="active" className="">
-							<TabsList>
+							<TabsList className="m-4">
 								<TabsTrigger value="active">Active</TabsTrigger>
 								<TabsTrigger value="archived">Archived</TabsTrigger>
 							</TabsList>
