@@ -6,6 +6,7 @@ import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type CoreSchemaType from "~/kysely/types/public/CoreSchemaType";
 import type Event from "~/kysely/types/public/Event";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
@@ -35,9 +36,9 @@ export type RunProps<T extends Action> =
 		infer A extends ZodObjectOrWrappedOrOptional
 	>
 		? {
-				config: C["_output"];
+				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
 				pub: ActionPub<P>;
-				args: A["_output"];
+				args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
 				stageId: StagesId;
 				communityId: CommunitiesId;
 			}
@@ -78,6 +79,10 @@ export type Action<
 				 * `custom` indicates you are defining the component yourself in `[action]/[config|params]/[fieldName].field.tsx`
 				 */
 				fieldType?: FieldConfigItem["fieldType"] | "custom";
+				/**
+				 * TODO: Document this
+				 */
+				allowedSchemas?: CoreSchemaType[] | false;
 			};
 		};
 		dependencies?: Dependency<z.infer<C>>[];
@@ -98,6 +103,10 @@ export type Action<
 				 * Custom indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
 				 */
 				fieldType?: FieldConfigItem["fieldType"] | "custom";
+				/**
+				 * TODO: Document this
+				 */
+				allowedSchemas?: CoreSchemaType[] | false;
 			};
 		};
 		dependencies?: Dependency<NonNullable<z.infer<A>>>[];

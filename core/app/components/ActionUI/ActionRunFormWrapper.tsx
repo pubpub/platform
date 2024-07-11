@@ -1,3 +1,6 @@
+import { PubFieldProvider } from "ui/pubFields";
+import { TokenProvider } from "ui/tokens";
+
 import type { PageContext } from "./PubsRunActionDropDownMenu";
 import type { Action, ActionInstanceOf } from "~/actions/types";
 import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
@@ -6,6 +9,8 @@ import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { Stages } from "~/kysely/types/public/Stages";
 import type { StagePub } from "~/lib/db/queries";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
+import { getActionByName } from "~/actions/api";
+import { getPubFields } from "~/lib/server/pubFields";
 import { ActionRunForm } from "./ActionRunForm";
 
 export const ActionRunFormWrapper = async ({
@@ -19,7 +24,11 @@ export const ActionRunFormWrapper = async ({
 	stage: Stages;
 	pageContext: PageContext;
 }) => {
-	const resolvedFieldConfig = await resolveFieldConfig(actionInstance.action, "params", {
+	const { tokens = {} } = getActionByName(actionInstance.action);
+
+	const fieldsPromise = getPubFields({ pubId: pub.id as PubsId }).executeTakeFirstOrThrow();
+
+	const resolvedFieldConfigPromise = resolveFieldConfig(actionInstance.action, "params", {
 		pubId: pub.id as PubsId,
 		stageId: stage.id,
 		communityId: pub.communityId as CommunitiesId,
@@ -27,11 +36,20 @@ export const ActionRunFormWrapper = async ({
 		pageContext,
 	});
 
+	const [{ fields }, resolvedFieldConfig] = await Promise.all([
+		fieldsPromise,
+		resolvedFieldConfigPromise,
+	]);
+
 	return (
-		<ActionRunForm
-			actionInstance={actionInstance}
-			pub={pub}
-			fieldConfig={resolvedFieldConfig}
-		/>
+		<PubFieldProvider pubFields={fields}>
+			<TokenProvider tokens={tokens}>
+				<ActionRunForm
+					actionInstance={actionInstance}
+					pub={pub}
+					fieldConfig={resolvedFieldConfig}
+				/>
+			</TokenProvider>
+		</PubFieldProvider>
 	);
 };

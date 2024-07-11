@@ -11,12 +11,14 @@ export const registerCorePubField = async (corePubField: CorePubField) => {
 		create: {
 			name: corePubField.name,
 			slug: corePubField.slug,
+			schemaName: corePubField.schemaName,
 			schema: {
 				create: corePubField.schema,
 			},
 		},
 		update: {
 			name: corePubField.name,
+			schemaName: corePubField.schemaName,
 			schema: {
 				update: corePubField.schema,
 			},

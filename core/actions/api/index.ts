@@ -20,7 +20,11 @@ export const actions = {
 	[move.action.name]: move.action,
 } as const;
 
-export const getActionByName = (name: keyof typeof actions) => {
+export const getActionByName = <N extends keyof typeof actions>(name: N) => {
+	if (!(name in actions)) {
+		throw new Error(`Action ${name} not found`);
+	}
+
 	return actions[name];
 };
 

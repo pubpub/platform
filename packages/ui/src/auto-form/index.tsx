@@ -1,18 +1,20 @@
 "use client";
 
+import type { DefaultValues } from "react-hook-form";
+import type { z } from "zod";
+
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DefaultValues, useForm, useFormContext, useFormState } from "react-hook-form";
-import { z } from "zod";
+import { useForm, useFormState } from "react-hook-form";
 
 import { cn } from "utils";
 
+import type { Dependency, FieldConfig } from "./types";
+import type { ZodObjectOrWrapped } from "./utils";
 import { Button } from "../button";
-import { Form, FormMessage } from "../form";
-import { Check, Loader2, X } from "../icon";
+import { Form } from "../form";
 import AutoFormObject from "./fields/object";
-import { Dependency, FieldConfig } from "./types";
-import { getDefaultValues, getObjectFormSchema, ZodObjectOrWrapped } from "./utils";
+import { getDefaultValues, getObjectFormSchema } from "./utils";
 
 export function AutoFormSubmit({
 	children,
@@ -52,8 +54,10 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	formSchema: SchemaType;
 	values?: Partial<z.infer<SchemaType>>;
 	onValuesChange?: (values: Partial<z.infer<SchemaType>>) => void;
-	onParsedValuesChange?: (values: Partial<z.infer<SchemaType>>) => void;
-	onSubmit?: (values: z.infer<SchemaType>) => void;
+	onParsedValuesChange?: (
+		values: Partial<z.infer<SchemaType>> & { pubFields: Record<string, string[]> }
+	) => void;
+	onSubmit?: (values: z.infer<SchemaType> & { pubFields: Record<string, string[]> }) => void;
 	fieldConfig?: FieldConfig<NonNullable<z.infer<SchemaType>>>;
 	children?: React.ReactNode;
 	className?: string;
@@ -74,10 +78,19 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 		shouldFocusError: true,
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		const parsedValues = formSchema.safeParse(values);
+	const values = form.watch();
+	// valuesString is needed because form.watch() returns a new object every time
+	const valuesString = JSON.stringify(values);
+
+	function onSubmit(submittedValues: z.infer<typeof formSchema>) {
+		const parsedValues = formSchema.safeParse(submittedValues);
 		if (parsedValues.success) {
-			onSubmitProp?.(parsedValues.data);
+			onSubmitProp?.({
+				...parsedValues.data,
+				// need to grab this from `values` because it's not in the parsed values,
+				// as pubFields are not part of the schema
+				pubFields: values?.pubFields ?? {},
+			});
 			return;
 		}
 
@@ -89,17 +102,13 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 		});
 	}
 
-	const values = form.watch();
-	// valuesString is needed because form.watch() returns a new object every time
-	const valuesString = JSON.stringify(values);
-
 	React.useEffect(() => {
 		onValuesChangeProp?.(values);
 		const parsedValues = formSchema.safeParse(values);
 		if (parsedValues.success === false) {
 		}
 		if (parsedValues.success && parsedValues.data !== undefined) {
-			onParsedValuesChange?.(parsedValues.data);
+			onParsedValuesChange?.({ ...parsedValues.data, pubFields: values?.pubFields ?? {} });
 		}
 	}, [valuesString]);
 
