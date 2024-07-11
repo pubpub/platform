@@ -31,6 +31,7 @@ const Footer = ({ onCancel }: { onCancel: () => void }) => {
 
 const NewFieldButton = () => {
 	const [isOpen, setIsOpen] = useState(false);
+
 	return (
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen} modal={true}>
 			<DialogOverlay />
@@ -47,12 +48,13 @@ const NewFieldButton = () => {
 					onSubmitSuccess={() => {
 						setIsOpen(false);
 					}}
-				/>
-				<Footer
-					onCancel={() => {
-						setIsOpen(false);
-					}}
-				/>
+				>
+					<Footer
+						onCancel={() => {
+							setIsOpen(false);
+						}}
+					/>
+				</NewFieldForm>
 			</DialogContent>
 		</Dialog>
 	);

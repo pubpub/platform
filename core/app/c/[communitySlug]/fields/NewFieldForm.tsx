@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 
+import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { CoreSchemaType } from "schemas";
@@ -16,17 +18,21 @@ import {
 } from "ui/form";
 import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { toast } from "ui/use-toast";
+
+import { didSucceed, useServerAction } from "~/lib/serverActions";
+import * as actions from "./actions";
 
 const schema = z.object({
-	slug: z.string(),
 	name: z.string(),
-	// TODO: make this a select?
 	schemaName: z.nativeEnum(CoreSchemaType),
 });
 
-const SchemaSelect = ({ form }: { form: UseFormReturn<FieldValues, any, undefined> }) => {
+type FormValues = z.infer<typeof schema>;
+
+const SchemaSelectField = ({ form }: { form: UseFormReturn<FieldValues, any, undefined> }) => {
 	const schemaTypes = Object.values(CoreSchemaType);
-	console.log({ schemaTypes });
+
 	return (
 		<FormField
 			control={form.control}
@@ -60,28 +66,48 @@ const SchemaSelect = ({ form }: { form: UseFormReturn<FieldValues, any, undefine
 	);
 };
 
-const NewFieldForm = ({ onSubmitSuccess }: { onSubmitSuccess: () => void }) => {
-	const handleSubmit = async ({ name, schemaName }: z.infer<typeof schema>) => {
+const NewFieldForm = ({
+	onSubmitSuccess,
+	children,
+}: {
+	onSubmitSuccess: () => void;
+	children: ReactNode;
+}) => {
+	const createField = useServerAction(actions.createField);
+	const handleCreate = useCallback(async (values: FormValues) => {
+		const result = await createField(values.name, values.schemaName);
+		if (didSucceed(result)) {
+			toast({ title: `Created field ${values.name}` });
+		}
+	}, []);
+
+	const handleSubmit = async (values: FormValues) => {
+		handleCreate(values);
 		onSubmitSuccess();
 	};
+
 	const form = useForm({ resolver: zodResolver(schema) });
+
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6">
-				<SchemaSelect form={form} />
-				<FormField
-					control={form.control}
-					name="name"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Field Name</FormLabel>
-							<FormControl>
-								<Input placeholder="Name" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+			<form onSubmit={form.handleSubmit(handleSubmit)}>
+				<div className="mb-4 flex flex-col gap-6">
+					<SchemaSelectField form={form} />
+					<FormField
+						control={form.control}
+						name="name"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Field Name</FormLabel>
+								<FormControl>
+									<Input placeholder="Name" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+				{children}
 			</form>
 		</Form>
 	);
