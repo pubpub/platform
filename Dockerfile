@@ -21,16 +21,16 @@ RUN apk add g++ make py3-pip ca-certificates curl
 # Setup RDS CA Certificates
 
 RUN curl -L \
-      -o  /usr/local/share/ca-certificates/rds-global-bundle.pem \
-      https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
-    && update-ca-certificates
+  -o  /usr/local/share/ca-certificates/rds-global-bundle.pem \
+  https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+  && update-ca-certificates
 
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
 
 # Install pnpm.
 RUN --mount=type=cache,target=/root/.npm \
-    npm install -g pnpm@${PNPM_VERSION}
+  npm install -g pnpm@${PNPM_VERSION}
 
 ################################################################################
 # Create a stage for building the application.
@@ -41,12 +41,31 @@ RUN apk add postgresql
 # if booting without a command, just sit and wait forever for a term signal
 CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 
+# We separate out the `fetch` step to allow caching of the `pnpm fetch` layer.
+# Brief explanation:
+# Docker can cache steps (layers) in the build process if none of the files used in it OR in preceding steps have changed.
+# Normally you'd do
+# COPY . .
+# RUN pnpm install
+#
+# Since `COPY . .` will copy all files, and it's extremely likely that across CD runs some file will have changed (because you pushed up a change)
+# this will almost never be cached.
+# Since `pnpm install` happens after `COPY . .`, it will also not be cached.
+#
+# Instead, we only copy the `pnpm-lock.yaml` file, and run `pnpm fetch` to install the dependencies.
+# `pnpm-lock.yaml` will only change if dependencies are added or removed, so this step will be cached.
+# Therefore, `pnpm fetch` will also be able to be cached.
+COPY pnpm-lock.yaml ./
+
+RUN pnpm fetch
+#
 # Copy the rest of the source files into the image.
 COPY . .
 
 # Run the build script.
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --offline
 RUN pnpm p:build
+
 
 FROM monorepo AS withpackage
 ARG PACKAGE
@@ -56,20 +75,20 @@ RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && 
 ENV DOCKERBUILD=1
 
 RUN pnpm --filter $PACKAGE build && \
-    pnpm --filter $PACKAGE --prod deploy /tmp/app && \
-    pnpm --filter $PACKAGE exec \
-      cp next.docker.config.js /tmp/app/next.config.js && \
-    cp core/.env.docker /tmp/app/.env
+  pnpm --filter $PACKAGE --prod deploy /tmp/app && \
+  pnpm --filter $PACKAGE exec \
+  cp next.docker.config.js /tmp/app/next.config.js && \
+  cp core/.env.docker /tmp/app/.env
 
 # Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
 RUN if [[ ${PACKAGE} == core ]]; \
-    then \
-      find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
-      | xargs -r -I{} sh -c " \
-        rm -rf /tmp/app/{} && \
-        mkdir -p /tmp/app/{} && \
-        cp -a {}/. /tmp/app/{}/" ; \
-    fi
+  then \
+  find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
+  | xargs -r -I{} sh -c " \
+  rm -rf /tmp/app/{} && \
+  mkdir -p /tmp/app/{} && \
+  cp -a {}/. /tmp/app/{}/" ; \
+  fi
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
@@ -85,7 +104,7 @@ ENV NODE_ENV production
 
 # Copy the deployed contents
 COPY --from=withpackage /tmp/app \
-     ./
+  ./
 
 # Run the application as a non-root user.
 USER node

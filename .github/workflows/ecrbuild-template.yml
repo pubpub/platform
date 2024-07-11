@@ -27,6 +27,9 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
+            - name: Set up Docker CLI
+              uses: docker/setup-buildx-action@v3
+
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
@@ -56,18 +59,18 @@ jobs:
                   echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
 
             - name: Build, tag, and push image to Amazon ECR
+              uses: docker/build-push-action@v5
               id: build-image
+              with:
+                  context: .
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max`
+                  build-args: |
+                      PACKAGE=${{ inputs.package }}
+                  target: ${{ steps.label.outputs.target }}
+                  tags: ${{ steps.label.outputs.label }}
+                  platforms: linux/amd64
+                  push: true
               env:
                   LABEL: ${{ steps.label.outputs.label }}
                   TARGET: ${{ steps.label.outputs.target }}
-              run: |
-                  # Build a docker container and
-                  # push it to ECR so that it can
-                  # be deployed to ECS.
-                  docker build \
-                    --platform linux/amd64 \
-                    --build-arg PACKAGE=$PACKAGE \
-                    --target $TARGET \
-                    -t $LABEL \
-                    .
-                  docker push $LABEL
