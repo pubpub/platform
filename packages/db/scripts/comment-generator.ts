@@ -122,7 +122,7 @@ export async function generate(options: GeneratorOptions) {
 			.toISOString()
 			.replace(/[:\-TZ]/g, "")
 			.replace(".000", "");
-		const migrationDir = `prisma/migrations/${dateStr}_update_comments`;
+		const migrationDir = `src/prisma/migrations/${dateStr}_update_comments`;
 
 		logger.info(`Lock file changed, creating a new migration at ${migrationDir}...`);
 

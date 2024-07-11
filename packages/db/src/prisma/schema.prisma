@@ -405,7 +405,7 @@ model Rule {
   event            Event
   actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String
-  config           Json? /// @type(RuleConfigs, '~/actions/types', true, false, true)
+  config           Json?
 
   @@unique([actionInstanceId, event])
   @@map(name: "rules")

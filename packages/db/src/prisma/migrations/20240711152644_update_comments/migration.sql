@@ -87,7 +87,8 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 -- Model rules comments
 
-COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', true, false, true)';
+COMMENT ON COLUMN "rules"."config" IS NULL;
+
 
 
 -- Model forms comments
