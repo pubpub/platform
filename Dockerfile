@@ -32,9 +32,6 @@ WORKDIR /usr/src/app
 RUN --mount=type=cache,target=/root/.npm \
   npm install -g pnpm@${PNPM_VERSION}
 
-################################################################################
-# Create a stage for building the application.
-FROM base as monorepo
 
 # install postgres utilities for scripts
 RUN apk add postgresql
@@ -58,6 +55,11 @@ CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 COPY pnpm-lock.yaml ./
 
 RUN pnpm fetch
+
+################################################################################
+# Create a stage for building the application.
+FROM base as monorepo
+
 #
 # Copy the rest of the source files into the image.
 COPY . .
