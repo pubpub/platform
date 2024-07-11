@@ -6,15 +6,22 @@ import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { Ellipsis } from "ui/icon";
+import { cn } from "utils";
 
 /**
  * Menu item that renders as a button. Need forwardRef to pass on asChild
  * or else the menu won't close when the button is clicked
  * */
 export const MenuItemButton = forwardRef<HTMLButtonElement, ButtonProps>(
-	({ children, ...props }, ref) => {
+	({ children, className, ...props }, ref) => {
 		return (
-			<Button variant="ghost" size="sm" {...props} ref={ref}>
+			<Button
+				variant="ghost"
+				size="sm"
+				className={cn("flex w-full justify-start", className)}
+				{...props}
+				ref={ref}
+			>
 				{children}
 			</Button>
 		);

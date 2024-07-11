@@ -1,13 +1,18 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { CoreSchemaType } from "schemas";
 
+import { useCallback } from "react";
+
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 import { DropdownMenuItem } from "ui/dropdown-menu";
 import { Archive, CurlyBraces, History } from "ui/icon";
+import { toast } from "ui/use-toast";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import { MenuItemButton, TableActionMenu } from "~/app/components/TableActionMenu";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
+import * as actions from "./actions";
 
 export interface TableData {
 	id: PubFieldsId;
@@ -15,6 +20,23 @@ export interface TableData {
 	schema: CoreSchemaType | null;
 	updated: Date;
 }
+
+const ArchiveMenuItem = ({ field }: { field: TableData }) => {
+	const archiveField = useServerAction(actions.archiveField);
+	const handleArchive = useCallback(async () => {
+		const result = await archiveField(field.id);
+		if (didSucceed(result)) {
+			toast({ title: `Archived ${field.name}` });
+		}
+	}, [field.id]);
+	return (
+		<DropdownMenuItem asChild key={field.id}>
+			<MenuItemButton onClick={handleArchive} className="gap-2">
+				<Archive size={12} /> Archive
+			</MenuItemButton>
+		</DropdownMenuItem>
+	);
+};
 
 export const getFieldTableColumns = () =>
 	[
@@ -74,11 +96,7 @@ export const getFieldTableColumns = () =>
 			cell: ({ row }) => {
 				return (
 					<TableActionMenu>
-						<DropdownMenuItem asChild key={row.original.id}>
-							<MenuItemButton className="flex w-full justify-start gap-2">
-								<Archive size={12} /> Archive
-							</MenuItemButton>
-						</DropdownMenuItem>
+						<ArchiveMenuItem field={row.original} />
 					</TableActionMenu>
 				);
 			},
