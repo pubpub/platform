@@ -4,7 +4,7 @@ import React from "react";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
 import type { UserAndMemberships } from "~/lib/types";
-import { DataTable } from "~/app/components/DataTable";
+import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getCommunityTableColumns } from "./getCommunityTableColumns";
 
 export const CommunityTable = ({
