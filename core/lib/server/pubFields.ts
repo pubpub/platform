@@ -75,6 +75,7 @@ export const getPubFields = (
 							schemaName: eb.ref("pub_fields.schemaName"),
 							pubFieldSchemaId: eb.ref("pub_fields.pubFieldSchemaId"),
 							updatedAt: eb.ref("pub_fields.updatedAt"),
+							isArchived: eb.ref("isArchived"),
 						}).as("json"),
 					])
 					.where("pub_fields.id", "in", eb.selectFrom("ids").select("id"))
