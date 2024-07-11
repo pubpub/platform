@@ -14,6 +14,8 @@ import {
 } from "ui/dialog";
 import { Plus } from "ui/icon";
 
+import NewFieldForm from "./NewFieldForm";
+
 const Footer = ({ onCancel }: { onCancel: () => void }) => {
 	return (
 		<DialogFooter className="gap-y-1">
@@ -41,7 +43,16 @@ const NewFieldButton = () => {
 				<DialogHeader>
 					<DialogTitle>Create New Field</DialogTitle>
 				</DialogHeader>
-				<Footer onCancel={() => {}} />
+				<NewFieldForm
+					onSubmitSuccess={() => {
+						setIsOpen(false);
+					}}
+				/>
+				<Footer
+					onCancel={() => {
+						setIsOpen(false);
+					}}
+				/>
 			</DialogContent>
 		</Dialog>
 	);
