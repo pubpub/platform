@@ -23,16 +23,21 @@ jobs:
                   sha_short=$(git describe --always --abbrev=40 --dirty)
                   echo "Building containers with tag:"
                   echo "$sha_short"
-    build-base:
-        uses: ./.github/workflows/ecrbuild-template.yml
-        secrets:
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    # TODO: This is commented out along with the `needs` in the other jobs
+    # as restoring the cached base layer is actually slower than just building it.
+    # Some IO limitation I figure. If you can figure out how to make the extraction of cached
+    # layers faster, or we end up using a faster CI service, restore this along with the needs fields
+    # in the other jobs.
+    # build-base:
+    #     uses: ./.github/workflows/ecrbuild-template.yml
+    #     secrets:
+    #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     build-core:
         uses: ./.github/workflows/ecrbuild-template.yml
-        needs:
-            - build-base
+        # needs:
+        #     - build-base
         with:
             package: core
         secrets:
@@ -41,8 +46,8 @@ jobs:
 
     build-intg-submissions:
         uses: ./.github/workflows/ecrbuild-template.yml
-        needs:
-            - build-base
+        # needs:
+        #     - build-base
         with:
             package: integration-submissions
         secrets:
@@ -51,8 +56,8 @@ jobs:
 
     build-jobs:
         uses: ./.github/workflows/ecrbuild-template.yml
-        needs:
-            - build-base
+        # needs:
+        #     - build-base
         with:
             package: jobs
         secrets:
@@ -61,8 +66,8 @@ jobs:
 
     build-intg-evaluations:
         uses: ./.github/workflows/ecrbuild-template.yml
-        needs:
-            - build-base
+        # needs:
+        #     - build-base
         with:
             package: integration-evaluations
         secrets:
