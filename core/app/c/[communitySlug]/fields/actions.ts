@@ -6,20 +6,16 @@ import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import { db } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { slugifyString } from "~/lib/string";
 
 export const createField = defineServerAction(async function createField(
 	name: string,
+	slug: string,
 	schemaName: CoreSchemaType
 ) {
 	try {
-		const { slug } = await autoRevalidate(
-			db
-				.insertInto("pub_fields")
-				.values({ name, slug: slugifyString(name), schemaName })
-				.returning("slug")
-		).executeTakeFirstOrThrow();
-		return slug;
+		await autoRevalidate(
+			db.insertInto("pub_fields").values({ name, slug, schemaName })
+		).execute();
 	} catch (error) {
 		return {
 			error: "Failed to create field",

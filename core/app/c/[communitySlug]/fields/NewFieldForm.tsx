@@ -21,7 +21,9 @@ import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
 
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { slugifyString } from "~/lib/string";
 import * as actions from "./actions";
 
 const schema = z.object({
@@ -109,15 +111,17 @@ const NewFieldForm = ({
 	children: ReactNode;
 }) => {
 	const createField = useServerAction(actions.createField);
-	const handleCreate = useCallback(async (values: FormValues) => {
-		const result = await createField(values.name, values.schemaName);
+	const community = useCommunity();
+	const handleCreate = useCallback(async (values: FormValues & { slug: string }) => {
+		const result = await createField(values.name, values.slug, values.schemaName);
 		if (didSucceed(result)) {
 			toast({ title: `Created field ${values.name}` });
 		}
 	}, []);
 
 	const handleSubmit = async (values: FormValues) => {
-		handleCreate(values);
+		const slug = `${community?.slug}:${slugifyString(values.name)}`;
+		handleCreate({ ...values, slug });
 		onSubmitSuccess();
 	};
 
