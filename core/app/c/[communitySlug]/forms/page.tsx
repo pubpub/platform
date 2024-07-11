@@ -84,19 +84,21 @@ export default async function Page({ params: { communitySlug } }) {
 						</div>
 					) : archived.length > 0 ? (
 						<Tabs defaultValue="active" className="">
-							<TabsList className="m-4">
+							<TabsList className="ml-4 mt-4">
 								<TabsTrigger value="active">Active</TabsTrigger>
 								<TabsTrigger value="archived">Archived</TabsTrigger>
 							</TabsList>
-							<TabsContent value="active">
-								<FormTable forms={tableForms(active)} />
-							</TabsContent>
-							<TabsContent value="archived">
-								<FormTable forms={tableForms(archived)} />
-							</TabsContent>
+							<div className="px-4">
+								<TabsContent value="active">
+									<FormTable forms={tableForms(active)} />
+								</TabsContent>
+								<TabsContent value="archived">
+									<FormTable forms={tableForms(archived)} />
+								</TabsContent>
+							</div>
 						</Tabs>
 					) : (
-						<div>
+						<div className="px-4">
 							<FormTable forms={tableForms(active)} />
 						</div>
 					)}
