@@ -45,6 +45,8 @@
 		"public/Rules",
 		"public/Stages",
 		"public/Users",
+		"prisma/client",
+		"table-names",
 		"types"
 	],
 	"scripts": {
@@ -133,7 +135,9 @@
 			"./public/Rules.ts",
 			"./public/Stages.ts",
 			"./public/Users.ts",
-			"./types/index.ts"
+			"./types/index.ts",
+			"./prisma/client/index.ts",
+			"./table-names.ts"
 		]
 	},
 	"prisma": {
