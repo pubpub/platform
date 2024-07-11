@@ -16,6 +16,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "ui/form";
+import { BoxSelect, CalendarClock, CheckSquare, ImagePlus, Link, Mail, User } from "ui/icon";
 import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
@@ -29,6 +30,31 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+const SCHEMA_TYPES: Record<CoreSchemaType, { description: string; icon: ReactNode }> = {
+	[CoreSchemaType.Boolean]: {
+		description: "A true or false value",
+		icon: <CheckSquare className="w-4" />,
+	},
+	[CoreSchemaType.String]: {
+		description: "Text of any length",
+		icon: <CheckSquare className="w-4" />,
+	},
+	[CoreSchemaType.DateTime]: {
+		description: "A moment in time",
+		icon: <CalendarClock className="w-4" />,
+	},
+	[CoreSchemaType.Email]: { description: "An email address", icon: <Mail className="w-4" /> },
+	[CoreSchemaType.FileUpload]: {
+		description: "A file uploader",
+		icon: <ImagePlus className="w-4" />,
+	},
+	[CoreSchemaType.URL]: { description: "A link to a website", icon: <Link className="w-4" /> },
+	[CoreSchemaType.UserId]: { description: "A PubPub user ID", icon: <User className="w-4" /> },
+	[CoreSchemaType.Vector3]: {
+		description: "A set of 3 numbers",
+		icon: <BoxSelect className="w-4" />,
+	},
+};
 
 const SchemaSelectField = ({ form }: { form: UseFormReturn<FieldValues, any, undefined> }) => {
 	const schemaTypes = Object.values(CoreSchemaType);
@@ -48,9 +74,18 @@ const SchemaSelectField = ({ form }: { form: UseFormReturn<FieldValues, any, und
 						</FormControl>
 						<SelectContent>
 							{schemaTypes.map((schemaName) => {
+								const schemaData = SCHEMA_TYPES[schemaName];
 								return (
 									<SelectItem key={schemaName} value={schemaName}>
-										{schemaName}
+										<div className="flex items-center gap-2">
+											{schemaData.icon}
+											<div className="flex flex-col items-start font-medium">
+												<div>{schemaName}</div>
+												<div className="text-xs text-muted-foreground">
+													{schemaData.description}
+												</div>
+											</div>
+										</div>
 									</SelectItem>
 								);
 							})}
