@@ -1,7 +1,8 @@
-import { ControllerRenderProps, FieldValues } from "react-hook-form";
-import * as z from "zod";
+import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+import type { CoreSchemaType } from "schemas";
+import type * as z from "zod";
 
-import { INPUT_COMPONENTS } from "./config";
+import type { INPUT_COMPONENTS } from "./config";
 
 export type FieldConfigItem = {
 	description?: React.ReactNode;
@@ -9,8 +10,8 @@ export type FieldConfigItem = {
 		showLabel?: boolean;
 	};
 	fieldType?: keyof typeof INPUT_COMPONENTS | React.FC<AutoFormInputComponentProps>;
-
 	renderParent?: (props: { children: React.ReactNode }) => React.ReactElement | null;
+	allowedSchemas?: CoreSchemaType[] | false;
 };
 
 export type FieldConfig<SchemaType extends z.infer<z.ZodObject<any, any>>> = {
@@ -73,4 +74,5 @@ export type AutoFormInputComponentProps = {
 	zodItem: z.ZodType<any>;
 	description?: string;
 	className?: string;
+	canUsePubField?: boolean;
 };

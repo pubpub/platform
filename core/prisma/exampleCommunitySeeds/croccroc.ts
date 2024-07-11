@@ -231,6 +231,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			db
 				.insertInto("pubs")
 				.values({
+					assigneeId: users[0].id,
 					communityId: communityUUID,
 					pubTypeId: submissionTypeId,
 				})
@@ -249,6 +250,7 @@ export default async function main(communityUUID: CommunitiesId) {
 				.insertInto("pubs")
 				.values((eb) => [
 					{
+						assigneeId: users[0].id,
 						communityId: communityUUID,
 						pubTypeId: evaluationTypeId,
 						parentId: eb.selectFrom("new_pubs").select("id"),
@@ -273,6 +275,38 @@ export default async function main(communityUUID: CommunitiesId) {
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
 				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
 				value: '"Evaluation of Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
+			},
+			{
+				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:email")!.id,
+				value: '"alivader@croc.com"',
+			},
+			{
+				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:url")!.id,
+				value: '"https://croc.com"',
+			},
+			{
+				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:user-id")!
+					.id,
+				value: JSON.stringify(users[0].id),
+			},
+			{
+				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:email")!.id,
+				value: '"crocochild@croc.com"',
+			},
+			{
+				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:url")!.id,
+				value: '"https://croc.com"',
+			},
+			{
+				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
+				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:user-id")!
+					.id,
+				value: JSON.stringify(users[0].id),
 			},
 		])
 		.execute();

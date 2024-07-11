@@ -1,8 +1,8 @@
-import * as React from "react";
-import { DefaultValues } from "react-hook-form";
-import { z } from "zod";
+import type * as React from "react";
+import type { DefaultValues } from "react-hook-form";
+import type { z } from "zod";
 
-import { FieldConfig } from "./types";
+import type { FieldConfig } from "./types";
 
 // TODO: This should support recursive ZodEffects but TypeScript doesn't allow circular type definitions.
 type ZodObjectOrWrappedBase = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;

@@ -13,9 +13,9 @@ import {
 } from "ui/command";
 import { ChevronsUpDown } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { usePubFieldContext } from "ui/pubFields";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import { useFields } from "./FieldsProvider";
 
 export type FieldSelectProps = {
 	excludedFields: PubFieldsId[];
@@ -26,7 +26,7 @@ export type FieldSelectProps = {
 export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: FieldSelectProps) {
 	const [open, setOpen] = useState(false);
 
-	const fields = useFields();
+	const fields = usePubFieldContext();
 	const availableFields = Object.values(fields).filter(
 		(field) => !excludedFields.includes(field.id)
 	);

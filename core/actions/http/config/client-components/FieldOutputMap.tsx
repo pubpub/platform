@@ -7,6 +7,7 @@ import { Button } from "ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ArrowRight, Info, Plus, Trash } from "ui/icon";
 import { Input } from "ui/input";
+import { usePubFieldContext } from "ui/pubFields";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
@@ -119,13 +120,8 @@ export const FieldOutputMap = defineCustomFormField(
 	action,
 	"config",
 	"outputMap",
-	function FieldOutputMap(
-		{ form, fieldName },
-		context: {
-			pubFields: PubField[];
-		}
-	) {
-		const pubFields = context.pubFields;
+	function FieldOutputMap({ form, fieldName }) {
+		const pubFields = Object.values(usePubFieldContext());
 		const values = form.watch();
 
 		const { fields, append, remove } = useFieldArray({

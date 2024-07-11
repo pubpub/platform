@@ -1,28 +1,26 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { GetPubResponseBody } from "contracts";
 import { logger } from "logger";
 
 import type { ActionSuccess } from "../types";
-import type Action from "~/kysely/types/public/Action";
 import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
+import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import type { UsersId } from "~/kysely/types/public/Users";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
-import { CommunitiesId } from "~/kysely/types/public/Communities";
 import Event from "~/kysely/types/public/Event";
-import { getPub } from "~/lib/server";
+import { getPub, getPubCached } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
+import { resolveWithPubfields } from "./resolvePubfields";
 import { validatePubValues } from "./validateFields";
 
 export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
@@ -36,7 +34,7 @@ export type RunActionInstanceArgs = {
 const _runActionInstance = async (
 	args: RunActionInstanceArgs
 ): Promise<ActionInstanceRunResult> => {
-	const pubPromise = getPub(args.pubId);
+	const pubPromise = getPubCached(args.pubId);
 
 	const actionInstancePromise = db
 		.selectFrom("action_instances")
@@ -141,17 +139,27 @@ const _runActionInstance = async (
 		};
 	}
 
+	const argsWithPubfields = resolveWithPubfields(
+		{ ...parsedArgs.data, ...args.actionInstanceArgs },
+		pub.values
+	);
+	const configWithPubfields = resolveWithPubfields(
+		{ ...(actionInstance.config as {}), ...parsedConfig.data },
+		pub.values
+	);
+
 	try {
 		const result = await actionRun({
 			// FIXME: get rid of any
-			config: parsedConfig.data as any,
+			config: configWithPubfields as any,
 			pub: {
 				id: pub.id,
 				// FIXME: get rid of any
 				values: pub.values as any,
 				assignee: pub.assignee ?? undefined,
 			},
-			args: parsedArgs.data,
+			// FIXME: get rid of any
+			args: argsWithPubfields as any,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
 		});

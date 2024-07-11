@@ -8,7 +8,6 @@ import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Loader2, Play } from "ui/icon";
-import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
@@ -84,28 +83,23 @@ export const ActionRunForm = ({
 					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
 				</DialogHeader>
 				<Suspense fallback={<SkeletonCard />}>
-					<TokenProvider tokens={action.tokens ?? {}}>
-						<AutoForm
-							values={actionInstance.config ?? {}}
-							fieldConfig={fieldConfig}
-							formSchema={action.params.schema}
-							dependencies={action.params.dependencies}
-							onSubmit={onSubmit}
-						>
-							<AutoFormSubmit
-								disabled={isPending}
-								className="flex items-center gap-x-2"
-							>
-								{isPending ? (
-									<Loader2 size="14" className="animate-spin" />
-								) : (
-									<>
-										<Play size="14" /> Run
-									</>
-								)}
-							</AutoFormSubmit>
-						</AutoForm>
-					</TokenProvider>
+					<AutoForm
+						values={actionInstance.config ?? {}}
+						fieldConfig={fieldConfig}
+						formSchema={action.params.schema}
+						dependencies={action.params.dependencies}
+						onSubmit={onSubmit}
+					>
+						<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
+							{isPending ? (
+								<Loader2 size="14" className="animate-spin" />
+							) : (
+								<>
+									<Play size="14" /> Run
+								</>
+							)}
+						</AutoFormSubmit>
+					</AutoForm>
 				</Suspense>
 			</DialogContent>
 		</Dialog>

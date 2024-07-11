@@ -93,17 +93,17 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 				const [title, description, additionalType] = itemName.split("|");
 				const key = [...path, name].join(".");
 
+				const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {};
+
 				const {
 					isHidden,
 					isDisabled,
 					isRequired: isRequiredByDependency,
 					overrideOptions,
-				} = resolveDependencies(dependencies, name, watch);
+				} = resolveDependencies(dependencies, name, watch, fieldConfigItem);
 				if (isHidden) {
 					return null;
 				}
-
-				const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {};
 
 				// fully rendered (server) component
 				if (typeof fieldConfigItem.fieldType === "object") {

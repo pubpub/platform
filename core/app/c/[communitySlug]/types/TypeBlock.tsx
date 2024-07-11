@@ -6,12 +6,12 @@ import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
 import { ChevronDown, ChevronUp, Pencil } from "ui/icon";
 import { Label } from "ui/label";
+import { usePubFieldContext } from "ui/pubFields";
 
 import type { PubTypeWithFieldIds } from "~/lib/types";
 import { useServerAction } from "~/lib/serverActions";
 import { addPubField } from "./actions";
 import { FieldSelect } from "./FieldSelect";
-import { useFields } from "./FieldsProvider";
 import { RemoveFieldButton } from "./RemoveFieldButton";
 import { RemoveTypeButton } from "./RemoveTypeButton";
 
@@ -24,7 +24,7 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 	const [expanded, setExpanded] = useState(false);
 	const [editing, setEditing] = useState(false);
 	const runAddPubField = useServerAction(addPubField);
-	const fields = useFields();
+	const fields = usePubFieldContext();
 	return (
 		<Card>
 			<CardContent className="px-6 py-2">

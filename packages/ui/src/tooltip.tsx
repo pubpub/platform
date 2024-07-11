@@ -9,7 +9,19 @@ const TooltipProvider = TooltipPrimitive.Provider;
 
 const Tooltip = TooltipPrimitive.Root;
 
-const TooltipTrigger = TooltipPrimitive.Trigger;
+const TooltipTrigger = React.forwardRef<
+	React.ElementRef<typeof TooltipPrimitive.Trigger>,
+	React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>
+>(({ type, ...props }, ref) => (
+	<TooltipPrimitive.Trigger
+		ref={ref}
+		// for some reason the default type is not "button", which makes it "submit" when used in a form
+		type={type ?? "button"}
+		{...props}
+	/>
+));
+
+TooltipPrimitive.Trigger;
 
 const TooltipContent = React.forwardRef<
 	React.ElementRef<typeof TooltipPrimitive.Content>,

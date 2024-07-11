@@ -3,6 +3,7 @@
 
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
+import { type default as CoreSchemaType } from "./CoreSchemaType";
 import { type IntegrationsId } from "./Integrations";
 import { type PubFieldSchemaId } from "./PubFieldSchema";
 
@@ -28,6 +29,8 @@ export default interface PubFieldsTable {
 	>;
 
 	slug: ColumnType<string, string, string>;
+
+	schemaName: ColumnType<CoreSchemaType | null, CoreSchemaType | null, CoreSchemaType | null>;
 }
 
 export type PubFields = Selectable<PubFieldsTable>;

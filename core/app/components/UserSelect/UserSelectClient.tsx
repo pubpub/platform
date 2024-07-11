@@ -1,16 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { CoreSchemaType } from "schemas";
 import { useDebouncedCallback } from "use-debounce";
 
-import { AutoComplete, Option } from "ui/autocomplete";
+import type { Option } from "ui/autocomplete";
+import { AutoComplete } from "ui/autocomplete";
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { TooltipProvider } from "ui/tooltip";
+import {
+	PubFieldSelector,
+	PubFieldSelectorHider,
+	PubFieldSelectorProvider,
+	PubFieldSelectorToggleButton,
+} from "ui/pubFields";
 
-import { Communities } from "~/kysely/types/public/Communities";
-import { Users } from "~/kysely/types/public/Users";
+import type { Communities } from "~/kysely/types/public/Communities";
+import type { Users } from "~/kysely/types/public/Users";
 import { UserAvatar } from "../UserAvatar";
 import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
 
@@ -82,18 +88,24 @@ export function UserSelectClient({
 	}, 400);
 
 	return (
-		<TooltipProvider>
-			<FormField
-				name={fieldName}
-				render={({ field }) => {
-					const selectedUserOption = selectedUser
-						? makeOptionFromUser(selectedUser)
-						: undefined;
-					return (
+		<FormField
+			name={fieldName}
+			render={({ field }) => {
+				const selectedUserOption = selectedUser
+					? makeOptionFromUser(selectedUser)
+					: undefined;
+				return (
+					<PubFieldSelectorProvider
+						field={field}
+						allowedSchemas={[CoreSchemaType.UserId]}
+					>
 						<FormItem className="flex flex-col gap-y-1">
-							<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-								{fieldLabel}
-							</FormLabel>
+							<div className="flex items-center justify-between">
+								<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+									{fieldLabel}
+								</FormLabel>
+								<PubFieldSelectorToggleButton />
+							</div>
 							<AutoComplete
 								value={selectedUserOption}
 								options={options}
@@ -113,10 +125,13 @@ export function UserSelectClient({
 								icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
 							/>
 							<FormMessage />
+							<PubFieldSelectorHider>
+								<PubFieldSelector />
+							</PubFieldSelectorHider>
 						</FormItem>
-					);
-				}}
-			/>
-		</TooltipProvider>
+					</PubFieldSelectorProvider>
+				);
+			}}
+		/>
 	);
 }
