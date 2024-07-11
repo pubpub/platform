@@ -110,6 +110,7 @@ model PubField {
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
   schemaName       CoreSchemaType?
   pubFieldSchemaId String?
+  isArchived       Boolean         @default(false)
 
   values    PubValue[]
   pubTypes  PubType[]
