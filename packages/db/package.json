@@ -49,23 +49,42 @@
 	],
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"generate-db-table-names": "dotenv -e .env.local -e .env.development tsx ./scripts/generateDbTableNames.ts ./src/table-names.ts public | pino-pretty",
+		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w ./src/table-names.ts",
+		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
+		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
+		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
+		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
+		"prisma": "dotenv -e .env.local -e .env.development prisma",
+		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio"
 	},
 	"author": "public/Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "public/GPL-2.0+",
 	"dependencies": {
-		"utils": "workspace:*",
-		"logger": "workspace:*"
+		"@prisma/client": "5.2.0",
+		"logger": "workspace:*",
+		"utils": "workspace:*"
 	},
 	"peerDependencies": {
 		"@ts-rest/core": "^3.45.2",
-		"zod": "^3.22.4",
-		"kysely": "^0.27.2"
+		"kysely": "^0.27.2",
+		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@prisma/generator-helper": "^5.14.0",
+		"@prisma/internals": "^5.14.0",
 		"@pubpub/prettier-config": "workspace:*",
 		"@ts-rest/core": "^3.45.2",
+		"@types/pg": "^8.11.6",
+		"dotenv-cli": "^7.2.1",
+		"kanel": "^3.8.2",
+		"kanel-kysely": "^0.4.0",
+		"kanel-zod": "^1.3.4",
+		"pg": "^8.11.3",
+		"prisma": "^5.2.0",
 		"tsconfig": "workspace:*",
+		"tsx": "^3.13.0",
 		"typescript": "^5.4.2",
 		"zod": "^3.22.4"
 	},
@@ -114,5 +133,8 @@
 			"./public/Users.ts",
 			"./types/index.ts"
 		]
+	},
+	"prisma": {
+		"schema": "./src/prisma/schema.prisma"
 	}
 }
