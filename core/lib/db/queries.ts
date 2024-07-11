@@ -2,8 +2,10 @@ import { cache } from "react";
 
 import type { User } from "db/prisma/client";
 import type { StagesId } from "db/public/Stages";
+import { Rules } from "db/public/Rules";
 import { expect } from "utils";
 
+import { RuleConfig, RuleConfigs } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { communityMemberInclude, pubValuesInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -93,6 +95,7 @@ export const getStageRules = cache(async (stageId: string) => {
 			"action_instances.action",
 			"actionInstanceId",
 		])
+		.$narrowType<{ config: RuleConfig | null }>()
 		.execute();
 	return rules;
 });

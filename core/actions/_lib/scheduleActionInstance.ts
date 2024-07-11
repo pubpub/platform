@@ -10,6 +10,7 @@ import ActionRunStatus from "db/public/ActionRunStatus";
 import Event from "db/public/Event";
 import { logger } from "logger";
 
+import type { RuleConfig } from "./rules";
 import { db } from "~/kysely/database";
 import { addDuration } from "~/lib/dates";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -64,8 +65,15 @@ export const scheduleActionInstances = async ({
 
 	const validRules = instances.flatMap((instance) =>
 		instance.rules
-			.filter((rule): rule is Rules & { config: { duration: number } } =>
-				Boolean(rule.config?.duration && rule.config.interval)
+			.filter((rule): rule is Rules & { config: RuleConfig } =>
+				Boolean(
+					typeof rule.config === "object" &&
+						rule.config &&
+						"duration" in rule.config &&
+						rule.config.duration &&
+						"interval" in rule.config &&
+						rule.config.interval
+				)
 			)
 			.map((rule) => ({
 				...rule,
