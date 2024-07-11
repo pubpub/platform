@@ -16,7 +16,7 @@ export const FieldsTable = ({ fields }: { fields: Record<PubFieldsId, PubField> 
 			return {
 				id: d.id,
 				name: d.name,
-				schema: d.pubFieldSchemaId,
+				schema: d.schemaName,
 				updated: new Date(d.updatedAt),
 			};
 		});
