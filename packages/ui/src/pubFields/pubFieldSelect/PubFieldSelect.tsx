@@ -14,6 +14,7 @@ import { Button } from "../../button";
 import { Info, Minus, Plus } from "../../icon";
 import { MultiSelect } from "../../multi-select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
+import { PubField } from "../PubFieldContext";
 import { determineAllowedPubFields } from "./determinePubFields";
 
 const PubFieldSelectContext = React.createContext<{
@@ -22,7 +23,7 @@ const PubFieldSelectContext = React.createContext<{
 	pubFields: string[];
 	setPubFields: (pubFields: string[]) => void;
 	parentField: ControllerRenderProps<FieldValues, any>;
-	allowedPubFields: PubFields[];
+	allowedPubFields: PubField[];
 }>({
 	shouldReadFromPubField: false,
 	setShouldReadFromPubField: () => {},

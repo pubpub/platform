@@ -693,9 +693,6 @@ importers:
 
   packages/db:
     dependencies:
-      '@prisma/client':
-        specifier: 5.2.0
-        version: 5.2.0(prisma@5.2.0)
       kysely:
         specifier: ^0.27.2
         version: 0.27.3
@@ -706,12 +703,6 @@ importers:
         specifier: workspace:*
         version: link:../utils
     devDependencies:
-      '@prisma/generator-helper':
-        specifier: ^5.14.0
-        version: 5.15.0
-      '@prisma/internals':
-        specifier: ^5.14.0
-        version: 5.15.0
       '@pubpub/prettier-config':
         specifier: workspace:*
         version: link:../../config/prettier
@@ -742,9 +733,6 @@ importers:
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
-      prisma:
-        specifier: ^5.2.0
-        version: 5.2.0
       tsconfig:
         specifier: workspace:*
         version: link:../../config/tsconfig
@@ -8014,7 +8002,7 @@ packages:
       '@sentry/vercel-edge': 7.109.0
       '@sentry/webpack-plugin': 1.21.0
       chalk: 3.0.0
-      next: 14.2.4(@babel/core@7.22.17)(@opentelemetry/api@1.7.0)(react-dom@18.2.0)(react@18.2.0)
+      next: 14.2.4(@babel/core@7.24.3)(@opentelemetry/api@1.7.0)(@playwright/test@1.43.1)(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       resolve: 1.22.8
       rollup: 2.78.0

@@ -57,7 +57,9 @@ export const PubCreateForm = ({
 
 		const uncompiledSchema = buildSchemaFromPubFields(
 			//  @ts-expect-error FIXME: Schema types are different
-			selectedPubType,
+			selectedPubType as {
+				__fakeType: "remove me when we figure out how to get rid of the above error";
+			},
 			[]
 		);
 		const compiledSchema = new Ajv({

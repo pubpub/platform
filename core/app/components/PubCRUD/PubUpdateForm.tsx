@@ -41,7 +41,9 @@ export const PubUpdateForm = ({
 	const { compiledSchema, uncompiledSchema } = useMemo(() => {
 		const uncompiledSchema = buildSchemaFromPubFields(
 			//  @ts-expect-error FIXME: Schema types are different
-			pubType,
+			pubType as {
+				__fakeType: "remove me when we figure out how to get rid of the above error";
+			},
 			[]
 		);
 		const compiledSchema = new Ajv({
