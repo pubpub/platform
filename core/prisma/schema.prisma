@@ -482,7 +482,7 @@ model ApiAccessPermission {
   apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id])
   scope            ApiAccessScope
   accessType       ApiAccessType
-  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../../ApiAccessToken', true, false, true)
+  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)
 
   // this ensures that only one permission per token and scope and access type exists
   @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")

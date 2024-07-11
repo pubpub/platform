@@ -669,6 +669,34 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
 
+  packages/db:
+    dependencies:
+      kysely:
+        specifier: ^0.27.2
+        version: 0.27.3
+      logger:
+        specifier: workspace:*
+        version: link:../logger
+      utils:
+        specifier: workspace:*
+        version: link:../utils
+    devDependencies:
+      '@pubpub/prettier-config':
+        specifier: workspace:*
+        version: link:../../config/prettier
+      '@ts-rest/core':
+        specifier: ^3.45.2
+        version: 3.45.2(zod@3.22.4)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../config/tsconfig
+      typescript:
+        specifier: ^5.4.2
+        version: 5.4.5
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+
   packages/logger:
     dependencies:
       pino:
