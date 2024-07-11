@@ -23,8 +23,6 @@ jobs:
                   sha_short=$(git describe --always --abbrev=40 --dirty)
                   echo "Building containers with tag:"
                   echo "$sha_short"
-    # TODO: restore the commented `needs` lines once we implement
-    # Docker build caching in github actions
     build-base:
         uses: ./.github/workflows/ecrbuild-template.yml
         secrets:
@@ -33,8 +31,8 @@ jobs:
 
     build-core:
         uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
+        needs:
+            - build-base
         with:
             package: core
         secrets:
@@ -43,8 +41,8 @@ jobs:
 
     build-intg-submissions:
         uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
+        needs:
+            - build-base
         with:
             package: integration-submissions
         secrets:
@@ -53,8 +51,8 @@ jobs:
 
     build-jobs:
         uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
+        needs:
+            - build-base
         with:
             package: jobs
         secrets:
@@ -63,8 +61,8 @@ jobs:
 
     build-intg-evaluations:
         uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
+        needs:
+            - build-base
         with:
             package: integration-evaluations
         secrets:
