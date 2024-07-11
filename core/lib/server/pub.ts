@@ -11,7 +11,7 @@ import type {
 	JsonValue,
 } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
-import type Database from "db/Database";
+import type { Database } from "db/Database";
 import type { CommunitiesId } from "db/public/Communities";
 import type { PubsId } from "db/public/Pubs";
 import type { PubTypesId } from "db/public/PubTypes";

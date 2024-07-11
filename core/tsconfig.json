@@ -4,6 +4,7 @@
 		"moduleResolution": "Bundler",
 		"allowImportingTsExtensions": true,
 		"noErrorTruncation": true,
+		"allowSyntheticDefaultImports": true,
 		"plugins": [
 			{
 				"name": "next"
@@ -28,7 +29,8 @@
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
 		"instrumentation.registerCorePubFields.mts",
-		"../packages/db/scripts/scripts/generateDatabaseObject.mts"
+		"../packages/db/scripts/scripts/generateDatabaseObject.mts",
+		"../packages/db/src/prisma/comment-generator.ts"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }

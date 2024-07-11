@@ -5,7 +5,7 @@ import { Pool } from "pg";
 
 import { logger } from "logger";
 
-import type Database from "../src/Database";
+import type { Database } from "../src/Database";
 
 const db = new Kysely<Database>({
 	dialect: new PostgresDialect({

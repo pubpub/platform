@@ -5,7 +5,7 @@ import type {
 	UpdateQueryBuilder,
 } from "kysely";
 
-import type Database from "db/Database";
+import type { Database } from "db/Database";
 
 import type { CacheTag } from "./cacheTags";
 import type { MemoizeOptionType } from "./memoize";

@@ -3,6 +3,10 @@
 
 import { type default as PublicSchema } from "./public/PublicSchema";
 
-type Database = PublicSchema;
+/** We export this as named in order to avoid weirdness with preconstruct. */
+export type Database = PublicSchema;
 
-export default Database;
+/** Backup default export that's the same as the above */
+type DefaultDatabaseExport = PublicSchema;
+
+export default DefaultDatabaseExport;

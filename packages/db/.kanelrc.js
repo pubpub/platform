@@ -1,14 +1,12 @@
 // @ts-check
 const { makeKyselyHook } = require("kanel-kysely");
-const {
-	generateZodSchemas,
-	makeGenerateZodSchemas,
-	defaultGetZodIdentifierMetadata,
-	defaultGetZodSchemaMetadata,
-} = require("kanel-zod");
+const { generateZodSchemas } = require("kanel-zod");
 const {
 	kanelKyselyZodCompatibilityPreRenderHook,
 } = require("./src/kanel/kanel-kysely-zod-compatibility-hook.cjs");
+const {
+	kanelDatabaseDefaultExportFixPreRenderHook,
+} = require("./src/kanel/kanel-database-default-export-fix-hook.cjs");
 
 /** @type {import('kanel').Config} */
 module.exports = {
@@ -21,6 +19,7 @@ module.exports = {
 		makeKyselyHook(),
 		generateZodSchemas,
 		kanelKyselyZodCompatibilityPreRenderHook,
+		kanelDatabaseDefaultExportFixPreRenderHook,
 	],
 	outputPath: "./src",
 

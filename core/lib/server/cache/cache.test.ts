@@ -4,7 +4,7 @@ import { Kysely, PostgresDialect } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { expect, it, vitest } from "vitest";
 
-import type Database from "db/Database";
+import type { Database } from "db/Database";
 import type { ActionInstancesId } from "db/public/ActionInstances";
 import type { CommunitiesId } from "db/public/Communities";
 import type { PubsId } from "db/public/Pubs";

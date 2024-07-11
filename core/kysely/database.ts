@@ -3,7 +3,7 @@ import type { LogEvent } from "kysely";
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 
-import type Database from "db/Database";
+import type { Database } from "db/Database";
 import { logger } from "logger";
 
 import { env } from "~/lib/env/env.mjs";
