@@ -6,7 +6,8 @@ import * as React from "react";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useFormContext } from "react-hook-form";
 
-import type { PubField } from "../PubFieldContext";
+import type { PubFields } from "db/public/PubFields";
+
 import type { AllowedSchemasOrZodItem } from "./determinePubFields";
 import { usePubFieldContext } from "..";
 import { Button } from "../../button";
@@ -21,7 +22,7 @@ const PubFieldSelectContext = React.createContext<{
 	pubFields: string[];
 	setPubFields: (pubFields: string[]) => void;
 	parentField: ControllerRenderProps<FieldValues, any>;
-	allowedPubFields: PubField[];
+	allowedPubFields: PubFields[];
 }>({
 	shouldReadFromPubField: false,
 	setShouldReadFromPubField: () => {},

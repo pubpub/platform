@@ -766,6 +766,9 @@ importers:
       '@sinclair/typebox':
         specifier: ^0.32.34
         version: 0.32.34
+      db:
+        specifier: workspace:*
+        version: link:../db
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -960,6 +963,9 @@ importers:
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
+      db:
+        specifier: workspace:*
+        version: link:../db
       lexical:
         specifier: ^0.15.0
         version: 0.15.0
@@ -7995,7 +8001,7 @@ packages:
       '@sentry/vercel-edge': 7.109.0
       '@sentry/webpack-plugin': 1.21.0
       chalk: 3.0.0
-      next: 14.2.4(@babel/core@7.24.3)(@opentelemetry/api@1.7.0)(@playwright/test@1.43.1)(react-dom@18.2.0)(react@18.2.0)
+      next: 14.2.4(@babel/core@7.22.17)(@opentelemetry/api@1.7.0)(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       resolve: 1.22.8
       rollup: 2.78.0

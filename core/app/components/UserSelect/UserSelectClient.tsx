@@ -2,12 +2,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CoreSchemaType } from "schemas";
 import { useDebouncedCallback } from "use-debounce";
 
 import type { Communities } from "db/public/Communities";
 import type { Users } from "db/public/Users";
 import type { Option } from "ui/autocomplete";
+import CoreSchemaType from "db/public/CoreSchemaType";
 import { AutoComplete } from "ui/autocomplete";
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import {

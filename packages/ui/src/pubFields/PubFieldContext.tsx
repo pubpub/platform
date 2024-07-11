@@ -1,22 +1,10 @@
 "use client";
 
-import type { CoreSchemaType } from "schemas";
-
 import React, { createContext, useContext } from "react";
 
-// TODO: Replace with the actual types once the db package is separated out
-type PubFieldsId = string & { __brand: "PubFieldsId" };
-type PubFieldSchemaId = string & { __brand: "PubFieldSchemaId" };
+import type { PubFields, PubFieldsId } from "db/public/PubFields";
 
-export type PubField = {
-	id: PubFieldsId;
-	name: string;
-	pubFieldSchemaId: PubFieldSchemaId | null;
-	slug: string;
-	schemaName: CoreSchemaType | null;
-};
-
-export type PubFieldContext = Record<PubFieldsId, PubField>;
+export type PubFieldContext = Record<PubFieldsId, PubFields>;
 
 type Props = {
 	children: React.ReactNode;
