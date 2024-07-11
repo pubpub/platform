@@ -87,6 +87,7 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 -- Model rules comments
 
+COMMENT ON COLUMN "rules"."config" IS NULL;
 
 
 -- Model forms comments

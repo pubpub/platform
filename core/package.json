@@ -11,7 +11,7 @@
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
 		"lint": "dotenv -v SKIP_VALIDATION=true next lint",
 		"lint:fix": "dotenv -v SKIP_VALIDATION=true next lint --fix",
-		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
+		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm --filter db make-kysely-types",
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
 		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
 		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
