@@ -1,23 +1,18 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { CoreSchemaType } from "schemas";
 
-import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { CurlyBraces, Ellipsis, History } from "ui/icon";
+import { DropdownMenuItem } from "ui/dropdown-menu";
+import { Archive, CurlyBraces, History } from "ui/icon";
 
 import type { PubFieldsId } from "~/kysely/types/public/PubFields";
+import { MenuItemButton, TableActionMenu } from "~/app/components/TableActionMenu";
 
 export interface TableData {
 	id: PubFieldsId;
 	name: string;
-	// TODO: figure out how to get schema value
-	schema: any;
+	schema: CoreSchemaType | null;
 	updated: Date;
 }
 
@@ -78,19 +73,13 @@ export const getFieldTableColumns = () =>
 			enableHiding: false,
 			cell: ({ row }) => {
 				return (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="h-8 w-8 p-0">
-								<span className="sr-only">Open menu</span>
-								<Ellipsis className="h-4 w-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="p-0">
-							<DropdownMenuItem asChild key={row.original.id}>
-								<div>TODO</div>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<TableActionMenu>
+						<DropdownMenuItem asChild key={row.original.id}>
+							<MenuItemButton className="flex w-full justify-start gap-2">
+								<Archive size={12} /> Archive
+							</MenuItemButton>
+						</DropdownMenuItem>
+					</TableActionMenu>
 				);
 			},
 		},
