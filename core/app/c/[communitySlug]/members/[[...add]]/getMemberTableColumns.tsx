@@ -2,8 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { Community } from "@prisma/client";
-
+import { Community } from "db/prisma/client";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";

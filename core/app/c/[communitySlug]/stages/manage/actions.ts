@@ -1,10 +1,9 @@
 "use server";
 
-import type { Action as PrismaAction } from "@prisma/client";
-
 import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 
+import type { Action as PrismaAction } from "db/prisma/client";
 import type Action from "db/public/Action";
 import type { CommunitiesId } from "db/public/Communities";
 import type { RulesId } from "db/public/Rules";

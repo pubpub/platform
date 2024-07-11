@@ -1,7 +1,6 @@
-import type { Prisma, User } from "@prisma/client";
-
 import { Eta } from "eta";
 
+import type { Prisma, User } from "db/prisma/client";
 import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
 
 import prisma from "~/prisma/db";

@@ -1,7 +1,6 @@
 "use client";
 
-import type { Community } from "@prisma/client";
-
+import type { Community } from "db/prisma/client";
 import {
 	AlertDialog,
 	AlertDialogAction,

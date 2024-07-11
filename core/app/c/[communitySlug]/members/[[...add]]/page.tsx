@@ -1,8 +1,7 @@
-import type { Community } from "@prisma/client";
-
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { Community } from "db/prisma/client";
 import type { CommunitiesId } from "db/public/Communities";
 
 import type { TableMember } from "./getMemberTableColumns";

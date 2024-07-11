@@ -1,6 +1,5 @@
 import type { ExpressionBuilder, SelectExpression, StringReference, Transaction } from "kysely";
 
-import { Prisma } from "@prisma/client";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
@@ -16,6 +15,7 @@ import type { CommunitiesId } from "db/public/Communities";
 import type { PubsId } from "db/public/Pubs";
 import type { PubTypesId } from "db/public/PubTypes";
 import type { UsersId } from "db/public/Users";
+import { Prisma } from "db/prisma/client";
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";

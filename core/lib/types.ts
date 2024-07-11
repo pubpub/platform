@@ -1,5 +1,4 @@
-import type { Community, Member, Prisma } from "@prisma/client";
-
+import type { Community, Member, Prisma } from "db/prisma/client";
 import type { PubFields, PubFieldsId } from "db/public/PubFields";
 import type { PubTypes } from "db/public/PubTypes";
 

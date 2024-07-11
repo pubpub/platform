@@ -2,8 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { Event } from "@prisma/client";
-
+import { Event } from "db/prisma/client";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";

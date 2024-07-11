@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { User } from "db/prisma/client";
 
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";
