@@ -18,6 +18,7 @@ export const FieldsTable = ({ fields }: { fields: Record<PubFieldsId, PubField> 
 				name: d.name,
 				schema: d.schemaName,
 				updated: new Date(d.updatedAt),
+				isArchived: d.isArchived,
 			};
 		});
 	}, [fields]);

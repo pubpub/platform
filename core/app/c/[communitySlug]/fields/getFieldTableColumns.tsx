@@ -19,6 +19,7 @@ export interface TableData {
 	name: string;
 	schema: CoreSchemaType | null;
 	updated: Date;
+	isArchived: boolean;
 }
 
 const ArchiveMenuItem = ({ field }: { field: TableData }) => {
@@ -94,6 +95,9 @@ export const getFieldTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
+				if (row.original.isArchived) {
+					return;
+				}
 				return (
 					<TableActionMenu>
 						<ArchiveMenuItem field={row.original} />
