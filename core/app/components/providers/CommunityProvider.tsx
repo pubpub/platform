@@ -15,4 +15,10 @@ export function CommunityProvider({ children, community }: Props) {
 	return <CommunityContext.Provider value={community}>{children}</CommunityContext.Provider>;
 }
 
-export const useCommunity = () => useContext(CommunityContext);
+export const useCommunity = () => {
+	const community = useContext(CommunityContext);
+	if (!community) {
+		throw new Error("Community context used without provider");
+	}
+	return community;
+};

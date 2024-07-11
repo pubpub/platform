@@ -4,12 +4,7 @@ import { Prisma } from "@prisma/client";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type {
-	CreatePubRequestBodyWithNulls,
-	GetPubResponseBody,
-	GetPubTypeResponseBody,
-	JsonValue,
-} from "contracts";
+import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 import type { Database } from "db/Database";
 import type { CommunitiesId } from "db/public/Communities";
@@ -240,7 +235,7 @@ export type GetManyParams = {
 	orderDirection?: "asc" | "desc";
 };
 
-const GET_MANY_DEFAULT = {
+export const GET_MANY_DEFAULT = {
 	limit: 10,
 	offset: 0,
 	orderBy: "createdAt",
@@ -620,85 +615,3 @@ export const updatePub = async (instanceId: string, body: CreatePubRequestBodyWi
 export const deletePub = async (pubId: string) => {
 	await prisma.pub.delete({ where: { id: pubId } });
 };
-
-export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseBody> => {
-	const pubType = await prisma.pubType.findUnique({
-		where: { id: pubTypeId },
-		select: {
-			id: true,
-			name: true,
-			description: true,
-			fields: {
-				select: {
-					id: true,
-					name: true,
-					slug: true,
-					schema: {
-						select: {
-							id: true,
-							namespace: true,
-							name: true,
-							schema: true,
-						},
-					},
-				},
-			},
-		},
-	});
-	if (!pubType) {
-		throw PubNotFoundError;
-	}
-	return pubType;
-};
-
-export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
-	"id",
-	"description",
-	"name",
-	"communityId",
-	"createdAt",
-	"updatedAt",
-	jsonArrayFrom(
-		eb
-			.selectFrom("pub_fields")
-			.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
-			.select((eb) => [
-				"pub_fields.id",
-				"pub_fields.name",
-				//	"pub_fields.pubFieldSchemaId",
-				"pub_fields.slug",
-				jsonObjectFrom(
-					eb
-						.selectFrom("PubFieldSchema")
-						.select([
-							"PubFieldSchema.id",
-							"PubFieldSchema.namespace",
-							"PubFieldSchema.name",
-							"PubFieldSchema.schema",
-						])
-						.whereRef("PubFieldSchema.id", "=", eb.ref("pub_fields.pubFieldSchemaId"))
-				).as("schema"),
-			])
-			.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
-	).as("fields"),
-]);
-
-export const getPubType = (pubTypeId: PubTypesId) =>
-	autoCache(getPubTypeBase.where("pub_types.id", "=", pubTypeId));
-
-export const getPubTypesForCommunity = async (
-	communityId: CommunitiesId,
-	{
-		limit = GET_PUBS_DEFAULT.limit,
-		offset = GET_PUBS_DEFAULT.offset,
-		orderBy = GET_PUBS_DEFAULT.orderBy,
-		orderDirection = GET_PUBS_DEFAULT.orderDirection,
-	}: GetManyParams = GET_MANY_DEFAULT
-) =>
-	autoCache(
-		getPubTypeBase
-			.where("pub_types.communityId", "=", communityId)
-			.orderBy(orderBy, orderDirection)
-			.limit(limit)
-			.offset(offset)
-	).execute();

@@ -1,7 +1,9 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 import { z } from "zod";
 
+import type { CommunitiesId } from "./Communities";
 import type { PubTypesId } from "./PubTypes";
+import { communitiesIdSchema } from "./Communities";
 import { pubTypesIdSchema } from "./PubTypes";
 
 // @generated
@@ -17,6 +19,12 @@ export default interface FormsTable {
 	name: ColumnType<string, string, string>;
 
 	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>;
+
+	isArchived: ColumnType<boolean, boolean | undefined, boolean>;
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
+
+	slug: ColumnType<string, string, string>;
 }
 
 export type Forms = Selectable<FormsTable>;
@@ -31,16 +39,25 @@ export const formsSchema = z.object({
 	id: formsIdSchema,
 	name: z.string(),
 	pubTypeId: pubTypesIdSchema,
+	isArchived: z.boolean(),
+	communityId: communitiesIdSchema,
+	slug: z.string(),
 }) as z.ZodObject<{ [K in keyof Forms]: z.Schema<Forms[K]> }>;
 
 export const formsInitializerSchema = z.object({
 	id: formsIdSchema.optional(),
 	name: z.string(),
 	pubTypeId: pubTypesIdSchema,
+	isArchived: z.boolean().optional(),
+	communityId: communitiesIdSchema,
+	slug: z.string(),
 }) as z.ZodObject<{ [K in keyof NewForms]: z.Schema<NewForms[K]> }>;
 
 export const formsMutatorSchema = z.object({
 	id: formsIdSchema.optional(),
 	name: z.string().optional(),
 	pubTypeId: pubTypesIdSchema.optional(),
+	isArchived: z.boolean().optional(),
+	communityId: communitiesIdSchema.optional(),
+	slug: z.string().optional(),
 }) as z.ZodObject<{ [K in keyof FormsUpdate]: z.Schema<FormsUpdate[K]> }>;

@@ -19,6 +19,7 @@ export type TableForm = {
 	formName: string;
 	pubType: string;
 	updated: Date;
+	isArchived: Boolean;
 };
 
 export const getFormTableColumns = () =>
@@ -81,6 +82,9 @@ export const getFormTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
+				if (row.original.isArchived) {
+					return;
+				}
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -91,7 +95,10 @@ export const getFormTableColumns = () =>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="p-0">
 							<DropdownMenuItem asChild key={row.original.id}>
-								<ArchiveFormButton id={row.original.id} />
+								<ArchiveFormButton
+									className="w-full justify-start pl-3"
+									id={row.original.id}
+								/>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>

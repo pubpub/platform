@@ -23,7 +23,7 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { ChevronDown, Loader2, Pencil } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { getPubType } from "~/lib/server/pub";
+import type { getPubType } from "~/lib/server/pubtype";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 
