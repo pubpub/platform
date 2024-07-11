@@ -27,9 +27,11 @@ type PubWithChildren = z.infer<typeof pubsSchema> & {
 	children?: PubWithChildren[];
 };
 
-const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.extend({
-	children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
-});
+const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.and(
+	z.object({
+		children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
+	})
+);
 
 export const siteApi = contract.router(
 	{

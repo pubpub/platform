@@ -39,7 +39,7 @@ export const permissionsSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-}) as z.ZodObject<{ [K in keyof Permissions]: z.Schema<Permissions[K]> }>;
+});
 
 export const permissionsInitializerSchema = z.object({
 	id: permissionsIdSchema.optional(),
@@ -47,7 +47,7 @@ export const permissionsInitializerSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof NewPermissions]: z.Schema<NewPermissions[K]> }>;
+});
 
 export const permissionsMutatorSchema = z.object({
 	id: permissionsIdSchema.optional(),
@@ -55,4 +55,4 @@ export const permissionsMutatorSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof PermissionsUpdate]: z.Schema<PermissionsUpdate[K]> }>;
+});

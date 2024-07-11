@@ -50,7 +50,7 @@ export const actionMoveSchema = z.object({
 	note: z.string(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-}) as z.ZodObject<{ [K in keyof ActionMove]: z.Schema<ActionMove[K]> }>;
+});
 
 export const actionMoveInitializerSchema = z.object({
 	id: actionMoveIdSchema.optional(),
@@ -61,7 +61,7 @@ export const actionMoveInitializerSchema = z.object({
 	note: z.string(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof NewActionMove]: z.Schema<NewActionMove[K]> }>;
+});
 
 export const actionMoveMutatorSchema = z.object({
 	id: actionMoveIdSchema.optional(),
@@ -72,4 +72,4 @@ export const actionMoveMutatorSchema = z.object({
 	note: z.string().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof ActionMoveUpdate]: z.Schema<ActionMoveUpdate[K]> }>;
+});

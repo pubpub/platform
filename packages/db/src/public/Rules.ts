@@ -36,18 +36,18 @@ export const rulesSchema = z.object({
 	event: eventSchema,
 	actionInstanceId: actionInstancesIdSchema,
 	config: z.unknown().nullable(),
-}) as z.ZodObject<{ [K in keyof Rules]: z.Schema<Rules[K]> }>;
+});
 
 export const rulesInitializerSchema = z.object({
 	id: rulesIdSchema.optional(),
 	event: eventSchema,
 	actionInstanceId: actionInstancesIdSchema,
 	config: z.unknown().optional().nullable(),
-}) as z.ZodObject<{ [K in keyof NewRules]: z.Schema<NewRules[K]> }>;
+});
 
 export const rulesMutatorSchema = z.object({
 	id: rulesIdSchema.optional(),
 	event: eventSchema.optional(),
 	actionInstanceId: actionInstancesIdSchema.optional(),
 	config: z.unknown().optional().nullable(),
-}) as z.ZodObject<{ [K in keyof RulesUpdate]: z.Schema<RulesUpdate[K]> }>;
+});

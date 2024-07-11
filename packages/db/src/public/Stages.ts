@@ -40,7 +40,7 @@ export const stagesSchema = z.object({
 	name: z.string(),
 	order: z.string(),
 	communityId: communitiesIdSchema,
-}) as z.ZodObject<{ [K in keyof Stages]: z.Schema<Stages[K]> }>;
+});
 
 export const stagesInitializerSchema = z.object({
 	id: stagesIdSchema.optional(),
@@ -49,7 +49,7 @@ export const stagesInitializerSchema = z.object({
 	name: z.string(),
 	order: z.string(),
 	communityId: communitiesIdSchema,
-}) as z.ZodObject<{ [K in keyof NewStages]: z.Schema<NewStages[K]> }>;
+});
 
 export const stagesMutatorSchema = z.object({
 	id: stagesIdSchema.optional(),
@@ -58,4 +58,4 @@ export const stagesMutatorSchema = z.object({
 	name: z.string().optional(),
 	order: z.string().optional(),
 	communityId: communitiesIdSchema.optional(),
-}) as z.ZodObject<{ [K in keyof StagesUpdate]: z.Schema<StagesUpdate[K]> }>;
+});

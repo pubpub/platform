@@ -34,18 +34,18 @@ export const apiAccessLogsSchema = z.object({
 	accessTokenId: apiAccessTokensIdSchema,
 	timestamp: z.date(),
 	action: z.string(),
-}) as z.ZodObject<{ [K in keyof ApiAccessLogs]: z.Schema<ApiAccessLogs[K]> }>;
+});
 
 export const apiAccessLogsInitializerSchema = z.object({
 	id: apiAccessLogsIdSchema.optional(),
 	accessTokenId: apiAccessTokensIdSchema,
 	timestamp: z.date().optional(),
 	action: z.string(),
-}) as z.ZodObject<{ [K in keyof NewApiAccessLogs]: z.Schema<NewApiAccessLogs[K]> }>;
+});
 
 export const apiAccessLogsMutatorSchema = z.object({
 	id: apiAccessLogsIdSchema.optional(),
 	accessTokenId: apiAccessTokensIdSchema.optional(),
 	timestamp: z.date().optional(),
 	action: z.string().optional(),
-}) as z.ZodObject<{ [K in keyof ApiAccessLogsUpdate]: z.Schema<ApiAccessLogsUpdate[K]> }>;
+});

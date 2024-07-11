@@ -40,7 +40,7 @@ export const authTokensSchema = z.object({
 	expiresAt: z.date(),
 	isUsed: z.boolean(),
 	userId: usersIdSchema,
-}) as z.ZodObject<{ [K in keyof AuthTokens]: z.Schema<AuthTokens[K]> }>;
+});
 
 export const authTokensInitializerSchema = z.object({
 	id: authTokensIdSchema,
@@ -49,7 +49,7 @@ export const authTokensInitializerSchema = z.object({
 	expiresAt: z.date(),
 	isUsed: z.boolean().optional(),
 	userId: usersIdSchema,
-}) as z.ZodObject<{ [K in keyof NewAuthTokens]: z.Schema<NewAuthTokens[K]> }>;
+});
 
 export const authTokensMutatorSchema = z.object({
 	id: authTokensIdSchema.optional(),
@@ -58,4 +58,4 @@ export const authTokensMutatorSchema = z.object({
 	expiresAt: z.date().optional(),
 	isUsed: z.boolean().optional(),
 	userId: usersIdSchema.optional(),
-}) as z.ZodObject<{ [K in keyof AuthTokensUpdate]: z.Schema<AuthTokensUpdate[K]> }>;
+});

@@ -25,14 +25,14 @@ export type MemberGroupToUserUpdate = Updateable<MemberGroupToUserTable>;
 export const memberGroupToUserSchema = z.object({
 	A: memberGroupsIdSchema,
 	B: usersIdSchema,
-}) as z.ZodObject<{ [K in keyof MemberGroupToUser]: z.Schema<MemberGroupToUser[K]> }>;
+});
 
 export const memberGroupToUserInitializerSchema = z.object({
 	A: memberGroupsIdSchema,
 	B: usersIdSchema,
-}) as z.ZodObject<{ [K in keyof NewMemberGroupToUser]: z.Schema<NewMemberGroupToUser[K]> }>;
+});
 
 export const memberGroupToUserMutatorSchema = z.object({
 	A: memberGroupsIdSchema.optional(),
 	B: usersIdSchema.optional(),
-}) as z.ZodObject<{ [K in keyof MemberGroupToUserUpdate]: z.Schema<MemberGroupToUserUpdate[K]> }>;
+});

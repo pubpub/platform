@@ -42,7 +42,7 @@ export const pubValuesSchema = z.object({
 	pubId: pubsIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
-}) as z.ZodObject<{ [K in keyof PubValues]: z.Schema<PubValues[K]> }>;
+});
 
 export const pubValuesInitializerSchema = z.object({
 	id: pubValuesIdSchema.optional(),
@@ -51,7 +51,7 @@ export const pubValuesInitializerSchema = z.object({
 	pubId: pubsIdSchema,
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof NewPubValues]: z.Schema<NewPubValues[K]> }>;
+});
 
 export const pubValuesMutatorSchema = z.object({
 	id: pubValuesIdSchema.optional(),
@@ -60,4 +60,4 @@ export const pubValuesMutatorSchema = z.object({
 	pubId: pubsIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof PubValuesUpdate]: z.Schema<PubValuesUpdate[K]> }>;
+});

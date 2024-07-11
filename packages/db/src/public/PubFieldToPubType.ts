@@ -25,14 +25,14 @@ export type PubFieldToPubTypeUpdate = Updateable<PubFieldToPubTypeTable>;
 export const pubFieldToPubTypeSchema = z.object({
 	A: pubFieldsIdSchema,
 	B: pubTypesIdSchema,
-}) as z.ZodObject<{ [K in keyof PubFieldToPubType]: z.Schema<PubFieldToPubType[K]> }>;
+});
 
 export const pubFieldToPubTypeInitializerSchema = z.object({
 	A: pubFieldsIdSchema,
 	B: pubTypesIdSchema,
-}) as z.ZodObject<{ [K in keyof NewPubFieldToPubType]: z.Schema<NewPubFieldToPubType[K]> }>;
+});
 
 export const pubFieldToPubTypeMutatorSchema = z.object({
 	A: pubFieldsIdSchema.optional(),
 	B: pubTypesIdSchema.optional(),
-}) as z.ZodObject<{ [K in keyof PubFieldToPubTypeUpdate]: z.Schema<PubFieldToPubTypeUpdate[K]> }>;
+});

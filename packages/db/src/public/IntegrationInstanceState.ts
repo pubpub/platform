@@ -28,20 +28,16 @@ export const integrationInstanceStateSchema = z.object({
 	pubId: pubsIdSchema,
 	instanceId: integrationInstancesIdSchema,
 	state: z.unknown(),
-}) as z.ZodObject<{ [K in keyof IntegrationInstanceState]: z.Schema<IntegrationInstanceState[K]> }>;
+});
 
 export const integrationInstanceStateInitializerSchema = z.object({
 	pubId: pubsIdSchema,
 	instanceId: integrationInstancesIdSchema,
 	state: z.unknown(),
-}) as z.ZodObject<{
-	[K in keyof NewIntegrationInstanceState]: z.Schema<NewIntegrationInstanceState[K]>;
-}>;
+});
 
 export const integrationInstanceStateMutatorSchema = z.object({
 	pubId: pubsIdSchema.optional(),
 	instanceId: integrationInstancesIdSchema.optional(),
 	state: z.unknown().optional(),
-}) as z.ZodObject<{
-	[K in keyof IntegrationInstanceStateUpdate]: z.Schema<IntegrationInstanceStateUpdate[K]>;
-}>;
+});

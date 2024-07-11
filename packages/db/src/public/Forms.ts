@@ -42,7 +42,7 @@ export const formsSchema = z.object({
 	isArchived: z.boolean(),
 	communityId: communitiesIdSchema,
 	slug: z.string(),
-}) as z.ZodObject<{ [K in keyof Forms]: z.Schema<Forms[K]> }>;
+});
 
 export const formsInitializerSchema = z.object({
 	id: formsIdSchema.optional(),
@@ -51,7 +51,7 @@ export const formsInitializerSchema = z.object({
 	isArchived: z.boolean().optional(),
 	communityId: communitiesIdSchema,
 	slug: z.string(),
-}) as z.ZodObject<{ [K in keyof NewForms]: z.Schema<NewForms[K]> }>;
+});
 
 export const formsMutatorSchema = z.object({
 	id: formsIdSchema.optional(),
@@ -60,4 +60,4 @@ export const formsMutatorSchema = z.object({
 	isArchived: z.boolean().optional(),
 	communityId: communitiesIdSchema.optional(),
 	slug: z.string().optional(),
-}) as z.ZodObject<{ [K in keyof FormsUpdate]: z.Schema<FormsUpdate[K]> }>;
+});

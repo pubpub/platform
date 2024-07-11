@@ -47,7 +47,7 @@ export const actionClaimSchema = z.object({
 	releasedAt: z.date().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-}) as z.ZodObject<{ [K in keyof ActionClaim]: z.Schema<ActionClaim[K]> }>;
+});
 
 export const actionClaimInitializerSchema = z.object({
 	id: actionClaimIdSchema.optional(),
@@ -57,7 +57,7 @@ export const actionClaimInitializerSchema = z.object({
 	releasedAt: z.date().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof NewActionClaim]: z.Schema<NewActionClaim[K]> }>;
+});
 
 export const actionClaimMutatorSchema = z.object({
 	id: actionClaimIdSchema.optional(),
@@ -67,4 +67,4 @@ export const actionClaimMutatorSchema = z.object({
 	releasedAt: z.date().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof ActionClaimUpdate]: z.Schema<ActionClaimUpdate[K]> }>;
+});

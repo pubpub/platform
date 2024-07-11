@@ -48,7 +48,7 @@ export const apiAccessTokensSchema = z.object({
 	expiration: z.date(),
 	issuedById: usersIdSchema,
 	issuedAt: z.date(),
-}) as z.ZodObject<{ [K in keyof ApiAccessTokens]: z.Schema<ApiAccessTokens[K]> }>;
+});
 
 export const apiAccessTokensInitializerSchema = z.object({
 	id: apiAccessTokensIdSchema.optional(),
@@ -59,7 +59,7 @@ export const apiAccessTokensInitializerSchema = z.object({
 	expiration: z.date(),
 	issuedById: usersIdSchema,
 	issuedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof NewApiAccessTokens]: z.Schema<NewApiAccessTokens[K]> }>;
+});
 
 export const apiAccessTokensMutatorSchema = z.object({
 	id: apiAccessTokensIdSchema.optional(),
@@ -70,4 +70,4 @@ export const apiAccessTokensMutatorSchema = z.object({
 	expiration: z.date().optional(),
 	issuedById: usersIdSchema.optional(),
 	issuedAt: z.date().optional(),
-}) as z.ZodObject<{ [K in keyof ApiAccessTokensUpdate]: z.Schema<ApiAccessTokensUpdate[K]> }>;
+});

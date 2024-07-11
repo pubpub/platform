@@ -52,7 +52,7 @@ export const apiAccessPermissionsSchema = z.object({
 	scope: apiAccessScopeSchema,
 	accessType: apiAccessTypeSchema,
 	constraints: z.unknown().nullable(),
-}) as z.ZodObject<{ [K in keyof ApiAccessPermissions]: z.Schema<ApiAccessPermissions[K]> }>;
+});
 
 export const apiAccessPermissionsInitializerSchema = z.object({
 	id: apiAccessPermissionsIdSchema.optional(),
@@ -60,7 +60,7 @@ export const apiAccessPermissionsInitializerSchema = z.object({
 	scope: apiAccessScopeSchema,
 	accessType: apiAccessTypeSchema,
 	constraints: z.unknown().optional().nullable(),
-}) as z.ZodObject<{ [K in keyof NewApiAccessPermissions]: z.Schema<NewApiAccessPermissions[K]> }>;
+});
 
 export const apiAccessPermissionsMutatorSchema = z.object({
 	id: apiAccessPermissionsIdSchema.optional(),
@@ -68,6 +68,4 @@ export const apiAccessPermissionsMutatorSchema = z.object({
 	scope: apiAccessScopeSchema.optional(),
 	accessType: apiAccessTypeSchema.optional(),
 	constraints: z.unknown().optional().nullable(),
-}) as z.ZodObject<{
-	[K in keyof ApiAccessPermissionsUpdate]: z.Schema<ApiAccessPermissionsUpdate[K]>;
-}>;
+});

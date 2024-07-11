@@ -40,7 +40,7 @@ export const pubTypesSchema = z.object({
 	communityId: communitiesIdSchema,
 	name: z.string(),
 	description: z.string().nullable(),
-}) as z.ZodObject<{ [K in keyof PubTypes]: z.Schema<PubTypes[K]> }>;
+});
 
 export const pubTypesInitializerSchema = z.object({
 	id: pubTypesIdSchema.optional(),
@@ -49,7 +49,7 @@ export const pubTypesInitializerSchema = z.object({
 	communityId: communitiesIdSchema,
 	name: z.string(),
 	description: z.string().optional().nullable(),
-}) as z.ZodObject<{ [K in keyof NewPubTypes]: z.Schema<NewPubTypes[K]> }>;
+});
 
 export const pubTypesMutatorSchema = z.object({
 	id: pubTypesIdSchema.optional(),
@@ -58,4 +58,4 @@ export const pubTypesMutatorSchema = z.object({
 	communityId: communitiesIdSchema.optional(),
 	name: z.string().optional(),
 	description: z.string().optional().nullable(),
-}) as z.ZodObject<{ [K in keyof PubTypesUpdate]: z.Schema<PubTypesUpdate[K]> }>;
+});

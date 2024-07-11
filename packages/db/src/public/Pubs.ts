@@ -50,7 +50,7 @@ export const pubsSchema = z.object({
 	valuesBlob: z.unknown().nullable(),
 	parentId: pubsIdSchema.nullable(),
 	assigneeId: usersIdSchema.nullable(),
-}) as z.ZodObject<{ [K in keyof Pubs]: z.Schema<Pubs[K]> }>;
+});
 
 export const pubsInitializerSchema = z.object({
 	id: pubsIdSchema.optional(),
@@ -61,7 +61,7 @@ export const pubsInitializerSchema = z.object({
 	valuesBlob: z.unknown().optional().nullable(),
 	parentId: pubsIdSchema.optional().nullable(),
 	assigneeId: usersIdSchema.optional().nullable(),
-}) as z.ZodObject<{ [K in keyof NewPubs]: z.Schema<NewPubs[K]> }>;
+});
 
 export const pubsMutatorSchema = z.object({
 	id: pubsIdSchema.optional(),
@@ -72,4 +72,4 @@ export const pubsMutatorSchema = z.object({
 	valuesBlob: z.unknown().optional().nullable(),
 	parentId: pubsIdSchema.optional().nullable(),
 	assigneeId: usersIdSchema.optional().nullable(),
-}) as z.ZodObject<{ [K in keyof PubsUpdate]: z.Schema<PubsUpdate[K]> }>;
+});
