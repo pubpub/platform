@@ -1,6 +1,6 @@
+import type { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import type { AnySchema, JSONSchemaType } from "ajv";
 
-import type { Prisma, PubField, PubFieldSchema, PubValue } from "db/prisma/client";
 import { CardContent, CardHeader, CardTitle } from "ui/card";
 import { Separator } from "ui/separator";
 import { cn } from "utils";

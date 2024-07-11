@@ -36,24 +36,6 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
-	action_instances: ActionInstancesTable;
-
-	PubsInStages: PubsInStagesTable;
-
-	rules: RulesTable;
-
-	action_runs: ActionRunsTable;
-
-	forms: FormsTable;
-
-	form_inputs: FormInputsTable;
-
-	api_access_tokens: ApiAccessTokensTable;
-
-	api_access_logs: ApiAccessLogsTable;
-
-	api_access_permissions: ApiAccessPermissionsTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -101,4 +83,22 @@ export default interface PublicSchema {
 	PubFieldSchema: PubFieldSchemaTable;
 
 	IntegrationInstanceState: IntegrationInstanceStateTable;
+
+	action_instances: ActionInstancesTable;
+
+	PubsInStages: PubsInStagesTable;
+
+	rules: RulesTable;
+
+	action_runs: ActionRunsTable;
+
+	forms: FormsTable;
+
+	form_inputs: FormInputsTable;
+
+	api_access_tokens: ApiAccessTokensTable;
+
+	api_access_logs: ApiAccessLogsTable;
+
+	api_access_permissions: ApiAccessPermissionsTable;
 }

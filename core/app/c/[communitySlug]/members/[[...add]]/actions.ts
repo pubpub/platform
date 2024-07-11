@@ -2,10 +2,9 @@
 
 import { cache } from "react";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { Community } from "@prisma/client";
 import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 import { User } from "@supabase/supabase-js";
-
-import { Community } from "db/prisma/client";
 
 import type { SuggestedUser } from "~/lib/server/members";
 import { getLoginData } from "~/lib/auth/loginData";

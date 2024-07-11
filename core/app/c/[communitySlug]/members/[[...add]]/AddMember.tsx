@@ -1,4 +1,4 @@
-import { Community } from "db/prisma/client";
+import { Community } from "@prisma/client";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { getSuggestedMembers } from "~/lib/server";

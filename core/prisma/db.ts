@@ -3,7 +3,7 @@
 	https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
 */
 
-import { PrismaClient } from "db/prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 import { env } from "~/lib/env/env.mjs";
 

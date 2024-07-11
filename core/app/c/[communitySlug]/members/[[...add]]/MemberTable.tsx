@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-
-import { Community } from "db/prisma/client";
+import { Community } from "@prisma/client";
 
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getMemberTableColumns, TableMember } from "./getMemberTableColumns";

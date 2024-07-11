@@ -1,6 +1,7 @@
+import type { User } from "@prisma/client";
+
 import { cache } from "react";
 
-import type { User } from "db/prisma/client";
 import type { StagesId } from "db/public/Stages";
 import { Rules } from "db/public/Rules";
 import { expect } from "utils";

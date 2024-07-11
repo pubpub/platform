@@ -9,11 +9,10 @@ datasource db {
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
-  output          = "./client/generated"
 }
 
 generator comments {
-  provider = "pnpm exec tsx ./scripts/comment-generator.ts"
+  provider = "pnpm exec tsx prisma/comment-generator.ts"
 }
 
 model User {
@@ -405,7 +404,7 @@ model Rule {
   event            Event
   actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String
-  config           Json?
+  config           Json? /// @type(RuleConfigs, '~/actions/types', true, false, true)
 
   @@unique([actionInstanceId, event])
   @@map(name: "rules")
@@ -483,7 +482,7 @@ model ApiAccessPermission {
   apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id])
   scope            ApiAccessScope
   accessType       ApiAccessType
-  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)
+  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../../ApiAccessToken', true, false, true)
 
   // this ensures that only one permission per token and scope and access type exists
   @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")

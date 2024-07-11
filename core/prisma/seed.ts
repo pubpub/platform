@@ -1,7 +1,7 @@
+import { PrismaClient } from "@prisma/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { makeWorkerUtils } from "graphile-worker";
 
-import { PrismaClient } from "db/prisma/client";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";

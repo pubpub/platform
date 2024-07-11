@@ -46,7 +46,6 @@
 		"public/Rules",
 		"public/Stages",
 		"public/Users",
-		"prisma/client",
 		"table-names",
 		"types"
 	],
@@ -54,18 +53,11 @@
 		"format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
 		"type-check": "tsc --noEmit",
 		"generate-db-table-names": "dotenv -e .env.local -e .env.development tsx ./scripts/generateDbTableNames.ts ./src/table-names.ts public | pino-pretty",
-		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w src/",
-		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
-		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
-		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
-		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
-		"prisma": "dotenv -e .env.local -e .env.development prisma",
-		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio"
+		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w src/"
 	},
 	"author": "public/Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "public/GPL-2.0+",
 	"dependencies": {
-		"@prisma/client": "5.2.0",
 		"logger": "workspace:*",
 		"utils": "workspace:*"
 	},
@@ -75,8 +67,6 @@
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
-		"@prisma/generator-helper": "^5.14.0",
-		"@prisma/internals": "^5.14.0",
 		"@pubpub/prettier-config": "workspace:*",
 		"@ts-rest/core": "^3.45.2",
 		"@types/pg": "^8.11.6",
@@ -87,7 +77,6 @@
 		"kanel-zod": "^1.3.4",
 		"pg": "^8.11.3",
 		"prettier": "^3.2.5",
-		"prisma": "^5.2.0",
 		"tsconfig": "workspace:*",
 		"tsx": "^3.13.0",
 		"typescript": "^5.4.2",
@@ -138,11 +127,7 @@
 			"./public/Stages.ts",
 			"./public/Users.ts",
 			"./types/index.ts",
-			"./prisma/client/index.ts",
 			"./table-names.ts"
 		]
-	},
-	"prisma": {
-		"schema": "./src/prisma/schema.prisma"
 	}
 }
