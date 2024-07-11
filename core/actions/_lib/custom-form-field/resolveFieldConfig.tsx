@@ -1,8 +1,8 @@
+import type ActionName from "db/public/Action";
 import { logger } from "logger";
 
 import type { Action, ZodObjectOrWrappedOrOptional } from "../../types";
 import type { ActionConfigServerComponentProps } from "./defineConfigServerComponent";
-import type ActionName from "~/kysely/types/public/Action";
 import { getActionByName } from "../../api";
 import { getCustomConfigComponentByActionName } from "./getCustomConfigComponent";
 

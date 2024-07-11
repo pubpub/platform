@@ -1,6 +1,5 @@
+import { Users } from "db/public/Users";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-
-import { Users } from "~/kysely/types/public/Users";
 
 type Props = {
 	user: Users;

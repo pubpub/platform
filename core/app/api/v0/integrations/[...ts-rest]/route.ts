@@ -1,9 +1,9 @@
 import { createNextHandler } from "@ts-rest/serverless/next";
 
+import type { PubsId } from "db/public/Pubs";
 import { api } from "contracts";
 import { logger } from "logger";
 
-import type { PubsId } from "~/kysely/types/public/Pubs";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import {

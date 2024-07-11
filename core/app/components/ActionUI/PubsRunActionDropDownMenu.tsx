@@ -1,9 +1,9 @@
+import type { ActionInstances } from "db/public/ActionInstances";
+import type { Stages } from "db/public/Stages";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
-import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
-import type { Stages } from "~/kysely/types/public/Stages";
 import type { StagePub } from "~/lib/db/queries";
 import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
 

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import type { Users } from "db/public/Users";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -11,7 +12,6 @@ import { Loader2, Undo2, X, XCircle } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
-import type { Users } from "~/kysely/types/public/Users";
 import { useServerAction } from "~/lib/serverActions";
 import { UserLoginData } from "~/lib/types";
 import * as actions from "./actions";

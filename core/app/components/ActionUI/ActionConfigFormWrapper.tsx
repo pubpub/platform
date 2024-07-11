@@ -1,11 +1,11 @@
+import type { ActionInstances } from "db/public/ActionInstances";
+import type { CommunitiesId } from "db/public/Communities";
+import type { StagesId } from "db/public/Stages";
 import { PubFieldProvider } from "ui/pubFields";
 import { TokenProvider } from "ui/tokens";
 
 import type { PageContext } from "./PubsRunActionDropDownMenu";
 import type { Action, ActionInstanceOf } from "~/actions/types";
-import type { ActionInstances } from "~/kysely/types/public/ActionInstances";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { StagesId } from "~/kysely/types/public/Stages";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
 import { getActionByName } from "~/actions/api";
 import { getPubFields } from "~/lib/server/pubFields";

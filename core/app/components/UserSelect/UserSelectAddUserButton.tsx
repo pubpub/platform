@@ -1,10 +1,10 @@
 import { MutableRefObject, useCallback, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { Communities } from "db/public/Communities";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-import { Communities } from "~/kysely/types/public/Communities";
 import { UserSelectAddUserForm } from "./UserSelectAddUserForm";
 
 type Props = {

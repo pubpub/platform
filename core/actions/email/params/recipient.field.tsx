@@ -1,7 +1,8 @@
+import { UsersId } from "db/public/Users";
+
 import { defineActionFormFieldServerComponent } from "~/actions/_lib/custom-form-field/defineConfigServerComponent";
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";
 import { db } from "~/kysely/database";
-import { UsersId } from "~/kysely/types/public/Users";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { action } from "../action";
 

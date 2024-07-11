@@ -2,11 +2,11 @@ import crypto from "crypto";
 
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { NewApiAccessPermissions } from "db/public/ApiAccessPermissions";
+import type { ApiAccessTokensId, NewApiAccessTokens } from "db/public/ApiAccessTokens";
+import type { CommunitiesId } from "db/public/Communities";
 import { logger } from "logger";
 
-import type { NewApiAccessPermissions } from "~/kysely/types/public/ApiAccessPermissions";
-import type { ApiAccessTokensId, NewApiAccessTokens } from "~/kysely/types/public/ApiAccessTokens";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";

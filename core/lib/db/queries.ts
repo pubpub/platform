@@ -2,9 +2,9 @@ import type { User } from "@prisma/client";
 
 import { cache } from "react";
 
+import type { StagesId } from "db/public/Stages";
 import { expect } from "utils";
 
-import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
 import { communityMemberInclude, pubValuesInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";

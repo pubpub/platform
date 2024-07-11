@@ -1,7 +1,8 @@
 "use server";
 
-import type { FormsId } from "~/kysely/types/public/Forms";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
+import type { FormsId } from "db/public/Forms";
+import type { PubTypesId } from "db/public/PubTypes";
+
 import { db } from "~/kysely/database";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 

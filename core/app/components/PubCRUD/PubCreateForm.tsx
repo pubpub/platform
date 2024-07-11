@@ -7,6 +7,11 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubFields } from "db/public/PubFields";
+import type { PubFieldSchema } from "db/public/PubFieldSchema";
+import type { PubTypes } from "db/public/PubTypes";
+import type { Stages } from "db/public/Stages";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {
@@ -19,11 +24,6 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { ChevronDown, Loader2, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubFields } from "~/kysely/types/public/PubFields";
-import type { PubFieldSchema } from "~/kysely/types/public/PubFieldSchema";
-import type { PubTypes } from "~/kysely/types/public/PubTypes";
-import type { Stages } from "~/kysely/types/public/Stages";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 

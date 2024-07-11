@@ -2,8 +2,9 @@ import type { CompiledQuery, OperationNode, Simplify } from "kysely";
 
 import { QueryNode, SelectQueryNode, TableNode } from "kysely";
 
+import type Database from "db/Database";
+
 import type { AutoOptions, DirectAutoOutput, ExecuteCreatorFn, QB } from "./types";
-import type Database from "~/kysely/types/Database";
 import { databaseTables } from "~/kysely/table-names";
 
 export function findTables<T extends OperationNode>(

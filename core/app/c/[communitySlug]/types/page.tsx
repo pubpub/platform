@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { sql } from "kysely";
 
+import type { PubFieldsId } from "db/public/PubFields";
 import { PubFieldProvider } from "ui/pubFields";
 
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";

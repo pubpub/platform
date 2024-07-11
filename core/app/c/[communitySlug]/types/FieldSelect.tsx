@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import type { PubFieldsId } from "db/public/PubFields";
 import { Button } from "ui/button";
 import {
 	Command,
@@ -14,8 +15,6 @@ import {
 import { ChevronsUpDown } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { usePubFieldContext } from "ui/pubFields";
-
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 
 export type FieldSelectProps = {
 	excludedFields: PubFieldsId[];

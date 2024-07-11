@@ -2,7 +2,8 @@
 
 import type * as z from "zod";
 
-import type Event from "~/kysely/types/public/Event";
+import type Event from "db/public/Event";
+
 import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
 import * as email from "../email/action";
 import * as http from "../http/action";

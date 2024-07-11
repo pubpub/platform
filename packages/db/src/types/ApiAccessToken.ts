@@ -5,12 +5,10 @@ import type { Prettify } from "@ts-rest/core";
 import { z } from "zod";
 
 import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "../public/ApiAccessPermissions";
-import type { ApiAccessTokensId } from "../public/ApiAccessTokens";
 import type ApiAccessType from "../public/ApiAccessType";
-import type { CommunitiesId } from "../public/Communities";
-import type { Stages, StagesId } from "../public/Stages";
-import type { UsersId } from "../public/Users";
+import type { Stages } from "../public/Stages";
 import ApiAccessScope from "../public/ApiAccessScope";
+import { stagesIdSchema } from "../public/Stages";
 
 /**
  * General shape of a generic ApiAccessToken constraint,
@@ -39,25 +37,6 @@ export type ApiAccessPermissionConstraintsShape = {
 export type ApiAccessPermissionContraintsObjectShape = {
 	[key in ApiAccessScope]: ApiAccessPermissionConstraintsShape;
 };
-
-const stagesIdSchema = z.string().uuid() as unknown as z.Schema<StagesId>;
-const communitiesIdSchema = z.string().uuid() as unknown as z.Schema<CommunitiesId>;
-const usersIdSchema = z.string().uuid() as unknown as z.Schema<UsersId>;
-const apiAccessTokensIdSchema = z.string().uuid() as unknown as z.Schema<ApiAccessTokensId>;
-
-export const apiAccessTokensInitializerSchema = z.object({
-	id: apiAccessTokensIdSchema.optional(),
-	token: z.string(),
-	name: z.string(),
-	description: z.string().optional().nullable(),
-	communityId: communitiesIdSchema,
-	expiration: z.date(),
-	revoked: z.boolean().optional(),
-	issuedById: usersIdSchema,
-	issuedAt: z.date().optional(),
-	usageLimit: z.number().optional().nullable(),
-	usages: z.number().optional(),
-});
 
 export const permissionsSchema = z.object({
 	[ApiAccessScope.community]: z.object({

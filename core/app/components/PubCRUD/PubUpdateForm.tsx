@@ -8,6 +8,9 @@ import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
 import type { GetPubResponseBody } from "contracts";
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubsId } from "db/public/Pubs";
+import type { Stages, StagesId } from "db/public/Stages";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {
@@ -20,9 +23,6 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { ChevronDown, Loader2, Pencil } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { Stages, StagesId } from "~/kysely/types/public/Stages";
 import type { getPubType } from "~/lib/server/pub";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";

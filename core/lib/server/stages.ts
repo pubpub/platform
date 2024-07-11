@@ -1,6 +1,7 @@
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import type { CommunitiesId } from "db/public/Communities";
+
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { pubValuesByRef } from "./pub";

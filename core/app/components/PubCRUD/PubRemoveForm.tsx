@@ -4,12 +4,12 @@ import { useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 
+import type { PubsId } from "db/public/Pubs";
 import { Button } from "ui/button";
 import { Form } from "ui/form";
 import { Loader2, Trash } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { PubsId } from "~/kysely/types/public/Pubs";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 

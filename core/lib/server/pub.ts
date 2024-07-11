@@ -11,14 +11,14 @@ import type {
 	JsonValue,
 } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
+import type Database from "db/Database";
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubsId } from "db/public/Pubs";
+import type { PubTypesId } from "db/public/PubTypes";
+import type { UsersId } from "db/public/Users";
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";
-import type Database from "~/kysely/types/Database";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import type { UsersId } from "~/kysely/types/public/Users";
 import { validatePubValues } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";

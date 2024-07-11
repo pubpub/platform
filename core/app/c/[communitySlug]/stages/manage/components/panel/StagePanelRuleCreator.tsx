@@ -5,6 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import type Action from "db/public/Action";
+import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
+import type { CommunitiesId } from "db/public/Communities";
+import Event from "db/public/Event";
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -19,11 +23,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
 import type { Rules } from "~/actions/_lib/rules";
-import type Action from "~/kysely/types/public/Action";
-import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api";
-import Event from "~/kysely/types/public/Event";
 import { useServerAction } from "~/lib/serverActions";
 import AutoFormObject from "../../../../../../../../packages/ui/src/auto-form/fields/object";
 import { addRule } from "../../actions";

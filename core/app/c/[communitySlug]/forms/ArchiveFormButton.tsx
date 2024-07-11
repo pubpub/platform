@@ -1,7 +1,6 @@
+import type { FormsId } from "db/public/Forms";
 import { Button } from "ui/button";
 import { Archive } from "ui/icon";
-
-import type { FormsId } from "~/kysely/types/public/Forms";
 
 type Props = {
 	id: FormsId;

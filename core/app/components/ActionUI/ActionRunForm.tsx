@@ -2,6 +2,8 @@
 
 import { Suspense, useCallback, useTransition } from "react";
 
+import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
+import type { PubsId } from "db/public/Pubs";
 import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
@@ -10,8 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Loader2, Play } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { StagePub } from "~/lib/db/queries";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";

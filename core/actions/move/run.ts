@@ -1,10 +1,10 @@
 "use server";
 
+import type { PubsId } from "db/public/Pubs";
+import type { StagesId } from "db/public/Stages";
 import { logger } from "logger";
 
 import type { action } from "./action";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { StagesId } from "~/kysely/types/public/Stages";
 import { db } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineRun } from "../types";

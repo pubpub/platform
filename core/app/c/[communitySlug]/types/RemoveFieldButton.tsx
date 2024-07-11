@@ -2,12 +2,12 @@
 
 import { useCallback } from "react";
 
+import type { PubFieldsId } from "db/public/PubFields";
+import type { PubTypesId } from "db/public/PubTypes";
 import { Button } from "ui/button";
 import { X } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { useServerAction } from "~/lib/serverActions";
 import { removePubField } from "./actions";
 

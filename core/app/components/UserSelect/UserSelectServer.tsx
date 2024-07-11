@@ -1,6 +1,7 @@
+import { Communities } from "db/public/Communities";
+import { Users, UsersId } from "db/public/Users";
+
 import { db } from "~/kysely/database";
-import { Communities } from "~/kysely/types/public/Communities";
-import { Users, UsersId } from "~/kysely/types/public/Users";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { UserSelectClient } from "./UserSelectClient";
 

@@ -1,10 +1,11 @@
 import type React from "react";
 
+import type { CommunitiesId } from "db/public/Communities";
+import type { PubsId } from "db/public/Pubs";
+import type { StagesId } from "db/public/Stages";
+
 import type { Action, ActionInstanceOf } from "../../types";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { StagesId } from "~/kysely/types/public/Stages";
 
 export type ActionFormFieldBaseProps<T extends Action, Type extends "config" | "params"> = {
 	actionInstance: ActionInstanceOf<T>;
