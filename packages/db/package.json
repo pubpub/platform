@@ -51,7 +51,7 @@
 		"types"
 	],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
 		"type-check": "tsc --noEmit",
 		"generate-db-table-names": "dotenv -e .env.local -e .env.development tsx ./scripts/generateDbTableNames.ts ./src/table-names.ts public | pino-pretty",
 		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w src/",
