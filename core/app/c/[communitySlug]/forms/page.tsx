@@ -1,13 +1,18 @@
 import React from "react";
+import partition from "lodash.partition";
 
-import { ClipboardPenLine, Plus } from "ui/icon";
+import { ClipboardPenLine } from "ui/icon";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { autoCache } from "~/lib/server/cache/autoCache";
+import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import ContentLayout from "../ContentLayout";
 import { FormTable } from "./FormTable";
+import { NewFormButton } from "./NewFormButton";
 
-export default async function Page() {
+export default async function Page({ params: { communitySlug } }) {
 	const loginData = await getLoginData();
 
 	if (!loginData) {
@@ -17,26 +22,36 @@ export default async function Page() {
 		return null;
 	}
 
-	const forms = await db
-		.selectFrom("forms")
-		.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
-		.select([
-			"forms.id as id",
-			"forms.name as formName",
-			"pub_types.name as pubType",
-			"updatedAt",
-		])
-		.execute();
+	const forms = await autoCache(
+		db
+			.selectFrom("forms")
+			.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
+			.innerJoin("communities", "communities.id", "pub_types.communityId")
+			.select([
+				"forms.id as id",
+				"forms.name as formName",
+				"pub_types.name as pubType",
+				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
+				"forms.isArchived",
+			])
+			.where("communities.slug", "=", communitySlug)
+	).execute();
 
-	const tableForms = forms.map((form) => {
-		const { id, formName, pubType, updatedAt } = form;
-		return {
-			id,
-			formName,
-			pubType,
-			updated: new Date(updatedAt),
-		};
-	});
+	const [active, archived] = partition(forms, (form) => !form.isArchived);
+
+	const tableForms = (formList: typeof forms) =>
+		formList.map((form) => {
+			const { id, formName, pubType, updatedAt, isArchived } = form;
+			return {
+				id,
+				formName,
+				pubType,
+				updated: new Date(updatedAt),
+				isArchived,
+			};
+		});
+
+	const pubTypes = await getAllPubTypesForCommunity().execute();
 
 	return (
 		<ContentLayout
@@ -46,6 +61,7 @@ export default async function Page() {
 					Forms
 				</>
 			}
+			headingAction={<NewFormButton pubTypes={pubTypes} />}
 		>
 			{forms.length === 0 ? (
 				<div className="flex h-full items-center justify-center">
@@ -57,11 +73,27 @@ export default async function Page() {
 							Forms are templates of questions used to collect information from users
 							via a response submission process.
 						</p>
+						<NewFormButton pubTypes={pubTypes} />
 					</div>
 				</div>
+			) : archived.length > 0 ? (
+				<Tabs defaultValue="active" className="">
+					<TabsList className="ml-4 mt-4">
+						<TabsTrigger value="active">Active</TabsTrigger>
+						<TabsTrigger value="archived">Archived</TabsTrigger>
+					</TabsList>
+					<div className="px-4">
+						<TabsContent value="active">
+							<FormTable forms={tableForms(active)} />
+						</TabsContent>
+						<TabsContent value="archived">
+							<FormTable forms={tableForms(archived)} />
+						</TabsContent>
+					</div>
+				</Tabs>
 			) : (
-				<div className="p-4">
-					<FormTable forms={tableForms} />
+				<div className="px-4">
+					<FormTable forms={tableForms(active)} />
 				</div>
 			)}
 		</ContentLayout>

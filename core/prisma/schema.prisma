@@ -67,6 +67,7 @@ model Community {
   memberGroups         MemberGroup[]
   stages               Stage[]
   APIAccessToken       ApiAccessToken[]
+  Form                 Form[]
 
   @@map(name: "communities")
 }
@@ -418,12 +419,18 @@ enum Event {
 }
 
 model Form {
-  id        String      @id @default(dbgenerated("gen_random_uuid()"))
-  name      String
-  pubType   PubType     @relation(fields: [pubTypeId], references: [id])
-  pubTypeId String
-  inputs    FormInput[]
+  id          String      @id @default(dbgenerated("gen_random_uuid()"))
+  name        String
+  slug        String
+  communityId String
+  community   Community   @relation(fields: [communityId], references: [id])
+  pubType     PubType     @relation(fields: [pubTypeId], references: [id])
+  pubTypeId   String
+  inputs      FormInput[]
+  isArchived  Boolean     @default(false)
 
+  @@unique([name, communityId])
+  @@unique([slug, communityId])
   @@map(name: "forms")
 }
 
