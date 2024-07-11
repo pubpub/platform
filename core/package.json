@@ -15,6 +15,7 @@
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
 		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
 		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
+		"prebuild": "prisma generate",
 		"prisma": "dotenv -e .env.local -e .env.development prisma",
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
 		"format": "prettier --check . --ignore-path ../.gitignore",
