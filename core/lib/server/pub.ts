@@ -1,13 +1,19 @@
 import type { ExpressionBuilder, SelectExpression, StringReference, Transaction } from "kysely";
 
+
+
 import { Prisma } from "@prisma/client";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+
+
 
 import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 import type { Database } from "db/Database";
 import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
+
+
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";
@@ -18,6 +24,10 @@ import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { ForbiddenError, NotFoundError } from "./errors";
+
+
+
+
 
 type PubValues = Record<string, JsonValue>;
 
@@ -181,7 +191,8 @@ export const getPubBase = (
 			jsonArrayFrom(
 				eb
 					.selectFrom("PubsInStages")
-					.select(["PubsInStages.stageId as id"])
+					.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+					.select(["PubsInStages.stageId as id", "stages.name"])
 					.whereRef("PubsInStages.pubId", "=", "pubs.id")
 			).as("stages"),
 			jsonArrayFrom(

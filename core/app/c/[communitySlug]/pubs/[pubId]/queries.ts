@@ -18,27 +18,26 @@ export const getPubOnTheIndividualPubPage = async (pubId: PubsId) => {
 						.selectAll()
 				).as("pubType")
 			)
-			.select((eb) =>
-				jsonArrayFrom(
-					eb
-						.selectFrom("PubsInStages")
-						.where("PubsInStages.pubId", "=", pubId)
-						.innerJoin("stages", "stages.id", "PubsInStages.stageId")
-						.select((eb) =>
-							jsonArrayFrom(
-								eb
-									.selectFrom("integration_instances")
-									.where(
-										"integration_instances.stageId",
-										"=",
-										eb.ref("stages.id")
-									)
-									.selectAll()
-							).as("integrationInstances")
-						)
-						.selectAll()
-				).as("stages")
-			)
+			// .select((eb) =>
+			// 	jsonArrayFrom(
+			// 		eb
+			// 			.selectFrom("PubsInStages")
+			// 			.where("PubsInStages.pubId", "=", pubId)
+			// 			.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+			// 			.select((eb) =>
+			// 				jsonArrayFrom(
+			// 					eb
+			// 						.selectFrom("integration_instances")
+			// 						.where(
+			// 							"integration_instances.stageId",
+			// 							"=",
+			// 							eb.ref("stages.id")
+			// 						)
+			// 						.selectAll()
+			// 				).as("integrationInstances")
+			// 			)
+			// 	).as("stages")
+			// )
 			.select((eb) =>
 				jsonArrayFrom(
 					eb

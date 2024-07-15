@@ -23,10 +23,6 @@ import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
 import { getPubOnTheIndividualPubPage } from "./queries";
 
-
-
-
-
 export default async function Page({
 	params,
 	searchParams,
@@ -73,7 +69,7 @@ export default async function Page({
 
 	const [actionsPromise, stagePromise] =
 		alsoPubs.stages.length > 0
-			? [getStageActions(alsoPubs.stages[0].stageId), getStage(alsoPubs.stages[0].stageId)]
+			? [getStageActions(alsoPubs.stages[0].id), getStage(alsoPubs.stages[0].id)]
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
@@ -102,8 +98,8 @@ export default async function Page({
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Current Stage</div>
 						<div className="ml-4 font-medium">
-							{pub.stages.map(({ stage }) => {
-								return <div key={stage.id}>{stage.name}</div>;
+							{alsoPubs.stages.map(({ id, name }) => {
+								return <div key={id}>{name}</div>;
 							})}
 						</div>
 					</div>
