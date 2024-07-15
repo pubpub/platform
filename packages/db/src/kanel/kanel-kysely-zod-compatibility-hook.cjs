@@ -58,10 +58,12 @@ const makeUuid = (line) => line.replace(/z.string\(\) /, "z.string().uuid() ");
 /**
  * @type {import("kanel").PreRenderHook}
  *
- * Renames the type of the `as unknown as z.Schema` casts from `kanel-zod` to
- * to be compatible with `kanel-kysely`, turning
- * 1. `as unknown as z.Schema<TableMutator>` into `as unknown as z.Schema<TableUpdate>`
- * 2. `as unknown as z.Schema<TableInitializer>` into `as unknown as z.Schema<NewTable>`
+ * Does two things:
+ * 1. Removes the `as unknown as z.Schema` casts from `kanel-zod` to allow you to use the `z.object`s as actual
+ * ZodObjects. By casting them to `z.Schema`, you lose the ability to do e.g. `z.pick`, `z.partial`, etc. The
+ * cast is also incorrect, as the type that it uses is not the Kysely one see https://github.com/kristiandupont/kanel/issues/563#issuecomment-2157934214.
+ * 2. Casts the `id` fields to `z.string().uuid()` to allow them to be parsed as uuids, and brands them with the correct type.
+ * This makes sure that if you do `usersSchema.parse(user)` it will return a type compatible with `Users`.
  */
 function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig) {
 	const renamedSchemas = Object.fromEntries(
