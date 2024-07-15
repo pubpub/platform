@@ -11,13 +11,13 @@
 		"types"
 	],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit",
 		"generate-db-table-names": "dotenv -e .env.local -e .env.development tsx ./scripts/generateDbTableNames.ts ./src/table-names.ts public | pino-pretty",
 		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w src/"
 	},
-	"author": "public/Knowledge Futures, Inc <hello@knowledgefutures.org>",
-	"license": "public/GPL-2.0+",
+	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
+	"license": "GPL-2.0+",
 	"dependencies": {
 		"logger": "workspace:*",
 		"utils": "workspace:*"
