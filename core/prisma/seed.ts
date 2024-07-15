@@ -4,7 +4,6 @@ import { makeWorkerUtils } from "graphile-worker";
 
 import { logger } from "logger";
 
-import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
 import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
@@ -14,15 +13,25 @@ const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
 const prisma = new PrismaClient();
 const supabase = new SupabaseClient(supabaseUrl, supabaseKey);
 
-async function createUserMembers(
-	email: string,
-	password: string,
-	slug: string,
-	firstName: string,
-	lastName: string | undefined,
-	isSuperAdmin: boolean,
-	prismaCommunityIds: { communityId: string; canAdmin: boolean }[]
-) {
+async function createUserMembers({
+	email,
+	password,
+	slug,
+	firstName,
+	lastName,
+	isSuperAdmin,
+	role,
+	prismaCommunityIds,
+}: {
+	email: string;
+	password: string;
+	slug: string;
+	firstName: string;
+	lastName: string | undefined;
+	isSuperAdmin: boolean;
+	role: "member" | "admin" | "contributor";
+	prismaCommunityIds: string[];
+}) {
 	let user;
 	const { data, error } = await supabase.auth.admin.createUser({
 		email,
@@ -51,19 +60,17 @@ async function createUserMembers(
 			lastName,
 			avatar: "/demo/person.png",
 			isSuperAdmin,
-			memberships: { createMany: { data: prismaCommunityIds } },
+			memberships: {
+				createMany: {
+					data: prismaCommunityIds.map((communityId) => ({ communityId, role })),
+				},
+			},
 		},
 	});
 }
 
 async function main() {
-	const prismaCommunityIds = [
-		{ communityId: unJournalId, canAdmin: true },
-		{
-			communityId: crocCrocId,
-			canAdmin: true,
-		},
-	];
+	const prismaCommunityIds = [unJournalId, crocCrocId];
 
 	logger.info("migrate graphile");
 	const workerUtils = await makeWorkerUtils({
@@ -77,15 +84,38 @@ async function main() {
 	await buildUnjournal(prisma, unJournalId);
 
 	try {
-		await createUserMembers(
-			"all@pubpub.org",
-			"pubpub-all",
-			"all",
-			"Jill",
-			"Admin",
-			true,
-			prismaCommunityIds
-		);
+		await createUserMembers({
+			email: "all@pubpub.org",
+			password: "pubpub-all",
+			slug: "all",
+			firstName: "Jill",
+			lastName: "Admin",
+			isSuperAdmin: true,
+			role: "admin",
+			prismaCommunityIds,
+		});
+
+		await createUserMembers({
+			email: "some@pubpub.org",
+			password: "pubpub-some",
+			slug: "some",
+			firstName: "Jack",
+			lastName: "Member",
+			isSuperAdmin: false,
+			role: "member",
+			prismaCommunityIds,
+		});
+
+		await createUserMembers({
+			email: "none@pubpub.org",
+			password: "pubpub-none",
+			slug: "none",
+			firstName: "Jenna",
+			lastName: "Contributor",
+			isSuperAdmin: false,
+			role: "contributor",
+			prismaCommunityIds,
+		});
 	} catch (error) {
 		logger.error(error);
 	}

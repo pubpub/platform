@@ -251,21 +251,30 @@ model ActionMove {
 }
 
 model Member {
-  id          String    @id @default(dbgenerated("gen_random_uuid()"))
-  canAdmin    Boolean // Community-wide administrator
+  id          String     @id @default(dbgenerated("gen_random_uuid()"))
+  role        MemberRole @default(member)
   // If admin, the permissions are irrelevant because they have acccess to everything, but we
   // may want to keep the permissions around (though grayed our and with a note?) in case their
   // admin status is ever removed.
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
-  user        User      @relation(fields: [userId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
   userId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
   permissions Permission[]
 
   @@map(name: "members")
+}
+
+enum MemberRole {
+  // community-wide administrator
+  admin
+  // regular member
+  member
+  // contributor
+  contributor
 }
 
 model MemberGroup {

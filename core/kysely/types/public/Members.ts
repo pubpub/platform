@@ -4,6 +4,7 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
 import { type CommunitiesId } from "./Communities";
+import { type default as MemberRole } from "./MemberRole";
 import { type UsersId } from "./Users";
 
 /** Identifier type for public.members */
@@ -17,11 +18,11 @@ export default interface MembersTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	canAdmin: ColumnType<boolean, boolean, boolean>;
-
 	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
 	userId: ColumnType<UsersId, UsersId, UsersId>;
+
+	role: ColumnType<MemberRole, MemberRole | undefined, MemberRole>;
 }
 
 export type Members = Selectable<MembersTable>;

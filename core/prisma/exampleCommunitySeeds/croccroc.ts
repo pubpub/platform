@@ -102,7 +102,7 @@ export default async function main(communityUUID: CommunitiesId) {
 		.values({
 			userId: users[0].id,
 			communityId: communityUUID,
-			canAdmin: true,
+			role: "admin",
 		})
 		.returning("id")
 		.executeTakeFirst();
