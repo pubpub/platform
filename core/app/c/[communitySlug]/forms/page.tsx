@@ -30,6 +30,7 @@ export default async function Page({ params: { communitySlug } }) {
 			.innerJoin("communities", "communities.id", "pub_types.communityId")
 			.select([
 				"forms.id as id",
+				"forms.slug as slug",
 				"forms.name as formName",
 				"pub_types.name as pubType",
 				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
@@ -42,9 +43,10 @@ export default async function Page({ params: { communitySlug } }) {
 
 	const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
-			const { id, formName, pubType, updatedAt, isArchived } = form;
+			const { id, formName, pubType, updatedAt, isArchived, slug } = form;
 			return {
 				id,
+				slug,
 				formName,
 				pubType,
 				updated: new Date(updatedAt),
