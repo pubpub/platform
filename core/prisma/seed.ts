@@ -29,7 +29,7 @@ async function createUserMembers({
 	firstName: string;
 	lastName: string | undefined;
 	isSuperAdmin: boolean;
-	role: "member" | "admin" | "contributor";
+	role: "editor" | "admin" | "contributor";
 	prismaCommunityIds: string[];
 }) {
 	let user;
@@ -100,9 +100,9 @@ async function main() {
 			password: "pubpub-some",
 			slug: "some",
 			firstName: "Jack",
-			lastName: "Member",
+			lastName: "Editor",
 			isSuperAdmin: false,
-			role: "member",
+			role: "editor",
 			prismaCommunityIds,
 		});
 

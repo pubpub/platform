@@ -61,7 +61,7 @@ export const getLoginData = cache(async () => {
 		const firstName = supabaseUser.user_metadata.firstName ?? "";
 		const lastName = supabaseUser.user_metadata.lastName ?? null;
 		const communityId = supabaseUser.user_metadata.communityId ?? unJournalId;
-		const role = supabaseUser.user_metadata.role ?? MemberRole.member;
+		const role = supabaseUser.user_metadata.role ?? MemberRole.editor;
 
 		user = await prisma.user.create({
 			data: {

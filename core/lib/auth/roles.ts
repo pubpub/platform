@@ -16,6 +16,11 @@ export const getCommunityRole = (
 				slug: string;
 		  }
 ) => {
+	if (loginData?.isSuperAdmin) {
+		// super admins are treated as admins, regardless of their role
+		return "admin";
+	}
+
 	const isIdentifiedWithCommunityId =
 		"communityId" in communityIdentifier && communityIdentifier.id !== undefined;
 
@@ -50,6 +55,11 @@ export const isCommunityAdmin = (
 				slug: string;
 		  }
 ) => {
+	if (loginData?.isSuperAdmin) {
+		// Super admins can do anything
+		return true;
+	}
+
 	const role = getCommunityRole(loginData, communityIdentifier);
 	return role === "admin";
 };

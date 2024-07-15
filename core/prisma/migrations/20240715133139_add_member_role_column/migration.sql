@@ -1,9 +1,9 @@
 -- CreateEnum
-CREATE TYPE "MemberRole" AS ENUM ('admin', 'member', 'contributor');
+CREATE TYPE "MemberRole" AS ENUM ('admin', 'editor', 'contributor');
 
 -- AlterTable
 ALTER TABLE "members"
-ADD COLUMN "role" "MemberRole" NOT NULL DEFAULT 'member';
+ADD COLUMN "role" "MemberRole" NOT NULL DEFAULT 'editor';
 
 -- Migrate members
 BEGIN;

@@ -1,8 +1,7 @@
 "use client";
 
+import type { Community } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
-
-import { Community } from "@prisma/client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";

@@ -252,7 +252,7 @@ model ActionMove {
 
 model Member {
   id          String     @id @default(dbgenerated("gen_random_uuid()"))
-  role        MemberRole @default(member)
+  role        MemberRole @default(editor)
   // If admin, the permissions are irrelevant because they have acccess to everything, but we
   // may want to keep the permissions around (though grayed our and with a note?) in case their
   // admin status is ever removed.
@@ -272,7 +272,7 @@ enum MemberRole {
   // community-wide administrator
   admin
   // regular member
-  member
+  editor
   // contributor
   contributor
 }

@@ -52,7 +52,7 @@ export const UserSelectAddUserForm = ({ email, community }: Props) => {
 						firstName,
 						lastName,
 						community,
-						role: MemberRole.member,
+						role: MemberRole.contributor,
 					});
 
 					if (didSucceed(result)) {

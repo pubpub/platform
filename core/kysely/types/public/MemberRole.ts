@@ -4,7 +4,7 @@
 /** Represents the enum public.MemberRole */
 enum MemberRole {
 	admin = "admin",
-	member = "member",
+	editor = "editor",
 	contributor = "contributor",
 }
 

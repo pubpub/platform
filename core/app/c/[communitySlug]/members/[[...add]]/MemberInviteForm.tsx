@@ -1,12 +1,13 @@
 "use client";
 
+import type { Community } from "@prisma/client";
+import type { z } from "zod";
+
 import { useCallback, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Community } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
-import { z } from "zod";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
@@ -23,15 +24,13 @@ import {
 } from "ui/form";
 import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
-import { Select, SelectContent, SelectItem } from "ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
 
+import type { MemberFormState } from "./AddMember";
 import MemberRole from "~/kysely/types/public/MemberRole";
-import { useSession } from "~/lib/auth/useSession";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { supabase } from "~/lib/supabase";
 import * as actions from "./actions";
-import { MemberFormState } from "./AddMember";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const MemberInviteForm = ({
@@ -214,10 +213,7 @@ export const MemberInviteForm = ({
 												onCheckedChange={field.onChange}
 											/>
 										</FormControl>
-										<FormLabel>
-											Make user superadmin (you only see this if you are a
-											superadmin yourself)
-										</FormLabel>
+										<FormLabel>Make user superadmin</FormLabel>
 									</FormItem>
 								)}
 							/>
@@ -229,16 +225,36 @@ export const MemberInviteForm = ({
 						control={form.control}
 						name="role"
 						render={({ field }) => (
-							<FormItem className="flex items-end gap-x-2">
+							<FormItem>
+								<FormLabel>Role</FormLabel>
 								<Select {...field}>
+									<SelectTrigger>
+										<SelectValue
+											placeholder="Select a role"
+											defaultValue={MemberRole.editor}
+										/>
+									</SelectTrigger>
+
 									<SelectContent>
-										<SelectItem value={MemberRole.member}>Member</SelectItem>
 										<SelectItem value={MemberRole.admin}>Admin</SelectItem>
+										<SelectItem value={MemberRole.editor}>Editor</SelectItem>
 										<SelectItem value={MemberRole.contributor}>
 											Contributor
 										</SelectItem>
 									</SelectContent>
 								</Select>
+								<FormDescription>
+									Select the role for this user.
+									<ul className="list-inside list-disc">
+										<li> Admins can do anything.</li>
+										<li>Editors are able to edit most things</li>
+										<li>
+											Contributors are only able to see forms and other public
+											facing content that are linked to them
+										</li>
+									</ul>
+								</FormDescription>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
