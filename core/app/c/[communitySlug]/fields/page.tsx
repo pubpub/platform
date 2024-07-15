@@ -17,16 +17,14 @@ export default async function Page({ params }: Props) {
 		return notFound();
 	}
 
-	const fieldsData = await getPubFields().executeTakeFirst();
+	const pubFields = await getPubFields().executeTakeFirst();
 
-	if (!fieldsData) {
+	if (!pubFields || !pubFields.fields) {
 		return null;
 	}
 
-	const { fields } = fieldsData;
-
 	return (
-		<PubFieldProvider pubFields={fields}>
+		<PubFieldProvider pubFields={pubFields.fields}>
 			<ContentLayout
 				title={
 					<>
@@ -37,7 +35,7 @@ export default async function Page({ params }: Props) {
 				headingAction={<NewFieldButton />}
 			>
 				<div className="m-4">
-					<FieldsTable fields={fields} />
+					<FieldsTable fields={pubFields.fields} />
 				</div>
 			</ContentLayout>
 		</PubFieldProvider>
