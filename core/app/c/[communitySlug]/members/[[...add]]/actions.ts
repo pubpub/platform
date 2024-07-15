@@ -263,7 +263,7 @@ export const createUserWithMembership = defineServerAction(async function create
 }) {
 	try {
 		const { error: adminError, loginData } = await isCommunityAdmin(community);
-		if (loginData?.isSuperAdmin && isSuperAdmin) {
+		if (!loginData?.isSuperAdmin && isSuperAdmin) {
 			return {
 				title: "Failed to add member",
 				error: "You cannot add members as super admins",
