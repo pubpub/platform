@@ -4,7 +4,7 @@ import type { CommunitiesId } from "db/public";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
-import { pubInclude, stageInclude } from "~/lib/types";
+import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import PubHeader from "./PubHeader";
 import PubList from "./PubList";
@@ -15,14 +15,6 @@ const getCommunityPubs = async (communityId: string) => {
 		include: {
 			...pubInclude,
 		},
-	});
-};
-
-const getStages = async (communityId: string) => {
-	// When trying to render the workflows a member can see. We look at the pubs they can see, get the workflows associated, and then show all those.
-	return await prisma.stage.findMany({
-		where: { communityId: communityId },
-		include: stageInclude,
 	});
 };
 
@@ -42,11 +34,7 @@ export default async function Page({ params }: Props) {
 	}
 
 	const token = await createToken(loginData.id);
-
-	const [pubs, stages] = await Promise.all([
-		getCommunityPubs(community.id),
-		getStages(community.id),
-	]);
+	const pubs = await getCommunityPubs(community.id);
 
 	return (
 		<>

@@ -5,6 +5,7 @@ import { CommunitiesId, PubsId } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { PubsId } from "~/kysely/types/public/Pubs";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -20,6 +21,11 @@ import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
+import { getPubOnTheIndividualPubPage } from "./queries";
+
+
+
+
 
 export default async function Page({
 	params,
@@ -47,6 +53,14 @@ export default async function Page({
 		});
 
 	const pub = await getPub(params.pubId);
+	const alsoPubs = await getPubOnTheIndividualPubPage(params.pubId as PubsId);
+
+	console.log("\n\n");
+	console.log("PUB is here prisma", pub);
+	console.log("\n\n");
+	console.log("PUB here is the kysely", alsoPubs);
+	console.log("\n\n");
+
 	if (!pub) {
 		return null;
 	}
@@ -58,8 +72,8 @@ export default async function Page({
 	}
 
 	const [actionsPromise, stagePromise] =
-		pub.stages.length > 0
-			? [getStageActions(pub.stages[0].stageId), getStage(pub.stages[0].stageId)]
+		alsoPubs.stages.length > 0
+			? [getStageActions(alsoPubs.stages[0].stageId), getStage(alsoPubs.stages[0].stageId)]
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
@@ -67,7 +81,7 @@ export default async function Page({
 	return (
 		<>
 			<div className="mb-8">
-				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
+				<h3 className="mb-2 text-xl font-bold">{alsoPubs.pubType?.name}</h3>
 				<PubTitle pub={pub} />
 			</div>
 			<div className="flex flex-wrap space-x-4">

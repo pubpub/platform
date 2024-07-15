@@ -92,7 +92,7 @@ const pubValues = (
 
 // Converts a pub from having all its children (regardless of depth) in a flat array to a tree
 // structure. Assumes that pub.children are ordered by depth (leaves last)
-const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
+export const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
 	const pubList = [pub, ...pub.children];
 	const pubsMap = new Map();
 	pubList.forEach((pub) => pubsMap.set(pub.id, { ...pub, children: [] }));
