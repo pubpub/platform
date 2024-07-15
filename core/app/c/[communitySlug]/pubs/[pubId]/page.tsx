@@ -49,12 +49,6 @@ export default async function Page({
 
 	const pub = await getPub(params.pubId);
 	const alsoPubs = await getPubOnTheIndividualPubPage(params.pubId as PubsId);
-	alsoPubs.stages.map;
-	console.log("\n\n");
-	console.log("PUB is here prisma", pub);
-	console.log("\n\n");
-	console.log("PUB here is the kysely", alsoPubs);
-	console.log("\n\n");
 
 	if (!pub) {
 		return null;
