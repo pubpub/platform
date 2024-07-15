@@ -36,6 +36,22 @@ import { type default as StagesTable } from "./Stages";
 import { type default as UsersTable } from "./Users";
 
 export default interface PublicSchema {
+	move_constraint: MoveConstraintTable;
+
+	action_claim: ActionClaimTable;
+
+	action_move: ActionMoveTable;
+
+	pub_fields: PubFieldsTable;
+
+	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
+
+	integration_instances: IntegrationInstancesTable;
+
+	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
+
 	permissions: PermissionsTable;
 
 	_PermissionToPub: PermissionToPubTable;
@@ -85,20 +101,4 @@ export default interface PublicSchema {
 	integrations: IntegrationsTable;
 
 	communities: CommunitiesTable;
-
-	move_constraint: MoveConstraintTable;
-
-	action_claim: ActionClaimTable;
-
-	action_move: ActionMoveTable;
-
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
-	integration_instances: IntegrationInstancesTable;
-
-	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
 }

@@ -31,6 +31,8 @@ export default interface PubFieldsTable {
 	slug: ColumnType<string, string, string>;
 
 	schemaName: ColumnType<CoreSchemaType | null, CoreSchemaType | null, CoreSchemaType | null>;
+
+	isArchived: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type PubFields = Selectable<PubFieldsTable>;
