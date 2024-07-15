@@ -28,5 +28,3 @@ export const FieldsTable = ({ fields }: { fields: Record<PubFieldsId, PubField> 
 
 	return <DataTable columns={columns} data={data} onRowClick={handleRowClick} />;
 };
-
-export default FieldsTable;

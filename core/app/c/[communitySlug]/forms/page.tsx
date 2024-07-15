@@ -8,7 +8,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
-import ContentLayout from "../ContentLayout";
+import { ContentLayout } from "../ContentLayout";
 import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
 

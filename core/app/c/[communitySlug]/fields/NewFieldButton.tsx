@@ -14,7 +14,7 @@ import {
 } from "ui/dialog";
 import { Plus } from "ui/icon";
 
-import NewFieldForm from "./NewFieldForm";
+import { NewFieldForm } from "./NewFieldForm";
 
 const Footer = ({ onCancel }: { onCancel: () => void }) => {
 	return (
@@ -29,7 +29,7 @@ const Footer = ({ onCancel }: { onCancel: () => void }) => {
 	);
 };
 
-const NewFieldButton = () => {
+export const NewFieldButton = () => {
 	const [isOpen, setIsOpen] = useState(false);
 
 	return (
@@ -59,5 +59,3 @@ const NewFieldButton = () => {
 		</Dialog>
 	);
 };
-
-export default NewFieldButton;

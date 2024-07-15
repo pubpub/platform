@@ -11,7 +11,7 @@ const Heading = ({ title, action }: { title: ReactNode; action: ReactNode }) => 
 	);
 };
 
-const ContentLayout = ({
+export const ContentLayout = ({
 	title,
 	headingAction,
 	children,
@@ -29,5 +29,3 @@ const ContentLayout = ({
 		</div>
 	);
 };
-
-export default ContentLayout;

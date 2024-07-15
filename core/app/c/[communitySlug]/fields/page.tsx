@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import { FormInput } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
-import ContentLayout from "~/app/c/[communitySlug]/ContentLayout";
+import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getPubFields } from "~/lib/server/pubFields";
-import FieldsTable from "./FieldsTable";
-import NewFieldButton from "./NewFieldButton";
+import { FieldsTable } from "./FieldsTable";
+import { NewFieldButton } from "./NewFieldButton";
 
 type Props = { params: { communitySlug: string } };
 

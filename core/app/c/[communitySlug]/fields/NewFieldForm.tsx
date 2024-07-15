@@ -103,7 +103,7 @@ const SchemaSelectField = ({ form }: { form: UseFormReturn<FieldValues, any, und
 	);
 };
 
-const NewFieldForm = ({
+export const NewFieldForm = ({
 	onSubmitSuccess,
 	children,
 }: {
@@ -151,5 +151,3 @@ const NewFieldForm = ({
 		</Form>
 	);
 };
-
-export default NewFieldForm;
