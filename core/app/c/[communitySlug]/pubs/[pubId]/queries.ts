@@ -1,6 +1,7 @@
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { PubsId } from "db/public";
+
 import { getPubBase, nestChildren, NotFoundError } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 
@@ -18,31 +19,20 @@ export const getPubOnTheIndividualPubPage = async (pubId: PubsId) => {
 						.selectAll()
 				).as("pubType")
 			)
-			// .select((eb) =>
-			// 	jsonArrayFrom(
-			// 		eb
-			// 			.selectFrom("PubsInStages")
-			// 			.where("PubsInStages.pubId", "=", pubId)
-			// 			.innerJoin("stages", "stages.id", "PubsInStages.stageId")
-			// 			.select((eb) =>
-			// 				jsonArrayFrom(
-			// 					eb
-			// 						.selectFrom("integration_instances")
-			// 						.where(
-			// 							"integration_instances.stageId",
-			// 							"=",
-			// 							eb.ref("stages.id")
-			// 						)
-			// 						.selectAll()
-			// 				).as("integrationInstances")
-			// 			)
-			// 	).as("stages")
-			// )
 			.select((eb) =>
 				jsonArrayFrom(
 					eb
 						.selectFrom("action_claim")
 						.where("action_claim.pubId", "=", eb.ref("pubs.id"))
+						.innerJoin("users", "users.id", "action_claim.userId")
+						.select((eb) =>
+							jsonObjectFrom(
+								eb
+									.selectFrom("users")
+									.where("users.id", "=", eb.ref("action_claim.userId"))
+									.selectAll()
+							).as("user")
+						)
 						.selectAll()
 				).as("claims")
 			)

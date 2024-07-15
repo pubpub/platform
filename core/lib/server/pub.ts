@@ -1,19 +1,13 @@
 import type { ExpressionBuilder, SelectExpression, StringReference, Transaction } from "kysely";
 
-
-
 import { Prisma } from "@prisma/client";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-
-
 
 import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 import type { Database } from "db/Database";
 import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
-
-
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";
@@ -24,10 +18,6 @@ import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { ForbiddenError, NotFoundError } from "./errors";
-
-
-
-
 
 type PubValues = Record<string, JsonValue>;
 
@@ -194,6 +184,31 @@ export const getPubBase = (
 					.innerJoin("stages", "stages.id", "PubsInStages.stageId")
 					.select(["PubsInStages.stageId as id", "stages.name"])
 					.whereRef("PubsInStages.pubId", "=", "pubs.id")
+					.select((eb) =>
+						jsonArrayFrom(
+							eb
+								.selectFrom("integration_instances")
+								.where("integration_instances.stageId", "=", eb.ref("stages.id"))
+								.innerJoin(
+									"integrations",
+									"integrations.id",
+									"integration_instances.integrationId"
+								)
+								.select((eb) =>
+									jsonObjectFrom(
+										eb
+											.selectFrom("integrations")
+											.where(
+												"integrations.id",
+												"=",
+												eb.ref("integration_instances.integrationId")
+											)
+											.selectAll()
+									).as("integration")
+								)
+								.selectAll()
+						).as("integrationInstances")
+					)
 			).as("stages"),
 			jsonArrayFrom(
 				eb

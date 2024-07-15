@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { CommunitiesId, PubsId } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { PubsId } from "~/kysely/types/public/Pubs";
+import type { StagePub } from "~/lib/db/queries";
+import type { PubPayload } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -15,7 +15,6 @@ import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
-import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -50,7 +49,7 @@ export default async function Page({
 
 	const pub = await getPub(params.pubId);
 	const alsoPubs = await getPubOnTheIndividualPubPage(params.pubId as PubsId);
-
+	alsoPubs.stages.map;
 	console.log("\n\n");
 	console.log("PUB is here prisma", pub);
 	console.log("\n\n");
@@ -60,7 +59,7 @@ export default async function Page({
 	if (!pub) {
 		return null;
 	}
-	const users = getPubUsers(pub.permissions);
+
 	const community = await getCommunityBySlug(params.communitySlug);
 
 	if (community === null) {
@@ -73,12 +72,11 @@ export default async function Page({
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
-
 	return (
 		<>
 			<div className="mb-8">
 				<h3 className="mb-2 text-xl font-bold">{alsoPubs.pubType?.name}</h3>
-				<PubTitle pub={pub} />
+				<PubTitle pub={alsoPubs} />
 			</div>
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
@@ -104,21 +102,24 @@ export default async function Page({
 						</div>
 					</div>
 					<div className="mb-4">
-						<MembersAvatars pub={pub} />
+						<MembersAvatars pub={alsoPubs as unknown as PubPayload} />
 					</div>
-					<div className="mb-4">
-						<div className="mb-1 text-lg font-bold">Integrations</div>
-						<div>
-							<IntegrationActions pub={pub} token={token} />
-						</div>
-					</div>
+					{alsoPubs.stages.length > 0 &&
+						alsoPubs.stages.find((stage) => stage.integrationInstances.length > 0) && (
+							<div className="mb-4">
+								<div className="mb-1 text-lg font-bold">Integrations</div>
+								<div>
+									<IntegrationActions pub={pub} token={token} />
+								</div>
+							</div>
+						)}
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (
 							<div>
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
-									pub={pub}
+									pub={alsoPubs as unknown as StagePub}
 									stage={stage!}
 									pageContext={{
 										params: params,
@@ -133,22 +134,6 @@ export default async function Page({
 							</div>
 						)}
 					</div>
-
-					<div className="mb-4">
-						<div className="mb-1 text-lg font-bold">Members</div>
-						<div className="flex flex-row flex-wrap">
-							{users.map((user) => {
-								return (
-									<div key={user.id}>
-										<Avatar className="mr-2 h-8 w-8">
-											<AvatarImage src={user.avatar || undefined} />
-											<AvatarFallback>{user.firstName[0]}</AvatarFallback>
-										</Avatar>
-									</div>
-								);
-							})}
-						</div>
-					</div>
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
@@ -162,7 +147,10 @@ export default async function Page({
 				parentId={pub.id as PubsId}
 			/>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper pub={pub} members={community.members} />
+				<PubChildrenTableWrapper
+					pub={alsoPubs as unknown as PubPayload}
+					members={community.members}
+				/>
 			</Suspense>
 		</>
 	);

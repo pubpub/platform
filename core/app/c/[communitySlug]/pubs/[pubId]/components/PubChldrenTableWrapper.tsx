@@ -3,6 +3,7 @@ import type { StagePub } from "~/lib/db/queries";
 import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { getStage, getStageActions } from "~/lib/db/queries";
+import { getPubTitle } from "~/lib/pubs";
 import { PubChildrenTable } from "./PubChildrenTable";
 
 async function PubChildrenTableWrapper({
@@ -24,9 +25,7 @@ async function PubChildrenTableWrapper({
 
 		return {
 			id: child.id,
-			title:
-				(child.values.find((value) => value.field.name === "Title")?.value as string) ||
-				"Evaluation",
+			title: getPubTitle(pub),
 			stage: child.stages[0]?.stageId,
 			assignee: assigneeUser ? `${assigneeUser.firstName} ${assigneeUser.lastName}` : null,
 			created: new Date(child.createdAt),

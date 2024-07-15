@@ -1,6 +1,6 @@
 import { Button } from "ui/button";
 
-import { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/types";
 
 type Props = {
 	pub: PubPayload;
@@ -18,7 +18,7 @@ const getStatus = (pub: Props["pub"], integrationId: string) => {
 
 const getInstances = (pub: Props["pub"]) => {
 	return pub.integrationInstances.concat(
-		pub.stages.flatMap(({ stage }) => stage.integrationInstances)
+		pub.stages.flatMap(({ stage }) => stage?.integrationInstances)
 	);
 };
 
@@ -40,7 +40,7 @@ const getButtons = (pub: Props["pub"], token: Props["token"]) => {
 	const buttons = instances
 		.map((instance) => {
 			const integration = instance.integration;
-			const status = getStatus(pub, integration.id);
+			const status = getStatus(pub, integration?.id);
 			const actions: IntegrationAction[] = (
 				Array.isArray(integration.actions) ? integration.actions : []
 			)
