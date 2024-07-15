@@ -29,7 +29,7 @@ export default async function Page({ params }: Props) {
 				title={
 					<>
 						<FormInput size={24} strokeWidth={1} className="mr-2 text-slate-500" />{" "}
-						Forms
+						Fields
 					</>
 				}
 				headingAction={<NewFieldButton />}
