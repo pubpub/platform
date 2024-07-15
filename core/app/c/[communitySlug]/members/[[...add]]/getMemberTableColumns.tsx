@@ -18,6 +18,7 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
+import type MemberRole from "~/kysely/types/public/MemberRole";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
@@ -26,7 +27,7 @@ export type TableMember = {
 	email: string;
 	firstName: string;
 	lastName: string | null;
-	admin: boolean;
+	role: MemberRole;
 	joined: string;
 };
 

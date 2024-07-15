@@ -7,6 +7,7 @@ import type { TableMember } from "./getMemberTableColumns";
 import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import prisma from "~/prisma/db";
 import { AddMember } from "./AddMember";
@@ -19,7 +20,7 @@ const getCachedMembers = (community: Community) =>
 			.selectFrom("members")
 			.select((eb) => [
 				"members.id as id",
-				"canAdmin",
+				"members.role",
 				"members.communityId",
 				"createdAt",
 				jsonObjectFrom(
@@ -71,12 +72,10 @@ export default async function Page({
 	}
 
 	const loginData = await getLoginData();
-	const currentCommunityMemberShip = loginData?.memberships?.find(
-		(m) => m.community.slug === communitySlug
-	);
+	const isAdmin = isCommunityAdmin(loginData, community);
 
 	// we don't want to show the members page to non-admins
-	if (!currentCommunityMemberShip?.canAdmin) {
+	if (!isAdmin) {
 		return null;
 	}
 
@@ -89,13 +88,13 @@ export default async function Page({
 	}
 
 	const tableMembers = members.map((member) => {
-		const { id, createdAt, user, canAdmin } = member;
+		const { id, createdAt, user, role } = member;
 		return {
 			id,
 			avatar: user.avatar,
 			firstName: user.firstName,
 			lastName: user.lastName,
-			admin: canAdmin,
+			role,
 			email: user.email,
 			joined: new Date(createdAt).toLocaleString(),
 		} satisfies TableMember;

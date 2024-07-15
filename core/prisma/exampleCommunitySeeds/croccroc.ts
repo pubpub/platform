@@ -7,6 +7,7 @@ import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { registerCorePubField } from "~/actions/_lib/init";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
+import MemberRole from "~/kysely/types/public/MemberRole";
 
 export const crocCrocId = "758ba348-92c7-46ec-9612-7afda81e2d70" as CommunitiesId;
 
@@ -102,7 +103,7 @@ export default async function main(communityUUID: CommunitiesId) {
 		.values({
 			userId: users[0].id,
 			communityId: communityUUID,
-			role: "admin",
+			role: MemberRole.admin,
 		})
 		.returning("id")
 		.executeTakeFirst();

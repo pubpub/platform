@@ -16,6 +16,7 @@ import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
 import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import ApiAccessType from "~/kysely/types/public/ApiAccessType";
 import Event from "~/kysely/types/public/Event";
+import MemberRole from "~/kysely/types/public/MemberRole";
 import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
 import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto";
@@ -103,7 +104,6 @@ describe("cachedFindTables", () => {
 			.values((eb) => ({
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
-				canAdmin: true,
 			}));
 
 		const tables = await compileAndFindTables(qb, "mutation");
@@ -125,7 +125,6 @@ describe("cachedFindTables", () => {
 			.values((eb) => ({
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
-				canAdmin: true,
 			}));
 
 		const tables = await compileAndFindTables(qb, "mutation");
@@ -226,7 +225,6 @@ describe("cachedFindTables", () => {
 				.innerJoin("communities", "communities.id", "members.communityId")
 				.select("users.id"),
 			communityId: eb.selectFrom("communities").select("communities.id"),
-			canAdmin: true,
 		}));
 
 		const tables = await compileAndFindTables(query, "mutation");

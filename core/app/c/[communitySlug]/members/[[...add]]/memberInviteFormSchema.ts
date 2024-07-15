@@ -1,10 +1,13 @@
 import { z } from "zod";
 
+import MemberRole from "~/kysely/types/public/MemberRole";
+
 export const memberInviteFormSchema = z.object({
 	email: z.string().email({
 		message: "Please provide a valid email address",
 	}),
-	canAdmin: z.boolean().default(false).optional(),
+	role: z.nativeEnum(MemberRole).default(MemberRole.member),
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
+	isSuperAdmin: z.boolean().optional(),
 });

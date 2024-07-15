@@ -12,6 +12,7 @@ import type { UsersId } from "~/kysely/types/public/Users";
 import type { UserAndMemberships } from "~/lib/types";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
+import MemberRole from "~/kysely/types/public/MemberRole";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
 import { crocCrocId } from "~/prisma/exampleCommunitySeeds/croccroc";
@@ -75,7 +76,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.values({
 					userId: user.id as UsersId,
 					communityId: c.id as CommunitiesId,
-					canAdmin: true,
+					role: MemberRole.admin,
 				})
 				.returning("id")
 				.executeTakeFirst();

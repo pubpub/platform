@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
+import MemberRole from "~/kysely/types/public/MemberRole";
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { getUserInfoFromJWT } from "~/lib/auth/loginId";
 import prisma from "~/prisma/db";
@@ -60,7 +61,7 @@ export const getLoginData = cache(async () => {
 		const firstName = supabaseUser.user_metadata.firstName ?? "";
 		const lastName = supabaseUser.user_metadata.lastName ?? null;
 		const communityId = supabaseUser.user_metadata.communityId ?? unJournalId;
-		const canAdmin = supabaseUser.user_metadata.canAdmin ?? false;
+		const role = supabaseUser.user_metadata.role ?? MemberRole.member;
 
 		user = await prisma.user.create({
 			data: {
@@ -74,7 +75,7 @@ export const getLoginData = cache(async () => {
 				memberships: {
 					create: {
 						communityId,
-						canAdmin,
+						role,
 					},
 				},
 			},
@@ -89,3 +90,5 @@ export const getLoginData = cache(async () => {
 	}
 	return user;
 });
+
+export type LoginData = Awaited<ReturnType<typeof getLoginData>>;

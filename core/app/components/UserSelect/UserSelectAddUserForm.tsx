@@ -11,6 +11,7 @@ import { toast } from "ui/use-toast";
 
 import { createUserWithMembership } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
 import { Communities } from "~/kysely/types/public/Communities";
+import MemberRole from "~/kysely/types/public/MemberRole";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 type Props = {
@@ -51,7 +52,7 @@ export const UserSelectAddUserForm = ({ email, community }: Props) => {
 						firstName,
 						lastName,
 						community,
-						canAdmin: false,
+						role: MemberRole.member,
 					});
 
 					if (didSucceed(result)) {

@@ -1,4 +1,4 @@
-import { Community } from "@prisma/client";
+import type { Community } from "@prisma/client";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { getSuggestedMembers } from "~/lib/server";
@@ -105,5 +105,12 @@ export const AddMember = async ({ email, community }: { email?: string; communit
 		currentEmail: loginData?.email,
 	});
 
-	return <MemberInviteForm state={state} community={community} email={email} />;
+	return (
+		<MemberInviteForm
+			state={state}
+			community={community}
+			email={email}
+			isSuperAdmin={loginData?.isSuperAdmin}
+		/>
+	);
 };
