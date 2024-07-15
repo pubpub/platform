@@ -89,10 +89,25 @@ export const getMemberTableColumns = ({ community }: { community: Community }) =
 			accessorKey: "email",
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Admin" />,
-			accessorKey: "admin",
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+			accessorKey: "role",
 			cell: ({ getValue }) => {
-				return getValue() ? <Badge>admin</Badge> : "-";
+				const role = getValue() as MemberRole;
+				return role ? (
+					<Badge
+						variant={
+							role === "admin"
+								? "default"
+								: role === "editor"
+									? "secondary"
+									: "outline"
+						}
+					>
+						{role}
+					</Badge>
+				) : (
+					"-"
+				);
 			},
 		},
 		{

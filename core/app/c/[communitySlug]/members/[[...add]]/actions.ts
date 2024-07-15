@@ -17,6 +17,7 @@ import { formatSupabaseError } from "~/lib/supabase";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import prisma from "~/prisma/db";
 import { TableMember } from "./getMemberTableColumns";
+import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const revalidateMemberPathsAndTags = defineServerAction(
 	async function revalidateMemberPathsAndTags(community: Community) {
@@ -247,12 +248,8 @@ export const addMember = defineServerAction(async function addMember({
  * supabase
  */
 export const createUserWithMembership = defineServerAction(async function createUserWithMembership({
-	firstName,
-	lastName,
-	email,
 	community,
-	role,
-	isSuperAdmin,
+	...data
 }: {
 	firstName: string;
 	lastName?: string | null;
@@ -261,6 +258,19 @@ export const createUserWithMembership = defineServerAction(async function create
 	role?: MemberRole;
 	isSuperAdmin?: boolean;
 }) {
+	const parsed = memberInviteFormSchema
+		.required({ firstName: true, lastName: true })
+		.safeParse(data);
+
+	if (!parsed.success) {
+		return {
+			title: "Form values are invalid",
+			error: parsed.error.message,
+		};
+	}
+
+	const { firstName, lastName, email, role, isSuperAdmin } = parsed.data;
+
 	try {
 		const { error: adminError, loginData } = await isCommunityAdmin(community);
 		if (!loginData?.isSuperAdmin && isSuperAdmin) {
@@ -285,7 +295,7 @@ export const createUserWithMembership = defineServerAction(async function create
 				slug: `${slugifyString(firstName)}${
 					lastName ? `-${slugifyString(lastName)}` : ""
 				}-${generateHash(4, "0123456789")}`,
-				isSuperAdmin,
+				isSuperAdmin: isSuperAdmin === true,
 				memberships: {
 					create: {
 						communityId: community.id,
@@ -301,7 +311,7 @@ export const createUserWithMembership = defineServerAction(async function create
 			lastName,
 			community,
 			role,
-			isSuperAdmin,
+			isSuperAdmin: isSuperAdmin === true,
 		});
 
 		if (supabaseError !== null) {

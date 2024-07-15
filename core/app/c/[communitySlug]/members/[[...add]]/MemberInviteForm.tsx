@@ -53,6 +53,8 @@ export const MemberInviteForm = ({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
 			email: email,
+			role: MemberRole.editor,
+			isSuperAdmin: false,
 		},
 	});
 
@@ -227,14 +229,12 @@ export const MemberInviteForm = ({
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Role</FormLabel>
-								<Select {...field}>
-									<SelectTrigger>
-										<SelectValue
-											placeholder="Select a role"
-											defaultValue={MemberRole.editor}
-										/>
-									</SelectTrigger>
-
+								<Select onValueChange={field.onChange} defaultValue={field.value}>
+									<FormControl>
+										<SelectTrigger>
+											<SelectValue placeholder="Select a role" />
+										</SelectTrigger>
+									</FormControl>
 									<SelectContent>
 										<SelectItem value={MemberRole.admin}>Admin</SelectItem>
 										<SelectItem value={MemberRole.editor}>Editor</SelectItem>
