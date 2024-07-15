@@ -46,6 +46,7 @@ export {
 	Terminal,
 	ToyBrick,
 	Trash,
+	Type,
 	Undo2,
 	User,
 	UserCircle2,

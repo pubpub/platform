@@ -16,7 +16,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "ui/form";
-import { BoxSelect, CalendarClock, CheckSquare, ImagePlus, Link, Mail, User } from "ui/icon";
+import { BoxSelect, CalendarClock, CheckSquare, ImagePlus, Link, Mail, Type, User } from "ui/icon";
 import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
@@ -39,7 +39,7 @@ const SCHEMA_TYPES: Record<CoreSchemaType, { description: string; icon: ReactNod
 	},
 	[CoreSchemaType.String]: {
 		description: "Text of any length",
-		icon: <CheckSquare className="w-4" />,
+		icon: <Type className="w-4" />,
 	},
 	[CoreSchemaType.DateTime]: {
 		description: "A moment in time",
