@@ -5,14 +5,13 @@ import type { Row } from "@tanstack/react-table";
 import React, { useMemo } from "react";
 
 import type { TableData } from "./getFieldTableColumns";
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubField } from "~/lib/types";
 import { DataTable } from "~/app/components/DataTable/v2/DataTable";
 import { getFieldTableColumns } from "./getFieldTableColumns";
 
-export const FieldsTable = ({ fields }: { fields: Record<PubFieldsId, PubField> }) => {
+export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 	const data = useMemo(() => {
-		return Object.entries(fields).map(([, d]) => {
+		return fields.map((d) => {
 			return {
 				id: d.id,
 				name: d.name,

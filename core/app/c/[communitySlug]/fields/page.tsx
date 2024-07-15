@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
+import partition from "lodash.partition";
 
 import { FormInput } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 import { cn } from "utils";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
+import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getPubFields } from "~/lib/server/pubFields";
 import { FieldsTable } from "./FieldsTable";
@@ -38,7 +40,10 @@ export default async function Page({ params }: Props) {
 		return null;
 	}
 
-	const hasFields = !!Object.keys(pubFields.fields).length;
+	const fields = Object.values(pubFields.fields);
+
+	const hasFields = !!Object.keys(fields).length;
+	const [active, archived] = partition(fields, (field) => !field.isArchived);
 
 	return (
 		<PubFieldProvider pubFields={pubFields.fields}>
@@ -52,8 +57,17 @@ export default async function Page({ params }: Props) {
 				headingAction={<NewFieldButton />}
 			>
 				<div className="m-4">
-					<FieldsTable fields={pubFields.fields} />
-					{!hasFields ? <EmptyState className="mt-12" /> : null}
+					{archived.length ? (
+						<ActiveArchiveTabs
+							activeContent={<FieldsTable fields={active} />}
+							archiveContent={<FieldsTable fields={archived} />}
+						/>
+					) : (
+						<>
+							<FieldsTable fields={active} />
+							{!hasFields ? <EmptyState className="mt-12" /> : null}{" "}
+						</>
+					)}
 				</div>
 			</ContentLayout>
 		</PubFieldProvider>
