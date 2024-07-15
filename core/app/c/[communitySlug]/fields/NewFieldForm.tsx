@@ -116,13 +116,13 @@ export const NewFieldForm = ({
 		const result = await createField(values.name, values.slug, values.schemaName);
 		if (didSucceed(result)) {
 			toast({ title: `Created field ${values.name}` });
+			onSubmitSuccess();
 		}
 	}, []);
 
 	const handleSubmit = async (values: FormValues) => {
 		const slug = `${community?.slug}:${slugifyString(values.name)}`;
 		handleCreate({ ...values, slug });
-		onSubmitSuccess();
 	};
 
 	const form = useForm({ resolver: zodResolver(schema) });
