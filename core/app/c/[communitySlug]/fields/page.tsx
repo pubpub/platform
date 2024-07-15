@@ -17,11 +17,13 @@ export default async function Page({ params }: Props) {
 		return notFound();
 	}
 
-	const { fields } = await getPubFields().executeTakeFirst();
+	const fieldsData = await getPubFields().executeTakeFirst();
 
-	if (!fields) {
+	if (!fieldsData) {
 		return null;
 	}
+
+	const { fields } = fieldsData;
 
 	return (
 		<PubFieldProvider pubFields={fields}>
