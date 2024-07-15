@@ -7,10 +7,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 import type { Database } from "db/Database";
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { PubTypesId } from "db/public/PubTypes";
-import type { UsersId } from "db/public/Users";
+import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";

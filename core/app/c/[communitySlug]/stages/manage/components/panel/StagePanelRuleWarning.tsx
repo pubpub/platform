@@ -1,5 +1,4 @@
-import type { RulesId } from "db/public/Rules";
-import type { StagesId } from "db/public/Stages";
+import type { RulesId, StagesId } from "db/public";
 
 export async function StagePanelRuleWarning({
 	ruleId,

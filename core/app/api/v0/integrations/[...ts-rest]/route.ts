@@ -1,6 +1,6 @@
 import { createNextHandler } from "@ts-rest/serverless/next";
 
-import type { PubsId } from "db/public/Pubs";
+import type { PubsId } from "db/public";
 import { api } from "contracts";
 import { logger } from "logger";
 

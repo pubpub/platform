@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { PubFieldsId } from "db/public/PubFields";
+import type { PubFieldsId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Command,

@@ -4,15 +4,13 @@
 import { z } from "zod";
 
 /** Represents the enum public.ApiAccessScope */
-enum ApiAccessScope {
+export enum ApiAccessScope {
 	community = "community",
 	pub = "pub",
 	stage = "stage",
 	member = "member",
 	pubType = "pubType",
 }
-
-export default ApiAccessScope;
 
 /** Zod schema for ApiAccessScope */
 export const apiAccessScopeSchema = z.nativeEnum(ApiAccessScope);

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import type { FormsId } from "db/public/Forms";
+import type { FormsId } from "db/public";
 import { Button } from "ui/button";
 import { Archive } from "ui/icon";
 import { cn } from "utils";

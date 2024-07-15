@@ -11,7 +11,7 @@ import { communitiesIdSchema } from "./Communities";
 export type StagesId = string & { __brand: "StagesId" };
 
 /** Represents the table public.stages */
-export default interface StagesTable {
+export interface StagesTable {
 	id: ColumnType<StagesId, StagesId | undefined, StagesId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

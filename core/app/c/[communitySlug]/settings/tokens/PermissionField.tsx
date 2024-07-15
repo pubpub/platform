@@ -1,8 +1,8 @@
 "use client";
 
-import type ApiAccessScope from "db/public/ApiAccessScope";
+import type { ApiAccessScope } from "db/public";
 import type { ApiAccessPermissionConstraintsInput, CreateTokenFormContext } from "db/types";
-import ApiAccessType from "db/public/ApiAccessType";
+import { ApiAccessType } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";

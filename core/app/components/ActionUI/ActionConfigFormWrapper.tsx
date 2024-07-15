@@ -1,6 +1,4 @@
-import type { ActionInstances } from "db/public/ActionInstances";
-import type { CommunitiesId } from "db/public/Communities";
-import type { StagesId } from "db/public/Stages";
+import type { ActionInstances, CommunitiesId, StagesId } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 import { TokenProvider } from "ui/tokens";
 

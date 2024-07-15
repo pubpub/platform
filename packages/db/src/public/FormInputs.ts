@@ -13,7 +13,7 @@ import { pubFieldsIdSchema } from "./PubFields";
 export type FormInputsId = string & { __brand: "FormInputsId" };
 
 /** Represents the table public.form_inputs */
-export default interface FormInputsTable {
+export interface FormInputsTable {
 	id: ColumnType<FormInputsId, FormInputsId | undefined, FormInputsId>;
 
 	fieldId: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;

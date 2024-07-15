@@ -1,9 +1,9 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 import { z } from "zod";
 
-import type { default as ApiAccessScope } from "./ApiAccessScope";
+import type { ApiAccessScope } from "./ApiAccessScope";
 import type { ApiAccessTokensId } from "./ApiAccessTokens";
-import type { default as ApiAccessType } from "./ApiAccessType";
+import type { ApiAccessType } from "./ApiAccessType";
 import { type ApiAccessPermissionConstraints } from "../types";
 import { apiAccessScopeSchema } from "./ApiAccessScope";
 import { apiAccessTokensIdSchema } from "./ApiAccessTokens";
@@ -16,7 +16,7 @@ import { apiAccessTypeSchema } from "./ApiAccessType";
 export type ApiAccessPermissionsId = string & { __brand: "ApiAccessPermissionsId" };
 
 /** Represents the table public.api_access_permissions */
-export default interface ApiAccessPermissionsTable {
+export interface ApiAccessPermissionsTable {
 	id: ColumnType<
 		ApiAccessPermissionsId,
 		ApiAccessPermissionsId | undefined,

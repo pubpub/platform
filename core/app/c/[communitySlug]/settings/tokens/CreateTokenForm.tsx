@@ -6,8 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import type { CreateTokenFormContext } from "db/types";
-import ApiAccessScope from "db/public/ApiAccessScope";
-import { apiAccessTokensInitializerSchema } from "db/public/ApiAccessTokens";
+import { ApiAccessScope, apiAccessTokensInitializerSchema } from "db/public";
 import { permissionsSchema } from "db/types";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
@@ -60,7 +59,7 @@ export const createTokenFormSchema = apiAccessTokensInitializerSchema
 export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
 export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
 
-// import { apiAccessTokensInitializerSchema } from "db/public/ApiAccessTokens";
+// import { apiAccessTokensInitializerSchema } from "db/public";
 
 export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
 	const form = useForm<CreateTokenFormSchema>({

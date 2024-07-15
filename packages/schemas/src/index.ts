@@ -1,4 +1,4 @@
-import CoreSchemaType from "db/public/CoreSchemaType";
+import { CoreSchemaType } from "db/public";
 
 import { Boolean, DateTime, Email, FileUpload, String, URL, UserId, Vector3 } from "./schemas";
 

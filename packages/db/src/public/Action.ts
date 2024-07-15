@@ -4,7 +4,7 @@
 import { z } from "zod";
 
 /** Represents the enum public.Action */
-enum Action {
+export enum Action {
 	log = "log",
 	pdf = "pdf",
 	email = "email",
@@ -12,8 +12,6 @@ enum Action {
 	http = "http",
 	move = "move",
 }
-
-export default Action;
 
 /** Zod schema for Action */
 export const actionSchema = z.nativeEnum(Action);

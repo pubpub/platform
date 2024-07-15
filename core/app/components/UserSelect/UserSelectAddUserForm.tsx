@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Communities } from "db/public/Communities";
+import { Communities } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";

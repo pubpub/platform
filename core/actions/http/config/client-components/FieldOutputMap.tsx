@@ -2,8 +2,7 @@
 
 import { useFieldArray } from "react-hook-form";
 
-import type { PubFieldsId } from "db/public/PubFields";
-import type { PubFieldSchemaId } from "db/public/PubFieldSchema";
+import type { PubFieldSchemaId, PubFieldsId } from "db/public";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
 import { Button } from "ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";

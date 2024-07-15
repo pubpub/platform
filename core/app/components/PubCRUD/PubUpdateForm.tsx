@@ -8,9 +8,7 @@ import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
 import type { GetPubResponseBody } from "contracts";
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { Stages, StagesId } from "db/public/Stages";
+import type { CommunitiesId, PubsId, Stages, StagesId } from "db/public";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {

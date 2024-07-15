@@ -5,11 +5,8 @@ import type { Action as PrismaAction } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 
-import type Action from "db/public/Action";
-import type { CommunitiesId } from "db/public/Communities";
-import type { RulesId } from "db/public/Rules";
-import { type ActionInstancesId } from "db/public/ActionInstances";
-import Event from "db/public/Event";
+import type { Action, ActionInstancesId, CommunitiesId, RulesId } from "db/public";
+import { Event } from "db/public";
 import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";

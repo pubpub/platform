@@ -15,7 +15,7 @@ import { usersIdSchema } from "./Users";
 export type ActionMoveId = string & { __brand: "ActionMoveId" };
 
 /** Represents the table public.action_move */
-export default interface ActionMoveTable {
+export interface ActionMoveTable {
 	id: ColumnType<ActionMoveId, ActionMoveId | undefined, ActionMoveId>;
 
 	sourceStageId: ColumnType<StagesId, StagesId, StagesId>;

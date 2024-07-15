@@ -5,9 +5,9 @@ import type { Prettify } from "@ts-rest/core";
 import { z } from "zod";
 
 import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "../public/ApiAccessPermissions";
-import type ApiAccessType from "../public/ApiAccessType";
+import type { ApiAccessType } from "../public/ApiAccessType";
 import type { Stages } from "../public/Stages";
-import ApiAccessScope from "../public/ApiAccessScope";
+import { ApiAccessScope } from "../public/ApiAccessScope";
 import { stagesIdSchema } from "../public/Stages";
 
 /**

@@ -15,7 +15,7 @@ import { usersIdSchema } from "./Users";
 export type ActionClaimId = string & { __brand: "ActionClaimId" };
 
 /** Represents the table public.action_claim */
-export default interface ActionClaimTable {
+export interface ActionClaimTable {
 	id: ColumnType<ActionClaimId, ActionClaimId | undefined, ActionClaimId>;
 
 	stageId: ColumnType<StagesId, StagesId, StagesId>;

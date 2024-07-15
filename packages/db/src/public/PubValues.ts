@@ -13,7 +13,7 @@ import { pubsIdSchema } from "./Pubs";
 export type PubValuesId = string & { __brand: "PubValuesId" };
 
 /** Represents the table public.pub_values */
-export default interface PubValuesTable {
+export interface PubValuesTable {
 	id: ColumnType<PubValuesId, PubValuesId | undefined, PubValuesId>;
 
 	fieldId: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;

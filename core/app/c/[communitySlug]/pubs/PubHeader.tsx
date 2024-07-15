@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { CommunitiesId } from "db/public/Communities";
+import type { CommunitiesId } from "db/public";
 import { Button } from "ui/button";
 
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";

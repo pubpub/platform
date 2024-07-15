@@ -1,8 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { UsersId } from "db/public/Users";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { createCacheTag } from "./cache/cacheTags";

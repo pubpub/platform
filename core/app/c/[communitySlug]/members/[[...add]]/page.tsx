@@ -3,7 +3,7 @@ import type { Community } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "db/public/Communities";
+import type { CommunitiesId } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { db } from "~/kysely/database";

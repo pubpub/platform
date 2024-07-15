@@ -8,7 +8,7 @@ import { z } from "zod";
 export type CommunitiesId = string & { __brand: "CommunitiesId" };
 
 /** Represents the table public.communities */
-export default interface CommunitiesTable {
+export interface CommunitiesTable {
 	id: ColumnType<CommunitiesId, CommunitiesId | undefined, CommunitiesId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

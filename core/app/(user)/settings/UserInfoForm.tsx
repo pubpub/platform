@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { Users } from "db/public/Users";
+import type { Users } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";

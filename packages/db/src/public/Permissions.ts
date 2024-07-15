@@ -13,7 +13,7 @@ import { membersIdSchema } from "./Members";
 export type PermissionsId = string & { __brand: "PermissionsId" };
 
 /** Represents the table public.permissions */
-export default interface PermissionsTable {
+export interface PermissionsTable {
 	id: ColumnType<PermissionsId, PermissionsId | undefined, PermissionsId>;
 
 	memberId: ColumnType<MembersId | null, MembersId | null, MembersId | null>;

@@ -6,15 +6,13 @@ import * as React from "react";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { useFormContext } from "react-hook-form";
 
-import type { PubFields } from "db/public/PubFields";
-
+import type { PubField } from "../PubFieldContext";
 import type { AllowedSchemasOrZodItem } from "./determinePubFields";
 import { usePubFieldContext } from "..";
 import { Button } from "../../button";
 import { Info, Minus, Plus } from "../../icon";
 import { MultiSelect } from "../../multi-select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
-import { PubField } from "../PubFieldContext";
 import { determineAllowedPubFields } from "./determinePubFields";
 
 const PubFieldSelectContext = React.createContext<{

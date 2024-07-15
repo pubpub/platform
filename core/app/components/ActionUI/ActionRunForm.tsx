@@ -2,8 +2,7 @@
 
 import { Suspense, useCallback, useTransition } from "react";
 
-import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
-import type { PubsId } from "db/public/Pubs";
+import type { ActionInstances, ActionInstancesId, PubsId } from "db/public";
 import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";

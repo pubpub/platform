@@ -1,9 +1,7 @@
 import { sql } from "kysely";
 import { jsonBuildObject } from "kysely/helpers/postgres";
 
-import type { PubFieldsId } from "db/public/PubFields";
-import type { PubsId } from "db/public/Pubs";
-import type { PubTypesId } from "db/public/PubTypes";
+import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
 
 import type { PubField } from "../types";
 import { db } from "~/kysely/database";

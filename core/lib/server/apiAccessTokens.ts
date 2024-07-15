@@ -2,9 +2,12 @@ import crypto from "crypto";
 
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { NewApiAccessPermissions } from "db/public/ApiAccessPermissions";
-import type { ApiAccessTokensId, NewApiAccessTokens } from "db/public/ApiAccessTokens";
-import type { CommunitiesId } from "db/public/Communities";
+import type {
+	ApiAccessTokensId,
+	CommunitiesId,
+	NewApiAccessPermissions,
+	NewApiAccessTokens,
+} from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";

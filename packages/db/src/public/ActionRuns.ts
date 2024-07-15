@@ -2,8 +2,8 @@ import { type ColumnType, type Insertable, type Selectable, type Updateable } fr
 import { z } from "zod";
 
 import type { ActionInstancesId } from "./ActionInstances";
-import type { default as ActionRunStatus } from "./ActionRunStatus";
-import type { default as Event } from "./Event";
+import type { ActionRunStatus } from "./ActionRunStatus";
+import type { Event } from "./Event";
 import type { PubsId } from "./Pubs";
 import type { UsersId } from "./Users";
 import { actionInstancesIdSchema } from "./ActionInstances";
@@ -19,7 +19,7 @@ import { usersIdSchema } from "./Users";
 export type ActionRunsId = string & { __brand: "ActionRunsId" };
 
 /** Represents the table public.action_runs */
-export default interface ActionRunsTable {
+export interface ActionRunsTable {
 	id: ColumnType<ActionRunsId, ActionRunsId | undefined, ActionRunsId>;
 
 	actionInstanceId: ColumnType<

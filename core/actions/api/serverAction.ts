@@ -1,6 +1,6 @@
 "use server";
 
-import type { UsersId } from "db/public/Users";
+import type { UsersId } from "db/public";
 
 import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
 import { getLoginData } from "~/lib/auth/loginData";

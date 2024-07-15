@@ -5,8 +5,7 @@ import dynamic from "next/dynamic";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
-import type { CommunitiesId } from "db/public/Communities";
-import type { StagesId } from "db/public/Stages";
+import type { CommunitiesId, StagesId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";

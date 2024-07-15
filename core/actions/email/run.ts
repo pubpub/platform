@@ -7,7 +7,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
-import type { UsersId } from "db/public/Users";
+import type { UsersId } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 

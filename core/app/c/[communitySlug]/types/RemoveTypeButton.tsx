@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import type { PubTypesId } from "db/public/PubTypes";
+import type { PubTypesId } from "db/public";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";

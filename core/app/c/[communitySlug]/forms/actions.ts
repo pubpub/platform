@@ -1,8 +1,6 @@
 "use server";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { FormsId } from "db/public/Forms";
-import type { PubTypesId } from "db/public/PubTypes";
+import type { CommunitiesId, FormsId, PubTypesId } from "db/public";
 import { logger } from "logger";
 
 import { db, isUniqueConstraintError } from "~/kysely/database";

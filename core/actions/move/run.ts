@@ -1,7 +1,6 @@
 "use server";
 
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
+import type { PubsId, StagesId } from "db/public";
 import { logger } from "logger";
 
 import type { action } from "./action";

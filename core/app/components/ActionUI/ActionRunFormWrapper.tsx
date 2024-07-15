@@ -1,7 +1,4 @@
-import type { ActionInstances } from "db/public/ActionInstances";
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { Stages } from "db/public/Stages";
+import type { ActionInstances, CommunitiesId, PubsId, Stages } from "db/public";
 
 import type { PageContext } from "./PubsRunActionDropDownMenu";
 import type { Action, ActionInstanceOf } from "~/actions/types";

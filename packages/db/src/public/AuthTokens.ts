@@ -11,7 +11,7 @@ import { usersIdSchema } from "./Users";
 export type AuthTokensId = string & { __brand: "AuthTokensId" };
 
 /** Represents the table public.auth_tokens */
-export default interface AuthTokensTable {
+export interface AuthTokensTable {
 	id: ColumnType<AuthTokensId, AuthTokensId, AuthTokensId>;
 
 	hash: ColumnType<string, string, string>;

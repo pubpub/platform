@@ -15,7 +15,7 @@ import { usersIdSchema } from "./Users";
 export type PubsId = string & { __brand: "PubsId" };
 
 /** Represents the table public.pubs */
-export default interface PubsTable {
+export interface PubsTable {
 	id: ColumnType<PubsId, PubsId | undefined, PubsId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

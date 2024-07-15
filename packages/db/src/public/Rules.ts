@@ -2,7 +2,7 @@ import { type ColumnType, type Insertable, type Selectable, type Updateable } fr
 import { z } from "zod";
 
 import type { ActionInstancesId } from "./ActionInstances";
-import type { default as Event } from "./Event";
+import type { Event } from "./Event";
 import { actionInstancesIdSchema } from "./ActionInstances";
 import { eventSchema } from "./Event";
 
@@ -13,7 +13,7 @@ import { eventSchema } from "./Event";
 export type RulesId = string & { __brand: "RulesId" };
 
 /** Represents the table public.rules */
-export default interface RulesTable {
+export interface RulesTable {
 	id: ColumnType<RulesId, RulesId | undefined, RulesId>;
 
 	event: ColumnType<Event, Event, Event>;

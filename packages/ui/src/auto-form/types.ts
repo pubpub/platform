@@ -1,7 +1,7 @@
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 import type * as z from "zod";
 
-import type CoreSchemaType from "db/public/CoreSchemaType";
+import type { CoreSchemaType } from "db/public";
 
 import type { INPUT_COMPONENTS } from "./config";
 

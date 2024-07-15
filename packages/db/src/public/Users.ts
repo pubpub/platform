@@ -8,7 +8,7 @@ import { z } from "zod";
 export type UsersId = string & { __brand: "UsersId" };
 
 /** Represents the table public.users */
-export default interface UsersTable {
+export interface UsersTable {
 	id: ColumnType<UsersId, UsersId | undefined, UsersId>;
 
 	slug: ColumnType<string, string, string>;

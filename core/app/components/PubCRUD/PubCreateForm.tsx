@@ -7,11 +7,7 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubFields } from "db/public/PubFields";
-import type { PubFieldSchema } from "db/public/PubFieldSchema";
-import type { PubTypes } from "db/public/PubTypes";
-import type { Stages } from "db/public/Stages";
+import type { CommunitiesId, PubFields, PubFieldSchema, PubTypes, Stages } from "db/public";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {

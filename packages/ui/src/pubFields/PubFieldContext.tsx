@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext } from "react";
 
-import type { PubFields, PubFieldsId } from "db/public/PubFields";
+import type { PubFields, PubFieldsId } from "db/public";
 
 export type PubField = Pick<PubFields, "id" | "name" | "slug" | "schemaName" | "pubFieldSchemaId">;
 export type PubFieldContext = Record<PubFieldsId, PubField>;

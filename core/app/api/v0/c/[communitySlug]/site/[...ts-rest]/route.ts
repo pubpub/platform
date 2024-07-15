@@ -2,14 +2,10 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { z } from "zod";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { PubTypesId } from "db/public/PubTypes";
-import type { StagesId } from "db/public/Stages";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
 import { api } from "contracts";
-import ApiAccessScope from "db/public/ApiAccessScope";
-import ApiAccessType from "db/public/ApiAccessType";
+import { ApiAccessScope, ApiAccessType } from "db/public";
 
 import { db } from "~/kysely/database";
 import { getStage } from "~/lib/db/queries";

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { PubFieldsId } from "db/public/PubFields";
+import type { PubFieldsId } from "db/public";
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2, X } from "ui/icon";

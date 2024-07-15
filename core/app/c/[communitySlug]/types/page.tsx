@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import type { PubFieldsId } from "db/public/PubFields";
+import type { PubFieldsId } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 
 import { getLoginData } from "~/lib/auth/loginData";

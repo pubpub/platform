@@ -5,10 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type Action from "db/public/Action";
-import type { ActionInstances, ActionInstancesId } from "db/public/ActionInstances";
-import type { CommunitiesId } from "db/public/Communities";
-import Event from "db/public/Event";
+import type { Action, ActionInstances, ActionInstancesId, CommunitiesId } from "db/public";
+import { Event } from "db/public";
 import { Button } from "ui/button";
 import {
 	Dialog,

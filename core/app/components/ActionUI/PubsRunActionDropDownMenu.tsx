@@ -1,5 +1,4 @@
-import type { ActionInstances } from "db/public/ActionInstances";
-import type { Stages } from "db/public/Stages";
+import type { ActionInstances, Stages } from "db/public";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";

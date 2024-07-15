@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { PubTypesId } from "db/public/PubTypes";
+import type { PubTypesId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Dialog,

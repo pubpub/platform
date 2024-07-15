@@ -3,9 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubTypesId } from "db/public/PubTypes";
-import type { StagesId } from "db/public/Stages";
+import type { CommunitiesId, PubTypesId, StagesId } from "db/public";
 
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";

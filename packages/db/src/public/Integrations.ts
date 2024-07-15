@@ -8,7 +8,7 @@ import { z } from "zod";
 export type IntegrationsId = string & { __brand: "IntegrationsId" };
 
 /** Represents the table public.integrations */
-export default interface IntegrationsTable {
+export interface IntegrationsTable {
 	id: ColumnType<IntegrationsId, IntegrationsId | undefined, IntegrationsId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

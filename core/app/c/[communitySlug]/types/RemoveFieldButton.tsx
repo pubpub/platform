@@ -2,8 +2,7 @@
 
 import { useCallback } from "react";
 
-import type { PubFieldsId } from "db/public/PubFields";
-import type { PubTypesId } from "db/public/PubTypes";
+import type { PubFieldsId, PubTypesId } from "db/public";
 import { Button } from "ui/button";
 import { X } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";

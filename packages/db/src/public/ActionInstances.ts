@@ -1,7 +1,7 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 import { z } from "zod";
 
-import type { default as Action } from "./Action";
+import type { Action } from "./Action";
 import type { StagesId } from "./Stages";
 import { actionSchema } from "./Action";
 import { stagesIdSchema } from "./Stages";
@@ -13,7 +13,7 @@ import { stagesIdSchema } from "./Stages";
 export type ActionInstancesId = string & { __brand: "ActionInstancesId" };
 
 /** Represents the table public.action_instances */
-export default interface ActionInstancesTable {
+export interface ActionInstancesTable {
 	id: ColumnType<ActionInstancesId, ActionInstancesId | undefined, ActionInstancesId>;
 
 	stageId: ColumnType<StagesId, StagesId, StagesId>;

@@ -1,10 +1,12 @@
 "use server";
 
-import type { NewApiAccessPermissions } from "db/public/ApiAccessPermissions";
-import type ApiAccessScope from "db/public/ApiAccessScope";
-import type { ApiAccessTokensId } from "db/public/ApiAccessTokens";
-import type ApiAccessType from "db/public/ApiAccessType";
-import type { UsersId } from "db/public/Users";
+import type {
+	ApiAccessScope,
+	ApiAccessTokensId,
+	ApiAccessType,
+	NewApiAccessPermissions,
+	UsersId,
+} from "db/public";
 
 import type { CreateTokenFormSchema } from "./CreateTokenForm";
 import { getLoginData } from "~/lib/auth/loginData";

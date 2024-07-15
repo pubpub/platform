@@ -4,7 +4,7 @@ import type { z } from "zod";
 
 import { revalidatePath } from "next/cache";
 
-import type { UsersId } from "db/public/Users";
+import type { UsersId } from "db/public";
 
 import type { userInfoFormSchema } from "./UserInfoForm";
 import { db } from "~/kysely/database";

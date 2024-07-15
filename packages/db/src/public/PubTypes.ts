@@ -11,7 +11,7 @@ import { communitiesIdSchema } from "./Communities";
 export type PubTypesId = string & { __brand: "PubTypesId" };
 
 /** Represents the table public.pub_types */
-export default interface PubTypesTable {
+export interface PubTypesTable {
 	id: ColumnType<PubTypesId, PubTypesId | undefined, PubTypesId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

@@ -3,9 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubTypesId } from "db/public/PubTypes";
-import type { UsersId } from "db/public/Users";
+import type { CommunitiesId, PubTypesId, UsersId } from "db/public";
 import { expect } from "utils";
 
 import type { TableCommunity } from "./getCommunityTableColumns";

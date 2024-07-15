@@ -15,7 +15,7 @@ import { stagesIdSchema } from "./Stages";
 export type IntegrationInstancesId = string & { __brand: "IntegrationInstancesId" };
 
 /** Represents the table public.integration_instances */
-export default interface IntegrationInstancesTable {
+export interface IntegrationInstancesTable {
 	id: ColumnType<
 		IntegrationInstancesId,
 		IntegrationInstancesId | undefined,

@@ -1,9 +1,6 @@
 import { createNextHandler } from "@ts-rest/serverless/next";
 
-import type { ActionInstancesId } from "db/public/ActionInstances";
-import type Event from "db/public/Event";
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
+import type { ActionInstancesId, Event, PubsId, StagesId } from "db/public";
 import { api } from "contracts";
 
 import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";

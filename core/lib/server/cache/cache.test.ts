@@ -5,15 +5,8 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { expect, it, vitest } from "vitest";
 
 import type { Database } from "db/Database";
-import type { ActionInstancesId } from "db/public/ActionInstances";
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { PubTypesId } from "db/public/PubTypes";
-import type { UsersId } from "db/public/Users";
-import ActionRunStatus from "db/public/ActionRunStatus";
-import ApiAccessScope from "db/public/ApiAccessScope";
-import ApiAccessType from "db/public/ApiAccessType";
-import Event from "db/public/Event";
+import type { ActionInstancesId, CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
+import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event } from "db/public";
 
 import type { QB } from "./types";
 import type { Equal, Expect } from "~/lib/types";

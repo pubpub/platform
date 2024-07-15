@@ -2,7 +2,7 @@
 
 import type * as z from "zod";
 
-import type Event from "db/public/Event";
+import type { Event } from "db/public";
 
 import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
 import * as email from "../email/action";

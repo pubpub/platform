@@ -13,7 +13,7 @@ import { usersIdSchema } from "./Users";
 export type ApiAccessTokensId = string & { __brand: "ApiAccessTokensId" };
 
 /** Represents the table public.api_access_tokens */
-export default interface ApiAccessTokensTable {
+export interface ApiAccessTokensTable {
 	id: ColumnType<ApiAccessTokensId, ApiAccessTokensId | undefined, ApiAccessTokensId>;
 
 	token: ColumnType<string, string, string>;

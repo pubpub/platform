@@ -1,40 +1,43 @@
 // @ts-check
 
 /**
+ *
+ * @template {import("kanel").Declaration | import("kanel").InterfacePropertyDeclaration} T
+ * @param {T} declaration
+ * @returns {T}
+ */
+const makeNamedTypeImports = (declaration) => {
+	const declarationWithNonDefaultImports = {
+		...declaration,
+		...("exportAs" in declaration ? { exportAs: "named" } : {}),
+		typeImports: declaration?.typeImports?.map((typeImport) => ({
+			...typeImport,
+			isDefault: false,
+		})),
+	};
+
+	if ("properties" in declaration) {
+		return {
+			...declarationWithNonDefaultImports,
+			properties: declaration.properties.map(makeNamedTypeImports),
+		};
+	}
+
+	return declarationWithNonDefaultImports;
+};
+
+/**
  * @type {import("kanel").PreRenderHook}
  *
  */
 function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, instantiatedConfig) {
 	return Object.fromEntries(
 		Object.entries(outputAcc).map(([name, output]) => {
-			if (name !== "src/Database") {
-				return [name, output];
-			}
 			output.declarations = output.declarations.flatMap((declaration) => {
-				if (
-					declaration.declarationType !== "typeDeclaration" ||
-					declaration.name !== "Database"
-				) {
-					return [declaration];
-				}
-				console.log(declaration);
-				return [
-					{
-						...declaration,
-						exportAs: "named",
-						comment: [
-							"We export this as named in order to avoid weirdness with preconstruct.",
-						],
-					},
-					{
-						...declaration,
-						name: "DefaultDatabaseExport",
-						comment: ["Backup default export that's the same as the above"],
-					},
-				];
-			});
+				const declarationWithNamedImports = makeNamedTypeImports(declaration);
 
-			console.log(output);
+				return declarationWithNamedImports;
+			});
 
 			return [name, output];
 		})

@@ -4,6 +4,6 @@
 		"noEmit": true,
 		"isolatedModules": true
 	},
-	"include": ["./src"],
+	"include": ["./src", "scripts/comment-generator.ts"],
 	"exclude": ["dist", "build", "node_modules"]
 }

@@ -2,10 +2,7 @@
 
 import { useCallback } from "react";
 
-import type Action from "db/public/Action";
-import type { CommunitiesId } from "db/public/Communities";
-import type Event from "db/public/Event";
-import type { RulesId } from "db/public/Rules";
+import type { Action, CommunitiesId, Event, RulesId } from "db/public";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 

@@ -3,7 +3,7 @@ import type { z } from "zod";
 import { zodTypeToCoreSchemaType } from "schemas";
 
 // this makes Zod be imported on the client, we might want to change this in the future
-import { coreSchemaTypeSchema } from "db/public/CoreSchemaType";
+import { coreSchemaTypeSchema } from "db/public";
 
 import type { FieldConfigItem } from "../../auto-form/types";
 import type { PubFieldContext } from "../PubFieldContext";

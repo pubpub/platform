@@ -1,4 +1,4 @@
-import type ActionName from "db/public/Action";
+import type { Action as ActionName } from "db/public";
 import { logger } from "logger";
 
 import type { Action, ZodObjectOrWrappedOrOptional } from "../../types";

@@ -11,7 +11,7 @@ import { apiAccessTokensIdSchema } from "./ApiAccessTokens";
 export type ApiAccessLogsId = string & { __brand: "ApiAccessLogsId" };
 
 /** Represents the table public.api_access_logs */
-export default interface ApiAccessLogsTable {
+export interface ApiAccessLogsTable {
 	id: ColumnType<ApiAccessLogsId, ApiAccessLogsId | undefined, ApiAccessLogsId>;
 
 	accessTokenId: ColumnType<ApiAccessTokensId, ApiAccessTokensId, ApiAccessTokensId>;

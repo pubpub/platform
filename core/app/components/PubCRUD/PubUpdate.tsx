@@ -2,9 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubsId } from "db/public/Pubs";
-import type { PubTypesId } from "db/public/PubTypes";
+import type { CommunitiesId, PubsId, PubTypesId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { getPub, getPubCached, getPubType } from "~/lib/server";

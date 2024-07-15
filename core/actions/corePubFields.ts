@@ -1,6 +1,6 @@
 import type { JSONSchemaType } from "ajv";
 
-import CoreSchemaType from "db/public/CoreSchemaType";
+import { CoreSchemaType } from "db/public";
 
 export type BasePubField<Namespace extends string = string> = {
 	id?: string;

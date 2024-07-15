@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import type { CommunitiesId } from "db/public/Communities";
+import type { CommunitiesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";

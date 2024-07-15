@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import type { CommunitiesId } from "db/public/Communities";
+import type { CommunitiesId } from "db/public";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";

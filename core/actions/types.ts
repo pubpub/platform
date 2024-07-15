@@ -1,10 +1,7 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type CoreSchemaType from "db/public/CoreSchemaType";
-import type Event from "db/public/Event";
-import type { StagesId } from "db/public/Stages";
+import type { CommunitiesId, CoreSchemaType, Event, StagesId } from "db/public";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 

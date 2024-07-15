@@ -11,7 +11,7 @@ import { communitiesIdSchema } from "./Communities";
 export type MemberGroupsId = string & { __brand: "MemberGroupsId" };
 
 /** Represents the table public.member_groups */
-export default interface MemberGroupsTable {
+export interface MemberGroupsTable {
 	id: ColumnType<MemberGroupsId, MemberGroupsId | undefined, MemberGroupsId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 
-import type { PubsId } from "db/public/Pubs";
-import type { StagesId } from "db/public/Stages";
+import type { PubsId, StagesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";

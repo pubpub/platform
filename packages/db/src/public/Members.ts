@@ -13,7 +13,7 @@ import { usersIdSchema } from "./Users";
 export type MembersId = string & { __brand: "MembersId" };
 
 /** Represents the table public.members */
-export default interface MembersTable {
+export interface MembersTable {
 	id: ColumnType<MembersId, MembersId | undefined, MembersId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;

@@ -8,7 +8,7 @@ import { z } from "zod";
 export type PrismaMigrationsId = string & { __brand: "PrismaMigrationsId" };
 
 /** Represents the table public._prisma_migrations */
-export default interface PrismaMigrationsTable {
+export interface PrismaMigrationsTable {
 	id: ColumnType<PrismaMigrationsId, PrismaMigrationsId, PrismaMigrationsId>;
 
 	checksum: ColumnType<string, string, string>;

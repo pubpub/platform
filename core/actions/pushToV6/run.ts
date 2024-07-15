@@ -2,7 +2,7 @@
 
 import { defaultMarkdownParser } from "prosemirror-markdown";
 
-import type { PubsId } from "db/public/Pubs";
+import type { PubsId } from "db/public";
 import { logger } from "logger";
 
 import type { action } from "./action";

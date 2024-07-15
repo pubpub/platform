@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
-import type { PubsId } from "db/public/Pubs";
+import type { PubsId } from "db/public";
 
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 

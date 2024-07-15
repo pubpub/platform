@@ -1,8 +1,6 @@
 "use server";
 
-import type { CommunitiesId } from "db/public/Communities";
-import type { PubFieldsId } from "db/public/PubFields";
-import type { PubTypesId } from "db/public/PubTypes";
+import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";

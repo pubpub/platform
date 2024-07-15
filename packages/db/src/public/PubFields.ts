@@ -1,7 +1,7 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 import { z } from "zod";
 
-import type { default as CoreSchemaType } from "./CoreSchemaType";
+import type { CoreSchemaType } from "./CoreSchemaType";
 import type { IntegrationsId } from "./Integrations";
 import type { PubFieldSchemaId } from "./PubFieldSchema";
 import { coreSchemaTypeSchema } from "./CoreSchemaType";
@@ -15,7 +15,7 @@ import { pubFieldSchemaIdSchema } from "./PubFieldSchema";
 export type PubFieldsId = string & { __brand: "PubFieldsId" };
 
 /** Represents the table public.pub_fields */
-export default interface PubFieldsTable {
+export interface PubFieldsTable {
 	id: ColumnType<PubFieldsId, PubFieldsId | undefined, PubFieldsId>;
 
 	name: ColumnType<string, string, string>;

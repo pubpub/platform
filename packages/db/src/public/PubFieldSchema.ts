@@ -8,7 +8,7 @@ import { z } from "zod";
 export type PubFieldSchemaId = string & { __brand: "PubFieldSchemaId" };
 
 /** Represents the table public.PubFieldSchema */
-export default interface PubFieldSchemaTable {
+export interface PubFieldSchemaTable {
 	id: ColumnType<PubFieldSchemaId, PubFieldSchemaId | undefined, PubFieldSchemaId>;
 
 	namespace: ColumnType<string, string, string>;
