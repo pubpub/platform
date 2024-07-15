@@ -48,7 +48,8 @@
 		"entrypoints": [
 			"./Database.ts",
 			"./public.ts",
-			"./table-names.ts"
+			"./table-names.ts",
+			"./types/index.ts"
 		]
 	}
 }
