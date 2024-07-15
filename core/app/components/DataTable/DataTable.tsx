@@ -29,6 +29,7 @@ export interface DataTableProps<TData, TValue> {
 	onRowClick?: (row: Row<TData>) => void;
 	className?: string;
 	striped?: boolean;
+	emptyState?: React.ReactNode;
 }
 
 const STRIPED_ROW_STYLING = "hover:bg-slate-100 data-[state=selected]:bg-sky-50";
@@ -41,6 +42,7 @@ export function DataTable<TData, TValue>({
 	onRowClick,
 	className,
 	striped,
+	emptyState,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -119,40 +121,43 @@ export function DataTable<TData, TValue>({
 						))}
 					</TableHeader>
 					<TableBody>
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row, idx) => (
-								<TableRow
-									key={row.id}
-									data-state={row.getIsSelected() && "selected"}
-									onClick={(evt) => {
-										handleRowClick(evt, row);
-									}}
-									className={cn({
-										"cursor-pointer": onRowClick,
-										"bg-slate-100/50": striped && idx % 2,
-										[STRIPED_ROW_STYLING]: striped,
-									})}
-								>
-									{row.getVisibleCells().map((cell) => (
+						{table.getRowModel().rows?.length
+							? table.getRowModel().rows.map((row, idx) => (
+									<TableRow
+										key={row.id}
+										data-state={row.getIsSelected() && "selected"}
+										onClick={(evt) => {
+											handleRowClick(evt, row);
+										}}
+										className={cn({
+											"cursor-pointer": onRowClick,
+											"bg-slate-100/50": striped && idx % 2,
+											[STRIPED_ROW_STYLING]: striped,
+										})}
+									>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell
+												key={cell.id}
+												className="max-w-[12rem] overflow-auto"
+											>
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext()
+												)}
+											</TableCell>
+										))}
+									</TableRow>
+								))
+							: emptyState ?? (
+									<TableRow>
 										<TableCell
-											key={cell.id}
-											className="max-w-[12rem] overflow-auto"
+											colSpan={columns.length}
+											className="h-24 text-center"
 										>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext()
-											)}
+											No results.
 										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="h-24 text-center">
-									No results.
-								</TableCell>
-							</TableRow>
-						)}
+									</TableRow>
+								)}
 					</TableBody>
 				</Table>
 			</div>

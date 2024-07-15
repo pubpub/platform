@@ -14,6 +14,8 @@ export function DataTable<TData, TValue>({
 			columns={columns}
 			data={data}
 			onRowClick={onRowClick}
+			// Render nothing on empty instead of the default
+			emptyState={<></>}
 			hidePaginationWhenSinglePage
 			className="border-none"
 			striped
