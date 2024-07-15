@@ -17,7 +17,7 @@ export default async function Page({ params }: Props) {
 		return notFound();
 	}
 
-	const { fields } = await getPubFields().executeTakeFirstOrThrow();
+	const { fields } = await getPubFields().executeTakeFirst();
 
 	if (!fields) {
 		return null;
