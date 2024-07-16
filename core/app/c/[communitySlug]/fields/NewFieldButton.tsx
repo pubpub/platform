@@ -7,7 +7,7 @@ import { DialogTrigger } from "ui/dialog";
 import { Plus } from "ui/icon";
 
 import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog";
-import { NewFieldForm } from "./NewFieldForm";
+import { FieldForm } from "./FieldForm";
 
 export const NewFieldButton = () => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +25,7 @@ export const NewFieldButton = () => {
 				</DialogTrigger>
 			}
 		>
-			<NewFieldForm
+			<FieldForm
 				onSubmitSuccess={() => {
 					setIsOpen(false);
 				}}
@@ -36,7 +36,7 @@ export const NewFieldButton = () => {
 						setIsOpen(false);
 					}}
 				/>
-			</NewFieldForm>
+			</FieldForm>
 		</CreateEditDialog>
 	);
 };

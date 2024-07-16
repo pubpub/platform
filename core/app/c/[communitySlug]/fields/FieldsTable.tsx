@@ -8,8 +8,8 @@ import type { TableData } from "./getFieldTableColumns";
 import type { PubField } from "~/lib/types";
 import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog";
 import { DataTable } from "~/app/components/DataTable/v2/DataTable";
+import { FieldForm } from "./FieldForm";
 import { getFieldTableColumns } from "./getFieldTableColumns";
-import { NewFieldForm } from "./NewFieldForm";
 
 export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 	const data = useMemo(() => {
@@ -17,7 +17,7 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 			return {
 				id: d.id,
 				name: d.name,
-				schema: d.schemaName,
+				schemaName: d.schemaName,
 				updated: new Date(d.updatedAt),
 				isArchived: d.isArchived,
 			};
@@ -43,9 +43,9 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 				open={!!editField}
 				onOpenChange={handleModalToggle}
 			>
-				<NewFieldForm onSubmitSuccess={handleModalToggle}>
+				<FieldForm defaultValues={editField} onSubmitSuccess={handleModalToggle}>
 					<Footer submitText="Update" onCancel={handleModalToggle} />
-				</NewFieldForm>
+				</FieldForm>
 			</CreateEditDialog>
 		</>
 	);

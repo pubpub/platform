@@ -17,7 +17,7 @@ import * as actions from "./actions";
 export interface TableData {
 	id: PubFieldsId;
 	name: string;
-	schema: CoreSchemaType | null;
+	schemaName: CoreSchemaType | null;
 	updated: Date;
 	isArchived: boolean;
 }
@@ -76,7 +76,7 @@ export const getFieldTableColumns = () =>
 					icon={<CurlyBraces size={15} strokeWidth={1} />}
 				/>
 			),
-			accessorKey: "schema",
+			accessorKey: "schemaName",
 		},
 		{
 			header: ({ column }) => (
