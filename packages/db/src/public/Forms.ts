@@ -2,8 +2,10 @@ import { type ColumnType, type Insertable, type Selectable, type Updateable } fr
 import { z } from "zod";
 
 import type { CommunitiesId } from "./Communities";
+import type { FormAccessType } from "./FormAccessType";
 import type { PubTypesId } from "./PubTypes";
 import { communitiesIdSchema } from "./Communities";
+import { formAccessTypeSchema } from "./FormAccessType";
 import { pubTypesIdSchema } from "./PubTypes";
 
 // @generated
@@ -25,6 +27,8 @@ export interface FormsTable {
 	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
 	slug: ColumnType<string, string, string>;
+
+	access: ColumnType<FormAccessType, FormAccessType | undefined, FormAccessType>;
 }
 
 export type Forms = Selectable<FormsTable>;
@@ -42,6 +46,7 @@ export const formsSchema = z.object({
 	isArchived: z.boolean(),
 	communityId: communitiesIdSchema,
 	slug: z.string(),
+	access: formAccessTypeSchema,
 });
 
 export const formsInitializerSchema = z.object({
@@ -51,6 +56,7 @@ export const formsInitializerSchema = z.object({
 	isArchived: z.boolean().optional(),
 	communityId: communitiesIdSchema,
 	slug: z.string(),
+	access: formAccessTypeSchema.optional(),
 });
 
 export const formsMutatorSchema = z.object({
@@ -60,4 +66,5 @@ export const formsMutatorSchema = z.object({
 	isArchived: z.boolean().optional(),
 	communityId: communitiesIdSchema.optional(),
 	slug: z.string().optional(),
+	access: formAccessTypeSchema.optional(),
 });

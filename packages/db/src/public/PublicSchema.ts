@@ -10,7 +10,7 @@ import { type ApiAccessPermissionsTable } from "./ApiAccessPermissions";
 import { type ApiAccessTokensTable } from "./ApiAccessTokens";
 import { type AuthTokensTable } from "./AuthTokens";
 import { type CommunitiesTable } from "./Communities";
-import { type FormInputsTable } from "./FormInputs";
+import { type FormElementsTable } from "./FormElements";
 import { type FormsTable } from "./Forms";
 import { type FormToPermissionsTable } from "./FormToPermissions";
 import { type IntegrationInstancesTable } from "./IntegrationInstances";
@@ -95,8 +95,6 @@ export interface PublicSchema {
 
 	forms: FormsTable;
 
-	form_inputs: FormInputsTable;
-
 	api_access_tokens: ApiAccessTokensTable;
 
 	api_access_logs: ApiAccessLogsTable;
@@ -104,4 +102,6 @@ export interface PublicSchema {
 	api_access_permissions: ApiAccessPermissionsTable;
 
 	form_to_permissions: FormToPermissionsTable;
+
+	form_elements: FormElementsTable;
 }

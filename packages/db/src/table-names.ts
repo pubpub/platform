@@ -22,6 +22,7 @@ export const databaseTables = [
 	"communities",
 	"form_inputs",
 	"form_to_permissions",
+	"form_elements",
 	"forms",
 	"integration_instances",
 	"integrations",

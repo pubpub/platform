@@ -142,9 +142,15 @@ importers:
       '@dnd-kit/core':
         specifier: ^6.1.0
         version: 6.1.0(react-dom@18.2.0)(react@18.2.0)
+      '@dnd-kit/modifiers':
+        specifier: ^7.0.0
+        version: 7.0.0(@dnd-kit/core@6.1.0)(react@18.2.0)
       '@dnd-kit/sortable':
         specifier: ^8.0.0
         version: 8.0.0(@dnd-kit/core@6.1.0)(react@18.2.0)
+      '@dnd-kit/utilities':
+        specifier: ^3.2.2
+        version: 3.2.2(react@18.2.0)
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -1565,7 +1571,7 @@ packages:
       '@smithy/protocol-http': 3.0.10
       '@smithy/signature-v4': 2.0.16
       '@smithy/types': 2.6.0
-      tslib: 2.6.1
+      tslib: 2.6.3
     dev: false
 
   /@aws-sdk/token-providers@3.438.0:
@@ -1618,7 +1624,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@smithy/types': 2.6.0
-      tslib: 2.6.1
+      tslib: 2.6.3
     dev: false
 
   /@aws-sdk/util-arn-parser@3.310.0:
@@ -1644,7 +1650,7 @@ packages:
       '@aws-sdk/types': 3.433.0
       '@smithy/querystring-builder': 2.0.14
       '@smithy/types': 2.6.0
-      tslib: 2.6.1
+      tslib: 2.6.3
     dev: false
 
   /@aws-sdk/util-locate-window@3.310.0:
@@ -3366,6 +3372,18 @@ packages:
       '@dnd-kit/utilities': 3.2.2(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+      tslib: 2.6.3
+    dev: false
+
+  /@dnd-kit/modifiers@7.0.0(@dnd-kit/core@6.1.0)(react@18.2.0):
+    resolution: {integrity: sha512-BG/ETy3eBjFap7+zIti53f0PCLGDzNXyTmn6fSdrudORf+OH04MxrW4p5+mPu4mgMk9kM41iYONjc3DOUWTcfg==}
+    peerDependencies:
+      '@dnd-kit/core': ^6.1.0
+      react: '>=16.8.0'
+    dependencies:
+      '@dnd-kit/core': 6.1.0(react-dom@18.2.0)(react@18.2.0)
+      '@dnd-kit/utilities': 3.2.2(react@18.2.0)
+      react: 18.2.0
       tslib: 2.6.3
     dev: false
 
@@ -8303,7 +8321,7 @@ packages:
       '@smithy/types': 2.6.0
       '@smithy/url-parser': 2.0.14
       '@smithy/util-middleware': 2.0.7
-      tslib: 2.6.1
+      tslib: 2.6.3
     dev: false
 
   /@smithy/middleware-retry@2.0.21:
@@ -8370,7 +8388,7 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       '@smithy/types': 2.6.0
-      tslib: 2.6.1
+      tslib: 2.6.3
     dev: false
 
   /@smithy/querystring-builder@2.0.14:
@@ -8426,14 +8444,14 @@ packages:
       '@smithy/middleware-stack': 2.0.8
       '@smithy/types': 2.6.0
       '@smithy/util-stream': 2.0.21
-      tslib: 2.6.1
+      tslib: 2.6.3
     dev: false
 
   /@smithy/types@2.6.0:
     resolution: {integrity: sha512-PgqxJq2IcdMF9iAasxcqZqqoOXBHufEfmbEUdN1pmJrJltT42b0Sc8UiYSWWzKkciIp9/mZDpzYi4qYG1qqg6g==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      tslib: 2.6.1
+      tslib: 2.6.3
     dev: false
 
   /@smithy/url-parser@2.0.14:

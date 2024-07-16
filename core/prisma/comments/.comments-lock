@@ -93,7 +93,7 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 
 
--- Model form_inputs comments
+-- Model form_elements comments
 
 
 

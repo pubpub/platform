@@ -6,6 +6,7 @@ import { logger } from "logger";
 import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { _getPubFields, getPubFields } from "~/lib/server/pubFields";
 import { slugifyString } from "~/lib/string";
 
 export const createForm = defineServerAction(async function createForm(
@@ -16,14 +17,43 @@ export const createForm = defineServerAction(async function createForm(
 	try {
 		const { slug } = await autoRevalidate(
 			db
-				.insertInto("forms")
-				.values({
-					name,
-					pubTypeId,
-					slug: slugifyString(name),
-					communityId,
-				})
-				.returning("slug")
+				.with("fields", () =>
+					_getPubFields({ pubTypeId })
+						.clearSelect()
+						.select((eb) => [
+							eb.ref("f.id").as("fieldId"),
+							eb.ref("f.json", "->>").key("name").as("name"),
+						])
+				)
+				.with("form", (db) =>
+					db
+						.insertInto("forms")
+						.values({
+							name,
+							pubTypeId,
+							slug: slugifyString(name),
+							communityId,
+						})
+						.returning(["slug", "id"])
+				)
+				.with("elements", (db) =>
+					db
+						.insertInto("form_elements")
+						.columns(["fieldId", "formId", "label", "type"])
+						.expression((eb) =>
+							eb
+								.selectFrom("fields")
+								.innerJoin("form", (join) => join.onTrue())
+								.select([
+									"fields.fieldId",
+									"form.id as formId",
+									"fields.name as label",
+									eb.val("pubfield").as("type"),
+								])
+						)
+				)
+				.selectFrom("form")
+				.select("form.slug")
 		).executeTakeFirstOrThrow();
 		return slug;
 	} catch (error) {
@@ -33,16 +63,5 @@ export const createForm = defineServerAction(async function createForm(
 		}
 		logger.error({ msg: "error creating form", error });
 		return { error: "Form creation failed" };
-	}
-});
-
-export const archiveForm = defineServerAction(async function archiveForm(id: FormsId) {
-	try {
-		await autoRevalidate(
-			db.updateTable("forms").set({ isArchived: true }).where("forms.id", "=", id)
-		).executeTakeFirstOrThrow();
-	} catch (error) {
-		logger.error({ msg: "error archiving form", error });
-		return { error: "Unable to archive form" };
 	}
 });
