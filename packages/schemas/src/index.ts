@@ -24,3 +24,4 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 
 export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
 export { CoreSchemaType } from "./CoreSchemaType";
+export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons";
