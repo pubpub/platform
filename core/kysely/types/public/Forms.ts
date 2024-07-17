@@ -4,7 +4,6 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 
 import { type CommunitiesId } from "./Communities";
-import { type PermissionsId } from "./Permissions";
 import { type PubTypesId } from "./PubTypes";
 
 /** Identifier type for public.forms */
@@ -23,8 +22,6 @@ export default interface FormsTable {
 	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
 	slug: ColumnType<string, string, string>;
-
-	permissionId: ColumnType<PermissionsId | null, PermissionsId | null, PermissionsId | null>;
 }
 
 export type Forms = Selectable<FormsTable>;

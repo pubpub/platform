@@ -5,6 +5,7 @@ export const databaseTables = [
 	"IntegrationInstanceState",
 	"PubFieldSchema",
 	"PubsInStages",
+	"_FormToPermission",
 	"_IntegrationInstanceToPub",
 	"_MemberGroupToUser",
 	"_PermissionToPub",

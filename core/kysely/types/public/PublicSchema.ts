@@ -12,6 +12,7 @@ import { type default as AuthTokensTable } from "./AuthTokens";
 import { type default as CommunitiesTable } from "./Communities";
 import { type default as FormInputsTable } from "./FormInputs";
 import { type default as FormsTable } from "./Forms";
+import { type default as FormToPermissionTable } from "./FormToPermission";
 import { type default as IntegrationInstancesTable } from "./IntegrationInstances";
 import { type default as IntegrationInstanceStateTable } from "./IntegrationInstanceState";
 import { type default as IntegrationInstanceToPubTable } from "./IntegrationInstanceToPub";
@@ -101,4 +102,6 @@ export default interface PublicSchema {
 	api_access_logs: ApiAccessLogsTable;
 
 	api_access_permissions: ApiAccessPermissionsTable;
+
+	_FormToPermission: FormToPermissionTable;
 }

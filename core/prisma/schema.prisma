@@ -428,17 +428,17 @@ enum Event {
 }
 
 model Form {
-  id           String      @id @default(dbgenerated("gen_random_uuid()"))
-  name         String
-  slug         String
-  communityId  String
-  community    Community   @relation(fields: [communityId], references: [id])
-  pubType      PubType     @relation(fields: [pubTypeId], references: [id])
-  pubTypeId    String
-  inputs       FormInput[]
-  isArchived   Boolean     @default(false)
-  Permission   Permission? @relation(fields: [permissionId], references: [id])
-  permissionId String?
+  id          String      @id @default(dbgenerated("gen_random_uuid()"))
+  name        String
+  slug        String
+  communityId String
+  community   Community   @relation(fields: [communityId], references: [id])
+  pubType     PubType     @relation(fields: [pubTypeId], references: [id])
+  pubTypeId   String
+  inputs      FormInput[]
+  isArchived  Boolean     @default(false)
+
+  Permissions Permission[]
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
