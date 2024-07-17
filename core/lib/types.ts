@@ -199,4 +199,7 @@ export type Expect<a extends true> = a;
 export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> & {
 	fields: PubFieldsId[];
 };
-export type PubField = Pick<PubFields, "id" | "name" | "slug" | "schemaName" | "pubFieldSchemaId">;
+export type PubField = Pick<
+	PubFields,
+	"id" | "name" | "slug" | "updatedAt" | "schemaName" | "pubFieldSchemaId" | "isArchived"
+>;

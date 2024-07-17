@@ -35,6 +35,8 @@ export interface PubFieldsTable {
 	slug: ColumnType<string, string, string>;
 
 	schemaName: ColumnType<CoreSchemaType | null, CoreSchemaType | null, CoreSchemaType | null>;
+
+	isArchived: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type PubFields = Selectable<PubFieldsTable>;
@@ -54,6 +56,7 @@ export const pubFieldsSchema = z.object({
 	pubFieldSchemaId: pubFieldSchemaIdSchema.nullable(),
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.nullable(),
+	isArchived: z.boolean(),
 });
 
 export const pubFieldsInitializerSchema = z.object({
@@ -65,6 +68,7 @@ export const pubFieldsInitializerSchema = z.object({
 	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),
+	isArchived: z.boolean().optional(),
 });
 
 export const pubFieldsMutatorSchema = z.object({
@@ -76,4 +80,5 @@ export const pubFieldsMutatorSchema = z.object({
 	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string().optional(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),
+	isArchived: z.boolean().optional(),
 });
