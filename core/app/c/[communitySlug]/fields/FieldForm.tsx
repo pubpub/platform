@@ -96,7 +96,7 @@ const SchemaSelectField = ({
 					>
 						<FormControl>
 							<SelectTrigger>
-								<SelectValue placeholder="Select one" />
+								<SelectValue placeholder="Select one">{field.value}</SelectValue>
 							</SelectTrigger>
 						</FormControl>
 						<SelectContent>
