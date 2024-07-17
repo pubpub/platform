@@ -42,6 +42,59 @@ const isCommunityAdmin = cache(async (community: Community) => {
 });
 
 /**
+ * Create a user in supabase.
+ * If the user is not a contributor, also sends them an invite by email
+ */
+const createOrInviteSupabaseUser = async ({
+	email,
+	firstName,
+	lastName,
+	community,
+	role,
+	isSuperAdmin,
+}: {
+	email: string;
+	firstName: string;
+	lastName?: string | null;
+	community: Community;
+	role?: MemberRole;
+	isSuperAdmin?: boolean;
+}) => {
+	const client = getServerSupabase();
+
+	if (role === MemberRole.contributor) {
+		const data = await client.auth.admin.createUser({
+			email,
+			user_metadata: {
+				firstName,
+				lastName,
+				communityId: community.id,
+				communitySlug: community.slug,
+				communityName: community.name,
+				role,
+				isSuperAdmin,
+			},
+		});
+		return data;
+	}
+
+	const data = await client.auth.admin.inviteUserByEmail(email, {
+		redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+		data: {
+			firstName,
+			lastName,
+			communityId: community.id,
+			communitySlug: community.slug,
+			communityName: community.name,
+			role,
+			isSuperAdmin,
+		},
+	});
+
+	return data;
+};
+
+/**
  * Add someone as a user to supabase and send them an invite by email
  *
  * By default will reinvite the user if they already exist in supabase by deleting them and trying
@@ -81,17 +134,13 @@ const addSupabaseUser = async ({
 > => {
 	const client = getServerSupabase();
 
-	const { error, data } = await client.auth.admin.inviteUserByEmail(email, {
-		redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-		data: {
-			firstName,
-			lastName,
-			communityId: community.id,
-			communitySlug: community.slug,
-			communityName: community.name,
-			role,
-			isSuperAdmin,
-		},
+	const { error, data } = await createOrInviteSupabaseUser({
+		email,
+		firstName,
+		lastName,
+		community,
+		role,
+		isSuperAdmin,
 	});
 
 	if (!error) {
