@@ -36,7 +36,7 @@ If you have added a new table, make sure to add
 export * from "./tableName";
 ```
 
-to `src/public/index.ts`, otherwise you will not be able to import it.
+to `src/public.ts`, otherwise you will not be able to import it.
 
 ## Special hooks
 
