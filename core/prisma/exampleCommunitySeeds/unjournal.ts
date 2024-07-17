@@ -8,6 +8,7 @@ import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import type { StagesId } from "~/kysely/types/public/Stages";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
+import MemberRole from "~/kysely/types/public/MemberRole";
 import { env } from "../../lib/env/env.mjs";
 import { FileUpload } from "../../lib/fields/fileUpload";
 
@@ -457,7 +458,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const memberGroup = await prisma.memberGroup.create({
 		data: {
-			canAdmin: true,
+			role: MemberRole.admin,
 			communityId: communityUUID,
 			users: {
 				connect: [{ id: user2.id }],

@@ -278,12 +278,12 @@ enum MemberRole {
 }
 
 model MemberGroup {
-  id          String    @id @default(dbgenerated("gen_random_uuid()"))
-  canAdmin    Boolean // Community-wide administrator
-  community   Community @relation(fields: [communityId], references: [id])
+  id          String     @id @default(dbgenerated("gen_random_uuid()"))
+  role        MemberRole @default(editor)
+  community   Community  @relation(fields: [communityId], references: [id])
   communityId String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
   permissions Permission[]
   users       User[]
@@ -313,6 +313,7 @@ model Permission {
 
   pubs   Pub[]
   stages Stage[]
+  forms  Form[]
 
   @@map(name: "permissions")
 }
@@ -427,15 +428,17 @@ enum Event {
 }
 
 model Form {
-  id          String      @id @default(dbgenerated("gen_random_uuid()"))
-  name        String
-  slug        String
-  communityId String
-  community   Community   @relation(fields: [communityId], references: [id])
-  pubType     PubType     @relation(fields: [pubTypeId], references: [id])
-  pubTypeId   String
-  inputs      FormInput[]
-  isArchived  Boolean     @default(false)
+  id           String      @id @default(dbgenerated("gen_random_uuid()"))
+  name         String
+  slug         String
+  communityId  String
+  community    Community   @relation(fields: [communityId], references: [id])
+  pubType      PubType     @relation(fields: [pubTypeId], references: [id])
+  pubTypeId    String
+  inputs       FormInput[]
+  isArchived   Boolean     @default(false)
+  Permission   Permission? @relation(fields: [permissionId], references: [id])
+  permissionId String?
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
