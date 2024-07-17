@@ -96,7 +96,12 @@ const SchemaSelectField = ({
 					>
 						<FormControl>
 							<SelectTrigger>
-								<SelectValue placeholder="Select one">{field.value}</SelectValue>
+								<SelectValue
+									aria-label={field.value ?? undefined}
+									placeholder="Select one"
+								>
+									{field.value}
+								</SelectValue>
 							</SelectTrigger>
 						</FormControl>
 						<SelectContent>
