@@ -201,3 +201,33 @@ export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> 
 	fields: PubFieldsId[];
 };
 export type PubField = Pick<PubFields, "id" | "name" | "slug" | "schemaName" | "pubFieldSchemaId">;
+
+/**
+ * Slightly nicer way to do `{ a: string } | { b: number }`
+ * instead creating `{ a: string, b?: undefined } | { a?: undefined, b: number }`
+ *
+ * This way you are able to do the following without having to do annoying
+ * `'a' in props` checks
+ * ```ts
+ * function foo(props: MutuallyExclusive<{ a: string }, { b: number }>) {
+ * 	if(props.a){
+ * 		// do something
+ * 		return
+ * 	}
+ *
+ * 	return props.b
+ * }
+ * ```
+ *
+ */
+
+export type XOR<T extends Record<string, unknown>, P extends Record<string, unknown>> = Prettify<
+	| ({ [K in keyof T]: T[K] } & { [K in keyof P]?: never })
+	| ({ [K in keyof P]: P[K] } & { [K in keyof T]?: never })
+>;
+
+export type OR<T extends Record<string, unknown>, P extends Record<string, unknown>> = Prettify<
+	| ({ [K in keyof T]: T[K] } & { [K in keyof P]?: never })
+	| ({ [K in keyof P]: P[K] } & { [K in keyof T]?: never })
+	| ({ [K in keyof T]: T[K] } & { [K in keyof P]: P[K] })
+>;
