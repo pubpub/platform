@@ -1,10 +1,9 @@
 import { sql } from "kysely";
 import { jsonBuildObject } from "kysely/helpers/postgres";
 
+import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
+
 import type { PubField } from "../types";
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 

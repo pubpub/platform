@@ -1,10 +1,8 @@
 "use server";
 
-import type { CoreSchemaType } from "schemas";
-
+import type { CoreSchemaType, PubFieldsId } from "db/public";
 import { logger } from "logger";
 
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";

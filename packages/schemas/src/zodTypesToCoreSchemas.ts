@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// TODO: replace with import from db
-import { CoreSchemaType } from "./CoreSchemaType";
+import { CoreSchemaType } from "db/public";
 
 const zodStringTypes = ["ZodString", "ZodLiteral", "ZodEnum"];
 

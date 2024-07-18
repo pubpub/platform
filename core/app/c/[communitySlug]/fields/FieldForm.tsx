@@ -4,9 +4,10 @@ import type { UseFormReturn } from "react-hook-form";
 import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { CoreSchemaType, SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 import { z } from "zod";
 
+import { CoreSchemaType } from "db/public";
 import {
 	Form,
 	FormControl,

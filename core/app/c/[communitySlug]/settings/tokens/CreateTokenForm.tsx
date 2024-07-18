@@ -5,6 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import type { CreateTokenFormContext } from "db/types";
+import { ApiAccessScope, apiAccessTokensInitializerSchema } from "db/public";
+import { permissionsSchema } from "db/types";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
 import { CopyButton } from "ui/copy-button";
@@ -14,22 +17,49 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 
-import type {
-	ApiAccessPermissionConstraintsInput,
-	CreateTokenFormContext,
-	CreateTokenFormSchema,
-} from "~/kysely/ApiAccessToken";
-import type { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { Stages, StagesId } from "~/kysely/types/public/Stages";
-import type { UsersId } from "~/kysely/types/public/Users";
-import { createTokenFormSchema } from "~/kysely/ApiAccessToken";
-import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { PermissionField } from "./PermissionField";
 
-// import { apiAccessTokensInitializerSchema } from "~/kysely/types/public/ApiAccessTokens";
+export const createTokenFormSchema = apiAccessTokensInitializerSchema
+	.omit({
+		communityId: true,
+		usageLimit: true,
+		issuedById: true,
+	})
+	.extend({
+		description: z.string().max(255).optional(),
+		token: apiAccessTokensInitializerSchema.shape.token.optional(),
+		expiration: z
+			.date()
+			.max(
+				new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+				"Maximum expiration date is 1 year in the future"
+			)
+			.min(new Date(), "Expiry date cannot be in the past"),
+		permissions: permissionsSchema,
+	})
+	.superRefine((data, ctx) => {
+		if (
+			Object.values(data.permissions)
+				.flatMap((scope) => Object.values(scope))
+				.filter((value) => value).length > 0
+		) {
+			return true;
+		}
+		ctx.addIssue({
+			path: ["permissions"],
+			code: z.ZodIssueCode.custom,
+
+			message: "At least one permission must be selected",
+		});
+		return false;
+	});
+
+export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
+export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
+
+// import { apiAccessTokensInitializerSchema } from "db/public";
 
 export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
 	const form = useForm<CreateTokenFormSchema>({

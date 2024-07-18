@@ -1,4 +1,5 @@
-import { CoreSchemaType } from "./CoreSchemaType";
+import { CoreSchemaType } from "db/public";
+
 import { Boolean, DateTime, Email, FileUpload, String, URL, UserId, Vector3 } from "./schemas";
 
 export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
@@ -23,5 +24,4 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 }
 
 export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
-export { CoreSchemaType } from "./CoreSchemaType";
 export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons";

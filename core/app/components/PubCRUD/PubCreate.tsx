@@ -4,9 +4,9 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type PublicSchema from "~/kysely/types/public/PublicSchema";
-import type { StagesId } from "~/kysely/types/public/Stages";
+import type { Database } from "db/Database";
+import type { CommunitiesId, StagesId } from "db/public";
+
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
@@ -22,11 +22,11 @@ export type CreatePubProps =
 	  };
 
 const getCommunityById = <
-	K extends keyof PublicSchema,
-	EB extends ExpressionBuilder<PublicSchema, keyof PublicSchema>,
+	K extends keyof Database,
+	EB extends ExpressionBuilder<Database, keyof Database>,
 >(
 	eb: EB,
-	communityId: CommunitiesId | ExpressionWrapper<PublicSchema, "stages", CommunitiesId>
+	communityId: CommunitiesId | ExpressionWrapper<Database, "stages", CommunitiesId>
 ) => {
 	const query = eb.selectFrom("communities").select((eb) => [
 		"communities.id",

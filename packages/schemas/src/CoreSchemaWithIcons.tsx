@@ -10,7 +10,7 @@ import {
 	User,
 } from "lucide-react";
 
-import { CoreSchemaType } from "./CoreSchemaType";
+import { CoreSchemaType } from "db/public";
 
 export const SCHEMA_TYPES_WITH_ICONS: Record<
 	CoreSchemaType,

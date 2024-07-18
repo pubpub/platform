@@ -2,15 +2,12 @@
 
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
+import type { ActionInstancesId, PubsId, Rules, StagesId } from "db/public";
+import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
-import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { Rules } from "~/kysely/types/public/Rules";
-import type { StagesId } from "~/kysely/types/public/Stages";
+import type { RuleConfig } from "./rules";
 import { db } from "~/kysely/database";
-import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
-import Event from "~/kysely/types/public/Event";
 import { addDuration } from "~/lib/dates";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
@@ -64,8 +61,15 @@ export const scheduleActionInstances = async ({
 
 	const validRules = instances.flatMap((instance) =>
 		instance.rules
-			.filter((rule): rule is Rules & { config: { duration: number } } =>
-				Boolean(rule.config?.duration && rule.config.interval)
+			.filter((rule): rule is Rules & { config: RuleConfig } =>
+				Boolean(
+					typeof rule.config === "object" &&
+						rule.config &&
+						"duration" in rule.config &&
+						rule.config.duration &&
+						"interval" in rule.config &&
+						rule.config.interval
+				)
 			)
 			.map((rule) => ({
 				...rule,

@@ -5,9 +5,10 @@ import type {
 	UpdateQueryBuilder,
 } from "kysely";
 
+import type { Database } from "db/Database";
+
 import type { CacheTag } from "./cacheTags";
 import type { MemoizeOptionType } from "./memoize";
-import type Database from "~/kysely/types/Database";
 
 /** Select Query Builder */
 export type SQB<K extends keyof Database = keyof Database> = SelectQueryBuilder<Database, K, any>;

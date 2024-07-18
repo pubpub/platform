@@ -15,6 +15,7 @@
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
 	"dependencies": {
+		"db": "workspace:*",
 		"utils": "workspace:*"
 	},
 	"peerDependencies": {

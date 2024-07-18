@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { CoreSchemaType } from "./CoreSchemaType";
+import { CoreSchemaType } from "db/public";
+
 import { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
 
 class Markdown extends z.ZodString {
