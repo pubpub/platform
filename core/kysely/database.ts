@@ -4,9 +4,9 @@ import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import { z } from "zod";
 
+import type { Database } from "db/Database";
 import { logger } from "logger";
 
-import type Database from "~/kysely/types/Database";
 import { env } from "~/lib/env/env.mjs";
 
 const dialect = new PostgresDialect({

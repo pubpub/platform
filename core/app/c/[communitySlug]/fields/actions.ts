@@ -1,8 +1,7 @@
 "use server";
 
-import type { CoreSchemaType } from "schemas";
+import type { CoreSchemaType, PubFieldsId } from "db/public";
 
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import { db } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";

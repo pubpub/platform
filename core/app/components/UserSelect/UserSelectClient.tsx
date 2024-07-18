@@ -2,10 +2,11 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CoreSchemaType } from "schemas";
 import { useDebouncedCallback } from "use-debounce";
 
+import type { Communities, Users } from "db/public";
 import type { Option } from "ui/autocomplete";
+import { CoreSchemaType } from "db/public";
 import { AutoComplete } from "ui/autocomplete";
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import {
@@ -15,8 +16,6 @@ import {
 	PubFieldSelectorToggleButton,
 } from "ui/pubFields";
 
-import type { Communities } from "~/kysely/types/public/Communities";
-import type { Users } from "~/kysely/types/public/Users";
 import { UserAvatar } from "../UserAvatar";
 import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
 

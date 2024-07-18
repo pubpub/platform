@@ -2,15 +2,12 @@
 
 import { useCallback } from "react";
 
+import type { Action, CommunitiesId, Event, RulesId } from "db/public";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 
 import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
-import type Action from "~/kysely/types/public/Action";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type Event from "~/kysely/types/public/Event";
-import type { RulesId } from "~/kysely/types/public/Rules";
 import { getActionByName, humanReadableEvent } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
 import { deleteRule } from "../../actions";

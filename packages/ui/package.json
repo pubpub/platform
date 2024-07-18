@@ -313,6 +313,7 @@
 		"@uppy/file-input": "^3.0.4",
 		"@uppy/progress-bar": "^3.0.4",
 		"@uppy/react": "^3.1.4",
+		"db": "workspace:*",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.0.0",
 		"cmdk": "^1.0.0",

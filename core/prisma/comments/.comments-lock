@@ -87,7 +87,6 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 -- Model rules comments
 
-COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', true, false, true)';
 
 
 -- Model forms comments
@@ -108,4 +107,4 @@ COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', t
 
 -- Model api_access_permissions comments
 
-COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../../ApiAccessToken'', true, false, true)';
+COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../types'', true, false, true)';

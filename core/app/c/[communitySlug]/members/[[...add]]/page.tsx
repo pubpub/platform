@@ -3,8 +3,9 @@ import type { Community } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { CommunitiesId } from "db/public";
+
 import type { TableMember } from "./getMemberTableColumns";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";

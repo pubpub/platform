@@ -4,8 +4,9 @@ import type { Row } from "@tanstack/react-table";
 
 import React, { useMemo } from "react";
 
+import type { PubFieldsId } from "db/public";
+
 import type { TableData } from "./getFieldTableColumns";
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import type { PubField } from "~/lib/types";
 import { DataTable } from "~/app/components/DataTable/v2/DataTable";
 import { getFieldTableColumns } from "./getFieldTableColumns";

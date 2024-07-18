@@ -1,11 +1,14 @@
 "use server";
 
-import type { CreateTokenFormSchema } from "~/kysely/ApiAccessToken";
-import type { NewApiAccessPermissions } from "~/kysely/types/public/ApiAccessPermissions";
-import type ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
-import type { ApiAccessTokensId } from "~/kysely/types/public/ApiAccessTokens";
-import type ApiAccessType from "~/kysely/types/public/ApiAccessType";
-import type { UsersId } from "~/kysely/types/public/Users";
+import type {
+	ApiAccessScope,
+	ApiAccessTokensId,
+	ApiAccessType,
+	NewApiAccessPermissions,
+	UsersId,
+} from "db/public";
+
+import type { CreateTokenFormSchema } from "./CreateTokenForm";
 import { getLoginData } from "~/lib/auth/loginData";
 import { createApiAccessToken, deleteApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
