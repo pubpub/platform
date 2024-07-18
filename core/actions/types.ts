@@ -1,14 +1,11 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
+import type { CommunitiesId, CoreSchemaType, Event, StagesId } from "db/public";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type CoreSchemaType from "~/kysely/types/public/CoreSchemaType";
-import type Event from "~/kysely/types/public/Event";
-import type { StagesId } from "~/kysely/types/public/Stages";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 
 export type ActionPubType = CorePubField[];

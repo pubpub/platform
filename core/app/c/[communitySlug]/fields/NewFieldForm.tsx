@@ -4,9 +4,9 @@ import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { CoreSchemaType } from "schemas";
 import { z } from "zod";
 
+import { CoreSchemaType } from "db/public";
 import {
 	Form,
 	FormControl,

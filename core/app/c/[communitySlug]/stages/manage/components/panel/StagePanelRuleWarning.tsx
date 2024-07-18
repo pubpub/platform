@@ -1,5 +1,4 @@
-import type { RulesId } from "~/kysely/types/public/Rules";
-import type { StagesId } from "~/kysely/types/public/Stages";
+import type { RulesId, StagesId } from "db/public";
 
 export async function StagePanelRuleWarning({
 	ruleId,

@@ -1,10 +1,8 @@
 "use server";
 
+import type { CommunitiesId, FormsId, PubTypesId } from "db/public";
 import { logger } from "logger";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { FormsId } from "~/kysely/types/public/Forms";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";

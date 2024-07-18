@@ -2,12 +2,11 @@
 
 import { startTransition, useCallback } from "react";
 
+import type { ActionInstances, ActionInstancesId, Action as ActionName } from "db/public";
 import type { FieldConfig } from "ui/auto-form";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { toast } from "ui/use-toast";
 
-import type { default as ActionName } from "~/kysely/types/public/Action";
-import type { ActionInstances, ActionInstancesId } from "~/kysely/types/public/ActionInstances";
 import { getActionByName } from "~/actions/api";
 import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
 import { useServerAction } from "~/lib/serverActions";

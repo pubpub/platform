@@ -4,18 +4,13 @@ import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
+import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
 import type { ActionSuccess } from "../types";
-import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { StagesId } from "~/kysely/types/public/Stages";
-import type { UsersId } from "~/kysely/types/public/Users";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
-import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
-import Event from "~/kysely/types/public/Event";
 import { getPub, getPubCached } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getActionByName } from "../api";

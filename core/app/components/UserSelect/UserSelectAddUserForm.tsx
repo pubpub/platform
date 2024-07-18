@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Communities } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -10,7 +11,6 @@ import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
 import { createUserWithMembership } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
-import { Communities } from "~/kysely/types/public/Communities";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 type Props = {
