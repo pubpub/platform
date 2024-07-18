@@ -1,7 +1,13 @@
-import { User } from "@prisma/client";
+import type { User } from "@prisma/client";
 
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+
+import type { XOR } from "../types";
+import type { UsersId } from "~/kysely/types/public/Users";
+import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";
+import { autoCache } from "./cache/autoCache";
 import { NotFoundError } from "./errors";
 
 export async function findOrCreateUser(userId: string): Promise<User>;
@@ -45,3 +51,43 @@ export async function findOrCreateUser(
 	}
 	return user;
 }
+
+export const getUser = (userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
+	return autoCache(
+		db
+			.selectFrom("users")
+			.$if(Boolean(userIdOrEmail.email), (eb) =>
+				eb.where("users.email", "=", userIdOrEmail.email!)
+			)
+			.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!))
+			.select((eb) => [
+				"users.id",
+				"users.email",
+				"users.firstName",
+				"users.lastName",
+				"users.slug",
+				"users.supabaseId",
+				"users.createdAt",
+				"users.updatedAt",
+				"users.isSuperAdmin",
+				jsonArrayFrom(
+					eb
+						.selectFrom("members")
+						.select((eb) => [
+							"members.id",
+							"members.userId",
+							"members.createdAt",
+							"members.updatedAt",
+							"members.role",
+							"members.communityId",
+							jsonObjectFrom(
+								eb
+									.selectFrom("communities")
+									.whereRef("communities.id", "=", "members.communityId")
+									.selectAll()
+							).as("community"),
+						])
+				).as("memberships"),
+			])
+	);
+};
