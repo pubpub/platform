@@ -1,7 +1,6 @@
 import type { Community, Member, Prisma } from "@prisma/client";
 
-import type { PubFields, PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubTypes } from "~/kysely/types/public/PubTypes";
+import type { PubFields, PubFieldsId, PubTypes } from "db/public";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
 	include: {
@@ -200,7 +199,11 @@ export type Expect<a extends true> = a;
 export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> & {
 	fields: PubFieldsId[];
 };
-export type PubField = Pick<PubFields, "id" | "name" | "slug" | "schemaName" | "pubFieldSchemaId">;
+
+export type PubField = Pick<
+	PubFields,
+	"id" | "name" | "slug" | "updatedAt" | "schemaName" | "pubFieldSchemaId" | "isArchived"
+>;
 
 /**
  * Slightly nicer way to do `{ a: string } | { b: number }`

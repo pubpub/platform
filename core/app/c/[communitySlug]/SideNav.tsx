@@ -121,6 +121,8 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 
 	const isAdmin = isCommunityAdmin(loginData, community);
 
+	const isSuperAdmin = loginData?.isSuperAdmin;
+
 	return (
 		<>
 			<header className="flex h-14 w-full items-center justify-between gap-4 border-b px-4 md:hidden lg:h-[60px] lg:px-6">
@@ -169,7 +171,11 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 							</nav>
 							<nav className="grid items-start pr-2 pt-4 text-sm font-medium">
 								<span className="font-semibold text-gray-500">MANAGE</span>
-								<ManageLinks prefix={prefix} isAdmin={isAdmin} />
+								<ManageLinks
+									prefix={prefix}
+									isAdmin={isAdmin}
+									isSuperAdmin={isSuperAdmin}
+								/>
 							</nav>
 						</div>
 					</div>

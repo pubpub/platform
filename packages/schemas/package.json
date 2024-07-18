@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@sinclair/typebox": "^0.32.34",
+		"db": "workspace:*",
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {

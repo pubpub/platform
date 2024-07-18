@@ -5,17 +5,14 @@ import type { Action as PrismaAction } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 
+import type { Action, ActionInstancesId, CommunitiesId, RulesId } from "db/public";
+import { Event } from "db/public";
 import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
-import type Action from "~/kysely/types/public/Action";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { RulesId } from "~/kysely/types/public/Rules";
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
-import { type ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import Event from "~/kysely/types/public/Event";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";

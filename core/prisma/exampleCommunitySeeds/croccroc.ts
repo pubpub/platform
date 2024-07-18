@@ -1,13 +1,12 @@
 import { faker } from "@faker-js/faker";
 
+import type { CommunitiesId, PubTypesId } from "db/public";
+import { MemberRole } from "db/public";
 import { logger } from "logger";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { registerCorePubField } from "~/actions/_lib/init";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
-import MemberRole from "~/kysely/types/public/MemberRole";
 
 export const crocCrocId = "758ba348-92c7-46ec-9612-7afda81e2d70" as CommunitiesId;
 

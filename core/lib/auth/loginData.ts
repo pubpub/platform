@@ -3,7 +3,8 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
-import MemberRole from "~/kysely/types/public/MemberRole";
+import { MemberRole } from "db/public";
+
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { getUserInfoFromJWT } from "~/lib/auth/loginId";
 import prisma from "~/prisma/db";

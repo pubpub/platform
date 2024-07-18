@@ -6,13 +6,9 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { JsonValue } from "contracts";
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import { logger } from "logger";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import type { StagesId } from "~/kysely/types/public/Stages";
 import { validatePubValues } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";

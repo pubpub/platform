@@ -2,11 +2,9 @@ import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { GetPubTypeResponseBody } from "contracts";
+import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
 
 import type { GetManyParams } from "./pub";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { autoCache } from "./cache/autoCache";

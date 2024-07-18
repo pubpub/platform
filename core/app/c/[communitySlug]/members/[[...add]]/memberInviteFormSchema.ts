@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import MemberRole from "~/kysely/types/public/MemberRole";
+import { MemberRole } from "db/public";
 
 export const memberInviteFormSchema = z.object({
 	email: z.string().email({

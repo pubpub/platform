@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 
+import { MemberRole } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
@@ -28,7 +29,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { toast } from "ui/use-toast";
 
 import type { MemberFormState } from "./AddMember";
-import MemberRole from "~/kysely/types/public/MemberRole";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";

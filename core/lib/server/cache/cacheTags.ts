@@ -1,4 +1,4 @@
-import type Database from "~/kysely/types/Database";
+import type { Database } from "db/Database";
 
 export type CacheScope<K extends keyof Database = keyof Database> = "slug" | "all" | K;
 

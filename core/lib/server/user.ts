@@ -2,8 +2,9 @@ import type { User } from "@prisma/client";
 
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { UsersId } from "db/public";
+
 import type { XOR } from "../types";
-import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";

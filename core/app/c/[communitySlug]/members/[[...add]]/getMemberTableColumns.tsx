@@ -3,6 +3,7 @@
 import type { Community } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import type { MemberRole } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -17,7 +18,6 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
-import type MemberRole from "~/kysely/types/public/MemberRole";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {

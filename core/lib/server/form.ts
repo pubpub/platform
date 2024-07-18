@@ -1,8 +1,8 @@
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
+import type { FormsId, UsersId } from "db/public";
+
 import type { XOR } from "../types";
-import type { FormsId } from "~/kysely/types/public/Forms";
-import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 

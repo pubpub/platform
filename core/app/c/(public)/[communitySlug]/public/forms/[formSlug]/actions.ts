@@ -1,6 +1,7 @@
 "use server";
 
-import type { FormsId } from "~/kysely/types/public/Forms";
+import type { FormsId } from "db/public";
+
 import type { XOR } from "~/lib/types";
 import { createMagicLink } from "~/lib/auth/createTempToken";
 import { defineServerAction } from "~/lib/server/defineServerAction";

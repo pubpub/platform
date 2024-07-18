@@ -2,8 +2,8 @@ import type { Prisma } from "@prisma/client";
 
 import { cache } from "react";
 
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { UsersId } from "~/kysely/types/public/Users";
+import type { PubsId, UsersId } from "db/public";
+
 import { db } from "~/kysely/database";
 import { createCacheTag } from "./cache/cacheTags";
 import { ONE_DAY } from "./cache/constants";

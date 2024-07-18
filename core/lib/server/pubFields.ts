@@ -1,10 +1,9 @@
 import { sql } from "kysely";
 import { jsonBuildObject } from "kysely/helpers/postgres";
 
+import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
+
 import type { PubField } from "../types";
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 
@@ -74,6 +73,8 @@ export const getPubFields = (
 							slug: eb.ref("pub_fields.slug"),
 							schemaName: eb.ref("pub_fields.schemaName"),
 							pubFieldSchemaId: eb.ref("pub_fields.pubFieldSchemaId"),
+							updatedAt: eb.ref("pub_fields.updatedAt"),
+							isArchived: eb.ref("isArchived"),
 						}).as("json"),
 					])
 					.where("pub_fields.id", "in", eb.selectFrom("ids").select("id"))

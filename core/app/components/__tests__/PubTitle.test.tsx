@@ -40,6 +40,7 @@ test("PubTitle component includes the pub title", async () => {
 					pubFieldSchemaId: null,
 					schema: null,
 					schemaName: "String",
+					isArchived: false,
 				},
 			},
 			{
@@ -59,6 +60,7 @@ test("PubTitle component includes the pub title", async () => {
 					pubFieldSchemaId: null,
 					schema: null,
 					schemaName: "String",
+					isArchived: false,
 				},
 			},
 			{
@@ -78,6 +80,7 @@ test("PubTitle component includes the pub title", async () => {
 					pubFieldSchemaId: null,
 					schema: null,
 					schemaName: "URL",
+					isArchived: false,
 				},
 			},
 		],

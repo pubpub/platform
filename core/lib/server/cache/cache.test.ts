@@ -4,19 +4,12 @@ import { Kysely, PostgresDialect } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { expect, it, vitest } from "vitest";
 
+import type { Database } from "db/Database";
+import type { ActionInstancesId, CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
+import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event, MemberRole } from "db/public";
+
 import type { QB } from "./types";
-import type Database from "~/kysely/types/Database";
-import type { ActionInstancesId } from "~/kysely/types/public/ActionInstances";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import type { UsersId } from "~/kysely/types/public/Users";
 import type { Equal, Expect } from "~/lib/types";
-import ActionRunStatus from "~/kysely/types/public/ActionRunStatus";
-import ApiAccessScope from "~/kysely/types/public/ApiAccessScope";
-import ApiAccessType from "~/kysely/types/public/ApiAccessType";
-import Event from "~/kysely/types/public/Event";
-import MemberRole from "~/kysely/types/public/MemberRole";
 import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
 import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto";

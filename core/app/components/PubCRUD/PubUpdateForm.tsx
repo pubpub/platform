@@ -8,6 +8,7 @@ import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
 import type { GetPubResponseBody } from "contracts";
+import type { CommunitiesId, PubsId, Stages, StagesId } from "db/public";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {
@@ -20,9 +21,6 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { ChevronDown, Loader2, Pencil } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { Stages, StagesId } from "~/kysely/types/public/Stages";
 import type { getPubType } from "~/lib/server/pubtype";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
@@ -41,7 +39,9 @@ export const PubUpdateForm = ({
 	const { compiledSchema, uncompiledSchema } = useMemo(() => {
 		const uncompiledSchema = buildSchemaFromPubFields(
 			//  @ts-expect-error FIXME: Schema types are different
-			pubType,
+			pubType as {
+				__fakeType: "remove me when we figure out how to get rid of the above error";
+			},
 			[]
 		);
 		const compiledSchema = new Ajv({

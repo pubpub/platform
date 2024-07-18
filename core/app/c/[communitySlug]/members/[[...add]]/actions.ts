@@ -1,13 +1,16 @@
 "use server";
 
+import type { Community } from "@prisma/client";
+import type { User } from "@supabase/supabase-js";
+
 import { cache } from "react";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { Community } from "@prisma/client";
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
-import { User } from "@supabase/supabase-js";
+import { captureException } from "@sentry/nextjs";
 
+import { MemberRole } from "db/public";
+
+import type { TableMember } from "./getMemberTableColumns";
 import type { SuggestedUser } from "~/lib/server/members";
-import MemberRole from "~/kysely/types/public/MemberRole";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
 import { env } from "~/lib/env/env.mjs";
@@ -16,7 +19,6 @@ import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import prisma from "~/prisma/db";
-import { TableMember } from "./getMemberTableColumns";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const revalidateMemberPathsAndTags = defineServerAction(

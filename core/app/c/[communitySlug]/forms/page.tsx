@@ -8,6 +8,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
+import { ContentLayout } from "../ContentLayout";
 import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
 
@@ -53,57 +54,48 @@ export default async function Page({ params: { communitySlug } }) {
 	const pubTypes = await getAllPubTypesForCommunity().execute();
 
 	return (
-		<div className="absolute inset-0 w-full">
-			<div className="flex h-full flex-col">
-				<header className="flex items-center justify-between border-b bg-gray-50 p-4 shadow-md">
-					<h1 className="text-lg font-semibold">
-						<div className="flex flex-row items-center">
-							<ClipboardPenLine
-								size={24}
-								strokeWidth={1}
-								className="mr-2 text-slate-500"
-							/>{" "}
-							Forms
-						</div>
-					</h1>
-					<NewFormButton pubTypes={pubTypes} />
-				</header>
-				<div className="h-full flex-1 overflow-auto">
-					{forms.length === 0 ? (
-						<div className="flex h-full items-center justify-center">
-							<div className="flex max-w-[444px] flex-col items-center justify-center">
-								<h2 className="mb-2 text-2xl font-semibold text-gray-800">
-									You don’t have any forms yet
-								</h2>
-								<p className="mb-6 text-center text-gray-600">
-									Forms are templates of questions used to collect information
-									from users via a response submission process.
-								</p>
-								<NewFormButton pubTypes={pubTypes} />
-							</div>
-						</div>
-					) : archived.length > 0 ? (
-						<Tabs defaultValue="active" className="">
-							<TabsList className="ml-4 mt-4">
-								<TabsTrigger value="active">Active</TabsTrigger>
-								<TabsTrigger value="archived">Archived</TabsTrigger>
-							</TabsList>
-							<div className="px-4">
-								<TabsContent value="active">
-									<FormTable forms={tableForms(active)} />
-								</TabsContent>
-								<TabsContent value="archived">
-									<FormTable forms={tableForms(archived)} />
-								</TabsContent>
-							</div>
-						</Tabs>
-					) : (
-						<div className="px-4">
-							<FormTable forms={tableForms(active)} />
-						</div>
-					)}
+		<ContentLayout
+			title={
+				<>
+					<ClipboardPenLine size={24} strokeWidth={1} className="mr-2 text-slate-500" />{" "}
+					Forms
+				</>
+			}
+			headingAction={<NewFormButton pubTypes={pubTypes} />}
+		>
+			{forms.length === 0 ? (
+				<div className="flex h-full items-center justify-center">
+					<div className="flex max-w-[444px] flex-col items-center justify-center">
+						<h2 className="mb-2 text-2xl font-semibold text-gray-800">
+							You don’t have any forms yet
+						</h2>
+						<p className="mb-6 text-center text-gray-600">
+							Forms are templates of questions used to collect information from users
+							via a response submission process.
+						</p>
+						<NewFormButton pubTypes={pubTypes} />
+					</div>
 				</div>
-			</div>
-		</div>
+			) : archived.length > 0 ? (
+				<Tabs defaultValue="active" className="">
+					<TabsList className="ml-4 mt-4">
+						<TabsTrigger value="active">Active</TabsTrigger>
+						<TabsTrigger value="archived">Archived</TabsTrigger>
+					</TabsList>
+					<div className="px-4">
+						<TabsContent value="active">
+							<FormTable forms={tableForms(active)} />
+						</TabsContent>
+						<TabsContent value="archived">
+							<FormTable forms={tableForms(archived)} />
+						</TabsContent>
+					</div>
+				</Tabs>
+			) : (
+				<div className="px-4">
+					<FormTable forms={tableForms(active)} />
+				</div>
+			)}
+		</ContentLayout>
 	);
 }
