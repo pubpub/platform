@@ -1,5 +1,5 @@
 import { getLoginData } from "~/lib/auth/loginData";
-import { getFormBySlug } from "~/lib/server/form";
+import { getForm } from "~/lib/server/form";
 import { FormBuilder } from "./FormBuilder";
 
 export default async function Page({ params: { formSlug } }) {
@@ -12,6 +12,6 @@ export default async function Page({ params: { formSlug } }) {
 		return null;
 	}
 
-	const form = await getFormBySlug(formSlug).executeTakeFirstOrThrow();
+	const form = await getForm({ slug: formSlug }).executeTakeFirstOrThrow();
 	return <FormBuilder form={form} />;
 }

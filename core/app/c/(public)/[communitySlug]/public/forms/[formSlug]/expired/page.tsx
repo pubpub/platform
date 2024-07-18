@@ -1,9 +1,34 @@
 import React from "react";
 
-import { Button } from "ui/button";
-import { Mail } from "ui/icon";
+import { getForm, userHasPermissionToForm } from "~/lib/server/form";
+import { RequestLink } from "./RequestLink";
 
-export default async function Page() {
+export default async function Page({
+	params,
+	searchParams,
+}: {
+	params: { formSlug: string; communitySlug: string };
+	searchParams: { email?: string };
+}) {
+	const form = await getForm({ slug: params.formSlug }).executeTakeFirst();
+
+	if (!form) {
+		return <div>No form found</div>;
+	}
+
+	if (!searchParams.email) {
+		return <div>No email provided</div>;
+	}
+
+	const hasAccessToForm = await userHasPermissionToForm({
+		formId: form.id,
+		email: searchParams.email,
+	});
+
+	if (!hasAccessToForm) {
+		return <div>You do not have permission to access this form</div>;
+	}
+
 	return (
 		<div className="mx-auto mt-32 flex max-w-md flex-col items-center justify-center text-center">
 			<h2 className="mb-2 text-lg font-semibold">Link Expired</h2>
@@ -11,12 +36,11 @@ export default async function Page() {
 				The link for this form has expired. Request a new one via email below to pick up
 				right where you left off.
 			</p>
-			<Button
-				variant="secondary"
-				className="bg-blue-500 text-slate-50 shadow-sm hover:bg-blue-500/90 dark:bg-blue-900 dark:text-slate-50 dark:hover:bg-blue-900/90"
-			>
-				<Mail size={16} className="mr-1" strokeWidth={1} /> Request New Link
-			</Button>
+			<RequestLink
+				formSlug={params.formSlug}
+				communitySlug={params.communitySlug}
+				email={searchParams.email}
+			/>
 		</div>
 	);
 }
