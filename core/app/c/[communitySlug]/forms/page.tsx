@@ -83,9 +83,10 @@ export default async function Page({ params: { communitySlug } }) {
 				<ActiveArchiveTabs
 					activeContent={<FormTable forms={tableForms(active)} />}
 					archiveContent={<FormTable forms={tableForms(archived)} />}
+					className="m-4"
 				/>
 			) : (
-				<div className="px-4">
+				<div className="m-4">
 					<FormTable forms={tableForms(active)} />
 				</div>
 			)}
