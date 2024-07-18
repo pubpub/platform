@@ -1,32 +1,9 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
+import { pubsSchema, pubTypesSchema, StagesId, stagesIdSchema, stagesSchema } from "db/public";
+
 import { CreatePubRequestBodyWithNulls, CreatePubRequestBodyWithNullsBase } from "./integrations";
-
-// import { pubsSchema } from "db/public/Pubs";
-// import { StagesId, stagesIdSchema, stagesSchema } from "db/public/Stages";
-// import { pubTypesSchema } from "db/src/public/PubTypes";
-type StagesId = string & { __brand: "StagesId" };
-const stagesIdSchema = z.string().uuid() as unknown as z.Schema<StagesId>;
-const pubsSchema = z.object({
-	id: z.string().uuid(),
-	createdAt: z.date(),
-	updatedAt: z.date(),
-	pubTypeId: z.string().uuid(),
-	communityId: z.string().uuid(),
-	parentId: z.string().uuid().nullable(),
-	assigneeId: z.string().uuid().nullable(),
-});
-
-const pubTypesSchema = z.object({
-	id: z.string().uuid(),
-	name: z.string(),
-	description: z.string().nullable(),
-	createdAt: z.date(),
-	updatedAt: z.date(),
-});
-
-const stagesSchema = z.record(z.unknown());
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
 	stageId?: StagesId;
@@ -48,9 +25,11 @@ type PubWithChildren = z.infer<typeof pubsSchema> & {
 	children?: PubWithChildren[];
 };
 
-const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.extend({
-	children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
-});
+const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.and(
+	z.object({
+		children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
+	})
+);
 
 export const siteApi = contract.router(
 	{

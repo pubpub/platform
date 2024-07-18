@@ -1,6 +1,9 @@
 import type { z } from "zod";
 
-import { CoreSchemaType, zodTypeToCoreSchemaType } from "schemas";
+import { zodTypeToCoreSchemaType } from "schemas";
+
+// this makes Zod be imported on the client, we might want to change this in the future
+import { coreSchemaTypeSchema } from "db/public";
 
 import type { FieldConfigItem } from "../../auto-form/types";
 import type { PubFieldContext } from "../PubFieldContext";
@@ -25,7 +28,13 @@ export const getAllowedSchemaNames = (allowedSchemasOrZodItem: AllowedSchemasOrZ
 		return [];
 	}
 	// just to make sure
-	return allowedSchemas.filter((schema) => Boolean(CoreSchemaType[schema]));
+	const parsed = coreSchemaTypeSchema.array().safeParse(allowedSchemas);
+
+	if (!parsed.success) {
+		throw new Error(`Invalid allowedSchemas: ${allowedSchemas.join(", ")}`);
+	}
+
+	return parsed.data;
 };
 
 export type AllowedSchemasOrZodItem =

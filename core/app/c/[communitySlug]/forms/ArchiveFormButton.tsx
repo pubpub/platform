@@ -2,11 +2,11 @@
 
 import { useCallback } from "react";
 
+import type { FormsId } from "db/public";
 import { Button } from "ui/button";
 import { Archive } from "ui/icon";
 import { cn } from "utils";
 
-import type { FormsId } from "~/kysely/types/public/Forms";
 import { useServerAction } from "~/lib/serverActions";
 import { archiveForm } from "./actions";
 

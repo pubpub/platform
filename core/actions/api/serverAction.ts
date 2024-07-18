@@ -1,7 +1,8 @@
 "use server";
 
+import type { UsersId } from "db/public";
+
 import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
-import type { UsersId } from "~/kysely/types/public/Users";
 import { getLoginData } from "~/lib/auth/loginData";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { runActionInstance as runActionInstanceInner } from "../_lib/runActionInstance";

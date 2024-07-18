@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import type { PubTypesId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -29,7 +30,6 @@ import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
 
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { createForm } from "./actions";

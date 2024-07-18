@@ -1,15 +1,14 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import type { CoreSchemaType } from "schemas";
 
 import { useCallback } from "react";
 
+import type { CoreSchemaType, PubFieldsId } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 import { DropdownMenuItem } from "ui/dropdown-menu";
 import { Archive, CurlyBraces, History } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { PubFieldsId } from "~/kysely/types/public/PubFields";
 import { MenuItemButton, TableActionMenu } from "~/app/components/TableActionMenu";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";

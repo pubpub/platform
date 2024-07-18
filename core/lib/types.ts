@@ -1,7 +1,6 @@
 import type { Community, Member, Prisma } from "@prisma/client";
 
-import type { PubFields, PubFieldsId } from "~/kysely/types/public/PubFields";
-import type { PubTypes } from "~/kysely/types/public/PubTypes";
+import type { PubFields, PubFieldsId, PubTypes } from "db/public";
 
 export type RecursiveInclude<T extends string, U extends {}> = {
 	include: {

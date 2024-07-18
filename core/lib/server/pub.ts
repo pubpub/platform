@@ -6,14 +6,11 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
+import type { Database } from "db/Database";
+import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";
-import type Database from "~/kysely/types/Database";
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
-import type { PubsId } from "~/kysely/types/public/Pubs";
-import type { PubTypesId } from "~/kysely/types/public/PubTypes";
-import type { UsersId } from "~/kysely/types/public/Users";
 import { validatePubValues } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
