@@ -1,13 +1,12 @@
-import type { Users } from "~/kysely/types/public/Users";
 import { env } from "../env/env.mjs";
 import { getServerSupabase } from "../supabaseServer";
 
-const createSupabaseMagicLink = async ({ user, path }: { user: Users; path: string }) => {
+const createSupabaseMagicLink = async ({ email, path }: { email: string; path: string }) => {
 	const supabase = getServerSupabase();
 
 	const { data, error } = await supabase.auth.admin.generateLink({
 		type: "magiclink",
-		email: user.email,
+		email: email,
 		options: {
 			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/${path}`,
 		},
@@ -20,6 +19,6 @@ const createSupabaseMagicLink = async ({ user, path }: { user: Users; path: stri
 	return data.properties.action_link;
 };
 
-export const createMagicLink = async ({ user, path }: { user: Users; path: string }) => {
-	return createSupabaseMagicLink({ user, path });
+export const createMagicLink = async ({ email, path }: { email: string; path: string }) => {
+	return createSupabaseMagicLink({ email, path });
 };
