@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
-import type { CommunitiesId } from "~/kysely/types/public/Communities";
+import { cache } from "react";
+
 import type { PubsId } from "~/kysely/types/public/Pubs";
 import type { UsersId } from "~/kysely/types/public/Users";
 import { db } from "~/kysely/database";
@@ -9,7 +10,7 @@ import { ONE_DAY } from "./cache/constants";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { memoize } from "./cache/memoize";
 
-export function findCommunityBySlug(communitySlug?: string) {
+export const findCommunityBySlug = cache((communitySlug?: string) => {
 	const slug = communitySlug ?? getCommunitySlug();
 	return memoize(
 		() => db.selectFrom("communities").selectAll().where("slug", "=", slug).executeTakeFirst(),
@@ -18,7 +19,7 @@ export function findCommunityBySlug(communitySlug?: string) {
 			revalidateTags: [createCacheTag(`community-all_${slug}`)],
 		}
 	)();
-}
+});
 
 // Retrieve the pub's community id in order to revalidate the next server
 // cache after the action is run.
@@ -46,6 +47,7 @@ export const findCommunityByPubId = memoize(
 
 export type CommunityData = Prisma.PromiseReturnType<typeof findCommunityBySlug>;
 
+// TODO: cache this
 export const getAvailableCommunities = async (userId: UsersId) => {
 	return await db
 		.selectFrom("members")
