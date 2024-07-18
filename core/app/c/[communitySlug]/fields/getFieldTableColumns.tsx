@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { useCallback } from "react";
+import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import type { CoreSchemaType, PubFieldsId } from "db/public";
 import { Checkbox } from "ui/checkbox";
@@ -66,6 +67,16 @@ export const getFieldTableColumns = () =>
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
 			accessorKey: "name",
+			cell: ({ row }) => {
+				const { schemaName, name } = row.original;
+				const icon = schemaName ? SCHEMA_TYPES_WITH_ICONS[schemaName].icon : null;
+				return (
+					<div className="flex items-center gap-2">
+						{icon ? <span className="absolute -ml-6">{icon}</span> : null}
+						<span>{row.original.name}</span>
+					</div>
+				);
+			},
 		},
 		{
 			header: ({ column }) => (
