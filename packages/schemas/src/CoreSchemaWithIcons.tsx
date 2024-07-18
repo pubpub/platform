@@ -45,4 +45,4 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 		description: "A set of 3 numbers",
 		icon: <BoxSelect className="w-4" />,
 	},
-};
+} as const;
