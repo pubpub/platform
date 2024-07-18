@@ -1,28 +1,16 @@
+import type { OR } from "../types";
 import type { LoginData } from "./loginData";
 
 export const getCommunityRole = (
 	loginData: LoginData,
-	communityIdentifier:
-		| {
-				id: string;
-				slug?: never;
-		  }
-		| {
-				id: string;
-				slug?: never;
-		  }
-		| {
-				id: string;
-				slug: string;
-		  }
+	communityIdentifier: OR<{ id: string }, { slug: string }>
 ) => {
 	if (loginData?.isSuperAdmin) {
 		// super admins are treated as admins, regardless of their role
 		return "admin";
 	}
 
-	const isIdentifiedWithCommunityId =
-		"communityId" in communityIdentifier && communityIdentifier.id !== undefined;
+	const isIdentifiedWithCommunityId = communityIdentifier.id !== undefined;
 
 	const membership = loginData?.memberships.find((m) => {
 		if (isIdentifiedWithCommunityId) {
@@ -47,8 +35,8 @@ export const isCommunityAdmin = (
 				slug?: never;
 		  }
 		| {
-				id: string;
-				slug?: never;
+				id?: never;
+				slug: string;
 		  }
 		| {
 				id: string;
