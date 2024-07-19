@@ -19,8 +19,8 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 				.where("formId", "=", formId as FormsId)
 		).executeTakeFirstOrThrow();
 	} catch (error) {
-		logger.error({ msg: "error archiving form", error });
-		return { error: "Unable to archive form" };
+		logger.error({ msg: "error saving form", error });
+		return { error: "Unable to save form" };
 	}
 });
 

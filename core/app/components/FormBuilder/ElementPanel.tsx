@@ -38,8 +38,6 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 				...newElement,
 				required: true,
 				type: ElementType.pubfield,
-				label: null,
-				description: null,
 			});
 			dispatch("finishAdd");
 		}
@@ -47,7 +45,6 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 			addElement({
 				...newElement,
 				type: ElementType.structural,
-				content: null,
 			});
 		}
 	};

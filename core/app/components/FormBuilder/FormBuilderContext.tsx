@@ -5,14 +5,14 @@ import type { PropsWithChildren } from "react";
 import * as React from "react";
 import { createContext, useCallback, useContext } from "react";
 
-import type { FormElementData } from "./types";
+import type { FormBuilderSchema } from "./types";
 
 type FormBuilderContext = {
 	submit: () => void;
-	addElement: (element: FormElementData) => void;
+	addElement: (element: FormBuilderSchema["elements"][0]) => void;
 	removeElement: (index: number) => void;
 	setEditingElement: (index: number) => void;
-	editingElement?: FormElementData;
+	editingElement?: FormBuilderSchema["elements"][0];
 	elementsCount: number;
 };
 

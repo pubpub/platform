@@ -1,46 +1,56 @@
 import { z } from "zod";
 
-import { ElementType, FormAccessType, StructuralFormElement } from "db/public";
+import type { ElementType, PubFieldsId, StructuralFormElement } from "db/public";
+import {
+	FormAccessType,
+	formElementsIdSchema,
+	formElementsInitializerSchema,
+	formsIdSchema,
+} from "db/public";
 
-export const baseElementSchema = z.object({
-	elementId: z.string().optional(),
+const baseElementSchema = z.object({
+	elementId: formElementsIdSchema.optional(),
+	deleted: z.boolean().optional().default(false),
+	updated: z.boolean().optional().default(false),
 });
-export const inputElementSchema = z
-	.object({
-		type: z.literal(ElementType.pubfield),
-		fieldId: z.string(),
-		required: z.boolean(),
-		label: z.string().nullable().optional().default(null),
-		description: z.string().nullable().optional().default(null),
-	})
-	.merge(baseElementSchema);
-export type InputElement = z.infer<typeof inputElementSchema>;
 
-export const structuralElementSchema = z
-	.object({
-		type: z.literal(ElementType.structural),
-		element: z.nativeEnum(StructuralFormElement),
-		content: z.string().nullable().optional().default(null),
-	})
-	.merge(baseElementSchema);
+type baseElement = z.input<typeof baseElementSchema>;
 
-export type StructuralElement = z.infer<typeof structuralElementSchema>;
-export const elementSchema = z.discriminatedUnion("type", [
-	inputElementSchema,
-	structuralElementSchema,
-]);
+export type InputElement = baseElement & {
+	type: ElementType.pubfield;
+	fieldId: PubFieldsId;
+	required: boolean;
+	label?: string | null;
+	description?: string | null;
+	element: never;
+	content: never;
+};
 
-export type FormElementData = z.infer<typeof elementSchema>;
-export const isFieldInput = (element: FormElementData) => "fieldId" in element;
-export const isStructuralElement = (element: FormElementData) => "element" in element;
+export type StructuralElement = baseElement & {
+	type: ElementType.structural;
+	element: StructuralFormElement;
+	content: string;
+	fieldId: never;
+	required: never;
+	label?: never;
+	description?: never;
+};
+
+const formElementSchema = formElementsInitializerSchema
+	.merge(baseElementSchema)
+	.omit({ formId: true, id: true });
+export type FormElementData = z.input<typeof formElementSchema>;
+export const isFieldInput = (element: FormElementData): element is InputElement =>
+	"fieldId" in element;
+export const isStructuralElement = (element: FormElementData): element is StructuralElement =>
+	"element" in element;
 
 export const formBuilderSchema = z.object({
 	access: z.nativeEnum(FormAccessType),
-	elements: z.array(elementSchema),
-	// deletedElementIds: z.array(z.string()),
-	formId: z.string(),
+	elements: z.array(formElementSchema),
+	formId: formsIdSchema,
 });
 
-export type FormBuilderSchema = z.infer<typeof formBuilderSchema>;
+export type FormBuilderSchema = z.input<typeof formBuilderSchema>;
 export type PanelState = "initial" | "selecting" | "configuring";
 export type PanelEvent = "back" | "cancel" | "startAdd" | "select" | "finishAdd";

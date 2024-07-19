@@ -70,8 +70,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),
 		values: {
-			// TODO: make a union type that actually works here
-			elements: pubForm.elements as unknown as FormBuilderSchema["elements"],
+			elements: pubForm.elements,
 			access: pubForm.access,
 			formId: pubForm.id,
 		},
@@ -107,7 +106,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 			});
 		}
 	};
-	const addElement = useCallback((element: FormElementData) => {
+	const addElement = useCallback((element: FormBuilderSchema["elements"][0]) => {
 		append(element);
 	}, []);
 	const removeElement = useCallback((index: number) => remove(index), []);
