@@ -4,6 +4,7 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getForm } from "~/lib/server/form";
 import { RequestLink } from "./expired/RequestLink";
+import { StupidHackyThingy } from "./StupidHackyThingy";
 
 export default async function FormPage({
 	params,
@@ -22,26 +23,31 @@ export default async function FormPage({
 
 	// this is most likely what happens if a user clicks a link in an email
 	// with an expired token, or a token that has been used already
-	if (!loginData) {
-		redirect(
-			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}`,
-			RedirectType.replace
-		);
-	}
+	// if (!loginData) {
+	// 	redirect(
+	// 		`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}`,
+	// 		RedirectType.replace
+	// 	);
+	// }
 
-	const role = getCommunityRole(loginData, { slug: params.communitySlug });
-	if (!role) {
-		return null;
-	}
+	// const role = getCommunityRole(loginData, { slug: params.communitySlug });
+	// if (!role) {
+	// 	return null;
+	// }
 
 	return (
 		<div className="container mx-auto flex w-full flex-col items-center">
-			<h1>Form Page</h1>
-			<RequestLink
-				formSlug={params.formSlug}
-				communitySlug={params.communitySlug}
-				email={"none@pubpub.org"}
-			/>
+			<StupidHackyThingy />
+			{!loginData ? (
+				<p>Loading...</p>
+			) : (
+				<>
+					<h1>Form Page {form.name}</h1>
+					<p>Hello {loginData.firstName}!</p>
+
+					<p>Fill in the form below!</p>
+				</>
+			)}
 		</div>
 	);
 }

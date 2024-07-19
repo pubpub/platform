@@ -1,8 +1,11 @@
 "use server";
 
 import type { CommunitiesId, FormsId, PubTypesId, UsersId } from "db/public";
+import { MemberRole } from "db/public";
 import { logger } from "logger";
+import { assert } from "utils";
 
+import type { XOR } from "~/lib/types";
 import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -12,6 +15,7 @@ import { getForm } from "~/lib/server/form";
 import { getUser } from "~/lib/server/user";
 import { slugifyString } from "~/lib/string";
 import { inviteUserToForm } from "../../(public)/[communitySlug]/public/forms/[formSlug]/actions";
+import { createUserWithMembership } from "../members/[[...add]]/actions";
 
 export const createForm = defineServerAction(async function createForm(
 	pubTypeId: PubTypesId,
@@ -52,26 +56,49 @@ export const archiveForm = defineServerAction(async function archiveForm(id: For
 	}
 });
 
-export const addUserToForm = defineServerAction(async function addUserToForm({
-	userId,
-	...formSlugOrId
-}: {
-	userId: UsersId;
-} & (
-	| {
-			slug: string;
-			id?: never;
-	  }
-	| {
-			id: FormsId;
-			slug?: never;
-	  }
-)) {
+const resolveUserId = async (props: XOR<{ userId: UsersId }, { email: string }>) => {
+	if (props.userId !== undefined) {
+		return props.userId;
+	}
+
+	const existingUser = await getUser({ email: props.email }).executeTakeFirstOrThrow();
+
+	if (existingUser?.id) {
+		return existingUser.id as UsersId;
+	}
+
+	const community = await findCommunityBySlug();
+	assert(community, "Community not found");
+
+	const newUser = await createUserWithMembership({
+		email: props.email,
+		firstName: "test",
+		lastName: "test",
+		community,
+		role: MemberRole.contributor,
+		isSuperAdmin: false,
+	});
+
+	if (!("user" in newUser)) {
+		throw new Error("Failed to create user");
+	}
+
+	assert(newUser.user);
+
+	return newUser.user.id as UsersId;
+};
+
+export const addUserToForm = defineServerAction(async function addUserToForm(
+	props: XOR<{ userId: UsersId }, { email: string }> & XOR<{ slug: string }, { id: FormsId }>
+) {
 	const communitySlug = getCommunitySlug();
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return { error: "Community not found" };
 	}
+	const { userId: maybeUsersId, email, ...formSlugOrId } = props;
+
+	const userId = await resolveUserId(props);
 
 	try {
 		const form = await getForm(formSlugOrId).executeTakeFirstOrThrow();
@@ -106,7 +133,7 @@ export const addUserToForm = defineServerAction(async function addUserToForm({
 		await inviteUserToForm({
 			communitySlug,
 			email: user.email,
-			...formSlugOrId,
+			id: form.id,
 		});
 	} catch (error) {
 		logger.error({ msg: "error adding user to form", error });

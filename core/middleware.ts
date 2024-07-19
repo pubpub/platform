@@ -2,7 +2,10 @@ import type { NextRequest } from "next/server";
 
 import { NextResponse } from "next/server";
 
-import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME } from "./lib/server/cache/constants";
+import {
+	PUBPUB_COMMUNITY_SLUG_COOKIE_NAME,
+	PUBPUB_COMMUNITY_SLUG_HEADER_NAME,
+} from "./lib/server/cache/constants";
 
 const communityRouteRegexp = /^\/c\/([^/]*?)(?:$|\/)|\/api\/v\d\/c\/([^/]*?)\//;
 
@@ -33,6 +36,7 @@ const communitySlugMiddleware = async (request: NextRequest) => {
 	response.cookies.set(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME, communitySlug, {
 		maxAge: 60 * 60 * 24,
 	});
+	response.headers.set(PUBPUB_COMMUNITY_SLUG_HEADER_NAME, communitySlug);
 
 	return response;
 };
