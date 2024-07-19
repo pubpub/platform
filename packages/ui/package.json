@@ -313,11 +313,11 @@
 		"@uppy/file-input": "^3.0.4",
 		"@uppy/progress-bar": "^3.0.4",
 		"@uppy/react": "^3.1.4",
-		"db": "workspace:*",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.0.0",
 		"cmdk": "^1.0.0",
 		"date-fns": "^3.6.0",
+		"db": "workspace:*",
 		"lexical": "^0.15.0",
 		"lucide-react": "^0.357.0",
 		"next": "14.2.4",
@@ -343,7 +343,7 @@
 		"react-hook-form": "^7.46.1",
 		"tsconfig": "workspace:*",
 		"typescript": "^5.4.2",
-		"zod": "^3.22.4"
+		"zod": "^3.23.8"
 	},
 	"preconstruct": {
 		"exports": {

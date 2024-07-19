@@ -102,7 +102,7 @@
 		"use-debounce": "^10.0.0",
 		"utils": "workspace:*",
 		"uuid": "^9.0.0",
-		"zod": "^3.22.4"
+		"zod": "^3.23.8"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.43.1",

@@ -12,7 +12,7 @@
 		"@sinclair/typebox": "^0.32.34",
 		"db": "workspace:*",
 		"lucide-react": "^0.357.0",
-		"zod": "^3.22.4"
+		"zod": "^3.23.8"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
