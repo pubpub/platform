@@ -53,4 +53,4 @@ export const formBuilderSchema = z.object({
 
 export type FormBuilderSchema = z.input<typeof formBuilderSchema>;
 export type PanelState = "initial" | "selecting" | "configuring";
-export type PanelEvent = "back" | "cancel" | "startAdd" | "select" | "finishAdd";
+export type PanelEvent = "back" | "cancel" | "add" | "configure" | "save";

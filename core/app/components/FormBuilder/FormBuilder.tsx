@@ -43,12 +43,12 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (state, event
 		case "back":
 			if (state === "configuring") return "selecting";
 			break;
-		case "startAdd":
+		case "add":
 			if (state === "initial") return "selecting";
-		case "select":
+		case "configure":
 			return "configuring";
 			break;
-		case "finishAdd":
+		case "save":
 			if (state === "configuring") return "initial";
 			break;
 	}
@@ -126,6 +126,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 				editingElementIndex !== null ? elements[editingElementIndex] : undefined
 			}
 			elementsCount={elements.length}
+			openConfigPanel={() => dispatch("configure")}
 		>
 			{" "}
 			<Tabs defaultValue="builder" className="pr-[380px]">
@@ -168,13 +169,20 @@ export function FormBuilder({ pubForm, id }: Props) {
 											items={elements}
 											strategy={verticalListSortingStrategy}
 										>
-											{elements.map((element, index) => (
-												<FormElement
-													key={element.id}
-													element={element}
-													index={index}
-												></FormElement>
-											))}
+											{elements.map((element, index) => {
+												return (
+													<FormElement
+														key={element.id}
+														element={element}
+														index={index}
+														isEditing={editingElementIndex === index}
+														isDisabled={
+															editingElementIndex !== null &&
+															editingElementIndex !== index
+														}
+													></FormElement>
+												);
+											})}
 										</SortableContext>
 									</DndContext>
 								</div>
@@ -194,7 +202,6 @@ export function FormBuilder({ pubForm, id }: Props) {
 														dispatch={dispatch}
 													/>
 												</FormControl>
-												{/* <FormMessage /> */}
 											</FormItem>
 										)}
 									/>

@@ -23,13 +23,12 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 	const fields = usePubFieldContext();
 
 	const { addElement, setEditingElement, elementsCount } = useFormBuilder();
-	const [newElement, setNewElement] = useState<
-		| undefined
-		| { type: "structure"; element: StructuralFormElement }
-		| { type: "field"; fieldId: PubFieldsId }
-	>();
 
-	const addToForm = () => {
+	const addToForm = (
+		newElement:
+			| { type: "structure"; element: StructuralFormElement }
+			| { type: "field"; fieldId: PubFieldsId }
+	) => {
 		if (!newElement) {
 			return;
 		}
@@ -39,7 +38,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 				required: true,
 				type: ElementType.pubfield,
 			});
-			dispatch("finishAdd");
+			dispatch("save");
 		}
 		if (newElement.type === "structure") {
 			addElement({
@@ -61,7 +60,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 					<Button
 						className="flex w-full items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600"
 						size="lg"
-						onClick={() => dispatch("startAdd")}
+						onClick={() => dispatch("add")}
 					>
 						<PlusCircle /> Add New
 					</Button>
@@ -94,8 +93,9 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 											key={field.id}
 											className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
 											onClick={() => {
-												setNewElement({ type: "field", fieldId: field.id });
-												dispatch("select");
+												addToForm({ type: "field", fieldId: field.id });
+												setEditingElement(elementsCount);
+												dispatch("configure");
 											}}
 										>
 											<Type size={20} className="my-auto text-emerald-500" />
@@ -136,12 +136,22 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 						<Button
 							className="border-slate-950"
 							variant="outline"
-							onClick={() => dispatch("cancel")}
+							onClick={() => {
+								setEditingElement(null);
+								dispatch("cancel");
+							}}
 						>
 							Cancel
 						</Button>
-						<Button className="bg-blue-500 hover:bg-blue-600" onClick={addToForm}>
-							Add
+						<Button
+							className="bg-blue-500 hover:bg-blue-600"
+							onClick={() => {
+								//update element
+								dispatch("save");
+								setEditingElement(null);
+							}}
+						>
+							Save
 						</Button>
 					</div>
 				</>

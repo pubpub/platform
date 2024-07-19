@@ -11,9 +11,10 @@ type FormBuilderContext = {
 	submit: () => void;
 	addElement: (element: FormBuilderSchema["elements"][0]) => void;
 	removeElement: (index: number) => void;
-	setEditingElement: (index: number) => void;
+	setEditingElement: (index: number | null) => void;
 	editingElement?: FormBuilderSchema["elements"][0];
 	elementsCount: number;
+	openConfigPanel: () => void;
 };
 
 const FormBuilderContext = createContext<FormBuilderContext | undefined>(undefined);
