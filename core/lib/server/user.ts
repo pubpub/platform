@@ -1,5 +1,6 @@
 import type { User } from "@prisma/client";
 
+import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { UsersId } from "db/public";
@@ -53,7 +54,7 @@ export async function findOrCreateUser(
 	return user;
 }
 
-export const getUser = (userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
+export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
 	// do not use autocache here until we have a good way to globally invalidate users
 	return db
 		.selectFrom("users")
@@ -92,4 +93,4 @@ export const getUser = (userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) 
 			eb.where("users.email", "=", userIdOrEmail.email!)
 		)
 		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
-};
+});

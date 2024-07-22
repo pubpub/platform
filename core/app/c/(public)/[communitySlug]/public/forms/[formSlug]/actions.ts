@@ -11,7 +11,12 @@ import { createMagicLink } from "~/lib/auth/createMagicLink";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { addUserToForm, getForm, userHasPermissionToForm } from "~/lib/server/form";
+import {
+	addUserToForm,
+	createFormInviteLink,
+	getForm,
+	userHasPermissionToForm,
+} from "~/lib/server/form";
 import { smtpclient } from "~/lib/server/mailgun";
 import { getUser } from "~/lib/server/user";
 
@@ -67,6 +72,44 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		return { error: `No form found with ${formSlugOrId}` };
 	}
 
+	const canAccessForm = await userHasPermissionToForm({
+		email,
+		formId: form.id,
+	});
+
+	if (!canAccessForm) {
+		logger.error({ msg: "error adding user to form" });
+		return { error: `You do not have permission to access form ${form.slug}` };
+	}
+
+	const link = await createFormInviteLink({ formSlug: form.slug, email });
+
+	await smtpclient.sendMail({
+		from: "hello@pubpub.org",
+		to: email,
+		subject: "Link to form",
+		text: `You have been invited to fill in the form ${form.name} on PubPub. Click the link below to accept the invitation
+
+		${link}
+		`,
+	});
+});
+
+// TODO: This is a test action to test inviting locally, remove when done
+// it also adds users to the form, and creates users if they don't exist, which should
+// not normally be done at this step
+export const TEST_inviteUserToForm = defineServerAction(async function TEST_inviteUserToForm({
+	email,
+	...formSlugOrId
+}: {
+	email: string;
+} & XOR<{ slug: string }, { id: FormsId }>) {
+	const form = await getForm(formSlugOrId).executeTakeFirst();
+
+	if (!form) {
+		return { error: `No form found with ${formSlugOrId}` };
+	}
+
 	const user = await resolveUser({ email, firstName: "test", lastName: "test" });
 
 	const canAccessForm = await userHasPermissionToForm({
@@ -83,17 +126,15 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		}
 	}
 
-	const communitySlug = getCommunitySlug();
-
-	const link = await createMagicLink({
-		email,
-		path: `/c/${communitySlug}/public/forms/${form.slug}?email=${email}`,
-	});
+	const link = await createFormInviteLink({ formSlug: form.slug, email });
 
 	await smtpclient.sendMail({
 		from: "hello@pubpub.org",
 		to: email,
 		subject: "Link to form",
-		text: link,
+		text: `You have been invited to fill in the form ${form.name} on PubPub. Click the link below to accept the invitation
+
+		${link}
+		`,
 	});
 });

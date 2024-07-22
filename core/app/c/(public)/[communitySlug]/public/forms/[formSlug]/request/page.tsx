@@ -1,8 +1,5 @@
 import { notFound } from "next/navigation";
 
-import { Button } from "ui/button";
-
-import { addUserToForm } from "~/app/c/[communitySlug]/forms/actions";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { getForm } from "~/lib/server/form";

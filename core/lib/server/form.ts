@@ -5,8 +5,11 @@ import type { FormsId, PublicSchema, UsersId } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
+import { createMagicLink } from "../auth/createMagicLink";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
+import { getCommunitySlug } from "./cache/getCommunitySlug";
+import { getUser } from "./user";
 
 /**
  * Get a form by either slug or id
@@ -67,6 +70,9 @@ export const userHasPermissionToForm = async (
 	return Boolean(formPermission);
 };
 
+/**
+ * Gives a user permission to a form
+ */
 export const addUserToForm = (
 	props: { userId: UsersId } & XOR<{ slug: string }, { id: FormsId }>
 ) => {
@@ -132,4 +138,53 @@ export const addUserToForm = (
 			}))
 			.returning(["formId", "permissionId"])
 	);
+};
+
+export const createFormInvitePath = ({
+	formSlug,
+	communitySlug,
+	email,
+}: {
+	formSlug: string;
+	communitySlug: string;
+	email: string;
+}) => {
+	return `/c/${communitySlug}/public/invite?redirectTo=${encodeURIComponent(`/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}`)}`;
+};
+
+export const createFormInviteLink = async (
+	props: XOR<{ formSlug: string }, { formId: FormsId }> &
+		XOR<{ email: string }, { userId: UsersId }>
+) => {
+	const formPromise = getForm(
+		props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }
+	).executeTakeFirstOrThrow();
+
+	const userPromise = getUser(
+		props.userId !== undefined ? { id: props.userId } : { email: props.email }
+	).executeTakeFirstOrThrow();
+
+	const [formSettled, userSettled] = await Promise.allSettled([formPromise, userPromise]);
+
+	if (formSettled.status === "rejected") {
+		throw formSettled.reason;
+	}
+
+	if (userSettled.status === "rejected") {
+		throw userSettled.reason;
+	}
+
+	const form = formSettled.value;
+	const user = userSettled.value;
+
+	const communitySlug = getCommunitySlug();
+	const formPath = createFormInvitePath({
+		formSlug: form.slug,
+		communitySlug: communitySlug,
+		email: user.email,
+	});
+
+	const magicLink = await createMagicLink({ email: user.email, path: formPath });
+
+	return magicLink;
 };

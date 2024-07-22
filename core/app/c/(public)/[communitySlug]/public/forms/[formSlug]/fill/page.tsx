@@ -35,16 +35,10 @@ export default async function FormPage({
 
 	return (
 		<div className="container mx-auto flex w-full flex-col items-center">
-			{!loginData ? (
-				<p>Loading...</p>
-			) : (
-				<>
-					<h1>Form Page {form.name}</h1>
-					<p>Hello {loginData.firstName}!</p>
+			<h1>Form Page {form.name}</h1>
+			<p>Hello {loginData.firstName}!</p>
 
-					<p>Fill in the form below!</p>
-				</>
-			)}
+			<p>Fill in the form below!</p>
 		</div>
 	);
 }

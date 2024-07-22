@@ -7,7 +7,7 @@ import { Mail } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "../request/actions";
+import * as actions from "../actions";
 
 export const RequestLink = ({
 	formSlug,
@@ -21,7 +21,7 @@ export const RequestLink = ({
 	const useRequestLink = useServerAction(actions.inviteUserToForm);
 
 	const requestLink = useCallback(async () => {
-		const link = await useRequestLink({ slug: formSlug, communitySlug, email });
+		const link = await useRequestLink({ slug: formSlug, email });
 
 		if (link && link.error) {
 			return;

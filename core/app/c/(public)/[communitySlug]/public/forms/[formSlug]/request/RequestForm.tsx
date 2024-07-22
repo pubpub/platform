@@ -11,7 +11,7 @@ import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
+import * as actions from "../actions";
 
 const schema = z.object({
 	email: z.string().email(),
@@ -19,7 +19,7 @@ const schema = z.object({
 
 export const RequestForm = () => {
 	const params = useParams<{ formSlug: string }>();
-	const runInviteUserToForm = useServerAction(actions.inviteUserToForm);
+	const runInviteUserToForm = useServerAction(actions.TEST_inviteUserToForm);
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 	});
