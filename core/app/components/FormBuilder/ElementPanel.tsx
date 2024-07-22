@@ -58,6 +58,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 				<div className="flex flex-col gap-4">
 					<p>This form has {elementsCount} elements.</p>
 					<Button
+						type="button"
 						className="flex w-full items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600"
 						size="lg"
 						onClick={() => dispatch("add")}
@@ -89,6 +90,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 										fieldsFilter
 									) && (
 										<Button
+											type="button"
 											variant="outline"
 											key={field.id}
 											className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
@@ -113,6 +115,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 						</div>
 
 						<Button
+							type="button"
 							variant="outline"
 							className="w-full border-slate-950"
 							onClick={() => dispatch("cancel")}
@@ -121,7 +124,9 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 						</Button>
 					</TabsContent>
 					<TabsContent value="structure">
-						<Button onClick={() => dispatch("cancel")}>Cancel</Button>
+						<Button type="button" onClick={() => dispatch("cancel")}>
+							Cancel
+						</Button>
 					</TabsContent>
 				</Tabs>
 			);
@@ -134,6 +139,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 					</Button>
 					<div className="flex w-full flex-grow gap-3">
 						<Button
+							type="button"
 							className="border-slate-950"
 							variant="outline"
 							onClick={() => {
@@ -144,6 +150,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 							Cancel
 						</Button>
 						<Button
+							type="button"
 							className="bg-blue-500 hover:bg-blue-600"
 							onClick={() => {
 								//update element

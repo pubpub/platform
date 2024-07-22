@@ -22,6 +22,7 @@ export const ArchiveFormButton = ({ id, className }: Props) => {
 	}, [id]);
 	return (
 		<Button
+			type="button"
 			variant="ghost"
 			size="lg"
 			className={cn("flex gap-2", className)}
