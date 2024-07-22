@@ -4,6 +4,7 @@ import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId, PubTypesId, StagesId } from "db/public";
+import { MemberRole } from "db/public";
 
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
@@ -450,13 +451,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		data: {
 			userId: user1.id,
 			communityId: communityUUID,
-			canAdmin: true,
+			role: "admin",
 		},
 	});
 
 	const memberGroup = await prisma.memberGroup.create({
 		data: {
-			canAdmin: false,
+			role: MemberRole.admin,
 			communityId: communityUUID,
 			users: {
 				connect: [{ id: user2.id }],

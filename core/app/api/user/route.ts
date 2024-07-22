@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
 				data: {
 					firstName,
 					lastName,
-					canAdmin: true,
 				},
 			},
 		});

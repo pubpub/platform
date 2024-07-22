@@ -57,7 +57,7 @@ export async function getUserInfoFromJWT(
 		// refreshSession method below returns
 		return { id: decoded.sub, ...decoded } as jwtUser;
 	} catch (jwtError) {
-		logger.error("Error verifying jwt", jwtError);
+		logger.error({ msg: `Error verifying jwt:  ${jwtError}` });
 		/* We may get a jwtError if it has expired. In which case, */
 		/* we try to use the refreshToken to sign back in before   */
 		/* waiting for the client to that after initial page load. */
@@ -66,7 +66,7 @@ export async function getUserInfoFromJWT(
 			refresh_token: refreshToken || "",
 		});
 		if (error) {
-			logger.error("Error refreshing session:", error.message);
+			logger.error(`Error refreshing session:  ${error.message}`);
 			return null;
 		}
 		if (!data.user?.id) {

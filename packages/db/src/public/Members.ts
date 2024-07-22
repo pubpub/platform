@@ -2,8 +2,10 @@ import { type ColumnType, type Insertable, type Selectable, type Updateable } fr
 import { z } from "zod";
 
 import type { CommunitiesId } from "./Communities";
+import type { MemberRole } from "./MemberRole";
 import type { UsersId } from "./Users";
 import { communitiesIdSchema } from "./Communities";
+import { memberRoleSchema } from "./MemberRole";
 import { usersIdSchema } from "./Users";
 
 // @generated
@@ -20,11 +22,11 @@ export interface MembersTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	canAdmin: ColumnType<boolean, boolean, boolean>;
-
 	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
 	userId: ColumnType<UsersId, UsersId, UsersId>;
+
+	role: ColumnType<MemberRole, MemberRole | undefined, MemberRole>;
 }
 
 export type Members = Selectable<MembersTable>;
@@ -39,25 +41,25 @@ export const membersSchema = z.object({
 	id: membersIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	canAdmin: z.boolean(),
 	communityId: communitiesIdSchema,
 	userId: usersIdSchema,
+	role: memberRoleSchema,
 });
 
 export const membersInitializerSchema = z.object({
 	id: membersIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	canAdmin: z.boolean(),
 	communityId: communitiesIdSchema,
 	userId: usersIdSchema,
+	role: memberRoleSchema.optional(),
 });
 
 export const membersMutatorSchema = z.object({
 	id: membersIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	canAdmin: z.boolean().optional(),
 	communityId: communitiesIdSchema.optional(),
 	userId: usersIdSchema.optional(),
+	role: memberRoleSchema.optional(),
 });

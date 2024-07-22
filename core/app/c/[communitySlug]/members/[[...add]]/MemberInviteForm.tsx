@@ -1,13 +1,15 @@
 "use client";
 
+import type { Community } from "@prisma/client";
+import type { z } from "zod";
+
 import { useCallback, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Community } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
-import { z } from "zod";
 
+import { MemberRole } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
@@ -23,21 +25,24 @@ import {
 } from "ui/form";
 import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
 
+import type { MemberFormState } from "./AddMember";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
-import { MemberFormState } from "./AddMember";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const MemberInviteForm = ({
 	community,
 	state,
 	email,
+	isSuperAdmin,
 }: {
 	community: Community;
 	state: MemberFormState;
 	email?: string;
+	isSuperAdmin?: boolean;
 }) => {
 	const runCreateUserWithMembership = useServerAction(actions.createUserWithMembership);
 	const runAddMember = useServerAction(actions.addMember);
@@ -47,8 +52,9 @@ export const MemberInviteForm = ({
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
-			canAdmin: false,
 			email: email,
+			role: MemberRole.editor,
+			isSuperAdmin: false,
 		},
 	});
 
@@ -79,7 +85,8 @@ export const MemberInviteForm = ({
 				firstName: data.firstName!,
 				lastName: data.lastName!,
 				community,
-				canAdmin: Boolean(data.canAdmin),
+				role: data.role,
+				isSuperAdmin: data.isSuperAdmin,
 			});
 
 			if (didSucceed(result)) {
@@ -95,7 +102,7 @@ export const MemberInviteForm = ({
 
 		const result = await runAddMember({
 			user: state.user,
-			canAdmin: data.canAdmin,
+			role: data.role,
 			community,
 		});
 
@@ -194,21 +201,60 @@ export const MemberInviteForm = ({
 								</FormItem>
 							)}
 						/>
+
+						{/* Makes it a bit easier to add people as super admins,*/}
+						{isSuperAdmin && (
+							<FormField
+								control={form.control}
+								name="isSuperAdmin"
+								render={({ field }) => (
+									<FormItem className="flex items-end gap-x-2">
+										<FormControl>
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={field.onChange}
+											/>
+										</FormControl>
+										<FormLabel>Make user superadmin</FormLabel>
+									</FormItem>
+								)}
+							/>
+						)}
 					</>
 				)}
 				{state.state !== "initial" && (
 					<FormField
 						control={form.control}
-						name="canAdmin"
+						name="role"
 						render={({ field }) => (
-							<FormItem className="flex items-end gap-x-2">
-								<FormControl>
-									<Checkbox
-										checked={field.value}
-										onCheckedChange={field.onChange}
-									/>
-								</FormControl>
-								<FormLabel>Make user admin of this community</FormLabel>
+							<FormItem>
+								<FormLabel>Role</FormLabel>
+								<Select onValueChange={field.onChange} defaultValue={field.value}>
+									<FormControl>
+										<SelectTrigger>
+											<SelectValue placeholder="Select a role" />
+										</SelectTrigger>
+									</FormControl>
+									<SelectContent>
+										<SelectItem value={MemberRole.admin}>Admin</SelectItem>
+										<SelectItem value={MemberRole.editor}>Editor</SelectItem>
+										<SelectItem value={MemberRole.contributor}>
+											Contributor
+										</SelectItem>
+									</SelectContent>
+								</Select>
+								<FormDescription>
+									Select the role for this user.
+									<ul className="list-inside list-disc">
+										<li> Admins can do anything.</li>
+										<li>Editors are able to edit most things</li>
+										<li>
+											Contributors are only able to see forms and other public
+											facing content that are linked to them
+										</li>
+									</ul>
+								</FormDescription>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>

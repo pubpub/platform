@@ -252,30 +252,39 @@ model ActionMove {
 }
 
 model Member {
-  id          String    @id @default(dbgenerated("gen_random_uuid()"))
-  canAdmin    Boolean // Community-wide administrator
+  id          String     @id @default(dbgenerated("gen_random_uuid()"))
+  role        MemberRole @default(editor)
   // If admin, the permissions are irrelevant because they have acccess to everything, but we
   // may want to keep the permissions around (though grayed our and with a note?) in case their
   // admin status is ever removed.
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
-  user        User      @relation(fields: [userId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
   userId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
   permissions Permission[]
 
   @@map(name: "members")
 }
 
+enum MemberRole {
+  // community-wide administrator
+  admin
+  // regular member
+  editor
+  // contributor
+  contributor
+}
+
 model MemberGroup {
-  id          String    @id @default(dbgenerated("gen_random_uuid()"))
-  canAdmin    Boolean // Community-wide administrator
-  community   Community @relation(fields: [communityId], references: [id])
+  id          String     @id @default(dbgenerated("gen_random_uuid()"))
+  role        MemberRole @default(editor)
+  community   Community  @relation(fields: [communityId], references: [id])
   communityId String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
   permissions Permission[]
   users       User[]
@@ -305,6 +314,7 @@ model Permission {
 
   pubs   Pub[]
   stages Stage[]
+  forms  FormToPermission[]
 
   @@map(name: "permissions")
 }
@@ -429,6 +439,8 @@ model Form {
   inputs      FormInput[]
   isArchived  Boolean     @default(false)
 
+  permissions FormToPermission[]
+
   @@unique([name, communityId])
   @@unique([slug, communityId])
   @@map(name: "forms")
@@ -503,4 +515,15 @@ enum ApiAccessScope {
   stage
   member
   pubType
+}
+
+model FormToPermission {
+  form         Form       @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId       String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String
+
+  // prevents user getting assigned permissions to a form multiple times
+  @@unique([formId, permissionId])
+  @@map(name: "form_to_permissions")
 }

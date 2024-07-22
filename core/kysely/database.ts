@@ -42,5 +42,9 @@ type PostgresError = z.infer<typeof PostgresError>;
 export const isPostgresError = (error: unknown): error is PostgresError =>
 	PostgresError.safeParse(error).success;
 
-export const isUniqueConstraintError = (error: unknown) =>
-	isPostgresError(error) && error.code === "23505";
+export const isUniqueConstraintError = (
+	error: unknown
+): error is PostgresError & { code: "23505" } => isPostgresError(error) && error.code === "23505";
+
+export const isCheckContraintError = (error: unknown): error is PostgresError & { code: "23514" } =>
+	isPostgresError(error) && error.code === "23514";

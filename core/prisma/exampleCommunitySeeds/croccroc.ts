@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 
 import type { CommunitiesId, PubTypesId } from "db/public";
+import { MemberRole } from "db/public";
 import { logger } from "logger";
 
 import { registerCorePubField } from "~/actions/_lib/init";
@@ -101,7 +102,7 @@ export default async function main(communityUUID: CommunitiesId) {
 		.values({
 			userId: users[0].id,
 			communityId: communityUUID,
-			canAdmin: true,
+			role: MemberRole.admin,
 		})
 		.returning("id")
 		.executeTakeFirst();
@@ -111,7 +112,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			db
 				.insertInto("member_groups")
 				.values({
-					canAdmin: false,
+					role: MemberRole.editor,
 					communityId: communityUUID,
 				})
 				.returning("id")

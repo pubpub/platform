@@ -1,34 +1,38 @@
 "use server";
 
+import type { Community } from "@prisma/client";
+import type { User } from "@supabase/supabase-js";
+
 import { cache } from "react";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { Community } from "@prisma/client";
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
-import { User } from "@supabase/supabase-js";
+import { captureException } from "@sentry/nextjs";
 
+import { MemberRole } from "db/public";
+
+import type { TableMember } from "./getMemberTableColumns";
 import type { SuggestedUser } from "~/lib/server/members";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
 import { env } from "~/lib/env/env.mjs";
+import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import prisma from "~/prisma/db";
-import { TableMember } from "./getMemberTableColumns";
+import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const revalidateMemberPathsAndTags = defineServerAction(
 	async function revalidateMemberPathsAndTags(community: Community) {
 		revalidatePath(`/c/${community.slug}/members`);
-		revalidateTag(`members_${community.id}`);
-		// not in use yet, but should be updated here
-		revalidateTag(`users`);
+		revalidateTagsForCommunity(["members", "users"]);
 	}
 );
 
 const isCommunityAdmin = cache(async (community: Community) => {
 	const loginData = await getLoginData();
 
-	if (!loginData?.memberships?.find((m) => m.communityId === community.id)?.canAdmin) {
+	if (!isAdminOfCommunity(loginData, community)) {
 		return {
 			error: "You do not have permission to invite members to this community",
 			loginData,
@@ -37,6 +41,59 @@ const isCommunityAdmin = cache(async (community: Community) => {
 
 	return { loginData, error: null };
 });
+
+/**
+ * Create a user in supabase.
+ * If the user is not a contributor, also sends them an invite by email
+ */
+const createOrInviteSupabaseUser = async ({
+	email,
+	firstName,
+	lastName,
+	community,
+	role,
+	isSuperAdmin,
+}: {
+	email: string;
+	firstName: string;
+	lastName?: string | null;
+	community: Community;
+	role?: MemberRole;
+	isSuperAdmin?: boolean;
+}) => {
+	const client = getServerSupabase();
+
+	if (role === MemberRole.contributor) {
+		const data = await client.auth.admin.createUser({
+			email,
+			user_metadata: {
+				firstName,
+				lastName,
+				communityId: community.id,
+				communitySlug: community.slug,
+				communityName: community.name,
+				role,
+				isSuperAdmin,
+			},
+		});
+		return data;
+	}
+
+	const data = await client.auth.admin.inviteUserByEmail(email, {
+		redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
+		data: {
+			firstName,
+			lastName,
+			communityId: community.id,
+			communitySlug: community.slug,
+			communityName: community.name,
+			role,
+			isSuperAdmin,
+		},
+	});
+
+	return data;
+};
 
 /**
  * Add someone as a user to supabase and send them an invite by email
@@ -49,14 +106,16 @@ const addSupabaseUser = async ({
 	firstName,
 	lastName,
 	community,
-	canAdmin,
+	role,
 	force = true,
+	isSuperAdmin,
 }: {
 	email: string;
 	firstName: string;
 	lastName?: string | null;
 	community: Community;
-	canAdmin?: boolean;
+	role?: MemberRole;
+	isSuperAdmin?: boolean;
 	/**
 	 * If true, the user will be reinvited even if they already exist in supabase by deleting them
 	 * and trying again
@@ -76,16 +135,13 @@ const addSupabaseUser = async ({
 > => {
 	const client = getServerSupabase();
 
-	const { error, data } = await client.auth.admin.inviteUserByEmail(email, {
-		redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-		data: {
-			firstName,
-			lastName,
-			communityId: community.id,
-			communitySlug: community.slug,
-			communityName: community.name,
-			canAdmin,
-		},
+	const { error, data } = await createOrInviteSupabaseUser({
+		email,
+		firstName,
+		lastName,
+		community,
+		role,
+		isSuperAdmin,
 	});
 
 	if (!error) {
@@ -131,8 +187,9 @@ const addSupabaseUser = async ({
 		firstName,
 		lastName,
 		community,
-		canAdmin,
+		role,
 		force: false,
+		isSuperAdmin,
 	});
 };
 
@@ -146,18 +203,18 @@ const addSupabaseUser = async ({
  * to do so
  *
  * @param user - The user to add as a member.
- * @param canAdmin - Optional. Specifies whether the user has admin privileges in the community.
+ * @param role - Optional. Specifies the role of the user in the community.
  * @param community - The community to add the member to.
  * @returns A Promise that resolves to the newly created member object, or an error object if an
  *   error occurs.
  */
 export const addMember = defineServerAction(async function addMember({
 	user,
-	canAdmin,
+	role,
 	community,
 }: {
 	user: SuggestedUser;
-	canAdmin?: boolean;
+	role?: MemberRole;
 	community: Community;
 }) {
 	const { error: adminError } = await isCommunityAdmin(community);
@@ -187,7 +244,7 @@ export const addMember = defineServerAction(async function addMember({
 			data: {
 				communityId: community.id,
 				userId: user.id,
-				canAdmin: Boolean(canAdmin),
+				role,
 			},
 		});
 
@@ -204,7 +261,7 @@ export const addMember = defineServerAction(async function addMember({
 			firstName: user.firstName,
 			lastName: user.lastName,
 			community,
-			canAdmin,
+			role,
 			force: true,
 		});
 
@@ -235,24 +292,44 @@ export const addMember = defineServerAction(async function addMember({
 });
 
 /**
- * Create a new user and add them as a member to a community Will also add them as a user to
+ * Create a new user and add them as a member to a community
+ *
+ * Will also add them as a user to
  * supabase
  */
 export const createUserWithMembership = defineServerAction(async function createUserWithMembership({
-	firstName,
-	lastName,
-	email,
 	community,
-	canAdmin,
+	...data
 }: {
 	firstName: string;
 	lastName?: string | null;
 	email: string;
 	community: Community;
-	canAdmin: boolean;
+	role?: MemberRole;
+	isSuperAdmin?: boolean;
 }) {
+	const parsed = memberInviteFormSchema
+		.required({ firstName: true, lastName: true })
+		.safeParse(data);
+
+	if (!parsed.success) {
+		return {
+			title: "Form values are invalid",
+			error: parsed.error.message,
+		};
+	}
+
+	const { firstName, lastName, email, role, isSuperAdmin } = parsed.data;
+
 	try {
-		const { error: adminError } = await isCommunityAdmin(community);
+		const { error: adminError, loginData } = await isCommunityAdmin(community);
+		if (!loginData?.isSuperAdmin && isSuperAdmin) {
+			return {
+				title: "Failed to add member",
+				error: "You cannot add members as super admins",
+			};
+		}
+
 		if (adminError) {
 			return {
 				title: "Failed to add member",
@@ -268,10 +345,11 @@ export const createUserWithMembership = defineServerAction(async function create
 				slug: `${slugifyString(firstName)}${
 					lastName ? `-${slugifyString(lastName)}` : ""
 				}-${generateHash(4, "0123456789")}`,
+				isSuperAdmin: isSuperAdmin === true,
 				memberships: {
 					create: {
 						communityId: community.id,
-						canAdmin,
+						role,
 					},
 				},
 			},
@@ -282,7 +360,8 @@ export const createUserWithMembership = defineServerAction(async function create
 			firstName,
 			lastName,
 			community,
-			canAdmin,
+			role,
+			isSuperAdmin: isSuperAdmin === true,
 		});
 
 		if (supabaseError !== null) {
