@@ -4,6 +4,7 @@ import partition from "lodash.partition";
 import { ClipboardPenLine } from "ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
+import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -29,6 +30,7 @@ export default async function Page({ params: { communitySlug } }) {
 			.innerJoin("communities", "communities.id", "pub_types.communityId")
 			.select([
 				"forms.id as id",
+				"forms.slug as slug",
 				"forms.name as formName",
 				"pub_types.name as pubType",
 				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
@@ -41,9 +43,10 @@ export default async function Page({ params: { communitySlug } }) {
 
 	const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
-			const { id, formName, pubType, updatedAt, isArchived } = form;
+			const { id, formName, pubType, updatedAt, isArchived, slug } = form;
 			return {
 				id,
+				slug,
 				formName,
 				pubType,
 				updated: new Date(updatedAt),
@@ -77,22 +80,13 @@ export default async function Page({ params: { communitySlug } }) {
 					</div>
 				</div>
 			) : archived.length > 0 ? (
-				<Tabs defaultValue="active" className="">
-					<TabsList className="ml-4 mt-4">
-						<TabsTrigger value="active">Active</TabsTrigger>
-						<TabsTrigger value="archived">Archived</TabsTrigger>
-					</TabsList>
-					<div className="px-4">
-						<TabsContent value="active">
-							<FormTable forms={tableForms(active)} />
-						</TabsContent>
-						<TabsContent value="archived">
-							<FormTable forms={tableForms(archived)} />
-						</TabsContent>
-					</div>
-				</Tabs>
+				<ActiveArchiveTabs
+					activeContent={<FormTable forms={tableForms(active)} />}
+					archiveContent={<FormTable forms={tableForms(archived)} />}
+					className="m-4"
+				/>
 			) : (
-				<div className="px-4">
+				<div className="m-4">
 					<FormTable forms={tableForms(active)} />
 				</div>
 			)}

@@ -16,6 +16,7 @@ import { ArchiveFormButton } from "./ArchiveFormButton";
 
 export type TableForm = {
 	id: FormsId;
+	slug: string;
 	formName: string;
 	pubType: string;
 	updated: Date;

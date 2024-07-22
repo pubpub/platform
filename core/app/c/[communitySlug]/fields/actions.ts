@@ -1,8 +1,9 @@
 "use server";
 
 import type { CoreSchemaType, PubFieldsId } from "db/public";
+import { logger } from "logger";
 
-import { db } from "~/kysely/database";
+import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
@@ -16,6 +17,10 @@ export const createField = defineServerAction(async function createField(
 			db.insertInto("pub_fields").values({ name, slug, schemaName })
 		).execute();
 	} catch (error) {
+		if (isUniqueConstraintError(error)) {
+			return { error: `A field with this name already exists. Choose a new name` };
+		}
+		logger.error({ msg: "error creating field", error });
 		return {
 			error: "Failed to create field",
 			cause: error,
