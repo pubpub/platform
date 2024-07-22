@@ -2,30 +2,53 @@
 
 import type { Row } from "@tanstack/react-table";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
 import type { PubFieldsId } from "db/public";
 
 import type { TableData } from "./getFieldTableColumns";
 import type { PubField } from "~/lib/types";
+import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog";
 import { DataTable } from "~/app/components/DataTable/v2/DataTable";
+import { FieldForm } from "./FieldForm";
 import { getFieldTableColumns } from "./getFieldTableColumns";
 
-export const FieldsTable = ({ fields }: { fields: Record<PubFieldsId, PubField> }) => {
+export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 	const data = useMemo(() => {
-		return Object.entries(fields).map(([, d]) => {
+		return fields.map((d) => {
 			return {
 				id: d.id,
 				name: d.name,
-				schema: d.schemaName,
+				schemaName: d.schemaName,
 				updated: new Date(d.updatedAt),
 				isArchived: d.isArchived,
 			};
 		});
 	}, [fields]);
+	const [editField, setEditField] = useState<TableData>();
+	const handleModalToggle = () => {
+		if (editField) {
+			setEditField(undefined);
+		}
+	};
 
 	const columns = getFieldTableColumns();
-	const handleRowClick = (row: Row<TableData>) => {};
+	const handleRowClick = (row: Row<TableData>) => {
+		setEditField(row.original);
+	};
 
-	return <DataTable columns={columns} data={data} onRowClick={handleRowClick} />;
+	return (
+		<>
+			<DataTable columns={columns} data={data} onRowClick={handleRowClick} />
+			<CreateEditDialog
+				title="Edit Field"
+				open={!!editField}
+				onOpenChange={handleModalToggle}
+			>
+				<FieldForm defaultValues={editField} onSubmitSuccess={handleModalToggle}>
+					<Footer submitText="Update" onCancel={handleModalToggle} />
+				</FieldForm>
+			</CreateEditDialog>
+		</>
+	);
 };
