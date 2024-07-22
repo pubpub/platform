@@ -10,8 +10,8 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
-import { addUserToForm } from "~/app/c/[communitySlug]/forms/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import * as actions from "./actions";
 
 const schema = z.object({
 	email: z.string().email(),
@@ -19,7 +19,7 @@ const schema = z.object({
 
 export const RequestForm = () => {
 	const params = useParams<{ formSlug: string }>();
-	const runAddUserToForm = useServerAction(addUserToForm);
+	const runInviteUserToForm = useServerAction(actions.inviteUserToForm);
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 	});
@@ -28,11 +28,9 @@ export const RequestForm = () => {
 		<Form {...form}>
 			<form
 				onSubmit={form.handleSubmit(async (data) => {
-					const result = await runAddUserToForm({
+					const result = await runInviteUserToForm({
 						email: data.email,
 						slug: params.formSlug,
-						firstName: "test",
-						lastName: "test",
 					});
 					if (didSucceed(result)) {
 						toast({

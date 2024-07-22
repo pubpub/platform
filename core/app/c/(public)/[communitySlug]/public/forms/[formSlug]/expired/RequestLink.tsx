@@ -7,7 +7,7 @@ import { Mail } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "../actions";
+import * as actions from "../request/actions";
 
 export const RequestLink = ({
 	formSlug,

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export function StupidHackyThingy() {
+export function RedirectHack({ redirectUrl }: { redirectUrl: string }) {
 	const router = useRouter();
 	useEffect(() => {
 		router.refresh();
