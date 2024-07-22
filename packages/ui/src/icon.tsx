@@ -1,6 +1,7 @@
 export {
 	Activity,
 	Archive,
+	ArchiveRestore,
 	ArrowRight,
 	Calendar,
 	CalendarClock,
