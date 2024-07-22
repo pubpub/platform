@@ -110,17 +110,26 @@ export function FormBuilder({ pubForm, id }: Props) {
 	const addElement = useCallback((element: FormBuilderSchema["elements"][0]) => {
 		append(element);
 	}, []);
-	const removeElement = useCallback((index: number) => remove(index), []);
+	const removeElement = useCallback(
+		(index: number) => update(index, { ...elements[index], deleted: true }),
+		[]
+	);
+	const restoreElement = useCallback(
+		(index: number) => update(index, { ...elements[index], deleted: false }),
+		[]
+	);
 	const setEditingElement = useCallback(
 		(index: number | null) => setEditingElementIndex(index),
 		[]
 	);
+
 	const submit = useCallback(() => form.handleSubmit(onSubmit), []);
 
 	return (
 		<FormBuilderProvider
 			addElement={addElement}
 			removeElement={removeElement}
+			restoreElement={restoreElement}
 			submit={submit}
 			setEditingElement={setEditingElement}
 			editingElement={
@@ -128,6 +137,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 			}
 			elementsCount={elements.length}
 			openConfigPanel={() => dispatch("configure")}
+			update={update}
 		>
 			{" "}
 			<Tabs defaultValue="builder" className="pr-[380px]">

@@ -5,7 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import type { PubFieldsId } from "db/public";
 import { Button } from "ui/button";
-import { GripVertical, Pencil, Type } from "ui/icon";
+import { ArchiveRestore, GripVertical, Pencil, Trash, Type } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
 import { cn } from "utils";
 
@@ -31,7 +31,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		transition,
 	};
 
-	const { setEditingElement, openConfigPanel } = useFormBuilder();
+	const { setEditingElement, openConfigPanel, removeElement, restoreElement } = useFormBuilder();
 
 	const pubFields = usePubFieldContext();
 	if (isFieldInput(element)) {
@@ -44,7 +44,8 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				className={cn(
 					"flex flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
 					isEditing ? "border-sky-500 border-l-blue-500" : "",
-					isDisabled ? "cursor-auto opacity-50" : ""
+					isDisabled ? "cursor-auto opacity-50" : "",
+					element.deleted ? "border-l-red-200" : ""
 				)}
 			>
 				{isFieldInput(element) && (
@@ -53,21 +54,67 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							size={20}
 							className={cn(
 								"my-auto mr-4",
-								isEditing ? "text-blue-500" : "text-emerald-500"
+								isEditing ? "text-blue-500" : "text-emerald-500",
+								element.deleted ? "text-slate-500" : ""
 							)}
 						/>
 						<div>
-							<div className="text-muted-foreground">{field.slug}</div>
-							<div className="font-semibold">{element.label ?? field.name}</div>
+							<div className="text-slate-500">{field.slug}</div>
+							<div
+								className={cn(
+									"font-semibold",
+									element.deleted ? "text-slate-500" : ""
+								)}
+							>
+								{element.label ?? field.name}
+							</div>
 						</div>
 						{isEditing ? (
 							<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
 						) : (
-							<div className="ml-auto hidden gap-1 group-hover:flex">
+							<div className="my-auto ml-auto flex gap-1">
+								{element.deleted ? (
+									<>
+										<div className="my-auto text-slate-500">
+											Deleted on save
+										</div>
+										<Button
+											type="button"
+											variant="ghost"
+											className="invisible p-2 hover:bg-white group-hover:visible"
+											aria-label="Restore element"
+											onClick={() => {
+												restoreElement(index);
+											}}
+										>
+											<ArchiveRestore
+												size={24}
+												className="text-neutral-400 hover:text-red-500"
+											/>
+										</Button>
+									</>
+								) : (
+									<Button
+										type="button"
+										disabled={isDisabled}
+										variant="ghost"
+										className="invisible p-2 hover:bg-white group-hover:visible"
+										aria-label="Delete element"
+										onClick={() => {
+											removeElement(index);
+										}}
+									>
+										<Trash
+											size={24}
+											className="text-neutral-400 hover:text-red-500"
+										/>
+									</Button>
+								)}
 								<Button
-									disabled={isDisabled}
+									type="button"
+									disabled={isDisabled || element.deleted}
 									variant="ghost"
-									className="p-2"
+									className="invisible p-2 group-hover:visible"
 									onClick={() => {
 										setEditingElement(index);
 										openConfigPanel();
@@ -76,9 +123,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 									<Pencil size={24} className="text-neutral-400" />
 								</Button>
 								<Button
-									disabled={isDisabled}
+									type="button"
+									disabled={isDisabled || element.deleted}
 									variant="ghost"
-									className="p-1.5"
+									className="invisible p-1.5 group-hover:visible"
 									{...listeners}
 								>
 									<GripVertical size={24} className="text-neutral-400" />
