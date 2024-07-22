@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
@@ -30,6 +30,7 @@ const schema = z.object({
 	id: z.string(),
 	name: z.string(),
 	schemaName: z.nativeEnum(CoreSchemaType),
+	slug: z.string().refine((s) => !s.includes(" "), { message: "Slug must not have spaces" }),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -38,22 +39,20 @@ const DEFAULT_VALUES = {
 	id: "",
 	name: "",
 	schemaName: null,
+	slug: "",
 };
 
-const SchemaSelectField = ({
-	form,
-	isDisabled,
-}: {
-	form: UseFormReturn<
-		{
-			name: string;
-			schemaName: CoreSchemaType | null;
-		},
-		any,
-		undefined
-	>;
-	isDisabled?: boolean;
-}) => {
+type FormType = UseFormReturn<
+	{
+		name: string;
+		schemaName: CoreSchemaType | null;
+		slug: string;
+	},
+	any,
+	undefined
+>;
+
+const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: boolean }) => {
 	const schemaTypes = Object.values(CoreSchemaType);
 
 	return (
@@ -107,12 +106,49 @@ const SchemaSelectField = ({
 	);
 };
 
+const SlugField = ({ form, communityName }: { form: FormType; communityName: string }) => {
+	const { watch, setValue } = form;
+
+	const community = slugifyString(communityName);
+	const watchName = watch("name");
+
+	useEffect(() => {
+		const autoSlug = slugifyString(watchName);
+		setValue("slug", autoSlug);
+	}, [watchName]);
+
+	return (
+		<FormField
+			control={form.control}
+			name="slug"
+			render={({ field }) => {
+				return (
+					<FormItem>
+						<FormLabel>Slug</FormLabel>
+						<FormControl>
+							<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
+								<span className="pl-2">{community}:</span>
+								<Input
+									placeholder="Slug"
+									className="border-none pl-0 focus:ml-1"
+									{...field}
+								/>
+							</div>
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				);
+			}}
+		/>
+	);
+};
+
 export const FieldForm = ({
 	defaultValues,
 	onSubmitSuccess,
 	children,
 }: {
-	defaultValues?: { name: string; schemaName: CoreSchemaType | null };
+	defaultValues?: { name: string; schemaName: CoreSchemaType | null; slug: string };
 	onSubmitSuccess: () => void;
 	children: ReactNode;
 }) => {
@@ -143,7 +179,7 @@ export const FieldForm = ({
 			return;
 		}
 
-		const slug = `${community?.slug}:${slugifyString(values.name)}`;
+		const slug = `${community?.slug}:${slugifyString(values.slug)}`;
 		handleCreate({ ...values, slug });
 	};
 
@@ -171,6 +207,7 @@ export const FieldForm = ({
 							</FormItem>
 						)}
 					/>
+					{!isEditing ? <SlugField form={form} communityName={community.name} /> : null}
 				</div>
 				{children}
 			</form>

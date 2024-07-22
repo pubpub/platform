@@ -4,8 +4,6 @@ import type { Row } from "@tanstack/react-table";
 
 import React, { useMemo, useState } from "react";
 
-import type { PubFieldsId } from "db/public";
-
 import type { TableData } from "./getFieldTableColumns";
 import type { PubField } from "~/lib/types";
 import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog";
@@ -22,6 +20,7 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 				schemaName: d.schemaName,
 				updated: new Date(d.updatedAt),
 				isArchived: d.isArchived,
+				slug: d.slug,
 			};
 		});
 	}, [fields]);
