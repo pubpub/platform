@@ -106,6 +106,11 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 	);
 };
 
+/**
+ * This field watches the `name` field and will try to autogenerate a slug from it.
+ * The user can overwrite this value via the text input. The value here does not have
+ * the community prepended—the community is automatically prepended in handleSubmit
+ */
 const SlugField = ({ form, communityName }: { form: FormType; communityName: string }) => {
 	const { watch, setValue } = form;
 
@@ -130,6 +135,7 @@ const SlugField = ({ form, communityName }: { form: FormType; communityName: str
 								<span className="pl-2">{community}:</span>
 								<Input
 									placeholder="Slug"
+									// A little margin on focus or else the focus ring will cover the `:` after the community name
 									className="border-none pl-0 focus:ml-1"
 									{...field}
 								/>
