@@ -15,7 +15,7 @@ export * from "./public/Communities";
 export * from "./public/Event";
 export * from "./public/FormInputs";
 export * from "./public/Forms";
-export * from "./public/FormToPermission";
+export * from "./public/FormToPermissions";
 export * from "./public/IntegrationInstanceState";
 export * from "./public/IntegrationInstanceToPub";
 export * from "./public/IntegrationInstances";

@@ -314,7 +314,7 @@ model Permission {
 
   pubs   Pub[]
   stages Stage[]
-  forms  Form[]
+  forms  FormToPermission[]
 
   @@map(name: "permissions")
 }
@@ -439,7 +439,7 @@ model Form {
   inputs      FormInput[]
   isArchived  Boolean     @default(false)
 
-  Permissions Permission[]
+  permissions FormToPermission[]
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
@@ -515,4 +515,15 @@ enum ApiAccessScope {
   stage
   member
   pubType
+}
+
+model FormToPermission {
+  form         Form       @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId       String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String
+
+  // prevents user getting assigned permissions to a form multiple times
+  @@unique([formId, permissionId])
+  @@map(name: "form_to_permissions")
 }
