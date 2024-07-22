@@ -14,6 +14,7 @@ import type { SuggestedUser } from "~/lib/server/members";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
 import { env } from "~/lib/env/env.mjs";
+import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
@@ -24,9 +25,7 @@ import { memberInviteFormSchema } from "./memberInviteFormSchema";
 export const revalidateMemberPathsAndTags = defineServerAction(
 	async function revalidateMemberPathsAndTags(community: Community) {
 		revalidatePath(`/c/${community.slug}/members`);
-		revalidateTag(`members_${community.id}`);
-		// not in use yet, but should be updated here
-		revalidateTag(`users`);
+		revalidateTagsForCommunity(["members", "users"]);
 	}
 );
 

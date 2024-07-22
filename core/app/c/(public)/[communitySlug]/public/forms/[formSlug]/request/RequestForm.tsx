@@ -31,6 +31,8 @@ export const RequestForm = () => {
 					const result = await runAddUserToForm({
 						email: data.email,
 						slug: params.formSlug,
+						firstName: "test",
+						lastName: "test",
 					});
 					if (didSucceed(result)) {
 						toast({

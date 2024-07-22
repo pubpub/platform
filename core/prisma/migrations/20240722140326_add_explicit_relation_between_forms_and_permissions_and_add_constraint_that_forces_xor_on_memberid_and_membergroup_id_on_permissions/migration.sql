@@ -15,7 +15,7 @@ ALTER TABLE "form_to_permissions" ADD CONSTRAINT "form_to_permissions_formId_fke
 ALTER TABLE "form_to_permissions" ADD CONSTRAINT "form_to_permissions_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "permissions" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Force permissions to have either a memberId or a memberGroupId, but not both
-ALTER TABLE "permissions" ADD CONSTRAINT memberId_or_memberGroupId CHECK (
+ALTER TABLE "permissions" ADD CONSTRAINT "memberId_xor_memberGroupId" CHECK (
     (
         "memberId" IS NOT NULL
         AND "memberGroupId" IS NULL

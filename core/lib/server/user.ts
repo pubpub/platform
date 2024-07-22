@@ -54,41 +54,42 @@ export async function findOrCreateUser(
 }
 
 export const getUser = (userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
-	return autoCache(
-		db
-			.selectFrom("users")
-			.$if(Boolean(userIdOrEmail.email), (eb) =>
-				eb.where("users.email", "=", userIdOrEmail.email!)
-			)
-			.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!))
-			.select((eb) => [
-				"users.id",
-				"users.email",
-				"users.firstName",
-				"users.lastName",
-				"users.slug",
-				"users.supabaseId",
-				"users.createdAt",
-				"users.updatedAt",
-				"users.isSuperAdmin",
-				jsonArrayFrom(
-					eb
-						.selectFrom("members")
-						.select((eb) => [
-							"members.id",
-							"members.userId",
-							"members.createdAt",
-							"members.updatedAt",
-							"members.role",
-							"members.communityId",
-							jsonObjectFrom(
-								eb
-									.selectFrom("communities")
-									.whereRef("communities.id", "=", "members.communityId")
-									.selectAll()
-							).as("community"),
-						])
-				).as("memberships"),
-			])
-	);
+	// do not use autocache here until we have a good way to globally invalidate users
+	return db
+		.selectFrom("users")
+		.select((eb) => [
+			"users.id",
+			"users.email",
+			"users.firstName",
+			"users.lastName",
+			"users.slug",
+			"users.supabaseId",
+			"users.createdAt",
+			"users.updatedAt",
+			"users.isSuperAdmin",
+			jsonArrayFrom(
+				eb
+					.selectFrom("members")
+					.select((eb) => [
+						"members.id",
+						"members.userId",
+						"members.createdAt",
+						"members.updatedAt",
+						"members.role",
+						"members.communityId",
+						jsonObjectFrom(
+							eb
+								.selectFrom("communities")
+								.whereRef("communities.id", "=", "members.communityId")
+								.selectAll()
+						).as("community"),
+					])
+					// for some reason doing "members.userId" doesn't work
+					.whereRef("userId", "=", "users.id")
+			).as("memberships"),
+		])
+		.$if(Boolean(userIdOrEmail.email), (eb) =>
+			eb.where("users.email", "=", userIdOrEmail.email!)
+		)
+		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
 };

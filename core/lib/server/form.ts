@@ -45,15 +45,17 @@ export const userHasPermissionToForm = async (
 			)
 			.$if(Boolean(props.userId), (eb) => eb.where("members.userId", "=", props.userId!))
 
-			.innerJoin("_FormToPermission", "B", "permissions.id")
+			.innerJoin("form_to_permissions", "permissionId", "permissions.id")
 
 			// formSlug / formId split
 			.$if(Boolean(props.formSlug), (eb) =>
 				eb
-					.innerJoin("forms", "forms.id", "_FormToPermission.A")
+					.innerJoin("forms", "forms.id", "form_to_permissions.formId")
 					.where("forms.slug", "=", props.formSlug!)
 			)
-			.$if(Boolean(props.formId), (eb) => eb.where("_FormToPermission.A", "=", props.formId!))
+			.$if(Boolean(props.formId), (eb) =>
+				eb.where("form_to_permissions.formId", "=", props.formId!)
+			)
 			.select(["permissions.id"])
 	).executeTakeFirst();
 
