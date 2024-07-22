@@ -473,7 +473,7 @@ model FormElement {
   fieldId     String?
   field       PubField?              @relation(fields: [fieldId], references: [id])
   formId      String
-  order       Int                    @default(autoincrement())
+  order       Int
   label       String?
   description String?
   element     StructuralFormElement?
@@ -482,6 +482,8 @@ model FormElement {
   form        Form                   @relation(fields: [formId], references: [id])
   isSubmit    Boolean                @default(false) @map(name: "isSubmit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
 
+  @@unique([fieldId, formId])
+  @@unique([order, formId])
   @@map(name: "form_elements")
 }
 

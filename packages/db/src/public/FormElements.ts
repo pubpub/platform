@@ -26,7 +26,7 @@ export interface FormElementsTable {
 
 	formId: ColumnType<FormsId, FormsId, FormsId>;
 
-	order: ColumnType<number, number | undefined, number>;
+	order: ColumnType<number, number, number>;
 
 	label: ColumnType<string | null, string | null, string | null>;
 
@@ -72,7 +72,7 @@ export const formElementsInitializerSchema = z.object({
 	type: elementTypeSchema,
 	fieldId: pubFieldsIdSchema.optional().nullable(),
 	formId: formsIdSchema,
-	order: z.number().optional(),
+	order: z.number(),
 	label: z.string().optional().nullable(),
 	description: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),

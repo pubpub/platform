@@ -39,16 +39,20 @@ export const createForm = defineServerAction(async function createForm(
 				.with("elements", (db) =>
 					db
 						.insertInto("form_elements")
-						.columns(["fieldId", "formId", "label", "type"])
+						.columns(["fieldId", "formId", "label", "type", "order"])
 						.expression((eb) =>
 							eb
 								.selectFrom("fields")
 								.innerJoin("form", (join) => join.onTrue())
-								.select([
+								.select((eb) => [
 									"fields.fieldId",
 									"form.id as formId",
 									"fields.name as label",
 									eb.val("pubfield").as("type"),
+									eb.fn
+										.agg<number>("ROW_NUMBER")
+										.over((o) => o.partitionBy("form.id"))
+										.as("order"),
 								])
 						)
 				)
