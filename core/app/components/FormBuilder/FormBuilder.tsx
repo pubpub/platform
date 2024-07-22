@@ -85,6 +85,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 		fields: elements,
 		move,
 		remove,
+		update,
 	} = useFieldArray({
 		name: "elements",
 		control: form.control,
