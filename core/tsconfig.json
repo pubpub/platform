@@ -28,7 +28,6 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
-		"instrumentation.registerCorePubFields.mts",
 		"../packages/db/scripts/scripts/generateDatabaseObject.mts",
 		"../packages/db/src/prisma/comment-generator.ts"
 	],
