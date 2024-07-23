@@ -21,7 +21,6 @@ export type TableForm = {
 	pubType: string;
 	updated: Date;
 	isArchived: boolean;
-	path: string;
 };
 
 export const getFormTableColumns = () =>

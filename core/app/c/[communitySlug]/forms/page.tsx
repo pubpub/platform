@@ -52,7 +52,6 @@ export default async function Page({ params: { communitySlug } }) {
 				pubType,
 				updated: new Date(updatedAt),
 				isArchived,
-				path: `/c/${communitySlug}/forms/${slug}/edit`,
 			};
 		});
 
