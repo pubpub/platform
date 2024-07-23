@@ -20,6 +20,7 @@ export interface TableData {
 	schemaName: CoreSchemaType | null;
 	updated: Date;
 	isArchived: boolean;
+	slug: string;
 }
 
 const ArchiveMenuItem = ({ field }: { field: TableData }) => {
