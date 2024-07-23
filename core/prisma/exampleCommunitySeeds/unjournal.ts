@@ -3,10 +3,8 @@ import type { PrismaClient } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 
-import type { CommunitiesId, PubTypesId, StagesId } from "db/public";
-import { MemberRole } from "db/public";
+import type { CommunitiesId, MemberRole, PubFieldsId, PubTypesId, StagesId } from "db/public";
 
-import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
 import { env } from "../../lib/env/env.mjs";
 import { FileUpload } from "../../lib/fields/fileUpload";
@@ -266,7 +264,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	const fileUploadSchema = await prisma.pubFieldSchema.create({
 		data: {
 			name: "uploadFile",
-			namespace: "pubpub",
+			namespace: "unjournal",
 			schema: FileUpload,
 		},
 	});
@@ -289,75 +287,101 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	await prisma.pubField.createMany({
 		data: [
-			{ id: fieldIds[0], name: "Title", slug: "unjournal:title" },
-			{ id: fieldIds[1], name: "Description", slug: "unjournal:description" },
-			{ id: fieldIds[2], name: "Manager's Notes", slug: "unjournal:managers-notes" },
+			{ id: fieldIds[0], name: "Title", slug: "unjournal:title", communityId: communityUUID },
+			{
+				id: fieldIds[1],
+				name: "Description",
+				slug: "unjournal:description",
+				communityId: communityUUID,
+			},
+			{
+				id: fieldIds[2],
+				name: "Manager's Notes",
+				slug: "unjournal:managers-notes",
+				communityId: communityUUID,
+			},
 			{
 				id: fieldIds[3],
 				name: "Anonymity",
 				pubFieldSchemaId: anonymitySchema.id,
 				slug: "unjournal:anonymity",
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[4],
 				name: "Please enter your 'salted hashtag' here if you know it. Otherwise please enter an anonymous psuedonym here",
 				slug: "unjournal:hashtag",
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[5],
 				name: "Evaluation",
 				pubFieldSchemaId: evaluationSchema.id,
 				slug: "unjournal:evaluation",
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[15],
 				name: "File Upload",
 				pubFieldSchemaId: fileUploadSchema.id,
 				slug: "pubpub:fileUpload",
+				communityId: communityUUID,
 			},
-			{ id: fieldIds[6], name: "Evaluated Paper", slug: "unjournal:evaluated-paper" },
-			{ id: fieldIds[7], name: "Tags", slug: "unjournal:tags" },
-			{ id: fieldIds[8], name: "DOI", slug: "unjournal:doi" },
+			{
+				id: fieldIds[6],
+				name: "Evaluated Paper",
+				slug: "unjournal:evaluated-paper",
+				communityId: communityUUID,
+			},
+			{ id: fieldIds[7], name: "Tags", slug: "unjournal:tags", communityId: communityUUID },
+			{ id: fieldIds[8], name: "DOI", slug: "unjournal:doi", communityId: communityUUID },
 			{
 				id: fieldIds[9],
 				name: "Metrics",
 				pubFieldSchemaId: metricsSchema.id,
 				slug: "unjournal:metrics",
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[10],
 				name: "Predictions",
 				slug: "unjournal:predictions",
 				pubFieldSchemaId: predictionsSchema.id,
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[11],
 				name: "Confidential Comments",
 				slug: "unjournal:confidential-comments",
 				pubFieldSchemaId: confidentialCommentsSchema.id,
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[12],
 				name: "Survey Questions",
 				slug: "unjournal:survey",
 				pubFieldSchemaId: surveySchema.id,
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[13],
 				name: "Feedback",
 				slug: "unjournal:feedback",
 				pubFieldSchemaId: feedbackSchema.id,
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[14],
 				name: "Submission Evaluator",
 				pubFieldSchemaId: evaluator.id,
 				slug: "unjournal:evaluator",
+				communityId: communityUUID,
 			},
 			{
 				id: fieldIds[16],
 				name: "URL",
 				slug: "unjournal:url",
+				communityId: communityUUID,
 			},
 		],
 	});
@@ -633,12 +657,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		},
 	});
-	const corePubSlugs = corePubFields.map((field) => field.slug);
-	const persistedCorePubFields = await db
-		.selectFrom("pub_fields")
-		.selectAll()
-		.where("pub_fields.slug", "in", corePubSlugs)
-		.execute();
+
 	await db
 		.with("new_pubs", (db) =>
 			db
@@ -661,13 +680,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		.values((eb) => [
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
+				fieldId: fieldIds[0] as PubFieldsId, // title
 				value: '"It Aint Ease Bein Cheese"',
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
-					.id,
+				fieldId: fieldIds[1] as PubFieldsId, // description
 				value: '"# Abstract"',
 			},
 		])
