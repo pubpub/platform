@@ -10,6 +10,7 @@ import {
 
 const baseElementSchema = z.object({
 	elementId: formElementsIdSchema.optional(),
+	order: z.number().int(),
 	deleted: z.boolean().optional().default(false),
 	updated: z.boolean().optional().default(false),
 });

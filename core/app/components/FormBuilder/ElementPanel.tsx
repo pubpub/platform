@@ -12,7 +12,7 @@ import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
-import type { InputElement, PanelEvent, PanelState } from "./types";
+import type { PanelEvent, PanelState } from "./types";
 import { useFormBuilder } from "./FormBuilderContext";
 
 type ElementPanelProps = {
@@ -37,6 +37,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 				...newElement,
 				required: true,
 				type: ElementType.pubfield,
+				order: elementsCount,
 			});
 			dispatch("save");
 		}
@@ -44,6 +45,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 			addElement({
 				...newElement,
 				type: ElementType.structural,
+				order: elementsCount,
 			});
 		}
 	};
