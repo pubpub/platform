@@ -1,4 +1,4 @@
-import { JSONSchemaType } from "ajv";
+import type { JSONSchemaType } from "ajv";
 
 export type FileUploadFile = {
 	fileName: string;
@@ -12,7 +12,7 @@ export type FileUploadFile = {
 export type FileUpload = FileUploadFile[];
 
 export const FileUpload = {
-	$id: "pubpub:fileUpload",
+	$id: "unjournal:fileUpload",
 	title: "Upload Files",
 	type: "array",
 	items: {
