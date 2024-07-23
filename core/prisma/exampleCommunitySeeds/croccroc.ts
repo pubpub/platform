@@ -11,11 +11,11 @@ import { db } from "~/kysely/database";
 export const crocCrocId = "758ba348-92c7-46ec-9612-7afda81e2d70" as CommunitiesId;
 
 export default async function main(communityUUID: CommunitiesId) {
-	logger.info("Registering core fields");
-	for (const corePubField of corePubFields) {
-		logger.info(`Registering core field ${corePubField.slug}`);
-		await registerCorePubField(corePubField);
-	}
+	// logger.info("Registering core fields");
+	// for (const corePubField of corePubFields) {
+	// 	logger.info(`Registering core field ${corePubField.slug}`);
+	// 	await registerCorePubField(corePubField);
+	// }
 	await db
 		.insertInto("communities")
 		.values({
