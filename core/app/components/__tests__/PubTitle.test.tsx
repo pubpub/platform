@@ -41,6 +41,7 @@ test("PubTitle component includes the pub title", async () => {
 					schema: null,
 					schemaName: "String",
 					isArchived: false,
+					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
 				},
 			},
 			{
@@ -61,6 +62,7 @@ test("PubTitle component includes the pub title", async () => {
 					schema: null,
 					schemaName: "String",
 					isArchived: false,
+					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
 				},
 			},
 			{
@@ -81,6 +83,7 @@ test("PubTitle component includes the pub title", async () => {
 					schema: null,
 					schemaName: "URL",
 					isArchived: false,
+					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
 				},
 			},
 		],
