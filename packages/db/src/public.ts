@@ -17,11 +17,8 @@ export * from "./public/Event";
 export * from "./public/FormAccessType";
 export * from "./public/FormElements";
 export * from "./public/Forms";
-<<<<<<< HEAD
 export * from "./public/FormToPermissions";
-=======
 export * from "./public/IntegrationInstances";
->>>>>>> feaeecf8 (Add form building form)
 export * from "./public/IntegrationInstanceState";
 export * from "./public/IntegrationInstanceToPub";
 export * from "./public/Integrations";

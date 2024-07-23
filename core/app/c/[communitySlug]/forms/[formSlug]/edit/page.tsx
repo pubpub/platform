@@ -5,7 +5,7 @@ import { ArchiveFormButton } from "~/app/components/FormBuilder/ArchiveFormButto
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { getLoginData } from "~/lib/auth/loginData";
-import { getFormBySlug } from "~/lib/server/form";
+import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 
@@ -20,7 +20,7 @@ export default async function Page({ params: { formSlug } }) {
 	}
 
 	const [form, { fields }] = await Promise.all([
-		getFormBySlug(formSlug).executeTakeFirstOrThrow(),
+		getForm({ slug: formSlug }).executeTakeFirstOrThrow(),
 		getPubFields().executeTakeFirstOrThrow(),
 	]);
 
