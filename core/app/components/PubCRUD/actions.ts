@@ -12,6 +12,7 @@ import { logger } from "logger";
 import { validatePubValues } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
@@ -33,10 +34,7 @@ export const createPub = defineServerAction(async function createPub({
 		throw new Error("Not logged in");
 	}
 
-	if (
-		!loginData.memberships.find((m) => m.communityId === communityId)?.canAdmin &&
-		!loginData.isSuperAdmin
-	) {
+	if (!isCommunityAdmin(loginData, { id: communityId })) {
 		return {
 			error: "You need to be an admin",
 		};
@@ -237,10 +235,7 @@ export const updatePub = defineServerAction(async function updatePub({
 		throw new Error("Not logged in");
 	}
 
-	if (
-		!loginData.memberships.find((m) => m.communityId === communityId)?.canAdmin &&
-		!loginData.isSuperAdmin
-	) {
+	if (!isCommunityAdmin(loginData, { id: communityId })) {
 		return {
 			error: "You need to be an admin",
 		};
@@ -291,10 +286,7 @@ export const removePub = defineServerAction(async function removePub({
 		};
 	}
 
-	if (
-		!loginData.memberships.find((m) => m.communityId === pub.communityId)?.canAdmin &&
-		!loginData.isSuperAdmin
-	) {
+	if (!isCommunityAdmin(loginData, { id: pub.communityId })) {
 		return {
 			error: "You need to be an admin of this community to remove this pub.",
 		};

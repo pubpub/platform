@@ -1,7 +1,15 @@
-import { User } from "@prisma/client";
+import type { User } from "@prisma/client";
 
+import { cache } from "react";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+
+import type { UsersId } from "db/public";
+
+import type { XOR } from "../types";
+import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";
+import { autoCache } from "./cache/autoCache";
 import { NotFoundError } from "./errors";
 
 export async function findOrCreateUser(userId: string): Promise<User>;
@@ -45,3 +53,44 @@ export async function findOrCreateUser(
 	}
 	return user;
 }
+
+export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
+	// do not use autocache here until we have a good way to globally invalidate users
+	return db
+		.selectFrom("users")
+		.select((eb) => [
+			"users.id",
+			"users.email",
+			"users.firstName",
+			"users.lastName",
+			"users.slug",
+			"users.supabaseId",
+			"users.createdAt",
+			"users.updatedAt",
+			"users.isSuperAdmin",
+			jsonArrayFrom(
+				eb
+					.selectFrom("members")
+					.select((eb) => [
+						"members.id",
+						"members.userId",
+						"members.createdAt",
+						"members.updatedAt",
+						"members.role",
+						"members.communityId",
+						jsonObjectFrom(
+							eb
+								.selectFrom("communities")
+								.whereRef("communities.id", "=", "members.communityId")
+								.selectAll()
+						).as("community"),
+					])
+					// for some reason doing "members.userId" doesn't work
+					.whereRef("userId", "=", "users.id")
+			).as("memberships"),
+		])
+		.$if(Boolean(userIdOrEmail.email), (eb) =>
+			eb.where("users.email", "=", userIdOrEmail.email!)
+		)
+		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
+});

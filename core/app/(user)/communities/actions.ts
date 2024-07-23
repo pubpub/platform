@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId, PubTypesId, UsersId } from "db/public";
+import { MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
@@ -73,7 +74,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.values({
 					userId: user.id as UsersId,
 					communityId: c.id as CommunitiesId,
-					canAdmin: true,
+					role: MemberRole.admin,
 				})
 				.returning("id")
 				.executeTakeFirst();

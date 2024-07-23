@@ -6,7 +6,7 @@ import { expect, it, vitest } from "vitest";
 
 import type { Database } from "db/Database";
 import type { ActionInstancesId, CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
-import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event } from "db/public";
+import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event, MemberRole } from "db/public";
 
 import type { QB } from "./types";
 import type { Equal, Expect } from "~/lib/types";
@@ -97,7 +97,6 @@ describe("cachedFindTables", () => {
 			.values((eb) => ({
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
-				canAdmin: true,
 			}));
 
 		const tables = await compileAndFindTables(qb, "mutation");
@@ -119,7 +118,6 @@ describe("cachedFindTables", () => {
 			.values((eb) => ({
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
-				canAdmin: true,
 			}));
 
 		const tables = await compileAndFindTables(qb, "mutation");
@@ -220,7 +218,6 @@ describe("cachedFindTables", () => {
 				.innerJoin("communities", "communities.id", "members.communityId")
 				.select("users.id"),
 			communityId: eb.selectFrom("communities").select("communities.id"),
-			canAdmin: true,
 		}));
 
 		const tables = await compileAndFindTables(query, "mutation");

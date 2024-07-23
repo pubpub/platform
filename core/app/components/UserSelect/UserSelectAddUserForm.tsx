@@ -1,9 +1,12 @@
-import { SyntheticEvent, useCallback, useTransition } from "react";
+import type { SyntheticEvent } from "react";
+
+import { useCallback, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Communities } from "db/public";
+import type { Communities } from "db/public";
+import { MemberRole } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -51,7 +54,7 @@ export const UserSelectAddUserForm = ({ email, community }: Props) => {
 						firstName,
 						lastName,
 						community,
-						canAdmin: false,
+						role: MemberRole.contributor,
 					});
 
 					if (didSucceed(result)) {

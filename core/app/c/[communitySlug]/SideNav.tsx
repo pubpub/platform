@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { CommunityData } from "~/lib/server/community";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
@@ -117,9 +118,8 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 	const divider = <div className="my-4 h-[1px] bg-gray-200" />;
 
 	const loginData = await getLoginData();
-	const isAdmin = loginData?.memberships.find(
-		(m) => m.community.slug === community.slug
-	)?.canAdmin;
+
+	const isAdmin = isCommunityAdmin(loginData, community);
 
 	const isSuperAdmin = loginData?.isSuperAdmin;
 

@@ -2,7 +2,7 @@ import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { getParams } from "@nimpl/getters/get-params";
 
-import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME } from "./constants";
+import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME, PUBPUB_COMMUNITY_SLUG_HEADER_NAME } from "./constants";
 
 /**
  * Experimental and likely unstable way to get the community slug.
@@ -33,7 +33,6 @@ export class NotInCommunityError extends Error {
  */
 export const getCommunitySlug = cache(() => {
 	const cookie = cookies().get(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
-
 	if (cookie?.value) {
 		return cookie.value;
 	}
@@ -42,9 +41,15 @@ export const getCommunitySlug = cache(() => {
 	const communityIdCookie = setCookies?.find((cookie) =>
 		cookie.startsWith(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME)
 	);
-	if (!communityIdCookie) {
+	if (communityIdCookie) {
+		return communityIdCookie.split(";")[0].split("=")[1];
+	}
+
+	const header = headers();
+	const communitySlugHeader = header.get(PUBPUB_COMMUNITY_SLUG_HEADER_NAME);
+	if (!communitySlugHeader) {
 		throw new NotInCommunityError();
 	}
 
-	return communityIdCookie.split(";")[0].split("=")[1];
+	return communitySlugHeader;
 });

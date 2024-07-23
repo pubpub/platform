@@ -4,6 +4,7 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
 import { pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -22,11 +23,8 @@ export default async function Page({
 		return notFound();
 	}
 
-	const currentCommunityMembership = loginData.memberships.find(
-		(m) => m.community.slug === communitySlug
-	);
-
-	if (!currentCommunityMembership?.canAdmin) {
+	const isAdmin = isCommunityAdmin(loginData, community);
+	if (!isAdmin) {
 		return null;
 	}
 
