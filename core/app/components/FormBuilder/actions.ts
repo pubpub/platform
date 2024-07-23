@@ -10,7 +10,7 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
 export const saveForm = defineServerAction(async function saveForm(form: FormBuilderSchema) {
-	const { elements, formId } = form;
+	const { elements, formId, access } = form;
 	//todo: this logic determines what, if any updates to make. that should be determined on the
 	//frontend so we can disable the save button if there are none
 	const { upserts, deletes } = elements.reduce<{
@@ -51,21 +51,32 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 					return Object.fromEntries(keys.map((key) => [key, eb.ref(`excluded.${key}`)]));
 				})
 			);
-		if (!upserts.length) {
-			await autoRevalidate(deleteQuery).executeTakeFirstOrThrow();
-			return;
+		if (upserts.length && deletes.length) {
+			await autoRevalidate(
+				db
+					.with("upserts", () => upsertQuery)
+					.with("deletes", () => deleteQuery)
+					.updateTable("forms")
+					.set({ access })
+					.where("forms.id", "=", formId)
+			).executeTakeFirstOrThrow();
+		} else if (deletes.length) {
+			await autoRevalidate(
+				db
+					.with("deletes", () => deleteQuery)
+					.updateTable("forms")
+					.set({ access })
+					.where("forms.id", "=", formId)
+			).executeTakeFirstOrThrow();
+		} else if (upserts.length) {
+			await autoRevalidate(
+				db
+					.with("upserts", () => upsertQuery)
+					.updateTable("forms")
+					.set({ access })
+					.where("forms.id", "=", formId)
+			).executeTakeFirstOrThrow();
 		}
-		if (!deletes.length) {
-			await autoRevalidate(upsertQuery).executeTakeFirstOrThrow();
-			return;
-		}
-		await autoRevalidate(
-			db
-				.with("updates", () => upsertQuery)
-				// TODO: this is just the deleteQuery repeated but it's unclear how to reuse it
-				.deleteFrom("form_elements")
-				.where("form_elements.id", "in", deletes)
-		).executeTakeFirstOrThrow();
 	} catch (error) {
 		logger.error({ msg: "error saving form", error });
 		return { error: "Unable to save form" };

@@ -10,7 +10,6 @@ import { useFieldArray, useForm } from "react-hook-form";
 
 import { FormAccessType } from "db/public";
 import { logger } from "logger";
-import { Button } from "ui/button";
 import {
 	Form,
 	FormControl,
@@ -32,8 +31,7 @@ import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
-import { SaveFormButton } from "./SaveFormButton";
-import { formBuilderSchema, isFieldInput, isStructuralElement } from "./types";
+import { formBuilderSchema } from "./types";
 
 const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (state, event) => {
 	switch (event) {
@@ -78,7 +76,6 @@ export function FormBuilder({ pubForm, id }: Props) {
 
 	const [panelState, dispatch] = useReducer(elementPanelReducer, "initial");
 	const [editingElementIndex, setEditingElementIndex] = useState<null | number>(null);
-	const [addingElement, setAddingElement] = useState(false);
 
 	const {
 		append,
@@ -93,7 +90,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 
 	const runSaveForm = useServerAction(saveForm);
 	const onSubmit = async (formData: FormBuilderSchema) => {
-		logger.debug({ msg: "form submitted" });
+		//TODO: only submit dirty fields
 		const result = await runSaveForm(formData);
 		if (didSucceed(result)) {
 			toast({
@@ -107,7 +104,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 			});
 		}
 	};
-	const addElement = useCallback((element: FormBuilderSchema["elements"][0]) => {
+	const addElement = useCallback((element: FormElementData) => {
 		append(element);
 	}, []);
 	const removeElement = useCallback(
@@ -123,14 +120,11 @@ export function FormBuilder({ pubForm, id }: Props) {
 		[]
 	);
 
-	const submit = useCallback(() => form.handleSubmit(onSubmit), []);
-
 	return (
 		<FormBuilderProvider
 			addElement={addElement}
 			removeElement={removeElement}
 			restoreElement={restoreElement}
-			submit={submit}
 			setEditingElement={setEditingElement}
 			editingElement={
 				editingElementIndex !== null ? elements[editingElementIndex] : undefined

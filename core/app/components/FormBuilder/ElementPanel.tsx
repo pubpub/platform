@@ -50,8 +50,6 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 		}
 	};
 
-	const addStructure = (structure) => {};
-
 	const [fieldsFilter, setFieldsFilter] = useState("");
 
 	switch (state) {

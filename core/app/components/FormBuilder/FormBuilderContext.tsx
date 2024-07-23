@@ -3,20 +3,19 @@
 import type { PropsWithChildren } from "react";
 
 import * as React from "react";
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useContext } from "react";
 
-import type { FormBuilderSchema } from "./types";
+import type { FormElementData } from "./types";
 
 type FormBuilderContext = {
-	submit: () => void;
-	addElement: (element: FormBuilderSchema["elements"][0]) => void;
+	addElement: (element: FormElementData) => void;
 	removeElement: (index: number) => void;
 	restoreElement: (index: number) => void;
 	setEditingElement: (index: number | null) => void;
-	editingElement?: FormBuilderSchema["elements"][0];
+	editingElement?: FormElementData;
 	elementsCount: number;
 	openConfigPanel: () => void;
-	update: (index: number, element: FormBuilderSchema["elements"][0]) => void;
+	update: (index: number, element: FormElementData) => void;
 };
 
 const FormBuilderContext = createContext<FormBuilderContext | undefined>(undefined);
