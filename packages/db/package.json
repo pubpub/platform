@@ -41,7 +41,7 @@
 		"tsconfig": "workspace:*",
 		"tsx": "^3.13.0",
 		"typescript": "^5.4.2",
-		"zod": "^3.22.4"
+		"zod": "^3.23.8"
 	},
 	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {

@@ -35,6 +35,7 @@ export default async function Page({ params: { communitySlug } }) {
 				"pub_types.name as pubType",
 				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
 				"forms.isArchived",
+				"forms.slug",
 			])
 			.where("communities.slug", "=", communitySlug)
 	).execute();

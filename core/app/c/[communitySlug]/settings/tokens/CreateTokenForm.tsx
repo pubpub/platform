@@ -24,7 +24,6 @@ import { PermissionField } from "./PermissionField";
 export const createTokenFormSchema = apiAccessTokensInitializerSchema
 	.omit({
 		communityId: true,
-		usageLimit: true,
 		issuedById: true,
 	})
 	.extend({
