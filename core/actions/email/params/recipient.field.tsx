@@ -1,4 +1,4 @@
-import { UsersId } from "db/public";
+import type { UsersId } from "db/public";
 
 import { defineActionFormFieldServerComponent } from "~/actions/_lib/custom-form-field/defineConfigServerComponent";
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";

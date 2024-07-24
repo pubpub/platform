@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { JsonValue } from "contracts";
+import type { JsonValue } from "contracts";
 
 import type { getPubCached } from "~/lib/server";
 

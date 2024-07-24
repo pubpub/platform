@@ -207,7 +207,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 				config.communitySlug,
 				config.authToken,
 				v6Community.id,
-				pub.values[corePubFields.title.slug]
+				config.title
 			);
 
 			if (isClientExceptionOptions(createV6PubResponse)) {
@@ -225,7 +225,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			v6Pub.id,
 			config.communitySlug,
 			config.authToken,
-			pub.values[corePubFields.content.slug]
+			config.content
 		);
 
 		if (isClientExceptionOptions(updateV6PubTextRequest)) {

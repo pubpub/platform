@@ -48,7 +48,6 @@ export const action = defineAction({
 			},
 		},
 	},
-	pubFields: [],
 	icon: Mail,
 	tokens: {
 		body: {
