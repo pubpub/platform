@@ -79,6 +79,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 							placeholder="Type a field name to search..."
 							aria-label="Type a field name to search"
 							onChange={(event) => setFieldsFilter(event.target.value)}
+							value={fieldsFilter}
 							className="mb-2"
 						></Input>
 						<div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
@@ -94,6 +95,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 											className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
 											onClick={() => {
 												addToForm({ type: "field", fieldId: field.id });
+												setFieldsFilter("");
 												setEditingElement(elementsCount);
 												dispatch("configure");
 											}}
@@ -116,7 +118,10 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 							type="button"
 							variant="outline"
 							className="w-full border-slate-950"
-							onClick={() => dispatch("cancel")}
+							onClick={() => {
+								dispatch("cancel");
+								setFieldsFilter("");
+							}}
 						>
 							Cancel
 						</Button>
