@@ -95,10 +95,9 @@ export function FormBuilder({ pubForm, id }: Props) {
 		if (didSucceed(result)) {
 			toast({
 				className: "rounded border-emerald-100 bg-emerald-50",
-				children: (
-					<div className="flex gap-3">
-						<CircleCheck />
-						<span>Form Successfully Saved</span>
+				action: (
+					<div className="flex w-full gap-3 text-green-700">
+						<CircleCheck className="" /> Form Successfully Saved
 					</div>
 				),
 			});
