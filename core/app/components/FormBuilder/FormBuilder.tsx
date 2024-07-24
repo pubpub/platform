@@ -104,20 +104,26 @@ export function FormBuilder({ pubForm, id }: Props) {
 			});
 		}
 	};
-	const addElement = useCallback((element: FormElementData) => {
-		append(element);
-	}, []);
+	const addElement = useCallback(
+		(element: FormElementData) => {
+			append(element);
+		},
+		[append]
+	);
 	const removeElement = useCallback(
-		(index: number) => update(index, { ...elements[index], deleted: true }),
-		[]
+		(index: number) => {
+			const element = elements[index];
+			if (element.elementId) {
+				update(index, { ...elements[index], deleted: true });
+			} else {
+				remove(index);
+			}
+		},
+		[elements, update, remove]
 	);
 	const restoreElement = useCallback(
 		(index: number) => update(index, { ...elements[index], deleted: false }),
-		[]
-	);
-	const setEditingElement = useCallback(
-		(index: number | null) => setEditingElementIndex(index),
-		[]
+		[elements]
 	);
 
 	return (
@@ -125,7 +131,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 			addElement={addElement}
 			removeElement={removeElement}
 			restoreElement={restoreElement}
-			setEditingElement={setEditingElement}
+			setEditingElement={setEditingElementIndex}
 			editingElement={
 				editingElementIndex !== null ? elements[editingElementIndex] : undefined
 			}

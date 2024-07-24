@@ -39,7 +39,6 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 				type: ElementType.pubfield,
 				order: elementsCount,
 			});
-			dispatch("save");
 		}
 		if (newElement.type === "structure") {
 			addElement({
@@ -67,7 +66,6 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 					</Button>
 				</div>
 			);
-			break;
 		case "selecting":
 			return (
 				<Tabs defaultValue="field">
@@ -130,7 +128,6 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 					</TabsContent>
 				</Tabs>
 			);
-			break;
 		case "configuring":
 			return (
 				<>
@@ -154,8 +151,8 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 							className="bg-blue-500 hover:bg-blue-600"
 							onClick={() => {
 								//update element
-								dispatch("save");
 								setEditingElement(null);
+								dispatch("save");
 							}}
 						>
 							Save
@@ -163,6 +160,5 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 					</div>
 				</>
 			);
-			break;
 	}
 };

@@ -11,8 +11,8 @@ import {
 const baseElementSchema = z.object({
 	elementId: formElementsIdSchema.optional(),
 	order: z.number().int(),
-	deleted: z.boolean().optional().default(false),
-	updated: z.boolean().optional().default(false),
+	deleted: z.boolean().default(false),
+	updated: z.boolean().default(false),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
