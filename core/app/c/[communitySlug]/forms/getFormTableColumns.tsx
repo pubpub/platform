@@ -83,6 +83,9 @@ export const getFormTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
+				// TODO: remove this return so the actions column renders once archiving exists or
+				// there are other actions to take
+				return;
 				if (row.original.isArchived) {
 					return;
 				}

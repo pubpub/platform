@@ -36,7 +36,7 @@ export default async function Page({ params: { formSlug } }) {
 			}
 			headingAction={
 				<div className="flex gap-2">
-					<ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "}
+					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
 					<SaveFormButton form={formBuilderId} />
 				</div>
 			}
