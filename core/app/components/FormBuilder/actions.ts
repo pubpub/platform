@@ -1,6 +1,8 @@
 "use server";
 
-import type { FormElementsId, FormsId, NewFormElements } from "db/public";
+import type { QueryCreator } from "kysely";
+
+import type { FormElementsId, FormsId, NewFormElements, PublicSchema } from "db/public";
 import { formElementsInitializerSchema } from "db/public";
 import { logger } from "logger";
 
@@ -18,8 +20,10 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 		deletes: FormElementsId[];
 	}>(
 		(acc, element, index) => {
-			if (element.deleted && element.elementId) {
-				acc.deletes.push(element.elementId);
+			if (element.deleted) {
+				if (element.elementId) {
+					acc.deletes.push(element.elementId);
+				}
 			} else if (!element.elementId) {
 				// Newly created elements have no elementId
 				acc.upserts.push(formElementsInitializerSchema.parse({ formId, ...element }));
@@ -37,25 +41,37 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 		},
 		{ upserts: [], deletes: [] }
 	);
+
+	logger.debug({ msg: "saving form", form, upserts, deletes });
 	if (!upserts.length && !deletes.length) {
 		return;
 	}
 	try {
-		const deleteQuery = db.deleteFrom("form_elements").where("form_elements.id", "in", deletes);
-		const upsertQuery = db
-			.insertInto("form_elements")
-			.values(upserts)
-			.onConflict((oc) =>
-				oc.column("id").doUpdateSet((eb) => {
-					const keys = Object.keys(upserts[0]) as (keyof NewFormElements)[];
-					return Object.fromEntries(keys.map((key) => [key, eb.ref(`excluded.${key}`)]));
-				})
-			);
+		const deleteQuery = (db: QueryCreator<PublicSchema>) =>
+			db.deleteFrom("form_elements").where("form_elements.id", "in", deletes);
+
+		const upsertQuery = (db: QueryCreator<PublicSchema>) =>
+			db
+				.insertInto("form_elements")
+				.values(upserts)
+				.onConflict((oc) =>
+					oc.column("id").doUpdateSet((eb) => {
+						const keys = Object.keys(upserts[0]) as (keyof NewFormElements)[];
+						return Object.fromEntries(
+							keys.map((key) => [key, eb.ref(`excluded.${key}`)])
+						);
+					})
+				);
+
 		if (upserts.length && deletes.length) {
 			await autoRevalidate(
 				db
-					.with("upserts", () => upsertQuery)
-					.with("deletes", () => deleteQuery)
+					.with("upserts", (db) => upsertQuery(db))
+					.with("deletes", (db) =>
+						// This isn't type safe, but it doesn't seem like there's any type safe way
+						// to reuse a CTE in kysely right now
+						deleteQuery(db as unknown as QueryCreator<PublicSchema>)
+					)
 					.updateTable("forms")
 					.set({ access })
 					.where("forms.id", "=", formId)
@@ -63,7 +79,7 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 		} else if (deletes.length) {
 			await autoRevalidate(
 				db
-					.with("deletes", () => deleteQuery)
+					.with("deletes", (db) => deleteQuery(db))
 					.updateTable("forms")
 					.set({ access })
 					.where("forms.id", "=", formId)
@@ -71,7 +87,7 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 		} else if (upserts.length) {
 			await autoRevalidate(
 				db
-					.with("upserts", () => upsertQuery)
+					.with("upserts", (db) => upsertQuery(db))
 					.updateTable("forms")
 					.set({ access })
 					.where("forms.id", "=", formId)
