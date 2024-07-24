@@ -31,7 +31,7 @@ CREATE TABLE "form_elements" (
     "type" "ElementType" NOT NULL,
     "fieldId" TEXT,
     "formId" TEXT NOT NULL,
-    "order" SERIAL NOT NULL,
+    "order" INTEGER NOT NULL,
     "label" TEXT,
     "description" TEXT,
     "element" "StructuralFormElement",
@@ -41,6 +41,9 @@ CREATE TABLE "form_elements" (
 
     CONSTRAINT "form_elements_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "form_elements_fieldId_formId_key" ON "form_elements"("fieldId", "formId");
 
 -- AddForeignKey
 ALTER TABLE "form_elements" ADD CONSTRAINT "form_elements_fieldId_fkey" FOREIGN KEY ("fieldId") REFERENCES "pub_fields"("id") ON DELETE SET NULL ON UPDATE CASCADE;
