@@ -325,7 +325,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				id: fieldIds[15],
 				name: "File Upload",
 				pubFieldSchemaId: fileUploadSchema.id,
-				slug: "pubpub:fileUpload",
+				slug: "unjournal:fileUpload",
 				communityId: communityUUID,
 			},
 			{
