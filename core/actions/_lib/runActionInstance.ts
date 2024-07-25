@@ -123,6 +123,7 @@ const _runActionInstance = async (
 		};
 	}
 
+	// TODO: restore validation https://github.com/pubpub/v7/issues/455
 	// const pubValuesValidationResult = validatePubValues({
 	// 	fields: action.pubFields,
 	// 	values: pub.values,
