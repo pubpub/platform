@@ -42,7 +42,11 @@ export default async function Page({ params: { formSlug } }) {
 			}
 		>
 			<PubFieldProvider pubFields={fields}>
-				<FormBuilder pubForm={form} id={formBuilderId} />
+				<FormBuilder
+					pubForm={form}
+					id={formBuilderId}
+					superadmin={loginData.isSuperAdmin}
+				/>
 			</PubFieldProvider>
 		</ContentLayout>
 	);
