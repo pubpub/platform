@@ -5,6 +5,7 @@ import { useCallback, useReducer, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { DevTool } from "@hookform/devtools";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 
@@ -62,9 +63,10 @@ const elementPanelTitles: Record<PanelState, string> = {
 type Props = {
 	pubForm: PubForm;
 	id: string;
+	superadmin: boolean;
 };
 
-export function FormBuilder({ pubForm, id }: Props) {
+export function FormBuilder({ pubForm, id, superadmin }: Props) {
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),
 		values: {
@@ -149,8 +151,13 @@ export function FormBuilder({ pubForm, id }: Props) {
 						<Form {...form}>
 							<form
 								id={id}
-								onSubmit={form.handleSubmit(onSubmit, (errors) =>
-									logger.debug({ msg: "unable to submit form", errors })
+								onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
+									logger.error({
+										msg: "unable to submit form",
+										errors,
+										event,
+										elements,
+									})
 								)}
 							>
 								<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
@@ -262,6 +269,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 					<TabsContent value="preview">Preview your form here</TabsContent>
 				</div>
 			</Tabs>
+			{superadmin && <DevTool control={form.control} />}
 		</FormBuilderProvider>
 	);
 }
