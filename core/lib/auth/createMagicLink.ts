@@ -1,14 +1,21 @@
 import { env } from "../env/env.mjs";
 import { getServerSupabase } from "../supabaseServer";
+import { XOR } from "../types";
 
-const createSupabaseMagicLink = async ({ email, path }: { email: string; path: string }) => {
+type CreateMagicLinkOptions = {
+	email: string;
+} & XOR<{ path: string }, { url: string }>;
+
+const createSupabaseMagicLink = async (options: CreateMagicLinkOptions) => {
 	const supabase = getServerSupabase();
 
 	const { data, error } = await supabase.auth.admin.generateLink({
 		type: "magiclink",
-		email: email,
+		email: options.email,
 		options: {
-			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/${path}`,
+			redirectTo: options.path
+				? `${env.NEXT_PUBLIC_PUBPUB_URL}/${options.path}`
+				: options.url,
 		},
 	});
 
@@ -19,6 +26,6 @@ const createSupabaseMagicLink = async ({ email, path }: { email: string; path: s
 	return data.properties.action_link;
 };
 
-export const createMagicLink = async ({ email, path }: { email: string; path: string }) => {
-	return createSupabaseMagicLink({ email, path });
+export const createMagicLink = async (options: CreateMagicLinkOptions) => {
+	return createSupabaseMagicLink(options);
 };

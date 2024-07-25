@@ -269,6 +269,7 @@ model Member {
 
   permissions Permission[]
 
+  @@unique([userId, communityId])
   @@map(name: "members")
 }
 

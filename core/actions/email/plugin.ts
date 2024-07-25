@@ -7,9 +7,10 @@ import type { Node } from "unist";
 
 import { visit } from "unist-util-visit";
 
+import { UsersId } from "db/public";
 import { expect } from "utils";
 
-import { createToken } from "~/lib/server/token";
+import { addUserToForm, createFormInviteLink } from "~/lib/server/form";
 import { EmailToken } from "./tokens";
 
 export type EmailDirectivePluginContext = {
@@ -22,10 +23,9 @@ export type EmailDirectivePluginContext = {
 		id: string;
 		firstName: string;
 		lastName: string | null;
+		email: string;
 	};
-	community: {
-		slug: string;
-	};
+	communitySlug: string;
 	pub: {
 		values: Record<string, any>;
 		assignee?: {
@@ -189,8 +189,9 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirective
 	}
 	// :link{form=review}
 	else if ("form" in attrs) {
-		const name = expect(attrs.form, 'Missing value for "form" attribute');
-		href = `https://app.pubpub.org/c/${context.community.slug}/forms/${name}`;
+		assert(attrs.form, 'Missing value for "form" attribute');
+		// Form hrefs are handled by the async post-processing step below.
+		href = "";
 	}
 	// :link{to=https://example.com}
 	else if ("to" in attrs) {
@@ -257,11 +258,22 @@ export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) 
 		await Promise.all(
 			tokenAuthLinkNodes.map(async (node) => {
 				const data = expect(node.data);
-				const token = await createToken(context.recipient.id);
 				const props = expect(data.hProperties);
-				const url = new URL(expect(props.href) as string);
-				url.searchParams.set("token", token);
-				props.href = url.toString();
+				if (isDirective(node)) {
+					const attrs = expect(node.attributes);
+					if ("form" in attrs) {
+						// ensure user has a membership w/ the community and is
+						// authorized to use the form they are being invited to
+						await addUserToForm({
+							userId: context.recipient.id as UsersId,
+							slug: expect(attrs.form),
+						}).execute();
+						props.href = await createFormInviteLink({
+							userId: context.recipient.id as UsersId,
+							formSlug: expect(attrs.form),
+						});
+					}
+				}
 			})
 		);
 	};
