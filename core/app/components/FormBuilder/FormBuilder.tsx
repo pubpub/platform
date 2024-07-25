@@ -149,8 +149,13 @@ export function FormBuilder({ pubForm, id }: Props) {
 						<Form {...form}>
 							<form
 								id={id}
-								onSubmit={form.handleSubmit(onSubmit, (errors) =>
-									logger.debug({ msg: "unable to submit form", errors })
+								onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
+									logger.error({
+										msg: "unable to submit form",
+										errors,
+										event,
+										elements,
+									})
 								)}
 							>
 								<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">

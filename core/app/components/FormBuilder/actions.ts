@@ -42,7 +42,7 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 		{ upserts: [], deletes: [] }
 	);
 
-	logger.debug({ msg: "saving form", form, upserts, deletes });
+	logger.info({ msg: "saving form", form, upserts, deletes });
 	if (!upserts.length && !deletes.length) {
 		return;
 	}
