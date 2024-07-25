@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useCallback, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createPortal } from "react-dom";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import { FormAccessType } from "db/public";
@@ -62,6 +63,20 @@ type Props = {
 	id: string;
 };
 
+// Render children in a portal so they can safely use <form> components
+function PanelWrapper({
+	children,
+	sidebar,
+}: {
+	children: React.ReactNode;
+	sidebar: Element | null;
+}) {
+	if (!sidebar) {
+		return null;
+	}
+	return createPortal(children, sidebar);
+}
+
 export function FormBuilder({ pubForm, id }: Props) {
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),
@@ -76,6 +91,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 		},
 	});
 
+	const sidebarRef = useRef(null);
 	const [panelState, dispatch] = useReducer(elementPanelReducer, "initial");
 	const [editingElementIndex, setEditingElementIndex] = useState<null | number>(null);
 
@@ -203,72 +219,79 @@ export function FormBuilder({ pubForm, id }: Props) {
 										</SortableContext>
 									</DndContext>
 								</div>
-								<div className="fixed right-0 top-[72px] z-30 flex h-screen w-[380px] flex-col gap-10 border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow">
-									<FormField
-										control={form.control}
-										name="elements"
-										render={() => (
-											<FormItem>
-												<FormLabel className="mb-4 uppercase text-slate-500">
-													{elementPanelTitles[panelState]}
-												</FormLabel>
-												<hr />
-												<FormControl>
-													<ElementPanel
-														state={panelState}
-														dispatch={dispatch}
-													/>
-												</FormControl>
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="access"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-slate-500">
-													Access
-												</FormLabel>
-												<hr />
-												<Select
-													onValueChange={field.onChange}
-													defaultValue={field.value}
-												>
+								<PanelWrapper sidebar={sidebarRef.current}>
+									<>
+										<FormField
+											control={form.control}
+											name="elements"
+											render={() => (
+												<FormItem>
+													<FormLabel className="mb-4 uppercase text-slate-500">
+														{elementPanelTitles[panelState]}
+													</FormLabel>
+													<hr />
 													<FormControl>
-														<SelectTrigger>
-															<SelectValue placeholder="Select a type" />
-														</SelectTrigger>
+														<ElementPanel
+															state={panelState}
+															dispatch={dispatch}
+														/>
 													</FormControl>
-													<SelectContent>
-														{Object.values(FormAccessType).map((t) => (
-															<SelectItem
-																key={t}
-																value={t.toString()}
-															>
-																<div className="first-letter:capitalize">
-																	{t}
-																</div>
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormDescription>
-													{field.value === FormAccessType.private &&
-														"Only internal editors can submit"}{" "}
-												</FormDescription>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
+												</FormItem>
+											)}
+										/>
+										<FormField
+											control={form.control}
+											name="access"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel className="text-slate-500">
+														Access
+													</FormLabel>
+													<hr />
+													<Select
+														onValueChange={field.onChange}
+														defaultValue={field.value}
+													>
+														<FormControl>
+															<SelectTrigger>
+																<SelectValue placeholder="Select a type" />
+															</SelectTrigger>
+														</FormControl>
+														<SelectContent>
+															{Object.values(FormAccessType).map(
+																(t) => (
+																	<SelectItem
+																		key={t}
+																		value={t.toString()}
+																	>
+																		<div className="first-letter:capitalize">
+																			{t}
+																		</div>
+																	</SelectItem>
+																)
+															)}
+														</SelectContent>
+													</Select>
+													<FormDescription>
+														{field.value === FormAccessType.private &&
+															"Only internal editors can submit"}{" "}
+													</FormDescription>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>{" "}
+									</>
+								</PanelWrapper>
 							</form>
 						</Form>
 					</TabsContent>
 					<TabsContent value="preview">Preview your form here</TabsContent>
 				</div>
 			</Tabs>
+			<div
+				ref={sidebarRef}
+				className="fixed right-0 top-[72px] z-30 flex h-screen w-[380px] flex-col gap-10 border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
+			></div>
 		</FormBuilderProvider>
 	);
 }
