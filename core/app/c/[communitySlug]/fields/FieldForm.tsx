@@ -164,7 +164,7 @@ export const FieldForm = ({
 	const isEditing = !!defaultValues;
 
 	const handleCreate = useCallback(async (values: FormValues & { slug: string }) => {
-		const result = await createField(values.name, values.slug, values.schemaName);
+		const result = await createField(values.name, values.slug, values.schemaName, community.id);
 		if (didSucceed(result)) {
 			toast({ title: `Created field ${values.name}` });
 			onSubmitSuccess();

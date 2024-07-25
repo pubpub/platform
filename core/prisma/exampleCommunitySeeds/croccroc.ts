@@ -1,40 +1,65 @@
 import { faker } from "@faker-js/faker";
 
 import type { CommunitiesId, PubTypesId } from "db/public";
-import { MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 import { logger } from "logger";
 
-import { registerCorePubField } from "~/actions/_lib/init";
-import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
 
 export const crocCrocId = "758ba348-92c7-46ec-9612-7afda81e2d70" as CommunitiesId;
 
 export default async function main(communityUUID: CommunitiesId) {
-	logger.info("Registering core fields");
-	for (const corePubField of corePubFields) {
-		logger.info(`Registering core field ${corePubField.slug}`);
-		await registerCorePubField(corePubField);
-	}
+	const slug = "croccroc";
 	await db
 		.insertInto("communities")
 		.values({
 			id: communityUUID,
 			name: "CrocCroc",
-			slug: "croccroc",
+			slug,
 			avatar: "/demo/croc.png",
 		})
 		.execute();
 
+	logger.info("Registering croccroc pub fields");
+	const persistedPubFields = await db
+		.insertInto("pub_fields")
+		.values([
+			{
+				name: "Title",
+				slug: `${slug}:title`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
+			},
+			{
+				name: "Content",
+				slug: `${slug}:content`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
+			},
+			{
+				name: "Email",
+				slug: `${slug}:email`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.Email,
+			},
+			{
+				name: "URL",
+				slug: `${slug}:url`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.URL,
+			},
+			{
+				name: "User ID",
+				slug: `${slug}:user-id`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.UserId,
+			},
+		])
+		.returning(["id", "slug"])
+		.execute();
+
 	const submissionTypeId = "a8a92307-ec90-41e6-9905-30ba3d06e08e" as PubTypesId;
 	const evaluationTypeId = "9bc8a68c-5b75-4c7c-a691-4f9c1daf8bb6" as PubTypesId;
-
-	const corePubSlugs = corePubFields.map((field) => field.slug);
-	const persistedCorePubFields = await db
-		.selectFrom("pub_fields")
-		.selectAll()
-		.where("pub_fields.slug", "in", corePubSlugs)
-		.execute();
 
 	await db
 		.with("submission_pub_type", (db) =>
@@ -49,7 +74,7 @@ export default async function main(communityUUID: CommunitiesId) {
 		)
 		.insertInto("_PubFieldToPubType")
 		.values((eb) =>
-			persistedCorePubFields.map((field) => ({
+			persistedPubFields.map((field) => ({
 				A: field.id,
 				B: eb.selectFrom("submission_pub_type").select("id"),
 			}))
@@ -69,7 +94,7 @@ export default async function main(communityUUID: CommunitiesId) {
 		)
 		.insertInto("_PubFieldToPubType")
 		.values((eb) =>
-			persistedCorePubFields.map((field) => ({
+			persistedPubFields.map((field) => ({
 				A: field.id,
 				B: eb.selectFrom("evaluation_pub_type").select("id"),
 			}))
@@ -262,50 +287,47 @@ export default async function main(communityUUID: CommunitiesId) {
 		.values((eb) => [
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:title`)!.id,
 				value: '"Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:content")!
-					.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:content`)!.id,
 				value: '"# Abstract"',
 			},
 			{
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:title")!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:title`)!.id,
 				value: '"Evaluation of Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:email")!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:email`)!.id,
 				value: '"alivader@croc.com"',
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:url")!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:url`)!.id,
 				value: '"https://croc.com"',
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:user-id")!
-					.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:user-id`)!.id,
 				value: JSON.stringify(users[0].id),
 			},
 			{
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:email")!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:email`)!.id,
 				value: '"crocochild@croc.com"',
 			},
 			{
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:url")!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:url`)!.id,
 				value: '"https://croc.com"',
 			},
 			{
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedCorePubFields.find((field) => field.slug === "pubpub:user-id")!
-					.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:user-id`)!.id,
 				value: JSON.stringify(users[0].id),
 			},
 		])

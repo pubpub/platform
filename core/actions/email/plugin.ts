@@ -27,7 +27,7 @@ export type EmailDirectivePluginContext = {
 		slug: string;
 	};
 	pub: {
-		values: Record<string, string>;
+		values: Record<string, any>;
 		assignee?: {
 			email: string;
 		};

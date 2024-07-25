@@ -68,6 +68,7 @@ model Community {
   stages               Stage[]
   APIAccessToken       ApiAccessToken[]
   Form                 Form[]
+  pubFields            PubField[]
 
   @@map(name: "communities")
 }
@@ -112,6 +113,8 @@ model PubField {
   schemaName       CoreSchemaType?
   pubFieldSchemaId String?
   isArchived       Boolean         @default(false)
+  community        Community @relation(fields: [communityId], references: [id])
+  communityId      String
 
   values    PubValue[]
   pubTypes  PubType[]

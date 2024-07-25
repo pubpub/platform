@@ -109,10 +109,6 @@ export type Action<
 		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
 	};
 	/**
-	 * The core pub fields that this action requires in order to run.
-	 */
-	pubFields: P;
-	/**
 	 * The icon to display for this action. Used in the UI.
 	 */
 	icon: (typeof Icons)[keyof typeof Icons];

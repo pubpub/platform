@@ -2,7 +2,6 @@ import * as z from "zod";
 
 import { FileText } from "ui/icon";
 
-import * as corePubFields from "../corePubFields";
 import { defineAction } from "../types";
 
 export const action = defineAction({
@@ -20,7 +19,6 @@ export const action = defineAction({
 			})
 			.optional(),
 	},
-	pubFields: [corePubFields.title],
 	icon: FileText,
 });
 

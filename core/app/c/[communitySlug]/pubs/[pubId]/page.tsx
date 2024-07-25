@@ -1,9 +1,6 @@
 import { Suspense } from "react";
-import { unstable_cache } from "next/cache";
-import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
@@ -23,8 +20,10 @@ import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
 
 export default async function Page({
 	params,
+	searchParams,
 }: {
 	params: { pubId: string; communitySlug: string };
+	searchParams: Record<string, string>;
 }) {
 	const loginData = await getLoginData();
 	if (!loginData) {
@@ -105,12 +104,10 @@ export default async function Page({
 									actionInstances={actions}
 									pub={pub}
 									stage={stage!}
-									pageContext={
-										{
-											params: params,
-											searchParams: undefined,
-										} as unknown as PageContext // still need to figure this out
-									}
+									pageContext={{
+										params: params,
+										searchParams,
+									}}
 								/>
 							</div>
 						) : (

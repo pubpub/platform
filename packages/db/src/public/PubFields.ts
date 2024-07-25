@@ -1,9 +1,11 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 import { z } from "zod";
 
+import type { CommunitiesId } from "./Communities";
 import type { CoreSchemaType } from "./CoreSchemaType";
 import type { IntegrationsId } from "./Integrations";
 import type { PubFieldSchemaId } from "./PubFieldSchema";
+import { communitiesIdSchema } from "./Communities";
 import { coreSchemaTypeSchema } from "./CoreSchemaType";
 import { integrationsIdSchema } from "./Integrations";
 import { pubFieldSchemaIdSchema } from "./PubFieldSchema";
@@ -37,6 +39,8 @@ export interface PubFieldsTable {
 	schemaName: ColumnType<CoreSchemaType | null, CoreSchemaType | null, CoreSchemaType | null>;
 
 	isArchived: ColumnType<boolean, boolean | undefined, boolean>;
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 }
 
 export type PubFields = Selectable<PubFieldsTable>;
@@ -57,6 +61,7 @@ export const pubFieldsSchema = z.object({
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.nullable(),
 	isArchived: z.boolean(),
+	communityId: communitiesIdSchema,
 });
 
 export const pubFieldsInitializerSchema = z.object({
@@ -69,6 +74,7 @@ export const pubFieldsInitializerSchema = z.object({
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),
 	isArchived: z.boolean().optional(),
+	communityId: communitiesIdSchema,
 });
 
 export const pubFieldsMutatorSchema = z.object({
@@ -81,4 +87,5 @@ export const pubFieldsMutatorSchema = z.object({
 	slug: z.string().optional(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),
 	isArchived: z.boolean().optional(),
+	communityId: communitiesIdSchema.optional(),
 });

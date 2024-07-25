@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId, PubTypesId, UsersId } from "db/public";
-import { MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
@@ -80,9 +80,22 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.executeTakeFirst();
 
 			const pubFieldsPromise = db
-				.selectFrom("pub_fields")
-				.selectAll()
-				.where("pub_fields.slug", "in", corePubSlugs)
+				.insertInto("pub_fields")
+				.values([
+					{
+						name: "Title",
+						slug: `${slug}:title`,
+						communityId: communityUUID,
+						schemaName: CoreSchemaType.String,
+					},
+					{
+						name: "Content",
+						slug: `${slug}:content`,
+						communityId: communityUUID,
+						schemaName: CoreSchemaType.String,
+					},
+				])
+				.returning(["id", "slug"])
 				.execute();
 
 			const [fields, member] = await Promise.all([pubFieldsPromise, memberPromise]);
@@ -230,12 +243,12 @@ export const createCommunity = defineServerAction(async function createCommunity
 				.values((eb) => [
 					{
 						pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-						fieldId: fields.find((field) => field.slug === "pubpub:title")!.id,
+						fieldId: fields.find((field) => field.slug === `${slug}:title`)!.id,
 						value: '"The Activity of Slugs I. The Induction of Activity by Changing Temperatures"',
 					},
 					{
 						pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-						fieldId: fields.find((field) => field.slug === "pubpub:content")!.id,
+						fieldId: fields.find((field) => field.slug === `${slug}:content`)!.id,
 						value: '"LONG LIVE THE SLUGS"',
 					},
 				])

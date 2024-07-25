@@ -19,7 +19,7 @@ export function recursivelyGetScalarFields(
 	schema: JSONSchemaType<AnySchema>,
 	value: Prisma.JsonValue
 ) {
-	if (schema.$id === "pubpub:fileUpload") {
+	if (schema.$id === "unjournal:fileUpload") {
 		return <FileUploadPreview files={value as FileUpload} />;
 	}
 	// TODO: get schema IDs and render specific stuff -- e.g. file upload, confidence intervals

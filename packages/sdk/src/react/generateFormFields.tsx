@@ -142,7 +142,7 @@ const ScalarField = (props: ScalarFieldProps) => {
 	);
 };
 
-const customScalars = ["unjournal:100confidence", "unjournal:5confidence", "pubpub:fileUpload"];
+const customScalars = ["unjournal:100confidence", "unjournal:5confidence", "unjournal:fileUpload"];
 
 const hasCustomRenderer = (id: string) => {
 	return customScalars.includes(id);

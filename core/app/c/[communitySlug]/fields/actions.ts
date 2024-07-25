@@ -1,6 +1,6 @@
 "use server";
 
-import type { CoreSchemaType, PubFieldsId } from "db/public";
+import type { CommunitiesId, CoreSchemaType, PubFieldsId } from "db/public";
 import { logger } from "logger";
 
 import { db, isUniqueConstraintError } from "~/kysely/database";
@@ -10,11 +10,12 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 export const createField = defineServerAction(async function createField(
 	name: string,
 	slug: string,
-	schemaName: CoreSchemaType
+	schemaName: CoreSchemaType,
+	communityId: CommunitiesId
 ) {
 	try {
 		await autoRevalidate(
-			db.insertInto("pub_fields").values({ name, slug, schemaName })
+			db.insertInto("pub_fields").values({ name, slug, schemaName, communityId })
 		).execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {

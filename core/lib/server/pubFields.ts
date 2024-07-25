@@ -1,13 +1,12 @@
 import { sql } from "kysely";
 import { jsonBuildObject } from "kysely/helpers/postgres";
 
-import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public";
 
 import type { PubField } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 
-// TODO: this should probably filter by the community, but fields aren't actually scoped to a community yet!
 /**
  * Get pub fields
  *
@@ -15,26 +14,30 @@ import { autoCache } from "./cache/autoCache";
  * @param props.pubId - When supplied, return all the pub fields associated with the pub through pub values and the pub type of that pub
  * When props.valuesOnly is true, only return the pub fields associated with the pub through pub values, not through the pub type
  * @param props.pubTypeId - When supplied, return all the pub fields associated with the pub type
- *
+ * @param props.communityId - When supplied, return all the pub fields associated with the community ID
  */
 export const getPubFields = (
 	props:
-		| { pubId?: never; pubTypeId?: never }
-		| { pubId: PubsId; valuesOnly?: boolean; pubTypeId?: never }
+		| { pubId?: never; pubTypeId?: never; communityId?: never }
+		| { pubId: PubsId; valuesOnly?: boolean; pubTypeId?: never; communityId?: never }
 		| {
 				pubId?: never;
 				pubTypeId: PubTypesId;
-		  } = {}
+				communityId?: never;
+		  }
+		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId } = ({} = {})
 ) => autoCache(_getPubFields(props));
 
 export const _getPubFields = (
 	props:
-		| { pubId?: never; pubTypeId?: never }
-		| { pubId: PubsId; valuesOnly?: boolean; pubTypeId?: never }
+		| { pubId?: never; pubTypeId?: never; communityId?: never }
+		| { pubId: PubsId; valuesOnly?: boolean; pubTypeId?: never; communityId?: never }
 		| {
 				pubId?: never;
 				pubTypeId: PubTypesId;
-		  } = {}
+				communityId?: never;
+		  }
+		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId } = {}
 ) =>
 	db
 		.with("ids", (eb) =>
@@ -85,6 +88,9 @@ export const _getPubFields = (
 									)
 								)
 						)
+				)
+				.$if(props.communityId !== undefined, (qb) =>
+					qb.where("pub_fields.communityId", "=", props.communityId!)
 				)
 		)
 		.with("f", (eb) =>

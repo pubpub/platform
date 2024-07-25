@@ -123,16 +123,17 @@ const _runActionInstance = async (
 		};
 	}
 
-	const pubValuesValidationResult = validatePubValues({
-		fields: action.pubFields,
-		values: pub.values,
-	});
+	// TODO: restore validation https://github.com/pubpub/v7/issues/455
+	// const pubValuesValidationResult = validatePubValues({
+	// 	fields: action.pubFields,
+	// 	values: pub.values,
+	// });
 
-	if (pubValuesValidationResult?.error) {
-		return {
-			error: pubValuesValidationResult.error,
-		};
-	}
+	// if (pubValuesValidationResult?.error) {
+	// 	return {
+	// 		error: pubValuesValidationResult.error,
+	// 	};
+	// }
 
 	const argsWithPubfields = resolveWithPubfields(
 		{ ...parsedArgs.data, ...args.actionInstanceArgs },
