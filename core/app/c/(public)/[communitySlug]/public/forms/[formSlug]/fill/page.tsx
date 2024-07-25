@@ -3,6 +3,7 @@ import { redirect, RedirectType } from "next/navigation";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getForm } from "~/lib/server/form";
+import { FormElement } from "./FormElement";
 
 export default async function FormPage({
 	params,
@@ -37,7 +38,9 @@ export default async function FormPage({
 		<div className="container mx-auto flex w-full flex-col items-center">
 			<h1>Form Page {form.name}</h1>
 			<p>Hello {loginData.firstName}!</p>
-
+			{form.elements.map((e) => {
+				return <FormElement key={e.elementId} element={e} />;
+			})}
 			<p>Fill in the form below!</p>
 		</div>
 	);
