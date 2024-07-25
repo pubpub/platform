@@ -13,6 +13,7 @@ import { expect } from "utils";
 
 import type { action } from "./action";
 import { db } from "~/kysely/database";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { smtpclient } from "~/lib/server/mailgun";
 import { defineRun } from "../types";
 import { emailDirectives } from "./plugin";
@@ -20,11 +21,7 @@ import { emailDirectives } from "./plugin";
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
 		// FIXME: could be replaced with `getCommunitySlug`
-		const community = await db
-			.selectFrom("communities")
-			.where("id", "=", communityId)
-			.select(["slug"])
-			.executeTakeFirstOrThrow();
+		const communitySlug = getCommunitySlug();
 
 		// TODO: the pub must currently have an assignee to send an email. This
 		// should be set at the action instance level—it should be possible to
@@ -44,7 +41,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					new Error(`Could not find user with ID ${args?.recipient ?? config.recipient}`)
 			);
 
-		const emailDirectivesContext = { community, sender, recipient, pub };
+		const emailDirectivesContext = { communitySlug, sender, recipient, pub };
 
 		const html = (
 			await unified()
