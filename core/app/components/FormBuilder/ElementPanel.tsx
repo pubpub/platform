@@ -4,10 +4,10 @@ import type { Dispatch } from "react";
 
 import { useState } from "react";
 
-import type { PubFieldsId, StructuralFormElement } from "db/public";
-import { ElementType } from "db/public";
+import type { PubFieldsId } from "db/public";
+import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
-import { ChevronLeft, PlusCircle, Search, Type } from "ui/icon";
+import { CaseSensitive, ChevronLeft, PlusCircle, Type } from "ui/icon";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
@@ -82,7 +82,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 							value={fieldsFilter}
 							className="mb-2"
 						></Input>
-						<div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
+						<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
 							{Object.values(fields).map(
 								(field) =>
 									`${field.name} ${field.slug} ${field.schemaName}`.includes(
@@ -127,7 +127,30 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 						</Button>
 					</TabsContent>
 					<TabsContent value="structure">
-						<Button type="button" onClick={() => dispatch("cancel")}>
+						<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
+							<Button
+								type="button"
+								variant="outline"
+								className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
+								onClick={() => {
+									addToForm({
+										type: "structure",
+										element: StructuralFormElement.p,
+									});
+									setEditingElement(elementsCount);
+									dispatch("configure");
+								}}
+							>
+								<CaseSensitive size={20} className="my-auto text-emerald-500" />
+								<div>Paragraph</div>
+							</Button>
+						</div>
+						<Button
+							type="button"
+							variant="outline"
+							className="w-full border-slate-950"
+							onClick={() => dispatch("cancel")}
+						>
 							Cancel
 						</Button>
 					</TabsContent>

@@ -5,6 +5,7 @@ export {
 	ArrowRight,
 	Calendar,
 	CalendarClock,
+	CaseSensitive,
 	ClipboardPenLine,
 	BadgeCheck,
 	Bookmark,
