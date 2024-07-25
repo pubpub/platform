@@ -33,7 +33,6 @@ export const getForm = (
 							"form_elements.id as elementId",
 							"form_elements.type",
 							"form_elements.fieldId",
-							"form_elements.formId",
 							"form_elements.order",
 							"form_elements.label",
 							"form_elements.description",
