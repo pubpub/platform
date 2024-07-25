@@ -9,6 +9,7 @@ import {
 } from "db/public";
 
 const baseElementSchema = z.object({
+	id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB
 	elementId: formElementsIdSchema.optional(),
 	order: z.number().int(),
 	deleted: z.boolean().default(false),
@@ -38,8 +39,9 @@ export type StructuralElement = baseElement & {
 };
 
 const formElementSchema = formElementsInitializerSchema
-	.merge(baseElementSchema)
-	.omit({ formId: true, id: true });
+	.omit({ formId: true })
+	.extend(baseElementSchema.shape)
+	.strict();
 export type FormElementData = z.input<typeof formElementSchema>;
 export const isFieldInput = (element: FormElementData): element is InputElement =>
 	"fieldId" in element;

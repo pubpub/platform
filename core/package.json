@@ -42,7 +42,6 @@
 		"@dnd-kit/utilities": "^3.2.2",
 		"@faker-js/faker": "^8.0.2",
 		"@honeycombio/opentelemetry-node": "^0.6.1",
-		"@hookform/devtools": "^4.3.1",
 		"@hookform/resolvers": "^3.3.1",
 		"@nimpl/getters": "^1.4.1",
 		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
@@ -106,6 +105,7 @@
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
+		"@hookform/devtools": "^4.3.1",
 		"@playwright/test": "^1.43.1",
 		"@preconstruct/next": "^4.0.0",
 		"@prisma/generator-helper": "^5.14.0",
