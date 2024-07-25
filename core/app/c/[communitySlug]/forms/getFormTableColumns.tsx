@@ -1,5 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
+import { ArchiveFormButton } from "app/components/FormBuilder/ArchiveFormButton";
+
 import type { FormsId } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
@@ -12,15 +14,13 @@ import {
 } from "ui/dropdown-menu";
 import { Ellipsis, History, ToyBrick } from "ui/icon";
 
-import { ArchiveFormButton } from "./ArchiveFormButton";
-
 export type TableForm = {
 	id: FormsId;
 	slug: string;
 	formName: string;
 	pubType: string;
 	updated: Date;
-	isArchived: Boolean;
+	isArchived: boolean;
 };
 
 export const getFormTableColumns = () =>
@@ -83,6 +83,9 @@ export const getFormTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
+				// TODO: remove this return so the actions column renders once archiving exists or
+				// there are other actions to take
+				return;
 				if (row.original.isArchived) {
 					return;
 				}

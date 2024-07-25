@@ -12,7 +12,7 @@ import { archiveForm } from "./actions";
 
 type Props = {
 	id: FormsId;
-	className: string;
+	className?: string;
 };
 
 export const ArchiveFormButton = ({ id, className }: Props) => {
@@ -22,8 +22,9 @@ export const ArchiveFormButton = ({ id, className }: Props) => {
 	}, [id]);
 	return (
 		<Button
+			type="button"
 			variant="ghost"
-			size="sm"
+			size="lg"
 			className={cn("flex gap-2", className)}
 			onClick={handleRemove}
 		>

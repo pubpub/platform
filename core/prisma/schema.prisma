@@ -118,7 +118,7 @@ model PubField {
 
   values    PubValue[]
   pubTypes  PubType[]
-  FormInput FormInput[]
+  FormInput FormElement[]
 
   @@map(name: "pub_fields")
 }
@@ -431,16 +431,23 @@ enum Event {
   pubInStageForDuration
 }
 
+enum FormAccessType {
+  private
+  inviteOnly
+  public
+}
+
 model Form {
-  id          String      @id @default(dbgenerated("gen_random_uuid()"))
+  id          String         @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   slug        String
   communityId String
-  community   Community   @relation(fields: [communityId], references: [id])
-  pubType     PubType     @relation(fields: [pubTypeId], references: [id])
+  community   Community      @relation(fields: [communityId], references: [id])
+  pubType     PubType        @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
-  inputs      FormInput[]
-  isArchived  Boolean     @default(false)
+  elements    FormElement[]
+  isArchived  Boolean        @default(false)
+  access      FormAccessType @default(private)
 
   permissions FormToPermission[]
 
@@ -449,18 +456,37 @@ model Form {
   @@map(name: "forms")
 }
 
-model FormInput {
-  id       String   @id @default(dbgenerated("gen_random_uuid()"))
-  fieldId  String
-  field    PubField @relation(fields: [fieldId], references: [id])
-  formId   String
-  order    String
-  label    String
-  required Boolean
-  form     Form     @relation(fields: [formId], references: [id])
-  isSubmit Boolean  @map(name: "isSubmit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
+// Supported structural elements in the form builder
+enum StructuralFormElement {
+  h2
+  h3
+  p
+  hr
+}
 
-  @@map(name: "form_inputs")
+enum ElementType {
+  pubfield
+  structural
+}
+
+// Either a structural element like a header, hr etc. or a pubfield input
+model FormElement {
+  id          String                 @id @default(dbgenerated("gen_random_uuid()"))
+  type        ElementType
+  fieldId     String?
+  field       PubField?              @relation(fields: [fieldId], references: [id])
+  formId      String
+  order       Int
+  label       String?
+  description String?
+  element     StructuralFormElement?
+  content     String?
+  required    Boolean?
+  form        Form                   @relation(fields: [formId], references: [id])
+  isSubmit    Boolean                @default(false) @map(name: "isSubmit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
+
+  @@unique([fieldId, formId])
+  @@map(name: "form_elements")
 }
 
 model ApiAccessToken {

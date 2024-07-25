@@ -20,7 +20,7 @@ export const databaseTables = [
 	"api_access_tokens",
 	"auth_tokens",
 	"communities",
-	"form_inputs",
+	"form_elements",
 	"form_to_permissions",
 	"forms",
 	"integration_instances",

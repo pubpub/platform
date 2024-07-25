@@ -27,10 +27,24 @@ export const getForm = (
 			.select((eb) =>
 				jsonArrayFrom(
 					eb
-						.selectFrom("form_inputs")
-						.whereRef("form_inputs.formId", "=", "forms.id")
-						.selectAll("form_inputs")
-				).as("inputs")
+						.selectFrom("form_elements")
+						.whereRef("form_elements.formId", "=", "forms.id")
+						.select([
+							"form_elements.id as elementId",
+							"form_elements.type",
+							"form_elements.fieldId",
+							"form_elements.formId",
+							"form_elements.order",
+							"form_elements.label",
+							"form_elements.description",
+							"form_elements.content",
+							"form_elements.description",
+							"form_elements.element",
+							"form_elements.required",
+							"form_elements.isSubmit",
+						])
+						.orderBy("form_elements.order")
+				).as("elements")
 			)
 	);
 
