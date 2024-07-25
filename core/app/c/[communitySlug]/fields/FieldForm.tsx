@@ -114,7 +114,6 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: string }) => {
 	const { watch, setValue } = form;
 
-	const community = communitySlug;
 	const watchName = watch("name");
 
 	useEffect(() => {
@@ -132,7 +131,7 @@ const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: str
 						<FormLabel>Slug</FormLabel>
 						<FormControl>
 							<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
-								<span className="whitespace-nowrap pl-2">{community}:</span>
+								<span className="whitespace-nowrap pl-2">{communitySlug}:</span>
 								<Input
 									placeholder="Slug"
 									// A little margin on focus or else the focus ring will cover the `:` after the community name
