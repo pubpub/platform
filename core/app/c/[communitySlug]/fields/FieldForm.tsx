@@ -111,10 +111,10 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
  * The user can overwrite this value via the text input. The value here does not have
  * the community prepended—the community is automatically prepended in handleSubmit
  */
-const SlugField = ({ form, communityName }: { form: FormType; communityName: string }) => {
+const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: string }) => {
 	const { watch, setValue } = form;
 
-	const community = slugifyString(communityName);
+	const community = communitySlug;
 	const watchName = watch("name");
 
 	useEffect(() => {
@@ -132,7 +132,7 @@ const SlugField = ({ form, communityName }: { form: FormType; communityName: str
 						<FormLabel>Slug</FormLabel>
 						<FormControl>
 							<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
-								<span className="pl-2">{community}:</span>
+								<span className="whitespace-nowrap pl-2">{community}:</span>
 								<Input
 									placeholder="Slug"
 									// A little margin on focus or else the focus ring will cover the `:` after the community name
@@ -213,7 +213,7 @@ export const FieldForm = ({
 							</FormItem>
 						)}
 					/>
-					{!isEditing ? <SlugField form={form} communityName={community.name} /> : null}
+					{!isEditing ? <SlugField form={form} communitySlug={community.slug} /> : null}
 				</div>
 				{children}
 			</form>
