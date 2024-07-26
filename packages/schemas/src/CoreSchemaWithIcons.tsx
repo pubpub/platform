@@ -37,8 +37,8 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 		description: "A link to a website",
 		icon: <Link className="w-4" />,
 	},
-	[CoreSchemaType.UserId]: {
-		description: "A PubPub user ID",
+	[CoreSchemaType.MemberId]: {
+		description: "A member of your community",
 		icon: <User className="w-4" />,
 	},
 	[CoreSchemaType.Vector3]: {

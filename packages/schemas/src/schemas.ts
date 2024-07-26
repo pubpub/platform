@@ -41,9 +41,9 @@ export const URL = Type.String({
 	examples: ["https://example.com"],
 });
 
-export const UserId = Type.String({
+export const MemberId = Type.String({
 	format: "uuid",
-	description: "A PubPub user ID.",
+	description: "A member of your community.",
 	examples: ["f7b3b3b3-4b3b-4b3b-4b3b-1acefbd22232"],
 });
 

@@ -1,25 +1,36 @@
 "use client";
 
+import assert from "assert";
+
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
-import type { Communities, Users } from "db/public";
+import type { Communities } from "db/public";
 import type { Option } from "ui/autocomplete";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 import { AutoComplete } from "ui/autocomplete";
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { UserCircle2 } from "ui/icon";
 import {
 	PubFieldSelector,
 	PubFieldSelectorHider,
 	PubFieldSelectorProvider,
 	PubFieldSelectorToggleButton,
 } from "ui/pubFields";
+import { expect } from "utils";
 
+import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { UserAvatar } from "../UserAvatar";
+import {
+	isMemberSelectUserWithMembership,
+	MemberSelectUser,
+	MemberSelectUserWithMembership,
+} from "./types";
 import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
 
-const makeOptionFromUser = (user: Users): Option => ({
+const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 	value: user.id,
 	label: user.email,
 	node: (
@@ -28,6 +39,7 @@ const makeOptionFromUser = (user: Users): Option => ({
 				{user.firstName} {user.lastName}
 			</span>
 			<address className="text-xs not-italic text-muted-foreground">{user.email}</address>
+			{user.member && <UserCircle2 />}
 		</div>
 	),
 });
@@ -37,8 +49,8 @@ type Props = {
 	fieldLabel: string;
 	fieldName: string;
 	queryParamName: string;
-	user?: Users;
-	users: Users[];
+	member?: MemberSelectUserWithMembership;
+	users: MemberSelectUser[];
 };
 
 export function UserSelectClient({
@@ -46,13 +58,14 @@ export function UserSelectClient({
 	fieldLabel,
 	fieldName,
 	queryParamName,
-	user,
+	member,
 	users,
 }: Props) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
+	const runAddMember = useServerAction(addMember);
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
@@ -66,17 +79,7 @@ export function UserSelectClient({
 		setAddUserButtonKey((x) => x + 1);
 	}, []);
 
-	// User selection state/logic.
-	const [selectedUser, setSelectedUser] = useState(user);
-	const selectUserOption = useCallback(
-		(option: Option) => {
-			const user = users.find((user) => user.id === option.value);
-			if (user) {
-				setSelectedUser(user);
-			}
-		},
-		[users]
-	);
+	const [selectedUser, setSelectedUser] = useState(member);
 
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
 	const onInputValueChange = useDebouncedCallback((value: string) => {
@@ -90,13 +93,11 @@ export function UserSelectClient({
 		<FormField
 			name={fieldName}
 			render={({ field }) => {
-				const selectedUserOption = selectedUser
-					? makeOptionFromUser(selectedUser)
-					: undefined;
+				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
 				return (
 					<PubFieldSelectorProvider
 						field={field}
-						allowedSchemas={[CoreSchemaType.UserId]}
+						allowedSchemas={[CoreSchemaType.MemberId]}
 					>
 						<FormItem className="flex flex-col gap-y-1">
 							<div className="flex items-center justify-between">
@@ -116,9 +117,26 @@ export function UserSelectClient({
 									/>
 								}
 								onInputValueChange={onInputValueChange}
-								onValueChange={(option) => {
-									field.onChange(option.value);
-									selectUserOption(option);
+								onValueChange={async (option) => {
+									const user = users.find((user) => user.id === option.value);
+									if (!user) {
+										return;
+									}
+									if (isMemberSelectUserWithMembership(user)) {
+										setSelectedUser(user);
+										field.onChange(user.member.id);
+									} else {
+										const result = await runAddMember({
+											user,
+											role: MemberRole.contributor,
+											community,
+										});
+										if (didSucceed(result)) {
+											const member = expect(result.member);
+											setSelectedUser({ ...user, member });
+											field.onChange(member.id);
+										}
+									}
 								}}
 								onClose={resetAddUserButton}
 								icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
