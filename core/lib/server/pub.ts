@@ -167,6 +167,7 @@ const pubColumns = [
 	"pubTypeId",
 	"updatedAt",
 	"assigneeId",
+	"parentId",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
 export const getPubBase = (

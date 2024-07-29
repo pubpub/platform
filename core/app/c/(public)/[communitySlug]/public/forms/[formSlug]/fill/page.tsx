@@ -53,7 +53,7 @@ export default async function FormPage({
 	return (
 		<div className="grid w-full grid-cols-4 gap-16 px-6 py-12">
 			<div className="col-span-1">
-				<ParentPubInfo />
+				<ParentPubInfo parentId={pub.parentId} />
 			</div>
 			<div className="col-span-2">
 				<ExternalForm pub={pub} elements={form.elements} className="flex-1" />
