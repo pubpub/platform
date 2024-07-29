@@ -49,14 +49,18 @@ export const ExternalForm = ({
 		<FormProvider {...methods}>
 			<form
 				onSubmit={methods.handleSubmit(handleSubmit, handleError)}
-				className={cn("flex flex-col gap-6", className)}
+				className={cn("relative flex flex-col gap-6", className)}
 			>
 				{elements.map((e) => {
 					return <FormElement key={e.elementId} element={e} />;
 				})}
-				<div>
-					<Button type="submit">Submit</Button>
-				</div>
+				<Button
+					type="submit"
+					// Make the button fixed next to the bottom of the form as user scrolls
+					className="sticky bottom-2 -mr-[100px] -mt-[68px] ml-auto w-fit"
+				>
+					Submit
+				</Button>
 			</form>
 		</FormProvider>
 	);
