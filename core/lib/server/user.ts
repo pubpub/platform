@@ -3,13 +3,12 @@ import type { User } from "@prisma/client";
 import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { UsersId } from "db/public";
+import type { MembersId, UsersId } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";
-import { autoCache } from "./cache/autoCache";
 import { NotFoundError } from "./errors";
 
 export async function findOrCreateUser(userId: string): Promise<User>;
@@ -93,4 +92,26 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 			eb.where("users.email", "=", userIdOrEmail.email!)
 		)
 		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
+});
+
+export const getMember = cache((memberId: MembersId) => {
+	return db
+		.selectFrom("members")
+		.select((eb) => [
+			"members.id",
+			"members.userId",
+			"members.createdAt",
+			"members.updatedAt",
+			"members.role",
+			"members.communityId",
+			jsonObjectFrom(
+				eb
+					.selectFrom("users")
+					.whereRef("users.id", "=", "members.userId")
+					.selectAll("users")
+			)
+				.$notNull()
+				.as("user"),
+		])
+		.where("members.id", "=", memberId);
 });

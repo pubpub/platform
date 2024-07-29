@@ -2,7 +2,7 @@ import type { QueryCreator } from "kysely";
 
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type { FormsId, PublicSchema, UsersId } from "db/public";
+import type { FormsId, MembersId, PublicSchema, UsersId } from "db/public";
 import { MemberRole } from "db/public";
 
 import type { XOR } from "../types";
@@ -89,12 +89,12 @@ export const userHasPermissionToForm = async (
 };
 
 /**
- * Gives a user permission to a form
+ * Gives a community member permission to a form
  */
-export const addUserToForm = (
-	props: { userId: UsersId } & XOR<{ slug: string }, { id: FormsId }>
+export const addMemberToForm = (
+	props: { memberId: MembersId } & XOR<{ slug: string }, { id: FormsId }>
 ) => {
-	const { userId, ...formSlugOrId } = props;
+	const { memberId, ...formSlugOrId } = props;
 
 	return autoRevalidate(
 		db
@@ -103,26 +103,6 @@ export const addUserToForm = (
 				(db) =>
 					// reduce, reuse, recycle
 					getForm(formSlugOrId, db).qb
-			)
-			.with("new_member", (db) =>
-				db
-					.insertInto("members")
-					.values({
-						userId,
-						communityId: db.selectFrom("current_form").select("communityId"),
-						role: MemberRole.contributor,
-					})
-					.returning("id")
-					.onConflict((oc) => oc.doNothing())
-			)
-			.with("member", (db) =>
-				db
-					.selectFrom("members")
-					.select("id")
-					.where("userId", "=", userId)
-					.where("communityId", "=", (eb) =>
-						eb.selectFrom("current_form").select("communityId")
-					)
 			)
 			.with("existing_permission", (db) =>
 				db
@@ -134,23 +114,12 @@ export const addUserToForm = (
 						"=",
 						db.selectFrom("current_form").select("id")
 					)
-					.where("permissions.memberId", "=", (eb) =>
-						eb.selectFrom("new_member").select("new_member.id")
-					)
+					.where("permissions.memberId", "=", memberId)
 			)
 			.with("new_permission", (db) =>
 				db
 					.insertInto("permissions")
-					.values((eb) => ({
-						memberId: eb.selectFrom("new_member").select("new_member.id"),
-						// .where((eb) =>
-						// 	// this will cause a NULL to be inserted
-						// 	// causing an error, as you cannot set
-						// 	// memberId AND memberGroupId to NULL
-						// 	// we handle this in the onConflict below
-						// 	eb.not(eb.exists(eb.selectFrom("existing_permission").selectAll()))
-						// ),
-					}))
+					.values(() => ({ memberId }))
 					.returning("id")
 					// this happens when a permission is already set
 					// which leads this update to fail

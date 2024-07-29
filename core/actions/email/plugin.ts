@@ -7,10 +7,11 @@ import type { Node } from "unist";
 
 import { visit } from "unist-util-visit";
 
-import { UsersId } from "db/public";
+import { MembersId, UsersId } from "db/public";
 import { expect } from "utils";
 
-import { addUserToForm, createFormInviteLink } from "~/lib/server/form";
+import { addMemberToForm, createFormInviteLink } from "~/lib/server/form";
+import { getMember } from "~/lib/server/user";
 import { EmailToken } from "./tokens";
 
 export type EmailDirectivePluginContext = {
@@ -231,6 +232,20 @@ const directiveVisitors: Record<EmailToken, DirectiveVisitor> = {
 	[EmailToken.Link]: visitLinkDirective,
 };
 
+const ensureFormMembershipAndCreateInviteLink = async (formSlug: string, userId: MembersId) => {
+	const [member] = await Promise.all([
+		getMember(userId).executeTakeFirstOrThrow(),
+		addMemberToForm({
+			memberId: userId,
+			slug: formSlug,
+		}).execute(),
+	]);
+	return createFormInviteLink({
+		userId: member.user.id,
+		formSlug,
+	});
+};
+
 export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) => {
 	return async (tree) => {
 		const tokenAuthLinkNodes: NodeMdast[] = [];
@@ -262,16 +277,10 @@ export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) 
 				if (isDirective(node)) {
 					const attrs = expect(node.attributes);
 					if ("form" in attrs) {
-						// ensure user has a membership w/ the community and is
-						// authorized to use the form they are being invited to
-						await addUserToForm({
-							userId: context.recipient.id as UsersId,
-							slug: expect(attrs.form),
-						}).execute();
-						props.href = await createFormInviteLink({
-							userId: context.recipient.id as UsersId,
-							formSlug: expect(attrs.form),
-						});
+						props.href = await ensureFormMembershipAndCreateInviteLink(
+							expect(attrs.form),
+							context.recipient.id as MembersId
+						);
 					}
 				}
 			})
