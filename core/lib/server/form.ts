@@ -44,6 +44,7 @@ export const getForm = (
 							"form_elements.required",
 							"form_elements.isSubmit",
 							"pub_fields.schemaName",
+							"pub_fields.slug",
 						])
 						.orderBy("form_elements.order")
 				).as("elements")

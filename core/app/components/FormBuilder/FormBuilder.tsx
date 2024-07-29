@@ -67,8 +67,8 @@ export function FormBuilder({ pubForm, id }: Props) {
 		resolver: zodResolver(formBuilderSchema),
 		values: {
 			elements: pubForm.elements.map((e) => {
-				// Do not include schemaName here
-				const { schemaName, ...rest } = e;
+				// Do not include schemaName or slug here
+				const { schemaName, slug, ...rest } = e;
 				return rest;
 			}),
 			access: pubForm.access,

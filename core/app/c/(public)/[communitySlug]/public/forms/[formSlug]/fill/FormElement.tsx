@@ -11,28 +11,31 @@ import type { Form } from "~/lib/server/form";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { UserSelectClient } from "~/app/components/UserSelect/UserSelectClient";
 
-const TextElement = ({ label, ...rest }: { label: string } & InputProps) => {
+const TextElement = ({ label, name, ...rest }: { label: string; name: string } & InputProps) => {
 	const { control } = useFormContext();
 
 	return (
 		<FormField
 			control={control}
-			name="name"
-			render={({ field }) => (
-				<FormItem>
-					<FormLabel>{label}</FormLabel>
-					<FormControl>
-						<Input {...field} {...rest} />
-					</FormControl>
-					<FormMessage />
-				</FormItem>
-			)}
+			name={name}
+			render={({ field }) => {
+				const { value, ...fieldRest } = field;
+				return (
+					<FormItem>
+						<FormLabel>{label}</FormLabel>
+						<FormControl>
+							<Input value={value ?? ""} {...fieldRest} {...rest} />
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				);
+			}}
 		/>
 	);
 };
 
 export const FormElement = ({ element }: { element: Form["elements"][number] }) => {
-	const { schemaName, label } = element;
+	const { schemaName, label, slug } = element;
 	const community = useCommunity();
 	if (!schemaName) {
 		return null;
@@ -43,7 +46,7 @@ export const FormElement = ({ element }: { element: Form["elements"][number] }) 
 		schemaName === CoreSchemaType.URL
 	) {
 		// TODO: figure out what kind of text element the user wanted (textarea vs input)
-		return <TextElement label={label ?? ""} />;
+		return <TextElement label={label ?? ""} name={slug} />;
 	}
 	if (schemaName === CoreSchemaType.Boolean) {
 		return <input type="checkbox"></input>;
