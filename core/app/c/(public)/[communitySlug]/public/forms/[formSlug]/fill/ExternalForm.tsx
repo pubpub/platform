@@ -31,7 +31,6 @@ export const ExternalForm = ({
 }) => {
 	const handleSubmit = (values: FieldValues) => {
 		// TODO
-		console.log({ values });
 	};
 	const schema = Type.Object(
 		Object.fromEntries(
