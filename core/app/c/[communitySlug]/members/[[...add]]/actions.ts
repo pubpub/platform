@@ -7,7 +7,7 @@ import { cache } from "react";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 
-import { MemberRole } from "db/public";
+import { MemberRole, Members } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import type { SuggestedUser } from "~/lib/server/members";
@@ -16,6 +16,7 @@ import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
 import { env } from "~/lib/env/env.mjs";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
 import { getServerSupabase } from "~/lib/supabaseServer";
@@ -240,13 +241,13 @@ export const addMember = defineServerAction(async function addMember({
 			};
 		}
 
-		const member = await prisma.member.create({
+		const member = (await prisma.member.create({
 			data: {
 				communityId: community.id,
 				userId: user.id,
 				role,
 			},
-		});
+		})) as Members;
 
 		revalidateMemberPathsAndTags(community);
 

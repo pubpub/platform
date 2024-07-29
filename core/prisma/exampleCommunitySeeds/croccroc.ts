@@ -52,7 +52,7 @@ export default async function main(communityUUID: CommunitiesId) {
 				name: "User ID",
 				slug: `${slug}:user-id`,
 				communityId: communityUUID,
-				schemaName: CoreSchemaType.UserId,
+				schemaName: CoreSchemaType.MemberId,
 			},
 		])
 		.returning(["id", "slug"])

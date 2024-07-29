@@ -1,7 +1,10 @@
-import type { Communities, Users, UsersId } from "db/public";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+
+import type { Communities, MembersId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { UserSelectClient } from "./UserSelectClient";
 
 type Props = {
@@ -16,7 +19,7 @@ type Props = {
 	 * would result in the same query parameter being used for all instances.
 	 */
 	queryParamName: string;
-	value?: UsersId;
+	value?: MembersId;
 };
 
 export async function UserSelectServer({
@@ -27,15 +30,30 @@ export async function UserSelectServer({
 	queryParamName,
 	value,
 }: Props) {
-	let user: Users | undefined;
+	let member: MemberSelectUserWithMembership | undefined | null;
 
 	if (value !== undefined) {
-		user = await autoCache(
-			db.selectFrom("users").selectAll().where("id", "=", value)
+		member = await autoCache(
+			db
+				.selectFrom("members")
+				.innerJoin("users", "members.userId", "users.id")
+				.selectAll("users")
+				.select((eb) => [
+					jsonObjectFrom(
+						eb
+							.selectFrom("members")
+							.selectAll("members")
+							.whereRef("members.id", "=", "users.id")
+							.where("members.communityId", "=", community.id)
+					)
+						.$notNull()
+						.as("member"),
+				])
+				.where("members.id", "=", value)
 		).executeTakeFirst();
 	}
 
-	if (!Boolean(query) && user === undefined) {
+	if (!Boolean(query) && member === undefined) {
 		return (
 			<UserSelectClient
 				community={community}
@@ -47,8 +65,21 @@ export async function UserSelectServer({
 		);
 	}
 
-	const users = await autoCache(
-		db.selectFrom("users").selectAll().where("email", "ilike", `${query}%`).limit(10)
+	const users: MemberSelectUser[] = await autoCache(
+		db
+			.selectFrom("users")
+			.selectAll()
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("members")
+						.selectAll("members")
+						.whereRef("members.userId", "=", "users.id")
+						.where("members.communityId", "=", community.id)
+				).as("member"),
+			])
+			.where("email", "ilike", `${query}%`)
+			.limit(10)
 	).execute();
 
 	return (
@@ -57,7 +88,7 @@ export async function UserSelectServer({
 			fieldLabel={fieldLabel}
 			fieldName={fieldName}
 			queryParamName={queryParamName}
-			user={user}
+			member={member ?? undefined}
 			users={users}
 		/>
 	);
