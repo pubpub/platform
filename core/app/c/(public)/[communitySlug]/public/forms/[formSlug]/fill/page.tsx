@@ -36,7 +36,7 @@ export default async function FormPage({
 	}
 
 	return (
-		<div className="container mx-auto grid w-full grid-cols-4 gap-16 p-12">
+		<div className="grid w-full grid-cols-4 gap-16 px-6 py-12">
 			<div className="col-span-1">
 				<ParentPubInfo />
 			</div>
