@@ -4,6 +4,9 @@ import { useFormContext } from "react-hook-form";
 
 import type { InputProps } from "ui/input";
 import { CoreSchemaType } from "db/public";
+import { Confidence } from "ui/customRenderers/confidence/confidence";
+import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
+import { DatePicker } from "ui/date-picker";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
@@ -11,7 +14,12 @@ import type { Form } from "~/lib/server/form";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { UserSelectClient } from "~/app/components/UserSelect/UserSelectClient";
 
-const TextElement = ({ label, name, ...rest }: { label: string; name: string } & InputProps) => {
+interface ElementProps {
+	label: string;
+	name: string;
+}
+
+const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 	const { control } = useFormContext();
 
 	return (
@@ -34,7 +42,7 @@ const TextElement = ({ label, name, ...rest }: { label: string; name: string } &
 	);
 };
 
-const BooleanElement = ({ label, name, ...rest }: { label: string; name: string } & InputProps) => {
+const BooleanElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 	const { control } = useFormContext();
 
 	return (
@@ -43,7 +51,7 @@ const BooleanElement = ({ label, name, ...rest }: { label: string; name: string 
 			name={name}
 			render={({ field }) => {
 				return (
-					<FormItem className="relative">
+					<FormItem>
 						<div className="flex items-center gap-2">
 							<FormControl>
 								<input type="checkbox" className="rounded" {...field} {...rest} />
@@ -58,7 +66,7 @@ const BooleanElement = ({ label, name, ...rest }: { label: string; name: string 
 	);
 };
 
-const UserIdSelect = ({ label, name, id }: { label: string; name: string; id: string }) => {
+const UserIdSelect = ({ label, name, id }: ElementProps & { id: string }) => {
 	const community = useCommunity();
 	const queryParamName = `user-${id}`;
 	return (
@@ -72,9 +80,81 @@ const UserIdSelect = ({ label, name, id }: { label: string; name: string; id: st
 	);
 };
 
+const FileUploadElement = ({
+	label,
+	name,
+	onUpload,
+}: ElementProps & {
+	onUpload: () => void;
+}) => {
+	const { control } = useFormContext();
+	return (
+		<FormField
+			control={control}
+			name={name}
+			render={({ field }) => (
+				<FormItem className="mb-6">
+					<FormLabel>{label}</FormLabel>
+					<FormControl>
+						<FileUpload
+							{...field}
+							upload={onUpload}
+							onUpdateFiles={(event: any[]) => field.onChange(event)}
+						/>
+					</FormControl>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
+};
+
+const Vector3Element = ({ label, name }: ElementProps) => {
+	const { control } = useFormContext();
+	return (
+		<FormField
+			control={control}
+			name={name}
+			defaultValue={[0, 0, 0]}
+			render={({ field }) => (
+				<FormItem className="mb-6">
+					<FormLabel className="text-[0.9em]">{label}</FormLabel>
+					<FormControl>
+						<Confidence
+							{...field}
+							min={0}
+							max={100}
+							onValueChange={(event) => field.onChange(event)}
+							className="confidence"
+						/>
+					</FormControl>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
+};
+
+const DateElement = ({ label, name }: ElementProps) => {
+	const { control } = useFormContext();
+	return (
+		<FormField
+			name={name}
+			control={control}
+			render={({ field }) => (
+				<FormItem className="grid gap-2">
+					<FormLabel>{label}</FormLabel>
+					<DatePicker date={field.value} setDate={(date) => field.onChange(date)} />
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
+};
+
 export const FormElement = ({ element }: { element: Form["elements"][number] }) => {
 	const { schemaName, label: labelProp, slug } = element;
-	const label = labelProp ?? "";
+	const elementProps = { label: labelProp ?? "", name: slug };
 
 	if (!schemaName) {
 		return null;
@@ -85,13 +165,22 @@ export const FormElement = ({ element }: { element: Form["elements"][number] }) 
 		schemaName === CoreSchemaType.URL
 	) {
 		// TODO: figure out what kind of text element the user wanted (textarea vs input)
-		return <TextElement label={label} name={slug} />;
+		return <TextElement {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.Boolean) {
-		return <BooleanElement label={label} name={slug} />;
+		return <BooleanElement {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.UserId) {
-		return <UserIdSelect label={label} name={slug} id={element.elementId} />;
+		return <UserIdSelect {...elementProps} id={element.elementId} />;
 	}
-	return <div>todo</div>;
+	if (schemaName === CoreSchemaType.FileUpload) {
+		return <FileUploadElement {...elementProps} onUpload={() => {}} />;
+	}
+	if (schemaName === CoreSchemaType.Vector3) {
+		return <Vector3Element {...elementProps} />;
+	}
+	if (schemaName === CoreSchemaType.DateTime) {
+		return <DateElement {...elementProps} />;
+	}
+	return <div>test</div>;
 };

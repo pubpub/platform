@@ -54,7 +54,7 @@ export const ExternalForm = ({
 				<Button
 					type="submit"
 					// Make the button fixed next to the bottom of the form as user scrolls
-					className="sticky bottom-2 -mr-[100px] -mt-[68px] ml-auto w-fit"
+					className="sticky bottom-4 -mr-[100px] -mt-[68px] ml-auto w-fit"
 				>
 					Submit
 				</Button>

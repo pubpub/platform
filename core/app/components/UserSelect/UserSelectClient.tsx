@@ -61,7 +61,7 @@ export function UserSelectClient({
 		// clear search param
 		const newParams = new URLSearchParams(params);
 		newParams.delete(queryParamName);
-		router.replace(`${pathname}?${newParams.toString()}`);
+		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 
 		setAddUserButtonKey((x) => x + 1);
 	}, []);
