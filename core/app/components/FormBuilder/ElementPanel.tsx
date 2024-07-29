@@ -7,13 +7,14 @@ import { useState } from "react";
 import type { PubFieldsId } from "db/public";
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
-import { CaseSensitive, ChevronLeft, PlusCircle, Type } from "ui/icon";
+import { ChevronLeft, PlusCircle, Type } from "ui/icon";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { PanelEvent, PanelState } from "./types";
 import { useFormBuilder } from "./FormBuilderContext";
+import { structuralElements } from "./StructuralElements";
 
 type ElementPanelProps = {
 	state: PanelState;
@@ -128,22 +129,31 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 					</TabsContent>
 					<TabsContent value="structure">
 						<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
-							<Button
-								type="button"
-								variant="outline"
-								className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
-								onClick={() => {
-									addToForm({
-										type: "structure",
-										element: StructuralFormElement.p,
-									});
-									setEditingElement(elementsCount);
-									dispatch("configure");
-								}}
-							>
-								<CaseSensitive size={20} className="my-auto text-emerald-500" />
-								<div>Paragraph</div>
-							</Button>
+							{Object.values(StructuralFormElement).map((elementType) => {
+								const { Icon, enabled, name } = structuralElements[elementType];
+								if (!enabled) {
+									return null;
+								}
+								return (
+									<Button
+										key={elementType}
+										type="button"
+										variant="outline"
+										className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
+										onClick={() => {
+											addToForm({
+												type: "structure",
+												element: elementType,
+											});
+											setEditingElement(elementsCount);
+											dispatch("configure");
+										}}
+									>
+										<Icon size={20} className="my-auto text-emerald-500" />
+										<div>{name}</div>
+									</Button>
+								);
+							})}
 						</div>
 						<Button
 							type="button"

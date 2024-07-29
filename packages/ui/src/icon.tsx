@@ -30,6 +30,8 @@ export {
 	Globe,
 	GripVertical,
 	History,
+	Heading2,
+	Heading3,
 	ImagePlus,
 	Info,
 	Link,
@@ -61,3 +63,5 @@ export {
 	X,
 	XCircle,
 } from "lucide-react";
+
+export type { LucideIcon } from "lucide-react";

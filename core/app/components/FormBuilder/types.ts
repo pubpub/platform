@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import type { ElementType, PubFieldsId, StructuralFormElement } from "db/public";
+import type { PubFieldsId, StructuralFormElement } from "db/public";
 import {
+	ElementType,
 	FormAccessType,
 	formElementsIdSchema,
 	formElementsInitializerSchema,
@@ -44,9 +45,9 @@ const formElementSchema = formElementsInitializerSchema
 	.strict();
 export type FormElementData = z.input<typeof formElementSchema>;
 export const isFieldInput = (element: FormElementData): element is InputElement =>
-	"fieldId" in element;
+	element.type === ElementType.pubfield;
 export const isStructuralElement = (element: FormElementData): element is StructuralElement =>
-	"element" in element;
+	element.type === ElementType.structural;
 
 export const formBuilderSchema = z.object({
 	access: z.nativeEnum(FormAccessType),
