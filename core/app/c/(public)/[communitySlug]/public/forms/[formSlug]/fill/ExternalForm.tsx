@@ -9,7 +9,7 @@ import type { FieldValues } from "react-hook-form";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { FormProvider, useForm } from "react-hook-form";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
+import { getJsonSchemaByCoreSchemaType, registerFormats } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
 import { Button } from "ui/button";
@@ -17,6 +17,8 @@ import { cn } from "utils";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { FormElement } from "./FormElement";
+
+registerFormats();
 
 export const ExternalForm = ({
 	pub,
@@ -28,10 +30,8 @@ export const ExternalForm = ({
 	className?: string;
 }) => {
 	const handleSubmit = (values: FieldValues) => {
+		// TODO
 		console.log({ values });
-	};
-	const handleError = (e: FieldValues) => {
-		console.log(e);
 	};
 	const schema = Type.Object(
 		Object.fromEntries(
@@ -48,7 +48,7 @@ export const ExternalForm = ({
 	return (
 		<FormProvider {...methods}>
 			<form
-				onSubmit={methods.handleSubmit(handleSubmit, handleError)}
+				onSubmit={methods.handleSubmit(handleSubmit)}
 				className={cn("relative flex flex-col gap-6", className)}
 			>
 				{elements.map((e) => {
