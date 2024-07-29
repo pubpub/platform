@@ -97,7 +97,7 @@ export const url = {
 export const userId = {
 	name: "User ID",
 	slug: "pubpub:user-id",
-	schemaName: CoreSchemaType.UserId,
+	schemaName: CoreSchemaType.MemberId,
 	schema: {
 		name: "userId",
 		namespace: "pubpub",
