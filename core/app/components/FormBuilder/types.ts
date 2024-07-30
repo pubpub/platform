@@ -15,6 +15,7 @@ const baseElementSchema = z.object({
 	order: z.number().int(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
+	configured: z.boolean().default(true),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
@@ -56,5 +57,16 @@ export const formBuilderSchema = z.object({
 });
 
 export type FormBuilderSchema = z.input<typeof formBuilderSchema>;
-export type PanelState = "initial" | "selecting" | "configuring";
-export type PanelEvent = "back" | "cancel" | "add" | "configure" | "save";
+export type PanelState = {
+	state: "initial" | "selecting" | "editing";
+	backButton: PanelState["state"] | null;
+	selectedElementIndex: number | null;
+	fieldsFilter: string | null;
+};
+export type PanelEvent =
+	| { eventName: "filterFields"; fieldsFilter: PanelState["fieldsFilter"] }
+	| { eventName: "back"; selectedElementIndex?: PanelState["selectedElementIndex"] }
+	| { eventName: "cancel"; selectedElementIndex?: PanelState["selectedElementIndex"] }
+	| { eventName: "add" }
+	| { eventName: "edit"; selectedElementIndex: PanelState["selectedElementIndex"] }
+	| { eventName: "save" };

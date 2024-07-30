@@ -34,26 +34,57 @@ import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema } from "./types";
 
-const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (state, event) => {
-	switch (event) {
+const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
+	const { eventName } = event;
+	switch (eventName) {
+		case "filterFields":
+			const { fieldsFilter } = event;
+			return { ...prevState, fieldsFilter };
+			break;
 		case "cancel":
-			return "initial";
+			return {
+				state: "initial",
+				selectedElementIndex: null,
+				fieldsFilter: null,
+				backButton: null,
+			};
+			break;
 		case "back":
-			if (state === "configuring") return "selecting";
+			return {
+				state: prevState.backButton ?? "initial",
+				backButton: prevState.backButton === "selecting" ? "initial" : null,
+				selectedElementIndex: null,
+				fieldsFilter: null,
+			};
 			break;
 		case "add":
-			if (state === "initial") return "selecting";
-		case "configure":
-			return "configuring";
+			if (prevState.state === "initial")
+				return {
+					...prevState,
+					state: "selecting",
+					fieldsFilter: null,
+					backButton: "initial",
+				};
+			break;
+		case "edit":
+			const newBack = prevState.state === "editing" ? prevState.backButton : prevState.state;
+			return {
+				state: "editing",
+				backButton: newBack,
+				selectedElementIndex: event.selectedElementIndex,
+				fieldsFilter: null,
+			};
+			break;
 		case "save":
-			if (state === "configuring") return "initial";
+			if (prevState.state === "editing")
+				return { ...prevState, state: "initial", selectedElementIndex: null };
 			break;
 	}
-	return state;
+	return prevState;
 };
 
-const elementPanelTitles: Record<PanelState, string> = {
-	configuring: "Configure element",
+const elementPanelTitles: Record<PanelState["state"], string> = {
+	editing: "Configure element",
 	selecting: "Add element",
 	initial: "Elements",
 };
@@ -92,8 +123,12 @@ export function FormBuilder({ pubForm, id }: Props) {
 	});
 
 	const sidebarRef = useRef(null);
-	const [panelState, dispatch] = useReducer(elementPanelReducer, "initial");
-	const [editingElementIndex, setEditingElementIndex] = useState<null | number>(null);
+	const [panelState, dispatch] = useReducer(elementPanelReducer, {
+		state: "initial",
+		backButton: null,
+		selectedElementIndex: null,
+		fieldsFilter: null,
+	});
 
 	const {
 		append,
@@ -142,19 +177,33 @@ export function FormBuilder({ pubForm, id }: Props) {
 		(index: number) => update(index, { ...elements[index], deleted: false }),
 		[elements]
 	);
+	const removeIfUnconfigured = useCallback(() => {
+		if (panelState.selectedElementIndex === null) {
+			return;
+		}
+		const element = elements[panelState.selectedElementIndex];
+		if (element.configured === false) {
+			remove(panelState.selectedElementIndex);
+		}
+	}, [elements, remove, panelState.selectedElementIndex]);
 
 	return (
 		<FormBuilderProvider
+			removeIfUnconfigured={removeIfUnconfigured}
 			addElement={addElement}
 			removeElement={removeElement}
 			restoreElement={restoreElement}
-			setEditingElement={setEditingElementIndex}
-			editingElement={
-				editingElementIndex !== null ? elements[editingElementIndex] : undefined
+			selectedElement={
+				panelState.selectedElementIndex !== null
+					? elements[panelState.selectedElementIndex]
+					: undefined
 			}
 			elementsCount={elements.length}
-			openConfigPanel={() => dispatch("configure")}
+			openConfigPanel={(index: number) =>
+				dispatch({ eventName: "edit", selectedElementIndex: index })
+			}
 			update={update}
+			dispatch={dispatch}
 		>
 			{" "}
 			<Tabs defaultValue="builder" className="pr-[380px]">
@@ -208,10 +257,15 @@ export function FormBuilder({ pubForm, id }: Props) {
 														key={element.id}
 														element={element}
 														index={index}
-														isEditing={editingElementIndex === index}
+														isEditing={
+															panelState.selectedElementIndex ===
+															index
+														}
 														isDisabled={
-															editingElementIndex !== null &&
-															editingElementIndex !== index
+															panelState.selectedElementIndex !==
+																null &&
+															panelState.selectedElementIndex !==
+																index
 														}
 													></FormElement>
 												);
@@ -227,14 +281,11 @@ export function FormBuilder({ pubForm, id }: Props) {
 											render={() => (
 												<FormItem>
 													<FormLabel className="mb-4 uppercase text-slate-500">
-														{elementPanelTitles[panelState]}
+														{elementPanelTitles[panelState.state]}
 													</FormLabel>
 													<hr />
 													<FormControl>
-														<ElementPanel
-															state={panelState}
-															dispatch={dispatch}
-														/>
+														<ElementPanel state={panelState} />
 													</FormControl>
 												</FormItem>
 											)}

@@ -32,7 +32,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		transition,
 	};
 
-	const { setEditingElement, openConfigPanel, removeElement, restoreElement } = useFormBuilder();
+	const { openConfigPanel, removeElement, restoreElement } = useFormBuilder();
 
 	const restoreRemoveButton = element.deleted ? (
 		<>
@@ -94,8 +94,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							variant="ghost"
 							className="invisible p-2 group-hover:visible"
 							onClick={() => {
-								setEditingElement(index);
-								openConfigPanel();
+								openConfigPanel(index);
 							}}
 						>
 							<Pencil size={24} className="text-neutral-400" />
