@@ -49,8 +49,8 @@ export default async function main(communityUUID: CommunitiesId) {
 				schemaName: CoreSchemaType.URL,
 			},
 			{
-				name: "User ID",
-				slug: `${slug}:user-id`,
+				name: "Member ID",
+				slug: `${slug}:member-id`,
 				communityId: communityUUID,
 				schemaName: CoreSchemaType.MemberId,
 			},

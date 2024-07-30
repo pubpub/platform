@@ -98,7 +98,7 @@ export const FormElement = ({ element }: { element: Form["elements"][number] }) 
 	if (schemaName === CoreSchemaType.Boolean) {
 		return <BooleanElement label={label} name={slug} />;
 	}
-	if (schemaName === CoreSchemaType.UserId) {
+	if (schemaName === CoreSchemaType.MemberId) {
 		return <UserIdSelect label={label} name={slug} id={element.elementId} />;
 	}
 	return <div>todo</div>;

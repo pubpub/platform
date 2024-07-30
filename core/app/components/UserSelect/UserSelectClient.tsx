@@ -11,13 +11,14 @@ import type { Option } from "ui/autocomplete";
 import { CoreSchemaType, MemberRole } from "db/public";
 import { AutoComplete } from "ui/autocomplete";
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { UserCircle2 } from "ui/icon";
+import { UserCheck } from "ui/icon";
 import {
 	PubFieldSelector,
 	PubFieldSelectorHider,
 	PubFieldSelectorProvider,
 	PubFieldSelectorToggleButton,
 } from "ui/pubFields";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { expect } from "utils";
 
 import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
@@ -34,13 +35,24 @@ const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 	value: user.id,
 	label: user.email,
 	node: (
-		<div className="flex flex-col">
-			<span>
-				{user.firstName} {user.lastName}
-			</span>
-			<address className="text-xs not-italic text-muted-foreground">{user.email}</address>
-			{user.member && <UserCircle2 />}
-		</div>
+		<TooltipProvider>
+			<div className="flex flex-1 flex-row items-center">
+				<div className="flex flex-1 flex-col">
+					<span>
+						{user.firstName} {user.lastName}
+					</span>
+					<address className="text-xs not-italic text-muted-foreground">
+						{user.email}
+					</address>
+				</div>
+				<Tooltip>
+					<TooltipTrigger>
+						{user.member && <UserCheck size={18} className="text-gray-600" />}
+					</TooltipTrigger>
+					<TooltipContent>This user is a member of your community.</TooltipContent>
+				</Tooltip>
+			</div>
+		</TooltipProvider>
 	),
 });
 

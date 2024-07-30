@@ -1,5 +1,6 @@
 "use server";
 
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 import rehypeFormat from "rehype-format";
 import rehypeStringify from "rehype-stringify";
 import remarkDirective from "remark-directive";
@@ -7,7 +8,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
-import type { UsersId } from "db/public";
+import type { MembersId, UsersId } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
@@ -33,9 +34,19 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		// the pub assignee, a pub field, a static email address, a member, or a
 		// member group.
 		const recipient = await db
-			.selectFrom("users")
-			.select(["id", "email", "firstName", "lastName"])
-			.where("id", "=", expect(args?.recipient ?? config.recipient) as UsersId)
+			.selectFrom("members")
+			.select((eb) => [
+				"members.id",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.whereRef("users.id", "=", "members.userId")
+						.selectAll("users")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.where("id", "=", expect(args?.recipient ?? config.recipient) as MembersId)
 			.executeTakeFirstOrThrow(
 				() =>
 					new Error(`Could not find user with ID ${args?.recipient ?? config.recipient}`)
@@ -56,7 +67,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 
 		await smtpclient.sendMail({
 			from: "hello@pubpub.org",
-			to: recipient.email,
+			to: recipient.user.email,
 			replyTo: "hello@pubpub.org",
 			html,
 			subject: args?.subject ?? config.subject,

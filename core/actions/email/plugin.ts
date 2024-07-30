@@ -21,10 +21,13 @@ export type EmailDirectivePluginContext = {
 		email: string;
 	};
 	recipient: {
-		id: string;
-		firstName: string;
-		lastName: string | null;
-		email: string;
+		id: MembersId;
+		user: {
+			id: UsersId;
+			firstName: string;
+			lastName: string | null;
+			email: string;
+		};
 	};
 	communitySlug: string;
 	pub: {
@@ -120,7 +123,7 @@ const visitRecipientNameDirective = (
 		hChildren: [
 			{
 				type: "text",
-				value: `${context.recipient.firstName} ${context.recipient.lastName}`,
+				value: `${context.recipient.user.firstName} ${context.recipient.user.lastName}`,
 			},
 		],
 	};
@@ -136,7 +139,7 @@ const visitRecipientFirstNameDirective = (
 		hChildren: [
 			{
 				type: "text",
-				value: context.recipient.firstName,
+				value: context.recipient.user.firstName,
 			},
 		],
 	};
@@ -152,7 +155,7 @@ const visitRecipientLastNameDirective = (
 		hChildren: [
 			{
 				type: "text",
-				value: context.recipient.lastName ?? "",
+				value: context.recipient.user.lastName ?? "",
 			},
 		],
 	};
@@ -232,18 +235,13 @@ const directiveVisitors: Record<EmailToken, DirectiveVisitor> = {
 	[EmailToken.Link]: visitLinkDirective,
 };
 
-const ensureFormMembershipAndCreateInviteLink = async (formSlug: string, userId: MembersId) => {
-	const [member] = await Promise.all([
-		getMember(userId).executeTakeFirstOrThrow(),
-		addMemberToForm({
-			memberId: userId,
-			slug: formSlug,
-		}).execute(),
-	]);
-	return createFormInviteLink({
-		userId: member.user.id,
-		formSlug,
-	});
+const ensureFormMembershipAndCreateInviteLink = async (
+	formSlug: string,
+	memberId: MembersId,
+	userId: UsersId
+) => {
+	await addMemberToForm({ memberId, slug: formSlug }).execute();
+	return createFormInviteLink({ userId, formSlug });
 };
 
 export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) => {
@@ -279,7 +277,8 @@ export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) 
 					if ("form" in attrs) {
 						props.href = await ensureFormMembershipAndCreateInviteLink(
 							expect(attrs.form),
-							context.recipient.id as MembersId
+							context.recipient.id,
+							context.recipient.user.id
 						);
 					}
 				}
