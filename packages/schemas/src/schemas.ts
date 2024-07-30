@@ -1,5 +1,9 @@
 import { Type } from "@sinclair/typebox";
 
+import { registerFormats } from "./formats";
+
+registerFormats();
+
 export const Boolean = Type.Boolean({
 	description: "A true or false value.",
 	examples: [true, false],

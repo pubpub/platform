@@ -1,4 +1,5 @@
-import { QueryCreator } from "kysely";
+import type { QueryCreator } from "kysely";
+
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type { FormsId, PublicSchema, UsersId } from "db/public";
@@ -28,6 +29,7 @@ export const getForm = (
 				jsonArrayFrom(
 					eb
 						.selectFrom("form_elements")
+						.innerJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
 						.whereRef("form_elements.formId", "=", "forms.id")
 						.select([
 							"form_elements.id as elementId",
@@ -41,6 +43,8 @@ export const getForm = (
 							"form_elements.element",
 							"form_elements.required",
 							"form_elements.isSubmit",
+							"pub_fields.schemaName",
+							"pub_fields.slug",
 						])
 						.orderBy("form_elements.order")
 				).as("elements")

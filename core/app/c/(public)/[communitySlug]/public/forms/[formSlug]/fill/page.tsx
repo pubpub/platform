@@ -1,20 +1,37 @@
+import type { ReactNode } from "react";
+
 import { redirect, RedirectType } from "next/navigation";
+
+import type { PubsId } from "db/public";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
+import { getPub } from "~/lib/server";
 import { getForm } from "~/lib/server/form";
+import { ExternalForm } from "./ExternalForm";
+import { ParentPubInfo } from "./ParentPubInfo";
+
+const NotFound = ({ children }: { children: ReactNode }) => {
+	return <div className="w-full pt-8 text-center">{children}</div>;
+};
 
 export default async function FormPage({
 	params,
 	searchParams,
 }: {
 	params: { formSlug: string; communitySlug: string };
-	searchParams: { email?: string };
+	searchParams: { email?: string; pubId?: PubsId };
 }) {
 	const form = await getForm({ slug: params.formSlug }).executeTakeFirst();
+	const pub = searchParams.pubId ? await getPub(searchParams.pubId) : undefined;
 
 	if (!form) {
-		return <div>No form found</div>;
+		return <NotFound>No form found</NotFound>;
+	}
+
+	// TODO: eventually, we will be able to create a pub
+	if (!pub) {
+		return <NotFound>No pub found</NotFound>;
 	}
 
 	const loginData = await getLoginData();
@@ -34,11 +51,13 @@ export default async function FormPage({
 	}
 
 	return (
-		<div className="container mx-auto flex w-full flex-col items-center">
-			<h1>Form Page {form.name}</h1>
-			<p>Hello {loginData.firstName}!</p>
-
-			<p>Fill in the form below!</p>
+		<div className="grid w-full grid-cols-4 gap-16 px-6 py-12">
+			<div className="col-span-1">
+				<ParentPubInfo />
+			</div>
+			<div className="col-span-2">
+				<ExternalForm pub={pub} elements={form.elements} className="flex-1" />
+			</div>
 		</div>
 	);
 }
