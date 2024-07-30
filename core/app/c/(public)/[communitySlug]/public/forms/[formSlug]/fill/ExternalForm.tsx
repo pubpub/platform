@@ -12,10 +12,14 @@ import { FormProvider, useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType, registerFormats } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
+import type { PubsId } from "db/public";
 import { Button } from "ui/button";
+import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
+import * as actions from "~/app/components/PubCRUD/actions";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { FormElement } from "./FormElement";
 
 export const ExternalForm = ({
@@ -27,8 +31,19 @@ export const ExternalForm = ({
 	elements: PubPubForm["elements"];
 	className?: string;
 }) => {
-	const handleSubmit = (values: FieldValues) => {
-		// TODO
+	const runUpdatePub = useServerAction(actions.upsertPubValues);
+	const handleSubmit = async (values: FieldValues) => {
+		const { pubFields, ...fields } = values;
+		const result = await runUpdatePub({
+			pubId: pub.id as PubsId,
+			fields,
+		});
+		if (didSucceed(result)) {
+			toast({
+				title: "Success",
+				description: "Pub updated",
+			});
+		}
 	};
 	const schema = Type.Object(
 		Object.fromEntries(
@@ -41,6 +56,7 @@ export const ExternalForm = ({
 		)
 	);
 	const methods = useForm({ resolver: typeboxResolver(schema), defaultValues: pub.values });
+	const isSubmitting = methods.formState.isSubmitting;
 
 	return (
 		<FormProvider {...methods}>
@@ -53,8 +69,9 @@ export const ExternalForm = ({
 				})}
 				<Button
 					type="submit"
+					disabled={isSubmitting}
 					// Make the button fixed next to the bottom of the form as user scrolls
-					className="sticky bottom-4 -mr-[100px] -mt-[68px] ml-auto w-fit"
+					className="sticky bottom-4 -mr-[100px] -mt-[68px] ml-auto"
 				>
 					Submit
 				</Button>

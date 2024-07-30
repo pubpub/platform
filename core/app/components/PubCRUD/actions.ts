@@ -86,6 +86,96 @@ export const createPub = defineServerAction(async function createPub({
 	}
 });
 
+export const _upsertPubValues = async ({
+	pubId,
+	fields,
+}: {
+	pubId: PubsId;
+	fields: Record<string, JsonValue>;
+}) => {
+	// First query for existing values so we know whether to insert or update
+	const toBeUpdatedPubFieldSlugs = Object.keys(fields);
+	const existingPubValues = await db
+		.selectFrom("pub_fields")
+		.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+		.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
+		.where("pub_values.pubId", "=", pubId)
+		.distinctOn("pub_fields.id")
+		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+		.select(["pub_values.id", "pub_fields.slug", "pub_fields.name"])
+		.execute();
+
+	// Insert, update on conflict
+	try {
+		await autoRevalidate(
+			db
+				.insertInto("pub_values")
+				.values((eb) => {
+					return Object.entries(fields).map(([slug, value]) => {
+						return {
+							id: existingPubValues.find((pv) => pv.slug === slug)?.id ?? undefined,
+							pubId,
+							value: JSON.stringify(value),
+							fieldId: eb
+								.selectFrom("pub_fields")
+								.where("pub_fields.slug", "=", slug)
+								.select("pub_fields.id"),
+						};
+					});
+				})
+				.onConflict((oc) =>
+					oc.column("id").doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+					}))
+				)
+				.returningAll()
+		).execute();
+	} catch (error) {
+		logger.error(error);
+		return {
+			error: "Failed to update pub",
+			cause: error,
+		};
+	}
+	revalidateTag(`pubs_${pubId}`);
+
+	return {
+		success: true,
+		report: `Successfully updated the Pub`,
+	};
+};
+
+export const upsertPubValues = defineServerAction(async function upsertPubValues({
+	pubId,
+	fields,
+	path,
+}: {
+	pubId: PubsId;
+	fields: Record<string, JsonValue>;
+	path?: string | null;
+}) {
+	const loginData = await getLoginData();
+
+	if (!loginData) {
+		throw new Error("Not logged in");
+	}
+
+	try {
+		const result = await _upsertPubValues({ pubId, fields });
+		if (path) {
+			revalidatePath(path);
+		}
+
+		return result;
+	} catch (error) {
+		logger.error(error);
+		return {
+			error: "Failed to update pub",
+			cause: error,
+		};
+	}
+});
+
 export const _updatePub = async ({
 	stageId,
 	pubId,
