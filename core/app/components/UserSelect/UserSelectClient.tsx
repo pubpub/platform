@@ -82,7 +82,7 @@ export function UserSelectClient({
 	const onInputValueChange = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
 		newParams.set(queryParamName, value);
-		router.replace(`${pathname}?${newParams.toString()}`);
+		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		setInputValue(value);
 	}, 400);
 

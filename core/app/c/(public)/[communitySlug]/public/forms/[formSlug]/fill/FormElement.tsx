@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { useFormContext } from "react-hook-form";
 
 import type { InputProps } from "ui/input";
@@ -12,8 +14,6 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { Input } from "ui/input";
 
 import type { Form } from "~/lib/server/form";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { UserSelectClient } from "~/app/components/UserSelect/UserSelectClient";
 
 interface ElementProps {
 	label: string;
@@ -71,20 +71,6 @@ const BooleanElement = ({ label, name }: ElementProps) => {
 					</FormItem>
 				);
 			}}
-		/>
-	);
-};
-
-const UserIdSelect = ({ label, name, id }: ElementProps & { id: string }) => {
-	const community = useCommunity();
-	const queryParamName = `user-${id}`;
-	return (
-		<UserSelectClient
-			community={community}
-			fieldLabel={label}
-			fieldName={name}
-			users={[]} // TODO
-			queryParamName={queryParamName}
 		/>
 	);
 };
@@ -161,7 +147,14 @@ const DateElement = ({ label, name }: ElementProps) => {
 	);
 };
 
-export const FormElement = ({ element }: { element: Form["elements"][number] }) => {
+export const FormElement = ({
+	element,
+	userSelect,
+}: {
+	element: Form["elements"][number];
+	/** The userSelect component is a server component so is passed in separately */
+	userSelect: ReactNode;
+}) => {
 	const { schemaName, label: labelProp, slug } = element;
 	const elementProps = { label: labelProp ?? "", name: slug };
 
@@ -180,7 +173,7 @@ export const FormElement = ({ element }: { element: Form["elements"][number] }) 
 		return <BooleanElement {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.UserId) {
-		return <UserIdSelect {...elementProps} id={element.elementId} />;
+		return userSelect;
 	}
 	if (schemaName === CoreSchemaType.FileUpload) {
 		return <FileUploadElement {...elementProps} onUpload={() => {}} />;
