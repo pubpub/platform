@@ -1,4 +1,4 @@
-import { HEADER_HEIGHT } from "../layout";
+import { HEADER_HEIGHT } from "~/lib/ui";
 
 // Need to offset by the height of the nav bar since that is also sticky so taken out of flow layout
 const OFFSET = HEADER_HEIGHT + 16;

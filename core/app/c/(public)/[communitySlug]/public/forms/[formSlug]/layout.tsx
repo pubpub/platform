@@ -3,8 +3,7 @@ import { Bookmark } from "ui/icon";
 
 import Logo from "~/app/components/Logo";
 import { findCommunityBySlug } from "~/lib/server/community";
-
-export const HEADER_HEIGHT = 72;
+import { HEADER_HEIGHT } from "~/lib/ui";
 
 type Props = { children: React.ReactNode; params: { communitySlug: string; formSlug: string } };
 
