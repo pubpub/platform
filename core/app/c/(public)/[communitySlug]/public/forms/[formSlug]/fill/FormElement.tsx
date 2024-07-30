@@ -4,6 +4,7 @@ import { useFormContext } from "react-hook-form";
 
 import type { InputProps } from "ui/input";
 import { CoreSchemaType } from "db/public";
+import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
 import { DatePicker } from "ui/date-picker";
@@ -42,7 +43,7 @@ const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 	);
 };
 
-const BooleanElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
+const BooleanElement = ({ label, name }: ElementProps) => {
 	const { control } = useFormContext();
 
 	return (
@@ -54,7 +55,15 @@ const BooleanElement = ({ label, name, ...rest }: ElementProps & InputProps) => 
 					<FormItem>
 						<div className="flex items-center gap-2">
 							<FormControl>
-								<input type="checkbox" className="rounded" {...field} {...rest} />
+								<Checkbox
+									checked={Boolean(field.value)}
+									onCheckedChange={(change) => {
+										if (typeof change === "boolean") {
+											field.onChange(change);
+										}
+									}}
+									className="rounded"
+								/>
 							</FormControl>
 							<FormLabel>{label}</FormLabel>
 						</div>
@@ -182,5 +191,5 @@ export const FormElement = ({ element }: { element: Form["elements"][number] }) 
 	if (schemaName === CoreSchemaType.DateTime) {
 		return <DateElement {...elementProps} />;
 	}
-	return <div>test</div>;
+	return null;
 };
