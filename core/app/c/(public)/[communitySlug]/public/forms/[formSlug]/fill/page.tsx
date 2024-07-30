@@ -31,7 +31,7 @@ export default async function FormPage({
 
 	// TODO: eventually, we will be able to create a pub
 	if (!pub) {
-		return <NotFound>No parent pub found</NotFound>;
+		return <NotFound>No pub found</NotFound>;
 	}
 
 	const loginData = await getLoginData();
