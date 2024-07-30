@@ -18,8 +18,6 @@ import { cn } from "utils";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { FormElement } from "./FormElement";
 
-registerFormats();
-
 export const ExternalForm = ({
 	pub,
 	elements,
