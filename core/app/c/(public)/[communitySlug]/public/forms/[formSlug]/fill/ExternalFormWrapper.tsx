@@ -7,6 +7,7 @@
 import type { ReactNode } from "react";
 import type { FieldValues } from "react-hook-form";
 
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -25,6 +26,8 @@ import * as actions from "~/app/components/PubCRUD/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_TIME_QUERY_PARAM } from "./SaveStatus";
 
+const SAVE_WAIT_MS = 2000;
+
 export const ExternalFormWrapper = ({
 	pub,
 	elements,
@@ -39,18 +42,21 @@ export const ExternalFormWrapper = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
+	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.upsertPubValues);
-	const handleSubmit = async (values: FieldValues) => {
+	const handleSubmit = async (values: FieldValues, autoSave = false) => {
 		const { pubFields, ...fields } = values;
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			fields,
 		});
 		if (didSucceed(result)) {
-			toast({
-				title: "Success",
-				description: "Pub updated",
-			});
+			if (!autoSave) {
+				toast({
+					title: "Success",
+					description: "Pub updated",
+				});
+			}
 			const newParams = new URLSearchParams(params);
 			newParams.set(SAVE_TIME_QUERY_PARAM, `${new Date().getTime()}`);
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
@@ -69,10 +75,23 @@ export const ExternalFormWrapper = ({
 	const methods = useForm({ resolver: typeboxResolver(schema), defaultValues: pub.values });
 	const isSubmitting = methods.formState.isSubmitting;
 
+	const handleAutoSave = (values: FieldValues) => {
+		if (saveTimer) {
+			clearTimeout(saveTimer);
+		}
+		const newTimer = setTimeout(() => {
+			if (methods.formState.isValid) {
+				handleSubmit(values, true);
+			}
+		}, SAVE_WAIT_MS);
+		setSaveTimer(newTimer);
+	};
+
 	return (
 		<Form {...methods}>
 			<form
-				onSubmit={methods.handleSubmit(handleSubmit)}
+				onChange={methods.handleSubmit(handleAutoSave)}
+				onSubmit={methods.handleSubmit((values) => handleSubmit(values))}
 				className={cn("relative flex flex-col gap-6", className)}
 			>
 				{children}

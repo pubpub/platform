@@ -2,8 +2,6 @@
 
 import { useSearchParams } from "next/navigation";
 
-import { Button } from "ui/button";
-import { DialogTrigger } from "ui/dialog";
 import { CircleHelp } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
