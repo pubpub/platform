@@ -50,7 +50,6 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	children,
 	className,
 	dependencies,
-	stopPropagation,
 }: {
 	formSchema: SchemaType;
 	values?: Partial<z.infer<SchemaType>>;
@@ -119,9 +118,6 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 			<Form {...form}>
 				<form
 					onSubmit={(e) => {
-						if (stopPropagation) {
-							e.stopPropagation();
-						}
 						form.handleSubmit(onSubmit)(e);
 					}}
 					className={cn("space-y-5", className)}
