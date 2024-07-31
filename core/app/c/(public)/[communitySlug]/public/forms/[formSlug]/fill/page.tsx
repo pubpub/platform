@@ -4,13 +4,16 @@ import { redirect, RedirectType } from "next/navigation";
 
 import type { PubsId } from "db/public";
 
+import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
 import { ParentPubInfo } from "./ParentPubInfo";
+import { SaveStatus } from "./SaveStatus";
 
 const NotFound = ({ children }: { children: ReactNode }) => {
 	return <div className="w-full pt-8 text-center">{children}</div>;
@@ -25,6 +28,7 @@ export default async function FormPage({
 }) {
 	const form = await getForm({ slug: params.formSlug }).executeTakeFirst();
 	const pub = searchParams.pubId ? await getPub(searchParams.pubId) : undefined;
+	const community = await findCommunityBySlug(params.communitySlug);
 
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
@@ -52,20 +56,30 @@ export default async function FormPage({
 	}
 
 	return (
-		<div className="grid w-full grid-cols-4 gap-16 px-6 py-12">
-			<div className="col-span-1">
-				<ParentPubInfo parentId={pub.parentId} />
-			</div>
-			<div className="col-span-2">
-				<ExternalFormWrapper pub={pub} elements={form.elements} className="flex-1">
-					<InnerForm
-						elements={form.elements}
-						// The following params are for rendering UserSelectServer
-						communitySlug={params.communitySlug}
-						searchParams={searchParams}
-						values={pub.values}
-					/>
-				</ExternalFormWrapper>
+		<div className="isolate min-h-screen">
+			<Header>
+				<div className="flex flex-col items-center">
+					<h1 className="text-xl font-bold">Evaluation for {community?.name}</h1>
+					<SaveStatus />
+				</div>
+			</Header>
+			<div className="container mx-auto">
+				<div className="grid w-full grid-cols-4 gap-16 px-6 py-12">
+					<div className="col-span-1">
+						<ParentPubInfo parentId={pub.parentId} />
+					</div>
+					<div className="col-span-2">
+						<ExternalFormWrapper pub={pub} elements={form.elements} className="flex-1">
+							<InnerForm
+								elements={form.elements}
+								// The following params are for rendering UserSelectServer
+								communitySlug={params.communitySlug}
+								searchParams={searchParams}
+								values={pub.values}
+							/>
+						</ExternalFormWrapper>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
