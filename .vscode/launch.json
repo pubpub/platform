@@ -17,18 +17,14 @@
 		},
 		{
 			"name": "Next.js: debug full stack",
-			"type": "node",
+			"type": "node-terminal",
 			"request": "launch",
-			"program": "${workspaceFolder}/node_modules/.bin/next",
-			"runtimeArgs": ["--inspect"],
-			"skipFiles": ["<node_internals>/**"],
+			"command": "pnpm run dev",
 			"cwd": "${workspaceFolder}/core",
 			"serverReadyAction": {
-				"action": "debugWithEdge",
-				"killOnServerStop": true,
 				"pattern": "- Local:.+(https?://.+)",
 				"uriFormat": "%s",
-				"webRoot": "${workspaceFolder}"
+				"action": "debugWithChrome"
 			}
 		}
 	]
