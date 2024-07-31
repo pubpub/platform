@@ -37,7 +37,6 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (state, event
 	switch (event) {
 		case "cancel":
 			return "initial";
-			break;
 		case "back":
 			if (state === "configuring") return "selecting";
 			break;
@@ -45,7 +44,6 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (state, event
 			if (state === "initial") return "selecting";
 		case "configure":
 			return "configuring";
-			break;
 		case "save":
 			if (state === "configuring") return "initial";
 			break;
@@ -68,7 +66,11 @@ export function FormBuilder({ pubForm, id }: Props) {
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),
 		values: {
-			elements: pubForm.elements,
+			elements: pubForm.elements.map((e) => {
+				// Do not include schemaName or slug here
+				const { schemaName, slug, ...rest } = e;
+				return rest;
+			}),
 			access: pubForm.access,
 			formId: pubForm.id,
 		},
