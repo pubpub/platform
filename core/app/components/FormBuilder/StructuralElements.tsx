@@ -1,4 +1,4 @@
-import type { ZodSchema } from "zod";
+import type { ZodObject } from "zod";
 
 import { z } from "zod";
 
@@ -10,12 +10,12 @@ import { markdown } from "~/actions/_lib/zodTypes";
 
 export const structuralElements: Record<
 	StructuralFormElement,
-	{ Icon: LucideIcon; schema?: ZodSchema; enabled: boolean; name: string }
+	{ Icon: LucideIcon; schema?: ZodObject<any, any>; enabled: boolean; name: string }
 > = {
 	[StructuralFormElement.p]: {
 		Icon: CaseSensitive,
 		schema: z.object({
-			content: markdown().describe("Markdown contents of the <p> element"),
+			content: markdown().nullable().describe("Markdown contents of the <p> element"),
 		}),
 		enabled: true,
 		name: "Paragraph",

@@ -171,11 +171,6 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 				</Tabs>
 			);
 		case "editing":
-			if (!state.selectedElementIndex) {
-				// toast({ title: "Error", description: "Element not found", variant: "destructive" });
-				// dispatch({ eventName: "cancel" });
-				return null;
-			}
 			return (
 				<>
 					<Button
@@ -188,7 +183,12 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 						<ChevronLeft />
 					</Button>
 					<div className="flex w-full flex-grow gap-3">
-						<ConfigureElement index={state.selectedElementIndex} />
+						{state.selectedElementIndex === null ? (
+							// Shouldn't be possible
+							<div>No selected element</div>
+						) : (
+							<ConfigureElement index={state.selectedElementIndex} />
+						)}
 					</div>
 				</>
 			);

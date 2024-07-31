@@ -2,6 +2,7 @@ import type { FieldArrayWithId } from "react-hook-form";
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import Markdown from "react-markdown";
 
 import type { PubFieldsId } from "db/public";
 import { Button } from "ui/button";
@@ -163,7 +164,8 @@ const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
 			<div>
 				<div className="text-slate-500">{name}</div>
 				<div className={cn("font-semibold", element.deleted ? "text-slate-500" : "")}>
-					{element.content ?? " "}
+					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
+					<Markdown>{element.content ?? " "}</Markdown>
 				</div>
 			</div>
 		</>
