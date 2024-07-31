@@ -9,7 +9,7 @@ import type { JsonValue } from "contracts";
 import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import { logger } from "logger";
 
-import { validatePubValues } from "~/actions/_lib/validateFields";
+import { validatePubValues, validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
@@ -104,6 +104,27 @@ export const _upsertPubValues = async ({
 		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
 		.select(["pub_values.id", "pub_fields.slug", "pub_fields.name"])
 		.execute();
+
+	// Query for all relevant fields, including ones that aren't in the pub yet
+	const pubFields = await db
+		.selectFrom("pub_fields")
+		.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
+		.distinctOn("pub_fields.id")
+		.orderBy(["pub_fields.id"])
+		.select(["name", "slug", "schemaName"])
+		.execute();
+
+	const validated = validatePubValuesBySchemaName({
+		fields: pubFields,
+		values: fields,
+	});
+
+	if (validated && validated.error) {
+		return {
+			error: validated.error,
+			cause: validated.error,
+		};
+	}
 
 	// Insert, update on conflict
 	try {
