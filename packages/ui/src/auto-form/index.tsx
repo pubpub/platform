@@ -62,6 +62,7 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	children?: React.ReactNode;
 	className?: string;
 	dependencies?: Dependency<NonNullable<z.infer<SchemaType>>>[];
+	stopPropagation?: boolean;
 }) {
 	const objectFormSchema = getObjectFormSchema(formSchema);
 	const defaultValues: DefaultValues<z.infer<typeof objectFormSchema>> | null = getDefaultValues(
@@ -146,5 +147,9 @@ export type {
 } from "./types";
 
 export { DependencyType } from "./types";
+
+export { MarkdownEditor } from "./fields/markdown/MarkdownEditor";
+
+export { zodToHtmlInputProps } from "./utils";
 
 export default AutoForm;

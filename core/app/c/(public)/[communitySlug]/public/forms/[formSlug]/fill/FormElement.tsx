@@ -3,10 +3,11 @@
 import type { ReactNode } from "react";
 
 import { useFormContext } from "react-hook-form";
+import Markdown from "react-markdown";
 
 import type { PubsId } from "db/public";
 import type { InputProps } from "ui/input";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, ElementType } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
@@ -157,11 +158,18 @@ export const FormElement = ({
 	userSelect: ReactNode;
 }) => {
 	const { schemaName, label: labelProp, slug } = element;
-	const elementProps = { label: labelProp ?? "", name: slug };
+	if (!slug) {
+		if (element.type === ElementType.structural) {
+			return <Markdown>{element.content}</Markdown>;
+		}
+		return null;
+	}
 
 	if (!schemaName) {
 		return null;
 	}
+
+	const elementProps = { label: labelProp ?? "", name: slug };
 	if (
 		schemaName === CoreSchemaType.String ||
 		schemaName === CoreSchemaType.Email ||

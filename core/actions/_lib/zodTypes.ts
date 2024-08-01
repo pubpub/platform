@@ -8,10 +8,10 @@ class Markdown extends z.ZodString {
 			coerce: false,
 		});
 
-	_parse(): z.ParseReturnType<string> {
+	_parse(input: z.ParseInput): z.ParseReturnType<string> {
 		return {
 			status: "valid",
-			value: "",
+			value: input.data,
 		};
 	}
 }

@@ -1,28 +1,26 @@
 "use client";
 
-import type { Dispatch } from "react";
-
-import { useState } from "react";
-
-import type { PubFieldsId, StructuralFormElement } from "db/public";
-import { ElementType } from "db/public";
+import type { PubFieldsId } from "db/public";
+import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
-import { ChevronLeft, PlusCircle, Search, Type } from "ui/icon";
+import { ChevronLeft, PlusCircle, Type } from "ui/icon";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import { toast } from "ui/use-toast";
 
-import type { PanelEvent, PanelState } from "./types";
+import type { PanelState } from "./types";
+import { ConfigureElement } from "./ConfigureElement";
 import { useFormBuilder } from "./FormBuilderContext";
+import { structuralElements } from "./StructuralElements";
 
 type ElementPanelProps = {
 	state: PanelState;
-	dispatch: Dispatch<PanelEvent>;
 };
-export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
+export const ElementPanel = ({ state }: ElementPanelProps) => {
 	const fields = usePubFieldContext();
 
-	const { addElement, setEditingElement, elementsCount } = useFormBuilder();
+	const { addElement, elementsCount, removeIfUnconfigured, dispatch } = useFormBuilder();
 
 	const addToForm = (
 		newElement:
@@ -38,6 +36,7 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 				required: true,
 				type: ElementType.pubfield,
 				order: elementsCount,
+				configured: false,
 			});
 		}
 		if (newElement.type === "structure") {
@@ -45,13 +44,12 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 				...newElement,
 				type: ElementType.structural,
 				order: elementsCount,
+				configured: false,
 			});
 		}
 	};
 
-	const [fieldsFilter, setFieldsFilter] = useState("");
-
-	switch (state) {
+	switch (state.state) {
 		case "initial":
 			return (
 				<div className="flex flex-col gap-4">
@@ -60,13 +58,42 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 						type="button"
 						className="flex w-full items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600"
 						size="lg"
-						onClick={() => dispatch("add")}
+						onClick={() => dispatch({ eventName: "add" })}
 					>
 						<PlusCircle /> Add New
 					</Button>
 				</div>
 			);
 		case "selecting":
+			const fieldButtons = Object.values(fields).map((field) => {
+				if (
+					state.fieldsFilter &&
+					!`${field.name} ${field.slug} ${field.schemaName}`.includes(state.fieldsFilter)
+				) {
+					return null;
+				}
+				return (
+					<Button
+						type="button"
+						variant="outline"
+						key={field.id}
+						className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
+						onClick={() => {
+							addToForm({ type: "field", fieldId: field.id });
+							dispatch({
+								eventName: "edit",
+								selectedElementIndex: elementsCount,
+							});
+						}}
+					>
+						<Type size={20} className="my-auto text-emerald-500" />
+						<div className="flex flex-col items-start">
+							<div className="text-muted-foreground">{field.slug}</div>
+							<div className="text-left font-semibold">{field.name}</div>
+						</div>
+					</Button>
+				);
+			});
 			return (
 				<Tabs defaultValue="field">
 					<TabsList>
@@ -78,40 +105,17 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 							type="search"
 							placeholder="Type a field name to search..."
 							aria-label="Type a field name to search"
-							onChange={(event) => setFieldsFilter(event.target.value)}
-							value={fieldsFilter}
+							onChange={(event) =>
+								dispatch({
+									eventName: "filterFields",
+									fieldsFilter: event.target.value,
+								})
+							}
+							value={state.fieldsFilter ?? ""}
 							className="mb-2"
 						></Input>
-						<div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
-							{Object.values(fields).map(
-								(field) =>
-									`${field.name} ${field.slug} ${field.schemaName}`.includes(
-										fieldsFilter
-									) && (
-										<Button
-											type="button"
-											variant="outline"
-											key={field.id}
-											className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
-											onClick={() => {
-												addToForm({ type: "field", fieldId: field.id });
-												setFieldsFilter("");
-												setEditingElement(elementsCount);
-												dispatch("configure");
-											}}
-										>
-											<Type size={20} className="my-auto text-emerald-500" />
-											<div className="flex flex-col items-start">
-												<div className="text-muted-foreground">
-													{field.slug}
-												</div>
-												<div className="text-left font-semibold">
-													{field.name}
-												</div>
-											</div>
-										</Button>
-									)
-							)}
+						<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
+							{fieldButtons}
 						</div>
 
 						<Button
@@ -119,49 +123,72 @@ export const ElementPanel = ({ state, dispatch }: ElementPanelProps) => {
 							variant="outline"
 							className="w-full border-slate-950"
 							onClick={() => {
-								dispatch("cancel");
-								setFieldsFilter("");
+								dispatch({ eventName: "cancel" });
 							}}
 						>
 							Cancel
 						</Button>
 					</TabsContent>
 					<TabsContent value="structure">
-						<Button type="button" onClick={() => dispatch("cancel")}>
+						<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
+							{Object.values(StructuralFormElement).map((elementType) => {
+								const { Icon, enabled, name } = structuralElements[elementType];
+								if (!enabled) {
+									return null;
+								}
+								return (
+									<Button
+										key={elementType}
+										type="button"
+										variant="outline"
+										className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
+										onClick={() => {
+											addToForm({
+												type: "structure",
+												element: elementType,
+											});
+											dispatch({
+												eventName: "edit",
+												selectedElementIndex: elementsCount,
+											});
+										}}
+									>
+										<Icon size={20} className="my-auto text-emerald-500" />
+										<div>{name}</div>
+									</Button>
+								);
+							})}
+						</div>
+						<Button
+							type="button"
+							variant="outline"
+							className="w-full border-slate-950"
+							onClick={() => dispatch({ eventName: "cancel" })}
+						>
 							Cancel
 						</Button>
 					</TabsContent>
 				</Tabs>
 			);
-		case "configuring":
+		case "editing":
 			return (
 				<>
-					<Button onClick={() => dispatch("back")} aria-label="Back">
+					<Button
+						onClick={() => {
+							removeIfUnconfigured();
+							dispatch({ eventName: "back" });
+						}}
+						aria-label="Back"
+					>
 						<ChevronLeft />
 					</Button>
 					<div className="flex w-full flex-grow gap-3">
-						<Button
-							type="button"
-							className="border-slate-950"
-							variant="outline"
-							onClick={() => {
-								setEditingElement(null);
-								dispatch("cancel");
-							}}
-						>
-							Cancel
-						</Button>
-						<Button
-							type="button"
-							className="bg-blue-500 hover:bg-blue-600"
-							onClick={() => {
-								//update element
-								setEditingElement(null);
-								dispatch("save");
-							}}
-						>
-							Save
-						</Button>
+						{state.selectedElementIndex === null ? (
+							// Shouldn't be possible
+							<div>No selected element</div>
+						) : (
+							<ConfigureElement index={state.selectedElementIndex} />
+						)}
 					</div>
 				</>
 			);
