@@ -70,10 +70,14 @@ export const getFieldTableColumns = () =>
 			accessorKey: "name",
 			cell: ({ row }) => {
 				const { schemaName, name } = row.original;
-				const icon = schemaName ? SCHEMA_TYPES_WITH_ICONS[schemaName].icon : null;
+				const Icon = schemaName ? SCHEMA_TYPES_WITH_ICONS[schemaName].icon : null;
 				return (
 					<div className="flex items-center gap-2">
-						{icon ? <span className="absolute -ml-6">{icon}</span> : null}
+						{Icon ? (
+							<span className="absolute -ml-6">
+								<Icon className="w-4" />
+							</span>
+						) : null}
 						<span>{row.original.name}</span>
 					</div>
 				);
