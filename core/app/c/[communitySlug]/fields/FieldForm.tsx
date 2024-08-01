@@ -79,15 +79,16 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 						</FormControl>
 						<SelectContent>
 							{schemaTypes.map((schemaName) => {
-								const schemaData = SCHEMA_TYPES_WITH_ICONS[schemaName];
+								const { description, icon: Icon } =
+									SCHEMA_TYPES_WITH_ICONS[schemaName];
 								return (
 									<SelectItem key={schemaName} value={schemaName}>
 										<div className="flex items-center gap-2">
-											{schemaData.icon}
+											<Icon className="w-4" />
 											<div className="flex flex-col items-start font-medium">
 												<div>{schemaName}</div>
 												<div className="text-xs text-muted-foreground">
-													{schemaData.description}
+													{description}
 												</div>
 											</div>
 										</div>
