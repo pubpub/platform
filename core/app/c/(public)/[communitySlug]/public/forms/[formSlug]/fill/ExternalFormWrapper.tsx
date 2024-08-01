@@ -18,15 +18,25 @@ import type { GetPubResponseBody } from "contracts";
 import type { PubsId } from "db/public";
 import { Button } from "ui/button";
 import { Form } from "ui/form";
-import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import * as actions from "~/app/components/PubCRUD/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { SAVE_TIME_QUERY_PARAM } from "./SaveStatus";
+import { COMPLETE_STATUS, SAVE_STATUS_QUERY_PARAM } from "./constants";
 
 const SAVE_WAIT_MS = 2000;
+
+const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) => {
+	const requiredElements = formElements.filter((fe) => fe.required);
+	requiredElements.forEach((element) => {
+		const value = values[element.slug];
+		if (value == null) {
+			return false;
+		}
+	});
+	return true;
+};
 
 export const ExternalFormWrapper = ({
 	pub,
@@ -51,14 +61,13 @@ export const ExternalFormWrapper = ({
 			fields,
 		});
 		if (didSucceed(result)) {
-			if (!autoSave) {
-				toast({
-					title: "Success",
-					description: "Pub updated",
-				});
-			}
 			const newParams = new URLSearchParams(params);
-			newParams.set(SAVE_TIME_QUERY_PARAM, `${new Date().getTime()}`);
+			const currentTime = `${new Date().getTime()}`;
+			if (!autoSave && isComplete(elements, values)) {
+				newParams.set(SAVE_STATUS_QUERY_PARAM, COMPLETE_STATUS);
+			} else {
+				newParams.set(SAVE_STATUS_QUERY_PARAM, currentTime);
+			}
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		}
 	};
@@ -72,7 +81,10 @@ export const ExternalFormWrapper = ({
 			])
 		)
 	);
-	const methods = useForm({ resolver: typeboxResolver(schema), defaultValues: pub.values });
+	const methods = useForm({
+		resolver: typeboxResolver(schema),
+		defaultValues: pub.values,
+	});
 	const isSubmitting = methods.formState.isSubmitting;
 
 	const handleAutoSave = (values: FieldValues) => {
@@ -80,7 +92,9 @@ export const ExternalFormWrapper = ({
 			clearTimeout(saveTimer);
 		}
 		const newTimer = setTimeout(() => {
-			if (methods.formState.isValid) {
+			// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
+			// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
+			if (methods.formState.isValid || saveTimer === undefined) {
 				handleSubmit(values, true);
 			}
 		}, SAVE_WAIT_MS);
