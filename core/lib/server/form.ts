@@ -2,7 +2,7 @@ import type { QueryCreator } from "kysely";
 
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type { FormsId, PublicSchema, UsersId } from "db/public";
+import type { CommunitiesId, FormsId, PublicSchema, UsersId } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -16,7 +16,7 @@ import { getUser } from "./user";
  * Get a form by either slug or id
  */
 export const getForm = (
-	props: XOR<{ slug: string }, { id: FormsId }>,
+	props: XOR<{ slug: string }, { id: FormsId }> & { communityId?: CommunitiesId },
 	trx: typeof db | QueryCreator<PublicSchema> = db
 ) =>
 	autoCache(
@@ -24,6 +24,9 @@ export const getForm = (
 			.selectFrom("forms")
 			.$if(Boolean(props.slug), (eb) => eb.where("forms.slug", "=", props.slug!))
 			.$if(Boolean(props.id), (eb) => eb.where("forms.id", "=", props.id!))
+			.$if(Boolean(props.communityId), (eb) =>
+				eb.where("forms.communityId", "=", props.communityId!)
+			)
 			.selectAll()
 			.select((eb) =>
 				jsonArrayFrom(

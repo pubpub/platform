@@ -37,9 +37,12 @@ export default async function FormPage({
 	params: { formSlug: string; communitySlug: string };
 	searchParams: { email?: string; pubId?: PubsId };
 }) {
-	const form = await getForm({ slug: params.formSlug }).executeTakeFirst();
-	const pub = searchParams.pubId ? await getPub(searchParams.pubId) : undefined;
 	const community = await findCommunityBySlug(params.communitySlug);
+	const form = await getForm({
+		slug: params.formSlug,
+		communityId: community?.id,
+	}).executeTakeFirst();
+	const pub = searchParams.pubId ? await getPub(searchParams.pubId) : undefined;
 
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
