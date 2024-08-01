@@ -12,8 +12,9 @@ import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { GetPubResponseBody } from "contracts";
+import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { PubsId } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Form } from "ui/form";
 import { toast } from "ui/use-toast";
@@ -22,6 +23,24 @@ import { cn } from "utils";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import * as actions from "~/app/components/PubCRUD/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+
+/**
+ * Date pubValues need to be transformed to a Date type to pass validation
+ */
+const buildDefaultValues = (
+	elements: PubPubForm["elements"],
+	pubValues: Record<string, JsonValue>
+) => {
+	const defaultValues: FieldValues = { ...pubValues };
+	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
+	dateElements.forEach((de) => {
+		const pubValue = pubValues[de.slug];
+		if (pubValue) {
+			defaultValues[de.slug] = new Date(pubValue as string);
+		}
+	});
+	return defaultValues;
+};
 
 export const ExternalFormWrapper = ({
 	pub,
@@ -58,8 +77,12 @@ export const ExternalFormWrapper = ({
 			])
 		)
 	);
-	const methods = useForm({ resolver: typeboxResolver(schema), defaultValues: pub.values });
+	const methods = useForm({
+		resolver: typeboxResolver(schema),
+		defaultValues: buildDefaultValues(elements, pub.values),
+	});
 	const isSubmitting = methods.formState.isSubmitting;
+	const data = methods.watch();
 
 	return (
 		<Form {...methods}>
