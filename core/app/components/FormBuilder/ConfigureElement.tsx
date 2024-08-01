@@ -50,7 +50,7 @@ export const ConfigureElement = ({ index }: Props) => {
 					form.handleSubmit(onSubmit)(e);
 				}}
 			>
-				{[...schema.keyof().options].map((name) => (
+				{(schema.keyof().options as string[]).map((name) => (
 					<FormField
 						key={name}
 						control={form.control}
