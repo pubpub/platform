@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import type { ElementType, PubFieldsId, StructuralFormElement } from "db/public";
+import type { PubFieldsId, StructuralFormElement } from "db/public";
 import {
+	ElementType,
 	FormAccessType,
 	formElementsIdSchema,
 	formElementsInitializerSchema,
@@ -14,6 +15,7 @@ const baseElementSchema = z.object({
 	order: z.number().int(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
+	configured: z.boolean().default(true),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
@@ -44,9 +46,9 @@ const formElementSchema = formElementsInitializerSchema
 	.strict();
 export type FormElementData = z.input<typeof formElementSchema>;
 export const isFieldInput = (element: FormElementData): element is InputElement =>
-	"fieldId" in element;
+	element.type === ElementType.pubfield;
 export const isStructuralElement = (element: FormElementData): element is StructuralElement =>
-	"element" in element;
+	element.type === ElementType.structural;
 
 export const formBuilderSchema = z.object({
 	access: z.nativeEnum(FormAccessType),
@@ -55,5 +57,16 @@ export const formBuilderSchema = z.object({
 });
 
 export type FormBuilderSchema = z.input<typeof formBuilderSchema>;
-export type PanelState = "initial" | "selecting" | "configuring";
-export type PanelEvent = "back" | "cancel" | "add" | "configure" | "save";
+export type PanelState = {
+	state: "initial" | "selecting" | "editing";
+	backButton: PanelState["state"] | null;
+	selectedElementIndex: number | null;
+	fieldsFilter: string | null;
+};
+export type PanelEvent =
+	| { eventName: "filterFields"; fieldsFilter: PanelState["fieldsFilter"] }
+	| { eventName: "back"; selectedElementIndex?: PanelState["selectedElementIndex"] }
+	| { eventName: "cancel"; selectedElementIndex?: PanelState["selectedElementIndex"] }
+	| { eventName: "add" }
+	| { eventName: "edit"; selectedElementIndex: PanelState["selectedElementIndex"] }
+	| { eventName: "save" };

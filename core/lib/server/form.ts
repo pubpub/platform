@@ -29,7 +29,7 @@ export const getForm = (
 				jsonArrayFrom(
 					eb
 						.selectFrom("form_elements")
-						.innerJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
+						.leftJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
 						.whereRef("form_elements.formId", "=", "forms.id")
 						.select([
 							"form_elements.id as elementId",

@@ -2,6 +2,7 @@ import type { FieldArrayWithId } from "react-hook-form";
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import Markdown from "react-markdown";
 
 import type { PubFieldsId } from "db/public";
 import { Button } from "ui/button";
@@ -9,9 +10,10 @@ import { ArchiveRestore, GripVertical, Pencil, Trash, Type } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
 import { cn } from "utils";
 
-import type { FormBuilderSchema, InputElement } from "./types";
+import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
 import { useFormBuilder } from "./FormBuilderContext";
-import { isFieldInput } from "./types";
+import { structuralElements } from "./StructuralElements";
+import { isFieldInput, isStructuralElement } from "./types";
 
 type FormElementProps = {
 	element: FieldArrayWithId<FormBuilderSchema, "elements", "id">;
@@ -31,7 +33,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		transition,
 	};
 
-	const { setEditingElement, openConfigPanel, removeElement, restoreElement } = useFormBuilder();
+	const { openConfigPanel, removeElement, restoreElement } = useFormBuilder();
 
 	const restoreRemoveButton = element.deleted ? (
 		<>
@@ -69,7 +71,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			style={style}
 			{...attributes}
 			className={cn(
-				"flex flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
+				"flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				element.deleted && "border-l-red-200"
@@ -78,6 +80,9 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			<div className="group flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
 				{isFieldInput(element) && (
 					<FieldInputElement element={element} isEditing={isEditing} />
+				)}
+				{isStructuralElement(element) && (
+					<StructuralElement element={element} isEditing={isEditing} />
 				)}
 				{isEditing ? (
 					<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
@@ -90,8 +95,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							variant="ghost"
 							className="invisible p-2 group-hover:visible"
 							onClick={() => {
-								setEditingElement(index);
-								openConfigPanel();
+								openConfigPanel(index);
 							}}
 						>
 							<Pencil size={24} className="text-neutral-400" />
@@ -134,6 +138,34 @@ const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
 				<div className="text-slate-500">{field.slug}</div>
 				<div className={cn("font-semibold", element.deleted ? "text-slate-500" : "")}>
 					{element.label ?? field.name}
+				</div>
+			</div>
+		</>
+	);
+};
+
+type StructuralElementProps = {
+	element: StructuralElement;
+	isEditing: boolean;
+};
+const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
+	const { Icon, enabled, name } = structuralElements[element.element];
+
+	return (
+		<>
+			<Icon
+				size={20}
+				className={cn(
+					"my-auto mr-4",
+					isEditing ? "text-blue-500" : "text-emerald-500",
+					element.deleted && "text-slate-500"
+				)}
+			/>
+			<div>
+				<div className="text-slate-500">{name}</div>
+				<div className={cn("font-semibold", element.deleted ? "text-slate-500" : "")}>
+					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
+					<Markdown>{element.content ?? " "}</Markdown>
 				</div>
 			</div>
 		</>
