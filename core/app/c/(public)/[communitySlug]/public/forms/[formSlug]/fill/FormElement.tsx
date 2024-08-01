@@ -88,7 +88,8 @@ const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId: PubsI
 			control={control}
 			name={name}
 			render={({ field }) => (
-				<FormItem className="mb-6">
+				// Need the isolate to keep the FileUpload's huge z-index from covering our own header
+				<FormItem className="isolate mb-6">
 					<FormLabel>{label}</FormLabel>
 					<FormControl>
 						<FileUpload
