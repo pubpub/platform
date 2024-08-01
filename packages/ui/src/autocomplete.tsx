@@ -23,6 +23,7 @@ type AutoCompleteProps = {
 	disabled?: boolean;
 	placeholder?: string;
 	icon?: React.ReactNode;
+	name?: string;
 };
 
 export const AutoComplete = ({
@@ -36,6 +37,7 @@ export const AutoComplete = ({
 	disabled,
 	isLoading = false,
 	icon,
+	name,
 }: AutoCompleteProps) => {
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -122,6 +124,7 @@ export const AutoComplete = ({
 	return (
 		<CommandPrimitive onKeyDown={handleKeyDown} ref={commandRef}>
 			<CommandInput
+				name={name}
 				ref={inputRef}
 				value={inputValue}
 				onValueChange={isLoading ? undefined : _setInputValue}

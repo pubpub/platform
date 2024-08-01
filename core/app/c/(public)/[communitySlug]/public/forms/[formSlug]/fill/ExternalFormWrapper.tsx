@@ -16,6 +16,7 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
 import type { PubsId } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Form } from "ui/form";
 import { cn } from "utils";
@@ -25,7 +26,7 @@ import * as actions from "~/app/components/PubCRUD/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { COMPLETE_STATUS, SAVE_STATUS_QUERY_PARAM } from "./constants";
 
-const SAVE_WAIT_MS = 2000;
+const SAVE_WAIT_MS = 5000;
 
 const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) => {
 	const requiredElements = formElements.filter((fe) => fe.required);
@@ -36,6 +37,23 @@ const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) =
 		}
 	});
 	return true;
+};
+
+const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
+	const element = elements.find((e) => e.slug === slug);
+	return element?.schemaName === CoreSchemaType.UserId;
+};
+
+const preparePayload = (formElements: PubPubForm["elements"], pubValues: FieldValues) => {
+	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
+	// For example, if a pub has an 'email' field but the form does not,
+	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
+	const formSlugs = formElements.map((fe) => fe.slug);
+	const defaultValues = {};
+	formSlugs.forEach((slug) => {
+		defaultValues[slug] = pubValues[slug];
+	});
+	return defaultValues;
 };
 
 export const ExternalFormWrapper = ({
@@ -55,7 +73,7 @@ export const ExternalFormWrapper = ({
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.upsertPubValues);
 	const handleSubmit = async (values: FieldValues, autoSave = false) => {
-		const { pubFields, ...fields } = values;
+		const fields = preparePayload(elements, values);
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			fields,
@@ -86,8 +104,14 @@ export const ExternalFormWrapper = ({
 		defaultValues: pub.values,
 	});
 	const isSubmitting = methods.formState.isSubmitting;
+	const data = methods.watch();
 
-	const handleAutoSave = (values: FieldValues) => {
+	const handleAutoSave = (evt) => {
+		// Don't auto save while editing the user ID field. the query params
+		// will clash and it will be a bad time :(
+		if (isUserSelectField(evt.target.name, elements)) {
+			return;
+		}
 		if (saveTimer) {
 			clearTimeout(saveTimer);
 		}
@@ -95,7 +119,7 @@ export const ExternalFormWrapper = ({
 			// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 			// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
 			if (methods.formState.isValid || saveTimer === undefined) {
-				handleSubmit(values, true);
+				handleSubmit(data, true);
 			}
 		}, SAVE_WAIT_MS);
 		setSaveTimer(newTimer);
@@ -104,7 +128,7 @@ export const ExternalFormWrapper = ({
 	return (
 		<Form {...methods}>
 			<form
-				onChange={methods.handleSubmit(handleAutoSave)}
+				onChange={(evt) => handleAutoSave(evt)}
 				onSubmit={methods.handleSubmit((values) => handleSubmit(values))}
 				className={cn("relative flex flex-col gap-6", className)}
 			>

@@ -106,6 +106,7 @@ export function UserSelectClient({
 								<PubFieldSelectorToggleButton />
 							</div>
 							<AutoComplete
+								name={fieldName}
 								value={selectedUserOption}
 								options={options}
 								empty={
