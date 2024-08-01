@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { useFormContext } from "react-hook-form";
 
+import type { PubsId } from "db/public";
 import type { InputProps } from "ui/input";
 import { CoreSchemaType } from "db/public";
 import { Checkbox } from "ui/checkbox";
@@ -14,6 +15,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { Input } from "ui/input";
 
 import type { Form } from "~/lib/server/form";
+import { upload } from "./actions";
 
 interface ElementProps {
 	label: string;
@@ -75,13 +77,10 @@ const BooleanElement = ({ label, name }: ElementProps) => {
 	);
 };
 
-const FileUploadElement = ({
-	label,
-	name,
-	onUpload,
-}: ElementProps & {
-	onUpload: () => void;
-}) => {
+const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId: PubsId }) => {
+	const signedUploadUrl = (fileName: string) => {
+		return upload(pubId, fileName);
+	};
 	const { control } = useFormContext();
 	return (
 		<FormField
@@ -93,7 +92,7 @@ const FileUploadElement = ({
 					<FormControl>
 						<FileUpload
 							{...field}
-							upload={onUpload}
+							upload={signedUploadUrl}
 							onUpdateFiles={(event: any[]) => field.onChange(event)}
 						/>
 					</FormControl>
@@ -148,9 +147,11 @@ const DateElement = ({ label, name }: ElementProps) => {
 };
 
 export const FormElement = ({
+	pubId,
 	element,
 	userSelect,
 }: {
+	pubId: PubsId;
 	element: Form["elements"][number];
 	/** The userSelect component is a server component so is passed in separately */
 	userSelect: ReactNode;
@@ -176,7 +177,7 @@ export const FormElement = ({
 		return userSelect;
 	}
 	if (schemaName === CoreSchemaType.FileUpload) {
-		return <FileUploadElement {...elementProps} onUpload={() => {}} />;
+		return <FileUploadElement pubId={pubId} {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.Vector3) {
 		return <Vector3Element {...elementProps} />;

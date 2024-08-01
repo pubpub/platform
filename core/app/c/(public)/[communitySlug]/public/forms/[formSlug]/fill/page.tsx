@@ -59,6 +59,7 @@ export default async function FormPage({
 			<div className="col-span-2">
 				<ExternalFormWrapper pub={pub} elements={form.elements} className="flex-1">
 					<InnerForm
+						pubId={pub.id as PubsId}
 						elements={form.elements}
 						// The following params are for rendering UserSelectServer
 						communitySlug={params.communitySlug}

@@ -1,11 +1,10 @@
 import type { GetPubResponseBody } from "contracts";
-import type { UsersId } from "db/public";
+import type { PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";
 import { db } from "~/kysely/database";
-import { getCommunityBySlug } from "~/lib/db/queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { FormElement } from "./FormElement";
 
@@ -42,11 +41,13 @@ const UserIdSelect = async ({
 };
 
 export const InnerForm = ({
+	pubId,
 	elements,
 	searchParams,
 	values,
 	communitySlug,
 }: {
+	pubId: PubsId;
 	elements: PubPubForm["elements"];
 	searchParams: Record<string, unknown>;
 	values: GetPubResponseBody["values"];
@@ -58,6 +59,7 @@ export const InnerForm = ({
 				const userId = e.schemaName === CoreSchemaType.UserId ? values[e.slug] : undefined;
 				return (
 					<FormElement
+						pubId={pubId}
 						key={e.elementId}
 						element={e}
 						userSelect={

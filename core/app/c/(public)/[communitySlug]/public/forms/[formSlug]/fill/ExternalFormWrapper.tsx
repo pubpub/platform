@@ -82,7 +82,6 @@ export const ExternalFormWrapper = ({
 		defaultValues: buildDefaultValues(elements, pub.values),
 	});
 	const isSubmitting = methods.formState.isSubmitting;
-	const data = methods.watch();
 
 	return (
 		<Form {...methods}>
