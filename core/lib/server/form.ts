@@ -138,17 +138,19 @@ export const createFormInvitePath = ({
 	formSlug,
 	communitySlug,
 	email,
+	pubId,
 }: {
 	formSlug: string;
 	communitySlug: string;
 	email: string;
+	pubId?: string;
 }) => {
-	return `/c/${communitySlug}/public/invite?redirectTo=${encodeURIComponent(`/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}`)}`;
+	return `/c/${communitySlug}/public/invite?redirectTo=${encodeURIComponent(`/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}${pubId ? `&pubId=${pubId}` : ""}`)}`;
 };
 
 export const createFormInviteLink = async (
 	props: XOR<{ formSlug: string }, { formId: FormsId }> &
-		XOR<{ email: string }, { userId: UsersId }>
+		XOR<{ email: string }, { userId: UsersId }> & { pubId?: string }
 ) => {
 	const formPromise = getForm(
 		props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }
@@ -176,6 +178,7 @@ export const createFormInviteLink = async (
 		formSlug: form.slug,
 		communitySlug: communitySlug,
 		email: user.email,
+		pubId: props.pubId,
 	});
 
 	const magicLink = await createMagicLink({ email: user.email, path: formPath });

@@ -312,7 +312,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:user-id`)!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!.id,
 				value: JSON.stringify(users[0].id),
 			},
 			{
@@ -327,7 +327,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			},
 			{
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:user-id`)!.id,
+				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!.id,
 				value: JSON.stringify(users[0].id),
 			},
 		])

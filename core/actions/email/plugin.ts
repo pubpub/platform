@@ -31,6 +31,7 @@ export type EmailDirectivePluginContext = {
 	};
 	communitySlug: string;
 	pub: {
+		id: string;
 		values: Record<string, any>;
 		assignee?: {
 			email: string;
@@ -238,10 +239,11 @@ const directiveVisitors: Record<EmailToken, DirectiveVisitor> = {
 const ensureFormMembershipAndCreateInviteLink = async (
 	formSlug: string,
 	memberId: MembersId,
-	userId: UsersId
+	userId: UsersId,
+	pubId?: string
 ) => {
 	await addMemberToForm({ memberId, slug: formSlug }).execute();
-	return createFormInviteLink({ userId, formSlug });
+	return createFormInviteLink({ userId, formSlug, pubId });
 };
 
 export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) => {
@@ -278,7 +280,8 @@ export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) 
 						props.href = await ensureFormMembershipAndCreateInviteLink(
 							expect(attrs.form),
 							context.recipient.id,
-							context.recipient.user.id
+							context.recipient.user.id,
+							context.pub.id
 						);
 					}
 				}
