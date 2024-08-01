@@ -1,9 +1,10 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
+import Markdown from "react-markdown";
 
 import type { InputProps } from "ui/input";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, ElementType } from "db/public";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
@@ -75,6 +76,13 @@ const UserIdSelect = ({ label, name, id }: { label: string; name: string; id: st
 export const FormElement = ({ element }: { element: Form["elements"][number] }) => {
 	const { schemaName, label: labelProp, slug } = element;
 	const label = labelProp ?? "";
+
+	if (!slug) {
+		if (element.type === ElementType.structural) {
+			return <Markdown>{element.content}</Markdown>;
+		}
+		return null;
+	}
 
 	if (!schemaName) {
 		return null;
