@@ -242,7 +242,7 @@ const ensureFormMembershipAndCreateInviteLink = async (
 	userId: UsersId,
 	pubId?: string
 ) => {
-	await addMemberToForm({ memberId, slug: formSlug }).execute();
+	await addMemberToForm({ memberId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, pubId });
 };
 

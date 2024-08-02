@@ -91,47 +91,35 @@ export const userHasPermissionToForm = async (
 /**
  * Gives a community member permission to a form
  */
-export const addMemberToForm = (
+export const addMemberToForm = async (
 	props: { memberId: MembersId } & XOR<{ slug: string }, { id: FormsId }>
 ) => {
+	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
 	const { memberId, ...formSlugOrId } = props;
+	const form = await getForm(formSlugOrId).executeTakeFirstOrThrow();
 
-	return autoRevalidate(
+	const existingPermission = await autoCache(
 		db
-			.with(
-				"current_form",
-				(db) =>
-					// reduce, reuse, recycle
-					getForm(formSlugOrId, db).qb
-			)
-			.with("existing_permission", (db) =>
-				db
-					.selectFrom("form_to_permissions")
-					.innerJoin("permissions", "permissions.id", "form_to_permissions.permissionId")
-					.selectAll()
-					.where(
-						"form_to_permissions.formId",
-						"=",
-						db.selectFrom("current_form").select("id")
-					)
-					.where("permissions.memberId", "=", memberId)
-			)
-			.with("new_permission", (db) =>
-				db
-					.insertInto("permissions")
-					.values(() => ({ memberId }))
-					.returning("id")
-					// this happens when a permission is already set
-					// which leads this update to fail
-					.onConflict((oc) => oc.doNothing())
-			)
-			.insertInto("form_to_permissions")
-			.values((eb) => ({
-				formId: eb.selectFrom("current_form").select("id"),
-				permissionId: eb.selectFrom("new_permission").select("new_permission.id"),
-			}))
-			.returning(["formId", "permissionId"])
-	);
+			.selectFrom("form_to_permissions")
+			.innerJoin("permissions", "permissions.id", "form_to_permissions.permissionId")
+			.selectAll()
+			.where("form_to_permissions.formId", "=", form.id)
+			.where("permissions.memberId", "=", memberId)
+	).executeTakeFirst();
+
+	if (existingPermission === undefined) {
+		await autoRevalidate(
+			db
+				.with("new_permission", (db) =>
+					db.insertInto("permissions").values({ memberId }).returning("id")
+				)
+				.insertInto("form_to_permissions")
+				.values((eb) => ({
+					formId: form.id,
+					permissionId: eb.selectFrom("new_permission").select("new_permission.id"),
+				}))
+		).execute();
+	}
 };
 
 export const createFormInvitePath = ({
