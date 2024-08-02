@@ -2,7 +2,8 @@ import type { QueryCreator } from "kysely";
 
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type { FormsId, PublicSchema, UsersId } from "db/public";
+import type { FormsId, MembersId, PublicSchema, UsersId } from "db/public";
+import { MemberRole } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -88,90 +89,56 @@ export const userHasPermissionToForm = async (
 };
 
 /**
- * Gives a user permission to a form
+ * Gives a community member permission to a form
  */
-export const addUserToForm = (
-	props: { userId: UsersId } & XOR<{ slug: string }, { id: FormsId }>
+export const addMemberToForm = async (
+	props: { memberId: MembersId } & XOR<{ slug: string }, { id: FormsId }>
 ) => {
-	const { userId, ...formSlugOrId } = props;
+	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
+	const { memberId, ...formSlugOrId } = props;
+	const form = await getForm(formSlugOrId).executeTakeFirstOrThrow();
 
-	return autoRevalidate(
+	const existingPermission = await autoCache(
 		db
-			.with(
-				"current_form",
-				(db) =>
-					// reduce, reuse, recycle
-					getForm(formSlugOrId, db).qb
-			)
-			.with("current_member", (db) =>
-				db
-					.selectFrom("members")
-					.selectAll()
-					.where("members.userId", "=", userId)
-					.where(
-						"members.communityId",
-						"=",
-						db.selectFrom("current_form").select("communityId")
-					)
-			)
-			.with("existing_permission", (db) =>
-				db
-					.selectFrom("form_to_permissions")
-					.innerJoin("permissions", "permissions.id", "form_to_permissions.permissionId")
-					.selectAll()
-					.where(
-						"form_to_permissions.formId",
-						"=",
-						db.selectFrom("current_form").select("id")
-					)
-					.where("permissions.memberId", "=", (eb) =>
-						eb.selectFrom("current_member").select("current_member.id")
-					)
-			)
-			.with("new_permission", (db) =>
-				db
-					.insertInto("permissions")
-					.values((eb) => ({
-						memberId: eb
-							.selectFrom("current_member")
-							.select("current_member.id")
-							.where((eb) =>
-								// this will cause a NULL to be inserted
-								// causing an error, as you cannot set
-								// memberId AND memberGroupId to NULL
-								// we handle this in the onConflict below
-								eb.not(eb.exists(eb.selectFrom("existing_permission").selectAll()))
-							),
-					}))
-					.returning("id")
-					// this happens when a permission is already set
-					// which leads this update to fail
-					.onConflict((oc) => oc.doNothing())
-			)
-			.insertInto("form_to_permissions")
-			.values((eb) => ({
-				formId: eb.selectFrom("current_form").select("id"),
-				permissionId: eb.selectFrom("new_permission").select("new_permission.id"),
-			}))
-			.returning(["formId", "permissionId"])
-	);
+			.selectFrom("form_to_permissions")
+			.innerJoin("permissions", "permissions.id", "form_to_permissions.permissionId")
+			.selectAll()
+			.where("form_to_permissions.formId", "=", form.id)
+			.where("permissions.memberId", "=", memberId)
+	).executeTakeFirst();
+
+	if (existingPermission === undefined) {
+		await autoRevalidate(
+			db
+				.with("new_permission", (db) =>
+					db.insertInto("permissions").values({ memberId }).returning("id")
+				)
+				.insertInto("form_to_permissions")
+				.values((eb) => ({
+					formId: form.id,
+					permissionId: eb.selectFrom("new_permission").select("new_permission.id"),
+				}))
+		).execute();
+	}
 };
 
 export const createFormInvitePath = ({
 	formSlug,
 	communitySlug,
 	email,
+	pubId,
 }: {
 	formSlug: string;
 	communitySlug: string;
 	email: string;
+	pubId?: string;
 }) => {
-	return `/c/${communitySlug}/public/invite?redirectTo=${encodeURIComponent(`/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}`)}`;
+	return `/c/${communitySlug}/public/invite?redirectTo=${encodeURIComponent(`/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}${pubId ? `&pubId=${pubId}` : ""}`)}`;
 };
 
 export const createFormInviteLink = async (
 	props: XOR<{ formSlug: string }, { formId: FormsId }> &
-		XOR<{ email: string }, { userId: UsersId }>
+		XOR<{ email: string }, { userId: UsersId }> & { pubId?: string }
 ) => {
 	const formPromise = getForm(
 		props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }
@@ -199,6 +166,7 @@ export const createFormInviteLink = async (
 		formSlug: form.slug,
 		communitySlug: communitySlug,
 		email: user.email,
+		pubId: props.pubId,
 	});
 
 	const magicLink = await createMagicLink({ email: user.email, path: formPath });

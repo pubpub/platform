@@ -113,7 +113,7 @@ model PubField {
   schemaName       CoreSchemaType?
   pubFieldSchemaId String?
   isArchived       Boolean         @default(false)
-  community        Community @relation(fields: [communityId], references: [id])
+  community        Community       @relation(fields: [communityId], references: [id])
   communityId      String
 
   values    PubValue[]
@@ -130,7 +130,7 @@ enum CoreSchemaType {
   DateTime
   Email
   URL
-  UserId
+  MemberId
   FileUpload
 }
 
@@ -269,6 +269,7 @@ model Member {
 
   permissions Permission[]
 
+  @@unique([userId, communityId])
   @@map(name: "members")
 }
 

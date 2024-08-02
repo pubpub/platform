@@ -11,7 +11,7 @@ export enum CoreSchemaType {
 	DateTime = "DateTime",
 	Email = "Email",
 	URL = "URL",
-	UserId = "UserId",
+	MemberId = "MemberId",
 	FileUpload = "FileUpload",
 }
 

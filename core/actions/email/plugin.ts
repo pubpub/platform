@@ -7,9 +7,11 @@ import type { Node } from "unist";
 
 import { visit } from "unist-util-visit";
 
+import { MembersId, UsersId } from "db/public";
 import { expect } from "utils";
 
-import { createToken } from "~/lib/server/token";
+import { addMemberToForm, createFormInviteLink } from "~/lib/server/form";
+import { getMember } from "~/lib/server/user";
 import { EmailToken } from "./tokens";
 
 export type EmailDirectivePluginContext = {
@@ -19,14 +21,17 @@ export type EmailDirectivePluginContext = {
 		email: string;
 	};
 	recipient: {
-		id: string;
-		firstName: string;
-		lastName: string | null;
+		id: MembersId;
+		user: {
+			id: UsersId;
+			firstName: string;
+			lastName: string | null;
+			email: string;
+		};
 	};
-	community: {
-		slug: string;
-	};
+	communitySlug: string;
 	pub: {
+		id: string;
 		values: Record<string, any>;
 		assignee?: {
 			email: string;
@@ -119,7 +124,7 @@ const visitRecipientNameDirective = (
 		hChildren: [
 			{
 				type: "text",
-				value: `${context.recipient.firstName} ${context.recipient.lastName}`,
+				value: `${context.recipient.user.firstName} ${context.recipient.user.lastName}`,
 			},
 		],
 	};
@@ -135,7 +140,7 @@ const visitRecipientFirstNameDirective = (
 		hChildren: [
 			{
 				type: "text",
-				value: context.recipient.firstName,
+				value: context.recipient.user.firstName,
 			},
 		],
 	};
@@ -151,7 +156,7 @@ const visitRecipientLastNameDirective = (
 		hChildren: [
 			{
 				type: "text",
-				value: context.recipient.lastName ?? "",
+				value: context.recipient.user.lastName ?? "",
 			},
 		],
 	};
@@ -189,8 +194,9 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirective
 	}
 	// :link{form=review}
 	else if ("form" in attrs) {
-		const name = expect(attrs.form, 'Missing value for "form" attribute');
-		href = `https://app.pubpub.org/c/${context.community.slug}/forms/${name}`;
+		assert(attrs.form, 'Missing value for "form" attribute');
+		// Form hrefs are handled by the async post-processing step below.
+		href = "";
 	}
 	// :link{to=https://example.com}
 	else if ("to" in attrs) {
@@ -230,6 +236,16 @@ const directiveVisitors: Record<EmailToken, DirectiveVisitor> = {
 	[EmailToken.Link]: visitLinkDirective,
 };
 
+const ensureFormMembershipAndCreateInviteLink = async (
+	formSlug: string,
+	memberId: MembersId,
+	userId: UsersId,
+	pubId?: string
+) => {
+	await addMemberToForm({ memberId, slug: formSlug });
+	return createFormInviteLink({ userId, formSlug, pubId });
+};
+
 export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) => {
 	return async (tree) => {
 		const tokenAuthLinkNodes: NodeMdast[] = [];
@@ -257,11 +273,18 @@ export const emailDirectives: Plugin<[EmailDirectivePluginContext]> = (context) 
 		await Promise.all(
 			tokenAuthLinkNodes.map(async (node) => {
 				const data = expect(node.data);
-				const token = await createToken(context.recipient.id);
 				const props = expect(data.hProperties);
-				const url = new URL(expect(props.href) as string);
-				url.searchParams.set("token", token);
-				props.href = url.toString();
+				if (isDirective(node)) {
+					const attrs = expect(node.attributes);
+					if ("form" in attrs) {
+						props.href = await ensureFormMembershipAndCreateInviteLink(
+							expect(attrs.form),
+							context.recipient.id,
+							context.recipient.user.id,
+							context.pub.id
+						);
+					}
+				}
 			})
 		);
 	};
