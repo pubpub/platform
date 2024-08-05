@@ -41,7 +41,7 @@ const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) =
 
 const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 	const element = elements.find((e) => e.slug === slug);
-	return element?.schemaName === CoreSchemaType.UserId;
+	return element?.schemaName === CoreSchemaType.MemberId;
 };
 
 const preparePayload = ({
