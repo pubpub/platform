@@ -44,18 +44,24 @@ const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 	return element?.schemaName === CoreSchemaType.UserId;
 };
 
-const preparePayload = (formElements: PubPubForm["elements"], pubValues: FieldValues) => {
+const preparePayload = ({
+	formElements,
+	formValues,
+}: {
+	formElements: PubPubForm["elements"];
+	formValues: FieldValues;
+}) => {
 	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const formSlugs = formElements.map((fe) => fe.slug);
-	const defaultValues = {};
+	const payload = {};
 	formSlugs.forEach((slug) => {
 		if (slug) {
-			defaultValues[slug] = pubValues[slug];
+			payload[slug] = formValues[slug];
 		}
 	});
-	return defaultValues;
+	return payload;
 };
 
 /**
@@ -95,7 +101,10 @@ export const ExternalFormWrapper = ({
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.upsertPubValues);
 	const handleSubmit = async (values: FieldValues, autoSave = false) => {
-		const fields = preparePayload(elements, values);
+		const fields = preparePayload({
+			formElements: elements,
+			formValues: values,
+		});
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			fields,
@@ -126,22 +135,23 @@ export const ExternalFormWrapper = ({
 		defaultValues: buildDefaultValues(elements, pub.values),
 	});
 	const isSubmitting = methods.formState.isSubmitting;
-	const data = methods.watch();
 
-	const handleAutoSave = (evt) => {
+	const handleAutoSave = (values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
 		// Don't auto save while editing the user ID field. the query params
 		// will clash and it will be a bad time :(
-		if (isUserSelectField(evt.target.name, elements)) {
+		const { name } = evt?.target as HTMLInputElement;
+		if (isUserSelectField(name, elements)) {
 			return;
 		}
 		if (saveTimer) {
 			clearTimeout(saveTimer);
 		}
-		const newTimer = setTimeout(() => {
+		const newTimer = setTimeout(async () => {
+			const { errors } = methods.formState;
 			// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 			// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
 			if (methods.formState.isValid || saveTimer === undefined) {
-				handleSubmit(data, true);
+				handleSubmit(values, true);
 			}
 		}, SAVE_WAIT_MS);
 		setSaveTimer(newTimer);
@@ -150,7 +160,7 @@ export const ExternalFormWrapper = ({
 	return (
 		<Form {...methods}>
 			<form
-				onChange={(evt) => handleAutoSave(evt)}
+				onChange={methods.handleSubmit((values, evt) => handleAutoSave(values, evt))}
 				onSubmit={methods.handleSubmit((values) => handleSubmit(values))}
 				className={cn("relative flex flex-col gap-6", className)}
 			>
