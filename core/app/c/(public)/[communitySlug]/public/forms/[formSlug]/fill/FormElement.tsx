@@ -3,9 +3,11 @@
 import type { ReactNode } from "react";
 
 import { useFormContext } from "react-hook-form";
+import Markdown from "react-markdown";
 
+import type { PubsId } from "db/public";
 import type { InputProps } from "ui/input";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, ElementType } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
@@ -14,6 +16,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { Input } from "ui/input";
 
 import type { Form } from "~/lib/server/form";
+import { upload } from "./actions";
 
 interface ElementProps {
 	label: string;
@@ -75,25 +78,23 @@ const BooleanElement = ({ label, name }: ElementProps) => {
 	);
 };
 
-const FileUploadElement = ({
-	label,
-	name,
-	onUpload,
-}: ElementProps & {
-	onUpload: () => void;
-}) => {
+const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId: PubsId }) => {
+	const signedUploadUrl = (fileName: string) => {
+		return upload(pubId, fileName);
+	};
 	const { control } = useFormContext();
 	return (
 		<FormField
 			control={control}
 			name={name}
 			render={({ field }) => (
-				<FormItem className="mb-6">
+				// Need the isolate to keep the FileUpload's huge z-index from covering our own header
+				<FormItem className="isolate mb-6">
 					<FormLabel>{label}</FormLabel>
 					<FormControl>
 						<FileUpload
 							{...field}
-							upload={onUpload}
+							upload={signedUploadUrl}
 							onUpdateFiles={(event: any[]) => field.onChange(event)}
 						/>
 					</FormControl>
@@ -148,19 +149,28 @@ const DateElement = ({ label, name }: ElementProps) => {
 };
 
 export const FormElement = ({
+	pubId,
 	element,
 	userSelect,
 }: {
+	pubId: PubsId;
 	element: Form["elements"][number];
 	/** The userSelect component is a server component so is passed in separately */
 	userSelect: ReactNode;
 }) => {
 	const { schemaName, label: labelProp, slug } = element;
-	const elementProps = { label: labelProp ?? "", name: slug };
+	if (!slug) {
+		if (element.type === ElementType.structural) {
+			return <Markdown>{element.content}</Markdown>;
+		}
+		return null;
+	}
 
 	if (!schemaName) {
 		return null;
 	}
+
+	const elementProps = { label: labelProp ?? "", name: slug };
 	if (
 		schemaName === CoreSchemaType.String ||
 		schemaName === CoreSchemaType.Email ||
@@ -176,7 +186,7 @@ export const FormElement = ({
 		return userSelect;
 	}
 	if (schemaName === CoreSchemaType.FileUpload) {
-		return <FileUploadElement {...elementProps} onUpload={() => {}} />;
+		return <FileUploadElement pubId={pubId} {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.Vector3) {
 		return <Vector3Element {...elementProps} />;

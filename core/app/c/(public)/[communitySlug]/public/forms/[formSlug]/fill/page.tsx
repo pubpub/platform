@@ -94,6 +94,7 @@ export default async function FormPage({
 								className="flex-1"
 							>
 								<InnerForm
+									pubId={pub.id as PubsId}
 									elements={form.elements}
 									// The following params are for rendering UserSelectServer
 									communitySlug={params.communitySlug}

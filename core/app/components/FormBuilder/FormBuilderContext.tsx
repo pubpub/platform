@@ -5,17 +5,19 @@ import type { PropsWithChildren } from "react";
 import * as React from "react";
 import { createContext, useContext } from "react";
 
-import type { FormElementData } from "./types";
+import type { FormElementData, PanelEvent } from "./types";
 
 type FormBuilderContext = {
 	addElement: (element: FormElementData) => void;
 	removeElement: (index: number) => void;
 	restoreElement: (index: number) => void;
-	setEditingElement: (index: number | null) => void;
-	editingElement?: FormElementData;
+	newElement?: number;
 	elementsCount: number;
-	openConfigPanel: () => void;
+	selectedElement?: FormElementData;
+	openConfigPanel: (index: number) => void;
 	update: (index: number, element: FormElementData) => void;
+	removeIfUnconfigured: () => void;
+	dispatch: React.Dispatch<PanelEvent>;
 };
 
 const FormBuilderContext = createContext<FormBuilderContext | undefined>(undefined);

@@ -93,25 +93,18 @@ export const _upsertPubValues = async ({
 	pubId: PubsId;
 	fields: Record<string, JsonValue>;
 }) => {
-	// First query for existing values so we know whether to insert or update
+	// First query for existing values so we know whether to insert or update.
+	// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
 	const toBeUpdatedPubFieldSlugs = Object.keys(fields);
-	const existingPubValues = await db
-		.selectFrom("pub_fields")
-		.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
-		.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-		.where("pub_values.pubId", "=", pubId)
-		.distinctOn("pub_fields.id")
-		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
-		.select(["pub_values.id", "pub_fields.slug", "pub_fields.name"])
-		.execute();
-
-	// Query for all relevant fields, including ones that aren't in the pub yet
 	const pubFields = await db
 		.selectFrom("pub_fields")
-		.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
+		.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+		.where((eb) =>
+			eb("pub_values.pubId", "=", pubId).or("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
+		)
 		.distinctOn("pub_fields.id")
-		.orderBy(["pub_fields.id"])
-		.select(["name", "slug", "schemaName"])
+		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+		.select(["pub_values.id", "pub_fields.slug", "pub_fields.name", "pub_fields.schemaName"])
 		.execute();
 
 	const validated = validatePubValuesBySchemaName({
@@ -134,7 +127,7 @@ export const _upsertPubValues = async ({
 				.values((eb) => {
 					return Object.entries(fields).map(([slug, value]) => {
 						return {
-							id: existingPubValues.find((pv) => pv.slug === slug)?.id ?? undefined,
+							id: pubFields.find((pf) => pf.slug === slug)?.id ?? undefined,
 							pubId,
 							value: JSON.stringify(value),
 							fieldId: eb

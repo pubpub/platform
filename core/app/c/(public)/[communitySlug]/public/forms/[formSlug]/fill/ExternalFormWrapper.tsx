@@ -14,7 +14,7 @@ import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { GetPubResponseBody } from "contracts";
+import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
@@ -29,9 +29,9 @@ import { COMPLETE_STATUS, SAVE_STATUS_QUERY_PARAM } from "./constants";
 const SAVE_WAIT_MS = 5000;
 
 const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) => {
-	const requiredElements = formElements.filter((fe) => fe.required);
+	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);
 	requiredElements.forEach((element) => {
-		const value = values[element.slug];
+		const value = values[element.slug!];
 		if (value == null) {
 			return false;
 		}
@@ -51,7 +51,29 @@ const preparePayload = (formElements: PubPubForm["elements"], pubValues: FieldVa
 	const formSlugs = formElements.map((fe) => fe.slug);
 	const defaultValues = {};
 	formSlugs.forEach((slug) => {
-		defaultValues[slug] = pubValues[slug];
+		if (slug) {
+			defaultValues[slug] = pubValues[slug];
+		}
+	});
+	return defaultValues;
+};
+
+/**
+ * Date pubValues need to be transformed to a Date type to pass validation
+ */
+const buildDefaultValues = (
+	elements: PubPubForm["elements"],
+	pubValues: Record<string, JsonValue>
+) => {
+	const defaultValues: FieldValues = { ...pubValues };
+	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
+	dateElements.forEach((de) => {
+		if (de.slug) {
+			const pubValue = pubValues[de.slug];
+			if (pubValue) {
+				defaultValues[de.slug] = new Date(pubValue as string);
+			}
+		}
 	});
 	return defaultValues;
 };
@@ -101,7 +123,7 @@ export const ExternalFormWrapper = ({
 	);
 	const methods = useForm({
 		resolver: typeboxResolver(schema),
-		defaultValues: pub.values,
+		defaultValues: buildDefaultValues(elements, pub.values),
 	});
 	const isSubmitting = methods.formState.isSubmitting;
 	const data = methods.watch();
