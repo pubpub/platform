@@ -1,10 +1,13 @@
 import type { FieldArrayWithId } from "react-hook-form";
 
+import { ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Markdown from "react-markdown";
+import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import type { PubFieldsId } from "db/public";
+import type { LucideIcon } from "ui/icon";
 import { Button } from "ui/button";
 import { ArchiveRestore, GripVertical, Pencil, Trash, Type } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
@@ -123,10 +126,17 @@ type FieldInputElementProps = {
 const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
 	const pubFields = usePubFieldContext();
 	const field = pubFields[element.fieldId as PubFieldsId];
+	let Icon: LucideIcon;
+	if (!field.schemaName) {
+		Icon = Type;
+	} else {
+		Icon = SCHEMA_TYPES_WITH_ICONS[field.schemaName].icon;
+	}
 
 	return (
 		<>
-			<Type
+			{}
+			<Icon
 				size={20}
 				className={cn(
 					"my-auto mr-4",
@@ -149,7 +159,7 @@ type StructuralElementProps = {
 	isEditing: boolean;
 };
 const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
-	const { Icon, enabled, name } = structuralElements[element.element];
+	const { Icon, name } = structuralElements[element.element];
 
 	return (
 		<>

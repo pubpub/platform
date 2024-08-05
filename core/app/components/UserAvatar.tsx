@@ -2,7 +2,7 @@ import { Users } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 type Props = {
-	user: Users;
+	user: Pick<Users, "avatar" | "firstName" | "lastName">;
 };
 
 export const UserAvatar = ({ user }: Props) => {

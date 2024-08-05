@@ -34,9 +34,11 @@ const buildDefaultValues = (
 	const defaultValues: FieldValues = { ...pubValues };
 	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
 	dateElements.forEach((de) => {
-		const pubValue = pubValues[de.slug];
-		if (pubValue) {
-			defaultValues[de.slug] = new Date(pubValue as string);
+		if (de.slug) {
+			const pubValue = pubValues[de.slug];
+			if (pubValue) {
+				defaultValues[de.slug] = new Date(pubValue as string);
+			}
 		}
 	});
 	return defaultValues;

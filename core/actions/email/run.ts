@@ -1,5 +1,6 @@
 "use server";
 
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 import rehypeFormat from "rehype-format";
 import rehypeStringify from "rehype-stringify";
 import remarkDirective from "remark-directive";
@@ -7,12 +8,13 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
-import type { UsersId } from "db/public";
+import type { MembersId, UsersId } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
 import { db } from "~/kysely/database";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { smtpclient } from "~/lib/server/mailgun";
 import { defineRun } from "../types";
 import { emailDirectives } from "./plugin";
@@ -20,11 +22,7 @@ import { emailDirectives } from "./plugin";
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
 		// FIXME: could be replaced with `getCommunitySlug`
-		const community = await db
-			.selectFrom("communities")
-			.where("id", "=", communityId)
-			.select(["slug"])
-			.executeTakeFirstOrThrow();
+		const communitySlug = getCommunitySlug();
 
 		// TODO: the pub must currently have an assignee to send an email. This
 		// should be set at the action instance level—it should be possible to
@@ -36,15 +34,25 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		// the pub assignee, a pub field, a static email address, a member, or a
 		// member group.
 		const recipient = await db
-			.selectFrom("users")
-			.select(["id", "email", "firstName", "lastName"])
-			.where("id", "=", expect(args?.recipient ?? config.recipient) as UsersId)
+			.selectFrom("members")
+			.select((eb) => [
+				"members.id",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.whereRef("users.id", "=", "members.userId")
+						.selectAll("users")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.where("id", "=", expect(args?.recipient ?? config.recipient) as MembersId)
 			.executeTakeFirstOrThrow(
 				() =>
 					new Error(`Could not find user with ID ${args?.recipient ?? config.recipient}`)
 			);
 
-		const emailDirectivesContext = { community, sender, recipient, pub };
+		const emailDirectivesContext = { communitySlug, sender, recipient, pub };
 
 		const html = (
 			await unified()
@@ -59,7 +67,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 
 		await smtpclient.sendMail({
 			from: "hello@pubpub.org",
-			to: recipient.email,
+			to: recipient.user.email,
 			replyTo: "hello@pubpub.org",
 			html,
 			subject: args?.subject ?? config.subject,
