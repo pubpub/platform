@@ -1,6 +1,6 @@
 import { CoreSchemaType } from "db/public";
 
-import { Boolean, DateTime, Email, FileUpload, String, URL, UserId, Vector3 } from "./schemas";
+import { Boolean, DateTime, Email, FileUpload, MemberId, String, URL, Vector3 } from "./schemas";
 
 export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 	switch (coreSchemaType) {
@@ -16,8 +16,8 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 			return Email;
 		case CoreSchemaType.URL:
 			return URL;
-		case CoreSchemaType.UserId:
-			return UserId;
+		case CoreSchemaType.MemberId:
+			return MemberId;
 		case CoreSchemaType.FileUpload:
 			return FileUpload;
 	}

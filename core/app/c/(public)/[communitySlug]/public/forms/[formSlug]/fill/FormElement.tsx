@@ -182,7 +182,7 @@ export const FormElement = ({
 	if (schemaName === CoreSchemaType.Boolean) {
 		return <BooleanElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.UserId) {
+	if (schemaName === CoreSchemaType.MemberId) {
 		return userSelect;
 	}
 	if (schemaName === CoreSchemaType.FileUpload) {

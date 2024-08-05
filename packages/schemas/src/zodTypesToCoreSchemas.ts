@@ -19,7 +19,7 @@ export const zodTypeToCoreSchemaType = <Z extends z.ZodTypeAny>(zodType: Z): Cor
 	if (zodStringTypes.includes(zodType._def.typeName)) {
 		if (isZodString(zodType)) {
 			if (zodType.isUUID) {
-				return CoreSchemaType.UserId;
+				return CoreSchemaType.MemberId;
 			}
 
 			if (zodType.isEmail) {

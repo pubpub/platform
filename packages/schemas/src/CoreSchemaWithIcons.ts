@@ -1,4 +1,5 @@
-import * as React from "react";
+import type { LucideIcon } from "lucide-react";
+
 import {
 	BoxSelect,
 	CalendarClock,
@@ -14,35 +15,35 @@ import { CoreSchemaType } from "db/public";
 
 export const SCHEMA_TYPES_WITH_ICONS: Record<
 	CoreSchemaType,
-	{ description: string; icon: React.ReactNode }
+	{ description: string; icon: LucideIcon }
 > = {
 	[CoreSchemaType.Boolean]: {
 		description: "A true or false value",
-		icon: <CheckSquare className="w-4" />,
+		icon: CheckSquare,
 	},
 	[CoreSchemaType.String]: {
 		description: "Text of any length",
-		icon: <Type className="w-4" />,
+		icon: Type,
 	},
 	[CoreSchemaType.DateTime]: {
 		description: "A moment in time",
-		icon: <CalendarClock className="w-4" />,
+		icon: CalendarClock,
 	},
-	[CoreSchemaType.Email]: { description: "An email address", icon: <Mail className="w-4" /> },
+	[CoreSchemaType.Email]: { description: "An email address", icon: Mail },
 	[CoreSchemaType.FileUpload]: {
 		description: "A file uploader",
-		icon: <ImagePlus className="w-4" />,
+		icon: ImagePlus,
 	},
 	[CoreSchemaType.URL]: {
 		description: "A link to a website",
-		icon: <Link className="w-4" />,
+		icon: Link,
 	},
-	[CoreSchemaType.UserId]: {
-		description: "A PubPub user ID",
-		icon: <User className="w-4" />,
+	[CoreSchemaType.MemberId]: {
+		description: "A member of your community",
+		icon: User,
 	},
 	[CoreSchemaType.Vector3]: {
 		description: "A set of 3 numbers",
-		icon: <BoxSelect className="w-4" />,
+		icon: BoxSelect,
 	},
 } as const;

@@ -59,6 +59,7 @@ export {
 	Undo2,
 	User,
 	UserCircle2,
+	UserCheck,
 	UserPlus,
 	Wand2,
 	X,

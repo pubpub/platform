@@ -27,9 +27,9 @@ describe("zodTypeToCoreSchemaType", () => {
 		expect(zodTypeToCoreSchemaType(schema)).toBe(CoreSchemaType.String);
 	});
 
-	it("should return UserId for ZodString with isUUID", () => {
+	it("should return MemberId for ZodString with isUUID", () => {
 		const schema = z.string().uuid();
-		expect(zodTypeToCoreSchemaType(schema)).toBe(CoreSchemaType.UserId);
+		expect(zodTypeToCoreSchemaType(schema)).toBe(CoreSchemaType.MemberId);
 	});
 
 	it("should return Email for ZodString with isEmail", () => {
