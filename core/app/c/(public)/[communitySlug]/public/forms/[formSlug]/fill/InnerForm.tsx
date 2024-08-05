@@ -56,7 +56,8 @@ export const InnerForm = ({
 	return (
 		<>
 			{elements.map((e) => {
-				const userId = e.schemaName === CoreSchemaType.UserId ? values[e.slug] : undefined;
+				const userId =
+					e.schemaName === CoreSchemaType.UserId && e.slug ? values[e.slug] : undefined;
 				return (
 					<FormElement
 						pubId={pubId}
@@ -65,7 +66,7 @@ export const InnerForm = ({
 						userSelect={
 							<UserIdSelect
 								label={e.label ?? ""}
-								name={e.slug}
+								name={e.slug ?? ""}
 								id={e.elementId}
 								searchParams={searchParams}
 								value={userId as UsersId | undefined}
