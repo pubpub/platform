@@ -147,7 +147,6 @@ export const ExternalFormWrapper = ({
 			clearTimeout(saveTimer);
 		}
 		const newTimer = setTimeout(async () => {
-			const { errors } = methods.formState;
 			// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 			// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
 			if (methods.formState.isValid || saveTimer === undefined) {
