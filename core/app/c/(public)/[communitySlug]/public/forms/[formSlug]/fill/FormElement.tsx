@@ -16,6 +16,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { Input } from "ui/input";
 
 import type { Form } from "~/lib/server/form";
+import { FileUploadPreview } from "~/app/c/[communitySlug]/pubs/[pubId]/components/FileUpload";
 import { upload } from "./actions";
 
 interface ElementProps {
@@ -82,26 +83,34 @@ const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId: PubsI
 	const signedUploadUrl = (fileName: string) => {
 		return upload(pubId, fileName);
 	};
-	const { control } = useFormContext();
+	const { control, getValues } = useFormContext();
+	const files = getValues()[name];
 	return (
-		<FormField
-			control={control}
-			name={name}
-			render={({ field }) => (
-				// Need the isolate to keep the FileUpload's huge z-index from covering our own header
-				<FormItem className="isolate mb-6">
-					<FormLabel>{label}</FormLabel>
-					<FormControl>
-						<FileUpload
-							{...field}
-							upload={signedUploadUrl}
-							onUpdateFiles={(event: any[]) => field.onChange(event)}
-						/>
-					</FormControl>
-					<FormMessage />
-				</FormItem>
-			)}
-		/>
+		<div>
+			<FormField
+				control={control}
+				name={name}
+				render={({ field }) => {
+					// Need the isolate to keep the FileUpload's huge z-index from covering our own header
+					return (
+						<FormItem className="isolate mb-6">
+							<FormLabel>{label}</FormLabel>
+							<FormControl>
+								<FileUpload
+									{...field}
+									upload={signedUploadUrl}
+									onUpdateFiles={(event: any[]) => {
+										field.onChange(event);
+									}}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
+			/>
+			<FileUploadPreview files={files} />
+		</div>
 	);
 };
 

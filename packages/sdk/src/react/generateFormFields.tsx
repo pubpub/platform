@@ -191,7 +191,7 @@ const CustomRenderer = (props: CustomRendererProps) => {
 			/>
 		);
 	}
-	if (fieldSchema.$id === "pubpub:fileUpload") {
+	if (fieldSchema.$id === "unjournal:fileUpload") {
 		return (
 			<FormField
 				control={control}
