@@ -3,11 +3,11 @@
 import type { PubFieldsId } from "db/public";
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
+import { FormLabel } from "ui/form";
 import { ChevronLeft, PlusCircle, Type } from "ui/icon";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import { toast } from "ui/use-toast";
 
 import type { PanelState } from "./types";
 import { ConfigureElement } from "./ConfigureElement";
@@ -20,7 +20,7 @@ type ElementPanelProps = {
 export const ElementPanel = ({ state }: ElementPanelProps) => {
 	const fields = usePubFieldContext();
 
-	const { addElement, elementsCount, removeIfUnconfigured, dispatch } = useFormBuilder();
+	const { addElement, elementsCount, removeIfUnconfigured, dispatch, slug } = useFormBuilder();
 
 	const addToForm = (
 		newElement:
@@ -52,7 +52,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 	switch (state.state) {
 		case "initial":
 			return (
-				<div className="flex flex-col gap-4">
+				<div className="mb-4 flex flex-col gap-4">
 					<p>This form has {elementsCount} elements.</p>
 					<Button
 						type="button"
@@ -62,6 +62,11 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 					>
 						<PlusCircle /> Add New
 					</Button>
+					<div className="mt-8">
+						<FormLabel className="text-slate-500">Slug</FormLabel>
+						<hr className="my-2" />
+						<Input disabled value={slug} />
+					</div>
 				</div>
 			);
 		case "selecting":

@@ -37,6 +37,7 @@ import { createForm } from "./actions";
 const schema = z.object({
 	pubTypeName: z.string(),
 	name: z.string(),
+	slug: z.string().regex(/^[a-zA-Z0-9-]+$/, "Only letters, numbers, and hyphens (-) are allowed"),
 });
 
 type Props = {
@@ -54,7 +55,7 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 	const community = useCommunity();
 	const router = useRouter();
 
-	const onSubmit = async ({ pubTypeName, name }: z.infer<typeof schema>) => {
+	const onSubmit = async ({ pubTypeName, name, slug }: z.infer<typeof schema>) => {
 		const pubTypeId = pubTypes.find((type) => type.name === pubTypeName)?.id;
 		if (!pubTypeId) {
 			toast({
@@ -64,8 +65,8 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 			});
 			return;
 		}
-		const slug = await runCreateForm(pubTypeId, name, community.id);
-		if (didSucceed(slug)) {
+		const result = await runCreateForm(pubTypeId, name, slug, community.id);
+		if (didSucceed(result)) {
 			toast({
 				title: "Success",
 				description: "Form created",
@@ -132,6 +133,23 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 										<Input placeholder="Name" {...field} />
 									</FormControl>
 									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="slug"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Slug</FormLabel>
+									<FormControl>
+										<Input placeholder="slug-example" {...field} />
+									</FormControl>
+									<FormMessage />
+									<FormDescription>
+										The URL-friendly identifier for this form. This cannot be
+										changed.
+									</FormDescription>
 								</FormItem>
 							)}
 						/>
