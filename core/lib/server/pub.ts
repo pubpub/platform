@@ -111,7 +111,7 @@ export const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
 
 // TODO: make this usable in a subquery, possibly by turning it into a view
 // Create a CTE ("children") with the pub's children and their values
-export const withPubChildren = ({
+const withPubChildren = ({
 	pubId,
 	pubIdRef,
 	communityId,
@@ -140,7 +140,7 @@ export const withPubChildren = ({
 	});
 };
 
-export const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
+const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonObjectFrom(
 		eb
 			.selectFrom("users")
@@ -159,7 +159,7 @@ export const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 
 // These aliases are used to make sure the JSON object returned matches
 // the old prisma query's return value
-export const pubColumns = [
+const pubColumns = [
 	"id",
 	"communityId",
 	"createdAt",
@@ -260,6 +260,47 @@ export const getPubBase2 = (
 					.$narrowType<{ values: PubValues }>()
 			).as("children"),
 		])
+		.select((eb) =>
+			jsonObjectFrom(
+				eb
+					.selectFrom("pub_types")
+					.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
+					.selectAll()
+			).as("pubType")
+		)
+		.select((eb) =>
+			jsonArrayFrom(
+				eb
+					.selectFrom("action_claim")
+					.where("action_claim.pubId", "=", eb.ref("pubs.id"))
+					.innerJoin("users", "users.id", "action_claim.userId")
+					.select((eb) =>
+						jsonObjectFrom(
+							eb
+								.selectFrom("users")
+								.where("users.id", "=", eb.ref("action_claim.userId"))
+								.selectAll()
+						).as("user")
+					)
+					.selectAll()
+			).as("claims")
+		)
+		.select((eb) =>
+			jsonArrayFrom(
+				eb
+					.selectFrom("integration_instances")
+					.where("integration_instances.communityId", "=", eb.ref("pubs.communityId"))
+					.selectAll()
+			).as("integrationInstances")
+		)
+		.select((eb) =>
+			jsonObjectFrom(
+				eb
+					.selectFrom("pub_types")
+					.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
+					.selectAll()
+			).as("pubType")
+		)
 		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
 		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
 		.$narrowType<{ values: PubValues }>();
