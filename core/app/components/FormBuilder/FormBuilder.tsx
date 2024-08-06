@@ -285,64 +285,60 @@ export function FormBuilder({ pubForm, id }: Props) {
 									</DndContext>
 								</div>
 								<PanelWrapper sidebar={sidebarRef.current}>
-									<>
-										<FormField
-											control={form.control}
-											name="elements"
-											render={() => (
-												<FormItem>
-													<FormLabel className="mb-4 text-sm uppercase text-slate-500">
-														{elementPanelTitles[panelState.state]}
-													</FormLabel>
-													<hr />
+									<FormField
+										control={form.control}
+										name="elements"
+										render={() => (
+											<FormItem className="flex-1">
+												<FormLabel className="mb-4 text-sm uppercase text-slate-500">
+													{elementPanelTitles[panelState.state]}
+												</FormLabel>
+												<hr />
+												<FormControl>
+													<ElementPanel state={panelState} />
+												</FormControl>
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="access"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-sm uppercase text-slate-500">
+													Access
+												</FormLabel>
+												<hr />
+												<Select
+													onValueChange={field.onChange}
+													defaultValue={field.value}
+												>
 													<FormControl>
-														<ElementPanel state={panelState} />
+														<SelectTrigger>
+															<SelectValue placeholder="Select a type" />
+														</SelectTrigger>
 													</FormControl>
-												</FormItem>
-											)}
-										/>
-										<FormField
-											control={form.control}
-											name="access"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-sm uppercase text-slate-500">
-														Access
-													</FormLabel>
-													<hr />
-													<Select
-														onValueChange={field.onChange}
-														defaultValue={field.value}
-													>
-														<FormControl>
-															<SelectTrigger>
-																<SelectValue placeholder="Select a type" />
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent>
-															{Object.values(FormAccessType).map(
-																(t) => (
-																	<SelectItem
-																		key={t}
-																		value={t.toString()}
-																	>
-																		<div className="first-letter:capitalize">
-																			{t}
-																		</div>
-																	</SelectItem>
-																)
-															)}
-														</SelectContent>
-													</Select>
-													<FormDescription>
-														{field.value === FormAccessType.private &&
-															"Only internal editors can submit"}{" "}
-													</FormDescription>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-									</>
+													<SelectContent>
+														{Object.values(FormAccessType).map((t) => (
+															<SelectItem
+																key={t}
+																value={t.toString()}
+															>
+																<div className="first-letter:capitalize">
+																	{t}
+																</div>
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+												<FormDescription>
+													{field.value === FormAccessType.private &&
+														"Only internal editors can submit"}{" "}
+												</FormDescription>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
 								</PanelWrapper>
 							</form>
 						</Form>
@@ -352,7 +348,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 			</Tabs>
 			<div
 				ref={sidebarRef}
-				className="fixed right-0 top-[72px] z-30 flex h-screen w-[380px] flex-col gap-10 border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
+				className="fixed right-0 top-[72px] z-30 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
 			></div>
 		</FormBuilderProvider>
 	);
