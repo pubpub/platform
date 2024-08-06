@@ -43,7 +43,7 @@ export const getForm = (
 							"form_elements.description",
 							"form_elements.element",
 							"form_elements.required",
-							"form_elements.isSubmit",
+							"form_elements.stageId",
 							"pub_fields.schemaName",
 							"pub_fields.slug",
 						])

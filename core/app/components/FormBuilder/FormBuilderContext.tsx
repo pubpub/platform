@@ -15,10 +15,12 @@ type FormBuilderContext = {
 	elementsCount: number;
 	selectedElement?: FormElementData;
 	openConfigPanel: (index: number) => void;
+	openButtonConfigPanel: (id?: string) => void;
 	update: (index: number, element: FormElementData) => void;
 	removeIfUnconfigured: () => void;
 	dispatch: React.Dispatch<PanelEvent>;
 	slug: string;
+	elements: FormElementData[];
 };
 
 const FormBuilderContext = createContext<FormBuilderContext | undefined>(undefined);

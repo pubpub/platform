@@ -32,7 +32,6 @@ import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
-import { SubmissionSettings } from "./SubmissionSettings";
 import { formBuilderSchema } from "./types";
 
 const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
@@ -47,6 +46,7 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 				selectedElementIndex: null,
 				fieldsFilter: null,
 				backButton: null,
+				buttonId: null,
 			};
 		case "back":
 			return {
@@ -54,6 +54,7 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 				backButton: prevState.backButton === "selecting" ? "initial" : null,
 				selectedElementIndex: null,
 				fieldsFilter: null,
+				buttonId: null,
 			};
 		case "add":
 			if (prevState.state === "initial")
@@ -71,11 +72,20 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 				backButton: newBack,
 				selectedElementIndex: event.selectedElementIndex,
 				fieldsFilter: null,
+				buttonId: null,
 			};
 		case "save":
 			if (prevState.state === "editing")
 				return { ...prevState, state: "initial", selectedElementIndex: null };
 			break;
+		case "editButton":
+			const buttonId = event.buttonId ?? null;
+			return {
+				...prevState,
+				state: "editingButton",
+				backButton: "initial",
+				buttonId,
+			};
 	}
 	return prevState;
 };
@@ -84,6 +94,7 @@ const elementPanelTitles: Record<PanelState["state"], string> = {
 	editing: "Configure element",
 	selecting: "Add element",
 	initial: "Elements",
+	editingButton: "Edit Submission Button",
 };
 
 type Props = {
@@ -125,6 +136,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 		backButton: null,
 		selectedElementIndex: null,
 		fieldsFilter: null,
+		buttonId: null,
 	});
 
 	const {
@@ -186,6 +198,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 
 	return (
 		<FormBuilderProvider
+			elements={pubForm.elements}
 			removeIfUnconfigured={removeIfUnconfigured}
 			addElement={addElement}
 			removeElement={removeElement}
@@ -199,11 +212,11 @@ export function FormBuilder({ pubForm, id }: Props) {
 			openConfigPanel={(index: number) =>
 				dispatch({ eventName: "edit", selectedElementIndex: index })
 			}
+			openButtonConfigPanel={(id) => dispatch({ eventName: "editButton", buttonId: id })}
 			update={update}
 			dispatch={dispatch}
 			slug={pubForm.slug}
 		>
-			{" "}
 			<Tabs defaultValue="builder" className="pr-[380px]">
 				<div className="px-6">
 					<TabsList className="mb-2 mt-4">
@@ -329,7 +342,6 @@ export function FormBuilder({ pubForm, id }: Props) {
 												</FormItem>
 											)}
 										/>
-										<SubmissionSettings elements={pubForm.elements} />
 									</>
 								</PanelWrapper>
 							</form>
