@@ -197,6 +197,7 @@ model Stage {
   integrationInstances  IntegrationInstance[]
   permissions           Permission[]
   actionInstances       ActionInstance[]
+  formElements          FormElement[]
 
   @@map(name: "stages")
 }
@@ -468,6 +469,7 @@ enum StructuralFormElement {
 enum ElementType {
   pubfield
   structural
+  button
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input
@@ -477,14 +479,15 @@ model FormElement {
   fieldId     String?
   field       PubField?              @relation(fields: [fieldId], references: [id])
   formId      String
-  order       Int
+  order       Int?
   label       String?
   description String?
   element     StructuralFormElement?
   content     String?
   required    Boolean?
   form        Form                   @relation(fields: [formId], references: [id])
-  isSubmit    Boolean                @default(false) @map(name: "isSubmit") // This column has a unique index preventing multiple rows with isSubmit per formId (core/prisma/migrations/20240529145416_add_forms)
+  stage       Stage?                 @relation(fields: [stageId], references: [id])
+  stageId     String?
 
   @@unique([fieldId, formId])
   @@map(name: "form_elements")
