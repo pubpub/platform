@@ -54,7 +54,7 @@ export const pubValuesByVal = (pubId: PubsId) => {
 // pubValues is the shared logic between pubValuesByRef and pubValuesByVal which handles getting the
 // most recent pub field entries (since the table is append-only) and aggregating the pub_fields and
 // pub_values rows into a single {"slug": "value"} JSON object
-const pubValues = (
+export const pubValues = (
 	eb: ExpressionBuilder<Database, keyof Database>,
 	{
 		pubId,
@@ -111,7 +111,7 @@ export const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
 
 // TODO: make this usable in a subquery, possibly by turning it into a view
 // Create a CTE ("children") with the pub's children and their values
-const withPubChildren = ({
+export const withPubChildren = ({
 	pubId,
 	pubIdRef,
 	communityId,
@@ -140,7 +140,7 @@ const withPubChildren = ({
 	});
 };
 
-const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
+export const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonObjectFrom(
 		eb
 			.selectFrom("users")
@@ -159,7 +159,7 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 
 // These aliases are used to make sure the JSON object returned matches
 // the old prisma query's return value
-const pubColumns = [
+export const pubColumns = [
 	"id",
 	"communityId",
 	"createdAt",
