@@ -20,7 +20,11 @@ import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
-import { getPubOnTheIndividualPubPage, getPubPage } from "./queries";
+import { getPubOnTheIndividualPubPage } from "./queries";
+
+
+
+
 
 export default async function Page({
 	params,
@@ -48,7 +52,7 @@ export default async function Page({
 		});
 
 	const pub = await getPub(params.pubId);
-	const alsoPubs = await getPubPage(params.pubId as PubsId);
+	const alsoPubs = await getPubOnTheIndividualPubPage(params.pubId as PubsId);
 
 	if (!pub) {
 		return null;

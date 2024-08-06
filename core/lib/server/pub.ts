@@ -170,6 +170,100 @@ export const pubColumns = [
 	"parentId",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
+const inCludePubTypes = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonObjectFrom(
+		eb.selectFrom("pub_types").where("pub_types.id", "=", eb.ref("pubs.pubTypeId")).selectAll()
+	).as("pubType");
+
+const includeClaims = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonArrayFrom(
+		eb
+			.selectFrom("action_claim")
+			.where("action_claim.pubId", "=", eb.ref("pubs.id"))
+			.innerJoin("users", "users.id", "action_claim.userId")
+			.select((eb) =>
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.where("users.id", "=", eb.ref("action_claim.userId"))
+						.selectAll()
+				).as("user")
+			)
+			.selectAll()
+	).as("claims");
+
+const includeStagesWithIntegrations = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonArrayFrom(
+		eb
+			.selectFrom("PubsInStages")
+			.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+			.select(["PubsInStages.stageId as id", "stages.name"])
+			.whereRef("PubsInStages.pubId", "=", "pubs.id")
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("integration_instances")
+						.where("integration_instances.stageId", "=", eb.ref("stages.id"))
+						.innerJoin(
+							"integrations",
+							"integrations.id",
+							"integration_instances.integrationId"
+						)
+						.select((eb) =>
+							jsonObjectFrom(
+								eb
+									.selectFrom("integrations")
+									.where(
+										"integrations.id",
+										"=",
+										eb.ref("integration_instances.integrationId")
+									)
+									.selectAll()
+							).as("integration")
+						)
+						.selectAll()
+				).as("integrationInstances")
+			)
+	).as("stages");
+
+const includeStagesForChildrenOnPubPage = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonArrayFrom(
+		eb
+			.selectFrom("PubsInStages")
+			.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+			.select(["PubsInStages.stageId as id", "stages.name"])
+			.whereRef("PubsInStages.pubId", "=", "pubs.id")
+	).as("stages");
+
+const includeInterationInstances = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonArrayFrom(
+		eb
+			.selectFrom("integration_instances")
+			.where("integration_instances.communityId", "=", eb.ref("pubs.communityId"))
+			.selectAll()
+	).as("integrationInstances");
+
+// TODO: note what this is and include it in the base pub query
+const includeConfusingBitOfCode = (
+	eb: ExpressionBuilder<Database, "pubs">,
+	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
+) =>
+	jsonArrayFrom(
+		eb
+			.selectFrom("pubs")
+			.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
+			.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
+			.$narrowType<{ values: PubValues }>()
+	);
+
+const includeStagesForPubBase = (eb: ExpressionBuilder<Database, "pubs">) =>
+	jsonArrayFrom(
+		eb
+			.selectFrom("PubsInStages")
+			.select(["PubsInStages.stageId as id"])
+			.whereRef("PubsInStages.pubId", "=", "pubs.id")
+	).as("stages");
+
 export const getPubBase = (
 	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
 ) =>
@@ -178,12 +272,7 @@ export const getPubBase = (
 		.select((eb) => [
 			...pubColumns,
 			pubAssignee(eb),
-			jsonArrayFrom(
-				eb
-					.selectFrom("PubsInStages")
-					.select(["PubsInStages.stageId as id"])
-					.whereRef("PubsInStages.pubId", "=", "pubs.id")
-			).as("stages"),
+			includeStagesForPubBase(eb),
 			jsonArrayFrom(
 				eb
 					.selectFrom("children")
@@ -212,95 +301,21 @@ export const getPubBase2 = (
 		.select((eb) => [
 			...pubColumns,
 			pubAssignee(eb),
-			jsonArrayFrom(
-				eb
-					.selectFrom("PubsInStages")
-					.innerJoin("stages", "stages.id", "PubsInStages.stageId")
-					.select(["PubsInStages.stageId as id", "stages.name"])
-					.whereRef("PubsInStages.pubId", "=", "pubs.id")
-					.select((eb) =>
-						jsonArrayFrom(
-							eb
-								.selectFrom("integration_instances")
-								.where("integration_instances.stageId", "=", eb.ref("stages.id"))
-								.innerJoin(
-									"integrations",
-									"integrations.id",
-									"integration_instances.integrationId"
-								)
-								.select((eb) =>
-									jsonObjectFrom(
-										eb
-											.selectFrom("integrations")
-											.where(
-												"integrations.id",
-												"=",
-												eb.ref("integration_instances.integrationId")
-											)
-											.selectAll()
-									).as("integration")
-								)
-								.selectAll()
-						).as("integrationInstances")
-					)
-			).as("stages"),
+			includeStagesWithIntegrations(eb),
+			inCludePubTypes(eb),
+			includeClaims(eb),
+			includeInterationInstances(eb),
 			jsonArrayFrom(
 				eb
 					.selectFrom("children")
 					.select((eb) => [
 						...pubColumns,
 						"children.values",
-						jsonArrayFrom(
-							eb
-								.selectFrom("PubsInStages")
-								.select(["PubsInStages.stageId as id"])
-								.whereRef("PubsInStages.pubId", "=", "children.id")
-						).as("stages"),
+						includeStagesForChildrenOnPubPage(eb),
 					])
 					.$narrowType<{ values: PubValues }>()
 			).as("children"),
 		])
-		.select((eb) =>
-			jsonObjectFrom(
-				eb
-					.selectFrom("pub_types")
-					.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
-					.selectAll()
-			).as("pubType")
-		)
-		.select((eb) =>
-			jsonArrayFrom(
-				eb
-					.selectFrom("action_claim")
-					.where("action_claim.pubId", "=", eb.ref("pubs.id"))
-					.innerJoin("users", "users.id", "action_claim.userId")
-					.select((eb) =>
-						jsonObjectFrom(
-							eb
-								.selectFrom("users")
-								.where("users.id", "=", eb.ref("action_claim.userId"))
-								.selectAll()
-						).as("user")
-					)
-					.selectAll()
-			).as("claims")
-		)
-		.select((eb) =>
-			jsonArrayFrom(
-				eb
-					.selectFrom("integration_instances")
-					.where("integration_instances.communityId", "=", eb.ref("pubs.communityId"))
-					.selectAll()
-			).as("integrationInstances")
-		)
-		.select((eb) =>
-			jsonObjectFrom(
-				eb
-					.selectFrom("pub_types")
-					.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
-					.selectAll()
-			).as("pubType")
-		)
 		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
 		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
 		.$narrowType<{ values: PubValues }>();
