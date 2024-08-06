@@ -5,13 +5,13 @@ import dynamic from "next/dynamic";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
-import type { CommunitiesId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 
-export type CreatePubProps =
+export type CreatePubProps = { parentId?: PubsId } & (
 	| {
 			communityId: CommunitiesId;
 			stageId?: never;
@@ -19,7 +19,8 @@ export type CreatePubProps =
 	| {
 			stageId: StagesId;
 			communityId?: never;
-	  };
+	  }
+);
 
 const getCommunityById = <
 	K extends keyof Database,
@@ -111,7 +112,7 @@ const PubCreateForm = dynamic(
 	{ ssr: false, loading: () => <SkeletonCard /> }
 );
 
-export async function PubCreate({ communityId, stageId }: CreatePubProps) {
+export async function PubCreate({ communityId, stageId, parentId }: CreatePubProps) {
 	const query = stageId
 		? getStage(stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
@@ -138,6 +139,7 @@ export async function PubCreate({ communityId, stageId }: CreatePubProps) {
 					communityId={community.id}
 					availableStages={community.stages}
 					availablePubTypes={community.pubTypes}
+					parentId={parentId}
 				/>
 			</Suspense>
 		</>

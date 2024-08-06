@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
-import type { CommunitiesId, PubFields, PubFieldSchema, PubTypes, Stages } from "db/public";
+import type { CommunitiesId, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {
@@ -28,9 +28,11 @@ export const PubCreateForm = ({
 	availableStages,
 	availablePubTypes,
 	currentStage = null,
+	parentId,
 }: {
 	communityId: CommunitiesId;
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
+	parentId?: PubsId;
 
 	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description"> & {
 		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug"> & {
@@ -115,6 +117,7 @@ export const PubCreateForm = ({
 				}
 				return acc;
 			}, {}),
+			parentId,
 		});
 
 		if (result && "success" in result) {

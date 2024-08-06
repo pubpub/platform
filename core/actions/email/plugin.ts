@@ -11,8 +11,15 @@ import { MembersId, UsersId } from "db/public";
 import { expect } from "utils";
 
 import { addMemberToForm, createFormInviteLink } from "~/lib/server/form";
-import { getMember } from "~/lib/server/user";
 import { EmailToken } from "./tokens";
+
+export type EmailDirectivePluginPub = {
+	id: string;
+	values: Record<string, any>;
+	assignee?: {
+		email: string;
+	} | null;
+};
 
 export type EmailDirectivePluginContext = {
 	sender: {
@@ -30,13 +37,8 @@ export type EmailDirectivePluginContext = {
 		};
 	};
 	communitySlug: string;
-	pub: {
-		id: string;
-		values: Record<string, any>;
-		assignee?: {
-			email: string;
-		};
-	};
+	pub: EmailDirectivePluginPub;
+	parentPub?: EmailDirectivePluginPub | null;
 };
 
 const isDirective = (node: Node): node is NodeMdast & Directive => {
@@ -52,15 +54,28 @@ const isParent = (node: Node): node is ParentMdast => {
 };
 
 const visitValueDirective = (node: NodeMdast & Directive, context: EmailDirectivePluginContext) => {
-	const attrs = expect(node.attributes);
-	const value = context.pub.values[expect(attrs.field)];
+	const attrs = expect(node.attributes, "Invalid syntax in value directive");
+	const field = expect(attrs.field, "Missing field attribute in value directive");
+
+	let value: unknown;
+
+	if ("rel" in attrs) {
+		assert(attrs.rel === "parent", 'Invalid value for "rel" attribute');
+		const parentPub = expect(context.parentPub, "Missing parent pub");
+		value = parentPub.values[field];
+	} else {
+		value = context.pub.values[field];
+	}
+
+	assert(value !== undefined, `Missing value for ${field}`);
+
 	node.data = {
 		...node.data,
 		hName: "span",
 		hChildren: [
 			{
 				type: "text",
-				value,
+				value: String(value),
 			},
 		],
 	};
@@ -164,7 +179,7 @@ const visitRecipientLastNameDirective = (
 
 const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirectivePluginContext) => {
 	// `node.attributes` should always be defined for directive nodes
-	const attrs = expect(node.attributes);
+	const attrs = expect(node.attributes, "Invalid syntax in link directive");
 	// All directives are considered parent nodes
 	assert(isParent(node));
 	let href: string;
@@ -185,7 +200,7 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirective
 		// If the user defines the recipient as `"assignee"`, the pub must have an
 		// assignee for the email to be sent.
 		if (to === "assignee") {
-			assert(context.pub.assignee !== undefined, "Pub has no assignee");
+			assert(context.pub.assignee != null, "Pub has no assignee");
 			href = `mailto:${context.pub.assignee.email}`;
 		} else {
 			// The recipient is a static email address
@@ -204,11 +219,19 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirective
 	}
 	// :link{field=pubpub:url}
 	else if ("field" in attrs) {
-		const field = expect(attrs.field, 'Missing value for "field" attribute');
-		href = context.pub.values[field];
+		const field = expect(attrs.field, 'Missing "field" attribute');
+		if ("rel" in attrs) {
+			assert(attrs.rel === "parent", 'Invalid value for "rel" attribute');
+			const parentPub = expect(context.parentPub, "Missing parent pub");
+			href = parentPub.values[field];
+		} else {
+			href = context.pub.values[field];
+		}
+		assert(href !== undefined, `Missing value for ${field}`);
 	} else {
 		throw new Error("Invalid link directive");
 	}
+
 	// Default the text content to the href if the node has no children
 	if (node.children.length === 0) {
 		node.children.push({
