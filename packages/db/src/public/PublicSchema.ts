@@ -33,6 +33,7 @@ import { type PubsInStagesTable } from "./PubsInStages";
 import { type PubTypesTable } from "./PubTypes";
 import { type PubValuesTable } from "./PubValues";
 import { type RulesTable } from "./Rules";
+import { type SessionsTable } from "./Sessions";
 import { type StagesTable } from "./Stages";
 import { type UsersTable } from "./Users";
 
@@ -104,4 +105,6 @@ export interface PublicSchema {
 	form_to_permissions: FormToPermissionsTable;
 
 	form_elements: FormElementsTable;
+
+	sessions: SessionsTable;
 }

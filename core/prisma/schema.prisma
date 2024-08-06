@@ -27,7 +27,6 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now()) @updatedAt
   isSuperAdmin Boolean  @default(false)
-
   // TODO: remove the ? when we have removed supabase
   passwordHash String?
   salt         String?
@@ -40,8 +39,22 @@ model User {
   assignedPubs   Pub[]
   actionRuns     ActionRun[]
   ApiAccessToken ApiAccessToken[]
+  Session        Session[]
 
   @@map(name: "users")
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  fresh     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map(name: "sessions")
 }
 
 model AuthToken {
