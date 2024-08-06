@@ -2,14 +2,14 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { PubsId } from "db/public";
 
-import { getPubBase, nestChildren, NotFoundError } from "~/lib/server";
+import { getPubBase2, nestChildren, NotFoundError } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 
 const PubNotFoundError = new NotFoundError("Pub not found");
 
 export const getPubOnTheIndividualPubPage = async (pubId: PubsId) => {
 	const pub = await autoCache(
-		getPubBase({ pubId })
+		getPubBase2({ pubId })
 			.where("pubs.id", "=", pubId)
 			.select((eb) =>
 				jsonObjectFrom(

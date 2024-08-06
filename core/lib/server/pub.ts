@@ -111,7 +111,7 @@ export const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
 
 // TODO: make this usable in a subquery, possibly by turning it into a view
 // Create a CTE ("children") with the pub's children and their values
-const withPubChildren = ({
+export const withPubChildren = ({
 	pubId,
 	pubIdRef,
 	communityId,
@@ -140,7 +140,7 @@ const withPubChildren = ({
 	});
 };
 
-const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
+export const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonObjectFrom(
 		eb
 			.selectFrom("users")
@@ -159,7 +159,7 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 
 // These aliases are used to make sure the JSON object returned matches
 // the old prisma query's return value
-const pubColumns = [
+export const pubColumns = [
 	"id",
 	"communityId",
 	"createdAt",
@@ -171,6 +171,40 @@ const pubColumns = [
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
 export const getPubBase = (
+	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
+) =>
+	withPubChildren(props)
+		.selectFrom("pubs")
+		.select((eb) => [
+			...pubColumns,
+			pubAssignee(eb),
+			jsonArrayFrom(
+				eb
+					.selectFrom("PubsInStages")
+					.select(["PubsInStages.stageId as id"])
+					.whereRef("PubsInStages.pubId", "=", "pubs.id")
+			).as("stages"),
+			jsonArrayFrom(
+				eb
+					.selectFrom("children")
+					.select((eb) => [
+						...pubColumns,
+						"children.values",
+						jsonArrayFrom(
+							eb
+								.selectFrom("PubsInStages")
+								.select(["PubsInStages.stageId as id"])
+								.whereRef("PubsInStages.pubId", "=", "children.id")
+						).as("stages"),
+					])
+					.$narrowType<{ values: PubValues }>()
+			).as("children"),
+		])
+		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
+		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
+		.$narrowType<{ values: PubValues }>();
+
+export const getPubBase2 = (
 	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
 ) =>
 	withPubChildren(props)
