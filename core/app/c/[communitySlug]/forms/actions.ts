@@ -1,21 +1,21 @@
 "use server";
 
-import type { CommunitiesId, FormsId, PubTypesId } from "db/public";
+import type { CommunitiesId, PubTypesId } from "db/public";
 import { logger } from "logger";
 
 import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { _getPubFields, getPubFields } from "~/lib/server/pubFields";
-import { slugifyString } from "~/lib/string";
+import { _getPubFields } from "~/lib/server/pubFields";
 
 export const createForm = defineServerAction(async function createForm(
 	pubTypeId: PubTypesId,
 	name: string,
+	slug: string,
 	communityId: CommunitiesId
 ) {
 	try {
-		const { slug } = await autoRevalidate(
+		await autoRevalidate(
 			db
 				.with("fields", () =>
 					_getPubFields({ pubTypeId })
@@ -31,35 +31,30 @@ export const createForm = defineServerAction(async function createForm(
 						.values({
 							name,
 							pubTypeId,
-							slug: slugifyString(name),
+							slug,
 							communityId,
 						})
 						.returning(["slug", "id"])
 				)
-				.with("elements", (db) =>
-					db
-						.insertInto("form_elements")
-						.columns(["fieldId", "formId", "label", "type", "order"])
-						.expression((eb) =>
-							eb
-								.selectFrom("fields")
-								.innerJoin("form", (join) => join.onTrue())
-								.select((eb) => [
-									"fields.fieldId",
-									"form.id as formId",
-									"fields.name as label",
-									eb.val("pubfield").as("type"),
-									eb.fn
-										.agg<number>("ROW_NUMBER")
-										.over((o) => o.partitionBy("form.id"))
-										.as("order"),
-								])
-						)
+
+				.insertInto("form_elements")
+				.columns(["fieldId", "formId", "label", "type", "order"])
+				.expression((eb) =>
+					eb
+						.selectFrom("fields")
+						.innerJoin("form", (join) => join.onTrue())
+						.select((eb) => [
+							"fields.fieldId",
+							"form.id as formId",
+							"fields.name as label",
+							eb.val("pubfield").as("type"),
+							eb.fn
+								.agg<number>("ROW_NUMBER")
+								.over((o) => o.partitionBy("id"))
+								.as("order"),
+						])
 				)
-				.selectFrom("form")
-				.select("form.slug")
 		).executeTakeFirstOrThrow();
-		return slug;
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			const column = error.constraint === "forms_slug_key" ? "slug" : "name";
