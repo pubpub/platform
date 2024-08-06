@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { MarkdownEditor, zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
-import { FormField } from "ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Input } from "ui/input";
 
 import { useFormBuilder } from "./FormBuilderContext";
 
@@ -42,20 +43,34 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 	};
 
 	return (
-		<Form {...form} className="h-full">
+		<Form {...form}>
 			<form
 				onSubmit={(e) => {
 					e.stopPropagation(); //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e);
+					form.handleSubmit(onSubmit, (f) => console.log(f))(e);
 				}}
 				className="flex h-full flex-col justify-between gap-2"
 			>
+				<FormField
+					control={form.control}
+					name="label"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Button label</FormLabel>
+							<FormControl>
+								<Input {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 				<FormField
 					control={form.control}
 					name="content"
 					render={({ field }) => (
 						<MarkdownEditor
 							zodInputProps={zodToHtmlInputProps(SCHEMA.shape.content)}
+							// @ts-ignore can't seem to infer this is ok for FieldValues
 							field={field}
 							fieldConfigItem={{
 								description: undefined,
@@ -64,13 +79,15 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 								renderParent: undefined,
 								allowedSchemas: undefined,
 							}}
-							label={""}
+							label="Post-submission message"
 							isRequired={false}
 							fieldProps={{
 								...zodToHtmlInputProps(SCHEMA.shape.content),
 								...field,
 							}}
 							zodItem={SCHEMA.shape.content}
+							description="The message displayed after submission. Markdown supported."
+							descriptionPlacement="bottom"
 						/>
 					)}
 				/>
