@@ -160,6 +160,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.3.1
         version: 3.3.1(react-hook-form@7.46.1)
+      '@lucia-auth/adapter-postgresql':
+        specifier: ^3.1.2
+        version: 3.1.2(lucia@3.2.0)(pg@8.11.3)
       '@nimpl/getters':
         specifier: ^1.4.1
         version: 1.4.1(next@14.2.4)(react-dom@18.2.0)(react@18.2.0)
@@ -4734,6 +4737,25 @@ packages:
       '@lexical/offset': 0.15.0
       lexical: 0.15.0
       yjs: 13.6.18
+    dev: false
+
+  /@lucia-auth/adapter-postgresql@3.1.2(lucia@3.2.0)(pg@8.11.3):
+    resolution: {integrity: sha512-XgScy312JsaiyJZ0OaUHakk01hFBldF1m8abX4Ctk2Dkt7lEVS/u0xZ2Sf6Hlji1wZtEM0uiIWdeMUu79XcXZA==}
+    peerDependencies:
+      '@neondatabase/serverless': 0.7 - 0.9
+      lucia: 3.x
+      pg: ^8.8.0
+      postgres: ^3.3.0
+    peerDependenciesMeta:
+      '@neondatabase/serverless':
+        optional: true
+      pg:
+        optional: true
+      postgres:
+        optional: true
+    dependencies:
+      lucia: 3.2.0
+      pg: 8.11.3
     dev: false
 
   /@manypkg/find-root@1.1.0:
