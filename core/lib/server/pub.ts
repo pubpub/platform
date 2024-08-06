@@ -54,7 +54,7 @@ export const pubValuesByVal = (pubId: PubsId) => {
 // pubValues is the shared logic between pubValuesByRef and pubValuesByVal which handles getting the
 // most recent pub field entries (since the table is append-only) and aggregating the pub_fields and
 // pub_values rows into a single {"slug": "value"} JSON object
-export const pubValues = (
+const pubValues = (
 	eb: ExpressionBuilder<Database, keyof Database>,
 	{
 		pubId,
@@ -140,7 +140,7 @@ export const withPubChildren = ({
 	});
 };
 
-export const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
+const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonObjectFrom(
 		eb
 			.selectFrom("users")
@@ -159,7 +159,7 @@ export const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 
 // These aliases are used to make sure the JSON object returned matches
 // the old prisma query's return value
-export const pubColumns = [
+const pubColumns = [
 	"id",
 	"communityId",
 	"createdAt",
@@ -170,7 +170,7 @@ export const pubColumns = [
 	"parentId",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
-const inCludePubTypes = (eb: ExpressionBuilder<Database, "pubs">) =>
+export const inCludePubTypes = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonObjectFrom(
 		eb.selectFrom("pub_types").where("pub_types.id", "=", eb.ref("pubs.pubTypeId")).selectAll()
 	).as("pubType");
@@ -226,15 +226,6 @@ const includeStagesWithIntegrations = (eb: ExpressionBuilder<Database, "pubs">) 
 			)
 	).as("stages");
 
-const includeStagesForChildrenOnPubPage = (eb: ExpressionBuilder<Database, "pubs">) =>
-	jsonArrayFrom(
-		eb
-			.selectFrom("PubsInStages")
-			.innerJoin("stages", "stages.id", "PubsInStages.stageId")
-			.select(["PubsInStages.stageId as id", "stages.name"])
-			.whereRef("PubsInStages.pubId", "=", "pubs.id")
-	).as("stages");
-
 const includeInterationInstances = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonArrayFrom(
 		eb
@@ -242,19 +233,6 @@ const includeInterationInstances = (eb: ExpressionBuilder<Database, "pubs">) =>
 			.where("integration_instances.communityId", "=", eb.ref("pubs.communityId"))
 			.selectAll()
 	).as("integrationInstances");
-
-// TODO: note what this is and include it in the base pub query
-const includeConfusingBitOfCode = (
-	eb: ExpressionBuilder<Database, "pubs">,
-	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
-) =>
-	jsonArrayFrom(
-		eb
-			.selectFrom("pubs")
-			.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
-			.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
-			.$narrowType<{ values: PubValues }>()
-	);
 
 const includeStagesForPubBase = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonArrayFrom(
@@ -311,7 +289,13 @@ export const getPubBase2 = (
 					.select((eb) => [
 						...pubColumns,
 						"children.values",
-						includeStagesForChildrenOnPubPage(eb),
+						jsonArrayFrom(
+							eb
+								.selectFrom("PubsInStages")
+								.innerJoin("stages", "stages.id", "PubsInStages.stageId")
+								.select(["PubsInStages.stageId as id", "stages.name"])
+								.whereRef("PubsInStages.pubId", "=", "children.id")
+						).as("stages"),
 					])
 					.$narrowType<{ values: PubValues }>()
 			).as("children"),

@@ -22,10 +22,6 @@ import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
 import { getPubOnTheIndividualPubPage } from "./queries";
 
-
-
-
-
 export default async function Page({
 	params,
 	searchParams,
