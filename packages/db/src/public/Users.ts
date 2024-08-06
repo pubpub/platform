@@ -30,6 +30,10 @@ export interface UsersTable {
 	supabaseId: ColumnType<string | null, string | null, string | null>;
 
 	isSuperAdmin: ColumnType<boolean, boolean | undefined, boolean>;
+
+	passwordHash: ColumnType<string | null, string | null, string | null>;
+
+	salt: ColumnType<string | null, string | null, string | null>;
 }
 
 export type Users = Selectable<UsersTable>;
@@ -52,6 +56,8 @@ export const usersSchema = z.object({
 	orcid: z.string().nullable(),
 	supabaseId: z.string().nullable(),
 	isSuperAdmin: z.boolean(),
+	passwordHash: z.string().nullable(),
+	salt: z.string().nullable(),
 });
 
 export const usersInitializerSchema = z.object({
@@ -66,6 +72,8 @@ export const usersInitializerSchema = z.object({
 	orcid: z.string().optional().nullable(),
 	supabaseId: z.string().optional().nullable(),
 	isSuperAdmin: z.boolean().optional(),
+	passwordHash: z.string().optional().nullable(),
+	salt: z.string().optional().nullable(),
 });
 
 export const usersMutatorSchema = z.object({
@@ -80,4 +88,6 @@ export const usersMutatorSchema = z.object({
 	orcid: z.string().optional().nullable(),
 	supabaseId: z.string().optional().nullable(),
 	isSuperAdmin: z.boolean().optional(),
+	passwordHash: z.string().optional().nullable(),
+	salt: z.string().optional().nullable(),
 });
