@@ -53,46 +53,69 @@ export async function findOrCreateUser(
 	return user;
 }
 
-export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
-	// do not use autocache here until we have a good way to globally invalidate users
-	return db
-		.selectFrom("users")
-		.select((eb) => [
-			"users.id",
-			"users.email",
-			"users.firstName",
-			"users.lastName",
-			"users.slug",
-			"users.supabaseId",
-			"users.createdAt",
-			"users.updatedAt",
-			"users.isSuperAdmin",
-			jsonArrayFrom(
-				eb
-					.selectFrom("members")
-					.select((eb) => [
-						"members.id",
-						"members.userId",
-						"members.createdAt",
-						"members.updatedAt",
-						"members.role",
-						"members.communityId",
-						jsonObjectFrom(
-							eb
-								.selectFrom("communities")
-								.whereRef("communities.id", "=", "members.communityId")
-								.selectAll()
-						).as("community"),
-					])
-					// for some reason doing "members.userId" doesn't work
-					.whereRef("userId", "=", "users.id")
-			).as("memberships"),
-		])
-		.$if(Boolean(userIdOrEmail.email), (eb) =>
-			eb.where("users.email", "=", userIdOrEmail.email!)
-		)
-		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
-});
+export const DEFAULT_USER_SELECT = [
+	"users.id",
+	"users.email",
+	"users.firstName",
+	"users.lastName",
+	"users.slug",
+	"users.supabaseId",
+	"users.createdAt",
+	"users.updatedAt",
+	"users.isSuperAdmin",
+] as const;
+
+export const getUser = cache(
+	<
+		const Select extends Readonly<
+			("users.passwordHash" | (typeof DEFAULT_USER_SELECT)[number])[]
+		> = typeof DEFAULT_USER_SELECT,
+	>(
+		userIdOrEmail: XOR<{ id: UsersId }, { email: string }>,
+		options?: {
+			additionalSelect?: Select;
+		}
+	) => {
+		// do not use autocache here until we have a good way to globally invalidate users
+		return db
+			.selectFrom("users")
+			.select((eb) => [
+				...DEFAULT_USER_SELECT,
+				...(options?.additionalSelect ?? []),
+				jsonArrayFrom(
+					eb
+						.selectFrom("members")
+						.select((eb) => [
+							"members.id",
+							"members.userId",
+							"members.createdAt",
+							"members.updatedAt",
+							"members.role",
+							"members.communityId",
+							jsonObjectFrom(
+								eb
+									.selectFrom("communities")
+									.select([
+										"communities.id",
+										"communities.slug",
+										"communities.name",
+										"communities.avatar",
+										"communities.createdAt",
+										"communities.updatedAt",
+									])
+									.whereRef("communities.id", "=", "members.communityId")
+							).as("community"),
+						])
+						// for some reason doing "members.userId" doesn't work
+						.whereRef("userId", "=", "users.id")
+				).as("memberships"),
+			])
+			.$if(Boolean(userIdOrEmail.email), (eb) =>
+				eb.where("users.email", "=", userIdOrEmail.email!)
+			)
+			.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
+	}
+);
 
 export const getMember = cache((memberId: MembersId) => {
 	return db
