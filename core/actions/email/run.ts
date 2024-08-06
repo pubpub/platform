@@ -35,12 +35,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			parentPub = await getPubCached(parentId);
 		}
 
-		// TODO: the pub must currently have an assignee to send an email. This
-		// should be set at the action instance level—it should be possible to
-		// use the pub assignee, a pub field, a static email address, a member, or
-		// a member group as the sender.
-		const sender = expect(pub.assignee, "No assignee found for pub");
-
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
 		// member group.
@@ -63,7 +57,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					new Error(`Could not find user with ID ${args?.recipient ?? config.recipient}`)
 			);
 
-		const emailDirectivesContext = { communitySlug, sender, recipient, pub, parentPub };
+		const emailDirectivesContext = { communitySlug, recipient, pub, parentPub };
 
 		const html = (
 			await unified()
