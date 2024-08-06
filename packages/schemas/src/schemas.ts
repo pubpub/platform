@@ -51,26 +51,33 @@ export const MemberId = Type.String({
 	examples: ["f7b3b3b3-4b3b-4b3b-4b3b-1acefbd22232"],
 });
 
-export const FileUpload = Type.Object(
-	{
-		source: Type.String({ description: "The source of the file." }),
-		id: Type.String({ description: "A unique identifier for the file." }),
-		name: Type.String({ description: "The name of the file." }),
-		meta: Type.Object({
-			name: Type.String({ description: "The name of the file." }),
-			type: Type.String({ description: "The MIME type of the file." }),
-			relativePath: Type.String({ description: "The relative path of the file." }),
-			absolutePath: Type.String({ description: "The absolute path of the file." }),
-		}),
-		type: Type.String({ description: "The MIME type of the file." }),
-		size: Type.Number({ description: "The size of the file in bytes." }),
-		uploadURL: Type.String({
-			format: "uri",
-			description: "The URL to upload the file to.",
-		}),
-	},
-	{
-		description:
-			"An Uppy file upload object. See https://uppy.io/docs/uppy/#working-with-uppy-files for more information.",
-	}
+export const FileUpload = Type.Array(
+	Type.Object(
+		{
+			fileSource: Type.String({ description: "The source of the file." }),
+			id: Type.String({ description: "A unique identifier for the file." }),
+			fileName: Type.String({ description: "The name of the file." }),
+			fileMeta: Type.Object({
+				name: Type.String({ description: "The name of the file." }),
+				type: Type.String({ description: "The MIME type of the file." }),
+				relativePath: Type.Union([
+					Type.String({ description: "The relative path of the file." }),
+					Type.Null(),
+				]),
+				absolutePath: Type.Optional(
+					Type.String({ description: "The absolute path of the file." })
+				),
+			}),
+			fileType: Type.String({ description: "The MIME type of the file." }),
+			fileSize: Type.Number({ description: "The size of the file in bytes." }),
+			fileUploadUrl: Type.String({
+				format: "uri",
+				description: "The URL to upload the file to.",
+			}),
+		},
+		{
+			description:
+				"An Uppy file upload object. See https://uppy.io/docs/uppy/#working-with-uppy-files for more information.",
+		}
+	)
 );

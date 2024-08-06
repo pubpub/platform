@@ -1,8 +1,36 @@
+import { Value } from "@sinclair/typebox/value";
 import Ajv from "ajv";
+import { getJsonSchemaByCoreSchemaType } from "schemas";
 
+import type { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
-import type { BasePubField, CorePubField } from "../corePubFields";
+import type { BasePubField } from "../corePubFields";
+
+export const validatePubValuesBySchemaName = ({
+	fields,
+	values,
+}: {
+	fields: { name: string; slug: string; schemaName?: CoreSchemaType | null }[];
+	values: Record<string, unknown>;
+}) => {
+	for (const field of fields) {
+		const value = values[field.slug];
+		if (!field.schemaName) {
+			return { error: `Field ${field.slug} does not have a schemaName, cannot validate` };
+		}
+		if (value === undefined) {
+			return { error: `Field ${field.slug} not found in pub values` };
+		}
+		const jsonSchema = getJsonSchemaByCoreSchemaType(field.schemaName);
+		const result = Value.Check(jsonSchema, value);
+		if (!result) {
+			return {
+				error: `Field ${field.slug} failed schema validation. Field "${field.name}" of type "${field.slug}" cannot be assigned to value: ${value} of type ${typeof value}`,
+			};
+		}
+	}
+};
 
 /**
  * TODO: Replace this with a more robust validation implementation

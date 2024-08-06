@@ -9,7 +9,7 @@ import type { JsonValue } from "contracts";
 import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import { logger } from "logger";
 
-import { validatePubValues } from "~/actions/_lib/validateFields";
+import { validatePubValues, validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
@@ -81,6 +81,110 @@ export const createPub = defineServerAction(async function createPub({
 		logger.error(error);
 		return {
 			error: "Failed to create pub",
+			cause: error,
+		};
+	}
+});
+
+export const _upsertPubValues = async ({
+	pubId,
+	fields,
+}: {
+	pubId: PubsId;
+	fields: Record<string, JsonValue>;
+}) => {
+	// First query for existing values so we know whether to insert or update.
+	// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
+	const toBeUpdatedPubFieldSlugs = Object.keys(fields);
+	const pubFields = await db
+		.selectFrom("pub_fields")
+		.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+		.where((eb) =>
+			eb("pub_values.pubId", "=", pubId).or("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
+		)
+		.distinctOn("pub_fields.id")
+		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+		.select(["pub_values.id", "pub_fields.slug", "pub_fields.name", "pub_fields.schemaName"])
+		.execute();
+
+	const validated = validatePubValuesBySchemaName({
+		fields: pubFields,
+		values: fields,
+	});
+
+	if (validated && validated.error) {
+		return {
+			error: validated.error,
+			cause: validated.error,
+		};
+	}
+
+	// Insert, update on conflict
+	try {
+		await autoRevalidate(
+			db
+				.insertInto("pub_values")
+				.values((eb) => {
+					return Object.entries(fields).map(([slug, value]) => {
+						return {
+							id: pubFields.find((pf) => pf.slug === slug)?.id ?? undefined,
+							pubId,
+							value: JSON.stringify(value),
+							fieldId: eb
+								.selectFrom("pub_fields")
+								.where("pub_fields.slug", "=", slug)
+								.select("pub_fields.id"),
+						};
+					});
+				})
+				.onConflict((oc) =>
+					oc.column("id").doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+					}))
+				)
+				.returningAll()
+		).execute();
+	} catch (error) {
+		logger.error(error);
+		return {
+			error: "Failed to update pub",
+			cause: error,
+		};
+	}
+	revalidateTag(`pubs_${pubId}`);
+
+	return {
+		success: true,
+		report: `Successfully updated the Pub`,
+	};
+};
+
+export const upsertPubValues = defineServerAction(async function upsertPubValues({
+	pubId,
+	fields,
+	path,
+}: {
+	pubId: PubsId;
+	fields: Record<string, JsonValue>;
+	path?: string | null;
+}) {
+	const loginData = await getLoginData();
+
+	if (!loginData) {
+		throw new Error("Not logged in");
+	}
+
+	try {
+		const result = await _upsertPubValues({ pubId, fields });
+		if (path) {
+			revalidatePath(path);
+		}
+
+		return result;
+	} catch (error) {
+		logger.error(error);
+		return {
+			error: "Failed to update pub",
 			cause: error,
 		};
 	}

@@ -8,7 +8,8 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { getForm } from "~/lib/server/form";
-import { ExternalForm } from "./ExternalForm";
+import { ExternalFormWrapper } from "./ExternalFormWrapper";
+import { InnerForm } from "./InnerForm";
 import { ParentPubInfo } from "./ParentPubInfo";
 
 const NotFound = ({ children }: { children: ReactNode }) => {
@@ -53,10 +54,19 @@ export default async function FormPage({
 	return (
 		<div className="grid w-full grid-cols-4 gap-16 px-6 py-12">
 			<div className="col-span-1">
-				<ParentPubInfo />
+				<ParentPubInfo parentId={pub.parentId} />
 			</div>
 			<div className="col-span-2">
-				<ExternalForm pub={pub} elements={form.elements} className="flex-1" />
+				<ExternalFormWrapper pub={pub} elements={form.elements} className="flex-1">
+					<InnerForm
+						pubId={pub.id as PubsId}
+						elements={form.elements}
+						// The following params are for rendering UserSelectServer
+						communitySlug={params.communitySlug}
+						searchParams={searchParams}
+						values={pub.values}
+					/>
+				</ExternalFormWrapper>
 			</div>
 		</div>
 	);
