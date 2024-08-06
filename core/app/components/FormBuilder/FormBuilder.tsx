@@ -32,6 +32,7 @@ import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
+import { SubmissionSettings } from "./SubmissionSettings";
 import { formBuilderSchema } from "./types";
 
 const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
@@ -40,7 +41,6 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 		case "filterFields":
 			const { fieldsFilter } = event;
 			return { ...prevState, fieldsFilter };
-			break;
 		case "cancel":
 			return {
 				state: "initial",
@@ -48,7 +48,6 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 				fieldsFilter: null,
 				backButton: null,
 			};
-			break;
 		case "back":
 			return {
 				state: prevState.backButton ?? "initial",
@@ -56,7 +55,6 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 				selectedElementIndex: null,
 				fieldsFilter: null,
 			};
-			break;
 		case "add":
 			if (prevState.state === "initial")
 				return {
@@ -74,7 +72,6 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 				selectedElementIndex: event.selectedElementIndex,
 				fieldsFilter: null,
 			};
-			break;
 		case "save":
 			if (prevState.state === "editing")
 				return { ...prevState, state: "initial", selectedElementIndex: null };
@@ -281,7 +278,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 											name="elements"
 											render={() => (
 												<FormItem>
-													<FormLabel className="mb-4 uppercase text-slate-500">
+													<FormLabel className="mb-4 text-sm uppercase text-slate-500">
 														{elementPanelTitles[panelState.state]}
 													</FormLabel>
 													<hr />
@@ -296,7 +293,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 											name="access"
 											render={({ field }) => (
 												<FormItem>
-													<FormLabel className="text-slate-500">
+													<FormLabel className="text-sm uppercase text-slate-500">
 														Access
 													</FormLabel>
 													<hr />
@@ -331,7 +328,8 @@ export function FormBuilder({ pubForm, id }: Props) {
 													<FormMessage />
 												</FormItem>
 											)}
-										/>{" "}
+										/>
+										<SubmissionSettings elements={pubForm.elements} />
 									</>
 								</PanelWrapper>
 							</form>
