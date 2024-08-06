@@ -109,7 +109,7 @@ const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId: PubsI
 					);
 				}}
 			/>
-			<FileUploadPreview files={files} />
+			{files ? <FileUploadPreview files={files} /> : null}
 		</div>
 	);
 };
@@ -203,5 +203,5 @@ export const FormElement = ({
 	if (schemaName === CoreSchemaType.DateTime) {
 		return <DateElement {...elementProps} />;
 	}
-	return null;
+	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
 };
