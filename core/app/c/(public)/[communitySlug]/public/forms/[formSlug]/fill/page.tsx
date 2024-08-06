@@ -13,7 +13,6 @@ import { getForm } from "~/lib/server/form";
 import { COMPLETE_STATUS, SAVE_STATUS_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
-import { ParentPubInfo } from "./ParentPubInfo";
 import { SaveStatus } from "./SaveStatus";
 
 const NotFound = ({ children }: { children: ReactNode }) => {
@@ -83,26 +82,21 @@ export default async function FormPage({
 				{completed ? (
 					<Completed />
 				) : (
-					<div className="grid w-full grid-cols-4 gap-16 px-6 py-12">
-						<div className="col-span-1">
-							<ParentPubInfo parentId={pub.parentId} />
-						</div>
-						<div className="col-span-2">
-							<ExternalFormWrapper
-								pub={pub}
+					<div className="grid grid-cols-4 px-6 py-12">
+						<ExternalFormWrapper
+							pub={pub}
+							elements={form.elements}
+							className="col-span-2 col-start-2"
+						>
+							<InnerForm
+								pubId={pub.id as PubsId}
 								elements={form.elements}
-								className="flex-1"
-							>
-								<InnerForm
-									pubId={pub.id as PubsId}
-									elements={form.elements}
-									// The following params are for rendering UserSelectServer
-									communitySlug={params.communitySlug}
-									searchParams={searchParams}
-									values={pub.values}
-								/>
-							</ExternalFormWrapper>
-						</div>
+								// The following params are for rendering UserSelectServer
+								communitySlug={params.communitySlug}
+								searchParams={searchParams}
+								values={pub.values}
+							/>
+						</ExternalFormWrapper>
 					</div>
 				)}
 			</div>
