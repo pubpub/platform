@@ -204,6 +204,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 			}
 			update={update}
 			dispatch={dispatch}
+			slug={pubForm.slug}
 		>
 			{" "}
 			<Tabs defaultValue="builder" className="pr-[380px]">
