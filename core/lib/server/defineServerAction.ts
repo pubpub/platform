@@ -44,7 +44,6 @@ export const defineServerAction = <
 					if (isRedirectError(error)) {
 						const url = getURLFromRedirectError(error);
 						redirect(url);
-						return;
 					}
 
 					logger.debug(error);

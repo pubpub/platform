@@ -13,7 +13,7 @@ import { env } from "~/lib/env/env.mjs";
 
 type UserWithMembersShips = Omit<Users, "passwordHash"> & {
 	memberships: (Members & {
-		community: Communities | null;
+		community: Communities;
 	})[];
 };
 declare module "lucia" {
@@ -65,10 +65,14 @@ class KyselyAdapter implements Adapter {
 													"=",
 													"members.communityId"
 												)
-										).as("community"),
+										)
+											.$notNull()
+											.as("community"),
 									])
 									.whereRef("members.userId", "=", "users.id")
-							).as("memberships"),
+							)
+								.$notNull()
+								.as("memberships"),
 						])
 						.whereRef("users.id", "=", "sessions.userId")
 				).as("user"),
@@ -169,6 +173,7 @@ export const lucia = new Lucia(adapter, {
 		supabaseId,
 		memberships,
 		avatar,
+		orcid,
 	}) => {
 		return {
 			email,
@@ -181,6 +186,7 @@ export const lucia = new Lucia(adapter, {
 			supabaseId,
 			memberships,
 			avatar,
+			orcid,
 		};
 	},
 });
