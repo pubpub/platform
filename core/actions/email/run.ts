@@ -8,27 +8,32 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
-import type { MembersId, UsersId } from "db/public";
+import type { MembersId } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
 import { db } from "~/kysely/database";
+import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { smtpclient } from "~/lib/server/mailgun";
 import { defineRun } from "../types";
-import { emailDirectives } from "./plugin";
+import { EmailDirectivePluginPub, emailDirectives } from "./plugin";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
 		// FIXME: could be replaced with `getCommunitySlug`
 		const communitySlug = getCommunitySlug();
 
-		// TODO: the pub must currently have an assignee to send an email. This
-		// should be set at the action instance level—it should be possible to
-		// use the pub assignee, a pub field, a static email address, a member, or
-		// a member group as the sender.
-		const sender = expect(pub.assignee, "No assignee found for pub");
+		const { parentId } = pub;
+		let parentPub: EmailDirectivePluginPub | undefined;
+
+		// TODO: This is a pretty inefficient way of loading the parent pub, as it
+		// will redundantly load the child pub. Ideally we would lazily fetch and
+		// cache the parent pub while processing the email template.
+		if (parentId) {
+			parentPub = await getPubCached(parentId);
+		}
 
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
@@ -52,7 +57,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					new Error(`Could not find user with ID ${args?.recipient ?? config.recipient}`)
 			);
 
-		const emailDirectivesContext = { communitySlug, sender, recipient, pub };
+		const emailDirectivesContext = { communitySlug, recipient, pub, parentPub };
 
 		const html = (
 			await unified()
@@ -73,6 +78,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			subject: args?.subject ?? config.subject,
 		});
 	} catch (error) {
+		console.log(error);
 		logger.error({ msg: "email", error });
 
 		return {

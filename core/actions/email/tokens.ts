@@ -1,8 +1,8 @@
 export enum EmailToken {
 	Value = "value",
-	SenderName = "sendername",
-	SenderFirstName = "senderfirstname",
-	SenderLastName = "senderlastname",
+	AssigneeName = "assigneename",
+	AssigneeFirstName = "assigneefirstname",
+	AssigneeLastName = "assigneelastname",
 	Link = "link",
 	RecipientName = "recipientname",
 	RecipientFirstName = "recipientfirstname",

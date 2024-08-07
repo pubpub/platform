@@ -22,12 +22,14 @@ export const createPub = defineServerAction(async function createPub({
 	pubTypeId,
 	fields,
 	path,
+	parentId,
 }: {
 	communityId: CommunitiesId;
 	stageId: StagesId;
 	pubTypeId: PubTypesId;
 	fields: { [id: PubFieldsId]: { slug: string; value: JsonValue } };
 	path?: string | null;
+	parentId?: PubsId;
 }) {
 	const loginData = await getLoginData();
 	if (!loginData) {
@@ -49,6 +51,7 @@ export const createPub = defineServerAction(async function createPub({
 						.values({
 							communityId: communityId,
 							pubTypeId: pubTypeId,
+							parentId: parentId,
 						})
 						.returning("id")
 				)

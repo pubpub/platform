@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
+import { CommunitiesId, PubsId } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -7,6 +9,7 @@ import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
+import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -49,7 +52,10 @@ export default async function Page({
 	}
 	const users = getPubUsers(pub.permissions);
 	const community = await getCommunityBySlug(params.communitySlug);
-	const communityMembers = community?.members || [];
+
+	if (community === null) {
+		notFound();
+	}
 
 	const [actionsPromise, stagePromise] =
 		pub.stages.length > 0
@@ -136,13 +142,17 @@ export default async function Page({
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
-							<Assign members={communityMembers} pub={pub} />
+							<Assign members={community.members} pub={pub} />
 						</div>
 					</div>
 				</div>
 			</div>
+			<PubCreateButton
+				communityId={community.id as CommunitiesId}
+				parentId={pub.id as PubsId}
+			/>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper pub={pub} members={communityMembers} />
+				<PubChildrenTableWrapper pub={pub} members={community.members} />
 			</Suspense>
 		</>
 	);
