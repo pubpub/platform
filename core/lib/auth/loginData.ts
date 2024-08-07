@@ -10,21 +10,30 @@ import { getUserInfoFromJWT } from "~/lib/auth/loginId";
 import prisma from "~/prisma/db";
 import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
 import { generateHash, slugifyString } from "../string";
+import { validateRequest } from "./lucia";
 
 /* This is only called from Server Component functions */
 /* When in the API, use getLoginId from loginId.ts */
 export const getLoginData = cache(async () => {
 	const nextCookies = cookies();
+
+	const { session, user: luciaUser } = await validateRequest();
+	if (session && luciaUser) {
+		return luciaUser;
+	}
+
 	const sessionJWTCookie = nextCookies.get(TOKEN_NAME) || { value: "" };
 	const sessionRefreshCookie = nextCookies.get(REFRESH_NAME) || { value: "" };
 	const supabaseUser = await getUserInfoFromJWT(
 		sessionJWTCookie.value,
 		sessionRefreshCookie.value
 	);
+
 	if (!supabaseUser?.id) {
 		return undefined;
 	}
-	let user = await prisma.user.findUnique({
+
+	const user = await prisma.user.findUnique({
 		where: { email: supabaseUser.email },
 		include: {
 			memberships: {
@@ -47,49 +56,53 @@ export const getLoginData = cache(async () => {
 		});
 	}
 
-	if (!user) {
-		// They successfully logged in via supabase, but no corresponding record was found in the
-		// app database
-
-		if (!supabaseUser.email) {
-			throw new Error(
-				`Unable to create corresponding local record for supabase user ${supabaseUser.id}`
-			);
-		}
-
-		// TODO: Instead of this, we should force invited users to visit the settings screen and set
-		// a name before progressing
-		const firstName = supabaseUser.user_metadata.firstName ?? "";
-		const lastName = supabaseUser.user_metadata.lastName ?? null;
-		const communityId = supabaseUser.user_metadata.communityId ?? unJournalId;
-		const role = supabaseUser.user_metadata.role ?? MemberRole.editor;
-
-		user = await prisma.user.create({
-			data: {
-				email: supabaseUser.email,
-				supabaseId: supabaseUser.id,
-				firstName,
-				lastName,
-				slug: `${slugifyString(firstName)}${
-					lastName ? `-${slugifyString(lastName)}` : ""
-				}-${generateHash(4, "0123456789")}`,
-				memberships: {
-					create: {
-						communityId,
-						role,
-					},
-				},
-			},
-			include: {
-				memberships: {
-					include: {
-						community: true,
-					},
-				},
-			},
-		});
+	if (user) {
+		const { passwordHash, ...userWithoutPasswordHash } = user;
+		return userWithoutPasswordHash;
 	}
-	return user;
+
+	// They successfully logged in via supabase, but no corresponding record was found in the
+	// app database
+
+	if (!supabaseUser.email) {
+		throw new Error(
+			`Unable to create corresponding local record for supabase user ${supabaseUser.id}`
+		);
+	}
+
+	// TODO: Instead of this, we should force invited users to visit the settings screen and set
+	// a name before progressing
+	const firstName = supabaseUser.user_metadata.firstName ?? "";
+	const lastName = supabaseUser.user_metadata.lastName ?? null;
+	const communityId = supabaseUser.user_metadata.communityId ?? unJournalId;
+	const role = supabaseUser.user_metadata.role ?? MemberRole.editor;
+
+	const { passwordHash, ...newUser } = await prisma.user.create({
+		data: {
+			email: supabaseUser.email,
+			supabaseId: supabaseUser.id,
+			firstName,
+			lastName,
+			slug: `${slugifyString(firstName)}${
+				lastName ? `-${slugifyString(lastName)}` : ""
+			}-${generateHash(4, "0123456789")}`,
+			memberships: {
+				create: {
+					communityId,
+					role,
+				},
+			},
+		},
+		include: {
+			memberships: {
+				include: {
+					community: true,
+				},
+			},
+		},
+	});
+
+	return newUser;
 });
 
 export type LoginData = Awaited<ReturnType<typeof getLoginData>>;

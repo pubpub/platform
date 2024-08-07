@@ -2,19 +2,24 @@ import type { Adapter, DatabaseSession, DatabaseUser, Session, User } from "luci
 
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { Lucia } from "lucia";
 
-import type { Users, UsersId } from "db/public";
+import type { Communities, Members, Users, UsersId } from "db/public";
 import type { Sessions, SessionsId } from "db/src/public/Sessions";
 
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
 
+type UserWithMembersShips = Omit<Users, "passwordHash"> & {
+	memberships: (Members & {
+		community: Communities | null;
+	})[];
+};
 declare module "lucia" {
 	interface Register {
 		Lucia: typeof lucia;
-		DatabaseUserAttributes: Omit<Users, "id">;
+		DatabaseUserAttributes: Omit<UserWithMembersShips, "id">;
 		DatabaseSessionAttributes: Omit<
 			Sessions,
 			"id" | "expiresAt" | "userId" | "createdAt" | "updatedAt"
@@ -42,8 +47,30 @@ class KyselyAdapter implements Adapter {
 					eb
 						.selectFrom("users")
 						.selectAll()
-						.select(["users.id"])
-						.whereRef("users.id", "=", "sessions.id")
+						.select((eb) => [
+							"users.id",
+							jsonArrayFrom(
+								eb
+									.selectFrom("members")
+									.selectAll()
+									.select((eb) => [
+										"members.id",
+										jsonObjectFrom(
+											eb
+												.selectFrom("communities")
+												.selectAll()
+												.select(["communities.id"])
+												.whereRef(
+													"communities.id",
+													"=",
+													"members.communityId"
+												)
+										).as("community"),
+									])
+									.whereRef("members.userId", "=", "users.id")
+							).as("memberships"),
+						])
+						.whereRef("users.id", "=", "sessions.userId")
 				).as("user"),
 			])
 			.where("id", "=", sessionId)
@@ -102,34 +129,6 @@ class KyselyAdapter implements Adapter {
 			.where("expiresAt", "<=", new Date())
 			.executeTakeFirstOrThrow();
 	}
-
-	// private async getSession(sessionId: SessionsId): Promise<DatabaseSession | null> {
-	// 	const result = await db
-	// 		.selectFrom("sessions")
-	// 		.selectAll()
-	// 		.where("id", "=", sessionId)
-	// 		.executeTakeFirst();
-
-	// 	if (!result) {
-	// 		return null;
-	// 	}
-
-	// 	return transformIntoDatabaseSession(result);
-	// }
-
-	// private async getUserFromSessionId(sessionId: SessionsId): Promise<DatabaseUser | null> {
-	// 	const result = await db
-	// 		.selectFrom("users")
-	// 		.selectAll()
-	// 		.innerJoin("sessions", "sessions.userId", "users.id")
-	// 		.where("sessions.id", "=", sessionId)
-	// 		.executeTakeFirst();
-
-	// 	if (!result) {
-	// 		return null;
-	// 	}
-	// 	return transformIntoDatabaseUser(result);
-	// }
 }
 
 function transformIntoDatabaseSession(raw: Sessions): DatabaseSession {
@@ -142,7 +141,7 @@ function transformIntoDatabaseSession(raw: Sessions): DatabaseSession {
 	};
 }
 
-function transformIntoDatabaseUser(raw: Users): DatabaseUser {
+function transformIntoDatabaseUser(raw: UserWithMembersShips): DatabaseUser {
 	const { id, ...attributes } = raw;
 	return {
 		id,
@@ -168,6 +167,8 @@ export const lucia = new Lucia(adapter, {
 		createdAt,
 		updatedAt,
 		supabaseId,
+		memberships,
+		avatar,
 	}) => {
 		return {
 			email,
@@ -178,6 +179,8 @@ export const lucia = new Lucia(adapter, {
 			createdAt,
 			updatedAt,
 			supabaseId,
+			memberships,
+			avatar,
 		};
 	},
 });
@@ -185,6 +188,7 @@ export const lucia = new Lucia(adapter, {
 export const validateRequest = cache(
 	async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
 		const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
+
 		if (!sessionId) {
 			return {
 				user: null,
@@ -193,6 +197,7 @@ export const validateRequest = cache(
 		}
 
 		const result = await lucia.validateSession(sessionId);
+
 		// next.js throws when you attempt to set cookie when rendering page
 		try {
 			// a "fresh" session indicates that the session should be refreshed
