@@ -54,13 +54,12 @@ const preparePayload = ({
 	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
-	const formSlugs = formElements.map((fe) => fe.slug);
-	const payload = {};
-	formSlugs.forEach((slug) => {
+	const payload: Record<string, JsonValue> = {};
+	for (const { slug } of formElements) {
 		if (slug) {
 			payload[slug] = formValues[slug];
 		}
-	});
+	}
 	return payload;
 };
 
@@ -73,14 +72,14 @@ const buildDefaultValues = (
 ) => {
 	const defaultValues: FieldValues = { ...pubValues };
 	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
-	dateElements.forEach((de) => {
+	for (const de of dateElements) {
 		if (de.slug) {
 			const pubValue = pubValues[de.slug];
 			if (pubValue) {
 				defaultValues[de.slug] = new Date(pubValue as string);
 			}
 		}
-	});
+	}
 	return defaultValues;
 };
 
@@ -130,11 +129,11 @@ export const ExternalFormWrapper = ({
 			])
 		)
 	);
-	const methods = useForm({
+	const formInstance = useForm({
 		resolver: typeboxResolver(schema),
 		defaultValues: buildDefaultValues(elements, pub.values),
 	});
-	const isSubmitting = methods.formState.isSubmitting;
+	const isSubmitting = formInstance.formState.isSubmitting;
 
 	const handleAutoSave = (values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
 		// Don't auto save while editing the user ID field. the query params
@@ -149,7 +148,7 @@ export const ExternalFormWrapper = ({
 		const newTimer = setTimeout(async () => {
 			// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 			// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
-			if (methods.formState.isValid || saveTimer === undefined) {
+			if (formInstance.formState.isValid || saveTimer === undefined) {
 				handleSubmit(values, true);
 			}
 		}, SAVE_WAIT_MS);
@@ -157,10 +156,10 @@ export const ExternalFormWrapper = ({
 	};
 
 	return (
-		<Form {...methods}>
+		<Form {...formInstance}>
 			<form
-				onChange={methods.handleSubmit((values, evt) => handleAutoSave(values, evt))}
-				onSubmit={methods.handleSubmit((values) => handleSubmit(values))}
+				onChange={formInstance.handleSubmit((values, evt) => handleAutoSave(values, evt))}
+				onSubmit={formInstance.handleSubmit((values) => handleSubmit(values))}
 				className={cn("relative flex flex-col gap-6", className)}
 			>
 				{children}
