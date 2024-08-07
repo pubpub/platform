@@ -7,6 +7,9 @@ import { logger } from "logger";
 
 import type { BasePubField } from "../corePubFields";
 
+/**
+ * Validate all `values` against their corresponding field's `schemaName`.
+ */
 export const validatePubValuesBySchemaName = ({
 	fields,
 	values,
@@ -14,13 +17,13 @@ export const validatePubValuesBySchemaName = ({
 	fields: { name: string; slug: string; schemaName?: CoreSchemaType | null }[];
 	values: Record<string, unknown>;
 }) => {
-	for (const field of fields) {
-		const value = values[field.slug];
+	for (const [slug, value] of Object.entries(values)) {
+		const field = fields.find((f) => f.slug === slug);
+		if (!field) {
+			return { error: `Field ${slug} does not exist on pub` };
+		}
 		if (!field.schemaName) {
 			return { error: `Field ${field.slug} does not have a schemaName, cannot validate` };
-		}
-		if (value === undefined) {
-			return { error: `Field ${field.slug} not found in pub values` };
 		}
 		const jsonSchema = getJsonSchemaByCoreSchemaType(field.schemaName);
 		const result = Value.Check(jsonSchema, value);

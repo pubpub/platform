@@ -20,6 +20,7 @@ export {
 	CircleCheck,
 	CircleDashed,
 	CircleDollarSign,
+	CircleHelp,
 	CircleEllipsis,
 	Clipboard,
 	CurlyBraces,
