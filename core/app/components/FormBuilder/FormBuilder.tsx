@@ -32,7 +32,7 @@ import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
-import { formBuilderSchema } from "./types";
+import { formBuilderSchema, isButtonElement } from "./types";
 
 const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
 	const { eventName } = event;
@@ -77,6 +77,8 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 		case "save":
 			if (prevState.state === "editing")
 				return { ...prevState, state: "initial", selectedElementIndex: null };
+			if (prevState.state === "editingButton")
+				return { ...prevState, state: "initial", buttonId: null };
 			break;
 		case "editButton":
 			const buttonId = event.buttonId ?? null;
@@ -198,7 +200,6 @@ export function FormBuilder({ pubForm, id }: Props) {
 
 	return (
 		<FormBuilderProvider
-			elements={pubForm.elements}
 			removeIfUnconfigured={removeIfUnconfigured}
 			addElement={addElement}
 			removeElement={removeElement}
@@ -262,8 +263,9 @@ export function FormBuilder({ pubForm, id }: Props) {
 											items={elements}
 											strategy={verticalListSortingStrategy}
 										>
-											{elements.map((element, index) => {
-												return (
+											{elements
+												.filter((e) => !isButtonElement(e))
+												.map((element, index) => (
 													<FormElement
 														key={element.id}
 														element={element}
@@ -279,8 +281,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 																index
 														}
 													></FormElement>
-												);
-											})}
+												))}
 										</SortableContext>
 									</DndContext>
 								</div>

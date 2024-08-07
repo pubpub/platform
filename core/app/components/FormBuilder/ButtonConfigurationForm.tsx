@@ -1,7 +1,10 @@
+import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
+import type { StagesId } from "db/public";
+import { ElementType } from "db/public";
 import { MarkdownEditor, zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
 import {
@@ -39,8 +42,16 @@ const SCHEMA = z.object({
 });
 
 export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
-	const { elements, dispatch } = useFormBuilder();
-	const button = elements.find((e) => e.id === id);
+	const { dispatch, update } = useFormBuilder();
+	// This uses the parent's form context to get the most up to date version of 'elements'
+	const { getValues } = useFormContext();
+	const { button, buttonIndex } = useMemo(() => {
+		const elements = getValues()["elements"];
+		const button = elements.find((e) => e.elementId === id);
+		const buttonIndex = elements.findIndex((e) => e.elementId === id);
+		return { button, buttonIndex };
+	}, []);
+
 	const community = useCommunity();
 	const { stages } = community;
 
@@ -62,9 +73,18 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 	});
 
 	const onSubmit = (values: z.infer<typeof SCHEMA>) => {
-		console.log({ values });
-		// update(index, { ...selectedElement, ...values, updated: true, configured: true });
-		// dispatch({ eventName: "save" });
+		const index = buttonIndex === -1 ? 0 : buttonIndex;
+		update(index, {
+			order: null,
+			type: ElementType.button,
+			elementId: button?.elementId,
+			label: values.label,
+			content: values.content,
+			stageId: values.stageId as StagesId | undefined,
+			updated: true,
+			configured: true,
+		});
+		dispatch({ eventName: "save" });
 	};
 
 	return (
@@ -72,7 +92,7 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 			<form
 				onSubmit={(e) => {
 					e.stopPropagation(); //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit, (f) => console.log(f))(e);
+					form.handleSubmit(onSubmit)(e);
 				}}
 				className="flex h-full flex-col justify-between gap-2"
 			>

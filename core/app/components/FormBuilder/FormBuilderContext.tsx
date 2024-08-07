@@ -20,7 +20,6 @@ type FormBuilderContext = {
 	removeIfUnconfigured: () => void;
 	dispatch: React.Dispatch<PanelEvent>;
 	slug: string;
-	elements: FormElementData[];
 };
 
 const FormBuilderContext = createContext<FormBuilderContext | undefined>(undefined);

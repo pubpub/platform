@@ -1,3 +1,6 @@
+import { useMemo } from "react";
+import { useFormContext } from "react-hook-form";
+
 import { Button } from "ui/button";
 import { FormLabel } from "ui/form";
 import { FormInput, Pencil } from "ui/icon";
@@ -43,15 +46,32 @@ const DefaultButton = () => {
 };
 
 export const SubmissionSettings = () => {
-	const { elements } = useFormBuilder();
-	const buttons = elements.filter((e) => isButtonElement(e));
+	// This uses the parent's form context to get the most up to date version of 'elements'
+	const { getValues } = useFormContext();
+	const buttons = useMemo(() => {
+		const elements = getValues()["elements"];
+		return elements.filter((e) => isButtonElement(e));
+	}, []);
 	const showDefaultButton = buttons.length === 0;
 
 	return (
 		<div>
 			<FormLabel className="text-sm uppercase text-slate-500">Submission Settings</FormLabel>
 			<hr className="my-2" />
-			<div>{showDefaultButton ? <DefaultButton /> : null}</div>
+			{showDefaultButton ? <DefaultButton /> : null}
+			<div>
+				{buttons.map((b, i) => {
+					const buttonType = i === 0 ? "Primary Button" : "Secondary Button";
+					return (
+						<ButtonOption
+							id={b.elementId}
+							key={b.elementId}
+							label={b.label}
+							buttonType={buttonType}
+						/>
+					);
+				})}
+			</div>
 		</div>
 	);
 };
