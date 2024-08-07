@@ -28,8 +28,8 @@ model User {
   updatedAt    DateTime @default(now()) @updatedAt
   isSuperAdmin Boolean  @default(false)
   // TODO: remove the ? when we have removed supabase
+  // Users without a password (yet) should have an empty string instead 
   passwordHash String?
-  salt         String?
 
   claims         ActionClaim[]
   moves          ActionMove[]

@@ -10,7 +10,7 @@ import { logger } from "logger";
 import type { DefinitelyHas, Prettify, XOR } from "../types";
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { lucia, validateRequest } from "~/lib/auth/lucia";
-import { validatePassword } from "~/lib/auth/validatePassword";
+import { validatePassword } from "~/lib/auth/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getUser } from "~/lib/server/user";
 import { getServerSupabase } from "~/lib/supabaseServer";
@@ -21,7 +21,7 @@ const schema = z.object({
 });
 
 type LoginUser = Prettify<
-	Omit<Users, "orcid" | "avatar" | "salt"> & {
+	Omit<Users, "orcid" | "avatar"> & {
 		memberships: (Members & { community: Communities | null })[];
 	}
 >;
@@ -37,7 +37,7 @@ function redirectUser(memberships?: (Members & { community: Communities | null }
 async function supabaseLogin({ user, password }: { user: LoginUser; password: string }) {
 	const supabase = getServerSupabase();
 
-	const { data, error } = await supabase.auth.signInWithPassword({ email: user.email, password });
+	const { data } = await supabase.auth.signInWithPassword({ email: user.email, password });
 
 	if (!data.session) {
 		return {
