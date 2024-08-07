@@ -209,7 +209,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 					? elements[panelState.selectedElementIndex]
 					: undefined
 			}
-			elementsCount={elements.length}
+			elementsCount={elements.filter((e) => !isButtonElement(e)).length}
 			openConfigPanel={(index: number) =>
 				dispatch({ eventName: "edit", selectedElementIndex: index })
 			}

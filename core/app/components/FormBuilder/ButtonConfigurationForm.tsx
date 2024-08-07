@@ -26,31 +26,45 @@ import { ChevronDown } from "ui/icon";
 import { Input } from "ui/input";
 import { cn } from "utils";
 
+import type { ButtonElement } from "./types";
 import { useCommunity } from "../providers/CommunityProvider";
 import { useFormBuilder } from "./FormBuilderContext";
+import { ButtonOption } from "./SubmissionSettings";
+import { isButtonElement } from "./types";
 
-export const DEFAULT_BUTTON = {
+const DEFAULT_BUTTON = {
 	label: "Submit",
 	content: "Thank you for your submission",
-	buttonType: "Primary Button",
 };
-
-const SCHEMA = z.object({
-	label: z.string(),
-	content: z.string(),
-	stageId: z.string().optional(),
-});
 
 export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 	const { dispatch, update } = useFormBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext();
-	const { button, buttonIndex } = useMemo(() => {
+	// Derive some initial values based on the state of the parent form when this panel was opened
+	const { button, buttonIndex, otherButtons } = useMemo(() => {
 		const elements = getValues()["elements"];
-		const button = elements.find((e) => e.elementId === id);
+		const button = id
+			? elements.find((e) => {
+					// because we can add buttons without saving first, not all buttons will have an existing ID yet
+					// so we fallback to label
+					return e.elementId === id || e.label === id;
+				})
+			: undefined;
+		const otherButtons: ButtonElement[] = elements.filter(
+			(e) => isButtonElement(e) && e.elementId !== id
+		);
 		const buttonIndex = elements.findIndex((e) => e.elementId === id);
-		return { button, buttonIndex };
+		return { button, buttonIndex, otherButtons };
 	}, []);
+
+	const schema = z.object({
+		label: z.string().refine((l) => !otherButtons.find((b) => b.label === l), {
+			message: "There is already a button with this label",
+		}),
+		content: z.string(),
+		stageId: z.string().optional(),
+	});
 
 	const community = useCommunity();
 	const { stages } = community;
@@ -67,12 +81,12 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 				stageId: undefined,
 			};
 
-	const form = useForm<z.infer<typeof SCHEMA>>({
-		resolver: zodResolver(SCHEMA),
+	const form = useForm<z.infer<typeof schema>>({
+		resolver: zodResolver(schema),
 		defaultValues,
 	});
 
-	const onSubmit = (values: z.infer<typeof SCHEMA>) => {
+	const onSubmit = (values: z.infer<typeof schema>) => {
 		const index = buttonIndex === -1 ? 0 : buttonIndex;
 		update(index, {
 			order: null,
@@ -86,6 +100,7 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 		});
 		dispatch({ eventName: "save" });
 	};
+	const labelValue = form.watch("label");
 
 	return (
 		<Form {...form}>
@@ -94,8 +109,9 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 					e.stopPropagation(); //prevent submission from propagating to parent form
 					form.handleSubmit(onSubmit)(e);
 				}}
-				className="flex h-full flex-col justify-between gap-2"
+				className="flex h-full flex-col justify-between gap-2 pt-2"
 			>
+				<ButtonOption label={labelValue} readOnly />
 				<FormField
 					control={form.control}
 					name="label"
@@ -114,7 +130,7 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 					name="content"
 					render={({ field }) => (
 						<MarkdownEditor
-							zodInputProps={zodToHtmlInputProps(SCHEMA.shape.content)}
+							zodInputProps={zodToHtmlInputProps(schema.shape.content)}
 							// @ts-ignore can't seem to infer this is ok for FieldValues
 							field={field}
 							fieldConfigItem={{
@@ -127,10 +143,10 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 							label="Post-submission message"
 							isRequired={false}
 							fieldProps={{
-								...zodToHtmlInputProps(SCHEMA.shape.content),
+								...zodToHtmlInputProps(schema.shape.content),
 								...field,
 							}}
-							zodItem={SCHEMA.shape.content}
+							zodItem={schema.shape.content}
 							description="The message displayed after submission. Markdown supported."
 							descriptionPlacement="bottom"
 						/>
