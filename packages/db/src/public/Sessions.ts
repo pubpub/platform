@@ -18,8 +18,6 @@ export interface SessionsTable {
 
 	expiresAt: ColumnType<Date, Date | string, Date | string>;
 
-	fresh: ColumnType<boolean, boolean | undefined, boolean>;
-
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -37,7 +35,6 @@ export const sessionsSchema = z.object({
 	id: sessionsIdSchema,
 	userId: usersIdSchema,
 	expiresAt: z.date(),
-	fresh: z.boolean(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 });
@@ -46,7 +43,6 @@ export const sessionsInitializerSchema = z.object({
 	id: sessionsIdSchema.optional(),
 	userId: usersIdSchema,
 	expiresAt: z.date(),
-	fresh: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 });
@@ -55,7 +51,6 @@ export const sessionsMutatorSchema = z.object({
 	id: sessionsIdSchema.optional(),
 	userId: usersIdSchema.optional(),
 	expiresAt: z.date().optional(),
-	fresh: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 });

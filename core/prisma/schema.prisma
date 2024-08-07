@@ -45,11 +45,10 @@ model User {
 }
 
 model Session {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   expiresAt DateTime
-  fresh     Boolean  @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
