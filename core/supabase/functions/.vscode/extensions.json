@@ -1,3 +1,9 @@
 {
-	"recommendations": ["denoland.vscode-deno"]
+	"recommendations": [
+		"denoland.vscode-deno",
+		"ms-playwright.playwright",
+		"YoavBls.pretty-ts-errors",
+		"esbenp.prettier-vscode",
+		"dbaeumer.vscode-eslint"
+	]
 }
