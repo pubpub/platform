@@ -148,15 +148,15 @@ const DateElement = ({ label, name }: ElementProps) => {
 	);
 };
 
+/**
+ * Renders every CoreSchemaType EXCEPT MemberId!
+ */
 export const FormElement = ({
 	pubId,
 	element,
-	userSelect,
 }: {
 	pubId: PubsId;
 	element: Form["elements"][number];
-	/** The userSelect component is a server component so is passed in separately */
-	userSelect: ReactNode;
 }) => {
 	const { schemaName, label: labelProp, slug } = element;
 	if (!slug) {
@@ -181,9 +181,6 @@ export const FormElement = ({
 	}
 	if (schemaName === CoreSchemaType.Boolean) {
 		return <BooleanElement {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.MemberId) {
-		return userSelect;
 	}
 	if (schemaName === CoreSchemaType.FileUpload) {
 		return <FileUploadElement pubId={pubId} {...elementProps} />;

@@ -56,25 +56,21 @@ export const InnerForm = ({
 	return (
 		<>
 			{elements.map((e) => {
-				const userId =
-					e.schemaName === CoreSchemaType.MemberId && e.slug ? values[e.slug] : undefined;
-				return (
-					<FormElement
-						pubId={pubId}
-						key={e.elementId}
-						element={e}
-						userSelect={
-							<UserIdSelect
-								label={e.label ?? ""}
-								name={e.slug ?? ""}
-								id={e.elementId}
-								searchParams={searchParams}
-								value={userId as MembersId | undefined}
-								communitySlug={communitySlug}
-							/>
-						}
-					/>
-				);
+				if (e.schemaName === CoreSchemaType.MemberId) {
+					const userId = values[e.slug!] as MembersId | undefined;
+					return (
+						<UserIdSelect
+							key={e.elementId}
+							label={e.label ?? ""}
+							name={e.slug ?? ""}
+							id={e.elementId}
+							searchParams={searchParams}
+							value={userId}
+							communitySlug={communitySlug}
+						/>
+					);
+				}
+				return <FormElement pubId={pubId} key={e.elementId} element={e} />;
 			})}
 		</>
 	);
