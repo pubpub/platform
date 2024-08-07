@@ -42,7 +42,7 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext();
 	// Derive some initial values based on the state of the parent form when this panel was opened
-	const { button, buttonIndex, otherButtons } = useMemo(() => {
+	const { button, buttonIndex, otherButtons, numElements } = useMemo(() => {
 		const elements = getValues()["elements"];
 		const button = id
 			? elements.find((e) => {
@@ -55,14 +55,17 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 			(e) => isButtonElement(e) && e.elementId !== id
 		);
 		const buttonIndex = elements.findIndex((e) => e.elementId === id);
-		return { button, buttonIndex, otherButtons };
+		return { button, buttonIndex, otherButtons, numElements: elements.length };
 	}, []);
 
 	const schema = z.object({
-		label: z.string().refine((l) => !otherButtons.find((b) => b.label === l), {
-			message: "There is already a button with this label",
-		}),
-		content: z.string(),
+		label: z
+			.string()
+			.min(1)
+			.refine((l) => !otherButtons.find((b) => b.label === l), {
+				message: "There is already a button with this label",
+			}),
+		content: z.string().min(1),
 		stageId: z.string().optional(),
 	});
 
@@ -87,7 +90,7 @@ export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
 	});
 
 	const onSubmit = (values: z.infer<typeof schema>) => {
-		const index = buttonIndex === -1 ? 0 : buttonIndex;
+		const index = buttonIndex === -1 ? numElements : buttonIndex;
 		update(index, {
 			order: null,
 			type: ElementType.button,
