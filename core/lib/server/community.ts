@@ -70,3 +70,5 @@ export const getAvailableCommunities = async (userId: UsersId) => {
 		.selectAll("communities")
 		.execute();
 };
+
+export type AvailableCommunitiesData = Prisma.PromiseReturnType<typeof getAvailableCommunities>;
