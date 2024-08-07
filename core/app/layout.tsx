@@ -22,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				<PublicEnvScript />
 			</head>
 			<body>
+				{/* Can be removed once we have moved to Lucia */}
 				<InitClient />
 				<TooltipProvider>
 					{children}

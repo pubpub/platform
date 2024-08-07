@@ -1,10 +1,12 @@
-import { headers } from "next/headers";
+import { getURLFromRedirectError, isRedirectError } from "next/dist/client/components/redirect";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { withServerActionInstrumentation } from "@sentry/nextjs";
 
 import { logger } from "logger";
 
 import type { ClientExceptionOptions } from "../serverActions";
-import { ClientException, isClientExceptionOptions, makeClientException } from "../serverActions";
+import { isClientExceptionOptions, makeClientException } from "../serverActions";
 
 /**
  * Wraps a Next.js server action function with Sentry instrumentation. Additionally
@@ -38,6 +40,13 @@ export const defineServerAction = <
 							makeClientException(serverActionResult)
 						: serverActionResult;
 				} catch (error) {
+					// manually re-redirect users, as redirect() throws an error
+					if (isRedirectError(error)) {
+						const url = getURLFromRedirectError(error);
+						redirect(url);
+						return;
+					}
+
 					logger.debug(error);
 					// https://github.com/vercel/next.js/discussions/49426#discussioncomment-8176059
 					// Because you can't simply wrap a server action call on the client in try/catch

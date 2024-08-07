@@ -71,7 +71,7 @@ export const validateRequest = cache(
 				cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 			}
 		} catch {
-			// TODO: handle this
+			// TODO: handle this?
 		}
 		return result;
 	}
