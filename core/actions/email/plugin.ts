@@ -11,15 +11,19 @@ import { MembersId, UsersId } from "db/public";
 import { expect } from "utils";
 
 import { addMemberToForm, createFormInviteLink } from "~/lib/server/form";
-import { getMember } from "~/lib/server/user";
 import { EmailToken } from "./tokens";
 
-export type EmailDirectivePluginContext = {
-	sender: {
+export type EmailDirectivePluginPub = {
+	id: string;
+	values: Record<string, any>;
+	assignee?: {
 		firstName: string;
 		lastName: string | null;
 		email: string;
-	};
+	} | null;
+};
+
+export type EmailDirectivePluginContext = {
 	recipient: {
 		id: MembersId;
 		user: {
@@ -30,13 +34,8 @@ export type EmailDirectivePluginContext = {
 		};
 	};
 	communitySlug: string;
-	pub: {
-		id: string;
-		values: Record<string, any>;
-		assignee?: {
-			email: string;
-		};
-	};
+	pub: EmailDirectivePluginPub;
+	parentPub?: EmailDirectivePluginPub | null;
 };
 
 const isDirective = (node: Node): node is NodeMdast & Directive => {
@@ -51,64 +50,92 @@ const isParent = (node: Node): node is ParentMdast => {
 	return "children" in node;
 };
 
+const deriveAssigneeFromDirective = (
+	node: NodeMdast & Directive,
+	context: EmailDirectivePluginContext
+) => {
+	const attrs = node.attributes;
+	if (attrs?.rel === "parent") {
+		const parentPub = expect(context.parentPub, "Missing parent pub");
+		return expect(parentPub.assignee, "Parent pub has no assignee");
+	} else {
+		return expect(context.pub.assignee, "Pub has no assignee");
+	}
+};
+
 const visitValueDirective = (node: NodeMdast & Directive, context: EmailDirectivePluginContext) => {
-	const attrs = expect(node.attributes);
-	const value = context.pub.values[expect(attrs.field)];
+	const attrs = expect(node.attributes, "Invalid syntax in value directive");
+	const field = expect(attrs.field, "Missing field attribute in value directive");
+
+	let value: unknown;
+
+	if (attrs?.rel === "parent") {
+		const parentPub = expect(context.parentPub, "Missing parent pub");
+		value = parentPub.values[field];
+	} else {
+		value = context.pub.values[field];
+	}
+
+	assert(value !== undefined, `Missing value for ${field}`);
+
 	node.data = {
 		...node.data,
 		hName: "span",
 		hChildren: [
 			{
 				type: "text",
-				value,
+				value: String(value),
 			},
 		],
 	};
 };
 
-const visitSenderNameDirective = (
+const visitAssigneeNameDirective = (
 	node: NodeMdast & Directive,
 	context: EmailDirectivePluginContext
 ) => {
+	const assignee = deriveAssigneeFromDirective(node, context);
 	node.data = {
 		...node.data,
 		hName: "span",
 		hChildren: [
 			{
 				type: "text",
-				value: `${context.sender.firstName} ${context.sender.lastName}`,
+				value: `${assignee.firstName} ${assignee.lastName}`,
 			},
 		],
 	};
 };
 
-const visitSenderFirstNameDirective = (
+const visitAssigneeFirstNameDirective = (
 	node: NodeMdast & Directive,
 	context: EmailDirectivePluginContext
 ) => {
+	const assignee = deriveAssigneeFromDirective(node, context);
 	node.data = {
 		...node.data,
 		hName: "span",
 		hChildren: [
 			{
 				type: "text",
-				value: context.sender.firstName,
+				value: assignee.firstName,
 			},
 		],
 	};
 };
 
-const visitSenderLastNameDirective = (
+const visitAssigneeLastNameDirective = (
 	node: NodeMdast & Directive,
 	context: EmailDirectivePluginContext
 ) => {
+	const assignee = deriveAssigneeFromDirective(node, context);
 	node.data = {
 		...node.data,
 		hName: "span",
 		hChildren: [
 			{
 				type: "text",
-				value: context.sender.lastName ?? "",
+				value: assignee.lastName ?? "",
 			},
 		],
 	};
@@ -164,7 +191,7 @@ const visitRecipientLastNameDirective = (
 
 const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirectivePluginContext) => {
 	// `node.attributes` should always be defined for directive nodes
-	const attrs = expect(node.attributes);
+	const attrs = expect(node.attributes, "Invalid syntax in link directive");
 	// All directives are considered parent nodes
 	assert(isParent(node));
 	let href: string;
@@ -173,24 +200,19 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirective
 	if ("email" in attrs) {
 		// The `email` attribute must have a value. For example, :link{email=""}
 		// is invalid.
-		const to = expect(attrs.email, 'Missing value for "email" attribute');
-		// If the email has no label, default to the email address, e.g.
-		// :link{email=all@pubpub.org} -> :link[all@pubpub.org]{email=all@pubpub.org}
-		if (node.children.length === 0) {
-			node.children.push({
-				type: "text",
-				value: to === "assignee" ? context.sender.email : to,
-			});
-		}
+		let to = expect(attrs.email, 'Missing value for "email" attribute');
 		// If the user defines the recipient as `"assignee"`, the pub must have an
 		// assignee for the email to be sent.
 		if (to === "assignee") {
-			assert(context.pub.assignee !== undefined, "Pub has no assignee");
-			href = `mailto:${context.pub.assignee.email}`;
-		} else {
-			// The recipient is a static email address
-			href = `mailto:${to}`;
+			const assignee = deriveAssigneeFromDirective(node, context);
+			to = assignee.email;
 		}
+		// If the email has no label, default to the email address, e.g.
+		// :link{email=all@pubpub.org} -> :link[all@pubpub.org]{email=all@pubpub.org}
+		if (node.children.length === 0) {
+			node.children.push({ type: "text", value: to });
+		}
+		href = `mailto:${to}`;
 	}
 	// :link{form=review}
 	else if ("form" in attrs) {
@@ -204,11 +226,19 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: EmailDirective
 	}
 	// :link{field=pubpub:url}
 	else if ("field" in attrs) {
-		const field = expect(attrs.field, 'Missing value for "field" attribute');
-		href = context.pub.values[field];
+		const field = expect(attrs.field, 'Missing "field" attribute');
+		if ("rel" in attrs) {
+			assert(attrs.rel === "parent", 'Invalid value for "rel" attribute');
+			const parentPub = expect(context.parentPub, "Missing parent pub");
+			href = parentPub.values[field];
+		} else {
+			href = context.pub.values[field];
+		}
+		assert(href !== undefined, `Missing value for ${field}`);
 	} else {
 		throw new Error("Invalid link directive");
 	}
+
 	// Default the text content to the href if the node has no children
 	if (node.children.length === 0) {
 		node.children.push({
@@ -227,9 +257,9 @@ type DirectiveVisitor = (node: NodeMdast & Directive, context: EmailDirectivePlu
 
 const directiveVisitors: Record<EmailToken, DirectiveVisitor> = {
 	[EmailToken.Value]: visitValueDirective,
-	[EmailToken.SenderName]: visitSenderNameDirective,
-	[EmailToken.SenderFirstName]: visitSenderFirstNameDirective,
-	[EmailToken.SenderLastName]: visitSenderLastNameDirective,
+	[EmailToken.AssigneeName]: visitAssigneeNameDirective,
+	[EmailToken.AssigneeFirstName]: visitAssigneeFirstNameDirective,
+	[EmailToken.AssigneeLastName]: visitAssigneeLastNameDirective,
 	[EmailToken.RecipientName]: visitRecipientNameDirective,
 	[EmailToken.RecipientFirstName]: visitRecipientFirstNameDirective,
 	[EmailToken.RecipientLastName]: visitRecipientLastNameDirective,
