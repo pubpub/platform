@@ -65,6 +65,7 @@ export const GetPubResponseBodyBase = commonPubFields.extend({
 	values: z.record(JsonOutput),
 	assignee: User.nullish(),
 	communityId: z.string(),
+	createdAt: z.date(),
 });
 export type GetPubResponseBodyBase = z.infer<typeof GetPubResponseBodyBase>;
 

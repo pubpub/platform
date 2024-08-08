@@ -1,7 +1,9 @@
 "use client";
 
+import type { UppyFile } from "@uppy/core";
+
 import React, { forwardRef, useEffect } from "react";
-import Uppy, { UppyFile } from "@uppy/core";
+import Uppy from "@uppy/core";
 import { Dashboard } from "@uppy/react";
 
 // import "./fileUpload.css";
@@ -24,6 +26,7 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 			const uploadedFiles = uppy.getFiles();
 			const formattedFiles = uploadedFiles.map((file) => {
 				return {
+					id: file.id,
 					fileName: file.name,
 					fileSource: file.source,
 					fileType: file.type,

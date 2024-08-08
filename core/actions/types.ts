@@ -1,7 +1,7 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
-import type { CommunitiesId, CoreSchemaType, Event, StagesId } from "db/public";
+import type { CommunitiesId, CoreSchemaType, Event, PubsId, StagesId } from "db/public";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
@@ -15,6 +15,7 @@ export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<Zo
 
 export type ActionPub<T extends ActionPubType> = {
 	id: string;
+	parentId?: PubsId | null;
 	values: {
 		[key in T[number]["slug"]]: JTDDataType<T[number]["schema"]["schema"]>;
 	};
