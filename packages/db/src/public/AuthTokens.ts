@@ -1,7 +1,9 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 import { z } from "zod";
 
+import type { AuthTokenType } from "./AuthTokenType";
 import type { UsersId } from "./Users";
+import { authTokenTypeSchema } from "./AuthTokenType";
 import { usersIdSchema } from "./Users";
 
 // @generated
@@ -23,6 +25,8 @@ export interface AuthTokensTable {
 	isUsed: ColumnType<boolean, boolean | undefined, boolean>;
 
 	userId: ColumnType<UsersId, UsersId, UsersId>;
+
+	type: ColumnType<AuthTokenType, AuthTokenType | undefined, AuthTokenType>;
 }
 
 export type AuthTokens = Selectable<AuthTokensTable>;
@@ -40,6 +44,7 @@ export const authTokensSchema = z.object({
 	expiresAt: z.date(),
 	isUsed: z.boolean(),
 	userId: usersIdSchema,
+	type: authTokenTypeSchema,
 });
 
 export const authTokensInitializerSchema = z.object({
@@ -49,6 +54,7 @@ export const authTokensInitializerSchema = z.object({
 	expiresAt: z.date(),
 	isUsed: z.boolean().optional(),
 	userId: usersIdSchema,
+	type: authTokenTypeSchema.optional(),
 });
 
 export const authTokensMutatorSchema = z.object({
@@ -58,4 +64,5 @@ export const authTokensMutatorSchema = z.object({
 	expiresAt: z.date().optional(),
 	isUsed: z.boolean().optional(),
 	userId: usersIdSchema.optional(),
+	type: authTokenTypeSchema.optional(),
 });

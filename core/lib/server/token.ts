@@ -1,6 +1,13 @@
 import crypto from "crypto";
 
-import prisma from "~/prisma/db";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+
+import type { AuthTokensId, UsersId } from "db/public";
+import { AuthTokenType } from "db/public";
+
+import { db } from "~/kysely/database";
+import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
 import { UnauthorizedError } from "./errors";
 
 const hashAlgorithm = "sha3-512";
@@ -23,19 +30,9 @@ export const validateToken = async (token: string) => {
 	const [tokenId, tokenString] = token.split(".");
 
 	// Retrieve the token's hash, metadata, and associated user
-	const dbToken = await prisma.authToken.findUnique({
-		where: {
-			id: tokenId,
-		},
-		include: {
-			user: true,
-		},
-	});
-
-	// Check that we found a token with the provided token ID
-	if (!dbToken) {
-		throw new UnauthorizedError("Token not found");
-	}
+	const dbToken = await getAuthToken(tokenId as AuthTokensId).executeTakeFirstOrThrow(
+		() => new UnauthorizedError("Token not found")
+	);
 
 	// TODO: TURN THIS BACK ON
 	// Check if the token had been used previously. Integrations should use this response to prompt
@@ -44,13 +41,13 @@ export const validateToken = async (token: string) => {
 	// 	throw new UnauthorizedError('Token already used')
 	// }
 
-	const { hash, user } = dbToken;
+	const { hash, user, expiresAt, type } = dbToken;
 
 	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
 	// different expiration periods
-	// if (expiresAt < new Date()) {
-	// 	throw new UnauthorizedError('Expired token')
-	// }
+	if (expiresAt < new Date()) {
+		throw new UnauthorizedError("Expired token");
+	}
 
 	// Finally, hash the token string input and do a constant time comparison between this value and the hash retrieved from the database
 	const inputHash = createHash(tokenString).digest();
@@ -65,36 +62,67 @@ export const validateToken = async (token: string) => {
 	}
 
 	// If we haven't thrown by now, we've authenticated the user associated with the token
-	await prisma.authToken.update({
-		data: {
-			isUsed: true,
-		},
-		where: {
-			id: tokenId,
-		},
-	});
+	await autoRevalidate(
+		db.updateTable("auth_tokens").set({ isUsed: true }).where("id", "=", dbToken.id)
+	).execute();
+
 	return user;
 };
 
-// Securely generate a random token and store its hash in the database, while returning the
-// plaintext
-export const createToken = async (userId: string) => {
-	const tokenString = generateToken();
+const getTokenBase = db
+	.selectFrom("auth_tokens")
+	.select((eb) => [
+		"auth_tokens.id",
+		"auth_tokens.createdAt",
+		"auth_tokens.isUsed",
+		"auth_tokens.userId",
+		"auth_tokens.expiresAt",
+		"auth_tokens.hash",
+		"auth_tokens.type",
+		jsonObjectFrom(
+			eb.selectFrom("users").selectAll().whereRef("users.id", "=", "auth_tokens.userId")
+		).as("user"),
+	]);
+
+export const getAuthToken = (token: AuthTokensId) =>
+	autoCache(getTokenBase.where("auth_tokens.id", "=", token));
+
+const createDateOneWeekInTheFuture = () => {
 	const expiresAt = new Date();
 	const expirationPeriod = 7; // Tokens expire after one week
 	expiresAt.setDate(expiresAt.getDate() + expirationPeriod);
+	return expiresAt;
+};
+// Securely generate a random token and store its hash in the database, while returning the
+// plaintext
+export const createToken = async ({
+	userId,
+	type = AuthTokenType.magicLink,
+	expiresAt = createDateOneWeekInTheFuture(),
+}: {
+	userId: UsersId;
+	type: AuthTokenType;
+	expiresAt: Date;
+}) => {
+	const tokenString = generateToken();
 
 	// There's no salt added to this hash! That's okay because the string we're hashing is random
 	// data to begin with. Adding a salt would help protect tokens in a leaked database against
 	// rainbow table attacks, but no better than increasing the key length would.
 	const hash = createHash(tokenString).digest(encoding);
-	const token = await prisma.authToken.create({
-		data: {
-			userId,
-			hash,
-			expiresAt,
-		},
-	});
+
+	const token = await autoRevalidate(
+		db
+			.insertInto("auth_tokens")
+			.values({
+				userId,
+				hash,
+				expiresAt,
+				type,
+			})
+			.returning(["id", "hash"])
+	).executeTakeFirstOrThrow(() => new UnauthorizedError("Unable to create token"));
+
 	return `${token.id}.${tokenString}`;
 };
 

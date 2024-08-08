@@ -55,15 +55,22 @@ model Session {
 }
 
 model AuthToken {
-  id        String   @id @default(cuid())
+  id        String        @id @default(dbgenerated("gen_random_uuid()"))
   hash      String
-  createdAt DateTime @default(now())
+  createdAt DateTime      @default(now())
   expiresAt DateTime // Tokens expire within 1 week...
-  isUsed    Boolean  @default(false) // ...or after one use
-  user      User     @relation(fields: [userId], references: [id])
+  isUsed    Boolean       @default(false) // ...or after one use
+  user      User          @relation(fields: [userId], references: [id])
   userId    String
+  type      AuthTokenType @default(magicLink)
 
   @@map(name: "auth_tokens")
+}
+
+enum AuthTokenType {
+  magicLink
+  passwordReset
+  signup
 }
 
 model Community {

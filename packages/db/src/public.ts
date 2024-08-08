@@ -10,6 +10,7 @@ export * from "./public/ApiAccessScope";
 export * from "./public/ApiAccessTokens";
 export * from "./public/ApiAccessType";
 export * from "./public/AuthTokens";
+export * from "./public/AuthTokenType";
 export * from "./public/Communities";
 export * from "./public/CoreSchemaType";
 export * from "./public/ElementType";
