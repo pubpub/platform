@@ -14,6 +14,7 @@ import { validatePassword } from "~/lib/auth/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getUser } from "~/lib/server/user";
 import { getServerSupabase } from "~/lib/supabaseServer";
+import { env } from "../env/env.mjs";
 
 const schema = z.object({
 	email: z.string().email(),
@@ -45,8 +46,16 @@ async function supabaseLogin({ user, password }: { user: LoginUser; password: st
 		};
 	}
 
-	cookies().set(TOKEN_NAME, data.session?.access_token);
-	cookies().set(REFRESH_NAME, data.session?.refresh_token);
+	cookies().set(TOKEN_NAME, data.session?.access_token, {
+		sameSite: "lax",
+		secure: env.NODE_ENV === "production",
+		maxAge: 100 * 365 * 24 * 60 * 60, // 100 years, never expires
+	});
+	cookies().set(REFRESH_NAME, data.session?.refresh_token, {
+		sameSite: "lax",
+		secure: env.NODE_ENV === "production",
+		maxAge: 100 * 365 * 24 * 60 * 60, // 100 years, never expires
+	});
 
 	redirectUser(user.memberships);
 }
