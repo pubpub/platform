@@ -17,7 +17,7 @@ import { getServerSupabase } from "~/lib/supabaseServer";
 
 const schema = z.object({
 	email: z.string().email(),
-	password: z.string().min(8).max(72),
+	password: z.string().min(1),
 });
 
 type LoginUser = Prettify<
