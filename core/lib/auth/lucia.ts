@@ -27,6 +27,17 @@ declare module "lucia" {
 	}
 }
 
+/**
+ * I chose to write our own adapter instead of using Lucia's default PostgresNodeAdapter
+ * for a few reasons:
+ * 1. Lucia will most likely remove the adapters in v4
+ * 2. The default PostgresNodeAdapter required snake_cased column names, which is incosistent
+ * with what we have in our database
+ * 3. The default adapter used two separate queries to get the user and session, which is
+ * kinda inefficient for such a common one
+ * 4. Writing `getSessionAndUser` ourselves allowed me to include the `memberships`
+ * by default, which makes it easier to make this system compatible with `getLoginData`
+ */
 class KyselyAdapter implements Adapter {
 	public async deleteSession(sessionId: SessionsId): Promise<void> {
 		await db.deleteFrom("sessions").where("id", "=", sessionId).executeTakeFirstOrThrow();
@@ -191,6 +202,12 @@ export const lucia = new Lucia(adapter, {
 	},
 });
 
+/**
+ * Get the session and corresponding user from cookies
+ *
+ * Also extends the session cookie with the updated expiration date, keeping it fresh,
+ * and removes the session cookie if the session is invalid
+ */
 export const validateRequest = cache(
 	async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
 		const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
