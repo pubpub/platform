@@ -44,7 +44,7 @@
 		"@honeycombio/opentelemetry-node": "^0.6.1",
 		"@hookform/resolvers": "^3.3.1",
 		"@nimpl/getters": "^1.4.1",
-		"@node-rs/bcrypt": "^1.10.4",
+		"@node-rs/argon2": "^1.8.3",
 		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
 		"@prisma/client": "^5.2.0",
 		"@pubpub/sdk": "workspace:*",

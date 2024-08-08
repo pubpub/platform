@@ -43,7 +43,7 @@ const nextConfig = {
 			// without this here, next will sort of implode and no longer compile and serve pages properly
 			// if graphile-worker is used in server actions
 			"graphile-worker",
-			"@node-rs/bcrypt",
+			"@node-rs/argon2",
 		],
 	},
 	// open telemetry cries a lot during build, don't think it's serious
