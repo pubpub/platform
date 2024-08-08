@@ -1,19 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { Button } from "ui/button";
 import { LogOut } from "ui/icon";
 
-import { supabase } from "~/lib/supabase";
+import * as actions from "~/lib/auth/actions";
+import { useServerAction } from "~/lib/serverActions";
 
 export default function LogoutButton() {
-	const router = useRouter();
-
+	const runLogout = useServerAction(actions.logout);
 	const handleSignout = async () => {
-		await supabase.auth.signOut();
-		router.refresh();
-		router.push("/");
+		await runLogout();
 	};
 	return (
 		<Button
