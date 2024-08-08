@@ -59,7 +59,7 @@ export const ButtonConfigurationForm = ({
 				})
 			: -1;
 		const button = buttonIndex === -1 ? undefined : elements[buttonIndex];
-		const otherButtons = elements.filter(
+		const otherButtons: ButtonElement[] = elements.filter(
 			(e) =>
 				isButtonElement(e) &&
 				e.elementId !== buttonIdentifier &&

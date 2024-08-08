@@ -7,7 +7,7 @@ import { formElementsInitializerSchema } from "db/public";
 import { logger } from "logger";
 
 import type { FormBuilderSchema } from "./types";
-import { db } from "~/kysely/database";
+import { db, isUniqueConstraintError } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
@@ -94,6 +94,9 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 			).executeTakeFirstOrThrow();
 		}
 	} catch (error) {
+		if (isUniqueConstraintError(error)) {
+			return { error: `An element with this label already exists. Choose a new name` };
+		}
 		logger.error({ msg: "error saving form", error });
 		return { error: "Unable to save form" };
 	}
