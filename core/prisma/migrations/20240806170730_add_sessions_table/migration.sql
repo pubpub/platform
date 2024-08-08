@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE
     "sessions" (
-        "id" UUID NOT NULL DEFAULT gen_random_uuid (),
+        "id" TEXT NOT NULL DEFAULT gen_random_uuid (),
         "userId" TEXT NOT NULL,
         "expiresAt" TIMESTAMP(3) NOT NULL,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
