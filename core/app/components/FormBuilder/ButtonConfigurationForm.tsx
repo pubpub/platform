@@ -37,24 +37,34 @@ const DEFAULT_BUTTON = {
 	content: "Thank you for your submission",
 };
 
-export const ButtonConfigurationForm = ({ id }: { id: string | null }) => {
+export const ButtonConfigurationForm = ({
+	buttonIdentifier,
+}: {
+	// The id here is either the button's elementId or its label depending on what is available
+	buttonIdentifier: string | null;
+}) => {
 	const { dispatch, update } = useFormBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext();
 	// Derive some initial values based on the state of the parent form when this panel was opened
 	const { button, buttonIndex, otherButtons, numElements } = useMemo(() => {
 		const elements = getValues()["elements"];
-		const button = id
-			? elements.find((e) => {
-					// because we can add buttons without saving first, not all buttons will have an existing ID yet
-					// so we fallback to label
-					return e.elementId === id || e.label === id;
+		// Because a button might not have an ID yet (if it wasn't saved to the db yet) fall back to its label as an identifier
+		const buttonIndex = buttonIdentifier
+			? elements.findIndex((e) => {
+					if (!isButtonElement(e)) {
+						return false;
+					}
+					return e.elementId === buttonIdentifier || e.label === buttonIdentifier;
 				})
-			: undefined;
-		const otherButtons: ButtonElement[] = elements.filter(
-			(e) => isButtonElement(e) && e.elementId !== id
+			: -1;
+		const button = buttonIndex === -1 ? undefined : elements[buttonIndex];
+		const otherButtons = elements.filter(
+			(e) =>
+				isButtonElement(e) &&
+				e.elementId !== buttonIdentifier &&
+				e.label !== buttonIdentifier
 		);
-		const buttonIndex = elements.findIndex((e) => e.elementId === id);
 		return { button, buttonIndex, otherButtons, numElements: elements.length };
 	}, []);
 

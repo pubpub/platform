@@ -214,7 +214,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 					>
 						<X size="16px" className="text-muted-foreground" />
 					</Button>
-					<ButtonConfigurationForm id={state.buttonId} />
+					<ButtonConfigurationForm buttonIdentifier={state.buttonId} />
 				</>
 			);
 	}

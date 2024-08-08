@@ -16,6 +16,7 @@ const baseElementSchema = z.object({
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),
+	stageId: z.string().nullable().optional(),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
