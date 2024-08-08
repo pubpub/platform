@@ -78,7 +78,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			subject: args?.subject ?? config.subject,
 		});
 	} catch (error) {
-		console.log(error);
 		logger.error({ msg: "email", error });
 
 		return {
