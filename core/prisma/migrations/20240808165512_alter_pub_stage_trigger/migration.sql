@@ -1,0 +1,7 @@
+BEGIN;
+DROP TRIGGER IF EXISTS pub_moved ON "PubsInStages";
+CREATE TRIGGER pub_moved
+    AFTER INSERT OR DELETE OR UPDATE ON "PubsInStages"
+    FOR EACH ROW
+    EXECUTE FUNCTION emit_event();
+COMMIT;

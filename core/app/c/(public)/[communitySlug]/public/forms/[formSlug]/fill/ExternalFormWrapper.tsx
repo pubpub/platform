@@ -111,9 +111,13 @@ export const ExternalFormWrapper = ({
 			formElements,
 			formValues: values,
 		});
+		const submitButtonId = evt?.nativeEvent.submitter?.id;
+		const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
+		const stageId = submitButtonConfig?.stageId;
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			fields,
+			stageId,
 		});
 		if (didSucceed(result)) {
 			const newParams = new URLSearchParams(params);
