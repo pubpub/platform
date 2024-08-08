@@ -101,10 +101,7 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 
 	const { email, password } = parsed.data;
 
-	const user = await getUser(
-		{ email },
-		{ additionalSelect: ["users.passwordHash"] }
-	).executeTakeFirst();
+	const user = await getUser({ email }).select("users.passwordHash").executeTakeFirst();
 
 	if (!user) {
 		return {
