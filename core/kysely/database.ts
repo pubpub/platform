@@ -9,13 +9,10 @@ import { logger } from "logger";
 
 import { env } from "~/lib/env/env.mjs";
 
-// we also use this pool for lucia, hence the export
-export const pool = new Pool({
-	connectionString: env.DATABASE_URL,
-});
-
 const dialect = new PostgresDialect({
-	pool,
+	pool: new Pool({
+		connectionString: env.DATABASE_URL,
+	}),
 });
 
 const kyselyLogger =
