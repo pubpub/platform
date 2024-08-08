@@ -1,4 +1,4 @@
-import { getURLFromRedirectError, isRedirectError } from "next/dist/client/components/redirect";
+import { getURLFromRedirectError } from "next/dist/client/components/redirect";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { withServerActionInstrumentation } from "@sentry/nextjs";
@@ -40,10 +40,10 @@ export const defineServerAction = <
 							makeClientException(serverActionResult)
 						: serverActionResult;
 				} catch (error) {
-					// manually re-redirect users, as redirect() throws an error
-					if (isRedirectError(error)) {
-						const url = getURLFromRedirectError(error);
-						redirect(url);
+					const redirectUrl = getURLFromRedirectError(error);
+					if (redirectUrl) {
+						// manually re-redirect users, as redirect() throws an error
+						redirect(redirectUrl);
 					}
 
 					logger.debug(error);
