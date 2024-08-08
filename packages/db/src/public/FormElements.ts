@@ -4,10 +4,12 @@ import { z } from "zod";
 import type { ElementType } from "./ElementType";
 import type { FormsId } from "./Forms";
 import type { PubFieldsId } from "./PubFields";
+import type { StagesId } from "./Stages";
 import type { StructuralFormElement } from "./StructuralFormElement";
 import { elementTypeSchema } from "./ElementType";
 import { formsIdSchema } from "./Forms";
 import { pubFieldsIdSchema } from "./PubFields";
+import { stagesIdSchema } from "./Stages";
 import { structuralFormElementSchema } from "./StructuralFormElement";
 
 // @generated
@@ -26,7 +28,7 @@ export interface FormElementsTable {
 
 	formId: ColumnType<FormsId, FormsId, FormsId>;
 
-	order: ColumnType<number, number, number>;
+	order: ColumnType<number | null, number | null, number | null>;
 
 	label: ColumnType<string | null, string | null, string | null>;
 
@@ -42,7 +44,7 @@ export interface FormElementsTable {
 
 	required: ColumnType<boolean | null, boolean | null, boolean | null>;
 
-	isSubmit: ColumnType<boolean, boolean | undefined, boolean>;
+	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
 }
 
 export type FormElements = Selectable<FormElementsTable>;
@@ -58,13 +60,13 @@ export const formElementsSchema = z.object({
 	type: elementTypeSchema,
 	fieldId: pubFieldsIdSchema.nullable(),
 	formId: formsIdSchema,
-	order: z.number(),
+	order: z.number().nullable(),
 	label: z.string().nullable(),
 	description: z.string().nullable(),
 	element: structuralFormElementSchema.nullable(),
 	content: z.string().nullable(),
 	required: z.boolean().nullable(),
-	isSubmit: z.boolean(),
+	stageId: stagesIdSchema.nullable(),
 });
 
 export const formElementsInitializerSchema = z.object({
@@ -72,13 +74,13 @@ export const formElementsInitializerSchema = z.object({
 	type: elementTypeSchema,
 	fieldId: pubFieldsIdSchema.optional().nullable(),
 	formId: formsIdSchema,
-	order: z.number(),
+	order: z.number().optional().nullable(),
 	label: z.string().optional().nullable(),
 	description: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
-	isSubmit: z.boolean().optional(),
+	stageId: stagesIdSchema.optional().nullable(),
 });
 
 export const formElementsMutatorSchema = z.object({
@@ -86,11 +88,11 @@ export const formElementsMutatorSchema = z.object({
 	type: elementTypeSchema.optional(),
 	fieldId: pubFieldsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional(),
-	order: z.number().optional(),
+	order: z.number().optional().nullable(),
 	label: z.string().optional().nullable(),
 	description: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
-	isSubmit: z.boolean().optional(),
+	stageId: stagesIdSchema.optional().nullable(),
 });
