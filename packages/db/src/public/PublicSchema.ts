@@ -38,6 +38,36 @@ import { type StagesTable } from "./Stages";
 import { type UsersTable } from "./Users";
 
 export interface PublicSchema {
+	_prisma_migrations: PrismaMigrationsTable;
+
+	users: UsersTable;
+
+	pubs: PubsTable;
+
+	pub_types: PubTypesTable;
+
+	stages: StagesTable;
+
+	members: MembersTable;
+
+	member_groups: MemberGroupsTable;
+
+	integrations: IntegrationsTable;
+
+	communities: CommunitiesTable;
+
+	move_constraint: MoveConstraintTable;
+
+	action_claim: ActionClaimTable;
+
+	action_move: ActionMoveTable;
+
+	pub_fields: PubFieldsTable;
+
+	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
+
 	integration_instances: IntegrationInstancesTable;
 
 	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
@@ -73,36 +103,6 @@ export interface PublicSchema {
 	api_access_permissions: ApiAccessPermissionsTable;
 
 	form_to_permissions: FormToPermissionsTable;
-
-	_prisma_migrations: PrismaMigrationsTable;
-
-	users: UsersTable;
-
-	pubs: PubsTable;
-
-	pub_types: PubTypesTable;
-
-	stages: StagesTable;
-
-	members: MembersTable;
-
-	member_groups: MemberGroupsTable;
-
-	integrations: IntegrationsTable;
-
-	communities: CommunitiesTable;
-
-	move_constraint: MoveConstraintTable;
-
-	action_claim: ActionClaimTable;
-
-	action_move: ActionMoveTable;
-
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
 
 	form_elements: FormElementsTable;
 

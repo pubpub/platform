@@ -121,7 +121,6 @@ class KyselyAdapter implements Adapter {
 
 	public async setSession(databaseSession: DatabaseSession): Promise<void> {
 		const value = {
-			id: databaseSession.id as SessionsId,
 			userId: databaseSession.userId as UsersId,
 			expiresAt: databaseSession.expiresAt,
 			...databaseSession.attributes,
