@@ -47,11 +47,13 @@ async function supabaseLogin({ user, password }: { user: LoginUser; password: st
 	}
 
 	cookies().set(TOKEN_NAME, data.session?.access_token, {
+		path: "/",
 		sameSite: "lax",
 		secure: env.NODE_ENV === "production",
 		maxAge: 100 * 365 * 24 * 60 * 60, // 100 years, never expires
 	});
 	cookies().set(REFRESH_NAME, data.session?.refresh_token, {
+		path: "/",
 		sameSite: "lax",
 		secure: env.NODE_ENV === "production",
 		maxAge: 100 * 365 * 24 * 60 * 60, // 100 years, never expires
