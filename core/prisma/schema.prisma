@@ -489,7 +489,7 @@ model FormElement {
   stage       Stage?                 @relation(fields: [stageId], references: [id])
   stageId     String?
 
-  @@unique([type, label])
+  @@unique([type, label, formId])
   @@unique([fieldId, formId])
   @@map(name: "form_elements")
 }
