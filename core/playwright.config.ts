@@ -25,9 +25,11 @@ export default defineConfig({
 	},
 	webServer: [
 		{
-			command: process.env.TEST_DEV
-				? "pnpm --filter core dev"
-				: "pnpm --filter core build && pnpm --filter core start",
+			command: `pnpm -w preconstruct build && ${
+				process.env.TEST_DEV
+					? "pnpm --filter core dev"
+					: "pnpm --filter core build && pnpm --filter core start"
+			}`,
 			timeout: 600_000,
 			port: 3000,
 			stderr: "pipe",
