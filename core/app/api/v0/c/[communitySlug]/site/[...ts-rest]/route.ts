@@ -105,6 +105,7 @@ const handler = createNextHandler(
 
 				const pub = await getPubCached(pubId as PubsId);
 
+				res.responseHeaders.set("Access-Control-Allow-Origin", "*");
 				return {
 					status: 200,
 					body: pub,
@@ -195,7 +196,7 @@ const handler = createNextHandler(
 					body: stage,
 				};
 			},
-			getMany: async (req) => {
+			getMany: async (req, res) => {
 				const { community, authorization } = await checkAuthorization(
 					ApiAccessScope.stage,
 					ApiAccessType.read
@@ -213,7 +214,18 @@ const handler = createNextHandler(
 		handlerType: "app-router",
 		jsonQuery: true,
 		errorHandler: tsRestHandleErrors,
+		cors: {
+			origin: "*",
+			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+		},
 	}
 );
 
-export { handler as GET, handler as POST, handler as PUT, handler as PATCH, handler as DELETE };
+export {
+	handler as GET,
+	handler as POST,
+	handler as PUT,
+	handler as PATCH,
+	handler as DELETE,
+	handler as OPTIONS,
+};
