@@ -94,6 +94,17 @@ export const getFieldTableColumns = () =>
 			accessorKey: "schemaName",
 		},
 		{
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Slug" />,
+			accessorKey: "slug",
+			cell: ({ row }) => (
+				<div className="pr-10">
+					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400 ">
+						{row.original.slug}
+					</span>
+				</div>
+			),
+		},
+		{
 			header: ({ column }) => (
 				<DataTableColumnHeader
 					column={column}
