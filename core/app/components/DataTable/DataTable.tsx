@@ -68,7 +68,9 @@ export function DataTable<TData, TValue>({
 	const showPagination = hidePaginationWhenSinglePage ? table.getPageCount() > 1 : true;
 
 	const handleRowClick = (
-		evt: React.MouseEvent<HTMLTableRowElement, MouseEvent>,
+		evt:
+			| React.MouseEvent<HTMLTableRowElement, MouseEvent>
+			| React.KeyboardEvent<HTMLTableRowElement>,
 		row: Row<TData>
 	) => {
 		if (!onRowClick) {
@@ -76,7 +78,7 @@ export function DataTable<TData, TValue>({
 		}
 		// Do not activate the row click if the element already has a click handler
 		// Ex: a button inside a table cell should still be clickable
-		if ((evt.target as HTMLTableRowElement).onclick) {
+		if (evt.type !== "keydown" && (evt.target as HTMLTableRowElement).onclick) {
 			return;
 		}
 		onRowClick(row);
@@ -126,6 +128,14 @@ export function DataTable<TData, TValue>({
 									<TableRow
 										key={row.id}
 										data-state={row.getIsSelected() && "selected"}
+										tabIndex={0}
+										role="button"
+										aria-pressed={row.getIsSelected() ? "true" : "false"}
+										onKeyDown={(evt) => {
+											if (evt.code === "Enter" || evt.code === "Space") {
+												handleRowClick(evt, row);
+											}
+										}}
 										onClick={(evt) => {
 											handleRowClick(evt, row);
 										}}
