@@ -1,14 +1,15 @@
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-import type { ButtonElement } from "~/app/components/FormBuilder/types";
+import type { Form } from "~/lib/server/form";
+import { isButtonElement } from "~/app/components/FormBuilder/types";
 
 export const SubmitButtons = ({
 	buttons,
 	isDisabled,
 	className,
 }: {
-	buttons: ButtonElement[];
+	buttons: Form["elements"];
 	isDisabled?: boolean;
 	className?: string;
 }) => {
@@ -27,18 +28,20 @@ export const SubmitButtons = ({
 	}
 	return (
 		<div className={cn("flex gap-2", className)}>
-			{buttons.map((button) => {
-				return (
-					<Button
-						id={button.elementId}
-						key={button.elementId}
-						type="submit"
-						disabled={isDisabled}
-					>
-						{button.label}
-					</Button>
-				);
-			})}
+			{buttons
+				.filter((button) => isButtonElement(button))
+				.map((button) => {
+					return (
+						<Button
+							id={button.elementId}
+							key={button.elementId}
+							type="submit"
+							disabled={isDisabled}
+						>
+							{button.label}
+						</Button>
+					);
+				})}
 		</div>
 	);
 };

@@ -113,7 +113,7 @@ export const ExternalFormWrapper = ({
 		});
 		const submitButtonId = evt?.nativeEvent.submitter?.id;
 		const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
-		const stageId = submitButtonConfig?.stageId;
+		const stageId = submitButtonConfig?.stageId ?? undefined;
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			fields,

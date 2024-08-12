@@ -5,7 +5,7 @@ import Markdown from "react-markdown";
 
 import type { PubsId } from "db/public";
 
-import type { Form as PubPubForm } from "~/lib/server/form";
+import type { Form } from "~/lib/server/form";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -22,7 +22,7 @@ const NotFound = ({ children }: { children: ReactNode }) => {
 	return <div className="w-full pt-8 text-center">{children}</div>;
 };
 
-const Completed = ({ element }: { element: PubPubForm["elements"][number] | undefined }) => {
+const Completed = ({ element }: { element: Form["elements"][number] | undefined }) => {
 	return (
 		<div className="flex w-full flex-col gap-2 pt-32 text-center">
 			{element ? (
