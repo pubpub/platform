@@ -1,7 +1,11 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
+
+
 import type { CommunitiesId, PubsId } from "db/public";
+
+
 
 import type { StagePub } from "~/lib/db/queries";
 import type { PubPayload } from "~/lib/types";
@@ -18,6 +22,10 @@ import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
 import { getPubOnTheIndividualPubPage } from "./queries";
+
+
+
+
 
 export default async function Page({
 	params,
@@ -49,6 +57,10 @@ export default async function Page({
 	if (!pub) {
 		return null;
 	}
+	const values = alsoPubs.values;
+	console.log("What values imma old whore", pub.values);
+	console.log("What values imma whore", values);
+
 
 	const community = await getCommunityBySlug(params.communitySlug);
 
