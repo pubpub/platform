@@ -21,14 +21,11 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { expect } from "utils";
 
+import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { UserAvatar } from "../UserAvatar";
-import {
-	isMemberSelectUserWithMembership,
-	MemberSelectUser,
-	MemberSelectUserWithMembership,
-} from "./types";
+import { isMemberSelectUserWithMembership } from "./types";
 import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
 
 const makeOptionFromUser = (user: MemberSelectUser): Option => ({
@@ -83,11 +80,6 @@ export function UserSelectClient({
 	// autocomplete dropdown is closed.
 	const [addUserButtonKey, setAddUserButtonKey] = useState(0);
 	const resetAddUserButton = useCallback(() => {
-		// clear search param
-		const newParams = new URLSearchParams(params);
-		newParams.delete(queryParamName);
-		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
-
 		setAddUserButtonKey((x) => x + 1);
 	}, []);
 
