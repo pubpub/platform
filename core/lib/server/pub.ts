@@ -11,13 +11,14 @@ import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";
-import { validatePubValues } from "~/actions/_lib/validateFields";
+import { validatePubValues, validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { ForbiddenError, NotFoundError } from "./errors";
+import { getPubFields } from "./pubFields";
 
 type PubValues = Record<string, JsonValue>;
 
@@ -385,7 +386,7 @@ const makeRecursivePubUpdateInput = async (
 };
 
 /**
- * For recursive transations
+ * For recursive transactions
  */
 const maybeWithTrx = async <T>(
 	trx: Transaction<Database> | undefined,
@@ -421,29 +422,11 @@ export const createPubRecursiveNew = async ({
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
-	// better to cache fetching all the fields for a pub type
-	// rather than only fetching the ones that are actually used
-	// has a higher chance of being cached for longer
-	// TODO: cache this
-	const pubFieldsForPubType = await db
-		.selectFrom("pub_fields")
-		.select((eb) => [
-			"pub_fields.id",
-			"pub_fields.name",
-			"pub_fields.pubFieldSchemaId",
-			"pub_fields.slug",
-			jsonObjectFrom(
-				eb
-					.selectFrom("PubFieldSchema")
-					.selectAll()
-					.whereRef("PubFieldSchema.id", "=", "pub_fields.pubFieldSchemaId")
-			)
-				.$castTo<BasePubField["schema"]>()
-				.as("schema"),
-		])
-		.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
-		.where("_PubFieldToPubType.B", "=", body.pubTypeId as PubTypesId)
-		.execute();
+	const pubFieldsForPubTypeObject = await getPubFields({
+		pubTypeId: body.pubTypeId as PubTypesId,
+	}).executeTakeFirst();
+
+	const pubFieldsForPubType = Object.values(pubFieldsForPubTypeObject?.fields ?? {});
 
 	if (!pubFieldsForPubType?.length) {
 		throw new NotFoundError(
@@ -456,7 +439,7 @@ export const createPubRecursiveNew = async ({
 		return Boolean(value);
 	});
 
-	const validated = validatePubValues({
+	const validated = validatePubValuesBySchemaName({
 		fields: filteredFields,
 		values: body.values,
 	});
