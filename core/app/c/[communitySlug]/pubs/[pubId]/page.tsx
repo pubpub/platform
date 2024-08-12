@@ -1,11 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-
-
 import type { CommunitiesId, PubsId } from "db/public";
-
-
 
 import type { StagePub } from "~/lib/db/queries";
 import type { PubPayload } from "~/lib/types";
@@ -16,16 +12,13 @@ import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
+import { getPubTitle } from "~/lib/pubs";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
 import { getPubOnTheIndividualPubPage } from "./queries";
-
-
-
-
 
 export default async function Page({
 	params,
@@ -61,7 +54,6 @@ export default async function Page({
 	console.log("What values old", pub.values);
 	console.log("What values", values);
 
-
 	const community = await getCommunityBySlug(params.communitySlug);
 
 	if (community === null) {
@@ -89,6 +81,17 @@ export default async function Page({
 						.map((value) => {
 							return (
 								<div className="mb-4" key={value.id}>
+									<div>{renderField(value)}</div>
+								</div>
+							);
+						})}
+					{Object.entries(alsoPubs.values)
+						.filter(([value]) => {
+							return value !== getPubTitle(pub);
+						})
+						.map(([key, value]) => {
+							return (
+								<div className="mb-4" key={key}>
 									<div>{renderField(value)}</div>
 								</div>
 							);
