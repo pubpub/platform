@@ -19,7 +19,6 @@ export const getPubOnPubPage = (pubId: PubsId) =>
 	getPubBase({ pubId }).select((eb) => [
 		includeStagesWithIntegrations(eb),
 		inCludePubTypes(eb),
-		includeInterationInstances(eb),
 		jsonArrayFrom(
 			eb
 				.selectFrom("children")

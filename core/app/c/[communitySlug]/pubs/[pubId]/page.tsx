@@ -1,15 +1,12 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { CommunitiesId, PubsId } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import type { CommunitiesId, PubsId } from "db/public";
 
 import type { StagePub } from "~/lib/db/queries";
 import type { PubPayload } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import IntegrationActions from "~/app/components/IntegrationActions";
-import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
