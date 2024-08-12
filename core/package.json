@@ -5,6 +5,8 @@
 	"scripts": {
 		"playwright:test": "playwright test",
 		"playwright:ui": "playwright test --ui",
+		"playwright:test:dev": "TEST_DEV=true playwright test",
+		"playwright:ui:dev": "TEST_DEV=true playwright test --ui",
 		"clear-cache": "rm -rf .next/cache/fetch-cache",
 		"dev": "next dev -p 3000 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
