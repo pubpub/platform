@@ -18,7 +18,7 @@ test.describe("Creating a form", () => {
 	});
 	test("Create a new form for the first time", async ({ page }) => {
 		await page.goto("/c/croccroc/forms");
-		await page.getByTestId("new-form-button").click();
+		await page.getByRole("banner").getByTestId("new-form-button").click();
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "Submission" }).click();
 		await page.getByRole("textbox", { name: "name" }).fill("playwright test form");
@@ -28,13 +28,13 @@ test.describe("Creating a form", () => {
 	});
 	test("Cannot create a form with the same slug", async ({ page }) => {
 		await page.goto("/c/croccroc/forms");
-		await page.getByTestId("new-form-button").click();
+		await page.getByRole("banner").getByTestId("new-form-button").click();
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "Submission" }).click();
 		await page.getByRole("textbox", { name: "name" }).fill("playwright test form");
 		await page.getByRole("textbox", { name: "slug" }).fill(FORM_SLUG);
 		await page.getByRole("button", { name: "Create" }).click();
-		await expect(page.getByRole("status")).toContainText("Error");
+		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
 	});
 });
 
@@ -42,6 +42,7 @@ test.describe("Submission buttons", () => {
 	test.beforeEach(async ({ page }) => {
 		await login({ page });
 	});
+
 	test("Add a new button and edit without saving", async ({ page }) => {
 		await page.goto(`/c/croccroc/forms/${FORM_SLUG}/edit`);
 		await page.getByTestId("add-submission-settings-button").click();
@@ -55,6 +56,7 @@ test.describe("Submission buttons", () => {
 			.getByTestId("edit-button")
 			.click();
 	});
+
 	test("Add two new buttons", async ({ page }) => {
 		await page.goto(`/c/croccroc/forms/${FORM_SLUG}/edit`);
 		// Add first button with default fields
@@ -71,5 +73,34 @@ test.describe("Submission buttons", () => {
 
 		// Shouldn't be able to add more buttons
 		await expect(page.getByTestId("add-submission-settings-button")).toHaveCount(0);
+
+		// Save to the server
+		await page.getByTestId("save-form-button").click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
+		).toHaveCount(1);
+	});
+
+	test("Editing a saved button", async ({ page }) => {
+		const newData = { label: "Decline politely", content: "New description" };
+		page.on("request", (request) => {
+			if (request.method() === "POST" && request.url().includes(`forms/${FORM_SLUG}/edit`)) {
+				const data = request.postDataJSON();
+				const buttons = data[0].elements.filter((e) => e.type === "button");
+				const declineButton = buttons.find((b) => b.label === newData.label);
+				expect(declineButton.content).toEqual(newData.content);
+			}
+		});
+
+		await page.goto(`/c/croccroc/forms/${FORM_SLUG}/edit`);
+		await page.getByTestId("button-option-Decline").getByTestId("edit-button").click();
+		await page.getByRole("textbox", { name: "label" }).fill(newData.label);
+		await page.getByRole("textbox").nth(1).fill(newData.content);
+		await page.getByTestId("save-button-configuration-button").click();
+
+		await page.getByTestId("save-form-button").click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
+		).toHaveCount(1);
 	});
 });
