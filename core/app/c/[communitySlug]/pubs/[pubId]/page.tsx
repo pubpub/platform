@@ -52,8 +52,7 @@ export default async function Page({
 	if (!pub) {
 		return null;
 	}
-	console.log("\n\n\nPUB", pub);
-	console.log("\n\n\nALSO PUBS", alsoPubs);
+
 	const community = await getCommunityBySlug(params.communitySlug);
 
 	if (community === null) {
