@@ -32,7 +32,7 @@ import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
-import { formBuilderSchema } from "./types";
+import { formBuilderSchema, isButtonElement } from "./types";
 
 const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
 	const { eventName } = event;
@@ -40,23 +40,22 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 		case "filterFields":
 			const { fieldsFilter } = event;
 			return { ...prevState, fieldsFilter };
-			break;
 		case "cancel":
 			return {
 				state: "initial",
 				selectedElementIndex: null,
 				fieldsFilter: null,
 				backButton: null,
+				buttonId: null,
 			};
-			break;
 		case "back":
 			return {
 				state: prevState.backButton ?? "initial",
 				backButton: prevState.backButton === "selecting" ? "initial" : null,
 				selectedElementIndex: null,
 				fieldsFilter: null,
+				buttonId: null,
 			};
-			break;
 		case "add":
 			if (prevState.state === "initial")
 				return {
@@ -73,12 +72,22 @@ const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, e
 				backButton: newBack,
 				selectedElementIndex: event.selectedElementIndex,
 				fieldsFilter: null,
+				buttonId: null,
 			};
-			break;
 		case "save":
 			if (prevState.state === "editing")
 				return { ...prevState, state: "initial", selectedElementIndex: null };
+			if (prevState.state === "editingButton")
+				return { ...prevState, state: "initial", buttonId: null };
 			break;
+		case "editButton":
+			const buttonId = event.buttonId ?? null;
+			return {
+				...prevState,
+				state: "editingButton",
+				backButton: "initial",
+				buttonId,
+			};
 	}
 	return prevState;
 };
@@ -87,6 +96,7 @@ const elementPanelTitles: Record<PanelState["state"], string> = {
 	editing: "Configure element",
 	selecting: "Add element",
 	initial: "Elements",
+	editingButton: "Edit Submission Button",
 };
 
 type Props = {
@@ -128,6 +138,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 		backButton: null,
 		selectedElementIndex: null,
 		fieldsFilter: null,
+		buttonId: null,
 	});
 
 	const {
@@ -198,15 +209,15 @@ export function FormBuilder({ pubForm, id }: Props) {
 					? elements[panelState.selectedElementIndex]
 					: undefined
 			}
-			elementsCount={elements.length}
+			elementsCount={elements.filter((e) => !isButtonElement(e)).length}
 			openConfigPanel={(index: number) =>
 				dispatch({ eventName: "edit", selectedElementIndex: index })
 			}
+			openButtonConfigPanel={(id) => dispatch({ eventName: "editButton", buttonId: id })}
 			update={update}
 			dispatch={dispatch}
 			slug={pubForm.slug}
 		>
-			{" "}
 			<Tabs defaultValue="builder" className="pr-[380px]">
 				<div className="px-6">
 					<TabsList className="mb-2 mt-4">
@@ -252,8 +263,9 @@ export function FormBuilder({ pubForm, id }: Props) {
 											items={elements}
 											strategy={verticalListSortingStrategy}
 										>
-											{elements.map((element, index) => {
-												return (
+											{elements
+												.filter((e) => !isButtonElement(e))
+												.map((element, index) => (
 													<FormElement
 														key={element.id}
 														element={element}
@@ -269,70 +281,65 @@ export function FormBuilder({ pubForm, id }: Props) {
 																index
 														}
 													></FormElement>
-												);
-											})}
+												))}
 										</SortableContext>
 									</DndContext>
 								</div>
 								<PanelWrapper sidebar={sidebarRef.current}>
-									<>
-										<FormField
-											control={form.control}
-											name="elements"
-											render={() => (
-												<FormItem>
-													<FormLabel className="mb-4 uppercase text-slate-500">
-														{elementPanelTitles[panelState.state]}
-													</FormLabel>
-													<hr />
+									<FormField
+										control={form.control}
+										name="elements"
+										render={() => (
+											<FormItem className="flex-1">
+												<FormLabel className="mb-4 text-sm uppercase text-slate-500">
+													{elementPanelTitles[panelState.state]}
+												</FormLabel>
+												<hr />
+												<FormControl>
+													<ElementPanel state={panelState} />
+												</FormControl>
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="access"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-sm uppercase text-slate-500">
+													Access
+												</FormLabel>
+												<hr />
+												<Select
+													onValueChange={field.onChange}
+													defaultValue={field.value}
+												>
 													<FormControl>
-														<ElementPanel state={panelState} />
+														<SelectTrigger>
+															<SelectValue placeholder="Select a type" />
+														</SelectTrigger>
 													</FormControl>
-												</FormItem>
-											)}
-										/>
-										<FormField
-											control={form.control}
-											name="access"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-slate-500">
-														Access
-													</FormLabel>
-													<hr />
-													<Select
-														onValueChange={field.onChange}
-														defaultValue={field.value}
-													>
-														<FormControl>
-															<SelectTrigger>
-																<SelectValue placeholder="Select a type" />
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent>
-															{Object.values(FormAccessType).map(
-																(t) => (
-																	<SelectItem
-																		key={t}
-																		value={t.toString()}
-																	>
-																		<div className="first-letter:capitalize">
-																			{t}
-																		</div>
-																	</SelectItem>
-																)
-															)}
-														</SelectContent>
-													</Select>
-													<FormDescription>
-														{field.value === FormAccessType.private &&
-															"Only internal editors can submit"}{" "}
-													</FormDescription>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>{" "}
-									</>
+													<SelectContent>
+														{Object.values(FormAccessType).map((t) => (
+															<SelectItem
+																key={t}
+																value={t.toString()}
+															>
+																<div className="first-letter:capitalize">
+																	{t}
+																</div>
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+												<FormDescription>
+													{field.value === FormAccessType.private &&
+														"Only internal editors can submit"}{" "}
+												</FormDescription>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
 								</PanelWrapper>
 							</form>
 						</Form>
@@ -342,7 +349,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 			</Tabs>
 			<div
 				ref={sidebarRef}
-				className="fixed right-0 top-[72px] z-30 flex h-screen w-[380px] flex-col gap-10 border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
+				className="fixed right-0 top-[72px] z-30 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
 			></div>
 		</FormBuilderProvider>
 	);

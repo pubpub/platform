@@ -5,6 +5,7 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
+import { createPasswordHash } from "~/lib/auth/password";
 
 export const crocCrocId = "758ba348-92c7-46ec-9612-7afda81e2d70" as CommunitiesId;
 
@@ -104,6 +105,14 @@ export default async function main(communityUUID: CommunitiesId) {
 	const users = await db
 		.insertInto("users")
 		.values([
+			{
+				slug: "new-pubpub",
+				email: "new@pubpub.org",
+				firstName: "New",
+				lastName: "admin",
+				avatar: faker.image.avatar(),
+				passwordHash: await createPasswordHash("pubpub-new"),
+			},
 			{
 				slug: faker.lorem.slug(),
 				email: faker.internet.email(),

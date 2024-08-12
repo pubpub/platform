@@ -76,4 +76,5 @@ export type AutoFormInputComponentProps = {
 	description?: string;
 	className?: string;
 	canUsePubField?: boolean;
+	descriptionPlacement?: "top" | "bottom";
 };

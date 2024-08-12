@@ -54,13 +54,13 @@ export const action = defineAction({
 			[EmailToken.Value]: {
 				description: "Insert a value from the pub.",
 			},
-			[EmailToken.SenderName]: {
+			[EmailToken.AssigneeName]: {
 				description: "The full name of the email sender.",
 			},
-			[EmailToken.SenderFirstName]: {
+			[EmailToken.AssigneeFirstName]: {
 				description: "The first name of the email sender.",
 			},
-			[EmailToken.SenderLastName]: {
+			[EmailToken.AssigneeLastName]: {
 				description: "The last name of the email sender.",
 			},
 			[EmailToken.RecipientName]: {

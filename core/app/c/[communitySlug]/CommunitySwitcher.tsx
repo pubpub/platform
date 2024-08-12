@@ -8,11 +8,11 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 
-import type { CommunityData } from "~/lib/server/community";
+import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
 
 type Props = {
 	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<CommunityData>[];
+	availableCommunities: NonNullable<AvailableCommunitiesData>;
 };
 
 const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommunities }) {

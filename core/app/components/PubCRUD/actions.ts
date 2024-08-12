@@ -22,12 +22,14 @@ export const createPub = defineServerAction(async function createPub({
 	pubTypeId,
 	fields,
 	path,
+	parentId,
 }: {
 	communityId: CommunitiesId;
 	stageId: StagesId;
 	pubTypeId: PubTypesId;
 	fields: { [id: PubFieldsId]: { slug: string; value: JsonValue } };
 	path?: string | null;
+	parentId?: PubsId;
 }) {
 	const loginData = await getLoginData();
 	if (!loginData) {
@@ -49,6 +51,7 @@ export const createPub = defineServerAction(async function createPub({
 						.values({
 							communityId: communityId,
 							pubTypeId: pubTypeId,
+							parentId: parentId,
 						})
 						.returning("id")
 				)
@@ -104,7 +107,13 @@ export const _upsertPubValues = async ({
 		)
 		.distinctOn("pub_fields.id")
 		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
-		.select(["pub_values.id", "pub_fields.slug", "pub_fields.name", "pub_fields.schemaName"])
+		.select([
+			"pub_values.id as pubValueId",
+			"pub_values.pubId",
+			"pub_fields.slug",
+			"pub_fields.name",
+			"pub_fields.schemaName",
+		])
 		.execute();
 
 	const validated = validatePubValuesBySchemaName({
@@ -127,7 +136,9 @@ export const _upsertPubValues = async ({
 				.values((eb) => {
 					return Object.entries(fields).map(([slug, value]) => {
 						return {
-							id: pubFields.find((pf) => pf.slug === slug)?.id ?? undefined,
+							id:
+								pubFields.find((pf) => pf.slug === slug && pf.pubId === pubId)
+									?.pubValueId ?? undefined,
 							pubId,
 							value: JSON.stringify(value),
 							fieldId: eb

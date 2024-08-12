@@ -2,7 +2,7 @@ import { Button } from "ui/button";
 import { Activity, Menu, Settings, ToyBrick } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
-import type { CommunityData } from "~/lib/server/community";
+import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import CommunitySwitcher from "./CommunitySwitcher";
@@ -11,7 +11,7 @@ import NavLink from "./NavLink";
 
 type Props = {
 	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<CommunityData>[];
+	availableCommunities: NonNullable<AvailableCommunitiesData>;
 };
 
 const Links = ({

@@ -1,52 +1,37 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { supabase } from "lib/supabase";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Check, Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
-const loginFormSchema = z.object({
+import * as actions from "~/lib/auth/actions";
+import { useServerAction } from "~/lib/serverActions";
+
+export const loginFormSchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(1),
 });
 
 export default function LoginForm() {
-	const router = useRouter();
-
-	const form = useForm({
+	const form = useForm<z.infer<typeof loginFormSchema>>({
 		resolver: zodResolver(loginFormSchema),
 	});
 
-	const handleSubmit = async () => {
-		const { data, error } = await supabase.auth.signInWithPassword({
-			email: form.getValues().email,
-			password: form.getValues().password,
+	const runLoginWithPassword = useServerAction(actions.loginWithPassword);
+
+	const handleSubmit = async (formData: z.infer<typeof loginFormSchema>) => {
+		await runLoginWithPassword({
+			email: formData.email,
+			password: formData.password,
 		});
-		if (error) {
-			form.setError("password", { message: "Incorrect password or email" });
-		} else if (data) {
-			// check if user is in a community
-			const response = await fetch(`/api/member?email=${data.user.email}`, {
-				method: "GET",
-				headers: { "content-type": "application/json" },
-			});
-			const { member } = await response.json();
-			router.refresh();
-			if (member) {
-				router.push(`/c/${member.community.slug}/stages`);
-			} else {
-				router.push("/settings");
-			}
-		}
 	};
 
 	return (
@@ -77,7 +62,7 @@ export default function LoginForm() {
 						<FormField
 							control={form.control}
 							name="password"
-							render={({ field, fieldState }) => (
+							render={({ field }) => (
 								<div className="grid gap-2">
 									<FormItem>
 										<FormLabel>Password</FormLabel>

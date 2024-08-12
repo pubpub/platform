@@ -80,8 +80,15 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 						jsonObjectFrom(
 							eb
 								.selectFrom("communities")
+								.select([
+									"communities.id",
+									"communities.slug",
+									"communities.name",
+									"communities.avatar",
+									"communities.createdAt",
+									"communities.updatedAt",
+								])
 								.whereRef("communities.id", "=", "members.communityId")
-								.selectAll()
 						).as("community"),
 					])
 					// for some reason doing "members.userId" doesn't work

@@ -1,3 +1,5 @@
+import type { EditorState } from "lexical";
+
 import * as React from "react";
 import { CodeNode } from "@lexical/code";
 import { LinkNode } from "@lexical/link";
@@ -17,16 +19,15 @@ import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPl
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import { EditorState } from "lexical";
 
 import { cn } from "utils";
 
+import type { AutoFormInputComponentProps } from "../../types";
 import { FormControl, FormItem, FormMessage } from "../../../form";
 import { useTokenContext } from "../../../tokens";
 import AutoFormDescription from "../../common/description";
 import AutoFormLabel from "../../common/label";
 import AutoFormTooltip from "../../common/tooltip";
-import { AutoFormInputComponentProps } from "../../types";
 import { TokenNode } from "./TokenNode";
 import { TokenPlugin } from "./TokenPlugin";
 
@@ -61,6 +62,7 @@ const makeSyntheticChangeEvent = (value: string) => {
 export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = props.fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
+	const { descriptionPlacement = "top" } = props;
 	const initialValue = React.useMemo(() => props.field.value ?? "", []);
 	const initialConfig = React.useMemo(() => {
 		return {
@@ -89,7 +91,7 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 				{showLabel && (
 					<>
 						<AutoFormLabel label={props.label} isRequired={props.isRequired} />
-						{props.description && (
+						{props.description && descriptionPlacement === "top" && (
 							<AutoFormDescription description={props.description} />
 						)}
 					</>
@@ -119,6 +121,9 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 					</LexicalComposer>
 				</FormControl>
 				<AutoFormTooltip fieldConfigItem={props.fieldConfigItem} />
+				{props.description && descriptionPlacement === "bottom" && (
+					<AutoFormDescription description={props.description} />
+				)}
 				<FormMessage />
 			</FormItem>
 		</div>

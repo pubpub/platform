@@ -187,10 +187,11 @@ export type MaybeHas<T extends Record<string, unknown>, K extends keyof T> = T e
 export type DefinitelyHas<T, K extends keyof T> = T extends T
 	? Prettify<
 			Omit<T, K> & {
-				[P in K]: T[P];
+				[P in K]: NonNullable<T[P]>;
 			}
 		>
 	: never;
+
 export type Equal<a, b> =
 	(<T>() => T extends a ? 1 : 2) extends <T>() => T extends b ? 1 : 2 ? true : false;
 
@@ -212,7 +213,7 @@ export type PubField = Pick<
  * This way you are able to do the following without having to do annoying
  * `'a' in props` checks
  * ```ts
- * function foo(props: MutuallyExclusive<{ a: string }, { b: number }>) {
+ * function foo(props: XOR<{ a: string }, { b: number }>) {
  * 	if(props.a){
  * 		// do something
  * 		return
@@ -223,7 +224,6 @@ export type PubField = Pick<
  * ```
  *
  */
-
 export type XOR<T extends Record<string, unknown>, P extends Record<string, unknown>> = Prettify<
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]?: never })
 	| ({ [K in keyof P]: P[K] } & { [K in keyof T]?: never })

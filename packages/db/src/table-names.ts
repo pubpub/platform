@@ -34,6 +34,7 @@ export const databaseTables = [
 	"pub_values",
 	"pubs",
 	"rules",
+	"sessions",
 	"stages",
 	"users",
 ] as const;
