@@ -25,7 +25,7 @@ async function PubChildrenTableWrapper({
 
 		return {
 			id: child.id,
-			title: getPubTitle(pub),
+			title: getPubTitle(child),
 			stage: child.stages[0]?.stageId,
 			assignee: assigneeUser ? `${assigneeUser.firstName} ${assigneeUser.lastName}` : null,
 			created: new Date(child.createdAt),

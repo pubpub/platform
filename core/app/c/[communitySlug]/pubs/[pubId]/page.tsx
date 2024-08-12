@@ -46,14 +46,14 @@ export default async function Page({
 				...pubInclude,
 			},
 		});
-
 	const pub = await getPub(params.pubId);
 	const alsoPubs = await getPubOnTheIndividualPubPage(params.pubId as PubsId);
 
 	if (!pub) {
 		return null;
 	}
-
+	console.log("\n\n\nPUB", pub);
+	console.log("\n\n\nALSO PUBS", alsoPubs);
 	const community = await getCommunityBySlug(params.communitySlug);
 
 	if (community === null) {
@@ -90,23 +90,15 @@ export default async function Page({
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Current Stage</div>
 						<div className="ml-4 font-medium">
-							{alsoPubs.stages.map(({ id, name }) => {
-								return <div key={id}>{name}</div>;
+							{alsoPubs.stages.map((stage) => {
+								return (
+									<div key={stage.id}>
+										<div>{stage.name}</div>
+									</div>
+								);
 							})}
 						</div>
 					</div>
-					<div className="mb-4">
-						<MembersAvatars pub={alsoPubs as unknown as PubPayload} />
-					</div>
-					{alsoPubs.stages.length > 0 &&
-						alsoPubs.stages.find((stage) => stage.integrationInstances.length > 0) && (
-							<div className="mb-4">
-								<div className="mb-1 text-lg font-bold">Integrations</div>
-								<div>
-									<IntegrationActions pub={pub} token={token} />
-								</div>
-							</div>
-						)}
 					<div className="mb-4">
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (

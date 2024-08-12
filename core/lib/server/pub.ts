@@ -159,7 +159,7 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 
 // These aliases are used to make sure the JSON object returned matches
 // the old prisma query's return value
-const pubColumns = [
+export const pubColumns = [
 	"id",
 	"communityId",
 	"createdAt",
@@ -175,24 +175,7 @@ export const inCludePubTypes = (eb: ExpressionBuilder<Database, "pubs">) =>
 		eb.selectFrom("pub_types").where("pub_types.id", "=", eb.ref("pubs.pubTypeId")).selectAll()
 	).as("pubType");
 
-const includeClaims = (eb: ExpressionBuilder<Database, "pubs">) =>
-	jsonArrayFrom(
-		eb
-			.selectFrom("action_claim")
-			.where("action_claim.pubId", "=", eb.ref("pubs.id"))
-			.innerJoin("users", "users.id", "action_claim.userId")
-			.select((eb) =>
-				jsonObjectFrom(
-					eb
-						.selectFrom("users")
-						.where("users.id", "=", eb.ref("action_claim.userId"))
-						.selectAll()
-				).as("user")
-			)
-			.selectAll()
-	).as("claims");
-
-const includeStagesWithIntegrations = (eb: ExpressionBuilder<Database, "pubs">) =>
+export const includeStagesWithIntegrations = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonArrayFrom(
 		eb
 			.selectFrom("PubsInStages")
@@ -226,7 +209,7 @@ const includeStagesWithIntegrations = (eb: ExpressionBuilder<Database, "pubs">) 
 			)
 	).as("stages");
 
-const includeInterationInstances = (eb: ExpressionBuilder<Database, "pubs">) =>
+export const includeInterationInstances = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonArrayFrom(
 		eb
 			.selectFrom("integration_instances")
@@ -250,7 +233,6 @@ export const getPubBase = (
 		.select((eb) => [
 			...pubColumns,
 			pubAssignee(eb),
-			includeStagesForPubBase(eb),
 			jsonArrayFrom(
 				eb
 					.selectFrom("children")
@@ -271,41 +253,11 @@ export const getPubBase = (
 		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
 		.$narrowType<{ values: PubValues }>();
 
-export const getPubBase2 = (
-	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
-) =>
-	withPubChildren(props)
-		.selectFrom("pubs")
-		.select((eb) => [
-			...pubColumns,
-			pubAssignee(eb),
-			includeStagesWithIntegrations(eb),
-			inCludePubTypes(eb),
-			includeClaims(eb),
-			includeInterationInstances(eb),
-			jsonArrayFrom(
-				eb
-					.selectFrom("children")
-					.select((eb) => [
-						...pubColumns,
-						"children.values",
-						jsonArrayFrom(
-							eb
-								.selectFrom("PubsInStages")
-								.innerJoin("stages", "stages.id", "PubsInStages.stageId")
-								.select(["PubsInStages.stageId as id", "stages.name"])
-								.whereRef("PubsInStages.pubId", "=", "children.id")
-						).as("stages"),
-					])
-					.$narrowType<{ values: PubValues }>()
-			).as("children"),
-		])
-		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
-		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
-		.$narrowType<{ values: PubValues }>();
-
 export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	const pub = await getPubBase({ pubId }).where("pubs.id", "=", pubId).executeTakeFirst();
+	const pub = await getPubBase({ pubId })
+		.select((eb) => [includeStagesForPubBase(eb)])
+		.where("pubs.id", "=", pubId)
+		.executeTakeFirst();
 
 	if (!pub) {
 		throw PubNotFoundError;
@@ -316,7 +268,9 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 
 export const getPubCached = async (pubId: PubsId) => {
 	const pub = await autoCache(
-		getPubBase({ pubId }).where("pubs.id", "=", pubId)
+		getPubBase({ pubId })
+			.select((eb) => [includeStagesForPubBase(eb)])
+			.where("pubs.id", "=", pubId)
 	).executeTakeFirst();
 
 	if (!pub) {
@@ -356,6 +310,7 @@ export const getPubs = async (
 
 	const pubs = await autoCache(
 		getPubBase({ communityId })
+			.select((eb) => [includeStagesForPubBase(eb)])
 			.where("pubs.communityId", "=", communityId)
 			.where("pubs.parentId", "is", null)
 			.limit(limit)
