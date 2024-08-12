@@ -132,12 +132,10 @@ export const _upsertPubValues = async ({
 
 	const stageMoveQuery =
 		stageId &&
-		autoRevalidate(
-			db
-				.updateTable("PubsInStages")
-				.set({ pubId, stageId })
-				.where("PubsInStages.pubId", "=", pubId)
-		).execute();
+		db.transaction().execute(async (trx) => {
+			trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId).execute();
+			autoRevalidate(trx.insertInto("PubsInStages").values({ pubId, stageId })).execute();
+		});
 
 	// Insert, update on conflict
 	const upsert = autoRevalidate(
@@ -262,12 +260,10 @@ export const _updatePub = async ({
 
 	const stageMoveQuery =
 		stageId &&
-		autoRevalidate(
-			db
-				.updateTable("PubsInStages")
-				.set({ pubId, stageId })
-				.where("PubsInStages.pubId", "=", pubId)
-		).execute();
+		db.transaction().execute(async (trx) => {
+			trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId).execute();
+			autoRevalidate(trx.insertInto("PubsInStages").values({ pubId, stageId })).execute();
+		});
 
 	const newValues = Object.fromEntries(
 		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])
