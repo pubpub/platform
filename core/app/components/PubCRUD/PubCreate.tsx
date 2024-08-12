@@ -9,9 +9,11 @@ import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
+import { UserSelectServer } from "../UserSelect/UserSelectServer";
 
-export type CreatePubProps = { parentId?: PubsId } & (
+export type CreatePubProps = { parentId?: PubsId; searchParams?: Record<string, unknown> } & (
 	| {
 			communityId: CommunitiesId;
 			stageId?: never;
@@ -48,6 +50,7 @@ const getCommunityById = <
 								"pub_fields.pubFieldSchemaId",
 								"pub_fields.slug",
 								"pub_fields.name",
+								"pub_fields.schemaName",
 								jsonObjectFrom(
 									eb
 										.selectFrom("PubFieldSchema")
@@ -112,7 +115,27 @@ const PubCreateForm = dynamic(
 	{ ssr: false, loading: () => <SkeletonCard /> }
 );
 
-export async function PubCreate({ communityId, stageId, parentId }: CreatePubProps) {
+const HackyUserIdSelect = async ({ searchParams }: { searchParams: Record<string, unknown> }) => {
+	const community = await findCommunityBySlug();
+	const queryParamName = `user-wow`;
+	const query = searchParams?.[queryParamName] as string | undefined;
+	return (
+		<UserSelectServer
+			community={community!}
+			fieldLabel={"Member"}
+			fieldName={`hack`}
+			query={query}
+			queryParamName={queryParamName}
+		/>
+	);
+};
+
+export async function PubCreate({
+	communityId,
+	stageId,
+	parentId,
+	searchParams,
+}: CreatePubProps & { searchParams?: Record<string, unknown> }) {
 	const query = stageId
 		? getStage(stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
@@ -140,6 +163,7 @@ export async function PubCreate({ communityId, stageId, parentId }: CreatePubPro
 					availableStages={community.stages}
 					availablePubTypes={community.pubTypes}
 					parentId={parentId}
+					__hack__memberIdField={<HackyUserIdSelect searchParams={searchParams ?? {}} />}
 				/>
 			</Suspense>
 		</>
