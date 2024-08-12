@@ -97,3 +97,22 @@ However, we do need our Users table to remain in sync with any data added or edi
 The `/supabase/seed.sql` file has been edited to specify a function and trigger. After running `npx supabase db reset`, you should be able use the Dashboard to navigate to the Database > Functions or Database > Triggers tab and see `handle_updated_user` and `on_user_update` respectively.
 
 These instructions hold for using email signup (where their email is entered directly into a form). For 3rd party SSO signup, we will probably need an additional function and trigger to handle user_created events.
+
+# Testing
+
+## Playwright (E2E)
+
+```bash
+cd core
+cp .env.development .env.production.local
+
+pnpm playwright:test
+```
+
+You can also run the tests in `dev` mode, which is faster as you don't have to build the app before running the tests, but more flaky.
+
+```bash
+pnpm playwright:test:dev
+```
+
+You can also see what `playwright` is doing by running `pnpm playwright:ui` or `pnpm playwright:ui:dev`.

@@ -1,3 +1,4 @@
+/* eslint-disable n/no-process-env */
 import { defineConfig, devices } from "@playwright/test";
 
 /**
@@ -19,6 +20,23 @@ export default defineConfig({
 	retries: process.env.CI ? 2 : 0,
 	/* Opt out of parallel tests on CI. */
 	workers: process.env.CI ? 1 : undefined,
+	expect: {
+		timeout: process.env.CI ? 5_000 : 60_000,
+	},
+	webServer: [
+		{
+			command: `pnpm -w preconstruct build && ${
+				process.env.TEST_DEV
+					? "pnpm --filter core dev"
+					: "pnpm --filter core build && pnpm --filter core start"
+			}`,
+			timeout: 600_000,
+			port: 3000,
+			stderr: "pipe",
+			stdout: "pipe",
+		},
+	],
+	timeout: process.env.CI ? 60 * 1000 : 10 * 60 * 1000,
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
 	reporter: "html",
 	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -36,7 +54,6 @@ export default defineConfig({
 			name: "chromium",
 			use: { ...devices["Desktop Chrome"] },
 		},
-
 		{
 			name: "firefox",
 			use: { ...devices["Desktop Firefox"] },
