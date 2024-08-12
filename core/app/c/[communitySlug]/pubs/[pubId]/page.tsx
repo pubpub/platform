@@ -58,8 +58,8 @@ export default async function Page({
 		return null;
 	}
 	const values = alsoPubs.values;
-	console.log("What values imma old whore", pub.values);
-	console.log("What values imma whore", values);
+	console.log("What values old", pub.values);
+	console.log("What values", values);
 
 
 	const community = await getCommunityBySlug(params.communitySlug);
