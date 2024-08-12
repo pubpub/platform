@@ -57,6 +57,7 @@ export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
 				"pub_fields.id",
 				"pub_fields.name",
 				"pub_fields.slug",
+				"pub_fields.schemaName",
 				jsonObjectFrom(
 					eb
 						.selectFrom("PubFieldSchema")
