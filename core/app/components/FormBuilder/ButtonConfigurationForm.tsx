@@ -134,7 +134,7 @@ export const ButtonConfigurationForm = ({
 							<FormControl>
 								<Input {...field} />
 							</FormControl>
-							<FormMessage />
+							<FormMessage data-testid="label-form-message" />
 						</FormItem>
 					)}
 				/>

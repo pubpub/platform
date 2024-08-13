@@ -66,6 +66,12 @@ test.describe("Submission buttons", () => {
 
 		// Add second button
 		await page.getByTestId("add-submission-settings-button").click();
+		// Try a button with the same name first
+		await page.getByRole("textbox", { name: "label" }).fill("Submit");
+		await page.getByTestId("save-button-configuration-button").click();
+		await expect(page.getByTestId("label-form-message")).toHaveText(
+			"There is already a button with this label"
+		);
 		await page.getByRole("textbox", { name: "label" }).fill("Decline");
 		await page.getByTestId("save-button-configuration-button").click();
 		await page.getByTestId("button-option-Submit");
