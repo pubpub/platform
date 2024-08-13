@@ -9,8 +9,8 @@ const login = async ({ page }: { page: Page }) => {
 	await page.getByRole("button", { name: "Sign in" }).click();
 	await page.waitForURL("/c/unjournal/stages");
 };
-
-const FORM_SLUG = "playwright-test-form";
+const now = new Date();
+const FORM_SLUG = `playwright-test-form-${now.getTime()}`;
 
 test.describe("Creating a form", () => {
 	test.beforeEach(async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe("Creating a form", () => {
 		await page.getByRole("banner").getByTestId("new-form-button").click();
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "Submission" }).click();
-		await page.getByRole("textbox", { name: "name" }).fill("playwright test form");
+		await page.getByRole("textbox", { name: "name" }).fill(FORM_SLUG);
 		await page.getByRole("textbox", { name: "slug" }).fill(FORM_SLUG);
 		await page.getByRole("button", { name: "Create" }).click();
 		await page.waitForURL(`/c/croccroc/forms/${FORM_SLUG}/edit`);
@@ -31,7 +31,7 @@ test.describe("Creating a form", () => {
 		await page.getByRole("banner").getByTestId("new-form-button").click();
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "Submission" }).click();
-		await page.getByRole("textbox", { name: "name" }).fill("playwright test form");
+		await page.getByRole("textbox", { name: "name" }).fill("another form");
 		await page.getByRole("textbox", { name: "slug" }).fill(FORM_SLUG);
 		await page.getByRole("button", { name: "Create" }).click();
 		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
