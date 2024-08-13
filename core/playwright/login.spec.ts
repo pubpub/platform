@@ -7,8 +7,8 @@ test("Login", async ({ page }) => {
 	await page.getByLabel("email").fill("all@pubpub.org");
 	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
 	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL("/c/unjournal/stages");
-	await expect(page.getByRole("link", { name: "Stages" })).toBeVisible();
+	await page.waitForURL(/.*\/c\/\w+\/stages.*/);
+	await expect(page.getByRole("link", { name: "Workflows" })).toBeVisible();
 	await page.context().storageState({ path: authFile });
 });
 
@@ -18,7 +18,7 @@ test("Logout", async ({ page }) => {
 	await page.getByLabel("email").fill("all@pubpub.org");
 	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
 	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL("/c/unjournal/stages");
+	await page.waitForURL(/.*\/c\/\w+\/stages.*/);
 	await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
 	await page.getByRole("button", { name: "Logout" }).click();
 	await page.waitForURL("/login");

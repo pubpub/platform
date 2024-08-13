@@ -8,7 +8,7 @@ test("Assigning members to a pub", async ({ page }) => {
 	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
 	await page.getByRole("button", { name: "Sign in" }).click();
 
-	await page.waitForURL("/c/unjournal/stages");
+	await page.waitForURL(/.*\/c\/\w+\/stages.*/);
 	await page.getByRole("combobox").click();
 	await page.getByRole("option", { name: "Jill Admin" }).click();
 	await expect(page.getByText("Success", { exact: true })).toBeVisible();
