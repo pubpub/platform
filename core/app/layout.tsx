@@ -11,7 +11,7 @@ import "./globals.css";
 import { TooltipProvider } from "ui/tooltip";
 
 export const metadata = {
-	title: "PubPub v7",
+	title: "PubPub Platform",
 	description: "A more flexible PubPub",
 };
 
