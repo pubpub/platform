@@ -476,7 +476,7 @@ export const createPubRecursiveNew = async ({
 					communityId: communityId,
 					pubTypeId: body.pubTypeId as PubTypesId,
 					assigneeId: body.assigneeId as UsersId,
-					...(parent && { parentId: parentId as PubsId }),
+					parentId: parentId as PubsId,
 				})
 				.returningAll()
 		).executeTakeFirstOrThrow();
