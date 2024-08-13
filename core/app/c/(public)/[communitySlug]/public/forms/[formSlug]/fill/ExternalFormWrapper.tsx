@@ -17,7 +17,8 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { PubsId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, ElementType } from "db/public";
+import { Button } from "ui/button";
 import { Form } from "ui/form";
 import { cn } from "utils";
 
@@ -136,12 +137,15 @@ export const ExternalFormWrapper = ({
 	};
 	const schema = Type.Object(
 		Object.fromEntries(
-			formElements.map((e) => [
-				e.slug as string | undefined,
-				e.schemaName
-					? Type.Optional(getJsonSchemaByCoreSchemaType(e.schemaName))
-					: undefined,
-			])
+			formElements
+				// only add pubfields to the schema
+				.filter((e) => e.type === ElementType.pubfield)
+				.map((e) => [
+					e.slug as string | undefined,
+					e.schemaName
+						? Type.Optional(getJsonSchemaByCoreSchemaType(e.schemaName))
+						: undefined,
+				])
 		)
 	);
 	const formInstance = useForm({
