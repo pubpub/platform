@@ -11,20 +11,23 @@ import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
+import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { PubsId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, ElementType } from "db/public";
 import { Button } from "ui/button";
 import { Form } from "ui/form";
 import { cn } from "utils";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
+import { isButtonElement } from "~/app/components/FormBuilder/types";
 import * as actions from "~/app/components/PubCRUD/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { COMPLETE_STATUS, SAVE_STATUS_QUERY_PARAM } from "./constants";
+import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
+import { SubmitButtons } from "./SubmitButtons";
 
 const SAVE_WAIT_MS = 5000;
 
@@ -94,52 +97,71 @@ export const ExternalFormWrapper = ({
 	children: ReactNode;
 	className?: string;
 }) => {
+	const [buttonElements, formElements] = partition(elements, (e) => isButtonElement(e));
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.upsertPubValues);
-	const handleSubmit = async (values: FieldValues, autoSave = false) => {
+	const handleSubmit = async (
+		values: FieldValues,
+		evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
+		autoSave = false
+	) => {
 		const fields = preparePayload({
-			formElements: elements,
+			formElements,
 			formValues: values,
 		});
+		const submitButtonId = evt?.nativeEvent.submitter?.id;
+		const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
+		const stageId = submitButtonConfig?.stageId ?? undefined;
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			fields,
+			stageId,
 		});
 		if (didSucceed(result)) {
 			const newParams = new URLSearchParams(params);
 			const currentTime = `${new Date().getTime()}`;
-			if (!autoSave && isComplete(elements, values)) {
-				newParams.set(SAVE_STATUS_QUERY_PARAM, COMPLETE_STATUS);
-			} else {
-				newParams.set(SAVE_STATUS_QUERY_PARAM, currentTime);
+			if (!autoSave && isComplete(formElements, values)) {
+				const submitButtonId = evt?.nativeEvent.submitter?.id;
+				if (submitButtonId) {
+					newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
+				}
+				router.push(`${pathname}?${newParams.toString()}`);
+				return;
 			}
+			newParams.set(SAVE_STATUS_QUERY_PARAM, currentTime);
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		}
 	};
 	const schema = Type.Object(
 		Object.fromEntries(
-			elements.map((e) => [
-				e.slug as string | undefined,
-				e.schemaName
-					? Type.Optional(getJsonSchemaByCoreSchemaType(e.schemaName))
-					: undefined,
-			])
+			formElements
+				// only add pubfields to the schema
+				.filter((e) => e.type === ElementType.pubfield)
+				.map((e) => [
+					e.slug as string | undefined,
+					e.schemaName
+						? Type.Optional(getJsonSchemaByCoreSchemaType(e.schemaName))
+						: undefined,
+				])
 		)
 	);
 	const formInstance = useForm({
 		resolver: typeboxResolver(schema),
-		defaultValues: buildDefaultValues(elements, pub.values),
+		defaultValues: buildDefaultValues(formElements, pub.values),
 	});
 	const isSubmitting = formInstance.formState.isSubmitting;
 
-	const handleAutoSave = (values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
+	const handleAutoSave = (
+		values: FieldValues,
+		evt: React.BaseSyntheticEvent<SubmitEvent> | undefined
+	) => {
 		// Don't auto save while editing the user ID field. the query params
 		// will clash and it will be a bad time :(
 		const { name } = evt?.target as HTMLInputElement;
-		if (isUserSelectField(name, elements)) {
+		if (isUserSelectField(name, formElements)) {
 			return;
 		}
 		if (saveTimer) {
@@ -149,7 +171,7 @@ export const ExternalFormWrapper = ({
 			// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 			// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
 			if (formInstance.formState.isValid || saveTimer === undefined) {
-				handleSubmit(values, true);
+				handleSubmit(values, evt, true);
 			}
 		}, SAVE_WAIT_MS);
 		setSaveTimer(newTimer);
@@ -158,19 +180,16 @@ export const ExternalFormWrapper = ({
 	return (
 		<Form {...formInstance}>
 			<form
-				onChange={formInstance.handleSubmit((values, evt) => handleAutoSave(values, evt))}
-				onSubmit={formInstance.handleSubmit((values) => handleSubmit(values))}
+				onChange={formInstance.handleSubmit(handleAutoSave)}
+				onSubmit={formInstance.handleSubmit(handleSubmit)}
 				className={cn("relative flex flex-col gap-6", className)}
 			>
 				{children}
-				<Button
-					type="submit"
-					disabled={isSubmitting}
-					// Make the button fixed next to the bottom of the form as user scrolls
-					className="sticky bottom-4 -mr-[100px] -mt-[68px] ml-auto"
-				>
-					Submit
-				</Button>
+				<SubmitButtons
+					buttons={buttonElements}
+					isDisabled={isSubmitting}
+					className="sticky bottom-4 -mr-4 ml-auto -translate-y-[175%] translate-x-full"
+				/>
 			</form>
 		</Form>
 	);

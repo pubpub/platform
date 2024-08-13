@@ -1,5 +1,7 @@
 import React from "react";
 
+import { PubsId } from "db/public";
+
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
 import { RequestLink } from "./RequestLink";
 
@@ -8,7 +10,7 @@ export default async function Page({
 	searchParams,
 }: {
 	params: { formSlug: string; communitySlug: string };
-	searchParams: { email?: string };
+	searchParams: { email?: string; pubId?: string };
 }) {
 	const form = await getForm({ slug: params.formSlug }).executeTakeFirst();
 
@@ -18,6 +20,10 @@ export default async function Page({
 
 	if (!searchParams.email) {
 		return <div>No email provided</div>;
+	}
+
+	if (!searchParams.pubId) {
+		return <div>No pubId provided</div>;
 	}
 
 	const hasAccessToForm = await userHasPermissionToForm({
@@ -40,6 +46,7 @@ export default async function Page({
 				formSlug={params.formSlug}
 				communitySlug={params.communitySlug}
 				email={searchParams.email}
+				pubId={searchParams.pubId as PubsId}
 			/>
 		</div>
 	);
