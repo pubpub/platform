@@ -8,7 +8,7 @@ import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { FormElement } from "./FormElement";
 
-const UserIdSelect = async ({
+export const UserIdSelect = async ({
 	label,
 	name,
 	id,

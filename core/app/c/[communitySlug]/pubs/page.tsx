@@ -26,9 +26,9 @@ const getStages = async (communityId: string) => {
 	});
 };
 
-type Props = { params: { communitySlug: string } };
+type Props = { params: { communitySlug: string }; searchParams?: Record<string, unknown> };
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
 	const loginData = await getLoginData();
 	if (!loginData) {
 		redirect("/login");
@@ -50,7 +50,7 @@ export default async function Page({ params }: Props) {
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
+			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
 			<PubList pubs={pubs} token={token} />
 		</>
 	);

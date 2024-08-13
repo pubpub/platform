@@ -150,6 +150,7 @@ export default async function Page({
 			<PubCreateButton
 				communityId={community.id as CommunitiesId}
 				parentId={pub.id as PubsId}
+				searchParams={searchParams}
 			/>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper pub={pub} members={community.members} />
