@@ -89,6 +89,13 @@ export const createPub = defineServerAction(async function createPub({
 	}
 });
 
+const stageMove = (pubId: PubsId, stageId?: StagesId) =>
+	stageId &&
+	db.transaction().execute(async (trx) => {
+		trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId).execute();
+		autoRevalidate(trx.insertInto("PubsInStages").values({ pubId, stageId })).execute();
+	});
+
 export const _upsertPubValues = async ({
 	pubId,
 	fields,
@@ -103,6 +110,7 @@ export const _upsertPubValues = async ({
 	const toBeUpdatedPubFieldSlugs = Object.keys(fields);
 
 	if (!toBeUpdatedPubFieldSlugs.length) {
+		await stageMove(pubId, stageId);
 		return {
 			success: true,
 			report: `No fields to update`,
@@ -138,13 +146,6 @@ export const _upsertPubValues = async ({
 		};
 	}
 
-	const stageMoveQuery =
-		stageId &&
-		db.transaction().execute(async (trx) => {
-			trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId).execute();
-			autoRevalidate(trx.insertInto("PubsInStages").values({ pubId, stageId })).execute();
-		});
-
 	// Insert, update on conflict
 	const upsert = autoRevalidate(
 		db
@@ -171,7 +172,7 @@ export const _upsertPubValues = async ({
 			)
 			.returningAll()
 	).execute();
-	const upsertPub = await Promise.allSettled([upsert, ...([stageMoveQuery] || [])]);
+	const upsertPub = await Promise.allSettled([upsert, ...([stageMove(pubId, stageId)] || [])]);
 
 	const errors = upsertPub.filter(
 		(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>
