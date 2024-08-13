@@ -126,7 +126,7 @@ const withPubChildren = ({
 	return db.withRecursive("children", (qc) => {
 		return qc
 			.selectFrom("pubs")
-			.select(["id", "parentId", pubValuesByRef("pubs.id")])
+			.select(["id", "parentId", "pubTypeId", "assigneeId", pubValuesByRef("pubs.id")])
 			.$if(!!pubId, (qb) => qb.where("pubs.parentId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parentId", "=", ref(pubIdRef!)))
 			.$if(!!communityId, (qb) =>
@@ -136,7 +136,13 @@ const withPubChildren = ({
 				return eb
 					.selectFrom("pubs")
 					.innerJoin("children", "pubs.parentId", "children.id")
-					.select(["pubs.id", "pubs.parentId", pubValuesByRef("pubs.id")]);
+					.select([
+						"pubs.id",
+						"pubs.parentId",
+						"pubs.pubTypeId",
+						"pubs.assigneeId",
+						pubValuesByRef("pubs.id"),
+					]);
 			});
 	});
 };
