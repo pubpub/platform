@@ -39,6 +39,8 @@ export const resolveWithPubfields = <T extends Record<string, any>>(
 			for (const slug of pubFieldSlugs) {
 				value = pubValues[slug];
 
+				// FIXME: this treats empty strings as valid values
+				// we should investigate whether this is the right behaviour
 				if (value !== undefined) {
 					break;
 				}

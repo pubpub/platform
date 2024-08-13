@@ -13,12 +13,13 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
+import type { EmailDirectivePluginPub } from "./plugin";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { smtpclient } from "~/lib/server/mailgun";
 import { defineRun } from "../types";
-import { EmailDirectivePluginPub, emailDirectives } from "./plugin";
+import { emailDirectives } from "./plugin";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
@@ -54,7 +55,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			.where("id", "=", expect(args?.recipient ?? config.recipient) as MembersId)
 			.executeTakeFirstOrThrow(
 				() =>
-					new Error(`Could not find user with ID ${args?.recipient ?? config.recipient}`)
+					new Error(
+						`Could not find member with ID ${args?.recipient ?? config.recipient}`
+					)
 			);
 
 		const emailDirectivesContext = { communitySlug, recipient, pub, parentPub };

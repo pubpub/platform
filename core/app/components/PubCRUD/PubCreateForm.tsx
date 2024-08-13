@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 
 import type { CommunitiesId, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
+import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -29,16 +30,18 @@ export const PubCreateForm = ({
 	availablePubTypes,
 	currentStage = null,
 	parentId,
+	__hack__memberIdField,
 }: {
 	communityId: CommunitiesId;
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
 	parentId?: PubsId;
 
 	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description"> & {
-		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug"> & {
+		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
 		})[];
 	})[];
+	__hack__memberIdField?: React.ReactNode;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) => {
@@ -53,9 +56,16 @@ export const PubCreateForm = ({
 			return { compiledSchema: null, uncompiledSchema: null };
 		}
 
+		const selectedPubTypeWithoutMemberIdField = {
+			...selectedPubType,
+			fields: selectedPubType.fields.filter(
+				(field) => field.schemaName !== CoreSchemaType.MemberId
+			),
+		};
+
 		const uncompiledSchema = buildSchemaFromPubFields(
 			//  @ts-expect-error FIXME: Schema types are different
-			selectedPubType as {
+			selectedPubTypeWithoutMemberIdField as {
 				__fakeType: "remove me when we figure out how to get rid of the above error";
 			},
 			[]
@@ -111,6 +121,21 @@ export const PubCreateForm = ({
 			stageId: selectedStage?.id,
 			pubTypeId: selectedPubType?.id,
 			fields: Object.entries(values).reduce((acc, [key, value]) => {
+				// -- hack
+				if (key === "hack") {
+					const pubTypeMemberField = selectedPubType?.fields.find(
+						(field) => field.schemaName === CoreSchemaType.MemberId
+					);
+					if (!pubTypeMemberField) {
+						throw new Error("Member field not found");
+					}
+
+					acc[pubTypeMemberField?.id] = { slug: pubTypeMemberField?.slug, value };
+					return acc;
+				}
+
+				// -- hack
+
 				const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
 				if (id) {
 					acc[id] = { slug: key, value };
@@ -229,6 +254,12 @@ export const PubCreateForm = ({
 					/>
 				)}
 				{memoizedForm}
+				{__hack__memberIdField &&
+				selectedPubType?.fields.find(
+					(field) => field.schemaName === CoreSchemaType.MemberId
+				)
+					? __hack__memberIdField
+					: null}
 				<Button
 					type="submit"
 					className="flex items-center gap-x-2"

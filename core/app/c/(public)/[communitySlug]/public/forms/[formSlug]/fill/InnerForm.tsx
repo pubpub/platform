@@ -8,7 +8,7 @@ import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { FormElement } from "./FormElement";
 
-const UserIdSelect = async ({
+export const UserIdSelect = async ({
 	label,
 	name,
 	id,
@@ -26,7 +26,7 @@ const UserIdSelect = async ({
 	const community = await autoCache(
 		db.selectFrom("communities").selectAll().where("slug", "=", communitySlug)
 	).executeTakeFirstOrThrow();
-	const queryParamName = `user-${id}`;
+	const queryParamName = `user-${id.split("-").pop()}`;
 	const query = searchParams?.[queryParamName] as string | undefined;
 	return (
 		<UserSelectServer

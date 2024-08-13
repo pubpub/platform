@@ -14,7 +14,7 @@ const component = defineActionFormFieldServerComponent(
 			db.selectFrom("communities").selectAll().where("id", "=", communityId)
 		).executeTakeFirstOrThrow();
 
-		const queryParamName = `recipient-${actionInstance.id}`;
+		const queryParamName = `recipient-${actionInstance.id?.split("-").pop()}`;
 		const query = pageContext.searchParams?.[queryParamName] as string | undefined;
 
 		return (

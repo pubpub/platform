@@ -1,9 +1,13 @@
 import type { ActionInstances, CommunitiesId, PubsId, Stages } from "db/public";
+import { PubFieldProvider } from "ui/pubFields";
+import { TokenContext, TokenProvider } from "ui/tokens";
 
 import type { PageContext } from "./PubsRunActionDropDownMenu";
 import type { Action, ActionInstanceOf } from "~/actions/types";
 import type { StagePub } from "~/lib/db/queries";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
+import { getActionByName } from "~/actions/api";
+import { getPubFields } from "~/lib/server/pubFields";
 import { ActionRunForm } from "./ActionRunForm";
 
 export const ActionRunFormWrapper = async ({
@@ -17,19 +21,31 @@ export const ActionRunFormWrapper = async ({
 	stage: Stages;
 	pageContext: PageContext;
 }) => {
-	const resolvedFieldConfig = await resolveFieldConfig(actionInstance.action, "params", {
-		pubId: pub.id as PubsId,
+	const { tokens = {} } = getActionByName(actionInstance.action);
+
+	const fieldPromise = getPubFields({ communityId: stage.communityId }).executeTakeFirstOrThrow();
+
+	const resolvedFieldConfigPromise = resolveFieldConfig(actionInstance.action, "config", {
 		stageId: stage.id,
-		communityId: pub.communityId as CommunitiesId,
+		communityId: stage.communityId,
 		actionInstance: actionInstance as ActionInstanceOf<Action>,
 		pageContext,
 	});
 
+	const [{ fields }, resolvedFieldConfig] = await Promise.all([
+		fieldPromise,
+		resolvedFieldConfigPromise,
+	]);
+
 	return (
-		<ActionRunForm
-			actionInstance={actionInstance}
-			pub={pub}
-			fieldConfig={resolvedFieldConfig}
-		/>
+		<PubFieldProvider pubFields={fields}>
+			<TokenProvider tokens={tokens}>
+				<ActionRunForm
+					actionInstance={actionInstance}
+					pub={pub}
+					fieldConfig={resolvedFieldConfig}
+				/>
+			</TokenProvider>
+		</PubFieldProvider>
 	);
 };
