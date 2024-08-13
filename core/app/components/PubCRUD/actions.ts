@@ -101,6 +101,14 @@ export const _upsertPubValues = async ({
 	// First query for existing values so we know whether to insert or update.
 	// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
 	const toBeUpdatedPubFieldSlugs = Object.keys(fields);
+
+	if (!toBeUpdatedPubFieldSlugs.length) {
+		return {
+			success: true,
+			report: `No fields to update`,
+		};
+	}
+
 	const pubFields = await db
 		.selectFrom("pub_fields")
 		.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
