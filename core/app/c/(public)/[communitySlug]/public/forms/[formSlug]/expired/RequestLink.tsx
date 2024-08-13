@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 
+import type { PubsId } from "db/public";
 import { Button } from "ui/button";
 import { Mail } from "ui/icon";
 import { toast } from "ui/use-toast";
@@ -13,15 +14,17 @@ export const RequestLink = ({
 	formSlug,
 	communitySlug,
 	email,
+	pubId,
 }: {
 	formSlug: string;
 	communitySlug: string;
 	email: string;
+	pubId: PubsId;
 }) => {
 	const useRequestLink = useServerAction(actions.inviteUserToForm);
 
 	const requestLink = useCallback(async () => {
-		const link = await useRequestLink({ slug: formSlug, email });
+		const link = await useRequestLink({ slug: formSlug, email, pubId });
 
 		if (link && link.error) {
 			return;
@@ -31,7 +34,7 @@ export const RequestLink = ({
 			title: "Link sent",
 			description: "Successfully requested new link",
 		});
-	}, [email, formSlug, communitySlug]);
+	}, [email, formSlug, communitySlug, pubId]);
 
 	return (
 		<Button
