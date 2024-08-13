@@ -7,6 +7,7 @@ import { z } from "zod";
 export enum ElementType {
 	pubfield = "pubfield",
 	structural = "structural",
+	button = "button",
 }
 
 /** Zod schema for ElementType */

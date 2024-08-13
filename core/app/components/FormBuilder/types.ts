@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { PubFieldsId, StructuralFormElement } from "db/public";
+import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
 	ElementType,
 	FormAccessType,
@@ -12,10 +12,11 @@ import {
 const baseElementSchema = z.object({
 	id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB
 	elementId: formElementsIdSchema.optional(),
-	order: z.number().int(),
+	order: z.number().int().nullable(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),
+	stageId: z.string().nullable().optional(),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
@@ -40,6 +41,16 @@ export type StructuralElement = baseElement & {
 	description?: never;
 };
 
+export type ButtonElement = baseElement & {
+	type: ElementType.button;
+	label: string;
+	content: string;
+	stageId?: StagesId;
+	fieldId: never;
+	required: never;
+	description: never;
+};
+
 const formElementSchema = formElementsInitializerSchema
 	.omit({ formId: true })
 	.extend(baseElementSchema.shape)
@@ -49,6 +60,8 @@ export const isFieldInput = (element: FormElementData): element is InputElement 
 	element.type === ElementType.pubfield;
 export const isStructuralElement = (element: FormElementData): element is StructuralElement =>
 	element.type === ElementType.structural;
+export const isButtonElement = (element: FormElementData): element is ButtonElement =>
+	element.type === ElementType.button;
 
 export const formBuilderSchema = z.object({
 	access: z.nativeEnum(FormAccessType),
@@ -58,10 +71,11 @@ export const formBuilderSchema = z.object({
 
 export type FormBuilderSchema = z.input<typeof formBuilderSchema>;
 export type PanelState = {
-	state: "initial" | "selecting" | "editing";
+	state: "initial" | "selecting" | "editing" | "editingButton";
 	backButton: PanelState["state"] | null;
 	selectedElementIndex: number | null;
 	fieldsFilter: string | null;
+	buttonId: string | null;
 };
 export type PanelEvent =
 	| { eventName: "filterFields"; fieldsFilter: PanelState["fieldsFilter"] }
@@ -69,4 +83,5 @@ export type PanelEvent =
 	| { eventName: "cancel"; selectedElementIndex?: PanelState["selectedElementIndex"] }
 	| { eventName: "add" }
 	| { eventName: "edit"; selectedElementIndex: PanelState["selectedElementIndex"] }
-	| { eventName: "save" };
+	| { eventName: "save" }
+	| { eventName: "editButton"; buttonId?: PanelState["buttonId"] };

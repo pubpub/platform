@@ -4,15 +4,17 @@ import type { PubFieldsId } from "db/public";
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
 import { FormLabel } from "ui/form";
-import { ChevronLeft, PlusCircle, Type } from "ui/icon";
+import { ChevronLeft, PlusCircle, Type, X } from "ui/icon";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { PanelState } from "./types";
+import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
 import { ConfigureElement } from "./ConfigureElement";
 import { useFormBuilder } from "./FormBuilderContext";
 import { structuralElements } from "./StructuralElements";
+import { SubmissionSettings } from "./SubmissionSettings";
 
 type ElementPanelProps = {
 	state: PanelState;
@@ -67,6 +69,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 						<hr className="my-2" />
 						<Input disabled value={slug} />
 					</div>
+					<SubmissionSettings />
 				</div>
 			);
 		case "selecting":
@@ -195,6 +198,23 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 							<ConfigureElement index={state.selectedElementIndex} />
 						)}
 					</div>
+				</>
+			);
+		case "editingButton":
+			return (
+				<>
+					<Button
+						aria-label="Back"
+						variant="ghost"
+						size="sm"
+						className="absolute right-3 top-1"
+						onClick={() => {
+							dispatch({ eventName: "back" });
+						}}
+					>
+						<X size="16px" className="text-muted-foreground" />
+					</Button>
+					<ButtonConfigurationForm buttonIdentifier={state.buttonId} />
 				</>
 			);
 	}
