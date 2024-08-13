@@ -1,6 +1,6 @@
 "use server";
 
-import type { FormsId } from "db/public";
+import type { FormsId, PubsId } from "db/public";
 import { logger } from "logger";
 
 import type { XOR } from "~/lib/types";
@@ -10,9 +10,11 @@ import { smtpclient } from "~/lib/server/mailgun";
 
 export const inviteUserToForm = defineServerAction(async function inviteUserToForm({
 	email,
+	pubId,
 	...formSlugOrId
 }: {
 	email: string;
+	pubId: PubsId;
 } & XOR<{ slug: string }, { id: FormsId }>) {
 	const form = await getForm(formSlugOrId).executeTakeFirst();
 
@@ -30,7 +32,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		return { error: `You do not have permission to access form ${form.slug}` };
 	}
 
-	const link = await createFormInviteLink({ formSlug: form.slug, email });
+	const link = await createFormInviteLink({ formSlug: form.slug, email, pubId });
 
 	await smtpclient.sendMail({
 		from: "hello@pubpub.org",

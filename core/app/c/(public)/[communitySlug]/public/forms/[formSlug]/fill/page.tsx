@@ -63,7 +63,7 @@ export default async function FormPage({
 	// with an expired token, or a token that has been used already
 	if (!loginData) {
 		redirect(
-			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}`,
+			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}&pubId=${searchParams.pubId}`,
 			RedirectType.replace
 		);
 	}
