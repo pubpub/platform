@@ -92,13 +92,23 @@ export const createPub = defineServerAction(async function createPub({
 export const _upsertPubValues = async ({
 	pubId,
 	fields,
+	stageId,
 }: {
 	pubId: PubsId;
 	fields: Record<string, JsonValue>;
+	stageId?: StagesId;
 }) => {
 	// First query for existing values so we know whether to insert or update.
 	// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
 	const toBeUpdatedPubFieldSlugs = Object.keys(fields);
+
+	if (!toBeUpdatedPubFieldSlugs.length) {
+		return {
+			success: true,
+			report: `No fields to update`,
+		};
+	}
+
 	const pubFields = await db
 		.selectFrom("pub_fields")
 		.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
@@ -128,40 +138,53 @@ export const _upsertPubValues = async ({
 		};
 	}
 
+	const stageMoveQuery =
+		stageId &&
+		db.transaction().execute(async (trx) => {
+			trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId).execute();
+			autoRevalidate(trx.insertInto("PubsInStages").values({ pubId, stageId })).execute();
+		});
+
 	// Insert, update on conflict
-	try {
-		await autoRevalidate(
-			db
-				.insertInto("pub_values")
-				.values((eb) => {
-					return Object.entries(fields).map(([slug, value]) => {
-						return {
-							id:
-								pubFields.find((pf) => pf.slug === slug && pf.pubId === pubId)
-									?.pubValueId ?? undefined,
-							pubId,
-							value: JSON.stringify(value),
-							fieldId: eb
-								.selectFrom("pub_fields")
-								.where("pub_fields.slug", "=", slug)
-								.select("pub_fields.id"),
-						};
-					});
-				})
-				.onConflict((oc) =>
-					oc.column("id").doUpdateSet((eb) => ({
-						value: eb.ref("excluded.value"),
-					}))
-				)
-				.returningAll()
-		).execute();
-	} catch (error) {
-		logger.error(error);
+	const upsert = autoRevalidate(
+		db
+			.insertInto("pub_values")
+			.values((eb) => {
+				return Object.entries(fields).map(([slug, value]) => {
+					return {
+						id:
+							pubFields.find((pf) => pf.slug === slug && pf.pubId === pubId)
+								?.pubValueId ?? undefined,
+						pubId,
+						value: JSON.stringify(value),
+						fieldId: eb
+							.selectFrom("pub_fields")
+							.where("pub_fields.slug", "=", slug)
+							.select("pub_fields.id"),
+					};
+				});
+			})
+			.onConflict((oc) =>
+				oc.column("id").doUpdateSet((eb) => ({
+					value: eb.ref("excluded.value"),
+				}))
+			)
+			.returningAll()
+	).execute();
+	const upsertPub = await Promise.allSettled([upsert, ...([stageMoveQuery] || [])]);
+
+	const errors = upsertPub.filter(
+		(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>
+			pubValue.status === "rejected"
+	);
+	if (errors.length > 0) {
 		return {
-			error: "Failed to update pub",
-			cause: error,
+			title: "Failed to update pub",
+			error: `${errors[0]?.reason}`,
+			cause: errors,
 		};
 	}
+
 	revalidateTag(`pubs_${pubId}`);
 
 	return {
@@ -174,10 +197,12 @@ export const upsertPubValues = defineServerAction(async function upsertPubValues
 	pubId,
 	fields,
 	path,
+	stageId,
 }: {
 	pubId: PubsId;
 	fields: Record<string, JsonValue>;
 	path?: string | null;
+	stageId?: StagesId;
 }) {
 	const loginData = await getLoginData();
 
@@ -186,7 +211,7 @@ export const upsertPubValues = defineServerAction(async function upsertPubValues
 	}
 
 	try {
-		const result = await _upsertPubValues({ pubId, fields });
+		const result = await _upsertPubValues({ pubId, fields, stageId });
 		if (path) {
 			revalidatePath(path);
 		}
@@ -243,14 +268,10 @@ export const _updatePub = async ({
 
 	const stageMoveQuery =
 		stageId &&
-		autoRevalidate(
-			db
-				.with("leave-stage", (db) =>
-					db.deleteFrom("PubsInStages").where("pubId", "=", pubId)
-				)
-				.insertInto("PubsInStages")
-				.values({ pubId, stageId })
-		).execute();
+		db.transaction().execute(async (trx) => {
+			trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId).execute();
+			autoRevalidate(trx.insertInto("PubsInStages").values({ pubId, stageId })).execute();
+		});
 
 	const newValues = Object.fromEntries(
 		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])

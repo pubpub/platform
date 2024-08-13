@@ -1,16 +1,19 @@
 import type { ReactNode } from "react";
 
 import { redirect, RedirectType } from "next/navigation";
+import Markdown from "react-markdown";
 
 import type { PubsId } from "db/public";
 
+import type { Form } from "~/lib/server/form";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
+import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
-import { COMPLETE_STATUS, SAVE_STATUS_QUERY_PARAM } from "./constants";
+import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
 import { SaveStatus } from "./SaveStatus";
@@ -19,12 +22,14 @@ const NotFound = ({ children }: { children: ReactNode }) => {
 	return <div className="w-full pt-8 text-center">{children}</div>;
 };
 
-// TODO: will be configured in the future
-const Completed = () => {
+const Completed = ({ element }: { element: Form["elements"][number] | undefined }) => {
 	return (
 		<div className="flex w-full flex-col gap-2 pt-32 text-center">
-			<h2 className="text-lg font-semibold">Form Successfully Submitted</h2>
-			<p className="text-sm">Nice work!</p>
+			{element ? (
+				<Markdown className="prose self-center text-center">{element.content}</Markdown>
+			) : (
+				<h2 className="text-lg font-semibold">Form Successfully Submitted</h2>
+			)}
 		</div>
 	);
 };
@@ -58,7 +63,7 @@ export default async function FormPage({
 	// with an expired token, or a token that has been used already
 	if (!loginData) {
 		redirect(
-			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}`,
+			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}&pubId=${searchParams.pubId}`,
 			RedirectType.replace
 		);
 	}
@@ -68,7 +73,8 @@ export default async function FormPage({
 		return null;
 	}
 
-	const completed = searchParams[SAVE_STATUS_QUERY_PARAM] === COMPLETE_STATUS;
+	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
+	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
 	return (
 		<div className="isolate min-h-screen">
@@ -79,8 +85,8 @@ export default async function FormPage({
 				</div>
 			</Header>
 			<div className="container mx-auto">
-				{completed ? (
-					<Completed />
+				{submitId ? (
+					<Completed element={submitElement} />
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
 						<ExternalFormWrapper

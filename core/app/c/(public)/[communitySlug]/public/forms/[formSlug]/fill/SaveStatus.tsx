@@ -6,18 +6,19 @@ import { CircleHelp } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { formatDateAsTime } from "~/lib/dates";
-import { COMPLETE_STATUS, SAVE_STATUS_QUERY_PARAM } from "./constants";
+import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 
 export const SaveStatus = () => {
 	const searchParams = useSearchParams();
 	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 
-	const queryParam = urlSearchParams.get(SAVE_STATUS_QUERY_PARAM);
+	const submitId = urlSearchParams.get(SUBMIT_ID_QUERY_PARAM);
+	const saveStatus = urlSearchParams.get(SAVE_STATUS_QUERY_PARAM);
 	let status = "Progress will be automatically saved";
-	if (queryParam === COMPLETE_STATUS) {
+	if (submitId) {
 		status = "Completed";
-	} else if (queryParam) {
-		const queryAsNumber = +queryParam;
+	} else if (saveStatus) {
+		const queryAsNumber = +saveStatus;
 		if (!isNaN(queryAsNumber)) {
 			const lastSavedTime = new Date(queryAsNumber);
 			status = `Last saved at ${formatDateAsTime(lastSavedTime)}`;
