@@ -8,7 +8,6 @@ import {
 	ApiAccessType,
 	ElementType,
 	MemberRole,
-	Pubs,
 	StructuralFormElement,
 } from "db/public";
 import { databaseTables } from "db/table-names";
@@ -40,52 +39,7 @@ export type RequireByLoose<T extends Record<string, any>, S extends string> = {
 	[K in keyof T as K extends S ? never : K]: T[K];
 };
 
-const snakeCaseToPascalCase = (str: string) => {
-	return str.replace(/((?:_|^)\w)/g, (match) => match[1].toUpperCase()).replace(/s$/g, "");
-};
-
-type Capitalize<T extends string> = T extends `${infer First}${infer Rest}`
-	? `${Uppercase<First>}${Rest}`
-	: T;
-
-type SnakeCaseToPascalCase<T extends string> = T extends `${infer First}_${infer Rest}`
-	? `${Capitalize<First>}${Capitalize<SnakeCaseToPascalCase<Rest>>}`
-	: Capitalize<T>;
-
-type ToSingular<T> = T extends `${infer First}ies`
-	? `${First}y`
-	: T extends `${infer First}s`
-		? First
-		: T;
-
 type DBTableName = keyof PublicSchema;
-
-type DBTable = DBTableName extends DBTableName ? PublicSchema[DBTableName] : never;
-
-type SelectableDBTable = DBTable extends infer BTable
-	? BTable extends { id: any }
-		? Selectable<BTable>
-		: never
-	: never;
-//   ^?
-
-type SingularDBTable = DBTableName extends DBTableName
-	? ToSingular<SnakeCaseToPascalCase<DBTableName>>
-	: never;
-
-type ToPlural<T extends string> = T extends `${infer First}y`
-	? `${First}ies`
-	: T extends `${infer First}s`
-		? `${First}es`
-		: T;
-
-type Decapitalize<T extends string> = T extends Capitalize<infer U> ? U : T;
-
-type PascalCaseToSnakeCase<T extends string> = ToPlural<
-	T extends `${infer First}${infer Rest}`
-		? `${Decapitalize<First>}_${Decapitalize<PascalCaseToSnakeCase<Rest>>}`
-		: T
->;
 
 type SelectableTable<T extends keyof PublicSchema> = Selectable<PublicSchema[T]>;
 
@@ -255,6 +209,7 @@ const factories = {
 	communities: async (props) => {
 		const name = faker.company.name();
 		const slug = slugifyString(name);
+
 		return db
 			.insertInto("communities")
 			.values({
@@ -375,31 +330,18 @@ const filterTableNames = <T extends Record<string, any>>(props: T) => {
 };
 
 async function createSeed<T extends TopLevelThing>(t: T) {
-	const { communities } = t;
+	const things = Object.entries(t) as [DBTableName, Creatable<DBTableName>][];
 
-	const comms = Array.isArray(communities) ? communities : [communities];
-
-	for (const comm of comms) {
-		assert(comm);
-		const { tables, values } = filterTableNames(comm);
-
-		const { id } = await factories.communities(values);
+	for (const thing of things) {
+		const { tables, values } = filterTableNames(thing);
 
 		for (const table of Object.keys(tables)) {
 			const tableName = table as DBTableName;
 			const tableValues = tables[tableName];
 
-			await factories[tableName]({ ...tableValues, communityId: id });
+			await factories[tableName]({ ...tableValues, ...values });
 		}
 	}
 
 	return t;
 }
-
-const names = databaseTables.map(snakeCaseToPascalCase);
-
-// declare function modelize<T extends thingy>(schema: T)
-
-// const models = modelize(
-//     Community: {}
-// );
