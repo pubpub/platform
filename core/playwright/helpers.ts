@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { CommunityPage } from "./fixtures/community-page";
+
 export const login = async ({ page }: { page: Page }) => {
 	await page.goto("/login");
 	await page.getByLabel("email").fill("all@pubpub.org");
@@ -10,21 +12,15 @@ export const login = async ({ page }: { page: Page }) => {
 
 export const createCommunity = async ({
 	page,
-	community: communityProps,
+	community,
 }: {
 	page: Page;
 	community?: Partial<{ name: string; slug: string }>;
 }) => {
-	const defaultCommunity = { name: "test community", slug: "test-community-slug" };
-	const community = communityProps
-		? { ...defaultCommunity, ...communityProps }
-		: defaultCommunity;
-
-	await page.goto("/communities");
-	await page.getByRole("button", { name: "Create Community" }).click();
-	await page.locator("input[name='name']").fill(community.name);
-	await page.locator("input[name='slug']").fill(community.slug);
-	await page.getByRole("dialog").getByRole("button", { name: "Create Community" }).click();
-
-	return community;
+	const communityPage = new CommunityPage(page);
+	await communityPage.goto();
+	await communityPage.addCommunity(
+		community?.name ?? "test community",
+		community?.slug ?? "test-community-slug"
+	);
 };
