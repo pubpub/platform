@@ -134,7 +134,7 @@ export const ButtonConfigurationForm = ({
 							<FormControl>
 								<Input {...field} />
 							</FormControl>
-							<FormMessage />
+							<FormMessage data-testid="label-form-message" />
 						</FormItem>
 					)}
 				/>
@@ -224,10 +224,15 @@ export const ButtonConfigurationForm = ({
 						onClick={() => {
 							dispatch({ eventName: "cancel" });
 						}}
+						data-testid="cancel-button-configuration-button"
 					>
 						Cancel
 					</Button>
-					<Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+					<Button
+						data-testid="save-button-configuration-button"
+						type="submit"
+						className="bg-blue-500 hover:bg-blue-600"
+					>
 						Save
 					</Button>
 				</div>

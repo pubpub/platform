@@ -26,7 +26,10 @@ export const ButtonOption = ({
 	};
 	return (
 		// overflow-hidden to keep the div that is only a color inside the border radius
-		<div className="relative flex w-full items-center justify-between overflow-hidden rounded border">
+		<div
+			data-testid={`button-option-${label}`}
+			className="relative flex w-full items-center justify-between overflow-hidden rounded border"
+		>
 			<div
 				className={cn("absolute h-full w-4 bg-foreground", {
 					"bg-muted-foreground": buttonType === "secondary",
@@ -42,7 +45,12 @@ export const ButtonOption = ({
 				</div>
 			</div>
 			{!readOnly ? (
-				<Button onClick={handleClick} variant="ghost" className="mr-2 p-2">
+				<Button
+					data-testid="edit-button"
+					onClick={handleClick}
+					variant="ghost"
+					className="mr-2 p-2"
+				>
 					<span className="sr-only">Edit</span>
 					<Pencil className="text-neutral-500" />
 				</Button>
@@ -78,6 +86,7 @@ export const SubmissionSettings = () => {
 						variant="link"
 						size="sm"
 						className="p-0 text-blue-500"
+						data-testid="add-submission-settings-button"
 					>
 						<Plus width="12px" className="mr-1" /> Add Button
 					</Button>
