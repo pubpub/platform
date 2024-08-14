@@ -7,7 +7,7 @@ const login = async ({ page }: { page: Page }) => {
 	await page.getByLabel("email").fill("all@pubpub.org");
 	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
 	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL("/c/unjournal/stages");
+	await page.waitForURL(/\/c\/\w+\/stages/);
 };
 const now = new Date();
 const FORM_SLUG = `playwright-test-form-${now.getTime()}`;
