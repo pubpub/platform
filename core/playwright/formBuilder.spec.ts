@@ -1,33 +1,48 @@
+/**
+ * Serial test which creates a form and form elements via the form builder
+ */
+
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-const login = async ({ page }: { page: Page }) => {
-	await page.goto("/login");
-	await page.getByLabel("email").fill("all@pubpub.org");
-	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
-	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL(/\/c\/\w+\/stages/);
-};
-const now = new Date();
-const FORM_SLUG = `playwright-test-form-${now.getTime()}`;
+import { createCommunity, login } from "./helpers";
+
+test.describe.configure({ mode: "serial" });
+
+const now = new Date().getTime();
+const FORM_SLUG = `playwright-test-form-${now}`;
+const COMMUNITY_SLUG = `playwright-test-community-${now}`;
+
+// Single page instance https://playwright.dev/docs/test-retries#reuse-single-page-between-tests
+let page: Page;
+
+test.beforeAll(async ({ browser }) => {
+	page = await browser.newPage();
+	await login({ page });
+	await createCommunity({
+		page,
+		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
+	});
+});
+
+test.afterAll(async () => {
+	await page.close();
+});
 
 test.describe("Creating a form", () => {
-	test.beforeEach(async ({ page }) => {
-		await login({ page });
-	});
-	test("Create a new form for the first time", async ({ page }) => {
-		await page.goto("/c/croccroc/forms");
+	test("Create a new form for the first time", async () => {
+		await page.goto(`/c/${COMMUNITY_SLUG}/forms`);
 		await page.getByRole("banner").getByTestId("new-form-button").click();
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "Submission" }).click();
 		await page.getByRole("textbox", { name: "name" }).fill(FORM_SLUG);
 		await page.getByRole("textbox", { name: "slug" }).fill(FORM_SLUG);
 		await page.getByRole("button", { name: "Create" }).click();
-		await page.waitForURL(`/c/croccroc/forms/${FORM_SLUG}/edit`);
+		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
 	});
-	test("Cannot create a form with the same slug", async ({ page }) => {
-		await page.goto("/c/croccroc/forms");
+	test("Cannot create a form with the same slug", async () => {
+		await page.goto(`/c/${COMMUNITY_SLUG}/forms`);
 		await page.getByRole("banner").getByTestId("new-form-button").click();
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "Submission" }).click();
@@ -39,12 +54,8 @@ test.describe("Creating a form", () => {
 });
 
 test.describe("Submission buttons", () => {
-	test.beforeEach(async ({ page }) => {
-		await login({ page });
-	});
-
-	test("Add a new button and edit without saving", async ({ page }) => {
-		await page.goto(`/c/croccroc/forms/${FORM_SLUG}/edit`);
+	test("Add a new button and edit without saving", async () => {
+		await page.goto(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
 		await page.getByTestId("add-submission-settings-button").click();
 		await page.getByTestId("save-button-configuration-button").click();
 		await page.getByTestId("button-option-Submit").getByTestId("edit-button").click();
@@ -57,8 +68,8 @@ test.describe("Submission buttons", () => {
 			.click();
 	});
 
-	test("Add two new buttons", async ({ page }) => {
-		await page.goto(`/c/croccroc/forms/${FORM_SLUG}/edit`);
+	test("Add two new buttons", async () => {
+		await page.goto(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
 		// Add first button with default fields
 		await page.getByTestId("add-submission-settings-button").click();
 		await page.getByTestId("save-button-configuration-button").click();
@@ -87,7 +98,7 @@ test.describe("Submission buttons", () => {
 		).toHaveCount(1);
 	});
 
-	test("Editing a saved button", async ({ page }) => {
+	test("Editing a saved button", async () => {
 		const newData = { label: "Decline politely", content: "New description" };
 		page.on("request", (request) => {
 			if (request.method() === "POST" && request.url().includes(`forms/${FORM_SLUG}/edit`)) {
@@ -98,7 +109,7 @@ test.describe("Submission buttons", () => {
 			}
 		});
 
-		await page.goto(`/c/croccroc/forms/${FORM_SLUG}/edit`);
+		await page.goto(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
 		await page.getByTestId("button-option-Decline").getByTestId("edit-button").click();
 		await page.getByRole("textbox", { name: "label" }).fill(newData.label);
 		await page.getByRole("textbox").nth(1).fill(newData.content);
