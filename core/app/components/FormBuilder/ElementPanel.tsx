@@ -95,7 +95,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 						}}
 					>
 						<Type size={20} className="my-auto text-emerald-500" />
-						<div className="flex flex-col items-start">
+						<div className="flex flex-col items-start text-left">
 							<div className="text-muted-foreground">{field.slug}</div>
 							<div className="text-left font-semibold">{field.name}</div>
 						</div>
