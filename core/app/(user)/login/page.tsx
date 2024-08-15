@@ -12,6 +12,7 @@ export default async function Login() {
 		const member = await prisma.member.findFirst({
 			where: { userId: loginData.id },
 			include: { community: true },
+			orderBy: { createdAt: "desc" },
 		});
 
 		if (member) {

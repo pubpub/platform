@@ -6,8 +6,6 @@ import type { AuthTokensId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
 import { UnauthorizedError } from "./errors";
 
 const hashAlgorithm = "sha3-512";
@@ -24,7 +22,7 @@ export const createHash = (input: string) => {
 };
 
 // TODO: reading the token from the db and updating it after it's used should probably happen in a transaction
-export const validateToken = async (token: string) => {
+export const validateToken = async (token: string, type?: AuthTokenType) => {
 	// Parse the token's id and plaintext value from the input
 	// Format: "<token id>.<token plaintext>"
 	const [tokenId, tokenString] = token.split(".");
@@ -41,7 +39,11 @@ export const validateToken = async (token: string) => {
 	// 	throw new UnauthorizedError('Token already used')
 	// }
 
-	const { hash, user, expiresAt, type } = dbToken;
+	const { hash, user, expiresAt, type: authTokenType } = dbToken;
+
+	if (type && type !== authTokenType) {
+		throw new UnauthorizedError("Invalid token type");
+	}
 
 	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
 	// different expiration periods
@@ -62,9 +64,11 @@ export const validateToken = async (token: string) => {
 	}
 
 	// If we haven't thrown by now, we've authenticated the user associated with the token
-	await autoRevalidate(
-		db.updateTable("auth_tokens").set({ isUsed: true }).where("id", "=", dbToken.id)
-	).execute();
+	await db
+		.updateTable("auth_tokens")
+		.set({ isUsed: true })
+		.where("id", "=", dbToken.id)
+		.execute();
 
 	return user;
 };
@@ -80,12 +84,15 @@ const getTokenBase = db
 		"auth_tokens.hash",
 		"auth_tokens.type",
 		jsonObjectFrom(
-			eb.selectFrom("users").selectAll().whereRef("users.id", "=", "auth_tokens.userId")
+			eb
+				.selectFrom("users")
+				.selectAll("users")
+				.whereRef("users.id", "=", "auth_tokens.userId")
 		).as("user"),
 	]);
 
 export const getAuthToken = (token: AuthTokensId) =>
-	autoCache(getTokenBase.where("auth_tokens.id", "=", token));
+	getTokenBase.where("auth_tokens.id", "=", token);
 
 const createDateOneWeekInTheFuture = () => {
 	const expiresAt = new Date();
@@ -111,25 +118,16 @@ export const createToken = async ({
 	// rainbow table attacks, but no better than increasing the key length would.
 	const hash = createHash(tokenString).digest(encoding);
 
-	const token = await autoRevalidate(
-		db
-			.insertInto("auth_tokens")
-			.values({
-				userId,
-				hash,
-				expiresAt,
-				type,
-			})
-			.returning(["id", "hash"])
-	).executeTakeFirstOrThrow(() => new UnauthorizedError("Unable to create token"));
+	const token = await db
+		.insertInto("auth_tokens")
+		.values({
+			userId,
+			hash,
+			expiresAt,
+			type,
+		})
+		.returning(["id", "hash"])
+		.executeTakeFirstOrThrow(() => new UnauthorizedError("Unable to create token"));
 
 	return `${token.id}.${tokenString}`;
 };
-
-// export const deleteToken = async (tokenId: string) => {
-// 	await prisma.authToken.delete({
-// 		where: {
-// 			id: tokenId,
-// 		},
-// 	});
-// }

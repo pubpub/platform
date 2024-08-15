@@ -24,3 +24,12 @@ test("Logout", async ({ page }) => {
 	await page.waitForURL("/login");
 	await page.context().storageState({ path: authFile });
 });
+
+test("Login with invalid credentials", async ({ page }) => {
+	await page.goto("/login");
+	await page.getByLabel("email").fill("all@pubpub.org");
+	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all-wrong");
+	await page.getByRole("button", { name: "Sign in" }).click();
+
+	await page.getByText("Incorrect email or password", { exact: true }).waitFor();
+});

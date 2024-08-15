@@ -170,6 +170,7 @@ export const lucia = new Lucia(adapter, {
 	sessionCookie: {
 		expires: false,
 		attributes: {
+			path: "/",
 			secure: env.NODE_ENV === "production",
 		},
 	},

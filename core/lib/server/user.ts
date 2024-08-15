@@ -8,6 +8,7 @@ import type { MembersId, UsersId } from "db/public";
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
+import { createPasswordHash } from "../auth/password";
 import { slugifyString } from "../string";
 import { NotFoundError } from "./errors";
 
@@ -121,4 +122,9 @@ export const getMember = cache((memberId: MembersId) => {
 				.as("user"),
 		])
 		.where("members.id", "=", memberId);
+});
+
+export const setUserPassword = cache(async (props: { userId: UsersId; password: string }) => {
+	const passwordHash = await createPasswordHash(props.password);
+	await db.updateTable("users").set({ passwordHash }).where("id", "=", props.userId).execute();
 });

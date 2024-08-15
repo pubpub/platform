@@ -25,7 +25,7 @@ interface ForgotPasswordProps {
 
 const baseUrl = process.env.PUBPUB_URL ? process.env.PUBPUB_URL : "";
 
-export const VercelInviteUserEmail = ({
+export const PasswordReset = ({
 	firstName = "ANDY",
 	lastName = "Rocha",
 	resetPasswordLink,
@@ -87,4 +87,4 @@ export const VercelInviteUserEmail = ({
 	);
 };
 
-export default VercelInviteUserEmail;
+export default PasswordReset;

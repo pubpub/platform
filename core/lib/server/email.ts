@@ -3,6 +3,7 @@ import type { Prisma, User } from "@prisma/client";
 import { Eta } from "eta";
 
 import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
+import { AuthTokenType, UsersId } from "db/public";
 
 import prisma from "~/prisma/db";
 import { IntegrationAction, pubValuesInclude } from "../types";
@@ -175,7 +176,7 @@ const makeTemplateApi = async (
 			firstName: user.firstName,
 			lastName: user.lastName,
 			get token() {
-				return createToken(user.id);
+				return createToken({ userId: user.id as UsersId, type: AuthTokenType.generic });
 			},
 		},
 		pubs: makeProxy(pubs, "pubs"),
