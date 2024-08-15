@@ -68,6 +68,7 @@ model AuthToken {
 }
 
 enum AuthTokenType {
+  generic
   magicLink
   passwordReset
   signup

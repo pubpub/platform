@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { CommunitiesId, PubsId } from "db/public";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -32,8 +33,12 @@ export default async function Page({
 	if (!loginData) {
 		return null;
 	}
-	let token;
-	token = await createToken(loginData.id);
+
+	const token = await createToken({
+		userId: loginData.id as UsersId,
+		type: AuthTokenType.generic,
+	});
+
 	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}
@@ -150,7 +155,6 @@ export default async function Page({
 			<PubCreateButton
 				communityId={community.id as CommunitiesId}
 				parentId={pub.id as PubsId}
-				searchParams={searchParams}
 			/>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper pub={pub} members={community.members} />

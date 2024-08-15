@@ -1,5 +1,8 @@
 import type { Prisma } from "@prisma/client";
 
+import type { UsersId } from "db/public";
+import { AuthTokenType } from "db/public";
+
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
@@ -35,7 +38,7 @@ export default async function Page({ params }: Props) {
 	const loginData = await getLoginData();
 	let token;
 	if (loginData) {
-		token = await createToken(loginData.id);
+		token = await createToken({ userId: loginData.id as UsersId, type: AuthTokenType.generic });
 	}
 	return (
 		<>

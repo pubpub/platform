@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
+import { AuthTokenType, UsersId } from "db/public";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
@@ -26,9 +27,9 @@ const getStages = async (communityId: string) => {
 	});
 };
 
-type Props = { params: { communitySlug: string }; searchParams?: Record<string, unknown> };
+type Props = { params: { communitySlug: string } };
 
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page({ params }: Props) {
 	const loginData = await getLoginData();
 	if (!loginData) {
 		redirect("/login");
@@ -41,7 +42,10 @@ export default async function Page({ params, searchParams }: Props) {
 		return null;
 	}
 
-	const token = await createToken(loginData.id);
+	const token = await createToken({
+		userId: loginData.id as UsersId,
+		type: AuthTokenType.generic,
+	});
 
 	const [pubs, stages] = await Promise.all([
 		getCommunityPubs(community.id),
@@ -50,7 +54,7 @@ export default async function Page({ params, searchParams }: Props) {
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
+			<PubHeader communityId={community.id as CommunitiesId} />
 			<PubList pubs={pubs} token={token} />
 		</>
 	);

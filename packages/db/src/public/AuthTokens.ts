@@ -14,7 +14,7 @@ export type AuthTokensId = string & { __brand: "AuthTokensId" };
 
 /** Represents the table public.auth_tokens */
 export interface AuthTokensTable {
-	id: ColumnType<AuthTokensId, AuthTokensId, AuthTokensId>;
+	id: ColumnType<AuthTokensId, AuthTokensId | undefined, AuthTokensId>;
 
 	hash: ColumnType<string, string, string>;
 
@@ -48,7 +48,7 @@ export const authTokensSchema = z.object({
 });
 
 export const authTokensInitializerSchema = z.object({
-	id: authTokensIdSchema,
+	id: authTokensIdSchema.optional(),
 	hash: z.string(),
 	createdAt: z.date().optional(),
 	expiresAt: z.date(),

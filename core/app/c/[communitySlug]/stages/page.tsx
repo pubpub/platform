@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 
+import { AuthTokenType, UsersId } from "db/public";
+
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { createToken } from "~/lib/server/token";
@@ -17,7 +19,10 @@ export default async function Page({ params }: Props) {
 	if (!community) {
 		notFound();
 	}
-	const token = await createToken(loginData.id);
+	const token = await createToken({
+		userId: loginData.id as UsersId,
+		type: AuthTokenType.generic,
+	});
 	const stageWorkflows = getStageWorkflows(community.stages);
 
 	const stageById = makeStagesById(community.stages);

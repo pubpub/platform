@@ -8,6 +8,7 @@ export enum AuthTokenType {
 	magicLink = "magicLink",
 	passwordReset = "passwordReset",
 	signup = "signup",
+	generic = "generic",
 }
 
 /** Zod schema for AuthTokenType */

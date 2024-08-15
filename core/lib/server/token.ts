@@ -97,12 +97,12 @@ const createDateOneWeekInTheFuture = () => {
 // plaintext
 export const createToken = async ({
 	userId,
-	type = AuthTokenType.magicLink,
+	type = AuthTokenType.generic,
 	expiresAt = createDateOneWeekInTheFuture(),
 }: {
 	userId: UsersId;
 	type: AuthTokenType;
-	expiresAt: Date;
+	expiresAt?: Date;
 }) => {
 	const tokenString = generateToken();
 
