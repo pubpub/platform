@@ -28,6 +28,7 @@ export const getPubFields = (
 		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId } = ({} = {})
 ) => autoCache(_getPubFields(props));
 
+
 export const _getPubFields = (
 	props:
 		| { pubId?: never; pubTypeId?: never; communityId?: never }
@@ -70,9 +71,6 @@ export const _getPubFields = (
 						)
 						.$if(props.pubId !== undefined, (qb) =>
 							qb
-								.innerJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
-								.innerJoin("pubs", "pubs.id", "pub_values.pubId")
-								.where("pubs.id", "=", props.pubId!)
 								// all the pubfields associated with the pubtype of the pub, as long as we're not asking for values only
 								.$if(props.pubId !== undefined && props.valuesOnly !== true, (qb) =>
 									qb.union(

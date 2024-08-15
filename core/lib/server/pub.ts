@@ -253,29 +253,6 @@ export const getPubBase = (
 		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
 		.$narrowType<{ values: PubValues }>();
 
-export const getPubOnPubPage = (pubId: PubsId) =>
-	getPubBase({ pubId }).select((eb) => [
-		includeStagesWithIntegrations(eb),
-		inCludePubTypes(eb),
-		includeInterationInstances(eb),
-		jsonArrayFrom(
-			eb
-				.selectFrom("children")
-				.select((eb) => [
-					...pubColumns,
-					"children.values",
-					jsonArrayFrom(
-						eb
-							.selectFrom("PubsInStages")
-							.innerJoin("stages", "stages.id", "PubsInStages.stageId")
-							.select(["PubsInStages.stageId as id", "stages.name"])
-							.whereRef("PubsInStages.pubId", "=", "children.id")
-					).as("stages"),
-				])
-				.$narrowType<{ values: PubValues }>()
-		).as("children"),
-	]);
-
 export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	const pub = await getPubBase({ pubId })
 		.select((eb) => [includeStagesForPubBase(eb)])

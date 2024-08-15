@@ -13,6 +13,7 @@ import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { getPubTitle } from "~/lib/pubs";
+import { _getPubFields } from "~/lib/server/pubFields";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -47,12 +48,13 @@ export default async function Page({
 	const pub = await getPub(params.pubId);
 	const alsoPubs = await getPubOnTheIndividualPubPage(params.pubId as PubsId);
 
-	if (!pub) {
+	if (!alsoPubs) {
 		return null;
 	}
-	const values = alsoPubs.values;
-	console.log("What values old", pub.values);
-	console.log("What values", values);
+	const pubFields = await _getPubFields({
+		pubId: alsoPubs.id as PubsId,
+		valuesOnly: true,
+	}).executeTakeFirstOrThrow();
 
 	const community = await getCommunityBySlug(params.communitySlug);
 
@@ -74,25 +76,27 @@ export default async function Page({
 			</div>
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
-					{pub.values
-						.filter((value) => {
-							return value.field.name !== "Title";
-						})
-						.map((value) => {
-							return (
-								<div className="mb-4" key={value.id}>
-									<div>{renderField(value)}</div>
-								</div>
-							);
-						})}
 					{Object.entries(alsoPubs.values)
 						.filter(([value]) => {
-							return value !== getPubTitle(pub);
+							return value !== getPubTitle(alsoPubs);
 						})
 						.map(([key, value]) => {
+							const field = Object.values(pubFields.fields).find(
+								(field) => field.slug === key
+							);
 							return (
 								<div className="mb-4" key={key}>
-									<div>{renderField(value)}</div>
+									<div>
+										{field ? (
+											renderField({
+												schemaName: field?.schemaName,
+												name: field.name,
+												value,
+											})
+										) : (
+											<div>Code a better alt</div>
+										)}
+									</div>
 								</div>
 							);
 						})}

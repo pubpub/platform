@@ -1,6 +1,9 @@
 import type { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import type { AnySchema, JSONSchemaType } from "ajv";
 
+import { useGetPointerPosition } from "reactflow";
+
+import { CoreSchemaType } from "db/public";
 import { CardContent, CardHeader, CardTitle } from "ui/card";
 import { Separator } from "ui/separator";
 import { cn } from "utils";
@@ -55,21 +58,29 @@ export function recursivelyGetScalarFields(
 	}
 }
 
-export function renderField(fieldValue: PubValueWithFieldAndSchema) {
-	const JSONSchema = fieldValue.field.schema
-		? (fieldValue.field.schema.schema as JSONSchemaType<AnySchema>)
-		: null;
-	const fieldTitle = (JSONSchema && JSONSchema.title) || fieldValue.field.name;
-	const renderedField = JSONSchema
-		? recursivelyGetScalarFields(JSONSchema, fieldValue.value)
-		: fieldValue.value && fieldValue.value.toString();
+type RenderProps = {
+	schemaName: CoreSchemaType | null;
+	name: string;
+	value: unknown;
+};
+
+
+export function renderField(props: RenderProps) {
+	// const JSONSchema = fieldValue.field.schema
+	// 	? (fieldValue.field.schema.schema as JSONSchemaType<AnySchema>)
+	// 	: null;
+	// const fieldTitle = (JSONSchema && JSONSchema.title) || fieldValue.field.name;
+	// const renderedField = JSONSchema
+	// 	? recursivelyGetScalarFields(JSONSchema, fieldValue.value)
+	// 	: fieldValue.value && fieldValue.value.toString();
+	const value = JSON.stringify(props.value);
 	return (
 		<>
 			<Separator />
 			<CardHeader>
-				<CardTitle className={cn("text-base")}>{fieldTitle}</CardTitle>
+				<CardTitle className={cn("text-base")}>{props.name}</CardTitle>
 			</CardHeader>
-			<CardContent>{renderedField}</CardContent>
+			<CardContent>{value}</CardContent>
 		</>
 	);
 }
