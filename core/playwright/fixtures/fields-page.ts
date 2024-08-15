@@ -15,15 +15,19 @@ export class FieldsPage {
 		this.communitySlug = communitySlug;
 		this.newButton = this.page.getByRole("button", { name: "New Field" });
 		this.formatBox = this.page.getByRole("combobox");
-		this.nameBox = page.getByRole("textbox", { name: "name" });
+		this.nameBox = this.page.getByRole("textbox", { name: "name" });
 	}
 
 	async goto() {
 		await this.page.goto(`/c/${this.communitySlug}/fields`);
 	}
 
-	async addField(name: string, format: CoreSchemaType) {
+	async openNewFieldModal() {
 		await this.newButton.click();
+	}
+
+	async addField(name: string, format: CoreSchemaType) {
+		await this.openNewFieldModal();
 		await this.nameBox.fill(name);
 		await this.formatBox.click();
 		await this.page.getByRole("option", { name: format }).click();
