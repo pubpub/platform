@@ -13,7 +13,7 @@ export class FieldsPage {
 		communitySlug: string
 	) {
 		this.communitySlug = communitySlug;
-		this.newButton = this.page.getByRole("button", { name: "New Field" });
+		this.newButton = this.page.getByRole("banner").getByRole("button", { name: "New Field" });
 		this.formatBox = this.page.getByRole("combobox");
 		this.nameBox = this.page.getByRole("textbox", { name: "name" });
 	}
