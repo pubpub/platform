@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
-import type { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public";
 
 export class FieldsPage {
 	private readonly formatBox: Locator;
@@ -32,5 +32,11 @@ export class FieldsPage {
 		await this.formatBox.click();
 		await this.page.getByRole("option", { name: format }).click();
 		await this.page.getByRole("button", { name: "Create" }).click();
+	}
+
+	async addFieldsOfEachType() {
+		for (const schema of Object.values(CoreSchemaType)) {
+			await this.addField(schema, schema);
+		}
 	}
 }

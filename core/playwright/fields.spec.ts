@@ -28,17 +28,18 @@ test.afterAll(async () => {
 });
 
 test.describe("Creating a field", () => {
-	test("Create a new field", async () => {
-		const fieldName = "Likes dogs";
+	test("Can create a new field of each type", async () => {
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
-		await fieldsPage.addField(fieldName, CoreSchemaType.Boolean);
-		await expect(
-			page.getByRole("button", { name: `Select row ${fieldName} Boolean` })
-		).toHaveCount(1);
+		await fieldsPage.addFieldsOfEachType();
+		for (const schema of Object.values(CoreSchemaType)) {
+			await expect(
+				page.getByRole("button", { name: `Select row ${schema} ${schema}` })
+			).toHaveCount(1);
+		}
 
 		// Try to create a field with the same name, should error
-		await fieldsPage.addField(fieldName, CoreSchemaType.String);
+		await fieldsPage.addField("String", CoreSchemaType.String);
 		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
 	});
 
