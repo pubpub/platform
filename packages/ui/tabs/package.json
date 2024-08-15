@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-tabs.cjs.js",
-	"module": "dist/ui-tabs.esm.js"
-}

@@ -3,8 +3,11 @@
 	"private": true,
 	"version": "0.0.0",
 	"description": "",
-	"main": "dist/contracts.cjs.js",
-	"module": "dist/contracts.esm.js",
+	"exports": {
+		".": "./dist/contracts.js",
+		"./package.json": "./package.json"
+	},
+	"type": "module",
 	"files": [
 		"dist"
 	],
@@ -29,5 +32,13 @@
 		"typescript": "^5.4.2",
 		"zod": "^3.23.8"
 	},
-	"prettier": "@pubpub/prettier-config"
+	"prettier": "@pubpub/prettier-config",
+	"preconstruct": {
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
+	}
 }

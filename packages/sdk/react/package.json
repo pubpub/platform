@@ -1,4 +1,0 @@
-{
-	"main": "dist/pubpub-sdk-react.cjs.js",
-	"module": "dist/pubpub-sdk-react.esm.js"
-}

@@ -42,7 +42,12 @@
 	"preconstruct": {
 		"packages": [
 			"packages/*"
-		]
+		],
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"prettier": "@pubpub/prettier-config",
 	"packageManager": "pnpm@8.7.0",

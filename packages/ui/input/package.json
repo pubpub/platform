@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-input.cjs.js",
-	"module": "dist/ui-input.esm.js"
-}

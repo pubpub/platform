@@ -1,8 +1,11 @@
 {
 	"name": "utils",
 	"version": "0.0.1",
-	"main": "dist/utils.cjs.js",
-	"module": "dist/utils.esm.js",
+	"exports": {
+		".": "./dist/utils.js",
+		"./package.json": "./package.json"
+	},
+	"type": "module",
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit"
@@ -15,6 +18,14 @@
 		"@pubpub/prettier-config": "workspace:*",
 		"tsconfig": "workspace:*",
 		"typescript": "^5.4.2"
+	},
+	"preconstruct": {
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"prettier": "@pubpub/prettier-config"
 }

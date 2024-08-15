@@ -1,10 +1,16 @@
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vitest-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-	plugins: [react(), tsconfigPaths()],
+	plugins: [react()],
+
 	test: {
+		alias: [
+			{
+				find: "~",
+				replacement: new URL(".", import.meta.url).pathname,
+			},
+		],
 		environment: "jsdom",
 		exclude: [
 			"**/playwright/**",
