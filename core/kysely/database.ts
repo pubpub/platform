@@ -1,7 +1,7 @@
 import type { LogEvent } from "kysely";
 
 import { Kysely, PostgresDialect } from "kysely";
-import { Pool } from "pg";
+import pg from "pg";
 import { z } from "zod";
 
 import type { Database } from "db/Database";
@@ -10,7 +10,7 @@ import { logger } from "logger";
 import { env } from "~/lib/env/env.mjs";
 
 const dialect = new PostgresDialect({
-	pool: new Pool({
+	pool: new pg.Pool({
 		connectionString: env.DATABASE_URL,
 	}),
 });

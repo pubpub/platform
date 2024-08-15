@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
+import { createSeed } from "~/lib/testing";
+
 const authFile = "playwright/.auth/user.json";
+
+test.beforeAll(async () => {
+	console.log(await createSeed({ communities: {} }));
+});
 
 test("Login", async ({ page }) => {
 	await page.goto("/login");

@@ -11,9 +11,8 @@ import {
 	StructuralFormElement,
 } from "db/public";
 import { databaseTables } from "db/table-names";
-import { assert } from "utils";
 
-import { db } from "../kysely/database";
+import { db } from "~/kysely/database";
 import { createPasswordHash } from "./auth/password";
 import { slugifyString } from "./string";
 
@@ -329,19 +328,20 @@ const filterTableNames = <T extends Record<string, any>>(props: T) => {
 	);
 };
 
-async function createSeed<T extends TopLevelThing>(t: T) {
-	const things = Object.entries(t) as [DBTableName, Creatable<DBTableName>][];
+export async function createSeed<T extends TopLevelThing>(t: T) {
+	console.log(t);
+	// const things = Object.entries(t) as [DBTableName, Creatable<DBTableName>][];
 
-	for (const thing of things) {
-		const { tables, values } = filterTableNames(thing);
+	// for (const thing of things) {
+	// 	const { tables, values } = filterTableNames(thing);
 
-		for (const table of Object.keys(tables)) {
-			const tableName = table as DBTableName;
-			const tableValues = tables[tableName];
+	// 	for (const table of Object.keys(tables)) {
+	// 		const tableName = table as DBTableName;
+	// 		const tableValues = tables[tableName];
 
-			await factories[tableName]({ ...tableValues, ...values });
-		}
-	}
+	// 		await factories[tableName]({ ...tableValues, ...values });
+	// 	}
+	// }
 
 	return t;
 }
