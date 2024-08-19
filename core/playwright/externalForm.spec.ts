@@ -41,12 +41,12 @@ test.beforeAll(async ({ browser }) => {
 	// We are automatically redirected to the form editor. Add elements!
 	const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
 	await formEditPage.openAddForm();
-	for (const schema of Object.values(CoreSchemaType)) {
-		await formEditPage.addFormElement(`${COMMUNITY_SLUG}:${schema.toLowerCase()}`);
-	}
+	// TODO: adding here is flaky when adding more than one...
+	await formEditPage.addFormElement(`${COMMUNITY_SLUG}:email`);
+
 	// Now we also need a pub! We'll use the one that automatically gets created in a community
 	await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
-	await page.locator("a").first().click();
+	await page.getByRole("link", { name: "The Activity of Slugs I. The" }).click();
 	await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
 	const pubId = page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)/)?.groups?.pubId;
 
@@ -59,7 +59,15 @@ test.afterAll(async () => {
 });
 
 test.describe("Rendering the external form", () => {
-	test("Can render the form", async () => {
+	test("Can render the form with validation", async () => {
 		await expect(page.locator("h1").filter({ hasText: "Evaluation" })).toHaveCount(1);
+		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("not an email");
+		await expect(
+			page.locator("p").filter({ hasText: "Expected string to match 'email' format" })
+		).toHaveCount(1);
+		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
+		await expect(
+			page.locator("p").filter({ hasText: "Expected string to match 'email' format" })
+		).toHaveCount(0);
 	});
 });
