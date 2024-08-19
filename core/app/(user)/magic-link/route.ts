@@ -1,6 +1,7 @@
+import type { NextRequest } from "next/server";
+
 import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { AuthTokenType } from "db/public";
 

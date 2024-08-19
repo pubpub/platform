@@ -3,12 +3,20 @@
 
 import { z } from "zod";
 
-/** Represents the enum public.AuthTokenType */
+/**
+ * Represents the enum public.AuthTokenType
+ * @property generic - For most use-cases. This will just authenticate you with a regular session.
+ * @property passwordReset - For resetting your password only
+ * @property signup - For signing up, but also when you're invited to a community
+ * @property publicInvite - For being invited to fill out a public form
+ * @property verifyEmail - For verifying your email address
+ */
 export enum AuthTokenType {
-	magicLink = "magicLink",
+	generic = "generic",
 	passwordReset = "passwordReset",
 	signup = "signup",
-	generic = "generic",
+	publicInvite = "publicInvite",
+	verifyEmail = "verifyEmail",
 }
 
 /** Zod schema for AuthTokenType */
