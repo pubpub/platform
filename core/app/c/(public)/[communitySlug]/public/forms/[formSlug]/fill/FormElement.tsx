@@ -240,8 +240,9 @@ export const FormElement = ({
 	if (component === InputComponent.datePicker) {
 		return <DateElement {...elementProps} />;
 	}
-	logger.error(
-		`Unknown component ${component} when rendering ${element.label} (${element.slug}, ${element.schemaName})`
-	);
-	return null;
+	if (schemaName === CoreSchemaType.MemberId) {
+		return <div>Sorry No Implementation exist yet</div>;
+	}
+
+	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
 };
