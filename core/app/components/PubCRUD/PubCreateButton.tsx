@@ -1,5 +1,5 @@
-import type { CreatePubProps } from "./PubCreate";
-import { PubCreate } from "./PubCreate";
+import type { CreatePubProps } from "./types";
+import { GenericDynamicPubFormWrapper } from "./NewFormWrapper";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
 
 type PubCreateButtonProps = CreatePubProps & {
@@ -8,7 +8,6 @@ type PubCreateButtonProps = CreatePubProps & {
 
 export const PubCreateButton = (props: PubCreateButtonProps) => {
 	const identifyingString = props.communityId ?? props.stageId;
-
 	return (
 		<PubCRUDDialogue
 			method={"create"}
