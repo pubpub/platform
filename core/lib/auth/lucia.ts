@@ -174,6 +174,11 @@ export const lucia = new Lucia(adapter, {
 			secure: env.NODE_ENV === "production",
 		},
 	},
+	getSessionAttributes: ({ type }) => {
+		return {
+			type,
+		};
+	},
 	getUserAttributes: ({
 		email,
 		isSuperAdmin,

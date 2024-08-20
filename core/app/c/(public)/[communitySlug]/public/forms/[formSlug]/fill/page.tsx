@@ -4,6 +4,7 @@ import { redirect, RedirectType } from "next/navigation";
 import Markdown from "react-markdown";
 
 import type { PubsId } from "db/public";
+import { AuthTokenType } from "db/public";
 
 import type { Form } from "~/lib/server/form";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
@@ -57,7 +58,9 @@ export default async function FormPage({
 		return <NotFound>No pub found</NotFound>;
 	}
 
-	const { user } = await getLoginData();
+	const { user, session } = await getLoginData({
+		allowedSessions: [AuthTokenType.generic, AuthTokenType.publicInvite],
+	});
 
 	// this is most likely what happens if a user clicks a link in an email
 	// with an expired token, or a token that has been used already
