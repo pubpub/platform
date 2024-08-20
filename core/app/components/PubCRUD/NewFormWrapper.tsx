@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 
+import { StagesTable } from "db/public";
+
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
@@ -20,23 +22,36 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 
 	const result = await query;
 	const { community, ...stage } = "communityId" in result ? result : { community: result };
+
 	let currentStage = "id" in stage ? stage : null;
+
 	if (!community) {
 		return null;
 	}
 
-	const pub = props.pubId && (await getPubCached(props.pubId));
-	const stages = await availableStagesAndCurrentStage(pub).executeTakeFirst();
+	let pub;
+	if (props.pubId !== undefined) {
+		pub = await getPubCached(props.pubId!);
+	}
 
-	const { availableStagesOfCurrentPub = [], stageOfCurrentPub } = stages ?? {};
+	let stages;
+	let availableStagesOfCurrentPub;
+	let stageOfCurrentPub;
+	if (pub) {
+		stages = await availableStagesAndCurrentStage(pub).executeTakeFirst();
+		({ availableStagesOfCurrentPub = [], stageOfCurrentPub } = stages ?? {});
+	}
+
+	const availableStages = pub ? availableStagesOfCurrentPub : community.stages;
+	const x = pub ? stageOfCurrentPub : currentStage;
 
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
 				<GenericDynamicPubForm
-					currentStage={currentStage || stageOfCurrentPub}
+					currentStage={x}
 					communityId={community.id}
-					availableStages={community.stages || availableStagesOfCurrentPub}
+					availableStages={availableStages}
 					availablePubTypes={community.pubTypes}
 					parentId={props.parentId}
 				/>
