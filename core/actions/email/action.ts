@@ -2,9 +2,9 @@ import * as z from "zod";
 
 import { Mail } from "ui/icon";
 
+import { RenderWithPubToken } from "~/lib/server/render/pub/renderWithPubUtils";
 import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
-import { EmailToken } from "./tokens";
 
 export const action = defineAction({
 	name: "email",
@@ -50,42 +50,42 @@ export const action = defineAction({
 	icon: Mail,
 	tokens: {
 		subject: {
-			[EmailToken.Value]: {
+			[RenderWithPubToken.Value]: {
 				description: "Insert a value from the pub.",
 			},
-			[EmailToken.RecipientName]: {
+			[RenderWithPubToken.RecipientName]: {
 				description: "The full name of the email recipient.",
 			},
-			[EmailToken.RecipientFirstName]: {
+			[RenderWithPubToken.RecipientFirstName]: {
 				description: "The first name of the email recipient.",
 			},
-			[EmailToken.RecipientLastName]: {
+			[RenderWithPubToken.RecipientLastName]: {
 				description: "The last name of the email recipient.",
 			},
 		},
 		body: {
-			[EmailToken.Value]: {
+			[RenderWithPubToken.Value]: {
 				description: "Insert a value from the pub.",
 			},
-			[EmailToken.AssigneeName]: {
+			[RenderWithPubToken.AssigneeName]: {
 				description: "The full name of the email sender.",
 			},
-			[EmailToken.AssigneeFirstName]: {
+			[RenderWithPubToken.AssigneeFirstName]: {
 				description: "The first name of the email sender.",
 			},
-			[EmailToken.AssigneeLastName]: {
+			[RenderWithPubToken.AssigneeLastName]: {
 				description: "The last name of the email sender.",
 			},
-			[EmailToken.RecipientName]: {
+			[RenderWithPubToken.RecipientName]: {
 				description: "The full name of the email recipient.",
 			},
-			[EmailToken.RecipientFirstName]: {
+			[RenderWithPubToken.RecipientFirstName]: {
 				description: "The first name of the email recipient.",
 			},
-			[EmailToken.RecipientLastName]: {
+			[RenderWithPubToken.RecipientLastName]: {
 				description: "The last name of the email recipient.",
 			},
-			[EmailToken.Link]: {
+			[RenderWithPubToken.Link]: {
 				description: "Insert a link.",
 			},
 		},

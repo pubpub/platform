@@ -40,7 +40,7 @@ export const UserIdSelect = async ({
 	);
 };
 
-export const InnerForm = ({
+export const InnerForm = async ({
 	pubId,
 	elements,
 	searchParams,
