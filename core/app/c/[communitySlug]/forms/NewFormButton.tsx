@@ -81,7 +81,10 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen} modal={true}>
 			<DialogOverlay />
 			<DialogTrigger asChild>
-				<Button className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow hover:bg-emerald-600">
+				<Button
+					data-testid="new-form-button"
+					className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow hover:bg-emerald-600"
+				>
 					<Plus size="16" /> <span>New Form</span>
 				</Button>
 			</DialogTrigger>
