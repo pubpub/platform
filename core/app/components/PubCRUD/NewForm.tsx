@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
 import { Button } from "ui/button";
@@ -47,7 +46,7 @@ async function GenericDynamicPubForm({
 		reValidateMode: "onChange",
 	});
 
-	const ElemenetForm = () => {
+	const PubFormElement = () => {
 		if (!selectedPubType) {
 			return null;
 		}
@@ -58,7 +57,7 @@ async function GenericDynamicPubForm({
 
 		return elements.map((element) => (
 			<>
-				<FormElement key={element.elementId} element={element} pubId={uuidv4() as PubsId} />
+				<FormElement key={element.elementId} element={element}/>
 				{JSON.stringify(element)}
 			</>
 		));
@@ -149,7 +148,7 @@ async function GenericDynamicPubForm({
 						)}
 					/>
 				)}
-				{selectedPubType && <ElemenetForm />}
+				{selectedPubType && <PubFormElement />}
 			</Form>
 		</div>
 	);

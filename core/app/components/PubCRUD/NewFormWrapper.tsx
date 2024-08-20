@@ -25,31 +25,24 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 
 	let currentStage = "id" in stage ? stage : null;
 
-	if (!community) {
+	if (!community) { 
 		return null;
 	}
 
-	let pub;
-	if (props.pubId !== undefined) {
-		pub = await getPubCached(props.pubId!);
-	}
+	const pub = props.pubId !== undefined ? await getPubCached(props.pubId) : undefined;
 
-	let stages;
-	let availableStagesOfCurrentPub;
-	let stageOfCurrentPub;
-	if (pub) {
-		stages = await availableStagesAndCurrentStage(pub).executeTakeFirst();
-		({ availableStagesOfCurrentPub = [], stageOfCurrentPub } = stages ?? {});
-	}
+	const { availableStagesOfCurrentPub, stageOfCurrentPub } = pub
+		? (await availableStagesAndCurrentStage(pub).executeTakeFirst()) || {}
+		: {};
 
-	const availableStages = pub ? availableStagesOfCurrentPub : community.stages;
-	const x = pub ? stageOfCurrentPub : currentStage;
+	const availableStages = availableStagesOfCurrentPub ?? community.stages;
+	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
 
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
 				<GenericDynamicPubForm
-					currentStage={x}
+					currentStage={stageOfPubRnRn}
 					communityId={community.id}
 					availableStages={availableStages}
 					availablePubTypes={community.pubTypes}
