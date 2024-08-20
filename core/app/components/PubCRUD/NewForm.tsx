@@ -1,9 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Pub } from "@prisma/client";
 import { useForm } from "react-hook-form";
 
-import type { Communities, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
+import type {
+	Communities,
+	PubFields,
+	PubFieldSchema,
+	PubsId,
+	PubTypes,
+	PubValues,
+	Stages,
+} from "db/public";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import {
@@ -26,11 +35,12 @@ async function GenericDynamicPubForm({
 	parentId,
 	searchParams,
 	__hack__memberIdField,
+	values,
+	pubType,
 }: {
 	communitySlug: Communities["slug"];
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
 	parentId?: PubsId;
-
 	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description"> & {
 		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
@@ -38,20 +48,25 @@ async function GenericDynamicPubForm({
 	})[];
 	searchParams?: Record<string, unknown>;
 	__hack__memberIdField?: React.ReactNode;
+	values?: { [key: PubFields["slug"]]: PubValues["value"] | null };
+	pubType: Pub["pubTypeId"];
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
+	const pt = availablePubTypes.find((type) => type.id === pubType);
 	const [selectedPubType, setSelectedPubType] = useState<
 		(typeof availablePubTypes)[number] | null
-	>(null);
-
+	>(pt ?? null);
 	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
+	const defaultData = { pubType: null, stage: null, ...values };
 
 	const form = useForm({
 		reValidateMode: "onChange",
+		defaultValues: defaultData,
 	});
 
 	const PubFormElement = () => {
+		// no notion of field values here
 		if (!selectedPubType) {
 			return null;
 		}

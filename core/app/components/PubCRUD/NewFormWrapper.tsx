@@ -52,7 +52,8 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
-
+	const values = pub?.values ?? {};
+	const pubType = pub?.pubTypeId ?? "";
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
@@ -65,6 +66,8 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 					__hack__memberIdField={
 						<HackyUserIdSelect searchParams={props.searchParams ?? {}} />
 					}
+					values={values}
+					pubType={pubType}
 				/>
 			</Suspense>
 		</>
