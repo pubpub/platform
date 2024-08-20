@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pub } from "@prisma/client";
 import { useForm } from "react-hook-form";
 
 import type {
@@ -49,7 +48,7 @@ async function GenericDynamicPubForm({
 	searchParams?: Record<string, unknown>;
 	__hack__memberIdField?: React.ReactNode;
 	values?: { [key: PubFields["slug"]]: PubValues["value"] | null };
-	pubType: Pub["pubTypeId"];
+	pubType: PubTypes["id"];
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {

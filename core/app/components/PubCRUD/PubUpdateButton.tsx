@@ -2,7 +2,6 @@ import type { CRUDButtonProps } from "./PubCRUDDialogue";
 import type { PubUpdateProps } from "./PubUpdate";
 import { GenericDynamicPubFormWrapper } from "./NewFormWrapper";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
-import { PubUpdate } from "./PubUpdate";
 
 export const PubUpdateButton = (props: PubUpdateProps & { button?: CRUDButtonProps }) => {
 	const { pubId, button } = props;
