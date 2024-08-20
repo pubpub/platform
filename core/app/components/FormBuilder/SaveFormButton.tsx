@@ -16,6 +16,7 @@ export const SaveFormButton = ({ form, className }: Props) => {
 			className={cn("flex gap-2 bg-emerald-500 px-4", className)}
 			form={form}
 			type="submit"
+			data-testid="save-form-button"
 		>
 			Save
 		</Button>
