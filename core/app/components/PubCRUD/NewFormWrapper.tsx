@@ -8,7 +8,7 @@ import { getPubCached } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { UserSelectServer } from "../UserSelect/UserSelectServer";
 import { GenericDynamicPubForm } from "./NewForm";
-import { availableStagesAndCurrentStage, getCommunityById, getStage } from "./queries";
+import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage } from "./queries";
 
 type Props = CreateEditPubProps & { searchParams?: Record<string, unknown> };
 
@@ -30,19 +30,16 @@ const HackyUserIdSelect = async ({ searchParams }: { searchParams: Record<string
 async function GenericDynamicPubFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
 	const communityId = pub ? pub.communityId : props.communityId;
-	console.log("\n\n COMUNITY ID SAYS WHAT", communityId, "\n\n");
 	const query = props.stageId
-		? getStage(props.stageId).executeTakeFirstOrThrow()
+		? getCommunityByStage(props.stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
 				// @ts-expect-error FIXME: I don't know how to fix this,
 				// not sure what the common type between EB and the DB is
 				db,
 				communityId as string
 			).executeTakeFirstOrThrow();
-	console.log("\n\n QUERY SAYS WHAT", query, "\n\n");
 	const result = await query;
 	const { community, ...stage } = "communityId" in result ? result : { community: result };
-
 	let currentStage = "id" in stage ? stage : null;
 
 	if (!community) {

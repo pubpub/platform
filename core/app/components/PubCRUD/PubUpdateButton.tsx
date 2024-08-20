@@ -11,7 +11,6 @@ export const PubUpdateButton = (props: PubUpdateProps & { button?: CRUDButtonPro
 
 	return (
 		<PubCRUDDialogue method={"update"} identifyingString={identifyingString} button={button}>
-			<PubUpdate pubId={pubId} />
 			<GenericDynamicPubFormWrapper pubId={pubId} />
 		</PubCRUDDialogue>
 	);

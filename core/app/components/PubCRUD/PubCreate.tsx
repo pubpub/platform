@@ -8,7 +8,7 @@ import { db } from "~/kysely/database";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 import { UserSelectServer } from "../UserSelect/UserSelectServer";
-import { getCommunityById, getStage } from "./queries";
+import { getCommunityById, getCommunityByStage } from "./queries";
 
 const PubCreateForm = dynamic(
 	async () => {
@@ -41,7 +41,7 @@ export async function PubCreate({
 	searchParams,
 }: CreateEditPubProps & { searchParams?: Record<string, unknown> }) {
 	const query = stageId
-		? getStage(stageId).executeTakeFirstOrThrow()
+		? getCommunityByStage(stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
 				// @ts-expect-error FIXME: I don't know how to fix this,
 				// not sure what the common type between EB and the DB is
