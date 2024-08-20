@@ -222,7 +222,7 @@ const directiveVisitors: Record<utils.RenderWithPubToken, DirectiveVisitor> = {
 	[utils.RenderWithPubToken.Link]: visitLinkDirective,
 };
 
-const emailDirectives: Plugin<[utils.RenderWithPubContext]> = (context) => {
+const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (context) => {
 	return async (tree) => {
 		const tokenAuthLinkNodes: NodeMdast[] = [];
 
@@ -272,7 +272,7 @@ export const renderMarkdownWithPub = async (text: string, context: utils.RenderW
 		await unified()
 			.use(remarkParse)
 			.use(remarkDirective)
-			.use(emailDirectives, context)
+			.use(renderMarkdownWithPubPlugin, context)
 			.use(remarkRehype)
 			.use(rehypeFormat)
 			.use(rehypeStringify)
