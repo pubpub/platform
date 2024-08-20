@@ -1,19 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { el } from "@faker-js/faker";
-import values from "ajv/dist/vocabularies/jtd/values";
 import { useForm } from "react-hook-form";
 
-import type {
-	Communities,
-	MembersId,
-	PubFields,
-	PubFieldSchema,
-	PubsId,
-	PubTypes,
-	Stages,
-} from "db/public";
+import type { Communities, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import {
@@ -26,7 +16,6 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { ChevronDown } from "ui/icon";
 
 import { FormElement } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/FormElement";
-import { UserIdSelect } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/InnerForm";
 import { createElementFromPubType } from "./helpers";
 
 async function GenericDynamicPubForm({
@@ -70,7 +59,6 @@ async function GenericDynamicPubForm({
 			() => createElementFromPubType(selectedPubType),
 			[selectedPubType]
 		);
-		console.log("\n\n Elements to Render: ", elements);
 		return elements.map((element) => {
 			return (
 				<>
