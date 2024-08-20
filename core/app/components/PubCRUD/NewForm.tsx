@@ -59,6 +59,7 @@ async function GenericDynamicPubForm({
 		return elements.map((element) => (
 			<>
 				<FormElement key={element.elementId} element={element} pubId={uuidv4() as PubsId} />
+				{JSON.stringify(element)}
 			</>
 		));
 	};
