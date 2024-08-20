@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { el } from "@faker-js/faker";
 import values from "ajv/dist/vocabularies/jtd/values";
 import { useForm } from "react-hook-form";
 
@@ -35,6 +36,7 @@ async function GenericDynamicPubForm({
 	currentStage = null,
 	parentId,
 	searchParams,
+	__hack__memberIdField,
 }: {
 	communitySlug: Communities["slug"];
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
@@ -46,6 +48,7 @@ async function GenericDynamicPubForm({
 		})[];
 	})[];
 	searchParams?: Record<string, unknown>;
+	__hack__memberIdField?: React.ReactNode;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
@@ -67,26 +70,11 @@ async function GenericDynamicPubForm({
 			() => createElementFromPubType(selectedPubType),
 			[selectedPubType]
 		);
-
+		console.log("\n\n Elements to Render: ", elements);
 		return elements.map((element) => {
-			if (element.schemaName === CoreSchemaType.MemberId) {
-				const userId = values[element.slug!] as MembersId | undefined;
-				return (
-					<UserIdSelect
-						key={element.elementId}
-						label={element.label ?? ""}
-						name={element.slug ?? ""}
-						id={element.elementId}
-						searchParams={searchParams!}
-						value={userId}
-						communitySlug={communitySlug}
-					/>
-				);
-			}
 			return (
 				<>
 					<FormElement key={element.elementId} element={element} />
-					{JSON.stringify(element)}
 				</>
 			);
 		});
@@ -177,6 +165,12 @@ async function GenericDynamicPubForm({
 					/>
 				)}
 				{selectedPubType && <PubFormElement />}
+				{__hack__memberIdField &&
+				selectedPubType?.fields.find(
+					(field) => field.schemaName === CoreSchemaType.MemberId
+				)
+					? __hack__memberIdField
+					: null}
 			</Form>
 		</div>
 	);
