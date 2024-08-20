@@ -199,7 +199,7 @@ export const FormElement = ({
 	pubId,
 	element,
 }: {
-	pubId: PubsId;
+	pubId?: PubsId;
 	element: Form["elements"][number];
 }) => {
 	const { component: componentProp, label: labelProp, slug, schemaName } = element;
@@ -240,7 +240,6 @@ export const FormElement = ({
 	if (component === InputComponent.datePicker) {
 		return <DateElement {...elementProps} />;
 	}
-	return <div>Sorry No Implementation exist yet for {schemaName}</div>;
 
-	// throw new Error(`Invalid CoreSchemaType ${schemaName}`);
+	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
 };
