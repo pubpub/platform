@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
-import type { CreatePubProps } from "./types";
+import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
@@ -39,7 +39,7 @@ export async function PubCreate({
 	stageId,
 	parentId,
 	searchParams,
-}: CreatePubProps & { searchParams?: Record<string, unknown> }) {
+}: CreateEditPubProps & { searchParams?: Record<string, unknown> }) {
 	const query = stageId
 		? getStage(stageId).executeTakeFirstOrThrow()
 		: getCommunityById(

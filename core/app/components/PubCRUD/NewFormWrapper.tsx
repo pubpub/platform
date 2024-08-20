@@ -1,17 +1,14 @@
-import type { CreatePubProps } from "./types";
-import { db } from "~/kysely/database";
-import { GenericDynamicPubForm } from "./NewForm";
-import { getCommunityById, getStage } from "./queries";
+import { Suspense } from "react";
 
-type Props = CreatePubProps & { searchParams?: Record<string, unknown> };
+import type { CreateEditPubProps } from "./types";
+import { db } from "~/kysely/database";
+import { getPubCached } from "~/lib/server";
+import { GenericDynamicPubForm } from "./NewForm";
+import { availableStagesAndCurrentStage, getCommunityById, getStage } from "./queries";
+
+type Props = CreateEditPubProps & { searchParams?: Record<string, unknown> };
 
 async function GenericDynamicPubFormWrapper(props: Props) {
-	// render a pubType select
-	// render a stage select
-	// render the fields on the selected pubType first
-	// itereate over selected pubType to create elemenets and pass them to FormElement.
-	// return <div></div>;
-	// create an in memory representaion of a form element
 	const query = props.stageId
 		? getStage(props.stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
@@ -22,23 +19,28 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 			).executeTakeFirstOrThrow();
 
 	const result = await query;
-
 	const { community, ...stage } = "communityId" in result ? result : { community: result };
-
-	const currentStage = "id" in stage ? stage : null;
-
+	let currentStage = "id" in stage ? stage : null;
 	if (!community) {
 		return null;
 	}
+
+	const pub = props.pubId && (await getPubCached(props.pubId));
+	const stages = await availableStagesAndCurrentStage(pub).executeTakeFirst();
+
+	const { availableStagesOfCurrentPub = [], stageOfCurrentPub } = stages ?? {};
+
 	return (
 		<>
-			<GenericDynamicPubForm
-				currentStage={currentStage}
-				communityId={community.id}
-				availableStages={community.stages}
-				availablePubTypes={community.pubTypes}
-				parentId={props.parentId}
-			/>
+			<Suspense fallback={<div>Loading...</div>}>
+				<GenericDynamicPubForm
+					currentStage={currentStage || stageOfCurrentPub}
+					communityId={community.id}
+					availableStages={community.stages || availableStagesOfCurrentPub}
+					availablePubTypes={community.pubTypes}
+					parentId={props.parentId}
+				/>
+			</Suspense>
 		</>
 	);
 }

@@ -1,4 +1,4 @@
-import type { CreatePubProps } from "./types";
+import type { CreateEditPubProps } from "./types";
 import { GenericDynamicPubFormWrapper } from "./NewFormWrapper";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
 

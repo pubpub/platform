@@ -37,18 +37,12 @@ async function GenericDynamicPubForm({
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
-	// render a pubType select
-	// render a stage select
-	// render the fields on the selected pubType first
-	// itereate over selected pubType to create elemenets and pass them to FormElement.
-	// return <div></div>;
-	// create an in memory representaion of a form element
 	const [selectedPubType, setSelectedPubType] = useState<
 		(typeof availablePubTypes)[number] | null
 	>(null);
 
 	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
-	// const elements = createElementFromPubType(selectedPubType);
+
 	const form = useForm({
 		reValidateMode: "onChange",
 	});
@@ -57,11 +51,15 @@ async function GenericDynamicPubForm({
 		if (!selectedPubType) {
 			return null;
 		}
-		const elements = createElementFromPubType(selectedPubType);
-		console.log("Ellies", elements);
+		const elements = useMemo(
+			() => createElementFromPubType(selectedPubType),
+			[selectedPubType]
+		);
+
 		return elements.map((element) => (
-			// <FormElement key={element.elementId} element={element} pubId={uuidv4() as PubsId} />
-			<div key={element.elementId}>{JSON.stringify(element)}</div>
+			<>
+				<FormElement key={element.elementId} element={element} pubId={uuidv4() as PubsId} />
+			</>
 		));
 	};
 
