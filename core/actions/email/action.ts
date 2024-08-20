@@ -12,7 +12,7 @@ export const action = defineAction({
 		schema: z.object({
 			recipient: z.string().uuid().describe("Recipient"),
 			subject: z.string().describe("Email subject"),
-			body: markdown().min(0).max(2_000).describe("Email body"),
+			body: markdown().min(0).describe("Email body"),
 		}),
 		fieldConfig: {
 			recipient: {
@@ -37,7 +37,6 @@ export const action = defineAction({
 					.optional(),
 				body: markdown()
 					.min(0)
-					.max(1_000)
 					.describe("Email body|Overrides the body specified in the action config.")
 					.optional(),
 			})
