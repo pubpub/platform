@@ -198,11 +198,9 @@ const DateElement = ({ label, name }: ElementProps) => {
 export const FormElement = ({
 	pubId,
 	element,
-	serverComponents,
 }: {
 	pubId?: PubsId;
 	element: Form["elements"][number];
-	serverComponents?: React.ReactNode[];
 }) => {
 	const { component: componentProp, label: labelProp, slug, schemaName } = element;
 	const component = componentProp ?? (schemaName && defaultComponent(schemaName));
@@ -242,8 +240,10 @@ export const FormElement = ({
 	if (component === InputComponent.datePicker) {
 		return <DateElement {...elementProps} />;
 	}
-	{
-		serverComponents && serverComponents.map((component) => component);
+
+	if (schemaName === CoreSchemaType.MemberId) {
+		return <>u shouldnt eb here</>;
 	}
+
 	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
 };

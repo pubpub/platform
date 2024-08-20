@@ -3,10 +3,27 @@ import { Suspense } from "react";
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
+import { UserSelectServer } from "../UserSelect/UserSelectServer";
 import { GenericDynamicPubForm } from "./NewForm";
 import { availableStagesAndCurrentStage, getCommunityById, getStage } from "./queries";
 
 type Props = CreateEditPubProps & { searchParams?: Record<string, unknown> };
+
+const HackyUserIdSelect = async ({ searchParams }: { searchParams: Record<string, unknown> }) => {
+	const community = await findCommunityBySlug();
+	const queryParamName = `user-wow`;
+	const query = searchParams?.[queryParamName] as string | undefined;
+	return (
+		<UserSelectServer
+			community={community!}
+			fieldLabel={"Member"}
+			fieldName={`hack`}
+			query={query}
+			queryParamName={queryParamName}
+		/>
+	);
+};
 
 async function GenericDynamicPubFormWrapper(props: Props) {
 	const query = props.stageId
@@ -35,17 +52,19 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
+
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
-				render elemnts for selected pubType
 				<GenericDynamicPubForm
 					currentStage={stageOfPubRnRn}
 					communitySlug={community.slug}
 					availableStages={availableStages}
 					availablePubTypes={community.pubTypes}
 					parentId={props.parentId}
-					searchParams={props.searchParams}
+					__hack__memberIdField={
+						<HackyUserIdSelect searchParams={props.searchParams ?? {}} />
+					}
 				/>
 			</Suspense>
 		</>
