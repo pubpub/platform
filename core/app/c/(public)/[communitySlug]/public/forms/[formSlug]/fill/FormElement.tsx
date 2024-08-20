@@ -240,9 +240,7 @@ export const FormElement = ({
 	if (component === InputComponent.datePicker) {
 		return <DateElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.MemberId) {
-		return <div>Sorry No Implementation exist yet</div>;
-	}
+	return <div>Sorry No Implementation exist yet for {schemaName}</div>;
 
-	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
+	// throw new Error(`Invalid CoreSchemaType ${schemaName}`);
 };

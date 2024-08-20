@@ -1,12 +1,22 @@
 import type { ExpressionBuilder, ExpressionWrapper } from "kysely";
 
+
+
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+
+
 import type { Database } from "db/Database";
-import type { CommunitiesId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId } from "db/public";
+
+
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
+
+
+
+
 
 export const getCommunityById = <
 	K extends keyof Database,
@@ -72,7 +82,6 @@ export const getCommunityById = <
 			: query.whereRef("communities.id", "=", communityId);
 
 	return autoCache(completeQuery);
-	// .executeTakeFirstOrThrow();
 };
 
 export const getStage = (stageId: StagesId) =>
@@ -89,4 +98,35 @@ export const getStage = (stageId: StagesId) =>
 				),
 			])
 			.where("stages.id", "=", stageId)
+	);
+
+export const availableStagesAndCurrentStage = (pub: any) =>
+	autoCache(
+		db
+			.with("currentStageId", (db) =>
+				db
+					.selectFrom("PubsInStages")
+					.select((eb) => ["stageId as currentStageId"])
+					.where("PubsInStages.pubId", "=", pub.pubId as PubsId)
+			)
+			.selectFrom("stages")
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name", "order"])
+						.whereRef(
+							"stages.id",
+							"=",
+							eb.selectFrom("currentStageId").select("currentStageId")
+						)
+				).as("stageOfCurrentPub"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name", "order"])
+						.orderBy("order desc")
+						.where("stages.communityId", "=", pub.communityId as CommunitiesId)
+				).as("availableStagesOfCurrentPub"),
+			])
 	);
