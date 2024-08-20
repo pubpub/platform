@@ -88,7 +88,7 @@ async function luciaLogin({
 		};
 	}
 	// lucia authentication
-	const session = await lucia.createSession(user.id, {});
+	const session = await lucia.createSession(user.id, { type: AuthTokenType.generic });
 	const sessionCookie = lucia.createSessionCookie(session.id);
 	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
@@ -305,15 +305,7 @@ export const resetPassword = defineServerAction(async function resetPassword({
 		};
 	}
 
-	const loginData = await getLoginData();
-
-	if (!loginData) {
-		return {
-			error: "Please login to reset your password",
-		};
-	}
-
-	const user = await getUserWithPasswordHash({ email: loginData.email });
+	const { user, session } = await getLoginData();
 
 	if (!user) {
 		return {
@@ -321,9 +313,17 @@ export const resetPassword = defineServerAction(async function resetPassword({
 		};
 	}
 
-	if (!user?.passwordHash && user?.supabaseId) {
-		return supabaseResetPassword({ user, password: parsed.data.password });
+	const fullUser = await getUserWithPasswordHash({ email: user.email });
+
+	if (!fullUser) {
+		return {
+			error: "Please login to reset your password",
+		};
 	}
 
-	return luciaResetPassword({ user, password: parsed.data.password });
+	if (!fullUser?.passwordHash && user?.supabaseId) {
+		return supabaseResetPassword({ user: fullUser, password: parsed.data.password });
+	}
+
+	return luciaResetPassword({ user: fullUser, password: parsed.data.password });
 });

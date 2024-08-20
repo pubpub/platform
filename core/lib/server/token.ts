@@ -21,7 +21,19 @@ export const createHash = (input: string) => {
 	return crypto.createHash(hashAlgorithm).update(input);
 };
 
+export class InvalidTokenError extends UnauthorizedError {
+	constructor(
+		message: string,
+		public tokenType: AuthTokenType | null
+	) {
+		super(message);
+	}
+}
+
 // TODO: reading the token from the db and updating it after it's used should probably happen in a transaction
+/**
+ * @throws {InvalidTokenError}
+ */
 export const validateToken = async (token: string, type?: AuthTokenType) => {
 	// Parse the token's id and plaintext value from the input
 	// Format: "<token id>.<token plaintext>"
@@ -29,7 +41,7 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 
 	// Retrieve the token's hash, metadata, and associated user
 	const dbToken = await getAuthToken(tokenId as AuthTokensId).executeTakeFirstOrThrow(
-		() => new UnauthorizedError("Token not found")
+		() => new InvalidTokenError("Token not found", null)
 	);
 
 	// TODO: TURN THIS BACK ON
@@ -42,13 +54,13 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 	const { hash, user, expiresAt, type: authTokenType } = dbToken;
 
 	if (type && type !== authTokenType) {
-		throw new UnauthorizedError("Invalid token type");
+		throw new InvalidTokenError("Invalid token type", authTokenType);
 	}
 
 	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
 	// different expiration periods
 	if (expiresAt < new Date()) {
-		throw new UnauthorizedError("Expired token");
+		throw new InvalidTokenError("Expired token", authTokenType);
 	}
 
 	// Finally, hash the token string input and do a constant time comparison between this value and the hash retrieved from the database
@@ -60,7 +72,7 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 	// We aren't worried about that because we're hashing the values first (so they're constant
 	// length) and because our tokens are all the same length anyways, unlike a password.
 	if (!crypto.timingSafeEqual(dbHash, inputHash)) {
-		throw new UnauthorizedError("Invalid token");
+		throw new InvalidTokenError("Invalid token", authTokenType);
 	}
 
 	// If we haven't thrown by now, we've authenticated the user associated with the token
@@ -70,7 +82,11 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 		.where("id", "=", dbToken.id)
 		.execute();
 
-	return user;
+	if (!user) {
+		throw new InvalidTokenError("No user for token", authTokenType);
+	}
+
+	return { user, authTokenType };
 };
 
 const getTokenBase = db
