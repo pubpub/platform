@@ -1,9 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import values from "ajv/dist/vocabularies/jtd/values";
 import { useForm } from "react-hook-form";
 
-import type { CommunitiesId, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
+import type {
+	Communities,
+	MembersId,
+	PubFields,
+	PubFieldSchema,
+	PubsId,
+	PubTypes,
+	Stages,
+} from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -15,16 +25,18 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { ChevronDown } from "ui/icon";
 
 import { FormElement } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/FormElement";
+import { UserIdSelect } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/InnerForm";
 import { createElementFromPubType } from "./helpers";
 
 async function GenericDynamicPubForm({
-	communityId,
+	communitySlug,
 	availableStages,
 	availablePubTypes,
 	currentStage = null,
 	parentId,
+	searchParams,
 }: {
-	communityId: CommunitiesId;
+	communitySlug: Communities["slug"];
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
 	parentId?: PubsId;
 
@@ -33,6 +45,7 @@ async function GenericDynamicPubForm({
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
 		})[];
 	})[];
+	searchParams?: Record<string, unknown>;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
@@ -55,17 +68,32 @@ async function GenericDynamicPubForm({
 			[selectedPubType]
 		);
 
-		return elements.map((element) => (
-			<>
-				<FormElement key={element.elementId} element={element}/>
-				{JSON.stringify(element)}
-			</>
-		));
+		return elements.map((element) => {
+			if (element.schemaName === CoreSchemaType.MemberId) {
+				const userId = values[element.slug!] as MembersId | undefined;
+				return (
+					<UserIdSelect
+						key={element.elementId}
+						label={element.label ?? ""}
+						name={element.slug ?? ""}
+						id={element.elementId}
+						searchParams={searchParams!}
+						value={userId}
+						communitySlug={communitySlug}
+					/>
+				);
+			}
+			return (
+				<>
+					<FormElement key={element.elementId} element={element} />
+					{JSON.stringify(element)}
+				</>
+			);
+		});
 	};
 
 	return (
 		<div>
-			Hello New World
 			<Form {...form}>
 				<FormField
 					name="pubType"
