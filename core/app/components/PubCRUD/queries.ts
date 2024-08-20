@@ -1,22 +1,12 @@
 import type { ExpressionBuilder, ExpressionWrapper } from "kysely";
 
-
-
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-
-
 
 import type { Database } from "db/Database";
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
-
-
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
-
-
-
-
 
 export const getCommunityById = <
 	K extends keyof Database,
@@ -27,6 +17,7 @@ export const getCommunityById = <
 ) => {
 	const query = eb.selectFrom("communities").select((eb) => [
 		"communities.id",
+		"communities.slug",
 		jsonArrayFrom(
 			eb
 				.selectFrom("pub_types")

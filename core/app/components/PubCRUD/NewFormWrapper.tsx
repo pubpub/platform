@@ -1,7 +1,5 @@
 import { Suspense } from "react";
 
-import { StagesTable } from "db/public";
-
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
@@ -25,28 +23,29 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 
 	let currentStage = "id" in stage ? stage : null;
 
-	if (!community) { 
-		return null;
+	if (!community) {
+		return null; // guard against null community for free?
 	}
 
-	const pub = props.pubId !== undefined ? await getPubCached(props.pubId) : undefined;
+	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
 
 	const { availableStagesOfCurrentPub, stageOfCurrentPub } = pub
-		? (await availableStagesAndCurrentStage(pub).executeTakeFirst()) || {}
+		? (await availableStagesAndCurrentStage(pub).executeTakeFirst()) ?? {}
 		: {};
 
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
-
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
+				render elemnts for selected pubType
 				<GenericDynamicPubForm
 					currentStage={stageOfPubRnRn}
-					communityId={community.id}
+					communitySlug={community.slug}
 					availableStages={availableStages}
 					availablePubTypes={community.pubTypes}
 					parentId={props.parentId}
+					searchParams={props.searchParams}
 				/>
 			</Suspense>
 		</>
