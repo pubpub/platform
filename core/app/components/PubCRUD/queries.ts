@@ -75,7 +75,7 @@ export const getCommunityById = <
 	return autoCache(completeQuery);
 };
 
-export const getStage = (stageId: StagesId) =>
+export const getCommunityByStage = (stageId: StagesId) =>
 	autoCache(
 		db
 			.selectFrom("stages")
