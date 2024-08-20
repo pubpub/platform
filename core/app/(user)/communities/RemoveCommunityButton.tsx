@@ -18,13 +18,7 @@ import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { removeCommunity } from "./actions";
 import { TableCommunity } from "./getCommunityTableColumns";
 
-export const RemoveCommunityButton = ({
-	community,
-	user,
-}: {
-	community: TableCommunity;
-	user: any;
-}) => {
+export const RemoveCommunityButton = ({ community }: { community: TableCommunity }) => {
 	const runRemoveCommunity = useServerAction(removeCommunity);
 	return (
 		<AlertDialog>
@@ -52,7 +46,7 @@ export const RemoveCommunityButton = ({
 					<Button asChild variant="destructive">
 						<AlertDialogAction
 							onClick={async () => {
-								const response = await runRemoveCommunity({ user, community });
+								const response = await runRemoveCommunity({ community });
 								if (didSucceed(response)) {
 									toast({
 										title: "Success",
