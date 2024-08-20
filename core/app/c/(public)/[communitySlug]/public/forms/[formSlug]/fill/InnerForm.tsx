@@ -1,11 +1,14 @@
 import type { GetPubResponseBody } from "contracts";
-import type { MembersId, PubsId, UsersId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import type { MembersId, Pubs, PubsId, UsersId } from "db/public";
+import { CoreSchemaType, StructuralFormElement } from "db/public";
+import { expect } from "utils";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { FormElement } from "./FormElement";
 
 export const UserIdSelect = async ({
@@ -40,19 +43,50 @@ export const UserIdSelect = async ({
 	);
 };
 
+const renderParagraphElementContent = async (
+	elements: PubPubForm["elements"],
+	renderMarkdownWithPubContext: RenderWithPubContext
+) => {
+	await Promise.all(
+		elements
+			.filter((element) => element.element === StructuralFormElement.p)
+			.map(async (paragraph) => {
+				const content = expect(
+					paragraph.content,
+					"Missing content for paragraph form element"
+				);
+				paragraph.content = await renderMarkdownWithPub(
+					content,
+					renderMarkdownWithPubContext
+				);
+			})
+	);
+};
+
 export const InnerForm = async ({
-	pubId,
+	pub,
+	parentPub,
+	member,
 	elements,
 	searchParams,
 	values,
 	communitySlug,
 }: {
-	pubId: PubsId;
+	pub: GetPubResponseBody;
+	parentPub?: GetPubResponseBody;
+	member: RenderWithPubContext["recipient"];
 	elements: PubPubForm["elements"];
 	searchParams: Record<string, unknown>;
 	values: GetPubResponseBody["values"];
 	communitySlug: string;
 }) => {
+	await renderParagraphElementContent(elements, {
+		pub,
+		parentPub,
+		recipient: member,
+		communitySlug,
+	});
+
 	return (
 		<>
 			{elements.map((e) => {
@@ -70,7 +104,7 @@ export const InnerForm = async ({
 						/>
 					);
 				}
-				return <FormElement pubId={pubId} key={e.elementId} element={e} />;
+				return <FormElement pubId={pub.id as PubsId} key={e.elementId} element={e} />;
 			})}
 		</>
 	);

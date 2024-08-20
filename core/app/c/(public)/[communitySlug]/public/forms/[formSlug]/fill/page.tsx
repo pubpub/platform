@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { redirect, RedirectType } from "next/navigation";
 import Markdown from "react-markdown";
 
-import type { PubsId } from "db/public";
+import type { MembersId, PubsId, Users, UsersId } from "db/public";
+import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
@@ -13,6 +14,7 @@ import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
+import { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
@@ -73,6 +75,16 @@ export default async function FormPage({
 		return null;
 	}
 
+	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+	const member = expect(loginData.memberships.find((m) => m.communityId === community?.id));
+	const memberWithUser = {
+		...member,
+		id: member.id as MembersId,
+		user: {
+			...loginData,
+			id: loginData.id as UsersId,
+		},
+	};
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
@@ -95,7 +107,9 @@ export default async function FormPage({
 							className="col-span-2 col-start-2"
 						>
 							<InnerForm
-								pubId={pub.id as PubsId}
+								pub={pub}
+								parentPub={parentPub}
+								member={memberWithUser}
 								elements={form.elements}
 								// The following params are for rendering UserSelectServer
 								communitySlug={params.communitySlug}
