@@ -59,7 +59,14 @@ const makeSyntheticChangeEvent = (value: string) => {
 	};
 };
 
-export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
+export const MarkdownEditor = (
+	props: AutoFormInputComponentProps & {
+		/** If true, will not render Markdown, will be editor with only tokens */
+		tokensOnly?: boolean;
+		/** Size of the input, defaults to lg */
+		size?: "sm" | "lg";
+	}
+) => {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = props.fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
 	const { descriptionPlacement = "top" } = props;
@@ -85,6 +92,8 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 		[fieldPropsWithoutShowLabel.onChange]
 	);
 
+	const size = props.size ?? "lg";
+
 	return (
 		<div className="flex flex-row items-center space-x-2">
 			<FormItem className="flex w-full flex-col justify-start">
@@ -103,8 +112,8 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 								<ContentEditable
 									className={cn(
 										"editor",
-										"markdown",
 										"prose prose-sm",
+										size === "sm" ? "min-h-5" : "min-h-[200px]",
 										// Copied from ui/src/input.tsx
 										"w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 									)}
@@ -116,7 +125,9 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 						<OnChangePlugin onChange={onChange} />
 						<HistoryPlugin />
 						<AutoFocusPlugin />
-						<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+						{!props.tokensOnly && (
+							<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+						)}
 						<TokenPlugin tokens={Object.keys(tokens[props.field.name] ?? {})} />
 					</LexicalComposer>
 				</FormControl>
