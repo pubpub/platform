@@ -10,3 +10,5 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 export const InputWithTokens = (props: AutoFormInputComponentProps) => {
 	return <LexicalEditor {...props} size="sm" />;
 };
+
+export { LexicalEditor } from "./LexicalEditor";

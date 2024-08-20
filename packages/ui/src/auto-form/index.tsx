@@ -148,8 +148,6 @@ export type {
 
 export { DependencyType } from "./types";
 
-export { MarkdownEditor } from "./fields/markdown/MarkdownEditor";
-
 export { zodToHtmlInputProps } from "./utils";
 
 export default AutoForm;
