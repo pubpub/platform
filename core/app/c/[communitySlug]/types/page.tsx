@@ -10,8 +10,8 @@ import { CreatePubType } from "./CreatePubType";
 import TypeList from "./TypeList";
 
 export default async function Page() {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return notFound();
 	}
 
@@ -31,7 +31,7 @@ export default async function Page() {
 					<CreatePubType />
 				</div>
 			</div>
-			<TypeList types={types} superadmin={loginData.isSuperAdmin} />
+			<TypeList types={types} superadmin={user.isSuperAdmin} />
 		</PubFieldProvider>
 	);
 }

@@ -68,6 +68,8 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 			"users.createdAt",
 			"users.updatedAt",
 			"users.isSuperAdmin",
+			"users.avatar",
+			"users.orcid",
 			jsonArrayFrom(
 				eb
 					.selectFrom("members")

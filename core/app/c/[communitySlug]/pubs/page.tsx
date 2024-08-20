@@ -30,8 +30,8 @@ const getStages = async (communityId: string) => {
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		redirect("/login");
 	}
 	const community = await prisma.community.findUnique({
@@ -43,7 +43,7 @@ export default async function Page({ params }: Props) {
 	}
 
 	const token = await createToken({
-		userId: loginData.id as UsersId,
+		userId: user.id as UsersId,
 		type: AuthTokenType.generic,
 	});
 

@@ -11,8 +11,8 @@ import StageList from "./components/StageList";
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return null;
 	}
 	const community = await getCommunityBySlug(params.communitySlug);
@@ -20,7 +20,7 @@ export default async function Page({ params }: Props) {
 		notFound();
 	}
 	const token = await createToken({
-		userId: loginData.id as UsersId,
+		userId: user.id as UsersId,
 		type: AuthTokenType.generic,
 	});
 	const stageWorkflows = getStageWorkflows(community.stages);
@@ -37,7 +37,6 @@ export default async function Page({ params }: Props) {
 				stageWorkflows={stageWorkflows}
 				stageById={stageById}
 				token={token}
-				loginData={loginData}
 			/>
 		</>
 	);

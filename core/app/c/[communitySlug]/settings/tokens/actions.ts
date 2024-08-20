@@ -18,9 +18,9 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 export const createToken = defineServerAction(async function createToken(
 	data: CreateTokenFormSchema
 ) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData?.isSuperAdmin) {
+	if (!user?.isSuperAdmin) {
 		throw new Error("You must be a super admin to create tokens");
 	}
 
@@ -51,7 +51,7 @@ export const createToken = defineServerAction(async function createToken(
 			name: data.name,
 			description: data.description,
 			expiration: data.expiration,
-			issuedById: loginData.id as UsersId,
+			issuedById: user.id as UsersId,
 		},
 		permissions,
 	}).executeTakeFirstOrThrow();
@@ -64,9 +64,9 @@ export const deleteToken = defineServerAction(async function deleteToken({
 }: {
 	id: ApiAccessTokensId;
 }) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData?.isSuperAdmin) {
+	if (!user?.isSuperAdmin) {
 		throw new Error("You must be a super admin to delete tokens");
 	}
 

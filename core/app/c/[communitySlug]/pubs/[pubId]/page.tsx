@@ -29,13 +29,13 @@ export default async function Page({
 	params: { pubId: string; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return null;
 	}
 
 	const token = await createToken({
-		userId: loginData.id as UsersId,
+		userId: user.id as UsersId,
 		type: AuthTokenType.generic,
 	});
 

@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
+import { redirect } from "next/navigation";
+
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
@@ -35,11 +37,14 @@ export default async function Page({ params }: Props) {
 		return null;
 	}
 
-	const loginData = await getLoginData();
-	let token;
-	if (loginData) {
-		token = await createToken({ userId: loginData.id as UsersId, type: AuthTokenType.generic });
+	const { user } = await getLoginData();
+
+	if (!user) {
+		redirect("/login");
 	}
+
+	const token = await createToken({ userId: user.id as UsersId, type: AuthTokenType.generic });
+
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">

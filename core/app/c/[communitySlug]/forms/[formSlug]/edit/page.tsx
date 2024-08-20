@@ -1,7 +1,6 @@
 import { ClipboardPenLine } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
-import { ArchiveFormButton } from "~/app/components/FormBuilder/ArchiveFormButton";
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -10,12 +9,12 @@ import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 
 export default async function Page({ params: { formSlug } }) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData) {
+	if (!user) {
 		return null;
 	}
-	if (!loginData.isSuperAdmin) {
+	if (!user.isSuperAdmin) {
 		return null;
 	}
 

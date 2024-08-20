@@ -14,12 +14,12 @@ import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
 
 export default async function Page({ params: { communitySlug } }) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData) {
+	if (!user) {
 		return null;
 	}
-	if (!loginData.isSuperAdmin) {
+	if (!user.isSuperAdmin) {
 		return null;
 	}
 

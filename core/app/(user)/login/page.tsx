@@ -2,25 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getLoginData } from "~/lib/auth/loginData";
-import prisma from "~/prisma/db";
 import LoginForm from "./LoginForm";
 
 export default async function Login() {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 	// if user and no commuhnmitiy, redirect to settings
-	if (loginData?.id) {
-		const member = await prisma.member.findFirst({
-			where: { userId: loginData.id },
-			include: { community: true },
-			orderBy: { createdAt: "desc" },
-		});
+	if (user?.id) {
+		const firstSlug = user.memberships[0]?.community?.slug;
 
-		if (member) {
-			redirect(`/c/${member.community.slug}/stages`);
-		} else {
-			redirect("/settings");
+		if (firstSlug) {
+			redirect(`/c/${firstSlug}/stages`);
 		}
+
+		redirect("/settings");
 	}
+
 	return (
 		<div className="mx-auto max-w-sm">
 			<LoginForm />

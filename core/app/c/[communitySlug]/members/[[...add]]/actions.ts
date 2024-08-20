@@ -31,16 +31,15 @@ export const revalidateMemberPathsAndTags = defineServerAction(
 );
 
 const isCommunityAdmin = cache(async (community: Community) => {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!isAdminOfCommunity(loginData, community)) {
+	if (!isAdminOfCommunity(user, community)) {
 		return {
 			error: "You do not have permission to invite members to this community",
-			loginData,
 		};
 	}
 
-	return { loginData, error: null };
+	return { user, error: null };
 });
 
 /**
@@ -323,8 +322,8 @@ export const createUserWithMembership = defineServerAction(async function create
 	const { firstName, lastName, email, role, isSuperAdmin } = parsed.data;
 
 	try {
-		const { error: adminError, loginData } = await isCommunityAdmin(community);
-		if (!loginData?.isSuperAdmin && isSuperAdmin) {
+		const { error: adminError, user } = await isCommunityAdmin(community);
+		if (!user?.isSuperAdmin && isSuperAdmin) {
 			return {
 				title: "Failed to add member",
 				error: "You cannot add members as super admins",
@@ -338,7 +337,7 @@ export const createUserWithMembership = defineServerAction(async function create
 			};
 		}
 
-		const user = await prisma.user.create({
+		const newUser = await prisma.user.create({
 			data: {
 				email,
 				firstName,
@@ -374,7 +373,7 @@ export const createUserWithMembership = defineServerAction(async function create
 
 		await prisma.user.update({
 			where: {
-				id: user.id,
+				id: newUser.id,
 			},
 			data: {
 				supabaseId: supabaseUser.id,
@@ -401,7 +400,7 @@ export const removeMember = defineServerAction(async function removeMember({
 	community: Community;
 }) {
 	try {
-		const { loginData, error: adminError } = await isCommunityAdmin(community);
+		const { user, error: adminError } = await isCommunityAdmin(community);
 
 		if (adminError) {
 			return {
@@ -410,7 +409,7 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		if (loginData?.memberships.find((m) => m.id === member.id)) {
+		if (user?.memberships.find((m) => m.id === member.id)) {
 			return {
 				title: "Failed to remove member",
 				error: "You cannot remove yourself from the community",

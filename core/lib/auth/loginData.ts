@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { User as LuciaUser } from "lucia";
+
 import { cache } from "react";
 import { cookies } from "next/headers";
 
@@ -53,7 +55,7 @@ export const getLoginData = cache(async () => {
 	}
 
 	if (user) {
-		return { session: FAKE_SUPABASE_SESSION, user };
+		return { session: FAKE_SUPABASE_SESSION, user: user as LuciaUser };
 	}
 
 	// They successfully logged in via supabase, but no corresponding record was found in the
@@ -97,7 +99,11 @@ export const getLoginData = cache(async () => {
 		},
 	});
 
-	return { session: FAKE_SUPABASE_SESSION, user: newUser };
+	// for type consistency sake
+	// this is innefficient, but it's fine for now
+	const newlyCreatedUser = await getUser({ email: newUser.email }).executeTakeFirst();
+
+	return { session: FAKE_SUPABASE_SESSION, user: newlyCreatedUser as LuciaUser };
 });
 
 export type LoginData = Awaited<ReturnType<typeof getLoginData>>;

@@ -2,7 +2,7 @@ import type { OR } from "../types";
 import type { LoginData } from "./loginData";
 
 export const getCommunityRole = (
-	loginData: LoginData,
+	loginData: LoginData["user"],
 	communityIdentifier: OR<{ id: string }, { slug: string }>
 ) => {
 	if (loginData?.isSuperAdmin) {
@@ -28,7 +28,7 @@ export const getCommunityRole = (
 };
 
 export const isCommunityAdmin = (
-	loginData: LoginData,
+	loginData: LoginData["user"],
 	communityIdentifier:
 		| {
 				id: string;

@@ -57,18 +57,18 @@ export default async function FormPage({
 		return <NotFound>No pub found</NotFound>;
 	}
 
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
 	// this is most likely what happens if a user clicks a link in an email
 	// with an expired token, or a token that has been used already
-	if (!loginData) {
+	if (!user) {
 		redirect(
 			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}&pubId=${searchParams.pubId}`,
 			RedirectType.replace
 		);
 	}
 
-	const role = getCommunityRole(loginData, { slug: params.communitySlug });
+	const role = getCommunityRole(user, { slug: params.communitySlug });
 	if (!role) {
 		return null;
 	}
