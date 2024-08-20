@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 
+import { assert } from "utils";
+
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
@@ -26,15 +28,18 @@ const HackyUserIdSelect = async ({ searchParams }: { searchParams: Record<string
 };
 
 async function GenericDynamicPubFormWrapper(props: Props) {
+	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
+	const communityId = pub ? pub.communityId : props.communityId;
+	console.log("\n\n COMUNITY ID SAYS WHAT", communityId, "\n\n");
 	const query = props.stageId
 		? getStage(props.stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
 				// @ts-expect-error FIXME: I don't know how to fix this,
 				// not sure what the common type between EB and the DB is
 				db,
-				props.communityId
+				communityId as string
 			).executeTakeFirstOrThrow();
-
+	console.log("\n\n QUERY SAYS WHAT", query, "\n\n");
 	const result = await query;
 	const { community, ...stage } = "communityId" in result ? result : { community: result };
 
@@ -43,8 +48,6 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	if (!community) {
 		return null; // guard against null community for free?
 	}
-
-	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
 
 	const { availableStagesOfCurrentPub, stageOfCurrentPub } = pub
 		? (await availableStagesAndCurrentStage(pub).executeTakeFirst()) ?? {}
