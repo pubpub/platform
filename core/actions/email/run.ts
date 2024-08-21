@@ -1,5 +1,6 @@
 "use server";
 
+import { CoreSchemaType } from "@prisma/client";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { MembersId } from "db/public";
@@ -7,17 +8,16 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
+import type { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { smtpclient } from "~/lib/server/mailgun";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
-import { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
 import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
-		// FIXME: could be replaced with `getCommunitySlug`
 		const communitySlug = getCommunitySlug();
 
 		const { parentId } = pub;
@@ -30,10 +30,27 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			parentPub = await getPubCached(parentId);
 		}
 
+		const recipientId = expect(args?.recipient ?? config.recipient) as MembersId;
+		const pubMemberFields = await db
+			.selectFrom("pub_fields")
+			.select(["slug"])
+			.where((eb) =>
+				eb("slug", "in", Object.keys(pub.values)).and(
+					"schemaName",
+					"=",
+					CoreSchemaType.MemberId as any
+				)
+			)
+			.execute();
+		const pubValueMemberIds = pubMemberFields.map(
+			(field) => pub.values[field.slug]
+		) as MembersId[];
+		const userIds: MembersId[] = [recipientId, ...pubValueMemberIds];
+
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
 		// member group.
-		const recipient = await db
+		const users = await db
 			.selectFrom("members")
 			.select((eb) => [
 				"members.id",
@@ -46,17 +63,18 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					.$notNull()
 					.as("user"),
 			])
-			.where("id", "=", expect(args?.recipient ?? config.recipient) as MembersId)
-			.executeTakeFirstOrThrow(
-				() =>
-					new Error(
-						`Could not find member with ID ${args?.recipient ?? config.recipient}`
-					)
-			);
+			.where("id", "in", userIds)
+			.execute();
+
+		const recipient = users.find((u) => u.id === recipientId);
+		if (!recipient) {
+			throw new Error(`Could not find member with ID ${recipientId}`);
+		}
 
 		const renderMarkdownWithPubContext = {
 			communitySlug,
 			recipient,
+			users,
 			pub,
 			parentPub,
 		};

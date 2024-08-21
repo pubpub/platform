@@ -46,6 +46,16 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 
 	assert(value !== undefined, `Missing value for ${field}`);
 
+	// If it's a member field, potentially use other values
+	// ex: :value{field="unjournal:evaluator" firstName lastName} should yield i.e. Jane Admin
+	const member = context.users.find((u) => u.id === value);
+	if (member && attrs) {
+		const userAttrs = Object.keys(attrs).filter((attr) => attr !== "field");
+		if (userAttrs.length) {
+			value = userAttrs.map((userAttribute) => member.user[userAttribute]).join(" ");
+		}
+	}
+
 	node.data = {
 		...node.data,
 		hName: "span",

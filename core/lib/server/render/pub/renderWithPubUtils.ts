@@ -15,16 +15,19 @@ export type RenderWithPubPub = {
 	} | null;
 };
 
-export type RenderWithPubContext = {
-	recipient: {
-		id: MembersId;
-		user: {
-			id: UsersId;
-			firstName: string;
-			lastName: string | null;
-			email: string;
-		};
+type User = {
+	id: MembersId;
+	user: {
+		id: UsersId;
+		firstName: string;
+		lastName: string | null;
+		email: string;
 	};
+};
+
+export type RenderWithPubContext = {
+	recipient: User;
+	users: User[];
 	communitySlug: string;
 	pub: RenderWithPubPub;
 	parentPub?: RenderWithPubPub | null;
