@@ -15,6 +15,7 @@ import { visit } from "unist-util-visit";
 
 import { expect } from "utils";
 
+import { RenderWithPubToken } from "./renderWithPubTokens";
 import * as utils from "./renderWithPubUtils";
 
 const isDirective = (node: Node): node is NodeMdast & Directive => {
@@ -211,15 +212,15 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: utils.RenderWi
 
 type DirectiveVisitor = (node: NodeMdast & Directive, context: utils.RenderWithPubContext) => void;
 
-const directiveVisitors: Record<utils.RenderWithPubToken, DirectiveVisitor> = {
-	[utils.RenderWithPubToken.Value]: visitValueDirective,
-	[utils.RenderWithPubToken.AssigneeName]: visitAssigneeNameDirective,
-	[utils.RenderWithPubToken.AssigneeFirstName]: visitAssigneeFirstNameDirective,
-	[utils.RenderWithPubToken.AssigneeLastName]: visitAssigneeLastNameDirective,
-	[utils.RenderWithPubToken.RecipientName]: visitRecipientNameDirective,
-	[utils.RenderWithPubToken.RecipientFirstName]: visitRecipientFirstNameDirective,
-	[utils.RenderWithPubToken.RecipientLastName]: visitRecipientLastNameDirective,
-	[utils.RenderWithPubToken.Link]: visitLinkDirective,
+const directiveVisitors: Record<RenderWithPubToken, DirectiveVisitor> = {
+	[RenderWithPubToken.Value]: visitValueDirective,
+	[RenderWithPubToken.AssigneeName]: visitAssigneeNameDirective,
+	[RenderWithPubToken.AssigneeFirstName]: visitAssigneeFirstNameDirective,
+	[RenderWithPubToken.AssigneeLastName]: visitAssigneeLastNameDirective,
+	[RenderWithPubToken.RecipientName]: visitRecipientNameDirective,
+	[RenderWithPubToken.RecipientFirstName]: visitRecipientFirstNameDirective,
+	[RenderWithPubToken.RecipientLastName]: visitRecipientLastNameDirective,
+	[RenderWithPubToken.Link]: visitLinkDirective,
 };
 
 const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (context) => {
@@ -229,11 +230,11 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 		visit(tree, (node) => {
 			if (isDirective(node)) {
 				// Directive names are case-insensitive
-				const directiveName = node.name.toLowerCase() as utils.RenderWithPubToken;
+				const directiveName = node.name.toLowerCase() as RenderWithPubToken;
 				const directiveVisitor = directiveVisitors[directiveName];
 				// Some links, like private form links, require one-time token authentication
 				const directiveRendersAuthLink =
-					directiveName === utils.RenderWithPubToken.Link &&
+					directiveName === RenderWithPubToken.Link &&
 					node.attributes?.form !== undefined;
 				// Throw an error if the email contains an invalid/undefined directive
 				assert(directiveVisitor !== undefined, "Invalid directive used in email.");

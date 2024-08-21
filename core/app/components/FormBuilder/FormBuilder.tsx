@@ -28,7 +28,7 @@ import { toast } from "ui/use-toast";
 
 import type { FormBuilderSchema, FormElementData, PanelEvent, PanelState } from "./types";
 import type { Form as PubForm } from "~/lib/server/form";
-import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubUtils";
+import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";

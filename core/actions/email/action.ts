@@ -2,7 +2,10 @@ import * as z from "zod";
 
 import { Mail } from "ui/icon";
 
-import { RenderWithPubToken } from "~/lib/server/render/pub/renderWithPubUtils";
+import {
+	RenderWithPubToken,
+	renderWithPubTokens,
+} from "~/lib/server/render/pub/renderWithPubTokens";
 import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 
@@ -63,31 +66,6 @@ export const action = defineAction({
 				description: "The last name of the email recipient.",
 			},
 		},
-		body: {
-			[RenderWithPubToken.Value]: {
-				description: "Insert a value from the pub.",
-			},
-			[RenderWithPubToken.AssigneeName]: {
-				description: "The full name of the email sender.",
-			},
-			[RenderWithPubToken.AssigneeFirstName]: {
-				description: "The first name of the email sender.",
-			},
-			[RenderWithPubToken.AssigneeLastName]: {
-				description: "The last name of the email sender.",
-			},
-			[RenderWithPubToken.RecipientName]: {
-				description: "The full name of the email recipient.",
-			},
-			[RenderWithPubToken.RecipientFirstName]: {
-				description: "The first name of the email recipient.",
-			},
-			[RenderWithPubToken.RecipientLastName]: {
-				description: "The last name of the email recipient.",
-			},
-			[RenderWithPubToken.Link]: {
-				description: "Insert a link.",
-			},
-		},
+		body: renderWithPubTokens,
 	},
 });
