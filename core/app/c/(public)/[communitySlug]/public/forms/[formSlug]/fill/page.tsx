@@ -4,6 +4,7 @@ import { redirect, RedirectType } from "next/navigation";
 import Markdown from "react-markdown";
 
 import type { MembersId, PubsId, UsersId } from "db/public";
+import { StructuralFormElement } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
@@ -14,6 +15,8 @@ import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
+import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
@@ -27,12 +30,23 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 	return (
 		<div className="flex w-full flex-col gap-2 pt-32 text-center">
 			{element ? (
-				<Markdown className="prose self-center text-center">{element.content}</Markdown>
+				<div
+					className="prose self-center text-center"
+					dangerouslySetInnerHTML={{ __html: element.content ?? " " }}
+				/>
 			) : (
 				<h2 className="text-lg font-semibold">Form Successfully Submitted</h2>
 			)}
 		</div>
 	);
+};
+
+const renderElementMarkdownContent = async (
+	element: Form["elements"][number],
+	renderWithPubContext: RenderWithPubContext
+) => {
+	const content = expect(element.content, "Expected element to have content");
+	return renderMarkdownWithPub(content, renderWithPubContext);
 };
 
 export default async function FormPage({
@@ -43,6 +57,7 @@ export default async function FormPage({
 	searchParams: { email?: string; pubId?: PubsId };
 }) {
 	const community = await findCommunityBySlug(params.communitySlug);
+
 	const form = await getForm({
 		slug: params.formSlug,
 		communityId: community?.id,
@@ -84,8 +99,30 @@ export default async function FormPage({
 			id: loginData.id as UsersId,
 		},
 	};
+	const renderWithPubContext = {
+		recipient: memberWithUser,
+		communitySlug: params.communitySlug,
+		pub,
+		parentPub,
+	};
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
+
+	if (submitId && submitElement) {
+		submitElement.content = await renderElementMarkdownContent(
+			submitElement,
+			renderWithPubContext
+		);
+	} else {
+		const elementsWithMarkdownContent = form.elements.filter(
+			(element) => element.element === StructuralFormElement.p || isButtonElement(element)
+		);
+		await Promise.all(
+			elementsWithMarkdownContent.map(async (element) => {
+				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
+			})
+		);
+	}
 
 	return (
 		<div className="isolate min-h-screen">
@@ -107,8 +144,6 @@ export default async function FormPage({
 						>
 							<InnerForm
 								pub={pub}
-								parentPub={parentPub}
-								member={memberWithUser}
 								elements={form.elements}
 								// The following params are for rendering UserSelectServer
 								communitySlug={params.communitySlug}
