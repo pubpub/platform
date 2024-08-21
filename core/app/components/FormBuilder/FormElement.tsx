@@ -174,16 +174,9 @@ const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
 				<div className="text-slate-500">{name}</div>
 				<div className={cn("prose prose-sm", element.deleted ? "text-slate-500" : "")}>
 					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
-					<Markdown>{truncateStructuralElementContent(element.content)}</Markdown>
+					<Markdown className="line-clamp-2">{element.content}</Markdown>
 				</div>
 			</div>
 		</>
 	);
-};
-
-const truncateStructuralElementContent = (content = " ") => {
-	if (content.length > 120) {
-		return content.slice(0, 120) + "...";
-	}
-	return content;
 };

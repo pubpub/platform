@@ -172,6 +172,7 @@ export const FormElement = ({
 			return (
 				<div
 					className="prose"
+					// TODO: sanitize content
 					dangerouslySetInnerHTML={{ __html: expect(element.content) }}
 				/>
 			);

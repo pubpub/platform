@@ -32,6 +32,7 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 			{element ? (
 				<div
 					className="prose self-center text-center"
+					// Sanitize content
 					dangerouslySetInnerHTML={{ __html: element.content ?? " " }}
 				/>
 			) : (
@@ -115,7 +116,7 @@ export default async function FormPage({
 		);
 	} else {
 		const elementsWithMarkdownContent = form.elements.filter(
-			(element) => element.element === StructuralFormElement.p || isButtonElement(element)
+			(element) => element.element === StructuralFormElement.p
 		);
 		await Promise.all(
 			elementsWithMarkdownContent.map(async (element) => {
