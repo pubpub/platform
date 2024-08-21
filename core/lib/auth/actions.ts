@@ -46,6 +46,13 @@ function redirectUser(memberships?: (Members & { community: Communities | null }
 	redirect(`/c/${memberships[0].community?.slug}/stages`);
 }
 
+const clearSupabaseCookies = () => {
+	cookies().delete(TOKEN_NAME);
+	cookies().delete(REFRESH_NAME);
+	cookies().delete("sb-access-token");
+	cookies().delete("sb-refresh-token");
+};
+
 async function supabaseLogin({ user, password }: { user: LoginUser; password: string }) {
 	const supabase = getServerSupabase();
 
@@ -142,9 +149,18 @@ async function supabaseLogout(token: string) {
 		};
 	}
 
-	cookies().delete(TOKEN_NAME);
-	cookies().delete(REFRESH_NAME);
-	redirect("/login");
+	// cookies().delete(TOKEN_NAME);
+	// cookies().delete(REFRESH_NAME);
+	// cookies().delete("sb-access-token");
+	// cookies().delete("sb-refresh-token");
+	// redirect("/login");
+
+	// handle supabase logout on the client,
+	// bc it won't listen otherwise
+
+	return {
+		success: true,
+	};
 }
 
 async function luciaLogout() {
@@ -162,8 +178,9 @@ async function luciaLogout() {
 	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
 	// for good measure, delete the supabse cookies too
-	cookies().delete(TOKEN_NAME);
-	cookies().delete(REFRESH_NAME);
+	// might not work
+	clearSupabaseCookies();
+
 	redirect("/login");
 }
 
