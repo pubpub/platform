@@ -36,13 +36,13 @@ export const renderWithPubTokens = {
 		description: "Insert a value from the pub.",
 	},
 	[RenderWithPubToken.AssigneeName]: {
-		description: "The full name of the email sender.",
+		description: "The full name of the pub assignee.",
 	},
 	[RenderWithPubToken.AssigneeFirstName]: {
-		description: "The first name of the email sender.",
+		description: "The first name of the pub assignee.",
 	},
 	[RenderWithPubToken.AssigneeLastName]: {
-		description: "The last name of the email sender.",
+		description: "The last name of the pub assignee.",
 	},
 	[RenderWithPubToken.RecipientName]: {
 		description: "The full name of the email recipient.",
@@ -150,9 +150,7 @@ const isLinkFieldOptions = (options: LinkOptions): options is LinkFieldOptions =
 export const renderLink = (context: RenderWithPubContext, options: LinkOptions) => {
 	let href: string;
 	if (isLinkEmailOptions(options)) {
-		// The `email` attribute must have a value. For example, :link{email=""}
-		// is invalid.
-		let to = expect(options.address, 'Unexpected missing value in ":link{email=?}" directive');
+		let to = options.address;
 		// If the user defines the recipient as `"assignee"`, the pub must have an
 		// assignee for the email to be sent.
 		if (to === "assignee") {
@@ -161,17 +159,12 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 		}
 		href = `mailto:${to}`;
 	} else if (isLinkFormOptions(options)) {
-		assert(options.form, 'Unexpected missing value in ":link{form=?}" directive');
 		// Form hrefs are handled by `ensureFormMembershipAndCreateInviteLink`
 		href = "";
 	} else if (isLinkUrlOptions(options)) {
-		href = expect(options.url, 'Unexpected missing value in ":link{to=?}" directive');
+		href = options.url;
 	} else if (isLinkFieldOptions(options)) {
-		href = buildHrefFromPubValue(
-			context,
-			expect(options.field, "Unexpected missing value in ':link{field=?}' directive"),
-			options.rel
-		);
+		href = buildHrefFromPubValue(context, options.field, options.rel);
 	} else {
 		throw new Error("Unexpected link variant");
 	}
