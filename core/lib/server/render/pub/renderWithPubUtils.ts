@@ -3,9 +3,7 @@ import { assert, expect } from "utils";
 
 import { addMemberToForm, createFormInviteLink } from "../../form";
 
-const validateRel = (rel: string) => {
-	assert(rel === "parent", 'Invalid value for "rel" attribute');
-};
+export type RenderWithPubRel = "parent" | "self";
 
 export type RenderWithPubPub = {
 	id: string;
@@ -32,6 +30,34 @@ export type RenderWithPubContext = {
 	parentPub?: RenderWithPubPub | null;
 };
 
+const parseRel = (rel: string | undefined): RenderWithPubRel => {
+	if (rel === undefined) {
+		return "self";
+	}
+	assert(rel === "parent" || rel === "self", 'Invalid value for "rel" attribute');
+	return rel;
+};
+
+const getPub = (context: RenderWithPubContext, rel?: string) => {
+	const parsedRel = parseRel(rel);
+	if (parsedRel === "parent") {
+		return expect(context.parentPub, 'Expected pub to have parent when rel is "parent"');
+	} else {
+		return context.pub;
+	}
+};
+
+const getAssignee = (context: RenderWithPubContext, rel?: string) => {
+	const pub = getPub(context, rel);
+	return expect(pub.assignee, `Expected pub to have assignee`);
+};
+
+const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: string) => {
+	const pub = getPub(context, rel);
+	const pubValue = pub.values[fieldSlug];
+	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`);
+};
+
 export const renderFormInviteLink = async (
 	formSlug: string,
 	memberId: MembersId,
@@ -40,34 +66,6 @@ export const renderFormInviteLink = async (
 ) => {
 	await addMemberToForm({ memberId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, pubId });
-};
-
-export const buildHrefFromPubValue = (
-	context: RenderWithPubContext,
-	fieldSlug: string,
-	rel?: string
-) => {
-	let href: string;
-	if (typeof rel === "string") {
-		validateRel(rel);
-		const parentPub = expect(context.parentPub, "Missing parent pub");
-		href = parentPub.values[fieldSlug];
-	} else {
-		href = context.pub.values[fieldSlug];
-	}
-	assert(href !== undefined, `Missing value for ${fieldSlug}`);
-	return href;
-};
-
-export const deriveAssigneeFromDirective = (context: RenderWithPubContext, rel?: string) => {
-	if (typeof rel === "string") {
-		validateRel(rel);
-		if (rel === "parent") {
-			const parentPub = expect(context.parentPub, "Missing parent pub");
-			return expect(parentPub.assignee, "Parent pub has no assignee");
-		}
-	}
-	return expect(context.pub.assignee, "Pub has no assignee");
 };
 
 type LinkEmailOptions = {
@@ -113,7 +111,7 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 		// If the user defines the recipient as `"assignee"`, the pub must have an
 		// assignee for the email to be sent.
 		if (to === "assignee") {
-			const assignee = deriveAssigneeFromDirective(context, options.rel);
+			const assignee = getAssignee(context, options.rel);
 			to = assignee.email;
 		}
 		href = `mailto:${to}`;
@@ -123,7 +121,7 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 	} else if (isLinkUrlOptions(options)) {
 		href = options.url;
 	} else if (isLinkFieldOptions(options)) {
-		href = buildHrefFromPubValue(context, options.field, options.rel);
+		href = getPubValue(context, options.field, options.rel);
 	} else {
 		throw new Error("Unexpected link variant");
 	}
@@ -144,12 +142,12 @@ export const renderRecipientFullName = (context: RenderWithPubContext) => {
 };
 
 export const renderAssigneeFirstName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = deriveAssigneeFromDirective(context, rel);
+	const assignee = getAssignee(context, rel);
 	return assignee.firstName;
 };
 
 export const renderAssigneeLastName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = deriveAssigneeFromDirective(context, rel);
+	const assignee = getAssignee(context, rel);
 	return assignee.lastName ?? "";
 };
 
