@@ -60,7 +60,7 @@ export const buildHrefFromPubValue = (
 };
 
 export const deriveAssigneeFromDirective = (context: RenderWithPubContext, rel?: string) => {
-	if (rel) {
+	if (typeof rel === "string") {
 		validateRel(rel);
 		if (rel === "parent") {
 			const parentPub = expect(context.parentPub, "Missing parent pub");
