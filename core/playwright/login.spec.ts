@@ -1,35 +1,164 @@
-import { expect, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
+
+import { gotoLatestEmailForInbox } from "./helpers";
 
 const authFile = "playwright/.auth/user.json";
 
-test("Login", async ({ page }) => {
+test.describe("general auth", () => {
+	test("Login with invalid credentials", async ({ page }) => {
+		await page.goto("/login");
+		await page.getByLabel("email").fill("all@pubpub.org");
+		await page.getByRole("textbox", { name: "password" }).fill("pubpub-all-wrong");
+		await page.getByRole("button", { name: "Sign in" }).click();
+
+		await page.getByText("Incorrect email or password", { exact: true }).waitFor();
+	});
+});
+
+test.describe("Auth with supabase", () => {
+	test("Login with supabase", async ({ page }) => {
+		await page.goto("/login");
+		await page.getByLabel("email").fill("all@pubpub.org");
+		await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
+		await page.getByRole("button", { name: "Sign in" }).click();
+		await page.waitForURL(/.*\/c\/\w+\/stages.*/);
+		await expect(page.getByRole("link", { name: "Workflows" })).toBeVisible();
+		await page.context().storageState({ path: authFile });
+	});
+
+	test("Logout with supabase", async ({ page }) => {
+		// should replace login with startup and and eventual db actions with teardown steps
+		await page.goto("/login");
+		await page.getByLabel("email").fill("all@pubpub.org");
+		await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
+		await page.getByRole("button", { name: "Sign in" }).click();
+		await page.waitForURL(/.*\/c\/\w+\/stages.*/);
+		await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
+		await page.getByRole("button", { name: "Logout" }).click();
+		await page.waitForURL("/login");
+		await page.context().storageState({ path: authFile });
+
+		expect(
+			(await page.context().cookies()).find((cookie) =>
+				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
+			)
+		).toBeFalsy();
+		// you should not be logged back in
+		await page.reload();
+		expect(
+			(await page.context().cookies()).find((cookie) =>
+				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
+			)
+		).toBeFalsy();
+
+		await page.reload();
+
+		expect(
+			(await page.context().cookies()).find((cookie) =>
+				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
+			)
+		).toBeFalsy();
+		expect(page.url()).toMatch(/\/login/);
+	});
+});
+
+const loginAsNew = async (page: Page) => {
 	await page.goto("/login");
-	await page.getByLabel("email").fill("all@pubpub.org");
-	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
+	await page.getByLabel("email").fill("new@pubpub.org");
+	await page.getByRole("textbox", { name: "password" }).fill("pubpub-new");
 	await page.getByRole("button", { name: "Sign in" }).click();
 	await page.waitForURL(/.*\/c\/\w+\/stages.*/);
 	await expect(page.getByRole("link", { name: "Workflows" })).toBeVisible();
-	await page.context().storageState({ path: authFile });
-});
+};
 
-test("Logout", async ({ page }) => {
-	// should replace login with startup and and eventual db actions with teardown steps
-	await page.goto("/login");
-	await page.getByLabel("email").fill("all@pubpub.org");
-	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
-	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL(/.*\/c\/\w+\/stages.*/);
-	await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
-	await page.getByRole("button", { name: "Logout" }).click();
-	await page.waitForURL("/login");
-	await page.context().storageState({ path: authFile });
-});
+test.describe("Auth with lucia", () => {
+	test("Login as a lucia user", async ({ page }) => {
+		await loginAsNew(page);
+	});
 
-test("Login with invalid credentials", async ({ page }) => {
-	await page.goto("/login");
-	await page.getByLabel("email").fill("all@pubpub.org");
-	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all-wrong");
-	await page.getByRole("button", { name: "Sign in" }).click();
+	test("Logout as a lucia user", async ({ page }) => {
+		await loginAsNew(page);
 
-	await page.getByText("Incorrect email or password", { exact: true }).waitFor();
+		const cookies = await page.context().cookies();
+		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy();
+		expect(
+			cookies.find((cookie) =>
+				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
+			)
+		).toBeFalsy();
+
+		await page.getByRole("button", { name: "Logout" }).click();
+		await page.waitForURL("/login");
+
+		const cookiesAfterLogout = await page.context().cookies();
+		expect(cookiesAfterLogout.find((cookie) => cookie.name === "session")).toBeFalsy();
+	});
+
+	test("Password reset flow for lucia user", async ({ page }) => {
+		// through forgot form
+		await page.goto("/forgot");
+		await page.getByRole("textbox").click();
+		await page.getByRole("textbox").fill("new@pubpub.org");
+		await page.getByRole("button", { name: "Send reset email" }).click();
+		await page.getByRole("button", { name: "Close" }).click();
+
+		// this is slightly less flaky, we are manually deleting the email
+		// to make sure we don't get a race condition
+		const mail = await gotoLatestEmailForInbox({ page, inbox: "new" });
+		await mail.click();
+		const link = await page.locator("a[href*='/reset']").first();
+		const url = await link.getAttribute("href");
+		if (!url) {
+			throw new Error("No url found!");
+		}
+		await page.getByText("Delete").click();
+		await page.goto(url);
+
+		await page.waitForURL("/reset");
+		await page.getByRole("textbox").click();
+		await page.getByRole("textbox").fill("new-pubpub");
+		await page.getByRole("button", { name: "Set new password" }).click();
+
+		await page.waitForURL("/login");
+
+		// through settings
+		await page.getByPlaceholder("m@example.com").click();
+		await page.getByPlaceholder("m@example.com").fill("new@pubpub.org");
+		await page.getByPlaceholder("m@example.com").press("Tab");
+		await page.getByLabel("Password").fill("new-pubpub");
+		await page.getByRole("button", { name: "Sign in" }).click();
+
+		await page.waitForURL(/\/c\/\w+\/stages/);
+		await page.getByRole("link", { name: "Settings" }).click();
+		await page.getByRole("button", { name: "Reset" }).click();
+		await page.waitForSelector(
+			"body > div:nth-child(3) > ol > li > div > div.text-sm.opacity-90"
+		);
+
+		// ugly, but we need to wait for the email to actually arrive
+		//		await page.waitForTimeout(1000);
+
+		// this is slightly less flaky, we are manually deleting the email
+		// to make sure we don't get a race condition
+		const mail2 = await gotoLatestEmailForInbox({ page, inbox: "new" });
+		const link2 = await page.locator("a[href*='/reset']").first();
+		const url2 = await link2.getAttribute("href");
+		if (!url2) {
+			throw new Error("No url found!");
+		}
+		await page.getByText("Delete").click();
+		await page.goto(url2);
+
+		await page.waitForURL("/reset");
+		await page.getByRole("textbox").click();
+		await page.getByRole("textbox").fill("pubpub-new");
+		await page.getByRole("button", { name: "Set new password" }).click();
+		await page.getByPlaceholder("m@example.com").click();
+		await page.getByPlaceholder("m@example.com").fill("new@pubpub.org");
+		await page.getByPlaceholder("m@example.com").press("Tab");
+		await page.getByLabel("Password").fill("pubpub-new");
+		await page.getByRole("button", { name: "Sign in" }).click();
+
+		await page.waitForURL(/\/c\/\w+\/stages/);
+	});
 });
