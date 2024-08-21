@@ -7,7 +7,7 @@ import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import type { TokenFailureReason } from "~/lib/server/token";
-import { PUBPUB_TOKEN_FAILURE_HEADER } from "~/lib/auth/helpers/authFailureReason";
+import { PUBPUB_TOKEN_FAILURE_HEADER } from "~/lib/auth/helpers/tokenFailureReason";
 import { lucia } from "~/lib/auth/lucia";
 import { InvalidTokenError, validateToken } from "~/lib/server/token";
 
