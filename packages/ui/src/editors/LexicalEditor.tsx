@@ -28,6 +28,7 @@ import AutoFormLabel from "../auto-form/common/label";
 import AutoFormTooltip from "../auto-form/common/tooltip";
 import { FormControl, FormItem, FormMessage } from "../form";
 import { useTokenContext } from "../tokens";
+import { SingleLinePlugin } from "./SingleLinePlugin";
 import { TokenNode } from "./TokenNode";
 import { TokenPlugin } from "./TokenPlugin";
 
@@ -62,8 +63,8 @@ const makeSyntheticChangeEvent = (value: string) => {
 export const LexicalEditor = (
 	props: AutoFormInputComponentProps & {
 		withMarkdown?: boolean;
-		/** Size of the input, defaults to lg */
-		size?: "sm" | "lg";
+		/** If the size of the input should just be a single line. Will also prevent line breaks */
+		singleLine?: boolean;
 	}
 ) => {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = props.fieldProps;
@@ -91,8 +92,6 @@ export const LexicalEditor = (
 		[fieldPropsWithoutShowLabel.onChange]
 	);
 
-	const size = props.size ?? "lg";
-
 	return (
 		<div className="flex flex-row items-center space-x-2">
 			<FormItem className="flex w-full flex-col justify-start">
@@ -112,7 +111,7 @@ export const LexicalEditor = (
 									className={cn(
 										"editor",
 										"prose prose-sm",
-										size === "sm" ? "min-h-5" : "min-h-[200px]",
+										props.singleLine ? "min-h-5" : "min-h-[200px]",
 										// Copied from ui/src/input.tsx
 										"w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 									)}
@@ -124,6 +123,7 @@ export const LexicalEditor = (
 						<OnChangePlugin onChange={onChange} />
 						<HistoryPlugin />
 						<AutoFocusPlugin />
+						{props.singleLine && <SingleLinePlugin />}
 						{props.withMarkdown && (
 							<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
 						)}
