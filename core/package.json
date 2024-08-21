@@ -20,7 +20,7 @@
 		"prebuild": "prisma generate",
 		"prisma": "dotenv -e .env.local -e .env.development prisma",
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
-		"format": "prettier --check . --ignore-path ../.gitignore",
+		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",

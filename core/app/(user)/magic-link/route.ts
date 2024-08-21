@@ -78,7 +78,6 @@ export async function GET(req: NextRequest) {
 
 	if (tokenSettled.status === "rejected") {
 		logger.debug("Token validation failed");
-		console.log({ tokenSettled });
 		if (!(tokenSettled.reason instanceof InvalidTokenError)) {
 			logger.error({
 				msg: `Token validation unexpectedly failed with reason: ${tokenSettled.reason}`,
@@ -96,7 +95,6 @@ export async function GET(req: NextRequest) {
 			? sessionSettled.value
 			: { user: null, session: null };
 
-	console.log({ currentSession });
 	if (currentSession.session) {
 		logger.debug("Invalidating old session");
 		await lucia.invalidateSession(currentSession.session.id);
