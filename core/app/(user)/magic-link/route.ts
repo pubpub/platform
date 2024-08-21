@@ -6,10 +6,8 @@ import { NextResponse } from "next/server";
 import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
-import {
-	AuthFailureReason,
-	PUBPUB_AUTH_FAILURE_HEADER,
-} from "~/lib/auth/helpers/authFailureReason";
+import type { TokenFailureReason } from "~/lib/server/token";
+import { PUBPUB_TOKEN_FAILURE_HEADER } from "~/lib/auth/helpers/authFailureReason";
 import { lucia } from "~/lib/auth/lucia";
 import { InvalidTokenError, validateToken } from "~/lib/server/token";
 
@@ -39,15 +37,17 @@ const redirectToURL = (redirectTo: string, req: NextRequest, opts?: ResponseInit
 const handleInvalidToken = ({
 	redirectTo,
 	tokenType,
+	reason,
 	req,
 }: {
 	redirectTo: string;
 	tokenType: AuthTokenType | null;
+	reason: TokenFailureReason;
 	req: NextRequest;
 }) => {
 	return redirectToURL(redirectTo, req, {
 		headers: {
-			[PUBPUB_AUTH_FAILURE_HEADER]: AuthFailureReason.InvalidToken,
+			[PUBPUB_TOKEN_FAILURE_HEADER]: reason,
 		},
 	});
 };
@@ -85,7 +85,12 @@ export async function GET(req: NextRequest) {
 			throw tokenSettled.reason;
 		}
 
-		return handleInvalidToken({ redirectTo, tokenType: tokenSettled.reason.tokenType, req });
+		return handleInvalidToken({
+			redirectTo,
+			tokenType: tokenSettled.reason.tokenType,
+			req,
+			reason: tokenSettled.reason.reason,
+		});
 	}
 
 	const currentSession =

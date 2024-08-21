@@ -25,10 +25,19 @@ export const createHash = (input: string) => {
 export class InvalidTokenError extends UnauthorizedError {
 	constructor(
 		message: string,
+		public reason: TokenFailureReason,
 		public tokenType: AuthTokenType | null
 	) {
 		super(message);
 	}
+}
+
+export enum TokenFailureReason {
+	notFound = "notFound",
+	invalid = "invalidToken",
+	expired = "expiredToken",
+	invalidType = "invalidType",
+	noUser = "noUser",
 }
 
 // TODO: reading the token from the db and updating it after it's used should probably happen in a transaction
@@ -42,7 +51,7 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 
 	// Retrieve the token's hash, metadata, and associated user
 	const dbToken = await getAuthToken(tokenId as AuthTokensId).executeTakeFirstOrThrow(
-		() => new InvalidTokenError("Token not found", null)
+		() => new InvalidTokenError("Token not found", TokenFailureReason.notFound, null)
 	);
 
 	// TODO: TURN THIS BACK ON
@@ -55,13 +64,17 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 	const { hash, user, expiresAt, type: authTokenType } = dbToken;
 
 	if (type && type !== authTokenType) {
-		throw new InvalidTokenError("Invalid token type", authTokenType);
+		throw new InvalidTokenError(
+			"Invalid token type",
+			TokenFailureReason.invalidType,
+			authTokenType
+		);
 	}
 
 	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
 	// different expiration periods
 	if (expiresAt < new Date()) {
-		throw new InvalidTokenError("Expired token", authTokenType);
+		throw new InvalidTokenError("Expired token", TokenFailureReason.expired, authTokenType);
 	}
 
 	// Finally, hash the token string input and do a constant time comparison between this value and the hash retrieved from the database
@@ -73,7 +86,7 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 	// We aren't worried about that because we're hashing the values first (so they're constant
 	// length) and because our tokens are all the same length anyways, unlike a password.
 	if (!crypto.timingSafeEqual(dbHash, inputHash)) {
-		throw new InvalidTokenError("Invalid token", authTokenType);
+		throw new InvalidTokenError("Invalid token", TokenFailureReason.invalid, authTokenType);
 	}
 
 	// If we haven't thrown by now, we've authenticated the user associated with the token
@@ -84,7 +97,7 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 		.execute();
 
 	if (!user) {
-		throw new InvalidTokenError("No user for token", authTokenType);
+		throw new InvalidTokenError("No user for token", TokenFailureReason.noUser, authTokenType);
 	}
 
 	return { user, authTokenType };

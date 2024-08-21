@@ -62,6 +62,8 @@ export default async function FormPage({
 
 	// this is most likely what happens if a user clicks a link in an email
 	// with an expired token, or a token that has been used already
+	// TODO: check the auth failure reason here
+	// if it's due to an invalid token, allow the user to request a new one
 	if (!user) {
 		redirect(
 			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}&pubId=${searchParams.pubId}`,
