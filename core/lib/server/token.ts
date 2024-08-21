@@ -4,6 +4,7 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { AuthTokensId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
+import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { UnauthorizedError } from "./errors";
@@ -146,4 +147,39 @@ export const createToken = async ({
 		.executeTakeFirstOrThrow(() => new UnauthorizedError("Unable to create token"));
 
 	return `${token.id}.${tokenString}`;
+};
+
+/**
+ * Invalidates all tokens of a given type for a user
+ *
+ * This atm just sets the expiration date to the past, but in the future we might want to
+ * invalidate the tokens in the database, or invalidate them in the browser
+ */
+export const invalidateTokensForUser = async (userId: UsersId, types: AuthTokenType[]) => {
+	const token = await db
+		.with("invalidated_tokens", (db) =>
+			db
+				.updateTable("auth_tokens")
+				.set({ expiresAt: new Date(0) })
+				.where("userId", "=", userId)
+				.where("type", "in", types)
+				.where("expiresAt", ">", new Date())
+				.returning(["id"])
+		)
+		.selectFrom("invalidated_tokens")
+		.select((eb) => eb.fn.countAll().as("count"))
+		.executeTakeFirst();
+
+	if (!token) {
+		return;
+	}
+
+	if (token.count === 0) {
+		logger.debug(`No ${types} tokens found for user ${userId}`);
+		return 0;
+	}
+
+	logger.debug(`Invalidated ${token.count} "${types}" tokens for user ${userId}`);
+
+	return Number(token.count);
 };

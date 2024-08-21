@@ -19,7 +19,7 @@ import { getUser, setUserPassword } from "~/lib/server/user";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import { env } from "../env/env.mjs";
 import { smtpclient } from "../server/mailgun";
-import { createToken } from "../server/token";
+import { createToken, invalidateTokensForUser } from "../server/token";
 import { formatSupabaseError } from "../supabase";
 import { createMagicLink } from "./createMagicLink";
 import { getLoginData } from "./loginData";
@@ -285,6 +285,13 @@ async function luciaResetPassword({
 }) {
 	await setUserPassword({ userId: user.id, password });
 
+	// clear all password reset tokens
+	// TODO: maybe others as well?
+	await invalidateTokensForUser(user.id, [AuthTokenType.passwordReset]);
+
+	// clear all sessions, including the current password reset session
+	await lucia.invalidateUserSessions(user.id);
+
 	return { success: true };
 }
 
@@ -305,11 +312,13 @@ export const resetPassword = defineServerAction(async function resetPassword({
 		};
 	}
 
-	const { user, session } = await getLoginData();
+	const { user } = await getLoginData({
+		allowedSessions: [AuthTokenType.passwordReset],
+	});
 
 	if (!user) {
 		return {
-			error: "Please login to reset your password",
+			error: "The password reset link is invalid or has expired. Please request a new one.",
 		};
 	}
 
@@ -317,11 +326,11 @@ export const resetPassword = defineServerAction(async function resetPassword({
 
 	if (!fullUser) {
 		return {
-			error: "Please login to reset your password",
+			error: "Something went wrong. Please request a new password reset link.",
 		};
 	}
 
-	if (!fullUser?.passwordHash && user?.supabaseId) {
+	if (!isLuciaUser(fullUser)) {
 		return supabaseResetPassword({ user: fullUser, password: parsed.data.password });
 	}
 

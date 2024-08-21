@@ -12,7 +12,8 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
-import { env } from "~/lib/env/env.mjs";
+import * as actions from "~/lib/auth/actions";
+import { isClientException, useServerAction } from "~/lib/serverActions";
 
 const forgotPasswordSchema = z.object({
 	email: z.string().email(),
@@ -23,16 +24,21 @@ export default function ForgotForm() {
 		resolver: zodResolver(forgotPasswordSchema),
 	});
 
+	const sendForgotPasswordMail = useServerAction(actions.sendForgotPasswordMail);
+
+	const [sent, setSent] = useState(false);
+
 	const onSubmit = async ({ email }: z.infer<typeof forgotPasswordSchema>) => {
-		const { error } = await supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-		});
-		if (error) {
-			form.setError("email", {
-				message: formatSupabaseError(error),
-			});
+		const result = await sendForgotPasswordMail({ email });
+
+		if (!isClientException(result)) {
+			setSent(true);
 			return;
 		}
+
+		form.setError("email", {
+			message: result.error,
+		});
 	};
 
 	return (
@@ -60,13 +66,14 @@ export default function ForgotForm() {
 			</Form>
 
 			<Dialog
-				open={form.formState.isSubmitSuccessful}
+				open={sent}
 				onOpenChange={(open) => {
 					if (open) {
 						return;
 					}
 
 					form.reset();
+					setSent(false);
 				}}
 			>
 				<DialogContent>
