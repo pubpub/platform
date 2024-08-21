@@ -8,14 +8,12 @@ import { z } from "zod";
  * @property generic - For most use-cases. This will just authenticate you with a regular session.
  * @property passwordReset - For resetting your password only
  * @property signup - For signing up, but also when you're invited to a community
- * @property publicInvite - For being invited to fill out a public form
  * @property verifyEmail - For verifying your email address
  */
 export enum AuthTokenType {
 	generic = "generic",
 	passwordReset = "passwordReset",
 	signup = "signup",
-	publicInvite = "publicInvite",
 	verifyEmail = "verifyEmail",
 }
 

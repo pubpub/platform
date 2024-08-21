@@ -3,7 +3,8 @@ import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { AuthTokenType } from "db/public";
+import type { AuthTokenType } from "db/public";
+import { logger } from "logger";
 
 import { lucia } from "~/lib/auth/lucia";
 import { InvalidTokenError, validateToken } from "~/lib/server/token";
@@ -22,6 +23,21 @@ const redirectToURL = (redirectTo: string, req: NextRequest) => {
 	return NextResponse.redirect(new URL(`/not-found?from=${redirectTo}`, req.url));
 };
 
+export const PUBPUB_AUTH_FAILURE_HEADER = "X-Pubpub-Auth-Failure-Reason" as const;
+
+export enum AuthFailureReason {
+	InvalidToken = "invalid-token",
+}
+
+/**
+ *
+ * just redirect them to the page they were trying to access,
+ * pages should handle auth failures themselves anyway
+ *
+ * we do let them know that the reason for the failure is invalid token
+ * that way pages can distinguish between an invalid token redirect and just accessing the page
+ * without being logged in
+ */
 const handleInvalidToken = ({
 	redirectTo,
 	tokenType,
@@ -31,14 +47,11 @@ const handleInvalidToken = ({
 	tokenType: AuthTokenType | null;
 	req: NextRequest;
 }) => {
-	// for public invites, we want to redirect them to the fill page anyway, even
-	// if the token is invalid, as the fill page will redirect them to a page
-	// where they can request a new invite
-	if (tokenType === AuthTokenType.publicInvite) {
-		return redirectToURL(redirectTo, req);
-	}
-
-	return NextResponse.redirect(new URL("/not-found", req.url));
+	return NextResponse.redirect(new URL(redirectTo, req.url), {
+		headers: {
+			PUBPUB_AUTH_FAILURE_HEADER: AuthFailureReason.InvalidToken,
+		},
+	});
 };
 
 export async function GET(req: NextRequest) {
@@ -50,25 +63,58 @@ export async function GET(req: NextRequest) {
 		return NextResponse.redirect(new URL("/login", req.url));
 	}
 
-	try {
-		const { user, authTokenType } = await validateToken(token);
+	const validatedTokenPromise = validateToken(token);
 
-		const session = await lucia.createSession(user.id, {
-			type: authTokenType,
-		});
+	const currentSessionCookie = cookies().get(lucia.sessionCookieName)?.value;
 
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		cookies().set(sessionCookie.name, sessionCookie.value, {
-			...sessionCookie.attributes,
-			path: redirectTo,
-		});
+	const currentSessionPromise = currentSessionCookie
+		? lucia.validateSession(currentSessionCookie)
+		: { user: null, session: null };
 
-		return redirectToURL(redirectTo, req);
-	} catch (error) {
-		if (error instanceof InvalidTokenError) {
-			handleInvalidToken({ redirectTo, tokenType: error.tokenType, req });
+	const [tokenSettled, sessionSettled] = await Promise.allSettled([
+		validatedTokenPromise,
+		currentSessionPromise,
+	]);
+
+	if (tokenSettled.status === "rejected") {
+		logger.debug("Token validation failed");
+		console.log({ tokenSettled });
+		if (!(tokenSettled.reason instanceof InvalidTokenError)) {
+			logger.error({
+				msg: `Token validation unexpectedly failed with reason: ${tokenSettled.reason}`,
+				reason: tokenSettled.reason,
+			});
+
+			throw tokenSettled.reason;
 		}
 
-		return NextResponse.redirect(new URL("/not-found", req.url));
+		return handleInvalidToken({ redirectTo, tokenType: tokenSettled.reason.tokenType, req });
 	}
+
+	const currentSession =
+		sessionSettled.status === "fulfilled"
+			? sessionSettled.value
+			: { user: null, session: null };
+
+	console.log({ currentSession });
+	if (currentSession.session) {
+		logger.debug("Invalidating old session");
+		await lucia.invalidateSession(currentSession.session.id);
+		// not sure if this is necessary
+		cookies().delete(lucia.sessionCookieName);
+	}
+
+	const { user: tokenUser, authTokenType } = tokenSettled.value;
+
+	const session = await lucia.createSession(tokenUser.id, {
+		type: authTokenType,
+	});
+
+	const newSessionCookie = lucia.createSessionCookie(session.id);
+
+	cookies().set(newSessionCookie.name, newSessionCookie.value, {
+		...newSessionCookie.attributes,
+	});
+
+	return redirectToURL(redirectTo, req);
 }

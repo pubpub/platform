@@ -58,9 +58,7 @@ export default async function FormPage({
 		return <NotFound>No pub found</NotFound>;
 	}
 
-	const { user, session } = await getLoginData({
-		allowedSessions: [AuthTokenType.generic, AuthTokenType.publicInvite],
-	});
+	const { user, session } = await getLoginData();
 
 	// this is most likely what happens if a user clicks a link in an email
 	// with an expired token, or a token that has been used already
