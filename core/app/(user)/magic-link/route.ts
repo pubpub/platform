@@ -6,28 +6,26 @@ import { NextResponse } from "next/server";
 import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
+import {
+	AuthFailureReason,
+	PUBPUB_AUTH_FAILURE_HEADER,
+} from "~/lib/auth/helpers/authFailureReason";
 import { lucia } from "~/lib/auth/lucia";
 import { InvalidTokenError, validateToken } from "~/lib/server/token";
 
-const redirectToURL = (redirectTo: string, req: NextRequest) => {
+const redirectToURL = (redirectTo: string, req: NextRequest, opts?: ResponseInit) => {
 	// it's a full url, just redirect them there
 	if (URL.canParse(redirectTo)) {
-		return NextResponse.redirect(new URL(redirectTo));
+		return NextResponse.redirect(new URL(redirectTo), opts);
 	}
 
 	if (URL.canParse(redirectTo, req.url)) {
-		return NextResponse.redirect(new URL(redirectTo, req.url));
+		return NextResponse.redirect(new URL(redirectTo, req.url), opts);
 	}
 
 	// invalid redirectTo, redirect to not-found
-	return NextResponse.redirect(new URL(`/not-found?from=${redirectTo}`, req.url));
+	return NextResponse.redirect(new URL(`/not-found?from=${redirectTo}`, req.url), opts);
 };
-
-export const PUBPUB_AUTH_FAILURE_HEADER = "X-Pubpub-Auth-Failure-Reason" as const;
-
-export enum AuthFailureReason {
-	InvalidToken = "invalid-token",
-}
 
 /**
  *
@@ -47,9 +45,9 @@ const handleInvalidToken = ({
 	tokenType: AuthTokenType | null;
 	req: NextRequest;
 }) => {
-	return NextResponse.redirect(new URL(redirectTo, req.url), {
+	return redirectToURL(redirectTo, req, {
 		headers: {
-			PUBPUB_AUTH_FAILURE_HEADER: AuthFailureReason.InvalidToken,
+			[PUBPUB_AUTH_FAILURE_HEADER]: AuthFailureReason.InvalidToken,
 		},
 	});
 };
