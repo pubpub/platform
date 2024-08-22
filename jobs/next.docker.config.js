@@ -4,4 +4,4 @@ const baseConfig = {
 	},
 };
 
-module.exports = baseConfig;
+export default baseConfig;

@@ -40,6 +40,7 @@ export * from "./public/PubsInStages";
 export * from "./public/PubTypes";
 export * from "./public/PubValues";
 export * from "./public/Rules";
+export * from "./public/Sessions";
 export * from "./public/Stages";
 export * from "./public/StructuralFormElement";
 export * from "./public/Users";

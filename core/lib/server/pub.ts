@@ -4,10 +4,14 @@ import { Prisma } from "@prisma/client";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
-import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
+import type {
+	CreatePubRequestBodyWithNulls,
+	CreatePubRequestBodyWithNullsNew,
+	GetPubResponseBody,
+	JsonValue,
+} from "contracts";
 import type { Database } from "db/Database";
-import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";

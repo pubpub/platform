@@ -2,6 +2,7 @@
 	"name": "jobs",
 	"version": "0.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"start": "tsx -r ./src/tracing.ts ./src/index.ts",
 		"dev": "dotenv -e .env.local -e .env.development tsx ./src/index.ts | pino-pretty",

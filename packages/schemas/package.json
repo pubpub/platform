@@ -1,14 +1,9 @@
 {
 	"name": "schemas",
 	"version": "0.0.1",
-	"main": "dist/schemas.cjs.js",
-	"module": "dist/schemas.esm.js",
+	"type": "module",
 	"exports": {
-		".": {
-			"types": "./dist/schemas.cjs.js",
-			"module": "./dist/schemas.esm.js",
-			"default": "./dist/schemas.cjs.js"
-		},
+		".": "./dist/schemas.js",
 		"./package.json": "./package.json"
 	},
 	"scripts": {

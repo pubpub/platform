@@ -321,6 +321,7 @@ const filterTableNames = <T extends Record<string, any>>(props: T) => {
 				return acc;
 			}
 
+			// @ts-expect-error
 			acc["values"][key] = value;
 			return acc;
 		},
@@ -329,7 +330,6 @@ const filterTableNames = <T extends Record<string, any>>(props: T) => {
 };
 
 export async function createSeed<T extends TopLevelThing>(t: T) {
-	console.log(t);
 	// const things = Object.entries(t) as [DBTableName, Creatable<DBTableName>][];
 
 	// for (const thing of things) {

@@ -2,6 +2,7 @@
 	"extends": "tsconfig/base.json",
 	"compilerOptions": {
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+		"moduleResolution": "Bundler",
 		"lib": ["ESNext"],
 		"types": ["node"]
 	},
