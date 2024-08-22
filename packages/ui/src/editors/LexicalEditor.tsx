@@ -22,12 +22,13 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 
 import { cn } from "utils";
 
-import type { AutoFormInputComponentProps } from "../../types";
-import { FormControl, FormItem, FormMessage } from "../../../form";
-import { useTokenContext } from "../../../tokens";
-import AutoFormDescription from "../../common/description";
-import AutoFormLabel from "../../common/label";
-import AutoFormTooltip from "../../common/tooltip";
+import type { AutoFormInputComponentProps } from "../auto-form";
+import AutoFormDescription from "../auto-form/common/description";
+import AutoFormLabel from "../auto-form/common/label";
+import AutoFormTooltip from "../auto-form/common/tooltip";
+import { FormControl, FormItem, FormMessage } from "../form";
+import { useTokenContext } from "../tokens";
+import { SingleLinePlugin } from "./SingleLinePlugin";
 import { TokenNode } from "./TokenNode";
 import { TokenPlugin } from "./TokenPlugin";
 
@@ -59,14 +60,20 @@ const makeSyntheticChangeEvent = (value: string) => {
 	};
 };
 
-export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
+export const LexicalEditor = (
+	props: AutoFormInputComponentProps & {
+		withMarkdown?: boolean;
+		/** If the size of the input should just be a single line. Will also prevent line breaks */
+		singleLine?: boolean;
+	}
+) => {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = props.fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
 	const { descriptionPlacement = "top" } = props;
 	const initialValue = React.useMemo(() => props.field.value ?? "", []);
 	const initialConfig = React.useMemo(() => {
 		return {
-			namespace: "MarkdownEditor",
+			namespace: "LexicalEditor",
 			theme,
 			onError,
 			editorState: () => $convertFromMarkdownString(initialValue, TRANSFORMERS),
@@ -103,8 +110,8 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 								<ContentEditable
 									className={cn(
 										"editor",
-										"markdown",
 										"prose prose-sm",
+										props.singleLine ? "min-h-5" : "min-h-[200px]",
 										// Copied from ui/src/input.tsx
 										"w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 									)}
@@ -116,7 +123,10 @@ export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
 						<OnChangePlugin onChange={onChange} />
 						<HistoryPlugin />
 						<AutoFocusPlugin />
-						<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+						{props.singleLine && <SingleLinePlugin />}
+						{props.withMarkdown && (
+							<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+						)}
 						<TokenPlugin tokens={Object.keys(tokens[props.field.name] ?? {})} />
 					</LexicalComposer>
 				</FormControl>

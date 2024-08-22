@@ -2,10 +2,12 @@
 
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import rehypeFormat from "rehype-format";
+import rehypeRemark from "rehype-remark";
 import rehypeStringify from "rehype-stringify";
 import remarkDirective from "remark-directive";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
+import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 
 import type { MembersId } from "db/public";
@@ -73,12 +75,26 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 				.process(args?.body ?? config.body)
 		).toString();
 
+		const subject = (
+			await unified()
+				.use(remarkParse)
+				.use(remarkDirective)
+				.use(emailDirectives, emailDirectivesContext)
+				.use(remarkRehype)
+				.use(rehypeFormat)
+				.use(rehypeRemark)
+				.use(remarkStringify)
+				.process(args?.subject ?? config.subject)
+		)
+			.toString()
+			.trim();
+
 		await smtpclient.sendMail({
 			from: "hello@pubpub.org",
 			to: recipient.user.email,
 			replyTo: "hello@pubpub.org",
 			html,
-			subject: args?.subject ?? config.subject,
+			subject,
 		});
 	} catch (error) {
 		logger.error({ msg: "email", error });

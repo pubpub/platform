@@ -177,6 +177,10 @@
 			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
 			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
 		},
+		"./editors": {
+			"module": "./editors/dist/ui-editors.esm.js",
+			"default": "./editors/dist/ui-editors.cjs.js"
+		},
 		"./auto-form": {
 			"module": "./auto-form/dist/ui-auto-form.esm.js",
 			"default": "./auto-form/dist/ui-auto-form.cjs.js"
@@ -238,6 +242,7 @@
 		"date-picker",
 		"dialog",
 		"dropdown-menu",
+		"editors",
 		"form",
 		"hover-card",
 		"icon",
@@ -387,6 +392,7 @@
 			"date-picker.tsx",
 			"dialog.tsx",
 			"dropdown-menu.tsx",
+			"editors/index.tsx",
 			"form.tsx",
 			"hover-card.tsx",
 			"icon.tsx",

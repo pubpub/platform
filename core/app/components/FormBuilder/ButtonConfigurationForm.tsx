@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import type { StagesId } from "db/public";
 import { ElementType } from "db/public";
-import { MarkdownEditor, zodToHtmlInputProps } from "ui/auto-form";
+import { zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -13,6 +13,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
+import { MarkdownEditor } from "ui/editors";
 import {
 	Form,
 	FormControl,
