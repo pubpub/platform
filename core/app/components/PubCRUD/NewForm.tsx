@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import type {
 	Communities,
@@ -26,6 +27,22 @@ import { ChevronDown } from "ui/icon";
 import { FormElement } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/FormElement";
 import { createElementFromPubType } from "./helpers";
 
+type PubForm = {
+	pubType: PubTypes;
+	stage: Pick<Stages, "id" | "name" | "order">;
+	values: { [key: PubFields["slug"]]: PubValues["value"] | null };
+};
+
+const PubFormSchema = z.object({
+	pubType: z.string(),
+	stage: z.object({
+		id: z.string(),
+		name: z.string(),
+		order: z.string(),
+	}),
+	values: z.object({}),
+});
+
 async function GenericDynamicPubForm({
 	communitySlug,
 	availableStages,
@@ -35,7 +52,7 @@ async function GenericDynamicPubForm({
 	searchParams,
 	__hack__memberIdField,
 	values,
-	pubType,
+	pubTypeId: pubType,
 }: {
 	communitySlug: Communities["slug"];
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
@@ -48,7 +65,7 @@ async function GenericDynamicPubForm({
 	searchParams?: Record<string, unknown>;
 	__hack__memberIdField?: React.ReactNode;
 	values?: { [key: PubFields["slug"]]: PubValues["value"] | null };
-	pubType: PubTypes["id"];
+	pubTypeId: PubTypes["id"];
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
@@ -57,15 +74,18 @@ async function GenericDynamicPubForm({
 		(typeof availablePubTypes)[number] | null
 	>(pt ?? null);
 	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
-	const defaultData = { pubType: null, stage: null, ...values };
+	// const defaultData ;
 
-	const form = useForm({
+	const form = useForm<z.infer<typeof PubFormSchema>>({
 		reValidateMode: "onChange",
-		defaultValues: defaultData,
+		defaultValues: {
+			pubType: pubType ?? "",
+			stage: currentStage ?? {},
+			values: values ?? {},
+		},
 	});
 
 	const PubFormElement = () => {
-		// no notion of field values here
 		if (!selectedPubType) {
 			return null;
 		}
@@ -76,7 +96,8 @@ async function GenericDynamicPubForm({
 		return elements.map((element) => {
 			return (
 				<>
-					<FormElement key={element.elementId} element={element} />
+					<FormElement key={element.elementId} element={element}
+					/>
 				</>
 			);
 		});

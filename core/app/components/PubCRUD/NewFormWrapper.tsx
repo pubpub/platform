@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { assert } from "utils";
+import type { PubTypesId } from "db/public";
 
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
@@ -53,7 +53,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
 	const values = pub?.values ?? {};
-	const pubType = pub?.pubTypeId ?? "";
+	const pubType = pub?.pubTypeId ?? ("" as PubTypesId);
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
@@ -67,7 +67,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 						<HackyUserIdSelect searchParams={props.searchParams ?? {}} />
 					}
 					values={values}
-					pubType={pubType}
+					pubTypeId={pubType}
 				/>
 			</Suspense>
 		</>
