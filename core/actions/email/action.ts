@@ -2,7 +2,7 @@ import * as z from "zod";
 
 import { Mail } from "ui/icon";
 
-import { markdown } from "../_lib/zodTypes";
+import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 import { EmailToken } from "./tokens";
 
@@ -11,8 +11,8 @@ export const action = defineAction({
 	config: {
 		schema: z.object({
 			recipient: z.string().uuid().describe("Recipient"),
-			subject: z.string().describe("Email subject"),
-			body: markdown().min(0).max(2_000).describe("Email body"),
+			subject: stringWithTokens().max(500).describe("Email subject"),
+			body: markdown().min(0).describe("Email body"),
 		}),
 		fieldConfig: {
 			recipient: {
@@ -31,13 +31,12 @@ export const action = defineAction({
 						"Recipient|Overrides the recipient user specified in the action config."
 					)
 					.optional(),
-				subject: z
-					.string()
+				subject: stringWithTokens()
+					.max(500)
 					.describe("Email subject|Overrides the subject specified in the action config.")
 					.optional(),
 				body: markdown()
 					.min(0)
-					.max(1_000)
 					.describe("Email body|Overrides the body specified in the action config.")
 					.optional(),
 			})
@@ -50,6 +49,20 @@ export const action = defineAction({
 	},
 	icon: Mail,
 	tokens: {
+		subject: {
+			[EmailToken.Value]: {
+				description: "Insert a value from the pub.",
+			},
+			[EmailToken.RecipientName]: {
+				description: "The full name of the email recipient.",
+			},
+			[EmailToken.RecipientFirstName]: {
+				description: "The first name of the email recipient.",
+			},
+			[EmailToken.RecipientLastName]: {
+				description: "The last name of the email recipient.",
+			},
+		},
 		body: {
 			[EmailToken.Value]: {
 				description: "Insert a value from the pub.",
