@@ -30,33 +30,20 @@ import {
 
 async function deleteMoveConstraints(moveConstraintIds: [StagesId, StagesId][]) {
 	await autoRevalidate(
-		db.deleteFrom("move_constraint").where((e) =>
-			e.or([
-				e(
-					"move_constraint.stageId",
-					"in",
-					moveConstraintIds.map(([stageId]) => stageId as StagesId)
-				),
-				e(
-					"move_constraint.destinationId",
-					"in",
-					moveConstraintIds.map(([, destinationId]) => destinationId as StagesId)
-				),
-			])
-		)
+		db
+			.deleteFrom("move_constraint")
+			.where(
+				"move_constraint.stageId",
+				"in",
+				moveConstraintIds.map(([stageId]) => stageId as StagesId)
+			)
+			.where(
+				"move_constraint.destinationId",
+				"in",
+				moveConstraintIds.map(([, destinationId]) => destinationId as StagesId)
+			)
+			.returningAll()
 	).execute();
-
-	// const ops = moveConstraintIds.map(([stageId, destinationId]) =>
-	// 	prisma.moveConstraint.delete({
-	// 		where: {
-	// 			moveConstraintId: {
-	// 				stageId,
-	// 				destinationId,
-	// 			},
-	// 		},
-	// 	})
-	// );
-	// await Promise.all(ops);
 }
 
 export const createStage = defineServerAction(async function createStage(

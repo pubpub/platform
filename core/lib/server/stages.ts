@@ -145,29 +145,6 @@ export const getCommunityStages = (communityId: CommunitiesId) =>
 			.orderBy("order asc")
 	);
 
-type GetCommunityStageOutput = Awaited<
-	ReturnType<ReturnType<typeof getCommunityStages>["executeTakeFirstOrThrow"]>
->;
-
-// declare const communityStage: GetCommunityStageOutput;
-// declare const stage: StagePayload;
-// //		stage.
-
-// let communityStagePermissions: StagePayload["permissions"] = communityStage.permissions;
-// let communityStageIntegrationInstances: StagePayload["integrationInstances"] =
-// 	communityStage.integrationInstances;
-
-// let communityStageActionInstances: StagePayload["actionInstances"] = communityStage.actionInstances;
-// let communityStagePubs: StagePayload["pubs"] = communityStage.pubs;
-// let communityStageMoveConstraints: StagePayload["moveConstraints"] = communityStage.moveConstraints;
-// let communityStageMoveConstraintSources: StagePayload["moveConstraintSources"] =
-// 	communityStage.moveConstraintSources;
-
-const test = async (): StagePayload[] => {
-	const stages = await getCommunityStages("c-1" as CommunitiesId).executeTakeFirst();
-	return stages;
-};
-
 export const createStage = (props: NewStages) =>
 	autoRevalidate(db.insertInto("stages").values(props));
 

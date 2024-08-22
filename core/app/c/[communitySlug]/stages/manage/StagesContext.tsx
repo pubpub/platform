@@ -173,7 +173,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 		startTransition(() => {
 			dispatch({ type: "stage_created" });
 		});
-		runCreateStage(props.communityId as CommunitiesId);
+		runCreateStage(props.communityId);
 	}, [dispatch, props.communityId, runCreateStage]);
 
 	const deleteStages = useCallback(
@@ -274,6 +274,6 @@ export const StagesProvider = (props: StagesProviderProps) => {
 		createStage,
 		updateStageName,
 		fetchStages,
-	};
+	} satisfies StagesContext;
 	return <StagesContext.Provider value={value}>{props.children}</StagesContext.Provider>;
 };
