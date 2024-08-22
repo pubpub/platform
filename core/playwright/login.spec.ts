@@ -1,6 +1,6 @@
 import { expect, Page, test } from "@playwright/test";
 
-import { gotoLatestEmailForInbox } from "./helpers";
+import { inbucketClient } from "./helpers";
 
 const authFile = "playwright/.auth/user.json";
 
@@ -102,16 +102,15 @@ test.describe("Auth with lucia", () => {
 		await page.getByRole("button", { name: "Send reset email" }).click();
 		await page.getByRole("button", { name: "Close" }).click();
 
-		// this is slightly less flaky, we are manually deleting the email
-		// to make sure we don't get a race condition
-		const mail = await gotoLatestEmailForInbox({ page, inbox: "new" });
-		await mail.click();
-		const link = await page.locator("a[href*='/reset']").first();
-		const url = await link.getAttribute("href");
+		const message = await (await inbucketClient.getMailbox("new")).getLatestMessage();
+
+		const url = message.message.body.text?.match(/http:\/\/.*\/reset/)?.[0];
+		await message.delete();
+
 		if (!url) {
 			throw new Error("No url found!");
 		}
-		await page.getByText("Delete").click();
+
 		await page.goto(url);
 
 		await page.waitForURL("/reset");
@@ -135,22 +134,20 @@ test.describe("Auth with lucia", () => {
 			"body > div:nth-child(3) > ol > li > div > div.text-sm.opacity-90"
 		);
 
-		// ugly, but we need to wait for the email to actually arrive
-		//		await page.waitForTimeout(1000);
+		const message2 = await (await inbucketClient.getMailbox("new")).getLatestMessage();
 
-		// this is slightly less flaky, we are manually deleting the email
-		// to make sure we don't get a race condition
-		const mail2 = await gotoLatestEmailForInbox({ page, inbox: "new" });
-		const link2 = await page.locator("a[href*='/reset']").first();
-		const url2 = await link2.getAttribute("href");
+		const url2 = message2.message.body.text?.match(/http:\/\/.*\/reset/)?.[0];
+		await message2.delete();
+
 		if (!url2) {
 			throw new Error("No url found!");
 		}
-		await page.getByText("Delete").click();
+
 		await page.goto(url2);
 
 		await page.waitForURL("/reset");
-		await page.getByRole("textbox").click();
+		// if it timesout here, the token is wrong
+		await page.getByRole("textbox").click({ timeout: 1000 });
 		await page.getByRole("textbox").fill("pubpub-new");
 		await page.getByRole("button", { name: "Set new password" }).click();
 		await page.getByPlaceholder("m@example.com").click();
