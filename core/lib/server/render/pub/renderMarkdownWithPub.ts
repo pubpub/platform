@@ -50,7 +50,10 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	// ex: :value{field="unjournal:evaluator" firstName lastName} should yield i.e. Jane Admin
 	const member = context.users.find((u) => u.id === value);
 	if (member && attrs) {
-		const userAttrs = Object.keys(attrs).filter((attr) => attr !== "field");
+		const allowedFields = ["firstName", "lastName"];
+		const userAttrs = Object.keys(attrs).filter(
+			(attr) => attr !== "field" && allowedFields.includes(attr)
+		);
 		if (userAttrs.length) {
 			value = userAttrs.map((userAttribute) => member.user[userAttribute]).join(" ");
 		}
