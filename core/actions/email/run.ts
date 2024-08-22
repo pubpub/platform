@@ -1,6 +1,5 @@
 "use server";
 
-import { CoreSchemaType } from "@prisma/client";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { MembersId } from "db/public";
@@ -31,21 +30,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		}
 
 		const recipientId = expect(args?.recipient ?? config.recipient) as MembersId;
-		const pubMemberFields = await db
-			.selectFrom("pub_fields")
-			.select(["slug"])
-			.where((eb) =>
-				eb("slug", "in", Object.keys(pub.values)).and(
-					"schemaName",
-					"=",
-					CoreSchemaType.MemberId as any
-				)
-			)
-			.execute();
-		const pubValueMemberIds = pubMemberFields.map(
-			(field) => pub.values[field.slug]
-		) as MembersId[];
-		const userIds: MembersId[] = [recipientId, ...pubValueMemberIds];
 
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
@@ -64,11 +48,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					.as("user"),
 			])
 			.where("id", "=", recipientId)
-			.executeTakeFirstOrThrow();
-
-		if (!recipient) {
-			throw new Error(`Could not find member with ID ${recipientId}`);
-		}
+			.executeTakeFirstOrThrow(
+				() => new Error(`Could not find member with ID ${recipientId}`)
+			);
 
 		const renderMarkdownWithPubContext = {
 			communitySlug,

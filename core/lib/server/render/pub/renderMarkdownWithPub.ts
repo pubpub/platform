@@ -298,6 +298,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 							fieldSlug,
 							attributes: Object.keys(attrs),
 							memberId: curValue,
+							communitySlug: context.communitySlug,
 						}),
 					};
 				}

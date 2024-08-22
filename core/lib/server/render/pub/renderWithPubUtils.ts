@@ -1,4 +1,5 @@
 import type { MembersId, UsersId } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
 import { db } from "~/kysely/database";
@@ -75,11 +76,22 @@ export const renderMemberFields = async ({
 	fieldSlug,
 	attributes,
 	memberId,
+	communitySlug,
 }: {
 	fieldSlug: string;
+	communitySlug: string;
 	attributes: string[];
 	memberId: MembersId;
 }) => {
+	// Make sure this field is a member type
+	await db
+		.selectFrom("pub_fields")
+		.innerJoin("communities", "pub_fields.communityId", "communities.id")
+		.where("pub_fields.slug", "=", fieldSlug)
+		.where("communities.slug", "=", communitySlug)
+		.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
+		.executeTakeFirstOrThrow(() => new Error(`Field ${fieldSlug} is not a member type`));
+
 	const user = await db
 		.selectFrom("members")
 		.innerJoin("users", "users.id", "members.userId")
@@ -90,7 +102,9 @@ export const renderMemberFields = async ({
 	if (!user) {
 		return memberId;
 	}
-	const relevantAttrs = attributes.filter((attr) => ALLOWED_MEMBER_ATTRIBUTES.includes(attr));
+	const relevantAttrs = attributes.filter((attr) =>
+		(ALLOWED_MEMBER_ATTRIBUTES as ReadonlyArray<string>).includes(attr)
+	);
 	if (relevantAttrs.length) {
 		return relevantAttrs.map((attr) => user[attr]).join(" ");
 	}
