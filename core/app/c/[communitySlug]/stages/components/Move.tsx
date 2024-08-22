@@ -4,7 +4,8 @@ import { Button } from "ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 
-import { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
+import type { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
+import { isClientException, useServerAction } from "~/lib/serverActions";
 import { move } from "./lib/actions";
 
 type Props = {
@@ -17,32 +18,33 @@ type Props = {
 export default function Move(props: Props) {
 	const { toast } = useToast();
 
+	const runMove = useServerAction(move);
+
 	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
-		const err = await move(pubId, sourceStageId, destStageId, props.stage.communityId);
-		if (err) {
-			toast({
-				title: "Error",
-				description: err.message,
-				variant: "destructive",
-			});
+		const err = await runMove(pubId, sourceStageId, destStageId);
+
+		if (isClientException(err)) {
 			return;
 		}
+
 		toast({
 			title: "Success",
 			description: "Pub was successfully moved",
 			variant: "default",
 			action: (
 				<Button
-					onClick={async () =>
-						await move(pubId, destStageId, sourceStageId, props.stage.communityId).then(
-							() =>
-								toast({
-									variant: "default",
-									title: "Success",
-									description: "Pub was successfully moved back",
-								})
-						)
-					}
+					onClick={async () => {
+						const result = await runMove(pubId, destStageId, sourceStageId);
+
+						if (isClientException(result)) {
+							return;
+						}
+						toast({
+							variant: "default",
+							title: "Success",
+							description: "Pub was successfully moved back",
+						});
+					}}
 				>
 					Undo
 				</Button>

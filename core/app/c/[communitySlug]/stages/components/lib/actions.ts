@@ -9,8 +9,7 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 export const move = defineServerAction(async function move(
 	pubId: string,
 	sourceStageId: string,
-	destinationStageId: string,
-	communityId: string
+	destinationStageId: string
 ) {
 	try {
 		await autoRevalidate(
@@ -29,7 +28,7 @@ export const move = defineServerAction(async function move(
 		// autoRevalidated kyseley query
 		// revalidateTagsForCommunity(["PubsInStages"]);
 	} catch {
-		return { message: "The Pub was not successully moved" };
+		return { error: "The Pub was not successully moved" };
 	}
 });
 
@@ -46,6 +45,6 @@ export const assign = defineServerAction(async function assign(pubId: string, us
 
 		// revalidateTagsForCommunity(["pubs"]);
 	} catch {
-		return { message: "The Pub was not successully assigned" };
+		return { error: "The Pub was not successully assigned" };
 	}
 });
