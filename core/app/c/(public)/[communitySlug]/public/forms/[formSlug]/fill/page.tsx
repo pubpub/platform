@@ -8,6 +8,7 @@ import { StructuralFormElement } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
+import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -16,7 +17,6 @@ import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
-import { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
@@ -103,6 +103,7 @@ export default async function FormPage({
 	const renderWithPubContext = {
 		recipient: memberWithUser,
 		communitySlug: params.communitySlug,
+		users: [],
 		pub,
 		parentPub,
 	};
