@@ -50,7 +50,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
 		// member group.
-		const users = await db
+		const recipient = await db
 			.selectFrom("members")
 			.select((eb) => [
 				"members.id",
@@ -63,10 +63,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					.$notNull()
 					.as("user"),
 			])
-			.where("id", "in", userIds)
-			.execute();
+			.where("id", "=", recipientId)
+			.executeTakeFirstOrThrow();
 
-		const recipient = users.find((u) => u.id === recipientId);
 		if (!recipient) {
 			throw new Error(`Could not find member with ID ${recipientId}`);
 		}
@@ -74,7 +73,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		const renderMarkdownWithPubContext = {
 			communitySlug,
 			recipient,
-			users,
 			pub,
 			parentPub,
 		};

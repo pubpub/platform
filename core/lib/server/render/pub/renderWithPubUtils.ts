@@ -1,6 +1,7 @@
 import type { MembersId, UsersId } from "db/public";
 import { assert, expect } from "utils";
 
+import { db } from "~/kysely/database";
 import { addMemberToForm, createFormInviteLink } from "../../form";
 
 export type RenderWithPubRel = "parent" | "self";
@@ -15,23 +16,22 @@ export type RenderWithPubPub = {
 	} | null;
 };
 
-type User = {
-	id: MembersId;
-	user: {
-		id: UsersId;
-		firstName: string;
-		lastName: string | null;
-		email: string;
-	};
-};
-
 export type RenderWithPubContext = {
-	recipient: User;
-	users: User[];
+	recipient: {
+		id: MembersId;
+		user: {
+			id: UsersId;
+			firstName: string;
+			lastName: string | null;
+			email: string;
+		};
+	};
 	communitySlug: string;
 	pub: RenderWithPubPub;
 	parentPub?: RenderWithPubPub | null;
 };
+
+export const ALLOWED_MEMBER_ATTRIBUTES = ["firstName", "lastName", "email"] as const;
 
 const parseRel = (rel: string | undefined): RenderWithPubRel => {
 	if (rel === undefined) {
@@ -69,6 +69,33 @@ export const renderFormInviteLink = async (
 ) => {
 	await addMemberToForm({ memberId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, pubId });
+};
+
+export const renderMemberFields = async ({
+	fieldSlug,
+	attributes,
+	memberId,
+}: {
+	fieldSlug: string;
+	attributes: string[];
+	memberId: MembersId;
+}) => {
+	const user = await db
+		.selectFrom("members")
+		.innerJoin("users", "users.id", "members.userId")
+		.select(ALLOWED_MEMBER_ATTRIBUTES)
+		.where("members.id", "=", memberId)
+		.executeTakeFirst();
+
+	if (!user) {
+		return memberId;
+	}
+	const relevantAttrs = attributes.filter((attr) => ALLOWED_MEMBER_ATTRIBUTES.includes(attr));
+	if (relevantAttrs.length) {
+		return relevantAttrs.map((attr) => user[attr]).join(" ");
+	}
+
+	return memberId;
 };
 
 type LinkEmailOptions = {

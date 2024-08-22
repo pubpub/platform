@@ -103,7 +103,6 @@ export default async function FormPage({
 	const renderWithPubContext = {
 		recipient: memberWithUser,
 		communitySlug: params.communitySlug,
-		users: [],
 		pub,
 		parentPub,
 	};

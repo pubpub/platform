@@ -50,19 +50,6 @@ export const visitValueDirective = (
 
 	assert(value !== undefined, `Missing value for ${field}`);
 
-	// If it's a member field, potentially use other values
-	// ex: :value{field="unjournal:evaluator" firstName lastName} should yield i.e. Jane Admin
-	const member = context.users.find((u) => u.id === value);
-	if (member && attrs) {
-		const allowedFields = ["firstName", "lastName", "email"];
-		const userAttrs = Object.keys(attrs).filter(
-			(attr) => attr !== "field" && allowedFields.includes(attr)
-		);
-		if (userAttrs.length) {
-			value = userAttrs.map((userAttribute) => member.user[userAttribute]).join(" ");
-		}
-	}
-
 	node.data = {
 		...node.data,
 		hName: "span",
@@ -244,6 +231,7 @@ const directiveVisitors: Record<RenderWithPubToken, DirectiveVisitor> = {
 const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (context) => {
 	return async (tree) => {
 		const tokenAuthLinkNodes: NodeMdast[] = [];
+		const memberFieldNodes: NodeMdast[] = [];
 
 		visit(tree, (node) => {
 			if (isDirective(node)) {
@@ -260,6 +248,15 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 				if (directiveRendersAuthLink) {
 					tokenAuthLinkNodes.push(node);
 				}
+
+				// Collect any member fields used
+				const isMemberFieldWithAttr =
+					directiveName === RenderWithPubToken.Value &&
+					utils.ALLOWED_MEMBER_ATTRIBUTES.some((f) => f in (node.attributes ?? []));
+				if (isMemberFieldWithAttr) {
+					memberFieldNodes.push(node);
+				}
+
 				// Process the directive
 				directiveVisitor(node, context);
 			}
@@ -280,6 +277,29 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 							context.pub.id
 						);
 					}
+				}
+			})
+		);
+
+		// Append member field data
+		await Promise.all(
+			memberFieldNodes.map(async (node) => {
+				const hChildren = expect(node.data?.hChildren);
+				const curValue = expect((hChildren[0] as any).value);
+				hChildren[0] = { type: "text", value: "" };
+
+				if (isDirective(node)) {
+					const attrs = expect(node.attributes);
+					const fieldSlug = expect(attrs.field);
+
+					hChildren[0] = {
+						...hChildren[0],
+						value: await utils.renderMemberFields({
+							fieldSlug,
+							attributes: Object.keys(attrs),
+							memberId: curValue,
+						}),
+					};
 				}
 			})
 		);
