@@ -11,6 +11,7 @@ import rehypeStringify from "rehype-stringify";
 import remarkDirective from "remark-directive";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
+import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
 
@@ -298,7 +299,7 @@ export const renderMarkdownWithPub = async (
 
 	if (asMarkdown) {
 		// Convert the HTML back to markdown using rehype-remark
-		processor = processorBase.use(rehypeRemark).use(rehypeStringify);
+		processor = processorBase.use(rehypeRemark).use(remarkStringify);
 	} else {
 		processor = processorBase.use(rehypeStringify);
 	}
