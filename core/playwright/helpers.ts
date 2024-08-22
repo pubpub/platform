@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { CommunityPage } from "./fixtures/community-page";
+import { InbucketClient } from "./inbucketClient";
 
 export const login = async ({ page }: { page: Page }) => {
 	await page.goto("/login");
@@ -25,41 +26,6 @@ export const createCommunity = async ({
 	);
 };
 
-export const gotoInbucket = async ({ page }: { page: Page }) => {
-	await page.goto("http://localhost:54324/monitor");
-};
+const INBUCKET_TESTING_URL = "http://localhost:54324";
 
-const waitForJustNow = async (page: Page, retryCount = 0) => {
-	const date = await page
-		.locator("body > div > div.page > div > aside.message-list > div:nth-child(1) > div.date")
-		.first();
-	const text = await date.innerText();
-
-	if (text !== "just now") {
-		if (retryCount > 5) {
-			throw new Error("Timed out waiting for just now");
-		}
-		await page.waitForTimeout(1000);
-		await page.reload();
-		await waitForJustNow(page, retryCount + 1);
-	}
-};
-
-export const gotoLatestEmailForInbox = async ({ page, inbox }: { page: Page; inbox: string }) => {
-	await page.goto("http://localhost:54324/monitor");
-	await page.reload();
-	await page.getByPlaceholder("mailbox").click();
-	await page.getByPlaceholder("mailbox").fill(inbox);
-	await page.getByPlaceholder("mailbox").press("Enter");
-
-	await waitForJustNow(page);
-	await page.click(
-		"body > div > div.page > div > aside.message-list > div:nth-child(1) > div.date"
-	);
-
-	const textElement = page.locator(
-		"body > div > div.page > div > main > div > div.tab-panel > article > rendered-html"
-	);
-
-	return textElement;
-};
+export const inbucketClient = new InbucketClient(INBUCKET_TESTING_URL);
