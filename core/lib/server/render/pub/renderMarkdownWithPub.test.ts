@@ -14,6 +14,13 @@ vi.mock("server-only", () => {
 	};
 });
 
+// Needed for https://github.com/pubpub/v7/pull/530#issuecomment-2305237258
+vi.mock("react", () => {
+	return {
+		cache: vi.fn(),
+	};
+});
+
 const mockUser = (overrides?: Partial<RenderWithPubContext["recipient"]["user"]>) => {
 	const id = overrides?.id ?? "123";
 	const merged = {
