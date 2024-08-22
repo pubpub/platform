@@ -2,10 +2,11 @@ import assert from "assert";
 
 import type { Node as NodeMdast, Parent as ParentMdast } from "mdast";
 import type { Directive } from "micromark-extension-directive";
-import type { Plugin } from "unified";
+import type { Plugin, Processor } from "unified";
 import type { Node } from "unist";
 
 import rehypeFormat from "rehype-format";
+import rehypeRemark from "rehype-remark";
 import rehypeStringify from "rehype-stringify";
 import remarkDirective from "remark-directive";
 import remarkParse from "remark-parse";
@@ -268,16 +269,28 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 	};
 };
 
-export const renderMarkdownWithPub = async (text: string, context: utils.RenderWithPubContext) => {
-	const html = (
-		await unified()
-			.use(remarkParse)
-			.use(remarkDirective)
-			.use(renderMarkdownWithPubPlugin, context)
-			.use(remarkRehype)
-			.use(rehypeFormat)
-			.use(rehypeStringify)
-			.process(text)
-	).toString();
-	return html;
+export const renderMarkdownWithPub = async (
+	text: string,
+	context: utils.RenderWithPubContext,
+	asMarkdown = false
+) => {
+	const processorBase = unified()
+		.use(remarkParse)
+		.use(remarkDirective)
+		.use(renderMarkdownWithPubPlugin, context)
+		.use(remarkRehype)
+		.use(rehypeFormat);
+
+	let processor: Processor<Node, Node, Node, Node, string>;
+
+	if (asMarkdown) {
+		// Convert the HTML back to markdown using rehype-remark
+		processor = processorBase.use(rehypeRemark).use(rehypeStringify);
+	} else {
+		processor = processorBase.use(rehypeStringify);
+	}
+
+	const result = await processor.process(text);
+
+	return result.toString().trim();
 };
