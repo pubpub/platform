@@ -11,14 +11,23 @@ import { ONE_DAY } from "./cache/constants";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { memoize } from "./cache/memoize";
 
-/**
- * Do not add any additional selects to this query.
- * This is meant to be the canonical way to get a community, should be very fast and small.
- */
 export const findCommunityBySlug = cache((communitySlug?: string) => {
 	const slug = communitySlug ?? getCommunitySlug();
 	return memoize(
-		() => db.selectFrom("communities").selectAll().where("slug", "=", slug).executeTakeFirst(),
+		() =>
+			db
+				.selectFrom("communities")
+				.selectAll()
+				.select((eb) => [
+					jsonArrayFrom(
+						eb
+							.selectFrom("stages")
+							.whereRef("stages.communityId", "=", "communities.id")
+							.selectAll()
+					).as("stages"),
+				])
+				.where("slug", "=", slug)
+				.executeTakeFirst(),
 		{
 			additionalCacheKey: [slug],
 			revalidateTags: [createCacheTag(`community-all_${slug}`)],
