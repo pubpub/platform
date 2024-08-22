@@ -1,5 +1,6 @@
 // @ts-check
 const { makeKyselyHook } = require("kanel-kysely");
+
 const { generateZodSchemas } = require("kanel-zod");
 const {
 	kanelKyselyZodCompatibilityPreRenderHook,
@@ -8,8 +9,10 @@ const {
 	kanelDatabaseDefaultExportFixPreRenderHook,
 } = require("./src/kanel/kanel-database-default-export-fix-hook.cjs");
 
+console.log("aaa", process.env["DATABASE_URL"]);
+
 /** @type {import('kanel').Config} */
-module.exports = {
+const config = {
 	connection: process.env["DATABASE_URL"],
 	schemas: ["public"],
 
@@ -28,3 +31,5 @@ module.exports = {
 		"pg_catalog.bpchar": "string",
 	},
 };
+
+module.exports = config;

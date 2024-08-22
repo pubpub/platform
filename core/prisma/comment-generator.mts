@@ -23,8 +23,8 @@ import { promises as fs } from "fs";
 
 import type { EnvValue, GeneratorOptions } from "@prisma/generator-helper";
 
-import { generatorHandler } from "@prisma/generator-helper";
-import { getDMMF, parseEnvValue } from "@prisma/internals";
+import GenHelper from "@prisma/generator-helper";
+import Internals from "@prisma/internals";
 
 import { logger } from "logger";
 
@@ -69,14 +69,14 @@ async function lockChanged(lockFile: string, tmpLockFile: string): Promise<boole
 }
 
 export async function generate(options: GeneratorOptions) {
-	const outputDir = parseEnvValue(options.generator.output as EnvValue);
+	const outputDir = Internals.parseEnvValue(options.generator.output as EnvValue);
 	await fs.mkdir(outputDir, { recursive: true });
 
 	const prismaClientProvider = options.otherGenerators.find(
-		(it) => parseEnvValue(it.provider) === "prisma-client-js"
+		(it) => Internals.parseEnvValue(it.provider) === "prisma-client-js"
 	);
 
-	const prismaClientDmmf = await getDMMF({
+	const prismaClientDmmf = await Internals.getDMMF({
 		datamodel: options.datamodel,
 		previewFeatures: prismaClientProvider?.previewFeatures,
 	});
@@ -139,7 +139,7 @@ export async function generate(options: GeneratorOptions) {
 	logger.info("Comment generation completed");
 }
 
-generatorHandler({
+GenHelper.generatorHandler({
 	onManifest() {
 		return {
 			defaultOutput: "comments",

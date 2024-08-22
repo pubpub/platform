@@ -1,7 +1,7 @@
 import { writeFile } from "fs/promises";
 
 import { Kysely, PostgresDialect } from "kysely";
-import { Pool } from "pg";
+import Pg from "pg";
 
 import { logger } from "logger";
 
@@ -9,7 +9,7 @@ import type { Database } from "../src/Database";
 
 const db = new Kysely<Database>({
 	dialect: new PostgresDialect({
-		pool: new Pool({
+		pool: new Pg.Pool({
 			connectionString: process.env.DATABASE_URL,
 		}),
 	}),
