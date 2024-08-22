@@ -51,7 +51,7 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	// ex: :value{field="unjournal:evaluator" firstName lastName} should yield i.e. Jane Admin
 	const member = context.users.find((u) => u.id === value);
 	if (member && attrs) {
-		const allowedFields = ["firstName", "lastName"];
+		const allowedFields = ["firstName", "lastName", "email"];
 		const userAttrs = Object.keys(attrs).filter(
 			(attr) => attr !== "field" && allowedFields.includes(attr)
 		);
