@@ -32,10 +32,7 @@ const isParent = (node: Node): node is ParentMdast => {
 	return "children" in node;
 };
 
-export const visitValueDirective = (
-	node: NodeMdast & Directive,
-	context: utils.RenderWithPubContext
-) => {
+const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderWithPubContext) => {
 	const attrs = expect(node.attributes, "Invalid syntax in value directive");
 	const field = expect(attrs.field, "Missing field attribute in value directive");
 
