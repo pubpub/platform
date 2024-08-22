@@ -20,8 +20,8 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 		return <SkeletonCard />;
 	}
 
-	const onNameChange = updateStageName.bind(null, stage.communityId, stage.id);
-	const onDelete = deleteStage.bind(null, stage.communityId, stage.id);
+	const onNameChange = updateStageName.bind(null, stage.id);
+	const onDelete = deleteStage.bind(null, stage.id);
 
 	return (
 		<Card>

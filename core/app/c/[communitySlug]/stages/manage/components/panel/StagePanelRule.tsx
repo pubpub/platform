@@ -32,7 +32,7 @@ export const StagePanelRule = (props: Props) => {
 	const { rule } = props;
 	const runDeleteRule = useServerAction(deleteRule);
 	const onDeleteClick = useCallback(async () => {
-		runDeleteRule(rule.id, props.communityId);
+		runDeleteRule(rule.id);
 	}, [rule.id, props.communityId]);
 
 	return (

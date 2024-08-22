@@ -73,7 +73,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 	const onSubmit = useCallback(
 		async (data: CreateRuleSchema) => {
 			setIsOpen(false);
-			runAddRule({ data, communityId: props.communityId });
+			runAddRule({ data });
 			// runOnAdd(event, actionInstanceId as ActionInstancesId);
 		},
 		[props.communityId] // [props.onAdd, runOnAdd]

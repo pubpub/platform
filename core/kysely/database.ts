@@ -1,7 +1,7 @@
 import type { LogEvent } from "kysely";
 
 import { Kysely, PostgresDialect } from "kysely";
-import { Pool } from "pg";
+import pg from "pg";
 import { z } from "zod";
 
 import type { Database } from "db/Database";
@@ -9,8 +9,15 @@ import { logger } from "logger";
 
 import { env } from "~/lib/env/env.mjs";
 
+const int8TypeId = 20;
+// Map int8 to number.
+// this is likely fine
+pg.types.setTypeParser(int8TypeId, (val: any) => {
+	return parseInt(val, 10);
+});
+
 const dialect = new PostgresDialect({
-	pool: new Pool({
+	pool: new pg.Pool({
 		connectionString: env.DATABASE_URL,
 	}),
 });

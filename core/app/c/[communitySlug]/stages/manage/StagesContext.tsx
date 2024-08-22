@@ -12,21 +12,23 @@ import {
 	useState,
 } from "react";
 
-import type { StagePayload } from "~/lib/types";
+import type { CommunitiesId, StagesId } from "db/public";
+
+import type { CommunityStage } from "./page";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 
 export type StagesContext = {
-	stages: StagePayload[];
-	deleteStages: (stageIds: string[]) => void;
-	createMoveConstraint: (sourceStageId: string, destinationStageId: string) => void;
-	deleteMoveConstraints: (moveConstraintIds: [string, string][]) => void;
+	stages: CommunityStage[];
+	deleteStages: (stageIds: StagesId[]) => void;
+	createMoveConstraint: (sourceStageId: StagesId, destinationStageId: StagesId) => void;
+	deleteMoveConstraints: (moveConstraintIds: [StagesId, StagesId][]) => void;
 	deleteStagesAndMoveConstraints: (
-		stageIds: string[],
-		moveConstraintIds: [string, string][]
+		stageIds: StagesId[],
+		moveConstraintIds: [StagesId, StagesId][]
 	) => void;
 	createStage: () => void;
-	updateStageName: (stageId: string, name: string) => void;
+	updateStageName: (stageId: StagesId, name: string) => void;
 	fetchStages: () => void;
 };
 
@@ -42,35 +44,34 @@ export const StagesContext = createContext<StagesContext>({
 });
 
 export type StagesProviderProps = PropsWithChildren<{
-	communityId: string;
-	stages: StagePayload[];
+	communityId: CommunitiesId;
+	stages: CommunityStage[];
 }>;
 
 export const useStages = () => useContext(StagesContext);
 
 type Action =
 	| { type: "stage_created" }
-	| { type: "stages_deleted"; stageIds: string[] }
-	| { type: "move_constraint_created"; sourceStageId: string; destinationStageId: string }
-	| { type: "move_constraints_deleted"; moveConstraintIds: [string, string][] }
-	| { type: "stage_name_updated"; stageId: string; name: string };
+	| { type: "stages_deleted"; stageIds: StagesId[] }
+	| { type: "move_constraint_created"; sourceStageId: StagesId; destinationStageId: StagesId }
+	| { type: "move_constraints_deleted"; moveConstraintIds: [StagesId, StagesId][] }
+	| { type: "stage_name_updated"; stageId: StagesId; name: string };
 
-const makeOptimisticStage = (communityId: string) => ({
-	actionInstances: [],
-	id: "new",
+const makeOptimisticStage = (communityId: CommunitiesId): CommunityStage => ({
+	id: "new" as StagesId,
 	name: "Untitled Stage",
 	order: "aa",
 	communityId,
 	moveConstraints: [],
 	moveConstraintSources: [],
-	permissions: [],
-	integrationInstances: [],
-	pubs: [],
 	createdAt: new Date(),
 	updatedAt: new Date(),
+	pubsCount: 0,
+	memberCount: 0,
+	actionInstancesCount: 0,
 });
 
-const makeOptimisticMoveConstraint = (source: StagePayload, destination: StagePayload) => ({
+const makeOptimisticMoveConstraint = (source: CommunityStage, destination: CommunityStage) => ({
 	stageId: source.id,
 	destination,
 	destinationId: destination.id,
@@ -79,8 +80,8 @@ const makeOptimisticMoveConstraint = (source: StagePayload, destination: StagePa
 });
 
 const makeOptimisitcStagesReducer =
-	(communityId: string) =>
-	(state: StagePayload[], action: Action): StagePayload[] => {
+	(communityId: CommunitiesId) =>
+	(state: CommunityStage[], action: Action): CommunityStage[] => {
 		switch (action.type) {
 			case "stage_created":
 				return [...state, makeOptimisticStage(communityId)];
@@ -148,8 +149,8 @@ const makeOptimisitcStagesReducer =
 	};
 
 type DeleteBatch = {
-	stageIds: string[];
-	moveConstraintIds: [string, string][];
+	stageIds: StagesId[];
+	moveConstraintIds: [StagesId, StagesId][];
 };
 
 export const StagesProvider = (props: StagesProviderProps) => {
@@ -172,11 +173,11 @@ export const StagesProvider = (props: StagesProviderProps) => {
 		startTransition(() => {
 			dispatch({ type: "stage_created" });
 		});
-		runCreateStage(props.communityId);
+		runCreateStage(props.communityId as CommunitiesId);
 	}, [dispatch, props.communityId, runCreateStage]);
 
 	const deleteStages = useCallback(
-		async (stageIds: string[]) => {
+		async (stageIds: StagesId[]) => {
 			startTransition(() => {
 				dispatch({ type: "stages_deleted", stageIds });
 			});
@@ -186,7 +187,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	);
 
 	const deleteStagesAndMoveConstraints = useCallback(
-		(stageIds: string[], moveConstraintIds: [string, string][]) => {
+		(stageIds: StagesId[], moveConstraintIds: [StagesId, StagesId][]) => {
 			if (stageIds.length > 0) {
 				startTransition(() => {
 					dispatch({
@@ -203,13 +204,13 @@ export const StagesProvider = (props: StagesProviderProps) => {
 					});
 				});
 			}
-			runDeleteStagesAndMoveConstraints(props.communityId, stageIds, moveConstraintIds);
+			runDeleteStagesAndMoveConstraints(stageIds, moveConstraintIds);
 		},
 		[dispatch, props.communityId, runDeleteStagesAndMoveConstraints]
 	);
 
 	const createMoveConstraint = useCallback(
-		async (sourceStageId: string, destinationStageId: string) => {
+		async (sourceStageId: StagesId, destinationStageId: StagesId) => {
 			startTransition(() => {
 				dispatch({
 					type: "move_constraint_created",
@@ -217,13 +218,13 @@ export const StagesProvider = (props: StagesProviderProps) => {
 					destinationStageId,
 				});
 			});
-			runCreateMoveConstraint(props.communityId, sourceStageId, destinationStageId);
+			runCreateMoveConstraint(sourceStageId, destinationStageId);
 		},
 		[dispatch, props.communityId, runCreateMoveConstraint]
 	);
 
 	const deleteMoveConstraints = useCallback(
-		async (moveConstraintIds: [string, string][]) => {
+		async (moveConstraintIds: [StagesId, StagesId][]) => {
 			startTransition(() => {
 				dispatch({
 					type: "move_constraints_deleted",
@@ -239,7 +240,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	);
 
 	const updateStageName = useCallback(
-		async (stageId: string, name: string) => {
+		async (stageId: StagesId, name: string) => {
 			startTransition(() => {
 				dispatch({
 					type: "stage_name_updated",
@@ -247,7 +248,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 					name,
 				});
 			});
-			runUpdateStageName(props.communityId, stageId, name);
+			runUpdateStageName(stageId, name);
 		},
 		[dispatch, props.communityId, runUpdateStageName]
 	);

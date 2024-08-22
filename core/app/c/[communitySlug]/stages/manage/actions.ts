@@ -1,11 +1,8 @@
 "use server";
 
-import type { Action as PrismaAction } from "@prisma/client";
-
-import { revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 
-import type { Action, ActionInstancesId, CommunitiesId, RulesId } from "db/public";
+import type { Action, ActionInstancesId, CommunitiesId, RulesId, StagesId } from "db/public";
 import { Event } from "db/public";
 import { logger } from "logger";
 
@@ -13,68 +10,78 @@ import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator"
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
+import {
+	createActionInstance,
+	getActionInstance,
+	removeActionInstance,
+	updateActionInstance,
+} from "~/lib/server/actions";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import prisma from "~/prisma/db";
+import { createRule, removeRule } from "~/lib/server/rules";
+import {
+	createMoveConstraint as createMoveConstraintDb,
+	createStage as createStageDb,
+	getPubIdsInStage,
+	removeStages,
+	updateStage,
+} from "~/lib/server/stages";
 
-async function deleteStages(stageIds: string[]) {
-	await prisma.stage.deleteMany({
-		where: {
-			id: {
-				in: stageIds,
-			},
-		},
-	});
+async function deleteMoveConstraints(moveConstraintIds: [StagesId, StagesId][]) {
+	await autoRevalidate(
+		db.deleteFrom("move_constraint").where((e) =>
+			e.or([
+				e(
+					"move_constraint.stageId",
+					"in",
+					moveConstraintIds.map(([stageId]) => stageId as StagesId)
+				),
+				e(
+					"move_constraint.destinationId",
+					"in",
+					moveConstraintIds.map(([, destinationId]) => destinationId as StagesId)
+				),
+			])
+		)
+	).execute();
+
+	// const ops = moveConstraintIds.map(([stageId, destinationId]) =>
+	// 	prisma.moveConstraint.delete({
+	// 		where: {
+	// 			moveConstraintId: {
+	// 				stageId,
+	// 				destinationId,
+	// 			},
+	// 		},
+	// 	})
+	// );
+	// await Promise.all(ops);
 }
 
-async function deleteMoveConstraints(moveConstraintIds: [string, string][]) {
-	const ops = moveConstraintIds.map(([stageId, destinationId]) =>
-		prisma.moveConstraint.delete({
-			where: {
-				moveConstraintId: {
-					stageId,
-					destinationId,
-				},
-			},
-		})
-	);
-	await Promise.all(ops);
-}
-
-export const createStage = defineServerAction(async function createStage(communityId: string) {
+export const createStage = defineServerAction(async function createStage(
+	communityId: CommunitiesId
+) {
+	// TODO: add authorization check
 	try {
-		await prisma.stage.create({
-			data: {
-				name: "Untitled Stage",
-				order: "aa",
-				community: {
-					connect: {
-						id: communityId,
-					},
-				},
-			},
-		});
+		await createStageDb({
+			name: "Untitled Stage",
+			order: "aa",
+			communityId,
+		}).executeTakeFirstOrThrow();
 	} catch (error) {
 		return {
 			error: "Failed to create stage",
 			cause: error,
 		};
-	} finally {
-		revalidateTagsForCommunity(["stages", "PubsInStages"]);
 	}
 });
 
-export const deleteStage = defineServerAction(async function deleteStage(
-	communityId: string,
-	stageId: string
-) {
+export const deleteStage = defineServerAction(async function deleteStage(stageId: StagesId) {
+	// TODO: add authorization check
+
 	try {
-		await prisma.stage.delete({
-			where: {
-				id: stageId,
-			},
-		});
+		await removeStages([stageId]).executeTakeFirstOrThrow();
 	} catch (error) {
 		return {
 			error: "Failed to delete stage",
@@ -86,25 +93,15 @@ export const deleteStage = defineServerAction(async function deleteStage(
 });
 
 export const createMoveConstraint = defineServerAction(async function createMoveConstraint(
-	communityId: string,
-	sourceStageId: string,
-	destinationStageId: string
+	sourceStageId: StagesId,
+	destinationStageId: StagesId
 ) {
+	// TODO: add authorization check
 	try {
-		await prisma.moveConstraint.create({
-			data: {
-				stage: {
-					connect: {
-						id: sourceStageId,
-					},
-				},
-				destination: {
-					connect: {
-						id: destinationStageId,
-					},
-				},
-			},
-		});
+		await createMoveConstraintDb({
+			stageId: sourceStageId,
+			destinationId: destinationStageId,
+		}).executeTakeFirstOrThrow();
 	} catch (error) {
 		return {
 			error: "Failed to connect stages",
@@ -117,9 +114,8 @@ export const createMoveConstraint = defineServerAction(async function createMove
 
 export const deleteStagesAndMoveConstraints = defineServerAction(
 	async function deleteStagesAndMoveConstraints(
-		communityId: string,
-		stageIds: string[],
-		moveConstraintIds: [string, string][]
+		stageIds: StagesId[],
+		moveConstraintIds: [StagesId, StagesId][]
 	) {
 		try {
 			// Delete move constraints prior to deleting stages to prevent foreign
@@ -128,7 +124,7 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 				await deleteMoveConstraints(moveConstraintIds);
 			}
 			if (stageIds.length > 0) {
-				await deleteStages(stageIds);
+				await removeStages(stageIds).executeTakeFirstOrThrow();
 			}
 		} catch (error) {
 			return {
@@ -142,19 +138,14 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 );
 
 export const updateStageName = defineServerAction(async function updateStageName(
-	communityId: string,
-	stageId: string,
+	stageId: StagesId,
 	name: string
 ) {
+	// TODO: add authorization check
 	try {
-		await prisma.stage.update({
-			where: {
-				id: stageId,
-			},
-			data: {
-				name,
-			},
-		});
+		await updateStage(stageId, {
+			name,
+		}).executeTakeFirstOrThrow();
 	} catch (error) {
 		return {
 			error: "Failed to update stage name",
@@ -170,34 +161,25 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 });
 
 export const addAction = defineServerAction(async function addAction(
-	communityId: string,
-	stageId: string,
+	stageId: StagesId,
 	actionName: Action
 ) {
+	// TODO: add authorization check
 	try {
-		await prisma.actionInstance.create({
-			data: {
-				name: actionName,
-				action: actionName as PrismaAction,
-				stage: {
-					connect: {
-						id: stageId,
-					},
-				},
-			},
-		});
+		await createActionInstance({
+			name: actionName,
+			action: actionName,
+			stageId,
+		}).executeTakeFirstOrThrow();
 	} catch (error) {
 		return {
 			error: "Failed to add action",
 			cause: error,
 		};
-	} finally {
-		revalidateTagsForCommunity(["stages", "PubsInStages", "action_instances"]);
 	}
 });
 
 export const updateAction = defineServerAction(async function updateAction(
-	communityId: string,
 	actionInstanceId: ActionInstancesId,
 	props:
 		| {
@@ -206,12 +188,9 @@ export const updateAction = defineServerAction(async function updateAction(
 		  }
 		| { name: string; config?: undefined }
 ) {
-	const result = await autoRevalidate(
-		db
-			.updateTable("action_instances")
-			.set(props.name ? { name: props.name } : { config: props.config })
-			.where("id", "=", actionInstanceId)
-	).executeTakeFirstOrThrow();
+	// TODO: add authorization checks
+
+	const result = await updateActionInstance(actionInstanceId, props).executeTakeFirstOrThrow();
 
 	return {
 		success: true,
@@ -220,15 +199,11 @@ export const updateAction = defineServerAction(async function updateAction(
 });
 
 export const deleteAction = defineServerAction(async function deleteAction(
-	communityId: string,
-	actionId: string
+	actionId: ActionInstancesId
 ) {
+	// TODO: add authorization check
 	try {
-		await prisma.actionInstance.delete({
-			where: {
-				id: actionId,
-			},
-		});
+		await removeActionInstance(actionId).executeTakeFirstOrThrow();
 	} catch (error) {
 		return {
 			error: "Failed to delete action",
@@ -241,19 +216,15 @@ export const deleteAction = defineServerAction(async function deleteAction(
 
 export const addRule = defineServerAction(async function addRule({
 	data,
-	communityId,
 }: {
 	data: CreateRuleSchema;
-	communityId: CommunitiesId;
 }) {
 	try {
-		await autoRevalidate(
-			db.insertInto("rules").values({
-				actionInstanceId: data.actionInstanceId as ActionInstancesId,
-				event: data.event,
-				config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
-			})
-		).executeTakeFirstOrThrow();
+		await createRule({
+			actionInstanceId: data.actionInstanceId as ActionInstancesId,
+			event: data.event,
+			config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
+		}).executeTakeFirstOrThrow();
 	} catch (error) {
 		logger.error(error);
 		if (error.message?.includes("unique constraint")) {
@@ -274,14 +245,11 @@ export const addRule = defineServerAction(async function addRule({
 	}
 });
 
-export const deleteRule = defineServerAction(async function deleteRule(
-	ruleId: RulesId,
-	communityId: string
-) {
+export const deleteRule = defineServerAction(async function deleteRule(ruleId: RulesId) {
 	try {
 		const deletedRule = await autoRevalidate(
-			db.deleteFrom("rules").where("id", "=", ruleId).returningAll()
-		).executeTakeFirst();
+			removeRule(ruleId).qb.returningAll()
+		).executeTakeFirstOrThrow();
 
 		if (!deletedRule) {
 			return {
@@ -294,11 +262,9 @@ export const deleteRule = defineServerAction(async function deleteRule(
 			return;
 		}
 
-		const actionInstance = await db
-			.selectFrom("action_instances")
-			.select(["id", "action", "stageId"])
-			.where("id", "=", deletedRule.actionInstanceId)
-			.executeTakeFirst();
+		const actionInstance = await getActionInstance(
+			deletedRule.actionInstanceId
+		).executeTakeFirst();
 
 		if (!actionInstance) {
 			// something is wrong here
@@ -310,12 +276,7 @@ export const deleteRule = defineServerAction(async function deleteRule(
 			return;
 		}
 
-		const pubsInStage = await db
-			.selectFrom("PubsInStages")
-			.select(["pubId", "stageId"])
-			.where("stageId", "=", actionInstance.stageId)
-			.execute();
-
+		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst();
 		if (!pubsInStage) {
 			// we don't need to unschedule any jobs, as there are no pubs this rule could have been applied to
 			return;
@@ -323,11 +284,11 @@ export const deleteRule = defineServerAction(async function deleteRule(
 
 		logger.debug(`Unscheduling jobs for rule ${ruleId}`);
 		await Promise.all(
-			pubsInStage.map(async (pubInStage) =>
+			pubsInStage.pubIds.map(async (pubInStageId) =>
 				unscheduleAction({
 					actionInstanceId: actionInstance.id,
-					pubId: pubInStage.pubId,
-					stageId: pubInStage.stageId,
+					pubId: pubInStageId,
+					stageId: actionInstance.stageId,
 				})
 			)
 		);

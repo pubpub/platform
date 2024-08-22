@@ -1,13 +1,13 @@
-import { unstable_cache } from "next/cache";
-
 import "reactflow/dist/style.css";
 
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+
+import type { CommunitiesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
-import { createCacheTag, createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
-import { memoize } from "~/lib/server/cache/memoize";
-import { stageInclude } from "~/lib/types";
-import prisma from "~/prisma/db";
+import { db } from "~/kysely/database";
+import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
 import { StagePanel } from "./components/panel/StagePanel";
@@ -20,38 +20,80 @@ type Props = {
 	};
 };
 
+const getCommunityStages = (communityId: CommunitiesId) =>
+	autoCache(
+		db
+			.selectFrom("stages")
+			.where("communityId", "=", communityId)
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom("move_constraint")
+						.whereRef("move_constraint.stageId", "=", "stages.id")
+						.selectAll("move_constraint")
+						.select((eb) => [
+							jsonObjectFrom(
+								eb
+									.selectFrom("stages")
+									.whereRef("stages.id", "=", "move_constraint.destinationId")
+									.selectAll("stages")
+							)
+								.$notNull()
+								.as("destination"),
+						])
+				).as("moveConstraints"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("move_constraint")
+						.whereRef("move_constraint.destinationId", "=", "stages.id")
+						.selectAll("move_constraint")
+				).as("moveConstraintSources"),
+				eb
+					.selectFrom("PubsInStages")
+					.select((eb) =>
+						eb.fn
+							.count<number>("PubsInStages.pubId")
+							.filterWhereRef("PubsInStages.stageId", "=", "stages.id")
+							.as("pubsCount")
+					)
+					.as("pubsCount"),
+				// needs to be fancier and include member groups
+				eb
+					.selectFrom("permissions")
+					.innerJoin("_PermissionToStage", "permissions.id", "_PermissionToStage.A")
+					.innerJoin("members", "_PermissionToStage.B", "members.id")
+					.select((eb) =>
+						eb.fn
+							.count("_PermissionToStage.A")
+							.filterWhereRef("_PermissionToStage.B", "=", "stages.id")
+							.as("memberCount")
+					)
+					.as("memberCount"),
+
+				eb
+					.selectFrom("action_instances")
+					.whereRef("action_instances.stageId", "=", "stages.id")
+					.select((eb) =>
+						eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
+					)
+					.as("actionInstancesCount"),
+			])
+			.selectAll("stages")
+			.orderBy("order asc")
+	);
+
+export type CommunityStage = Awaited<
+	ReturnType<ReturnType<typeof getCommunityStages>["execute"]>
+>[number];
+
 export default async function Page({ params, searchParams }: Props) {
-	const community = await prisma.community.findUnique({
-		where: { slug: params.communitySlug },
-	});
+	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return null;
 	}
 
-	const getCommunityStages = memoize(
-		(communityId: string) =>
-			prisma.stage.findMany({
-				where: { communityId },
-				include: stageInclude,
-			}),
-		{
-			revalidateTags: createCommunityCacheTags(
-				[
-					"stages",
-					"pubs",
-					"PubsInStages",
-					"action_instances",
-					"move_constraint",
-					"permissions",
-					"integrations",
-				],
-				params.communitySlug
-			),
-		}
-	);
-
-	const stages = await getCommunityStages(community.id);
+	const stages = await getCommunityStages(community.id).execute();
 
 	const pageContext = {
 		params,
@@ -62,13 +104,15 @@ export default async function Page({ params, searchParams }: Props) {
 		<StagesProvider stages={stages} communityId={community.id}>
 			<StageEditorProvider communitySlug={params.communitySlug}>
 				<LocalStorageProvider timeout={200}>
-					<div className="v-full absolute left-0 top-0 z-50 h-full w-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
+					<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
 						<div className="relative h-full select-none">
 							<StageEditor />
-							<StagePanel
-								stageId={searchParams.editingStageId}
-								pageContext={pageContext}
-							/>
+							{searchParams.editingStageId && (
+								<StagePanel
+									stageId={searchParams.editingStageId}
+									pageContext={pageContext}
+								/>
+							)}
 						</div>
 					</div>
 				</LocalStorageProvider>
