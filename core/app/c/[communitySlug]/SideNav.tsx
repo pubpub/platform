@@ -1,5 +1,5 @@
 import { Button } from "ui/button";
-import { Activity, Menu, Settings, ToyBrick } from "ui/icon";
+import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
@@ -80,8 +80,18 @@ const ManageLinks = ({
 				text={"Workflows"}
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
+			{isSuperAdmin && (
+				<NavLink
+					href={`${prefix}/stages/manage`}
+					text={"Stage editor"}
+					icon={<RefreshCw size={16} />}
+				/>
+			)}
 			{isAdmin && (
 				<NavLink href={`${prefix}/types`} text={"Types"} icon={<ToyBrick size={16} />} />
+			)}
+			{isAdmin && (
+				<NavLink href={`${prefix}/fields`} text={"Fields"} icon={<FormInput size={16} />} />
 			)}
 			{isAdmin && (
 				<NavLink

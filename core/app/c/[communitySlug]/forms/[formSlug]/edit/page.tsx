@@ -5,17 +5,18 @@ import { ArchiveFormButton } from "~/app/components/FormBuilder/ArchiveFormButto
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 
-export default async function Page({ params: { formSlug } }) {
+export default async function Page({ params: { formSlug, communitySlug } }) {
 	const loginData = await getLoginData();
 
 	if (!loginData) {
 		return null;
 	}
-	if (!loginData.isSuperAdmin) {
+	if (!isCommunityAdmin(loginData, { slug: communitySlug })) {
 		return null;
 	}
 
