@@ -2,7 +2,7 @@ import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
 export type CreateEditPubProps = {
 	parentId?: PubsId;
-	searchParams?: Record<string, unknown>;
+	searchParams: Record<string, unknown>;
 } & (
 	| {
 			communityId: CommunitiesId;

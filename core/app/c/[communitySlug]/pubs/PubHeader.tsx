@@ -15,7 +15,7 @@ const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
 		<div className="mb-16 flex items-center justify-between">
 			<h1 className="flex-grow text-xl font-bold">Pubs</h1>
 			<div className="flex items-center gap-x-2">
-				<PubCreateButton communityId={communityId} searchParams={searchParams} />
+				<PubCreateButton communityId={communityId} searchParams={searchParams ?? {}} />
 				<Button variant="outline" size="sm" asChild>
 					<Link href="types">Manage Types</Link>
 				</Button>

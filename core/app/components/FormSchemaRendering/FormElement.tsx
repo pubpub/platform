@@ -1,12 +1,13 @@
 import Markdown from "react-markdown";
 
+import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 
 import type { Form } from "~/lib/server/form";
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { findCommunityBySlug } from "~/lib/server/community";
+// import { findCommunityBySlug } from "~/lib/server/community";
 import { UserSelectServer } from "../UserSelect/UserSelectServer";
 import {
 	BooleanElement,
@@ -15,21 +16,6 @@ import {
 	TextElement,
 	Vector3Element,
 } from "./FormSchemaClientElements";
-
-const HackyUserIdSelect = async ({ searchParams }: { searchParams: Record<string, unknown> }) => {
-	const community = await findCommunityBySlug();
-	const queryParamName = `user-wow`;
-	const query = searchParams?.[queryParamName] as string | undefined;
-	return (
-		<UserSelectServer
-			community={community!}
-			fieldLabel={"Member"}
-			fieldName={`hack`}
-			query={query}
-			queryParamName={queryParamName}
-		/>
-	);
-};
 
 export const UserIdSelect = async ({
 	label,
@@ -69,9 +55,15 @@ export const UserIdSelect = async ({
 export const FormElement = ({
 	pubId,
 	element,
+	searchParams,
+	communitySlug,
+	values,
 }: {
 	pubId?: PubsId;
 	element: Form["elements"][number];
+	searchParams: Record<string, unknown>;
+	communitySlug: string;
+	values?: GetPubResponseBody["values"];
 }) => {
 	const { schemaName, label: labelProp, slug } = element;
 	if (!slug) {
@@ -106,9 +98,18 @@ export const FormElement = ({
 	if (schemaName === CoreSchemaType.DateTime) {
 		return <DateElement {...elementProps} />;
 	}
-
-	if (schemaName === CoreSchemaType.MemberId) {
-		return <>u shouldnt eb here</>;
+	if (schemaName === CoreSchemaType.MemberId && values) {
+		const userId = values[element.slug!] as MembersId | undefined;
+		return (
+			<UserIdSelect
+				label={elementProps.label}
+				name={elementProps.name}
+				id={element.elementId}
+				searchParams={searchParams}
+				value={userId}
+				communitySlug={communitySlug}
+			/>
+		);
 	}
 
 	throw new Error(`Invalid CoreSchemaType ${schemaName}`);

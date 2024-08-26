@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import type { GetPubResponseBody } from "contracts";
 import type {
 	Communities,
 	PubFields,
@@ -13,7 +14,6 @@ import type {
 	PubValues,
 	Stages,
 } from "db/public";
-import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -50,7 +50,6 @@ async function GenericDynamicPubForm({
 	currentStage = null,
 	parentId,
 	searchParams,
-	__hack__memberIdField,
 	values,
 	pubTypeId: pubType,
 }: {
@@ -62,9 +61,8 @@ async function GenericDynamicPubForm({
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
 		})[];
 	})[];
-	searchParams?: Record<string, unknown>;
-	__hack__memberIdField?: React.ReactNode;
-	values?: { [key: PubFields["slug"]]: PubValues["value"] | null };
+	searchParams: Record<string, unknown>;
+	values?: GetPubResponseBody["values"];
 	pubTypeId: PubTypes["id"];
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
@@ -96,7 +94,13 @@ async function GenericDynamicPubForm({
 		return elements.map((element) => {
 			return (
 				<>
-					<FormElement key={element.elementId} element={element} />
+					<FormElement
+						key={element.elementId}
+						element={element}
+						searchParams={searchParams}
+						communitySlug={communitySlug}
+						values={values}
+					/>
 				</>
 			);
 		});
@@ -187,12 +191,6 @@ async function GenericDynamicPubForm({
 					/>
 				)}
 				{selectedPubType && <PubFormElement />}
-				{__hack__memberIdField &&
-				selectedPubType?.fields.find(
-					(field) => field.schemaName === CoreSchemaType.MemberId
-				)
-					? __hack__memberIdField
-					: null}
 			</Form>
 		</div>
 	);

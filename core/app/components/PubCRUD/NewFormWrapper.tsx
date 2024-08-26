@@ -1,31 +1,15 @@
 import { Suspense } from "react";
 
-import type { PubTypesId } from "db/public";
+import type { GetPubResponseBody } from "contracts";
+import type { PubTypesId, PubValues } from "db/public";
 
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { UserSelectServer } from "../UserSelect/UserSelectServer";
 import { GenericDynamicPubForm } from "./NewForm";
 import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage } from "./queries";
 
-type Props = CreateEditPubProps & { searchParams?: Record<string, unknown> };
-
-const HackyUserIdSelect = async ({ searchParams }: { searchParams: Record<string, unknown> }) => {
-	const community = await findCommunityBySlug();
-	const queryParamName = `user-wow`;
-	const query = searchParams?.[queryParamName] as string | undefined;
-	return (
-		<UserSelectServer
-			community={community!}
-			fieldLabel={"Member"}
-			fieldName={`hack`}
-			query={query}
-			queryParamName={queryParamName}
-		/>
-	);
-};
+type Props = CreateEditPubProps;
 
 async function GenericDynamicPubFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
@@ -52,7 +36,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
-	const values = pub?.values ?? {};
+	const values = pub?.values ?? ({} as GetPubResponseBody["values"]);
 	const pubType = pub?.pubTypeId ?? ("" as PubTypesId);
 	return (
 		<>
@@ -63,9 +47,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 					availableStages={availableStages}
 					availablePubTypes={community.pubTypes}
 					parentId={props.parentId}
-					__hack__memberIdField={
-						<HackyUserIdSelect searchParams={props.searchParams ?? {}} />
-					}
+					searchParams={props.searchParams}
 					values={values}
 					pubTypeId={pubType}
 				/>
