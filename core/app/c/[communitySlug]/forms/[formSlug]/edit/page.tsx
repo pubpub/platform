@@ -35,14 +35,14 @@ export default async function Page({ params: { formSlug, communitySlug } }) {
 		return null;
 	}
 
+	const communityId = community.id as CommunitiesId;
+
 	const [form, { fields }] = await Promise.all([
 		getForm({
 			slug: formSlug,
-			communityId: community?.id as CommunitiesId,
+			communityId,
 		}).executeTakeFirstOrThrow(),
-		getPubFields({
-			communityId: community?.id as CommunitiesId,
-		}).executeTakeFirstOrThrow(),
+		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 	]);
 
 	const formBuilderId = "formbuilderform";
