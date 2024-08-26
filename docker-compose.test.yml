@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+
+services:
+    postgres:
+        image: postgres:15
+        environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: mydb
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+    app:
+        build:
+            context: .
+            args:
+                - PACKAGE=core
+            target: development # Define this target in your Dockerfile
+        image: core:latest
+        environment:
+            DATABASE_URL: postgres://user:password@postgres:5432/mydb
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./core:/app
+            - /app/node_modules
+        depends_on:
+            - postgres
+        # command: pnpm run dev # For development
+        profiles:
+            - dev
+
+    # app-prod:
+    #     image: your-app-image:latest
+    #     environment:
+    #         DATABASE_URL: postgres://user:password@postgres:5432/mydb
+    #     ports:
+    #         - "3000:3000"
+    #     depends_on:
+    #         - postgres
+    #     command: pnpm run start # For production or CI
+    #     profiles:
+    #         - prod
+
+    worker:
+        build:
+            target: development
+            context: .
+            args:
+                - PACKAGE=jobs
+        image: pubpub-jobs:AA
+        environment:
+            DATABASE_URL: postgres://user:password@postgres:5432/mydb
+        depends_on:
+            - postgres
+        # command: ls && pnpm --filter jobs run  start
+        profiles:
+            - dev
+            - prod
+
+volumes:
+    postgres_data:
+        driver: local
