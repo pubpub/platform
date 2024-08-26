@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 
-import type { GetPubResponseBody } from "contracts";
-import type { PubTypesId, PubValues } from "db/public";
+import type { PubsId, PubTypesId } from "db/public";
 
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
@@ -29,7 +28,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	let currentStage = "id" in stage ? stage : null;
 
 	if (!community) {
-		return null; // guard against null community for free?
+		return null;
 	}
 
 	const { availableStagesOfCurrentPub, stageOfCurrentPub } = pub
@@ -38,8 +37,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
-	const values = pub?.values ?? ({} as GetPubResponseBody["values"]);
-	const pubType = pub?.pubTypeId ?? ("" as PubTypesId);
+	const values = pub ? pub.values : {};
 
 	const formElementsByPubType: Record<string, React.ReactNode> = community.pubTypes.reduce(
 		(acc, pubType) => {
@@ -56,20 +54,20 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 		},
 		{}
 	);
+	const pubType = pub?.pubTypeId ?? ("" as PubTypesId);
 
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
 				<GenericDynamicPubForm
 					currentStage={stageOfPubRnRn}
-					communitySlug={community.slug}
-					availableStages={availableStages}
+					communityStages={availableStages}
 					availablePubTypes={community.pubTypes}
-					parentId={props.parentId}
-					searchParams={props.searchParams}
-					values={values}
+					parentId={props.parentId ?? ("" as PubsId)}
+					pubValues={values}
 					pubTypeId={pubType}
 					formElements={formElementsByPubType}
+					pubId={pub?.id ?? ("" as PubsId)}
 				/>
 			</Suspense>
 		</>

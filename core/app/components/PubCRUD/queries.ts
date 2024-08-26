@@ -25,6 +25,7 @@ export const getCommunityById = <
 					"pub_types.id",
 					"pub_types.name",
 					"pub_types.description",
+					"pub_types.communityId",
 					jsonArrayFrom(
 						eb
 							.selectFrom("pub_fields")
