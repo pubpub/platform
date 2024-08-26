@@ -35,12 +35,10 @@ const PubFormSchema = z.object({
 });
 
 async function GenericDynamicPubForm({
-	communitySlug,
 	availableStages,
 	availablePubTypes,
 	currentStage = null,
 	parentId,
-	searchParams,
 	values,
 	pubTypeId: pubType,
 	formElements,
@@ -56,7 +54,7 @@ async function GenericDynamicPubForm({
 	searchParams: Record<string, unknown>;
 	values?: GetPubResponseBody["values"];
 	pubTypeId: PubTypes["id"];
-	formElements: {};
+	formElements: Record<string, React.ReactNode>;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
@@ -66,6 +64,7 @@ async function GenericDynamicPubForm({
 	>(pt ?? null);
 	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
 
+	
 	const form = useForm<z.infer<typeof PubFormSchema>>({
 		reValidateMode: "onChange",
 		defaultValues: {
