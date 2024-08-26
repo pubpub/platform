@@ -1,10 +1,8 @@
-import { jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type { Communities, MembersId } from "db/public";
 
-import { db } from "~/kysely/database";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
+import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
+import { getMember } from "~/lib/server/member";
+import { getSuggestedUsers } from "~/lib/server/user";
 import { UserSelectClient } from "./UserSelectClient";
 
 type Props = {
@@ -33,24 +31,16 @@ export async function UserSelectServer({
 	let member: MemberSelectUserWithMembership | undefined | null;
 
 	if (value !== undefined) {
-		member = await autoCache(
-			db
-				.selectFrom("members")
-				.innerJoin("users", "members.userId", "users.id")
-				.selectAll("users")
-				.select((eb) => [
-					jsonObjectFrom(
-						eb
-							.selectFrom("members")
-							.selectAll("members")
-							.whereRef("members.id", "=", "users.id")
-							.where("members.communityId", "=", community.id)
-					)
-						.$notNull()
-						.as("member"),
-				])
-				.where("members.id", "=", value)
-		).executeTakeFirst();
+		const inbetweenMember = await getMember({
+			id: value,
+		}).executeTakeFirst();
+
+		if (inbetweenMember) {
+			member = {
+				...inbetweenMember.user,
+				member: inbetweenMember,
+			};
+		}
 	}
 
 	if (!Boolean(query) && member === undefined) {
@@ -65,23 +55,10 @@ export async function UserSelectServer({
 		);
 	}
 
-	const users: MemberSelectUser[] = await autoCache(
-		db
-			.selectFrom("users")
-			.selectAll()
-			.select((eb) => [
-				jsonObjectFrom(
-					eb
-						.selectFrom("members")
-						.selectAll("members")
-						.whereRef("members.userId", "=", "users.id")
-						.where("members.communityId", "=", community.id)
-				).as("member"),
-			])
-			.where("email", "ilike", `${query}%`)
-			.limit(10)
-	).execute();
-
+	const users: MemberSelectUser[] = await getSuggestedUsers({
+		communityId: community.id,
+		query: { email: query ?? "" },
+	}).execute();
 	return (
 		<UserSelectClient
 			community={community}

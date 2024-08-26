@@ -53,7 +53,6 @@ export const UserSelectAddUserForm = ({ email, community }: Props) => {
 						email,
 						firstName,
 						lastName,
-						community,
 						role: MemberRole.contributor,
 					});
 
