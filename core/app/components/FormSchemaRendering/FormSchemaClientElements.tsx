@@ -1,5 +1,3 @@
-"use client";
-
 import { useFormContext } from "react-hook-form";
 import { defaultComponent } from "schemas";
 
@@ -17,14 +15,8 @@ import { Input } from "ui/input";
 import { Textarea } from "ui/textarea";
 import { expect } from "utils";
 
-import type { Form } from "~/lib/server/form";
-import { FileUploadPreview } from "~/app/c/[communitySlug]/pubs/[pubId]/components/FileUpload";
 import { upload } from "./actions";
-
-interface ElementProps {
-	label: string;
-	name: string;
-}
+import { FileUploadPreview } from "./FileUpload";
 
 const TextInputElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 	const { control } = useFormContext();
@@ -192,58 +184,4 @@ const DateElement = ({ label, name }: ElementProps) => {
 	);
 };
 
-/**
- * Renders every CoreSchemaType EXCEPT MemberId!
- */
-export const FormElement = ({
-	pubId,
-	element,
-}: {
-	pubId?: PubsId;
-	element: Form["elements"][number];
-}) => {
-	const { component: componentProp, label: labelProp, slug, schemaName } = element;
-	const component = componentProp ?? (schemaName && defaultComponent(schemaName));
-	if (!slug) {
-		if (element.type === ElementType.structural) {
-			return (
-				<div
-					className="prose"
-					// TODO: sanitize content
-					dangerouslySetInnerHTML={{ __html: expect(element.content) }}
-				/>
-			);
-		}
-		return null;
-	}
-
-	if (!component) {
-		return null;
-	}
-
-	const elementProps = { label: labelProp ?? "", name: slug };
-	if (component === InputComponent.textInput) {
-		return <TextInputElement {...elementProps} />;
-	}
-	if (component === InputComponent.textArea) {
-		return <TextAreaElement {...elementProps} />;
-	}
-	if (component === InputComponent.checkbox) {
-		return <CheckboxElement {...elementProps} />;
-	}
-	if (component === InputComponent.fileUpload) {
-		return <FileUploadElement pubId={pubId} {...elementProps} />;
-	}
-	if (component === InputComponent.confidenceInterval) {
-		return <ConfidenceSliderElement {...elementProps} />;
-	}
-	if (component === InputComponent.datePicker) {
-		return <DateElement {...elementProps} />;
-	}
-
-	if (schemaName === CoreSchemaType.MemberId) {
-		return <>u shouldnt eb here</>;
-	}
-
-	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
-};
+export { TextElement, BooleanElement, FileUploadElement, Vector3Element, DateElement };

@@ -7,8 +7,7 @@ import { Separator } from "ui/separator";
 import { cn } from "utils";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
-import type { PubField } from "~/lib/types";
-import { FileUploadPreview } from "./FileUpload";
+import { FileUploadPreview } from "~/app/components/FormSchemaRendering/FileUpload";
 
 interface PubFieldWithValue extends PubField {
 	schema: PubFieldSchema | null;

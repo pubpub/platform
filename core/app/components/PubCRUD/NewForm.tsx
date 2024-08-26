@@ -24,7 +24,7 @@ import {
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ChevronDown } from "ui/icon";
 
-import { FormElement } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/FormElement";
+import { FormElement } from "~/app/components/FormSchemaRendering/FormElement";
 import { createElementFromPubType } from "./helpers";
 
 type PubForm = {
@@ -96,8 +96,7 @@ async function GenericDynamicPubForm({
 		return elements.map((element) => {
 			return (
 				<>
-					<FormElement key={element.elementId} element={element}
-					/>
+					<FormElement key={element.elementId} element={element} />
 				</>
 			);
 		});
