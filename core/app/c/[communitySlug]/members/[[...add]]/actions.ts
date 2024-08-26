@@ -19,7 +19,7 @@ import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import {
-	addMember as dbAddMember,
+	inviteMember as dbAddMember,
 	getMember as dbGetMember,
 	removeMember as dbRemoveMember,
 } from "~/lib/server/member";

@@ -43,7 +43,7 @@ export const getMember = (
 	);
 };
 
-export const addMember = (props: NewMembers) =>
+export const inviteMember = (props: NewMembers) =>
 	autoRevalidate(
 		db
 			.insertInto("members")
