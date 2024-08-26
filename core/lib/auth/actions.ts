@@ -2,6 +2,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { renderAsync } from "@react-email/render";
+import { PasswordReset } from "emails";
 import { z } from "zod";
 
 import type { Communities, Members, Users } from "db/public";
@@ -216,20 +218,19 @@ async function luciaSendForgotPasswordMail(props: {
 		userId: props.user.id,
 	});
 
-	const email = `Hello ${props.user.firstName} ${props.user.lastName ?? ""},
-
-		You have requested a password reset. Please click the link below to reset your password:
-
-		${magicLink}
-
-		If you did not request a password reset, please ignore this email.
-		`;
+	const email = await renderAsync(
+		PasswordReset({
+			firstName: props.user.firstName,
+			lastName: props.user.lastName ?? undefined,
+			resetPasswordLink: magicLink,
+		})
+	);
 
 	const send = await smtpclient.sendMail({
 		from: "PubPub <noreply@pubpub.com>",
 		to: props.user.email,
 		subject: "Reset your password",
-		text: email,
+		html: email,
 	});
 
 	return {

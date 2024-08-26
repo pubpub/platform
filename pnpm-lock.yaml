@@ -175,6 +175,9 @@ importers:
       '@pubpub/sdk':
         specifier: workspace:*
         version: link:../packages/sdk
+      '@react-email/render':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@18.2.0)(react@18.2.0)
       '@sentry/nextjs':
         specifier: ^7.106.1
         version: 7.109.0(next@14.2.4)(react@18.2.0)
@@ -235,6 +238,9 @@ importers:
       diacritics:
         specifier: ^1.3.0
         version: 1.3.0
+      emails:
+        specifier: workspace:*
+        version: link:../packages/emails
       eta:
         specifier: ^3.1.1
         version: 3.1.1
@@ -8597,6 +8603,20 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /@react-email/render@0.0.17(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-xBQ+/73+WsGuXKY7r1U73zMBNV28xdV0cp9cFjhNYipBReDHhV97IpA6v7Hl0dDtDzt+yS/72dY5vYXrF1v8NA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    dependencies:
+      html-to-text: 9.0.5
+      js-beautify: 1.15.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      react-promise-suspense: 0.3.4
+    dev: false
+
   /@react-email/row@0.0.7(react@18.2.0):
     resolution: {integrity: sha512-h7pwrLVGk5CIx7Ai/oPxBgCCAGY7BEpCUQ7FCzi4+eThcs5IdjSwDPefLEkwaFS8KZc56UNwTAH92kNq5B7blg==}
     engines: {node: '>=18.0.0'}
@@ -10937,7 +10957,7 @@ packages:
   /@types/accepts@1.3.7:
     resolution: {integrity: sha512-Pay9fq2lM2wXPWbteBsRAGiWH2hig4ZE2asK+mm7kUzlxRTfL961rj89I6zV/E3PcIkDqyuBEcMxFT7rccugeQ==}
     dependencies:
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
     dev: false
 
   /@types/aria-query@5.0.4:
@@ -10981,7 +11001,7 @@ packages:
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
     dev: false
 
   /@types/bunyan@1.8.9:
@@ -10999,7 +11019,7 @@ packages:
   /@types/connect@3.4.38:
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
     dependencies:
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
     dev: false
 
   /@types/content-disposition@0.5.8:
@@ -11016,7 +11036,7 @@ packages:
       '@types/connect': 3.4.38
       '@types/express': 4.17.21
       '@types/keygrip': 1.0.6
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
     dev: false
 
   /@types/cors@2.8.17:
@@ -11243,7 +11263,7 @@ packages:
   /@types/express-serve-static-core@4.17.43:
     resolution: {integrity: sha512-oaYtiBirUOPQGSWNGPWnzyAFJ0BP3cwvN4oWZQY+zUBwpVIGsKUkpBpSztp74drYcjavs7SKFZ4DX1V2QeN8rg==}
     dependencies:
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
       '@types/qs': 6.9.11
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -11295,7 +11315,7 @@ packages:
   /@types/hapi__shot@4.1.6:
     resolution: {integrity: sha512-h33NBjx2WyOs/9JgcFeFhkxnioYWQAZxOHdmqDuoJ1Qjxpcs+JGvSjEEoDeWfcrF+1n47kKgqph5IpfmPOnzbg==}
     dependencies:
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
     dev: false
 
   /@types/har-format@1.2.13:
@@ -11605,7 +11625,7 @@ packages:
     resolution: {integrity: sha512-x2EM6TJOybec7c52BX0ZspPodMsQUd5L6PRwOunVyVUhXiBSKf3AezDL8Dgvgt5o0UfKNfuA0eMLr2wLT4AiBA==}
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
     dev: false
 
   /@types/serve-static@1.15.5:
@@ -11613,7 +11633,7 @@ packages:
     dependencies:
       '@types/http-errors': 2.0.4
       '@types/mime': 3.0.4
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
     dev: false
 
   /@types/shimmer@1.0.5:
@@ -14858,7 +14878,6 @@ packages:
 
   /fast-deep-equal@2.0.1:
     resolution: {integrity: sha512-bCK/2Z4zLidyB4ReuIsvALH6w31YfAQDmXMqMx6FyfHqvBxtjC0eRumeSu4Bs3XtXwpyIywtSTrVT99BxY1f9w==}
-    dev: true
 
   /fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -19643,7 +19662,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 20.3.1
+      '@types/node': 20.14.11
       long: 5.2.3
     dev: false
 
@@ -19880,6 +19899,12 @@ packages:
       react-use: 17.4.0(react-dom@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - react-dom
+    dev: false
+
+  /react-promise-suspense@0.3.4:
+    resolution: {integrity: sha512-I42jl7L3Ze6kZaq+7zXWSunBa3b1on5yfvUW6Eo/3fFOj6dZ5Bqmcd264nJbTK/gn1HjjILAjSwnZbV4RpSaNQ==}
+    dependencies:
+      fast-deep-equal: 2.0.1
     dev: false
 
   /react-query@3.39.3(react-dom@18.2.0)(react@18.2.0):
