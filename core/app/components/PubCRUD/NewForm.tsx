@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -24,15 +24,6 @@ import {
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ChevronDown } from "ui/icon";
 
-import { FormElement } from "~/app/components/FormSchemaRendering/FormElement";
-import { createElementFromPubType } from "./helpers";
-
-type PubForm = {
-	pubType: PubTypes;
-	stage: Pick<Stages, "id" | "name" | "order">;
-	values: { [key: PubFields["slug"]]: PubValues["value"] | null };
-};
-
 const PubFormSchema = z.object({
 	pubType: z.string(),
 	stage: z.object({
@@ -52,6 +43,7 @@ async function GenericDynamicPubForm({
 	searchParams,
 	values,
 	pubTypeId: pubType,
+	formElements,
 }: {
 	communitySlug: Communities["slug"];
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
@@ -64,6 +56,7 @@ async function GenericDynamicPubForm({
 	searchParams: Record<string, unknown>;
 	values?: GetPubResponseBody["values"];
 	pubTypeId: PubTypes["id"];
+	formElements: {};
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
@@ -72,7 +65,6 @@ async function GenericDynamicPubForm({
 		(typeof availablePubTypes)[number] | null
 	>(pt ?? null);
 	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
-	// const defaultData ;
 
 	const form = useForm<z.infer<typeof PubFormSchema>>({
 		reValidateMode: "onChange",
@@ -82,29 +74,6 @@ async function GenericDynamicPubForm({
 			values: values ?? {},
 		},
 	});
-
-	const PubFormElement = () => {
-		if (!selectedPubType) {
-			return null;
-		}
-		const elements = useMemo(
-			() => createElementFromPubType(selectedPubType),
-			[selectedPubType]
-		);
-		return elements.map((element) => {
-			return (
-				<>
-					<FormElement
-						key={element.elementId}
-						element={element}
-						searchParams={searchParams}
-						communitySlug={communitySlug}
-						values={values}
-					/>
-				</>
-			);
-		});
-	};
 
 	return (
 		<div>
@@ -190,7 +159,7 @@ async function GenericDynamicPubForm({
 						)}
 					/>
 				)}
-				{selectedPubType && <PubFormElement />}
+				{selectedPubType && formElements[selectedPubType.id]}
 			</Form>
 		</div>
 	);
