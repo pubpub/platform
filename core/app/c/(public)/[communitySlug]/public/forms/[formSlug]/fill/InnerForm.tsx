@@ -76,7 +76,7 @@ export const InnerForm = async ({
 				return (
 					<FormElement
 						key={e.elementId}
-						pubId={pubId}
+						pubId={pub.id as PubsId}
 						element={e}
 						searchParams={searchParams}
 						communitySlug={communitySlug}
