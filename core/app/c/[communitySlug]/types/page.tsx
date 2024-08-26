@@ -17,7 +17,7 @@ export default async function Page({ params: { communitySlug } }) {
 	const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
 
 	const [types, { fields }] = await Promise.all([
-		getAllPubTypesForCommunity().execute(),
+		getAllPubTypesForCommunity(communitySlug).execute(),
 		getPubFields().executeTakeFirstOrThrow(),
 	]);
 
