@@ -73,7 +73,16 @@ export const InnerForm = async ({
 						/>
 					);
 				}
-				return <FormElement pubId={pub.id as PubsId} key={e.elementId} element={e} />;
+				return (
+					<FormElement
+						key={e.elementId}
+						pubId={pubId}
+						element={e}
+						searchParams={searchParams}
+						communitySlug={communitySlug}
+						values={values}
+					/>
+				);
 			})}
 		</>
 	);
