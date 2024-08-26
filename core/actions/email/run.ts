@@ -1,27 +1,19 @@
 "use server";
 
 import { jsonObjectFrom } from "kysely/helpers/postgres";
-import rehypeFormat from "rehype-format";
-import rehypeRemark from "rehype-remark";
-import rehypeStringify from "rehype-stringify";
-import remarkDirective from "remark-directive";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import remarkStringify from "remark-stringify";
-import { unified } from "unified";
 
 import type { MembersId } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
-import type { EmailDirectivePluginPub } from "./plugin";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { smtpclient } from "~/lib/server/mailgun";
+import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
 import { defineRun } from "../types";
-import { emailDirectives } from "./plugin";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
@@ -29,7 +21,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		const communitySlug = getCommunitySlug();
 
 		const { parentId } = pub;
-		let parentPub: EmailDirectivePluginPub | undefined;
+		let parentPub: RenderWithPubPub | undefined;
 
 		// TODO: This is a pretty inefficient way of loading the parent pub, as it
 		// will redundantly load the child pub. Ideally we would lazily fetch and
@@ -62,32 +54,22 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					)
 			);
 
-		const emailDirectivesContext = { communitySlug, recipient, pub, parentPub };
+		const renderMarkdownWithPubContext = {
+			communitySlug,
+			recipient,
+			pub,
+			parentPub,
+		};
 
-		const html = (
-			await unified()
-				.use(remarkParse)
-				.use(remarkDirective)
-				.use(emailDirectives, emailDirectivesContext)
-				.use(remarkRehype)
-				.use(rehypeFormat)
-				.use(rehypeStringify)
-				.process(args?.body ?? config.body)
-		).toString();
-
-		const subject = (
-			await unified()
-				.use(remarkParse)
-				.use(remarkDirective)
-				.use(emailDirectives, emailDirectivesContext)
-				.use(remarkRehype)
-				.use(rehypeFormat)
-				.use(rehypeRemark)
-				.use(remarkStringify)
-				.process(args?.subject ?? config.subject)
-		)
-			.toString()
-			.trim();
+		const html = await renderMarkdownWithPub(
+			args?.body ?? config.body,
+			renderMarkdownWithPubContext
+		);
+		const subject = await renderMarkdownWithPub(
+			args?.subject ?? config.subject,
+			renderMarkdownWithPubContext,
+			true
+		);
 
 		await smtpclient.sendMail({
 			from: "hello@pubpub.org",

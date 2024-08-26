@@ -1,5 +1,5 @@
 import type { GetPubResponseBody } from "contracts";
-import type { MembersId, PubsId, UsersId } from "db/public";
+import type { MembersId, PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
@@ -40,14 +40,14 @@ export const UserIdSelect = async ({
 	);
 };
 
-export const InnerForm = ({
-	pubId,
+export const InnerForm = async ({
+	pub,
 	elements,
 	searchParams,
 	values,
 	communitySlug,
 }: {
-	pubId: PubsId;
+	pub: GetPubResponseBody;
 	elements: PubPubForm["elements"];
 	searchParams: Record<string, unknown>;
 	values: GetPubResponseBody["values"];
@@ -70,7 +70,7 @@ export const InnerForm = ({
 						/>
 					);
 				}
-				return <FormElement pubId={pubId} key={e.elementId} element={e} />;
+				return <FormElement pubId={pub.id as PubsId} key={e.elementId} element={e} />;
 			})}
 		</>
 	);

@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 
 import { redirect, RedirectType } from "next/navigation";
-import Markdown from "react-markdown";
 
-import type { PubsId } from "db/public";
-import { AuthTokenType } from "db/public";
+import type { MembersId, PubsId, UsersId } from "db/public";
+import { StructuralFormElement } from "db/public";
+import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
+import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -14,6 +15,7 @@ import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
+import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
@@ -27,12 +29,24 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 	return (
 		<div className="flex w-full flex-col gap-2 pt-32 text-center">
 			{element ? (
-				<Markdown className="prose self-center text-center">{element.content}</Markdown>
+				<div
+					className="prose self-center text-center"
+					// Sanitize content
+					dangerouslySetInnerHTML={{ __html: element.content ?? " " }}
+				/>
 			) : (
 				<h2 className="text-lg font-semibold">Form Successfully Submitted</h2>
 			)}
 		</div>
 	);
+};
+
+const renderElementMarkdownContent = async (
+	element: Form["elements"][number],
+	renderWithPubContext: RenderWithPubContext
+) => {
+	const content = expect(element.content, "Expected element to have content");
+	return renderMarkdownWithPub(content, renderWithPubContext);
 };
 
 export default async function FormPage({
@@ -43,6 +57,7 @@ export default async function FormPage({
 	searchParams: { email?: string; pubId?: PubsId };
 }) {
 	const community = await findCommunityBySlug(params.communitySlug);
+
 	const form = await getForm({
 		slug: params.formSlug,
 		communityId: community?.id,
@@ -76,8 +91,40 @@ export default async function FormPage({
 		return null;
 	}
 
+	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
+	const memberWithUser = {
+		...member,
+		id: member.id as MembersId,
+		user: {
+			...user,
+			id: user.id as UsersId,
+		},
+	};
+	const renderWithPubContext = {
+		recipient: memberWithUser,
+		communitySlug: params.communitySlug,
+		pub,
+		parentPub,
+	};
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
+
+	if (submitId && submitElement) {
+		submitElement.content = await renderElementMarkdownContent(
+			submitElement,
+			renderWithPubContext
+		);
+	} else {
+		const elementsWithMarkdownContent = form.elements.filter(
+			(element) => element.element === StructuralFormElement.p
+		);
+		await Promise.all(
+			elementsWithMarkdownContent.map(async (element) => {
+				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
+			})
+		);
+	}
 
 	return (
 		<div className="isolate min-h-screen">
@@ -98,7 +145,7 @@ export default async function FormPage({
 							className="col-span-2 col-start-2"
 						>
 							<InnerForm
-								pubId={pub.id as PubsId}
+								pub={pub}
 								elements={form.elements}
 								// The following params are for rendering UserSelectServer
 								communitySlug={params.communitySlug}

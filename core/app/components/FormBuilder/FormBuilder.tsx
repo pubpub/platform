@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useReducer, useRef } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -23,10 +23,12 @@ import {
 import { CircleCheck } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import type { FormBuilderSchema, FormElementData, PanelEvent, PanelState } from "./types";
 import type { Form as PubForm } from "~/lib/server/form";
+import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
@@ -198,159 +200,165 @@ export function FormBuilder({ pubForm, id }: Props) {
 		}
 	}, [elements, remove, panelState.selectedElementIndex]);
 
+	const tokens = { content: renderWithPubTokens };
+
 	return (
-		<FormBuilderProvider
-			removeIfUnconfigured={removeIfUnconfigured}
-			addElement={addElement}
-			removeElement={removeElement}
-			restoreElement={restoreElement}
-			selectedElement={
-				panelState.selectedElementIndex !== null
-					? elements[panelState.selectedElementIndex]
-					: undefined
-			}
-			elementsCount={elements.filter((e) => !isButtonElement(e)).length}
-			openConfigPanel={(index: number) =>
-				dispatch({ eventName: "edit", selectedElementIndex: index })
-			}
-			openButtonConfigPanel={(id) => dispatch({ eventName: "editButton", buttonId: id })}
-			update={update}
-			dispatch={dispatch}
-			slug={pubForm.slug}
-		>
-			<Tabs defaultValue="builder" className="pr-[380px]">
-				<div className="px-6">
-					<TabsList className="mb-2 mt-4">
-						<TabsTrigger value="builder">Builder</TabsTrigger>
-						<TabsTrigger value="preview">Preview</TabsTrigger>
-					</TabsList>
-					<TabsContent value="builder">
-						<Form {...form}>
-							<form
-								id={id}
-								onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
-									logger.error({
-										msg: "unable to submit form",
-										errors,
-										event,
-										elements,
-									})
-								)}
-							>
-								<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
-									<DndContext
-										modifiers={[
-											restrictToVerticalAxis,
-											restrictToParentElement,
-										]}
-										onDragEnd={(event) => {
-											const { active, over } = event;
-											if (over && active.id !== over?.id) {
-												const activeIndex =
-													active.data.current?.sortable?.index;
-												const overIndex =
-													over.data.current?.sortable?.index;
-												if (
-													activeIndex !== undefined &&
-													overIndex !== undefined
-												) {
-													move(activeIndex, overIndex);
+		<TokenProvider tokens={tokens}>
+			<FormBuilderProvider
+				removeIfUnconfigured={removeIfUnconfigured}
+				addElement={addElement}
+				removeElement={removeElement}
+				restoreElement={restoreElement}
+				selectedElement={
+					panelState.selectedElementIndex !== null
+						? elements[panelState.selectedElementIndex]
+						: undefined
+				}
+				elementsCount={elements.filter((e) => !isButtonElement(e)).length}
+				openConfigPanel={(index: number) =>
+					dispatch({ eventName: "edit", selectedElementIndex: index })
+				}
+				openButtonConfigPanel={(id) => dispatch({ eventName: "editButton", buttonId: id })}
+				update={update}
+				dispatch={dispatch}
+				slug={pubForm.slug}
+			>
+				<Tabs defaultValue="builder" className="pr-[380px]">
+					<div className="px-6">
+						<TabsList className="mb-2 mt-4">
+							<TabsTrigger value="builder">Builder</TabsTrigger>
+							<TabsTrigger value="preview">Preview</TabsTrigger>
+						</TabsList>
+						<TabsContent value="builder">
+							<Form {...form}>
+								<form
+									id={id}
+									onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
+										logger.error({
+											msg: "unable to submit form",
+											errors,
+											event,
+											elements,
+										})
+									)}
+								>
+									<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
+										<DndContext
+											modifiers={[
+												restrictToVerticalAxis,
+												restrictToParentElement,
+											]}
+											onDragEnd={(event) => {
+												const { active, over } = event;
+												if (over && active.id !== over?.id) {
+													const activeIndex =
+														active.data.current?.sortable?.index;
+													const overIndex =
+														over.data.current?.sortable?.index;
+													if (
+														activeIndex !== undefined &&
+														overIndex !== undefined
+													) {
+														move(activeIndex, overIndex);
+													}
 												}
-											}
-										}}
-									>
-										<SortableContext
-											items={elements}
-											strategy={verticalListSortingStrategy}
+											}}
 										>
-											{elements
-												.filter((e) => !isButtonElement(e))
-												.map((element, index) => (
-													<FormElement
-														key={element.id}
-														element={element}
-														index={index}
-														isEditing={
-															panelState.selectedElementIndex ===
-															index
-														}
-														isDisabled={
-															panelState.selectedElementIndex !==
-																null &&
-															panelState.selectedElementIndex !==
+											<SortableContext
+												items={elements}
+												strategy={verticalListSortingStrategy}
+											>
+												{elements
+													.filter((e) => !isButtonElement(e))
+													.map((element, index) => (
+														<FormElement
+															key={element.id}
+															element={element}
+															index={index}
+															isEditing={
+																panelState.selectedElementIndex ===
 																index
-														}
-													></FormElement>
-												))}
-										</SortableContext>
-									</DndContext>
-								</div>
-								<PanelWrapper sidebar={sidebarRef.current}>
-									<FormField
-										control={form.control}
-										name="elements"
-										render={() => (
-											<FormItem className="flex-1">
-												<FormLabel className="mb-4 text-sm uppercase text-slate-500">
-													{elementPanelTitles[panelState.state]}
-												</FormLabel>
-												<hr />
-												<FormControl>
-													<ElementPanel state={panelState} />
-												</FormControl>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={form.control}
-										name="access"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-sm uppercase text-slate-500">
-													Access
-												</FormLabel>
-												<hr />
-												<Select
-													onValueChange={field.onChange}
-													defaultValue={field.value}
-												>
+															}
+															isDisabled={
+																panelState.selectedElementIndex !==
+																	null &&
+																panelState.selectedElementIndex !==
+																	index
+															}
+														></FormElement>
+													))}
+											</SortableContext>
+										</DndContext>
+									</div>
+									<PanelWrapper sidebar={sidebarRef.current}>
+										<FormField
+											control={form.control}
+											name="elements"
+											render={() => (
+												<FormItem className="flex-1">
+													<FormLabel className="mb-4 text-sm uppercase text-slate-500">
+														{elementPanelTitles[panelState.state]}
+													</FormLabel>
+													<hr />
 													<FormControl>
-														<SelectTrigger>
-															<SelectValue placeholder="Select a type" />
-														</SelectTrigger>
+														<ElementPanel state={panelState} />
 													</FormControl>
-													<SelectContent>
-														{Object.values(FormAccessType).map((t) => (
-															<SelectItem
-																key={t}
-																value={t.toString()}
-															>
-																<div className="first-letter:capitalize">
-																	{t}
-																</div>
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormDescription>
-													{field.value === FormAccessType.private &&
-														"Only internal editors can submit"}{" "}
-												</FormDescription>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</PanelWrapper>
-							</form>
-						</Form>
-					</TabsContent>
-					<TabsContent value="preview">Preview your form here</TabsContent>
-				</div>
-			</Tabs>
-			<div
-				ref={sidebarRef}
-				className="fixed right-0 top-[72px] z-30 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
-			></div>
-		</FormBuilderProvider>
+												</FormItem>
+											)}
+										/>
+										<FormField
+											control={form.control}
+											name="access"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel className="text-sm uppercase text-slate-500">
+														Access
+													</FormLabel>
+													<hr />
+													<Select
+														onValueChange={field.onChange}
+														defaultValue={field.value}
+													>
+														<FormControl>
+															<SelectTrigger>
+																<SelectValue placeholder="Select a type" />
+															</SelectTrigger>
+														</FormControl>
+														<SelectContent>
+															{Object.values(FormAccessType).map(
+																(t) => (
+																	<SelectItem
+																		key={t}
+																		value={t.toString()}
+																	>
+																		<div className="first-letter:capitalize">
+																			{t}
+																		</div>
+																	</SelectItem>
+																)
+															)}
+														</SelectContent>
+													</Select>
+													<FormDescription>
+														{field.value === FormAccessType.private &&
+															"Only internal editors can submit"}{" "}
+													</FormDescription>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+									</PanelWrapper>
+								</form>
+							</Form>
+						</TabsContent>
+						<TabsContent value="preview">Preview your form here</TabsContent>
+					</div>
+				</Tabs>
+				<div
+					ref={sidebarRef}
+					className="fixed right-0 top-[72px] z-30 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
+				></div>
+			</FormBuilderProvider>
+		</TokenProvider>
 	);
 }

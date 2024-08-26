@@ -12,6 +12,7 @@ import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
 import { DatePicker } from "ui/date-picker";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
+import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
 import { FileUploadPreview } from "~/app/c/[communitySlug]/pubs/[pubId]/components/FileUpload";
@@ -168,7 +169,13 @@ export const FormElement = ({
 	const { schemaName, label: labelProp, slug } = element;
 	if (!slug) {
 		if (element.type === ElementType.structural) {
-			return <Markdown>{element.content}</Markdown>;
+			return (
+				<div
+					className="prose"
+					// TODO: sanitize content
+					dangerouslySetInnerHTML={{ __html: expect(element.content) }}
+				/>
+			);
 		}
 		return null;
 	}
