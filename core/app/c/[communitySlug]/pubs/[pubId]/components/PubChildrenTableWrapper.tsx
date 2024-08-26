@@ -1,3 +1,5 @@
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { StagePub } from "~/lib/db/queries";
 import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
@@ -46,7 +48,18 @@ async function PubChildrenTableWrapper({
 						}
 					/>
 				) : (
-					<div>No actions exist on the pub</div>
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger>
+								<span className="border-b-2 border-dotted border-muted-foreground text-muted-foreground">
+									N/A
+								</span>
+							</TooltipTrigger>
+							<TooltipContent>
+								The pub's current stage has no actions configured.
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 				),
 		};
 	});

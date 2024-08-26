@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Badge } from "ui/badge";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
@@ -50,7 +51,7 @@ export const getPubChildrenTableColumns = () =>
 				const pathname = usePathname();
 				const path = pathname.split("/").slice(0, 4).join("/");
 				return (
-					<Link className="underline" href={`${path}/${row.original.id}`}>
+					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>
 						{row.original.title}
 					</Link>
 				);
@@ -59,6 +60,14 @@ export const getPubChildrenTableColumns = () =>
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",
+			cell: ({ getValue }) => {
+				const value = getValue<string>();
+				return value ? (
+					<Badge variant="outline">{value}</Badge>
+				) : (
+					<span className="text-muted-foreground">None</span>
+				);
+			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Assignee" />,
