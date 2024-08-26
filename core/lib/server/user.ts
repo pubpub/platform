@@ -1,16 +1,34 @@
 import type { User } from "@prisma/client";
+import type { SelectExpression } from "kysely";
 
 import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { MembersId, UsersId } from "db/public";
+import type { Database } from "db/Database";
+import type { CommunitiesId, NewUsers, UsersId } from "db/public";
 
-import type { XOR } from "../types";
+import type { OR, XOR } from "../types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { createPasswordHash } from "../auth/password";
 import { slugifyString } from "../string";
+import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
+
+export const SAFE_USER_SELECT = [
+	"users.id",
+	"users.email",
+	"users.firstName",
+	"users.lastName",
+	"users.slug",
+	"users.supabaseId",
+	"users.createdAt",
+	"users.updatedAt",
+	"users.isSuperAdmin",
+	"users.avatar",
+	"users.orcid",
+] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>;
 
 export async function findOrCreateUser(userId: string): Promise<User>;
 export async function findOrCreateUser(
@@ -58,18 +76,9 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 	// do not use autocache here until we have a good way to globally invalidate users
 	return db
 		.selectFrom("users")
+		.select(["users.id"])
 		.select((eb) => [
-			"users.id",
-			"users.email",
-			"users.firstName",
-			"users.lastName",
-			"users.slug",
-			"users.supabaseId",
-			"users.createdAt",
-			"users.updatedAt",
-			"users.isSuperAdmin",
-			"users.avatar",
-			"users.orcid",
+			...SAFE_USER_SELECT,
 			jsonArrayFrom(
 				eb
 					.selectFrom("members")
@@ -104,29 +113,63 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
 });
 
-export const getMember = cache((memberId: MembersId) => {
-	return db
-		.selectFrom("members")
-		.select((eb) => [
-			"members.id",
-			"members.userId",
-			"members.createdAt",
-			"members.updatedAt",
-			"members.role",
-			"members.communityId",
-			jsonObjectFrom(
-				eb
-					.selectFrom("users")
-					.whereRef("users.id", "=", "members.userId")
-					.selectAll("users")
+export const getSuggestedUsers = ({
+	communityId,
+	query,
+	limit = 10,
+}: {
+	communityId?: CommunitiesId;
+	query:
+		| {
+				email: string;
+				firstName?: string;
+				lastName?: string;
+		  }
+		| {
+				firstName: string;
+				lastName?: string;
+				email?: string;
+		  }
+		| {
+				lastName: string;
+				firstName?: string;
+				email?: string;
+		  };
+	limit?: number;
+}) =>
+	autoCache(
+		db
+			.selectFrom("users")
+			.select([...SAFE_USER_SELECT])
+			.$if(Boolean(communityId), (eb) =>
+				eb.select((eb) => [
+					jsonObjectFrom(
+						eb
+							.selectFrom("members")
+							.selectAll("members")
+							.whereRef("members.userId", "=", "users.id")
+							.where("members.communityId", "=", communityId!)
+					).as("member"),
+				])
 			)
-				.$notNull()
-				.as("user"),
-		])
-		.where("members.id", "=", memberId);
-});
+			.where((eb) =>
+				eb.or([
+					...(query.email ? [eb("email", "ilike", `${query.email}%`)] : []),
+					...(query.firstName
+						? [eb("firstName", "ilike", `${query.firstName}%`)]
+						: ([] as const)),
+					...(query.lastName ? [eb("lastName", "ilike", `${query.lastName}%`)] : []),
+				])
+			)
+			.limit(limit)
+	);
 
 export const setUserPassword = cache(async (props: { userId: UsersId; password: string }) => {
 	const passwordHash = await createPasswordHash(props.password);
 	await db.updateTable("users").set({ passwordHash }).where("id", "=", props.userId).execute();
 });
+
+export const addUser = (props: NewUsers) =>
+	autoRevalidate(db.insertInto("users").values(props).returningAll(), {
+		additionalRevalidateTags: ["all-users"],
+	});

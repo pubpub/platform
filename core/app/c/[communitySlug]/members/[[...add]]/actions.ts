@@ -7,7 +7,8 @@ import { cache } from "react";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { captureException } from "@sentry/nextjs";
 
-import { MemberRole, Members } from "db/public";
+import type { Members, MembersId, UsersId } from "db/public";
+import { MemberRole } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import type { SuggestedUser } from "~/lib/server/members";
@@ -15,12 +16,18 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
 import { env } from "~/lib/env/env.mjs";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import {
+	addMember as dbAddMember,
+	getMember as dbGetMember,
+	removeMember as dbRemoveMember,
+} from "~/lib/server/member";
+import { addUser, getUser } from "~/lib/server/user";
 import { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
 import { getServerSupabase } from "~/lib/supabaseServer";
-import prisma from "~/prisma/db";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const revalidateMemberPathsAndTags = defineServerAction(
@@ -30,8 +37,20 @@ export const revalidateMemberPathsAndTags = defineServerAction(
 	}
 );
 
-const isCommunityAdmin = cache(async (community: Community) => {
-	const { user } = await getLoginData();
+const isCommunityAdmin = cache(async () => {
+	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+
+	if (!user) {
+		return {
+			error: "You are not logged in",
+		};
+	}
+
+	if (!community) {
+		return {
+			error: "Community not found",
+		};
+	}
 
 	if (!isAdminOfCommunity(user, community)) {
 		return {
@@ -39,7 +58,7 @@ const isCommunityAdmin = cache(async (community: Community) => {
 		};
 	}
 
-	return { user, error: null };
+	return { user, error: null, community };
 });
 
 /**
@@ -211,14 +230,12 @@ const addSupabaseUser = async ({
 export const addMember = defineServerAction(async function addMember({
 	user,
 	role,
-	community,
 }: {
 	user: SuggestedUser;
 	role?: MemberRole;
-	community: Community;
 }) {
-	const { error: adminError } = await isCommunityAdmin(community);
-	if (adminError) {
+	const result = await isCommunityAdmin();
+	if (result.error !== null) {
 		return {
 			title: "Failed to add member",
 			error: "You do not have permission to invite members to this community",
@@ -226,12 +243,10 @@ export const addMember = defineServerAction(async function addMember({
 	}
 
 	try {
-		const existingMember = await prisma.member.findFirst({
-			where: {
-				userId: user.id,
-				communityId: community.id,
-			},
-		});
+		const existingMember = await dbGetMember({
+			userId: user.id as UsersId,
+			communityId: result.community.id,
+		}).executeTakeFirst();
 
 		if (existingMember) {
 			return {
@@ -240,48 +255,46 @@ export const addMember = defineServerAction(async function addMember({
 			};
 		}
 
-		const member = (await prisma.member.create({
-			data: {
-				communityId: community.id,
-				userId: user.id,
-				role,
-			},
-		})) as Members;
-
-		revalidateMemberPathsAndTags(community);
-
-		if (user.supabaseId) {
-			return { member };
-		}
-
-		// the user exists in our DB, but not in supabase, or is not linked to a supabase user
-		// most likely they were invited as an evaluator before by the evaluation integration
-		const { error: supabaseInviteError } = await addSupabaseUser({
-			email: user.email,
-			firstName: user.firstName,
-			lastName: user.lastName,
-			community,
+		const member = await dbAddMember({
+			userId: user.id as UsersId,
+			communityId: result.community.id,
 			role,
-			force: true,
-		});
+		}).executeTakeFirst();
 
-		if (supabaseInviteError) {
-			return {
-				title: "Failed to add member",
-				error: "We encounted a problem with our authentication provider.",
-			};
-		}
-
-		await prisma.user.update({
-			where: {
-				id: user.id,
-			},
-			data: {
-				supabaseId: user.supabaseId,
-			},
-		});
+		revalidateMemberPathsAndTags(result.community);
 
 		return { member };
+		// if (user.supabaseId) {
+		// 	return { member };
+		// }
+
+		// // No longer invite user to supabase
+		// const { error: supabaseInviteError } = await addSupabaseUser({
+		// 	email: user.email,
+		// 	firstName: user.firstName,
+		// 	lastName: user.lastName,
+		// 	community,
+		// 	role,
+		// 	force: true,
+		// });
+
+		// if (supabaseInviteError) {
+		// 	return {
+		// 		title: "Failed to add member",
+		// 		error: "We encounted a problem with our authentication provider.",
+		// 	};
+		// }
+
+		// await prisma.user.update({
+		// 	where: {
+		// 		id: user.id,
+		// 	},
+		// 	data: {
+		// 		supabaseId: user.supabaseId,
+		// 	},
+		// });
+
+		// return { member };
 	} catch (error) {
 		return {
 			title: "Failed to add member",
@@ -298,13 +311,11 @@ export const addMember = defineServerAction(async function addMember({
  * supabase
  */
 export const createUserWithMembership = defineServerAction(async function createUserWithMembership({
-	community,
 	...data
 }: {
 	firstName: string;
 	lastName?: string | null;
 	email: string;
-	community: Community;
 	role?: MemberRole;
 	isSuperAdmin?: boolean;
 }) {
@@ -322,7 +333,7 @@ export const createUserWithMembership = defineServerAction(async function create
 	const { firstName, lastName, email, role, isSuperAdmin } = parsed.data;
 
 	try {
-		const { error: adminError, user } = await isCommunityAdmin(community);
+		const { error: adminError, user, community } = await isCommunityAdmin();
 		if (!user?.isSuperAdmin && isSuperAdmin) {
 			return {
 				title: "Failed to add member",
@@ -330,59 +341,57 @@ export const createUserWithMembership = defineServerAction(async function create
 			};
 		}
 
-		if (adminError) {
+		if (adminError !== null) {
 			return {
 				title: "Failed to add member",
 				error: "You do not have permission to invite members to this community",
 			};
 		}
 
-		const newUser = await prisma.user.create({
-			data: {
-				email,
-				firstName,
-				lastName,
-				slug: `${slugifyString(firstName)}${
-					lastName ? `-${slugifyString(lastName)}` : ""
-				}-${generateHash(4, "0123456789")}`,
-				isSuperAdmin: isSuperAdmin === true,
-				memberships: {
-					create: {
-						communityId: community.id,
-						role,
-					},
-				},
-			},
-		});
-
-		const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
+		const newUser = await addUser({
 			email,
 			firstName,
 			lastName,
-			community,
-			role,
+			slug: `${slugifyString(firstName)}${
+				lastName ? `-${slugifyString(lastName)}` : ""
+			}-${generateHash(4, "0123456789")}`,
 			isSuperAdmin: isSuperAdmin === true,
-		});
+		}).executeTakeFirstOrThrow();
 
-		if (supabaseError !== null) {
-			return {
-				title: "Failed to add member",
-				error: "We encounted a problem with our authentication provider",
-			};
-		}
+		const member = await dbAddMember({
+			userId: newUser.id,
+			communityId: community.id,
+			role,
+		}).executeTakeFirst();
 
-		await prisma.user.update({
-			where: {
-				id: newUser.id,
-			},
-			data: {
-				supabaseId: supabaseUser.id,
-			},
-		});
+		// const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
+		// 	email,
+		// 	firstName,
+		// 	lastName,
+		// 	community,
+		// 	role,
+		// 	isSuperAdmin: isSuperAdmin === true,
+		// });
+
+		// if (supabaseError !== null) {
+		// 	return {
+		// 		title: "Failed to add member",
+		// 		error: "We encounted a problem with our authentication provider",
+		// 	};
+		// }
+
+		// await prisma.user.update({
+		// 	where: {
+		// 		id: newUser.id,
+		// 	},
+		// 	data: {
+		// 		supabaseId: supabaseUser.id,
+		// 	},
+		// });
 
 		revalidateMemberPathsAndTags(community);
 
-		return { user };
+		return { ...user, memberships: [member] };
 	} catch (error) {
 		return {
 			title: "Failed to add member",
@@ -394,15 +403,13 @@ export const createUserWithMembership = defineServerAction(async function create
 
 export const removeMember = defineServerAction(async function removeMember({
 	member,
-	community,
 }: {
 	member: TableMember;
-	community: Community;
 }) {
 	try {
-		const { user, error: adminError } = await isCommunityAdmin(community);
+		const { user, error: adminError, community } = await isCommunityAdmin();
 
-		if (adminError) {
+		if (adminError !== null) {
 			return {
 				title: "Failed to remove member",
 				error: adminError,
@@ -416,13 +423,9 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		const deleted = await prisma.member.delete({
-			where: {
-				id: member.id,
-			},
-		});
+		const removedMember = await dbRemoveMember(member.id as MembersId).executeTakeFirst();
 
-		if (!deleted) {
+		if (!removedMember) {
 			return {
 				title: "Failed to remove member",
 				error: "An unexpected error occurred",
