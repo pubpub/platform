@@ -19,7 +19,7 @@ import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
-import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
+import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 
 export default async function Page({
 	params,
