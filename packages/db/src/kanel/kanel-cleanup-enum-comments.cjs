@@ -17,9 +17,7 @@ function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, instantiatedConfi
 					return declaration;
 				}
 
-				console.log("AAAA", comment);
 				const cleanedComment = comment.flatMap((line) => line.split(/\n/));
-				console.log("BBBB", cleanedComment);
 
 				return {
 					...declaration,

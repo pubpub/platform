@@ -149,12 +149,6 @@ async function supabaseLogout(token: string) {
 		};
 	}
 
-	// cookies().delete(TOKEN_NAME);
-	// cookies().delete(REFRESH_NAME);
-	// cookies().delete("sb-access-token");
-	// cookies().delete("sb-refresh-token");
-	// redirect("/login");
-
 	// handle supabase logout on the client,
 	// bc it won't listen otherwise
 
