@@ -63,7 +63,7 @@ export const FormElement = ({
 	element: Form["elements"][number];
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
-	values?: GetPubResponseBody["values"];
+	values: GetPubResponseBody["values"];
 }) => {
 	const { schemaName, label: labelProp, slug } = element;
 	if (!slug) {
@@ -98,7 +98,7 @@ export const FormElement = ({
 	if (schemaName === CoreSchemaType.DateTime) {
 		return <DateElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.MemberId && values) {
+	if (schemaName === CoreSchemaType.MemberId) {
 		const userId = values[element.slug!] as MembersId | undefined;
 		return (
 			<UserIdSelect
