@@ -3,6 +3,7 @@ import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
 import { db } from "~/kysely/database";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { addMemberToForm, createFormInviteLink } from "../../form";
 
 export type RenderWithPubRel = "parent" | "self";
@@ -84,24 +85,32 @@ export const renderMemberFields = async ({
 	memberId: MembersId;
 }) => {
 	// Make sure this field is a member type
-	await db
-		.selectFrom("pub_fields")
-		.innerJoin("communities", "pub_fields.communityId", "communities.id")
-		.where("pub_fields.slug", "=", fieldSlug)
-		.where("communities.slug", "=", communitySlug)
-		.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
-		.executeTakeFirstOrThrow(() => new Error(`Field ${fieldSlug} is not a member type`));
+	const fieldIsMemberTypeQuery = autoCache(
+		db
+			.selectFrom("pub_fields")
+			.innerJoin("communities", "pub_fields.communityId", "communities.id")
+			.where("pub_fields.slug", "=", fieldSlug)
+			.where("communities.slug", "=", communitySlug)
+			.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
+	);
 
-	const user = await db
-		.selectFrom("members")
-		.innerJoin("users", "users.id", "members.userId")
-		.select(ALLOWED_MEMBER_ATTRIBUTES)
-		.where("members.id", "=", memberId)
-		.executeTakeFirst();
+	const userQuery = autoCache(
+		db
+			.selectFrom("members")
+			.innerJoin("users", "users.id", "members.userId")
+			.select(ALLOWED_MEMBER_ATTRIBUTES)
+			.where("members.id", "=", memberId)
+	);
 
-	if (!user) {
-		return memberId;
-	}
+	const [, user] = await Promise.all([
+		fieldIsMemberTypeQuery.executeTakeFirstOrThrow(
+			() => new Error(`Field ${fieldSlug} is not a member type`)
+		),
+		userQuery.executeTakeFirstOrThrow(
+			() => new Error(`Did not find user with member ID "${memberId}"`)
+		),
+	]);
+
 	const relevantAttrs = attributes.filter((attr) =>
 		(ALLOWED_MEMBER_ATTRIBUTES as ReadonlyArray<string>).includes(attr)
 	);
