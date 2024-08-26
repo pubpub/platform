@@ -18,6 +18,7 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getUser, setUserPassword } from "~/lib/server/user";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import { env } from "../env/env.mjs";
+import { Email } from "../server/email/sendPasswordResetEmail";
 import { smtpclient } from "../server/mailgun";
 import { createToken, invalidateTokensForUser } from "../server/token";
 import { formatSupabaseError } from "../supabase";
@@ -206,36 +207,29 @@ async function supabaseSendForgotPasswordMail(props: { email: string }) {
 	};
 }
 
-const FIFTEEN_MINUTES = 1000 * 60 * 15;
-
 async function luciaSendForgotPasswordMail(props: {
 	user: NonNullable<Awaited<ReturnType<typeof getUserWithPasswordHash>>>;
 }) {
-	const magicLink = await createMagicLink({
-		type: AuthTokenType.passwordReset,
-		expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-		path: "/reset",
-		userId: props.user.id,
-	});
-
-	const email = await renderAsync(
-		PasswordReset({
-			firstName: props.user.firstName,
-			lastName: props.user.lastName ?? undefined,
-			resetPasswordLink: magicLink,
+	const result = await new Email()
+		.passwordReset({
+			user: {
+				id: props.user.id,
+				email: props.user.email,
+				firstName: props.user.firstName,
+				lastName: props.user.lastName,
+			},
 		})
-	);
+		.send();
 
-	const send = await smtpclient.sendMail({
-		from: "PubPub <noreply@pubpub.com>",
-		to: props.user.email,
-		subject: "Reset your password",
-		html: email,
-	});
+	if ("error" in result) {
+		return {
+			error: result.error,
+		};
+	}
 
 	return {
 		success: true,
-		report: "Password reset email sent!",
+		report: result.report ?? "Password reset email sent!",
 	};
 }
 

@@ -18,25 +18,25 @@ type SupabaseMagicLinkOptions = {
 
 type CreateMagicLinkOptions = NativeMagicLinkOptions | SupabaseMagicLinkOptions;
 
-const createSupabaseMagicLink = async (options: SupabaseMagicLinkOptions) => {
-	const supabase = getServerSupabase();
+// const createSupabaseMagicLink = async (options: SupabaseMagicLinkOptions) => {
+// 	const supabase = getServerSupabase();
 
-	const { data, error } = await supabase.auth.admin.generateLink({
-		type: "magiclink",
-		email: options.email,
-		options: {
-			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/${options.path}`,
-		},
-	});
+// 	const { data, error } = await supabase.auth.admin.generateLink({
+// 		type: "magiclink",
+// 		email: options.email,
+// 		options: {
+// 			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/${options.path}`,
+// 		},
+// 	});
 
-	if (error) {
-		throw error;
-	}
+// 	if (error) {
+// 		throw error;
+// 	}
 
-	return data.properties.action_link;
-};
+// 	return data.properties.action_link;
+// };
 
-const createNativeMagicLink = async (options: NativeMagicLinkOptions) => {
+export const createMagicLink = async (options: NativeMagicLinkOptions) => {
 	const token = await createToken({
 		userId: options.userId,
 		type: options.type,
@@ -46,10 +46,10 @@ const createNativeMagicLink = async (options: NativeMagicLinkOptions) => {
 	return `${env.NEXT_PUBLIC_PUBPUB_URL}/magic-link?token=${token}&redirectTo=${options.path}`;
 };
 
-export const createMagicLink = async (options: CreateMagicLinkOptions) => {
-	if ("email" in options) {
-		return createSupabaseMagicLink(options);
-	}
+// export const createMagicLink = async (options: CreateMagicLinkOptions) => {
+// 	if ("email" in options) {
+// 		return createSupabaseMagicLink(options);
+// 	}
 
-	return createNativeMagicLink(options);
-};
+// 	return createNativeMagicLink(options);
+// };
