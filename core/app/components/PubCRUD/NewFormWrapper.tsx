@@ -6,6 +6,8 @@ import type { PubTypesId, PubValues } from "db/public";
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
+import { FormElement } from "../FormSchemaRendering/FormElement";
+import { createElementFromPubType } from "./helpers";
 import { GenericDynamicPubForm } from "./NewForm";
 import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage } from "./queries";
 
@@ -38,6 +40,46 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
 	const values = pub?.values ?? ({} as GetPubResponseBody["values"]);
 	const pubType = pub?.pubTypeId ?? ("" as PubTypesId);
+
+	// instead of using the selectedPubType, we can use the pubType to
+	// determine the elements to render
+	// we need to generate a list of form elements per pubtype and pass that to the GenericDynamicPubForm
+	// const PubFormElementsForPubType = () => {
+	// 	// if (!selectedPubType) {
+	// 	// 	return null;
+	// 	// }
+	// 	const elements =  createElementFromPubType(selectedPubType)
+
+	// 	return elements.map((element) => {
+	// 		return (
+	// 			<>
+	// 				<FormElement
+	// 					key={element.elementId}
+	// 					element={element}
+	// 					searchParams={props.searchParams}
+	// 					communitySlug={community.slug}
+	// 					values={values}
+	// 				/>
+	// 			</>
+	// 		);
+	// 	});
+	// };
+	const formElementsByPubType: Record<string, React.ReactNode> = community.pubTypes.reduce(
+		(acc, pubType) => {
+			acc[pubType.id] = createElementFromPubType(pubType).map((element) => (
+				<FormElement
+					key={element.elementId}
+					element={element}
+					searchParams={props.searchParams}
+					communitySlug={community.slug}
+					values={values}
+				/>
+			));
+			return acc;
+		},
+		{}
+	);
+
 	return (
 		<>
 			<Suspense fallback={<div>Loading...</div>}>
@@ -50,6 +92,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 					searchParams={props.searchParams}
 					values={values}
 					pubTypeId={pubType}
+					formElements={formElementsByPubType}
 				/>
 			</Suspense>
 		</>
