@@ -16,7 +16,7 @@ import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 
 const getCommunityStages = (communityId: CommunitiesId) =>
-	autoCache(db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll());
+	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
 export default async function Page({ params: { formSlug, communitySlug } }) {
 	const loginData = await getLoginData();
