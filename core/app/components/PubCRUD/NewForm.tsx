@@ -1,19 +1,14 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import type { GetPubResponseBody } from "contracts";
-import type {
-	Communities,
-	PubFields,
-	PubFieldSchema,
-	PubsId,
-	PubTypes,
-	PubValues,
-	Stages,
-} from "db/public";
+import type { Communities, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
+import { CommunitiesId, CoreSchemaType, StagesId } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -23,6 +18,10 @@ import {
 } from "ui/dropdown-menu";
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ChevronDown } from "ui/icon";
+import { toast } from "ui/use-toast";
+
+import { useServerAction } from "~/lib/serverActions";
+import * as actions from "./actions";
 
 const PubFormSchema = z.object({
 	pubType: z.string(),
@@ -35,44 +34,120 @@ const PubFormSchema = z.object({
 });
 
 async function GenericDynamicPubForm({
-	availableStages,
+	communityStages,
 	availablePubTypes,
 	currentStage = null,
 	parentId,
-	values,
-	pubTypeId: pubType,
+	pubValues,
+	pubTypeId,
 	formElements,
+	pubId,
 }: {
-	communitySlug: Communities["slug"];
-	availableStages: Pick<Stages, "id" | "name" | "order">[];
-	parentId?: PubsId;
-	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description"> & {
+	communityStages: Pick<Stages, "id" | "name" | "order">[];
+	parentId: PubsId;
+	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
 		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
 		})[];
 	})[];
-	searchParams: Record<string, unknown>;
-	values?: GetPubResponseBody["values"];
+	pubValues: GetPubResponseBody["values"];
 	pubTypeId: PubTypes["id"];
 	formElements: Record<string, React.ReactNode>;
+	pubId: PubsId;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
-	const pt = availablePubTypes.find((type) => type.id === pubType);
+	const pt = availablePubTypes.find((type) => type.id === pubTypeId);
 	const [selectedPubType, setSelectedPubType] = useState<
 		(typeof availablePubTypes)[number] | null
 	>(pt ?? null);
 	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
 
-	
 	const form = useForm<z.infer<typeof PubFormSchema>>({
 		reValidateMode: "onChange",
-		defaultValues: {
-			pubType: pubType ?? "",
-			stage: currentStage ?? {},
-			values: values ?? {},
-		},
 	});
+
+	// if the pub is being cretted the values passed in should be empty
+	// we could use mode to determine if we are creating or updating as well but thats a few lvls up
+	const hasValues = Object.keys(pubValues).length > 0;
+	const paramString = hasValues ? "update" : "create";
+	const runCreatePub = useServerAction(actions.createPub);
+	const runUpdatePub = useServerAction(actions.updatePub);
+
+	const path = usePathname();
+	const searchParams = useSearchParams();
+	const router = useRouter();
+
+	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
+	urlSearchParams.delete(`${paramString}-pub-form`);
+	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
+
+	const closeForm = useCallback(() => {
+		router.replace(pathWithoutFormParam);
+	}, [pathWithoutFormParam]);
+
+	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
+		if (!selectedStage) {
+			form.setError("stage", {
+				message: "Select a stage",
+			});
+			return;
+		}
+
+		if (!selectedPubType) {
+			form.setError("pubType", {
+				message: "Select a pub type",
+			});
+			return;
+		}
+
+		if (hasValues) {
+			const result = await runUpdatePub({
+				pubId: pubId,
+				communityId: selectedPubType.communityId as CommunitiesId,
+				path: pathWithoutFormParam,
+				stageId: stage as StagesId,
+				fields: Object.entries(values).reduce((acc, [key, value]) => {
+					const id = pubType?.fields.find((f) => f.slug === key)?.id;
+					if (id) {
+						acc[id] = { slug: key, value };
+					}
+					return acc;
+				}, {}),
+			});
+
+			if (result && "success" in result) {
+				toast({
+					title: "Success",
+					description: result.report,
+				});
+				closeForm();
+			}
+		} else {
+			const result = await runCreatePub({
+				communityId: selectedPubType.communityId,
+				pubTypeId: pubTypeId,
+				stageId: selectedStage?.id,
+				parentId,
+				fields: Object.entries(values).reduce((acc, [key, value]) => {
+					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
+					if (id) {
+						acc[id] = { slug: key, value };
+					}
+					return acc;
+				}),
+				path: pathWithoutFormParam,
+			});
+
+			if (result && "success" in result) {
+				toast({
+					title: "Success",
+					description: result.report,
+				});
+				closeForm();
+			}
+		}
+	};
 
 	return (
 		<div>
@@ -139,7 +214,7 @@ async function GenericDynamicPubForm({
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent>
-										{availableStages.map((stage) => (
+										{communityStages.map((stage) => (
 											<DropdownMenuItem
 												key={stage.id}
 												onClick={() => {
