@@ -3,16 +3,16 @@ import TypeBlock from "./TypeBlock";
 
 type Props = {
 	types: PubTypeWithFieldIds[];
-	superadmin: boolean;
+	allowEditing: boolean;
 };
 
-const TypeList: React.FC<Props> = function ({ types, superadmin }) {
+const TypeList: React.FC<Props> = function ({ types, allowEditing }) {
 	return (
 		<div>
 			{types.map((type) => {
 				return (
 					<div key={type.id} className="mb-5">
-						<TypeBlock type={type} superadmin={superadmin} />
+						<TypeBlock type={type} allowEditing={allowEditing} />
 					</div>
 				);
 			})}

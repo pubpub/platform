@@ -27,7 +27,7 @@ async function PubChildrenTableWrapper({
 			title:
 				(child.values.find((value) => value.field.name === "Title")?.value as string) ||
 				"Evaluation",
-			stage: child.stages[0]?.stageId,
+			stage: child.stages[0]?.stage.name,
 			assignee: assigneeUser ? `${assigneeUser.firstName} ${assigneeUser.lastName}` : null,
 			created: new Date(child.createdAt),
 			actions:
