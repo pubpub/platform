@@ -23,7 +23,7 @@ export const updateUserInfo = defineServerAction(async function updateUserInfo({
 	}
 
 	if (user.id !== data.id && !user.isSuperAdmin) {
-		return { error: "You must the user to update their information" };
+		return { error: "You must be the user to update their information" };
 	}
 
 	const { firstName, lastName, email, avatar } = data;
