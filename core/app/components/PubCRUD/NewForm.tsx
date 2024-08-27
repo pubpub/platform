@@ -2,7 +2,10 @@
 
 import React, { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
+import { getJsonSchemaByCoreSchemaType } from "schemas";
 import { z } from "zod";
 
 import type { GetPubResponseBody } from "contracts";
@@ -15,6 +18,7 @@ import type {
 	Stages,
 	StagesId,
 } from "db/public";
+import { ElementType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -25,19 +29,12 @@ import {
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
+import { cn } from "utils";
 
+import type { Form as PubPubForm } from "~/lib/server/form";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
-
-const PubFormSchema = z.object({
-	pubType: z.string(),
-	stage: z.object({
-		id: z.string(),
-		name: z.string(),
-		order: z.string(),
-	}),
-	values: z.object({}),
-});
+import { buildDefaultValues, createElementFromPubType } from "./helpers";
 
 async function GenericDynamicPubForm({
 	communityStages,
@@ -48,6 +45,7 @@ async function GenericDynamicPubForm({
 	pubTypeId,
 	formElements,
 	pubId,
+	className,
 }: {
 	communityStages: Pick<Stages, "id" | "name" | "order">[];
 	parentId: PubsId;
@@ -60,6 +58,7 @@ async function GenericDynamicPubForm({
 	pubTypeId: PubTypes["id"];
 	formElements: Record<string, React.ReactNode>;
 	pubId: PubsId;
+	className?: string;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
@@ -69,12 +68,6 @@ async function GenericDynamicPubForm({
 	>(pt ?? null);
 	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
 
-	const form = useForm<z.infer<typeof PubFormSchema>>({
-		reValidateMode: "onChange",
-	});
-
-	// if the pub is being cretted the values passed in should be empty
-	// we could use mode to determine if we are creating or updating as well but thats a few lvls up
 	const hasValues = Object.keys(pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
 	const runCreatePub = useServerAction(actions.createPub);
@@ -91,7 +84,23 @@ async function GenericDynamicPubForm({
 	const closeForm = useCallback(() => {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
-
+	const elements = selectedPubType ? createElementFromPubType(selectedPubType) : [];
+	const schema = Type.Object(
+		Object.fromEntries(
+			elements
+				.filter((e) => e.type === ElementType.pubfield)
+				.map((e) => [
+					e.slug as string | undefined,
+					e.schemaName
+						? Type.Optional(getJsonSchemaByCoreSchemaType(e.schemaName))
+						: undefined,
+				])
+		)
+	);
+	const form = useForm({
+		resolver: typeboxResolver(schema),
+		defaultValues: buildDefaultValues(elements, pubValues),
+	});
 	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
 		if (!selectedStage) {
 			form.setError("stage", {
@@ -108,27 +117,26 @@ async function GenericDynamicPubForm({
 		}
 
 		if (hasValues) {
-			const result = await runUpdatePub({
-				pubId: pubId,
-				communityId: selectedPubType.communityId as CommunitiesId,
-				path: pathWithoutFormParam,
-				stageId: stage as StagesId,
-				fields: Object.entries(values).reduce((acc, [key, value]) => {
-					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
-					if (id) {
-						acc[id] = { slug: key, value };
-					}
-					return acc;
-				}, {}),
-			});
+			// const result = await runUpdatePub({
+			// 	pubId: pubId,
+			// 	communityId: selectedPubType.communityId as CommunitiesId,
+			// 	path: pathWithoutFormParam,
+			// 	stageId: stage as StagesId,
+			// 	fields: Object.entries(values).reduce((acc, [key, value]) => {
+			// 		const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
+			// 		if (id) {
+			// 			acc[id] = { slug: key, value };
+			// 		}
+			// 		return acc;
+			// 	}, {}),
+			// });
 
-			if (result && "success" in result) {
-				toast({
-					title: "Success",
-					description: result.report,
-				});
-				closeForm();
-			}
+			// if (result && "success" in result) {
+			toast({
+				title: "Success",
+				description: "yay updatedd",
+			});
+			closeForm();
 		} else {
 			const fieldsToUpdate = Object.entries(values).reduce((acc, [key, value]) => {
 				const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
@@ -149,7 +157,7 @@ async function GenericDynamicPubForm({
 			if (result && "success" in result) {
 				toast({
 					title: "Success",
-					description: result.report,
+					description: "Yayyy new pub",
 				});
 				closeForm();
 			}
@@ -157,41 +165,80 @@ async function GenericDynamicPubForm({
 	};
 
 	return (
-		<div>
-			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)}>
+		<Form {...form}>
+			<form
+				onSubmit={form.handleSubmit(onSubmit)}
+				className={cn("relative flex flex-col gap-6", className)}
+			>
+				<FormField
+					name="pubType"
+					control={form.control}
+					rules={{
+						required: true,
+					}}
+					render={({ field }) => (
+						<FormItem aria-label="Email" className="flex flex-col items-start gap-2">
+							<FormLabel>Pub Type</FormLabel>
+							<FormDescription>
+								Select the type of pub you want to create
+							</FormDescription>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button size="sm" variant="outline">
+										{selectedPubType?.name || "Select PubType"}
+										<ChevronDown size="16" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									{availablePubTypes.map((pubType) => (
+										<DropdownMenuItem
+											key={pubType.id}
+											onClick={() => {
+												setSelectedPubType(pubType);
+											}}
+										>
+											{pubType.name}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				{!currentStage && (
 					<FormField
-						name="pubType"
+						name="stage"
 						control={form.control}
 						rules={{
 							required: true,
 						}}
 						render={({ field }) => (
 							<FormItem
-								aria-label="Email"
+								aria-label="Stage"
 								className="flex flex-col items-start gap-2"
 							>
-								<FormLabel>Pub Type</FormLabel>
+								<FormLabel>Stage</FormLabel>
 								<FormDescription>
-									Select the type of pub you want to create
+									Select the stage you want to create a pub in
 								</FormDescription>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button size="sm" variant="outline">
-											{selectedPubType?.name || "Select PubType"}
+											{selectedStage?.name || "Select Stage"}
 											<ChevronDown size="16" />
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent>
-										{availablePubTypes.map((pubType) => (
+										{communityStages.map((stage) => (
 											<DropdownMenuItem
-												key={pubType.id}
+												key={stage.id}
 												onClick={() => {
-													field.onChange(pubType.id);
-													setSelectedPubType(pubType);
+													setSelectedStage(stage);
 												}}
 											>
-												{pubType.name}
+												{stage.name}
 											</DropdownMenuItem>
 										))}
 									</DropdownMenuContent>
@@ -201,77 +248,34 @@ async function GenericDynamicPubForm({
 							</FormItem>
 						)}
 					/>
-					{!currentStage && (
-						<FormField
-							name="stage"
-							control={form.control}
-							rules={{
-								required: true,
-							}}
-							render={({ field }) => (
-								<FormItem
-									aria-label="Stage"
-									className="flex flex-col items-start gap-2"
-								>
-									<FormLabel>Stage</FormLabel>
-									<FormDescription>
-										Select the stage you want to create a pub in
-									</FormDescription>
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button size="sm" variant="outline">
-												{selectedStage?.name || "Select Stage"}
-												<ChevronDown size="16" />
-											</Button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent>
-											{communityStages.map((stage) => (
-												<DropdownMenuItem
-													key={stage.id}
-													onClick={() => {
-														field.onChange(stage.id);
-														setSelectedStage(stage);
-													}}
-												>
-													{stage.name}
-												</DropdownMenuItem>
-											))}
-										</DropdownMenuContent>
-									</DropdownMenu>
-
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+				)}
+				{selectedPubType && formElements[selectedPubType.id]}
+				<Button
+					type="submit"
+					className="flex items-center gap-x-2"
+					disabled={
+						form.formState.isSubmitting ||
+						!selectedStage ||
+						!selectedPubType ||
+						!form.formState.isValid
+					}
+				>
+					{form.formState.isSubmitting ? (
+						<Loader2 className="h-4 w-4 animate-spin" />
+					) : hasValues ? (
+						<>
+							<Pencil size="12" />
+							Update Pub
+						</>
+					) : (
+						<>
+							<Plus size="12" />
+							Create Pub
+						</>
 					)}
-					{selectedPubType && formElements[selectedPubType.id]}
-					<Button
-						type="submit"
-						className="flex items-center gap-x-2"
-						disabled={
-							form.formState.isSubmitting ||
-							!selectedStage ||
-							!selectedPubType ||
-							!form.formState.isValid
-						}
-					>
-						{form.formState.isSubmitting ? (
-							<Loader2 className="h-4 w-4 animate-spin" />
-						) : hasValues ? (
-							<>
-								<Pencil size="12" />
-								Update Pub
-							</>
-						) : (
-							<>
-								<Plus size="12" />
-								Create Pub
-							</>
-						)}
-					</Button>
-				</form>
-			</Form>
-		</div>
+				</Button>
+			</form>
+		</Form>
 	);
 }
 

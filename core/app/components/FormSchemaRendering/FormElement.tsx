@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import Markdown from "react-markdown";
 
 import type { GetPubResponseBody } from "contracts";
@@ -5,49 +6,12 @@ import type { MembersId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 
 import type { Form } from "~/lib/server/form";
-import { db } from "~/kysely/database";
-import { autoCache } from "~/lib/server/cache/autoCache";
-// import { findCommunityBySlug } from "~/lib/server/community";
-import { UserSelectServer } from "../UserSelect/UserSelectServer";
-import {
-	BooleanElement,
-	DateElement,
-	FileUploadElement,
-	TextElement,
-	Vector3Element,
-} from "./FormSchemaClientElements";
-
-export const UserIdSelect = async ({
-	label,
-	name,
-	id,
-	value,
-	searchParams,
-	communitySlug,
-}: {
-	label: string;
-	name: string;
-	id: string;
-	value?: MembersId;
-	searchParams: Record<string, unknown>;
-	communitySlug: string;
-}) => {
-	const community = await autoCache(
-		db.selectFrom("communities").selectAll().where("slug", "=", communitySlug)
-	).executeTakeFirstOrThrow();
-	const queryParamName = `user-${id.split("-").pop()}`;
-	const query = searchParams?.[queryParamName] as string | undefined;
-	return (
-		<UserSelectServer
-			community={community}
-			fieldLabel={label}
-			fieldName={name}
-			query={query}
-			queryParamName={queryParamName}
-			value={value}
-		/>
-	);
-};
+import { BooleanElement } from "./elements/BooleanElement";
+import { Vector3Element } from "./elements/ConfidenceElement";
+import { DateElement } from "./elements/DateElement";
+import { FileUploadElement } from "./elements/FIleUploadElement";
+import { UserIdSelect } from "./elements/MemberSelectElement";
+import { TextElement } from "./elements/TextElement";
 
 /**
  * Renders every CoreSchemaType EXCEPT MemberId!
