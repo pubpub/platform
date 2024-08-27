@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { CommunitiesId, PubsId } from "db/public";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -28,12 +29,16 @@ export default async function Page({
 	params: { pubId: string; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return null;
 	}
-	let token;
-	token = await createToken(loginData.id);
+
+	const token = await createToken({
+		userId: user.id as UsersId,
+		type: AuthTokenType.generic,
+	});
+
 	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}

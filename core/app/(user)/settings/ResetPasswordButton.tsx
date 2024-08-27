@@ -7,21 +7,20 @@ import { Loader2 } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import type { UserLoginData } from "~/lib/types";
-import { env } from "~/lib/env/env.mjs";
-import { supabase } from "~/lib/supabase";
+import { sendForgotPasswordMail } from "~/lib/auth/actions";
+import { useServerAction } from "~/lib/serverActions";
 
 export const ResetPasswordButton = ({ user }: { user: UserLoginData }) => {
 	const status = useFormStatus();
+	const runResetPassword = useServerAction(sendForgotPasswordMail);
 
 	const onSubmit = async () => {
-		const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-			redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-		});
+		const result = await runResetPassword({ email: user.email });
 
-		if (error) {
+		if (result && "error" in result) {
 			toast({
 				title: "Error",
-				description: error.message,
+				description: result.error,
 				variant: "destructive",
 			});
 		}

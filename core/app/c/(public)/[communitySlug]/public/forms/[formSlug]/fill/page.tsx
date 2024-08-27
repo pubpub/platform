@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { redirect, RedirectType } from "next/navigation";
-import Markdown from "react-markdown";
 
 import type { MembersId, PubsId, UsersId } from "db/public";
 import { StructuralFormElement } from "db/public";
@@ -74,30 +73,32 @@ export default async function FormPage({
 		return <NotFound>No pub found</NotFound>;
 	}
 
-	const loginData = await getLoginData();
+	const { user, session } = await getLoginData();
 
 	// this is most likely what happens if a user clicks a link in an email
 	// with an expired token, or a token that has been used already
-	if (!loginData) {
+	// TODO: check the auth failure reason here
+	// if it's due to an invalid token, allow the user to request a new one
+	if (!user) {
 		redirect(
 			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}&pubId=${searchParams.pubId}`,
 			RedirectType.replace
 		);
 	}
 
-	const role = getCommunityRole(loginData, { slug: params.communitySlug });
+	const role = getCommunityRole(user, { slug: params.communitySlug });
 	if (!role) {
 		return null;
 	}
 
 	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
-	const member = expect(loginData.memberships.find((m) => m.communityId === community?.id));
+	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 	const memberWithUser = {
 		...member,
 		id: member.id as MembersId,
 		user: {
-			...loginData,
-			id: loginData.id as UsersId,
+			...user,
+			id: user.id as UsersId,
 		},
 	};
 	const renderWithPubContext = {

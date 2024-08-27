@@ -19,7 +19,7 @@ const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
 export default async function Page({ params: { formSlug, communitySlug } }) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 	const community = await findCommunityBySlug();
 
 	if (!community) {
@@ -28,11 +28,11 @@ export default async function Page({ params: { formSlug, communitySlug } }) {
 
 	const communityStages = await getCommunityStages(community.id).execute();
 
-	if (!loginData) {
+	if (!user) {
 		return null;
 	}
 
-	if (!isCommunityAdmin(loginData, { slug: communitySlug })) {
+	if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return null;
 	}
 

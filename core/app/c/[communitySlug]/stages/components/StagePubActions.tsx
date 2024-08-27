@@ -3,13 +3,11 @@ import type {
 	PubPayload,
 	StagePayload,
 	StagePayloadMoveConstraintDestination,
-	UserLoginData,
 } from "~/lib/types";
 import Assign from "./Assign";
 import Move from "./Move";
 
 type Props = {
-	loginData: UserLoginData;
 	members: CommunityMemberPayload[];
 	moveFrom: StagePayloadMoveConstraintDestination[];
 	moveTo: StagePayloadMoveConstraintDestination[];

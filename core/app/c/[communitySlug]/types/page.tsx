@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 
-import type { PubFieldsId } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 
 import { getLoginData } from "~/lib/auth/loginData";
@@ -11,11 +10,11 @@ import { CreatePubType } from "./CreatePubType";
 import TypeList from "./TypeList";
 
 export default async function Page({ params: { communitySlug } }) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return notFound();
 	}
-	const allowEditing = isCommunityAdmin(loginData, { slug: communitySlug });
+	const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
 
 	const [types, { fields }] = await Promise.all([
 		getAllPubTypesForCommunity().execute(),

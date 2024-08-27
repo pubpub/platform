@@ -15,11 +15,11 @@ import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
 
 export default async function Page({ params: { communitySlug } }) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return null;
 	}
-	if (!isCommunityAdmin(loginData, { slug: communitySlug })) {
+	if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return null;
 	}
 

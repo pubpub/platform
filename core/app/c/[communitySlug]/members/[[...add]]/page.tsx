@@ -72,8 +72,8 @@ export default async function Page({
 		return notFound();
 	}
 
-	const loginData = await getLoginData();
-	const isAdmin = isCommunityAdmin(loginData, community);
+	const { user } = await getLoginData();
+	const isAdmin = isCommunityAdmin(user, community);
 
 	// we don't want to show the members page to non-admins
 	if (!isAdmin) {

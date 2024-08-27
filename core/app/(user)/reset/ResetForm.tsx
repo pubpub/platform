@@ -14,6 +14,9 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
+import { resetPassword } from "~/lib/auth/actions";
+import { useServerAction } from "~/lib/serverActions";
+
 const resetPasswordSchema = z.object({
 	password: z.string().min(8),
 });
@@ -23,42 +26,24 @@ export default function ResetForm() {
 	const form = useForm({
 		resolver: zodResolver(resetPasswordSchema),
 	});
+	const runResetPassword = useServerAction(resetPassword);
 
-	const redirectUser = async (data: (UserResponse & { error: null })["data"]) => {
-		router.refresh();
-		// check if user is in a community
-		const response = await fetch(`/api/member?email=${data.user.email}`, {
-			method: "GET",
-			headers: { "content-type": "application/json" },
-		});
-		const { member } = await response.json();
-		setTimeout(() => {
-			if (member) {
-				router.push(`/c/${member.community.slug}/stages`);
-			} else {
-				router.push("/settings");
-			}
-		}, 5000);
+	const redirectUser = async () => {
+		router.push("/login");
 	};
 
 	const onSubmit = async ({ password }: z.infer<typeof resetPasswordSchema>) => {
-		const { data, error } = await supabase.auth.updateUser({
-			password,
-		});
+		const result = await runResetPassword({ password });
 
-		if (error) {
-			const formattedError =
-				error.name === "AuthSessionMissingError"
-					? "This reset link is invalid or has expired. Please request a new one."
-					: formatSupabaseError(error);
-
+		if (result && "error" in result) {
+			const formattedError = result.error;
 			form.setError("password", {
 				message: formattedError,
 			});
 			return;
 		}
 
-		redirectUser(data);
+		redirectUser();
 	};
 
 	return (

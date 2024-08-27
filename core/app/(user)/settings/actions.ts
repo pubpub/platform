@@ -17,12 +17,12 @@ export const updateUserInfo = defineServerAction(async function updateUserInfo({
 }: {
 	data: z.infer<typeof userInfoFormSchema>;
 }) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return { error: "You must be logged in to update your user information" };
 	}
 
-	if (loginData.id !== data.id && !loginData.isSuperAdmin) {
+	if (user.id !== data.id && !user.isSuperAdmin) {
 		return { error: "You must be the user to update their information" };
 	}
 

@@ -127,11 +127,11 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 	const prefix = `/c/${community.slug}`;
 	const divider = <div className="my-4 h-[1px] bg-gray-200" />;
 
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	const isAdmin = isCommunityAdmin(loginData, community);
+	const isAdmin = isCommunityAdmin(user, community);
 
-	const isSuperAdmin = loginData?.isSuperAdmin;
+	const isSuperAdmin = user?.isSuperAdmin;
 
 	return (
 		<>

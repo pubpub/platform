@@ -11,8 +11,8 @@ import { ResetPasswordButton } from "./ResetPasswordButton";
 import { UserInfoForm } from "./UserInfoForm";
 
 export default async function Page() {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return notFound();
 	}
 
@@ -31,12 +31,12 @@ export default async function Page() {
 					</Link>
 
 					<hr />
-					{loginData.memberships.length > 0 && (
+					{user.memberships.length > 0 && (
 						<div className="flex flex-col gap-4">
 							<span className="text-sm text-primary">Communities</span>
 
 							<div className="grid gap-4">
-								{loginData.memberships.map(({ community }) => {
+								{user.memberships.map(({ community }) => {
 									return (
 										<Button variant="link" key={community.id} asChild>
 											<Link
@@ -67,7 +67,7 @@ export default async function Page() {
 							<CardDescription>Who are you?</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<UserInfoForm user={loginData} />
+							<UserInfoForm user={user} />
 						</CardContent>
 					</Card>
 					<Card x-chunk="dashboard-04-chunk-2">
@@ -79,7 +79,7 @@ export default async function Page() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<ResetPasswordButton user={loginData} />
+							<ResetPasswordButton user={user} />
 						</CardContent>
 					</Card>
 

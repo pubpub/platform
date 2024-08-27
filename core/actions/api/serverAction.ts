@@ -10,7 +10,7 @@ import { runActionInstance as runActionInstanceInner } from "../_lib/runActionIn
 export const runActionInstance = defineServerAction(async function runActionInstance(
 	args: Omit<RunActionInstanceArgs, "userId" | "event">
 ): Promise<ActionInstanceRunResult> {
-	const user = await getLoginData();
+	const { user } = await getLoginData();
 
 	if (!user) {
 		return {

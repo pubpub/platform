@@ -8,16 +8,15 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
-import type { UserAndMemberships } from "~/lib/types";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
+import { getLoginData } from "~/lib/auth/loginData";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
 import { crocCrocId } from "~/prisma/exampleCommunitySeeds/croccroc";
 import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
 
 export const createCommunity = defineServerAction(async function createCommunity({
-	user,
 	name,
 	slug,
 	avatar,
@@ -25,8 +24,16 @@ export const createCommunity = defineServerAction(async function createCommunity
 	name: string;
 	slug: string;
 	avatar?: string;
-	user: UserAndMemberships;
 }) {
+	const { user } = await getLoginData();
+
+	if (!user) {
+		return {
+			title: "Failed to create community",
+			error: "Not logged in",
+		};
+	}
+
 	if (!user.isSuperAdmin) {
 		return {
 			title: "Failed to create community",
@@ -266,12 +273,19 @@ export const createCommunity = defineServerAction(async function createCommunity
 });
 
 export const removeCommunity = defineServerAction(async function removeCommunity({
-	user,
 	community,
 }: {
-	user: UserAndMemberships;
 	community: TableCommunity;
 }) {
+	const { user } = await getLoginData();
+
+	if (!user) {
+		return {
+			title: "Failed to remove community",
+			error: "Not logged in",
+		};
+	}
+
 	if (!user.isSuperAdmin) {
 		return {
 			title: "Failed to remove community",

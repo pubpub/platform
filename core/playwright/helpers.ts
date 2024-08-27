@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { CommunityPage } from "./fixtures/community-page";
+import { InbucketClient } from "./inbucketClient";
 
 export const login = async ({ page }: { page: Page }) => {
 	await page.goto("/login");
@@ -24,3 +25,7 @@ export const createCommunity = async ({
 		community?.slug ?? "test-community-slug"
 	);
 };
+
+const INBUCKET_TESTING_URL = "http://localhost:54324";
+
+export const inbucketClient = new InbucketClient(INBUCKET_TESTING_URL);
