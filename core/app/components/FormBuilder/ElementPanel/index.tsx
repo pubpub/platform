@@ -10,6 +10,7 @@ import { useFormBuilder } from "../FormBuilderContext";
 import { SubmissionSettings } from "../SubmissionSettings";
 import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
 import { ElementConfigurationForm } from "./ElementConfigurationForm";
+import { SelectAccess } from "./SelectAccess";
 import { SelectElement } from "./SelectElement";
 
 type ElementPanelProps = {
@@ -36,6 +37,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 						<hr className="my-2" />
 						<Input disabled value={slug} />
 					</div>
+					<SelectAccess />
 					<SubmissionSettings />
 				</div>
 			);

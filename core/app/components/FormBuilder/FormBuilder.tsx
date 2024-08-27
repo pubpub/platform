@@ -306,47 +306,6 @@ export function FormBuilder({ pubForm, id }: Props) {
 												</FormItem>
 											)}
 										/>
-										<FormField
-											control={form.control}
-											name="access"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-sm uppercase text-slate-500">
-														Access
-													</FormLabel>
-													<hr />
-													<Select
-														onValueChange={field.onChange}
-														defaultValue={field.value}
-													>
-														<FormControl>
-															<SelectTrigger>
-																<SelectValue placeholder="Select a type" />
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent>
-															{Object.values(FormAccessType).map(
-																(t) => (
-																	<SelectItem
-																		key={t}
-																		value={t.toString()}
-																	>
-																		<div className="first-letter:capitalize">
-																			{t}
-																		</div>
-																	</SelectItem>
-																)
-															)}
-														</SelectContent>
-													</Select>
-													<FormDescription>
-														{field.value === FormAccessType.private &&
-															"Only internal editors can submit"}{" "}
-													</FormDescription>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
 									</PanelWrapper>
 								</form>
 							</Form>
