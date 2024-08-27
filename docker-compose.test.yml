@@ -28,7 +28,7 @@ services:
             - /app/node_modules
         depends_on:
             - postgres
-        # command: pnpm run dev # For development
+        command: pnpm --filter core run test
         profiles:
             - dev
 
