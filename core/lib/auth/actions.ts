@@ -2,27 +2,25 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { renderAsync } from "@react-email/render";
-import { PasswordReset } from "emails";
+import { captureException } from "@sentry/nextjs";
 import { z } from "zod";
 
-import type { Communities, Members, Users } from "db/public";
+import type { Communities, Members, Users, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
-import type { DefinitelyHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, Prettify } from "../types";
+import { db } from "~/kysely/database";
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { lucia, validateRequest } from "~/lib/auth/lucia";
-import { createPasswordHash, validatePassword } from "~/lib/auth/password";
+import { validatePassword } from "~/lib/auth/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { getUser, setUserPassword } from "~/lib/server/user";
+import { getUser, setUserPassword, updateUser } from "~/lib/server/user";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import { env } from "../env/env.mjs";
 import { Email } from "../server/email";
-import { smtpclient } from "../server/mailgun";
-import { createToken, invalidateTokensForUser } from "../server/token";
+import { invalidateTokensForUser } from "../server/token";
 import { formatSupabaseError } from "../supabase";
-import { createMagicLink } from "./createMagicLink";
 import { getLoginData } from "./loginData";
 
 const schema = z.object({
@@ -336,4 +334,99 @@ export const resetPassword = defineServerAction(async function resetPassword({
 	}
 
 	return luciaResetPassword({ user: fullUser, password: parsed.data.password });
+});
+
+export const signup = defineServerAction(async function signup(props: {
+	id: UsersId;
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+}) {
+	const { user, session } = await getLoginData({
+		allowedSessions: [AuthTokenType.signup],
+	});
+
+	if (!user) {
+		captureException(new Error("User tried to signup without existing"), {
+			user: {
+				id: props.id,
+				firstName: props.firstName,
+				lastName: props.lastName,
+				email: props.email,
+			},
+		});
+		return {
+			error: "Something went wrong. Please try again later.",
+		};
+	}
+
+	if (user.id !== props.id) {
+		captureException(new Error("User tried to signup with a different id"), {
+			user: {
+				id: props.id,
+				firstName: props.firstName,
+				lastName: props.lastName,
+				email: props.email,
+			},
+		});
+		return {
+			error: "Something went wrong. Please try again later.",
+		};
+	}
+
+	const trx = db.transaction();
+
+	const result = await trx.execute(async (trx) => {
+		const newUser = await updateUser(
+			{
+				id: props.id,
+				firstName: props.firstName,
+				lastName: props.lastName,
+				email: props.email,
+			},
+			trx
+		);
+
+		await setUserPassword(
+			{
+				userId: props.id,
+				password: props.password,
+			},
+			trx
+		);
+
+		if (newUser.email !== user.email) {
+			return { ...newUser, needsVerification: true };
+			// TODO: send email verification
+		}
+
+		return newUser;
+	});
+
+	if ("needsVerification" in result && result.needsVerification) {
+		return {
+			success: true,
+			report: "Please check your email to verify your account!",
+			needsVerification: true,
+		};
+	}
+
+	// log them in
+
+	const invalidatedSessions = await lucia.invalidateUserSessions(user.id);
+
+	// lucia authentication
+	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
+	const sessionCookie = lucia.createSessionCookie(session.id);
+	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+
+	// for good measure, delete the supabse cookies too
+	cookies().delete(TOKEN_NAME);
+	cookies().delete(REFRESH_NAME);
+
+	return {
+		success: true,
+		report: "Account created!",
+	};
 });

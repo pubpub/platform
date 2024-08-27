@@ -7,6 +7,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { Database } from "db/Database";
 import type { CommunitiesId, NewUsers, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
+import { UsersUpdate } from "db/src/public";
 
 import type { OR, XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -179,6 +180,40 @@ export const setUserPassword = cache(
 			.execute();
 	}
 );
+
+export const updateUser = async (
+	props: Omit<UsersUpdate, "passwordHash"> & { id: UsersId },
+	trx = db
+) => {
+	const { id, ...data } = props;
+
+	// since a user is one of the few entities that exist cross-community,
+	// we need to manually invalidate all the communities they are a part of
+	// it's also not a good idea to cache this query
+	// as, again, this query sits outside of the community scope
+	// and thus is hard to invalidate using only community scoped tags
+	// as we would need to know the result of this query in order to tag it
+	// properly, which is obviously impossible
+	const communitySlugs = await trx
+		.selectFrom("members")
+		.where("userId", "=", id)
+		.innerJoin("communities", "members.communityId", "communities.id")
+		.select(["communities.slug"])
+		.execute();
+
+	const newUser = await autoRevalidate(
+		trx
+			.updateTable("users")
+			.set(data)
+			.where("id", "=", id as UsersId)
+			.returning(SAFE_USER_SELECT),
+		{
+			communitySlug: communitySlugs.map((slug) => slug.slug),
+		}
+	).executeTakeFirstOrThrow((err) => new Error(`Unable to update user ${id}`));
+
+	return newUser;
+};
 
 export const addUser = (props: NewUsers, trx = db) =>
 	autoRevalidate(trx.insertInto("users").values(props).returning(SAFE_USER_SELECT), {

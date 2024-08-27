@@ -1,125 +1,155 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { useCallback, useMemo } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
+import { useForm } from "react-hook-form";
+import { registerFormats } from "schemas";
 
-import { logger } from "logger";
+import type { Users } from "db/src/public";
 import { Button } from "ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Input } from "ui/input";
 
-import { UserPostBody } from "~/lib/types";
+import { signup } from "~/lib/auth/actions";
+import { isClientException, useServerAction } from "~/lib/serverActions";
 
-export default function SignupForm() {
-	const [firstName, setFirstName] = useState("");
-	const [lastName, setLastName] = useState("");
-	const [password, setPassword] = useState("");
-	const [email, setEmail] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
-	const [signupComplete, setSignupComplete] = useState(false);
+registerFormats();
 
-	const handleSubmit = async (evt: FormEvent<EventTarget>) => {
-		// TODO: reenable signups
-		return;
-		evt.preventDefault();
+const formSchema = Type.Object({
+	firstName: Type.String(),
+	lastName: Type.String(),
+	email: Type.String({ format: "email" }),
+	password: Type.String({
+		minLength: 8,
+		maxLength: 72,
+	}),
+});
 
-		setIsLoading(true);
-		const postBody: UserPostBody = {
-			firstName,
-			lastName,
-			password,
-			email,
-		};
-		const response = await fetch("/api/user", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(postBody),
+export function SignupForm(props: {
+	user: Pick<Users, "firstName" | "lastName" | "email" | "id">;
+}) {
+	const runSignup = useServerAction(signup);
+
+	const resolver = useMemo(() => typeboxResolver(formSchema), []);
+
+	const form = useForm({
+		resolver,
+		defaultValues: props.user,
+	});
+
+	const router = useRouter();
+
+	const searchParams = useSearchParams();
+	const handleSubmit = useCallback(async (data) => {
+		const result = await runSignup({
+			id: props.user.id,
+			firstName: data.firstName,
+			lastName: data.lastName,
+			email: data.email,
+			password: data.password,
 		});
-		if (!response.ok) {
-			setIsLoading(false);
-			const { message } = await response.json();
-			logger.error(message);
-		} else {
-			setIsLoading(false);
-			setSignupComplete(true);
+
+		if (isClientException(result)) {
+			return;
 		}
-	};
+
+		if (!result.needsVerification) {
+			const redirectTo = searchParams.get("redirectTo");
+			if (redirectTo) {
+				router.push(redirectTo);
+			} else {
+				router.push("/settings");
+			}
+		}
+	}, []);
 
 	return (
-		<div className="border p-4">
-			{!signupComplete && (
-				<>
-					<h1 className="text-center text-2xl">Signup</h1>
-					<div className="my-10">
-						<form onSubmit={handleSubmit}>
-							<div>
-								<label htmlFor="firstName">Name</label>
-							</div>
-							<div>
-								<input
-									id="firstName"
-									className="w-full"
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(handleSubmit)}>
+				<Card className="mx-auto max-w-sm">
+					<CardHeader>
+						<CardTitle className="text-xl">Sign Up</CardTitle>
+						<CardDescription>
+							Enter your information to finish setting up your account
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className="grid gap-4">
+							<div className="grid grid-cols-2 gap-4">
+								<FormField
 									name="firstName"
-									value={firstName}
-									onChange={(evt) => setFirstName(evt.target.value)}
+									control={form.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>First name</FormLabel>
+
+											<Input {...field} placeholder="Max" required />
+											<FormMessage />
+										</FormItem>
+									)}
 								/>
-							</div>
-							<div>
-								<label htmlFor="lastName">Name</label>
-							</div>
-							<div>
-								<input
-									id="lastName"
-									className="w-full"
+								<FormField
 									name="lastName"
-									value={lastName}
-									onChange={(evt) => setLastName(evt.target.value)}
+									control={form.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Last name</FormLabel>
+											<Input {...field} placeholder="Robinson" required />
+											<FormMessage />
+										</FormItem>
+									)}
 								/>
 							</div>
-							<div className="mt-2">
-								<label htmlFor="email">Email</label>
-							</div>
-							<div>
-								<input
-									id="email"
-									className="w-full"
-									name="email"
-									value={email}
-									onChange={(evt) => setEmail(evt.target.value)}
-								/>
-							</div>
-							<div className="mt-2">
-								<label htmlFor="password">Password</label>
-							</div>
-							<div>
-								<input
-									id="password"
-									className="w-full"
-									name="Password"
-									value={password}
-									type="password"
-									onChange={(evt) => setPassword(evt.target.value)}
-								/>
-							</div>
-							<div className="mt-4 text-center">
-								<Button
-									variant="outline"
-									type="submit"
-									disabled={!firstName || !email || !password}
-								>
-									Create Account
-								</Button>
-							</div>
-						</form>
-					</div>
-				</>
-			)}
-			{signupComplete && (
-				<div className="text-center">
-					<h2 className="text-2xl font-bold">Welcome!</h2>
-					<div>
-						We've sent you a verification email - click the link in that message to
-						finish your signup.
-					</div>
-				</div>
-			)}
-		</div>
+							<FormField
+								name="email"
+								control={form.control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Email</FormLabel>
+										<FormDescription>
+											If you change this, we will ask you to confirm your
+											email again.
+										</FormDescription>
+										<Input
+											{...field}
+											type="email"
+											placeholder="m@example.com"
+											required
+										/>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="password"
+								control={form.control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Password</FormLabel>
+										<Input {...field} type="password" />
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<Button type="submit" className="w-full">
+								Create an account
+							</Button>
+						</div>
+						{/* <div className="mt-4 text-center text-sm">
+							Already have an account?{" "}
+							<Link href="#" className="underline">
+								Sign in
+							</Link>
+						</div> */}
+					</CardContent>
+				</Card>
+			</form>
+		</Form>
 	);
 }
