@@ -43,41 +43,39 @@ export const createPub = defineServerAction(async function createPub({
 	}
 
 	try {
-		const createNewPub = await autoRevalidate(
-			db
-				.with("new_pub", (db) =>
-					db
-						.insertInto("pubs")
-						.values({
-							communityId: communityId,
-							pubTypeId: pubTypeId,
-							parentId: parentId,
-						})
-						.returning("id")
-				)
-				.with("stage_create", (db) =>
-					db.insertInto("PubsInStages").values((eb) => ({
-						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-						stageId,
-					}))
-				)
+		// const createNewPub = await autoRevalidate(
+		// 	db
+		// 		.with("new_pub", (db) =>
+		// 			db
+		// 				.insertInto("pubs")
+		// 				.values({
+		// 					communityId: communityId,
+		// 					pubTypeId: pubTypeId,
+		// 					parentId: parentId,
+		// 				})
+		// 				.returning("id")
+		// 		)
+		// 		.with("stage_create", (db) =>
+		// 			db.insertInto("PubsInStages").values((eb) => ({
+		// 				pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+		// 				stageId,
+		// 			}))
+		// 		)
 
-				.insertInto("pub_values")
-				.values((eb) =>
-					Object.entries(fields)
-						// TODO: figure out whether null values should be allowed and/or what the difference is between "" and null
-						.filter(([key, value]) => value.value != undefined)
-						.map(([key, value]) => ({
-							fieldId: key as PubFieldsId,
-							pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-							value: JSON.stringify(value.value),
-						}))
-				)
-		).execute();
+		// 		.insertInto("pub_values")
+		// 		.values((eb) =>
+		// 			Object.entries(fields).map(([key, value]) => ({
+		// 				fieldId: key as PubFieldsId,
+		// 				pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+		// 				value: JSON.stringify(value.value),
+		// 			}))
+		// 		)
+		// ).execute();
 
-		if (path) {
-			revalidatePath(path);
-		}
+		// if (path) {
+		// 	revalidatePath(path);
+		// }
+		console.log("createPub data is def here", communityId, stageId, pubTypeId, fields, path, parentId);
 
 		return {
 			success: true,

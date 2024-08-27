@@ -10,7 +10,7 @@ export const PubUpdateButton = (props: PubUpdateProps & { button?: CRUDButtonPro
 
 	return (
 		<PubCRUDDialogue method={"update"} identifyingString={identifyingString} button={button}>
-			<GenericDynamicPubFormWrapper pubId={pubId} />
+			<GenericDynamicPubFormWrapper pubId={pubId} searchParams={{}} />
 		</PubCRUDDialogue>
 	);
 };

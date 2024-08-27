@@ -1,5 +1,8 @@
+import type { FieldValues } from "react-hook-form";
+
 import { v4 as uuidv4 } from "uuid";
 
+import type { JsonValue } from "contracts";
 import type {
 	FormElementsId,
 	PubFieldSchemaId,
@@ -9,6 +12,8 @@ import type {
 	StructuralFormElement,
 } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
+
+import type { Form as PubPubForm } from "~/lib/server/form";
 
 // Function to create an element object based on pubType parameter
 export function createElementFromPubType(pubType: {
@@ -58,3 +63,20 @@ export function createElementFromPubType(pubType: {
 		elementId: randomUUID as FormElementsId, // Replace with logic to generate or assign elementId
 	}));
 }
+
+export const buildDefaultValues = (
+	elements: PubPubForm["elements"],
+	pubValues: Record<string, JsonValue>
+) => {
+	const defaultValues: FieldValues = { ...pubValues };
+	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
+	for (const de of dateElements) {
+		if (de.slug) {
+			const pubValue = pubValues[de.slug];
+			if (pubValue) {
+				defaultValues[de.slug] = new Date(pubValue as string);
+			}
+		}
+	}
+	return defaultValues;
+};
