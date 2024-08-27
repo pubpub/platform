@@ -3,6 +3,7 @@
 import type { JSONSchemaType } from "ajv";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { fi } from "@faker-js/faker";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { JsonValue } from "contracts";
@@ -43,39 +44,60 @@ export const createPub = defineServerAction(async function createPub({
 	}
 
 	try {
-		// const createNewPub = await autoRevalidate(
-		// 	db
-		// 		.with("new_pub", (db) =>
-		// 			db
-		// 				.insertInto("pubs")
-		// 				.values({
-		// 					communityId: communityId,
-		// 					pubTypeId: pubTypeId,
-		// 					parentId: parentId,
-		// 				})
-		// 				.returning("id")
-		// 		)
-		// 		.with("stage_create", (db) =>
-		// 			db.insertInto("PubsInStages").values((eb) => ({
-		// 				pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-		// 				stageId,
-		// 			}))
-		// 		)
+		console.log(
+			"\n\ncreatePub data is def here",
+			"\nCommunityId:",
+			communityId,
+			"\nStageId:",
+			stageId,
+			"\nPubTypeId:",
+			pubTypeId,
+			"\nFields for db:",
+			Object.entries(fields).map(([key, value]) => ({
+				fieldId: key as PubFieldsId,
+				pubId: "I DONT EXIST YA FILTHY MORON",
+				value: value.value,
+			})),
+			"\nFields:",
+			fields,
+			"\nPath:",
+			path,
+			"\nParentId:",
+			parentId,
+			"\n\n"
+		);
+		const createNewPub = await autoRevalidate(
+			db
+				.with("new_pub", (db) =>
+					db
+						.insertInto("pubs")
+						.values({
+							communityId: communityId,
+							pubTypeId: pubTypeId,
+							parentId: parentId,
+						})
+						.returning("id")
+				)
+				.with("stage_create", (db) =>
+					db.insertInto("PubsInStages").values((eb) => ({
+						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+						stageId,
+					}))
+				)
 
-		// 		.insertInto("pub_values")
-		// 		.values((eb) =>
-		// 			Object.entries(fields).map(([key, value]) => ({
-		// 				fieldId: key as PubFieldsId,
-		// 				pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-		// 				value: JSON.stringify(value.value),
-		// 			}))
-		// 		)
-		// ).execute();
+				.insertInto("pub_values")
+				.values((eb) =>
+					Object.entries(fields).map(([key, value]) => ({
+						fieldId: key as PubFieldsId,
+						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+						value: JSON.stringify(value.value),
+					}))
+				)
+		).execute();
 
-		// if (path) {
-		// 	revalidatePath(path);
-		// }
-		console.log("createPub data is def here", communityId, stageId, pubTypeId, fields, path, parentId);
+		if (path) {
+			revalidatePath(path);
+		}
 
 		return {
 			success: true,

@@ -74,20 +74,16 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	// ));
 
 	return (
-		<>
-			<Suspense fallback={<div>Loading...</div>}>
-				<GenericDynamicPubForm
-					currentStage={stageOfPubRnRn}
-					communityStages={availableStages}
-					availablePubTypes={community.pubTypes}
-					parentId={props.parentId ?? ("" as PubsId)}
-					pubValues={values}
-					pubTypeId={pubTypeId}
-					formElements={formElementsByPubType}
-					pubId={pub?.id ?? ("" as PubsId)}
-				/>
-			</Suspense>
-		</>
+		<GenericDynamicPubForm
+			currentStage={stageOfPubRnRn}
+			communityStages={availableStages}
+			availablePubTypes={community.pubTypes}
+			parentId={props.parentId ?? ("" as PubsId)}
+			pubValues={values}
+			pubTypeId={pubTypeId}
+			formElements={formElementsByPubType}
+			pubId={pub?.id ?? ("" as PubsId)}
+		/>
 	);
 }
 
