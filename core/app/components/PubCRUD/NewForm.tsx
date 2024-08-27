@@ -1,24 +1,17 @@
 "use client";
 
+import type { FieldValues } from "react-hook-form";
+
 import React, { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
-import { z } from "zod";
 
-import type { GetPubResponseBody } from "contracts";
-import type {
-	CommunitiesId,
-	PubFields,
-	PubFieldSchema,
-	PubsId,
-	PubTypes,
-	Stages,
-	StagesId,
-} from "db/public";
-import { ElementType } from "db/public";
+import type { GetPubResponseBody, JsonValue } from "contracts";
+import type { PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
+import { CoreSchemaType, ElementType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -101,6 +94,26 @@ async function GenericDynamicPubForm({
 		resolver: typeboxResolver(schema),
 		defaultValues: buildDefaultValues(elements, pubValues),
 	});
+
+	const preparePayload = ({
+		formElements,
+		formValues,
+	}: {
+		formElements: PubPubForm["elements"];
+		formValues: FieldValues;
+	}) => {
+		// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
+		// For example, if a pub has an 'email' field but the form does not,
+		// we do not want to pass an empty `email` field to the upsert (it will fail validation)
+		const payload: Record<string, JsonValue> = {};
+		for (const { slug } of formElements) {
+			if (slug) {
+				payload[slug] = formValues[slug];
+			}
+		}
+		return payload;
+	};
+
 	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
 		if (!selectedStage) {
 			form.setError("stage", {
@@ -115,6 +128,10 @@ async function GenericDynamicPubForm({
 			});
 			return;
 		}
+		const fields = preparePayload({
+			formElements: elements,
+			formValues: values,
+		});
 
 		if (hasValues) {
 			// const result = await runUpdatePub({
@@ -138,19 +155,18 @@ async function GenericDynamicPubForm({
 			});
 			closeForm();
 		} else {
-			const fieldsToUpdate = Object.entries(values).reduce((acc, [key, value]) => {
-				const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
-				if (id) {
-					acc[id] = { slug: key, value };
-				}
-				return acc;
-			}, {});
 			const result = await runCreatePub({
 				communityId: selectedPubType.communityId,
 				pubTypeId: pubTypeId,
 				stageId: selectedStage?.id,
 				parentId,
-				fields: fieldsToUpdate,
+				fields: Object.entries(values).reduce((acc, [key, value]) => {
+					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
+					if (id) {
+						acc[id] = { slug: key, value };
+					}
+					return acc;
+				}, {}),
 				path: pathWithoutFormParam,
 			});
 
