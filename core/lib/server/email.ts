@@ -1,13 +1,14 @@
 import { renderAsync } from "@react-email/render";
-import { PasswordReset } from "emails";
+import { PasswordReset, SignupInvite } from "emails";
 import { SendMailOptions } from "nodemailer";
 
-import { AuthTokenType, UsersId } from "db/public";
+import { AuthTokenType, Communities, MemberRole, NewUsers, Users, UsersId } from "db/public";
 import { logger } from "logger";
 
+import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/auth/createMagicLink";
 import { smtpclient } from "./mailgun";
-import { getUser } from "./user";
+import { addUser, getUser } from "./user";
 
 const FIFTEEN_MINUTES = 1000 * 60 * 15;
 
@@ -72,29 +73,20 @@ export class Email {
 		}
 	}
 
-	public static passwordReset(props: {
-		user: {
-			id: UsersId;
-			email?: string;
-			firstName: string;
-			lastName?: string | null;
-		};
-	}) {
+	public static passwordReset(
+		user: Pick<Users, "id" | "email" | "firstName" | "lastName">,
+		trx = db
+	) {
 		const emailPromise = async () => {
-			const user = props.user.email
-				? props.user
-				: await getUser({ id: props.user.id }).executeTakeFirst();
-
-			if (!user || !user.email) {
-				throw new Error(`No user found with id ${props.user.id}`);
-			}
-
-			const magicLink = await createMagicLink({
-				type: AuthTokenType.passwordReset,
-				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-				path: "/reset",
-				userId: user.id,
-			});
+			const magicLink = await createMagicLink(
+				{
+					type: AuthTokenType.passwordReset,
+					expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+					path: "/reset",
+					userId: user.id,
+				},
+				trx
+			);
 
 			const email = await renderAsync(
 				PasswordReset({
@@ -116,35 +108,48 @@ export class Email {
 		};
 	}
 
-	public static signup(props: {
-		user: {
-			id: UsersId;
-			email?: string;
-			firstName: string;
-			lastName?: string | null;
-		};
-	}) {
+	public static invite() {
+		// TODO:
+	}
+
+	public static signupInvite(
+		props: {
+			user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">;
+			community: Pick<Communities, "name" | "avatar" | "slug">;
+			role: MemberRole;
+		},
+		trx = db
+	) {
 		const emailPromise = async () => {
-			const user = props.user.email
-				? props.user
-				: await getUser({ id: props.user.id }).executeTakeFirst();
-
-			if (!user || !user.email) {
-				throw new Error(`No user found with id ${props.user.id}`);
-			}
-
-			const magicLink = await createMagicLink({
-				type: AuthTokenType.passwordReset,
-				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-				path: "/reset",
-				userId: user.id,
-			});
+			const magicLink = await createMagicLink(
+				{
+					type: AuthTokenType.signup,
+					expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+					path: `/signup?redirectTo=${encodeURIComponent(
+						`/c/${props.community.slug}/stages`
+					)}`,
+					userId: props.user.id,
+				},
+				trx
+			);
 
 			const email = await renderAsync(
-				PasswordReset({
-					firstName: user.firstName,
+				SignupInvite({
+					community: props.community,
+					signupLink: magicLink,
+					role: props.role,
 				})
 			);
+
+			return {
+				to: props.user.email,
+				emailTemplate: email,
+				subject: "Join PubPub",
+			};
+		};
+
+		return {
+			send: this.#buildSend(emailPromise),
 		};
 	}
 }

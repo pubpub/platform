@@ -77,9 +77,9 @@ export async function findOrCreateUser(
 	return user;
 }
 
-export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
+export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>, trx = db) => {
 	// do not use autocache here until we have a good way to globally invalidate users
-	return db
+	return trx
 		.selectFrom("users")
 		.select(["users.id"])
 		.select((eb) => [
@@ -169,13 +169,19 @@ export const getSuggestedUsers = ({
 			.limit(limit)
 	);
 
-export const setUserPassword = cache(async (props: { userId: UsersId; password: string }) => {
-	const passwordHash = await createPasswordHash(props.password);
-	await db.updateTable("users").set({ passwordHash }).where("id", "=", props.userId).execute();
-});
+export const setUserPassword = cache(
+	async (props: { userId: UsersId; password: string }, trx = db) => {
+		const passwordHash = await createPasswordHash(props.password);
+		await trx
+			.updateTable("users")
+			.set({ passwordHash })
+			.where("id", "=", props.userId)
+			.execute();
+	}
+);
 
-export const addUser = (props: NewUsers) =>
-	autoRevalidate(db.insertInto("users").values(props).returningAll(), {
+export const addUser = (props: NewUsers, trx = db) =>
+	autoRevalidate(trx.insertInto("users").values(props).returning(SAFE_USER_SELECT), {
 		additionalRevalidateTags: ["all-users"],
 	});
 

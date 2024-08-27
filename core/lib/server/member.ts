@@ -12,10 +12,11 @@ import { SAFE_USER_SELECT } from "./user";
  * Either get a member by their id, or by userId and communityId
  */
 export const getMember = (
-	props: XOR<{ id: MembersId }, { userId: UsersId; communityId: CommunitiesId }>
+	props: XOR<{ id: MembersId }, { userId: UsersId; communityId: CommunitiesId }>,
+	trx = db
 ) => {
 	return autoCache(
-		db
+		trx
 			.selectFrom("members")
 			.select((eb) => [
 				"members.id",
@@ -43,9 +44,9 @@ export const getMember = (
 	);
 };
 
-export const inviteMember = (props: NewMembers) =>
+export const inviteMember = (props: NewMembers, trx = db) =>
 	autoRevalidate(
-		db
+		trx
 			.insertInto("members")
 			.values({
 				userId: props.userId,
@@ -55,8 +56,8 @@ export const inviteMember = (props: NewMembers) =>
 			.returningAll()
 	);
 
-export const updateMember = (props: MembersUpdate & { id: MembersId }) =>
-	autoRevalidate(db.updateTable("members").set(props).where("id", "=", props.id).returningAll());
+export const updateMember = (props: MembersUpdate & { id: MembersId }, trx = db) =>
+	autoRevalidate(trx.updateTable("members").set(props).where("id", "=", props.id).returningAll());
 
-export const removeMember = (props: MembersId) =>
-	autoRevalidate(db.deleteFrom("members").where("id", "=", props).returningAll());
+export const removeMember = (props: MembersId, trx = db) =>
+	autoRevalidate(trx.deleteFrom("members").where("id", "=", props).returningAll());

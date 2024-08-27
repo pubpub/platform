@@ -12,19 +12,20 @@ import { MemberRole } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import type { SuggestedUser } from "~/lib/server/members";
+import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
 import { env } from "~/lib/env/env.mjs";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { Email } from "~/lib/server/email";
 import {
 	inviteMember as dbAddMember,
 	getMember as dbGetMember,
 	removeMember as dbRemoveMember,
 } from "~/lib/server/member";
 import { addUser, getUser } from "~/lib/server/user";
-import { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { generateHash, slugifyString } from "~/lib/string";
 import { formatSupabaseError } from "~/lib/supabase";
 import { getServerSupabase } from "~/lib/supabaseServer";
@@ -261,40 +262,12 @@ export const addMember = defineServerAction(async function addMember({
 			role,
 		}).executeTakeFirst();
 
+		// TODO: send email to user confirming their membership,
+		// don't just add them
+
 		revalidateMemberPathsAndTags(result.community);
 
 		return { member };
-		// if (user.supabaseId) {
-		// 	return { member };
-		// }
-
-		// // No longer invite user to supabase
-		// const { error: supabaseInviteError } = await addSupabaseUser({
-		// 	email: user.email,
-		// 	firstName: user.firstName,
-		// 	lastName: user.lastName,
-		// 	community,
-		// 	role,
-		// 	force: true,
-		// });
-
-		// if (supabaseInviteError) {
-		// 	return {
-		// 		title: "Failed to add member",
-		// 		error: "We encounted a problem with our authentication provider.",
-		// 	};
-		// }
-
-		// await prisma.user.update({
-		// 	where: {
-		// 		id: user.id,
-		// 	},
-		// 	data: {
-		// 		supabaseId: user.supabaseId,
-		// 	},
-		// });
-
-		// return { member };
 	} catch (error) {
 		return {
 			title: "Failed to add member",
@@ -316,6 +289,9 @@ export const createUserWithMembership = defineServerAction(async function create
 	firstName: string;
 	lastName?: string | null;
 	email: string;
+	/**
+	 * @default MemberRole.editor
+	 */
 	role?: MemberRole;
 	isSuperAdmin?: boolean;
 }) {
@@ -330,7 +306,9 @@ export const createUserWithMembership = defineServerAction(async function create
 		};
 	}
 
-	const { firstName, lastName, email, role, isSuperAdmin } = parsed.data;
+	const { firstName, lastName, email, role: maybeRole, isSuperAdmin } = parsed.data;
+
+	const role = maybeRole ?? MemberRole.editor;
 
 	try {
 		const { error: adminError, user, community } = await isCommunityAdmin();
@@ -348,21 +326,46 @@ export const createUserWithMembership = defineServerAction(async function create
 			};
 		}
 
-		const newUser = await addUser({
-			email,
-			firstName,
-			lastName,
-			slug: `${slugifyString(firstName)}${
-				lastName ? `-${slugifyString(lastName)}` : ""
-			}-${generateHash(4, "0123456789")}`,
-			isSuperAdmin: isSuperAdmin === true,
-		}).executeTakeFirstOrThrow();
+		const trx = db.transaction();
 
-		const member = await dbAddMember({
-			userId: newUser.id,
-			communityId: community.id,
-			role,
-		}).executeTakeFirst();
+		const inviteUserResult = await trx.execute(async (trx) => {
+			const newUser = await addUser(
+				{
+					email,
+					firstName,
+					lastName,
+					slug: `${slugifyString(firstName)}${
+						lastName ? `-${slugifyString(lastName)}` : ""
+					}-${generateHash(4, "0123456789")}`,
+					isSuperAdmin: isSuperAdmin === true,
+				},
+				trx
+			).executeTakeFirstOrThrow();
+
+			const member = await dbAddMember(
+				{
+					userId: newUser.id,
+					communityId: community.id,
+					role: role,
+				},
+				trx
+			).executeTakeFirstOrThrow();
+
+			const result = await Email.signupInvite(
+				{
+					user: newUser,
+					community,
+					role: member.role,
+				},
+				trx
+			).send();
+
+			return result;
+		});
+
+		// if(inviteUserResult.error){
+
+		// }
 
 		// const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
 		// 	email,
@@ -389,9 +392,10 @@ export const createUserWithMembership = defineServerAction(async function create
 		// 	},
 		// });
 
-		revalidateMemberPathsAndTags(community);
+		//	revalidateMemberPathsAndTags(community);
 
-		return { ...user, memberships: [member] };
+		//		return { ...user, memberships: [member] };
+		return inviteUserResult;
 	} catch (error) {
 		return {
 			title: "Failed to add member",

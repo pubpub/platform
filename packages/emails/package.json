@@ -4,7 +4,7 @@
 	"main": "dist/emails.cjs.js",
 	"private": true,
 	"scripts": {
-		"dev": " node ./node_modules/react-email/cli/index.js dev -d src -p 3003",
+		"dev": "cp .env.development ./node_modules/react-email/ && pnpm email dev -d src -p 3003",
 		"type-check": "tsc --noEmit",
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"lint": "eslint **/*.tsx",

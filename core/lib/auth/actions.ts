@@ -210,16 +210,12 @@ async function supabaseSendForgotPasswordMail(props: { email: string }) {
 async function luciaSendForgotPasswordMail(props: {
 	user: NonNullable<Awaited<ReturnType<typeof getUserWithPasswordHash>>>;
 }) {
-	const result = await new Email()
-		.passwordReset({
-			user: {
-				id: props.user.id,
-				email: props.user.email,
-				firstName: props.user.firstName,
-				lastName: props.user.lastName,
-			},
-		})
-		.send();
+	const result = await Email.passwordReset({
+		id: props.user.id,
+		email: props.user.email,
+		firstName: props.user.firstName,
+		lastName: props.user.lastName,
+	}).send();
 
 	if ("error" in result) {
 		return {

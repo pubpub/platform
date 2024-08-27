@@ -1,8 +1,7 @@
-import * as React from "react";
+/* eslint-disable n/no-process-env */
 import {
 	Body,
 	Button,
-	Column,
 	Container,
 	Head,
 	Heading,
@@ -17,11 +16,12 @@ import {
 	Text,
 } from "@react-email/components";
 
-import type { Communities, CommunitiesId } from "db/public";
+import type { Communities, MemberRole } from "db/public";
 
 interface SignupInviteProps {
 	signupLink: string;
-	community: Communities;
+	community: Pick<Communities, "name" | "avatar" | "slug">;
+	role: MemberRole;
 }
 
 const baseUrl = process.env.PUBPUB_URL ?? process.env.NEXT_PUBLIC_PUBPUB_URL ?? "";
@@ -29,11 +29,11 @@ const baseUrl = process.env.PUBPUB_URL ?? process.env.NEXT_PUBLIC_PUBPUB_URL ?? 
 export const SignupInvite = ({
 	community = {
 		name: "CrocCroc",
-		id: "croccroc" as CommunitiesId,
+		avatar: `${baseUrl}/demo/croc.png`,
 		slug: "croccroc",
-		avatar: `${baseUrl}/static/croccroc.png`,
 	},
 	signupLink,
+	role,
 }: SignupInviteProps) => {
 	const previewText = `your PubPub password`;
 
@@ -57,8 +57,9 @@ export const SignupInvite = ({
 							Join {community.name} on PubPub
 						</Heading>
 						<Text className="text-[14px] leading-[24px] text-black">
-							You have been invited to signup for PubPub. Click the button below to
-							join {community.name} on PubPub.
+							You have been invited to become a <strong>{role}</strong> of{" "}
+							{community.name} on PubPub. Click the button below finish your
+							registration and join {community.name} on PubPub.
 						</Text>
 						<Section className="mb-[32px] mt-[32px] text-center">
 							<Button
@@ -86,5 +87,3 @@ export const SignupInvite = ({
 		</Html>
 	);
 };
-
-export default SignupInvite;

@@ -1,5 +1,6 @@
 import type { AuthTokenType, UsersId } from "db/public";
 
+import { db } from "~/kysely/database";
 import { env } from "../env/env.mjs";
 import { createToken } from "../server/token";
 import { getServerSupabase } from "../supabaseServer";
@@ -36,12 +37,15 @@ type CreateMagicLinkOptions = NativeMagicLinkOptions | SupabaseMagicLinkOptions;
 // 	return data.properties.action_link;
 // };
 
-export const createMagicLink = async (options: NativeMagicLinkOptions) => {
-	const token = await createToken({
-		userId: options.userId,
-		type: options.type,
-		expiresAt: options.expiresAt,
-	});
+export const createMagicLink = async (options: NativeMagicLinkOptions, trx = db) => {
+	const token = await createToken(
+		{
+			userId: options.userId,
+			type: options.type,
+			expiresAt: options.expiresAt,
+		},
+		trx
+	);
 
 	return `${env.NEXT_PUBLIC_PUBPUB_URL}/magic-link?token=${token}&redirectTo=${options.path}`;
 };

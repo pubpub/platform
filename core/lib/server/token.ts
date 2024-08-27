@@ -44,7 +44,7 @@ export enum TokenFailureReason {
 /**
  * @throws {InvalidTokenError}
  */
-export const validateToken = async (token: string, type?: AuthTokenType) => {
+export const validateToken = async (token: string, type?: AuthTokenType, trx = db) => {
 	// Parse the token's id and plaintext value from the input
 	// Format: "<token id>.<token plaintext>"
 	const [tokenId, tokenString] = token.split(".");
@@ -90,7 +90,7 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 	}
 
 	// If we haven't thrown by now, we've authenticated the user associated with the token
-	await db
+	await trx
 		.updateTable("auth_tokens")
 		.set({ isUsed: true })
 		.where("id", "=", dbToken.id)
@@ -103,26 +103,27 @@ export const validateToken = async (token: string, type?: AuthTokenType) => {
 	return { user, authTokenType };
 };
 
-const getTokenBase = db
-	.selectFrom("auth_tokens")
-	.select((eb) => [
-		"auth_tokens.id",
-		"auth_tokens.createdAt",
-		"auth_tokens.isUsed",
-		"auth_tokens.userId",
-		"auth_tokens.expiresAt",
-		"auth_tokens.hash",
-		"auth_tokens.type",
-		jsonObjectFrom(
-			eb
-				.selectFrom("users")
-				.selectAll("users")
-				.whereRef("users.id", "=", "auth_tokens.userId")
-		).as("user"),
-	]);
+const getTokenBase = (trx = db) =>
+	trx
+		.selectFrom("auth_tokens")
+		.select((eb) => [
+			"auth_tokens.id",
+			"auth_tokens.createdAt",
+			"auth_tokens.isUsed",
+			"auth_tokens.userId",
+			"auth_tokens.expiresAt",
+			"auth_tokens.hash",
+			"auth_tokens.type",
+			jsonObjectFrom(
+				eb
+					.selectFrom("users")
+					.selectAll("users")
+					.whereRef("users.id", "=", "auth_tokens.userId")
+			).as("user"),
+		]);
 
-export const getAuthToken = (token: AuthTokensId) =>
-	getTokenBase.where("auth_tokens.id", "=", token);
+export const getAuthToken = (token: AuthTokensId, trx = db) =>
+	getTokenBase(trx).where("auth_tokens.id", "=", token);
 
 const createDateOneWeekInTheFuture = () => {
 	const expiresAt = new Date();
@@ -132,15 +133,18 @@ const createDateOneWeekInTheFuture = () => {
 };
 // Securely generate a random token and store its hash in the database, while returning the
 // plaintext
-export const createToken = async ({
-	userId,
-	type = AuthTokenType.generic,
-	expiresAt = createDateOneWeekInTheFuture(),
-}: {
-	userId: UsersId;
-	type: AuthTokenType;
-	expiresAt?: Date;
-}) => {
+export const createToken = async (
+	{
+		userId,
+		type = AuthTokenType.generic,
+		expiresAt = createDateOneWeekInTheFuture(),
+	}: {
+		userId: UsersId;
+		type: AuthTokenType;
+		expiresAt?: Date;
+	},
+	trx = db
+) => {
 	const tokenString = generateToken();
 
 	// There's no salt added to this hash! That's okay because the string we're hashing is random
@@ -148,7 +152,7 @@ export const createToken = async ({
 	// rainbow table attacks, but no better than increasing the key length would.
 	const hash = createHash(tokenString).digest(encoding);
 
-	const token = await db
+	const token = await trx
 		.insertInto("auth_tokens")
 		.values({
 			userId,
@@ -168,8 +172,12 @@ export const createToken = async ({
  * This atm just sets the expiration date to the past, but in the future we might want to
  * invalidate the tokens in the database, or invalidate them in the browser
  */
-export const invalidateTokensForUser = async (userId: UsersId, types: AuthTokenType[]) => {
-	const token = await db
+export const invalidateTokensForUser = async (
+	userId: UsersId,
+	types: AuthTokenType[],
+	trx = db
+) => {
+	const token = await trx
 		.with("invalidated_tokens", (db) =>
 			db
 				.updateTable("auth_tokens")
