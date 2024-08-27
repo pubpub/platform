@@ -18,7 +18,7 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getUser, setUserPassword } from "~/lib/server/user";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import { env } from "../env/env.mjs";
-import { Email } from "../server/email/sendPasswordResetEmail";
+import { Email } from "../server/email";
 import { smtpclient } from "../server/mailgun";
 import { createToken, invalidateTokensForUser } from "../server/token";
 import { formatSupabaseError } from "../supabase";
