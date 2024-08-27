@@ -30,7 +30,9 @@ export function StageSelectClient(props: Props) {
 						}}
 					>
 						<SelectTrigger>
-							<SelectValue placeholder="Select a stage" defaultValue={field.value} />
+							<SelectValue placeholder="Select a stage" defaultValue={field.value}>
+								{props.stages.find((stage) => stage.id === field.value)?.name}
+							</SelectValue>
 						</SelectTrigger>
 						<SelectContent>
 							{props.stages.map((stage) => (

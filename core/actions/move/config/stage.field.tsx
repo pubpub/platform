@@ -10,15 +10,11 @@ const component = defineActionFormFieldServerComponent(
 	action,
 	"params",
 	async ({ communityId, actionInstance }) => {
-		const community = await autoCache(
-			db.selectFrom("communities").selectAll().where("id", "=", communityId)
-		).executeTakeFirstOrThrow();
-
 		return (
 			<StageSelectServer
 				fieldName="stage"
 				fieldLabel="Destination stage"
-				community={community}
+				communityId={communityId}
 				value={actionInstance.config?.stage as StagesId}
 			/>
 		);
