@@ -11,15 +11,15 @@ import { Button } from "ui/button";
 import { MarkdownEditor } from "ui/editors";
 import { Form, FormField } from "ui/form";
 
-import { useFormBuilder } from "./FormBuilderContext";
-import { structuralElements } from "./StructuralElements";
-import { isStructuralElement } from "./types";
+import { useFormBuilder } from "../FormBuilderContext";
+import { structuralElements } from "../StructuralElements";
+import { isStructuralElement } from "../types";
 
 type Props = {
 	index: number;
 };
 
-export const ConfigureElement = ({ index }: Props) => {
+export const ElementConfigurationForm = ({ index }: Props) => {
 	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
 	if (!selectedElement) {
 		return null;
