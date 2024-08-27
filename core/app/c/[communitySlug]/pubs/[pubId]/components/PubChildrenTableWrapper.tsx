@@ -1,3 +1,4 @@
+import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -48,18 +49,19 @@ async function PubChildrenTableWrapper({
 						}
 					/>
 				) : (
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger>
-								<span className="border-b-2 border-dotted border-muted-foreground text-muted-foreground">
-									N/A
-								</span>
-							</TooltipTrigger>
-							<TooltipContent>
-								The pub's current stage has no actions configured.
-							</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
+					<div className="flex items-center space-x-1">
+						<span className="text-muted-foreground">None</span>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger>
+									<Info className="h-4 w-4 text-muted-foreground" />
+								</TooltipTrigger>
+								<TooltipContent>
+									The pub's current stage has no actions configured.
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
+					</div>
 				),
 		};
 	});
