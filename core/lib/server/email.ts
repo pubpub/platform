@@ -1,223 +1,150 @@
-import type { Prisma, User } from "@prisma/client";
+import { renderAsync } from "@react-email/render";
+import { PasswordReset } from "emails";
+import { SendMailOptions } from "nodemailer";
 
-import { Eta } from "eta";
-
-import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
 import { AuthTokenType, UsersId } from "db/public";
+import { logger } from "logger";
 
-import prisma from "~/prisma/db";
-import { IntegrationAction, pubValuesInclude } from "../types";
-import { BadRequestError, NotFoundError } from "./errors";
+import { createMagicLink } from "~/lib/auth/createMagicLink";
 import { smtpclient } from "./mailgun";
-import { createToken } from "./token";
+import { getUser } from "./user";
 
-type Node = string | { t: string; val: string };
+const FIFTEEN_MINUTES = 1000 * 60 * 15;
 
-const staticTokens = new Set([
-	"user.token",
-	"user.id",
-	"user.firstName",
-	"user.lastName",
-	"instance.id",
-]);
-const dynamicTokens = /^(instance\.actions|extra|pubs|users)\.(.+)$/;
-const commentRegex = /\/\*([\s\S]*?)\*\//g;
+type RequiredOptions = {
+	to: string;
+	emailTemplate: string;
+	subject: string;
+};
 
-const plugin = {
-	processAST(nodes: Node[]) {
-		const next: unknown[] = [];
-		for (let i = 0; i < nodes.length; i++) {
-			const node = nodes[i];
-			if (typeof node === "string") {
-				// Accept any string
-				next.push(node);
-			} else if (node.t === "i") {
-				// Strip pure comment interpolations
-				if (node.val.replace(commentRegex, "") === "") {
-					continue;
-				}
-				// Accept valid tokens
-				if (!staticTokens.has(node.val) && !dynamicTokens.test(node.val)) {
-					throw new BadRequestError(`Invalid token ${node.val}`);
-				}
-				// Await async tokens
-				next.push(node.val === "user.token" ? { t: "i", val: "await user.token" } : node);
-			} else {
-				// Disable code execution and raw expressions
-				throw new BadRequestError("Invalid message syntax");
+const DEFAULT_OPTIONS = {
+	from: `hello@pubpub.org`,
+	name: `PubPub Team`,
+} as const;
+
+export class Email {
+	static #buildSend(emailPromise: () => Promise<RequiredOptions>) {
+		const func = this.#send.bind(this, emailPromise);
+
+		return func as (
+			options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
+				name?: string;
 			}
+		) => Promise<{ success: true; report?: string } | { error: string }>;
+	}
+
+	static async #send(
+		requiredPromise: () => Promise<RequiredOptions>,
+		options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
+			name?: string;
 		}
-		return next;
-	},
-};
+	) {
+		try {
+			const required = await requiredPromise();
 
-const eta = new Eta({
-	autoEscape: false,
-	// <%= it.user.id %> becomes <%= user.id %>
-	functionHeader:
-		"const user=it.user,instance=it.instance,extra=it.extra,pubs=it.pubs,users=it.users;",
-	// <%= token %> becomes {{= token }}
-	tags: ["{{", "}}"],
-	// {{= token }} becomes {{ token }}
-	parse: { exec: ".", interpolate: "", raw: "." },
-	// Register a plugin that disables unsafe features and desugars async tokens
-	plugins: [plugin],
-	// TODO: enable caching for static and/or hot messages
-	cache: false,
-});
-
-const instanceInclude = {
-	integration: {
-		select: {
-			actions: true,
-		},
-	},
-} satisfies Prisma.IntegrationInstanceInclude;
-
-const makeProxy = <T extends Record<string, unknown>>(obj: T, prefix: string) => {
-	return new Proxy(obj, {
-		get(target, prop) {
-			if (typeof prop !== "string") {
-				throw new BadRequestError("Invalid token");
-			}
-			if (!(prop in target)) {
-				throw new BadRequestError(`Invalid token ${prefix}.${prop}`);
-			}
-			return target[prop];
-		},
-	});
-};
-
-const pubInclude = {
-	...pubValuesInclude,
-	assignee: {
-		select: {
-			id: true,
-			slug: true,
-			avatar: true,
-			firstName: true,
-			lastName: true,
-			email: true,
-		},
-	},
-} satisfies Prisma.PubInclude;
-
-type EmailTemplatePub = {
-	id: string;
-	pubTypeId: string;
-	values: Record<string, Prisma.JsonValue>;
-	assignee: Prisma.UserGetPayload<(typeof pubInclude)["assignee"]> | null;
-};
-
-const userSelect = {
-	firstName: true,
-	lastName: true,
-	email: true,
-} satisfies Prisma.UserSelect;
-
-type EmailTemplateUser = Prisma.UserGetPayload<{ select: typeof userSelect }>;
-
-const makeTemplateApi = async (
-	instance: Prisma.IntegrationInstanceGetPayload<{ include: typeof instanceInclude }>,
-	user: User,
-	body: SendEmailRequestBody
-) => {
-	const actions = (instance.integration.actions as IntegrationAction[]).reduce(
-		(actions, action) => {
-			actions[action.name] = action.href;
-			return actions;
-		},
-		{} as Record<string, string>
-	);
-	// TODO: Batch these calls using prisma.findMany() or equivalent.
-	// Load included pubs.
-	const pubs: { [pubId: string]: EmailTemplatePub } = {};
-	if (body.include?.pubs) {
-		for (const pubAlias in body.include.pubs) {
-			const pubId = body.include.pubs[pubAlias];
-			const pub = await prisma.pub.findUnique({
-				where: { id: pubId },
-				include: pubInclude,
+			logger.info({
+				msg: `Sending email to ${required.to}`,
+				options: {
+					...required,
+					...options,
+				},
 			});
-			if (pub) {
-				pubs[pubAlias] = {
-					id: pub.id,
-					pubTypeId: pub.pubTypeId,
-					values: pub.values.reduce(
-						(prev, curr) => {
-							prev[curr.field.slug] = curr.value;
-							return prev;
-						},
-						{} as Record<string, Prisma.JsonValue>
-					),
-					assignee: pub.assignee,
-				};
-			}
+
+			const send = await smtpclient.sendMail({
+				from: `${options?.name ?? DEFAULT_OPTIONS.name} <${options?.from ?? DEFAULT_OPTIONS.from}>`,
+				to: required.to,
+				subject: required.subject,
+				html: required.emailTemplate,
+				...options,
+			});
+
+			return {
+				success: true,
+			};
+		} catch (error) {
+			logger.error({
+				msg: `Failed to send email`,
+				error: error,
+			});
+			return {
+				error: error.message,
+			};
 		}
 	}
-	// Load included users.
-	const users: { [userId: string]: EmailTemplateUser } = {};
-	if (body.include?.users) {
-		for (const userAlias in body.include.users) {
-			const userId = body.include.users[userAlias];
-			const user = await prisma.user.findUnique({
-				where: { id: userId },
-				select: { id: true, firstName: true, lastName: true, email: true },
-			});
-			if (user) {
-				users[userAlias] = user;
-			}
-		}
-	}
-	const api = {
-		instance: { id: instance.id, actions: makeProxy(actions, "instance.actions") },
+
+	public static passwordReset(props: {
 		user: {
-			id: user.id,
-			firstName: user.firstName,
-			lastName: user.lastName,
-			get token() {
-				return createToken({ userId: user.id as UsersId, type: AuthTokenType.generic });
-			},
-		},
-		pubs: makeProxy(pubs, "pubs"),
-		users: makeProxy(users, "users"),
-	};
+			id: UsersId;
+			email?: string;
+			firstName: string;
+			lastName?: string | null;
+		};
+	}) {
+		const emailPromise = async () => {
+			const user = props.user.email
+				? props.user
+				: await getUser({ id: props.user.id }).executeTakeFirst();
 
-	const parsedExtra: Record<string, string> = {};
+			if (!user || !user.email) {
+				throw new Error(`No user found with id ${props.user.id}`);
+			}
 
-	for (const key in body.extra) {
-		parsedExtra[key] = await eta.renderStringAsync(body.extra[key], api);
+			const magicLink = await createMagicLink({
+				type: AuthTokenType.passwordReset,
+				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+				path: "/reset",
+				userId: user.id,
+			});
+
+			const email = await renderAsync(
+				PasswordReset({
+					firstName: user.firstName,
+					lastName: user.lastName ?? undefined,
+					resetPasswordLink: magicLink,
+				})
+			);
+
+			return {
+				to: user.email,
+				emailTemplate: email,
+				subject: "Reset your PubPub password",
+			};
+		};
+
+		return {
+			send: this.#buildSend(emailPromise),
+		};
 	}
 
-	return {
-		...api,
-		extra: parsedExtra,
-	};
-};
+	public static signup(props: {
+		user: {
+			id: UsersId;
+			email?: string;
+			firstName: string;
+			lastName?: string | null;
+		};
+	}) {
+		const emailPromise = async () => {
+			const user = props.user.email
+				? props.user
+				: await getUser({ id: props.user.id }).executeTakeFirst();
 
-export const emailUser = async (instanceId: string, user: User, body: SendEmailRequestBody) => {
-	const instance = await prisma.integrationInstance.findUnique({
-		where: { id: instanceId },
-		include: { ...instanceInclude, community: { select: { name: true } } },
-	});
+			if (!user || !user.email) {
+				throw new Error(`No user found with id ${props.user.id}`);
+			}
 
-	if (!instance) {
-		throw new NotFoundError(`Integration instance ${instanceId} not found`);
+			const magicLink = await createMagicLink({
+				type: AuthTokenType.passwordReset,
+				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+				path: "/reset",
+				userId: user.id,
+			});
+
+			const email = await renderAsync(
+				PasswordReset({
+					firstName: user.firstName,
+				})
+			);
+		};
 	}
-
-	const templateApi = await makeTemplateApi(instance, user, body);
-	const subject = await eta.renderStringAsync(body.subject, templateApi);
-	const html = await eta.renderStringAsync(body.message, templateApi);
-	const { accepted, rejected } = await smtpclient.sendMail({
-		from: `${instance.community.name || "PubPub Team"} <hello@mg.pubpub.org>`,
-		to: user.email,
-		replyTo: "hello@pubpub.org",
-		html,
-		subject,
-	});
-
-	return {
-		accepted,
-		rejected,
-	};
-};
+}
