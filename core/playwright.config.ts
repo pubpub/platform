@@ -25,7 +25,7 @@ export default defineConfig({
 	},
 	webServer: [
 		{
-			command: `pnpm -w preconstruct build && ${
+			command: `pnpm --workspace-root exec preconstruct build && ${
 				process.env.TEST_DEV
 					? "pnpm --filter core dev"
 					: "pnpm --filter core build && pnpm --filter core start"
