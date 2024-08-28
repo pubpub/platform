@@ -7,17 +7,15 @@ import type { Communities, MemberRole, Users } from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
+import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/auth/createMagicLink";
 import { smtpclient } from "./mailgun";
 
 const FIFTEEN_MINUTES = 1000 * 60 * 15;
 
-type RequiredOptions = {
-	to: string;
-	emailTemplate: string;
-	subject: string;
-};
+type RequiredOptions = Required<Pick<SendMailOptions, "to" | "subject">> &
+	XOR<{ html: string }, { text: string }>;
 
 const DEFAULT_OPTIONS = {
 	from: `hello@pubpub.org`,
@@ -56,7 +54,8 @@ export class Email {
 				from: `${options?.name ?? DEFAULT_OPTIONS.name} <${options?.from ?? DEFAULT_OPTIONS.from}>`,
 				to: required.to,
 				subject: required.subject,
-				html: required.emailTemplate,
+				html: required.html,
+				text: required.text,
 				...options,
 			});
 
@@ -78,34 +77,32 @@ export class Email {
 		user: Pick<Users, "id" | "email" | "firstName" | "lastName">,
 		trx = db
 	) {
-		const emailPromise = async () => {
-			const magicLink = await createMagicLink(
-				{
-					type: AuthTokenType.passwordReset,
-					expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-					path: "/reset",
-					userId: user.id,
-				},
-				trx
-			);
-
-			const email = await renderAsync(
-				PasswordReset({
-					firstName: user.firstName,
-					lastName: user.lastName ?? undefined,
-					resetPasswordLink: magicLink,
-				})
-			);
-
-			return {
-				to: user.email,
-				emailTemplate: email,
-				subject: "Reset your PubPub password",
-			};
-		};
-
 		return {
-			send: this.#buildSend(emailPromise),
+			send: this.#buildSend(async () => {
+				const magicLink = await createMagicLink(
+					{
+						type: AuthTokenType.passwordReset,
+						expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+						path: "/reset",
+						userId: user.id,
+					},
+					trx
+				);
+
+				const email = await renderAsync(
+					PasswordReset({
+						firstName: user.firstName,
+						lastName: user.lastName ?? undefined,
+						resetPasswordLink: magicLink,
+					})
+				);
+
+				return {
+					to: user.email,
+					html: email,
+					subject: "Reset your PubPub password",
+				};
+			}),
 		};
 	}
 
@@ -121,36 +118,40 @@ export class Email {
 		},
 		trx = db
 	) {
-		const emailPromise = async () => {
-			const magicLink = await createMagicLink(
-				{
-					type: AuthTokenType.signup,
-					expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-					path: `/signup?redirectTo=${encodeURIComponent(
-						`/c/${props.community.slug}/stages`
-					)}`,
-					userId: props.user.id,
-				},
-				trx
-			);
-
-			const email = await renderAsync(
-				SignupInvite({
-					community: props.community,
-					signupLink: magicLink,
-					role: props.role,
-				})
-			);
-
-			return {
-				to: props.user.email,
-				emailTemplate: email,
-				subject: "Join PubPub",
-			};
-		};
-
 		return {
-			send: this.#buildSend(emailPromise),
+			send: this.#buildSend(async () => {
+				const magicLink = await createMagicLink(
+					{
+						type: AuthTokenType.signup,
+						expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+						path: `/signup?redirectTo=${encodeURIComponent(
+							`/c/${props.community.slug}/stages`
+						)}`,
+						userId: props.user.id,
+					},
+					trx
+				);
+
+				const email = await renderAsync(
+					SignupInvite({
+						community: props.community,
+						signupLink: magicLink,
+						role: props.role,
+					})
+				);
+
+				return {
+					to: props.user.email,
+					html: email,
+					subject: "Join PubPub",
+				};
+			}),
+		};
+	}
+
+	public static generic(opts: RequiredOptions) {
+		return {
+			send: this.#buildSend(async () => opts),
 		};
 	}
 }

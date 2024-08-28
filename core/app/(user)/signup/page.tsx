@@ -31,10 +31,6 @@ export default async function Page() {
 		);
 	}
 
-	// if (loginData) {
-	// 	/* TODO: clean this up. Better alert status. */
-	// 	return <div>Currently logged in. Please logout to signup for a new account.</div>;
-	// }
 	return (
 		<div className="m-auto max-w-lg">
 			<SignupForm user={user} />
