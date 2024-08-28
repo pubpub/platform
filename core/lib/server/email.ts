@@ -1,14 +1,15 @@
+import type { SendMailOptions } from "nodemailer";
+
 import { renderAsync } from "@react-email/render";
 import { PasswordReset, SignupInvite } from "emails";
-import { SendMailOptions } from "nodemailer";
 
-import { AuthTokenType, Communities, MemberRole, NewUsers, Users, UsersId } from "db/public";
+import type { Communities, MemberRole, Users } from "db/public";
+import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/auth/createMagicLink";
 import { smtpclient } from "./mailgun";
-import { addUser, getUser } from "./user";
 
 const FIFTEEN_MINUTES = 1000 * 60 * 15;
 
@@ -108,7 +109,7 @@ export class Email {
 		};
 	}
 
-	public static invite() {
+	public static inviteToForm() {
 		// TODO:
 	}
 
