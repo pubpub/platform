@@ -3,7 +3,6 @@
 import type { JSONSchemaType } from "ajv";
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import { fi } from "@faker-js/faker";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { JsonValue } from "contracts";
@@ -44,28 +43,6 @@ export const createPub = defineServerAction(async function createPub({
 	}
 
 	try {
-		console.log(
-			"\n\ncreatePub data is def here",
-			"\nCommunityId:",
-			communityId,
-			"\nStageId:",
-			stageId,
-			"\nPubTypeId:",
-			pubTypeId,
-			"\nFields for db:",
-			Object.entries(fields).map(([key, value]) => ({
-				fieldId: key as PubFieldsId,
-				pubId: "I DONT EXIST YA FILTHY MORON",
-				value: value.value,
-			})),
-			"\nFields:",
-			fields,
-			"\nPath:",
-			path,
-			"\nParentId:",
-			parentId,
-			"\n\n"
-		);
 		const createNewPub = await autoRevalidate(
 			db
 				.with("new_pub", (db) =>

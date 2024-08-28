@@ -11,7 +11,7 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
-import { CoreSchemaType, ElementType } from "db/public";
+import { ElementType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -37,7 +37,6 @@ async function GenericDynamicPubForm({
 	pubValues,
 	pubTypeId,
 	formElements,
-	pubId,
 	className,
 }: {
 	communityStages: Pick<Stages, "id" | "name" | "order">[];
@@ -77,6 +76,7 @@ async function GenericDynamicPubForm({
 	const closeForm = useCallback(() => {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
+
 	const elements = selectedPubType ? createElementFromPubType(selectedPubType) : [];
 	const schema = Type.Object(
 		Object.fromEntries(
@@ -155,6 +155,20 @@ async function GenericDynamicPubForm({
 			});
 			closeForm();
 		} else {
+			console.log(
+				"\n\nFields before server sction",
+				"\n\nRaw values",
+				values,
+				"\n\nFields",
+				Object.entries(values).reduce((acc, [key, value]) => {
+					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
+					if (id) {
+						acc[id] = { slug: key, value };
+					}
+					return acc;
+				}, {}),
+				"\n\n"
+			);
 			const result = await runCreatePub({
 				communityId: selectedPubType.communityId,
 				pubTypeId: pubTypeId,
