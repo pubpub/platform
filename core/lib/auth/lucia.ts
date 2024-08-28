@@ -20,6 +20,7 @@ type UserWithMembersShips = Omit<Users, "passwordHash"> & {
 };
 declare module "lucia" {
 	interface Register {
+		UserId: UsersId;
 		Lucia: typeof lucia;
 		DatabaseUserAttributes: Omit<UserWithMembersShips, "id">;
 		DatabaseSessionAttributes: Omit<
