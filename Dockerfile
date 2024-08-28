@@ -126,4 +126,6 @@ ENV PACKAGE=${PACKAGE}
 
 RUN pnpm p:build
 
+RUN pnpm --filter ${PACKAGE} prisma generate
+
 CMD pnpm run --filter ${PACKAGE} dev

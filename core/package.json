@@ -17,6 +17,7 @@
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
 		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
 		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
+		"migrate-test": "dotenv -e .env.test -- prisma migrate deploy",
 		"prebuild": "prisma generate",
 		"prisma": "dotenv -e .env.local -e .env.development prisma",
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
@@ -24,6 +25,7 @@
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",
+		"test-run": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest run",
 		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch"
 	},

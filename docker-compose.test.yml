@@ -28,9 +28,12 @@ services:
             - /app/node_modules
         depends_on:
             - postgres
-        command: pnpm --filter core run test
+        command: >
+            sh -c "pnpm --filter core migrate-test &&
+                   pnpm --filter core run test-run"
         profiles:
             - dev
+            - test
 
     # app-prod:
     #     image: your-app-image:latest

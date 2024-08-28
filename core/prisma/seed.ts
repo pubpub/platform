@@ -4,6 +4,7 @@ import { makeWorkerUtils } from "graphile-worker";
 
 import { logger } from "logger";
 
+import { isUniqueConstraintError } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
 import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
@@ -125,7 +126,11 @@ main()
 		await prisma.$disconnect();
 	})
 	.catch(async (e) => {
+		if (!isUniqueConstraintError(e)) {
+			logger.error(e);
+			await prisma.$disconnect();
+			process.exit(1);
+		}
 		logger.error(e);
 		await prisma.$disconnect();
-		process.exit(1);
 	});
