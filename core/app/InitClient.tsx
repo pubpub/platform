@@ -4,18 +4,25 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 import { REFRESH_NAME, TOKEN_NAME } from "lib/auth/cookies";
-import { createBrowserSupabase, supabase } from "lib/supabase";
+import { createBrowserSupabase } from "lib/supabase";
 import { logger } from "logger";
 
 import { env } from "~/lib/env/env.mjs";
+
+const supabase = createBrowserSupabase(
+	env.NEXT_PUBLIC_SUPABASE_URL,
+	env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
+);
 
 export default function InitClient() {
 	const pathname = usePathname();
 	useEffect(() => {
 		const isLocalhost = window.location.origin.includes("localhost");
 		const securityValue = isLocalhost ? "secure" : "";
-		createBrowserSupabase(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY);
-		supabase.auth.onAuthStateChange(async (event, session) => {
+
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange(async (event, session) => {
 			if (event === "SIGNED_OUT") {
 				// delete cookies on sign out
 				const expires = new Date(0).toUTCString();
@@ -32,6 +39,8 @@ export default function InitClient() {
 				}
 			}
 		});
+
+		return () => subscription.unsubscribe();
 	}, []);
 	/* This effect is only needed so long as Links fail to scroll to the top. */
 	/* https://github.com/vercel/next.js/issues/42492 */
