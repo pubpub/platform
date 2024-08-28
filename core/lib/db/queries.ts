@@ -8,7 +8,7 @@ import { expect } from "utils";
 
 import { RuleConfig, RuleConfigs } from "~/actions/types";
 import { db } from "~/kysely/database";
-import { communityMemberInclude, pubValuesInclude, stageInclude } from "~/lib/types";
+import { communityMemberInclude, pubTypeSelect, pubValuesInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 
 export const getStage = cache(async (stageId: string) => {
@@ -110,6 +110,9 @@ export const getCommunityBySlug = async (communitySlug: string) => {
 			},
 			members: {
 				include: communityMemberInclude,
+			},
+			pubTypes: {
+				select: pubTypeSelect,
 			},
 		},
 	});

@@ -5,7 +5,6 @@ import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -168,7 +167,11 @@ export default async function Page({
 				/>
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper pub={pub} members={community.members} />
+				<PubChildrenTableWrapper
+					pub={pub}
+					members={community.members}
+					pubTypes={community.pubTypes}
+				/>
 			</Suspense>
 		</div>
 	);

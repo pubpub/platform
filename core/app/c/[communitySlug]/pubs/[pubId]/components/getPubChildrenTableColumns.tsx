@@ -5,7 +5,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
@@ -15,6 +14,7 @@ export type PubChild = {
 	title: string;
 	stage: string;
 	assignee: string | null;
+	member: string;
 	created: Date;
 	actions: JSX.Element;
 };
@@ -72,6 +72,10 @@ export const getPubChildrenTableColumns = () =>
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Assignee" />,
 			accessorKey: "assignee",
+		},
+		{
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
+			accessorKey: "member",
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,

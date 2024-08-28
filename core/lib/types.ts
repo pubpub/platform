@@ -144,6 +144,14 @@ export type CommunityMemberPayload = Prisma.MemberGetPayload<{
 	include: typeof communityMemberInclude;
 }>;
 
+export const pubTypeSelect = {
+	id: true,
+	name: true,
+};
+
+export type PubTypePayload = Prisma.PubTypeGetPayload<{
+	select: typeof pubTypeSelect;
+}>;
 export const stageInclude = {
 	actionInstances: true,
 	pubs: { include: { pub: { include: pubInclude } } },

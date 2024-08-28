@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { StagePub } from "~/lib/db/queries";
-import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
+import type { CommunityMemberPayload, PubPayload, PubTypePayload } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { getStage, getStageActions } from "~/lib/db/queries";
 import { PubChildrenTable } from "./PubChildrenTable";
@@ -11,9 +11,11 @@ import { PubChildrenTable } from "./PubChildrenTable";
 async function PubChildrenTableWrapper({
 	pub,
 	members,
+	pubTypes,
 }: {
 	pub: PubPayload;
 	members: CommunityMemberPayload[];
+	pubTypes: PubTypePayload[];
 }) {
 	const pubChildren = pub.children.map(async (child) => {
 		const [stageActionInstances, stage] =
@@ -24,7 +26,6 @@ async function PubChildrenTableWrapper({
 					])
 				: [null, null];
 		const assigneeUser = members.find((m) => m.userId === child.assigneeId)?.user;
-
 		return {
 			id: child.id,
 			title:
@@ -32,6 +33,7 @@ async function PubChildrenTableWrapper({
 				"Evaluation",
 			stage: child.stages[0]?.stage.name,
 			assignee: assigneeUser ? `${assigneeUser.firstName} ${assigneeUser.lastName}` : null,
+			member: "N/A",
 			created: new Date(child.createdAt),
 			actions:
 				stageActionInstances && stageActionInstances.length > 0 ? (
@@ -65,9 +67,9 @@ async function PubChildrenTableWrapper({
 				),
 		};
 	});
-
 	const children = await Promise.all(pubChildren);
-	return <PubChildrenTable children={children} />;
+	<PubChildrenTable children={children} />;
+	return <></>;
 }
 
 export default PubChildrenTableWrapper;
