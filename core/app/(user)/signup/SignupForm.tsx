@@ -1,7 +1,8 @@
 "use client";
 
+import type { Static } from "@sinclair/typebox";
+
 import React, { useCallback, useMemo } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -36,15 +37,16 @@ export function SignupForm(props: {
 
 	const resolver = useMemo(() => typeboxResolver(formSchema), []);
 
-	const form = useForm({
+	const form = useForm<Static<typeof formSchema>>({
 		resolver,
-		defaultValues: props.user,
+		defaultValues: { ...props.user, lastName: props.user.lastName ?? undefined },
 	});
 
 	const router = useRouter();
 
 	const searchParams = useSearchParams();
-	const handleSubmit = useCallback(async (data) => {
+
+	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
 		const result = await runSignup({
 			id: props.user.id,
 			firstName: data.firstName,
@@ -57,13 +59,15 @@ export function SignupForm(props: {
 			return;
 		}
 
-		if (!result.needsVerification) {
-			const redirectTo = searchParams.get("redirectTo");
-			if (redirectTo) {
-				router.push(redirectTo);
-			} else {
-				router.push("/settings");
-			}
+		if (result.needsVerification) {
+			// TODO: handle this
+		}
+
+		const redirectTo = searchParams.get("redirectTo");
+		if (redirectTo) {
+			router.push(redirectTo);
+		} else {
+			router.push("/settings");
 		}
 	}, []);
 
@@ -138,7 +142,7 @@ export function SignupForm(props: {
 							/>
 
 							<Button type="submit" className="w-full">
-								Create an account
+								Finish sign up
 							</Button>
 						</div>
 						{/* <div className="mt-4 text-center text-sm">

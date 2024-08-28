@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
 	]);
 
 	if (tokenSettled.status === "rejected") {
-		logger.debug("Token validation failed");
+		logger.debug({ msg: "Token validation failed", reason: tokenSettled.reason });
 		if (!(tokenSettled.reason instanceof InvalidTokenError)) {
 			logger.error({
 				msg: `Token validation unexpectedly failed with reason: ${tokenSettled.reason}`,

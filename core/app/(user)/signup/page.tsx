@@ -10,7 +10,13 @@ export default async function Page() {
 		allowedSessions: [AuthTokenType.signup],
 	});
 
-	if (!session || !user) {
+	if (
+		!session ||
+		!user ||
+		// user is still logged in as a supabase user, we should not let them signup
+		// TODO: remove this checks once we remove supabase entirely
+		session.id === "fake-session-id"
+	) {
 		const reason = getTokenFailureReason();
 
 		if (reason === TokenFailureReason.expired) {
