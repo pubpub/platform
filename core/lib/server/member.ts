@@ -28,15 +28,13 @@ export const getMember = (
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
-						.whereRef("users.id", "=", "members.userId")
 						.select(SAFE_USER_SELECT)
-						.$if(Boolean(props.userId), (eb) =>
-							eb.where("users.id", "=", props.userId!)
-						)
+						.whereRef("users.id", "=", "members.userId")
 				)
 					.$notNull()
 					.as("user"),
 			])
+			.$if(Boolean(props.userId), (eb) => eb.where("members.userId", "=", props.userId!))
 			.$if(Boolean(props.communityId), (eb) =>
 				eb.where("members.communityId", "=", props.communityId!)
 			)
