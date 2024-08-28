@@ -21,7 +21,7 @@ import {
 	tsRestHandleErrors,
 	updatePub,
 } from "~/lib/server";
-import { emailUser } from "~/lib/server/email";
+import { emailUser } from "~/lib/server/_legacy-intergration-email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
 import { findOrCreateUser } from "~/lib/server/user";
