@@ -78,6 +78,7 @@ async function GenericDynamicPubForm({
 	}, [pathWithoutFormParam]);
 
 	const elements = selectedPubType ? createElementFromPubType(selectedPubType) : [];
+
 	const schema = Type.Object(
 		Object.fromEntries(
 			elements
@@ -155,23 +156,9 @@ async function GenericDynamicPubForm({
 			});
 			closeForm();
 		} else {
-			console.log(
-				"\n\nFields before server sction",
-				"\n\nRaw values",
-				values,
-				"\n\nFields",
-				Object.entries(values).reduce((acc, [key, value]) => {
-					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
-					if (id) {
-						acc[id] = { slug: key, value };
-					}
-					return acc;
-				}, {}),
-				"\n\n"
-			);
 			const result = await runCreatePub({
 				communityId: selectedPubType.communityId,
-				pubTypeId: pubTypeId,
+				pubTypeId: selectedPubType.id,
 				stageId: selectedStage?.id,
 				parentId,
 				fields: Object.entries(values).reduce((acc, [key, value]) => {
@@ -193,6 +180,8 @@ async function GenericDynamicPubForm({
 			}
 		}
 	};
+
+	console.log("\n\nFORM VALUES\n\n", form.getValues());
 
 	return (
 		<Form {...form}>
@@ -224,6 +213,7 @@ async function GenericDynamicPubForm({
 										<DropdownMenuItem
 											key={pubType.id}
 											onClick={() => {
+												field.onChange(pubType.id);
 												setSelectedPubType(pubType);
 											}}
 										>
@@ -265,6 +255,7 @@ async function GenericDynamicPubForm({
 											<DropdownMenuItem
 												key={stage.id}
 												onClick={() => {
+													field.onChange(stage.id);
 													setSelectedStage(stage);
 												}}
 											>

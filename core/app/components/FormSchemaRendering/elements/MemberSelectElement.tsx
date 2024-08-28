@@ -26,6 +26,14 @@ export const UserIdSelect = async ({
 	).executeTakeFirstOrThrow();
 	const queryParamName = `user-${id.split("-").pop()}`;
 	const query = searchParams?.[queryParamName] as string | undefined;
+	console.log("Query Param Name", queryParamName);
+	console.log("\n\nQuery", query);
+	console.log("\n\nMemberId Value", value);
+	console.log("\n\nCommunity", community);
+	console.log("\n\nElement Label", label);
+	console.log("\n\nElement Name", name);
+	console.log("\n\nElement Id", id);
+	console.log("\n\nSearch Params", searchParams);
 	return (
 		<UserSelectServer
 			community={community}
