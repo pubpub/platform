@@ -11,7 +11,7 @@ export const PubCreateButton = (props: PubCreateButtonProps) => {
 	return (
 		<PubCRUDDialogue
 			method={"create"}
-			identifyingString={identifyingString!}
+			identifyingString={identifyingString as string}
 			button={props.label ? { title: props.label } : undefined}
 		>
 			<GenericDynamicPubFormWrapper {...props} />

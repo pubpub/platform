@@ -86,13 +86,15 @@ export function UserSelectClient({
 	const [selectedUser, setSelectedUser] = useState(member);
 
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
+	
+	
 	const onInputValueChange = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
 		newParams.set(queryParamName, value);
 		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		setInputValue(value);
 	}, 400);
-
+	
 	return (
 		<FormField
 			name={fieldName}

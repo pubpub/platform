@@ -1,7 +1,5 @@
 import type { FieldValues } from "react-hook-form";
 
-import { v4 as uuidv4 } from "uuid";
-
 import type { JsonValue } from "contracts";
 import type {
 	FormElementsId,
@@ -47,20 +45,19 @@ export function createElementFromPubType(pubType: {
 	required: boolean | null;
 	elementId: FormElementsId;
 }[] {
-	const randomUUID = uuidv4();
 	return pubType.fields.map((field, index) => ({
 		slug: field.slug || null,
 		schemaName: field.schemaName || null,
 		type: ElementType.pubfield,
 		order: index + 1,
 		description: field.name || null,
-		stageId: null, // Replace with actual StagesId if needed
+		stageId: null,
 		fieldId: field.id || null,
 		label: field.name || null,
 		element: null,
 		content: null,
 		required: false,
-		elementId: randomUUID as FormElementsId, // Replace with logic to generate or assign elementId
+		elementId: field.id as unknown as FormElementsId, // use field.id?
 	}));
 }
 
