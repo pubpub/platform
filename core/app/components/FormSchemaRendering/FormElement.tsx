@@ -47,7 +47,6 @@ export const FormElement = ({
 		schemaName === CoreSchemaType.Email ||
 		schemaName === CoreSchemaType.URL
 	) {
-		// TODO: figure out what kind of text element the user wanted (textarea vs input)
 		return <TextElement {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.Boolean) {
@@ -64,6 +63,7 @@ export const FormElement = ({
 	}
 	if (schemaName === CoreSchemaType.MemberId) {
 		const userId = values[element.slug!] as MembersId | undefined;
+		console.log("I dont know why it get this", userId);
 		return (
 			<UserIdSelect
 				label={elementProps.label}

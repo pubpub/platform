@@ -51,15 +51,15 @@ export function createElementFromPubType(pubType: {
 	return pubType.fields.map((field, index) => ({
 		slug: field.slug || null,
 		schemaName: field.schemaName || null,
-		type: ElementType.pubfield, // Replace with actual ElementType based on your logic
+		type: ElementType.pubfield,
 		order: index + 1,
-		description: field.name || null, // or any other logic to set description
+		description: field.name || null,
 		stageId: null, // Replace with actual StagesId if needed
 		fieldId: field.id || null,
 		label: field.name || null,
-		element: null, // Replace with actual StructuralFormElement if needed
+		element: null,
 		content: null,
-		required: false, // or any other logic to set required
+		required: false,
 		elementId: randomUUID as FormElementsId, // Replace with logic to generate or assign elementId
 	}));
 }

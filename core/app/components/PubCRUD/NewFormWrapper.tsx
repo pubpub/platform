@@ -1,5 +1,3 @@
-import { Suspense } from "react";
-
 import type { PubsId, PubTypesId } from "db/public";
 
 import type { CreateEditPubProps } from "./types";
