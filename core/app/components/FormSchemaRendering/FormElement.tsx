@@ -63,7 +63,6 @@ export const FormElement = ({
 	}
 	if (schemaName === CoreSchemaType.MemberId) {
 		const userId = values[element.slug!] as MembersId | undefined;
-		console.log("I dont know why it get this", userId);
 		return (
 			<UserIdSelect
 				label={elementProps.label}
