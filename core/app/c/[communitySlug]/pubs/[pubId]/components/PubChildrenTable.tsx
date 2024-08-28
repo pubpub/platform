@@ -8,5 +8,7 @@ import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
 
 export const PubChildrenTable = ({ children }: { children: PubChild[] }) => {
 	const communityTableColumns = getPubChildrenTableColumns();
-	return <DataTable columns={communityTableColumns} data={children} />;
+	return (
+		<DataTable columns={communityTableColumns} data={children} hidePaginationWhenSinglePage />
+	);
 };

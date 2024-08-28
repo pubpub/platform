@@ -1,11 +1,13 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
+import { PubTypes } from "db/src/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { buttonVariants } from "ui/button";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -68,6 +70,20 @@ export default async function Page({
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
+	const pubChildrenPubTypesById = pub.children
+		.map((child) => child.pubType)
+		.reduce((acc, pubType) => {
+			const record = acc.get(pubType.id);
+			if (record) {
+				record.pubCount++;
+			} else {
+				acc.set(pubType.id, { pubType: pubType as PubTypes, pubCount: 1 });
+			}
+			return acc;
+		}, new Map<string, { pubType: PubTypes; pubCount: number }>());
+	const pubChildrenPubTypes = Array.from(pubChildrenPubTypesById.values());
+
+	const selectedChildPubType = searchParams.selectedPubType ?? pubChildrenPubTypes[0]?.pubType.id;
 
 	return (
 		<div className="flex flex-col space-y-4">
@@ -167,9 +183,40 @@ export default async function Page({
 					searchParams={searchParams}
 				/>
 			</div>
-			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper pub={pub} members={community.members} />
-			</Suspense>
+			<div className="mb-2 flex gap-2">
+				<div className="border-color-muted flex flex-col border-r-[1px]">
+					<nav className="grid w-48 gap-1 px-2">
+						{pubChildrenPubTypes.map((record) => {
+							const linkSearchParams = new URLSearchParams(searchParams);
+							linkSearchParams.append("selectedPubType", record.pubType.id);
+							return (
+								<Link
+									key={record.pubType.id}
+									href={`/c/${params.communitySlug}/pubs/${params.pubId}?${linkSearchParams}`}
+									className={buttonVariants({
+										variant:
+											selectedChildPubType === record.pubType.id
+												? "default"
+												: "ghost",
+										size: "default",
+									})}
+									scroll={false}
+								>
+									{record.pubType.name}
+									<span className="ml-auto text-muted-foreground">
+										{record.pubCount}
+									</span>
+								</Link>
+							);
+						})}
+					</nav>
+				</div>
+				<div className="flex-1">
+					<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
+						<PubChildrenTableWrapper pub={pub} members={community.members} />
+					</Suspense>
+				</div>
+			</div>
 		</div>
 	);
 }
