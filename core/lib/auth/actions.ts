@@ -414,7 +414,10 @@ export const signup = defineServerAction(async function signup(props: {
 
 	// log them in
 
-	const invalidatedSessions = await lucia.invalidateUserSessions(user.id);
+	const [invalidatedSessions, invalidatedTokens] = await Promise.all([
+		lucia.invalidateUserSessions(user.id),
+		invalidateTokensForUser(user.id, [AuthTokenType.signup]),
+	]);
 
 	// lucia authentication
 	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
