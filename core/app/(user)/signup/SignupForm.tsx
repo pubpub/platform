@@ -42,33 +42,17 @@ export function SignupForm(props: {
 		defaultValues: { ...props.user, lastName: props.user.lastName ?? undefined },
 	});
 
-	const router = useRouter();
-
 	const searchParams = useSearchParams();
 
 	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
-		const result = await runSignup({
+		await runSignup({
 			id: props.user.id,
 			firstName: data.firstName,
 			lastName: data.lastName,
 			email: data.email,
 			password: data.password,
+			redirect: searchParams.get("redirectTo"),
 		});
-
-		if (isClientException(result)) {
-			return;
-		}
-
-		if (result.needsVerification) {
-			// TODO: handle this
-		}
-
-		const redirectTo = searchParams.get("redirectTo");
-		if (redirectTo) {
-			router.push(redirectTo);
-		} else {
-			router.push("/settings");
-		}
 	}, []);
 
 	return (

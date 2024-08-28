@@ -342,6 +342,7 @@ export const signup = defineServerAction(async function signup(props: {
 	lastName: string;
 	email: string;
 	password: string;
+	redirect: string | null;
 }) {
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.signup],
@@ -421,15 +422,15 @@ export const signup = defineServerAction(async function signup(props: {
 
 	// lucia authentication
 	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
-	const sessionCookie = lucia.createSessionCookie(session.id);
-	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+	const newSessionCookie = lucia.createSessionCookie(newSession.id);
+	cookies().set(newSessionCookie.name, newSessionCookie.value, newSessionCookie.attributes);
 
 	// for good measure, delete the supabse cookies too
 	cookies().delete(TOKEN_NAME);
 	cookies().delete(REFRESH_NAME);
 
-	return {
-		success: true,
-		report: "Account created!",
-	};
+	if (props.redirect) {
+		redirect(props.redirect);
+	}
+	redirectUser();
 });

@@ -40,7 +40,6 @@ export class MembersPage {
 		// await this.page.goto(`/c/${this.communitySlug}/members/add`);
 		await this.page.getByText(/Add Member/).click();
 		const emailInput = await this.page.waitForSelector('input[name="email"]');
-		await this.page.waitForTimeout(2000);
 		await emailInput.fill(email);
 
 		// debounce
@@ -54,10 +53,8 @@ export class MembersPage {
 		await this.page.getByLabel("Role").click();
 		await this.page.getByLabel(role[0].toUpperCase() + role.slice(1)).click();
 
-		await this.page.waitForTimeout(2000);
 		await this.page.getByRole("button", { name: "Invite" }).click();
 
-		await this.page.waitForTimeout(10000);
 		await this.page.getByText("User successfully invited");
 
 		return {

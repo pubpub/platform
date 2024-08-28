@@ -55,6 +55,8 @@ test.describe("Members", () => {
 		await membersPage.addExistingUser("new@pubpub.org");
 
 		await page.waitForTimeout(1000);
+
+		await page.close();
 	});
 
 	test("New user signup", async ({ page }) => {
@@ -67,7 +69,6 @@ test.describe("Members", () => {
 		const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]!;
 
 		expect(joinLink).toBeTruthy();
-		console.log(joinLink);
 
 		await page.goto(joinLink);
 		await page.waitForURL(/\/signup.*/);
@@ -76,7 +77,7 @@ test.describe("Members", () => {
 
 		await page.click("button[type='submit']");
 
-		await page.waitForURL(/\/settings/);
+		await page.waitForURL(/\/c\/.*?\/stages/);
 
 		await page.close();
 	});
