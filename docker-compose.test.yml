@@ -12,6 +12,13 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data
 
+    inbucket:
+        image: inbucket/inbucket:latest
+        ports:
+            - "54324:9000" # UI
+            - "54325:2500" # smtp
+            - "54326:1100" # pop3
+
     app:
         build:
             context: .
@@ -28,6 +35,7 @@ services:
             - /app/node_modules
         depends_on:
             - postgres
+            - inbucket
         command: >
             sh -c "pnpm --filter core migrate-test &&
                    pnpm --filter core run test-run"
