@@ -55,7 +55,7 @@ export default async function Page({ params: { communitySlug } }) {
 			};
 		});
 
-	const pubTypes = await getAllPubTypesForCommunity().execute();
+	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
 
 	return (
 		<ContentLayout
