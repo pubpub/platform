@@ -101,7 +101,6 @@ export const PubCRUDDialogue = ({
 			</DialogTrigger>
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
 				<DialogTitle>{crud.title}</DialogTitle>
-
 				{isOpen && <Suspense fallback={<SkeletonCard />}>{children}</Suspense>}
 			</DialogContent>
 		</Dialog>

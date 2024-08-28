@@ -29,10 +29,10 @@ import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { buildDefaultValues, createElementFromPubType } from "./helpers";
 
-async function GenericDynamicPubForm({
+async function NewForm({
 	communityStages,
 	availablePubTypes,
-	currentStage = null,
+	currentStage,
 	parentId,
 	pubValues,
 	pubTypeId,
@@ -58,7 +58,7 @@ async function GenericDynamicPubForm({
 	const [selectedPubType, setSelectedPubType] = useState<
 		(typeof availablePubTypes)[number] | null
 	>(pt ?? null);
-	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage);
+	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage ?? null);
 
 	const hasValues = Object.keys(pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
@@ -94,6 +94,7 @@ async function GenericDynamicPubForm({
 	const form = useForm({
 		resolver: typeboxResolver(schema),
 		defaultValues: buildDefaultValues(elements, pubValues),
+		reValidateMode: "onChange",
 	});
 
 	const preparePayload = ({
@@ -133,7 +134,6 @@ async function GenericDynamicPubForm({
 			formElements: elements,
 			formValues: values,
 		});
-
 		if (hasValues) {
 			// const result = await runUpdatePub({
 			// 	pubId: pubId,
@@ -170,7 +170,6 @@ async function GenericDynamicPubForm({
 				}, {}),
 				path: pathWithoutFormParam,
 			});
-
 			if (result && "success" in result) {
 				toast({
 					title: "Success",
@@ -180,8 +179,6 @@ async function GenericDynamicPubForm({
 			}
 		}
 	};
-
-	console.log("\n\nFORM VALUES\n\n", form.getValues());
 
 	return (
 		<Form {...form}>
@@ -199,7 +196,7 @@ async function GenericDynamicPubForm({
 						<FormItem aria-label="Email" className="flex flex-col items-start gap-2">
 							<FormLabel>Pub Type</FormLabel>
 							<FormDescription>
-								Select the type of pub you want to create
+								Select the type of pub
 							</FormDescription>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
@@ -241,7 +238,7 @@ async function GenericDynamicPubForm({
 							>
 								<FormLabel>Stage</FormLabel>
 								<FormDescription>
-									Select the stage you want to create a pub in
+									Select the stage you want the pub in
 								</FormDescription>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -300,4 +297,4 @@ async function GenericDynamicPubForm({
 	);
 }
 
-export { GenericDynamicPubForm };
+export { NewForm };

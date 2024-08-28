@@ -5,7 +5,7 @@ import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { FormElement } from "../FormSchemaRendering/FormElement";
 import { createElementFromPubType } from "./helpers";
-import { GenericDynamicPubForm } from "./NewForm";
+import { NewForm } from "./NewForm";
 import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage } from "./queries";
 
 type Props = CreateEditPubProps;
@@ -72,7 +72,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	// ));
 
 	return (
-		<GenericDynamicPubForm
+		<NewForm
 			currentStage={stageOfPubRnRn}
 			communityStages={availableStages}
 			availablePubTypes={community.pubTypes}

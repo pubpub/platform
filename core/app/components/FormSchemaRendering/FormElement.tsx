@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import Markdown from "react-markdown";
 
 import type { GetPubResponseBody } from "contracts";
