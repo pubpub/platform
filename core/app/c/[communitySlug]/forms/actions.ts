@@ -1,6 +1,8 @@
 "use server";
 
-import type { CommunitiesId, PubTypesId } from "db/public";
+import type { QueryCreator } from "kysely";
+
+import type { CommunitiesId, PublicSchema, PubTypesId } from "db/public";
 import { logger } from "logger";
 
 import { db, isUniqueConstraintError } from "~/kysely/database";
@@ -12,11 +14,12 @@ export const createForm = defineServerAction(async function createForm(
 	pubTypeId: PubTypesId,
 	name: string,
 	slug: string,
-	communityId: CommunitiesId
+	communityId: CommunitiesId,
+	trx: typeof db | QueryCreator<PublicSchema> = db
 ) {
 	try {
 		await autoRevalidate(
-			db
+			trx
 				.with("fields", () =>
 					_getPubFields({ pubTypeId })
 						.clearSelect()

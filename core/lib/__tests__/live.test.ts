@@ -1,11 +1,25 @@
 import type { Transaction } from "kysely";
 
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { PublicSchema } from "db/public";
 
+import { createForm } from "~/app/c/[communitySlug]/forms/actions";
 import { db } from "~/kysely/database";
+import { getForm } from "../server/form";
 import { beginTransaction } from "./utils";
+
+vi.mock("server-only", () => {
+	return {
+		// mock server-only module
+	};
+});
+
+vi.mock("react", () => {
+	return {
+		cache: vi.fn(),
+	};
+});
 
 describe("live", () => {
 	test("should be able to connect to db", async () => {
@@ -53,6 +67,7 @@ describe("live", () => {
 	// Not sure how to assert since tests may not run serially, but can look at
 	// db to see that no user 'test-user' has been added. This is another version
 	// of the "can rollback transactions" test above
+	// The benefit of this method is that you don't have to remember to rollback yourself
 	describe("transaction block example", () => {
 		let trx: Transaction<PublicSchema>;
 		let rollback: () => void;
@@ -79,5 +94,35 @@ describe("live", () => {
 				.returning(["id"])
 				.executeTakeFirstOrThrow();
 		});
+
+		test("user did not persist", async () => {
+			const user = await trx.selectFrom("users").where("slug", "=", "test-user").execute();
+			expect(user.length).toEqual(0);
+		});
+	});
+
+	test("getForm and createForm", async () => {
+		const { trx, rollback } = await beginTransaction(db);
+		// also doesn't work—no function named getCommunitySlug ?
+		// const forms = await getForm({ slug: "test-form" }, trx).execute();
+		// expect(forms.length).toEqual(0);
+
+		// make stuff, encapsulate in functions later
+		const community = await trx
+			.selectFrom("communities")
+			.selectAll()
+			.where("slug", "=", "croccroc")
+
+			.executeTakeFirstOrThrow();
+		const pubType = await trx
+			.selectFrom("pub_types")
+			.select(["id"])
+			.where("communityId", "=", community.id)
+			.executeTakeFirstOrThrow();
+
+		const form = await createForm(pubType.id, "my form", "my-form", community.id, trx);
+		console.log({ form });
+
+		rollback();
 	});
 });
