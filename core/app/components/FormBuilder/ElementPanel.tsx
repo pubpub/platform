@@ -75,8 +75,11 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 		case "selecting":
 			const fieldButtons = Object.values(fields).map((field) => {
 				if (
-					state.fieldsFilter &&
-					!`${field.name} ${field.slug} ${field.schemaName}`.includes(state.fieldsFilter)
+					field.isArchived ||
+					(state.fieldsFilter &&
+						!`${field.name} ${field.slug} ${field.schemaName}`.includes(
+							state.fieldsFilter
+						))
 				) {
 					return null;
 				}
