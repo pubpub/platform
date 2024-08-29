@@ -7,6 +7,9 @@ on:
         inputs:
             package:
                 type: string
+            runner:
+                type: string
+                default: ubuntu-latest
         secrets:
             AWS_ACCESS_KEY_ID:
                 required: true
@@ -21,7 +24,7 @@ env:
 jobs:
     build:
         name: Build
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner }}
 
         steps:
             - name: Checkout
