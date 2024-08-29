@@ -9,8 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { AddCommunityForm } from "./AddCommunityForm";
 
-type Props = { user: any };
-export const AddCommunity = (props: Props) => {
+export const AddCommunity = () => {
 	const [open, setOpen] = React.useState(false);
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -26,7 +25,7 @@ export const AddCommunity = (props: Props) => {
 			</Tooltip>
 
 			<DialogContent>
-				<AddCommunityForm user={props.user} setOpen={setOpen} />
+				<AddCommunityForm setOpen={setOpen} />
 			</DialogContent>
 		</Dialog>
 	);

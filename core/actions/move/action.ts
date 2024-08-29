@@ -8,8 +8,13 @@ export const action = defineAction({
 	name: "move",
 	config: {
 		schema: z.object({
-			stage: z.string().describe("Destination stage"),
+			stage: z.string().uuid().describe("Destination stage"),
 		}),
+		fieldConfig: {
+			stage: {
+				fieldType: "custom",
+			},
+		},
 	},
 	description: "Move a pub to a different stage",
 	params: { schema: z.object({}).optional() },

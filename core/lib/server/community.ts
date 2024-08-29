@@ -14,20 +14,7 @@ import { memoize } from "./cache/memoize";
 export const findCommunityBySlug = cache((communitySlug?: string) => {
 	const slug = communitySlug ?? getCommunitySlug();
 	return memoize(
-		() =>
-			db
-				.selectFrom("communities")
-				.selectAll()
-				.select((eb) => [
-					jsonArrayFrom(
-						eb
-							.selectFrom("stages")
-							.whereRef("stages.communityId", "=", "communities.id")
-							.selectAll()
-					).as("stages"),
-				])
-				.where("slug", "=", slug)
-				.executeTakeFirst(),
+		() => db.selectFrom("communities").selectAll().where("slug", "=", slug).executeTakeFirst(),
 		{
 			additionalCacheKey: [slug],
 			revalidateTags: [createCacheTag(`community-all_${slug}`)],

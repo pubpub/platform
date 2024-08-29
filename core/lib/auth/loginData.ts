@@ -1,25 +1,36 @@
 import "server-only";
 
+import type { User as LuciaUser } from "lucia";
+
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { AuthToken, AuthTokenType } from "@prisma/client";
 
 import { MemberRole } from "db/public";
 
+import type { ExtraSessionValidationOptions } from "./lucia";
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { getUserInfoFromJWT } from "~/lib/auth/loginId";
 import prisma from "~/prisma/db";
 import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
+import { getUser } from "../server/user";
 import { generateHash, slugifyString } from "../string";
 import { validateRequest } from "./lucia";
 
-/* This is only called from Server Component functions */
-/* When in the API, use getLoginId from loginId.ts */
-export const getLoginData = cache(async () => {
+const FAKE_SUPABASE_SESSION = {
+	id: "fake-session-id",
+} as const;
+
+export const getLoginData = cache(async (opts?: ExtraSessionValidationOptions) => {
 	const nextCookies = cookies();
 
-	const { session, user: luciaUser } = await validateRequest();
+	const { session, user: luciaUser } = await validateRequest(opts);
+
 	if (session && luciaUser) {
-		return luciaUser;
+		return {
+			session,
+			user: luciaUser,
+		};
 	}
 
 	const sessionJWTCookie = nextCookies.get(TOKEN_NAME) || { value: "" };
@@ -29,20 +40,11 @@ export const getLoginData = cache(async () => {
 		sessionRefreshCookie.value
 	);
 
-	if (!supabaseUser?.id) {
-		return undefined;
+	if (!supabaseUser?.id || !supabaseUser.email) {
+		return { session: null, user: null };
 	}
 
-	const user = await prisma.user.findUnique({
-		where: { email: supabaseUser.email },
-		include: {
-			memberships: {
-				include: {
-					community: true,
-				},
-			},
-		},
-	});
+	const user = await getUser({ email: supabaseUser.email }).executeTakeFirst();
 
 	if (user && !user.supabaseId) {
 		// They logged in via supabase, but the app db record doesn't have a supabaseId yet
@@ -57,8 +59,7 @@ export const getLoginData = cache(async () => {
 	}
 
 	if (user) {
-		const { passwordHash, ...userWithoutPasswordHash } = user;
-		return userWithoutPasswordHash;
+		return { session: FAKE_SUPABASE_SESSION, user: user as LuciaUser };
 	}
 
 	// They successfully logged in via supabase, but no corresponding record was found in the
@@ -102,7 +103,11 @@ export const getLoginData = cache(async () => {
 		},
 	});
 
-	return newUser;
+	// for type consistency sake
+	// this is innefficient, but it's fine for now
+	const newlyCreatedUser = await getUser({ email: newUser.email }).executeTakeFirst();
+
+	return { session: FAKE_SUPABASE_SESSION, user: newlyCreatedUser as LuciaUser };
 });
 
 export type LoginData = Awaited<ReturnType<typeof getLoginData>>;

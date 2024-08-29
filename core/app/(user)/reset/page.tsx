@@ -1,5 +1,7 @@
+import { AuthTokenType } from "db/public";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 
+import { getLoginData } from "~/lib/auth/loginData";
 import ResetForm from "./ResetForm";
 
 export default async function Page({
@@ -19,6 +21,18 @@ export default async function Page({
 		| {};
 }) {
 	// TODO: add reset token validation
+	const { user, session } = await getLoginData({
+		allowedSessions: [AuthTokenType.passwordReset],
+	});
+
+	if (!user) {
+		return (
+			<div className="prose mx-auto max-w-sm">
+				<h1>Invalid</h1>
+				<p>It looks like this link has expired. Please request a new one.</p>
+			</div>
+		);
+	}
 
 	return (
 		<>

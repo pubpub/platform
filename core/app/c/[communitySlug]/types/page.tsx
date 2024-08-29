@@ -1,22 +1,23 @@
 import { notFound } from "next/navigation";
 
-import type { PubFieldsId } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { CreatePubType } from "./CreatePubType";
 import TypeList from "./TypeList";
 
-export default async function Page() {
-	const loginData = await getLoginData();
-	if (!loginData) {
+export default async function Page({ params: { communitySlug } }) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return notFound();
 	}
+	const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
 
 	const [types, { fields }] = await Promise.all([
-		getAllPubTypesForCommunity().execute(),
+		getAllPubTypesForCommunity(communitySlug).execute(),
 		getPubFields().executeTakeFirstOrThrow(),
 	]);
 
@@ -31,7 +32,7 @@ export default async function Page() {
 					<CreatePubType />
 				</div>
 			</div>
-			<TypeList types={types} superadmin={loginData.isSuperAdmin} />
+			<TypeList types={types} allowEditing={allowEditing} />
 		</PubFieldProvider>
 	);
 }

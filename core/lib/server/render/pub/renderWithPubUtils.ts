@@ -1,6 +1,9 @@
 import type { MembersId, UsersId } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
+import { db } from "~/kysely/database";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { addMemberToForm, createFormInviteLink } from "../../form";
 
 export type RenderWithPubRel = "parent" | "self";
@@ -29,6 +32,8 @@ export type RenderWithPubContext = {
 	pub: RenderWithPubPub;
 	parentPub?: RenderWithPubPub | null;
 };
+
+export const ALLOWED_MEMBER_ATTRIBUTES = ["firstName", "lastName", "email"] as const;
 
 const parseRel = (rel: string | undefined): RenderWithPubRel => {
 	if (rel === undefined) {
@@ -66,6 +71,54 @@ export const renderFormInviteLink = async (
 ) => {
 	await addMemberToForm({ memberId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, pubId });
+};
+
+export const renderMemberFields = async ({
+	fieldSlug,
+	attributes,
+	memberId,
+	communitySlug,
+}: {
+	fieldSlug: string;
+	communitySlug: string;
+	attributes: string[];
+	memberId: MembersId;
+}) => {
+	// Make sure this field is a member type
+	const fieldIsMemberTypeQuery = autoCache(
+		db
+			.selectFrom("pub_fields")
+			.innerJoin("communities", "pub_fields.communityId", "communities.id")
+			.where("pub_fields.slug", "=", fieldSlug)
+			.where("communities.slug", "=", communitySlug)
+			.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
+	);
+
+	const userQuery = autoCache(
+		db
+			.selectFrom("members")
+			.innerJoin("users", "users.id", "members.userId")
+			.select(ALLOWED_MEMBER_ATTRIBUTES)
+			.where("members.id", "=", memberId)
+	);
+
+	const [, user] = await Promise.all([
+		fieldIsMemberTypeQuery.executeTakeFirstOrThrow(
+			() => new Error(`Field ${fieldSlug} is not a member type`)
+		),
+		userQuery.executeTakeFirstOrThrow(
+			() => new Error(`Did not find user with member ID "${memberId}"`)
+		),
+	]);
+
+	const relevantAttrs = attributes.filter((attr) =>
+		(ALLOWED_MEMBER_ATTRIBUTES as ReadonlyArray<string>).includes(attr)
+	);
+	if (relevantAttrs.length) {
+		return relevantAttrs.map((attr) => user[attr]).join(" ");
+	}
+
+	return memberId;
 };
 
 type LinkEmailOptions = {

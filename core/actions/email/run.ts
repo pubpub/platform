@@ -7,17 +7,16 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
+import type { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { smtpclient } from "~/lib/server/mailgun";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
-import { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
 import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
-		// FIXME: could be replaced with `getCommunitySlug`
 		const communitySlug = getCommunitySlug();
 
 		const { parentId } = pub;
@@ -29,6 +28,8 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		if (parentId) {
 			parentPub = await getPubCached(parentId);
 		}
+
+		const recipientId = expect(args?.recipient ?? config.recipient) as MembersId;
 
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
@@ -46,12 +47,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					.$notNull()
 					.as("user"),
 			])
-			.where("id", "=", expect(args?.recipient ?? config.recipient) as MembersId)
+			.where("id", "=", recipientId)
 			.executeTakeFirstOrThrow(
-				() =>
-					new Error(
-						`Could not find member with ID ${args?.recipient ?? config.recipient}`
-					)
+				() => new Error(`Could not find member with ID ${recipientId}`)
 			);
 
 		const renderMarkdownWithPubContext = {

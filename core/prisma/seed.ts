@@ -47,6 +47,11 @@ async function createUserMembers({
 			logger.error(`Error finding existing user ${error}`);
 		} else {
 			user = data.users.find((user) => user.email === email);
+
+			logger.info("Resetting password for user with email " + email);
+			await supabase.auth.admin.updateUserById(user.id, {
+				password,
+			});
 		}
 	} else {
 		user = data.user;

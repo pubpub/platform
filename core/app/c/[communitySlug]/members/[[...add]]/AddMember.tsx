@@ -92,17 +92,17 @@ const createCachedGetUser = ({
 export type MemberFormState = Awaited<ReturnType<ReturnType<typeof createCachedGetUser>>>;
 
 export const AddMember = async ({ email, community }: { email?: string; community: Community }) => {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
 	const getUserAndMember = createCachedGetUser({
 		email,
-		currentEmail: loginData?.email,
+		currentEmail: user?.email,
 		community,
 	});
 
 	const state = await getUserAndMember({
 		email,
-		currentEmail: loginData?.email,
+		currentEmail: user?.email,
 	});
 
 	return (
@@ -110,7 +110,7 @@ export const AddMember = async ({ email, community }: { email?: string; communit
 			state={state}
 			community={community}
 			email={email}
-			isSuperAdmin={loginData?.isSuperAdmin}
+			isSuperAdmin={user?.isSuperAdmin}
 		/>
 	);
 };

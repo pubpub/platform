@@ -48,6 +48,7 @@ export {
 	Plus,
 	PlusCircle,
 	Play,
+	RefreshCw,
 	Search,
 	Send,
 	Settings,

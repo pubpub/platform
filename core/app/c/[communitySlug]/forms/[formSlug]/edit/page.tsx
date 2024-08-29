@@ -1,27 +1,48 @@
+import { notFound } from "next/navigation";
+
+import type { CommunitiesId } from "db/public";
 import { ClipboardPenLine } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
-import { ArchiveFormButton } from "~/app/components/FormBuilder/ArchiveFormButton";
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
+import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 
-export default async function Page({ params: { formSlug } }) {
-	const loginData = await getLoginData();
+const getCommunityStages = (communityId: CommunitiesId) =>
+	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
-	if (!loginData) {
+export default async function Page({ params: { formSlug, communitySlug } }) {
+	const { user } = await getLoginData();
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		notFound();
+	}
+
+	const communityStages = await getCommunityStages(community.id).execute();
+
+	if (!user) {
 		return null;
 	}
-	if (!loginData.isSuperAdmin) {
+
+	if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return null;
 	}
+
+	const communityId = community.id as CommunitiesId;
 
 	const [form, { fields }] = await Promise.all([
-		getForm({ slug: formSlug }).executeTakeFirstOrThrow(),
-		getPubFields().executeTakeFirstOrThrow(),
+		getForm({
+			slug: formSlug,
+			communityId,
+		}).executeTakeFirstOrThrow(),
+		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 	]);
 
 	const formBuilderId = "formbuilderform";
@@ -42,7 +63,7 @@ export default async function Page({ params: { formSlug } }) {
 			}
 		>
 			<PubFieldProvider pubFields={fields}>
-				<FormBuilder pubForm={form} id={formBuilderId} />
+				<FormBuilder pubForm={form} id={formBuilderId} stages={communityStages} />
 			</PubFieldProvider>
 		</ContentLayout>
 	);

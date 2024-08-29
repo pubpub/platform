@@ -17,10 +17,10 @@ import { RemoveTypeButton } from "./RemoveTypeButton";
 
 type Props = {
 	type: PubTypeWithFieldIds;
-	superadmin: boolean;
+	allowEditing: boolean;
 };
 
-const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
+const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 	const [expanded, setExpanded] = useState(false);
 	const [editing, setEditing] = useState(false);
 	const runAddPubField = useServerAction(addPubField);
@@ -47,7 +47,7 @@ const TypeBlock: React.FC<Props> = function ({ type, superadmin }) {
 					>
 						{expanded ? <ChevronUp /> : <ChevronDown />}
 					</Button>
-					{superadmin && (
+					{allowEditing && (
 						<Button
 							className="ml-1"
 							size="icon"
