@@ -69,7 +69,6 @@ describe("live", () => {
 	test("should be able to connect to db", async () => {
 		const result = await testDb.selectFrom("users").selectAll().execute();
 		expect(result.length).toBeGreaterThan(0);
-		expect(1).toEqual(2);
 	});
 
 	test("can rollback transactions", async () => {
