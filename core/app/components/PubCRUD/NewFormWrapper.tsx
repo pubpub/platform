@@ -24,53 +24,30 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	const result = await query;
 	const { community, ...stage } = "communityId" in result ? result : { community: result };
 	let currentStage = "id" in stage ? stage : null;
-
 	if (!community) {
 		return null;
 	}
-
 	const { availableStagesOfCurrentPub = null, stageOfCurrentPub = null } = pub
 		? (await availableStagesAndCurrentStage(pub).executeTakeFirst()) ?? {}
 		: {};
-
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
 	const values = pub ? pub.values : {};
-
-	const formElementsByPubType: Record<string, React.ReactNode> = community.pubTypes.reduce(
-		(acc, pubType) => {
-			acc[pubType.id] = createElementFromPubType(pubType).map((element) => (
-				<FormElement
-					key={element.elementId}
-					element={element}
-					searchParams={props.searchParams}
-					communitySlug={community.slug}
-					values={values}
-				/>
-			));
-			return acc;
-		},
-		{}
-	);
-	const pubTypeId = pub?.pubTypeId ?? ("" as PubTypesId);
-
-	// const pubTypeId = pub?.pubTypeId ?? (props.searchParams.pubTypeId as PubTypesId);
-
-	// const currentlySelectedPubType = community.pubTypes.find((p) => p.id === pubTypeId);
-	// const elements = currentlySelectedPubType
-	// 	? createElementFromPubType(currentlySelectedPubType)
-	// 	: [];
-	// const formElements = elements.map((element) => (
-	// 	<FormElement
-	// 		key={element.elementId}
-	// 		element={element}
-	// 		searchParams={props.searchParams}
-	// 		communitySlug={community.slug}
-	// 		values={values}
-	// 		pubId={pub?.id ?? ("" as PubsId)}
-	// 	/>
-	// ));
-
+	const pubTypeId = pub?.pubTypeId ?? (props.searchParams.pubTypeId as PubTypesId);
+	const currentlySelectedPubType = community.pubTypes.find((p) => p.id === pubTypeId);
+	const elements = currentlySelectedPubType
+		? createElementFromPubType(currentlySelectedPubType)
+		: [];
+	const formElements = elements.map((element) => (
+		<FormElement
+			key={element.elementId}
+			element={element}
+			searchParams={props.searchParams}
+			communitySlug={community.slug}
+			values={values}
+			pubId={pub?.id}
+		/>
+	));
 	return (
 		<NewForm
 			currentStage={stageOfPubRnRn}
@@ -79,7 +56,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 			parentId={props.parentId ?? ("" as PubsId)}
 			pubValues={values}
 			pubTypeId={pubTypeId}
-			formElements={formElementsByPubType}
+			formElements={formElements}
 			pubId={pub?.id ?? ("" as PubsId)}
 		/>
 	);
