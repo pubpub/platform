@@ -62,7 +62,7 @@ async function NewForm({
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
 	const pt = availablePubTypes.find((type) => type.id === pubTypeId);
-	
+
 	const [selectedPubType, setSelectedPubType] = useState<
 		(typeof availablePubTypes)[number] | null
 	>(pt ?? null);

@@ -9,8 +9,8 @@ import { BooleanElement } from "./elements/BooleanElement";
 import { Vector3Element } from "./elements/ConfidenceElement";
 import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FIleUploadElement";
-import { UserIdSelect } from "./elements/UserSelectElement";
 import { TextElement } from "./elements/TextElement";
+import { UserIdSelect } from "./elements/UserSelectElement";
 
 /**
  * Renders every CoreSchemaType EXCEPT MemberId!
