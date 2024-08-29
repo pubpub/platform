@@ -25,7 +25,7 @@
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",
-		"test-run": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest run",
+		"test-run": "SKIP_VALIDATION=true dotenv -e .env.test -e .env.development vitest run",
 		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch"
 	},
