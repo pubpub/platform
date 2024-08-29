@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 import { useDebouncedCallback } from "use-debounce";
 
-import type { GetPubResponseBody, JsonValue } from "contracts";
+import type { GetPubResponseBody } from "contracts";
 import type {
 	CommunitiesId,
 	PubFields,
@@ -62,6 +62,7 @@ async function NewForm({
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
 	const pt = availablePubTypes.find((type) => type.id === pubTypeId);
+	
 	const [selectedPubType, setSelectedPubType] = useState<
 		(typeof availablePubTypes)[number] | null
 	>(pt ?? null);
