@@ -5,9 +5,30 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { PublicSchema } from "db/public";
 
 import { createForm } from "~/app/c/[communitySlug]/forms/actions";
-import { db } from "~/kysely/database";
-import { getForm } from "../server/form";
-import { beginTransaction } from "./utils";
+
+const { testDb, trx, rollback, beginTransaction } = await vi.hoisted(async () => {
+	const testDb = await import("./db").then((m) => m.testDb);
+
+	const { beginTransaction } = await import("./utils");
+	const { trx, rollback } = await beginTransaction(testDb);
+
+	return {
+		testDb,
+		trx,
+		rollback,
+		beginTransaction,
+	};
+});
+
+vi.mock("~/lib/server/cache/autoRevalidate", () => ({
+	autoRevalidate: (db) => {
+		return db;
+	},
+}));
+
+vi.mock("~/kysely/database", () => ({
+	db: trx,
+}));
 
 vi.mock("server-only", () => {
 	return {
@@ -21,14 +42,21 @@ vi.mock("react", () => {
 	};
 });
 
+vi.mock("next/headers", () => {
+	return {
+		cookies: vi.fn(),
+		headers: vi.fn(),
+	};
+});
+
 describe("live", () => {
 	test("should be able to connect to db", async () => {
-		const result = await db.selectFrom("users").selectAll().execute();
+		const result = await testDb.selectFrom("users").selectAll().execute();
 		expect(result.length).toBeGreaterThan(0);
 	});
 
 	test("can rollback transactions", async () => {
-		const { trx, rollback } = await beginTransaction(db);
+		const { trx, rollback } = await beginTransaction(testDb);
 
 		// Insert a user
 		const user = await trx
@@ -54,7 +82,7 @@ describe("live", () => {
 		rollback();
 
 		// Make sure user did not persist
-		const selectUserAgain = await db
+		const selectUserAgain = await testDb
 			.selectFrom("users")
 			.select("firstName")
 			.where("id", "=", user.id)
@@ -73,7 +101,7 @@ describe("live", () => {
 		let rollback: () => void;
 
 		beforeEach(async () => {
-			const transaction = await beginTransaction(db);
+			const transaction = await beginTransaction(testDb);
 			trx = transaction.trx;
 			rollback = transaction.rollback;
 		});
@@ -102,7 +130,6 @@ describe("live", () => {
 	});
 
 	test("getForm and createForm", async () => {
-		const { trx, rollback } = await beginTransaction(db);
 		// also doesn't work—no function named getCommunitySlug ?
 		// const forms = await getForm({ slug: "test-form" }, trx).execute();
 		// expect(forms.length).toEqual(0);
@@ -120,7 +147,7 @@ describe("live", () => {
 			.where("communityId", "=", community.id)
 			.executeTakeFirstOrThrow();
 
-		const form = await createForm(pubType.id, "my form", "my-form", community.id, trx);
+		const form = await createForm(pubType.id, "my form", "my-form", community.id);
 		console.log({ form });
 
 		rollback();

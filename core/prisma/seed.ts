@@ -4,7 +4,7 @@ import { makeWorkerUtils } from "graphile-worker";
 
 import { logger } from "logger";
 
-import { isUniqueConstraintError } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { env } from "~/lib/env/env.mjs";
 import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";

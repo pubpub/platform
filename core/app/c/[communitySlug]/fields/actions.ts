@@ -3,7 +3,8 @@
 import type { CommunitiesId, CoreSchemaType, PubFieldsId } from "db/public";
 import { logger } from "logger";
 
-import { db, isUniqueConstraintError } from "~/kysely/database";
+import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 

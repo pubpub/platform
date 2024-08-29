@@ -5,7 +5,8 @@ import type { QueryCreator } from "kysely";
 import type { CommunitiesId, PublicSchema, PubTypesId } from "db/public";
 import { logger } from "logger";
 
-import { db, isUniqueConstraintError } from "~/kysely/database";
+import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { _getPubFields } from "~/lib/server/pubFields";
@@ -18,7 +19,7 @@ export const createForm = defineServerAction(async function createForm(
 	trx: typeof db | QueryCreator<PublicSchema> = db
 ) {
 	try {
-		await autoRevalidate(
+		return await autoRevalidate(
 			trx
 				.with("fields", () =>
 					_getPubFields({ pubTypeId })
@@ -57,8 +58,10 @@ export const createForm = defineServerAction(async function createForm(
 								.as("order"),
 						])
 				)
+				.returningAll()
 		).executeTakeFirstOrThrow();
 	} catch (error) {
+		console.log(error);
 		if (isUniqueConstraintError(error)) {
 			const column = error.constraint === "forms_slug_key" ? "slug" : "name";
 			return { error: `A form with this ${column} already exists. Choose a new name` };
