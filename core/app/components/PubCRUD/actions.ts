@@ -43,7 +43,7 @@ export const createPub = defineServerAction(async function createPub({
 	}
 
 	try {
-		const createNewPub = await autoRevalidate(
+		await autoRevalidate(
 			db
 				.with("new_pub", (db) =>
 					db

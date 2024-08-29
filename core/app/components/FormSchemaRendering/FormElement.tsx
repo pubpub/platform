@@ -9,7 +9,7 @@ import { BooleanElement } from "./elements/BooleanElement";
 import { Vector3Element } from "./elements/ConfidenceElement";
 import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FIleUploadElement";
-import { UserIdSelect } from "./elements/MemberSelectElement";
+import { UserIdSelect } from "./elements/UserSelectElement";
 import { TextElement } from "./elements/TextElement";
 
 /**

@@ -1,16 +1,23 @@
 "use client";
 
-import type { FieldValues } from "react-hook-form";
-
 import React, { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
+import { useDebouncedCallback } from "use-debounce";
 
 import type { GetPubResponseBody, JsonValue } from "contracts";
-import type { PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
+import type {
+	CommunitiesId,
+	PubFields,
+	PubFieldSchema,
+	PubsId,
+	PubTypes,
+	Stages,
+	StagesId,
+} from "db/public";
 import { ElementType } from "db/public";
 import { Button } from "ui/button";
 import {
@@ -24,7 +31,6 @@ import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
-import type { Form as PubPubForm } from "~/lib/server/form";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { buildDefaultValues, createElementFromPubType } from "./helpers";
@@ -38,6 +44,7 @@ async function NewForm({
 	pubTypeId,
 	formElements,
 	className,
+	pubId,
 }: {
 	communityStages: Pick<Stages, "id" | "name" | "order">[];
 	parentId: PubsId;
@@ -48,8 +55,8 @@ async function NewForm({
 	})[];
 	pubValues: GetPubResponseBody["values"];
 	pubTypeId: PubTypes["id"];
-	formElements: Record<string, React.ReactNode>;
-	pubId: PubsId;
+	formElements: React.ReactNode[];
+	pubId?: PubsId;
 	className?: string;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
@@ -72,6 +79,12 @@ async function NewForm({
 	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 	urlSearchParams.delete(`${paramString}-pub-form`);
 	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
+
+	const handleSelect = useDebouncedCallback((value: (typeof availablePubTypes)[number]) => {
+		const newParams = new URLSearchParams(searchParams);
+		newParams.set("pubTypeId", value.id);
+		router.replace(`${path}?${newParams.toString()}`, { scroll: false });
+	}, 800);
 
 	const closeForm = useCallback(() => {
 		router.replace(pathWithoutFormParam);
@@ -96,26 +109,6 @@ async function NewForm({
 		defaultValues: buildDefaultValues(elements, pubValues),
 		reValidateMode: "onChange",
 	});
-
-	const preparePayload = ({
-		formElements,
-		formValues,
-	}: {
-		formElements: PubPubForm["elements"];
-		formValues: FieldValues;
-	}) => {
-		// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
-		// For example, if a pub has an 'email' field but the form does not,
-		// we do not want to pass an empty `email` field to the upsert (it will fail validation)
-		const payload: Record<string, JsonValue> = {};
-		for (const { slug } of formElements) {
-			if (slug) {
-				payload[slug] = formValues[slug];
-			}
-		}
-		return payload;
-	};
-
 	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
 		if (!selectedStage) {
 			form.setError("stage", {
@@ -123,38 +116,34 @@ async function NewForm({
 			});
 			return;
 		}
-
 		if (!selectedPubType) {
 			form.setError("pubType", {
 				message: "Select a pub type",
 			});
 			return;
 		}
-		const fields = preparePayload({
-			formElements: elements,
-			formValues: values,
-		});
-		if (hasValues) {
-			// const result = await runUpdatePub({
-			// 	pubId: pubId,
-			// 	communityId: selectedPubType.communityId as CommunitiesId,
-			// 	path: pathWithoutFormParam,
-			// 	stageId: stage as StagesId,
-			// 	fields: Object.entries(values).reduce((acc, [key, value]) => {
-			// 		const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
-			// 		if (id) {
-			// 			acc[id] = { slug: key, value };
-			// 		}
-			// 		return acc;
-			// 	}, {}),
-			// });
-
-			// if (result && "success" in result) {
-			toast({
-				title: "Success",
-				description: "yay updatedd",
+		if (hasValues && pubId) {
+			const result = await runUpdatePub({
+				pubId,
+				communityId: selectedPubType.communityId as CommunitiesId,
+				path: pathWithoutFormParam,
+				stageId: stage as StagesId,
+				fields: Object.entries(values).reduce((acc, [key, value]) => {
+					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
+					if (id) {
+						acc[id] = { slug: key, value };
+					}
+					return acc;
+				}, {}),
 			});
-			closeForm();
+
+			if (result && "success" in result) {
+				toast({
+					title: "Success",
+					description: "yay updatedd",
+				});
+				closeForm();
+			}
 		} else {
 			const result = await runCreatePub({
 				communityId: selectedPubType.communityId,
@@ -195,9 +184,7 @@ async function NewForm({
 					render={({ field }) => (
 						<FormItem aria-label="Email" className="flex flex-col items-start gap-2">
 							<FormLabel>Pub Type</FormLabel>
-							<FormDescription>
-								Select the type of pub
-							</FormDescription>
+							<FormDescription>Select the type of pub</FormDescription>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button size="sm" variant="outline">
@@ -209,9 +196,10 @@ async function NewForm({
 									{availablePubTypes.map((pubType) => (
 										<DropdownMenuItem
 											key={pubType.id}
-											onClick={() => {
-												field.onChange(pubType.id);
+											onSelect={() => {
 												setSelectedPubType(pubType);
+												field.onChange(pubType.id);
+												handleSelect(pubType);
 											}}
 										>
 											{pubType.name}
@@ -267,7 +255,7 @@ async function NewForm({
 						)}
 					/>
 				)}
-				{selectedPubType && formElements[selectedPubType.id]}
+				{selectedPubType && formElements}
 				<Button
 					type="submit"
 					className="flex items-center gap-x-2"
