@@ -11,8 +11,6 @@ export const createBrowserSupabase = (url, publicKey) => {
 	});
 
 	supabase = supabaseClient;
-
-	return supabaseClient;
 };
 
 export const formatSupabaseError = (error: AuthError) =>

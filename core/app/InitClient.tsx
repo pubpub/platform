@@ -4,15 +4,10 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 import { REFRESH_NAME, TOKEN_NAME } from "lib/auth/cookies";
-import { createBrowserSupabase } from "lib/supabase";
+import { createBrowserSupabase, supabase } from "lib/supabase";
 import { logger } from "logger";
 
 import { env } from "~/lib/env/env.mjs";
-
-const supabase = createBrowserSupabase(
-	env.NEXT_PUBLIC_SUPABASE_URL,
-	env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
-);
 
 export default function InitClient() {
 	const pathname = usePathname();
@@ -20,6 +15,7 @@ export default function InitClient() {
 		const isLocalhost = window.location.origin.includes("localhost");
 		const securityValue = isLocalhost ? "secure" : "";
 
+		createBrowserSupabase(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY);
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange(async (event, session) => {
