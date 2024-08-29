@@ -38,6 +38,7 @@ const nextConfig = {
 	},
 	experimental: {
 		instrumentationHook: true,
+		webpackBuildWorker: true,
 		serverComponentsExternalPackages: [
 			"@aws-sdk",
 			// without this here, next will sort of implode and no longer compile and serve pages properly
