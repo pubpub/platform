@@ -131,7 +131,35 @@ describe("live", () => {
 		});
 	});
 
-	test("getForm and createForm", async () => {
+	test.only("first rollback test", async () => {
+		const { trx, rollback } = await beginTransaction(testDb);
+
+		vi.doMock("~/kysely/database", () => ({
+			db: trx,
+		}));
+
+		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
+			(m) => m.createForm
+		);
+
+		const community = await trx
+			.selectFrom("communities")
+			.selectAll()
+			.where("slug", "=", "croccroc")
+
+			.executeTakeFirstOrThrow();
+		const pubType = await trx
+			.selectFrom("pub_types")
+			.select(["id"])
+			.where("communityId", "=", community.id)
+			.executeTakeFirstOrThrow();
+
+		await createForm(pubType.id, "my form", "my-form-1", community.id);
+
+		rollback();
+	});
+
+	test.only("getForm and createForm (second rollback test)", async () => {
 		const { trx, rollback } = await beginTransaction(testDb);
 
 		vi.doMock("~/kysely/database", () => ({
@@ -144,7 +172,7 @@ describe("live", () => {
 		);
 
 		// also doesn't work—no function named getCommunitySlug ?
-		const forms = await getForm({ slug: "test-form" }).execute();
+		const forms = await getForm({ slug: "my-form" }).execute();
 		expect(forms.length).toEqual(0);
 
 		// make stuff, encapsulate in functions later
