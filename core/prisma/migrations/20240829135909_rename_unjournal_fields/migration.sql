@@ -8,6 +8,17 @@ SET
 WHERE
     "schemaName" IS null;
 
+-- Replace field names in instance config
+UPDATE
+    integration_instances
+SET
+    config = replace(
+        config :: TEXT,
+        'unjournal:',
+        'legacy-unjournal:'
+    ) :: jsonb;
+
+-- Remove form elements tied to schemaless fields
 DELETE FROM
     form_elements USING pub_fields
 WHERE
