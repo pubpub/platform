@@ -5,6 +5,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { PublicSchema } from "db/public";
 
 import { createForm } from "~/app/c/[communitySlug]/forms/actions";
+import { getForm } from "../server/form";
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const { testDb, trx, rollback, beginTransaction } = await vi.hoisted(async () => {
 	const testDb = await import("./db").then((m) => m.testDb);
@@ -22,6 +25,12 @@ const { testDb, trx, rollback, beginTransaction } = await vi.hoisted(async () =>
 
 vi.mock("~/lib/server/cache/autoRevalidate", () => ({
 	autoRevalidate: (db) => {
+		return db;
+	},
+}));
+
+vi.mock("~/lib/server/cache/autoCache", () => ({
+	autoCache: (db) => {
 		return db;
 	},
 }));
@@ -131,8 +140,8 @@ describe("live", () => {
 
 	test("getForm and createForm", async () => {
 		// also doesn't work—no function named getCommunitySlug ?
-		// const forms = await getForm({ slug: "test-form" }, trx).execute();
-		// expect(forms.length).toEqual(0);
+		const forms = await getForm({ slug: "test-form" }, trx).execute();
+		expect(forms.length).toEqual(0);
 
 		// make stuff, encapsulate in functions later
 		const community = await trx
@@ -147,9 +156,13 @@ describe("live", () => {
 			.where("communityId", "=", community.id)
 			.executeTakeFirstOrThrow();
 
-		const form = await createForm(pubType.id, "my form", "my-form", community.id);
-		console.log({ form });
+		await createForm(pubType.id, "my form", "my-form", community.id);
 
+		const form = await getForm({ slug: "my-form" }).executeTakeFirstOrThrow();
+
+		expect(form.name).toEqual("my form");
+
+		// TODO: test the rollback
 		rollback();
 	});
 });

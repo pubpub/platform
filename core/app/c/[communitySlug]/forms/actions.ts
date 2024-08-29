@@ -58,7 +58,6 @@ export const createForm = defineServerAction(async function createForm(
 								.as("order"),
 						])
 				)
-				.returningAll()
 		).executeTakeFirstOrThrow();
 	} catch (error) {
 		console.log(error);
