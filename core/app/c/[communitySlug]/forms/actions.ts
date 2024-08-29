@@ -25,7 +25,7 @@ export const createForm = defineServerAction(async function createForm(
 	}
 
 	try {
-		return await autoRevalidate(
+		await autoRevalidate(
 			db
 				.with("fields", () =>
 					_getPubFields({ pubTypeId })
