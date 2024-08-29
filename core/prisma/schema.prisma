@@ -17,7 +17,6 @@ generator comments {
 
 model User {
   id           String   @id @default(dbgenerated("gen_random_uuid()"))
-  supabaseId   String?  @unique
   slug         String   @unique
   email        String   @unique
   firstName    String
