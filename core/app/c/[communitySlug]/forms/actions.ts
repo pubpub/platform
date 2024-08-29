@@ -5,6 +5,7 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { _getPubFields } from "~/lib/server/pubFields";
@@ -15,6 +16,14 @@ export const createForm = defineServerAction(async function createForm(
 	slug: string,
 	communityId: CommunitiesId
 ) {
+	const user = await getLoginData();
+
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+
 	try {
 		return await autoRevalidate(
 			db

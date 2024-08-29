@@ -4,7 +4,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { PublicSchema } from "db/public";
 
-const { testDb, beginTransaction, mockedTestDb } = await vi.hoisted(async () => {
+import type { ClientException } from "../serverActions";
+import { isClientException } from "../serverActions";
+
+const { testDb, beginTransaction, mockedTestDb, getLoginData } = await vi.hoisted(async () => {
 	const testDb = await import("./db").then((m) => m.testDb);
 
 	const { beginTransaction } = await import("./utils");
@@ -13,6 +16,7 @@ const { testDb, beginTransaction, mockedTestDb } = await vi.hoisted(async () => 
 		testDb,
 		mockedTestDb: vi.fn(),
 		beginTransaction,
+		getLoginData: vi.fn(),
 	};
 });
 
@@ -27,6 +31,12 @@ vi.mock("~/lib/server/cache/autoCache", () => ({
 		return db;
 	},
 }));
+
+vi.mock("~/lib/auth/loginData", () => {
+	return {
+		getLoginData: getLoginData,
+	};
+});
 
 vi.mock("~/kysely/database", () => ({
 	db: mockedTestDb,
@@ -52,6 +62,10 @@ vi.mock("next/headers", () => {
 });
 
 describe("live", () => {
+	beforeEach(() => {
+		vi.resetModules();
+	});
+
 	test("should be able to connect to db", async () => {
 		const result = await testDb.selectFrom("users").selectAll().execute();
 		expect(result.length).toBeGreaterThan(0);
@@ -131,9 +145,11 @@ describe("live", () => {
 		});
 	});
 
-	test.only("first rollback test", async () => {
+	test("createForm needs a logged in user", async () => {
 		const { trx, rollback } = await beginTransaction(testDb);
-
+		getLoginData.mockImplementation(() => {
+			return undefined;
+		});
 		vi.doMock("~/kysely/database", () => ({
 			db: trx,
 		}));
@@ -154,13 +170,18 @@ describe("live", () => {
 			.where("communityId", "=", community.id)
 			.executeTakeFirstOrThrow();
 
-		await createForm(pubType.id, "my form", "my-form-1", community.id);
+		const result = await createForm(pubType.id, "my form", "my-form-1", community.id);
+		expect(isClientException(result)).toBeTruthy();
+		expect((result as ClientException).error).toEqual("Not logged in");
 
 		rollback();
 	});
 
-	test.only("getForm and createForm (second rollback test)", async () => {
+	test("getForm and createForm", async () => {
 		const { trx, rollback } = await beginTransaction(testDb);
+		getLoginData.mockImplementation(() => {
+			return { id: "123", isSuperAdmin: true };
+		});
 
 		vi.doMock("~/kysely/database", () => ({
 			db: trx,
@@ -172,7 +193,7 @@ describe("live", () => {
 		);
 
 		// also doesn't work—no function named getCommunitySlug ?
-		const forms = await getForm({ slug: "my-form" }).execute();
+		const forms = await getForm({ slug: "my-form-2" }).execute();
 		expect(forms.length).toEqual(0);
 
 		// make stuff, encapsulate in functions later
@@ -188,13 +209,12 @@ describe("live", () => {
 			.where("communityId", "=", community.id)
 			.executeTakeFirstOrThrow();
 
-		await createForm(pubType.id, "my form", "my-form", community.id);
+		await createForm(pubType.id, "my form", "my-form-2", community.id);
 
-		const form = await getForm({ slug: "my-form" }).executeTakeFirstOrThrow();
+		const form = await getForm({ slug: "my-form-2" }).executeTakeFirstOrThrow();
 
 		expect(form.name).toEqual("my form");
 
-		// TODO: test the rollback
 		rollback();
 	});
 });
