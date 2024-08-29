@@ -39,11 +39,11 @@ const optional = (schema: z.ZodType<any, any>) =>
 
 // TODO: generate fields using instance's configured PubType
 const schema = z.object({
-	"unjournal:description": optional(z.string().optional()),
-	"unjournal:doi": optional(z.string().regex(DOI_REGEX, "Invalid DOI")),
-	"unjournal:title": z.string().min(3, "Title is required"),
-	"unjournal:url": optional(z.string().regex(URL_REGEX, "Invalid URL")),
-	"unjournal:managers-notes": optional(z.string()),
+	"legacy-unjournal:description": optional(z.string().optional()),
+	"legacy-unjournal:doi": optional(z.string().regex(DOI_REGEX, "Invalid DOI")),
+	"legacy-unjournal:title": z.string().min(3, "Title is required"),
+	"legacy-unjournal:url": optional(z.string().regex(URL_REGEX, "Invalid URL")),
+	"legacy-unjournal:managers-notes": optional(z.string()),
 });
 
 export function Submit(props: Props) {
@@ -54,11 +54,11 @@ export function Submit(props: Props) {
 		// TODO: generate fields using instance's configured PubType
 		resolver: zodResolver(schema),
 		defaultValues: {
-			"unjournal:managers-notes": "",
-			"unjournal:title": "",
-			"unjournal:description": "",
-			"unjournal:doi": "",
-			"unjournal:url": "",
+			"legacy-unjournal:managers-notes": "",
+			"legacy-unjournal:title": "",
+			"legacy-unjournal:description": "",
+			"legacy-unjournal:doi": "",
+			"legacy-unjournal:url": "",
 		},
 	});
 	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
@@ -68,8 +68,8 @@ export function Submit(props: Props) {
 		// The DOI field may contain either a DOI or a URL that contains a DOI.
 		// If the value is a URL, we convert it into a valid DOI before sending
 		// it to core PubPub.
-		if (pub["unjournal:doi"]) {
-			pub["unjournal:doi"] = normalizeDoi(pub["unjournal:doi"]);
+		if (pub["legacy-unjournal:doi"]) {
+			pub["legacy-unjournal:doi"] = normalizeDoi(pub["legacy-unjournal:doi"]);
 		}
 		const result = await submit(props.instanceId, pub, user.id);
 		if ("error" in result && typeof result.error === "string") {
@@ -113,7 +113,7 @@ export function Submit(props: Props) {
 					<CardContent className={cn("column flex flex-col gap-4")}>
 						<FormField
 							control={form.control}
-							name="unjournal:title"
+							name="legacy-unjournal:title"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Title</FormLabel>
@@ -132,7 +132,7 @@ export function Submit(props: Props) {
 						/>
 						<FormField
 							control={form.control}
-							name="unjournal:description"
+							name="legacy-unjournal:description"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Abstract</FormLabel>
@@ -149,7 +149,7 @@ export function Submit(props: Props) {
 						<div className={cn("flex gap-4")}>
 							<FormField
 								control={form.control}
-								name="unjournal:doi"
+								name="legacy-unjournal:doi"
 								render={({ field }) => {
 									// If a user inputs a URL containing a DOI, or a DOI with a specifier
 									// like doi:10.1234, send only DOI with the request to auto-fill
@@ -180,7 +180,7 @@ export function Submit(props: Props) {
 							/>
 							<FormField
 								control={form.control}
-								name="unjournal:url"
+								name="legacy-unjournal:url"
 								render={({ field }) => (
 									<FormItem className={cn("flex-1")}>
 										<FormLabel>URL</FormLabel>
@@ -205,7 +205,7 @@ export function Submit(props: Props) {
 							// TODO: This field is not working, probably because
 							// the name contains a space.
 							control={form.control}
-							name="unjournal:managers-notes"
+							name="legacy-unjournal:managers-notes"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Manager's Notes</FormLabel>

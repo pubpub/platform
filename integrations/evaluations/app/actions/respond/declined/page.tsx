@@ -23,7 +23,7 @@ export default async function Page(props: Props) {
 	const params = new URLSearchParams(props.searchParams);
 	params.set("intent", "info");
 	const infoUrl = "/actions/respond" + "?" + params.toString();
-	const submissionUrl = pub.values["unjournal:url"] as string;
+	const submissionUrl = pub.values["legacy-unjournal:url"] as string;
 	const submissionTitle = pub.values[instanceConfig.titleFieldSlug] as string;
 
 	return (
