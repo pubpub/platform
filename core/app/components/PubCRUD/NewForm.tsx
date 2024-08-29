@@ -47,7 +47,7 @@ async function NewForm({
 	pubId,
 }: {
 	communityStages: Pick<Stages, "id" | "name" | "order">[];
-	parentId: PubsId;
+	parentId?: PubsId;
 	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
 		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;

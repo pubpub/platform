@@ -1,4 +1,4 @@
-import type { PubsId, PubTypesId } from "db/public";
+import type { PubTypesId } from "db/public";
 
 import type { CreateEditPubProps } from "./types";
 import { db } from "~/kysely/database";
@@ -53,11 +53,11 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 			currentStage={stageOfPubRnRn}
 			communityStages={availableStages}
 			availablePubTypes={community.pubTypes}
-			parentId={props.parentId ?? ("" as PubsId)}
+			parentId={props.parentId}
 			pubValues={values}
 			pubTypeId={pubTypeId}
 			formElements={formElements}
-			pubId={pub?.id ?? ("" as PubsId)}
+			pubId={pub?.id}
 		/>
 	);
 }
