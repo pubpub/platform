@@ -15,53 +15,6 @@ test.describe("general auth", () => {
 	});
 });
 
-test.describe("Auth with supabase", () => {
-	test("Login with supabase", async ({ page }) => {
-		await page.goto("/login");
-		await page.getByLabel("email").fill("all@pubpub.org");
-		await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
-		await page.getByRole("button", { name: "Sign in" }).click();
-		await page.waitForURL(/.*\/c\/\w+\/stages.*/);
-		await expect(page.getByRole("link", { name: "Workflows" })).toBeVisible();
-		await page.context().storageState({ path: authFile });
-	});
-
-	test("Logout with supabase", async ({ page }) => {
-		// should replace login with startup and and eventual db actions with teardown steps
-		await page.goto("/login");
-		await page.getByLabel("email").fill("all@pubpub.org");
-		await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
-		await page.getByRole("button", { name: "Sign in" }).click();
-		await page.waitForURL(/.*\/c\/\w+\/stages.*/);
-		await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
-		await page.getByRole("button", { name: "Logout" }).click();
-		await page.waitForURL("/login");
-		await page.context().storageState({ path: authFile });
-
-		expect(
-			(await page.context().cookies()).find((cookie) =>
-				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
-			)
-		).toBeFalsy();
-		// you should not be logged back in
-		await page.reload();
-		expect(
-			(await page.context().cookies()).find((cookie) =>
-				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
-			)
-		).toBeFalsy();
-
-		await page.reload();
-
-		expect(
-			(await page.context().cookies()).find((cookie) =>
-				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
-			)
-		).toBeFalsy();
-		expect(page.url()).toMatch(/\/login/);
-	});
-});
-
 const loginAsNew = async (page: Page) => {
 	await page.goto("/login");
 	await page.getByLabel("email").fill("new@pubpub.org");

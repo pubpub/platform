@@ -1,13 +1,11 @@
 "use client";
 
-import React, { FormEvent, useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UserResponse } from "@supabase/supabase-js";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { formatSupabaseError, supabase } from "lib/supabase";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
