@@ -1,8 +1,6 @@
 "use server";
 
-import type { QueryCreator } from "kysely";
-
-import type { CommunitiesId, PublicSchema, PubTypesId } from "db/public";
+import type { CommunitiesId, PubTypesId } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -15,12 +13,11 @@ export const createForm = defineServerAction(async function createForm(
 	pubTypeId: PubTypesId,
 	name: string,
 	slug: string,
-	communityId: CommunitiesId,
-	trx: typeof db | QueryCreator<PublicSchema> = db
+	communityId: CommunitiesId
 ) {
 	try {
 		return await autoRevalidate(
-			trx
+			db
 				.with("fields", () =>
 					_getPubFields({ pubTypeId })
 						.clearSelect()
@@ -60,7 +57,6 @@ export const createForm = defineServerAction(async function createForm(
 				)
 		).executeTakeFirstOrThrow();
 	} catch (error) {
-		console.log(error);
 		if (isUniqueConstraintError(error)) {
 			const column = error.constraint === "forms_slug_key" ? "slug" : "name";
 			return { error: `A form with this ${column} already exists. Choose a new name` };
