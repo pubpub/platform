@@ -142,7 +142,7 @@ export const createFormInvitePath = ({
 const createExpiresAtDate = (days = 7) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
 export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }> &
-	XOR<{ email: string }, { userId: UsersId }> & { pubId?: PubsId };
+	XOR<{ email: string }, { userId: UsersId }> & { pubId?: PubsId; expiresInDays?: number };
 
 export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 	const formPromise = getForm(
@@ -178,7 +178,7 @@ export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 	const magicLink = await createMagicLink({
 		userId: user.id,
 		path: formPath,
-		expiresAt: createExpiresAtDate(0),
+		expiresAt: createExpiresAtDate(props.expiresInDays),
 		type: AuthTokenType.generic,
 	});
 

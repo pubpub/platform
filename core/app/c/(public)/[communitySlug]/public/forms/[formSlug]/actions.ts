@@ -7,7 +7,7 @@ import type { XOR } from "~/lib/types";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { Email } from "~/lib/server/email";
-import { getForm, userHasPermissionToForm } from "~/lib/server/form";
+import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/server/form";
 
 export const inviteUserToForm = defineServerAction(async function inviteUserToForm({
 	email,
@@ -38,15 +38,17 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		return { error: `You do not have permission to access form ${form.slug}` };
 	}
 
+	const formInviteLink = await createFormInviteLink({
+		formId: form.id,
+		email,
+		pubId,
+	});
+
 	await Email.requestAccessToForm({
 		community,
-		formSlug: form.slug,
-		form: {
-			name: form.name,
-		},
-		email,
+		form,
+		formInviteLink,
 		to: email,
 		subject: `Access to ${form.name}`,
-		pubId,
 	}).send();
 });

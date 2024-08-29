@@ -24,168 +24,164 @@ export const DEFAULT_OPTIONS = {
 	name: `PubPub Team`,
 } as const;
 
-export class Email {
-	static #buildSend(emailPromise: () => Promise<RequiredOptions>) {
-		const func = this.#send.bind(this, emailPromise);
+// export class Email {
+function buildSend(emailPromise: () => Promise<RequiredOptions>) {
+	const func = send.bind(null, emailPromise);
 
-		return func as (
+	return {
+		send: func as (
 			options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
 				name?: string;
 			}
-		) => Promise<{ success: true; report?: string } | { error: string }>;
+		) => Promise<{ success: true; report?: string } | { error: string }>,
+	};
+}
+
+async function send(
+	requiredPromise: () => Promise<RequiredOptions>,
+	options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
+		name?: string;
 	}
+) {
+	try {
+		const required = await requiredPromise();
 
-	static async #send(
-		requiredPromise: () => Promise<RequiredOptions>,
-		options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
-			name?: string;
-		}
-	) {
-		try {
-			const required = await requiredPromise();
-
-			logger.info({
-				msg: `Sending email to ${required.to}`,
-				options: {
-					...required,
-					...options,
-				},
-			});
-
-			const send = await smtpclient.sendMail({
-				from: `${options?.name ?? DEFAULT_OPTIONS.name} <${options?.from ?? DEFAULT_OPTIONS.from}>`,
-				to: required.to,
-				subject: required.subject,
-				html: required.html,
-				text: required.text,
+		logger.info({
+			msg: `Sending email to ${required.to}`,
+			options: {
+				...required,
 				...options,
-			});
+			},
+		});
 
-			return {
-				success: true,
-			};
-		} catch (error) {
-			logger.error({
-				msg: `Failed to send email`,
-				error: error,
-			});
-			return {
-				error: error.message,
-			};
-		}
-	}
+		const send = await smtpclient.sendMail({
+			from: `${options?.name ?? DEFAULT_OPTIONS.name} <${options?.from ?? DEFAULT_OPTIONS.from}>`,
+			to: required.to,
+			subject: required.subject,
+			html: required.html,
+			text: required.text,
+			...options,
+		});
 
-	public static passwordReset(
-		user: Pick<Users, "id" | "email" | "firstName" | "lastName">,
-		trx = db
-	) {
 		return {
-			send: this.#buildSend(async () => {
-				const magicLink = await createMagicLink(
-					{
-						type: AuthTokenType.passwordReset,
-						expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-						path: "/reset",
-						userId: user.id,
-					},
-					trx
-				);
-
-				const email = await renderAsync(
-					PasswordReset({
-						firstName: user.firstName,
-						lastName: user.lastName ?? undefined,
-						resetPasswordLink: magicLink,
-					})
-				);
-
-				return {
-					to: user.email,
-					html: email,
-					subject: "Reset your PubPub password",
-				};
-			}),
+			success: true,
 		};
-	}
-
-	public static inviteToForm() {
-		// TODO:
-	}
-
-	public static signupInvite(
-		props: {
-			user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">;
-			community: Pick<Communities, "name" | "avatar" | "slug">;
-			role: MemberRole;
-		},
-		trx = db
-	) {
+	} catch (error) {
+		logger.error({
+			msg: `Failed to send email`,
+			error: error.message,
+		});
 		return {
-			send: this.#buildSend(async () => {
-				const magicLink = await createMagicLink(
-					{
-						type: AuthTokenType.signup,
-						expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-						path: `/signup?redirectTo=${encodeURIComponent(
-							`/c/${props.community.slug}/stages`
-						)}`,
-						userId: props.user.id,
-					},
-					trx
-				);
-
-				const email = await renderAsync(
-					SignupInvite({
-						community: props.community,
-						signupLink: magicLink,
-						role: props.role,
-					})
-				);
-
-				return {
-					to: props.user.email,
-					html: email,
-					subject: "Join PubPub",
-				};
-			}),
-		};
-	}
-
-	public static requestAccessToForm(
-		props: {
-			community: Pick<Communities, "name" | "avatar" | "slug">;
-			form: { name: string };
-			subject: string;
-			to: string | string[];
-		} & (FormInviteLinkProps | { formInviteLink: string })
-	) {
-		return {
-			send: this.#buildSend(async () => {
-				const inviteLink =
-					"formInviteLink" in props
-						? props.formInviteLink
-						: await createFormInviteLink(props);
-
-				const email = await renderAsync(
-					RequestLinkToForm({
-						community: props.community,
-						formInviteLink: inviteLink,
-						form: props.form,
-					})
-				);
-
-				return {
-					to: props.to,
-					subject: props.subject,
-					html: email,
-				};
-			}),
-		};
-	}
-
-	public static generic(opts: RequiredOptions) {
-		return {
-			send: this.#buildSend(async () => opts),
+			error: error.message,
 		};
 	}
 }
+
+export function passwordReset(
+	user: Pick<Users, "id" | "email" | "firstName" | "lastName">,
+	trx = db
+) {
+	return buildSend(async () => {
+		const magicLink = await createMagicLink(
+			{
+				type: AuthTokenType.passwordReset,
+				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+				path: "/reset",
+				userId: user.id,
+			},
+			trx
+		);
+
+		const email = await renderAsync(
+			PasswordReset({
+				firstName: user.firstName,
+				lastName: user.lastName ?? undefined,
+				resetPasswordLink: magicLink,
+			})
+		);
+
+		return {
+			to: user.email,
+			html: email,
+			subject: "Reset your PubPub password",
+		};
+	});
+}
+
+function inviteToForm() {
+	// TODO:
+}
+
+export function signupInvite(
+	props: {
+		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">;
+		community: Pick<Communities, "name" | "avatar" | "slug">;
+		role: MemberRole;
+	},
+	trx = db
+) {
+	return buildSend(async () => {
+		const magicLink = await createMagicLink(
+			{
+				type: AuthTokenType.signup,
+				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+				path: `/signup?redirectTo=${encodeURIComponent(
+					`/c/${props.community.slug}/stages`
+				)}`,
+				userId: props.user.id,
+			},
+			trx
+		);
+
+		const email = await renderAsync(
+			SignupInvite({
+				community: props.community,
+				signupLink: magicLink,
+				role: props.role,
+			})
+		);
+
+		return {
+			to: props.user.email,
+			html: email,
+			subject: "Join PubPub",
+		};
+	});
+}
+
+export function requestAccessToForm(
+	props: {
+		community: Pick<Communities, "name" | "avatar" | "slug">;
+		form: { name: string };
+		subject: string;
+		to: string | string[];
+	} & (FormInviteLinkProps | { formInviteLink: string })
+) {
+	return buildSend(async () => {
+		const inviteLink =
+			"formInviteLink" in props ? props.formInviteLink : await createFormInviteLink(props);
+
+		const email = await renderAsync(
+			RequestLinkToForm({
+				community: props.community,
+				formInviteLink: inviteLink,
+				form: props.form,
+			})
+		);
+
+		return {
+			to: props.to,
+			subject: props.subject,
+			html: email,
+		};
+	});
+}
+
+export function generic(opts: RequiredOptions) {
+	return buildSend(async () => opts);
+}
+
+// kind of evil, but neat
+// Why not use a class with static methods?
+// somehow, that broke everything, do not attempt
+export * as Email from "./email";
