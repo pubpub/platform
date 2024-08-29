@@ -4,21 +4,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { PublicSchema } from "db/public";
 
-import { createForm } from "~/app/c/[communitySlug]/forms/actions";
-import { getForm } from "../server/form";
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const { testDb, trx, rollback, beginTransaction } = await vi.hoisted(async () => {
+const { testDb, beginTransaction, mockedTestDb } = await vi.hoisted(async () => {
 	const testDb = await import("./db").then((m) => m.testDb);
 
 	const { beginTransaction } = await import("./utils");
-	const { trx, rollback } = await beginTransaction(testDb);
 
 	return {
 		testDb,
-		trx,
-		rollback,
+		mockedTestDb: vi.fn(),
 		beginTransaction,
 	};
 });
@@ -36,7 +29,7 @@ vi.mock("~/lib/server/cache/autoCache", () => ({
 }));
 
 vi.mock("~/kysely/database", () => ({
-	db: trx,
+	db: mockedTestDb,
 }));
 
 vi.mock("server-only", () => {
@@ -139,8 +132,19 @@ describe("live", () => {
 	});
 
 	test("getForm and createForm", async () => {
+		const { trx, rollback } = await beginTransaction(testDb);
+
+		vi.doMock("~/kysely/database", () => ({
+			db: trx,
+		}));
+
+		const getForm = await import("../server/form").then((m) => m.getForm);
+		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
+			(m) => m.createForm
+		);
+
 		// also doesn't work—no function named getCommunitySlug ?
-		const forms = await getForm({ slug: "test-form" }, trx).execute();
+		const forms = await getForm({ slug: "test-form" }).execute();
 		expect(forms.length).toEqual(0);
 
 		// make stuff, encapsulate in functions later
