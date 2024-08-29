@@ -2,7 +2,8 @@ import type { QueryCreator } from "kysely";
 
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId, FormsId, MembersId, PublicSchema, UsersId } from "db/public";
+import type { CommunitiesId, FormsId, MembersId, PublicSchema, PubsId, UsersId } from "db/public";
+import { AuthTokenType } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -135,13 +136,15 @@ export const createFormInvitePath = ({
 	email: string;
 	pubId?: string;
 }) => {
-	return `/c/${communitySlug}/public/invite?redirectTo=${encodeURIComponent(`/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}${pubId ? `&pubId=${pubId}` : ""}`)}`;
+	return `/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}${pubId ? `&pubId=${pubId}` : ""}`;
 };
 
-export const createFormInviteLink = async (
-	props: XOR<{ formSlug: string }, { formId: FormsId }> &
-		XOR<{ email: string }, { userId: UsersId }> & { pubId?: string }
-) => {
+const createExpiresAtDate = (days = 7) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }> &
+	XOR<{ email: string }, { userId: UsersId }> & { pubId?: PubsId };
+
+export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 	const formPromise = getForm(
 		props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }
 	).executeTakeFirstOrThrow();
@@ -164,6 +167,7 @@ export const createFormInviteLink = async (
 	const user = userSettled.value;
 
 	const communitySlug = getCommunitySlug();
+
 	const formPath = createFormInvitePath({
 		formSlug: form.slug,
 		communitySlug: communitySlug,
@@ -171,7 +175,12 @@ export const createFormInviteLink = async (
 		pubId: props.pubId,
 	});
 
-	const magicLink = await createMagicLink({ email: user.email, path: formPath });
+	const magicLink = await createMagicLink({
+		userId: user.id,
+		path: formPath,
+		expiresAt: createExpiresAtDate(0),
+		type: AuthTokenType.generic,
+	});
 
 	return magicLink;
 };

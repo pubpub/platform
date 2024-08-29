@@ -1,8 +1,6 @@
 import { AuthTokenType } from "db/public";
 import { getLoginData } from "lib/auth/loginData";
 
-import { getTokenFailureReason } from "~/lib/auth/helpers/tokenFailureReason";
-import { TokenFailureReason } from "~/lib/server/token";
 import { SignupForm } from "./SignupForm";
 
 export default async function Page() {
@@ -17,16 +15,10 @@ export default async function Page() {
 		// TODO: remove this checks once we remove supabase entirely
 		session.id === "fake-session-id"
 	) {
-		const reason = getTokenFailureReason();
-
-		if (reason === TokenFailureReason.expired) {
-			return <div>This signup link has expired. Please request a new one.</div>;
-		}
-
 		return (
 			<div>
 				You are not allowed to signup for an account, or the link that you clicked is
-				invalid.
+				invalid expired. Please try again
 			</div>
 		);
 	}

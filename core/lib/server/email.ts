@@ -1,15 +1,17 @@
 import type { SendMailOptions } from "nodemailer";
 
 import { renderAsync } from "@react-email/render";
-import { PasswordReset, SignupInvite } from "emails";
+import { PasswordReset, RequestLinkToForm, SignupInvite } from "emails";
 
 import type { Communities, MemberRole, Users } from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import type { XOR } from "../types";
+import type { FormInviteLinkProps } from "./form";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/auth/createMagicLink";
+import { createFormInviteLink } from "./form";
 import { smtpclient } from "./mailgun";
 
 const FIFTEEN_MINUTES = 1000 * 60 * 15;
@@ -17,7 +19,7 @@ const FIFTEEN_MINUTES = 1000 * 60 * 15;
 type RequiredOptions = Required<Pick<SendMailOptions, "to" | "subject">> &
 	XOR<{ html: string }, { text: string }>;
 
-const DEFAULT_OPTIONS = {
+export const DEFAULT_OPTIONS = {
 	from: `hello@pubpub.org`,
 	name: `PubPub Team`,
 } as const;
@@ -144,6 +146,38 @@ export class Email {
 					to: props.user.email,
 					html: email,
 					subject: "Join PubPub",
+				};
+			}),
+		};
+	}
+
+	public static requestAccessToForm(
+		props: {
+			community: Pick<Communities, "name" | "avatar" | "slug">;
+			form: { name: string };
+			subject: string;
+			to: string | string[];
+		} & (FormInviteLinkProps | { formInviteLink: string })
+	) {
+		return {
+			send: this.#buildSend(async () => {
+				const inviteLink =
+					"formInviteLink" in props
+						? props.formInviteLink
+						: await createFormInviteLink(props);
+
+				const email = await renderAsync(
+					RequestLinkToForm({
+						community: props.community,
+						formInviteLink: inviteLink,
+						form: props.form,
+					})
+				);
+
+				return {
+					to: props.to,
+					subject: props.subject,
+					html: email,
 				};
 			}),
 		};

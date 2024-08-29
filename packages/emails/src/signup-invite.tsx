@@ -23,20 +23,22 @@ interface SignupInviteProps {
 	signupLink: string;
 	community: Pick<Communities, "name" | "avatar" | "slug">;
 	role: MemberRole;
+	previewText?: string;
 }
 
-const baseUrl = process.env.PUBPUB_URL ?? process.env.NEXT_PUBLIC_PUBPUB_URL ?? "";
-
 export const SignupInvite = ({
-	community = {
+	community: comm,
+	signupLink,
+	role,
+	previewText = `Join ${comm?.name} on PubPub`,
+}: SignupInviteProps) => {
+	const baseUrl = process.env.PUBPUB_URL ?? process.env.NEXT_PUBLIC_PUBPUB_URL ?? "";
+
+	const community = comm ?? {
 		name: "CrocCroc",
 		avatar: `${baseUrl}/demo/croc.png`,
 		slug: "croccroc",
-	},
-	signupLink,
-	role,
-}: SignupInviteProps) => {
-	const previewText = `your PubPub password`;
+	};
 
 	return (
 		<Html>

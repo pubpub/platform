@@ -6,10 +6,8 @@ import { NextResponse } from "next/server";
 import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
-import type { TokenFailureReason } from "~/lib/server/token";
-import { PUBPUB_TOKEN_FAILURE_HEADER } from "~/lib/auth/helpers/tokenFailureReason";
 import { lucia } from "~/lib/auth/lucia";
-import { InvalidTokenError, validateToken } from "~/lib/server/token";
+import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 
 const redirectToURL = (redirectTo: string, req: NextRequest, opts?: ResponseInit) => {
 	// it's a full url, just redirect them there
@@ -45,11 +43,15 @@ const handleInvalidToken = ({
 	reason: TokenFailureReason;
 	req: NextRequest;
 }) => {
-	return redirectToURL(redirectTo, req, {
-		headers: {
-			[PUBPUB_TOKEN_FAILURE_HEADER]: reason,
-		},
-	});
+	if (reason === TokenFailureReason.expired) {
+		// if the token is expired, we just send you through and let the page handle it
+		// this is necessary e.g. for the form invites, where we want users to be able to request
+		// a new invite if it has expired.
+		return redirectToURL(redirectTo, req);
+	}
+
+	// TODO: may want to add additional error pages for specific reasons
+	return redirectToURL(`/invalid-token?redirectTo=${encodeURIComponent(redirectTo)}`, req);
 };
 
 export async function GET(req: NextRequest) {

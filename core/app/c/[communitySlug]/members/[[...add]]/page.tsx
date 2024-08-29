@@ -111,7 +111,7 @@ export default async function Page({
 					content={<AddMember community={community} email={searchParams.email} />}
 				/>
 			</div>
-			<MemberTable members={tableMembers} community={community} />
+			<MemberTable members={tableMembers} />
 		</>
 	);
 }

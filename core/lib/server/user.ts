@@ -6,21 +6,16 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
 import type { CommunitiesId, NewUsers, UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
-import { UsersUpdate } from "db/src/public";
+import type { UsersUpdate } from "db/src/public";
 
-import type { OR, XOR } from "../types";
+import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
-import { createMagicLink } from "../auth/createMagicLink";
 import { createPasswordHash } from "../auth/password";
-import { env } from "../env/env.mjs";
 import { slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { findCommunityBySlug } from "./community";
 import { NotFoundError } from "./errors";
-import { smtpclient } from "./mailgun";
 
 export const SAFE_USER_SELECT = [
 	"users.id",
@@ -219,30 +214,3 @@ export const addUser = (props: NewUsers, trx = db) =>
 	autoRevalidate(trx.insertInto("users").values(props).returning(SAFE_USER_SELECT), {
 		additionalRevalidateTags: ["all-users"],
 	});
-
-export const createAndInviteUser = async (
-	props: NewUsers & {
-		communityId?: CommunitiesId;
-	}
-) => {
-	const user = await addUser(props).executeTakeFirstOrThrow(
-		(err) => new Error(`Unable to create user ${props.email}`)
-	);
-
-	const magicLink = await createMagicLink({
-		type: AuthTokenType.signup,
-		userId: user.id,
-		expiresAt: new Date(Date.now() + 3600 * 1000 * 7),
-		path: "/signup",
-	});
-
-	await smtpclient.sendMail({
-		from: `${"PubPub Team"} <hello@mg.pubpub.org>`,
-		to: user.email,
-		replyTo: "hello@pubpub.org",
-		subject: "You've been invited to join PubPub",
-		html: `<p>You've been invited to join PubPub. Click <a href="${magicLink}">here</a> to accept.</p>`,
-	});
-	//inviteUser(props.email, user.id);
-	return user;
-};

@@ -4,9 +4,10 @@ import type { FormsId, PubsId } from "db/public";
 import { logger } from "logger";
 
 import type { XOR } from "~/lib/types";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/server/form";
-import { smtpclient } from "~/lib/server/mailgun";
+import { Email } from "~/lib/server/email";
+import { getForm, userHasPermissionToForm } from "~/lib/server/form";
 
 export const inviteUserToForm = defineServerAction(async function inviteUserToForm({
 	email,
@@ -16,6 +17,11 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 	email: string;
 	pubId: PubsId;
 } & XOR<{ slug: string }, { id: FormsId }>) {
+	const community = await findCommunityBySlug();
+	if (!community) {
+		throw new Error("Invite user to form failed because community not found");
+	}
+
 	const form = await getForm(formSlugOrId).executeTakeFirst();
 
 	if (!form) {
@@ -32,15 +38,15 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		return { error: `You do not have permission to access form ${form.slug}` };
 	}
 
-	const link = await createFormInviteLink({ formSlug: form.slug, email, pubId });
-
-	await smtpclient.sendMail({
-		from: "hello@pubpub.org",
+	await Email.requestAccessToForm({
+		community,
+		formSlug: form.slug,
+		form: {
+			name: form.name,
+		},
+		email,
 		to: email,
-		subject: "Link to form",
-		text: `You have been invited to fill in the form ${form.name} on PubPub. Click the link below to accept the invitation
-
-		${link}
-		`,
-	});
+		subject: `Access to ${form.name}`,
+		pubId,
+	}).send();
 });
