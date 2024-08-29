@@ -180,8 +180,3 @@ export function requestAccessToForm(
 export function generic(opts: RequiredOptions) {
 	return buildSend(async () => opts);
 }
-
-// kind of evil, but neat
-// Why not use a class with static methods?
-// somehow, that broke everything, do not attempt
-export * as Email from "./email";

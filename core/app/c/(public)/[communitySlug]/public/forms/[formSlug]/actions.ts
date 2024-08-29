@@ -6,7 +6,7 @@ import { logger } from "logger";
 import type { XOR } from "~/lib/types";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { Email } from "~/lib/server/email";
+import * as Email from "~/lib/server/email";
 import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/server/form";
 
 export const inviteUserToForm = defineServerAction(async function inviteUserToForm({

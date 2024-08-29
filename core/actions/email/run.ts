@@ -11,7 +11,7 @@ import type { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtil
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { Email } from "~/lib/server/email";
+import * as Email from "~/lib/server/email";
 import { smtpclient } from "~/lib/server/mailgun";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { defineRun } from "../types";

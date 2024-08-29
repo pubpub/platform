@@ -19,7 +19,7 @@ import { env } from "~/lib/env/env.mjs";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { Email } from "~/lib/server/email";
+import * as Email from "~/lib/server/email";
 import {
 	inviteMember as dbAddMember,
 	getMember as dbGetMember,
