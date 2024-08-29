@@ -10,53 +10,14 @@ jobs:
     ci:
         timeout-minutes: 15
         runs-on: ubuntu-latest
+        env:
+            COMPOSE_FILE: docker-compose.test.yml
         steps:
             - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Install Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20.13.1
+            - name: Build docker image
+              run: docker compose --profile test build
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v3
-              with:
-                  version: 8
-                  run_install: false
-
-            - name: Get pnpm store directory
-              shell: bash
-              run: |
-                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-            # Setup and try to restore cache
-            - name: Setup pnpm cache
-              uses: actions/cache@v4
-              with:
-                  path: ${{ env.STORE_PATH }}
-                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-store-
-
-            - name: install dependencies
-              run: pnpm install
-
-            # this makes sure all the packages are properly linked
-            - name: preconstruct build
-              run: pnpm p:build
-
-            - name: generate prisma types
-              run: pnpm --filter core prisma generate
-
-            - name: check formatting
-              run: pnpm run format
-
-            - name: lint
-              run: pnpm run lint
-
-            - name: type-check
-              run: pnpm run type-check
-
-            - name: test
-              run: pnpm run test
+            - name: Run vitest tests
+              run: docker compose run app
