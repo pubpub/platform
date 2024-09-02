@@ -5,6 +5,7 @@ import { Card, CardContent } from "ui/card";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
+import { getLoginData } from "~/lib/auth/loginData";
 import { getStage, getStageActions } from "~/lib/db/queries";
 import { addAction, deleteAction } from "../../actions";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
@@ -25,6 +26,8 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 
 	const onAddAction = addAction.bind(null, stage.communityId, stage.id);
 	const onDeleteAction = deleteAction.bind(null, stage.communityId);
+
+	const { user } = await getLoginData();
 
 	return (
 		<Card>
@@ -58,7 +61,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 						</StagePanelActionEditor>
 					))}
 				</div>
-				<StagePanelActionCreator onAdd={onAddAction} />
+				<StagePanelActionCreator onAdd={onAddAction} isSuperAdmin={user?.isSuperAdmin} />
 			</CardContent>
 		</Card>
 	);
