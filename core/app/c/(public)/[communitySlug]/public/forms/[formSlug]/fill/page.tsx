@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { redirect, RedirectType } from "next/navigation";
 
-import type { MembersId, PubsId, PubTypesId, UsersId } from "db/public";
+import type { MembersId, PubsId, UsersId } from "db/public";
 import { StructuralFormElement } from "db/public";
 import { expect } from "utils";
 
@@ -12,7 +12,7 @@ import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
-import { getPub, getPubType } from "~/lib/server";
+import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
@@ -94,10 +94,6 @@ export default async function FormPage({
 		return null;
 	}
 
-	const pubType = await getPubType(pub.pubTypeId as PubTypesId).executeTakeFirstOrThrow(
-		() => new Error(`No pub type found for pub ${pub.id} and pubTypeId ${pub.pubTypeId}`)
-	);
-
 	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
@@ -139,7 +135,7 @@ export default async function FormPage({
 			<Header>
 				<div className="flex flex-col items-center">
 					<h1 className="text-xl font-bold">
-						{capitalize(pubType.name)} for {community?.name}
+						{capitalize(form.name)} for {community?.name}
 					</h1>
 					<SaveStatus />
 				</div>

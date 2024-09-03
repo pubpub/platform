@@ -1,6 +1,8 @@
+import { notFound } from "next/navigation";
+
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
-import { getPubTypeForForm } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getForm } from "~/lib/server/form";
 import { capitalize } from "~/lib/string";
 
 type Props = { children: React.ReactNode; params: { communitySlug: string; formSlug: string } };
@@ -11,17 +13,20 @@ export default async function Layout({ children, params }: Props) {
 		return null;
 	}
 
-	const pubType = await getPubTypeForForm({ slug: params.formSlug }).executeTakeFirstOrThrow();
+	const form = await getForm({
+		slug: params.formSlug,
+		communityId: community.id,
+	}).executeTakeFirst();
 
-	if (!pubType) {
-		return null;
+	if (!form) {
+		return notFound();
 	}
 
 	return (
 		<div>
 			<Header>
 				<h1 className="text-xl font-bold">
-					{capitalize(pubType.name)} for {community.name}
+					{capitalize(form.name)} for {community.name}
 				</h1>
 			</Header>
 			<div className="container mx-auto">{children}</div>
