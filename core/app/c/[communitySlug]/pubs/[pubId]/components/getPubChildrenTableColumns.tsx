@@ -5,21 +5,38 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { CoreSchemaType } from "db/public";
 import { Badge } from "ui/badge";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-export type PubChild = {
+import { PubPayload } from "~/lib/types";
+
+export type PubChildrenTableRow = {
 	id: string;
 	title: string;
 	stage: string;
 	assignee: string | null;
 	created: Date;
 	actions: JSX.Element;
+	values: { field: { id: string }; value: unknown }[];
 };
 
-export const getPubChildrenTableColumns = () =>
+const createMemberColumns = (pubType: PubPayload["pubType"]) =>
+	pubType.fields
+		.filter((field) => field.schemaName === CoreSchemaType.MemberId)
+		.map(
+			(field) =>
+				({
+					id: field.id,
+					header: ({ column }) => (
+						<DataTableColumnHeader column={column} title={field.name} />
+					),
+					accessorFn: (row) => row.values.find((v) => v.field.id === field.id)?.value,
+				}) as ColumnDef<PubChildrenTableRow, unknown>
+		);
+
+export const getPubChildrenTableColumns = (pubType?: PubPayload["pubType"]) =>
 	[
 		{
 			id: "select",
@@ -69,19 +86,11 @@ export const getPubChildrenTableColumns = () =>
 				);
 			},
 		},
-		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Assignee" />,
-			accessorKey: "assignee",
-		},
-		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
-			accessorKey: "created",
-			cell: ({ row }) => row.original.created.toLocaleDateString(),
-		},
+		...(pubType ? createMemberColumns(pubType) : []),
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
 			enableHiding: false,
 			accessorKey: "actions",
 			cell: ({ row }) => row.original.actions,
 		},
-	] as const satisfies ColumnDef<PubChild, unknown>[];
+	] as const satisfies ColumnDef<PubChildrenTableRow, unknown>[];

@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
-import { PubTypes } from "db/src/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { buttonVariants } from "ui/button";
+import { cn } from "utils";
 
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -19,7 +19,7 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
-import { pubInclude } from "~/lib/types";
+import { pubInclude, PubPayload } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
@@ -77,13 +77,14 @@ export default async function Page({
 			if (record) {
 				record.pubCount++;
 			} else {
-				acc.set(pubType.id, { pubType: pubType as PubTypes, pubCount: 1 });
+				acc.set(pubType.id, { pubType: pubType as PubPayload["pubType"], pubCount: 1 });
 			}
 			return acc;
-		}, new Map<string, { pubType: PubTypes; pubCount: number }>());
+		}, new Map<string, { pubType: PubPayload["pubType"]; pubCount: number }>());
 	const pubChildrenPubTypes = Array.from(pubChildrenPubTypesById.values());
-
-	const selectedChildPubType = searchParams.selectedPubType ?? pubChildrenPubTypes[0]?.pubType.id;
+	const selectedChildPubTypeId =
+		searchParams.selectedPubType ?? pubChildrenPubTypes[0]?.pubType.id;
+	const selectedChildPubType = pubChildrenPubTypesById.get(selectedChildPubTypeId);
 
 	return (
 		<div className="flex flex-col space-y-4">
@@ -183,37 +184,46 @@ export default async function Page({
 					searchParams={searchParams}
 				/>
 			</div>
-			<div className="mb-2 flex gap-2">
-				<div className="border-color-muted flex flex-col border-r-[1px]">
-					<nav className="grid w-48 gap-1 px-2">
-						{pubChildrenPubTypes.map((record) => {
-							const linkSearchParams = new URLSearchParams(searchParams);
-							linkSearchParams.append("selectedPubType", record.pubType.id);
-							return (
-								<Link
-									key={record.pubType.id}
-									href={`/c/${params.communitySlug}/pubs/${params.pubId}?${linkSearchParams}`}
-									className={buttonVariants({
-										variant:
-											selectedChildPubType === record.pubType.id
-												? "default"
-												: "ghost",
-										size: "default",
-									})}
-									scroll={false}
+			<div className="mb-2 flex flex-col gap-2">
+				<nav className="flex w-48 gap-1">
+					{pubChildrenPubTypes.map((record) => {
+						const linkSearchParams = new URLSearchParams(searchParams);
+						linkSearchParams.set("selectedPubType", record.pubType.id);
+						return (
+							<Link
+								key={record.pubType.id}
+								href={`/c/${params.communitySlug}/pubs/${params.pubId}?${linkSearchParams}`}
+								className={buttonVariants({
+									variant:
+										selectedChildPubTypeId === record.pubType.id
+											? "default"
+											: "ghost",
+									size: "default",
+								})}
+								scroll={false}
+							>
+								{record.pubType.name}
+								<span
+									className={cn(
+										"ml-auto",
+										selectedChildPubTypeId === record.pubType.id &&
+											"text-background dark:text-white"
+									)}
 								>
-									{record.pubType.name}
-									<span className="ml-auto text-muted-foreground">
-										{record.pubCount}
-									</span>
-								</Link>
-							);
-						})}
-					</nav>
-				</div>
+									{record.pubCount}
+								</span>
+							</Link>
+						);
+					})}
+				</nav>
+				<div className="flex flex-col"></div>
 				<div className="flex-1">
 					<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-						<PubChildrenTableWrapper pub={pub} members={community.members} />
+						<PubChildrenTableWrapper
+							pub={pub}
+							pubType={selectedChildPubType?.pubType}
+							members={community.members}
+						/>
 					</Suspense>
 				</div>
 			</div>

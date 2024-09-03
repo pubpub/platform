@@ -1,14 +1,16 @@
 "use client";
 
-import React from "react";
-
-import type { PubChild } from "./getPubChildrenTableColumns";
+import type { PubChildrenTableRow } from "./getPubChildrenTableColumns";
 import { DataTable } from "~/app/components/DataTable/DataTable";
+import { PubPayload } from "~/lib/types";
 import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
 
-export const PubChildrenTable = ({ children }: { children: PubChild[] }) => {
-	const communityTableColumns = getPubChildrenTableColumns();
-	return (
-		<DataTable columns={communityTableColumns} data={children} hidePaginationWhenSinglePage />
-	);
+type Props = {
+	children: PubChildrenTableRow[];
+	pubType?: PubPayload["pubType"];
+};
+
+export const PubChildrenTable = (props: Props) => {
+	const columns = getPubChildrenTableColumns(props.pubType);
+	return <DataTable columns={columns} data={props.children} hidePaginationWhenSinglePage />;
 };
