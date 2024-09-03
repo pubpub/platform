@@ -36,7 +36,12 @@ const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 					<FormItem>
 						<FormLabel>{label}</FormLabel>
 						<FormControl>
-							<Input value={value ?? ""} {...fieldRest} {...rest} />
+							<Input
+								data-testid={name}
+								value={value ?? ""}
+								{...fieldRest}
+								{...rest}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>

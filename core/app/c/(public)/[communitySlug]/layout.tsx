@@ -6,18 +6,19 @@ import { findCommunityBySlug } from "~/lib/server/community";
 type Props = { children: React.ReactNode; params: { communitySlug: string } };
 
 export default async function MainLayout({ children, params }: Props) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);
+
 	if (!community) {
 		return null;
 	}
 
-	const role = getCommunityRole(loginData, { slug: params.communitySlug });
+	const role = getCommunityRole(user, { slug: params.communitySlug });
 
 	// the user is logged in, but not a member of the community
 	// we should bar them from accessing the page
-	if (loginData && !role) {
+	if (user && !role) {
 		return null;
 	}
 

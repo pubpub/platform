@@ -94,8 +94,7 @@ export const getPubTypesForCommunity = async (
 			.offset(offset)
 	).execute();
 
-export const getAllPubTypesForCommunity = () => {
-	const communitySlug = getCommunitySlug();
+export const getAllPubTypesForCommunity = (communitySlug: string) => {
 	return autoCache(
 		db
 			.selectFrom("pub_types")

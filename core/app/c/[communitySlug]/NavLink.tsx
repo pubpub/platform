@@ -10,7 +10,7 @@ type Props = { href: string; text: string; icon: React.ReactNode; count?: number
 
 export default function NavLink({ href, text, icon, count }: Props) {
 	const layoutSegment = useSelectedLayoutSegment();
-	const isActive = layoutSegment ? new RegExp(`c\\/.*?\\/${layoutSegment}`).test(href) : false;
+	const isActive = layoutSegment ? new RegExp(`c\\/.*?\\/${layoutSegment}$`).test(href) : false;
 	return (
 		<Link
 			className={cn(

@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { CommunitiesId, PubsId } from "db/public";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -19,7 +20,7 @@ import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
-import PubChildrenTableWrapper from "./components/PubChldrenTableWrapper";
+import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 
 export default async function Page({
 	params,
@@ -28,12 +29,16 @@ export default async function Page({
 	params: { pubId: string; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return null;
 	}
-	let token;
-	token = await createToken(loginData.id);
+
+	const token = await createToken({
+		userId: user.id as UsersId,
+		type: AuthTokenType.generic,
+	});
+
 	if (!params.pubId || !params.communitySlug) {
 		return null;
 	}
@@ -65,7 +70,7 @@ export default async function Page({
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
 
 	return (
-		<>
+		<div className="flex flex-col space-y-4">
 			<div className="mb-8">
 				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
 				<PubTitle pub={pub} />
@@ -147,14 +152,24 @@ export default async function Page({
 					</div>
 				</div>
 			</div>
-			<PubCreateButton
-				communityId={community.id as CommunitiesId}
-				parentId={pub.id as PubsId}
-				searchParams={searchParams}
-			/>
+			<div>
+				<h2 className="text-xl font-bold">Pub Contents</h2>
+				<p className="text-muted-foreground">
+					Use the "Add New Pub" button below to create a new pub and add it to this pub's
+					contents.
+				</p>
+			</div>
+			<div className="mb-2">
+				<PubCreateButton
+					label="Add New Pub"
+					communityId={community.id as CommunitiesId}
+					parentId={pub.id as PubsId}
+					searchParams={searchParams}
+				/>
+			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper pub={pub} members={community.members} />
 			</Suspense>
-		</>
+		</div>
 	);
 }

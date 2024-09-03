@@ -50,6 +50,7 @@ export {
 	Play,
 	Plus,
 	PlusCircle,
+	RefreshCw,
 	Search,
 	Send,
 	Settings,

@@ -1,3 +1,5 @@
+import type { User as LuciaUser } from "lucia";
+
 import { Fragment } from "react";
 import Link from "next/link";
 
@@ -10,7 +12,6 @@ import { moveConstraintSourcesForStage } from "~/lib/stages";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = {
-	loginData: UserLoginData;
 	members: CommunityMemberPayload[];
 	stageById: StagesById;
 	stageWorkflows: StagePayload[][];
@@ -93,7 +94,6 @@ function StageList(props: Props) {
 														actions={
 															<StagePubActions
 																key={stage.id}
-																loginData={props.loginData}
 																members={props.members}
 																moveFrom={sources}
 																moveTo={destinations}

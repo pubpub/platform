@@ -15,8 +15,9 @@ export const SelectElement = (state) => {
 
 	const fieldButtons = Object.values(fields).map((field) => {
 		if (
-			state.fieldsFilter &&
-			!`${field.name} ${field.slug} ${field.schemaName}`.includes(state.fieldsFilter)
+			field.isArchived ||
+			(state.fieldsFilter &&
+				!`${field.name} ${field.slug} ${field.schemaName}`.includes(state.fieldsFilter))
 		) {
 			return null;
 		}
@@ -39,9 +40,10 @@ export const SelectElement = (state) => {
 						selectedElementIndex: elementsCount,
 					});
 				}}
+				data-testid={`field-button-${field.slug}`}
 			>
 				<Type size={20} className="my-auto text-emerald-500" />
-				<div className="flex flex-col items-start">
+				<div className="flex flex-col items-start text-left">
 					<div className="text-muted-foreground">{field.slug}</div>
 					<div className="text-left font-semibold">{field.name}</div>
 				</div>

@@ -1,5 +1,5 @@
 import { Button } from "ui/button";
-import { Activity, Menu, Settings, ToyBrick } from "ui/icon";
+import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
@@ -80,8 +80,18 @@ const ManageLinks = ({
 				text={"Workflows"}
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
+			{isSuperAdmin && (
+				<NavLink
+					href={`${prefix}/stages/manage`}
+					text={"Stage editor"}
+					icon={<RefreshCw size={16} />}
+				/>
+			)}
 			{isAdmin && (
 				<NavLink href={`${prefix}/types`} text={"Types"} icon={<ToyBrick size={16} />} />
+			)}
+			{isAdmin && (
+				<NavLink href={`${prefix}/fields`} text={"Fields"} icon={<FormInput size={16} />} />
 			)}
 			{isAdmin && (
 				<NavLink
@@ -117,11 +127,11 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 	const prefix = `/c/${community.slug}`;
 	const divider = <div className="my-4 h-[1px] bg-gray-200" />;
 
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	const isAdmin = isCommunityAdmin(loginData, community);
+	const isAdmin = isCommunityAdmin(user, community);
 
-	const isSuperAdmin = loginData?.isSuperAdmin;
+	const isSuperAdmin = user?.isSuperAdmin;
 
 	return (
 		<>

@@ -21,14 +21,14 @@
 import { createHash } from "crypto";
 import { promises as fs } from "fs";
 
-import type { EnvValue, GeneratorOptions } from "@prisma/generator-helper";
+import type { DMMF, EnvValue, GeneratorOptions } from "@prisma/generator-helper";
 
 import { generatorHandler } from "@prisma/generator-helper";
 import { getDMMF, parseEnvValue } from "@prisma/internals";
 
 import { logger } from "logger";
 
-async function generateModelComment(model: any): Promise<string[]> {
+async function generateModelComment(model: DMMF.Model): Promise<string[]> {
 	const modelName = model.dbName ?? model.name;
 
 	const commentStatements: string[] = [];
@@ -47,6 +47,18 @@ async function generateModelComment(model: any): Promise<string[]> {
 	});
 
 	return [`-- Model ${modelName} comments`, "", ...commentStatements, ""];
+}
+
+async function generateEnumComment(enumModel: DMMF.DatamodelEnum): Promise<string[]> {
+	const enumName = enumModel.name;
+
+	const documentation = enumModel.documentation;
+
+	logger.debug({ msg: `Generating comment for ${enumName}..., ` });
+
+	const commentStatement = `COMMENT ON TYPE "${enumName}" IS '${documentation?.replace(/'/g, "''") ?? ""}';`;
+
+	return [`-- Enum ${enumName} comments`, "", documentation ? commentStatement : "", ""];
 }
 
 async function fileHash(file: string, allowEmpty = false): Promise<string> {
@@ -86,6 +98,10 @@ export async function generate(options: GeneratorOptions) {
 	prismaClientDmmf.datamodel.models.forEach((model: any) => {
 		logger.debug(`Generating comment for ${model.name}...`);
 		promises.push(generateModelComment(model));
+	});
+	prismaClientDmmf.datamodel.enums.forEach((enumModel) => {
+		logger.debug(`Generating comment for ${enumModel.name}...`);
+		promises.push(generateEnumComment(enumModel));
 	});
 
 	const allStatements = await Promise.all(promises);

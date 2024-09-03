@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createPortal } from "react-dom";
 import { useFieldArray, useForm } from "react-hook-form";
 
+import type { Stages } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Form, FormItem } from "ui/form";
@@ -117,6 +118,7 @@ const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
 type Props = {
 	pubForm: PubForm;
 	id: string;
+	stages: Stages[];
 };
 
 // Render children in a portal so they can safely use <form> components
@@ -133,7 +135,7 @@ function PanelWrapper({
 	return createPortal(children, sidebar);
 }
 
-export function FormBuilder({ pubForm, id }: Props) {
+export function FormBuilder({ pubForm, id, stages }: Props) {
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),
 		values: {
@@ -235,6 +237,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 				update={update}
 				dispatch={dispatch}
 				slug={pubForm.slug}
+				stages={stages}
 			>
 				<Tabs defaultValue="builder" className="pr-[380px]">
 					<div className="px-6">

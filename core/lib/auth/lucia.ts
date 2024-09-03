@@ -7,6 +7,8 @@ import { Lucia } from "lucia";
 
 import type { Communities, Members, Users, UsersId } from "db/public";
 import type { Sessions, SessionsId } from "db/src/public/Sessions";
+import { AuthTokenType } from "db/public";
+import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
@@ -170,8 +172,14 @@ export const lucia = new Lucia(adapter, {
 	sessionCookie: {
 		expires: false,
 		attributes: {
+			path: "/",
 			secure: env.NODE_ENV === "production",
 		},
+	},
+	getSessionAttributes: ({ type }) => {
+		return {
+			type,
+		};
 	},
 	getUserAttributes: ({
 		email,
@@ -202,6 +210,21 @@ export const lucia = new Lucia(adapter, {
 	},
 });
 
+export type ExtraSessionValidationOptions = {
+	/**
+	 * Which kind of sessions are allowed to be used for logging in.
+	 *
+	 * @default  [AuthTokenType.generic]
+	 */
+	allowedSessions?: AuthTokenType[];
+};
+
+const DEFAULT_ALLOWED_SESSIONS = [AuthTokenType.generic] as AuthTokenType[];
+
+const defaultOptions = {
+	allowedSessions: DEFAULT_ALLOWED_SESSIONS,
+} as const satisfies ExtraSessionValidationOptions;
+
 /**
  * Get the session and corresponding user from cookies
  *
@@ -209,8 +232,22 @@ export const lucia = new Lucia(adapter, {
  * and removes the session cookie if the session is invalid
  */
 export const validateRequest = cache(
-	async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
-		const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
+	async (opts?: {
+		/**
+		 * Which kind of sessions are allowed to be used for logging in.
+		 *
+		 * @default  [AuthTokenType.generic]
+		 */
+		allowedSessions?: AuthTokenType[];
+	}): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
+		const options = {
+			...defaultOptions,
+			...opts,
+		};
+
+		const sessionCookies = cookies().get(lucia.sessionCookieName);
+
+		const sessionId = sessionCookies?.value ?? null;
 
 		if (!sessionId) {
 			return {
@@ -220,6 +257,14 @@ export const validateRequest = cache(
 		}
 
 		const result = await lucia.validateSession(sessionId);
+
+		// do not allow unspecified sessions
+		// eg prevent generic session from being used for password reset
+		// this is to prevent users from being able to reset the password of any logged in user
+		if (result.session?.type && !options.allowedSessions.includes(result.session?.type)) {
+			logger.debug(`Invalid session type: ${result.session?.type}`);
+			return { user: null, session: null };
+		}
 
 		// next.js throws when you attempt to set cookie when rendering page
 		try {

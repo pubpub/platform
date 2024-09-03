@@ -7,6 +7,7 @@ const {
 const {
 	kanelDatabaseDefaultExportFixPreRenderHook,
 } = require("./src/kanel/kanel-database-default-export-fix-hook.cjs");
+const { cleanupEnumComments } = require("./src/kanel/kanel-cleanup-enum-comments.cjs");
 
 /** @type {import('kanel').Config} */
 module.exports = {
@@ -20,6 +21,7 @@ module.exports = {
 		generateZodSchemas,
 		kanelKyselyZodCompatibilityPreRenderHook,
 		kanelDatabaseDefaultExportFixPreRenderHook,
+		cleanupEnumComments,
 	],
 	outputPath: "./src",
 

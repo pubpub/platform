@@ -44,7 +44,7 @@ export const ButtonConfigurationForm = ({
 	// The id here is either the button's elementId or its label depending on what is available
 	buttonIdentifier: string | null;
 }) => {
-	const { dispatch, update } = useFormBuilder();
+	const { dispatch, update, stages } = useFormBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext();
 	// Derive some initial values based on the state of the parent form when this panel was opened
@@ -81,7 +81,6 @@ export const ButtonConfigurationForm = ({
 	});
 
 	const community = useCommunity();
-	const { stages } = community;
 
 	const defaultValues = button
 		? {
