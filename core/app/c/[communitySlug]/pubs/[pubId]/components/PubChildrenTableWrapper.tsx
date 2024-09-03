@@ -1,3 +1,4 @@
+import { Expression, ExpressionBuilder, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { PubsId, PubTypes, Stages } from "db/public";
@@ -14,56 +15,47 @@ import { getStageActions } from "~/lib/db/queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { PubChildrenTable } from "./PubChildrenTable";
 
+const stage = (stageId: Expression<string>) =>
+	jsonArrayFrom(
+		db
+			.selectFrom("stages")
+			.select(["stages.id", "stages.name"])
+			.whereRef("stages.id", "=", stageId)
+	);
+
+const actionInstances = (stageId: Expression<string>) =>
+	jsonArrayFrom(
+		db
+			.selectFrom("action_instances")
+			.whereRef("action_instances.stageId", "=", stageId)
+			.selectAll()
+	);
+
+const memberFields = (pubId: Expression<string>) =>
+	jsonArrayFrom(
+		db
+			.selectFrom("pub_values")
+			.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+			.innerJoin("members", (join) =>
+				join.on((eb) => eb("members.id", "=", sql`pub_values.value #>> '{}'`))
+			)
+			.select(["members.id", "members.userId", "pub_fields.name"])
+			.whereRef("pub_values.pubId", "=", pubId)
+			.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
+			.distinctOn("pub_fields.id")
+			.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+	);
+
 const getPubChildrenTablePubs = (parentId: PubsId) => {
 	return autoCache(
 		db
-			.with("member-fields", (eb) =>
-				eb
-					.selectFrom("pub_values")
-					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
-					.innerJoin("pubs", "pubs.id", "pub_values.pubId")
-					.select(["pub_values.value", "pub_values.pubId"])
-					.where("pubs.parentId", "=", parentId)
-					.where("schemaName", "=", CoreSchemaType.MemberId)
-					.distinctOn("pub_fields.id")
-					.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
-			)
 			.selectFrom("pubs")
 			.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 			.select((eb) => [
 				"pubs.id",
-				jsonArrayFrom(
-					eb
-						.selectFrom("member-fields")
-						.innerJoin("members", "members.id", "member-fields.value")
-						.select((eb) => [
-							"members.id",
-							jsonObjectFrom(
-								eb
-									.selectFrom("users")
-									.select([
-										"users.id",
-										"users.firstName",
-										"users.lastName",
-										"users.avatar",
-									])
-									.whereRef("users.id", "=", "members.userId")
-							).as("user"),
-						])
-						.whereRef("pubs.id", "=", "member-fields.pubId")
-				).as("members"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("action_instances")
-						.whereRef("action_instances.stageId", "=", "PubsInStages.stageId")
-						.selectAll()
-				).as("actions"),
-				jsonObjectFrom(
-					eb
-						.selectFrom("stages")
-						.select(["stages.id", "stages.name"])
-						.whereRef("stages.id", "=", "stages.id")
-				).as("stage"),
+				memberFields(eb.ref("pubs.id")).as("members"),
+				actionInstances(eb.ref("PubsInStages.stageId")).as("actions"),
+				stage(eb.ref("PubsInStages.stageId")).as("stage"),
 			])
 			.where("parentId", "=", parentId)
 	);
@@ -137,6 +129,7 @@ async function PubChildrenTableWrapper(props: Props) {
 	const children = await Promise.all(
 		childrenOfPubType.map((child) => childToTableRow(child, props.members))
 	);
+
 	return <PubChildrenTable children={children} pubType={pubType} />;
 }
 
