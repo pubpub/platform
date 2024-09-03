@@ -101,12 +101,13 @@ const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
 				<div className="text-sm uppercase text-slate-500">{elementPanelTitles[state]}</div>
 				{state !== "initial" && (
 					<Button
+						aria-label="Cancel"
 						variant="ghost"
 						size="sm"
 						className=""
 						onClick={() => dispatch({ eventName: "cancel" })}
 					>
-						<X size={16} />
+						<X size={16} className="text-muted-foreground" />
 					</Button>
 				)}
 			</div>

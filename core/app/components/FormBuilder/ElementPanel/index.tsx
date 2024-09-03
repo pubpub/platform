@@ -66,17 +66,6 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 		case "editingButton":
 			return (
 				<>
-					<Button
-						aria-label="Back"
-						variant="ghost"
-						size="sm"
-						className="absolute right-3 top-1"
-						onClick={() => {
-							dispatch({ eventName: "back" });
-						}}
-					>
-						<X size="16px" className="text-muted-foreground" />
-					</Button>
 					<ButtonConfigurationForm buttonIdentifier={state.buttonId} />
 				</>
 			);
