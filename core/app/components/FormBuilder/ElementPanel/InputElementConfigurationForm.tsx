@@ -38,10 +38,10 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 	}
 
 	const schema = z.object({
-		label: z.string().default(""),
-		placeholder: z.string().default(""),
-		help: z.string().default(""),
-		required: z.boolean().default(true),
+		label: z.string().nullable().default(""),
+		placeholder: z.string().nullable().default(""),
+		help: z.string().nullable().default(""),
+		required: z.boolean().nullable(),
 	});
 
 	const form = useForm<z.infer<typeof schema>>({

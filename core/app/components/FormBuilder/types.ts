@@ -24,7 +24,7 @@ type baseElement = z.input<typeof baseElementSchema>;
 export type InputElement = baseElement & {
 	type: ElementType.pubfield;
 	fieldId: PubFieldsId;
-	required: boolean;
+	required: boolean | null;
 	label?: string | null;
 	description?: string | null;
 	help?: string | null;
