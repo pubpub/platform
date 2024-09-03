@@ -486,6 +486,16 @@ enum ElementType {
   button
 }
 
+enum InputComponent {
+  textArea
+  textInput
+  date
+  boolean
+  fileUpload
+  memberSelect
+  confidenceInterval
+}
+
 // Either a structural element like a header, hr etc. or a pubfield input
 model FormElement {
   id          String                 @id @default(dbgenerated("gen_random_uuid()"))
@@ -495,8 +505,10 @@ model FormElement {
   formId      String
   order       Int?
   label       String?
+  help        String?
   description String?
   element     StructuralFormElement?
+  component   InputComponent?
   content     String?
   required    Boolean?
   form        Form                   @relation(fields: [formId], references: [id])

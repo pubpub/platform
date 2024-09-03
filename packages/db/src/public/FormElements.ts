@@ -3,11 +3,13 @@ import { z } from "zod";
 
 import type { ElementType } from "./ElementType";
 import type { FormsId } from "./Forms";
+import type { InputComponent } from "./InputComponent";
 import type { PubFieldsId } from "./PubFields";
 import type { StagesId } from "./Stages";
 import type { StructuralFormElement } from "./StructuralFormElement";
 import { elementTypeSchema } from "./ElementType";
 import { formsIdSchema } from "./Forms";
+import { inputComponentSchema } from "./InputComponent";
 import { pubFieldsIdSchema } from "./PubFields";
 import { stagesIdSchema } from "./Stages";
 import { structuralFormElementSchema } from "./StructuralFormElement";
@@ -45,6 +47,10 @@ export interface FormElementsTable {
 	required: ColumnType<boolean | null, boolean | null, boolean | null>;
 
 	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
+
+	component: ColumnType<InputComponent | null, InputComponent | null, InputComponent | null>;
+
+	help: ColumnType<string | null, string | null, string | null>;
 }
 
 export type FormElements = Selectable<FormElementsTable>;
@@ -67,6 +73,8 @@ export const formElementsSchema = z.object({
 	content: z.string().nullable(),
 	required: z.boolean().nullable(),
 	stageId: stagesIdSchema.nullable(),
+	component: inputComponentSchema.nullable(),
+	help: z.string().nullable(),
 });
 
 export const formElementsInitializerSchema = z.object({
@@ -81,6 +89,8 @@ export const formElementsInitializerSchema = z.object({
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
+	component: inputComponentSchema.optional().nullable(),
+	help: z.string().optional().nullable(),
 });
 
 export const formElementsMutatorSchema = z.object({
@@ -95,4 +105,6 @@ export const formElementsMutatorSchema = z.object({
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
+	component: inputComponentSchema.optional().nullable(),
+	help: z.string().optional().nullable(),
 });

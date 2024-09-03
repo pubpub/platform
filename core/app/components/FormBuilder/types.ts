@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
+import type { CoreSchemaType, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
 	ElementType,
 	FormAccessType,
@@ -27,8 +27,10 @@ export type InputElement = baseElement & {
 	required: boolean;
 	label?: string | null;
 	description?: string | null;
+	help?: string | null;
 	element: never;
 	content: never;
+	schemaName: CoreSchemaType;
 };
 
 export type StructuralElement = baseElement & {
