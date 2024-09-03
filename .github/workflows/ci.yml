@@ -19,5 +19,17 @@ jobs:
             - name: Build docker image
               run: docker compose --profile test build
 
+            - name: Run migrations
+              run: docker compose run app pnpm --filter core migrate-test
+
+            - name: Run prettier
+              run: docker compose run app pnpm format
+
+            - name: Run eslint
+              run: docker compose run app pnpm lint
+
+            - name: Run typecheck
+              run: docker compose run app pnpm type-check
+
             - name: Run vitest tests
               run: docker compose run app

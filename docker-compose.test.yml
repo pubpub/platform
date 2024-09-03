@@ -8,16 +8,16 @@ services:
             POSTGRES_PASSWORD: password
             POSTGRES_DB: mydb
         ports:
-            - "5432:5432"
+            - "5532:5432"
         volumes:
             - postgres_data:/var/lib/postgresql/data
 
     inbucket:
         image: inbucket/inbucket:latest
         ports:
-            - "54324:9000" # UI
-            - "54325:2500" # smtp
-            - "54326:1100" # pop3
+            - "55324:9000" # UI
+            - "55325:2500" # smtp
+            - "55326:1100" # pop3
 
     app:
         build:
@@ -28,8 +28,6 @@ services:
         image: core:latest
         environment:
             DATABASE_URL: postgres://user:password@postgres:5432/mydb
-        ports:
-            - "3000:3000"
         volumes:
             - ./core:/app
             - /app/node_modules
@@ -37,8 +35,7 @@ services:
             - postgres
             - inbucket
         command: >
-            sh -c "pnpm --filter core migrate-test &&
-                   pnpm --filter core run test-run"
+            sh -c "pnpm --filter core run test-run"
         profiles:
             - dev
             - test
