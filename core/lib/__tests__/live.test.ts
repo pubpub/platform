@@ -1,78 +1,21 @@
-import type { Transaction } from "kysely";
-
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-
-import type { PublicSchema } from "db/public";
+import { describe, expect, test } from "vitest";
 
 import type { ClientException } from "../serverActions";
 import { isClientException } from "../serverActions";
+import { mockServerCode } from "./utils";
 
-const { testDb, beginTransaction, mockedTestDb, getLoginData } = await vi.hoisted(async () => {
-	const testDb = await import("./db").then((m) => m.testDb);
+const { testDb, getLoginData, createForEachMockedTransaction } = await mockServerCode();
 
-	const { beginTransaction } = await import("./utils");
-
-	return {
-		testDb,
-		mockedTestDb: vi.fn(),
-		beginTransaction,
-		getLoginData: vi.fn(),
-	};
-});
-
-vi.mock("~/lib/server/cache/autoRevalidate", () => ({
-	autoRevalidate: (db) => {
-		return db;
-	},
-}));
-
-vi.mock("~/lib/server/cache/autoCache", () => ({
-	autoCache: (db) => {
-		return db;
-	},
-}));
-
-vi.mock("~/lib/auth/loginData", () => {
-	return {
-		getLoginData: getLoginData,
-	};
-});
-
-vi.mock("~/kysely/database", () => ({
-	db: mockedTestDb,
-}));
-
-vi.mock("server-only", () => {
-	return {
-		// mock server-only module
-	};
-});
-
-vi.mock("react", () => {
-	return {
-		cache: vi.fn(),
-	};
-});
-
-vi.mock("next/headers", () => {
-	return {
-		cookies: vi.fn(),
-		headers: vi.fn(),
-	};
-});
+const { getTrx, rollback, commit } = createForEachMockedTransaction();
 
 describe("live", () => {
-	beforeEach(() => {
-		vi.resetModules();
-	});
-
 	test("should be able to connect to db", async () => {
 		const result = await testDb.selectFrom("users").selectAll().execute();
 		expect(result.length).toBeGreaterThan(0);
 	});
 
 	test("can rollback transactions", async () => {
-		const { trx, rollback } = await beginTransaction(testDb);
+		const trx = getTrx();
 
 		// Insert a user
 		const user = await trx
@@ -113,20 +56,8 @@ describe("live", () => {
 	// of the "can rollback transactions" test above
 	// The benefit of this method is that you don't have to remember to rollback yourself
 	describe("transaction block example", () => {
-		let trx: Transaction<PublicSchema>;
-		let rollback: () => void;
-
-		beforeEach(async () => {
-			const transaction = await beginTransaction(testDb);
-			trx = transaction.trx;
-			rollback = transaction.rollback;
-		});
-
-		afterEach(() => {
-			rollback();
-		});
-
 		test("can add a user that will not persist", async () => {
+			const trx = getTrx();
 			await trx
 				.insertInto("users")
 				.values({
@@ -140,19 +71,17 @@ describe("live", () => {
 		});
 
 		test("user did not persist", async () => {
+			const trx = getTrx();
 			const user = await trx.selectFrom("users").where("slug", "=", "test-user").execute();
 			expect(user.length).toEqual(0);
 		});
 	});
 
 	test("createForm needs a logged in user", async () => {
-		const { trx, rollback } = await beginTransaction(testDb);
+		const trx = getTrx();
 		getLoginData.mockImplementation(() => {
 			return undefined;
 		});
-		vi.doMock("~/kysely/database", () => ({
-			db: trx,
-		}));
 
 		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
 			(m) => m.createForm
@@ -162,8 +91,8 @@ describe("live", () => {
 			.selectFrom("communities")
 			.selectAll()
 			.where("slug", "=", "croccroc")
-
 			.executeTakeFirstOrThrow();
+
 		const pubType = await trx
 			.selectFrom("pub_types")
 			.select(["id"])
@@ -173,36 +102,28 @@ describe("live", () => {
 		const result = await createForm(pubType.id, "my form", "my-form-1", community.id);
 		expect(isClientException(result)).toBeTruthy();
 		expect((result as ClientException).error).toEqual("Not logged in");
-
-		rollback();
 	});
 
 	test("getForm and createForm", async () => {
-		const { trx, rollback } = await beginTransaction(testDb);
+		const trx = getTrx();
 		getLoginData.mockImplementation(() => {
 			return { id: "123", isSuperAdmin: true };
 		});
-
-		vi.doMock("~/kysely/database", () => ({
-			db: trx,
-		}));
 
 		const getForm = await import("../server/form").then((m) => m.getForm);
 		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
 			(m) => m.createForm
 		);
 
-		// also doesn't work—no function named getCommunitySlug ?
 		const forms = await getForm({ slug: "my-form-2" }).execute();
 		expect(forms.length).toEqual(0);
 
-		// make stuff, encapsulate in functions later
 		const community = await trx
 			.selectFrom("communities")
 			.selectAll()
 			.where("slug", "=", "croccroc")
-
 			.executeTakeFirstOrThrow();
+
 		const pubType = await trx
 			.selectFrom("pub_types")
 			.select(["id"])
@@ -214,7 +135,5 @@ describe("live", () => {
 		const form = await getForm({ slug: "my-form-2" }).executeTakeFirstOrThrow();
 
 		expect(form.name).toEqual("my form");
-
-		rollback();
 	});
 });

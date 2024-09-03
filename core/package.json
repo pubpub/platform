@@ -24,8 +24,8 @@
 		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
-		"test": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development vitest",
-		"test-run": "SKIP_VALIDATION=true dotenv -e .env.test -e .env.development vitest run",
+		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
+		"test-run": "SKIP_VALIDATION=true vitest run --logHeapUsage",
 		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch"
 	},
