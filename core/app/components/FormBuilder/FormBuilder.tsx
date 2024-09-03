@@ -9,19 +9,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createPortal } from "react-dom";
 import { useFieldArray, useForm } from "react-hook-form";
 
-import { FormAccessType } from "db/public";
 import { logger } from "logger";
-import {
-	Form,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form";
-import { CircleCheck } from "ui/icon";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { Button } from "ui/button";
+import { Form, FormItem } from "ui/form";
+import { CircleCheck, X } from "ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
@@ -32,7 +23,7 @@ import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
-import { FormBuilderProvider } from "./FormBuilderContext";
+import { FormBuilderProvider, useFormBuilder } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema, isButtonElement } from "./types";
 
@@ -101,6 +92,28 @@ const elementPanelTitles: Record<PanelState["state"], string> = {
 	editingButton: "Edit Submission Button",
 };
 
+const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
+	const { dispatch } = useFormBuilder();
+	return (
+		<>
+			<div className="flex items-center justify-between">
+				<div className="text-sm uppercase text-slate-500">{elementPanelTitles[state]}</div>
+				{state !== "initial" && (
+					<Button
+						variant="ghost"
+						size="sm"
+						className=""
+						onClick={() => dispatch({ eventName: "cancel" })}
+					>
+						<X size={16} />
+					</Button>
+				)}
+			</div>
+			<hr />
+		</>
+	);
+};
+
 type Props = {
 	pubForm: PubForm;
 	id: string;
@@ -126,7 +139,7 @@ export function FormBuilder({ pubForm, id }: Props) {
 		values: {
 			elements: pubForm.elements.map((e) => {
 				// Do not include schemaName or slug here
-				const { schemaName, slug, ...rest } = e;
+				const { slug, ...rest } = e;
 				return rest;
 			}),
 			access: pubForm.access,
@@ -291,21 +304,10 @@ export function FormBuilder({ pubForm, id }: Props) {
 										</DndContext>
 									</div>
 									<PanelWrapper sidebar={sidebarRef.current}>
-										<FormField
-											control={form.control}
-											name="elements"
-											render={() => (
-												<FormItem className="flex-1">
-													<FormLabel className="mb-4 text-sm uppercase text-slate-500">
-														{elementPanelTitles[panelState.state]}
-													</FormLabel>
-													<hr />
-													<FormControl>
-														<ElementPanel state={panelState} />
-													</FormControl>
-												</FormItem>
-											)}
-										/>
+										<FormItem className="flex-1">
+											<PanelHeader state={panelState.state} />
+											<ElementPanel state={panelState} />
+										</FormItem>
 									</PanelWrapper>
 								</form>
 							</Form>

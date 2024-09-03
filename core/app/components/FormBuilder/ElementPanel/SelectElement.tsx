@@ -1,4 +1,3 @@
-import type { PubFieldsId } from "db/public";
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
 import { Type } from "ui/icon";

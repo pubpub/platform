@@ -19,7 +19,7 @@ type Props = {
 	index: number;
 };
 
-export const ElementConfigurationForm = ({ index }: Props) => {
+export const StructuralElementConfigurationForm = ({ index }: Props) => {
 	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
 	if (!selectedElement) {
 		return null;

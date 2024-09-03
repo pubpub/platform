@@ -2,22 +2,26 @@
 
 import { Button } from "ui/button";
 import { FormLabel } from "ui/form";
-import { ChevronLeft, PlusCircle, Type, X } from "ui/icon";
+import { PlusCircle, X } from "ui/icon";
 import { Input } from "ui/input";
 
 import type { PanelState } from "../types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { SubmissionSettings } from "../SubmissionSettings";
+import { isFieldInput } from "../types";
 import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
-import { ElementConfigurationForm } from "./ElementConfigurationForm";
+import { InputElementConfigurationForm } from "./InputElementConfigurationForm";
 import { SelectAccess } from "./SelectAccess";
 import { SelectElement } from "./SelectElement";
+import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm";
 
 type ElementPanelProps = {
 	state: PanelState;
 };
+
 export const ElementPanel = ({ state }: ElementPanelProps) => {
-	const { elementsCount, removeIfUnconfigured, dispatch, slug } = useFormBuilder();
+	const { elementsCount, removeIfUnconfigured, dispatch, slug, selectedElement } =
+		useFormBuilder();
 
 	switch (state.state) {
 		case "initial":
@@ -44,25 +48,19 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 		case "selecting":
 			return <SelectElement state={state} />;
 		case "editing":
+			const ConfigForm =
+				selectedElement && isFieldInput(selectedElement)
+					? InputElementConfigurationForm
+					: StructuralElementConfigurationForm;
+
 			return (
 				<>
-					<Button
-						onClick={() => {
-							removeIfUnconfigured();
-							dispatch({ eventName: "back" });
-						}}
-						aria-label="Back"
-					>
-						<ChevronLeft />
-					</Button>
-					<div className="flex w-full flex-grow gap-3">
-						{state.selectedElementIndex === null ? (
-							// Shouldn't be possible
-							<div>No selected element</div>
-						) : (
-							<ElementConfigurationForm index={state.selectedElementIndex} />
-						)}
-					</div>
+					{state.selectedElementIndex === null ? (
+						// Shouldn't be possible
+						<div>No selected element</div>
+					) : (
+						<ConfigForm index={state.selectedElementIndex} />
+					)}
 				</>
 			);
 		case "editingButton":
