@@ -27,7 +27,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 	const addToForm = (
 		newElement:
 			| { type: "structure"; element: StructuralFormElement }
-			| { type: "field"; fieldId: PubFieldsId }
+			| { type: "field"; fieldId: PubFieldsId; label: string }
 	) => {
 		if (!newElement) {
 			return;
@@ -90,7 +90,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 						key={field.id}
 						className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
 						onClick={() => {
-							addToForm({ type: "field", fieldId: field.id });
+							addToForm({ type: "field", fieldId: field.id, label: field.name });
 							dispatch({
 								eventName: "edit",
 								selectedElementIndex: elementsCount,
