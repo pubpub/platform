@@ -175,13 +175,13 @@ export const ExternalFormWrapper = ({
 		[formElements, router, pathname, runUpdatePub, pub]
 	);
 
-	const schema = useMemo(
+	const resolver = useMemo(
 		() => typeboxResolver(createSchemaFromElements(formElements)),
 		[formElements]
 	);
 
 	const formInstance = useForm({
-		resolver: schema,
+		resolver,
 		defaultValues: buildDefaultValues(formElements, pub.values),
 		shouldFocusError: false,
 	});
