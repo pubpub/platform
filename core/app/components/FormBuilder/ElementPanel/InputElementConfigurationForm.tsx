@@ -54,7 +54,7 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 		dispatch({ eventName: "save" });
 	};
 
-	const { components } = SCHEMA_TYPES_WITH_ICONS[selectedElement.schemaName];
+	const schemaData = SCHEMA_TYPES_WITH_ICONS[selectedElement.schemaName];
 
 	return (
 		<Form {...form}>
@@ -65,7 +65,9 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 				}}
 				className="flex h-full flex-col gap-2 pt-2"
 			>
-				{Array.isArray(components) && <ComponentSelect components={components} />}
+				{Array.isArray(schemaData?.components) && (
+					<ComponentSelect components={schemaData.components} />
+				)}
 				<FormField
 					control={form.control}
 					name="label"
@@ -117,7 +119,7 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 							<FormControl>
 								<Switch
 									className="data-[state=checked]:bg-emerald-400"
-									checked={field.value}
+									checked={field.value ?? undefined}
 									onCheckedChange={field.onChange}
 								/>
 							</FormControl>

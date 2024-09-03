@@ -308,7 +308,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 										</DndContext>
 									</div>
 									<PanelWrapper sidebar={sidebarRef.current}>
-										<FormItem className="flex-1">
+										<FormItem>
 											<PanelHeader state={panelState.state} />
 											<ElementPanel state={panelState} />
 										</FormItem>

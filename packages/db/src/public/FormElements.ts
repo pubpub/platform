@@ -34,8 +34,6 @@ export interface FormElementsTable {
 
 	label: ColumnType<string | null, string | null, string | null>;
 
-	description: ColumnType<string | null, string | null, string | null>;
-
 	element: ColumnType<
 		StructuralFormElement | null,
 		StructuralFormElement | null,
@@ -51,6 +49,8 @@ export interface FormElementsTable {
 	component: ColumnType<InputComponent | null, InputComponent | null, InputComponent | null>;
 
 	help: ColumnType<string | null, string | null, string | null>;
+
+	placeholder: ColumnType<string | null, string | null, string | null>;
 }
 
 export type FormElements = Selectable<FormElementsTable>;
@@ -68,13 +68,13 @@ export const formElementsSchema = z.object({
 	formId: formsIdSchema,
 	order: z.number().nullable(),
 	label: z.string().nullable(),
-	description: z.string().nullable(),
 	element: structuralFormElementSchema.nullable(),
 	content: z.string().nullable(),
 	required: z.boolean().nullable(),
 	stageId: stagesIdSchema.nullable(),
 	component: inputComponentSchema.nullable(),
 	help: z.string().nullable(),
+	placeholder: z.string().nullable(),
 });
 
 export const formElementsInitializerSchema = z.object({
@@ -84,13 +84,13 @@ export const formElementsInitializerSchema = z.object({
 	formId: formsIdSchema,
 	order: z.number().optional().nullable(),
 	label: z.string().optional().nullable(),
-	description: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
 	help: z.string().optional().nullable(),
+	placeholder: z.string().optional().nullable(),
 });
 
 export const formElementsMutatorSchema = z.object({
@@ -100,11 +100,11 @@ export const formElementsMutatorSchema = z.object({
 	formId: formsIdSchema.optional(),
 	order: z.number().optional().nullable(),
 	label: z.string().optional().nullable(),
-	description: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
 	help: z.string().optional().nullable(),
+	placeholder: z.string().optional().nullable(),
 });

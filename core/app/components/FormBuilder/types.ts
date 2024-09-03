@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import type { CoreSchemaType, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
+import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
+	CoreSchemaType,
 	ElementType,
 	FormAccessType,
 	formElementsIdSchema,
@@ -17,6 +18,7 @@ const baseElementSchema = z.object({
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),
 	stageId: z.string().nullable().optional(),
+	schemaName: z.nativeEnum(CoreSchemaType).optional(),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;

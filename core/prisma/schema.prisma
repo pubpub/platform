@@ -520,7 +520,7 @@ model FormElement {
   order       Int?
   label       String?
   help        String?
-  description String?
+  placeholder String?
   element     StructuralFormElement?
   component   InputComponent?
   content     String?
