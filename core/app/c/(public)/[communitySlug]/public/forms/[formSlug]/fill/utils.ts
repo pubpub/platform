@@ -32,7 +32,7 @@ export const handleFormToken = async ({
 		params: FormFillPageParams;
 		searchParams: FormFillPageSearchParams & { token: string };
 		result: Awaited<ReturnType<typeof validateTokenSafe>> & { isValid: false };
-	}) => void;
+	}) => any;
 	/**
 	 * What should happen if the user has no access to the page.
 	 *
@@ -46,6 +46,7 @@ export const handleFormToken = async ({
 	}
 
 	const result = await validateTokenSafe(searchParams.token);
+	console.log(result);
 
 	if (result.isValid) {
 		return onValidToken({
@@ -64,15 +65,18 @@ export const handleFormToken = async ({
 		formSlug: params.formSlug,
 		userId: result.user.id,
 	});
+	console.log(userHasAccess);
 
 	if (!userHasAccess) {
 		// TODO: show no access page
 		return onNoAccess();
 	}
 
-	return onExpired({
+	const x = onExpired({
 		params,
 		searchParams,
 		result,
 	});
+	console.log(x);
+	return x;
 };

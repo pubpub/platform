@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { notFound, redirect, RedirectType } from "next/navigation";
 import { Session, User } from "lucia";
 
-import type { MembersId, PubsId, UsersId } from "db/public";
+import type { Communities, MembersId, PubsId, UsersId } from "db/public";
 import { MemberRole, StructuralFormElement } from "db/public";
 import { expect } from "utils";
 
@@ -23,6 +23,7 @@ import { capitalize } from "~/lib/string";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
+import { RequestLink } from "./RequestLink";
 import { SaveStatus } from "./SaveStatus";
 import { handleFormToken } from "./utils";
 
@@ -53,6 +54,44 @@ export type FormFillPageSearchParams = { pubId?: PubsId } & (
 	| { token?: never; reason?: never }
 );
 
+const ExpiredTokenPage = ({
+	params,
+	searchParams,
+	form,
+	community,
+}: {
+	params: FormFillPageParams;
+	searchParams: FormFillPageSearchParams & { token: string };
+	community: Communities;
+	form: Form;
+}) => {
+	return (
+		<div className="isolate min-h-screen">
+			<Header>
+				<div className="flex flex-col items-center">
+					<h1 className="text-xl font-bold">
+						{capitalize(form.name)} for {community?.name}
+					</h1>
+					<SaveStatus />
+				</div>
+			</Header>
+			<div className="mx-auto mt-32 flex max-w-md flex-col items-center justify-center text-center">
+				<h2 className="mb-2 text-lg font-semibold">Link Expired</h2>
+				<p className="mb-6 text-sm">
+					The link for this form has expired. Request a new one via email below to pick up
+					right where you left off.
+				</p>
+				<RequestLink
+					formSlug={params.formSlug}
+					communitySlug={params.communitySlug}
+					token={searchParams.token}
+					pubId={searchParams.pubId as PubsId}
+				/>
+			</div>
+		</div>
+	);
+};
+
 const renderElementMarkdownContent = async (
 	element: Form["elements"][number],
 	renderWithPubContext: RenderWithPubContext
@@ -69,6 +108,11 @@ export default async function FormPage({
 	searchParams: FormFillPageSearchParams;
 }) {
 	const community = await findCommunityBySlug(params.communitySlug);
+
+	console.log("Here");
+	if (!community) {
+		return notFound();
+	}
 
 	const [form, pub] = await Promise.all([
 		getForm({
@@ -87,24 +131,29 @@ export default async function FormPage({
 	}
 
 	const { user, session } = await getLoginData();
+	console.log(user, session);
 
 	if (!user && !session) {
-		return await handleFormToken({
+		const result = await handleFormToken({
 			params,
 			searchParams,
 			onExpired: ({ params, searchParams, result }) => {
-				// redirect them to the expired token page
-				const search = new URLSearchParams(searchParams);
-
-				redirect(
-					`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?${search.toString()}`,
-					RedirectType.replace
-				);
+				return;
 			},
 		});
+
+		return (
+			<ExpiredTokenPage
+				params={params}
+				searchParams={searchParams as FormFillPageSearchParams & { token: string }}
+				form={form}
+				community={community}
+			/>
+		);
 	}
 
 	const role = getCommunityRole(user, { slug: params.communitySlug });
+	console.log({ role });
 	if (!role) {
 		// TODO: show no access page
 		return notFound();
@@ -145,6 +194,8 @@ export default async function FormPage({
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
+	console.log("hihih");
+
 	if (submitId && submitElement) {
 		submitElement.content = await renderElementMarkdownContent(
 			submitElement,
@@ -160,6 +211,8 @@ export default async function FormPage({
 			})
 		);
 	}
+
+	console.log("huh");
 
 	return (
 		<div className="isolate min-h-screen">
