@@ -1,18 +1,18 @@
 import Link from "next/link";
 
-import type { PubsId, PubTypesId } from "db/public";
+import type { PubsId } from "db/public";
 import { buttonVariants } from "ui/button";
 import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
-import type { PubPayload } from "~/lib/types";
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubChildrenTable } from "./PubChildrenTable";
 import { getPubChildrenTablePubs } from "./queries";
 import { ChildPubRow, ChildPubRowPubType } from "./types";
 
-const EmptyActions = () => {
+const NoActions = () => {
 	return (
 		<div className="flex items-center space-x-1">
 			<span className="text-muted-foreground">None</span>
@@ -30,30 +30,24 @@ const EmptyActions = () => {
 	);
 };
 
-const getChildPubRunActionDropdowns = (row: ChildPubRow) => {
-	return row.actionInstances.length > 0 ? (
+const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContext) => {
+	const stage = row.stages[0];
+	return stage && row.actionInstances.length > 0 ? (
 		<PubsRunActionDropDownMenu
-			actionInstances={row.actionInstances.map((action) => ({
-				...action,
-			}))}
-			pub={{ id: row.id } as any}
-			stage={row.stages[0]!}
-			pageContext={
-				{
-					params: undefined,
-					searchParams: undefined,
-				} as any
-			}
+			actionInstances={row.actionInstances}
+			pubId={row.id}
+			stage={stage}
+			pageContext={pageContext}
 		/>
 	) : (
-		<EmptyActions />
+		<NoActions />
 	);
 };
 
 type Props = {
 	communitySlug: string;
 	parentPubId: PubsId;
-	searchParams: Record<string, string>;
+	pageContext: PageContext;
 };
 
 type PubTypeSwitcherProps = {
@@ -61,7 +55,7 @@ type PubTypeSwitcherProps = {
 	pubId: string;
 	pubTypes: ChildPubRowPubType[];
 	pubTypeCounts: number[];
-	searchParams: Record<string, string>;
+	searchParams: Record<string, unknown>;
 	selectedPubTypeId?: string;
 };
 
@@ -70,7 +64,9 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 		<nav className="flex w-48 gap-1">
 			{props.pubTypes.map((pubType, pubTypeIndex) => {
 				const isSelected = props.selectedPubTypeId === pubType.id;
-				const linkSearchParams = new URLSearchParams(props.searchParams);
+				const linkSearchParams = new URLSearchParams(
+					props.searchParams as Record<string, string>
+				);
 				linkSearchParams.set("selectedPubType", pubType.id);
 				return (
 					<Link
@@ -127,7 +123,8 @@ const getUniqueChildPubTypes = (children: ChildPubRow[]) => {
 async function PubChildrenTableWrapper(props: Props) {
 	const childPubRows: ChildPubRow[] = await getPubChildrenTablePubs(props.parentPubId).execute();
 	const { pubTypes, pubTypeCounts } = getUniqueChildPubTypes(childPubRows);
-	const selectedPubTypeId = props.searchParams.selectedPubType ?? pubTypes[0]?.id;
+	const selectedPubTypeId =
+		(props.pageContext.searchParams.selectedPubType as string | undefined) ?? pubTypes[0]?.id;
 	const selectedPubType = pubTypes.find((pubType) => pubType.id === selectedPubTypeId);
 	return (
 		<>
@@ -136,13 +133,15 @@ async function PubChildrenTableWrapper(props: Props) {
 				pubId={props.parentPubId}
 				pubTypes={pubTypes}
 				pubTypeCounts={pubTypeCounts}
-				searchParams={props.searchParams}
+				searchParams={props.pageContext.searchParams}
 				selectedPubTypeId={selectedPubTypeId}
 			/>
 			<PubChildrenTable
 				childPubRows={childPubRows.filter((row) => row.pubType?.id === selectedPubTypeId)}
 				childPubType={selectedPubType}
-				childPubRunActionDropdowns={childPubRows.map(getChildPubRunActionDropdowns)}
+				childPubRunActionDropdowns={childPubRows.map((row) =>
+					getChildPubRunActionDropdowns(row, props.pageContext)
+				)}
 			/>
 		</>
 	);

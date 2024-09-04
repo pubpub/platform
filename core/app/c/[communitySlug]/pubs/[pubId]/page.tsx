@@ -112,7 +112,7 @@ export default async function Page({
 							<div>
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
-									pub={pub}
+									pubId={pub.id as PubsId}
 									stage={stage!}
 									pageContext={{
 										params: params,
@@ -169,7 +169,7 @@ export default async function Page({
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper
 					communitySlug={params.communitySlug}
-					searchParams={searchParams}
+					pageContext={{ params, searchParams }}
 					parentPubId={pub.id as PubsId}
 				/>
 			</Suspense>
