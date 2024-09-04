@@ -18,7 +18,7 @@ const baseElementSchema = z.object({
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),
 	stageId: z.string().nullable().optional(),
-	schemaName: z.nativeEnum(CoreSchemaType).optional(),
+	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
@@ -28,7 +28,7 @@ export type InputElement = baseElement & {
 	fieldId: PubFieldsId;
 	required: boolean | null;
 	label?: string | null;
-	description?: string | null;
+	placeholder?: string | null;
 	help?: string | null;
 	element: never;
 	content: never;
@@ -41,8 +41,8 @@ export type StructuralElement = baseElement & {
 	content: string;
 	fieldId: never;
 	required: never;
-	label?: never;
-	description?: never;
+	label: never;
+	placeholder: never;
 };
 
 export type ButtonElement = baseElement & {
@@ -52,7 +52,7 @@ export type ButtonElement = baseElement & {
 	stageId?: StagesId;
 	fieldId: never;
 	required: never;
-	description: never;
+	placeholder: never;
 };
 
 const formElementSchema = formElementsInitializerSchema
