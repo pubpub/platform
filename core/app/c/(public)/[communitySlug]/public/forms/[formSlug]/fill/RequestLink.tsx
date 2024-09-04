@@ -21,7 +21,6 @@ export const RequestLink = ({
 	token: string;
 	pubId: PubsId;
 }) => {
-	console.log("HEYYYY");
 	const useRequestLink = useServerAction(actions.inviteUserToForm);
 
 	const requestLink = useCallback(async () => {

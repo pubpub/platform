@@ -109,7 +109,6 @@ export default async function FormPage({
 }) {
 	const community = await findCommunityBySlug(params.communitySlug);
 
-	console.log("Here");
 	if (!community) {
 		return notFound();
 	}
@@ -131,7 +130,6 @@ export default async function FormPage({
 	}
 
 	const { user, session } = await getLoginData();
-	console.log(user, session);
 
 	if (!user && !session) {
 		const result = await handleFormToken({
@@ -153,7 +151,6 @@ export default async function FormPage({
 	}
 
 	const role = getCommunityRole(user, { slug: params.communitySlug });
-	console.log({ role });
 	if (!role) {
 		// TODO: show no access page
 		return notFound();
@@ -194,8 +191,6 @@ export default async function FormPage({
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
-	console.log("hihih");
-
 	if (submitId && submitElement) {
 		submitElement.content = await renderElementMarkdownContent(
 			submitElement,
@@ -211,8 +206,6 @@ export default async function FormPage({
 			})
 		);
 	}
-
-	console.log("huh");
 
 	return (
 		<div className="isolate min-h-screen">

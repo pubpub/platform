@@ -46,7 +46,6 @@ export const handleFormToken = async ({
 	}
 
 	const result = await validateTokenSafe(searchParams.token);
-	console.log(result);
 
 	if (result.isValid) {
 		return onValidToken({
@@ -65,18 +64,15 @@ export const handleFormToken = async ({
 		formSlug: params.formSlug,
 		userId: result.user.id,
 	});
-	console.log(userHasAccess);
 
 	if (!userHasAccess) {
 		// TODO: show no access page
 		return onNoAccess();
 	}
 
-	const x = onExpired({
+	return onExpired({
 		params,
 		searchParams,
 		result,
 	});
-	console.log(x);
-	return x;
 };
