@@ -8,13 +8,14 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import * as Email from "~/lib/server/email";
 import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/server/form";
+import { TokenFailureReason, validateTokenSafe } from "~/lib/server/token";
 
 export const inviteUserToForm = defineServerAction(async function inviteUserToForm({
-	email,
+	token,
 	pubId,
 	...formSlugOrId
 }: {
-	email: string;
+	token: string;
 	pubId: PubsId;
 } & XOR<{ slug: string }, { id: FormsId }>) {
 	const community = await findCommunityBySlug();
@@ -28,8 +29,14 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		return { error: `No form found with ${formSlugOrId}` };
 	}
 
+	const result = await validateTokenSafe(token);
+
+	if (result.isValid || result.reason !== TokenFailureReason.expired || !result.user) {
+		return { error: "Invalid token" };
+	}
+
 	const canAccessForm = await userHasPermissionToForm({
-		email,
+		userId: result.user.id,
 		formId: form.id,
 	});
 
@@ -40,7 +47,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 
 	const formInviteLink = await createFormInviteLink({
 		formId: form.id,
-		email,
+		userId: result.user.id,
 		pubId,
 	});
 
@@ -48,7 +55,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		community,
 		form,
 		formInviteLink,
-		to: email,
+		to: result.user.email,
 		subject: `Access to ${form.name}`,
 	}).send();
 });

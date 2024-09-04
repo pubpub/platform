@@ -1,16 +1,18 @@
 import React from "react";
 
-import { PubsId } from "db/public";
+import type { PubsId } from "db/public";
 
-import { getForm, userHasPermissionToForm } from "~/lib/server/form";
+import type { FormFillPageParams, FormFillPageSearchParams } from "../fill/page";
+import { getForm } from "~/lib/server/form";
+import { handleFormToken } from "../fill/utils";
 import { RequestLink } from "./RequestLink";
 
 export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { formSlug: string; communitySlug: string };
-	searchParams: { email?: string; pubId?: string };
+	params: FormFillPageParams;
+	searchParams: FormFillPageSearchParams;
 }) {
 	const form = await getForm({ slug: params.formSlug }).executeTakeFirst();
 
@@ -18,22 +20,25 @@ export default async function Page({
 		return <div>No form found</div>;
 	}
 
-	if (!searchParams.email) {
-		return <div>No email provided</div>;
-	}
-
 	if (!searchParams.pubId) {
 		return <div>No pubId provided</div>;
 	}
 
-	const hasAccessToForm = await userHasPermissionToForm({
-		formId: form.id,
-		email: searchParams.email,
-	});
-
-	if (!hasAccessToForm) {
-		return <div>You do not have permission to access this form</div>;
+	if (!searchParams.token) {
+		return <div>No token provided</div>;
 	}
+
+	const hasAccess = await handleFormToken({
+		params,
+		searchParams,
+		onValidToken: ({ params, searchParams, result }) => {
+			throw new Error("User somehow redirected to page with valid token");
+		},
+		onExpired: ({ params, searchParams, result }) => {
+			// good, do nothing
+			return;
+		},
+	});
 
 	return (
 		<div className="mx-auto mt-32 flex max-w-md flex-col items-center justify-center text-center">
@@ -45,7 +50,7 @@ export default async function Page({
 			<RequestLink
 				formSlug={params.formSlug}
 				communitySlug={params.communitySlug}
-				email={searchParams.email}
+				token={searchParams.token}
 				pubId={searchParams.pubId as PubsId}
 			/>
 		</div>

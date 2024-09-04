@@ -9,45 +9,67 @@ import { logger } from "logger";
 import { lucia } from "~/lib/auth/lucia";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 
-const redirectToURL = (redirectTo: string, req: NextRequest, opts?: ResponseInit) => {
+const redirectToURL = (
+	redirectTo: string,
+	req: NextRequest,
+	opts?: ResponseInit & {
+		searchParams?: Record<string, string>;
+	}
+) => {
 	// it's a full url, just redirect them there
 	if (URL.canParse(redirectTo)) {
-		return NextResponse.redirect(new URL(redirectTo), opts);
+		const url = new URL(redirectTo);
+		Object.entries(opts?.searchParams ?? {}).forEach(([key, value]) => {
+			url.searchParams.append(key, value);
+		});
+
+		return NextResponse.redirect(url, opts);
 	}
 
 	if (URL.canParse(redirectTo, req.url)) {
-		return NextResponse.redirect(new URL(redirectTo, req.url), opts);
+		const url = new URL(redirectTo, req.url);
+
+		Object.entries(opts?.searchParams ?? {}).forEach(([key, value]) => {
+			url.searchParams.append(key, value);
+		});
+		return NextResponse.redirect(url, opts);
 	}
 
 	// invalid redirectTo, redirect to not-found
-	return NextResponse.redirect(new URL(`/not-found?from=${redirectTo}`, req.url), opts);
+	return NextResponse.redirect(
+		new URL(`/not-found?from=${encodeURIComponent(redirectTo)}`, req.url),
+		opts
+	);
 };
 
 /**
+ * if the token is expired, we redirect them to the page anyway and
+ * attach the token so the page can do custom token logic if it needs to
  *
- * just redirect them to the page they were trying to access,
- * pages should handle auth failures themselves anyway
- *
- * we do let them know that the reason for the failure is invalid token
- * that way pages can distinguish between an invalid token redirect and just accessing the page
- * without being logged in
+ * otherwise, they get redirected to the invalid token page
  */
 const handleInvalidToken = ({
 	redirectTo,
 	tokenType,
 	reason,
 	req,
+	token,
 }: {
 	redirectTo: string;
 	tokenType: AuthTokenType | null;
 	reason: TokenFailureReason;
 	req: NextRequest;
+	token: string;
 }) => {
 	if (reason === TokenFailureReason.expired) {
 		// if the token is expired, we just send you through and let the page handle it
-		// this is necessary e.g. for the form invites, where we want users to be able to request
-		// a new invite if it has expired.
-		return redirectToURL(redirectTo, req);
+		// we attach the token so the page can do custom token logic if it needs to
+		return redirectToURL(redirectTo, req, {
+			searchParams: {
+				token,
+				reason,
+			},
+		});
 	}
 
 	// TODO: may want to add additional error pages for specific reasons
@@ -92,6 +114,7 @@ export async function GET(req: NextRequest) {
 			tokenType: tokenSettled.reason.tokenType,
 			req,
 			reason: tokenSettled.reason.reason,
+			token,
 		});
 	}
 

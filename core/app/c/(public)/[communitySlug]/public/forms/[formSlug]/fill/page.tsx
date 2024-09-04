@@ -1,9 +1,12 @@
+import assert from "assert";
+
 import type { ReactNode } from "react";
 
-import { redirect, RedirectType } from "next/navigation";
+import { notFound, redirect, RedirectType } from "next/navigation";
+import { Session, User } from "lucia";
 
 import type { MembersId, PubsId, UsersId } from "db/public";
-import { StructuralFormElement } from "db/public";
+import { MemberRole, StructuralFormElement } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
@@ -14,12 +17,13 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm } from "~/lib/server/form";
+import { getForm, userHasPermissionToForm } from "~/lib/server/form";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
 import { SaveStatus } from "./SaveStatus";
+import { handleFormToken } from "./utils";
 
 const NotFound = ({ children }: { children: ReactNode }) => {
 	return <div className="w-full pt-8 text-center">{children}</div>;
@@ -41,6 +45,13 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 	);
 };
 
+export type FormFillPageParams = { formSlug: string; communitySlug: string };
+
+export type FormFillPageSearchParams = { pubId?: PubsId } & (
+	| { token: string; reason: string }
+	| { token?: never; reason?: never }
+);
+
 const renderElementMarkdownContent = async (
 	element: Form["elements"][number],
 	renderWithPubContext: RenderWithPubContext
@@ -53,46 +64,69 @@ export default async function FormPage({
 	params,
 	searchParams,
 }: {
-	params: { formSlug: string; communitySlug: string };
-	searchParams: { email?: string; pubId?: PubsId };
+	params: FormFillPageParams;
+	searchParams: FormFillPageSearchParams;
 }) {
 	const community = await findCommunityBySlug(params.communitySlug);
 
-	const form = await getForm({
-		slug: params.formSlug,
-		communityId: community?.id,
-	}).executeTakeFirst();
+	const [formSettled, pubSettled] = await Promise.allSettled([
+		await getForm({
+			slug: params.formSlug,
+			communityId: community?.id,
+		}).executeTakeFirst(),
 
-	const pub = searchParams.pubId ? await getPub(searchParams.pubId) : undefined;
-
-	if (!form) {
+		searchParams.pubId ? await getPub(searchParams.pubId) : undefined,
+	]);
+	if (formSettled.status === "rejected" || !formSettled.value) {
 		return <NotFound>No form found</NotFound>;
 	}
-
 	// TODO: eventually, we will be able to create a pub
-	if (!pub) {
+	if (pubSettled.status === "rejected" || !pubSettled.value) {
 		return <NotFound>No pub found</NotFound>;
 	}
 
+	const [form, pub] = [formSettled.value, pubSettled.value];
+
 	const { user, session } = await getLoginData();
 
-	// this is most likely what happens if a user clicks a link in an email
-	// with an expired token, or a token that has been used already
-	// if it's due to an expired token, allow the user to request a new one
-	if (!user || !session) {
-		redirect(
-			`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?email=${searchParams.email}&pubId=${searchParams.pubId}`,
-			RedirectType.replace
-		);
+	if (!user && !session) {
+		return await handleFormToken({
+			params,
+			searchParams,
+			onExpired: ({ params, searchParams, result }) => {
+				// redirect them to the expired token page
+				const search = new URLSearchParams(searchParams);
+
+				redirect(
+					`/c/${params.communitySlug}/public/forms/${params.formSlug}/expired?${search.toString()}`,
+					RedirectType.replace
+				);
+			},
+		});
 	}
 
 	const role = getCommunityRole(user, { slug: params.communitySlug });
 	if (!role) {
-		return null;
+		// TODO: show no access page
+		return notFound();
+	}
+
+	// all other roles always have access to the form
+	if (role === MemberRole.contributor) {
+		const memberHasAccessToForm = await userHasPermissionToForm({
+			formSlug: params.formSlug,
+			userId: user.id,
+		});
+
+		if (!memberHasAccessToForm) {
+			// TODO: show no access page
+			return notFound();
+		}
 	}
 
 	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
+
 	const memberWithUser = {
 		...member,
 		id: member.id as MembersId,
@@ -107,6 +141,7 @@ export default async function FormPage({
 		pub,
 		parentPub,
 	};
+
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
