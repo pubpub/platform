@@ -11,6 +11,7 @@ import type { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtil
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import * as Email from "~/lib/server/email";
 import { smtpclient } from "~/lib/server/mailgun";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { defineRun } from "../types";
@@ -69,13 +70,11 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			true
 		);
 
-		await smtpclient.sendMail({
-			from: "hello@pubpub.org",
+		await Email.generic({
 			to: recipient.user.email,
-			replyTo: "hello@pubpub.org",
-			html,
 			subject,
-		});
+			html,
+		}).send();
 	} catch (error) {
 		logger.error({ msg: "email", error });
 

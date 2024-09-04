@@ -64,11 +64,14 @@ export const createPub = defineServerAction(async function createPub({
 
 				.insertInto("pub_values")
 				.values((eb) =>
-					Object.entries(fields).map(([key, value]) => ({
-						fieldId: key as PubFieldsId,
-						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-						value: JSON.stringify(value.value),
-					}))
+					Object.entries(fields)
+						// TODO: figure out whether null values should be allowed and/or what the difference is between "" and null
+						.filter(([key, value]) => value.value != undefined)
+						.map(([key, value]) => ({
+							fieldId: key as PubFieldsId,
+							pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+							value: JSON.stringify(value.value),
+						}))
 				)
 		).execute();
 

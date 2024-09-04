@@ -30,7 +30,7 @@ export type TableMember = {
 	joined: string;
 };
 
-export const getMemberTableColumns = ({ community }: { community: Community }) =>
+export const getMemberTableColumns = () =>
 	[
 		{
 			id: "select",
@@ -133,7 +133,7 @@ export const getMemberTableColumns = ({ community }: { community: Community }) =
 							<DropdownMenuLabel>Actions</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<div className="w-full">
-								<RemoveMemberButton community={community} member={row.original} />
+								<RemoveMemberButton member={row.original} />
 							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>

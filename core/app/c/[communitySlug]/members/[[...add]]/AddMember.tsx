@@ -1,10 +1,12 @@
 import type { Community } from "@prisma/client";
 
+import type { CommunitiesId } from "db/public";
+
 import { getLoginData } from "~/lib/auth/loginData";
-import { getSuggestedMembers } from "~/lib/server";
 import { createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
 import { memoize } from "~/lib/server/cache/memoize";
-import prisma from "~/prisma/db";
+import { getMember } from "~/lib/server/member";
+import { getSuggestedUsers } from "~/lib/server/user";
 import { MemberInviteForm } from "./MemberInviteForm";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
@@ -60,18 +62,27 @@ const createCachedGetUser = ({
 				};
 			}
 
-			const [user] = await getSuggestedMembers(email);
+			if (!email) {
+				return {
+					user: null,
+					state: "initial" as const,
+					error: "You must provide an email address",
+				};
+			}
+
+			const [user] = await getSuggestedUsers({
+				communityId: community.id as CommunitiesId,
+				query: { email },
+			}).execute();
 
 			if (!user) {
 				return { user: null, state: "user-not-found" as const, error: null };
 			}
 
-			const existingMember = await prisma.member.findFirst({
-				where: {
-					userId: user.id,
-					communityId: community.id,
-				},
-			});
+			const existingMember = await getMember({
+				userId: user.id,
+				communityId: community.id as CommunitiesId,
+			}).executeTakeFirst();
 
 			if (existingMember) {
 				return {

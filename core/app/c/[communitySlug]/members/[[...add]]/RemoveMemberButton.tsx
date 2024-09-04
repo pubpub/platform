@@ -16,17 +16,11 @@ import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
 
+import type { TableMember } from "./getMemberTableColumns";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
-import { TableMember } from "./getMemberTableColumns";
 
-export const RemoveMemberButton = ({
-	member,
-	community,
-}: {
-	member: TableMember;
-	community: Community;
-}) => {
+export const RemoveMemberButton = ({ member }: { member: TableMember }) => {
 	const runRemoveMember = useServerAction(actions.removeMember);
 	return (
 		<AlertDialog>
@@ -57,7 +51,7 @@ export const RemoveMemberButton = ({
 					<Button asChild variant="destructive">
 						<AlertDialogAction
 							onClick={async () => {
-								const response = await runRemoveMember({ member, community });
+								const response = await runRemoveMember({ member });
 								if (didSucceed(response)) {
 									toast({
 										title: "Success",
