@@ -6,12 +6,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import type { Stages } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Badge } from "ui/badge";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
 import { UserCard } from "~/app/components/UserCard";
-import { PubPayload } from "~/lib/types";
 import { ChildPubRow, ChildPubRowPubType } from "./types";
 
 const createdAtDateOptions = {
@@ -24,7 +24,7 @@ const createdAtDateOptions = {
 
 const createMemberColumns = (pubType: ChildPubRowPubType) =>
 	pubType.fields
-		.filter((field) => field.schemaName === "MemberId")
+		.filter((field) => field.schemaName === CoreSchemaType.MemberId)
 		.map(
 			(field) =>
 				({
