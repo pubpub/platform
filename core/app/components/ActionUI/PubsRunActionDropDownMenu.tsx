@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { ActionInstances, Stages } from "db/public";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";

@@ -65,20 +65,8 @@ export const pubValuesInclude = {
 	},
 } satisfies Prisma.PubInclude;
 
-const pubTypeInclude = {
-	include: {
-		fields: {
-			select: {
-				id: true,
-				name: true,
-				schemaName: true,
-			},
-		},
-	},
-};
-
 export const pubInclude = {
-	pubType: pubTypeInclude,
+	pubType: true,
 	...pubValuesInclude,
 	stages: {
 		include: {
@@ -95,7 +83,7 @@ export const pubInclude = {
 		...makeRecursiveInclude(
 			"children",
 			{
-				pubType: pubTypeInclude,
+				pubType: true,
 				values: { include: { field: true } },
 				stages: { include: { stage: true } },
 			},
