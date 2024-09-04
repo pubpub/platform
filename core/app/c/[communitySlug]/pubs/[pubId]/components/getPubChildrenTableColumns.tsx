@@ -41,7 +41,7 @@ const createMemberColumns = (pubType: ChildPubRowPubType) =>
 							? memberField.user.firstName + " " + memberField.user.lastName
 							: "None";
 					},
-					cell: ({ row, getValue }) => {
+					cell: ({ row }) => {
 						const memberField = row.original.memberFields.find(
 							(memberField) => memberField.fieldId === field.id
 						);
@@ -88,12 +88,10 @@ export const getPubChildrenTableColumns = (
 			cell: ({ row }) => {
 				const pathname = usePathname();
 				const path = pathname.split("/").slice(0, 4).join("/");
-				const title =
-					(Object.entries(row.original.values).find(
-						([slug]) => slug.split(":")[1]?.indexOf("title") !== -1
-					)?.[1] as string) ||
-					childPubType?.name ||
-					"Child";
+				const titleLikeValue = Object.entries(row.original.values).find(
+					([slug]) => slug.split(":")[1]?.indexOf("title") !== -1
+				)?.[1] as string | undefined;
+				const title = titleLikeValue || childPubType?.name || "Child";
 				return (
 					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>
 						{title}
