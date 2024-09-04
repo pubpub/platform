@@ -36,7 +36,12 @@ const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 					<FormItem>
 						<FormLabel>{label}</FormLabel>
 						<FormControl>
-							<Input value={value ?? ""} {...fieldRest} {...rest} />
+							<Input
+								data-testid={name}
+								value={value ?? ""}
+								{...fieldRest}
+								{...rest}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -126,6 +131,7 @@ const Vector3Element = ({ label, name }: ElementProps) => {
 					<FormControl>
 						<Confidence
 							{...field}
+							value={Array.isArray(field.value) ? field.value : [0, 0, 0]}
 							min={0}
 							max={100}
 							onValueChange={(event) => field.onChange(event)}

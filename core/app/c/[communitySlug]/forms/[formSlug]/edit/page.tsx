@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { CommunitiesId } from "db/public";
+import type { CommunitiesId } from "db/public";
 import { ClipboardPenLine } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
@@ -9,7 +9,6 @@ import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
-import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -36,9 +35,14 @@ export default async function Page({ params: { formSlug, communitySlug } }) {
 		return null;
 	}
 
+	const communityId = community.id as CommunitiesId;
+
 	const [form, { fields }] = await Promise.all([
-		getForm({ slug: formSlug }).executeTakeFirstOrThrow(),
-		getPubFields().executeTakeFirstOrThrow(),
+		getForm({
+			slug: formSlug,
+			communityId,
+		}).executeTakeFirstOrThrow(),
+		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 	]);
 
 	const formBuilderId = "formbuilderform";

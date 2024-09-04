@@ -6,6 +6,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
+import { FormsPage } from "./fixtures/forms-page";
 import { createCommunity, login } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -32,23 +33,15 @@ test.afterAll(async () => {
 
 test.describe("Creating a form", () => {
 	test("Create a new form for the first time", async () => {
-		await page.goto(`/c/${COMMUNITY_SLUG}/forms`);
-		await page.getByRole("banner").getByTestId("new-form-button").click();
-		await page.getByRole("combobox").click();
-		await page.getByRole("option", { name: "Submission" }).click();
-		await page.getByRole("textbox", { name: "name" }).fill(FORM_SLUG);
-		await page.getByRole("textbox", { name: "slug" }).fill(FORM_SLUG);
-		await page.getByRole("button", { name: "Create" }).click();
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		await formsPage.goto();
+		await formsPage.addForm("new form", FORM_SLUG);
 		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
 	});
 	test("Cannot create a form with the same slug", async () => {
-		await page.goto(`/c/${COMMUNITY_SLUG}/forms`);
-		await page.getByRole("banner").getByTestId("new-form-button").click();
-		await page.getByRole("combobox").click();
-		await page.getByRole("option", { name: "Submission" }).click();
-		await page.getByRole("textbox", { name: "name" }).fill("another form");
-		await page.getByRole("textbox", { name: "slug" }).fill(FORM_SLUG);
-		await page.getByRole("button", { name: "Create" }).click();
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		await formsPage.goto();
+		await formsPage.addForm("another form", FORM_SLUG);
 		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
 	});
 });

@@ -19,7 +19,7 @@ export default async function Page(props: Props) {
 	}
 	const instanceConfig = expect(await getInstanceConfig(instanceId), "Instance not configured");
 	const pub = await client.getPub(instanceId, pubId);
-	const submissionUrl = pub.values["unjournal:url"] as string;
+	const submissionUrl = pub.values["legacy-unjournal:url"] as string;
 	const submissionTitle = pub.values[instanceConfig.titleFieldSlug] as string;
 
 	// TODO: Get copy from Jeff/Gabe
