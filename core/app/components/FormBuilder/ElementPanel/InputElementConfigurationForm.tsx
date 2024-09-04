@@ -21,6 +21,7 @@ import { Input } from "ui/input";
 import { Switch } from "ui/switch";
 
 import { useFormBuilder } from "../FormBuilderContext";
+import { FieldInputElement } from "../FormElement";
 import { isFieldInput } from "../types";
 
 const ComponentSelect = ({ components }: { components: SchemaComponentData[] }) => {
@@ -63,8 +64,13 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 					e.stopPropagation(); //prevent submission from propagating to parent form
 					form.handleSubmit(onSubmit)(e);
 				}}
-				className="flex h-full flex-col gap-2 pt-2"
+				className="flex h-full flex-col gap-2"
 			>
+				<div className="text-sm uppercase text-muted-foreground">Appearance</div>
+				<div className="flex flex-nowrap rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4">
+					<FieldInputElement element={selectedElement} isEditing={false} />
+				</div>
+				<hr />
 				{Array.isArray(schemaData?.components) && (
 					<ComponentSelect components={schemaData.components} />
 				)}
@@ -111,24 +117,25 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 						</FormItem>
 					)}
 				/>
+				<hr className="mt-4" />
 				<FormField
 					control={form.control}
 					name="required"
 					render={({ field }) => (
-						<FormItem>
+						<FormItem className="mb-3 mt-1 flex items-center">
 							<FormControl>
 								<Switch
-									className="data-[state=checked]:bg-emerald-400"
+									className="mr-2 data-[state=checked]:bg-emerald-400"
 									checked={field.value ?? undefined}
 									onCheckedChange={field.onChange}
 								/>
 							</FormControl>
-							<FormLabel>Mark as required</FormLabel>
+							<FormLabel className="mt-0">Mark as required</FormLabel>
 							<FormMessage />
 						</FormItem>
 					)}
 				/>
-				<div className="flex w-full">
+				<div className="grid grid-cols-2 gap-2">
 					<Button
 						type="button"
 						className="border-slate-950"
@@ -141,7 +148,7 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 						Cancel
 					</Button>
 					<Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-						Add
+						Save
 					</Button>
 				</div>
 			</form>

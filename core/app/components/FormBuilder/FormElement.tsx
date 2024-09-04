@@ -123,7 +123,7 @@ type FieldInputElementProps = {
 	element: InputElement;
 	isEditing: boolean;
 };
-const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
+export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
 	const pubFields = usePubFieldContext();
 	const field = pubFields[element.fieldId as PubFieldsId];
 	let Icon: LucideIcon;
