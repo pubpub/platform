@@ -16,6 +16,7 @@ import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { capitalize } from "~/lib/string";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { InnerForm } from "./InnerForm";
@@ -58,11 +59,13 @@ export default async function FormPage({
 }) {
 	const community = await findCommunityBySlug(params.communitySlug);
 
-	const form = await getForm({
-		slug: params.formSlug,
-		communityId: community?.id,
-	}).executeTakeFirst();
-	const pub = searchParams.pubId ? await getPub(searchParams.pubId) : undefined;
+	const [form, pub] = await Promise.all([
+		getForm({
+			slug: params.formSlug,
+			communityId: community?.id,
+		}).executeTakeFirst(),
+		searchParams.pubId ? await getPub(searchParams.pubId) : undefined,
+	]);
 
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
@@ -92,6 +95,7 @@ export default async function FormPage({
 	}
 
 	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 	const memberWithUser = {
 		...member,
@@ -130,7 +134,9 @@ export default async function FormPage({
 		<div className="isolate min-h-screen">
 			<Header>
 				<div className="flex flex-col items-center">
-					<h1 className="text-xl font-bold">Evaluation for {community?.name}</h1>
+					<h1 className="text-xl font-bold">
+						{capitalize(form.name)} for {community?.name}
+					</h1>
 					<SaveStatus />
 				</div>
 			</Header>
