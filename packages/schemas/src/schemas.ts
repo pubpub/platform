@@ -1,8 +1,10 @@
 import { Type } from "@sinclair/typebox";
 
+import { setErrorFunction } from "./errors";
 import { registerFormats } from "./formats";
 
 registerFormats();
+setErrorFunction();
 
 export const Boolean = Type.Boolean({
 	description: "A true or false value.",
@@ -17,38 +19,48 @@ export const String = Type.String({
 	],
 });
 
-export const Vector3 = Type.Array(Type.Number(), {
-	minItems: 3,
-	maxItems: 3,
-	description:
-		"An array of exactly three numbers. Can be used to specify a confidence interval, three-dimensional coordinates, etc.",
-	examples: [
-		[0, 0, 0],
-		[30, 50, 65],
-	],
-});
+export const Vector3 = Type.Array(
+	Type.Number({
+		error: "Invalid number",
+	}),
+	{
+		minItems: 3,
+		maxItems: 3,
+		description:
+			"An array of exactly three numbers. Can be used to specify a confidence interval, three-dimensional coordinates, etc.",
+		examples: [
+			[0, 0, 0],
+			[30, 50, 65],
+		],
+		error: "Invalid vector",
+	}
+);
 
 export const DateTime = Type.Date({
 	description: "A moment in time.",
 	examples: ["2021-01-01T00:00:00Z"],
+	error: "Invalid date",
 });
 
 export const Email = Type.String({
 	format: "email",
 	description: "An email address.",
 	examples: ["stevie@example.com"],
+	error: "Invalid email address",
 });
 
 export const URL = Type.String({
 	format: "uri",
 	description: "A URL.",
 	examples: ["https://example.com"],
+	error: "Invalid URL",
 });
 
 export const MemberId = Type.String({
 	format: "uuid",
 	description: "A member of your community.",
 	examples: ["f7b3b3b3-4b3b-4b3b-4b3b-1acefbd22232"],
+	error: "Invalid UUID",
 });
 
 export const FileUpload = Type.Array(

@@ -79,6 +79,7 @@ const ActionCell = (props: ActionCellProps) => {
 
 type Props = {
 	onAdd: (actionName: string) => Promise<unknown>;
+	isSuperAdmin?: boolean | null;
 };
 
 export const StagePanelActionCreator = (props: Props) => {
@@ -109,13 +110,15 @@ export const StagePanelActionCreator = (props: Props) => {
 						</DialogDescription>
 					</DialogHeader>
 					<div className="grid grid-cols-2 gap-4">
-						{Object.values(actions).map((action) => (
-							<ActionCell
-								key={action.name}
-								action={action}
-								onClick={onActionSelect}
-							/>
-						))}
+						{Object.values(actions)
+							.filter((action) => !action.superAdminOnly || props.isSuperAdmin)
+							.map((action) => (
+								<ActionCell
+									key={action.name}
+									action={action}
+									onClick={onActionSelect}
+								/>
+							))}
 					</div>
 				</DialogContent>
 			</Dialog>

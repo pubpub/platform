@@ -1,5 +1,7 @@
 "use client";
 
+import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
+
 import type { PubFieldsId } from "db/public";
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
@@ -27,7 +29,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 	const addToForm = (
 		newElement:
 			| { type: "structure"; element: StructuralFormElement }
-			| { type: "field"; fieldId: PubFieldsId }
+			| { type: "field"; fieldId: PubFieldsId; label: string }
 	) => {
 		if (!newElement) {
 			return;
@@ -83,6 +85,8 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 				) {
 					return null;
 				}
+				const Icon =
+					(field.schemaName && SCHEMA_TYPES_WITH_ICONS[field.schemaName]?.icon) || Type;
 				return (
 					<Button
 						type="button"
@@ -90,7 +94,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 						key={field.id}
 						className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
 						onClick={() => {
-							addToForm({ type: "field", fieldId: field.id });
+							addToForm({ type: "field", fieldId: field.id, label: field.name });
 							dispatch({
 								eventName: "edit",
 								selectedElementIndex: elementsCount,
@@ -98,7 +102,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 						}}
 						data-testid={`field-button-${field.slug}`}
 					>
-						<Type size={20} className="my-auto text-emerald-500" />
+						<Icon size={20} className="my-auto text-emerald-500" />
 						<div className="flex flex-col items-start text-left">
 							<div className="text-muted-foreground">{field.slug}</div>
 							<div className="text-left font-semibold">{field.name}</div>
