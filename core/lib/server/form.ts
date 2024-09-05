@@ -50,6 +50,7 @@ export const getForm = (
 							"pub_fields.schemaName",
 							"pub_fields.slug",
 						])
+						.$narrowType<{ config?: {} }>()
 						.orderBy("form_elements.order")
 				).as("elements")
 			)

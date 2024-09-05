@@ -7,10 +7,8 @@ import { z } from "zod";
 
 import { InputComponent } from "db/src/public/InputComponent";
 import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
-import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
 import { DatePicker } from "ui/date-picker";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ImagePlus } from "ui/icon";

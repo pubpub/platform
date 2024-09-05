@@ -32,6 +32,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 		if (schemaName === null) {
 			return null;
 		}
+		const component = defaultComponent(schemaName);
 		return (
 			<Button
 				type="button"
@@ -45,8 +46,8 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						type: ElementType.pubfield,
 						order: elementsCount,
 						configured: false,
-						component: defaultComponent(schemaName),
 						label: field.name,
+						component,
 						schemaName,
 					});
 					dispatch({

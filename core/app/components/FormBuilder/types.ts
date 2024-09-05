@@ -9,6 +9,7 @@ import {
 	formElementsInitializerSchema,
 	formsIdSchema,
 } from "db/public";
+import { InputComponent } from "db/src/public/InputComponent";
 
 const baseElementSchema = z.object({
 	id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB
@@ -33,6 +34,7 @@ export type InputElement = baseElement & {
 	element: never;
 	content: never;
 	schemaName: CoreSchemaType;
+	component: InputComponent;
 };
 
 export type StructuralElement = baseElement & {

@@ -141,7 +141,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		resolver: zodResolver(formBuilderSchema),
 		values: {
 			elements: pubForm.elements.map((e) => {
-				// Do not include schemaName or slug here
+				// Do not include slug here
 				const { slug, ...rest } = e;
 				return rest;
 			}),
@@ -230,7 +230,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 						? elements[panelState.selectedElementIndex]
 						: undefined
 				}
-				elementsCount={elements.filter((e) => !isButtonElement(e)).length}
+				elementsCount={elements.length}
 				openConfigPanel={(index: number) =>
 					dispatch({ eventName: "edit", selectedElementIndex: index })
 				}
@@ -292,25 +292,26 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 															items={elements}
 															strategy={verticalListSortingStrategy}
 														>
-															{elements
-																.filter((e) => !isButtonElement(e))
-																.map((element, index) => (
-																	<FormElement
-																		key={element.id}
-																		element={element}
-																		index={index}
-																		isEditing={
-																			panelState.selectedElementIndex ===
-																			index
-																		}
-																		isDisabled={
-																			panelState.selectedElementIndex !==
-																				null &&
-																			panelState.selectedElementIndex !==
+															{elements.map(
+																(element, index) =>
+																	!isButtonElement(element) && (
+																		<FormElement
+																			key={element.id}
+																			element={element}
+																			index={index}
+																			isEditing={
+																				panelState.selectedElementIndex ===
 																				index
-																		}
-																	></FormElement>
-																))}
+																			}
+																			isDisabled={
+																				panelState.selectedElementIndex !==
+																					null &&
+																				panelState.selectedElementIndex !==
+																					index
+																			}
+																		/>
+																	)
+															)}
 														</SortableContext>
 													</DndContext>
 												</div>
