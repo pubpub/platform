@@ -3,9 +3,11 @@ import { z, ZodObject } from "zod";
 import { CoreSchemaType } from "db/public";
 import { InputComponent } from "db/src/public/InputComponent";
 
+export const defaultComponent = (schemaName: CoreSchemaType) => componentsBySchema[schemaName][0];
+
 export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
-	[CoreSchemaType.String]: [InputComponent.textArea, InputComponent.textInput],
+	[CoreSchemaType.String]: [InputComponent.textInput, InputComponent.textArea],
 	[CoreSchemaType.DateTime]: [InputComponent.datePicker],
 	[CoreSchemaType.Email]: [InputComponent.textInput],
 	[CoreSchemaType.FileUpload]: [InputComponent.fileUpload],
