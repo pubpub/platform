@@ -67,7 +67,7 @@ export const action = defineAction({
 				fieldType: "custom",
 			},
 			body: {
-				allowedSchemas: false,
+				allowedSchemas: true,
 				fieldType: "textarea",
 				inputProps: {
 					className: "font-mono text-gray-700",
@@ -151,6 +151,7 @@ export const action = defineAction({
 		],
 		fieldConfig: {
 			body: {
+				allowedSchemas: true,
 				fieldType: "textarea",
 				inputProps: {
 					className: "font-mono text-gray-700",
