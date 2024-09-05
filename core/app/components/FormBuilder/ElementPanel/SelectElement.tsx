@@ -1,4 +1,4 @@
-import { componentsBySchema, SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { componentsBySchema, defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
@@ -24,6 +24,11 @@ export const SelectElement = (state) => {
 			return null;
 		}
 		const Icon = (field.schemaName && SCHEMA_TYPES_WITH_ICONS[field.schemaName]?.icon) || Type;
+
+		const schemaName = field.schemaName;
+		if (schemaName === null) {
+			return null;
+		}
 		return (
 			<Button
 				type="button"
@@ -37,6 +42,9 @@ export const SelectElement = (state) => {
 						type: ElementType.pubfield,
 						order: elementsCount,
 						configured: false,
+						component: defaultComponent(schemaName),
+						label: field.name,
+						schemaName,
 					});
 					dispatch({
 						eventName: "edit",
