@@ -12,7 +12,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import type { Stages } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
-import { Form, FormItem } from "ui/form";
+import { Form, FormControl, FormField, FormItem } from "ui/form";
 import { CircleCheck, X } from "ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { TokenProvider } from "ui/tokens";
@@ -259,60 +259,72 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 										})
 									)}
 								>
-									<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
-										<DndContext
-											modifiers={[
-												restrictToVerticalAxis,
-												restrictToParentElement,
-											]}
-											onDragEnd={(event) => {
-												const { active, over } = event;
-												if (over && active.id !== over?.id) {
-													const activeIndex =
-														active.data.current?.sortable?.index;
-													const overIndex =
-														over.data.current?.sortable?.index;
-													if (
-														activeIndex !== undefined &&
-														overIndex !== undefined
-													) {
-														move(activeIndex, overIndex);
-													}
-												}
-											}}
-										>
-											<SortableContext
-												items={elements}
-												strategy={verticalListSortingStrategy}
-											>
-												{elements
-													.filter((e) => !isButtonElement(e))
-													.map((element, index) => (
-														<FormElement
-															key={element.id}
-															element={element}
-															index={index}
-															isEditing={
-																panelState.selectedElementIndex ===
-																index
+									<FormField
+										control={form.control}
+										name="elements"
+										render={() => (
+											<>
+												<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
+													<DndContext
+														modifiers={[
+															restrictToVerticalAxis,
+															restrictToParentElement,
+														]}
+														onDragEnd={(event) => {
+															const { active, over } = event;
+															if (over && active.id !== over?.id) {
+																const activeIndex =
+																	active.data.current?.sortable
+																		?.index;
+																const overIndex =
+																	over.data.current?.sortable
+																		?.index;
+																if (
+																	activeIndex !== undefined &&
+																	overIndex !== undefined
+																) {
+																	move(activeIndex, overIndex);
+																}
 															}
-															isDisabled={
-																panelState.selectedElementIndex !==
-																	null &&
-																panelState.selectedElementIndex !==
-																	index
-															}
-														></FormElement>
-													))}
-											</SortableContext>
-										</DndContext>
-									</div>
-									<PanelWrapper sidebar={sidebarRef.current}>
-										<FormItem>
-											<PanelHeader state={panelState.state} />
-											<ElementPanel state={panelState} />
-										</FormItem>
-									</PanelWrapper>
+														}}
+													>
+														<SortableContext
+															items={elements}
+															strategy={verticalListSortingStrategy}
+														>
+															{elements
+																.filter((e) => !isButtonElement(e))
+																.map((element, index) => (
+																	<FormElement
+																		key={element.id}
+																		element={element}
+																		index={index}
+																		isEditing={
+																			panelState.selectedElementIndex ===
+																			index
+																		}
+																		isDisabled={
+																			panelState.selectedElementIndex !==
+																				null &&
+																			panelState.selectedElementIndex !==
+																				index
+																		}
+																	></FormElement>
+																))}
+														</SortableContext>
+													</DndContext>
+												</div>
+												<PanelWrapper sidebar={sidebarRef.current}>
+													<FormItem>
+														<PanelHeader state={panelState.state} />
+														<FormControl>
+															<ElementPanel panelState={panelState} />
+														</FormControl>
+													</FormItem>
+												</PanelWrapper>
+											</>
+										)}
+									/>
 								</form>
 							</Form>
 						</TabsContent>
