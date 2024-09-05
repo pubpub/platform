@@ -16,14 +16,14 @@ import { SelectElement } from "./SelectElement";
 import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm";
 
 type ElementPanelProps = {
-	state: PanelState;
+	panelState: PanelState;
 };
 
-export const ElementPanel = ({ state }: ElementPanelProps) => {
+export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 	const { elementsCount, removeIfUnconfigured, dispatch, slug, selectedElement } =
 		useFormBuilder();
 
-	switch (state.state) {
+	switch (panelState.state) {
 		case "initial":
 			return (
 				<div className="mb-4 flex flex-col gap-4">
@@ -46,7 +46,7 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 				</div>
 			);
 		case "selecting":
-			return <SelectElement state={state} />;
+			return <SelectElement panelState={panelState} />;
 		case "editing":
 			const ConfigForm =
 				selectedElement && isFieldInput(selectedElement)
@@ -55,18 +55,18 @@ export const ElementPanel = ({ state }: ElementPanelProps) => {
 
 			return (
 				<>
-					{state.selectedElementIndex === null ? (
+					{panelState.selectedElementIndex === null ? (
 						// Shouldn't be possible
 						<div>No selected element</div>
 					) : (
-						<ConfigForm index={state.selectedElementIndex} />
+						<ConfigForm index={panelState.selectedElementIndex} />
 					)}
 				</>
 			);
 		case "editingButton":
 			return (
 				<>
-					<ButtonConfigurationForm buttonIdentifier={state.buttonId} />
+					<ButtonConfigurationForm buttonIdentifier={panelState.buttonId} />
 				</>
 			);
 	}

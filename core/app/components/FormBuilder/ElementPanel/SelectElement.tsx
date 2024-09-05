@@ -7,10 +7,11 @@ import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
+import type { PanelState } from "../types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
 
-export const SelectElement = (state) => {
+export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 	const fields = usePubFieldContext();
 
 	const { elementsCount, dispatch, addElement } = useFormBuilder();
@@ -18,8 +19,10 @@ export const SelectElement = (state) => {
 	const fieldButtons = Object.values(fields).map((field) => {
 		if (
 			field.isArchived ||
-			(state.fieldsFilter &&
-				!`${field.name} ${field.slug} ${field.schemaName}`.includes(state.fieldsFilter))
+			(panelState.fieldsFilter &&
+				!`${field.name} ${field.slug} ${field.schemaName}`.includes(
+					panelState.fieldsFilter
+				))
 		) {
 			return null;
 		}
@@ -72,13 +75,13 @@ export const SelectElement = (state) => {
 					type="search"
 					placeholder="Type a field name to search..."
 					aria-label="Type a field name to search"
-					onChange={(event) =>
+					onChange={(event) => {
 						dispatch({
 							eventName: "filterFields",
 							fieldsFilter: event.target.value,
-						})
-					}
-					value={state.fieldsFilter ?? ""}
+						});
+					}}
+					value={panelState.fieldsFilter ?? ""}
 					className="mb-2"
 				></Input>
 				<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
