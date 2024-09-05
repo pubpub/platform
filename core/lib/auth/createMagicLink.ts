@@ -8,7 +8,7 @@ type NativeMagicLinkOptions = {
 	userId: UsersId;
 	type: AuthTokenType;
 	expiresAt: Date;
-	path: string;
+	path: `/${string}`;
 };
 
 export const createMagicLink = async (options: NativeMagicLinkOptions, trx = db) => {
@@ -21,5 +21,5 @@ export const createMagicLink = async (options: NativeMagicLinkOptions, trx = db)
 		trx
 	);
 
-	return `${env.NEXT_PUBLIC_PUBPUB_URL}/magic-link?token=${token}&redirectTo=${encodeURIComponent(options.path)}`;
+	return `${env.NEXT_PUBLIC_PUBPUB_URL}/magic-link?token=${token}&redirectTo=${encodeURIComponent(`${env.NEXT_PUBLIC_PUBPUB_URL}${options.path}`)}`;
 };

@@ -134,7 +134,7 @@ export const createFormInvitePath = ({
 	communitySlug: string;
 	pubId?: string;
 }) => {
-	return `/c/${communitySlug}/public/forms/${formSlug}/fill${pubId ? `?pubId=${pubId}` : ""}`;
+	return `/c/${communitySlug}/public/forms/${formSlug}/fill${pubId ? `?pubId=${pubId}` : ""}` as const;
 };
 
 /**
