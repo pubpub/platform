@@ -14,7 +14,7 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
 } as const;
 
-export const componentConfigSchemas: Record<CoreSchemaType, ZodObject<any, any>> = {
+export const componentConfigSchemas: Record<InputComponent, ZodObject<any, any>> = {
 	[InputComponent.checkbox]: z.object({}),
 	[InputComponent.textArea]: z.object({}),
 	[InputComponent.textInput]: z.object({}),
@@ -22,4 +22,4 @@ export const componentConfigSchemas: Record<CoreSchemaType, ZodObject<any, any>>
 	[InputComponent.fileUpload]: z.object({}),
 	[InputComponent.memberSelect]: z.object({}),
 	[InputComponent.confidenceInterval]: z.object({}),
-};
+} as const;
