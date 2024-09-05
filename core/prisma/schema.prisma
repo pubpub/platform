@@ -503,8 +503,8 @@ enum ElementType {
 enum InputComponent {
   textArea
   textInput
-  date
-  boolean
+  datePicker
+  checkbox
   fileUpload
   memberSelect
   confidenceInterval
@@ -512,22 +512,21 @@ enum InputComponent {
 
 // Either a structural element like a header, hr etc. or a pubfield input
 model FormElement {
-  id          String                 @id @default(dbgenerated("gen_random_uuid()"))
-  type        ElementType
-  fieldId     String?
-  field       PubField?              @relation(fields: [fieldId], references: [id])
-  formId      String
-  order       Int?
-  label       String?
-  help        String?
-  placeholder String?
-  element     StructuralFormElement?
-  component   InputComponent?
-  content     String?
-  required    Boolean?
-  form        Form                   @relation(fields: [formId], references: [id])
-  stage       Stage?                 @relation(fields: [stageId], references: [id])
-  stageId     String?
+  id        String                 @id @default(dbgenerated("gen_random_uuid()"))
+  type      ElementType
+  fieldId   String?
+  field     PubField?              @relation(fields: [fieldId], references: [id])
+  formId    String
+  order     Int?
+  label     String?
+  element   StructuralFormElement?
+  component InputComponent?
+  config    Json?
+  content   String?
+  required  Boolean?
+  form      Form                   @relation(fields: [formId], references: [id])
+  stage     Stage?                 @relation(fields: [stageId], references: [id])
+  stageId   String?
 
   @@unique([type, label, formId])
   @@unique([fieldId, formId])

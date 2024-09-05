@@ -7,8 +7,8 @@ import { z } from "zod";
 export enum InputComponent {
 	textArea = "textArea",
 	textInput = "textInput",
-	date = "date",
-	boolean = "boolean",
+	datePicker = "datePicker",
+	checkbox = "checkbox",
 	fileUpload = "fileUpload",
 	memberSelect = "memberSelect",
 	confidenceInterval = "confidenceInterval",

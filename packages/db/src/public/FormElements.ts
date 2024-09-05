@@ -48,9 +48,7 @@ export interface FormElementsTable {
 
 	component: ColumnType<InputComponent | null, InputComponent | null, InputComponent | null>;
 
-	help: ColumnType<string | null, string | null, string | null>;
-
-	placeholder: ColumnType<string | null, string | null, string | null>;
+	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 }
 
 export type FormElements = Selectable<FormElementsTable>;
@@ -73,8 +71,7 @@ export const formElementsSchema = z.object({
 	required: z.boolean().nullable(),
 	stageId: stagesIdSchema.nullable(),
 	component: inputComponentSchema.nullable(),
-	help: z.string().nullable(),
-	placeholder: z.string().nullable(),
+	config: z.unknown().nullable(),
 });
 
 export const formElementsInitializerSchema = z.object({
@@ -89,8 +86,7 @@ export const formElementsInitializerSchema = z.object({
 	required: z.boolean().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
-	help: z.string().optional().nullable(),
-	placeholder: z.string().optional().nullable(),
+	config: z.unknown().optional().nullable(),
 });
 
 export const formElementsMutatorSchema = z.object({
@@ -105,6 +101,5 @@ export const formElementsMutatorSchema = z.object({
 	required: z.boolean().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
-	help: z.string().optional().nullable(),
-	placeholder: z.string().optional().nullable(),
+	config: z.unknown().optional().nullable(),
 });
