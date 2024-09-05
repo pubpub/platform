@@ -1,4 +1,4 @@
-import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { componentsBySchema, SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";

@@ -18,6 +18,7 @@ const uppy = new Uppy().use(AwsS3);
 type FileUploadProps = {
 	upload: Function;
 	onUpdateFiles: Function;
+	disabled?: boolean;
 };
 
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
@@ -54,7 +55,7 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 			};
 		},
 	});
-	return <Dashboard uppy={uppy} />;
+	return <Dashboard uppy={uppy} disabled={props.disabled} />;
 });
 
 export { FileUpload };
