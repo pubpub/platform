@@ -8,7 +8,7 @@ type NativeMagicLinkOptions = {
 	userId: UsersId;
 	type: AuthTokenType;
 	expiresAt: Date;
-	path: string;
+	path: `/${string}`;
 };
 
 export const createMagicLink = async (options: NativeMagicLinkOptions, trx = db) => {
