@@ -5,16 +5,15 @@ import type { UsersId } from "db/public";
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
-import { UnauthorizedError } from "~/lib/server";
 import { findCommunityBySlug, getAvailableCommunities } from "~/lib/server/community";
 import SideNav from "./SideNav";
 
 type Props = { children: React.ReactNode; params: { communitySlug: string } };
 
 export default async function MainLayout({ children, params }: Props) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData) {
+	if (!user) {
 		redirect("/login");
 	}
 
@@ -23,14 +22,16 @@ export default async function MainLayout({ children, params }: Props) {
 		return null;
 	}
 
-	const role = getCommunityRole(loginData, community);
+	const role = getCommunityRole(user, community);
 
 	if (role === "contributor") {
 		// TODO: figure something out for this
 		notFound();
 	}
 
-	const availableCommunities = await getAvailableCommunities(loginData.id as UsersId);
+	// const availableCommunities = await getAvailableCommunities(user.id as UsersId);
+	const availableCommunities = user?.memberships.map((m) => m.community);
+
 	return (
 		<CommunityProvider community={community}>
 			<div className="flex min-h-screen flex-col md:flex-row">

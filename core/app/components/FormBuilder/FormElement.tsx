@@ -32,7 +32,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 	});
 
 	const style = {
-		transform: CSS.Transform.toString(transform),
+		transform: CSS.Translate.toString(transform),
 		transition,
 	};
 
@@ -135,11 +135,10 @@ const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
 
 	return (
 		<>
-			{}
 			<Icon
 				size={20}
 				className={cn(
-					"my-auto mr-4",
+					"mr-4 mt-3 shrink-0",
 					isEditing ? "text-blue-500" : "text-emerald-500",
 					element.deleted && "text-slate-500"
 				)}
@@ -166,16 +165,16 @@ const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
 			<Icon
 				size={20}
 				className={cn(
-					"my-auto mr-4",
+					"mr-4 mt-3 shrink-0",
 					isEditing ? "text-blue-500" : "text-emerald-500",
 					element.deleted && "text-slate-500"
 				)}
 			/>
 			<div>
 				<div className="text-slate-500">{name}</div>
-				<div className={cn("font-semibold", element.deleted ? "text-slate-500" : "")}>
+				<div className={cn("prose prose-sm", element.deleted ? "text-slate-500" : "")}>
 					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
-					<Markdown>{element.content ?? " "}</Markdown>
+					<Markdown className="line-clamp-2">{element.content}</Markdown>
 				</div>
 			</div>
 		</>

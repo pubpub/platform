@@ -84,7 +84,6 @@ export const MemberInviteForm = ({
 				email: data.email,
 				firstName: data.firstName!,
 				lastName: data.lastName!,
-				community,
 				role: data.role,
 				isSuperAdmin: data.isSuperAdmin,
 			});
@@ -103,7 +102,6 @@ export const MemberInviteForm = ({
 		const result = await runAddMember({
 			user: state.user,
 			role: data.role,
-			community,
 		});
 
 		if (didSucceed(result)) {

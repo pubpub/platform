@@ -7,12 +7,12 @@ import { AddCommunity } from "./AddCommunityDialog";
 import { CommunityTable } from "./CommunityTable";
 
 export default async function Page() {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData) {
+	if (!user) {
 		return null;
 	}
-	if (!loginData.isSuperAdmin) {
+	if (!user.isSuperAdmin) {
 		return null;
 	}
 
@@ -41,10 +41,10 @@ export default async function Page() {
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Communities</h1>
-				<AddCommunity user={loginData} />
+				<AddCommunity />
 			</div>
 			<div>
-				<CommunityTable communities={tableMembers} user={loginData} />
+				<CommunityTable communities={tableMembers} />
 			</div>
 		</>
 	);

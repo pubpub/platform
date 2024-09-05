@@ -1,9 +1,9 @@
+import { InputWithTokens, MarkdownEditor } from "../editors";
 import AutoFormCheckbox from "./fields/checkbox";
 import AutoFormDate from "./fields/date";
 import AutoFormEnum from "./fields/enum";
 import AutoFormFile from "./fields/file";
 import AutoFormInput from "./fields/input";
-import MarkdownEditor from "./fields/markdown";
 import AutoFormNumber from "./fields/number";
 import AutoFormRadioGroup from "./fields/radio-group";
 import AutoFormSwitch from "./fields/switch";
@@ -20,6 +20,7 @@ export const INPUT_COMPONENTS = {
 	file: AutoFormFile,
 	fallback: AutoFormInput,
 	markdown: MarkdownEditor,
+	stringWithTokens: InputWithTokens,
 };
 
 /**
@@ -35,4 +36,5 @@ export const DEFAULT_ZOD_HANDLERS: {
 	ZodNativeEnum: "select",
 	ZodNumber: "number",
 	Markdown: "markdown",
+	StringWithTokens: "stringWithTokens",
 };

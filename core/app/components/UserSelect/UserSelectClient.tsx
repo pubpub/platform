@@ -134,7 +134,6 @@ export function UserSelectClient({
 										const result = await runAddMember({
 											user,
 											role: MemberRole.contributor,
-											community,
 										});
 										if (didSucceed(result)) {
 											const member = expect(result.member);

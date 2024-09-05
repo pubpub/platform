@@ -1,7 +1,9 @@
 import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
 import { z } from "zod";
 
+import type { AuthTokenType } from "./AuthTokenType";
 import type { UsersId } from "./Users";
+import { authTokenTypeSchema } from "./AuthTokenType";
 import { usersIdSchema } from "./Users";
 
 // @generated
@@ -21,6 +23,9 @@ export interface SessionsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	/** With what type of token is this session created? Used for determining on a page-by-page basis whether to allow a certain session to access it. For instance, a verify email token/session should not allow you to access the password reset page. */
+	type: ColumnType<AuthTokenType, AuthTokenType | undefined, AuthTokenType>;
 }
 
 export type Sessions = Selectable<SessionsTable>;
@@ -37,6 +42,7 @@ export const sessionsSchema = z.object({
 	expiresAt: z.date(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	type: authTokenTypeSchema,
 });
 
 export const sessionsInitializerSchema = z.object({
@@ -45,6 +51,7 @@ export const sessionsInitializerSchema = z.object({
 	expiresAt: z.date(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	type: authTokenTypeSchema.optional(),
 });
 
 export const sessionsMutatorSchema = z.object({
@@ -53,4 +60,5 @@ export const sessionsMutatorSchema = z.object({
 	expiresAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	type: authTokenTypeSchema.optional(),
 });

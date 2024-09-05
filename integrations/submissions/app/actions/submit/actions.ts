@@ -36,9 +36,9 @@ export const submit = async (instanceId: string, values: PubValues, assigneeId: 
 };
 
 const metadataResolvers = {
-	"unjournal:doi": makePubFromDoi,
-	"unjournal:url": makePubFromUrl,
-	"unjournal:title": makePubFromTitle,
+	"legacy-unjournal:doi": makePubFromDoi,
+	"legacy-unjournal:url": makePubFromUrl,
+	"legacy-unjournal:title": makePubFromTitle,
 };
 
 export const resolveMetadata = async (

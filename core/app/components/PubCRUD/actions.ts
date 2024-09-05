@@ -31,12 +31,12 @@ export const createPub = defineServerAction(async function createPub({
 	path?: string | null;
 	parentId?: PubsId;
 }) {
-	const loginData = await getLoginData();
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		throw new Error("Not logged in");
 	}
 
-	if (!isCommunityAdmin(loginData, { id: communityId })) {
+	if (!isCommunityAdmin(user, { id: communityId })) {
 		return {
 			error: "You need to be an admin",
 		};
@@ -64,11 +64,14 @@ export const createPub = defineServerAction(async function createPub({
 
 				.insertInto("pub_values")
 				.values((eb) =>
-					Object.entries(fields).map(([key, value]) => ({
-						fieldId: key as PubFieldsId,
-						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-						value: JSON.stringify(value.value),
-					}))
+					Object.entries(fields)
+						// TODO: figure out whether null values should be allowed and/or what the difference is between "" and null
+						.filter(([key, value]) => value.value != undefined)
+						.map(([key, value]) => ({
+							fieldId: key as PubFieldsId,
+							pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+							value: JSON.stringify(value.value),
+						}))
 				)
 		).execute();
 
@@ -366,13 +369,13 @@ export const updatePub = defineServerAction(async function updatePub({
 	path?: string | null;
 	stageId?: StagesId;
 }) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData) {
+	if (!user) {
 		throw new Error("Not logged in");
 	}
 
-	if (!isCommunityAdmin(loginData, { id: communityId })) {
+	if (!isCommunityAdmin(user, { id: communityId })) {
 		return {
 			error: "You need to be an admin",
 		};
@@ -406,9 +409,9 @@ export const removePub = defineServerAction(async function removePub({
 	pubId: PubsId;
 	path?: string | null;
 }) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 
-	if (!loginData) {
+	if (!user) {
 		throw new Error("Not logged in");
 	}
 	const pub = await db
@@ -423,7 +426,7 @@ export const removePub = defineServerAction(async function removePub({
 		};
 	}
 
-	if (!isCommunityAdmin(loginData, { id: pub.communityId })) {
+	if (!isCommunityAdmin(user, { id: pub.communityId })) {
 		return {
 			error: "You need to be an admin of this community to remove this pub.",
 		};

@@ -1,33 +1,27 @@
 "use server";
 
 import { jsonObjectFrom } from "kysely/helpers/postgres";
-import rehypeFormat from "rehype-format";
-import rehypeStringify from "rehype-stringify";
-import remarkDirective from "remark-directive";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import { unified } from "unified";
 
 import type { MembersId } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
-import type { EmailDirectivePluginPub } from "./plugin";
+import type { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import * as Email from "~/lib/server/email";
 import { smtpclient } from "~/lib/server/mailgun";
+import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { defineRun } from "../types";
-import { emailDirectives } from "./plugin";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
-		// FIXME: could be replaced with `getCommunitySlug`
 		const communitySlug = getCommunitySlug();
 
 		const { parentId } = pub;
-		let parentPub: EmailDirectivePluginPub | undefined;
+		let parentPub: RenderWithPubPub | undefined;
 
 		// TODO: This is a pretty inefficient way of loading the parent pub, as it
 		// will redundantly load the child pub. Ideally we would lazily fetch and
@@ -35,6 +29,8 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		if (parentId) {
 			parentPub = await getPubCached(parentId);
 		}
+
+		const recipientId = expect(args?.recipient ?? config.recipient) as MembersId;
 
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
@@ -52,34 +48,33 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 					.$notNull()
 					.as("user"),
 			])
-			.where("id", "=", expect(args?.recipient ?? config.recipient) as MembersId)
+			.where("id", "=", recipientId)
 			.executeTakeFirstOrThrow(
-				() =>
-					new Error(
-						`Could not find member with ID ${args?.recipient ?? config.recipient}`
-					)
+				() => new Error(`Could not find member with ID ${recipientId}`)
 			);
 
-		const emailDirectivesContext = { communitySlug, recipient, pub, parentPub };
+		const renderMarkdownWithPubContext = {
+			communitySlug,
+			recipient,
+			pub,
+			parentPub,
+		};
 
-		const html = (
-			await unified()
-				.use(remarkParse)
-				.use(remarkDirective)
-				.use(emailDirectives, emailDirectivesContext)
-				.use(remarkRehype)
-				.use(rehypeFormat)
-				.use(rehypeStringify)
-				.process(args?.body ?? config.body)
-		).toString();
+		const html = await renderMarkdownWithPub(
+			args?.body ?? config.body,
+			renderMarkdownWithPubContext
+		);
+		const subject = await renderMarkdownWithPub(
+			args?.subject ?? config.subject,
+			renderMarkdownWithPubContext,
+			true
+		);
 
-		await smtpclient.sendMail({
-			from: "hello@pubpub.org",
+		await Email.generic({
 			to: recipient.user.email,
-			replyTo: "hello@pubpub.org",
+			subject,
 			html,
-			subject: args?.subject ?? config.subject,
-		});
+		}).send();
 	} catch (error) {
 		logger.error({ msg: "email", error });
 

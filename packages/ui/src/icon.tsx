@@ -1,5 +1,6 @@
 export {
 	Activity,
+	AlertCircle,
 	Archive,
 	ArchiveRestore,
 	ArrowRight,
@@ -48,6 +49,7 @@ export {
 	Plus,
 	PlusCircle,
 	Play,
+	RefreshCw,
 	Search,
 	Send,
 	Settings,

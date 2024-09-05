@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 
 import type { CommunitiesId, PubTypesId } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import { Action, CoreSchemaType, ElementType, MemberRole } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -56,7 +56,7 @@ export default async function main(communityUUID: CommunitiesId) {
 				schemaName: CoreSchemaType.MemberId,
 			},
 		])
-		.returning(["id", "slug"])
+		.returning(["id", "slug", "name", "schemaName"])
 		.execute();
 
 	const submissionTypeId = "a8a92307-ec90-41e6-9905-30ba3d06e08e" as PubTypesId;
@@ -340,5 +340,50 @@ export default async function main(communityUUID: CommunitiesId) {
 				value: JSON.stringify(users[0].id),
 			},
 		])
+		.execute();
+
+	const formSlug = "review" as const;
+	const formWithEmailAction = await db
+		.with("form", (eb) =>
+			eb
+				.insertInto("forms")
+				.values({
+					name: "Review",
+					slug: formSlug,
+					communityId: communityUUID,
+					pubTypeId: evaluationTypeId,
+				})
+				.returning(["id", "slug"])
+		)
+		.with("form_element", (eb) =>
+			eb.insertInto("form_elements").values([
+				...persistedPubFields.map((field, idx) => ({
+					formId: eb.selectFrom("form").select("id"),
+					fieldId: field.id,
+					order: idx + 1,
+					type: ElementType.pubfield,
+					label: field.name,
+				})),
+				{
+					formId: eb.selectFrom("form").select("id"),
+					label: "Submit",
+					content: "Thank you for your submission!",
+					order: 3,
+					type: ElementType.button,
+				},
+			])
+		)
+		.insertInto("action_instances")
+		.values({
+			action: Action.email,
+			name: "Form Invite Email",
+			stageId: stages[0],
+			config: JSON.stringify({
+				body: `You are invited to fill in a form.\n\n\n\n:link{form="${formSlug}"}`,
+				subject: "Hello :recipientName",
+				pubFields: {},
+				recipient: `${member!.id}`,
+			}),
+		})
 		.execute();
 }

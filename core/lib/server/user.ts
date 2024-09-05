@@ -1,15 +1,35 @@
 import type { User } from "@prisma/client";
+import type { SelectExpression } from "kysely";
 
 import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { MembersId, UsersId } from "db/public";
+import type { Database } from "db/Database";
+import type { CommunitiesId, NewUsers, UsersId } from "db/public";
+import type { UsersUpdate } from "db/src/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
+import { createPasswordHash } from "../auth/password";
 import { slugifyString } from "../string";
+import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
+
+export const SAFE_USER_SELECT = [
+	"users.id",
+	"users.email",
+	"users.firstName",
+	"users.lastName",
+	"users.slug",
+	"users.supabaseId",
+	"users.createdAt",
+	"users.updatedAt",
+	"users.isSuperAdmin",
+	"users.avatar",
+	"users.orcid",
+] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>;
 
 export async function findOrCreateUser(userId: string): Promise<User>;
 export async function findOrCreateUser(
@@ -53,20 +73,13 @@ export async function findOrCreateUser(
 	return user;
 }
 
-export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>) => {
+export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>, trx = db) => {
 	// do not use autocache here until we have a good way to globally invalidate users
-	return db
+	return trx
 		.selectFrom("users")
+		.select(["users.id"])
 		.select((eb) => [
-			"users.id",
-			"users.email",
-			"users.firstName",
-			"users.lastName",
-			"users.slug",
-			"users.supabaseId",
-			"users.createdAt",
-			"users.updatedAt",
-			"users.isSuperAdmin",
+			...SAFE_USER_SELECT,
 			jsonArrayFrom(
 				eb
 					.selectFrom("members")
@@ -101,24 +114,103 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
 });
 
-export const getMember = cache((memberId: MembersId) => {
-	return db
-		.selectFrom("members")
-		.select((eb) => [
-			"members.id",
-			"members.userId",
-			"members.createdAt",
-			"members.updatedAt",
-			"members.role",
-			"members.communityId",
-			jsonObjectFrom(
-				eb
-					.selectFrom("users")
-					.whereRef("users.id", "=", "members.userId")
-					.selectAll("users")
+export const getSuggestedUsers = ({
+	communityId,
+	query,
+	limit = 10,
+}: {
+	communityId?: CommunitiesId;
+	query:
+		| {
+				email: string;
+				firstName?: string;
+				lastName?: string;
+		  }
+		| {
+				firstName: string;
+				lastName?: string;
+				email?: string;
+		  }
+		| {
+				lastName: string;
+				firstName?: string;
+				email?: string;
+		  };
+	limit?: number;
+}) =>
+	autoCache(
+		db
+			.selectFrom("users")
+			.select([...SAFE_USER_SELECT])
+			.$if(Boolean(communityId), (eb) =>
+				eb.select((eb) => [
+					jsonObjectFrom(
+						eb
+							.selectFrom("members")
+							.selectAll("members")
+							.whereRef("members.userId", "=", "users.id")
+							.where("members.communityId", "=", communityId!)
+					).as("member"),
+				])
 			)
-				.$notNull()
-				.as("user"),
-		])
-		.where("members.id", "=", memberId);
-});
+			.where((eb) =>
+				eb.or([
+					...(query.email ? [eb("email", "ilike", `${query.email}%`)] : []),
+					...(query.firstName
+						? [eb("firstName", "ilike", `${query.firstName}%`)]
+						: ([] as const)),
+					...(query.lastName ? [eb("lastName", "ilike", `${query.lastName}%`)] : []),
+				])
+			)
+			.limit(limit)
+	);
+
+export const setUserPassword = cache(
+	async (props: { userId: UsersId; password: string }, trx = db) => {
+		const passwordHash = await createPasswordHash(props.password);
+		await trx
+			.updateTable("users")
+			.set({ passwordHash })
+			.where("id", "=", props.userId)
+			.execute();
+	}
+);
+
+export const updateUser = async (
+	props: Omit<UsersUpdate, "passwordHash"> & { id: UsersId },
+	trx = db
+) => {
+	const { id, ...data } = props;
+
+	// since a user is one of the few entities that exist cross-community,
+	// we need to manually invalidate all the communities they are a part of
+	// it's also not a good idea to cache this query
+	// as, again, this query sits outside of the community scope
+	// and thus is hard to invalidate using only community scoped tags
+	// as we would need to know the result of this query in order to tag it
+	// properly, which is obviously impossible
+	const communitySlugs = await trx
+		.selectFrom("members")
+		.where("userId", "=", id)
+		.innerJoin("communities", "members.communityId", "communities.id")
+		.select(["communities.slug"])
+		.execute();
+
+	const newUser = await autoRevalidate(
+		trx
+			.updateTable("users")
+			.set(data)
+			.where("id", "=", id as UsersId)
+			.returning(SAFE_USER_SELECT),
+		{
+			communitySlug: communitySlugs.map((slug) => slug.slug),
+		}
+	).executeTakeFirstOrThrow((err) => new Error(`Unable to update user ${id}`));
+
+	return newUser;
+};
+
+export const addUser = (props: NewUsers, trx = db) =>
+	autoRevalidate(trx.insertInto("users").values(props).returning(SAFE_USER_SELECT), {
+		additionalRevalidateTags: ["all-users"],
+	});

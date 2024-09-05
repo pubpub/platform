@@ -21,7 +21,7 @@ import {
 	tsRestHandleErrors,
 	updatePub,
 } from "~/lib/server";
-import { emailUser } from "~/lib/server/email";
+import { emailUser } from "~/lib/server/_legacy-intergration-email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
 import { findOrCreateUser } from "~/lib/server/user";
@@ -37,7 +37,7 @@ const handler = createNextHandler(
 	{
 		auth: async ({ headers }) => {
 			const token = getBearerToken(headers.authorization);
-			const user = await validateToken(token);
+			const { user } = await validateToken(token);
 			return { status: 200, body: user };
 		},
 		getPubType: async ({ headers, params }) => {

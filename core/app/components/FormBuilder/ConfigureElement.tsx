@@ -6,8 +6,9 @@ import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import { MarkdownEditor, zodToHtmlInputProps } from "ui/auto-form";
+import { zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
+import { MarkdownEditor } from "ui/editors";
 import { Form, FormField } from "ui/form";
 
 import { useFormBuilder } from "./FormBuilderContext";

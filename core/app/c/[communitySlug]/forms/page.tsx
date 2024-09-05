@@ -1,12 +1,13 @@
 import React from "react";
 import partition from "lodash.partition";
 
+import { MemberRole } from "db/public";
 import { ClipboardPenLine } from "ui/icon";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
+import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContentLayout } from "../ContentLayout";
@@ -14,12 +15,11 @@ import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
 
 export default async function Page({ params: { communitySlug } }) {
-	const loginData = await getLoginData();
-
-	if (!loginData) {
+	const { user } = await getLoginData();
+	if (!user) {
 		return null;
 	}
-	if (!loginData.isSuperAdmin) {
+	if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return null;
 	}
 
@@ -55,7 +55,7 @@ export default async function Page({ params: { communitySlug } }) {
 			};
 		});
 
-	const pubTypes = await getAllPubTypesForCommunity().execute();
+	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
 
 	return (
 		<ContentLayout

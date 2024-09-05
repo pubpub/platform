@@ -17,13 +17,13 @@ export default async function Page({
 		communitySlug: string;
 	};
 }) {
-	const loginData = await getLoginData();
+	const { user } = await getLoginData();
 	const community = await findCommunityBySlug(communitySlug);
-	if (!community || !loginData) {
+	if (!community || !user) {
 		return notFound();
 	}
 
-	const isAdmin = isCommunityAdmin(loginData, community);
+	const isAdmin = isCommunityAdmin(user, community);
 	if (!isAdmin) {
 		return null;
 	}

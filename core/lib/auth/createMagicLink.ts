@@ -1,31 +1,25 @@
+import type { AuthTokenType, UsersId } from "db/public";
+
+import { db } from "~/kysely/database";
 import { env } from "../env/env.mjs";
-import { getServerSupabase } from "../supabaseServer";
-import { XOR } from "../types";
+import { createToken } from "../server/token";
 
-type CreateMagicLinkOptions = {
-	email: string;
-} & XOR<{ path: string }, { url: string }>;
-
-const createSupabaseMagicLink = async (options: CreateMagicLinkOptions) => {
-	const supabase = getServerSupabase();
-
-	const { data, error } = await supabase.auth.admin.generateLink({
-		type: "magiclink",
-		email: options.email,
-		options: {
-			redirectTo: options.path
-				? `${env.NEXT_PUBLIC_PUBPUB_URL}/${options.path}`
-				: options.url,
-		},
-	});
-
-	if (error) {
-		throw error;
-	}
-
-	return data.properties.action_link;
+type NativeMagicLinkOptions = {
+	userId: UsersId;
+	type: AuthTokenType;
+	expiresAt: Date;
+	path: string;
 };
 
-export const createMagicLink = async (options: CreateMagicLinkOptions) => {
-	return createSupabaseMagicLink(options);
+export const createMagicLink = async (options: NativeMagicLinkOptions, trx = db) => {
+	const token = await createToken(
+		{
+			userId: options.userId,
+			type: options.type,
+			expiresAt: options.expiresAt,
+		},
+		trx
+	);
+
+	return `${env.NEXT_PUBLIC_PUBPUB_URL}/magic-link?token=${token}&redirectTo=${encodeURIComponent(options.path)}`;
 };

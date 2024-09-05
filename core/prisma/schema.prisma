@@ -43,10 +43,12 @@ model User {
 }
 
 model Session {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  id        String        @id @default(dbgenerated("gen_random_uuid()"))
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
   expiresAt DateTime
+  /// With what type of token is this session created? Used for determining on a page-by-page basis whether to allow a certain session to access it. For instance, a verify email token/session should not allow you to access the password reset page.
+  type      AuthTokenType @default(generic)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -55,15 +57,27 @@ model Session {
 }
 
 model AuthToken {
-  id        String   @id @default(cuid())
+  id        String        @id @default(dbgenerated("gen_random_uuid()"))
   hash      String
-  createdAt DateTime @default(now())
+  createdAt DateTime      @default(now())
   expiresAt DateTime // Tokens expire within 1 week...
-  isUsed    Boolean  @default(false) // ...or after one use
-  user      User     @relation(fields: [userId], references: [id])
+  isUsed    Boolean       @default(false) // ...or after one use
+  user      User          @relation(fields: [userId], references: [id])
   userId    String
+  type      AuthTokenType @default(generic)
 
   @@map(name: "auth_tokens")
+}
+
+/// @property generic - For most use-cases. This will just authenticate you with a regular session.
+/// @property passwordReset - For resetting your password only
+/// @property signup - For signing up, but also when you're invited to a community
+/// @property verifyEmail - For verifying your email address
+enum AuthTokenType {
+  generic
+  passwordReset
+  signup
+  verifyEmail
 }
 
 model Community {

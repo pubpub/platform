@@ -17,4 +17,5 @@ export const action = defineAction({
 	description: "Sync a PubPub Platform pub to v6",
 	params: { schema: z.object({}).optional() },
 	icon: FileText,
+	superAdminOnly: true,
 });

@@ -109,10 +109,10 @@ export function Evaluate(props: Props) {
 		return upload(props.instanceId, pub.id, fileName);
 	};
 
-	const submissionUrl = pub.values["unjournal:url"] as string;
+	const submissionUrl = pub.values["legacy-unjournal:url"] as string;
 	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
-	const submissionAbstract = pub.values["unjournal:description"] as string;
-	const managersNotes = pub.values["unjournal:managers-notes"] as string;
+	const submissionAbstract = pub.values["legacy-unjournal:description"] as string;
+	const managersNotes = pub.values["legacy-unjournal:managers-notes"] as string;
 	const deadline = getDeadline(props.instanceConfig, props.evaluator);
 
 	return (
