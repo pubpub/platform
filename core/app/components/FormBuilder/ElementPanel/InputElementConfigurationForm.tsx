@@ -158,7 +158,7 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 					control={form.control}
 					name="required"
 					render={({ field }) => (
-						<FormItem className="mb-3 mt-1 flex items-center">
+						<FormItem className="mb-auto mt-1 flex items-center">
 							<FormControl>
 								<Switch
 									className="mr-2 data-[state=checked]:bg-emerald-400"

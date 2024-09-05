@@ -38,7 +38,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				type="button"
 				variant="outline"
 				key={field.id}
-				className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
+				className="flex h-[68px] flex-1 flex-shrink-0 justify-start gap-4 bg-white p-4"
 				onClick={() => {
 					addElement({
 						fieldId: field.id,
@@ -66,12 +66,19 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 		);
 	});
 	return (
-		<Tabs defaultValue="field">
+		<Tabs defaultValue="field" className="flex flex-grow flex-col">
 			<TabsList>
-				<TabsTrigger value="field">Field</TabsTrigger>
-				<TabsTrigger value="structure">Structure</TabsTrigger>
+				<TabsTrigger className="w-full" value="field">
+					Field
+				</TabsTrigger>
+				<TabsTrigger className="w-full" value="structure">
+					Structure
+				</TabsTrigger>
 			</TabsList>
-			<TabsContent value="field">
+			<TabsContent
+				value="field"
+				className="flex flex-grow flex-col data-[state=inactive]:hidden"
+			>
 				<Input
 					type="search"
 					placeholder="Type a field name to search..."
@@ -85,7 +92,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					value={panelState.fieldsFilter ?? ""}
 					className="mb-2"
 				></Input>
-				<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
+				<div className="mb-auto flex max-h-[calc(100vh-300px)] flex-col gap-2 overflow-y-auto">
 					{fieldButtons}
 				</div>
 
@@ -100,8 +107,8 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					Cancel
 				</Button>
 			</TabsContent>
-			<TabsContent value="structure">
-				<div className="flex max-h-[250px] flex-col gap-2 overflow-y-auto">
+			<TabsContent value="structure" className="flex flex-grow flex-col">
+				<div className="mb-auto flex flex-col justify-start gap-2 overflow-y-auto">
 					{Object.values(StructuralFormElement).map((elementType) => {
 						const { Icon, enabled, name } = structuralElements[elementType];
 						if (!enabled) {
@@ -112,7 +119,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 								key={elementType}
 								type="button"
 								variant="outline"
-								className="group flex flex-1 flex-shrink-0 justify-start gap-4 bg-white"
+								className="flex h-[68px] justify-start gap-4 bg-white"
 								onClick={() => {
 									addElement({
 										element: elementType,
@@ -135,7 +142,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				<Button
 					type="button"
 					variant="outline"
-					className="w-full border-slate-950"
+					className="mb-3 w-full border-slate-950"
 					onClick={() => dispatch({ eventName: "cancel" })}
 				>
 					Cancel
