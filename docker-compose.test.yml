@@ -1,16 +1,76 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 
 services:
-    postgres:
+    core:
+        build:
+            context: .
+            args:
+                - PACKAGE=core
+        container_name: core
+        env_file: ./.env.docker-compose
+        environment:
+            #s non secret
+            - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
+            - MAILGUN_SMTP_HOST=smtp.mailgun.org
+            - MAILGUN_SMTP_PORT=465
+            - MAILGUN_SMTP_USERNAME=omitted
+            - NEXT_PUBLIC_PUBPUB_URL=http://localhost:8080
+            - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+            - OTEL_SERVICE_NAME=core.core
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:8080
+            - SUPABASE_URL=http://postgres:54321
+            - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+        networks:
+            - app-network
+        ports:
+            - "30000:3000"
+        depends_on:
+            - postgres
+            - jobs
+        profiles:
+            - test
+
+    jobs:
+        build:
+            context: .
+            args:
+                - PACKAGE=jobs
+        container_name: jobs
+        env_file: ./.env.docker-compose
+        environment:
+            - OTEL_SERVICE_NAME=jobs.jobs
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:8080
+        networks:
+            - app-network
+        depends_on:
+            - postgres
+        profiles:
+            - test
+
+    db:
         image: postgres:15
         environment:
-            POSTGRES_USER: user
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: mydb
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: postgres
         ports:
-            - "5532:5432"
+            - "5432:5432"
         volumes:
             - postgres_data:/var/lib/postgresql/data
+        networks:
+            - app-network
+        profiles:
+            - test
 
     inbucket:
         image: inbucket/inbucket:latest
@@ -18,56 +78,38 @@ services:
             - "55324:9000" # UI
             - "55325:2500" # smtp
             - "55326:1100" # pop3
-
-    app:
-        build:
-            context: .
-            args:
-                - PACKAGE=core
-            target: development # Define this target in your Dockerfile
-        image: core:latest
-        environment:
-            DATABASE_URL: postgres://user:password@postgres:5432/mydb
-        volumes:
-            - ./core:/app
-            - /app/node_modules
-        depends_on:
-            - postgres
-            - inbucket
-        command: >
-            sh -c "pnpm --filter core run test-run"
+        networks:
+            - app-network
         profiles:
-            - dev
             - test
 
-    # app-prod:
-    #     image: your-app-image:latest
+    # app:
+    #     build:
+    #         context: .
+    #         args:
+    #             - PACKAGE=core
+    #         target: development # Define this target in your Dockerfile
+    #     image: core:latest
     #     environment:
     #         DATABASE_URL: postgres://user:password@postgres:5432/mydb
-    #     ports:
-    #         - "3000:3000"
+    #     volumes:
+    #         - ./core:/app
+    #         - /app/node_modules
     #     depends_on:
     #         - postgres
-    #     command: pnpm run start # For production or CI
+    #         - inbucket
+    #     command: >
+    #         sh -c "pnpm --filter core run test-run"
     #     profiles:
-    #         - prod
+    #         - dev
+    #         - test
 
-    worker:
-        build:
-            target: development
-            context: .
-            args:
-                - PACKAGE=jobs
-        image: pubpub-jobs:AA
-        environment:
-            DATABASE_URL: postgres://user:password@postgres:5432/mydb
-        depends_on:
-            - postgres
-        # command: ls && pnpm --filter jobs run  start
-        profiles:
-            - dev
-            - prod
+    #     networks:
+    #         - default
 
 volumes:
     postgres_data:
         driver: local
+
+networks:
+    app-network:

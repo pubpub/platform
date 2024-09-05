@@ -79,6 +79,7 @@ async function main() {
 	const prismaCommunityIds = [unJournalId, crocCrocId];
 
 	logger.info("migrate graphile");
+	console.log(env.DATABASE_URL);
 	const workerUtils = await makeWorkerUtils({
 		connectionString: env.DATABASE_URL,
 	});

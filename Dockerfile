@@ -96,36 +96,38 @@ EXPOSE $PORT
 CMD pnpm start
 
 
-FROM base AS development
+# FROM base AS test-install-deps
 
-ARG PACKAGE
+# ARG PACKAGE
 
-RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && false)
-# Copy the entire app's source code
-# install postgres utilities for scripts
-RUN apk add postgresql
+# RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && false)
+# # Copy the entire app's source code
+# # install postgres utilities for scripts
+# RUN apk add postgresql
 
-# Copy the rest of the source files into the image.
-COPY ./pnpm-lock.yaml ./
+# # Copy the rest of the source files into the image.
+# COPY ./pnpm-lock.yaml ./
 
-# Run the build script.
-RUN pnpm fetch 
+# # Run the build script.
+# RUN pnpm fetch 
 
-COPY . .
+# FROM test-install-deps as development 
 
-RUN pnpm install --frozen-lockfile
+# ADD . ./
 
-RUN echo "Building ${PACKAGE}"
+# RUN pnpm install -r --offline 
 
-# Expose the port on which your app runs
-EXPOSE ${PORT}
+# RUN echo "Setting up ${PACKAGE}"
 
-RUN PACKAGE=${PACKAGE} echo ${PACKAGE}
+# # Expose the port on which your app runs
+# EXPOSE ${PORT}
 
-ENV PACKAGE=${PACKAGE}
+# RUN PACKAGE=${PACKAGE} echo ${PACKAGE}
 
-RUN pnpm p:build
+# ENV PACKAGE=${PACKAGE}
 
-RUN pnpm --filter ${PACKAGE} prisma generate
+# RUN pnpm p:build
 
-CMD pnpm run --filter ${PACKAGE} dev
+# RUN pnpm --filter core prisma generate
+
+# CMD pnpm run --filter ${PACKAGE} dev

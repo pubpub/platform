@@ -137,6 +137,7 @@
 		"@vitejs/plugin-react": "^4.2.1",
 		"autoprefixer": "^10.4.14",
 		"csv-parse": "^5.5.2",
+		"dotenv": "^16.4.5",
 		"dotenv-cli": "^7.2.1",
 		"jsdom": "^24.0.0",
 		"kanel": "^3.8.2",
