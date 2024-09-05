@@ -1,3 +1,5 @@
+import { MemberRole } from "db/public";
+
 import type { OR } from "../types";
 import type { LoginData } from "./loginData";
 
@@ -7,7 +9,7 @@ export const getCommunityRole = (
 ) => {
 	if (loginData?.isSuperAdmin) {
 		// super admins are treated as admins, regardless of their role
-		return "admin";
+		return MemberRole.admin;
 	}
 
 	const isIdentifiedWithCommunityId = communityIdentifier.id !== undefined;
@@ -49,5 +51,5 @@ export const isCommunityAdmin = (
 	}
 
 	const role = getCommunityRole(loginData, communityIdentifier);
-	return role === "admin";
+	return role === MemberRole.admin;
 };

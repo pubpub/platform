@@ -20,6 +20,5 @@ export const action = defineAction({
 			.optional(),
 	},
 	icon: FileText,
+	superAdminOnly: true,
 });
-
-// export { run } from "./run";

@@ -1,7 +1,6 @@
-import { MutableRefObject, useCallback, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useCallback, useState } from "react";
 
-import { Communities } from "db/public";
+import type { Communities } from "db/public";
 import { Button } from "ui/button";
 import { cn } from "utils";
 

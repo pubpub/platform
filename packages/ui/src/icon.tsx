@@ -1,5 +1,6 @@
 export {
 	Activity,
+	AlertCircle,
 	Archive,
 	ArchiveRestore,
 	ArrowRight,

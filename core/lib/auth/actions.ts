@@ -2,26 +2,25 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { renderAsync } from "@react-email/render";
-import { PasswordReset } from "emails";
+import { captureException } from "@sentry/nextjs";
 import { z } from "zod";
 
-import type { Communities, Members, Users } from "db/public";
+import type { Communities, Members, Users, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
-import type { DefinitelyHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, Prettify } from "../types";
+import { db } from "~/kysely/database";
 import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { lucia, validateRequest } from "~/lib/auth/lucia";
-import { createPasswordHash, validatePassword } from "~/lib/auth/password";
+import { validatePassword } from "~/lib/auth/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { getUser, setUserPassword } from "~/lib/server/user";
+import { getUser, setUserPassword, updateUser } from "~/lib/server/user";
 import { getServerSupabase } from "~/lib/supabaseServer";
 import { env } from "../env/env.mjs";
-import { smtpclient } from "../server/mailgun";
-import { createToken, invalidateTokensForUser } from "../server/token";
+import * as Email from "../server/email";
+import { invalidateTokensForUser } from "../server/token";
 import { formatSupabaseError } from "../supabase";
-import { createMagicLink } from "./createMagicLink";
 import { getLoginData } from "./loginData";
 
 const schema = z.object({
@@ -206,36 +205,25 @@ async function supabaseSendForgotPasswordMail(props: { email: string }) {
 	};
 }
 
-const FIFTEEN_MINUTES = 1000 * 60 * 15;
-
 async function luciaSendForgotPasswordMail(props: {
 	user: NonNullable<Awaited<ReturnType<typeof getUserWithPasswordHash>>>;
 }) {
-	const magicLink = await createMagicLink({
-		type: AuthTokenType.passwordReset,
-		expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
-		path: "/reset",
-		userId: props.user.id,
-	});
+	const result = await Email.passwordReset({
+		id: props.user.id,
+		email: props.user.email,
+		firstName: props.user.firstName,
+		lastName: props.user.lastName,
+	}).send();
 
-	const email = await renderAsync(
-		PasswordReset({
-			firstName: props.user.firstName,
-			lastName: props.user.lastName ?? undefined,
-			resetPasswordLink: magicLink,
-		})
-	);
-
-	const send = await smtpclient.sendMail({
-		from: "PubPub <noreply@pubpub.com>",
-		to: props.user.email,
-		subject: "Reset your password",
-		html: email,
-	});
+	if ("error" in result) {
+		return {
+			error: result.error,
+		};
+	}
 
 	return {
 		success: true,
-		report: "Password reset email sent!",
+		report: result.report ?? "Password reset email sent!",
 	};
 }
 
@@ -346,4 +334,103 @@ export const resetPassword = defineServerAction(async function resetPassword({
 	}
 
 	return luciaResetPassword({ user: fullUser, password: parsed.data.password });
+});
+
+export const signup = defineServerAction(async function signup(props: {
+	id: UsersId;
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+	redirect: string | null;
+}) {
+	const { user, session } = await getLoginData({
+		allowedSessions: [AuthTokenType.signup],
+	});
+
+	if (!user) {
+		captureException(new Error("User tried to signup without existing"), {
+			user: {
+				id: props.id,
+				firstName: props.firstName,
+				lastName: props.lastName,
+				email: props.email,
+			},
+		});
+		return {
+			error: "Something went wrong. Please try again later.",
+		};
+	}
+
+	if (user.id !== props.id) {
+		captureException(new Error("User tried to signup with a different id"), {
+			user: {
+				id: props.id,
+				firstName: props.firstName,
+				lastName: props.lastName,
+				email: props.email,
+			},
+		});
+		return {
+			error: "Something went wrong. Please try again later.",
+		};
+	}
+
+	const trx = db.transaction();
+
+	const result = await trx.execute(async (trx) => {
+		const newUser = await updateUser(
+			{
+				id: props.id,
+				firstName: props.firstName,
+				lastName: props.lastName,
+				email: props.email,
+			},
+			trx
+		);
+
+		await setUserPassword(
+			{
+				userId: props.id,
+				password: props.password,
+			},
+			trx
+		);
+
+		if (newUser.email !== user.email) {
+			return { ...newUser, needsVerification: true };
+			// TODO: send email verification
+		}
+
+		return newUser;
+	});
+
+	if ("needsVerification" in result && result.needsVerification) {
+		return {
+			success: true,
+			report: "Please check your email to verify your account!",
+			needsVerification: true,
+		};
+	}
+
+	// log them in
+
+	const [invalidatedSessions, invalidatedTokens] = await Promise.all([
+		lucia.invalidateUserSessions(user.id),
+		invalidateTokensForUser(user.id, [AuthTokenType.signup]),
+	]);
+
+	// lucia authentication
+	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
+	const newSessionCookie = lucia.createSessionCookie(newSession.id);
+	cookies().set(newSessionCookie.name, newSessionCookie.value, newSessionCookie.attributes);
+
+	// for good measure, delete the supabse cookies too
+	cookies().delete(TOKEN_NAME);
+	cookies().delete(REFRESH_NAME);
+
+	if (props.redirect) {
+		redirect(props.redirect);
+	}
+	redirectUser();
 });

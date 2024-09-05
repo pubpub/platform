@@ -2,11 +2,12 @@ import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { GetPubTypeResponseBody } from "contracts";
-import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
+import type { CommunitiesId, FormsId, PubFieldsId, PubTypesId } from "db/public";
 
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
+import { XOR } from "../types";
 import { autoCache } from "./cache/autoCache";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { NotFoundError } from "./errors";
@@ -117,3 +118,25 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 			.$narrowType<{ fields: PubFieldsId[] }>()
 	);
 };
+
+export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>) =>
+	autoCache(
+		db
+			.selectFrom("pub_types")
+			.innerJoin("forms", "forms.pubTypeId", "pub_types.id")
+			.$if(Boolean(props.slug), (eb) => eb.where("forms.slug", "=", props.slug!))
+			.$if(Boolean(props.id), (eb) => eb.where("forms.id", "=", props.id!))
+			.select([
+				"pub_types.id",
+				"pub_types.name",
+				"pub_types.description",
+				(eb) =>
+					eb
+						.selectFrom("_PubFieldToPubType")
+						.whereRef("B", "=", "pub_types.id")
+						.select((eb) =>
+							eb.fn.coalesce(eb.fn.agg("array_agg", ["A"]), sql`'{}'`).as("fields")
+						)
+						.as("fields"),
+			])
+	);

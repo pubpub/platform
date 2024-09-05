@@ -4,21 +4,29 @@
 	"main": "dist/emails.cjs.js",
 	"private": true,
 	"scripts": {
-		"dev": "email dev -d src -p 3003",
+		"dev": "cp .env.development ./node_modules/react-email/ && pnpm email dev -d src -p 3003",
+		"type-check": "tsc --noEmit",
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"lint": "eslint **/*.tsx",
 		"export": "email export"
 	},
 	"devDependencies": {
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "^20",
+		"dotenv-cli": "^7.2.1",
 		"tsconfig": "workspace:*"
 	},
 	"dependencies": {
 		"@react-email/components": "0.0.14",
 		"@types/react": "^18.2",
 		"browserslist": "^4.22.2",
+		"db": "workspace:*",
+		"eslint": "^8.57.0",
 		"react": "18.2.0",
-		"react-email": "2.0.0"
+		"react-email": "2.0.0",
+		"tsconfig": "workspace:*",
+		"typescript": "^5.4.2"
 	},
 	"preconstruct": {
 		"entrypoints": [
@@ -27,5 +35,12 @@
 	},
 	"files": [
 		"dist"
-	]
+	],
+	"eslintConfig": {
+		"extends": [
+			"@pubpub/eslint-config/base",
+			"@pubpub/eslint-config/react"
+		]
+	},
+	"prettier": "@pubpub/prettier-config"
 }

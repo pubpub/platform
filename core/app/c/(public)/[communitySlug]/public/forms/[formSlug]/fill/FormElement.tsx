@@ -131,6 +131,7 @@ const Vector3Element = ({ label, name }: ElementProps) => {
 					<FormControl>
 						<Confidence
 							{...field}
+							value={Array.isArray(field.value) ? field.value : [0, 0, 0]}
 							min={0}
 							max={100}
 							onValueChange={(event) => field.onChange(event)}

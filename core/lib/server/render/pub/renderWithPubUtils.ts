@@ -1,4 +1,4 @@
-import type { MembersId, UsersId } from "db/public";
+import type { MembersId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
@@ -70,7 +70,7 @@ export const renderFormInviteLink = async (
 	pubId?: string
 ) => {
 	await addMemberToForm({ memberId, slug: formSlug });
-	return createFormInviteLink({ userId, formSlug, pubId });
+	return createFormInviteLink({ userId, formSlug, pubId: pubId as PubsId });
 };
 
 export const renderMemberFields = async ({

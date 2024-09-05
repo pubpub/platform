@@ -24,4 +24,5 @@ export const action = defineAction({
 			.optional(),
 	},
 	icon: Terminal,
+	superAdminOnly: true,
 });
