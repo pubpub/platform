@@ -7,10 +7,10 @@ import { makeExtractPageMetadata } from "./html";
  */
 const derivePubFromCsl = (csl: any) => {
 	return {
-		"unjournal:description": csl.abstract,
-		"unjournal:doi": csl.DOI,
-		"unjournal:title": csl.title,
-		"unjournal:url": csl.resource?.primary?.URL ?? csl.URL,
+		"legacy-unjournal:description": csl.abstract,
+		"legacy-unjournal:doi": csl.DOI,
+		"legacy-unjournal:title": csl.title,
+		"legacy-unjournal:url": csl.resource?.primary?.URL ?? csl.URL,
 	};
 };
 
@@ -19,10 +19,10 @@ const derivePubFromCsl = (csl: any) => {
  */
 const derivePubFromCrossrefWork = (work: any) => {
 	return {
-		"unjournal:description": work.abstract,
-		"unjournal:doi": work.DOI,
-		"unjournal:title": Array.isArray(work.title) ? work.title[0] : work.title,
-		"unjournal:url": work.resource?.primary?.URL ?? work.URL,
+		"legacy-unjournal:description": work.abstract,
+		"legacy-unjournal:doi": work.DOI,
+		"legacy-unjournal:title": Array.isArray(work.title) ? work.title[0] : work.title,
+		"legacy-unjournal:url": work.resource?.primary?.URL ?? work.URL,
 	};
 };
 
@@ -68,12 +68,12 @@ export const makePubFromDoi = async (doi: string) => {
 // Extraction rules for HTML metadata.
 const extractPageMetadata = makeExtractPageMetadata(
 	{
-		mapTo: "unjournal:title",
+		mapTo: "legacy-unjournal:title",
 		rank: 0,
 		tagName: "title",
 	},
 	{
-		mapTo: "unjournal:title",
+		mapTo: "legacy-unjournal:title",
 		rank: 1,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -81,7 +81,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "unjournal:title",
+		mapTo: "legacy-unjournal:title",
 		rank: 2,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -89,7 +89,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "unjournal:description",
+		mapTo: "legacy-unjournal:description",
 		rank: 0,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -97,7 +97,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "unjournal:description",
+		mapTo: "legacy-unjournal:description",
 		rank: 1,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -105,7 +105,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "unjournal:doi",
+		mapTo: "legacy-unjournal:doi",
 		rank: 0,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -113,7 +113,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "unjournal:doi",
+		mapTo: "legacy-unjournal:doi",
 		rank: 1,
 		tagName: "meta",
 		tagTypeAttr: "name",
@@ -121,7 +121,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "unjournal:url",
+		mapTo: "legacy-unjournal:url",
 		rank: 0,
 		tagName: "meta",
 		tagTypeAttr: "property",
@@ -129,7 +129,7 @@ const extractPageMetadata = makeExtractPageMetadata(
 		tagValueAttr: "content",
 	},
 	{
-		mapTo: "unjournal:url",
+		mapTo: "legacy-unjournal:url",
 		rank: 1,
 		tagName: "link",
 		tagTypeAttr: "rel",
@@ -168,16 +168,18 @@ export const makePubFromUrl = async (url: string) => {
 	}
 	// Extract metadata directly from the page's HTML.
 	const pub = await extractPageMetadata(url);
-	if (typeof pub["unjournal:url"] === "undefined") {
-		pub["unjournal:url"] = url;
+	if (typeof pub["legacy-unjournal:url"] === "undefined") {
+		pub["legacy-unjournal:url"] = url;
 	}
-	if (typeof pub["unjournal:doi"] === "string") {
-		pub["unjournal:doi"] = normalizeDoi(pub["unjournal:doi"]);
+	if (typeof pub["legacy-unjournal:doi"] === "string") {
+		pub["legacy-unjournal:doi"] = normalizeDoi(pub["legacy-unjournal:doi"]);
 		// If a DOI was found in the HTML, try to fetch pub from doi.org.
-		Object.assign(pub, await makePubFromDoi(pub["unjournal:doi"]));
+		Object.assign(pub, await makePubFromDoi(pub["legacy-unjournal:doi"]));
 	}
-	if (typeof pub["unjournal:description"] === "string") {
-		pub["unjournal:description"] = replaceHtmlEntites(pub["unjournal:description"]);
+	if (typeof pub["legacy-unjournal:description"] === "string") {
+		pub["legacy-unjournal:description"] = replaceHtmlEntites(
+			pub["legacy-unjournal:description"]
+		);
 	}
 	return pub;
 };

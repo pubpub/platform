@@ -126,6 +126,10 @@ export type Action<
 	 * and configuring this action
 	 */
 	experimental?: boolean;
+	/**
+	 * This action is only available to super admins
+	 */
+	superAdminOnly?: boolean;
 };
 
 export const defineAction = <

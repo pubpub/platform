@@ -7,7 +7,7 @@
 import type { ReactNode } from "react";
 import type { FieldValues } from "react-hook-form";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -18,7 +18,6 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { PubsId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
-import { Button } from "ui/button";
 import { Form } from "ui/form";
 import { cn } from "utils";
 
@@ -86,6 +85,38 @@ const buildDefaultValues = (
 	return defaultValues;
 };
 
+const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
+	return Type.Object(
+		Object.fromEntries(
+			elements
+				// only add pubfields to the schema
+				.filter((e) => e.type === ElementType.pubfield)
+				.map(({ slug, schemaName }) => {
+					if (!schemaName) {
+						return [slug, undefined];
+					}
+
+					const schema = getJsonSchemaByCoreSchemaType(schemaName);
+					if (!schema) {
+						return [slug, undefined];
+					}
+
+					if (schema.type !== "string") {
+						return [slug, Type.Optional(schema)];
+					}
+
+					// this allows for empty strings, which happens when you enter something
+					// in an input field and then delete it
+					// TODO: reevaluate whether this should be "" or undefined
+					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
+						error: schema.error ?? "Invalid value",
+					});
+					return [slug, schemaWithAllowedEmpty];
+				})
+		)
+	);
+};
+
 export const ExternalFormWrapper = ({
 	pub,
 	elements,
@@ -97,85 +128,88 @@ export const ExternalFormWrapper = ({
 	children: ReactNode;
 	className?: string;
 }) => {
-	const [buttonElements, formElements] = partition(elements, (e) => isButtonElement(e));
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.upsertPubValues);
-	const handleSubmit = async (
-		values: FieldValues,
-		evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
-		autoSave = false
-	) => {
-		const fields = preparePayload({
-			formElements,
-			formValues: values,
-		});
-		const submitButtonId = evt?.nativeEvent.submitter?.id;
-		const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
-		const stageId = submitButtonConfig?.stageId ?? undefined;
-		const result = await runUpdatePub({
-			pubId: pub.id as PubsId,
-			fields,
-			stageId,
-		});
-		if (didSucceed(result)) {
-			const newParams = new URLSearchParams(params);
-			const currentTime = `${new Date().getTime()}`;
-			if (!autoSave && isComplete(formElements, values)) {
-				const submitButtonId = evt?.nativeEvent.submitter?.id;
-				if (submitButtonId) {
-					newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
-				}
-				router.push(`${pathname}?${newParams.toString()}`);
-				return;
-			}
-			newParams.set(SAVE_STATUS_QUERY_PARAM, currentTime);
-			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
-		}
-	};
-	const schema = Type.Object(
-		Object.fromEntries(
-			formElements
-				// only add pubfields to the schema
-				.filter((e) => e.type === ElementType.pubfield)
-				.map((e) => [
-					e.slug as string | undefined,
-					e.schemaName
-						? Type.Optional(getJsonSchemaByCoreSchemaType(e.schemaName))
-						: undefined,
-				])
-		)
+
+	const [buttonElements, formElements] = useMemo(
+		() => partition(elements, (e) => isButtonElement(e)),
+		[elements]
 	);
+
+	const handleSubmit = useCallback(
+		async (
+			values: FieldValues,
+			evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
+			autoSave = false
+		) => {
+			const fields = preparePayload({
+				formElements,
+				formValues: values,
+			});
+			const submitButtonId = evt?.nativeEvent.submitter?.id;
+			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
+			const stageId = submitButtonConfig?.stageId ?? undefined;
+			const result = await runUpdatePub({
+				pubId: pub.id as PubsId,
+				fields,
+				stageId,
+			});
+			if (didSucceed(result)) {
+				const newParams = new URLSearchParams(params);
+				const currentTime = `${new Date().getTime()}`;
+				if (!autoSave && isComplete(formElements, values)) {
+					const submitButtonId = evt?.nativeEvent.submitter?.id;
+					if (submitButtonId) {
+						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
+					}
+					router.push(`${pathname}?${newParams.toString()}`);
+					return;
+				}
+				newParams.set(SAVE_STATUS_QUERY_PARAM, currentTime);
+				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+			}
+		},
+		[formElements, router, pathname, runUpdatePub, pub]
+	);
+
+	const resolver = useMemo(
+		() => typeboxResolver(createSchemaFromElements(formElements)),
+		[formElements]
+	);
+
 	const formInstance = useForm({
-		resolver: typeboxResolver(schema),
+		resolver,
 		defaultValues: buildDefaultValues(formElements, pub.values),
+		shouldFocusError: false,
 	});
+
 	const isSubmitting = formInstance.formState.isSubmitting;
 
-	const handleAutoSave = (
-		values: FieldValues,
-		evt: React.BaseSyntheticEvent<SubmitEvent> | undefined
-	) => {
-		// Don't auto save while editing the user ID field. the query params
-		// will clash and it will be a bad time :(
-		const { name } = evt?.target as HTMLInputElement;
-		if (isUserSelectField(name, formElements)) {
-			return;
-		}
-		if (saveTimer) {
-			clearTimeout(saveTimer);
-		}
-		const newTimer = setTimeout(async () => {
-			// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
-			// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
-			if (formInstance.formState.isValid || saveTimer === undefined) {
-				handleSubmit(values, evt, true);
+	const handleAutoSave = useCallback(
+		(values: FieldValues, evt: React.BaseSyntheticEvent<SubmitEvent> | undefined) => {
+			// Don't auto save while editing the user ID field. the query params
+			// will clash and it will be a bad time :(
+			const { name } = evt?.target as HTMLInputElement;
+			if (isUserSelectField(name, formElements)) {
+				return;
 			}
-		}, SAVE_WAIT_MS);
-		setSaveTimer(newTimer);
-	};
+			if (saveTimer) {
+				clearTimeout(saveTimer);
+			}
+			const newTimer = setTimeout(async () => {
+				// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
+				// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
+				if (formInstance.formState.isValid || saveTimer === undefined) {
+					handleSubmit(values, evt, true);
+				}
+			}, SAVE_WAIT_MS);
+			setSaveTimer(newTimer);
+		},
+		[formElements, saveTimer, handleSubmit]
+	);
 
 	return (
 		<Form {...formInstance}>

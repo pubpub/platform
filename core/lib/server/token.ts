@@ -2,12 +2,13 @@ import crypto from "crypto";
 
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { AuthTokensId, UsersId } from "db/public";
+import type { AuthTokensId, Users, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { UnauthorizedError } from "./errors";
+import { SAFE_USER_SELECT } from "./user";
 
 const hashAlgorithm = "sha3-512";
 const encoding = "base64url";
@@ -26,7 +27,8 @@ export class InvalidTokenError extends UnauthorizedError {
 	constructor(
 		message: string,
 		public reason: TokenFailureReason,
-		public tokenType: AuthTokenType | null
+		public tokenType: AuthTokenType | null,
+		public user?: Omit<Users, "passwordHash"> | null
 	) {
 		super(message);
 	}
@@ -71,12 +73,6 @@ export const validateToken = async (token: string, type?: AuthTokenType, trx = d
 		);
 	}
 
-	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
-	// different expiration periods
-	if (expiresAt < new Date()) {
-		throw new InvalidTokenError("Expired token", TokenFailureReason.expired, authTokenType);
-	}
-
 	// Finally, hash the token string input and do a constant time comparison between this value and the hash retrieved from the database
 	const inputHash = createHash(tokenString).digest();
 	const dbHash = Buffer.from(hash, encoding);
@@ -87,6 +83,20 @@ export const validateToken = async (token: string, type?: AuthTokenType, trx = d
 	// length) and because our tokens are all the same length anyways, unlike a password.
 	if (!crypto.timingSafeEqual(dbHash, inputHash)) {
 		throw new InvalidTokenError("Invalid token", TokenFailureReason.invalid, authTokenType);
+	}
+
+	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
+	// different expiration periods
+	// sometimes tokens are valid, just expired, in which case we might want to do something with them
+	if (expiresAt < new Date()) {
+		throw new InvalidTokenError(
+			"Expired token",
+			TokenFailureReason.expired,
+			authTokenType,
+			// we pass the user here so that e.g. pages can still get the user from the token
+			// to e.g. send them a new token by email
+			user
+		);
 	}
 
 	// If we haven't thrown by now, we've authenticated the user associated with the token
@@ -103,6 +113,25 @@ export const validateToken = async (token: string, type?: AuthTokenType, trx = d
 	return { user, authTokenType };
 };
 
+/**
+ * Same as validateToken, but catches InvalidTokenError and returns the error object
+ */
+export const validateTokenSafe = async (token: string, type?: AuthTokenType, trx = db) => {
+	try {
+		const result = await validateToken(token, type, trx);
+		return {
+			isValid: true as const,
+			...result,
+		};
+	} catch (e) {
+		if (e instanceof InvalidTokenError) {
+			const { reason, user, message, tokenType } = e;
+			return { isValid: false as const, reason, user, message, tokenType };
+		}
+		throw e;
+	}
+};
+
 const getTokenBase = (trx = db) =>
 	trx
 		.selectFrom("auth_tokens")
@@ -117,7 +146,7 @@ const getTokenBase = (trx = db) =>
 			jsonObjectFrom(
 				eb
 					.selectFrom("users")
-					.selectAll("users")
+					.select(SAFE_USER_SELECT)
 					.whereRef("users.id", "=", "auth_tokens.userId")
 			).as("user"),
 		]);

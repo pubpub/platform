@@ -128,18 +128,24 @@ export const addMemberToForm = async (
 export const createFormInvitePath = ({
 	formSlug,
 	communitySlug,
-	email,
 	pubId,
 }: {
 	formSlug: string;
 	communitySlug: string;
-	email: string;
 	pubId?: string;
 }) => {
-	return `/c/${communitySlug}/public/forms/${formSlug}/fill?email=${email}${pubId ? `&pubId=${pubId}` : ""}`;
+	return `/c/${communitySlug}/public/forms/${formSlug}/fill${pubId ? `?pubId=${pubId}` : ""}` as const;
 };
 
-const createExpiresAtDate = (days = 7) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+/**
+ * @param days  - The number of days before the link expires
+ */
+const createExpiresAtDate = (
+	/**
+	 * @default 7
+	 */
+	days = 7
+) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
 export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }> &
 	XOR<{ email: string }, { userId: UsersId }> & { pubId?: PubsId; expiresInDays?: number };
@@ -171,7 +177,6 @@ export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 	const formPath = createFormInvitePath({
 		formSlug: form.slug,
 		communitySlug: communitySlug,
-		email: user.email,
 		pubId: props.pubId,
 	});
 

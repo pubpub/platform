@@ -1,3 +1,4 @@
+import type { PubTypesId } from "db/public";
 import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
@@ -6,6 +7,7 @@ import type { StagePub } from "~/lib/db/queries";
 import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { getStage, getStageActions } from "~/lib/db/queries";
+import { getPubType } from "~/lib/server";
 import { PubChildrenTable } from "./PubChildrenTable";
 
 async function PubChildrenTableWrapper({
@@ -16,11 +18,12 @@ async function PubChildrenTableWrapper({
 	members: CommunityMemberPayload[];
 }) {
 	const pubChildren = pub.children.map(async (child) => {
-		const [stageActionInstances, stage] =
+		const [stageActionInstances, stage, pubType] =
 			child.stages.length > 0
 				? await Promise.all([
 						getStageActions(child.stages[0].stageId),
 						getStage(child.stages[0].stageId),
+						getPubType(child.pubTypeId as PubTypesId).executeTakeFirst(),
 					])
 				: [null, null];
 		const assigneeUser = members.find((m) => m.userId === child.assigneeId)?.user;
@@ -29,7 +32,8 @@ async function PubChildrenTableWrapper({
 			id: child.id,
 			title:
 				(child.values.find((value) => value.field.name === "Title")?.value as string) ||
-				"Evaluation",
+				pubType?.name ||
+				"Child",
 			stage: child.stages[0]?.stage.name,
 			assignee: assigneeUser ? `${assigneeUser.firstName} ${assigneeUser.lastName}` : null,
 			created: new Date(child.createdAt),

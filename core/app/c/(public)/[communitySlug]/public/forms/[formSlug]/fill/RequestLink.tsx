@@ -8,23 +8,23 @@ import { Mail } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "../actions";
+import * as actions from "./actions";
 
 export const RequestLink = ({
 	formSlug,
 	communitySlug,
-	email,
+	token,
 	pubId,
 }: {
 	formSlug: string;
 	communitySlug: string;
-	email: string;
+	token: string;
 	pubId: PubsId;
 }) => {
 	const useRequestLink = useServerAction(actions.inviteUserToForm);
 
 	const requestLink = useCallback(async () => {
-		const link = await useRequestLink({ slug: formSlug, email, pubId });
+		const link = await useRequestLink({ slug: formSlug, token, pubId });
 
 		if (link && link.error) {
 			return;
@@ -34,7 +34,7 @@ export const RequestLink = ({
 			title: "Link sent",
 			description: "Successfully requested new link",
 		});
-	}, [email, formSlug, communitySlug, pubId]);
+	}, [token, formSlug, communitySlug, pubId]);
 
 	return (
 		<Button
