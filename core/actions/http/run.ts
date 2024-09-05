@@ -28,7 +28,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 
 	const finalOutputMap = args?.outputMap ?? config?.outputMap ?? [];
 
-	const actualBody = body && method !== "GET" ? body : undefined;
+	const actualBody = body && method !== "GET" ? JSON.stringify(JSON.parse(body)) : undefined;
 
 	const res = await fetch(url, {
 		method: method,

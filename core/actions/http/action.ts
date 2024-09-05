@@ -30,21 +30,6 @@ export const action = defineAction({
 					.describe("Response|Expected type to return"),
 				body: z
 					.string()
-					// this makes sure that the body is valid JSON
-					.transform((str, ctx) => {
-						if (!str) {
-							return undefined;
-						}
-						try {
-							// we just want to check if it can be parsed
-							const parsed = JSON.parse(str);
-							return str;
-						} catch (e) {
-							ctx.addIssue({ code: "custom", message: "Invalid JSON" });
-							return z.NEVER;
-						}
-					})
-					.optional()
 					.describe(
 						"Body|Body to send with the request. Only sent for non-GET requests."
 					),
