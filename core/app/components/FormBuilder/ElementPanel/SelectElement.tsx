@@ -1,3 +1,4 @@
+import { useFormContext } from "react-hook-form";
 import { componentsBySchema, defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import { ElementType, StructuralFormElement } from "db/public";
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import type { PanelState } from "../types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
+import { FormElementData, isFieldInput } from "../types";
 
 export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 	const fields = usePubFieldContext();
@@ -17,7 +19,11 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 	const { elementsCount, dispatch, addElement } = useFormBuilder();
 
 	const fieldButtons = Object.values(fields).map((field) => {
+		const { getValues } = useFormContext();
+		const elements: FormElementData[] = getValues()["elements"];
+		const usedFields = elements.map((e) => e.fieldId);
 		if (
+			usedFields.includes(field.id) ||
 			field.isArchived ||
 			(panelState.fieldsFilter &&
 				!`${field.name} ${field.slug} ${field.schemaName}`.includes(
