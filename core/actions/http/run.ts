@@ -28,6 +28,8 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 
 	const finalOutputMap = args?.outputMap ?? config?.outputMap ?? [];
 
+	const actualBody = body && method !== "GET" ? body : undefined;
+
 	const res = await fetch(url, {
 		method: method,
 		headers: {
@@ -35,7 +37,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			"Content-Type": "application/json",
 		},
 
-		body: body && method !== "GET" ? body : undefined,
+		body: actualBody,
 		cache: "no-store",
 	});
 
