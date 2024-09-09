@@ -2,10 +2,13 @@ import * as React from "react";
 
 import { cn } from "utils";
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value"> {
+	value?: React.InputHTMLAttributes<HTMLInputElement>["value"] | null;
+}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
 	({ className, type, ...props }, ref) => {
+		const newProps = { ...props, value: props.value ?? undefined };
 		return (
 			<input
 				type={type}
@@ -14,7 +17,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 					className
 				)}
 				ref={ref}
-				{...props}
+				{...newProps}
 			/>
 		);
 	}

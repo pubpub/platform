@@ -27,11 +27,11 @@ import { ChevronDown } from "ui/icon";
 import { Input } from "ui/input";
 import { cn } from "utils";
 
-import type { ButtonElement } from "./types";
-import { useCommunity } from "../providers/CommunityProvider";
-import { useFormBuilder } from "./FormBuilderContext";
-import { ButtonOption } from "./SubmissionSettings";
-import { isButtonElement } from "./types";
+import type { ButtonElement } from "../types";
+import { useCommunity } from "../../providers/CommunityProvider";
+import { useFormBuilder } from "../FormBuilderContext";
+import { ButtonOption } from "../SubmissionSettings";
+import { isButtonElement } from "../types";
 
 const DEFAULT_BUTTON = {
 	label: "Submit",
