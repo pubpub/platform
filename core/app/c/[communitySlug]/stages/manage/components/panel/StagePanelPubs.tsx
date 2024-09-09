@@ -45,7 +45,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 						<div className="flex items-center gap-x-2">
 							<PubsRunActionDropDownMenu
 								actionInstances={stageActionInstances}
-								pub={pub}
+								pubId={pub.id as PubsId}
 								stage={stage}
 								pageContext={props.pageContext}
 							/>
