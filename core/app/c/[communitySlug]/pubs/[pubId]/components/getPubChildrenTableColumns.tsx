@@ -115,13 +115,11 @@ export const getPubChildrenTableColumns = (
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
 			accessorKey: "createdAt",
-			cell: ({ getValue }) =>
-					<time dateTime={new Date().toString()} suppressHydrationWarning>
-						{new Date(getValue<string>()).toLocaleString(
-							undefined,
-							createdAtDateOptions
-						)}
-					</time>
+			cell: ({ getValue }) => (
+				<time dateTime={new Date().toString()} suppressHydrationWarning>
+					{new Date(getValue<string>()).toLocaleString(undefined, createdAtDateOptions)}
+				</time>
+			),
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
