@@ -109,7 +109,12 @@ async function PubChildrenTableWrapper(props: Props) {
 	const pubChildren = await getPubChildrenTable(
 		props.parentPubId,
 		props.pageContext.searchParams.selectedPubType as PubTypesId
-	).executeTakeFirstOrThrow();
+	).executeTakeFirst();
+
+	if (!pubChildren) {
+		return <PubChildrenTable childPubRows={[]} childPubRunActionDropdowns={[]} />;
+	}
+
 	const selectedPubTypeId = pubChildren.active_pubtype?.id;
 
 	const selectedPubType = pubChildren.active_pubtype;
