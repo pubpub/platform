@@ -9,19 +9,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createPortal } from "react-dom";
 import { useFieldArray, useForm } from "react-hook-form";
 
-import { FormAccessType, Stages } from "db/public";
+import type { Stages } from "db/public";
 import { logger } from "logger";
-import {
-	Form,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form";
-import { CircleCheck } from "ui/icon";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { Button } from "ui/button";
+import { Form, FormControl, FormField, FormItem } from "ui/form";
+import { CircleCheck, X } from "ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
@@ -32,7 +24,7 @@ import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
-import { FormBuilderProvider } from "./FormBuilderContext";
+import { FormBuilderProvider, useFormBuilder } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema, isButtonElement } from "./types";
 
@@ -101,6 +93,29 @@ const elementPanelTitles: Record<PanelState["state"], string> = {
 	editingButton: "Edit Submission Button",
 };
 
+const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
+	const { dispatch } = useFormBuilder();
+	return (
+		<>
+			<div className="flex items-center justify-between">
+				<div className="text-sm uppercase text-slate-500">{elementPanelTitles[state]}</div>
+				{state !== "initial" && (
+					<Button
+						aria-label="Cancel"
+						variant="ghost"
+						size="sm"
+						className=""
+						onClick={() => dispatch({ eventName: "cancel" })}
+					>
+						<X size={16} className="text-muted-foreground" />
+					</Button>
+				)}
+			</div>
+			<hr />
+		</>
+	);
+};
+
 type Props = {
 	pubForm: PubForm;
 	id: string;
@@ -126,8 +141,8 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		resolver: zodResolver(formBuilderSchema),
 		values: {
 			elements: pubForm.elements.map((e) => {
-				// Do not include schemaName or slug here
-				const { schemaName, slug, ...rest } = e;
+				// Do not include slug here
+				const { slug, ...rest } = e;
 				return rest;
 			}),
 			access: pubForm.access,
@@ -215,7 +230,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 						? elements[panelState.selectedElementIndex]
 						: undefined
 				}
-				elementsCount={elements.filter((e) => !isButtonElement(e)).length}
+				elementsCount={elements.length}
 				openConfigPanel={(index: number) =>
 					dispatch({ eventName: "edit", selectedElementIndex: index })
 				}
@@ -244,112 +259,73 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 										})
 									)}
 								>
-									<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
-										<DndContext
-											modifiers={[
-												restrictToVerticalAxis,
-												restrictToParentElement,
-											]}
-											onDragEnd={(event) => {
-												const { active, over } = event;
-												if (over && active.id !== over?.id) {
-													const activeIndex =
-														active.data.current?.sortable?.index;
-													const overIndex =
-														over.data.current?.sortable?.index;
-													if (
-														activeIndex !== undefined &&
-														overIndex !== undefined
-													) {
-														move(activeIndex, overIndex);
-													}
-												}
-											}}
-										>
-											<SortableContext
-												items={elements}
-												strategy={verticalListSortingStrategy}
-											>
-												{elements
-													.filter((e) => !isButtonElement(e))
-													.map((element, index) => (
-														<FormElement
-															key={element.id}
-															element={element}
-															index={index}
-															isEditing={
-																panelState.selectedElementIndex ===
-																index
+									<FormField
+										control={form.control}
+										name="elements"
+										render={() => (
+											<>
+												<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
+													<DndContext
+														modifiers={[
+															restrictToVerticalAxis,
+															restrictToParentElement,
+														]}
+														onDragEnd={(event) => {
+															const { active, over } = event;
+															if (over && active.id !== over?.id) {
+																const activeIndex =
+																	active.data.current?.sortable
+																		?.index;
+																const overIndex =
+																	over.data.current?.sortable
+																		?.index;
+																if (
+																	activeIndex !== undefined &&
+																	overIndex !== undefined
+																) {
+																	move(activeIndex, overIndex);
+																}
 															}
-															isDisabled={
-																panelState.selectedElementIndex !==
-																	null &&
-																panelState.selectedElementIndex !==
-																	index
-															}
-														></FormElement>
-													))}
-											</SortableContext>
-										</DndContext>
-									</div>
-									<PanelWrapper sidebar={sidebarRef.current}>
-										<FormField
-											control={form.control}
-											name="elements"
-											render={() => (
-												<FormItem className="flex-1">
-													<FormLabel className="mb-4 text-sm uppercase text-slate-500">
-														{elementPanelTitles[panelState.state]}
-													</FormLabel>
-													<hr />
-													<FormControl>
-														<ElementPanel state={panelState} />
-													</FormControl>
-												</FormItem>
-											)}
-										/>
-										<FormField
-											control={form.control}
-											name="access"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-sm uppercase text-slate-500">
-														Access
-													</FormLabel>
-													<hr />
-													<Select
-														onValueChange={field.onChange}
-														defaultValue={field.value}
+														}}
 													>
-														<FormControl>
-															<SelectTrigger>
-																<SelectValue placeholder="Select a type" />
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent>
-															{Object.values(FormAccessType).map(
-																(t) => (
-																	<SelectItem
-																		key={t}
-																		value={t.toString()}
-																	>
-																		<div className="first-letter:capitalize">
-																			{t}
-																		</div>
-																	</SelectItem>
-																)
+														<SortableContext
+															items={elements}
+															strategy={verticalListSortingStrategy}
+														>
+															{elements.map(
+																(element, index) =>
+																	!isButtonElement(element) && (
+																		<FormElement
+																			key={element.id}
+																			element={element}
+																			index={index}
+																			isEditing={
+																				panelState.selectedElementIndex ===
+																				index
+																			}
+																			isDisabled={
+																				panelState.selectedElementIndex !==
+																					null &&
+																				panelState.selectedElementIndex !==
+																					index
+																			}
+																		/>
+																	)
 															)}
-														</SelectContent>
-													</Select>
-													<FormDescription>
-														{field.value === FormAccessType.private &&
-															"Only internal editors can submit"}{" "}
-													</FormDescription>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-									</PanelWrapper>
+														</SortableContext>
+													</DndContext>
+												</div>
+												<PanelWrapper sidebar={sidebarRef.current}>
+													<FormItem className="relative flex h-screen flex-col">
+														<PanelHeader state={panelState.state} />
+														<FormControl>
+															<ElementPanel panelState={panelState} />
+														</FormControl>
+													</FormItem>
+												</PanelWrapper>
+											</>
+										)}
+									/>
 								</form>
 							</Form>
 						</TabsContent>

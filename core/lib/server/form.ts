@@ -37,17 +37,18 @@ export const getForm = (
 							"form_elements.id as elementId",
 							"form_elements.type",
 							"form_elements.fieldId",
+							"form_elements.component",
+							"form_elements.config",
 							"form_elements.order",
 							"form_elements.label",
-							"form_elements.description",
 							"form_elements.content",
-							"form_elements.description",
 							"form_elements.element",
 							"form_elements.required",
 							"form_elements.stageId",
 							"pub_fields.schemaName",
 							"pub_fields.slug",
 						])
+						.$narrowType<{ config?: {} }>()
 						.orderBy("form_elements.order")
 				).as("elements")
 			)

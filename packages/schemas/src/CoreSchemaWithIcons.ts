@@ -15,7 +15,10 @@ import { CoreSchemaType } from "db/public";
 
 export const SCHEMA_TYPES_WITH_ICONS: Record<
 	CoreSchemaType,
-	{ description: string; icon: LucideIcon }
+	{
+		description: string;
+		icon: LucideIcon;
+	}
 > = {
 	[CoreSchemaType.Boolean]: {
 		description: "A true or false value",
@@ -29,7 +32,10 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 		description: "A moment in time",
 		icon: CalendarClock,
 	},
-	[CoreSchemaType.Email]: { description: "An email address", icon: Mail },
+	[CoreSchemaType.Email]: {
+		description: "An email address",
+		icon: Mail,
+	},
 	[CoreSchemaType.FileUpload]: {
 		description: "A file uploader",
 		icon: ImagePlus,
