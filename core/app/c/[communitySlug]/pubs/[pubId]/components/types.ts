@@ -7,6 +7,7 @@ import type {
 	PubsId,
 	PubTypesId,
 	Stages,
+	StagesId,
 } from "db/public";
 
 export type ChildPubRowPubType = {
@@ -37,5 +38,5 @@ export type ChildPubRow = {
 	memberFields: ChildPubRowMemberField[];
 	actionInstances: ActionInstances[];
 	values: Record<string, JsonValue>;
-	pubType: ChildPubRowPubType | null;
+	pubTypeId: PubTypesId;
 };

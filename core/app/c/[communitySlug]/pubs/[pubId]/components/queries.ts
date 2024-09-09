@@ -1,10 +1,13 @@
-import { Expression, sql } from "kysely";
+import type { AliasedRawBuilder, Expression } from "kysely";
+
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { CoreSchemaType, PubsId, PubTypesId } from "db/public";
+import type { PubsId, PubTypesId } from "db/public";
+import { CoreSchemaType } from "db/public";
 
 import { db } from "~/kysely/database";
-import { getPubTypeBase, pubValuesByRef } from "~/lib/server";
+import { getPubTypeBase, PubValues, pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 
 const stages = (stageId: Expression<string | null>) =>
@@ -84,7 +87,9 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 					.leftJoin("PubsInStages", "PubsInStages.pubId", "all_children.id")
 					.selectAll()
 					.select((eb) => [
-						pubValuesByRef("all_children.id" as "pubs.id"),
+						pubValuesByRef(
+							"all_children.id" as "pubs.id"
+						) as unknown as AliasedRawBuilder<PubValues, "values">,
 						memberFields(eb.ref("all_children.id")).as("memberFields"),
 						actionInstances(eb.ref("PubsInStages.stageId")).as("actionInstances"),
 						stages(eb.ref("PubsInStages.stageId")).as("stages"),
@@ -95,7 +100,7 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 					.selectFrom("all_children")
 					.select((eb) => [
 						"all_children.pubTypeId",
-						eb.fn.count("all_children.pubTypeId").as("count"),
+						eb.fn.count<number>("all_children.pubTypeId").as("count"),
 					])
 					.groupBy("all_children.pubTypeId")
 			)
@@ -107,10 +112,22 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 						"=",
 						eb.selectFrom("children_with_specific_pubtype").select("pubTypeId").limit(1)
 					)
-				).as("active_pubtype"),
-				jsonArrayFrom(eb.selectFrom("children_with_specific_pubtype").selectAll()).as(
-					"children_of_active_pubtype"
-				),
+				)
+					.$notNull()
+					.as("active_pubtype"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("children_with_specific_pubtype")
+						.select([
+							"children_with_specific_pubtype.id",
+							"children_with_specific_pubtype.createdAt",
+							"children_with_specific_pubtype.stages",
+							"children_with_specific_pubtype.memberFields",
+							"children_with_specific_pubtype.actionInstances",
+							"children_with_specific_pubtype.values",
+							"children_with_specific_pubtype.pubTypeId",
+						])
+				).as("children_of_active_pubtype"),
 				jsonArrayFrom(
 					eb
 						.selectFrom("counts_of_other_pub_types")

@@ -1,8 +1,8 @@
 "use client";
 
+import type { ChildPubRow, ChildPubRowPubType } from "./types";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
-import { ChildPubRow, ChildPubRowPubType } from "./types";
 
 type Props = {
 	childPubRows: ChildPubRow[];

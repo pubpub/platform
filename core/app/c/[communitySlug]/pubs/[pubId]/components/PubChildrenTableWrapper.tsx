@@ -6,11 +6,11 @@ import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
+import type { ChildPubRow } from "./types";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubChildrenTable } from "./PubChildrenTable";
 import { getPubChildrenTable } from "./queries";
-import { ChildPubRow, ChildPubRowPubType } from "./types";
 
 const NoActions = () => {
 	return (
@@ -105,50 +105,27 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 	);
 };
 
-const getUniqueChildPubTypes = (children: ChildPubRow[]) => {
-	const pubTypesById = new Map<string, ChildPubRowPubType>();
-	const pubTypeCounts = new Map<string, number>();
-	children.forEach((child) => {
-		if (!child.pubType) {
-			return;
-		}
-		const pubTypeId = child.pubType.id;
-		if (pubTypesById.has(pubTypeId)) {
-			pubTypeCounts.set(pubTypeId, pubTypeCounts.get(pubTypeId)! + 1);
-		} else {
-			pubTypesById.set(pubTypeId, child.pubType);
-			pubTypeCounts.set(pubTypeId, 1);
-		}
-	});
-	return {
-		pubTypes: Array.from(pubTypesById.values()),
-		pubTypeCounts: Array.from(pubTypeCounts.values()),
-	};
-};
-
 async function PubChildrenTableWrapper(props: Props) {
-	const stuff = await getPubChildrenTable(
+	const pubChildren = await getPubChildrenTable(
 		props.parentPubId,
 		props.pageContext.searchParams.selectedPubType as PubTypesId
-	).executeTakeFirst();
-	const selectedPubTypeId = stuff?.active_pubtype?.id;
-	console.dir(stuff, { depth: null });
-	console.log(props.pageContext.searchParams.selectedPubType as PubTypesId);
+	).executeTakeFirstOrThrow();
+	const selectedPubTypeId = pubChildren.active_pubtype?.id;
 
-	const selectedPubType = stuff?.active_pubtype;
+	const selectedPubType = pubChildren.active_pubtype;
 	return (
 		<>
 			<PubTypeSwitcher
 				communitySlug={props.communitySlug}
 				pubId={props.parentPubId}
-				pubTypes={stuff?.counts_of_all_pub_types}
+				pubTypes={pubChildren.counts_of_all_pub_types}
 				searchParams={props.pageContext.searchParams}
 				selectedPubTypeId={selectedPubTypeId}
 			/>
 			<PubChildrenTable
-				childPubRows={stuff?.children_of_active_pubtype}
+				childPubRows={pubChildren.children_of_active_pubtype}
 				childPubType={selectedPubType}
-				childPubRunActionDropdowns={stuff?.children_of_active_pubtype.map((row) =>
+				childPubRunActionDropdowns={pubChildren.children_of_active_pubtype.map((row) =>
 					getChildPubRunActionDropdowns(row, props.pageContext)
 				)}
 			/>
