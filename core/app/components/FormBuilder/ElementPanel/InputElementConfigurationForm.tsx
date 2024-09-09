@@ -2,6 +2,7 @@
 
 import type { Static, TSchema } from "@sinclair/typebox";
 
+import { useMemo } from "react";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
@@ -101,15 +102,21 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 	const components = componentsBySchema[selectedElement.schemaName];
 	// const configSchema = componentConfigSchemas[selectedElement.schemaName]
 
-	const schema = Type.Object({
-		label: Nullable(Type.String({ default: "" })),
-		required: Nullable(Type.Boolean({ default: true })),
-		component: Type.Enum(InputComponent),
-		//config: configSchema,
-	});
+	const schema = useMemo(
+		() =>
+			Type.Object({
+				label: Nullable(Type.String({ default: "" })),
+				required: Nullable(Type.Boolean({ default: true })),
+				component: Type.Enum(InputComponent),
+				//config: configSchema,
+			}),
+		[]
+	);
+
+	const resolver = useMemo(() => typeboxResolver(schema), [schema]);
 
 	const form = useForm<Static<typeof schema>>({
-		resolver: typeboxResolver(schema),
+		resolver,
 		defaultValues: selectedElement,
 	});
 
