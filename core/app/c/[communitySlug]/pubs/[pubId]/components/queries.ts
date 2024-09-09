@@ -81,12 +81,13 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 								.limit(1)
 						)
 					)
+					.innerJoin("PubsInStages", "PubsInStages.pubId", "all_children.id")
 					.selectAll()
 					.select((eb) => [
-						pubValuesByRef("all_children.id"),
+						pubValuesByRef("all_children.id" as "pubs.id"),
 						memberFields(eb.ref("all_children.id")).as("memberFields"),
-						actionInstances(eb.ref("all_children.id")).as("actionInstances"),
-						stages(eb.ref("all_children.id")).as("stages"),
+						actionInstances(eb.ref("PubsInStages.stageId")).as("actionInstances"),
+						stages(eb.ref("PubsInStages.stageId")).as("stages"),
 					])
 			)
 			.with("counts_of_other_pub_types", (eb) =>
