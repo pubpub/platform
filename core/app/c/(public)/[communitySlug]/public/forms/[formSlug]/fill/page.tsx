@@ -96,8 +96,10 @@ const renderElementMarkdownContent = async (
 	element: Form["elements"][number],
 	renderWithPubContext: RenderWithPubContext
 ) => {
-	const content = expect(element.content, "Expected element to have content");
-	return renderMarkdownWithPub(content, renderWithPubContext);
+	if (element.content === null) {
+		return "";
+	}
+	return renderMarkdownWithPub(element.content, renderWithPubContext);
 };
 
 export default async function FormPage({
