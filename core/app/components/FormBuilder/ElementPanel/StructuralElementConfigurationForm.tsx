@@ -2,14 +2,14 @@
 
 import type { z } from "zod";
 
-import React from "react";
+import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
 import { MarkdownEditor } from "ui/editors";
-import { Form, FormField, FormItem, FormLabel } from "ui/form";
+import { Form, FormField } from "ui/form";
 
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
@@ -33,8 +33,9 @@ export const StructuralElementConfigurationForm = ({ index }: Props) => {
 		return null;
 	}
 
+	const resolver = useMemo(() => zodResolver(schema), [schema]);
 	const form = useForm<z.infer<typeof schema>>({
-		resolver: zodResolver(schema),
+		resolver,
 		defaultValues: schema.parse(selectedElement),
 	});
 

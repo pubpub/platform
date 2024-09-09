@@ -41,14 +41,14 @@ const iconsAndCopy = {
 	},
 };
 
+const schema = z.object({
+	access: z.nativeEnum(FormAccessType),
+});
+
 export const SelectAccess = () => {
 	const { getValues, setValue } = useFormContext();
 
 	const access: FormAccessType = getValues("access");
-
-	const schema = z.object({
-		access: z.nativeEnum(FormAccessType),
-	});
 
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
