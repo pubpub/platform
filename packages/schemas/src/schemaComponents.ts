@@ -1,4 +1,4 @@
-import { z, ZodObject } from "zod";
+import { TAnySchema, Type } from "@sinclair/typebox";
 
 import { CoreSchemaType } from "db/public";
 import { InputComponent } from "db/src/public/InputComponent";
@@ -16,12 +16,12 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
 } as const;
 
-export const componentConfigSchemas: Record<InputComponent, ZodObject<any, any>> = {
-	[InputComponent.checkbox]: z.object({}),
-	[InputComponent.textArea]: z.object({}),
-	[InputComponent.textInput]: z.object({}),
-	[InputComponent.datePicker]: z.object({}),
-	[InputComponent.fileUpload]: z.object({}),
-	[InputComponent.memberSelect]: z.object({}),
-	[InputComponent.confidenceInterval]: z.object({}),
+export const componentConfigSchemas: Record<InputComponent, TAnySchema> = {
+	[InputComponent.checkbox]: Type.Object({}),
+	[InputComponent.textArea]: Type.Object({}),
+	[InputComponent.textInput]: Type.Object({}),
+	[InputComponent.datePicker]: Type.Object({}),
+	[InputComponent.fileUpload]: Type.Object({}),
+	[InputComponent.memberSelect]: Type.Object({}),
+	[InputComponent.confidenceInterval]: Type.Object({}),
 } as const;

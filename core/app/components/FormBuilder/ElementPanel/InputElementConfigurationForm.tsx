@@ -1,9 +1,11 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import type { Static, TSchema } from "@sinclair/typebox";
+
+import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { componentConfigSchemas, componentsBySchema } from "schemas";
-import { z } from "zod";
 
 import { InputComponent } from "db/src/public/InputComponent";
 import { Button } from "ui/button";
@@ -88,6 +90,8 @@ type Props = {
 	index: number;
 };
 
+const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
+
 export const InputElementConfigurationForm = ({ index }: Props) => {
 	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
 	if (!selectedElement || !isFieldInput(selectedElement)) {
@@ -97,19 +101,19 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 	const components = componentsBySchema[selectedElement.schemaName];
 	// const configSchema = componentConfigSchemas[selectedElement.schemaName]
 
-	const schema = z.object({
-		label: z.string().nullable().default(""),
-		required: z.boolean().nullable(),
-		component: z.nativeEnum(InputComponent),
+	const schema = Type.Object({
+		label: Nullable(Type.String({ default: "" })),
+		required: Nullable(Type.Boolean({ default: true })),
+		component: Type.Enum(InputComponent),
 		//config: configSchema,
 	});
 
-	const form = useForm<z.infer<typeof schema>>({
-		resolver: zodResolver(schema),
-		defaultValues: schema.parse(selectedElement),
+	const form = useForm<Static<typeof schema>>({
+		resolver: typeboxResolver(schema),
+		defaultValues: selectedElement,
 	});
 
-	const onSubmit = (values: z.infer<typeof schema>) => {
+	const onSubmit = (values: Static<typeof schema>) => {
 		update(index, { ...selectedElement, ...values, updated: true, configured: true });
 		dispatch({ eventName: "save" });
 	};
