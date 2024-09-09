@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Loader2, Play } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import type { StagePub } from "~/lib/db/queries";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
@@ -19,11 +18,11 @@ import { useServerAction } from "~/lib/serverActions";
 
 export const ActionRunForm = ({
 	actionInstance,
-	pub,
+	pubId,
 	fieldConfig,
 }: {
 	actionInstance: ActionInstances;
-	pub: StagePub;
+	pubId: PubsId;
 	fieldConfig: FieldConfig<any>;
 }) => {
 	const runAction = useServerAction(runActionInstance);
@@ -42,7 +41,7 @@ export const ActionRunForm = ({
 			startTransition(async () => {
 				const result = await runAction({
 					actionInstanceId: actionInstance.id as ActionInstancesId,
-					pubId: pub.id as PubsId,
+					pubId,
 					actionInstanceArgs: values,
 				});
 
@@ -61,7 +60,7 @@ export const ActionRunForm = ({
 				}
 			});
 		},
-		[runAction, actionInstance.id, pub.id]
+		[runAction, actionInstance.id, pubId]
 	);
 
 	return (
