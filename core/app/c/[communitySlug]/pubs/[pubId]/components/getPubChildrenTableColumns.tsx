@@ -5,21 +5,59 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import type { Stages } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Badge } from "ui/badge";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-export type PubChild = {
-	id: string;
-	title: string;
-	stage: string;
-	assignee: string | null;
-	created: Date;
-	actions: JSX.Element;
-};
+import { UserCard } from "~/app/components/UserCard";
+import { ChildPubRow, ChildPubRowPubType } from "./types";
 
-export const getPubChildrenTableColumns = () =>
+const createdAtDateOptions = {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+} satisfies Intl.DateTimeFormatOptions;
+
+const createMemberColumns = (pubType: ChildPubRowPubType) =>
+	pubType.fields
+		.filter((field) => field.schemaName === CoreSchemaType.MemberId)
+		.map(
+			(field) =>
+				({
+					id: field.id,
+					header: ({ column }) => (
+						<DataTableColumnHeader column={column} title={field.name} />
+					),
+					accessorKey: "memberFields",
+					accessorFn: (row) => {
+						const memberField = row.memberFields.find(
+							(memberField) => memberField.fieldId === field.id
+						);
+						return memberField
+							? memberField.user.firstName + " " + memberField.user.lastName
+							: "None";
+					},
+					cell: ({ row }) => {
+						const memberField = row.original.memberFields.find(
+							(memberField) => memberField.fieldId === field.id
+						);
+						return memberField ? (
+							<UserCard user={memberField.user} />
+						) : (
+							<span className="text-muted-foreground">None</span>
+						);
+					},
+				}) as ColumnDef<ChildPubRow, unknown>
+		);
+
+export const getPubChildrenTableColumns = (
+	childPubRunActionDropdowns: JSX.Element[],
+	childPubType?: ChildPubRowPubType
+) =>
 	[
 		{
 			id: "select",
@@ -50,38 +88,43 @@ export const getPubChildrenTableColumns = () =>
 			cell: ({ row }) => {
 				const pathname = usePathname();
 				const path = pathname.split("/").slice(0, 4).join("/");
+				const titleLikeValue = Object.entries(row.original.values).find(
+					([slug]) => slug.split(":")[1]?.indexOf("title") !== -1
+				)?.[1] as string | undefined;
+				const title = titleLikeValue || childPubType?.name || "Child";
 				return (
 					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>
-						{row.original.title}
+						{title}
 					</Link>
 				);
 			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
-			accessorKey: "stage",
+			accessorKey: "stages",
 			cell: ({ getValue }) => {
-				const value = getValue<string>();
-				return value ? (
-					<Badge variant="outline">{value}</Badge>
+				const stageName = getValue<Stages[]>()[0]?.name;
+				return stageName ? (
+					<Badge variant="outline">{stageName}</Badge>
 				) : (
 					<span className="text-muted-foreground">None</span>
 				);
 			},
 		},
+		...(childPubType ? createMemberColumns(childPubType) : []),
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Assignee" />,
-			accessorKey: "assignee",
-		},
-		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
-			accessorKey: "created",
-			cell: ({ row }) => row.original.created.toLocaleDateString(),
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
+			accessorKey: "createdAt",
+			cell: ({ getValue }) => (
+				<time dateTime={new Date().toString()} suppressHydrationWarning>
+					{new Date(getValue<string>()).toLocaleString(undefined, createdAtDateOptions)}
+				</time>
+			),
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
 			enableHiding: false,
-			accessorKey: "actions",
-			cell: ({ row }) => row.original.actions,
+			accessorKey: "actionInstances",
+			cell: ({ row }) => childPubRunActionDropdowns[row.index],
 		},
-	] as const satisfies ColumnDef<PubChild, unknown>[];
+	] as const satisfies ColumnDef<ChildPubRow, unknown>[];
