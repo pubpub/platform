@@ -1,9 +1,10 @@
-import type { ActionInstances, Stages } from "db/public";
+import "server-only";
+
+import type { ActionInstances, PubsId, Stages } from "db/public";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
-import type { StagePub } from "~/lib/db/queries";
 import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
 
 export type PageContext = {
@@ -13,12 +14,12 @@ export type PageContext = {
 
 export const PubsRunActionDropDownMenu = ({
 	actionInstances,
-	pub,
+	pubId,
 	stage,
 	pageContext,
 }: {
 	actionInstances: ActionInstances[];
-	pub: StagePub;
+	pubId: PubsId;
 	stage: Stages;
 	pageContext: PageContext;
 }) => {
@@ -39,7 +40,7 @@ export const PubsRunActionDropDownMenu = ({
 				{actionInstances.map((actionInstance) => (
 					<ActionRunFormWrapper
 						stage={stage}
-						pub={pub}
+						pubId={pubId}
 						actionInstance={actionInstance}
 						pageContext={pageContext}
 						key={actionInstance.id}

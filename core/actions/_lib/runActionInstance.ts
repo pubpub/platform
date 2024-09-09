@@ -135,19 +135,25 @@ const _runActionInstance = async (
 	// 	};
 	// }
 
+	const argsFieldOverrides = new Set<string>();
+	const configFieldOverrides = new Set<string>();
+
 	const argsWithPubfields = resolveWithPubfields(
 		{ ...parsedArgs.data, ...args.actionInstanceArgs },
-		pub.values
+		pub.values,
+		argsFieldOverrides
 	);
 	const configWithPubfields = resolveWithPubfields(
 		{ ...(actionInstance.config as {}), ...parsedConfig.data },
-		pub.values
+		pub.values,
+		configFieldOverrides
 	);
 
 	try {
 		const result = await actionRun({
 			// FIXME: get rid of any
 			config: configWithPubfields as any,
+			configFieldOverrides,
 			pub: {
 				id: pub.id,
 				// FIXME: get rid of any
@@ -157,6 +163,7 @@ const _runActionInstance = async (
 			},
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,
+			argsFieldOverrides,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
 		});

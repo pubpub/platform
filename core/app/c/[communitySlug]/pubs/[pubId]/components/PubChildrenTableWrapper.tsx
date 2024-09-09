@@ -1,77 +1,141 @@
-import type { PubTypesId } from "db/public";
+import Link from "next/link";
+
+import type { PubsId, PubTypesId } from "db/public";
+import { buttonVariants } from "ui/button";
 import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { cn } from "utils";
 
+import type { ChildPubRow } from "./types";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { StagePub } from "~/lib/db/queries";
-import type { CommunityMemberPayload, PubPayload } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { getStage, getStageActions } from "~/lib/db/queries";
-import { getPubType } from "~/lib/server";
 import { PubChildrenTable } from "./PubChildrenTable";
+import { getPubChildrenTable } from "./queries";
 
-async function PubChildrenTableWrapper({
-	pub,
-	members,
-}: {
-	pub: PubPayload;
-	members: CommunityMemberPayload[];
-}) {
-	const pubChildren = pub.children.map(async (child) => {
-		const [stageActionInstances, stage, pubType] =
-			child.stages.length > 0
-				? await Promise.all([
-						getStageActions(child.stages[0].stageId),
-						getStage(child.stages[0].stageId),
-						getPubType(child.pubTypeId as PubTypesId).executeTakeFirst(),
-					])
-				: [null, null];
-		const assigneeUser = members.find((m) => m.userId === child.assigneeId)?.user;
+const NoActions = () => {
+	return (
+		<div className="flex items-center space-x-1">
+			<span className="text-muted-foreground">None</span>
+			<TooltipProvider>
+				<Tooltip>
+					<TooltipTrigger>
+						<Info className="h-4 w-4 text-muted-foreground" />
+					</TooltipTrigger>
+					<TooltipContent>
+						The pub's current stage has no actions configured.
+					</TooltipContent>
+				</Tooltip>
+			</TooltipProvider>
+		</div>
+	);
+};
 
-		return {
-			id: child.id,
-			title:
-				(child.values.find((value) => value.field.name === "Title")?.value as string) ||
-				pubType?.name ||
-				"Child",
-			stage: child.stages[0]?.stage.name,
-			assignee: assigneeUser ? `${assigneeUser.firstName} ${assigneeUser.lastName}` : null,
-			created: new Date(child.createdAt),
-			actions:
-				stageActionInstances && stageActionInstances.length > 0 ? (
-					<PubsRunActionDropDownMenu
-						actionInstances={stageActionInstances.map((action) => ({
-							...action,
-						}))}
-						pub={child as unknown as StagePub}
-						stage={stage!}
-						pageContext={
-							{
-								params: undefined,
-								searchParams: undefined,
-							} as unknown as PageContext
-						}
-					/>
-				) : (
-					<div className="flex items-center space-x-1">
-						<span className="text-muted-foreground">None</span>
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger>
-									<Info className="h-4 w-4 text-muted-foreground" />
-								</TooltipTrigger>
-								<TooltipContent>
-									The pub's current stage has no actions configured.
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-					</div>
-				),
-		};
-	});
+const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContext) => {
+	const stage = row.stages[0];
+	return stage && row.actionInstances.length > 0 ? (
+		<PubsRunActionDropDownMenu
+			actionInstances={row.actionInstances}
+			pubId={row.id}
+			stage={stage}
+			pageContext={pageContext}
+		/>
+	) : (
+		<NoActions />
+	);
+};
 
-	const children = await Promise.all(pubChildren);
-	return <PubChildrenTable children={children} />;
+type Props = {
+	communitySlug: string;
+	parentPubId: PubsId;
+	pageContext: PageContext;
+};
+
+type PubTypeSwitcherProps = {
+	communitySlug: string;
+	pubId: string;
+	pubTypes: {
+		count: number;
+		name: string;
+		pubTypeId: PubTypesId;
+	}[];
+	searchParams: Record<string, unknown>;
+	selectedPubTypeId?: string;
+};
+
+const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
+	return (
+		<nav className="flex w-48 gap-1">
+			{props.pubTypes.map((pubType, pubTypeIndex) => {
+				const isSelected = props.selectedPubTypeId === pubType.pubTypeId;
+				const linkSearchParams = new URLSearchParams(
+					props.searchParams as Record<string, string>
+				);
+				linkSearchParams.set("selectedPubType", pubType.pubTypeId);
+				return (
+					<Link
+						prefetch
+						key={pubType.pubTypeId}
+						href={`/c/${props.communitySlug}/pubs/${props.pubId}?${linkSearchParams}`}
+						className={cn(
+							buttonVariants({
+								variant: isSelected ? "default" : "ghost",
+								size: "default",
+							}),
+							"flex",
+							"items-center",
+							"gap-2"
+						)}
+						scroll={false}
+					>
+						{pubType.name}
+						<span
+							className={cn(
+								"ml-auto",
+								"font-mono",
+								"text-xs",
+								isSelected && "text-background dark:text-white"
+							)}
+						>
+							{pubType.count}
+						</span>
+					</Link>
+				);
+			})}
+		</nav>
+	);
+};
+
+async function PubChildrenTableWrapper(props: Props) {
+	const pubChildren = await getPubChildrenTable(
+		props.parentPubId,
+		props.pageContext.searchParams.selectedPubType as PubTypesId
+	).executeTakeFirst();
+
+	if (!pubChildren) {
+		return <PubChildrenTable childPubRows={[]} childPubRunActionDropdowns={[]} />;
+	}
+
+	const selectedPubTypeId = pubChildren.active_pubtype?.id;
+
+	const selectedPubType = pubChildren.active_pubtype;
+	return (
+		<>
+			<PubTypeSwitcher
+				communitySlug={props.communitySlug}
+				pubId={props.parentPubId}
+				pubTypes={pubChildren.counts_of_all_pub_types}
+				searchParams={props.pageContext.searchParams}
+				selectedPubTypeId={selectedPubTypeId}
+			/>
+			<PubChildrenTable
+				childPubRows={pubChildren.children_of_active_pubtype}
+				childPubType={selectedPubType}
+				childPubRunActionDropdowns={pubChildren.children_of_active_pubtype.map((row) =>
+					getChildPubRunActionDropdowns(row, props.pageContext)
+				)}
+			/>
+		</>
+	);
 }
 
 export default PubChildrenTableWrapper;

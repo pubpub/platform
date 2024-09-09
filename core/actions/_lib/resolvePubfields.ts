@@ -15,7 +15,8 @@ const pubFieldsSchema = z
  */
 export const resolveWithPubfields = <T extends Record<string, any>>(
 	argsOrConfig: T,
-	pubValues: Awaited<ReturnType<typeof getPubCached>>["values"]
+	pubValues: Awaited<ReturnType<typeof getPubCached>>["values"],
+	overrides: Set<string>
 ) => {
 	const parsedConfig = pubFieldsSchema.safeParse(argsOrConfig);
 	if (!parsedConfig.success) {
@@ -49,6 +50,8 @@ export const resolveWithPubfields = <T extends Record<string, any>>(
 			if (value === undefined) {
 				return [] as const;
 			}
+
+			overrides.add(arg);
 
 			return [[arg, value]] as const;
 		})

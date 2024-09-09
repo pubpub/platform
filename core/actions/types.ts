@@ -35,8 +35,10 @@ export type RunProps<T extends Action> =
 	>
 		? {
 				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
+				configFieldOverrides: Set<string>;
 				pub: ActionPub<P>;
 				args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
+				argsFieldOverrides: Set<string>;
 				stageId: StagesId;
 				communityId: CommunitiesId;
 			}
@@ -77,10 +79,6 @@ export type Action<
 				 * `custom` indicates you are defining the component yourself in `[action]/[config|params]/[fieldName].field.tsx`
 				 */
 				fieldType?: FieldConfigItem["fieldType"] | "custom";
-				/**
-				 * TODO: Document this
-				 */
-				allowedSchemas?: CoreSchemaType[] | false;
 			};
 		};
 		dependencies?: Dependency<z.infer<C>>[];
@@ -101,10 +99,6 @@ export type Action<
 				 * Custom indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
 				 */
 				fieldType?: FieldConfigItem["fieldType"] | "custom";
-				/**
-				 * TODO: Document this
-				 */
-				allowedSchemas?: CoreSchemaType[] | false;
 			};
 		};
 		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
