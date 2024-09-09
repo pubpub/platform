@@ -55,20 +55,71 @@ const memberFields = (pubId: Expression<string>) =>
 const pubType = (pubTypeId: Expression<string>) =>
 	jsonObjectFrom(getPubTypeBase.whereRef("pub_types.id", "=", pubTypeId));
 
-export const getPubChildrenTablePubs = (parentId: PubsId) => {
+export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTypesId) => {
 	return autoCache(
 		db
-			.selectFrom("pubs")
-			.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+			.with("all_children", (eb) =>
+				eb
+					.selectFrom("pubs")
+					.where("parentId", "=", parentId)
+					.select((eb) => ["id", "pubTypeId", "createdAt"])
+					.orderBy("createdAt", "desc")
+			)
+			.with("children_with_specific_pubtype", (eb) =>
+				eb
+					.selectFrom("all_children")
+					.$if(Boolean(selectedPubTypeId), (eb) =>
+						eb.where("pubTypeId", "=", selectedPubTypeId!)
+					)
+					// if no pubtype is selected, we find pubs by the first pub type created
+					.$if(!Boolean(selectedPubTypeId), (eb) =>
+						eb.where("pubTypeId", "=", (eb) =>
+							eb
+								.selectFrom("all_children")
+								.innerJoin("pub_types", "pub_types.id", "all_children.pubTypeId")
+								.select("pub_types.id")
+								.limit(1)
+						)
+					)
+					.selectAll()
+					.select((eb) => [
+						pubValuesByRef("all_children.id"),
+						memberFields(eb.ref("all_children.id")).as("memberFields"),
+						actionInstances(eb.ref("all_children.id")).as("actionInstances"),
+						stages(eb.ref("all_children.id")).as("stages"),
+					])
+			)
+			.with("counts_of_other_pub_types", (eb) =>
+				eb
+					.selectFrom("all_children")
+					.select((eb) => [
+						"all_children.pubTypeId",
+						eb.fn.count("all_children.pubTypeId").as("count"),
+					])
+					.groupBy("all_children.pubTypeId")
+			)
+			.selectFrom("all_children")
 			.select((eb) => [
-				"pubs.id",
-				"pubs.createdAt",
-				pubValuesByRef("pubs.id"),
-				pubType(eb.ref("pubs.pubTypeId")).as("pubType"),
-				memberFields(eb.ref("pubs.id")).as("memberFields"),
-				actionInstances(eb.ref("PubsInStages.stageId")).as("actionInstances"),
-				stages(eb.ref("PubsInStages.stageId")).as("stages"),
+				pubType(
+					eb.selectFrom("children_with_specific_pubtype").select("pubTypeId").limit(1)
+				).as("active_pubtype"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("children_with_specific_pubtype")
+						.selectAll()
+						.select(pubValuesByRef("children_with_specific_pubtype.id"))
+				).as("children_of_active_pubtype"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("counts_of_other_pub_types")
+						.innerJoin(
+							"pub_types",
+							"pub_types.id",
+							"counts_of_other_pub_types.pubTypeId"
+						)
+						.select(["count", "pubTypeId", "pub_types.name"])
+				).as("counts_of_all_pub_types"),
 			])
-			.where("parentId", "=", parentId)
+			.limit(1)
 	);
 };

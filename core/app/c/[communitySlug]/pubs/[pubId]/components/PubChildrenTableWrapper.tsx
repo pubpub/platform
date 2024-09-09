@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { PubsId } from "db/public";
+import type { PubsId, PubTypesId } from "db/public";
 import { buttonVariants } from "ui/button";
 import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
@@ -9,7 +9,7 @@ import { cn } from "utils";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubChildrenTable } from "./PubChildrenTable";
-import { getPubChildrenTablePubs } from "./queries";
+import { getPubChildrenTable } from "./queries";
 import { ChildPubRow, ChildPubRowPubType } from "./types";
 
 const NoActions = () => {
@@ -53,8 +53,11 @@ type Props = {
 type PubTypeSwitcherProps = {
 	communitySlug: string;
 	pubId: string;
-	pubTypes: ChildPubRowPubType[];
-	pubTypeCounts: number[];
+	pubTypes: {
+		count: number;
+		name: string;
+		pubTypeId: PubTypesId;
+	}[];
 	searchParams: Record<string, unknown>;
 	selectedPubTypeId?: string;
 };
@@ -63,20 +66,23 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 	return (
 		<nav className="flex w-48 gap-1">
 			{props.pubTypes.map((pubType, pubTypeIndex) => {
-				const isSelected = props.selectedPubTypeId === pubType.id;
+				const isSelected = props.selectedPubTypeId === pubType.pubTypeId;
 				const linkSearchParams = new URLSearchParams(
 					props.searchParams as Record<string, string>
 				);
-				linkSearchParams.set("selectedPubType", pubType.id);
+				linkSearchParams.set("selectedPubType", pubType.pubTypeId);
 				return (
 					<Link
-						key={pubType.id}
+						prefetch
+						key={pubType.pubTypeId}
 						href={`/c/${props.communitySlug}/pubs/${props.pubId}?${linkSearchParams}`}
 						className={cn(
 							buttonVariants({
 								variant: isSelected ? "default" : "ghost",
 								size: "default",
 							}),
+							"flex",
+							"items-center",
 							"gap-2"
 						)}
 						scroll={false}
@@ -90,7 +96,7 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 								isSelected && "text-background dark:text-white"
 							)}
 						>
-							{props.pubTypeCounts[pubTypeIndex]}
+							{pubType.count}
 						</span>
 					</Link>
 				);
@@ -121,25 +127,26 @@ const getUniqueChildPubTypes = (children: ChildPubRow[]) => {
 };
 
 async function PubChildrenTableWrapper(props: Props) {
-	const childPubRows: ChildPubRow[] = await getPubChildrenTablePubs(props.parentPubId).execute();
-	const { pubTypes, pubTypeCounts } = getUniqueChildPubTypes(childPubRows);
-	const selectedPubTypeId =
-		(props.pageContext.searchParams.selectedPubType as string | undefined) ?? pubTypes[0]?.id;
-	const selectedPubType = pubTypes.find((pubType) => pubType.id === selectedPubTypeId);
+	const stuff = await getPubChildrenTable(
+		props.parentPubId,
+		props.pageContext.searchParams.selectedPubType as PubTypesId
+	).executeTakeFirst();
+	const selectedPubTypeId = stuff?.active_pubtype?.id;
+
+	const selectedPubType = stuff?.active_pubtype;
 	return (
 		<>
 			<PubTypeSwitcher
 				communitySlug={props.communitySlug}
 				pubId={props.parentPubId}
-				pubTypes={pubTypes}
-				pubTypeCounts={pubTypeCounts}
+				pubTypes={stuff?.counts_of_all_pub_types}
 				searchParams={props.pageContext.searchParams}
 				selectedPubTypeId={selectedPubTypeId}
 			/>
 			<PubChildrenTable
-				childPubRows={childPubRows.filter((row) => row.pubType?.id === selectedPubTypeId)}
+				childPubRows={stuff?.children_of_active_pubtype}
 				childPubType={selectedPubType}
-				childPubRunActionDropdowns={childPubRows.map((row) =>
+				childPubRunActionDropdowns={stuff?.children_of_active_pubtype.map((row) =>
 					getChildPubRunActionDropdowns(row, props.pageContext)
 				)}
 			/>
