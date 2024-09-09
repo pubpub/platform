@@ -69,11 +69,11 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 				eb
 					.selectFrom("all_children")
 					.$if(Boolean(selectedPubTypeId), (eb) =>
-						eb.where("pubTypeId", "=", selectedPubTypeId!)
+						eb.where("all_children.pubTypeId", "=", selectedPubTypeId!)
 					)
 					// if no pubtype is selected, we find pubs by the first pub type created
 					.$if(!Boolean(selectedPubTypeId), (eb) =>
-						eb.where("pubTypeId", "=", (eb) =>
+						eb.where("all_children.pubTypeId", "=", (eb) =>
 							eb
 								.selectFrom("all_children")
 								.innerJoin("pub_types", "pub_types.id", "all_children.pubTypeId")
@@ -81,7 +81,7 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 								.limit(1)
 						)
 					)
-					.innerJoin("PubsInStages", "PubsInStages.pubId", "all_children.id")
+					.leftJoin("PubsInStages", "PubsInStages.pubId", "all_children.id")
 					.selectAll()
 					.select((eb) => [
 						pubValuesByRef("all_children.id" as "pubs.id"),
@@ -101,15 +101,16 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 			)
 			.selectFrom("all_children")
 			.select((eb) => [
-				pubType(
-					eb.selectFrom("children_with_specific_pubtype").select("pubTypeId").limit(1)
+				jsonObjectFrom(
+					getPubTypeBase.where(
+						"pub_types.id",
+						"=",
+						eb.selectFrom("children_with_specific_pubtype").select("pubTypeId").limit(1)
+					)
 				).as("active_pubtype"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("children_with_specific_pubtype")
-						.selectAll()
-						.select(pubValuesByRef("children_with_specific_pubtype.id"))
-				).as("children_of_active_pubtype"),
+				jsonArrayFrom(eb.selectFrom("children_with_specific_pubtype").selectAll()).as(
+					"children_of_active_pubtype"
+				),
 				jsonArrayFrom(
 					eb
 						.selectFrom("counts_of_other_pub_types")
@@ -121,6 +122,6 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 						.select(["count", "pubTypeId", "pub_types.name"])
 				).as("counts_of_all_pub_types"),
 			])
-			.limit(1)
+		// .limit(1)
 	);
 };

@@ -55,7 +55,7 @@ export const pubValuesByVal = (pubId: PubsId) => {
 // pubValues is the shared logic between pubValuesByRef and pubValuesByVal which handles getting the
 // most recent pub field entries (since the table is append-only) and aggregating the pub_fields and
 // pub_values rows into a single {"slug": "value"} JSON object
-const pubValues = (
+export const pubValues = (
 	eb: ExpressionBuilder<Database, keyof Database>,
 	{
 		pubId,

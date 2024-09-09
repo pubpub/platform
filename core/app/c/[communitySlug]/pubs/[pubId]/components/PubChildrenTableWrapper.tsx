@@ -132,6 +132,8 @@ async function PubChildrenTableWrapper(props: Props) {
 		props.pageContext.searchParams.selectedPubType as PubTypesId
 	).executeTakeFirst();
 	const selectedPubTypeId = stuff?.active_pubtype?.id;
+	console.dir(stuff, { depth: null });
+	console.log(props.pageContext.searchParams.selectedPubType as PubTypesId);
 
 	const selectedPubType = stuff?.active_pubtype;
 	return (
