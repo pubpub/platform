@@ -1,6 +1,6 @@
 "use server";
 
-import type { FormsId, PubsId } from "db/public";
+import type { CommunitiesId, FormsId, PubsId } from "db/public";
 import { logger } from "logger";
 
 import type { XOR } from "~/lib/types";
@@ -18,17 +18,19 @@ export const upload = defineServerAction(async function upload(pubId: string, fi
 export const inviteUserToForm = defineServerAction(async function inviteUserToForm({
 	token,
 	pubId,
+	communityId,
 	...formSlugOrId
 }: {
 	token: string;
 	pubId: PubsId;
+	communityId: CommunitiesId;
 } & XOR<{ slug: string }, { id: FormsId }>) {
 	const community = await findCommunityBySlug();
 	if (!community) {
 		throw new Error("Invite user to form failed because community not found");
 	}
 
-	const form = await getForm(formSlugOrId).executeTakeFirst();
+	const form = await getForm({ ...formSlugOrId, communityId }).executeTakeFirst();
 
 	if (!form) {
 		return { error: `No form found with ${formSlugOrId}` };
@@ -53,6 +55,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 	const formInviteLink = await createFormInviteLink({
 		formId: form.id,
 		userId: result.user.id,
+		communityId,
 		pubId,
 	});
 
