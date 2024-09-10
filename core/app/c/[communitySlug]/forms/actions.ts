@@ -3,8 +3,7 @@
 import { sql } from "kysely";
 import { componentsBySchema } from "schemas";
 
-import type { CommunitiesId, CoreSchemaType, PubTypesId } from "db/public";
-import type { InputComponent } from "db/src/public/InputComponent";
+import type { CommunitiesId, CoreSchemaType, InputComponent, PubTypesId } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";

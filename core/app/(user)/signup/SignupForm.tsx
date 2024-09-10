@@ -9,7 +9,7 @@ import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { registerFormats } from "schemas";
 
-import type { Users } from "db/src/public";
+import type { Users } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";

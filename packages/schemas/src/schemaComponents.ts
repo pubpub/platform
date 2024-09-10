@@ -1,7 +1,6 @@
 import { TAnySchema, Type } from "@sinclair/typebox";
 
-import { CoreSchemaType } from "db/public";
-import { InputComponent } from "db/src/public/InputComponent";
+import { CoreSchemaType, InputComponent } from "db/public";
 
 export const defaultComponent = (schemaName: CoreSchemaType) => componentsBySchema[schemaName][0];
 
