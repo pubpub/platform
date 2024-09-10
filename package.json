@@ -19,7 +19,7 @@
 		"dev:db:stop": "docker compose -f docker-compose.dev.yml down db",
 		"dev:inbucket:start": "docker compose -f docker-compose.dev.yml up inbucket -d",
 		"dev:inbucket:stop": "docker compose -f docker-compose.dev.yml down inbucket",
-		"dev:setup": "pnpm install && pnpm run db:start && pnpm run inbucket:start && pnpm p:dev && pnpm --filter core migrate-dev",
+		"dev:setup": "pnpm install && pnpm run dev:db:start && pnpm run dev:inbucket:start && pnpm p:dev && pnpm --filter core migrate-dev",
 		"dev:teardown": "docker compose -f docker-compose.dev.yml down"
 	},
 	"devDependencies": {
