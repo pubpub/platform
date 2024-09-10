@@ -1,6 +1,6 @@
 "use client";
 
-import type { Static, TSchema } from "@sinclair/typebox";
+import type { Static, TObject, TSchema } from "@sinclair/typebox";
 
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
@@ -13,7 +13,15 @@ import { InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { ImagePlus } from "ui/icon";
 import { Input } from "ui/input";
 import { RadioGroup, RadioGroupCard } from "ui/radio-group";
@@ -99,6 +107,19 @@ type Props = {
 
 const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
 
+const ConfigField = ({ name, schema }: { name: string; schema: TSchema }) => {
+	return (
+		<FormItem>
+			<FormLabel>{schema.title}</FormLabel>
+			<FormControl>
+				<Input placeholder={schema.examples}></Input>
+			</FormControl>
+			<FormDescription></FormDescription>
+			<FormMessage />
+		</FormItem>
+	);
+};
+
 export const InputElementConfigurationForm = ({ index }: Props) => {
 	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
 	if (!selectedElement || !isFieldInput(selectedElement)) {
@@ -106,7 +127,7 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 	}
 
 	const components = componentsBySchema[selectedElement.schemaName];
-	// const configSchema = componentConfigSchemas[selectedElement.schemaName]
+	const configSchema: TObject = componentConfigSchemas[selectedElement.schemaName];
 
 	const schema = useMemo(
 		() =>
@@ -114,9 +135,9 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 				label: Nullable(Type.String({ default: "" })),
 				required: Nullable(Type.Boolean({ default: true })),
 				component: Type.Enum(InputComponent),
-				//config: configSchema,
+				config: configSchema,
 			}),
-		[]
+		[configSchema]
 	);
 
 	const resolver = useMemo(() => typeboxResolver(schema), [schema]);
@@ -169,7 +190,28 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 						</FormItem>
 					)}
 				/>
-				{/* TODO: Autoform style rendering of config  */}
+				{
+					Object.entries(configSchema.properties).map(([name, schema]) => {
+						return (
+							<FormField
+								name={`config.${name}`}
+								key={`config.${name}`}
+								control={form.control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel></FormLabel>
+										<FormControl>
+											<Input></Input>
+										</FormControl>
+										<FormDescription></FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						);
+					})
+					/* TODO: Autoform style rendering of config  */
+				}
 				<hr className="mt-4" />
 				<FormField
 					control={form.control}

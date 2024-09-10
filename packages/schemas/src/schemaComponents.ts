@@ -1,4 +1,4 @@
-import { TAnySchema, Type } from "@sinclair/typebox";
+import { TObject, TSchema, Type } from "@sinclair/typebox";
 
 import { CoreSchemaType, InputComponent } from "db/public";
 
@@ -16,12 +16,75 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.Null]: [],
 } as const;
 
-export const componentConfigSchemas: Record<InputComponent, TAnySchema> = {
-	[InputComponent.checkbox]: Type.Object({}),
-	[InputComponent.textArea]: Type.Object({}),
-	[InputComponent.textInput]: Type.Object({}),
-	[InputComponent.datePicker]: Type.Object({}),
-	[InputComponent.fileUpload]: Type.Object({}),
-	[InputComponent.memberSelect]: Type.Object({}),
-	[InputComponent.confidenceInterval]: Type.Object({}),
+type ComponentConfig = {
+	label: string;
+	placeholder: string;
+	description?: string;
+	halfWidth?: true;
+	schema: TSchema;
+};
+
+export const componentConfigSchemas: Record<InputComponent, ComponentConfig[]> = {
+	[InputComponent.checkbox]: [],
+	[InputComponent.textArea]: [
+		{
+			label: "Placeholder",
+			placeholder: "Temporary text hinting at expected input",
+			schema: Type.String(),
+		},
+		{
+			label: "Help Text",
+			placeholder: "Optional additional guidance",
+			description: "Appears below the field",
+			schema: Type.String(),
+		},
+	],
+	[InputComponent.textInput]: [
+		{
+			label: "Placeholder",
+			placeholder: "Temporary text hinting at expected input",
+			schema: Type.String(),
+		},
+		{
+			label: "Help Text",
+			placeholder: "Optional additional guidance",
+			description: "Appears below the field",
+			schema: Type.String(),
+		},
+	],
+	[InputComponent.datePicker]: [
+		{
+			label: "Help Text",
+			placeholder: "Optional additional guidance",
+			description: "Appears below the field",
+			schema: Type.String(),
+		},
+	],
+	[InputComponent.fileUpload]: [
+		{
+			label: "Help Text",
+			placeholder: "Optional additional guidance",
+			description: "Appears below the field",
+			schema: Type.String(),
+		},
+	],
+	[InputComponent.memberSelect]: [{ label: "", placeholder: "", schema: Type.Object({}) }],
+	[InputComponent.confidenceInterval]: [
+		{
+			label: "Description",
+			placeholder: "Optional additional guidance",
+			description: "Appears below the field",
+			schema: Type.String(),
+		},
+		{
+			label: "Range Start",
+			placeholder: "0",
+			schema: Type.Integer({}),
+		},
+		{
+			label: "Range Start",
+			placeholder: "100",
+			schema: Type.Integer({}),
+		},
+	],
 } as const;
