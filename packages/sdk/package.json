@@ -34,7 +34,7 @@
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/node": "^20.4.2",
+		"@types/node": "^20",
 		"@types/react": "^18.2.78",
 		"contracts": "workspace:*",
 		"tsconfig": "workspace:*",
