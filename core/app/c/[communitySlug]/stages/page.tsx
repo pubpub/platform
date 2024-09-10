@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AuthTokenType, UsersId } from "db/public";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { createToken } from "~/lib/server/token";
 import { getStageWorkflows, makeStagesById } from "~/lib/stages";
@@ -11,10 +11,7 @@ import StageList from "./components/StageList";
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
-	const { user } = await getLoginData();
-	if (!user) {
-		return null;
-	}
+	const { user } = await getPageLoginData();
 	const community = await getCommunityBySlug(params.communitySlug);
 	if (!community) {
 		notFound();

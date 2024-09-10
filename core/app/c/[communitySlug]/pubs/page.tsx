@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { CommunitiesId } from "db/public";
 import { AuthTokenType, UsersId } from "db/public";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import { pubInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -30,10 +30,8 @@ const getStages = async (communityId: string) => {
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
-	const { user } = await getLoginData();
-	if (!user) {
-		redirect("/login");
-	}
+	const { user } = await getPageLoginData();
+
 	const community = await prisma.community.findUnique({
 		where: { slug: params.communitySlug },
 	});

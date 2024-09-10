@@ -1,10 +1,9 @@
-import { unstable_cache } from "next/cache";
-
 import "reactflow/dist/style.css";
 
 import { LocalStorageProvider } from "ui/hooks";
 
-import { createCacheTag, createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
+import { getPageLoginData } from "~/lib/auth/loginData";
+import { createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
 import { memoize } from "~/lib/server/cache/memoize";
 import { stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -21,6 +20,7 @@ type Props = {
 };
 
 export default async function Page({ params, searchParams }: Props) {
+	await getPageLoginData();
 	const community = await prisma.community.findUnique({
 		where: { slug: params.communitySlug },
 	});

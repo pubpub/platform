@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { PubFieldProvider } from "ui/pubFields";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -11,7 +11,7 @@ import { CreatePubType } from "./CreatePubType";
 import TypeList from "./TypeList";
 
 export default async function Page({ params: { communitySlug } }) {
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug();
 

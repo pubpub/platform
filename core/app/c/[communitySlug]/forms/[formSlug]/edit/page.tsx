@@ -7,7 +7,7 @@ import { PubFieldProvider } from "ui/pubFields";
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
@@ -18,7 +18,7 @@ const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
 export default async function Page({ params: { formSlug, communitySlug } }) {
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug();
 
 	if (!community) {
@@ -26,10 +26,6 @@ export default async function Page({ params: { formSlug, communitySlug } }) {
 	}
 
 	const communityStages = await getCommunityStages(community.id).execute();
-
-	if (!user) {
-		return null;
-	}
 
 	if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return null;

@@ -43,6 +43,7 @@ function redirectUser(memberships?: (Members & { community: Communities | null }
 export const loginWithPassword = defineServerAction(async function loginWithPassword(props: {
 	email: string;
 	password: string;
+	redirectTo: string | null;
 }) {
 	const parsed = schema.safeParse({ email: props.email, password: props.password });
 
@@ -79,6 +80,10 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 	const session = await lucia.createSession(user.id, { type: AuthTokenType.generic });
 	const sessionCookie = lucia.createSessionCookie(session.id);
 	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+
+	if (props.redirectTo) {
+		redirect(props.redirectTo);
+	}
 
 	redirectUser(user.memberships);
 });
