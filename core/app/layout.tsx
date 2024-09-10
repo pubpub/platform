@@ -4,8 +4,6 @@ import "ui/styles.css";
 
 import { PublicEnvScript } from "next-runtime-env";
 
-import InitClient from "./InitClient";
-
 import "./globals.css";
 
 import { TooltipProvider } from "ui/tooltip";
@@ -22,8 +20,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				<PublicEnvScript />
 			</head>
 			<body>
-				{/* Can be removed once we have moved to Lucia */}
-				<InitClient />
 				<TooltipProvider>
 					{children}
 					<Toaster />

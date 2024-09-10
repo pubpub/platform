@@ -23,7 +23,6 @@ export const SAFE_USER_SELECT = [
 	"users.firstName",
 	"users.lastName",
 	"users.slug",
-	"users.supabaseId",
 	"users.createdAt",
 	"users.updatedAt",
 	"users.isSuperAdmin",
