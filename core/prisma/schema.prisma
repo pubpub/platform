@@ -191,6 +191,7 @@ model PubValue {
 
   // Add userId and integrationId to track who created the value
 
+  @@unique([pubId, fieldId])
   @@map(name: "pub_values")
   @@unique([pubId, relatedPubId, fieldId])
 }
