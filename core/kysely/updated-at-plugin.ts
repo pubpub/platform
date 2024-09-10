@@ -13,8 +13,8 @@ import {
 	ColumnUpdateNode,
 	IdentifierNode,
 	OperationNodeTransformer,
+	RawNode,
 	TableNode,
-	ValueNode,
 } from "kysely";
 
 class UpdatedAtTransformer extends OperationNodeTransformer {
@@ -51,7 +51,7 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 				...nonUpdatedAtColumns,
 				ColumnUpdateNode.create(
 					ColumnNode.create("updatedAt"),
-					ValueNode.create(new Date())
+					RawNode.createWithSql("current_timestamp")
 				),
 			],
 		};
