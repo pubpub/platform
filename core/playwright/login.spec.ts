@@ -57,7 +57,7 @@ test.describe("Auth with lucia", () => {
 
 		const message = await (await inbucketClient.getMailbox("new")).getLatestMessage();
 
-		const url = message.message.body.text?.match(/http:\/\/.*\/reset/)?.[0];
+		const url = message.message.body.text?.match(/http:\/\/.*reset/)?.[0];
 		await message.delete();
 
 		if (!url) {
