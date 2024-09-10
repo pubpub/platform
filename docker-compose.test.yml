@@ -35,6 +35,8 @@ services:
             - jobs
         profiles:
             - test
+        command: >
+            sh -c "pnpm --filter core run test-run"
 
     jobs:
         build:
@@ -60,8 +62,6 @@ services:
             - db
         profiles:
             - test
-        command: >
-            sh -c "pnpm --filter core run test-run"
 
     db:
         extends:
