@@ -73,14 +73,12 @@ const pubValues = (
 	return jsonObjAgg(
 		eb
 			.selectFrom("pub_values")
-			.distinctOn("pub_values.fieldId")
 			.selectAll("pub_values")
 			.select("slug")
 			.leftJoinLateral(
 				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
-			.orderBy(["pub_values.fieldId", "pub_values.createdAt desc"])
 			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pubId", "=", ref(pubIdRef!)))
 			.as(alias)
