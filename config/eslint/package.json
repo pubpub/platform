@@ -31,8 +31,8 @@
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/eslint": "^8.56.6",
-		"eslint": "^8.57.0",
+		"@types/eslint": "^9.6.1",
+		"eslint": "^9.10.0",
 		"eslint-config-turbo": "^2.1.1",
 		"eslint-plugin-validate-jsx-nesting": "^0.1.1",
 		"prettier": "^3.2.5",

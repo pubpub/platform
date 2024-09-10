@@ -19,7 +19,7 @@
 		"contracts": "workspace:*",
 		"graphile-worker": "^0.16.5",
 		"logger": "workspace:*",
-		"tsx": "^3.13.0"
+		"tsx": "^4.19.0"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
