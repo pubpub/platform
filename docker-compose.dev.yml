@@ -134,5 +134,15 @@ services:
     ports:
       - "3002:8080"
 
+  db:
+    extends:
+      file: docker-compose.base.yml
+      service: db
+  
+  inbucket:
+    extends:
+      file: docker-compose.base.yml
+      service: inbucket
+
 networks:
   app-network:
