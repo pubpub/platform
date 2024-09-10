@@ -34,21 +34,28 @@ RUN --mount=type=cache,target=/root/.npm \
 
 ################################################################################
 # Create a stage for building the application.
-FROM base as monorepo
+FROM base as fetch-deps
 
 # install postgres utilities for scripts
 RUN apk add postgresql
 # if booting without a command, just sit and wait forever for a term signal
 CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 
-# Copy the rest of the source files into the image.
-COPY . .
+# Copy pnpm-lock.yaml so that we can use pnpm to install dependencies
+COPY ./pnpm-lock.yaml ./
 
-# Run the build script.
-RUN pnpm install --frozen-lockfile
+RUN pnpm fetch 
+
+FROM fetch-deps as monorepo
+
+ADD . ./
+
+RUN pnpm install -r --offline 
+
 RUN pnpm p:build
 
 FROM monorepo AS withpackage
+
 ARG PACKAGE
 
 RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && false)
@@ -96,38 +103,15 @@ EXPOSE $PORT
 CMD pnpm start
 
 
-# FROM base AS test-install-deps
+# to be used in `docker-compose.test.yml`
+FROM monorepo as test-setup
 
-# ARG PACKAGE
+RUN echo "Setting up ${PACKAGE} for testing"
 
-# RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && false)
-# # Copy the entire app's source code
-# # install postgres utilities for scripts
-# RUN apk add postgresql
+# Expose the port on which your app runs
+# not sure if necessary
+EXPOSE ${PORT}
 
-# # Copy the rest of the source files into the image.
-# COPY ./pnpm-lock.yaml ./
+ENV PACKAGE=${PACKAGE}
 
-# # Run the build script.
-# RUN pnpm fetch 
-
-# FROM test-install-deps as development 
-
-# ADD . ./
-
-# RUN pnpm install -r --offline 
-
-# RUN echo "Setting up ${PACKAGE}"
-
-# # Expose the port on which your app runs
-# EXPOSE ${PORT}
-
-# RUN PACKAGE=${PACKAGE} echo ${PACKAGE}
-
-# ENV PACKAGE=${PACKAGE}
-
-# RUN pnpm p:build
-
-# RUN pnpm --filter core prisma generate
-
-# CMD pnpm run --filter ${PACKAGE} dev
+RUN pnpm --filter core prisma generate

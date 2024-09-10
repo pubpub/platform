@@ -6,8 +6,11 @@ services:
             context: .
             args:
                 - PACKAGE=core
+            target: test-setup
         container_name: core
-        env_file: ./.env.docker-compose
+        env_file:
+            - path: ./.env.docker-compose
+              required: false
         environment:
             #s non secret
             - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
@@ -15,7 +18,6 @@ services:
             - MAILGUN_SMTP_PORT=465
             - MAILGUN_SMTP_USERNAME=omitted
             - NEXT_PUBLIC_PUBPUB_URL=http://localhost:8080
-            - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
             - OTEL_SERVICE_NAME=core.core
             - PGDATABASE=postgres
             - PGHOST=db
@@ -23,7 +25,6 @@ services:
             - PGUSER=postgres
             - PGPASSWORD=postgres
             - PUBPUB_URL=http://localhost:8080
-            - SUPABASE_URL=http://postgres:54321
             - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
         networks:
             - app-network
@@ -40,8 +41,11 @@ services:
             context: .
             args:
                 - PACKAGE=jobs
+            target: test-setup
         container_name: jobs
-        env_file: ./.env.docker-compose
+        env_file:
+            - path: ./.env.docker-compose
+              required: false
         environment:
             - OTEL_SERVICE_NAME=jobs.jobs
             - PGDATABASE=postgres
@@ -56,17 +60,21 @@ services:
             - db
         profiles:
             - test
+        command: >
+            sh -c "pnpm --filter core run test-run"
 
     db:
         extends:
             file: ./docker-compose.base.yml
             service: db
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - postgres_test_data:/var/lib/postgresql/data
         networks:
             - app-network
         profiles:
             - test
+        ports:
+            - "5432:5432"
 
     inbucket:
         extends:
@@ -102,7 +110,7 @@ services:
     #         - default
 
 volumes:
-    postgres_data:
+    postgres_test_data:
         driver: local
 
 networks:
