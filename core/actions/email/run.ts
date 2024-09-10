@@ -54,6 +54,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			);
 
 		const renderMarkdownWithPubContext = {
+			communityId,
 			communitySlug,
 			recipient,
 			pub,

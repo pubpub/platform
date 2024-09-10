@@ -271,6 +271,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 							expect(attrs.form),
 							context.recipient.id,
 							context.recipient.user.id,
+							context.communityId,
 							context.pub.id
 						);
 					}
