@@ -1,3 +1,4 @@
+/* eslint-disable n/no-process-env */
 import * as React from "react";
 import {
 	Body,
@@ -21,16 +22,16 @@ interface ForgotPasswordProps {
 	firstName: string;
 	lastName?: string;
 	resetPasswordLink: string;
+	previewText?: string;
 }
-
-const baseUrl = process.env.PUBPUB_URL ? process.env.PUBPUB_URL : "";
 
 export const PasswordReset = ({
 	firstName = "ANDY",
 	lastName = "Rocha",
 	resetPasswordLink,
+	previewText = `Reset your PubPub password`,
 }: ForgotPasswordProps) => {
-	const previewText = `Reset your PubPub password`;
+	const baseUrl = process.env.PUBPUB_URL ? process.env.PUBPUB_URL : "";
 
 	return (
 		<Html>
@@ -86,5 +87,3 @@ export const PasswordReset = ({
 		</Html>
 	);
 };
-
-export default PasswordReset;

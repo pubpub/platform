@@ -1,6 +1,9 @@
+import { defaultComponent } from "schemas";
+
 import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
+import { InputComponent } from "db/src/public/InputComponent";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";
@@ -56,7 +59,8 @@ export const InnerForm = async ({
 	return (
 		<>
 			{elements.map((e) => {
-				if (e.schemaName === CoreSchemaType.MemberId) {
+				const component = e.component ?? (e.schemaName && defaultComponent(e.schemaName));
+				if (component === InputComponent.memberSelect) {
 					const userId = values[e.slug!] as MembersId | undefined;
 					return (
 						<UserIdSelect

@@ -1,6 +1,10 @@
 "use server";
 
-import type { CommunitiesId, PubTypesId } from "db/public";
+import { sql } from "kysely";
+import { componentsBySchema } from "schemas";
+
+import type { CommunitiesId, CoreSchemaType, PubTypesId } from "db/public";
+import type { InputComponent } from "db/src/public/InputComponent";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -9,6 +13,13 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { _getPubFields } from "~/lib/server/pubFields";
+
+const componentsBySchemaTable = Object.entries(componentsBySchema)
+	.map(
+		([schema, components]) =>
+			`('${schema}'::"CoreSchemaType", '${components[0]}'::"InputComponent")`
+	)
+	.join(", ");
 
 export const createForm = defineServerAction(async function createForm(
 	pubTypeId: PubTypesId,
@@ -27,12 +38,35 @@ export const createForm = defineServerAction(async function createForm(
 	try {
 		await autoRevalidate(
 			db
+				.with("components", (db) =>
+					// This lets us set an appropriate default component during creation by turning
+					// the js mapping from schemaName to InputComponent into a temporary table which
+					// can be used during the query. Without this, we would need to first query for
+					// the pubtype's fields (and their schemaNames), then determine the input
+					// components in js before inserting
+					db
+						.selectFrom(
+							sql<{
+								schema: CoreSchemaType;
+								component: InputComponent;
+							}>`(values ${sql.raw(componentsBySchemaTable)})`.as<"c">(
+								sql`c(schema, component)`
+							)
+						)
+						.selectAll("c")
+				)
 				.with("fields", () =>
 					_getPubFields({ pubTypeId })
 						.clearSelect()
 						.select((eb) => [
 							eb.ref("f.id").as("fieldId"),
 							eb.ref("f.json", "->>").key("name").as("name"),
+							eb
+								.cast<CoreSchemaType>(
+									eb.ref("f.json", "->>").key("schemaName"),
+									sql.raw('"CoreSchemaType"')
+								)
+								.as("schemaName"),
 						])
 				)
 				.with("form", (db) =>
@@ -48,7 +82,7 @@ export const createForm = defineServerAction(async function createForm(
 				)
 
 				.insertInto("form_elements")
-				.columns(["fieldId", "formId", "label", "type", "order"])
+				.columns(["fieldId", "formId", "label", "type", "order", "component"])
 				.expression((eb) =>
 					eb
 						.selectFrom("fields")
@@ -62,13 +96,18 @@ export const createForm = defineServerAction(async function createForm(
 								.agg<number>("ROW_NUMBER")
 								.over((o) => o.partitionBy("id"))
 								.as("order"),
+							eb
+								.selectFrom("components")
+								.select("component")
+								.whereRef("components.schema", "=", "fields.schemaName")
+								.as("component"),
 						])
 				)
 		).executeTakeFirstOrThrow();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			const column = error.constraint === "forms_slug_key" ? "slug" : "name";
-			return { error: `A form with this ${column} already exists. Choose a new name` };
+			return { error: `A form with this ${column} already exists. Choose a new ${column}` };
 		}
 		logger.error({ msg: "error creating form", error });
 		return { error: "Form creation failed" };

@@ -174,9 +174,9 @@ export const Respond = (props: Props) => {
 		}
 	}, []);
 
-	const submissionUrl = props.pub.values["unjournal:url"] as string;
+	const submissionUrl = props.pub.values["legacy-unjournal:url"] as string;
 	const submissionTitle = props.pub.values[props.instanceConfig.titleFieldSlug] as string;
-	const submissionAbstract = props.pub.values["unjournal:description"] as string;
+	const submissionAbstract = props.pub.values["legacy-unjournal:description"] as string;
 	const deadline = calculateDeadline(
 		{
 			deadlineLength: props.instanceConfig.deadlineLength,

@@ -1,10 +1,9 @@
-import type { ActionInstances, CommunitiesId, PubsId, Stages } from "db/public";
+import type { ActionInstances, PubsId, Stages } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
-import { TokenContext, TokenProvider } from "ui/tokens";
+import { TokenProvider } from "ui/tokens";
 
 import type { PageContext } from "./PubsRunActionDropDownMenu";
 import type { Action, ActionInstanceOf } from "~/actions/types";
-import type { StagePub } from "~/lib/db/queries";
 import { resolveFieldConfig } from "~/actions/_lib/custom-form-field/resolveFieldConfig";
 import { getActionByName } from "~/actions/api";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -12,12 +11,12 @@ import { ActionRunForm } from "./ActionRunForm";
 
 export const ActionRunFormWrapper = async ({
 	actionInstance,
-	pub,
+	pubId,
 	stage,
 	pageContext,
 }: {
 	actionInstance: ActionInstances;
-	pub: StagePub;
+	pubId: PubsId;
 	stage: Stages;
 	pageContext: PageContext;
 }) => {
@@ -42,7 +41,7 @@ export const ActionRunFormWrapper = async ({
 			<TokenProvider tokens={tokens}>
 				<ActionRunForm
 					actionInstance={actionInstance}
-					pub={pub}
+					pubId={pubId}
 					fieldConfig={resolvedFieldConfig}
 				/>
 			</TokenProvider>

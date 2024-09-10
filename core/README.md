@@ -2,31 +2,31 @@
 
 Local development requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) to be installed and running on your machine.
 
-Begin by making sure Docker Desktop is running. Then, `cd` to this repo in your terminal and run the following commands. A few of them have interactive prompts you'll need to act on, so I suggest running them one-by-one.
+To setup the development environment, run:
 
 ```
-pnpm install (should already be done at root level)
-npx supabase login
-npx supabase start
-npx supabase db reset
-cp .env.template .env.local
-```
-
-Copy the relevant values output from `supabase start` into `.env.local`. The `anon key` from `supabase`'s output should map to `NEXT_PUBLIC_SUPABASE_PUBLIC_KEY` in `.env.local`.
-
-Populate the database by running:
-
-```
-pnpm --filter core reset
+pnpm dev:setup
 ```
 
 Choose yes on prompted questions.
 
-Start the dev server with
+This will
+
+1. Install dependencies
+2. Start a postgres docker container on port 54322
+3. Start an inbucket docker container on port 54324 (for receiving emails)
+4. Build all the dependencies once
+5. Run the database migrations
+
+With this, you should be all setup.
+
+Then, start the dev server with
 
 ```
-pnpm run dev
+pnpm -w run dev
 ```
+
+It's somewhat important to run the dev server from the root (the `-w` flag) such that at least the jobs runners are also running.
 
 # Running
 
@@ -35,37 +35,6 @@ After install you can start the dev server with
 ```
 pnpm run dev
 ```
-
-If Supabase isn't running, be sure to run
-
-```
-npx supabase start
-```
-
-Supabase can be stopped using
-
-```
-npx supabase stop
-```
-
-Stopping supabase will erase the database. You will need to re-seed the database each time you run `npx supabase start` by running:
-
-```
-npx supabase db reset // Rebuilds the postgres DB with necessary functions and triggers.
-pnpm run reset // Rebuils and applies the prisma schema and creates seed content.
-```
-
-If you wish to avoid this, you can preserve the database until next time by instead using
-
-```
-supabase stop --backup
-```
-
-## Supabase
-
-To speed development, we run Supabase locally. [These instructions](https://supabase.com/docs/guides/getting-started/local-development) were followed to get an initial config in place. Please review them so you understand how it's working.
-
-After running `npx supabase start` the Supabase dashboard is accessible at `http://localhost:54323`
 
 ## Prisma
 
@@ -84,19 +53,14 @@ Explore with `pnpm prisma-studio`.
 -   `/kysely` Config and functions for using Kysely
 -   `/public` Static files that will be publicly available at `https://[URL]/<filename>`.
 -   `/playwright` End-to-end tests
--   `/supabase` Files generated for use when running Supabase locally. Likely won't have to touch anything in here, with the exception of `seed.sql` which has been edited to support our Authentication setup, as described below.
 
 ## Authentication
 
-We use Supabase as our authentication provider. This gives us easy access to SSO providers (e.g. Github, Google, etc) and helpful functions (e.g. send invite email, reset password, etc).
+We are using [Lucia](https://github.com/lucia-auth/lucia) for authentication.
 
-Supabase manages users in a separate authentication postgres schema. We don't want to be messing with the supabase-managed schema, so we create a parallel `Users` table on the `public` (i.e. default) postgres schema. This `public.Users` table does not store any password, hash, or other auth-specific information. It only stores data that we may need on the application side (e.g. name and avatar for display, or email address so that we can send notifications). Likewise, we don't want any application-specific information being stored on the `auth` schema or managed by supabase. Supabase offers to provide this with a `metadata` object they'll track and return to you, but that would then require us to go through supabase auth everytime we want any user data (e.g. searching for users to add as a Member).
+It is a very minimal session-based authentication system.
 
-However, we do need our Users table to remain in sync with any data added or edited in the `auth` schema - specifically, the user's email address. On signup we take this email address from the form and submit it both to Supabase auth and to our Users table. However, the user can edit this email through Supabase-only functions that our backend wouldn't know about. To handle this scenario, we create a [Function and Trigger](https://supabase.com/docs/guides/database/functions) (stored in `/supabase/seed.sql`). Note, this is a just a plain Postgres SQL function, not a Supabase Edge Function.
-
-The `/supabase/seed.sql` file has been edited to specify a function and trigger. After running `npx supabase db reset`, you should be able use the Dashboard to navigate to the Database > Functions or Database > Triggers tab and see `handle_updated_user` and `on_user_update` respectively.
-
-These instructions hold for using email signup (where their email is entered directly into a form). For 3rd party SSO signup, we will probably need an additional function and trigger to handle user_created events.
+See [core/lib/auth/README.md](core/lib/auth/README.md) for more information.
 
 # Testing
 

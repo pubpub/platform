@@ -20,6 +20,7 @@ type UserWithMembersShips = Omit<Users, "passwordHash"> & {
 };
 declare module "lucia" {
 	interface Register {
+		UserId: UsersId;
 		Lucia: typeof lucia;
 		DatabaseUserAttributes: Omit<UserWithMembersShips, "id">;
 		DatabaseSessionAttributes: Omit<
@@ -189,7 +190,6 @@ export const lucia = new Lucia(adapter, {
 		slug,
 		createdAt,
 		updatedAt,
-		supabaseId,
 		memberships,
 		avatar,
 		orcid,
@@ -202,7 +202,6 @@ export const lucia = new Lucia(adapter, {
 			slug,
 			createdAt,
 			updatedAt,
-			supabaseId,
 			memberships,
 			avatar,
 			orcid,

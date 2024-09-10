@@ -37,6 +37,8 @@ jobs:
         #   - build-base
         with:
             package: core
+            # we require a bigger lad
+            runner: ubuntu-latest-m
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

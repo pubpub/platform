@@ -1,6 +1,6 @@
-import { Members, Users } from "db/public";
+import type { Members, Users } from "db/public";
 
-export type MemberSelectUserWithMembership = Users & {
+export type MemberSelectUserWithMembership = Omit<Users, "passwordHash"> & {
 	member: Members;
 };
 

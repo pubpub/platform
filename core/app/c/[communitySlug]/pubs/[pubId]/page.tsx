@@ -5,7 +5,6 @@ import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -17,7 +16,7 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
-import { pubInclude } from "~/lib/types";
+import { pubInclude, PubPayload } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
@@ -113,7 +112,7 @@ export default async function Page({
 							<div>
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
-									pub={pub}
+									pubId={pub.id as PubsId}
 									stage={stage!}
 									pageContext={{
 										params: params,
@@ -168,7 +167,11 @@ export default async function Page({
 				/>
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper pub={pub} members={community.members} />
+				<PubChildrenTableWrapper
+					communitySlug={params.communitySlug}
+					pageContext={{ params, searchParams }}
+					parentPubId={pub.id as PubsId}
+				/>
 			</Suspense>
 		</div>
 	);

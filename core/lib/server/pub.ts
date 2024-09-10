@@ -20,7 +20,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { ForbiddenError, NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 
-type PubValues = Record<string, JsonValue>;
+export type PubValues = Record<string, JsonValue>;
 
 type PubNoChildren = {
 	id: PubsId;

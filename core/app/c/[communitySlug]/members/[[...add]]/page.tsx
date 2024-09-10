@@ -36,7 +36,6 @@ const getCachedMembers = (community: Community) =>
 							"users.createdAt as createdAt",
 							"users.isSuperAdmin as isSuperAdmin",
 							"users.slug as slug",
-							"users.supabaseId as supabaseId",
 						])
 						.whereRef("users.id", "=", "members.userId")
 				)
@@ -111,7 +110,7 @@ export default async function Page({
 					content={<AddMember community={community} email={searchParams.email} />}
 				/>
 			</div>
-			<MemberTable members={tableMembers} community={community} />
+			<MemberTable members={tableMembers} />
 		</>
 	);
 }

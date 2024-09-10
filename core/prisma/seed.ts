@@ -1,18 +1,15 @@
 import { PrismaClient } from "@prisma/client";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { makeWorkerUtils } from "graphile-worker";
 
 import { logger } from "logger";
 
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { createPasswordHash } from "~/lib/auth/password";
 import { env } from "~/lib/env/env.mjs";
 import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
 
-const supabaseUrl = env.SUPABASE_URL;
-const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
 const prisma = new PrismaClient();
-const supabase = new SupabaseClient(supabaseUrl, supabaseKey);
 
 async function createUserMembers({
 	email,
@@ -34,36 +31,14 @@ async function createUserMembers({
 	prismaCommunityIds: string[];
 }) {
 	let user;
-	const { data, error } = await supabase.auth.admin.createUser({
-		email,
-		password,
-		email_confirm: true,
-	});
-	if (error) {
-		logger.warn(`Error creating user: ${error}`);
-		logger.info("Looking up existing supabase user");
-		const { data, error: newError } = await supabase.auth.admin.listUsers();
-		if (newError || !data.users) {
-			logger.error(`Error finding existing user ${error}`);
-		} else {
-			user = data.users.find((user) => user.email === email);
-
-			logger.info("Resetting password for user with email " + email);
-			await supabase.auth.admin.updateUserById(user.id, {
-				password,
-			});
-		}
-	} else {
-		user = data.user;
-	}
 
 	await prisma.user.create({
 		data: {
 			slug,
 			email: user ? user.email : email,
-			supabaseId: user.id,
 			firstName,
 			lastName,
+			passwordHash: await createPasswordHash(password),
 			avatar: "/demo/person.png",
 			isSuperAdmin,
 			memberships: {
