@@ -1,7 +1,7 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"globalDependencies": ["**/.env.*local"],
-	"pipeline": {
+	"tasks": {
 		"topo": {
 			"dependsOn": ["^topo"]
 		},
@@ -27,7 +27,7 @@
 		},
 		"format": {
 			"outputs": ["node_modules/.cache/.prettiercache"],
-			"outputMode": "new-only"
+			"outputLogs": "new-only"
 		},
 		"test": {
 			"dependsOn": ["^topo"],
