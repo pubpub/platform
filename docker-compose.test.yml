@@ -30,7 +30,7 @@ services:
         ports:
             - "30000:3000"
         depends_on:
-            - postgres
+            - db
             - jobs
         profiles:
             - test
@@ -53,18 +53,14 @@ services:
         networks:
             - app-network
         depends_on:
-            - postgres
+            - db
         profiles:
             - test
 
     db:
-        image: postgres:15
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: postgres
-        ports:
-            - "5432:5432"
+        extends:
+            file: ./docker-compose.base.yml
+            service: db
         volumes:
             - postgres_data:/var/lib/postgresql/data
         networks:
@@ -73,11 +69,9 @@ services:
             - test
 
     inbucket:
-        image: inbucket/inbucket:latest
-        ports:
-            - "55324:9000" # UI
-            - "55325:2500" # smtp
-            - "55326:1100" # pop3
+        extends:
+            file: ./docker-compose.base.yml
+            service: inbucket
         networks:
             - app-network
         profiles:
