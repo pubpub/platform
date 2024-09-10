@@ -6,12 +6,15 @@ import Markdown from "react-markdown";
 import type { PubsId } from "db/public";
 import type { InputProps } from "ui/input";
 import { CoreSchemaType, ElementType } from "db/public";
+import { InputComponent } from "db/src/public/InputComponent";
+import { logger } from "logger";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
 import { DatePicker } from "ui/date-picker";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
+import { Textarea, TextareaProps } from "ui/textarea";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
@@ -23,7 +26,7 @@ interface ElementProps {
 	name: string;
 }
 
-const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
+const TextInputElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 	const { control } = useFormContext();
 
 	return (
@@ -51,7 +54,34 @@ const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 	);
 };
 
-const BooleanElement = ({ label, name }: ElementProps) => {
+const TextAreaElement = ({ label, name, ...rest }: ElementProps & TextareaProps) => {
+	const { control } = useFormContext();
+	return (
+		<FormField
+			control={control}
+			name={name}
+			render={({ field }) => {
+				const { value, ...fieldRest } = field;
+				return (
+					<FormItem>
+						<FormLabel>{label}</FormLabel>
+						<FormControl>
+							<Textarea
+								data-testid={name}
+								value={value ?? ""}
+								{...fieldRest}
+								{...rest}
+							/>
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				);
+			}}
+		/>
+	);
+};
+
+const CheckboxElement = ({ label, name }: ElementProps) => {
 	const { control } = useFormContext();
 
 	return (
@@ -118,7 +148,7 @@ const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId: PubsI
 	);
 };
 
-const Vector3Element = ({ label, name }: ElementProps) => {
+const ConfidenceSliderElement = ({ label, name }: ElementProps) => {
 	const { control } = useFormContext();
 	return (
 		<FormField
@@ -172,7 +202,7 @@ export const FormElement = ({
 	pubId: PubsId;
 	element: Form["elements"][number];
 }) => {
-	const { schemaName, label: labelProp, slug } = element;
+	const { component, label: labelProp, slug } = element;
 	if (!slug) {
 		if (element.type === ElementType.structural) {
 			return (
@@ -186,30 +216,31 @@ export const FormElement = ({
 		return null;
 	}
 
-	if (!schemaName) {
+	if (!component) {
 		return null;
 	}
 
 	const elementProps = { label: labelProp ?? "", name: slug };
-	if (
-		schemaName === CoreSchemaType.String ||
-		schemaName === CoreSchemaType.Email ||
-		schemaName === CoreSchemaType.URL
-	) {
-		// TODO: figure out what kind of text element the user wanted (textarea vs input)
-		return <TextElement {...elementProps} />;
+	if (component === InputComponent.textInput) {
+		return <TextInputElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.Boolean) {
-		return <BooleanElement {...elementProps} />;
+	if (component === InputComponent.textArea) {
+		return <TextAreaElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.FileUpload) {
+	if (component === InputComponent.checkbox) {
+		return <CheckboxElement {...elementProps} />;
+	}
+	if (component === InputComponent.fileUpload) {
 		return <FileUploadElement pubId={pubId} {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.Vector3) {
-		return <Vector3Element {...elementProps} />;
+	if (component === InputComponent.confidenceInterval) {
+		return <ConfidenceSliderElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.DateTime) {
+	if (component === InputComponent.datePicker) {
 		return <DateElement {...elementProps} />;
 	}
-	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
+	logger.error(
+		`Unknown component ${component} when rendering ${element.label} (${element.slug}, ${element.schemaName})`
+	);
+	return null;
 };

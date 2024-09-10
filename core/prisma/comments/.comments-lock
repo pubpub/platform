@@ -167,6 +167,11 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 
 
+-- Enum InputComponent comments
+
+
+
+
 -- Enum ApiAccessType comments
 
 
