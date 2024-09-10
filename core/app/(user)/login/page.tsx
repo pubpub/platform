@@ -36,7 +36,7 @@ export default async function Login({
 							We've migrated our login system. If you have trouble logging in, you
 							need to reset your password.{" "}
 							<Link
-								href="/reset-password"
+								href="/forgot"
 								className="font-medium underline underline-offset-4"
 							>
 								Click here
