@@ -38,7 +38,7 @@
 		"@types/react": "^18.2.78",
 		"contracts": "workspace:*",
 		"tsconfig": "workspace:*",
-		"typescript": "^5.4.2",
+		"typescript": "^5.6.2",
 		"ui": "workspace:*"
 	},
 	"preconstruct": {

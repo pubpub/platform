@@ -40,7 +40,7 @@
 		"prettier": "^3.2.5",
 		"tsconfig": "workspace:*",
 		"tsx": "^3.13.0",
-		"typescript": "^5.4.2",
+		"typescript": "^5.6.2",
 		"zod": "^3.23.8"
 	},
 	"prettier": "@pubpub/prettier-config",
