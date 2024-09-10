@@ -208,12 +208,6 @@ importers:
       '@ts-rest/serverless':
         specifier: ^3.45.2
         version: 3.51.0(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(@types/aws-lambda@8.10.145)(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(zod@3.23.8)
-      '@types/mdast':
-        specifier: ^4.0.4
-        version: 4.0.4
-      '@types/unist':
-        specifier: ^3.0.2
-        version: 3.0.3
       ajv:
         specifier: ^8.12.0
         version: 8.17.1
@@ -269,8 +263,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       lucide-react:
-        specifier: ^0.356.0
-        version: 0.356.0(react@18.3.1)
+        specifier: ^0.357.0
+        version: 0.357.0(react@18.3.1)
       micromark-extension-directive:
         specifier: ^3.0.0
         version: 3.0.1
@@ -296,7 +290,7 @@ importers:
         specifier: ^1.12.0
         version: 1.13.0
       react:
-        specifier: 18.3.1
+        specifier: ^18.3.1
         version: 18.3.1
       react-dom:
         specifier: 18.3.1
@@ -401,6 +395,9 @@ importers:
       '@types/lodash.partition':
         specifier: ^4.6.9
         version: 4.6.9
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: ^20
         version: 20.16.5
@@ -408,11 +405,14 @@ importers:
         specifier: ^6.4.9
         version: 6.4.15
       '@types/react':
-        specifier: 18.3.5
+        specifier: ^18.3.5
         version: 18.3.5
       '@types/react-dom':
         specifier: 18.3.0
         version: 18.3.0
+      '@types/unist':
+        specifier: ^3.0.2
+        version: 3.0.3
       '@types/uuid':
         specifier: ^9.0.2
         version: 9.0.8
@@ -447,7 +447,7 @@ importers:
         specifier: ^1.68.6
         version: 1.192.5
       tailwindcss:
-        specifier: ^3.3.3
+        specifier: ^3.4.10
         version: 3.4.10(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2))
       ts-node:
         specifier: ^10.9.1
@@ -459,7 +459,7 @@ importers:
         specifier: ^4.19.0
         version: 4.19.0
       typescript:
-        specifier: 5.6.2
+        specifier: ^5.6.2
         version: 5.6.2
       vitest:
         specifier: ^1.3.1
@@ -513,7 +513,7 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       react:
-        specifier: 18.3.1
+        specifier: ^18.3.1
         version: 18.3.1
       react-dom:
         specifier: 18.3.1
@@ -547,7 +547,7 @@ importers:
         specifier: ^20
         version: 20.16.5
       '@types/react':
-        specifier: 18.3.5
+        specifier: ^18.3.5
         version: 18.3.5
       '@types/react-dom':
         specifier: 18.3.0
@@ -562,14 +562,16 @@ importers:
         specifier: ^8.4.27
         version: 8.4.45
       tailwindcss:
-        specifier: ^3.3.3
+        specifier: ^3.4.10
         version: 3.4.10(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2))
       tsconfig:
         specifier: workspace:*
         version: link:../../config/tsconfig
       typescript:
-        specifier: 5.6.2
+        specifier: ^5.6.2
         version: 5.6.2
+
+  integrations/evaluations-proxy: {}
 
   integrations/submissions:
     dependencies:
@@ -604,7 +606,7 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       react:
-        specifier: 18.3.1
+        specifier: ^18.3.1
         version: 18.3.1
       react-dom:
         specifier: 18.3.1
@@ -635,7 +637,7 @@ importers:
         specifier: ^20
         version: 20.16.5
       '@types/react':
-        specifier: 18.3.5
+        specifier: ^18.3.5
         version: 18.3.5
       '@types/react-dom':
         specifier: 18.3.0
@@ -647,14 +649,16 @@ importers:
         specifier: ^8.4.27
         version: 8.4.45
       tailwindcss:
-        specifier: ^3.3.3
+        specifier: ^3.4.10
         version: 3.4.10(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2))
       tsconfig:
         specifier: workspace:*
         version: link:../../config/tsconfig
       typescript:
-        specifier: 5.6.2
+        specifier: ^5.6.2
         version: 5.6.2
+
+  integrations/submissions-proxy: {}
 
   jobs:
     dependencies:
@@ -784,9 +788,6 @@ importers:
       '@react-email/components':
         specifier: 0.0.25
         version: 0.0.25(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/react':
-        specifier: ^18.3.5
-        version: 18.3.5
       browserslist:
         specifier: ^4.22.2
         version: 4.23.3
@@ -797,7 +798,7 @@ importers:
         specifier: ^9.10.0
         version: 9.10.0(jiti@1.21.6)
       react:
-        specifier: 18.3.1
+        specifier: ^18.3.1
         version: 18.3.1
       react-email:
         specifier: 3.0.1
@@ -818,6 +819,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.16.5
+      '@types/react':
+        specifier: ^18.3.5
+        version: 18.3.5
       dotenv-cli:
         specifier: ^7.2.1
         version: 7.4.2
@@ -1036,7 +1040,7 @@ importers:
         version: 3.1.1(@uppy/core@3.13.1)
       '@uppy/react':
         specifier: ^3.1.4
-        version: 3.4.0(@uppy/core@3.13.1)(@uppy/dashboard@3.9.1(@uppy/core@3.13.1))(@uppy/drag-drop@3.1.1(@uppy/core@3.13.1))(@uppy/file-input@3.1.2(@uppy/core@3.13.1))(@uppy/progress-bar@3.1.1(@uppy/core@3.13.1))(@uppy/status-bar@4.0.3(@uppy/core@3.13.1))(react@18.3.1)
+        version: 3.4.0(@uppy/core@3.13.1)(@uppy/dashboard@3.9.1(@uppy/core@3.13.1))(@uppy/drag-drop@3.1.1(@uppy/core@3.13.1))(@uppy/file-input@3.1.2(@uppy/core@3.13.1))(@uppy/progress-bar@3.1.1(@uppy/core@3.13.1))(@uppy/status-bar@3.3.3(@uppy/core@3.13.1))(react@18.3.1)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -1090,7 +1094,7 @@ importers:
         specifier: ^9.10.0
         version: 9.10.0(jiti@1.21.6)
       postcss:
-        specifier: ^8.4.20
+        specifier: ^8.4.27
         version: 8.4.45
       react:
         specifier: ^18.3.1
@@ -6337,11 +6341,6 @@ packages:
     peerDependencies:
       '@uppy/core': ^3.11.2
 
-  '@uppy/status-bar@4.0.3':
-    resolution: {integrity: sha512-ckujiEQwHgpJGa5Q6OZF+hJ+3JSMgs/7vyl4aeBvV0zSWoPSg/W10TpyGeNvMaaAsbAs4UB+0LuUjVu/vSmFcw==}
-    peerDependencies:
-      '@uppy/core': ^4.1.2
-
   '@uppy/store-default@3.2.2':
     resolution: {integrity: sha512-OiSgT++Jj4nLK0N9WTeod3UNjCH81OXE5BcMJCd9oWzl2d0xPNq2T/E9Y6O72XVd+6Y7+tf5vZlPElutfMB3KQ==}
 
@@ -6352,9 +6351,6 @@ packages:
 
   '@uppy/utils@5.9.0':
     resolution: {integrity: sha512-9Ubddd3orCOLYjf0KobwgJ+aTrABSxk9t4X/QdM4qJHVZuMIftkaMplrViRUO+kvIBCXEZDIP2AmS060siDNGw==}
-
-  '@uppy/utils@6.0.2':
-    resolution: {integrity: sha512-ZoNeAa1YTKSlcvXe1SP3POjzjRZ9jSojorbst03vwd1Ks9vHPGf6pne61DowTXHZ3HMj1vpcIaQ1VIEWeeADlA==}
 
   '@uppy/xhr-upload@3.6.8':
     resolution: {integrity: sha512-zr3OHrIdo08jmCqTYKS0C7o3E0XQpjtZI40wmB6VvXYzu4x/aZankG9QqKxLiY0n8KbZ9aCIvO8loxBGoL7Kaw==}
@@ -8998,11 +8994,6 @@ packages:
 
   lucia@3.2.0:
     resolution: {integrity: sha512-eXMxXwk6hqtjRTj4W/x3EnTUtAztLPm0p2N2TEBMDEbakDLXiYnDQ9z/qahjPdPdhPguQc+vwO0/88zIWxlpuw==}
-
-  lucide-react@0.356.0:
-    resolution: {integrity: sha512-MDInjLrmZToccH2UxEshntujBlFwtOofGB22FN/eg39FfGVYV1TT1eMIv2j4rdaTJBpYjUuX7fEo9pwYkNFgwA==}
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0
 
   lucide-react@0.357.0:
     resolution: {integrity: sha512-ILK6Ye6BMFyXyIHqG8FwMit1XKrj4KocLLLW4fDAAwsFjt6gSL9U6e3sZlbARIOqv0oP5XzLVacHEcb2SxuWkw==}
@@ -18107,7 +18098,7 @@ snapshots:
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 22.5.4
+      '@types/node': 20.16.5
 
   '@types/hapi__catbox@10.2.6': {}
 
@@ -18326,7 +18317,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 20.16.5
 
   '@types/tinycolor2@1.4.6': {}
 
@@ -18509,7 +18500,7 @@ snapshots:
       p-queue: 7.4.1
       preact: 10.23.2
 
-  '@uppy/react@3.4.0(@uppy/core@3.13.1)(@uppy/dashboard@3.9.1(@uppy/core@3.13.1))(@uppy/drag-drop@3.1.1(@uppy/core@3.13.1))(@uppy/file-input@3.1.2(@uppy/core@3.13.1))(@uppy/progress-bar@3.1.1(@uppy/core@3.13.1))(@uppy/status-bar@4.0.3(@uppy/core@3.13.1))(react@18.3.1)':
+  '@uppy/react@3.4.0(@uppy/core@3.13.1)(@uppy/dashboard@3.9.1(@uppy/core@3.13.1))(@uppy/drag-drop@3.1.1(@uppy/core@3.13.1))(@uppy/file-input@3.1.2(@uppy/core@3.13.1))(@uppy/progress-bar@3.1.1(@uppy/core@3.13.1))(@uppy/status-bar@3.3.3(@uppy/core@3.13.1))(react@18.3.1)':
     dependencies:
       '@uppy/core': 3.13.1
       '@uppy/utils': 5.9.0
@@ -18520,7 +18511,7 @@ snapshots:
       '@uppy/drag-drop': 3.1.1(@uppy/core@3.13.1)
       '@uppy/file-input': 3.1.2(@uppy/core@3.13.1)
       '@uppy/progress-bar': 3.1.1(@uppy/core@3.13.1)
-      '@uppy/status-bar': 4.0.3(@uppy/core@3.13.1)
+      '@uppy/status-bar': 3.3.3(@uppy/core@3.13.1)
 
   '@uppy/status-bar@3.3.3(@uppy/core@3.13.1)':
     dependencies:
@@ -18529,15 +18520,6 @@ snapshots:
       '@uppy/utils': 5.9.0
       classnames: 2.5.1
       preact: 10.23.2
-
-  '@uppy/status-bar@4.0.3(@uppy/core@3.13.1)':
-    dependencies:
-      '@transloadit/prettier-bytes': 0.3.4
-      '@uppy/core': 3.13.1
-      '@uppy/utils': 6.0.2
-      classnames: 2.5.1
-      preact: 10.23.2
-    optional: true
 
   '@uppy/store-default@3.2.2': {}
 
@@ -18551,12 +18533,6 @@ snapshots:
     dependencies:
       lodash: 4.17.21
       preact: 10.23.2
-
-  '@uppy/utils@6.0.2':
-    dependencies:
-      lodash: 4.17.21
-      preact: 10.23.2
-    optional: true
 
   '@uppy/xhr-upload@3.6.8(@uppy/core@3.13.1)':
     dependencies:
@@ -21641,10 +21617,6 @@ snapshots:
   lucia@3.2.0:
     dependencies:
       oslo: 1.2.0
-
-  lucide-react@0.356.0(react@18.3.1):
-    dependencies:
-      react: 18.3.1
 
   lucide-react@0.357.0(react@18.3.1):
     dependencies:

@@ -24,7 +24,7 @@
 		"contracts": "workspace:*",
 		"next": "14.2.9",
 		"parse5-sax-parser": "^7.0.0",
-		"react": "18.3.1",
+		"react": "^18.3.1",
 		"react-dom": "18.3.1",
 		"react-hook-form": "^7.46.1",
 		"tailwind-merge": "^2.5.2",
@@ -36,12 +36,12 @@
 		"@preconstruct/next": "^4.0.0",
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "^20",
-		"@types/react": "18.3.5",
+		"@types/react": "^18.3.5",
 		"@types/react-dom": "18.3.0",
 		"autoprefixer": "^10.4.14",
 		"postcss": "^8.4.27",
-		"tailwindcss": "^3.3.3",
+		"tailwindcss": "^3.4.10",
 		"tsconfig": "workspace:*",
-		"typescript": "5.6.2"
+		"typescript": "^5.6.2"
 	}
 }
