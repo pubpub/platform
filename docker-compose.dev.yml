@@ -135,21 +135,14 @@ services:
       - "3002:8080"
 
   db:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    ports:
-      - "54322:5432"
+    extends:
+      file: docker-compose.base.yml
+      service: db
   
   inbucket:
-    image: inbucket/inbucket:latest
-    restart: always
-    ports:
-      - "54324:9000"
-      - "54325:2500"
+    extends:
+      file: docker-compose.base.yml
+      service: inbucket
 
 networks:
   app-network:

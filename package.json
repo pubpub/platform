@@ -15,12 +15,12 @@
 		"lint:ws": "pnpm dlx sherif@latest",
 		"test": "turbo test",
 		"fix": "pnpm run lint:fix && pnpm run format:fix",
-		"dev:db:start": "docker compose -f docker-compose.dev.yml up db -d",
-		"dev:db:stop": "docker compose -f docker-compose.dev.yml down db",
-		"dev:inbucket:start": "docker compose -f docker-compose.dev.yml up inbucket -d",
-		"dev:inbucket:stop": "docker compose -f docker-compose.dev.yml down inbucket",
+		"dev:db:start": "docker compose -f docker-compose.base.yml up db -d",
+		"dev:db:stop": "docker compose -f docker-compose.base.yml down db",
+		"dev:inbucket:start": "docker compose -f docker-compose.base.yml up inbucket -d",
+		"dev:inbucket:stop": "docker compose -f docker-compose.base.yml down inbucket",
 		"dev:setup": "pnpm install && pnpm run dev:db:start && pnpm run dev:inbucket:start && pnpm p:dev && pnpm --filter core migrate-dev",
-		"dev:teardown": "docker compose -f docker-compose.dev.yml down"
+		"dev:teardown": "docker compose -f docker-compose.base.yml down"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.22.17",
