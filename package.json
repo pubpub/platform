@@ -45,7 +45,7 @@
 		]
 	},
 	"prettier": "@pubpub/prettier-config",
-	"packageManager": "pnpm@8.7.0",
+	"packageManager": "pnpm@9.10.0",
 	"prisma": {
 		"schema": "packages/db/src/prisma/schema.prisma"
 	},
