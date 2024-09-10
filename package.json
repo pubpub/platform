@@ -14,7 +14,13 @@
 		"lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
 		"lint:ws": "pnpm dlx sherif@latest",
 		"test": "turbo test",
-		"fix": "pnpm run lint:fix && pnpm run format:fix"
+		"fix": "pnpm run lint:fix && pnpm run format:fix",
+		"dev:db:start": "docker compose -f docker-compose.dev.yml up db -d",
+		"dev:db:stop": "docker compose -f docker-compose.dev.yml down db",
+		"dev:inbucket:start": "docker compose -f docker-compose.dev.yml up inbucket -d",
+		"dev:inbucket:stop": "docker compose -f docker-compose.dev.yml down inbucket",
+		"dev:setup": "pnpm install && pnpm run db:start && pnpm run inbucket:start && pnpm p:dev && pnpm --filter core migrate-dev",
+		"dev:teardown": "docker compose -f docker-compose.dev.yml down"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.22.17",
