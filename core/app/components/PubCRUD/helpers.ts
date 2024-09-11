@@ -9,6 +9,7 @@ import type {
 	StagesId,
 	StructuralFormElement,
 } from "db/public";
+import type { InputComponent } from "db/src/public/InputComponent";
 import { CoreSchemaType, ElementType } from "db/public";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
@@ -44,6 +45,8 @@ export function createElementFromPubType(pubType: {
 	content: string | null;
 	required: boolean | null;
 	elementId: FormElementsId;
+	component: InputComponent | null;
+	config: {} | undefined;
 }[] {
 	return pubType.fields.map((field, index) => ({
 		slug: field.slug || null,
@@ -58,6 +61,8 @@ export function createElementFromPubType(pubType: {
 		content: null,
 		required: false,
 		elementId: field.id as unknown as FormElementsId, // use field.id?
+		component: null,
+		config: {},
 	}));
 }
 
