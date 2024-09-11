@@ -12,7 +12,7 @@ type Props = CreateEditPubProps;
 
 async function GenericDynamicPubFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
-	const communityId = pub ? pub.communityId : props.communityId;
+	const communityId = pub ? pub.communityId : props.communityId!;
 	const query = props.stageId
 		? getCommunityByStage(props.stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
@@ -28,7 +28,10 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 		return null;
 	}
 	const { availableStagesOfCurrentPub = null, stageOfCurrentPub = null } = pub
-		? (await availableStagesAndCurrentStage(pub).executeTakeFirst()) ?? {}
+		? (await availableStagesAndCurrentStage({
+				pubId: pub.id,
+				communityId,
+			}).executeTakeFirst()) ?? {}
 		: {};
 	const availableStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;

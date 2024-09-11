@@ -91,14 +91,20 @@ export const getCommunityByStage = (stageId: StagesId) =>
 			.where("stages.id", "=", stageId)
 	);
 
-export const availableStagesAndCurrentStage = (pub: any) =>
+export const availableStagesAndCurrentStage = ({
+	pubId,
+	communityId,
+}: {
+	pubId: PubsId;
+	communityId: CommunitiesId;
+}) =>
 	autoCache(
 		db
-			.with("currentStageId", (db) =>
-				db
+			.with("currentStageId", (eb) =>
+				eb
 					.selectFrom("PubsInStages")
-					.select((eb) => ["stageId as currentStageId"])
-					.where("PubsInStages.pubId", "=", pub.pubId as PubsId)
+					.select(["stageId as currentStageId"])
+					.where("PubsInStages.pubId", "=", pubId)
 			)
 			.selectFrom("stages")
 			.select((eb) => [
@@ -117,7 +123,7 @@ export const availableStagesAndCurrentStage = (pub: any) =>
 						.selectFrom("stages")
 						.select(["id", "name", "order"])
 						.orderBy("order desc")
-						.where("stages.communityId", "=", pub.communityId as CommunitiesId)
+						.where("stages.communityId", "=", communityId as CommunitiesId)
 				).as("availableStagesOfCurrentPub"),
 			])
 	);
