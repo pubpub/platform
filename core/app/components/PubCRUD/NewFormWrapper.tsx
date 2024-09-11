@@ -51,6 +51,7 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 			pubId={pub?.id}
 		/>
 	));
+
 	return (
 		<NewForm
 			currentStage={stageOfPubRnRn}

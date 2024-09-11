@@ -230,8 +230,11 @@ export const _updatePub = async ({
 	pubId: PubsId;
 	fields: { slug: string; value: JsonValue }[];
 }) => {
+	// create a list of slugs to be updated
 	const toBeUpdatedPubFieldSlugs = fields.map(({ slug }) => slug);
+	console.log("\n\nFiled slugs to be updated", toBeUpdatedPubFieldSlugs);
 
+	// this gets the old values for the pub we want to update
 	const toBeUpdatedPubValues = await db
 		.selectFrom("pub_values")
 		.select((eb) => [
@@ -260,6 +263,7 @@ export const _updatePub = async ({
 		])
 		.where("pub_values.pubId", "=", pubId)
 		.execute();
+	console.log("\n\nPub Values???", toBeUpdatedPubValues);
 
 	const stageMoveQuery =
 		stageId &&
@@ -268,10 +272,10 @@ export const _updatePub = async ({
 			autoRevalidate(trx.insertInto("PubsInStages").values({ pubId, stageId })).execute();
 		});
 
+	// this includes the value for the new field we added
 	const newValues = Object.fromEntries(
 		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])
 	);
-
 	const pubFields = toBeUpdatedPubValues
 		.map((pubValue) => pubValue.field)
 		.filter(
@@ -286,7 +290,7 @@ export const _updatePub = async ({
 				}
 			> => field !== null && field.schema !== null && field.schema.schema !== null
 		);
-
+	console.log("\n\nPub Fields that will def get sent to the db", pubFields);
 	const validated = validatePubValues({
 		fields: pubFields,
 		values: newValues,
@@ -298,7 +302,6 @@ export const _updatePub = async ({
 			cause: validated.error,
 		};
 	}
-
 	const queries = [
 		toBeUpdatedPubValues.map(async (pubValue) => {
 			const field = fields.find((f) => f.slug === pubValue.field?.slug);
@@ -311,7 +314,7 @@ export const _updatePub = async ({
 				return;
 			}
 			const { value } = field;
-
+			// console.log("\n\nVALUE", value);
 			return autoRevalidate(
 				db
 					.updateTable("pub_values")
@@ -379,7 +382,6 @@ export const updatePub = defineServerAction(async function updatePub({
 		slug,
 		value,
 	}));
-
 	try {
 		const result = await _updatePub({ stageId, pubId, fields: mappedFields });
 		if (path) {
