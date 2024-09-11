@@ -12,6 +12,7 @@ export enum InputComponent {
 	fileUpload = "fileUpload",
 	memberSelect = "memberSelect",
 	confidenceInterval = "confidenceInterval",
+	connectionSelect = "connectionSelect",
 }
 
 /** Zod schema for InputComponent */
