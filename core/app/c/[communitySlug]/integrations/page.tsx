@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
 import IntegrationsList from "./IntegrationsList";
@@ -37,11 +37,7 @@ export default async function Page({ params }: Props) {
 		return null;
 	}
 
-	const { user } = await getLoginData();
-
-	if (!user) {
-		redirect("/login");
-	}
+	const { user } = await getPageLoginData();
 
 	const token = await createToken({ userId: user.id as UsersId, type: AuthTokenType.generic });
 
