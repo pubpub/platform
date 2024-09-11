@@ -83,7 +83,6 @@ const ExpiredTokenPage = ({
 				</p>
 				<RequestLink
 					formSlug={params.formSlug}
-					communitySlug={params.communitySlug}
 					token={searchParams.token}
 					pubId={searchParams.pubId as PubsId}
 				/>
@@ -118,7 +117,7 @@ export default async function FormPage({
 	const [form, pub] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
-			communityId: community?.id,
+			communityId: community.id,
 		}).executeTakeFirst(),
 		searchParams.pubId ? await getPub(searchParams.pubId) : undefined,
 	]);
@@ -184,6 +183,7 @@ export default async function FormPage({
 		},
 	};
 	const renderWithPubContext = {
+		communityId: community.id,
 		recipient: memberWithUser,
 		communitySlug: params.communitySlug,
 		pub,
