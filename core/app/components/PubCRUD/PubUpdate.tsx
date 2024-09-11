@@ -22,7 +22,10 @@ const PubUpdateForm = dynamic(
 
 export async function PubUpdate({ pubId }: PubUpdateProps) {
 	const pub = await getPubCached(pubId);
-	const stages = await availableStagesAndCurrentStage(pub).executeTakeFirst();
+	const stages = await availableStagesAndCurrentStage({
+		pubId: pub.id,
+		communityId: pub.communityId,
+	}).executeTakeFirst();
 
 	const { availableStagesOfCurrentPub = [], stageOfCurrentPub } = stages ?? {};
 

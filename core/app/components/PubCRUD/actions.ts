@@ -286,6 +286,15 @@ export const _updatePub = async ({
 	const newValues = Object.fromEntries(
 		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])
 	);
+
+	// gets the fields from the pubValues we want to ipdate
+	// the filter is to make sure we only get the fields that have a schema attached to them (not all fields do)
+	// this is because we need the schema to validate the new values
+	// if the schema is missing, we can't validate the new values
+	// and we can't update the pub
+	// so we filter out the fields that don't have a schema
+	// and then we validate the new values against the schema
+	// if the validation fails, we return an error
 	const pubFields = toBeUpdatedPubValues
 		.map((pubValue) => pubValue.field)
 		.filter(
@@ -305,13 +314,14 @@ export const _updatePub = async ({
 		fields: pubFields,
 		values: newValues,
 	});
-
+	console.log("\n\nValidated", validated);
 	if (validated && validated.error) {
 		return {
 			error: validated.error,
 			cause: validated.error,
 		};
 	}
+
 	const queries = [
 		toBeUpdatedPubValues.map(async (pubValue) => {
 			const field = fields.find((f) => f.slug === pubValue.field?.slug);
