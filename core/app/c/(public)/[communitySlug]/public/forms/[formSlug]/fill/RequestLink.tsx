@@ -7,9 +7,9 @@ import { Button } from "ui/button";
 import { Mail } from "ui/icon";
 import { toast } from "ui/use-toast";
 
+import * as actions from "~/app/components/FormSchemaRendering/actions";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
 
 export const RequestLink = ({
 	formSlug,

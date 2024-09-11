@@ -92,20 +92,7 @@ async function NewForm({
 
 	const elements = selectedPubType ? createElementFromPubType(selectedPubType) : [];
 
-	const schema = Type.Object(
-		Object.fromEntries(
-			elements
-				.filter((e) => e.type === ElementType.pubfield)
-				.map((e) => [
-					e.slug as string | undefined,
-					e.schemaName
-						? Type.Optional(getJsonSchemaByCoreSchemaType(e.schemaName))
-						: undefined,
-				])
-		)
-	);
 	const form = useForm({
-		resolver: typeboxResolver(schema),
 		defaultValues: buildDefaultValues(elements, pubValues),
 		reValidateMode: "onChange",
 	});
