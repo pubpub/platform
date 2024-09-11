@@ -5,9 +5,11 @@ import { Pool } from "pg";
 import { z } from "zod";
 
 import type { Database } from "db/Database";
+import { databaseTables } from "db/table-names";
 import { logger } from "logger";
 
 import { env } from "~/lib/env/env.mjs";
+import { UpdatedAtPlugin } from "./updated-at-plugin";
 
 const dialect = new PostgresDialect({
 	pool: new Pool({
@@ -21,6 +23,12 @@ const kyselyLogger =
 				logger.debug({ event }, "Kysely query:\n%s; --Parameters: %o", sql, parameters)
 		: undefined;
 
+const tablesWithUpdateAt = databaseTables
+	.filter((table) => table.columns.find((column) => column.name === "updatedAt"))
+	.map((table) => table.name);
+
+const updatedAtPlugin = new UpdatedAtPlugin(tablesWithUpdateAt);
+
 // Database interface is passed to Kysely's constructor, and from now on, Kysely
 // knows your database structure.
 // Dialect is passed to Kysely's constructor, and from now on, Kysely knows how
@@ -28,6 +36,7 @@ const kyselyLogger =
 export const db = new Kysely<Database>({
 	dialect,
 	log: kyselyLogger,
+	plugins: [updatedAtPlugin],
 });
 
 const PostgresError = z.object({
