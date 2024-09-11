@@ -42,7 +42,7 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 
 	private addUpdatedAtColumn(node: UpdateQueryNode): UpdateQueryNode {
 		const nonUpdatedAtColumns = (node.updates ?? []).filter(
-			(update) => IdentifierNode.is(update.column) && update.column.name !== "updatedAt"
+			(update) => !(IdentifierNode.is(update.column) && update.column.name == "updatedAt")
 		);
 
 		return {

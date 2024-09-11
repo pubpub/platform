@@ -36,7 +36,7 @@ const updatedAtPlugin = new UpdatedAtPlugin(tablesWithUpdateAt);
 export const db = new Kysely<Database>({
 	dialect,
 	log: kyselyLogger,
-	// plugins: [updatedAtPlugin],
+	plugins: [updatedAtPlugin],
 });
 
 const PostgresError = z.object({
