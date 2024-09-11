@@ -124,6 +124,7 @@ model Pub {
   permissions              Permission[]
   IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
+  PubValue                 PubValue[]                 @relation("connection")
 
   @@map(name: "pubs")
 }
@@ -159,6 +160,7 @@ enum CoreSchemaType {
   URL
   MemberId
   FileUpload
+  Connection
 }
 
 model PubFieldSchema {
@@ -176,17 +178,19 @@ model PubFieldSchema {
 }
 
 model PubValue {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
-  field     PubField @relation(fields: [fieldId], references: [id])
-  fieldId   String
-  value     Json
-  pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
+  id             String   @id @default(dbgenerated("gen_random_uuid()"))
+  field          PubField @relation(fields: [fieldId], references: [id])
+  fieldId        String
+  value          Json?
+  pub            Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
+  pubId          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  connectedPub   Pub?     @relation("connection", fields: [connectedPubId], references: [id])
+  connectedPubId String?
   // Add userId and integrationId to track who created the value
 
+  @@unique([pubId, fieldId, connectedPubId], name: "pub_connection")
   @@map(name: "pub_values")
 }
 
@@ -507,6 +511,7 @@ enum InputComponent {
   fileUpload
   memberSelect
   confidenceInterval
+  connectionSelect
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input
