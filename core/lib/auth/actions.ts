@@ -81,7 +81,7 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 	const sessionCookie = lucia.createSessionCookie(session.id);
 	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-	if (props.redirectTo) {
+	if (props.redirectTo && /^\/\w+/.test(props.redirectTo)) {
 		redirect(props.redirectTo);
 	}
 
