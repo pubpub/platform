@@ -176,76 +176,38 @@ async function NewForm({
 				onSubmit={form.handleSubmit(onSubmit)}
 				className={cn("relative flex flex-col gap-6", className)}
 			>
-				<FormField
-					name="pubType"
-					control={form.control}
-					rules={{
-						required: true,
-					}}
-					render={({ field }) => (
-						<FormItem aria-label="Email" className="flex flex-col items-start gap-2">
-							<FormLabel>Pub Type</FormLabel>
-							<FormDescription>Select the type of pub</FormDescription>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button size="sm" variant="outline">
-										{selectedPubType?.name || "Select PubType"}
-										<ChevronDown size="16" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent>
-									{availablePubTypes.map((pubType) => (
-										<DropdownMenuItem
-											key={pubType.id}
-											onSelect={() => {
-												setSelectedPubType(pubType);
-												field.onChange(pubType.id);
-												handleSelect(pubType);
-											}}
-										>
-											{pubType.name}
-										</DropdownMenuItem>
-									))}
-								</DropdownMenuContent>
-							</DropdownMenu>
-
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				{!currentStage && (
+				{!pubId && (
 					<FormField
-						name="stage"
+						name="pubType"
 						control={form.control}
 						rules={{
 							required: true,
 						}}
 						render={({ field }) => (
 							<FormItem
-								aria-label="Stage"
+								aria-label="Email"
 								className="flex flex-col items-start gap-2"
 							>
-								<FormLabel>Stage</FormLabel>
-								<FormDescription>
-									Select the stage you want the pub in
-								</FormDescription>
+								<FormLabel>Pub Type</FormLabel>
+								<FormDescription>Select the type of pub</FormDescription>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button size="sm" variant="outline">
-											{selectedStage?.name || "Select Stage"}
+											{selectedPubType?.name || "Select PubType"}
 											<ChevronDown size="16" />
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent>
-										{communityStages.map((stage) => (
+										{availablePubTypes.map((pubType) => (
 											<DropdownMenuItem
-												key={stage.id}
-												onClick={() => {
-													field.onChange(stage.id);
-													setSelectedStage(stage);
+												key={pubType.id}
+												onSelect={() => {
+													setSelectedPubType(pubType);
+													field.onChange(pubType.id);
+													handleSelect(pubType);
 												}}
 											>
-												{stage.name}
+												{pubType.name}
 											</DropdownMenuItem>
 										))}
 									</DropdownMenuContent>
@@ -256,6 +218,42 @@ async function NewForm({
 						)}
 					/>
 				)}
+				<FormField
+					name="stage"
+					control={form.control}
+					rules={{
+						required: true,
+					}}
+					render={({ field }) => (
+						<FormItem aria-label="Stage" className="flex flex-col items-start gap-2">
+							<FormLabel>Stage</FormLabel>
+							<FormDescription>Select the stage you want the pub in</FormDescription>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button size="sm" variant="outline">
+										{selectedStage?.name || "Select Stage"}
+										<ChevronDown size="16" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									{communityStages.map((stage) => (
+										<DropdownMenuItem
+											key={stage.id}
+											onClick={() => {
+												field.onChange(stage.id);
+												setSelectedStage(stage);
+											}}
+										>
+											{stage.name}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 				{selectedPubType && formElements}
 				<Button
 					type="submit"
