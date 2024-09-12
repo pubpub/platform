@@ -8,6 +8,7 @@ type PubCreateButtonProps = CreateEditPubProps & {
 
 export const PubCreateButton = (props: PubCreateButtonProps) => {
 	const identifyingString = props.communityId ?? props.stageId;
+	console.log("Props to CREATE: ", props);
 	return (
 		<PubCRUDDialogue
 			method={"create"}

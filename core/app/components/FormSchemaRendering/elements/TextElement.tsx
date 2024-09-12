@@ -17,14 +17,9 @@ export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps)
 				const { value, ...fieldRest } = field;
 				return (
 					<FormItem>
-						<FormLabel asChild>{label}</FormLabel>
+						<FormLabel>{label}</FormLabel>
 						<FormControl>
-							<Input
-								value={value ?? ""}
-								{...fieldRest}
-								{...rest}
-								onBlur={(e) => e.preventDefault()}
-							/>
+							<Input value={value ?? ""} {...fieldRest} {...rest} />
 						</FormControl>
 						<FormMessage />
 					</FormItem>
