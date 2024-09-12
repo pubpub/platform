@@ -25,7 +25,7 @@
 		"next": "14.2.9",
 		"parse5-sax-parser": "^7.0.0",
 		"react": "^18.3.1",
-		"react-dom": "18.3.1",
+		"react-dom": "^18.3.1",
 		"react-hook-form": "^7.46.1",
 		"tailwind-merge": "^2.5.2",
 		"ui": "workspace:*",
