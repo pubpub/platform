@@ -41,9 +41,23 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 	}
 
 	private addUpdatedAtColumn(node: UpdateQueryNode): UpdateQueryNode {
-		const nonUpdatedAtColumns = (node.updates ?? []).filter(
-			(update) => !(IdentifierNode.is(update.column) && update.column.name == "updatedAt")
-		);
+		// we don't want to update the updatedAt twice, so we filter it out here.
+		// this is fine, as we shouldn't be manually updating the updatedAt column
+		const nonUpdatedAtColumns = (node.updates ?? []).filter((update) => {
+			if (!ColumnNode.is(update.column)) {
+				return true;
+			}
+
+			if (!IdentifierNode.is(update.column.column)) {
+				return true;
+			}
+
+			if (update.column.column.name !== "updatedAt") {
+				return true;
+			}
+
+			return false;
+		});
 
 		return {
 			...node,
@@ -72,7 +86,7 @@ export class UpdatedAtPlugin implements KyselyPlugin {
 		return this.#updatedAtTransformer.transformNode(args.node);
 	}
 
-	async transformResult(args: PluginTransformResultArgs): Promise<QueryResult<UnknownRow>> {
+	async transformResult(args: PluginTransformResultArgs): Promise {
 		return args.result;
 	}
 }
