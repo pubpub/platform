@@ -1,5 +1,5 @@
 import type { CreateEditPubProps } from "./types";
-import { GenericDynamicPubFormWrapper } from "./NewFormWrapper";
+import { NewFormWrapper } from "./NewFormWrapper";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
 
 type PubCreateButtonProps = CreateEditPubProps & {
@@ -14,7 +14,7 @@ export const PubCreateButton = (props: PubCreateButtonProps) => {
 			identifyingString={identifyingString as string}
 			button={props.label ? { title: props.label } : undefined}
 		>
-			<GenericDynamicPubFormWrapper {...props} />
+			<NewFormWrapper {...props} />
 		</PubCRUDDialogue>
 	);
 };
