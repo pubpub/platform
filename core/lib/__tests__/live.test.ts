@@ -114,15 +114,14 @@ describe("live", () => {
 		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
 			(m) => m.createForm
 		);
-
-		const forms = await getForm({ slug: "my-form-2" }).execute();
-		expect(forms.length).toEqual(0);
-
 		const community = await trx
 			.selectFrom("communities")
 			.selectAll()
 			.where("slug", "=", "croccroc")
 			.executeTakeFirstOrThrow();
+
+		const forms = await getForm({ slug: "my-form-2", communityId: community.id }).execute();
+		expect(forms.length).toEqual(0);
 
 		const pubType = await trx
 			.selectFrom("pub_types")
@@ -132,7 +131,10 @@ describe("live", () => {
 
 		await createForm(pubType.id, "my form", "my-form-2", community.id);
 
-		const form = await getForm({ slug: "my-form-2" }).executeTakeFirstOrThrow();
+		const form = await getForm({
+			slug: "my-form-2",
+			communityId: community.id,
+		}).executeTakeFirstOrThrow();
 
 		expect(form.name).toEqual("my form");
 	});
