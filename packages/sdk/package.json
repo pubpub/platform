@@ -35,6 +35,7 @@
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
+		"@types/react": "catalog:react18",
 		"react": "catalog:react18",
 		"contracts": "workspace:*",
 		"tsconfig": "workspace:*",

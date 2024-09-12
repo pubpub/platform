@@ -949,6 +949,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 20.16.5
+      '@types/react':
+        specifier: catalog:react18
+        version: 18.3.5
       contracts:
         specifier: workspace:*
         version: link:../contracts
