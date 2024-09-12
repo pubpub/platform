@@ -1,0 +1,23 @@
+services:
+    db:
+        env_file:
+            - path: "./.env.docker-compose"
+              required: false
+        image: postgres:15
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: postgres
+        ports:
+            - "54322:5432"
+
+    inbucket:
+        env_file:
+            - path: "./.env.docker-compose"
+              required: false
+        image: inbucket/inbucket:latest
+        restart: always
+        ports:
+            - "54324:9000"
+            - "54325:2500"

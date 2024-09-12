@@ -42,7 +42,6 @@ export const getSuggestedMembers = async (
 			avatar: true,
 			firstName: true,
 			lastName: true,
-			supabaseId: true,
 			createdAt: true,
 		},
 	});

@@ -13,10 +13,6 @@ type Props = { children: React.ReactNode; params: { communitySlug: string } };
 export default async function MainLayout({ children, params }: Props) {
 	const { user } = await getLoginData();
 
-	if (!user) {
-		redirect("/login");
-	}
-
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
 		return null;
@@ -30,7 +26,7 @@ export default async function MainLayout({ children, params }: Props) {
 	}
 
 	// const availableCommunities = await getAvailableCommunities(user.id as UsersId);
-	const availableCommunities = user?.memberships.map((m) => m.community);
+	const availableCommunities = user?.memberships.map((m) => m.community) ?? [];
 
 	return (
 		<CommunityProvider community={community}>

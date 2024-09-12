@@ -9,8 +9,6 @@ import "./lib/env/env.mjs";
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 makeEnvPublic("PUBPUB_URL");
-makeEnvPublic("SUPABASE_PUBLIC_KEY");
-makeEnvPublic("SUPABASE_URL");
 
 /**
  * @type {import("next").NextConfig}

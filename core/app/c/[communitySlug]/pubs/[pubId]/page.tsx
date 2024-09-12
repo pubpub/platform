@@ -12,11 +12,11 @@ import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
-import { pubInclude, PubPayload } from "~/lib/types";
+import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
@@ -28,10 +28,7 @@ export default async function Page({
 	params: { pubId: string; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
-	const { user } = await getLoginData();
-	if (!user) {
-		return null;
-	}
+	const { user } = await getPageLoginData();
 
 	const token = await createToken({
 		userId: user.id as UsersId,

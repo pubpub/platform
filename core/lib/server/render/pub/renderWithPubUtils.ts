@@ -1,4 +1,4 @@
-import type { MembersId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, MembersId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
@@ -28,6 +28,7 @@ export type RenderWithPubContext = {
 			email: string;
 		};
 	};
+	communityId: CommunitiesId;
 	communitySlug: string;
 	pub: RenderWithPubPub;
 	parentPub?: RenderWithPubPub | null;
@@ -67,10 +68,11 @@ export const renderFormInviteLink = async (
 	formSlug: string,
 	memberId: MembersId,
 	userId: UsersId,
+	communityId: CommunitiesId,
 	pubId?: string
 ) => {
-	await addMemberToForm({ memberId, slug: formSlug });
-	return createFormInviteLink({ userId, formSlug, pubId: pubId as PubsId });
+	await addMemberToForm({ memberId, communityId, slug: formSlug });
+	return createFormInviteLink({ userId, formSlug, communityId, pubId: pubId as PubsId });
 };
 
 export const renderMemberFields = async ({

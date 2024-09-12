@@ -1,21 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
+import { NextResponse } from "next/server";
+
+import { db } from "~/kysely/database";
 import { handleErrors } from "~/lib/server";
-import { formatSupabaseError } from "~/lib/supabase";
-import { getServerSupabase } from "~/lib/supabaseServer";
-import prisma from "~/prisma/db";
 
 export async function GET(req: NextRequest) {
 	return await handleErrors(async () => {
 		const errors: string[] = [];
 		try {
-			const dbQuery = prisma.community.findFirstOrThrow();
-			const supabase = getServerSupabase();
-			const supabaseCheck = supabase.auth.admin.listUsers({ perPage: 1 });
-			const [supabaseResult, dbResult] = await Promise.all([supabaseCheck, dbQuery]);
-			if (supabaseResult.error) {
-				errors.push("Supabase error: " + formatSupabaseError(supabaseResult.error));
-			}
+			const dbQuery = await db
+				.selectFrom("communities")
+				.selectAll()
+				.executeTakeFirstOrThrow();
 		} catch (err) {
 			if (err instanceof Error) {
 				errors.push(err.message);

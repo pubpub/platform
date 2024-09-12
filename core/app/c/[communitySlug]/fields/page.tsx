@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import partition from "lodash.partition";
 
 import type { CommunitiesId } from "db/public";
@@ -8,7 +7,7 @@ import { cn } from "utils";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { getPubFields } from "~/lib/server/pubFields";
 import { FieldsTable } from "./FieldsTable";
@@ -31,10 +30,7 @@ const EmptyState = ({ className }: { className?: string }) => {
 };
 
 export default async function Page({ params }: Props) {
-	const loginData = await getLoginData();
-	if (!loginData) {
-		return notFound();
-	}
+	const loginData = await getPageLoginData();
 	const community = await getCommunityBySlug(params.communitySlug);
 	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
