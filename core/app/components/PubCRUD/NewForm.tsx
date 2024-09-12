@@ -15,7 +15,6 @@ import type {
 	Stages,
 	StagesId,
 } from "db/public";
-import { ElementType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -153,7 +152,7 @@ async function NewForm({
 			}
 		}
 	};
-	
+
 	return (
 		<Form {...form}>
 			<form
