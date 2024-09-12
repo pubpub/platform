@@ -1,8 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
+import { EditorView } from "prosemirror-view";
+
+import { PanelProps } from "./ContextEditor";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
-export function AttributePanel({ panelPosition, viewRef }) {
+
+export interface AttributePanelProps {
+	panelPosition: PanelProps;
+	viewRef: React.MutableRefObject<EditorView | null>;
+}
+
+export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) {
 	const [position, setPosition] = useState(panelPosition);
 	const [height, setHeight] = useState(0);
 	useEffect(() => {
@@ -22,6 +31,7 @@ export function AttributePanel({ panelPosition, viewRef }) {
 			}, animationTimeMS);
 		}
 	}, [panelPosition]);
+
 	return (
 		<>
 			<div
@@ -50,16 +60,16 @@ export function AttributePanel({ panelPosition, viewRef }) {
 				<input
 					onChange={(evt) => {
 						const node = panelPosition.node;
-						// console.log(evt.target.value, node, viewRef.current.dispatch, viewRef.current.state);
-						viewRef.current.dispatch(
-							viewRef.current.state.tr.setNodeMarkup(
-								panelPosition.pos,
-								node.type,
-								{ level: evt.target.value },
-								node.marks
-							)
-						);
-						// updateFunc.func({level: evt.target.value});
+						if (node) {
+							viewRef.current?.dispatch(
+								viewRef.current.state.tr.setNodeMarkup(
+									panelPosition.pos,
+									node.type,
+									{ level: evt.target.value },
+									node.marks
+								)
+							);
+						}
 					}}
 				/>
 				<hr />

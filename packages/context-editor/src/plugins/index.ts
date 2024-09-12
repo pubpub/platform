@@ -3,8 +3,7 @@ import { Schema } from "prosemirror-model";
 
 import { PanelProps } from "../ContextEditor";
 import attributePanel from "./attributePanel";
-import blockDecorations from "./blockDecorations";
-// import inlineDecorations from "./inlineDecorations";
+import structureDecorations from "./structureDecorations";
 
 export const basePlugins = (
 	schema: Schema,
@@ -12,8 +11,7 @@ export const basePlugins = (
 ) => {
 	return [
 		...exampleSetup({ schema, menuBar: false }),
-		blockDecorations(),
-		// inlineDecorations(),
+		structureDecorations(),
 		attributePanel(setPanelPosition),
 	];
 };

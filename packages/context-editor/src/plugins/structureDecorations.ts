@@ -3,7 +3,6 @@ import { Plugin } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
 import { PanelProps } from "../ContextEditor";
-// import { setWidgetClickListener } from "../utils/widgetEvents";
 import { attributePanelKey } from "./attributePanel";
 
 function wrapWidget(
@@ -22,8 +21,6 @@ function wrapWidget(
 		if (isBlock) {
 			widgetButtonChild.innerHTML = `${node.type.name}${node.type.name === "heading" ? ` ${node.attrs.level}` : ""}`;
 		}
-
-		// setWidgetClickListener(widgetButtonChild, node, pos, setPanelPosition);
 		widget.addEventListener("click", (evt) => {
 			if (evt.target instanceof Element) {
 				const rect = evt.target.getBoundingClientRect();
