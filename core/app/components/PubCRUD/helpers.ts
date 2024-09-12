@@ -1,6 +1,8 @@
 import type { FieldValues } from "react-hook-form";
 
-import type { JsonValue } from "contracts";
+import { Type } from "@sinclair/typebox";
+import { getJsonSchemaByCoreSchemaType } from "schemas";
+
 import type {
 	FormElementsId,
 	PubFieldSchemaId,
@@ -79,4 +81,36 @@ export const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: 
 		}
 	}
 	return defaultValues;
+};
+
+export const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
+	return Type.Object(
+		Object.fromEntries(
+			elements
+				// only add pubfields to the schema
+				.filter((e) => e.type === ElementType.pubfield)
+				.map(({ slug, schemaName }) => {
+					if (!schemaName) {
+						return [slug, undefined];
+					}
+
+					const schema = getJsonSchemaByCoreSchemaType(schemaName);
+					if (!schema) {
+						return [slug, undefined];
+					}
+
+					if (schema.type !== "string") {
+						return [slug, Type.Optional(schema)];
+					}
+
+					// this allows for empty strings, which happens when you enter something
+					// in an input field and then delete it
+					// TODO: reevaluate whether this should be "" or undefined
+					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
+						error: schema.error ?? "Invalid value",
+					});
+					return [slug, schemaWithAllowedEmpty];
+				})
+		)
+	);
 };
