@@ -20,6 +20,9 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 			return MemberId;
 		case CoreSchemaType.FileUpload:
 			return FileUpload;
+		default:
+			const _exhaustiveCheck: never = coreSchemaType;
+			return _exhaustiveCheck;
 	}
 }
 

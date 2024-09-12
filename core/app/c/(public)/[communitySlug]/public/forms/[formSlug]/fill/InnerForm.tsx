@@ -2,8 +2,7 @@ import { defaultComponent } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { InputComponent } from "db/src/public/InputComponent";
+import { CoreSchemaType, InputComponent } from "db/public";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";

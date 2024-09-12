@@ -3,11 +3,12 @@
 import { sql } from "kysely";
 import { componentsBySchema } from "schemas";
 
-import type { CommunitiesId, CoreSchemaType, PubTypesId } from "db/public";
-import type { InputComponent } from "db/src/public/InputComponent";
+import type { CommunitiesId, CoreSchemaType, InputComponent, PubTypesId } from "db/public";
 import { logger } from "logger";
 
-import { db, isUniqueConstraintError } from "~/kysely/database";
+import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { _getPubFields } from "~/lib/server/pubFields";
@@ -25,6 +26,14 @@ export const createForm = defineServerAction(async function createForm(
 	slug: string,
 	communityId: CommunitiesId
 ) {
+	const user = await getLoginData();
+
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+
 	try {
 		await autoRevalidate(
 			db

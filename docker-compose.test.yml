@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+
+services:
+    core:
+        build:
+            context: .
+            args:
+                - PACKAGE=core
+            target: test-setup
+        container_name: core
+        env_file:
+            - path: ./.env.docker-compose
+              required: false
+        environment:
+            #s non secret
+            - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
+            - MAILGUN_SMTP_HOST=smtp.mailgun.org
+            - MAILGUN_SMTP_PORT=465
+            - MAILGUN_SMTP_USERNAME=omitted
+            - NEXT_PUBLIC_PUBPUB_URL=http://localhost:8080
+            - OTEL_SERVICE_NAME=core.core
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:8080
+            - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+        networks:
+            - app-network
+        ports:
+            - "30000:3000"
+        depends_on:
+            - db
+            - jobs
+        profiles:
+            - test
+        command: >
+            sh -c "pnpm --filter core run test-run"
+
+    jobs:
+        build:
+            context: .
+            args:
+                - PACKAGE=jobs
+            target: test-setup
+        container_name: jobs
+        env_file:
+            - path: ./.env.docker-compose
+              required: false
+        environment:
+            - OTEL_SERVICE_NAME=jobs.jobs
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:8080
+        networks:
+            - app-network
+        depends_on:
+            - db
+        profiles:
+            - test
+
+    db:
+        extends:
+            file: ./docker-compose.base.yml
+            service: db
+        volumes:
+            - postgres_test_data:/var/lib/postgresql/data
+        networks:
+            - app-network
+        profiles:
+            - test
+        ports:
+            - "5432:5432"
+
+    inbucket:
+        extends:
+            file: ./docker-compose.base.yml
+            service: inbucket
+        networks:
+            - app-network
+        profiles:
+            - test
+
+    # app:
+    #     build:
+    #         context: .
+    #         args:
+    #             - PACKAGE=core
+    #         target: development # Define this target in your Dockerfile
+    #     image: core:latest
+    #     environment:
+    #         DATABASE_URL: postgres://user:password@postgres:5432/mydb
+    #     volumes:
+    #         - ./core:/app
+    #         - /app/node_modules
+    #     depends_on:
+    #         - postgres
+    #         - inbucket
+    #     command: >
+    #         sh -c "pnpm --filter core run test-run"
+    #     profiles:
+    #         - dev
+    #         - test
+
+    #     networks:
+    #         - default
+
+volumes:
+    postgres_test_data:
+        driver: local
+
+networks:
+    app-network:
