@@ -86,7 +86,7 @@ export class UpdatedAtPlugin implements KyselyPlugin {
 		return this.#updatedAtTransformer.transformNode(args.node);
 	}
 
-	async transformResult(args: PluginTransformResultArgs): Promise {
+	async transformResult(args: PluginTransformResultArgs): Promise<QueryResult<UnknownRow>> {
 		return args.result;
 	}
 }
