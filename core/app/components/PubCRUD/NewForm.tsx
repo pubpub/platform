@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 import { useDebouncedCallback } from "use-debounce";
 
-import type { GetPubResponseBody } from "contracts";
 import type {
 	CommunitiesId,
 	PubFields,
