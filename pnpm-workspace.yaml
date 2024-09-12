@@ -22,6 +22,7 @@ catalog:
     "@types/node": ^20
     "@honeycombio/opentelemetry-node": ^0.6.1
     "@opentelemetry/auto-instrumentations-node": ^0.41.1
+    "@sentry/nextjs": "^8.29.0"
     "@ts-rest/core": 3.45.2
     "@ts-rest/next": 3.45.2
     "@ts-rest/open-api": 3.45.2

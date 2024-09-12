@@ -12,6 +12,9 @@ catalogs:
     '@opentelemetry/auto-instrumentations-node':
       specifier: ^0.41.1
       version: 0.41.1
+    '@sentry/nextjs':
+      specifier: ^8.29.0
+      version: 8.29.0
     '@sinclair/typebox':
       specifier: ^0.32.34
       version: 0.32.35
@@ -252,7 +255,7 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1(react-dom@18.3.0(react@18.3.1))(react@18.3.1)
       '@sentry/nextjs':
-        specifier: ^8.29.0
+        specifier: 'catalog:'
         version: 8.29.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@1.26.0(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.26.0(@opentelemetry/api@1.9.0))(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.94.0(@swc/core@1.7.24(@swc/helpers@0.5.13)))
       '@sinclair/typebox':
         specifier: 'catalog:'
@@ -474,6 +477,9 @@ importers:
       '@types/nodemailer':
         specifier: ^6.4.9
         version: 6.4.15
+      '@types/react':
+        specifier: catalog:react18
+        version: 18.3.5
       '@types/unist':
         specifier: ^3.0.2
         version: 3.0.3
@@ -547,7 +553,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/sdk
       '@sentry/nextjs':
-        specifier: ^8.29.0
+        specifier: 'catalog:'
         version: 8.29.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@1.26.0(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.26.0(@opentelemetry/api@1.9.0))(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.94.0(@swc/core@1.7.24(@swc/helpers@0.5.13)))
       '@t3-oss/env-nextjs':
         specifier: ^0.11.1
@@ -607,6 +613,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 20.16.5
+      '@types/react':
+        specifier: catalog:react18
+        version: 18.3.5
       autoprefixer:
         specifier: ^10.4.14
         version: 10.4.20(postcss@8.4.45)
@@ -643,7 +652,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/sdk
       '@sentry/nextjs':
-        specifier: ^8.29.0
+        specifier: 'catalog:'
         version: 8.29.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@1.26.0(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.26.0(@opentelemetry/api@1.9.0))(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(react@18.3.1)(webpack@5.94.0(@swc/core@1.7.24(@swc/helpers@0.5.13)))
       '@t3-oss/env-nextjs':
         specifier: ^0.11.1
@@ -691,6 +700,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 20.16.5
+      '@types/react':
+        specifier: catalog:react18
+        version: 18.3.5
       autoprefixer:
         specifier: ^10.4.14
         version: 10.4.20(postcss@8.4.45)
