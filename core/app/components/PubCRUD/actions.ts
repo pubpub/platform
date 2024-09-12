@@ -242,7 +242,6 @@ export const _updatePub = async ({
 }) => {
 	// create a list of slugs to be updated
 	const toBeUpdatedPubFieldSlugs = fields.map(({ slug }) => slug);
-	console.log("\n\nFiled slugs to be updated", toBeUpdatedPubFieldSlugs);
 
 	// this gets the old values for the pub we want to update
 	const toBeUpdatedPubValues = await db
@@ -273,7 +272,6 @@ export const _updatePub = async ({
 		])
 		.where("pub_values.pubId", "=", pubId)
 		.execute();
-	console.log("\n\nPub Values???", toBeUpdatedPubValues);
 
 	const stageMoveQuery =
 		stageId &&
@@ -287,14 +285,6 @@ export const _updatePub = async ({
 		fields.map(({ slug, value }) => [slug, JSON.stringify(value)])
 	);
 
-	// gets the fields from the pubValues we want to ipdate
-	// the filter is to make sure we only get the fields that have a schema attached to them (not all fields do)
-	// this is because we need the schema to validate the new values
-	// if the schema is missing, we can't validate the new values
-	// and we can't update the pub
-	// so we filter out the fields that don't have a schema
-	// and then we validate the new values against the schema
-	// if the validation fails, we return an error
 	const pubFields = toBeUpdatedPubValues
 		.map((pubValue) => pubValue.field)
 		.filter(
@@ -309,12 +299,10 @@ export const _updatePub = async ({
 				}
 			> => field !== null && field.schema !== null && field.schema.schema !== null
 		);
-	console.log("\n\nPub Fields that will def get sent to the db", pubFields);
 	const validated = validatePubValues({
 		fields: pubFields,
 		values: newValues,
 	});
-	console.log("\n\nValidated", validated);
 	if (validated && validated.error) {
 		return {
 			error: validated.error,
@@ -334,7 +322,6 @@ export const _updatePub = async ({
 				return;
 			}
 			const { value } = field;
-			// console.log("\n\nVALUE", value);
 			return autoRevalidate(
 				db
 					.updateTable("pub_values")
@@ -342,6 +329,35 @@ export const _updatePub = async ({
 						value: JSON.stringify(value),
 					})
 					.where("pub_values.id", "=", pubValue.id)
+					.returningAll()
+			).execute();
+		}),
+		// Add queries to insert new fields
+		Object.entries(newValues).map(async (newValue) => {
+			const field = fields.find((f) => f.slug === newValue[0]);
+			if (!field) {
+				logger.debug({
+					msg: `Field ${newValue[0]} not found in fields`,
+					fields,
+				});
+				return;
+			}
+			const { value } = field;
+			// look up fieldId for field slug
+			const newValueField = await db
+				.selectFrom("pub_fields")
+				.where("pub_fields.slug", "=", field.slug)
+				.select("pub_fields.id")
+				.executeTakeFirstOrThrow();
+
+			return autoRevalidate(
+				db
+					.insertInto("pub_values")
+					.values({
+						pubId,
+						fieldId: newValueField.id,
+						value: JSON.stringify(value),
+					})
 					.returningAll()
 			).execute();
 		}),
