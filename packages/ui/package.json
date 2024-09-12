@@ -425,11 +425,5 @@
 			"customRenderers/fileUpload/fileUpload.tsx"
 		]
 	},
-	"eslintConfig": {
-		"extends": [
-			"@pubpub/eslint-config/base",
-			"@pubpub/eslint-config/react"
-		]
-	},
 	"prettier": "@pubpub/prettier-config"
 }

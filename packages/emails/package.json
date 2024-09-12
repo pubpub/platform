@@ -14,6 +14,7 @@
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
+		"@types/react": "catalog:react18",
 		"dotenv-cli": "^7.2.1",
 		"tsconfig": "workspace:*",
 		"react": "catalog:react18"

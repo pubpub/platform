@@ -1,7 +1,9 @@
 {
 	"extends": "tsconfig/base.json",
 	"compilerOptions": {
-		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+		"module": "esnext",
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+		"typeRoots": ["node_modules/@types", "./types.d.ts"]
 	},
 	"include": ["."],
 	"exclude": ["node_modules"]

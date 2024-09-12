@@ -3,6 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"license": "MIT",
+	"type": "module",
 	"files": [
 		"./base.js",
 		"./next.js",
@@ -20,30 +21,25 @@
 		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@eslint/compat": "^1.1.1",
 		"@next/eslint-plugin-next": "^14.1.4",
-		"@typescript-eslint/eslint-plugin": "^8.5.0",
-		"@typescript-eslint/parser": "^8.5.0",
-		"eslint-plugin-import": "^2.29.1",
-		"eslint-plugin-jsx-a11y": "^6.8.0",
-		"eslint-plugin-n": "^17.10.2",
+		"eslint-plugin-import": "^2.30.0",
+		"eslint-plugin-jsx-a11y": "^6.10.0",
 		"eslint-plugin-react": "^7.34.1",
-		"eslint-plugin-react-hooks": "^4.6.0"
+		"eslint-plugin-react-hooks": "^4.6.0",
+		"typescript-eslint": "^8.5.0"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/eslint": "^9.6.1",
+		"@types/eslint-plugin-jsx-a11y": "^6.9.0",
+		"@types/node": "catalog:",
 		"eslint": "catalog:",
 		"eslint-config-turbo": "^2.1.1",
 		"eslint-plugin-validate-jsx-nesting": "^0.1.1",
 		"prettier": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
-	},
-	"eslintConfig": {
-		"root": true,
-		"extends": [
-			"./base.js"
-		]
 	},
 	"prettier": "@pubpub/prettier-config"
 }
