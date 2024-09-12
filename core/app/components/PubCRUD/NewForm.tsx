@@ -15,6 +15,7 @@ import type {
 	PubFieldSchema,
 	PubsId,
 	PubTypes,
+	PubValues,
 	Stages,
 	StagesId,
 } from "db/public";
@@ -29,6 +30,7 @@ import {
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
+import { cn } from "utils";
 
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
@@ -52,7 +54,7 @@ async function NewForm({
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
 		})[];
 	})[];
-	pubValues: GetPubResponseBody["values"];
+	pubValues: PubValues;
 	pubTypeId: PubTypes["id"];
 	formElements: React.ReactNode[];
 	pubId?: PubsId;
@@ -155,10 +157,6 @@ async function NewForm({
 			}
 		}
 	};
-
-	function cn(arg0: string, className: string | undefined): string | undefined {
-		throw new Error("Function not implemented.");
-	}
 
 	return (
 		<Form {...form}>

@@ -6,6 +6,7 @@ import type {
 	PubFieldSchemaId,
 	PubFieldsId,
 	PubTypesId,
+	PubValues,
 	StagesId,
 	StructuralFormElement,
 } from "db/public";
@@ -66,10 +67,7 @@ export function createElementFromPubType(pubType: {
 	}));
 }
 
-export const buildDefaultValues = (
-	elements: PubPubForm["elements"],
-	pubValues: Record<string, JsonValue>
-) => {
+export const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
 	const defaultValues: FieldValues = { ...pubValues };
 	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
 	for (const de of dateElements) {

@@ -94,7 +94,7 @@ const pubValues = (
 		eb
 			.selectFrom("pub_values")
 			.selectAll("pub_values")
-			.select("slug")
+			.select(["slug", "pub_values.fieldId"])
 			.leftJoinLateral(
 				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
