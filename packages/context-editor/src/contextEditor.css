@@ -1,0 +1,39 @@
+.editor-wrapper {
+	position: relative;
+	max-width: 700px;
+}
+.ProseMirror {
+	outline: none;
+	padding: 2em;
+	border: 1px solid #777;
+	border-radius: 2px;
+	position: relative;
+}
+.wrap-widget {
+	position: relative;
+	/* background: red; */
+	/* width: 1px; */
+	height: 1px;
+	button {
+		position: absolute;
+		left: 0px;
+		top: 1px;
+		padding-right: 1em;
+		padding-left: 2px;
+		font-size: 12px;
+		color: #777;
+		border: 0px;
+		border-bottom: 1px solid #777;
+		background: transparent;
+		&:hover {
+			background: #ccc;
+		}
+		
+	}
+	
+}
+h1,h2,h3,h4,h5,h6,p,code {
+	border-left: 1px solid #777;
+	padding-left:5px;
+	padding-top: 5px;
+}
