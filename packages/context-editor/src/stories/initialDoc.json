@@ -1,0 +1,242 @@
+{
+	"type": "doc",
+	"content": [
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 3
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Introduction"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "Quantum biology"
+				},
+				{
+					"type": "text",
+					"text": " is an emerging field that seeks to explain biological processes through the principles of quantum mechanics. While traditional biological models rely on classical physics, recent research has explored the "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "quantum effects"
+				},
+				{
+					"type": "text",
+					"text": " in photosynthesis, enzyme catalysis, and even "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "cellular regeneration"
+				},
+				{
+					"type": "text",
+					"text": " (Smith et al., 2021). One theory proposes that quantum flux—defined as the movement of quantum particles across fields—could potentially accelerate "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "cellular repair"
+				},
+				{
+					"type": "text",
+					"text": " by interacting with "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "subatomic particles"
+				},
+				{
+					"type": "text",
+					"text": " within cells (Jones & Ray, 2023)."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"type": "text",
+					"text": "In this paper, we aim to evaluate the efficacy of "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "quantum flux transmutation"
+				},
+				{
+					"type": "text",
+					"text": " as a tool for enhancing cellular regeneration. We hypothesize that modulating quantum flux will result in faster tissue recovery times in "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "in vitro"
+				},
+				{
+					"type": "text",
+					"text": " models compared to control groups."
+				}
+			]
+		},
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 3
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Materials and Methods"
+				}
+			]
+		},
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 4
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Quantum Flux Modulation Device"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"type": "text",
+					"text": "We developed a custom-built "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "quantum flux modulation"
+				},
+				{
+					"type": "text",
+					"text": " device (QFMD), based on principles outlined by Watanabe et al. (2022). The QFMD utilizes a tunable magnetic resonance field to manipulate quantum particles in a targeted area. "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "The device was calibrated"
+				},
+				{
+					"type": "text",
+					"text": " to emit flux waves at 3.5 THz, the optimal frequency for interacting with cellular nuclei (Doe & Baker, 2020)."
+				}
+			]
+		},
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 4
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Experimental Setup"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "Sample preparation"
+				},
+				{
+					"type": "text",
+					"text": ": Lab-grown human fibroblast cells were divided into two groups: a control group, which received no quantum flux exposure, and an experimental group exposed to QFMD for 10 minutes per day over a 7-day period."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "Measurement of regeneration"
+				},
+				{
+					"type": "text",
+					"text": ": The rate of "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em"
+						}
+					],
+					"text": "cellular regeneration"
+				},
+				{
+					"type": "text",
+					"text": " was assessed using high-resolution time-lapse microscopy and by quantifying mitotic activity."
+				}
+			]
+		}
+	]
+}

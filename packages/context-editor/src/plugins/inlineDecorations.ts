@@ -6,20 +6,21 @@ import { panelKey } from "./ContextEditor";
 
 function wrapWidget(node, setPanelPosition) {
 	return () => {
-		let widget = document.createElement("div");
-		widget.className = "wrap-widget";
+		let widget = document.createElement("span");
+		widget.className = "inline-wrap-widget";
+		let widgetLineChild = document.createElement("span");
+		widget.appendChild(widgetLineChild);
 		let widgetChild = document.createElement("button");
 		widget.appendChild(widgetChild);
-		widgetChild.innerHTML = `${node.type.name}${node.type.name === 'heading' ? ` ${node.attrs.level}`: ''}`;
 		widgetChild.addEventListener("click", (evt) => {
 			const rect = evt.target.getBoundingClientRect();
-			setPanelPosition([rect.top,"5px",rect.left])
+			setPanelPosition([rect.top - 13,"-250px",rect.left])
 		});
 		return widget;
 	};
 }
 
-export default function blockDecoPlugin() {
+export default function inlineDecorationsPlugin() {
 	return new Plugin({
 		props: {
 			decorations: (state) => {
@@ -28,8 +29,8 @@ export default function blockDecoPlugin() {
 				const decorations: Decoration[] = [];
 				const setPanelPosition = panelKey.getState(state);
 				state.doc.descendants((node, pos) => {
-					console.log('node', node)
-					if (node.type.isBlock) {
+					if (!node.type.isBlock && node.marks.length) {
+						
 						decorations.push(Decoration.widget(pos, wrapWidget(node, setPanelPosition)));
 					}
 				});

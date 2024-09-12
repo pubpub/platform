@@ -1,8 +1,9 @@
 {
-	"extends": "tsconfig/base.json",
+	"extends": "tsconfig/react-library.json",
 	"compilerOptions": {
 		"noEmit": true,
-		"jsx": "react"
+		"jsx": "react",
+		"resolveJsonModule": true,
 	},
 	"include": ["."],
 	"exclude": ["dist", "build", "node_modules"]
