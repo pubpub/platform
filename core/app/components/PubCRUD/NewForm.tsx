@@ -2,10 +2,7 @@
 
 import React, { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
 import { useDebouncedCallback } from "use-debounce";
 
 import type {

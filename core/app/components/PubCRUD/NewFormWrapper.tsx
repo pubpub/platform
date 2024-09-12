@@ -10,7 +10,7 @@ import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage }
 
 type Props = CreateEditPubProps;
 
-async function GenericDynamicPubFormWrapper(props: Props) {
+async function NewFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
 	const communityId = pub ? pub.communityId : props.communityId!;
 	const query = props.stageId
@@ -66,4 +66,4 @@ async function GenericDynamicPubFormWrapper(props: Props) {
 	);
 }
 
-export { GenericDynamicPubFormWrapper };
+export { NewFormWrapper };
