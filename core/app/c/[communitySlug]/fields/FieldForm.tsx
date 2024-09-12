@@ -40,6 +40,7 @@ const DEFAULT_VALUES = {
 	name: "",
 	schemaName: null,
 	slug: "",
+	connectionType: "",
 };
 
 type FormType = UseFormReturn<
@@ -200,6 +201,23 @@ export const FieldForm = ({
 				<div className="mb-4 flex flex-col gap-6">
 					{/* Schema field is disabled if one has previously been selected */}
 					<SchemaSelectField isDisabled={!!defaultValues?.schemaName} form={form} />
+					{form.getValues().schemaName === CoreSchemaType.Connection && (
+						<>
+							<FormField
+								control={form.control}
+								name="connectionType"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Connection</FormLabel>
+										<FormControl>
+											<Input placeholder="Connection" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</>
+					)}
 					<FormField
 						control={form.control}
 						name="name"
