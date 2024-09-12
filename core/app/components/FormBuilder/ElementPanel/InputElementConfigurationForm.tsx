@@ -9,7 +9,7 @@ import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { componentConfigSchemas, componentsBySchema } from "schemas";
 
-import { InputComponent } from "db/src/public/InputComponent";
+import { InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";

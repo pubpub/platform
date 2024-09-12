@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
+import type { InputComponent, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
 	CoreSchemaType,
 	ElementType,
@@ -9,7 +9,6 @@ import {
 	formElementsInitializerSchema,
 	formsIdSchema,
 } from "db/public";
-import { InputComponent } from "db/src/public/InputComponent";
 
 const baseElementSchema = z.object({
 	id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB

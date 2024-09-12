@@ -53,7 +53,7 @@
 	"prettier": "@pubpub/prettier-config",
 	"packageManager": "pnpm@9.10.0",
 	"prisma": {
-		"schema": "packages/db/src/prisma/schema.prisma"
+		"schema": "core/prisma/schema.prisma"
 	},
 	"pnpm": {
 		"overrides": {

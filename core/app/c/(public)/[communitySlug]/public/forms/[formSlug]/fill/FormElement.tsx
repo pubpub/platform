@@ -1,12 +1,11 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import Markdown from "react-markdown";
 
 import type { PubsId } from "db/public";
 import type { InputProps } from "ui/input";
-import { CoreSchemaType, ElementType } from "db/public";
-import { InputComponent } from "db/src/public/InputComponent";
+import type { TextareaProps } from "ui/textarea";
+import { ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
@@ -14,7 +13,7 @@ import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
 import { DatePicker } from "ui/date-picker";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
-import { Textarea, TextareaProps } from "ui/textarea";
+import { Textarea } from "ui/textarea";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
