@@ -7,14 +7,29 @@ packages:
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
+    next: 14.2.9
     eslint: ^9.9.0
     prettier: ^3.3.3
     tailwindcss: ^3.4.10
+    tailwind-merge: ^2.5.2
+    clsx: ^2.0.0
+    postcss: ^8.4.27
+    date-fns: ^3.6.0
+    tsx: ^4.19.0
     typescript: ^5.6.2
+    zod: ^3.23.8
+    "@sinclair/typebox": ^0.32.34
+    "@types/node": ^20
+    "@honeycombio/opentelemetry-node": ^0.6.1
+    "@opentelemetry/auto-instrumentations-node": ^0.41.1
+    "@ts-rest/core": 3.45.2
+    "@ts-rest/next": 3.45.2
+    "@ts-rest/open-api": 3.45.2
+    "@ts-rest/serverless": 3.45.2
 
 catalogs:
     react18:
         react: 18.3.1
-        react-dom: 18.3.1
-        "@types/react": ^18.3.3
+        react-dom: 18.3.0
+        "@types/react": ^18.3.5
         "@types/react-dom": ^18.3.0

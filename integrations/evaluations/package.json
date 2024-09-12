@@ -14,9 +14,9 @@
 		".next"
 	],
 	"dependencies": {
-		"@honeycombio/opentelemetry-node": "^0.6.1",
+		"@honeycombio/opentelemetry-node": "catalog:",
 		"@hookform/resolvers": "^3.3.1",
-		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
+		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@pubpub/sdk": "workspace:*",
 		"@sentry/nextjs": "^8.29.0",
 		"@t3-oss/env-nextjs": "^0.11.1",
@@ -24,29 +24,29 @@
 		"ajv": "^8.12.0",
 		"ajv-errors": "^3.0.0",
 		"ajv-formats": "^2.1.1",
-		"clsx": "^2.0.0",
-		"next": "14.2.9",
+		"clsx": "catalog:",
+		"next": "catalog:",
 		"parse5-sax-parser": "^7.0.0",
-		"react": "^18.3.1",
-		"react-dom": "18.3.1",
+		"react": "catalog:react18",
+		"react-dom": "catalog:react18",
 		"react-hook-form": "^7.46.1",
-		"tailwind-merge": "^2.5.2",
+		"tailwind-merge": "catalog:",
 		"ui": "workspace:*",
 		"utils": "workspace:*",
-		"zod": "^3.23.8"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@preconstruct/next": "^4.0.0",
 		"@pubpub/prettier-config": "workspace:*",
 		"@tailwindcss/typography": "^0.5.10",
-		"@types/node": "^20",
-		"@types/react": "^18.3.5",
-		"@types/react-dom": "18.3.0",
+		"@types/node": "catalog:",
+		"react": "catalog:react18",
+		"react-dom": "catalog:react18",
 		"autoprefixer": "^10.4.14",
 		"logger": "workspace:*",
-		"postcss": "^8.4.27",
-		"tailwindcss": "^3.4.10",
+		"postcss": "catalog:",
+		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
-		"typescript": "^5.6.2"
+		"typescript": "catalog:"
 	}
 }

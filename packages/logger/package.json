@@ -9,9 +9,9 @@
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/node": "^20",
+		"@types/node": "catalog:",
 		"tsconfig": "workspace:*",
-		"typescript": "^5.6.2"
+		"typescript": "catalog:"
 	},
 	"dependencies": {
 		"pino": "^8.19.0"

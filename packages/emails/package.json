@@ -13,18 +13,18 @@
 	"devDependencies": {
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/node": "^20",
+		"@types/node": "catalog:",
 		"dotenv-cli": "^7.2.1",
 		"tsconfig": "workspace:*",
-		"@types/react": "^18.3.5"
+		"react": "catalog:react18"
 	},
 	"dependencies": {
 		"@react-email/components": "0.0.25",
-		"typescript": "^5.6.2",
+		"typescript": "catalog:",
 		"browserslist": "^4.22.2",
 		"db": "workspace:*",
-		"eslint": "^9.10.0",
-		"react": "^18.3.1",
+		"eslint": "catalog:",
+		"react": "catalog:react18",
 		"react-email": "3.0.1",
 		"tsconfig": "workspace:*"
 	},
