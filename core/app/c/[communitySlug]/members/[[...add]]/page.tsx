@@ -7,7 +7,7 @@ import type { CommunitiesId } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import prisma from "~/prisma/db";
@@ -71,7 +71,7 @@ export default async function Page({
 		return notFound();
 	}
 
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 	const isAdmin = isCommunityAdmin(user, community);
 
 	// we don't want to show the members page to non-admins
