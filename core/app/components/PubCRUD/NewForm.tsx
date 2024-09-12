@@ -152,12 +152,16 @@ async function NewForm({
 			}
 		}
 	};
+	console.log("\n\nForm Errs: ", form.formState.errors);
+	console.log("\n\nForm Values: ", form.getValues());
+	console.log("\n\nForm State: ", form.formState.dirtyFields);
 
 	return (
 		<Form {...form}>
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
 				className={cn("relative flex flex-col gap-6", className)}
+				onBlur={(e) => e.preventDefault()}
 			>
 				{!pubId && (
 					<FormField
