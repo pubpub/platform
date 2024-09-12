@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -29,9 +30,9 @@ import { cn } from "utils";
 
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
-import { buildDefaultValues, createElementFromPubType } from "./helpers";
+import { buildDefaultValues, createElementFromPubType, createSchemaFromElements } from "./helpers";
 
-async function NewForm({
+function NewForm({
 	communityStages,
 	availablePubTypes,
 	currentStage,
@@ -89,9 +90,14 @@ async function NewForm({
 
 	const elements = selectedPubType ? createElementFromPubType(selectedPubType) : [];
 
+	const resolver = useMemo(
+		() => typeboxResolver(createSchemaFromElements(elements)),
+		[formElements]
+	);
 	const form = useForm({
 		defaultValues: buildDefaultValues(elements, pubValues),
 		reValidateMode: "onChange",
+		resolver,
 	});
 	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
 		if (!selectedStage) {
@@ -146,16 +152,12 @@ async function NewForm({
 			if (result && "success" in result) {
 				toast({
 					title: "Success",
-					description: "Yayyy new pub",
+					description: "New pub created",
 				});
 				closeForm();
 			}
 		}
 	};
-	console.log("\n\nForm Errs: ", form.formState.errors);
-	console.log("\n\nForm Values: ", form.getValues());
-	console.log("\n\nForm State: ", form.formState.dirtyFields);
-
 	return (
 		<Form {...form}>
 			<form
