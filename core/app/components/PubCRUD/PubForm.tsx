@@ -32,7 +32,7 @@ import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { buildDefaultValues, createElementFromPubType, createSchemaFromElements } from "./helpers";
 
-function NewForm({
+function PubForm({
 	communityStages,
 	availablePubTypes,
 	currentStage,
@@ -273,4 +273,4 @@ function NewForm({
 	);
 }
 
-export { NewForm };
+export { PubForm as NewForm };
