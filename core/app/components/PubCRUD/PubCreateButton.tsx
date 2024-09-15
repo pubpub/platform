@@ -1,6 +1,6 @@
 import type { CreateEditPubProps } from "./types";
-import { NewFormWrapper } from "./NewFormWrapper";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
+import { NewFormWrapper } from "./PubFormWrapper";
 
 type PubCreateButtonProps = CreateEditPubProps & {
 	label?: string;

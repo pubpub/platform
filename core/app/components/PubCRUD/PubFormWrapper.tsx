@@ -5,12 +5,12 @@ import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { FormElement } from "../FormSchemaRendering/FormElement";
 import { createElementFromPubType } from "./helpers";
-import { NewForm } from "./NewForm";
+import { NewForm } from "./PubForm";
 import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage } from "./queries";
 
 type Props = CreateEditPubProps;
 
-async function NewFormWrapper(props: Props) {
+async function PubFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
 	const communityId = pub ? pub.communityId : props.communityId!;
 	const query = props.stageId
@@ -66,4 +66,4 @@ async function NewFormWrapper(props: Props) {
 	);
 }
 
-export { NewFormWrapper };
+export { PubFormWrapper as NewFormWrapper };

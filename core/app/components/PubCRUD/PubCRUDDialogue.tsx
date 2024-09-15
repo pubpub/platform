@@ -9,6 +9,7 @@ import { Pencil, Plus, Trash } from "ui/icon";
 import { cn } from "utils";
 
 import { SkeletonCard } from "../skeletons/SkeletonCard";
+import type { CRUDButtonProps } from "./NewFormButton";
 
 const CRUDMap = {
 	create: {
@@ -30,13 +31,6 @@ const CRUDMap = {
 		param: `remove-pub-form`,
 	},
 } as const;
-
-export type CRUDButtonProps = {
-	title?: string | null;
-	variant?: "secondary" | "outline" | "ghost" | "default" | "destructive";
-	size?: "sm" | "default" | "lg" | "icon";
-	className?: string;
-};
 
 export const PubCRUDDialogue = ({
 	children,
