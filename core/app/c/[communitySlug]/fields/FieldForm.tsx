@@ -155,7 +155,11 @@ export const FieldForm = ({
 	onSubmitSuccess,
 	children,
 }: {
-	defaultValues?: { name: string; schemaName: CoreSchemaType | null; slug: string };
+	defaultValues?: {
+		name: string;
+		schemaName: CoreSchemaType | null;
+		slug: string;
+	};
 	onSubmitSuccess: () => void;
 	children: ReactNode;
 }) => {
@@ -208,9 +212,28 @@ export const FieldForm = ({
 								name="connectionType"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Connection</FormLabel>
+										<FormLabel>PubType</FormLabel>
+										<FormDescription>
+											Choose the pubTypes you want this field to connect to
+										</FormDescription>
 										<FormControl>
-											<Input placeholder="Connection" {...field} />
+											<Input placeholder="Connection Type" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="pubType"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Connection Type</FormLabel>
+										<FormDescription>
+											Define the connectionType you want to create
+										</FormDescription>
+										<FormControl>
+											<Input placeholder="Connection Type" {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
