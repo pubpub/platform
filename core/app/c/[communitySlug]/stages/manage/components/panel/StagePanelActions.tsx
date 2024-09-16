@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import type { StagesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -12,14 +13,14 @@ import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
 
 type PropsInner = {
-	stageId: string;
+	stageId: StagesId;
 	pageContext: PageContext;
 };
 
 const StagePanelActionsInner = async (props: PropsInner) => {
 	const [stage, actionInstances] = await Promise.all([
-		getStage(props.stageId),
-		getStageActions(props.stageId),
+		getStage(props.stageId).executeTakeFirst(),
+		getStageActions(props.stageId).execute(),
 	]);
 
 	if (stage === undefined) {
@@ -70,7 +71,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 };
 
 type Props = {
-	stageId?: string;
+	stageId?: StagesId;
 	pageContext: PageContext;
 };
 

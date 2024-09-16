@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
@@ -92,7 +92,10 @@ export default async function Page({
 
 	const [actionsPromise, stagePromise] =
 		pub.stages.length > 0
-			? [getStageActions(pub.stages[0].stageId), getStage(pub.stages[0].stageId)]
+			? [
+					getStageActions(pub.stages[0].stageId as StagesId).execute(),
+					getStage(pub.stages[0].stageId as StagesId).executeTakeFirst(),
+				]
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);

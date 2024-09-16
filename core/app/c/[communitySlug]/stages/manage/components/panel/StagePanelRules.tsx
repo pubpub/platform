@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, StagesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
@@ -9,14 +9,14 @@ import { StagePanelRule } from "./StagePanelRule";
 import { StagePanelRuleCreator } from "./StagePanelRuleCreator";
 
 type PropsInner = {
-	stageId: string;
+	stageId: StagesId;
 };
 
 const StagePanelRulesInner = async (props: PropsInner) => {
 	const [stage, actionInstances, rules] = await Promise.all([
-		getStage(props.stageId),
-		getStageActions(props.stageId),
-		getStageRules(props.stageId),
+		getStage(props.stageId).executeTakeFirst(),
+		getStageActions(props.stageId).execute(),
+		getStageRules(props.stageId).execute(),
 	]);
 	if (!stage) {
 		return <SkeletonCard />;
@@ -63,7 +63,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 };
 
 type Props = {
-	stageId?: string;
+	stageId?: StagesId;
 };
 
 export const StagePanelRules = async (props: Props) => {
