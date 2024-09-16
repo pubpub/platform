@@ -52,8 +52,7 @@ async function PubFormWrapper(props: Props) {
 			pubId={pub?.id}
 		/>
 	));
-	console.log("\n\nStages on the Server", communityStages);
-	console.log("\n\nLen of stages", communityStages.length);
+
 	return (
 		<NewForm
 			currentStage={stageOfPubRnRn}
