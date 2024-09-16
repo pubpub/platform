@@ -39,18 +39,12 @@ catalogs:
     date-fns:
       specifier: ^3.6.0
       version: 3.6.0
-    eslint:
-      specifier: ^9.9.0
-      version: 9.10.0
     next:
       specifier: 14.2.9
       version: 14.2.9
     postcss:
       specifier: ^8.4.27
       version: 8.4.45
-    prettier:
-      specifier: ^3.3.3
-      version: 3.3.3
     tailwind-merge:
       specifier: ^2.5.2
       version: 2.5.2
@@ -347,9 +341,6 @@ importers:
       next-connect:
         specifier: ^1.0.0
         version: 1.0.0
-      next-runtime-env:
-        specifier: ^3.2.0
-        version: 3.2.2(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(react@18.3.1)
       nodemailer:
         specifier: ^6.9.5
         version: 6.9.15
@@ -9372,12 +9363,6 @@ packages:
   next-connect@1.0.0:
     resolution: {integrity: sha512-FeLURm9MdvzY1SDUGE74tk66mukSqL6MAzxajW7Gqh6DZKBZLrXmXnGWtHJZXkfvoi+V/DUe9Hhtfkl4+nTlYA==}
     engines: {node: '>=16'}
-
-  next-runtime-env@3.2.2:
-    resolution: {integrity: sha512-S5S6NxIf3XeaVc9fLBN2L5Jzu+6dLYCXeOaPQa1RzKRYlG2BBayxXOj6A4VsciocyNkJMazW1VAibtbb1/ZjAw==}
-    peerDependencies:
-      next: ^14
-      react: ^18
 
   next@14.2.3:
     resolution: {integrity: sha512-dowFkFTR8v79NPJO4QsBUtxv0g9BrS/phluVpMAt2ku7H+cbcBJlopXjkWlwxrk/xGqMemr7JkGPGemPrLLX7A==}
@@ -22082,11 +22067,6 @@ snapshots:
     dependencies:
       '@tsconfig/node16': 1.0.4
       regexparam: 2.0.2
-
-  next-runtime-env@3.2.2(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(react@18.3.1):
-    dependencies:
-      next: 14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
 
   next@14.2.3(@babel/core@7.24.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:

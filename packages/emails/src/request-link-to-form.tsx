@@ -36,7 +36,7 @@ export const RequestLinkToForm = ({
 	form,
 	previewText = `Requesting access to ${form.name}`,
 }: RequestAccessToForm) => {
-	const baseUrl = process.env.PUBPUB_URL ?? process.env.NEXT_PUBLIC_PUBPUB_URL ?? "";
+	const baseUrl = process.env.PUBPUB_URL ?? "";
 
 	return (
 		<Html>
