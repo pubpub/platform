@@ -58,8 +58,6 @@ function PubForm({
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
-	console.log("\n\nStages on the Client", communityStages);
-	console.log("\n\nLen of stages", communityStages.length);
 	const pt = availablePubTypes.find((type) => type.id === pubTypeId);
 
 	const [selectedPubType, setSelectedPubType] = useState<

@@ -98,30 +98,32 @@ export const availableStagesAndCurrentStage = ({
 	pubId: PubsId;
 	communityId: CommunitiesId;
 }) =>
-	db
-		.with("currentStageId", (eb) =>
-			eb
-				.selectFrom("PubsInStages")
-				.select(["stageId as currentStageId"])
-				.where("PubsInStages.pubId", "=", pubId)
-		)
-		.selectFrom("stages")
-		.select((eb) => [
-			jsonObjectFrom(
+	autoCache(
+		db
+			.with("currentStageId", (eb) =>
 				eb
-					.selectFrom("stages")
-					.select(["id", "name", "order"])
-					.whereRef(
-						"stages.id",
-						"=",
-						eb.selectFrom("currentStageId").select("currentStageId")
-					)
-			).as("stageOfCurrentPub"),
-			jsonArrayFrom(
-				eb
-					.selectFrom("stages")
-					.select(["id", "name", "order"])
-					.orderBy("order desc")
-					.where("stages.communityId", "=", communityId as CommunitiesId)
-			).as("availableStagesOfCurrentPub"),
-		]);
+					.selectFrom("PubsInStages")
+					.select(["stageId as currentStageId"])
+					.where("PubsInStages.pubId", "=", pubId)
+			)
+			.selectFrom("stages")
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name", "order"])
+						.whereRef(
+							"stages.id",
+							"=",
+							eb.selectFrom("currentStageId").select("currentStageId")
+						)
+				).as("stageOfCurrentPub"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name", "order"])
+						.orderBy("order desc")
+						.where("stages.communityId", "=", communityId as CommunitiesId)
+				).as("availableStagesOfCurrentPub"),
+			])
+	);
