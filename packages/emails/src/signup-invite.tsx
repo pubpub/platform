@@ -31,7 +31,7 @@ export const SignupInvite = ({
 	role,
 	previewText = `Join ${comm?.name} on PubPub`,
 }: SignupInviteProps) => {
-	const baseUrl = process.env.PUBPUB_URL ?? process.env.NEXT_PUBLIC_PUBPUB_URL ?? "";
+	const baseUrl = process.env.PUBPUB_URL ?? "";
 
 	const community = comm ?? {
 		name: "CrocCroc",
