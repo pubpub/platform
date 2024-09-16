@@ -38,11 +38,14 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 					</Suspense>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<PubRemoveButton pubId={pubId} button={{
+					<PubRemoveButton
+						pubId={pubId}
+						button={{
 							variant: "ghost",
 							title: "Remove Pub",
 							className: "w-full justify-start",
-						}}/>
+						}}
+					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
