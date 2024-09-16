@@ -1,4 +1,4 @@
-import type { CRUDButtonProps } from "./NewFormButton";
+import type { CRUDButtonProps } from "./PubIOButton";
 import type { PubRemoveProps } from "./PubRemove";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
 import { PubRemove } from "./PubRemove";

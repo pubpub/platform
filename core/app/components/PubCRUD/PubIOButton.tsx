@@ -43,7 +43,7 @@ type Props = IOPubProps & {
 	button?: CRUDButtonProps;
 };
 
-export const PubFormButton = (props: Props) => {
+export const PubIOButton = (props: Props) => {
 	const { label, mode, ...rest } = props;
 	let identifyingString: PubsId | CommunitiesId | StagesId;
 	if (mode === "update") {
