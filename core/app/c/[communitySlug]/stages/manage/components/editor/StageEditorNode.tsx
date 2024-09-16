@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from "react";
 import type { NodeProps } from "reactflow";
 
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Handle, Position } from "reactflow";
@@ -11,7 +11,7 @@ import { Button } from "ui/button";
 import { Settings } from "ui/icon";
 import { cn } from "utils";
 
-import type { CommunityStage } from "../../page";
+import type { StagePayload } from "~/lib/types";
 import { useStages } from "../../StagesContext";
 
 export const STAGE_NODE_WIDTH = 250;

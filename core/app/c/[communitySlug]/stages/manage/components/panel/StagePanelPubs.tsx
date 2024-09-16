@@ -12,7 +12,7 @@ import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
 
 type PropsInner = {
-	stageId: StagesId;
+	stageId: string;
 	pageContext: PageContext;
 };
 
@@ -35,7 +35,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 					<Suspense fallback={<SkeletonCard />}>
 						<PubIOButton
 							mode="create"
-							stageId={props.stageId}
+							stageId={props.stageId as StagesId}
 							searchParams={props.pageContext.searchParams}
 						/>
 					</Suspense>
@@ -60,7 +60,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 };
 
 type Props = {
-	stageId?: StagesId;
+	stageId?: string;
 	pageContext: PageContext;
 };
 
