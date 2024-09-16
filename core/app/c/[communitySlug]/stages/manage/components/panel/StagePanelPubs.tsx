@@ -7,6 +7,7 @@ import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDow
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
+import { PubIOButton } from "~/app/components/PubCRUD/PubIOButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
@@ -33,8 +34,9 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				<div className="flex flex-wrap items-center justify-between">
 					<h4 className="mb-2 text-base font-semibold">Pubs</h4>
 					<Suspense fallback={<SkeletonCard />}>
-						<PubCreateButton
-							stageId={props.stageId as StagesId}
+						<PubIOButton
+							mode="create"
+							stageId={props.stageId}
 							searchParams={props.pageContext.searchParams}
 						/>
 					</Suspense>

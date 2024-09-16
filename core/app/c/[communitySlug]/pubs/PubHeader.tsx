@@ -9,7 +9,7 @@ import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 
 type Props = {
 	communityId: CommunitiesId;
-	searchParams?: Record<string, unknown>;
+	searchParams: Record<string, unknown>;
 };
 
 const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
@@ -21,7 +21,7 @@ const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
 					fallback={<SkeletonButton className="w-20" />}
 					key={new Date().toString()}
 				>
-					<PubCreateButton communityId={communityId} searchParams={searchParams ?? {}} />
+					<PubCreateButton communityId={communityId} searchParams={searchParams} />
 				</Suspense>
 				<Button variant="outline" size="sm" asChild>
 					<Link href="types">Manage Types</Link>

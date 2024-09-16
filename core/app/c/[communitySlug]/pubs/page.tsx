@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import { Suspense } from "react";
-
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
@@ -15,9 +13,9 @@ export const metadata: Metadata = {
 	title: "Pubs",
 };
 
-type Props = { params: { communitySlug: string } };
+type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);
@@ -33,7 +31,7 @@ export default async function Page({ params }: Props) {
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
+			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
 			<PubList communityId={community.id} token={tokenPromise} />
 		</>
 	);
