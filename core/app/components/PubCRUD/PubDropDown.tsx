@@ -12,7 +12,6 @@ import { MoreVertical } from "ui/icon";
 
 import { SkeletonButton } from "../skeletons/SkeletonButton";
 import { PubIOButton } from "./PubIOButton";
-import { PubUpdateButton } from "./PubUpdateButton";
 
 export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 	return (
@@ -25,13 +24,15 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 			<DropdownMenuContent className="width">
 				<DropdownMenuItem asChild>
 					<Suspense fallback={<SkeletonButton />} key={pubId}>
-						<PubUpdateButton
+						<PubIOButton
 							button={{
 								variant: "ghost",
 								title: "Edit Pub",
 								className: "w-full justify-start",
 							}}
 							pubId={pubId}
+							searchParams={{}}
+							mode="update"
 						/>
 					</Suspense>
 				</DropdownMenuItem>
