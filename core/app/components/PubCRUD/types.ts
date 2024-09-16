@@ -1,18 +1,18 @@
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
-export type CreateButtonPropsFromAllPubsPage = {
+type CreateButtonPropsFromAllPubsPage = {
 	communityId: CommunitiesId;
 	stageId?: never;
 	pubId?: never;
 };
 
-export type CreateButtonPropsFromStagesPage = {
+type CreateButtonPropsFromStagesPage = {
 	stageId: StagesId;
 	communityId?: never;
 	pubId?: never;
 };
 
-export type EditButtonProps = {
+type EditButtonProps = {
 	pubId: PubsId;
 	communityId?: never;
 	stageId?: never;

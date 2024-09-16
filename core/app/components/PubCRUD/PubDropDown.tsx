@@ -9,6 +9,7 @@ import {
 import { MoreVertical } from "ui/icon";
 
 import { PubIOButton } from "./PubIOButton";
+import { PubRemoveButton } from "./PubRemoveButton";
 
 export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 	return (
@@ -32,16 +33,11 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<PubIOButton
-						button={{
+					<PubRemoveButton pubId={pubId} button={{
 							variant: "ghost",
 							title: "Remove Pub",
 							className: "w-full justify-start",
-						}}
-						pubId={pubId}
-						searchParams={{}}
-						mode="remove"
-					/>
+						}}/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
