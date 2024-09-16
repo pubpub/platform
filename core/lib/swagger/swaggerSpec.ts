@@ -1,5 +1,6 @@
+import type { OpenAPIObject } from "openapi3-ts/oas30";
+
 import { generateOpenApi } from "@ts-rest/open-api";
-import { OpenAPIObject } from "openapi3-ts/oas30";
 
 import { api } from "contracts";
 

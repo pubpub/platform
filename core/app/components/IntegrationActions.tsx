@@ -1,6 +1,6 @@
 import { Button } from "ui/button";
 
-import { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/types";
 
 type Props = {
 	pub: PubPayload;

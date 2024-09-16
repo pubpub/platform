@@ -12,8 +12,8 @@ import { Loader2, Undo2, X, XCircle } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
+import type { UserLoginData } from "~/lib/types";
 import { useServerAction } from "~/lib/serverActions";
-import { UserLoginData } from "~/lib/types";
 import * as actions from "./actions";
 
 export const userInfoFormSchema = z.object({
