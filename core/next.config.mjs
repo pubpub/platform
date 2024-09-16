@@ -2,13 +2,10 @@
 
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
-import { makeEnvPublic } from "next-runtime-env";
 
 import "./lib/env/env.mjs";
 
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
-
-makeEnvPublic("PUBPUB_URL");
 
 /**
  * @type {import("next").NextConfig}
@@ -88,22 +85,4 @@ const modifiedConfig = withPreconstruct(
 	)
 );
 
-export default (phase, { defaultConfig }) => {
-	// return modifiedConfig;
-	if (phase !== "phase-development-server") {
-		return modifiedConfig;
-	}
-
-	return {
-		...modifiedConfig,
-		experimental: {
-			...modifiedConfig.experimental,
-			serverComponentsExternalPackages: [
-				...(modifiedConfig.experimental?.serverComponentsExternalPackages ?? []),
-				// we need this to be external (for now) during dev, but not during build
-				// https://github.com/expatfile/next-runtime-env/issues/123
-				"next-runtime-env",
-			],
-		},
-	};
-};
+export default modifiedConfig;

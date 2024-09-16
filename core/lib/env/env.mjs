@@ -1,13 +1,11 @@
 // @ts-check
 
 import { createEnv } from "@t3-oss/env-nextjs";
-import { env as runtimeEnv } from "next-runtime-env";
 import { z } from "zod";
 
 export const env = createEnv({
 	shared: {
 		NODE_ENV: z.enum(["development", "production", "test"]).optional(),
-		NEXT_PUBLIC_PUBPUB_URL: z.string(),
 	},
 	server: {
 		API_KEY: z.string(),
@@ -34,7 +32,6 @@ export const env = createEnv({
 	client: {},
 	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
-		NEXT_PUBLIC_PUBPUB_URL: runtimeEnv("NEXT_PUBLIC_PUBPUB_URL"),
 	},
 	skipValidation: true, //Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
