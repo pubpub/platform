@@ -20,10 +20,14 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 			return MemberId;
 		case CoreSchemaType.FileUpload:
 			return FileUpload;
+		default:
+			const _exhaustiveCheck: never = coreSchemaType;
+			return _exhaustiveCheck;
 	}
 }
 
 export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
 export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons";
 export { registerFormats } from "./formats";
+export * from "./schemaComponents";
 export { setErrorFunction } from "./errors";

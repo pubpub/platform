@@ -1,7 +1,6 @@
 "use server";
 
 import type { Community } from "@prisma/client";
-import type { User } from "@supabase/supabase-js";
 
 import { cache } from "react";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -27,8 +26,6 @@ import {
 } from "~/lib/server/member";
 import { addUser, getUser } from "~/lib/server/user";
 import { generateHash, slugifyString } from "~/lib/string";
-import { formatSupabaseError } from "~/lib/supabase";
-import { getServerSupabase } from "~/lib/supabaseServer";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const revalidateMemberPathsAndTags = defineServerAction(
@@ -63,164 +60,10 @@ const isCommunityAdmin = cache(async () => {
 });
 
 /**
- * Create a user in supabase.
- * If the user is not a contributor, also sends them an invite by email
- */
-const createOrInviteSupabaseUser = async ({
-	email,
-	firstName,
-	lastName,
-	community,
-	role,
-	isSuperAdmin,
-}: {
-	email: string;
-	firstName: string;
-	lastName?: string | null;
-	community: Community;
-	role?: MemberRole;
-	isSuperAdmin?: boolean;
-}) => {
-	const client = getServerSupabase();
-
-	if (role === MemberRole.contributor) {
-		const data = await client.auth.admin.createUser({
-			email,
-			user_metadata: {
-				firstName,
-				lastName,
-				communityId: community.id,
-				communitySlug: community.slug,
-				communityName: community.name,
-				role,
-				isSuperAdmin,
-			},
-		});
-		return data;
-	}
-
-	const data = await client.auth.admin.inviteUserByEmail(email, {
-		redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-		data: {
-			firstName,
-			lastName,
-			communityId: community.id,
-			communitySlug: community.slug,
-			communityName: community.name,
-			role,
-			isSuperAdmin,
-		},
-	});
-
-	return data;
-};
-
-/**
- * Add someone as a user to supabase and send them an invite by email
- *
- * By default will reinvite the user if they already exist in supabase by deleting them and trying
- * again
- */
-const addSupabaseUser = async ({
-	email,
-	firstName,
-	lastName,
-	community,
-	role,
-	force = true,
-	isSuperAdmin,
-}: {
-	email: string;
-	firstName: string;
-	lastName?: string | null;
-	community: Community;
-	role?: MemberRole;
-	isSuperAdmin?: boolean;
-	/**
-	 * If true, the user will be reinvited even if they already exist in supabase by deleting them
-	 * and trying again
-	 *
-	 * @default true
-	 */
-	force?: boolean;
-}): Promise<
-	| {
-			user: User;
-			error: null;
-	  }
-	| {
-			user: null;
-			error: string;
-	  }
-> => {
-	const client = getServerSupabase();
-
-	const { error, data } = await createOrInviteSupabaseUser({
-		email,
-		firstName,
-		lastName,
-		community,
-		role,
-		isSuperAdmin,
-	});
-
-	if (!error) {
-		return { user: data.user, error: null };
-	}
-
-	// let's just give up
-	if (!force) {
-		captureException(error);
-		return {
-			user: null,
-			error: `Failed to invite member.\n ${formatSupabaseError(error)}`,
-		};
-	}
-
-	// 422 = email already exists in supabase
-	if (error.status !== 422) {
-		captureException(error);
-		return {
-			user: null,
-			error: `Failed to invite member.\n ${formatSupabaseError(error)}`,
-		};
-	}
-
-	// the user already exists in supabase, so we will delete them and try again
-	const { data: supabaseUserData, error: getEmailError } =
-		await client.auth.admin.getUserByEmail(email);
-
-	if (getEmailError) {
-		captureException(getEmailError);
-		return { user: null, error: `Failed to invite member.` };
-	}
-
-	const { error: deleteError } = await client.auth.admin.deleteUser(supabaseUserData.user.id);
-
-	if (deleteError) {
-		captureException(deleteError);
-		return { user: null, error: `Failed to invite member.` };
-	}
-
-	return addSupabaseUser({
-		email,
-		firstName,
-		lastName,
-		community,
-		role,
-		force: false,
-		isSuperAdmin,
-	});
-};
-
-/**
  * Adds a member to a community.
  *
  * First checks if the user is already a member of the community. If not, creates a new member in
  * the db and revalidates the member list.
- *
- * It will then double check to see if the user exists in supabase. If not, it will send an invite
- * to do so
  *
  * @param user - The user to add as a member.
  * @param role - Optional. Specifies the role of the user in the community.
@@ -279,9 +122,6 @@ export const addMember = defineServerAction(async function addMember({
 
 /**
  * Create a new user and add them as a member to a community
- *
- * Will also add them as a user to
- * supabase
  */
 export const createUserWithMembership = defineServerAction(async function createUserWithMembership({
 	...data
@@ -363,38 +203,6 @@ export const createUserWithMembership = defineServerAction(async function create
 			return result;
 		});
 
-		// if(inviteUserResult.error){
-
-		// }
-
-		// const { error: supabaseError, user: supabaseUser } = await addSupabaseUser({
-		// 	email,
-		// 	firstName,
-		// 	lastName,
-		// 	community,
-		// 	role,
-		// 	isSuperAdmin: isSuperAdmin === true,
-		// });
-
-		// if (supabaseError !== null) {
-		// 	return {
-		// 		title: "Failed to add member",
-		// 		error: "We encounted a problem with our authentication provider",
-		// 	};
-		// }
-
-		// await prisma.user.update({
-		// 	where: {
-		// 		id: newUser.id,
-		// 	},
-		// 	data: {
-		// 		supabaseId: supabaseUser.id,
-		// 	},
-		// });
-
-		//	revalidateMemberPathsAndTags(community);
-
-		//		return { ...user, memberships: [member] };
 		return inviteUserResult;
 	} catch (error) {
 		return {

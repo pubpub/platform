@@ -6,7 +6,7 @@ import { ClipboardPenLine } from "ui/icon";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
@@ -15,10 +15,8 @@ import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
 
 export default async function Page({ params: { communitySlug } }) {
-	const { user } = await getLoginData();
-	if (!user) {
-		return null;
-	}
+	const { user } = await getPageLoginData();
+
 	if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return null;
 	}

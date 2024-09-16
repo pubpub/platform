@@ -5,8 +5,7 @@ import { cookies } from "next/headers";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { Lucia } from "lucia";
 
-import type { Communities, Members, Users, UsersId } from "db/public";
-import type { Sessions, SessionsId } from "db/src/public/Sessions";
+import type { Communities, Members, Sessions, SessionsId, Users, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
@@ -190,7 +189,6 @@ export const lucia = new Lucia(adapter, {
 		slug,
 		createdAt,
 		updatedAt,
-		supabaseId,
 		memberships,
 		avatar,
 		orcid,
@@ -203,7 +201,6 @@ export const lucia = new Lucia(adapter, {
 			slug,
 			createdAt,
 			updatedAt,
-			supabaseId,
 			memberships,
 			avatar,
 			orcid,

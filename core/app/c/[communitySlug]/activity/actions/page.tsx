@@ -3,7 +3,7 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -17,9 +17,10 @@ export default async function Page({
 		communitySlug: string;
 	};
 }) {
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
+
 	const community = await findCommunityBySlug(communitySlug);
-	if (!community || !user) {
+	if (!community) {
 		return notFound();
 	}
 

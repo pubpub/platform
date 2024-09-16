@@ -7,11 +7,11 @@ import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import { lucia } from "~/lib/auth/lucia";
+import { env } from "~/lib/env/env.mjs";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 
 const redirectToURL = (
 	redirectTo: string,
-	req: NextRequest,
 	opts?: ResponseInit & {
 		searchParams?: Record<string, string>;
 	}
@@ -26,8 +26,8 @@ const redirectToURL = (
 		return NextResponse.redirect(url, opts);
 	}
 
-	if (URL.canParse(redirectTo, req.url)) {
-		const url = new URL(redirectTo, req.url);
+	if (URL.canParse(redirectTo, env.PUBPUB_URL)) {
+		const url = new URL(redirectTo, env.PUBPUB_URL);
 
 		Object.entries(opts?.searchParams ?? {}).forEach(([key, value]) => {
 			url.searchParams.append(key, value);
@@ -37,7 +37,7 @@ const redirectToURL = (
 
 	// invalid redirectTo, redirect to not-found
 	return NextResponse.redirect(
-		new URL(`/not-found?from=${encodeURIComponent(redirectTo)}`, req.url),
+		new URL(`/not-found?from=${encodeURIComponent(redirectTo)}`, env.PUBPUB_URL),
 		opts
 	);
 };
@@ -52,19 +52,17 @@ const handleInvalidToken = ({
 	redirectTo,
 	tokenType,
 	reason,
-	req,
 	token,
 }: {
 	redirectTo: string;
 	tokenType: AuthTokenType | null;
 	reason: TokenFailureReason;
-	req: NextRequest;
 	token: string;
 }) => {
 	if (reason === TokenFailureReason.expired) {
 		// if the token is expired, we just send you through and let the page handle it
 		// we attach the token so the page can do custom token logic if it needs to
-		return redirectToURL(redirectTo, req, {
+		return redirectToURL(redirectTo, {
 			searchParams: {
 				token,
 				reason,
@@ -73,7 +71,7 @@ const handleInvalidToken = ({
 	}
 
 	// TODO: may want to add additional error pages for specific reasons
-	return redirectToURL(`/invalid-token?redirectTo=${encodeURIComponent(redirectTo)}`, req);
+	return redirectToURL(`/invalid-token?redirectTo=${encodeURIComponent(redirectTo)}`);
 };
 
 export async function GET(req: NextRequest) {
@@ -112,7 +110,6 @@ export async function GET(req: NextRequest) {
 		return handleInvalidToken({
 			redirectTo,
 			tokenType: tokenSettled.reason.tokenType,
-			req,
 			reason: tokenSettled.reason.reason,
 			token,
 		});

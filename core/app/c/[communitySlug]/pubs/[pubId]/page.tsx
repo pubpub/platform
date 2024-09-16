@@ -5,7 +5,6 @@ import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -13,7 +12,7 @@ import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
 import { createToken } from "~/lib/server/token";
@@ -29,10 +28,7 @@ export default async function Page({
 	params: { pubId: string; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
-	const { user } = await getLoginData();
-	if (!user) {
-		return null;
-	}
+	const { user } = await getPageLoginData();
 
 	const token = await createToken({
 		userId: user.id as UsersId,
@@ -113,7 +109,7 @@ export default async function Page({
 							<div>
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
-									pub={pub}
+									pubId={pub.id as PubsId}
 									stage={stage!}
 									pageContext={{
 										params: params,
@@ -168,7 +164,11 @@ export default async function Page({
 				/>
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper pub={pub} members={community.members} />
+				<PubChildrenTableWrapper
+					communitySlug={params.communitySlug}
+					pageContext={{ params, searchParams }}
+					parentPubId={pub.id as PubsId}
+				/>
 			</Suspense>
 		</div>
 	);

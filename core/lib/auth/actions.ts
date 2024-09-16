@@ -7,20 +7,15 @@ import { z } from "zod";
 
 import type { Communities, Members, Users, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
-import { logger } from "logger";
 
-import type { DefinitelyHas, Prettify } from "../types";
+import type { Prettify } from "../types";
 import { db } from "~/kysely/database";
-import { REFRESH_NAME, TOKEN_NAME } from "~/lib/auth/cookies";
 import { lucia, validateRequest } from "~/lib/auth/lucia";
 import { validatePassword } from "~/lib/auth/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getUser, setUserPassword, updateUser } from "~/lib/server/user";
-import { getServerSupabase } from "~/lib/supabaseServer";
-import { env } from "../env/env.mjs";
 import * as Email from "../server/email";
 import { invalidateTokensForUser } from "../server/token";
-import { formatSupabaseError } from "../supabase";
 import { getLoginData } from "./loginData";
 
 const schema = z.object({
@@ -45,72 +40,10 @@ function redirectUser(memberships?: (Members & { community: Communities | null }
 	redirect(`/c/${memberships[0].community?.slug}/stages`);
 }
 
-const clearSupabaseCookies = () => {
-	cookies().delete(TOKEN_NAME);
-	cookies().delete(REFRESH_NAME);
-	cookies().delete("sb-access-token");
-	cookies().delete("sb-refresh-token");
-};
-
-async function supabaseLogin({ user, password }: { user: LoginUser; password: string }) {
-	const supabase = getServerSupabase();
-
-	const { data } = await supabase.auth.signInWithPassword({ email: user.email, password });
-
-	if (!data.session) {
-		return {
-			error: "Incorrect email or password",
-		};
-	}
-
-	cookies().set(TOKEN_NAME, data.session?.access_token, {
-		path: "/",
-		sameSite: "lax",
-		secure: env.NODE_ENV === "production",
-		maxAge: 100 * 365 * 24 * 60 * 60, // 100 years, never expires
-	});
-	cookies().set(REFRESH_NAME, data.session?.refresh_token, {
-		path: "/",
-		sameSite: "lax",
-		secure: env.NODE_ENV === "production",
-		maxAge: 100 * 365 * 24 * 60 * 60, // 100 years, never expires
-	});
-
-	redirectUser(user.memberships);
-}
-
-async function luciaLogin({
-	user,
-	password,
-}: {
-	user: DefinitelyHas<LoginUser, "passwordHash">;
-	password: string;
-}) {
-	const validPassword = await validatePassword(password, user.passwordHash);
-
-	if (!validPassword) {
-		return {
-			error: "Incorrect email or password",
-		};
-	}
-	// lucia authentication
-	const session = await lucia.createSession(user.id, { type: AuthTokenType.generic });
-	const sessionCookie = lucia.createSessionCookie(session.id);
-	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-
-	// for good measure, delete the supabse cookies too
-	cookies().delete(TOKEN_NAME);
-	cookies().delete(REFRESH_NAME);
-
-	redirectUser(user.memberships);
-}
-
-const isLuciaUser = (user: LoginUser): user is LoginUser & { passwordHash: string } =>
-	user.passwordHash !== null;
-
 export const loginWithPassword = defineServerAction(async function loginWithPassword(props: {
 	email: string;
 	password: string;
+	redirectTo: string | null;
 }) {
 	const parsed = schema.safeParse({ email: props.email, password: props.password });
 
@@ -130,33 +63,32 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 		};
 	}
 
-	if (!isLuciaUser(user)) {
-		return supabaseLogin({ user, password });
-	}
-
-	return luciaLogin({ user, password });
-});
-
-async function supabaseLogout(token: string) {
-	const supabase = getServerSupabase();
-	const signedOut = await supabase.auth.admin.signOut(token);
-
-	if (signedOut.error) {
-		logger.error(signedOut.error);
+	if (!user.passwordHash) {
 		return {
-			error: signedOut.error.message,
+			// TODO: user has no password hash, either send them a password reset email or something
+			error: "Incorrect email or password",
 		};
 	}
+	const validPassword = await validatePassword(password, user.passwordHash);
 
-	// handle supabase logout on the client,
-	// bc it won't listen otherwise
+	if (!validPassword) {
+		return {
+			error: "Incorrect email or password",
+		};
+	}
+	// lucia authentication
+	const session = await lucia.createSession(user.id, { type: AuthTokenType.generic });
+	const sessionCookie = lucia.createSessionCookie(session.id);
+	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-	return {
-		success: true,
-	};
-}
+	if (props.redirectTo && /^\/\w+/.test(props.redirectTo)) {
+		redirect(props.redirectTo);
+	}
 
-async function luciaLogout() {
+	redirectUser(user.memberships);
+});
+
+export const logout = defineServerAction(async function logout() {
 	const { session } = await validateRequest();
 
 	if (!session) {
@@ -170,62 +102,8 @@ async function luciaLogout() {
 	const sessionCookie = lucia.createBlankSessionCookie();
 	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-	// for good measure, delete the supabse cookies too
-	// might not work
-	clearSupabaseCookies();
-
 	redirect("/login");
-}
-
-export const logout = defineServerAction(async function logout() {
-	const token = cookies().get(TOKEN_NAME);
-
-	// signout supabase
-	if (token) {
-		return supabaseLogout(token.value);
-	}
-
-	return luciaLogout();
 });
-
-async function supabaseSendForgotPasswordMail(props: { email: string }) {
-	const supabase = getServerSupabase();
-
-	const { error } = await supabase.auth.resetPasswordForEmail(props.email, {
-		redirectTo: `${env.NEXT_PUBLIC_PUBPUB_URL}/reset`,
-	});
-
-	if (error) {
-		return { error: formatSupabaseError(error) };
-	}
-
-	return {
-		sucess: true,
-		report: "Password reset email sent!",
-	};
-}
-
-async function luciaSendForgotPasswordMail(props: {
-	user: NonNullable<Awaited<ReturnType<typeof getUserWithPasswordHash>>>;
-}) {
-	const result = await Email.passwordReset({
-		id: props.user.id,
-		email: props.user.email,
-		firstName: props.user.firstName,
-		lastName: props.user.lastName,
-	}).send();
-
-	if ("error" in result) {
-		return {
-			error: result.error,
-		};
-	}
-
-	return {
-		success: true,
-		report: result.report ?? "Password reset email sent!",
-	};
-}
 
 export const sendForgotPasswordMail = defineServerAction(
 	async function sendForgotPasswordMail(props: { email: string }) {
@@ -238,61 +116,25 @@ export const sendForgotPasswordMail = defineServerAction(
 			};
 		}
 
-		if (user?.passwordHash === null) {
-			return supabaseSendForgotPasswordMail(props);
+		const result = await Email.passwordReset({
+			id: user.id,
+			email: user.email,
+			firstName: user.firstName,
+			lastName: user.lastName,
+		}).send();
+
+		if ("error" in result) {
+			return {
+				error: result.error,
+			};
 		}
 
-		return luciaSendForgotPasswordMail({ user });
-	}
-);
-
-async function supabaseResetPassword({
-	user,
-	password,
-}: {
-	user: NonNullable<Awaited<ReturnType<typeof getUserWithPasswordHash>>>;
-	password: string;
-}) {
-	const supabase = getServerSupabase();
-
-	const { data, error } = await supabase.auth.admin.updateUserById(user.supabaseId!, {
-		password,
-	});
-
-	if (error) {
-		const formattedError =
-			error.name === "AuthSessionMissingError"
-				? "This reset link is invalid or has expired. Please request a new one."
-				: formatSupabaseError(error);
-
 		return {
-			error: formattedError,
+			success: true,
+			report: result.report ?? "Password reset email sent!",
 		};
 	}
-
-	return {
-		success: true,
-	};
-}
-
-async function luciaResetPassword({
-	user,
-	password,
-}: {
-	user: NonNullable<Awaited<ReturnType<typeof getUserWithPasswordHash>>>;
-	password: string;
-}) {
-	await setUserPassword({ userId: user.id, password });
-
-	// clear all password reset tokens
-	// TODO: maybe others as well?
-	await invalidateTokensForUser(user.id, [AuthTokenType.passwordReset]);
-
-	// clear all sessions, including the current password reset session
-	await lucia.invalidateUserSessions(user.id);
-
-	return { success: true };
-}
+);
 
 const newPasswordSchema = z.object({
 	password: z.string().min(8),
@@ -329,11 +171,16 @@ export const resetPassword = defineServerAction(async function resetPassword({
 		};
 	}
 
-	if (!isLuciaUser(fullUser)) {
-		return supabaseResetPassword({ user: fullUser, password: parsed.data.password });
-	}
+	await setUserPassword({ userId: user.id, password });
 
-	return luciaResetPassword({ user: fullUser, password: parsed.data.password });
+	// clear all password reset tokens
+	// TODO: maybe others as well?
+	await invalidateTokensForUser(user.id, [AuthTokenType.passwordReset]);
+
+	// clear all sessions, including the current password reset session
+	await lucia.invalidateUserSessions(user.id);
+
+	return { success: true };
 });
 
 export const signup = defineServerAction(async function signup(props: {
@@ -424,10 +271,6 @@ export const signup = defineServerAction(async function signup(props: {
 	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
 	cookies().set(newSessionCookie.name, newSessionCookie.value, newSessionCookie.attributes);
-
-	// for good measure, delete the supabse cookies too
-	cookies().delete(TOKEN_NAME);
-	cookies().delete(REFRESH_NAME);
 
 	if (props.redirect) {
 		redirect(props.redirect);

@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
+import type { InputComponent, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
+	CoreSchemaType,
 	ElementType,
 	FormAccessType,
 	formElementsIdSchema,
@@ -17,6 +18,7 @@ const baseElementSchema = z.object({
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),
 	stageId: z.string().nullable().optional(),
+	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
@@ -24,11 +26,14 @@ type baseElement = z.input<typeof baseElementSchema>;
 export type InputElement = baseElement & {
 	type: ElementType.pubfield;
 	fieldId: PubFieldsId;
-	required: boolean;
+	required: boolean | null;
 	label?: string | null;
-	description?: string | null;
+	placeholder?: string | null;
+	help?: string | null;
 	element: never;
 	content: never;
+	schemaName: CoreSchemaType;
+	component: InputComponent;
 };
 
 export type StructuralElement = baseElement & {
@@ -37,8 +42,8 @@ export type StructuralElement = baseElement & {
 	content: string;
 	fieldId: never;
 	required: never;
-	label?: never;
-	description?: never;
+	label: never;
+	placeholder: never;
 };
 
 export type ButtonElement = baseElement & {
@@ -48,7 +53,7 @@ export type ButtonElement = baseElement & {
 	stageId?: StagesId;
 	fieldId: never;
 	required: never;
-	description: never;
+	placeholder: never;
 };
 
 const formElementSchema = formElementsInitializerSchema

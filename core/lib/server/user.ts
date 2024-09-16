@@ -5,8 +5,7 @@ import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
-import type { CommunitiesId, NewUsers, UsersId } from "db/public";
-import type { UsersUpdate } from "db/src/public";
+import type { CommunitiesId, NewUsers, UsersId, UsersUpdate } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -23,7 +22,6 @@ export const SAFE_USER_SELECT = [
 	"users.firstName",
 	"users.lastName",
 	"users.slug",
-	"users.supabaseId",
 	"users.createdAt",
 	"users.updatedAt",
 	"users.isSuperAdmin",

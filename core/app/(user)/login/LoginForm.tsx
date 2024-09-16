@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,6 +21,7 @@ export const loginFormSchema = z.object({
 });
 
 export default function LoginForm() {
+	const searchParams = useSearchParams();
 	const form = useForm<z.infer<typeof loginFormSchema>>({
 		resolver: zodResolver(loginFormSchema),
 	});
@@ -31,6 +32,7 @@ export default function LoginForm() {
 		await runLoginWithPassword({
 			email: formData.email,
 			password: formData.password,
+			redirectTo: searchParams.get("redirectTo") ?? null,
 		});
 	};
 

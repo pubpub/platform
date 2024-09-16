@@ -14,7 +14,13 @@
 		"lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
 		"lint:ws": "pnpm dlx sherif@latest",
 		"test": "turbo test",
-		"fix": "pnpm run lint:fix && pnpm run format:fix"
+		"fix": "pnpm run lint:fix && pnpm run format:fix",
+		"dev:db:start": "docker compose -f docker-compose.base.yml up db -d",
+		"dev:db:stop": "docker compose -f docker-compose.base.yml down db",
+		"dev:inbucket:start": "docker compose -f docker-compose.base.yml up inbucket -d",
+		"dev:inbucket:stop": "docker compose -f docker-compose.base.yml down inbucket",
+		"dev:setup": "pnpm install && pnpm run dev:db:start && pnpm run dev:inbucket:start && pnpm p:dev && pnpm --filter core migrate-dev",
+		"dev:teardown": "docker compose -f docker-compose.base.yml down"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.22.17",
@@ -47,7 +53,7 @@
 	"prettier": "@pubpub/prettier-config",
 	"packageManager": "pnpm@8.7.0",
 	"prisma": {
-		"schema": "packages/db/src/prisma/schema.prisma"
+		"schema": "core/prisma/schema.prisma"
 	},
 	"pnpm": {
 		"overrides": {

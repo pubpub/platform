@@ -6,6 +6,7 @@ import type { CommunitiesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
 import { db } from "~/kysely/database";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { StageEditor } from "./components/editor/StageEditor";
@@ -87,6 +88,7 @@ export type CommunityStage = Awaited<
 >[number];
 
 export default async function Page({ params, searchParams }: Props) {
+	await getPageLoginData();
 	const community = await findCommunityBySlug();
 
 	if (!community) {
