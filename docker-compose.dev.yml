@@ -1,145 +1,145 @@
 services:
-    core:
-        build:
-            context: .
-            args:
-                - PACKAGE=core
-        container_name: core
-        env_file: ./.env.docker-compose
-        environment:
-            #s non secret
-            - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
-            - MAILGUN_SMTP_HOST=smtp.mailgun.org
-            - MAILGUN_SMTP_PORT=465
-            - MAILGUN_SMTP_USERNAME=omitted
-            - OTEL_SERVICE_NAME=core.core
-            - PGDATABASE=postgres
-            - PGHOST=host.docker.internal
-            - PGPORT=54322
-            - PGUSER=postgres
-            - PGPASSWORD=postgres
-            - PUBPUB_URL=http://localhost:8080
-        networks:
-            - app-network
-        ports:
-            - "30000:3000"
+  core:
+    build:
+      context: .
+      args:
+        - PACKAGE=core
+    container_name: core
+    env_file: ./.env.docker-compose
+    environment:
+        #s non secret
+      - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
+      - MAILGUN_SMTP_HOST=smtp.mailgun.org
+      - MAILGUN_SMTP_PORT=465
+      - MAILGUN_SMTP_USERNAME=omitted
+      - OTEL_SERVICE_NAME=core.core
+      - PGDATABASE=postgres
+      - PGHOST=host.docker.internal
+      - PGPORT=54322
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - PUBPUB_URL=http://localhost:8080
+    networks:
+      - app-network
+    ports:
+      - "30000:3000"
 
-    core-nginx:
-        build: ./infrastructure/nginx
-        container_name: core-nginx
-        environment:
-            - NGINX_LISTEN_PORT=8080
-            - NGINX_PREFIX=/
-            - NGINX_UPSTREAM_HOST=core
-            - NGINX_UPSTREAM_PORT=3000
-            - OTEL_SERVICE_NAME=core.nginx
-        depends_on:
-            - core
-        networks:
-            - app-network
-        ports:
-            - "3000:8080"
+  core-nginx:
+    build: ./infrastructure/nginx
+    container_name: core-nginx
+    environment:
+      - NGINX_LISTEN_PORT=8080
+      - NGINX_PREFIX=/
+      - NGINX_UPSTREAM_HOST=core
+      - NGINX_UPSTREAM_PORT=3000
+      - OTEL_SERVICE_NAME=core.nginx
+    depends_on:
+      - core
+    networks:
+      - app-network
+    ports:
+      - "3000:8080"
 
-    jobs:
-        build:
-            context: .
-            args:
-                - PACKAGE=jobs
-        container_name: jobs
-        env_file: ./.env.docker-compose
-        environment:
-            - OTEL_SERVICE_NAME=jobs.jobs
-            - PGDATABASE=postgres
-            - PGHOST=host.docker.internal
-            - PGPORT=54322
-            - PGUSER=postgres
-            - PGPASSWORD=postgres
-            - PUBPUB_URL=http://localhost:8080
-        networks:
-            - app-network
+  jobs:
+    build:
+      context: .
+      args:
+        - PACKAGE=jobs
+    container_name: jobs
+    env_file: ./.env.docker-compose
+    environment:
+      - OTEL_SERVICE_NAME=jobs.jobs
+      - PGDATABASE=postgres
+      - PGHOST=host.docker.internal
+      - PGPORT=54322
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - PUBPUB_URL=http://localhost:8080
+    networks:
+      - app-network
 
-    # jobs-nginx:
-    # No Nginx for jobs, because it does not take requests
+  # jobs-nginx:
+  # No Nginx for jobs, because it does not take requests
 
-    integration-evaluations:
-        build:
-            context: .
-            args:
-                - PACKAGE=integration-evaluations
-        container_name: integration-evaluations
-        env_file: ./.env.docker-compose
-        environment:
-            - SENTRY_AUTH_TOKEN=omitted
+  integration-evaluations:
+    build:
+      context: .
+      args:
+        - PACKAGE=integration-evaluations
+    container_name: integration-evaluations
+    env_file: ./.env.docker-compose
+    environment:
+      - SENTRY_AUTH_TOKEN=omitted
 
-            - OTEL_SERVICE_NAME=integration-evaluations.integration-evaluations
-            - PUBPUB_URL=http://localhost:8080
-        depends_on:
-            - core
-        networks:
-            - app-network
-        ports:
-            - "30001:3000"
+      - OTEL_SERVICE_NAME=integration-evaluations.integration-evaluations
+      - PUBPUB_URL=http://localhost:8080
+    depends_on:
+      - core
+    networks:
+      - app-network
+    ports:
+      - "30001:3000"
 
-    integration-evaluations-nginx:
-        build: ./infrastructure/nginx
-        container_name: integration-evaluations-nginx
-        environment:
-            - NGINX_LISTEN_PORT=8080
-            - NGINX_PREFIX=/
-            - NGINX_UPSTREAM_HOST=integration-evaluations
-            - NGINX_UPSTREAM_PORT=3000
-            - OTEL_SERVICE_NAME=integration-evaluations.nginx
-        depends_on:
-            - integration-evaluations
-        networks:
-            - app-network
-        ports:
-            - "3001:8080"
+  integration-evaluations-nginx:
+    build: ./infrastructure/nginx
+    container_name: integration-evaluations-nginx
+    environment:
+      - NGINX_LISTEN_PORT=8080
+      - NGINX_PREFIX=/
+      - NGINX_UPSTREAM_HOST=integration-evaluations
+      - NGINX_UPSTREAM_PORT=3000
+      - OTEL_SERVICE_NAME=integration-evaluations.nginx
+    depends_on:
+      - integration-evaluations
+    networks:
+      - app-network
+    ports:
+      - "3001:8080"
 
-    integration-submissions:
-        build:
-            context: .
-            args:
-                - PACKAGE=integration-submissions
-        container_name: integration-submissions
-        env_file: ./.env.docker-compose
-        environment:
-            - SENTRY_AUTH_TOKEN=omitted
+  integration-submissions:
+    build:
+      context: .
+      args:
+        - PACKAGE=integration-submissions
+    container_name: integration-submissions
+    env_file: ./.env.docker-compose
+    environment:
+      - SENTRY_AUTH_TOKEN=omitted
 
-            - OTEL_SERVICE_NAME=integration-submissions.integration-submissions
-            - PUBPUB_URL=http://localhost:8080
-        depends_on:
-            - core
-        networks:
-            - app-network
-        ports:
-            - "30002:3000"
+      - OTEL_SERVICE_NAME=integration-submissions.integration-submissions
+      - PUBPUB_URL=http://localhost:8080
+    depends_on:
+      - core
+    networks:
+      - app-network
+    ports:
+      - "30002:3000"
 
-    integration-submissions-nginx:
-        build: ./infrastructure/nginx
-        container_name: integration-submissions-nginx
-        environment:
-            - NGINX_LISTEN_PORT=8080
-            - NGINX_PREFIX=/
-            - NGINX_UPSTREAM_HOST=integration-submissions
-            - NGINX_UPSTREAM_PORT=3000
-            - OTEL_SERVICE_NAME=integration-submissions.nginx
-        depends_on:
-            - integration-submissions
-        networks:
-            - app-network
-        ports:
-            - "3002:8080"
+  integration-submissions-nginx:
+    build: ./infrastructure/nginx
+    container_name: integration-submissions-nginx
+    environment:
+      - NGINX_LISTEN_PORT=8080
+      - NGINX_PREFIX=/
+      - NGINX_UPSTREAM_HOST=integration-submissions
+      - NGINX_UPSTREAM_PORT=3000
+      - OTEL_SERVICE_NAME=integration-submissions.nginx
+    depends_on:
+      - integration-submissions
+    networks:
+      - app-network
+    ports:
+      - "3002:8080"
 
-    db:
-        extends:
-            file: docker-compose.base.yml
-            service: db
-
-    inbucket:
-        extends:
-            file: docker-compose.base.yml
-            service: inbucket
+  db:
+    extends:
+      file: docker-compose.base.yml
+      service: db
+  
+  inbucket:
+    extends:
+      file: docker-compose.base.yml
+      service: inbucket
 
 networks:
-    app-network:
+  app-network:

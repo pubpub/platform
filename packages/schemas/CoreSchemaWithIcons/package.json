@@ -1,4 +1,0 @@
-{
-	"main": "dist/schemas-CoreSchemaWithIcons.cjs.js",
-	"module": "dist/schemas-CoreSchemaWithIcons.esm.js"
-}
