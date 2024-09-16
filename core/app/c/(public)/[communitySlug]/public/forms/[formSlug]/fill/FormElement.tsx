@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
+import { defaultComponent } from "schemas";
 
 import type { PubsId } from "db/public";
 import type { InputProps } from "ui/input";
@@ -201,7 +202,8 @@ export const FormElement = ({
 	pubId: PubsId;
 	element: Form["elements"][number];
 }) => {
-	const { component, label: labelProp, slug } = element;
+	const { component: componentProp, label: labelProp, slug, schemaName } = element;
+	const component = componentProp ?? (schemaName && defaultComponent(schemaName));
 	if (!slug) {
 		if (element.type === ElementType.structural) {
 			return (
