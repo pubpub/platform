@@ -2,41 +2,12 @@ import { ErrorBoundary } from "@sentry/nextjs";
 
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
+import type { CRUDButtonProps, IOPubProps } from "./types";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
 import { NewFormWrapper } from "./PubFormWrapper";
 import { PubRemove } from "./PubRemove";
 
-type CreateButtonPropsFromAllPubsPage = {
-	communityId: CommunitiesId;
-	stageId?: never;
-	pubId?: never;
-};
-
-type CreateButtonPropsFromStagesPage = {
-	stageId: StagesId;
-	communityId?: never;
-	pubId?: never;
-};
-
-type EditButtonProps = {
-	pubId: PubsId;
-	communityId?: never;
-	stageId?: never;
-};
-
-export type CRUDButtonProps = {
-	title?: string | null;
-	variant?: "secondary" | "outline" | "ghost" | "default" | "destructive";
-	size?: "sm" | "default" | "lg" | "icon";
-	className?: string;
-};
-
-type IOPubProps = {
-	parentId?: PubsId;
-	searchParams: Record<string, unknown>;
-} & (CreateButtonPropsFromAllPubsPage | CreateButtonPropsFromStagesPage | EditButtonProps);
-
-type Props = IOPubProps & {
+export type Props = IOPubProps & {
 	label?: string;
 	mode: "create" | "update" | "remove";
 	button?: CRUDButtonProps;
