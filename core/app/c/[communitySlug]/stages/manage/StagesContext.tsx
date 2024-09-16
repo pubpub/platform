@@ -51,14 +51,14 @@ export type StagesProviderProps = PropsWithChildren<{
 export const useStages = () => useContext(StagesContext);
 
 type Action =
-	| { type: "stage_created" }
+	| { type: "stage_created"; newId: StagesId }
 	| { type: "stages_deleted"; stageIds: StagesId[] }
 	| { type: "move_constraint_created"; sourceStageId: StagesId; destinationStageId: StagesId }
 	| { type: "move_constraints_deleted"; moveConstraintIds: [StagesId, StagesId][] }
 	| { type: "stage_name_updated"; stageId: StagesId; name: string };
 
-const makeOptimisticStage = (communityId: CommunitiesId): CommunityStage => ({
-	id: "new" as StagesId,
+const makeOptimisticStage = (communityId: CommunitiesId, newId: StagesId): CommunityStage => ({
+	id: newId,
 	name: "Untitled Stage",
 	order: "aa",
 	communityId,
@@ -83,8 +83,9 @@ const makeOptimisitcStagesReducer =
 	(communityId: CommunitiesId) =>
 	(state: CommunityStage[], action: Action): CommunityStage[] => {
 		switch (action.type) {
-			case "stage_created":
-				return [...state, makeOptimisticStage(communityId)];
+			case "stage_created": {
+				return [...state, makeOptimisticStage(communityId, action.newId)];
+			}
 			case "stages_deleted":
 				return state.filter((stage) => !action.stageIds.includes(stage.id));
 			case "move_constraint_created":
@@ -170,10 +171,21 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	} as DeleteBatch);
 
 	const createStage = useCallback(async () => {
+		/**
+		 * We create the id on the client and pass it to both
+		 * the optimistic reducer and the server action
+		 * so that the id on the server and the client are in sync
+		 * and the client can properly reconsile the optimistic react flow node
+		 * with the new stage returned from the server.
+		 *
+		 * This solves a problem where the position of the server-returned stage
+		 * would be different from the position of the client-returned stage.
+		 */
+		const newId = crypto.randomUUID() as StagesId;
 		startTransition(() => {
-			dispatch({ type: "stage_created" });
+			dispatch({ type: "stage_created", newId });
 		});
-		runCreateStage(props.communityId);
+		runCreateStage(props.communityId, newId);
 	}, [dispatch, props.communityId, runCreateStage]);
 
 	const deleteStages = useCallback(

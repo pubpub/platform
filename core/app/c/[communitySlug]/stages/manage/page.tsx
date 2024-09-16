@@ -58,7 +58,7 @@ const getCommunityStages = (communityId: CommunitiesId) =>
 							.as("pubsCount")
 					)
 					.as("pubsCount"),
-				// needs to be fancier and include member groups
+				// TODO: needs to be fancier and include member groups
 				eb
 					.selectFrom("permissions")
 					.innerJoin("_PermissionToStage", "permissions.id", "_PermissionToStage.A")

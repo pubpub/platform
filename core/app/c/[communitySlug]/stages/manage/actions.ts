@@ -3,7 +3,7 @@
 import { captureException } from "@sentry/nextjs";
 
 import type { Action, ActionInstancesId, CommunitiesId, RulesId, StagesId } from "db/public";
-import { Event } from "db/public";
+import { Event, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
@@ -47,11 +47,15 @@ async function deleteMoveConstraints(moveConstraintIds: [StagesId, StagesId][]) 
 }
 
 export const createStage = defineServerAction(async function createStage(
-	communityId: CommunitiesId
+	communityId: CommunitiesId,
+	id: StagesId
 ) {
+	const validatedId = stagesIdSchema.parse(id);
+
 	// TODO: add authorization check
 	try {
 		await createStageDb({
+			id: validatedId,
 			name: "Untitled Stage",
 			order: "aa",
 			communityId,

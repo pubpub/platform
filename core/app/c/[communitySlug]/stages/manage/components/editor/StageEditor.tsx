@@ -20,7 +20,7 @@ import "reactflow/dist/style.css";
 import type { StagesId } from "db/public";
 import { expect } from "utils";
 
-import { CommunityStage } from "../../page";
+import type { CommunityStage } from "../../page";
 import { useStages } from "../../StagesContext";
 import { useStageEditor } from "./StageEditorContext";
 import { StageEditorContextMenu } from "./StageEditorContextMenu";

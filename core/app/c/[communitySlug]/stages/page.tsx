@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
-import { AuthTokenType, UsersId } from "db/public";
+import type { UsersId } from "db/public";
+import { AuthTokenType } from "db/public";
 
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
