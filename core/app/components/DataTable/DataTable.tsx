@@ -158,7 +158,7 @@ export function DataTable<TData, TValue>({
 										))}
 									</TableRow>
 								))
-							: emptyState ?? (
+							: (emptyState ?? (
 									<TableRow>
 										<TableCell
 											colSpan={columns.length}
@@ -167,7 +167,7 @@ export function DataTable<TData, TValue>({
 											No results.
 										</TableCell>
 									</TableRow>
-								)}
+								))}
 					</TableBody>
 				</Table>
 			</div>

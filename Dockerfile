@@ -4,16 +4,17 @@
 # If you need more help, visit the Dockerfile reference guide at
 # https://docs.docker.com/go/dockerfile-reference/
 
-ARG NODE_VERSION=20.13.1
+ARG NODE_VERSION=20.17.0
 
 ARG PACKAGE
 ARG PORT=3000
 
-ARG PNPM_VERSION=8.14.3
+ARG PNPM_VERSION=9.10.0
 
 ################################################################################
 # Use node image for base image for all stages.
 FROM node:${NODE_VERSION}-alpine as base
+
 
 # Install python deps for node-gyp
 RUN apk add g++ make py3-pip ca-certificates curl

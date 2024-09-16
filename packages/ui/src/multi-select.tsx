@@ -152,7 +152,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 						{...props}
 						onClick={handleTogglePopover}
 						className={cn(
-							"min-h-10 flex h-auto w-full items-center justify-between rounded-md border bg-inherit px-3 py-2 hover:bg-inherit",
+							"flex h-auto min-h-10 w-full items-center justify-between rounded-md border bg-inherit px-3 py-2 hover:bg-inherit",
 							className
 						)}
 					>
@@ -223,7 +223,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									/>
 									<Separator
 										orientation="vertical"
-										className="min-h-6 flex h-full"
+										className="flex h-full min-h-6"
 									/>
 									<ChevronDown className="mx-2 h-4 cursor-pointer text-muted-foreground" />
 								</div>
@@ -304,7 +304,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											</CommandItem>
 											<Separator
 												orientation="vertical"
-												className="min-h-6 flex h-full"
+												className="flex h-full min-h-6"
 											/>
 										</>
 									)}

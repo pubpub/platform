@@ -1,4 +1,4 @@
-/* eslint-disable n/no-process-env */
+/* eslint-disable no-restricted-properties */
 import { logger } from "logger";
 
 export async function register() {
