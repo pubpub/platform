@@ -1,6 +1,6 @@
 import type { PubTypesId, PubValues } from "db/public";
 
-import type { CreateEditPubProps } from "./types";
+import type { IOPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { FormElement } from "../FormSchemaRendering/FormElement";
@@ -8,7 +8,7 @@ import { createElementFromPubType } from "./helpers";
 import { NewForm } from "./PubForm";
 import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage } from "./queries";
 
-type Props = CreateEditPubProps;
+type Props = IOPubProps;
 
 async function PubFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;

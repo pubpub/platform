@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from
 import { Pencil, Plus, Trash } from "ui/icon";
 import { cn } from "utils";
 
-import type { CRUDButtonProps } from "./PubIOButton";
+import type { CRUDButtonProps } from "./types";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 const CRUDMap = {
