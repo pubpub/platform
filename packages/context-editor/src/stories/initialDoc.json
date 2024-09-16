@@ -143,6 +143,50 @@
 			]
 		},
 		{
+			"type": "contextAtom",
+			"attrs": {
+				"pubId": "675-88-fake-21441"
+			}
+		},
+		{
+			"type": "contextDoc",
+			"attrs": {
+				"pubId": "109-23-fake-21441"
+			},
+			"content": [
+				{
+					"type": "heading",
+					"attrs": {
+						"level": 4
+					},
+					"content": [
+						{
+							"type": "text",
+							"text": "This is in the Include"
+						}
+					]
+				},
+				{
+					"type": "paragraph",
+					"content": [
+						{
+							"type": "text",
+							"text": "This is include paragraph 1"
+						}
+					]
+				},
+				{
+					"type": "paragraph",
+					"content": [
+						{
+							"type": "text",
+							"text": "This is include paragraph 2"
+						}
+					]
+				}
+			]
+		},
+		{
 			"type": "paragraph",
 			"content": [
 				{

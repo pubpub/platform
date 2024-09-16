@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { EditorView } from "prosemirror-view";
 
-import { PanelProps } from "./ContextEditor";
+import { PanelProps } from "../ContextEditor";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
@@ -13,6 +13,9 @@ export interface AttributePanelProps {
 
 export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) {
 	const [position, setPosition] = useState(panelPosition);
+	/* Set as init position and then keep track of state here, while syncing 
+	so the panel doesn't become out of sync with doc (only an issue if values are shown
+	and edited elsewhere */
 	const [height, setHeight] = useState(0);
 	useEffect(() => {
 		if (panelPosition.top === 0) {
@@ -46,9 +49,10 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 					height: height,
 					opacity: height ? 1 : 0,
 					overflow: "scroll",
-					borderLeft: "1px solid #777",
-					borderRight: "1px solid #777",
-					borderBottom: `${height ? 1 : 0}px solid #777`,
+					borderLeft: "1px solid #999",
+					borderRight: "1px solid #999",
+					borderBottom: `${height ? 1 : 0}px solid #999`,
+					borderRadius: "0px 0px 2px 2px",
 					transition:
 						panelPosition.top === 0
 							? ""
@@ -65,7 +69,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 								viewRef.current.state.tr.setNodeMarkup(
 									panelPosition.pos,
 									node.type,
-									{ level: evt.target.value },
+									{ ...node.attrs, level: evt.target.value },
 									node.marks
 								)
 							);

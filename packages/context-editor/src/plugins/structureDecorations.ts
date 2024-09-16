@@ -20,12 +20,13 @@ function wrapWidget(
 		widget.appendChild(widgetButtonChild);
 		if (isBlock) {
 			widgetButtonChild.innerHTML = `${node.type.name}${node.type.name === "heading" ? ` ${node.attrs.level}` : ""}`;
+			widgetButtonChild.className = node.type.name;
 		}
 		widget.addEventListener("click", (evt) => {
 			if (evt.target instanceof Element) {
 				const rect = evt.target.getBoundingClientRect();
 				setPanelPosition({
-					top: rect.top,
+					top: isBlock ? rect.top : rect.top - 17,
 					left: rect.left,
 					bottom: rect.bottom,
 					// right: rect.right,
@@ -43,6 +44,7 @@ export default () => {
 	return new Plugin({
 		props: {
 			decorations: (state) => {
+				// console.log(state.doc.toJSON());
 				const decorations: Decoration[] = [];
 				const setPanelPosition = attributePanelKey.getState(state);
 				state.doc.descendants((node, pos) => {
