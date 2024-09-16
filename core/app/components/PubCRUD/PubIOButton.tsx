@@ -6,7 +6,7 @@ import { NewFormWrapper } from "./PubFormWrapper";
 
 export type Props = IOPubProps & {
 	label?: string;
-	mode: "create" | "update"
+	mode: "create" | "update";
 	button?: CRUDButtonProps;
 };
 
