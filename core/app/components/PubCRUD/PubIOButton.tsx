@@ -7,21 +7,18 @@ import { NewFormWrapper } from "./PubFormWrapper";
 import { PubRemove } from "./PubRemove";
 
 type CreateButtonPropsFromAllPubsPage = {
-	// this occurs when the user is creating a new pub from the All Pubs Page or the Pub Page
 	communityId: CommunitiesId;
 	stageId?: never;
 	pubId?: never;
 };
 
 type CreateButtonPropsFromStagesPage = {
-	// this occurs when the user is creating a new pub from the Stages Page
 	stageId: StagesId;
 	communityId?: never;
 	pubId?: never;
 };
 
 type EditButtonProps = {
-	// this occurs when the user is editing an existing pub
 	pubId: PubsId;
 	communityId?: never;
 	stageId?: never;
