@@ -58,6 +58,8 @@ function PubForm({
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 }) {
+	console.log("\n\nStages on the Client", communityStages);
+	console.log("\n\nLen of stages", communityStages.length);
 	const pt = availablePubTypes.find((type) => type.id === pubTypeId);
 
 	const [selectedPubType, setSelectedPubType] = useState<
@@ -82,7 +84,7 @@ function PubForm({
 		const newParams = new URLSearchParams(searchParams);
 		newParams.set("pubTypeId", value.id);
 		router.replace(`${path}?${newParams.toString()}`, { scroll: false });
-	}, 800);
+	});
 
 	const closeForm = useCallback(() => {
 		router.replace(pathWithoutFormParam);
@@ -158,6 +160,7 @@ function PubForm({
 			}
 		}
 	};
+
 	return (
 		<Form {...form}>
 			<form

@@ -13,6 +13,7 @@ type Props = CreateEditPubProps;
 async function PubFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
 	const communityId = pub ? pub.communityId : props.communityId!;
+	console.log("\n\nDefinitely Getting StageId", props.stageId);
 	const query = props.stageId
 		? getCommunityByStage(props.stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
@@ -33,7 +34,7 @@ async function PubFormWrapper(props: Props) {
 				communityId,
 			}).executeTakeFirst()) ?? {}
 		: {};
-	const availableStages = availableStagesOfCurrentPub ?? community.stages;
+	const communityStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
 	const values = pub ? pub.values : {};
 	const pubTypeId = pub?.pubTypeId ?? (props.searchParams.pubTypeId as PubTypesId);
@@ -51,11 +52,12 @@ async function PubFormWrapper(props: Props) {
 			pubId={pub?.id}
 		/>
 	));
-
+	console.log("\n\nStages on the Server", communityStages);
+	console.log("\n\nLen of stages", communityStages.length);
 	return (
 		<NewForm
 			currentStage={stageOfPubRnRn}
-			communityStages={availableStages}
+			communityStages={communityStages}
 			availablePubTypes={community.pubTypes}
 			parentId={props.parentId}
 			pubValues={values as unknown as PubValues}
