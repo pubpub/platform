@@ -26,11 +26,9 @@ export const ActionConfigForm = (props: Props) => {
 	const onSubmit = useCallback(
 		async (values) => {
 			startTransition(async () => {
-				const result = await runUpdateAction(
-					props.communityId,
-					props.instance.id as ActionInstancesId,
-					{ config: values }
-				);
+				const result = await runUpdateAction(props.instance.id as ActionInstancesId, {
+					config: values,
+				});
 
 				if (result && "success" in result) {
 					toast({

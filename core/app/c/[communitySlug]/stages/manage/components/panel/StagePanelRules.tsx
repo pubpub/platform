@@ -13,13 +13,14 @@ type PropsInner = {
 };
 
 const StagePanelRulesInner = async (props: PropsInner) => {
-	const stage = await getStage(props.stageId);
+	const [stage, actionInstances, rules] = await Promise.all([
+		getStage(props.stageId),
+		getStageActions(props.stageId),
+		getStageRules(props.stageId),
+	]);
 	if (!stage) {
 		return <SkeletonCard />;
 	}
-
-	const rules = await getStageRules(props.stageId);
-	const actionInstances = await getStageActions(props.stageId);
 
 	return (
 		<Card>

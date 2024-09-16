@@ -1,60 +1,50 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import type { PubsId, StagesId, UsersId } from "db/public";
 
-import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
-import prisma from "~/prisma/db";
+import { db } from "~/kysely/database";
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { defineServerAction } from "~/lib/server/defineServerAction";
 
-export async function move(
+export const move = defineServerAction(async function move(
 	pubId: string,
 	sourceStageId: string,
-	destinationStageId: string,
-	communityId: string
+	destinationStageId: string
 ) {
 	try {
-		await prisma.pub.update({
-			where: { id: pubId },
-			include: { stages: true },
-			data: {
-				stages: {
-					delete: { pubId_stageId: { stageId: sourceStageId, pubId } },
-					create: { stageId: destinationStageId },
-				},
-			},
-		});
+		await autoRevalidate(
+			db
+				.with("removed_pubsInStages", (db) =>
+					db
+						.deleteFrom("PubsInStages")
+						.where("pubId", "=", pubId as PubsId)
+						.where("stageId", "=", sourceStageId as StagesId)
+				)
+				.insertInto("PubsInStages")
+				.values([{ pubId: pubId as PubsId, stageId: destinationStageId as StagesId }])
+		).executeTakeFirstOrThrow();
+
 		// TODO: Remove this when the above query is replaced by an
 		// autoRevalidated kyseley query
-		revalidateTagsForCommunity(["PubsInStages"]);
+		// revalidateTagsForCommunity(["PubsInStages"]);
 	} catch {
-		return { message: "The Pub was not successully moved" };
+		return { error: "The Pub was not successully moved" };
 	}
-}
+});
 
-export async function assign(pubId: string, userId?: string) {
+export const assign = defineServerAction(async function assign(pubId: string, userId?: string) {
 	try {
-		if (userId) {
-			await prisma.pub.update({
-				where: { id: pubId },
-				data: {
-					assignee: {
-						connect: {
-							id: userId,
-						},
-					},
-				},
-			});
-		} else {
-			await prisma.pub.update({
-				where: { id: pubId },
-				data: {
-					assignee: {
-						disconnect: true,
-					},
-				},
-			});
-		}
-		revalidateTagsForCommunity(["pubs"]);
+		await autoRevalidate(
+			db
+				.updateTable("pubs")
+				.where("id", "=", pubId as PubsId)
+				.set({
+					assigneeId: userId ? (userId as UsersId) : null,
+				})
+		).executeTakeFirstOrThrow();
+
+		// revalidateTagsForCommunity(["pubs"]);
 	} catch {
-		return { message: "The Pub was not successully assigned" };
+		return { error: "The Pub was not successully assigned" };
 	}
-}
+});

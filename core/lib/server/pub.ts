@@ -7,7 +7,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 import type { Database } from "db/Database";
-import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 
 import type { MaybeHas } from "../types";
 import type { BasePubField } from "~/actions/corePubFields";
@@ -599,6 +599,8 @@ export const updatePub = async (instanceId: string, body: CreatePubRequestBodyWi
 	return pub;
 };
 
-export const deletePub = async (pubId: string) => {
-	await prisma.pub.delete({ where: { id: pubId } });
-};
+export const deletePub = async (pubId: PubsId) =>
+	autoRevalidate(db.deleteFrom("pubs").where("id", "=", pubId));
+
+export const getPubStage = async (pubId: PubsId) =>
+	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
