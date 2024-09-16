@@ -4,11 +4,12 @@ import { Eta } from "eta";
 
 import type { SendEmailRequestBody } from "contracts";
 import type { UsersId } from "db/public";
+import { GetPubResponseBodyBase } from "contracts";
 import { AuthTokenType } from "db/public";
 
-import type { IntegrationAction } from "./_legacy-integration-queries";
+import type { IntegrationAction } from "../types";
 import prisma from "~/prisma/db";
-import { pubValuesInclude } from "./_legacy-integration-queries";
+import { pubValuesInclude } from "../types";
 import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";

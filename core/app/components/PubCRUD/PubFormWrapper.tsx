@@ -13,7 +13,6 @@ type Props = IOPubProps;
 async function PubFormWrapper(props: Props) {
 	const pub = props.pubId ? await getPubCached(props.pubId) : undefined;
 	const communityId = pub ? pub.communityId : props.communityId!;
-	console.log("\n\nDefinitely Getting StageId", props.stageId);
 	const query = props.stageId
 		? getCommunityByStage(props.stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
@@ -29,10 +28,10 @@ async function PubFormWrapper(props: Props) {
 		return null;
 	}
 	const { availableStagesOfCurrentPub = null, stageOfCurrentPub = null } = pub
-		? (await availableStagesAndCurrentStage({
+		? ((await availableStagesAndCurrentStage({
 				pubId: pub.id,
 				communityId,
-			}).executeTakeFirst()) ?? {}
+			}).executeTakeFirst()) ?? {})
 		: {};
 	const communityStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;

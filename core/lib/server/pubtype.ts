@@ -9,6 +9,7 @@ import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db
 import type { XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
+import prisma from "~/prisma/db";
 import { autoCache } from "./cache/autoCache";
 import { GET_MANY_DEFAULT } from "./pub";
 
