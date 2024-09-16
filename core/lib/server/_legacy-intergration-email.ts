@@ -2,11 +2,14 @@ import type { Prisma, User } from "@prisma/client";
 
 import { Eta } from "eta";
 
-import { GetPubResponseBodyBase, SendEmailRequestBody } from "contracts";
-import { AuthTokenType, UsersId } from "db/public";
+import type { SendEmailRequestBody } from "contracts";
+import type { UsersId } from "db/public";
+import { GetPubResponseBodyBase } from "contracts";
+import { AuthTokenType } from "db/public";
 
+import type { IntegrationAction } from "../types";
 import prisma from "~/prisma/db";
-import { IntegrationAction, pubValuesInclude } from "../types";
+import { pubValuesInclude } from "../types";
 import { BadRequestError, NotFoundError } from "./errors";
 import { smtpclient } from "./mailgun";
 import { createToken } from "./token";

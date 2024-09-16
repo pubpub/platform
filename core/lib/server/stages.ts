@@ -1,5 +1,6 @@
+import type { JsonValue } from "@prisma/client/runtime/library";
+
 import { Integration } from "@prisma/client";
-import { JsonValue } from "@prisma/client/runtime/library";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
