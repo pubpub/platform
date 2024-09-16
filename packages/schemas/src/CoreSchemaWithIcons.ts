@@ -4,7 +4,6 @@ import {
 	BoxSelect,
 	CalendarClock,
 	CheckSquare,
-	ChevronsLeftRightIcon,
 	ImagePlus,
 	Link,
 	Mail,
@@ -52,9 +51,5 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 	[CoreSchemaType.Vector3]: {
 		description: "A set of 3 numbers",
 		icon: BoxSelect,
-	},
-	[CoreSchemaType.Connection]: {
-		description: "A connection",
-		icon: ChevronsLeftRightIcon,
 	},
 } as const;
