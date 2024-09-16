@@ -16,7 +16,7 @@ export const env = createEnv({
 		/**
 		 * Whether or not to verbosely log `memoize` cache hits and misses
 		 */
-		CACHE_LOG: z.boolean().optional(),
+		CACHE_LOG: z.string().optional(),
 		DATABASE_URL: z.string().url(),
 		JWT_SECRET: z.string(),
 		KYSELY_DEBUG: z.string().optional(),
@@ -33,6 +33,6 @@ export const env = createEnv({
 	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
 	},
-	skipValidation: true, //Boolean(process.env.SKIP_VALIDATION),
+	skipValidation: Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
 });
