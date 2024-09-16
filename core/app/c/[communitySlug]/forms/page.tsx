@@ -1,18 +1,22 @@
 import React from "react";
+import { Metadata } from "next";
 import partition from "lodash.partition";
 
-import { MemberRole } from "db/public";
 import { ClipboardPenLine } from "ui/icon";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { db } from "~/kysely/database";
-import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContentLayout } from "../ContentLayout";
 import { FormTable } from "./FormTable";
 import { NewFormButton } from "./NewFormButton";
+
+export const metadata: Metadata = {
+	title: "Forms",
+};
 
 export default async function Page({ params: { communitySlug } }) {
 	const { user } = await getPageLoginData();

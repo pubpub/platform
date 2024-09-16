@@ -1,14 +1,28 @@
-import { notFound, redirect } from "next/navigation";
-
-import type { UsersId } from "db/public";
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
-import { findCommunityBySlug, getAvailableCommunities } from "~/lib/server/community";
+import { findCommunityBySlug } from "~/lib/server/community";
 import SideNav from "./SideNav";
 
 type Props = { children: React.ReactNode; params: { communitySlug: string } };
+
+export async function generateMetadata({
+	params,
+}: {
+	params: { communitySlug: string };
+}): Promise<Metadata> {
+	const community = await findCommunityBySlug(params.communitySlug);
+
+	return {
+		title: {
+			template: `%s | ${community?.name ?? "PubPub"}`,
+			default: community?.name ? `${community?.name} on PubPub` : "PubPub",
+		},
+	};
+}
 
 export default async function MainLayout({ children, params }: Props) {
 	const { user } = await getLoginData();

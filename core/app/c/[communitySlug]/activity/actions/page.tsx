@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
@@ -9,6 +10,10 @@ import { pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { ActionRunsTable } from "./ActionRunsTable";
+
+export const metadata: Metadata = {
+	title: "Action Log",
+};
 
 export default async function Page({
 	params: { communitySlug },

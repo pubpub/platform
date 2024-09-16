@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
@@ -9,6 +10,10 @@ import { pubInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import PubHeader from "./PubHeader";
 import PubList from "./PubList";
+
+export const metadata: Metadata = {
+	title: "Pubs",
+};
 
 const getCommunityPubs = async (communityId: string) => {
 	return await prisma.pub.findMany({

@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import type { UsersId } from "db/public";
@@ -8,6 +9,10 @@ import { getCommunityBySlug } from "~/lib/db/queries";
 import { createToken } from "~/lib/server/token";
 import { getStageWorkflows, makeStagesById } from "~/lib/stages";
 import StageList from "./components/StageList";
+
+export const metadata: Metadata = {
+	title: "Workflows",
+};
 
 type Props = { params: { communitySlug: string } };
 
