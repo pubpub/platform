@@ -6,8 +6,6 @@ import { defaultComponent } from "schemas";
 import type { PubsId } from "db/public";
 import type { InputProps } from "ui/input";
 import type { TextareaProps } from "ui/textarea";
-import { ElementType, InputComponent } from "db/public";
-import { logger } from "logger";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
@@ -15,7 +13,6 @@ import { DatePicker } from "ui/date-picker";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { Textarea } from "ui/textarea";
-import { expect } from "utils";
 
 import { upload } from "./actions";
 import { FileUploadPreview } from "./FileUpload";
@@ -186,4 +183,11 @@ const DateElement = ({ label, name }: ElementProps) => {
 	);
 };
 
-export { TextElement, BooleanElement, FileUploadElement, Vector3Element, DateElement };
+export {
+	TextInputElement,
+	TextAreaElement,
+	CheckboxElement,
+	FileUploadElement,
+	ConfidenceSliderElement,
+	DateElement,
+};
