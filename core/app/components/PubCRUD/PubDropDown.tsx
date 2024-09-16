@@ -8,7 +8,7 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
-import { PubRemoveButton } from "./PubRemoveButton";
+import { PubIOButton } from "./PubIOButton";
 import { PubUpdateButton } from "./PubUpdateButton";
 
 export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
@@ -31,13 +31,15 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<PubRemoveButton
+					<PubIOButton
 						button={{
 							variant: "ghost",
 							title: "Remove Pub",
 							className: "w-full justify-start",
 						}}
 						pubId={pubId}
+						searchParams={{}}
+						mode="remove"
 					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>

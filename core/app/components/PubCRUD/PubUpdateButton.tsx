@@ -1,6 +1,6 @@
 import type { PubsId } from "db/public";
 
-import type { CRUDButtonProps } from "./NewFormButton";
+import type { CRUDButtonProps } from "./PubIOButton";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
 import { NewFormWrapper } from "./PubFormWrapper";
 
