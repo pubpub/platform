@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
-import { pubInclude, stageInclude } from "~/lib/server/_legacy-integration-queries";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
+import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import PubHeader from "./PubHeader";
 import PubList from "./PubList";
@@ -24,21 +24,16 @@ const getCommunityPubs = async (communityId: string) => {
 	});
 };
 
-const getStages = async (communityId: string) => {
-	// When trying to render the workflows a member can see. We look at the pubs they can see, get the workflows associated, and then show all those.
-	return await prisma.stage.findMany({
-		where: { communityId: communityId },
-		include: stageInclude,
-	});
+type Props = {
+	params: { communitySlug: string };
+	searchParams: { pubTypeId: string };
 };
 
-type Props = { params: { communitySlug: string } };
-
-export default async function Page({ params }: Props) {
+export default async function Page(props: Props) {
 	const { user } = await getPageLoginData();
 
 	const community = await prisma.community.findUnique({
-		where: { slug: params.communitySlug },
+		where: { slug: props.params.communitySlug },
 	});
 
 	if (!community) {
@@ -50,14 +45,14 @@ export default async function Page({ params }: Props) {
 		type: AuthTokenType.generic,
 	});
 
-	const [pubs, stages] = await Promise.all([
-		getCommunityPubs(community.id),
-		getStages(community.id),
-	]);
+	const [pubs] = await Promise.all([getCommunityPubs(community.id)]);
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
+			<PubHeader
+				communityId={community.id as CommunitiesId}
+				searchParams={props.searchParams}
+			/>
 			<PubList pubs={pubs} token={token} />
 		</>
 	);

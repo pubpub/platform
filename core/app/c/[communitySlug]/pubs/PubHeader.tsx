@@ -3,11 +3,11 @@ import Link from "next/link";
 import type { CommunitiesId } from "db/public";
 import { Button } from "ui/button";
 
-import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { PubIOButton } from "~/app/components/PubCRUD/PubIOButton";
 
 type Props = {
 	communityId: CommunitiesId;
-	searchParams?: Record<string, unknown>;
+	searchParams: Record<string, unknown>;
 };
 
 const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
@@ -15,7 +15,7 @@ const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
 		<div className="mb-16 flex items-center justify-between">
 			<h1 className="flex-grow text-xl font-bold">Pubs</h1>
 			<div className="flex items-center gap-x-2">
-				<PubCreateButton communityId={communityId} searchParams={searchParams ?? {}} />
+				<PubIOButton mode="create" communityId={communityId} searchParams={searchParams} />
 				<Button variant="outline" size="sm" asChild>
 					<Link href="types">Manage Types</Link>
 				</Button>

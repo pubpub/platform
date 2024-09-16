@@ -1,3 +1,5 @@
+import { ErrorBoundary } from "@sentry/nextjs";
+
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
@@ -62,7 +64,7 @@ export const PubIOButton = (props: Props) => {
 			</PubCRUDDialogue>
 		);
 	} else {
-		throw new Error("Invalid mode");
+		return <ErrorBoundary>Error: Invalid mode</ErrorBoundary>;
 	}
 
 	return (
