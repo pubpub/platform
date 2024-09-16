@@ -1,9 +1,7 @@
-import assert from "assert";
-
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { notFound, redirect, RedirectType } from "next/navigation";
-import { Session, User } from "lucia";
+import { notFound } from "next/navigation";
 
 import type { Communities, MembersId, PubsId, UsersId } from "db/public";
 import { MemberRole, StructuralFormElement } from "db/public";
@@ -100,6 +98,33 @@ const renderElementMarkdownContent = async (
 	}
 	return renderMarkdownWithPub(element.content, renderWithPubContext);
 };
+
+export async function generateMetadata({
+	params,
+	searchParams,
+}: {
+	params: FormFillPageParams;
+	searchParams: FormFillPageSearchParams;
+}): Promise<Metadata> {
+	const community = await findCommunityBySlug(params.communitySlug);
+
+	if (!community) {
+		return { title: "Community Not Found" };
+	}
+
+	const form = await getForm({
+		slug: params.formSlug,
+		communityId: community.id,
+	}).executeTakeFirst();
+
+	if (!form) {
+		return { title: "Form Not Found" };
+	}
+
+	return {
+		title: form.name,
+	};
+}
 
 export default async function FormPage({
 	params,

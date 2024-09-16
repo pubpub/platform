@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { notFound } from "next/navigation";
 
 import { PubFieldProvider } from "ui/pubFields";
@@ -9,6 +11,10 @@ import { getPubFields } from "~/lib/server/pubFields";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { CreatePubType } from "./CreatePubType";
 import TypeList from "./TypeList";
+
+export const metadata: Metadata = {
+	title: "Pub Types",
+};
 
 export default async function Page({ params: { communitySlug } }) {
 	const { user } = await getPageLoginData();
