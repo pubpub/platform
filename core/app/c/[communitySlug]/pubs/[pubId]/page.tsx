@@ -125,8 +125,8 @@ export default async function Page({
 							);
 						})}
 				</div>
-				<div className="w-64 rounded-lg bg-gray-50 p-4 font-semibold shadow-inner">
-					<div className="mb-4">
+				<div className="flex w-64 flex-col gap-4 rounded-lg bg-gray-50 p-4 font-semibold shadow-inner">
+					<div>
 						<div className="mb-1 text-lg font-bold">Current Stage</div>
 						<div className="ml-4 font-medium">
 							{pub.stages.map(({ stage }) => {
@@ -134,16 +134,16 @@ export default async function Page({
 							})}
 						</div>
 					</div>
-					<div className="mb-4">
+					<div>
 						<MembersAvatars pub={pub} />
 					</div>
-					<div className="mb-4">
+					<div>
 						<div className="mb-1 text-lg font-bold">Integrations</div>
 						<div>
 							<IntegrationActions pub={pub} token={token} />
 						</div>
 					</div>
-					<div className="mb-4">
+					<div>
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (
 							<div>
@@ -165,7 +165,7 @@ export default async function Page({
 						)}
 					</div>
 
-					<div className="mb-4">
+					<div>
 						<div className="mb-1 text-lg font-bold">Members</div>
 						<div className="flex flex-row flex-wrap">
 							{users.map((user) => {
@@ -180,7 +180,7 @@ export default async function Page({
 							})}
 						</div>
 					</div>
-					<div className="mb-4">
+					<div>
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
 							<Assign members={community.members} pub={pub} />
