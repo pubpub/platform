@@ -130,7 +130,7 @@ function PubForm({
 			if (result && "success" in result) {
 				toast({
 					title: "Success",
-					description: "yay updatedd",
+					description: "Pub Successfully Updated",
 				});
 				closeForm();
 			}
