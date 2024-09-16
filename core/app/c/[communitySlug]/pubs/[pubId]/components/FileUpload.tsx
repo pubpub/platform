@@ -13,7 +13,7 @@ export function FileUploadPreview({ files }: { files: FileUpload }) {
 							<HoverCardTrigger asChild>
 								<Button variant="link">{file.fileName}</Button>
 							</HoverCardTrigger>
-							<HoverCardContent className=" m-auto w-auto space-y-1">
+							<HoverCardContent className="m-auto w-auto space-y-1">
 								<h4 className="text-sm font-semibold">
 									{file.fileName} <br />
 								</h4>

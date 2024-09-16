@@ -16,6 +16,6 @@ if (env.NODE_ENV === "production") {
 
 		// Setting this option to true will print useful information to the console while you're setting up Sentry.
 		debug: false,
-		integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
+		integrations: [Sentry.prismaIntegration()],
 	});
 }

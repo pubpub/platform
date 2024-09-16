@@ -8,13 +8,13 @@
 		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
-		"clsx": "^2.0.0",
-		"tailwind-merge": "^1.14.0"
+		"clsx": "catalog:",
+		"tailwind-merge": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
 		"tsconfig": "workspace:*",
-		"typescript": "^5.4.2"
+		"typescript": "catalog:"
 	},
 	"prettier": "@pubpub/prettier-config"
 }

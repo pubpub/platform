@@ -20,7 +20,7 @@ root
 -   `integrations` holds the integrations developed by the PubPub team. 3rd party integrations may be developed and hosted elsewhere.
 -   `packages` holds libraries and npm packages that are used by `core`, `integrations`, and 3rd party integration developers.
 
-To avoid inconsistencies and difficult-to-track errors, we specify a particular version of node in `/.nvmrc` (currently `v18.16.0`). Please use [nvm](https://github.com/nvm-sh/nvm) to ensure you're using the same version.
+To avoid inconsistencies and difficult-to-track errors, we specify a particular version of node in `/.nvmrc` (currently `v20.17.0`). Please use [nvm](https://github.com/nvm-sh/nvm) to ensure you're using the same version.
 
 All following commands are run from the root of this package.
 

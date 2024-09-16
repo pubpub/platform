@@ -90,7 +90,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 										className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 p-0"
 										onClick={() => form.setValue("avatar", user.avatar)}
 									>
-										<Undo2 className="hidden group-hover:block " size="20" />
+										<Undo2 className="hidden group-hover:block" size="20" />
 									</Button>
 								)}
 							</Avatar>

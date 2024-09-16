@@ -2,7 +2,7 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
-		"dev": "pnpm p:dev && turbo dev",
+		"dev": "pnpm p:dev && turbo dev --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",
@@ -30,12 +30,12 @@
 		"@changesets/cli": "^2.26.2",
 		"@preconstruct/cli": "^2.8.4",
 		"@pubpub/prettier-config": "workspace:*",
-		"@turbo/gen": "^1.13.2",
+		"@turbo/gen": "^2.1.1",
 		"husky": "^8.0.3",
 		"lint-staged": "^13.2.2",
 		"pino-pretty": "^10.3.1",
-		"prettier": "^3.2.5",
-		"turbo": "^1.13.2"
+		"prettier": "catalog:",
+		"turbo": "^2.1.1"
 	},
 	"lint-staged": {
 		"*.{ts,tsx,js,jsx,scss,json,md}": [
@@ -51,7 +51,7 @@
 		]
 	},
 	"prettier": "@pubpub/prettier-config",
-	"packageManager": "pnpm@8.7.0",
+	"packageManager": "pnpm@9.10.0",
 	"prisma": {
 		"schema": "core/prisma/schema.prisma"
 	},
@@ -60,5 +60,6 @@
 			"@radix-ui/react-dismissable-layer": "^1.0.5",
 			"@radix-ui/react-focus-scope": "^1.0.4"
 		}
-	}
+	},
+	"name": "v7"
 }

@@ -12,21 +12,21 @@
 		"src"
 	],
 	"dependencies": {
-		"@honeycombio/opentelemetry-node": "^0.6.1",
-		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
+		"@honeycombio/opentelemetry-node": "catalog:",
+		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@pubpub/sdk": "workspace:*",
-		"@ts-rest/core": "^3.45.2",
+		"@ts-rest/core": "catalog:",
 		"contracts": "workspace:*",
 		"graphile-worker": "^0.16.5",
 		"logger": "workspace:*",
-		"tsx": "^3.13.0"
+		"tsx": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/node": "^20.12.2",
+		"@types/node": "catalog:",
 		"dotenv-cli": "^7.2.1",
 		"tsconfig": "workspace:*",
-		"typescript": "^5.4.2"
+		"typescript": "catalog:"
 	},
 	"prettier": "@pubpub/prettier-config"
 }

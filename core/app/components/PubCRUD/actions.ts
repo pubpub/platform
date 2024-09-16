@@ -175,7 +175,11 @@ export const _upsertPubValues = async ({
 			)
 			.returningAll()
 	).execute();
-	const upsertPub = await Promise.allSettled([upsert, ...([stageMove(pubId, stageId)] || [])]);
+	const stageMoveQuery = stageMove(pubId, stageId);
+	const upsertPub = await Promise.allSettled([
+		upsert,
+		...(stageMoveQuery ? [stageMoveQuery] : []),
+	]);
 
 	const errors = upsertPub.filter(
 		(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>
@@ -335,7 +339,10 @@ export const _updatePub = async ({
 		.filter((x) => x != null)
 		.flat();
 
-	const updatePub = await Promise.allSettled([...queries, ...([stageMoveQuery] || [])]);
+	const updatePub = await Promise.allSettled([
+		...queries,
+		...(stageMoveQuery ? [stageMoveQuery] : []),
+	]);
 
 	const errors = updatePub.filter(
 		(pubValue): pubValue is typeof pubValue & { status: "rejected" } =>

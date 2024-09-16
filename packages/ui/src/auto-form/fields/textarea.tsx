@@ -34,7 +34,7 @@ export default function AutoFormTextarea({
 			<FormItem>
 				{showLabel && (
 					<>
-						<span className="flex flex-row items-center  justify-between space-x-2">
+						<span className="flex flex-row items-center justify-between space-x-2">
 							<AutoFormLabel label={label} isRequired={isRequired} />
 							<PubFieldSelectToggleButton />
 						</span>

@@ -41,7 +41,7 @@ export default function AutoFormInput({
 				<FormItem className="flex w-full flex-col justify-start">
 					{showLabel && (
 						<>
-							<span className="flex flex-row items-center  justify-between space-x-2">
+							<span className="flex flex-row items-center justify-between space-x-2">
 								<AutoFormLabel label={label} isRequired={isRequired} />
 								<PubFieldSelectToggleButton />
 							</span>

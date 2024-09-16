@@ -291,6 +291,7 @@
 		"@radix-ui/react-avatar": "^1.0.3",
 		"@radix-ui/react-checkbox": "^1.0.4",
 		"@radix-ui/react-collapsible": "^1.0.3",
+		"@radix-ui/react-context": "^1.1.0",
 		"@radix-ui/react-context-menu": "^2.1.5",
 		"@radix-ui/react-dialog": "^1.0.4",
 		"@radix-ui/react-dropdown-menu": "^2.0.5",
@@ -319,36 +320,37 @@
 		"@uppy/progress-bar": "^3.0.4",
 		"@uppy/react": "^3.1.4",
 		"class-variance-authority": "^0.7.0",
-		"clsx": "^2.0.0",
+		"clsx": "catalog:",
 		"cmdk": "^1.0.0",
-		"date-fns": "^3.6.0",
+		"date-fns": "catalog:",
 		"db": "workspace:*",
 		"lexical": "^0.15.0",
 		"lucide-react": "^0.357.0",
-		"next": "14.2.4",
+		"next": "catalog:",
 		"react-day-picker": "^8.10.0",
 		"schemas": "workspace:*",
-		"tailwind-merge": "^1.14.0",
+		"tailwind-merge": "catalog:",
 		"tailwindcss-animate": "^1.0.6",
 		"utils": "workspace:*"
 	},
 	"peerDependencies": {
-		"react": "^18.2.0",
+		"react": "catalog:react18",
 		"react-hook-form": "^7.46.1",
-		"tailwindcss": "^3.3.3",
-		"zod": "^3.22.4"
+		"tailwindcss": "catalog:",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/react": "^18.2.78",
-		"eslint": "^8.57.0",
-		"postcss": "^8.4.20",
-		"react": "^18.2.0",
+		"@types/react": "catalog:react18",
+		"eslint": "catalog:",
+		"postcss": "catalog:",
+		"react": "catalog:react18",
 		"react-hook-form": "^7.46.1",
+		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
-		"typescript": "^5.4.2",
-		"zod": "^3.23.8"
+		"typescript": "catalog:",
+		"zod": "catalog:"
 	},
 	"preconstruct": {
 		"exports": {
@@ -421,12 +423,6 @@
 			"hooks/index.ts",
 			"customRenderers/confidence/confidence.tsx",
 			"customRenderers/fileUpload/fileUpload.tsx"
-		]
-	},
-	"eslintConfig": {
-		"extends": [
-			"@pubpub/eslint-config/base",
-			"@pubpub/eslint-config/react"
 		]
 	},
 	"prettier": "@pubpub/prettier-config"

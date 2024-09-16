@@ -13,20 +13,21 @@
 	"devDependencies": {
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/node": "^20",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:react18",
 		"dotenv-cli": "^7.2.1",
-		"tsconfig": "workspace:*"
+		"tsconfig": "workspace:*",
+		"react": "catalog:react18"
 	},
 	"dependencies": {
-		"@react-email/components": "0.0.14",
-		"@types/react": "^18.2",
+		"@react-email/components": "0.0.25",
+		"typescript": "catalog:",
 		"browserslist": "^4.22.2",
 		"db": "workspace:*",
-		"eslint": "^8.57.0",
-		"react": "18.2.0",
-		"react-email": "2.0.0",
-		"tsconfig": "workspace:*",
-		"typescript": "^5.4.2"
+		"eslint": "catalog:",
+		"react": "catalog:react18",
+		"react-email": "3.0.1",
+		"tsconfig": "workspace:*"
 	},
 	"preconstruct": {
 		"entrypoints": [
