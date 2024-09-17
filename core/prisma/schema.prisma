@@ -143,10 +143,10 @@ model PubField {
   isArchived       Boolean         @default(false)
   community        Community       @relation(fields: [communityId], references: [id])
   communityId      String
-
-  values    PubValue[]
-  pubTypes  PubType[]
-  FormInput FormElement[]
+  isRelationship   Boolean         @default(false)
+  values           PubValue[]
+  pubTypes         PubType[]
+  FormInput        FormElement[]
 
   @@map(name: "pub_fields")
 }

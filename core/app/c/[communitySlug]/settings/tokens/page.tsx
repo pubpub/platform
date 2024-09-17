@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
+
 import { notFound } from "next/navigation";
 
 import { getPageLoginData } from "~/lib/auth/loginData";

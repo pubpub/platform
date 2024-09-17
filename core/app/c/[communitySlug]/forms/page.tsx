@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
+
 import React from "react";
-import { Metadata } from "next";
 import partition from "lodash.partition";
 
 import { ClipboardPenLine } from "ui/icon";
