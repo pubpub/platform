@@ -144,9 +144,10 @@ model PubField {
   community        Community       @relation(fields: [communityId], references: [id])
   communityId      String
   isRelationship   Boolean         @default(false)
-  values           PubValue[]
-  pubTypes         PubType[]
-  FormInput        FormElement[]
+
+  values    PubValue[]
+  pubTypes  PubType[]
+  FormInput FormElement[]
 
   @@map(name: "pub_fields")
 }

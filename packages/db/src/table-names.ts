@@ -1894,6 +1894,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},
+			{
+				name: "isRelationship",
+				dataType: "bool",
+				dataTypeSchema: "pg_catalog",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: true,
+			},
 		],
 	},
 	{
