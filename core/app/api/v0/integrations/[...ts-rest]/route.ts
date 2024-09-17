@@ -7,6 +7,7 @@ import { logger } from "logger";
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
 import { deletePub, generateSignedAssetUploadUrl, getPub, tsRestHandleErrors } from "~/lib/server";
+import { emailUser } from "~/lib/server/_legacy-integration-email";
 import {
 	_getPubType,
 	createPub,
@@ -19,7 +20,6 @@ import {
 	setIntegrationInstanceState,
 	updatePub,
 } from "~/lib/server/_legacy-integration-queries";
-import { emailUser } from "~/lib/server/_legacy-intergration-email";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
 

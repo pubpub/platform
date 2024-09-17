@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import type { StagePayload, StagesById } from "./types";
+import type { StagePayload, StagesById } from "./server/_legacy-integration-queries";
 
 /**
  * takes a stage, a map of

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import type { PubPayload } from "../types";
+import type { PubPayload } from "../server/_legacy-integration-queries";
 import { getPubTitle } from "../pubs";
 
 const mockPub = (overrides?: Partial<PubPayload>) => {

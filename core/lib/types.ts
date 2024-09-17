@@ -2,11 +2,11 @@ import type { Communities, Members, PubFields, PubFieldsId, PubTypes, Users } fr
 
 import type { QB } from "./server/cache/types";
 
-export type UserWithMemberships = Users & {
+export type UserWithMemberships = Omit<Users, "passwordHash"> & {
 	memberships: Members[];
 };
 
-export type UserWithMember = Users & {
+export type UserWithMember = Omit<Users, "passwordHash"> & {
 	member?: Members | null;
 };
 
