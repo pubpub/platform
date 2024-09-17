@@ -5,8 +5,11 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type {
 	FormElementsId,
+	PubFields,
+	PubFieldSchema,
 	PubFieldSchemaId,
 	PubFieldsId,
+	PubTypes,
 	PubTypesId,
 	PubValues,
 	StagesId,
@@ -114,3 +117,22 @@ export const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
 		)
 	);
 };
+
+type PubType = {
+	pubType: Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
+		fields: Array<
+			Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
+				schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
+			}
+		>;
+	};
+};
+
+export const createFieldsForSever = (values: { [s: string]: string; }, pubType: PubType["pubType"]) =>
+	Object.entries(values).reduce((acc, [key, value]) => {
+		const id = pubType?.fields.find((f) => f.slug === key)?.id;
+		if (id) {
+			acc[id] = { slug: key, value };
+		}
+		return acc;
+	}, {});

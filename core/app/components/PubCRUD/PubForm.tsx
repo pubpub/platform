@@ -30,20 +30,30 @@ import { cn } from "utils";
 
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
-import { buildDefaultValues, createElementFromPubType, createSchemaFromElements } from "./helpers";
+import {
+	buildDefaultValues,
+	createElementFromPubType,
+	createFieldsForSever,
+	createSchemaFromElements,
+} from "./helpers";
 
-type Props = {
-	communityStages: Pick<Stages, "id" | "name" | "order">[];
+type PubType = {
 	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
 		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
 		})[];
 	})[];
+};
+
+type Props = {
+	communityStages: Pick<Stages, "id" | "name" | "order">[];
+	parentId?: PubsId;
+	availablePubTypes: PubType["availablePubTypes"];
 	pubValues: PubValues;
 	pubTypeId: PubTypes["id"];
 	formElements: React.ReactNode[];
-	className?: string;
 	pubId?: PubsId;
+	className?: string;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 };
@@ -54,7 +64,9 @@ function PubForm(props: Props) {
 	const [selectedPubType, setSelectedPubType] = useState<
 		(typeof props.availablePubTypes)[number] | null
 	>(pubType ?? null);
-	const [selectedStage, setSelectedStage] = useState<typeof props.currentStage>(props.currentStage ?? null);
+	const [selectedStage, setSelectedStage] = useState<typeof props.currentStage>(
+		props.currentStage ?? null
+	);
 
 	const hasValues = Object.keys(props.pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
@@ -69,7 +81,7 @@ function PubForm(props: Props) {
 	urlSearchParams.delete(`${paramString}-pub-form`);
 	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
 
-	const handleSelect = useDebouncedCallback((value: (typeof availablePubTypes)[number]) => {
+	const handleSelect = useDebouncedCallback((value: (typeof props.availablePubTypes)[number]) => {
 		const newParams = new URLSearchParams(searchParams);
 		newParams.set("pubTypeId", value.id);
 		router.replace(`${path}?${newParams.toString()}`, { scroll: false });
@@ -83,10 +95,10 @@ function PubForm(props: Props) {
 
 	const resolver = useMemo(
 		() => typeboxResolver(createSchemaFromElements(elements)),
-		[formElements]
+		[props.formElements]
 	);
 	const form = useForm({
-		defaultValues: buildDefaultValues(elements, pubValues),
+		defaultValues: buildDefaultValues(elements, props.pubValues),
 		reValidateMode: "onChange",
 		resolver,
 	});
@@ -103,19 +115,13 @@ function PubForm(props: Props) {
 			});
 			return;
 		}
-		if (hasValues && pubId) {
+		if (hasValues && props.pubId) {
 			const result = await runUpdatePub({
-				pubId,
+				pubId: props.pubId,
 				communityId: selectedPubType.communityId as CommunitiesId,
 				path: pathWithoutFormParam,
 				stageId: stage as StagesId,
-				fields: Object.entries(values).reduce((acc, [key, value]) => {
-					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
-					if (id) {
-						acc[id] = { slug: key, value };
-					}
-					return acc;
-				}, {}),
+				fields: createFieldsForSever(values, selectedPubType),
 			});
 
 			if (result && "success" in result) {
@@ -130,7 +136,7 @@ function PubForm(props: Props) {
 				communityId: selectedPubType.communityId,
 				pubTypeId: selectedPubType.id,
 				stageId: selectedStage?.id,
-				parentId,
+				parentId: props.parentId,
 				fields: Object.entries(values).reduce((acc, [key, value]) => {
 					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
 					if (id) {
@@ -154,10 +160,10 @@ function PubForm(props: Props) {
 		<Form {...form}>
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
-				className={cn("relative flex flex-col gap-6", className)}
+				className={cn("relative flex flex-col gap-6", props.className)}
 				onBlur={(e) => e.preventDefault()}
 			>
-				{!pubId && (
+				{!props.pubId && (
 					<FormField
 						name="pubType"
 						control={form.control}
@@ -179,7 +185,7 @@ function PubForm(props: Props) {
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent>
-										{availablePubTypes.map((pubType) => (
+										{props.availablePubTypes.map((pubType) => (
 											<DropdownMenuItem
 												key={pubType.id}
 												onSelect={() => {
@@ -217,7 +223,7 @@ function PubForm(props: Props) {
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
-									{communityStages.map((stage) => (
+									{props.communityStages.map((stage) => (
 										<DropdownMenuItem
 											key={stage.id}
 											onClick={() => {
@@ -235,7 +241,7 @@ function PubForm(props: Props) {
 						</FormItem>
 					)}
 				/>
-				{selectedPubType && formElements}
+				{selectedPubType && props.formElements}
 				<Button
 					type="submit"
 					className="flex items-center gap-x-2"
