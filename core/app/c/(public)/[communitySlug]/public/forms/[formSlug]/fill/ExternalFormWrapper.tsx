@@ -219,10 +219,11 @@ export const ExternalFormWrapper = ({
 				className={cn("relative flex flex-col gap-6", className)}
 			>
 				{children}
+				<hr />
 				<SubmitButtons
 					buttons={buttonElements}
 					isDisabled={isSubmitting}
-					className="sticky bottom-4 -mr-4 ml-auto -translate-y-[175%] translate-x-full"
+					className="flex justify-end"
 				/>
 			</form>
 		</Form>
