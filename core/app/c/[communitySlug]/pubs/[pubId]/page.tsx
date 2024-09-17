@@ -7,7 +7,7 @@ import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
+import type { PubValueWithFieldAndSchema } from "./components/jsonSchemaHelpers";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -25,7 +25,7 @@ import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
-import { renderField } from "./components/JsonSchemaHelpers";
+import { renderField } from "./components/jsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 
 export async function generateMetadata({

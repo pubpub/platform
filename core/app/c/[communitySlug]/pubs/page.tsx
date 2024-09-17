@@ -1,9 +1,11 @@
+import { Metadata } from "next";
+
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import { getPageLoginData } from "~/lib/auth/loginData";
+import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { createToken } from "~/lib/server/token";
-import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import PubHeader from "./PubHeader";
 import PubList from "./PubList";
