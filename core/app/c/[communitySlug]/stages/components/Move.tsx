@@ -78,8 +78,8 @@ export default function Move(props: Props) {
 			<PopoverContent>
 				<div className="flex flex-col">
 					{destinations.length > 0 && (
-						<>
-							<div className="mb-4 text-center font-bold">Move this Pub to:</div>
+						<div data-testid="destinations" className="text-center">
+							<div className="mb-4 font-bold">Move this Pub to:</div>
 							{destinations.map((stage) => {
 								return stage.id === props.stage.id ? null : (
 									<Button
@@ -94,11 +94,11 @@ export default function Move(props: Props) {
 									</Button>
 								);
 							})}
-						</>
+						</div>
 					)}
 					{sources.length > 0 && (
-						<>
-							<div className="mb-4 text-center font-bold">Move this Pub back to:</div>
+						<div data-testid="sources" className="text-center">
+							<div className="mb-4 font-bold">Move this Pub back to:</div>
 							{sources.map((stage) => {
 								<div className="mb-4">Move this Pub back to:</div>;
 								return stage.id === props.stage.id ? null : (
@@ -113,7 +113,7 @@ export default function Move(props: Props) {
 									</Button>
 								);
 							})}
-						</>
+						</div>
 					)}
 				</div>
 			</PopoverContent>

@@ -132,7 +132,11 @@ export default async function Page({
 						<div className="ml-4 flex items-center gap-2 font-medium">
 							<div>
 								{pub.stages.map(({ stage }) => {
-									return <div key={stage.id}>{stage.name}</div>;
+									return (
+										<div key={stage.id} data-testid="current-stage">
+											{stage.name}
+										</div>
+									);
 								})}
 							</div>
 							<Move
