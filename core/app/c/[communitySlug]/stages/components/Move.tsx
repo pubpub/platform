@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { Button } from "ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
@@ -23,6 +25,7 @@ export default function Move(props: Props) {
 	const destinations = stagesById[props.stage.id].moveConstraints.map(
 		(mc) => stagesById[mc.destinationId]
 	);
+	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
 	const { toast } = useToast();
 
 	const runMove = useServerAction(move);
@@ -31,6 +34,7 @@ export default function Move(props: Props) {
 		const err = await runMove(pubId, sourceStageId, destStageId);
 
 		if (isClientException(err)) {
+			setPopoverIsOpen(false);
 			return;
 		}
 
@@ -57,10 +61,11 @@ export default function Move(props: Props) {
 				</Button>
 			),
 		});
+		setPopoverIsOpen(false);
 	};
 
 	return (
-		<Popover>
+		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>
 				<Button size="sm" variant="outline">
 					Move
