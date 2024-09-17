@@ -1,10 +1,11 @@
-import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
+import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
+
 import { z } from "zod";
 
+import type { ApiAccessPermissionConstraints } from "../types";
 import type { ApiAccessScope } from "./ApiAccessScope";
 import type { ApiAccessTokensId } from "./ApiAccessTokens";
 import type { ApiAccessType } from "./ApiAccessType";
-import { type ApiAccessPermissionConstraints } from "../types";
 import { apiAccessScopeSchema } from "./ApiAccessScope";
 import { apiAccessTokensIdSchema } from "./ApiAccessTokens";
 import { apiAccessTypeSchema } from "./ApiAccessType";
