@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 import { Button } from "ui/button";
+import { Loader2 } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
+import { cn } from "utils";
 
 import type { PubPayload, StagePayload } from "~/lib/server/_legacy-integration-queries";
 import { isClientException, useServerAction } from "~/lib/serverActions";
@@ -28,6 +30,7 @@ export default function Move(props: Props) {
 	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
 	const { toast } = useToast();
 
+	const [isMoving, startTransition] = useTransition();
 	const runMove = useServerAction(move);
 
 	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
@@ -71,8 +74,8 @@ export default function Move(props: Props) {
 	return (
 		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>
-				<Button size="sm" variant="outline">
-					Move
+				<Button size="sm" variant="outline" disabled={isMoving}>
+					{isMoving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Move"}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent>
@@ -84,9 +87,16 @@ export default function Move(props: Props) {
 								return stage.id === props.stage.id ? null : (
 									<Button
 										variant="ghost"
+										disabled={isMoving}
 										key={stage.id}
 										onClick={() =>
-											onMove(props.pub.id, props.stage.id, stage.id)
+											startTransition(async () => {
+												await onMove(
+													props.pub.id,
+													props.stage.id,
+													stage.id
+												);
+											})
 										}
 										className="mb-2"
 									>
@@ -103,10 +113,17 @@ export default function Move(props: Props) {
 								<div className="mb-4">Move this Pub back to:</div>;
 								return stage.id === props.stage.id ? null : (
 									<Button
+										disabled={isMoving}
 										variant="ghost"
 										key={stage.id}
 										onClick={() =>
-											onMove(props.pub.id, props.stage.id, stage.id)
+											startTransition(async () => {
+												await onMove(
+													props.pub.id,
+													props.stage.id,
+													stage.id
+												);
+											})
 										}
 									>
 										{stage.name}

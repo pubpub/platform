@@ -96,7 +96,7 @@ const pubValues = (
 	).as("values");
 };
 
-const pubType = ({
+export const pubType = ({
 	eb,
 	pubTypeIdRef,
 }: {

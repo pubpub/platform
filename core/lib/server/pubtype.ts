@@ -10,40 +10,6 @@ import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { GET_MANY_DEFAULT } from "./pub";
 
-<<<<<<< HEAD
-export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
-	"id",
-	"description",
-	"name",
-	"communityId",
-	"createdAt",
-	"updatedAt",
-	jsonArrayFrom(
-		eb
-			.selectFrom("pub_fields")
-			.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
-			.select((eb) => [
-				"pub_fields.id",
-				"pub_fields.name",
-				"pub_fields.slug",
-				"pub_fields.schemaName",
-				jsonObjectFrom(
-					eb
-						.selectFrom("PubFieldSchema")
-						.select([
-							"PubFieldSchema.id",
-							"PubFieldSchema.namespace",
-							"PubFieldSchema.name",
-							"PubFieldSchema.schema",
-						])
-						.whereRef("PubFieldSchema.id", "=", eb.ref("pub_fields.pubFieldSchemaId"))
-				).as("schema"),
-			])
-			.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
-			.where("pub_fields.isRelation", "=", false)
-	).as("fields"),
-]);
-=======
 export const getPubTypeBase = (trx: typeof db | ExpressionBuilder<Database, keyof Database> = db) =>
 	(trx as typeof db).selectFrom("pub_types").select((eb) => [
 		"pub_types.id",
@@ -80,7 +46,6 @@ export const getPubTypeBase = (trx: typeof db | ExpressionBuilder<Database, keyo
 				.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 		).as("fields"),
 	]);
->>>>>>> 0802b2ed (refactor: make the stages pages and pubrows more composable and more quick to load initially)
 
 export const getPubType = (pubTypeId: PubTypesId) =>
 	autoCache(getPubTypeBase().where("pub_types.id", "=", pubTypeId));

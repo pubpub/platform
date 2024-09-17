@@ -62,14 +62,11 @@ export function getStageWorkflows<T extends StageThingy>(stages: T[]): Array<Arr
 	return stageWorkflows as T[][];
 }
 
-<<<<<<< HEAD
-=======
 // this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
 export function moveConstraintSourcesForStage(stage: StageThingy, stagesById: StagesById) {
 	return stage.moveConstraintSources.map((stage) => stagesById[stage.stageId]);
 }
 
->>>>>>> 0802b2ed (refactor: make the stages pages and pubrows more composable and more quick to load initially)
 export const StageFormSchema = z.object({
 	name: z.string(),
 	moveConstraints: z.record(z.boolean()),
