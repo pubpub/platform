@@ -6,7 +6,7 @@ import type { MembersId, UsersId } from "db/public";
 import { MemberRole } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
-import type { SuggestedUser } from "~/lib/server/members";
+import type { UserWithMember } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
@@ -62,7 +62,7 @@ export const addMember = defineServerAction(async function addMember({
 	user,
 	role,
 }: {
-	user: SuggestedUser;
+	user: UserWithMember;
 	role?: MemberRole;
 }) {
 	const result = await isCommunityAdmin();

@@ -13,7 +13,7 @@ import { FileUploadPreview } from "./FileUpload";
 interface PubFieldWithValue extends PubField {
 	schema: PubFieldSchema | null;
 }
-interface PubValueWithFieldAndSchema extends PubValues {
+export interface PubValueWithFieldAndSchema extends PubValues {
 	field: PubFieldWithValue;
 	value: JsonValue;
 }

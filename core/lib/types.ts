@@ -1,38 +1,19 @@
-import type { Communities, Members, PubFields, PubFieldsId, PubTypes } from "db/public";
+import type { Communities, Members, PubFields, PubFieldsId, PubTypes, Users } from "db/public";
 
 import type { QB } from "./server/cache/types";
 
-export type UserAndMemberships = {
-	id: string;
-	slug: string;
-	firstName: string;
-	lastName: string | null;
-	avatar: string | null;
-	createdAt: Date;
-	updatedAt: Date;
-	orcid: string | null;
-	email: string;
+export type UserWithMemberships = Users & {
 	memberships: Members[];
-	isSuperAdmin: boolean;
 };
 
-type User = {
-	id: string;
-	slug: string;
-	firstName: string;
-	lastName: string | null;
-	avatar: string | null;
-	createdAt: Date;
-	updatedAt: Date;
-	orcid: string | null;
-	email: string;
-	password: string;
+export type UserWithMember = Users & {
+	member?: Members | null;
 };
 
-export type UserPostBody = Pick<User, "firstName" | "lastName" | "email" | "password">;
-export type UserPutBody = Pick<User, "firstName" | "lastName">;
-export type UserLoginData = Omit<User, "password">;
-export type UserSetting = Pick<User, "firstName" | "lastName" | "email" | "slug"> & {
+export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">;
+export type UserPutBody = Pick<Users, "firstName" | "lastName">;
+export type UserLoginData = Omit<Users, "passwordHash">;
+export type UserSetting = Pick<Users, "firstName" | "lastName" | "email" | "slug"> & {
 	communities: Communities[];
 };
 

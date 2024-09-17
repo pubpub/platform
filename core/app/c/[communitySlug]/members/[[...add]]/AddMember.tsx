@@ -120,12 +120,5 @@ export const AddMember = async ({
 		currentEmail: user?.email,
 	});
 
-	return (
-		<MemberInviteForm
-			state={state}
-			community={community}
-			email={email}
-			isSuperAdmin={user?.isSuperAdmin}
-		/>
-	);
+	return <MemberInviteForm state={state} email={email} isSuperAdmin={user?.isSuperAdmin} />;
 };

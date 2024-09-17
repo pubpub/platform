@@ -6,6 +6,7 @@ import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
+import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
@@ -115,7 +116,11 @@ export default async function Page({
 						.map((value) => {
 							return (
 								<div className="mb-4" key={value.id}>
-									<div>{renderField(value)}</div>
+									<div>
+										{renderField(
+											value as unknown as PubValueWithFieldAndSchema
+										)}
+									</div>
 								</div>
 							);
 						})}
