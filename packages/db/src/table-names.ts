@@ -2306,14 +2306,6 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
-				name: "supabaseId",
-				dataType: "text",
-				dataTypeSchema: "pg_catalog",
-				isNullable: true,
-				isAutoIncrementing: false,
-				hasDefaultValue: false,
-			},
-			{
 				name: "isSuperAdmin",
 				dataType: "bool",
 				dataTypeSchema: "pg_catalog",
