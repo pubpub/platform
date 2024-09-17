@@ -27,7 +27,7 @@ import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
-import { renderField } from "./components/JsonSchemaHelpers";
+import { renderField } from "./components/jsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 
 export async function generateMetadata({

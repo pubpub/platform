@@ -7,7 +7,7 @@ import { Button } from "ui/button";
 import { Mail } from "ui/icon";
 import { toast } from "ui/use-toast";
 
-import * as actions from "~/app/components/FormSchemaRendering/actions";
+import * as actions from "~/app/components/Forms/actions";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
 
