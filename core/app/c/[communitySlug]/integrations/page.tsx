@@ -1,11 +1,9 @@
 import type { Prisma } from "@prisma/client";
 
-import { redirect } from "next/navigation";
-
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
 import IntegrationsList from "./IntegrationsList";

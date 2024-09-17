@@ -1,7 +1,5 @@
 "use client";
 
-import type { Community } from "@prisma/client";
-
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 

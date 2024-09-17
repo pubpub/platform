@@ -1,5 +1,3 @@
-import type { Community } from "@prisma/client";
-
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -11,6 +9,7 @@ import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
 import prisma from "~/prisma/db";
 import { AddMember } from "./AddMember";
 import { AddMemberDialog } from "./AddMemberDialog";
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
 	title: "Members",
 };
 
-const getCachedMembers = (community: Community) =>
+const getCachedMembers = (communityId: CommunitiesId) =>
 	autoCache(
 		db
 			.selectFrom("members")
@@ -47,7 +46,7 @@ const getCachedMembers = (community: Community) =>
 					.$notNull()
 					.as("user"),
 			])
-			.where("communityId", "=", community.id as CommunitiesId)
+			.where("communityId", "=", communityId)
 	);
 
 export default async function Page({
@@ -68,9 +67,7 @@ export default async function Page({
 		return notFound();
 	}
 
-	const community = await prisma.community.findUnique({
-		where: { slug: communitySlug },
-	});
+	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
 		return notFound();
@@ -86,7 +83,7 @@ export default async function Page({
 
 	const page = parseInt(searchParams.page ?? "1", 10);
 
-	const members = await getCachedMembers(community).execute();
+	const members = await getCachedMembers(community.id).execute();
 
 	if (!members.length && page !== 1) {
 		return notFound();
@@ -110,7 +107,6 @@ export default async function Page({
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Members</h1>
 				<AddMemberDialog
-					community={community}
 					open={!!add}
 					content={<AddMember community={community} email={searchParams.email} />}
 				/>

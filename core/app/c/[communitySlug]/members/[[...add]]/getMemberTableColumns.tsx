@@ -1,6 +1,5 @@
 "use client";
 
-import type { Community } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { MemberRole } from "db/public";
