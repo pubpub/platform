@@ -3,7 +3,7 @@ import type { PubTypesId, PubValues } from "db/public";
 import type { IOPubProps } from "./types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
-import { FormElement } from "../Forms/FormElement";
+import { FormElement } from "../forms/FormElement";
 import { createElementFromPubType } from "./helpers";
 import { NewForm } from "./PubForm";
 import { availableStagesAndCurrentStage, getCommunityById, getCommunityByStage } from "./queries";
@@ -28,10 +28,10 @@ async function PubFormWrapper(props: Props) {
 		return null;
 	}
 	const { availableStagesOfCurrentPub = null, stageOfCurrentPub = null } = pub
-		? ((await availableStagesAndCurrentStage({
+		? (await availableStagesAndCurrentStage({
 				pubId: pub.id,
 				communityId,
-			}).executeTakeFirst()) ?? {})
+			}).executeTakeFirst()) ?? {}
 		: {};
 	const communityStages = availableStagesOfCurrentPub ?? community.stages;
 	const stageOfPubRnRn = stageOfCurrentPub ?? currentStage;
