@@ -5,7 +5,7 @@ import type { MembersId, PubsId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
-import { FormElement } from "~/app/components/Forms/FormElement";
+import { FormElement } from "~/app/components/forms/FormElement";
 import { UserSelectServer } from "~/app/components/UserSelect/UserSelectServer";
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
