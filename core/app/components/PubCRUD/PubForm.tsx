@@ -32,19 +32,8 @@ import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { buildDefaultValues, createElementFromPubType, createSchemaFromElements } from "./helpers";
 
-function PubForm({
-	communityStages,
-	availablePubTypes,
-	currentStage,
-	parentId,
-	pubValues,
-	pubTypeId,
-	formElements,
-	className,
-	pubId,
-}: {
+type Props = {
 	communityStages: Pick<Stages, "id" | "name" | "order">[];
-	parentId?: PubsId;
 	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
 		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
 			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
@@ -53,19 +42,21 @@ function PubForm({
 	pubValues: PubValues;
 	pubTypeId: PubTypes["id"];
 	formElements: React.ReactNode[];
-	pubId?: PubsId;
 	className?: string;
+	pubId?: PubsId;
 } & {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
-}) {
-	const pt = availablePubTypes.find((type) => type.id === pubTypeId);
+};
+
+function PubForm(props: Props) {
+	const pubType = props.availablePubTypes.find((type) => type.id === props.pubTypeId);
 
 	const [selectedPubType, setSelectedPubType] = useState<
-		(typeof availablePubTypes)[number] | null
-	>(pt ?? null);
-	const [selectedStage, setSelectedStage] = useState<typeof currentStage>(currentStage ?? null);
+		(typeof props.availablePubTypes)[number] | null
+	>(pubType ?? null);
+	const [selectedStage, setSelectedStage] = useState<typeof props.currentStage>(props.currentStage ?? null);
 
-	const hasValues = Object.keys(pubValues).length > 0;
+	const hasValues = Object.keys(props.pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
 	const runCreatePub = useServerAction(actions.createPub);
 	const runUpdatePub = useServerAction(actions.updatePub);
