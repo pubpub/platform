@@ -1,4 +1,7 @@
-import type { PermissionPayload, PermissionPayloadUser } from "./types";
+import type {
+	PermissionPayload,
+	PermissionPayloadUser,
+} from "./server/_legacy-integration-queries";
 
 export const getPubUsers = (permissions: PermissionPayload[]) => {
 	const users: PermissionPayloadUser[] = [];

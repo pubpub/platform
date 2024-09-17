@@ -1,6 +1,6 @@
 import { cn } from "utils";
 
-import type { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
 import PubRow from "~/app/components/PubRow";
 
 type Props = { pubs: PubPayload[]; token: string };

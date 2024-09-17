@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "ui/avatar";
 
-import type { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
 
 function MembersAvatars({ pub }: { pub: PubPayload }) {
 	return (

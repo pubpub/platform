@@ -1,7 +1,6 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
-import { CoreSchemaType } from "@prisma/client";
 
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";

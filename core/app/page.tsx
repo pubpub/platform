@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { getLoginData } from "~/lib/auth/loginData";
-import prisma from "~/prisma/db";
 
 export default async function Page() {
 	const { user } = await getLoginData();

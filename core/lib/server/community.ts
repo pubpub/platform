@@ -1,7 +1,4 @@
-import type { Prisma } from "@prisma/client";
-
 import { cache } from "react";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type { PubsId, UsersId } from "db/public";
 
@@ -46,7 +43,7 @@ export const findCommunityByPubId = memoize(
 	{ revalidateTags: ["all", "all-pubs"], duration: ONE_DAY }
 );
 
-export type CommunityData = Prisma.PromiseReturnType<typeof findCommunityBySlug>;
+export type CommunityData = Awaited<ReturnType<typeof findCommunityByPubId>>;
 
 // TODO: cache this
 export const getAvailableCommunities = async (userId: UsersId) => {
@@ -58,4 +55,4 @@ export const getAvailableCommunities = async (userId: UsersId) => {
 		.execute();
 };
 
-export type AvailableCommunitiesData = Prisma.PromiseReturnType<typeof getAvailableCommunities>;
+export type AvailableCommunitiesData = Awaited<ReturnType<typeof getAvailableCommunities>>;

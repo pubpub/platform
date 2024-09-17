@@ -4,7 +4,11 @@ import { Button } from "ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 
-import type { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
+import type {
+	PubPayload,
+	StagePayload,
+	StagePayloadMoveConstraintDestination,
+} from "~/lib/server/_legacy-integration-queries";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { move } from "./lib/actions";
 

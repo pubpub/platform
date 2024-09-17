@@ -3,7 +3,7 @@ import type {
 	PubPayload,
 	StagePayload,
 	StagePayloadMoveConstraintDestination,
-} from "~/lib/types";
+} from "~/lib/server/_legacy-integration-queries";
 import Assign from "./Assign";
 import Move from "./Move";
 

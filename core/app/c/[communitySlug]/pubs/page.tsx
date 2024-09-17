@@ -5,8 +5,8 @@ import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
+import { pubInclude, stageInclude } from "~/lib/server/_legacy-integration-queries";
 import { createToken } from "~/lib/server/token";
-import { pubInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import PubHeader from "./PubHeader";
 import PubList from "./PubList";

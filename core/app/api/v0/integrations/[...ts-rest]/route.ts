@@ -6,25 +6,22 @@ import { logger } from "logger";
 
 import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
 import { env } from "~/lib/env/env.mjs";
+import { deletePub, generateSignedAssetUploadUrl, getPub, tsRestHandleErrors } from "~/lib/server";
+import { emailUser } from "~/lib/server/_legacy-integration-email";
 import {
 	_getPubType,
 	createPub,
-	deletePub,
-	generateSignedAssetUploadUrl,
+	findOrCreateUser,
 	getIntegrationInstanceConfig,
 	getIntegrationInstanceState,
 	getMembers,
-	getPub,
 	getSuggestedMembers,
 	setIntegrationInstanceConfig,
 	setIntegrationInstanceState,
-	tsRestHandleErrors,
 	updatePub,
-} from "~/lib/server";
-import { emailUser } from "~/lib/server/_legacy-intergration-email";
+} from "~/lib/server/_legacy-integration-queries";
 import { getJobsClient } from "~/lib/server/jobs";
 import { validateToken } from "~/lib/server/token";
-import { findOrCreateUser } from "~/lib/server/user";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
@@ -150,7 +147,7 @@ const handler = createNextHandler(
 		},
 		generateSignedAssetUploadUrl: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
-			const url = await generateSignedAssetUploadUrl(body.pubId, body.fileName);
+			const url = await generateSignedAssetUploadUrl(body.pubId as PubsId, body.fileName);
 			return {
 				status: 200,
 				body: url,

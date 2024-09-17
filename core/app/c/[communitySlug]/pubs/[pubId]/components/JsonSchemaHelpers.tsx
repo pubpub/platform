@@ -1,24 +1,24 @@
-import type { Prisma, PubField, PubFieldSchema, PubValue } from "@prisma/client";
 import type { AnySchema, JSONSchemaType } from "ajv";
 
+import type { JsonValue } from "contracts";
+import type { PubFieldSchema, PubValues } from "db/public";
 import { CardContent, CardHeader, CardTitle } from "ui/card";
 import { Separator } from "ui/separator";
 import { cn } from "utils";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
+import type { PubField } from "~/lib/types";
 import { FileUploadPreview } from "./FileUpload";
 
 interface PubFieldWithValue extends PubField {
 	schema: PubFieldSchema | null;
 }
-interface PubValueWithFieldAndSchema extends PubValue {
+export interface PubValueWithFieldAndSchema extends PubValues {
 	field: PubFieldWithValue;
+	value: JsonValue;
 }
 
-export function recursivelyGetScalarFields(
-	schema: JSONSchemaType<AnySchema>,
-	value: Prisma.JsonValue
-) {
+export function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, value: JsonValue) {
 	if (schema.$id === "unjournal:fileUpload") {
 		return <FileUploadPreview files={value as FileUpload} />;
 	}

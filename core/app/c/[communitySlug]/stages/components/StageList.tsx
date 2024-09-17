@@ -5,7 +5,11 @@ import Link from "next/link";
 
 import { Button } from "ui/button";
 
-import type { CommunityMemberPayload, StagePayload, StagesById, UserLoginData } from "~/lib/types";
+import type {
+	CommunityMemberPayload,
+	StagePayload,
+	StagesById,
+} from "~/lib/server/_legacy-integration-queries";
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
 import { moveConstraintSourcesForStage } from "~/lib/stages";

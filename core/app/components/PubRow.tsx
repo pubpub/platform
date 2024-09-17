@@ -6,7 +6,7 @@ import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { cn } from "utils";
 
-import type { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
 import { getPubTitle } from "~/lib/pubs";
 import IntegrationActions from "./IntegrationActions";
 import { PubDropDown } from "./PubCRUD/PubDropDown";

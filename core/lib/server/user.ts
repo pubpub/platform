@@ -1,4 +1,3 @@
-import type { User } from "@prisma/client";
 import type { SelectExpression } from "kysely";
 
 import { cache } from "react";
@@ -9,12 +8,9 @@ import type { CommunitiesId, NewUsers, UsersId, UsersUpdate } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
-import prisma from "~/prisma/db";
 import { createPasswordHash } from "../auth/password";
-import { slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { NotFoundError } from "./errors";
 
 export const SAFE_USER_SELECT = [
 	"users.id",
@@ -28,48 +24,6 @@ export const SAFE_USER_SELECT = [
 	"users.avatar",
 	"users.orcid",
 ] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>;
-
-export async function findOrCreateUser(userId: string): Promise<User>;
-export async function findOrCreateUser(
-	email: string,
-	firstName: string,
-	lastName?: string
-): Promise<User>;
-export async function findOrCreateUser(
-	userIdOrEmail: string,
-	firstName?: string,
-	lastName?: string
-): Promise<User> {
-	let user: User;
-	if (typeof firstName === "undefined") {
-		// Find user by id
-		const dbUser = await prisma.user.findUnique({ where: { id: userIdOrEmail } });
-		if (!dbUser) {
-			throw new NotFoundError(`User ${userIdOrEmail} not found`);
-		}
-		user = dbUser;
-	} else {
-		// Find or create user by email
-		const dbUser = await prisma.user.findUnique({ where: { email: userIdOrEmail } });
-		if (dbUser) {
-			user = dbUser;
-		} else {
-			try {
-				user = await prisma.user.create({
-					data: {
-						email: userIdOrEmail,
-						slug: slugifyString(userIdOrEmail),
-						firstName,
-						lastName,
-					},
-				});
-			} catch (cause) {
-				throw new Error(`Unable to create user for ${userIdOrEmail}`, { cause });
-			}
-		}
-	}
-	return user;
-}
 
 export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>, trx = db) => {
 	// do not use autocache here until we have a good way to globally invalidate users
