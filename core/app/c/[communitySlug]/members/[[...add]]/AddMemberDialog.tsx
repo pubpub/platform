@@ -1,8 +1,9 @@
 "use client";
 
+import type { Community } from "@prisma/client";
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Community } from "@prisma/client";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";

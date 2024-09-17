@@ -6,8 +6,9 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
+import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
-import { getPubTypeBase, PubValues, pubValuesByRef } from "~/lib/server";
+import { getPubTypeBase, pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 
 const stages = (stageId: Expression<string | null>) =>

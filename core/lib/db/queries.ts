@@ -7,7 +7,8 @@ import type { StagesId } from "db/public";
 import { Rules } from "db/public";
 import { expect } from "utils";
 
-import { RuleConfig, RuleConfigs } from "~/actions/types";
+import type { RuleConfig } from "~/actions/types";
+import { RuleConfigs } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { communityMemberInclude, pubValuesInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";

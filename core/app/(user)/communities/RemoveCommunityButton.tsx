@@ -14,9 +14,9 @@ import { Trash } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { toast } from "ui/use-toast";
 
+import type { TableCommunity } from "./getCommunityTableColumns";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { removeCommunity } from "./actions";
-import { TableCommunity } from "./getCommunityTableColumns";
 
 export const RemoveCommunityButton = ({ community }: { community: TableCommunity }) => {
 	const runRemoveCommunity = useServerAction(removeCommunity);

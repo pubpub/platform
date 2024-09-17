@@ -17,7 +17,6 @@ services:
             - MAILGUN_SMTP_HOST=smtp.mailgun.org
             - MAILGUN_SMTP_PORT=465
             - MAILGUN_SMTP_USERNAME=omitted
-            - NEXT_PUBLIC_PUBPUB_URL=http://localhost:8080
             - OTEL_SERVICE_NAME=core.core
             - PGDATABASE=postgres
             - PGHOST=db

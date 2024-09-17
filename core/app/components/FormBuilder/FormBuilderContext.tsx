@@ -5,7 +5,7 @@ import type { PropsWithChildren } from "react";
 import * as React from "react";
 import { createContext, useContext } from "react";
 
-import { Stages } from "db/public";
+import type { Stages } from "db/public";
 
 import type { FormElementData, PanelEvent } from "./types";
 
