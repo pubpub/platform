@@ -1,5 +1,13 @@
-import type { ExpressionBuilder, SelectExpression, StringReference, Transaction } from "kysely";
+import type {
+	ExpressionBuilder,
+	ReferenceExpression,
+	SelectExpression,
+	SelectQueryBuilder,
+	StringReference,
+	Transaction,
+} from "kysely";
 
+import { Reference } from "react";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
@@ -15,6 +23,7 @@ import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
+import { getPubTypeBase } from "./pubtype";
 
 export type PubValues = Record<string, JsonValue>;
 
@@ -87,6 +96,23 @@ const pubValues = (
 	).as("values");
 };
 
+const pubType = ({
+	eb,
+	pubTypeIdRef,
+}: {
+	eb: ExpressionBuilder<Database, keyof Database>;
+	pubTypeIdRef: `${string}.pubTypeId` | `${string}.id`;
+}) =>
+	jsonObjectFrom(
+		getPubTypeBase(eb).whereRef(
+			"pub_types.id",
+			"=",
+			pubTypeIdRef as ReferenceExpression<Database, "pub_types">
+		)
+	)
+		.$notNull()
+		.as("pubType");
+
 // Converts a pub from having all its children (regardless of depth) in a flat array to a tree
 // structure. Assumes that pub.children are ordered by depth (leaves last)
 const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
@@ -122,7 +148,14 @@ const withPubChildren = ({
 	return db.withRecursive("children", (qc) => {
 		return qc
 			.selectFrom("pubs")
-			.select(["id", "parentId", "pubTypeId", "assigneeId", pubValuesByRef("pubs.id")])
+			.select((eb) => [
+				"id",
+				"parentId",
+				"pubTypeId",
+				"assigneeId",
+				pubValuesByRef("pubs.id"),
+				pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
+			])
 			.$if(!!pubId, (qb) => qb.where("pubs.parentId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parentId", "=", ref(pubIdRef!)))
 			.$if(!!communityId, (qb) =>
@@ -138,6 +171,7 @@ const withPubChildren = ({
 						"pubs.pubTypeId",
 						"pubs.assigneeId",
 						pubValuesByRef("pubs.id"),
+						pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
 					]);
 			});
 	});
@@ -178,6 +212,7 @@ export const getPubBase = (
 		.selectFrom("pubs")
 		.select((eb) => [
 			...pubColumns,
+			pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
 			pubAssignee(eb),
 			jsonArrayFrom(
 				eb
@@ -191,6 +226,7 @@ export const getPubBase = (
 					.select((eb) => [
 						...pubColumns,
 						"children.values",
+						"children.pubType",
 						jsonArrayFrom(
 							eb
 								.selectFrom("PubsInStages")
@@ -226,6 +262,8 @@ export const getPubCached = async (pubId: PubsId) => {
 
 	return nestChildren(pub);
 };
+
+export type PubWithChildren = Awaited<ReturnType<typeof getPubCached>>;
 
 export type GetManyParams = {
 	limit?: number;

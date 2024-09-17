@@ -10,6 +10,8 @@ export type UserWithMember = Omit<Users, "passwordHash"> & {
 	member?: Members | null;
 };
 
+export type MemberWithUser = Members & { user: Omit<Users, "passwordHash"> };
+
 export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">;
 export type UserPutBody = Pick<Users, "firstName" | "lastName">;
 export type UserLoginData = Omit<Users, "passwordHash">;

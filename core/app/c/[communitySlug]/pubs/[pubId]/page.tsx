@@ -153,7 +153,9 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Integrations</div>
 						<div>
-							<IntegrationActions pub={pub} token={token} />
+							<Suspense>
+								<IntegrationActions pubId={pub.id as PubsId} token={token} />
+							</Suspense>
 						</div>
 					</div>
 					<div>

@@ -1,26 +1,17 @@
+import type { IntegrationInstances, Integrations, PubsId } from "db/public";
 import { Button } from "ui/button";
 
 import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
+import { autoCache } from "~/lib/server/cache/autoCache";
+import { getIntegrationInstanceBase } from "~/lib/server/stages";
 
 type Props = {
-	pub: PubPayload;
+	pubId: PubsId;
 	token: string;
 };
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
-
-const getStatus = (pub: Props["pub"], integrationId: string) => {
-	const statusValue = pub.values.find((value) => {
-		return value.field.integrationId === integrationId;
-	});
-	return statusValue?.value as { text: string; color: string };
-};
-
-const getInstances = (pub: Props["pub"]) => {
-	return pub.integrationInstances.concat(
-		pub.stages.flatMap(({ stage }) => stage.integrationInstances)
-	);
-};
+type IntegrationInstance = IntegrationInstances & { integration: Integrations };
 
 const appendQueryParams = (instanceId: string, pubId: string, token: string) => {
 	return (action: IntegrationAction) => {
@@ -35,26 +26,30 @@ const appendQueryParams = (instanceId: string, pubId: string, token: string) => 
 	};
 };
 
-const getButtons = (pub: Props["pub"], token: Props["token"]) => {
-	const instances = getInstances(pub);
+const getButtons = (pubId: PubsId, instances: IntegrationInstance[], token: Props["token"]) => {
 	const buttons = instances
 		.map((instance) => {
 			const integration = instance.integration;
-			const status = getStatus(pub, integration.id);
 			const actions: IntegrationAction[] = (
 				Array.isArray(integration.actions) ? integration.actions : []
 			)
 				.filter((action: IntegrationAction) => action.kind !== "stage")
-				.map(appendQueryParams(instance.id, pub.id, token));
-			return { status, actions };
+				.map(appendQueryParams(instance.id, pubId, token));
+			return { actions };
 		})
 		.filter((instance) => instance && instance.actions.length);
 
 	return buttons;
 };
 
-const IntegrationActions = (props: Props) => {
-	const buttons = getButtons(props.pub, props.token);
+const IntegrationActions = async (props: Props) => {
+	const integrationInstances = await autoCache(
+		getIntegrationInstanceBase()
+			.innerJoin("PubsInStages", "integration_instances.stageId", "PubsInStages.stageId")
+			.where("PubsInStages.pubId", "=", props.pubId)
+	).execute();
+
+	const buttons = getButtons(props.pubId, integrationInstances, props.token);
 
 	return buttons.length ? (
 		<ul className="flex list-none flex-row">
