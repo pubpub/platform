@@ -137,13 +137,7 @@ function PubForm(props: Props) {
 				pubTypeId: selectedPubType.id,
 				stageId: selectedStage?.id,
 				parentId: props.parentId,
-				fields: Object.entries(values).reduce((acc, [key, value]) => {
-					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
-					if (id) {
-						acc[id] = { slug: key, value };
-					}
-					return acc;
-				}, {}),
+				fields: createFieldsForSever(values, selectedPubType),
 				path: pathWithoutFormParam,
 			});
 			if (result && "success" in result) {
