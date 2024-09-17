@@ -12,15 +12,15 @@ import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
 
 type PropsInner = {
-	stageId: string;
+	stageId: StagesId;
 	pageContext: PageContext;
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
 	const [stagePubs, stageActionInstances, stage] = await Promise.all([
-		getStagePubs(props.stageId),
-		getStageActions(props.stageId),
-		getStage(props.stageId),
+		getStagePubs(props.stageId).execute(),
+		getStageActions(props.stageId).execute(),
+		getStage(props.stageId).executeTakeFirst(),
 	]);
 
 	if (!stage) {
@@ -59,7 +59,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 };
 
 type Props = {
-	stageId?: string;
+	stageId?: StagesId;
 	pageContext: PageContext;
 };
 

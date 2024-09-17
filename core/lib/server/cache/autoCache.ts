@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import type { autoRevalidate } from "./autoRevalidate";
 import type { AutoCacheOptions, AutoOptions, DirectAutoOutput, ExecuteFn, SQB } from "./types";
 import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
@@ -13,7 +15,7 @@ const executeWithCache = <
 	method: M,
 	options?: AutoCacheOptions
 ) => {
-	const executeFn = async (...args: Parameters<Q[M]>) => {
+	const executeFn = cache(async (...args: Parameters<Q[M]>) => {
 		const communitySlug = options?.communitySlug ?? getCommunitySlug();
 
 		const compiledQuery = qb.compile();
@@ -51,7 +53,7 @@ const executeWithCache = <
 		const result = await cachedExecute(method);
 
 		return result;
-	};
+	});
 
 	// we are reaching the limit of typescript's type inference here
 	// without this cast, the return type of the function

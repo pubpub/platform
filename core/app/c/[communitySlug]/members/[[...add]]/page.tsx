@@ -1,5 +1,6 @@
 import type { Community } from "@prisma/client";
 
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
@@ -14,6 +15,10 @@ import prisma from "~/prisma/db";
 import { AddMember } from "./AddMember";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { MemberTable } from "./MemberTable";
+
+export const metadata: Metadata = {
+	title: "Members",
+};
 
 const getCachedMembers = (community: Community) =>
 	autoCache(

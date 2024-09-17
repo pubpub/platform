@@ -186,7 +186,7 @@ const handler = createNextHandler(
 		stages: {
 			get: async (req) => {
 				await checkAuthorization(ApiAccessScope.stage, ApiAccessType.read);
-				const stage = await getStage(req.params.stageId as StagesId);
+				const stage = await getStage(req.params.stageId as StagesId).executeTakeFirst();
 				if (!stage) {
 					throw new NotFoundError("No stage found");
 				}

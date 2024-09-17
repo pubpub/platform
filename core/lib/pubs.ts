@@ -10,7 +10,7 @@ export const getPubTitle = (pub: PubTitleProps) => {
 			? pub.values.find((value) => {
 					return value.field.slug.includes("title") && value.value;
 				})?.value
-			: pub.values["pubpub:title"]
+			: Object.entries(pub.values).find(([key]) => key.includes("title"))?.[1]
 	) as string | undefined;
 	const fallbackTitle = `Untitled Pub - ${new Date(pub.createdAt).toDateString()}`;
 	return title ?? fallbackTitle;

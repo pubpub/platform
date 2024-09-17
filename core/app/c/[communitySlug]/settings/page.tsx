@@ -1,6 +1,11 @@
+import { Metadata } from "next";
 import Link from "next/link";
 
 import { getPageLoginData } from "~/lib/auth/loginData";
+
+export const metadata: Metadata = {
+	title: "Community Settings",
+};
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
 	await getPageLoginData();

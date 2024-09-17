@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import partition from "lodash.partition";
 
 import type { CommunitiesId } from "db/public";
@@ -14,6 +15,10 @@ import { FieldsTable } from "./FieldsTable";
 import { NewFieldButton } from "./NewFieldButton";
 
 type Props = { params: { communitySlug: string } };
+
+export const metadata: Metadata = {
+	title: "Fields",
+};
 
 const EmptyState = ({ className }: { className?: string }) => {
 	return (

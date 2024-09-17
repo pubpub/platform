@@ -1,12 +1,15 @@
 import "reactflow/dist/style.css";
 
+import type { Metadata } from "next";
+
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, StagesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/auth/loginData";
+import { getStage } from "~/lib/db/queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { StageEditor } from "./components/editor/StageEditor";
@@ -20,6 +23,28 @@ type Props = {
 		editingStageId: string | undefined;
 	};
 };
+
+export async function generateMetadata({
+	params: { communitySlug },
+	searchParams: { editingStageId },
+}: {
+	params: { communitySlug: string };
+	searchParams: {
+		editingStageId: string | undefined;
+	};
+}): Promise<Metadata> {
+	if (!editingStageId) {
+		return { title: "Workflow Editor" };
+	}
+
+	const stage = await getStage(editingStageId as StagesId).executeTakeFirst();
+
+	if (!stage) {
+		return { title: "Stage" };
+	}
+
+	return { title: stage.name };
+}
 
 const getCommunityStages = (communityId: CommunitiesId) =>
 	autoCache(
@@ -111,7 +136,7 @@ export default async function Page({ params, searchParams }: Props) {
 							<StageEditor />
 							{searchParams.editingStageId && (
 								<StagePanel
-									stageId={searchParams.editingStageId}
+									stageId={searchParams.editingStageId as StagesId}
 									pageContext={pageContext}
 								/>
 							)}

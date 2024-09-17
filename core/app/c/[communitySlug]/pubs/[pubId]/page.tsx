@@ -1,7 +1,8 @@
 import { Suspense } from "react";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
@@ -12,14 +13,45 @@ import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
+import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { getPubUsers } from "~/lib/permissions";
+import { pubValuesByVal } from "~/lib/server";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
+
+export async function generateMetadata({
+	params: { pubId },
+}: {
+	params: { pubId: string; communitySlug: string };
+}): Promise<Metadata> {
+	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
+
+	const pub = await autoCache(
+		db
+			.selectFrom("pubs")
+			.selectAll("pubs")
+			.select(pubValuesByVal(pubId as PubsId))
+			.where("id", "=", pubId as PubsId)
+	).executeTakeFirst();
+
+	if (!pub) {
+		return { title: "Pub Not Found" };
+	}
+
+	const title = Object.entries(pub.values).find(([key]) => /title/.test(key))?.[1];
+
+	if (!title) {
+		return { title: `Pub ${pub.id}` };
+	}
+
+	return { title: title as string };
+}
 
 export default async function Page({
 	params,
@@ -60,7 +92,10 @@ export default async function Page({
 
 	const [actionsPromise, stagePromise] =
 		pub.stages.length > 0
-			? [getStageActions(pub.stages[0].stageId), getStage(pub.stages[0].stageId)]
+			? [
+					getStageActions(pub.stages[0].stageId as StagesId).execute(),
+					getStage(pub.stages[0].stageId as StagesId).executeTakeFirst(),
+				]
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
