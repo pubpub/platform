@@ -2,6 +2,8 @@ import type { Community, Member, Prisma } from "@prisma/client";
 
 import type { PubFields, PubFieldsId, PubTypes } from "db/public";
 
+import { QB } from "./server/cache/types";
+
 export type RecursiveInclude<T extends string, U extends {}> = {
 	include: {
 		[K in T]: RecursiveInclude<T, U>;
@@ -234,3 +236,9 @@ export type OR<T extends Record<string, unknown>, P extends Record<string, unkno
 	| ({ [K in keyof P]: P[K] } & { [K in keyof T]?: never })
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]: P[K] })
 >;
+
+export type AutoReturnType<T extends (...args: any[]) => QB<any>> = {
+	[K in "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"]: Awaited<
+		ReturnType<ReturnType<T>[K]>
+	>;
+};
