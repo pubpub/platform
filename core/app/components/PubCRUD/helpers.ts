@@ -128,7 +128,10 @@ type PubType = {
 	};
 };
 
-export const createFieldsForSever = (values: { [s: string]: string; }, pubType: PubType["pubType"]) =>
+export const createFieldsForSever = (
+	values: { [s: string]: string },
+	pubType: PubType["pubType"]
+) =>
 	Object.entries(values).reduce((acc, [key, value]) => {
 		const id = pubType?.fields.find((f) => f.slug === key)?.id;
 		if (id) {

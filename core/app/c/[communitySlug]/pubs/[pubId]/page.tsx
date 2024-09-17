@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
+
 import { Suspense } from "react";
-import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";

@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
+
 import partition from "lodash.partition";
 
 import type { CommunitiesId } from "db/public";
