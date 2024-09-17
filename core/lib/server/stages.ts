@@ -1,9 +1,7 @@
-import type { JsonValue } from "@prisma/client/runtime/library";
-
-import { Integration } from "@prisma/client";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { JsonValue } from "contracts";
 import type {
 	CommunitiesId,
 	NewMoveConstraint,
@@ -14,7 +12,6 @@ import type {
 } from "db/public";
 
 import { db } from "~/kysely/database";
-import { Equal, StagePayload } from "../types";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { pubValuesByRef } from "./pub";

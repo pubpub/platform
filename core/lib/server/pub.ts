@@ -1,23 +1,19 @@
 import type { ExpressionBuilder, SelectExpression, StringReference, Transaction } from "kysely";
 
-import { Prisma } from "@prisma/client";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CreatePubRequestBodyWithNulls, GetPubResponseBody, JsonValue } from "contracts";
+import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 import type { Database } from "db/Database";
-import type { CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
 
 import type { MaybeHas } from "../types";
-import type { BasePubField } from "~/actions/corePubFields";
-import { validatePubValues, validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
+import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
-import prisma from "~/prisma/db";
-import { makeRecursiveInclude } from "../types";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { ForbiddenError, NotFoundError } from "./errors";
+import { NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 
 export type PubValues = Record<string, JsonValue>;
@@ -164,8 +160,6 @@ const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 			])
 	).as("assignee");
 
-// These aliases are used to make sure the JSON object returned matches
-// the old prisma query's return value
 const pubColumns = [
 	"id",
 	"communityId",
@@ -273,123 +267,7 @@ export const getPubs = async (
 	return pubs.map(nestChildren);
 };
 
-const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubNotFoundError = new NotFoundError("Pub not found");
-const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
-
-const toJSONNull = (json: CreatePubRequestBodyWithNulls["values"][1]) => {
-	if (json === null) {
-		return Prisma.JsonNull;
-	} else if (Array.isArray(json)) {
-		return json.map(toJSONNull);
-	} else if (typeof json === "object" && json !== null) {
-		return Object.fromEntries(Object.entries(json).map(([k, v]) => [k, toJSONNull(v)]));
-	}
-	return json;
-};
-
-const normalizePubValues = async (
-	values: CreatePubRequestBodyWithNulls["values"],
-	pubTypeId?: string
-) => {
-	const pubFieldSlugs = Object.keys(values);
-	const pubFieldIds = await prisma.pubField.findMany({
-		where: {
-			slug: {
-				in: pubFieldSlugs,
-			},
-			pubTypes: {
-				some: {
-					id: pubTypeId,
-				},
-			},
-		},
-	});
-
-	if (!pubFieldIds) {
-		throw PubFieldSlugsNotFoundError;
-	}
-
-	const normalizedValues = pubFieldIds.map((field) => {
-		const value = toJSONNull(values[field.slug]);
-		return {
-			fieldId: field.id,
-			value,
-		};
-	});
-
-	return normalizedValues;
-};
-
-const getUpdateDepth = (body: CreatePubRequestBodyWithNulls, depth = 0) => {
-	if (!body.children) {
-		return depth;
-	}
-	for (const child of body.children) {
-		depth = Math.max(getUpdateDepth(child, depth), depth);
-	}
-	return depth + 1;
-};
-
-const makePubChildrenCreateOptions = async (
-	body: CreatePubRequestBodyWithNulls,
-	communityId: string
-) => {
-	if (!body.children) {
-		return undefined;
-	}
-	const inputs: ReturnType<typeof makeRecursivePubUpdateInput>[] = [];
-	for (const child of body.children) {
-		if ("id" in child) {
-			continue;
-		}
-		inputs.push(
-			makeRecursivePubUpdateInput({ assigneeId: body.assigneeId, ...child }, communityId)
-		);
-	}
-	return Promise.all(inputs);
-};
-
-const makePubChildrenConnectOptions = (body: CreatePubRequestBodyWithNulls) => {
-	if (!body.children) {
-		return undefined;
-	}
-	const connect: Prisma.PubWhereUniqueInput[] = [];
-	for (const child of body.children) {
-		if ("id" in child) {
-			connect.push({ id: child.id });
-		}
-	}
-	return connect;
-};
-
-/** Build a Prisma `PubCreateInput` object used to create a pub with descendants. */
-const makeRecursivePubUpdateInput = async (
-	body: CreatePubRequestBodyWithNulls,
-	communityId: string
-): Promise<Prisma.PubCreateInput> => {
-	const assignee = body.assigneeId
-		? {
-				connect: { id: body.assigneeId },
-			}
-		: undefined;
-	return {
-		community: { connect: { id: communityId } },
-		pubType: { connect: { id: body.pubTypeId } },
-		values: {
-			createMany: {
-				data: await normalizePubValues(body.values),
-			},
-		},
-		assignee,
-		children: {
-			// For each child, either connect to an existing pub or create a new one.
-			connect: makePubChildrenConnectOptions(body),
-			create: await makePubChildrenCreateOptions(body, communityId),
-		},
-		...(body.parentId && { parent: { connect: { id: body.parentId } } }),
-	};
-};
 
 /**
  * For recursive transactions
@@ -539,64 +417,6 @@ export const createPubRecursiveNew = async ({
 	});
 
 	return result;
-};
-
-export const createPub = async (instanceId: string, body: CreatePubRequestBodyWithNulls) => {
-	const instance = await prisma.integrationInstance.findUnique({
-		where: { id: instanceId },
-	});
-
-	if (!instance) {
-		throw InstanceNotFoundError;
-	}
-
-	if (!instance.stageId) {
-		throw new ForbiddenError("Integration instance not attached to stage");
-	}
-
-	const updateDepth = getUpdateDepth(body);
-	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
-	const createArgs = {
-		data: {
-			...updateInput,
-			...(!body.parentId && {
-				stages: {
-					create: {
-						stageId: instance.stageId,
-					},
-				},
-			}),
-		},
-		...makeRecursiveInclude("children", {}, updateDepth),
-	};
-	const pub = await prisma.pub.create(createArgs);
-
-	return pub;
-};
-
-export const updatePub = async (instanceId: string, body: CreatePubRequestBodyWithNulls) => {
-	const instance = await prisma.integrationInstance.findUnique({
-		where: { id: instanceId },
-	});
-
-	if (!instance) {
-		throw InstanceNotFoundError;
-	}
-
-	const updateDepth = getUpdateDepth(body);
-	const updateInput = await makeRecursivePubUpdateInput(body, instance.communityId);
-	const updateArgs = {
-		data: {
-			...updateInput,
-		},
-		...makeRecursiveInclude("children", {}, updateDepth),
-	};
-	const pub = await prisma.pub.update({
-		where: { id: body.id },
-		...updateArgs,
-	});
-
-	return pub;
 };
 
 export const deletePub = async (pubId: PubsId) =>
