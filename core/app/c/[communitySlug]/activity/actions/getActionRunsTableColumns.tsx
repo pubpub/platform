@@ -1,8 +1,8 @@
 "use client";
 
-import type { Event } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import type { Event } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";

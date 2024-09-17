@@ -10,7 +10,6 @@ import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
-import prisma from "~/prisma/db";
 import { AddMember } from "./AddMember";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { MemberTable } from "./MemberTable";
