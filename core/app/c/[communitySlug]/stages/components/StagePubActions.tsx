@@ -2,28 +2,21 @@ import type {
 	CommunityMemberPayload,
 	PubPayload,
 	StagePayload,
-	StagePayloadMoveConstraintDestination,
 } from "~/lib/server/_legacy-integration-queries";
 import Assign from "./Assign";
 import Move from "./Move";
 
 type Props = {
 	members: CommunityMemberPayload[];
-	moveFrom: StagePayloadMoveConstraintDestination[];
-	moveTo: StagePayloadMoveConstraintDestination[];
 	pub: PubPayload;
 	stage: StagePayload;
+	communityStages: StagePayload[];
 };
 
 export const StagePubActions = (props: Props) => {
 	return (
 		<div className="flex shrink-0 items-end gap-2">
-			<Move
-				pub={props.pub}
-				stage={props.stage}
-				moveTo={props.moveTo}
-				moveFrom={props.moveFrom}
-			/>
+			<Move pub={props.pub} stage={props.stage} communityStages={props.communityStages} />
 			<Assign members={props.members} pub={props.pub} />
 		</div>
 	);

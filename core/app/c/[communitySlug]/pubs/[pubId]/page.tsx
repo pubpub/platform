@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
+import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
@@ -128,10 +129,17 @@ export default async function Page({
 				<div className="flex w-64 flex-col gap-4 rounded-lg bg-gray-50 p-4 font-semibold shadow-inner">
 					<div>
 						<div className="mb-1 text-lg font-bold">Current Stage</div>
-						<div className="ml-4 font-medium">
-							{pub.stages.map(({ stage }) => {
-								return <div key={stage.id}>{stage.name}</div>;
-							})}
+						<div className="ml-4 flex items-center gap-2 font-medium">
+							<div>
+								{pub.stages.map(({ stage }) => {
+									return <div key={stage.id}>{stage.name}</div>;
+								})}
+							</div>
+							<Move
+								pub={pub}
+								stage={pub.stages[0].stage}
+								communityStages={community.stages}
+							/>
 						</div>
 					</div>
 					<div>
@@ -146,7 +154,7 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (
-							<div>
+							<div className="ml-4">
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
 									pubId={pub.id as PubsId}
