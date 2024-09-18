@@ -23,7 +23,7 @@ import { cn } from "utils";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
-import * as actions from "~/app/components/PubCRUD/actions";
+import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";

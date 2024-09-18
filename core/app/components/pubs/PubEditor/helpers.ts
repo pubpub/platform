@@ -12,16 +12,13 @@ import type {
 	PubTypes,
 	PubTypesId,
 	PubValues,
-	StagesId,
-	StructuralFormElement,
 } from "db/public";
-import type { InputComponent } from "db/src/public/InputComponent";
 import { CoreSchemaType, ElementType } from "db/public";
 
-import type { Form as PubPubForm } from "~/lib/server/form";
+import type { Form, Form as PubPubForm } from "~/lib/server/form";
 
 // Function to create an element object based on pubType parameter
-export function createElementFromPubType(pubType: {
+export function createDefaultFormElementDefsForPubType(pubType: {
 	id: PubTypesId;
 	name: string;
 	description: string | null;
@@ -29,31 +26,9 @@ export function createElementFromPubType(pubType: {
 		id: PubFieldsId;
 		name: string;
 		slug: string;
-		pubFieldSchemaId: PubFieldSchemaId | null;
 		schemaName: CoreSchemaType | null;
-		schema: {
-			id: PubFieldSchemaId;
-			name: string;
-			namespace: string;
-			schema: unknown;
-		} | null;
 	}[];
-}): {
-	slug: string | null;
-	schemaName: CoreSchemaType | null;
-	type: ElementType;
-	order: number | null;
-	description: string | null;
-	stageId: StagesId | null;
-	fieldId: PubFieldsId | null;
-	label: string | null;
-	element: StructuralFormElement | null;
-	content: string | null;
-	required: boolean | null;
-	elementId: FormElementsId;
-	component: InputComponent | null;
-	config: {} | undefined;
-}[] {
+}): Form["elements"][number][] {
 	return pubType.fields.map((field, index) => ({
 		slug: field.slug || null,
 		schemaName: field.schemaName || null,

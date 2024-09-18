@@ -8,10 +8,14 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
-import { PubIOButton } from "./PubIOButton";
-import { PubRemoveButton } from "./PubRemoveButton";
+import { RemovePubButton } from "./RemovePubButton";
+import { UpdatePubButton } from "./UpdatePubButton";
 
-export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
+type Props = {
+	pubId: PubsId;
+};
+
+export const PubDropDown = (props: Props) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -21,25 +25,19 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="width">
 				<DropdownMenuItem asChild>
-					<PubIOButton
-						button={{
-							variant: "ghost",
-							title: "Edit Pub",
-							className: "w-full justify-start",
-						}}
-						pubId={pubId}
+					<UpdatePubButton
+						variant="ghost"
+						size="sm"
+						className="w-full justify-start"
+						pubId={props.pubId}
 						searchParams={{}}
-						mode="update"
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<PubRemoveButton
-						pubId={pubId}
-						button={{
-							variant: "ghost",
-							title: "Remove Pub",
-							className: "w-full justify-start",
-						}}
+					<RemovePubButton
+						pubId={props.pubId}
+						variant="ghost"
+						className="w-full justify-start"
 					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>

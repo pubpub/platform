@@ -1,6 +1,6 @@
 import type { Communities, Members, PubFields, PubFieldsId, PubTypes, Users } from "db/public";
 
-import type { QB } from "./server/cache/types";
+import type { DirectAutoOutput } from "./server/cache/types";
 
 export type UserWithMemberships = Omit<Users, "passwordHash"> & {
 	memberships: Members[];
@@ -89,7 +89,7 @@ export type OR<T extends Record<string, unknown>, P extends Record<string, unkno
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]: P[K] })
 >;
 
-export type AutoReturnType<T extends (...args: any[]) => QB<any>> = {
+export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> = {
 	[K in "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"]: Awaited<
 		ReturnType<ReturnType<T>[K]>
 	>;

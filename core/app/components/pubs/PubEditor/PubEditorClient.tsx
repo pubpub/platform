@@ -32,7 +32,7 @@ import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import {
 	buildDefaultValues,
-	createElementFromPubType,
+	createDefaultFormElementDefsForPubType,
 	createFieldsForSever,
 	createSchemaFromElements,
 } from "./helpers";
@@ -58,7 +58,7 @@ type Props = {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 };
 
-function PubForm(props: Props) {
+export function PubEditorClient(props: Props) {
 	const pubType = props.availablePubTypes.find((type) => type.id === props.pubTypeId);
 
 	const [selectedPubType, setSelectedPubType] = useState<
@@ -91,7 +91,7 @@ function PubForm(props: Props) {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const elements = selectedPubType ? createElementFromPubType(selectedPubType) : [];
+	const elements = selectedPubType ? createDefaultFormElementDefsForPubType(selectedPubType) : [];
 
 	const resolver = useMemo(
 		() => typeboxResolver(createSchemaFromElements(elements)),
@@ -127,7 +127,7 @@ function PubForm(props: Props) {
 			if (result && "success" in result) {
 				toast({
 					title: "Success",
-					description: "Pub Successfully Updated",
+					description: "Pub successfully updated",
 				});
 				closeForm();
 			}
@@ -174,7 +174,7 @@ function PubForm(props: Props) {
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button size="sm" variant="outline">
-											{selectedPubType?.name || "Select PubType"}
+											{selectedPubType?.name || "Select Pub Type"}
 											<ChevronDown size="16" />
 										</Button>
 									</DropdownMenuTrigger>
@@ -264,5 +264,3 @@ function PubForm(props: Props) {
 		</Form>
 	);
 }
-
-export { PubForm as NewForm };

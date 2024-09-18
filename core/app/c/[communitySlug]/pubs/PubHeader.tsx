@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { CommunitiesId } from "db/public";
 import { Button } from "ui/button";
 
-import { PubIOButton } from "~/app/components/PubCRUD/PubIOButton";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 
 type Props = {
 	communityId: CommunitiesId;
@@ -15,7 +15,7 @@ const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
 		<div className="mb-16 flex items-center justify-between">
 			<h1 className="flex-grow text-xl font-bold">Pubs</h1>
 			<div className="flex items-center gap-x-2">
-				<PubIOButton mode="create" communityId={communityId} searchParams={searchParams} />
+				<CreatePubButton communityId={communityId} searchParams={searchParams} />
 				<Button variant="outline" size="sm" asChild>
 					<Link href="types">Manage Types</Link>
 				</Button>
