@@ -38,6 +38,7 @@ export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
 				).as("schema"),
 			])
 			.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
+			.where("pub_fields.isRelation", "=", false)
 	).as("fields"),
 ]);
 

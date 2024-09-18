@@ -67,6 +67,7 @@ const getCommunityById = <
 										)
 								).as("schema"),
 							])
+							.where("pub_fields.isRelation", "=", false)
 							.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 					).as("fields"),
 				])
