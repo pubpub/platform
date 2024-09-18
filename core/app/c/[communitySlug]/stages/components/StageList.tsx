@@ -1,5 +1,3 @@
-import type { User as LuciaUser } from "lucia";
-
 import { Fragment } from "react";
 import Link from "next/link";
 
@@ -8,18 +6,16 @@ import { Button } from "ui/button";
 import type {
 	CommunityMemberPayload,
 	StagePayload,
-	StagesById,
 } from "~/lib/server/_legacy-integration-queries";
 import PubRow from "~/app/components/PubRow";
 import { getPubUsers } from "~/lib/permissions";
-import { moveConstraintSourcesForStage } from "~/lib/stages";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = {
 	members: CommunityMemberPayload[];
-	stageById: StagesById;
 	stageWorkflows: StagePayload[][];
 	token: string;
+	communityStages: StagePayload[];
 };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
@@ -32,11 +28,6 @@ function StageList(props: Props) {
 						{stages.map((stage) => {
 							const users = getPubUsers(stage.permissions);
 							// users should be just member but these are users
-
-							const sources = moveConstraintSourcesForStage(stage, props.stageById);
-							const destinations = stage.moveConstraints.map(
-								(stage) => stage.destination
-							);
 							return (
 								<div key={stage.id} className="mb-20">
 									<div className="flex flex-row justify-between">
@@ -91,10 +82,9 @@ function StageList(props: Props) {
 														<StagePubActions
 															key={stage.id}
 															members={props.members}
-															moveFrom={sources}
-															moveTo={destinations}
 															pub={pub}
 															stage={stage}
+															communityStages={props.communityStages}
 														/>
 													}
 												/>
