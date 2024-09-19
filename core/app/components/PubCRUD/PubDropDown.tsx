@@ -9,8 +9,8 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
-import { Skeleton } from "ui/skeleton";
 
+import { SkeletonButton } from "../skeletons/SkeletonButton";
 import { PubRemoveButton } from "./PubRemoveButton";
 import { PubUpdateButton } from "./PubUpdateButton";
 
@@ -24,7 +24,7 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="width">
 				<DropdownMenuItem asChild>
-					<Suspense fallback={<Skeleton className="h-9 w-full" />} key={pubId}>
+					<Suspense fallback={<SkeletonButton />} key={pubId}>
 						<PubUpdateButton
 							button={{
 								variant: "ghost",
