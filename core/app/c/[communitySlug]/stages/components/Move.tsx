@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 
 import type { PubsId, Stages, StagesId } from "db/public";
 import { Button } from "ui/button";
-import { ArrowLeft, Loader2 } from "ui/icon";
+import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 
@@ -101,35 +101,14 @@ export default function Move(props: Props) {
 					{isMoving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Move"}
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent>
-				<div className="flex flex-col">
-					{destinations.length > 0 && (
-						<div data-testid="destinations" className="text-center">
-							<div className="mb-4 font-bold">Move this Pub to:</div>
-							{destinations.map((stage) => {
-								return stage.id === props.stageId ? null : (
-									<Button
-										variant="ghost"
-										disabled={isMoving}
-										key={stage.id}
-										onClick={() =>
-											startTransition(async () => {
-												await onMove(props.pubId, props.stageId, stage.id);
-											})
-										}
-										className="mb-2"
-									>
-										{stage.name}
-									</Button>
-								);
-							})}
-						</div>
-					)}
+			<PopoverContent side="left" className="w-fit">
+				<div className="flex gap-x-4">
 					{sources.length > 0 && (
-						<div data-testid="sources" className="text-center">
-							<div className="mb-4 font-bold">Move this Pub back to:</div>
+						<div className="flex flex-col gap-y-2" data-testid="sources">
+							<div className="flex items-center justify-start gap-x-2">
+								<span className="text-sm font-bold">Move back</span>
+							</div>
 							{sources.map((stage) => {
-								<div className="mb-4">Move this Pub back to:</div>;
 								return stage.id === props.stageId ? null : (
 									<Button
 										disabled={isMoving}
@@ -146,6 +125,34 @@ export default function Move(props: Props) {
 										<span className="overflow-clip text-ellipsis whitespace-nowrap">
 											{stage.name}
 										</span>
+									</Button>
+								);
+							})}
+						</div>
+					)}
+
+					{destinations.length > 0 && (
+						<div className="flex flex-col gap-y-2" data-testid="destinations">
+							<div className="flex items-center justify-start gap-x-2">
+								<span className="text-sm font-bold">Move to</span>
+							</div>
+							{destinations.map((stage) => {
+								return stage.id === props.stageId ? null : (
+									<Button
+										variant="outline"
+										disabled={isMoving}
+										key={stage.id}
+										onClick={() =>
+											startTransition(async () => {
+												await onMove(props.pubId, props.stageId, stage.id);
+											})
+										}
+										className="flex justify-start gap-x-1"
+									>
+										<span className="overflow-clip text-ellipsis whitespace-nowrap">
+											{stage.name}
+										</span>
+										<ArrowRight className="h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								);
 							})}
