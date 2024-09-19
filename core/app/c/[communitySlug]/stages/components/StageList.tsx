@@ -14,6 +14,7 @@ import { getPubs } from "~/lib/server";
 import { getMembers } from "~/lib/server/member";
 import { getCommunityStages, getIntegrationInstancesForStage } from "~/lib/server/stages";
 import { getStageWorkflows, makeStagesById, moveConstraintSourcesForStage } from "~/lib/stages";
+import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = {
@@ -84,7 +85,7 @@ async function StageCard({
 					<IntegrationActions stage={stage} token={token} />
 				</Suspense>
 			</div>
-			<Suspense fallback={<SkeletonCard />}>
+			<Suspense fallback={<PubListSkeleton amount={2} />}>
 				<StagePubs
 					stage={stage}
 					token={token}

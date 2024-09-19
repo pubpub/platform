@@ -1,9 +1,11 @@
+import { Suspense } from "react";
+
 import type { CommunitiesId, PubsId } from "db/public";
 import { cn } from "utils";
 
 import type { PubWithChildren } from "~/lib/server";
 import type { XOR } from "~/lib/types";
-import PubRow from "~/app/components/PubRow";
+import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
 import { getPubs } from "~/lib/server";
 
 type Props = {
@@ -14,9 +16,9 @@ type Props = {
  * Renders a list pubs
  * You can either pass the pubs directly, or the communityId to get all the pubs in the community
  */
-const PubList: React.FC<Props> = async (props) => {
-	const allPubs = props.pubs ?? (await getPubs({ communityId: props.communityId }));
-	const token = await props.token;
+const PubListInner: React.FC<Props> = async (props) => {
+	const pubsPromiseMaybe = props.pubs ?? getPubs({ communityId: props.communityId });
+	const [allPubs, token] = await Promise.all([pubsPromiseMaybe, props.token]);
 
 	return (
 		<div className={cn("flex flex-col gap-8")}>
@@ -26,4 +28,21 @@ const PubList: React.FC<Props> = async (props) => {
 		</div>
 	);
 };
+
+export const PubListSkeleton = ({ amount = 10 }: { amount?: number }) => (
+	<div className={cn("flex flex-col gap-8")}>
+		{Array.from({ length: amount }).map((_, index) => (
+			<PubRowSkeleton key={index} />
+		))}
+	</div>
+);
+
+const PubList: React.FC<Props> = async (props) => {
+	return (
+		<Suspense fallback={<PubListSkeleton />}>
+			<PubListInner {...props} />
+		</Suspense>
+	);
+};
+
 export default PubList;

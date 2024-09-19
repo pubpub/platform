@@ -34,9 +34,7 @@ export default async function Page({ params }: Props) {
 	return (
 		<>
 			<PubHeader communityId={community.id as CommunitiesId} />
-			<Suspense fallback={<div>Loading...</div>}>
-				<PubList communityId={community.id} token={tokenPromise} />
-			</Suspense>
+			<PubList communityId={community.id} token={tokenPromise} />
 		</>
 	);
 }

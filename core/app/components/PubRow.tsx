@@ -132,7 +132,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 	);
 };
 
-const PubRowSkeleton = () => (
+export const PubRowSkeleton = () => (
 	<Skeleton className="flex h-24 w-full flex-col gap-2 px-4 py-3">
 		<Skeleton className="mt-3 h-6 w-24 space-y-1.5" />
 		<Skeleton className="h-8 w-1/2 space-y-1.5" />
