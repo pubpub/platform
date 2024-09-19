@@ -12,7 +12,7 @@ import type { XOR } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubCached } from "~/lib/server";
 import IntegrationActions from "./IntegrationActions";
-import { PubDropDown } from "./PubCRUD/PubDropDown";
+import { PubDropDown } from "./pubs/PubDropDown";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 

@@ -15,7 +15,7 @@ import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
-import { PubIOButton } from "~/app/components/PubCRUD/PubIOButton";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
@@ -226,9 +226,8 @@ export default async function Page({
 				</p>
 			</div>
 			<div className="mb-2">
-				<PubIOButton
-					label="Add New Pub"
-					mode="create"
+				<CreatePubButton
+					text="Add New Pub"
 					communityId={community.id as CommunitiesId}
 					parentId={pub.id as PubsId}
 					searchParams={searchParams}

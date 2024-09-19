@@ -10,11 +10,20 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
+<<<<<<< HEAD:core/app/components/PubCRUD/PubDropDown.tsx
 import { SkeletonButton } from "../skeletons/SkeletonButton";
 import { PubIOButton } from "./PubIOButton";
 import { PubRemoveButton } from "./PubRemoveButton";
+=======
+import { RemovePubButton } from "./RemovePubButton";
+import { UpdatePubButton } from "./UpdatePubButton";
+>>>>>>> Pub Editor (#626):core/app/components/pubs/PubDropDown.tsx
 
-export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
+type Props = {
+	pubId: PubsId;
+};
+
+export const PubDropDown = (props: Props) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -24,6 +33,7 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="width">
 				<DropdownMenuItem asChild>
+<<<<<<< HEAD:core/app/components/PubCRUD/PubDropDown.tsx
 					<Suspense fallback={<SkeletonButton />} key={pubId}>
 						<PubIOButton
 							button={{
@@ -36,15 +46,21 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 							mode="update"
 						/>
 					</Suspense>
+=======
+					<UpdatePubButton
+						variant="ghost"
+						size="sm"
+						className="w-full justify-start"
+						pubId={props.pubId}
+						searchParams={{}}
+					/>
+>>>>>>> Pub Editor (#626):core/app/components/pubs/PubDropDown.tsx
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<PubRemoveButton
-						pubId={pubId}
-						button={{
-							variant: "ghost",
-							title: "Remove Pub",
-							className: "w-full justify-start",
-						}}
+					<RemovePubButton
+						pubId={props.pubId}
+						variant="ghost"
+						className="w-full justify-start"
 					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>

@@ -12,6 +12,14 @@ import { FileUploadElement } from "./elements/FIleUploadElement";
 import { TextElement } from "./elements/TextElement";
 import { UserIdSelect } from "./elements/UserSelectElement";
 
+export type FormElementProps = {
+	pubId?: PubsId;
+	element: Form["elements"][number];
+	searchParams: Record<string, unknown>;
+	communitySlug: string;
+	values: GetPubResponseBody["values"];
+};
+
 /**
  * Renders every CoreSchemaType EXCEPT MemberId!
  */
@@ -21,13 +29,7 @@ export const FormElement = ({
 	searchParams,
 	communitySlug,
 	values,
-}: {
-	pubId?: PubsId;
-	element: Form["elements"][number];
-	searchParams: Record<string, unknown>;
-	communitySlug: string;
-	values: GetPubResponseBody["values"];
-}) => {
+}: FormElementProps) => {
 	const { schemaName, label: labelProp, slug } = element;
 	if (!slug) {
 		if (element.type === ElementType.structural) {

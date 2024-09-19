@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CommunitiesId } from "db/public";
 import { Button } from "ui/button";
 
-import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 
 type Props = {
@@ -21,7 +21,7 @@ const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
 					fallback={<SkeletonButton className="w-20" />}
 					key={new Date().toString()}
 				>
-					<PubCreateButton communityId={communityId} searchParams={searchParams} />
+					<CreatePubButton communityId={communityId} searchParams={searchParams} />
 				</Suspense>
 				<Button variant="outline" size="sm" asChild>
 					<Link href="types">Manage Types</Link>

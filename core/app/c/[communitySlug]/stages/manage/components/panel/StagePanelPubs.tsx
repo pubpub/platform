@@ -5,14 +5,14 @@ import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
-import { PubIOButton } from "~/app/components/PubCRUD/PubIOButton";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { PubDropDown } from "~/app/components/pubs/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
 
 type PropsInner = {
-	stageId: string;
+	stageId: StagesId;
 	pageContext: PageContext;
 };
 
@@ -33,8 +33,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				<div className="flex flex-wrap items-center justify-between">
 					<h4 className="mb-2 text-base font-semibold">Pubs</h4>
 					<Suspense fallback={<SkeletonCard />}>
-						<PubIOButton
-							mode="create"
+						<CreatePubButton
 							stageId={props.stageId as StagesId}
 							searchParams={props.pageContext.searchParams}
 						/>
@@ -60,7 +59,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 };
 
 type Props = {
-	stageId?: string;
+	stageId?: StagesId;
 	pageContext: PageContext;
 };
 

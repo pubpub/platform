@@ -8,10 +8,7 @@ import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
 
-export const getCommunityById = <
-	K extends keyof Database,
-	EB extends ExpressionBuilder<Database, keyof Database>,
->(
+export const getCommunityById = <EB extends ExpressionBuilder<Database, keyof Database>>(
 	eb: EB,
 	communityId: CommunitiesId | ExpressionWrapper<Database, "stages", CommunitiesId>
 ) => {
@@ -76,7 +73,7 @@ export const getCommunityById = <
 	return autoCache(completeQuery);
 };
 
-export const getCommunityByStage = (stageId: StagesId) =>
+export const getStage = (stageId: StagesId) =>
 	autoCache(
 		db
 			.selectFrom("stages")
@@ -85,9 +82,9 @@ export const getCommunityByStage = (stageId: StagesId) =>
 				"stages.communityId",
 				"stages.name",
 				"stages.order",
-				jsonObjectFrom(getCommunityById(eb, eb.ref("stages.communityId")).qb).as(
-					"community"
-				),
+				jsonObjectFrom(getCommunityById(eb, eb.ref("stages.communityId")).qb)
+					.$notNull()
+					.as("community"),
 			])
 			.where("stages.id", "=", stageId)
 	);

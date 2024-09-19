@@ -29,12 +29,12 @@ import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
 import { useServerAction } from "~/lib/serverActions";
+import { PubField } from "~/lib/types";
 import * as actions from "./actions";
 import {
-	buildDefaultValues,
-	createElementFromPubType,
+	createEditorFormDefaultValuesFromPubFields,
+	createEditorFormSchemaFromPubFields,
 	createFieldsForSever,
-	createSchemaFromElements,
 } from "./helpers";
 
 type PubType = {
@@ -49,6 +49,7 @@ type Props = {
 	communityStages: Pick<Stages, "id" | "name" | "order">[];
 	parentId?: PubsId;
 	availablePubTypes: PubType["availablePubTypes"];
+	pubFields: Pick<PubField, "slug" | "schemaName">[];
 	pubValues: PubValues;
 	pubTypeId: PubTypes["id"];
 	formElements: React.ReactNode[];
@@ -58,7 +59,7 @@ type Props = {
 	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
 };
 
-function PubForm(props: Props) {
+export function PubEditorClient(props: Props) {
 	const pubType = props.availablePubTypes.find((type) => type.id === props.pubTypeId);
 
 	const [selectedPubType, setSelectedPubType] = useState<
@@ -74,8 +75,8 @@ function PubForm(props: Props) {
 	const runUpdatePub = useServerAction(actions.updatePub);
 
 	const path = usePathname();
-	const searchParams = useSearchParams();
 	const router = useRouter();
+	const searchParams = useSearchParams();
 
 	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 	urlSearchParams.delete(`${paramString}-pub-form`);
@@ -91,14 +92,12 @@ function PubForm(props: Props) {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const elements = selectedPubType ? createElementFromPubType(selectedPubType) : [];
-
 	const resolver = useMemo(
-		() => typeboxResolver(createSchemaFromElements(elements)),
+		() => typeboxResolver(createEditorFormSchemaFromPubFields(props.pubFields)),
 		[props.formElements]
 	);
 	const form = useForm({
-		defaultValues: buildDefaultValues(elements, props.pubValues),
+		defaultValues: createEditorFormDefaultValuesFromPubFields(props.pubFields, props.pubValues),
 		reValidateMode: "onChange",
 		resolver,
 	});
@@ -127,7 +126,7 @@ function PubForm(props: Props) {
 			if (result && "success" in result) {
 				toast({
 					title: "Success",
-					description: "Pub Successfully Updated",
+					description: "Pub successfully updated",
 				});
 				closeForm();
 			}
@@ -174,7 +173,7 @@ function PubForm(props: Props) {
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button size="sm" variant="outline">
-											{selectedPubType?.name || "Select PubType"}
+											{selectedPubType?.name || "Select Pub Type"}
 											<ChevronDown size="16" />
 										</Button>
 									</DropdownMenuTrigger>
@@ -264,5 +263,3 @@ function PubForm(props: Props) {
 		</Form>
 	);
 }
-
-export { PubForm as NewForm };
