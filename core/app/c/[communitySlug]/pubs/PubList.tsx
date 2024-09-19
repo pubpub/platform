@@ -15,7 +15,7 @@ type Props = {
  * You can either pass the pubs directly, or the communityId to get all the pubs in the community
  */
 const PubList: React.FC<Props> = async (props) => {
-	const allPubs = props.pubs ?? (await getPubs(props.communityId));
+	const allPubs = props.pubs ?? (await getPubs({ communityId: props.communityId }));
 	const token = await props.token;
 
 	return (

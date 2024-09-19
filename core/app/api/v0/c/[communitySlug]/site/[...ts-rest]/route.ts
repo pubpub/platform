@@ -117,7 +117,7 @@ const handler = createNextHandler(
 					ApiAccessType.read
 				);
 
-				const pubs = await getPubs(community.id as CommunitiesId, req.query);
+				const pubs = await getPubs({ communityId: community.id }, req.query);
 
 				return {
 					status: 200,

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
@@ -24,6 +24,7 @@ import { pubValuesByVal } from "~/lib/server";
 import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createToken } from "~/lib/server/token";
+import { MemberWithUser, PubWithValues } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
@@ -103,6 +104,7 @@ export default async function Page({
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
 
+	const { stages, children, ...slimPub } = pub;
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8">
@@ -198,7 +200,12 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
-							<Assign members={community.members} pub={pub} />
+							<Assign
+								// TODO: Remove this cast
+								members={community.members as unknown as MemberWithUser[]}
+								// TODO: Remove this cast
+								pub={slimPub as unknown as PubWithValues}
+							/>
 						</div>
 					</div>
 				</div>
