@@ -23,7 +23,7 @@ export default async function Page({ params, searchParams }: Props) {
 		notFound();
 	}
 
-	const token = await createToken({
+	const token = createToken({
 		userId: user.id as UsersId,
 		type: AuthTokenType.generic,
 	});

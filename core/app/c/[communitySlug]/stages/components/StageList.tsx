@@ -17,16 +17,17 @@ import { getStageWorkflows, makeStagesById, moveConstraintSourcesForStage } from
 import { StagePubActions } from "./StagePubActions";
 
 type Props = {
-	token: string;
+	token: string | Promise<string>;
 	communityId: CommunitiesId;
 	pageContext: PageContext;
 };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 export async function StageList(props: Props) {
-	const [communityStages, communityMembers] = await Promise.all([
+	const [communityStages, communityMembers, token] = await Promise.all([
 		getCommunityStages(props.communityId).execute(),
 		getMembers({ communityId: props.communityId }).execute(),
+		props.token,
 	]);
 
 	const stageWorkflows = getStageWorkflows(communityStages);
@@ -41,7 +42,7 @@ export async function StageList(props: Props) {
 							key={stage.id}
 							stage={stage}
 							stageById={stageById}
-							token={props.token}
+							token={token}
 							members={communityMembers}
 							pageContext={props.pageContext}
 						/>
