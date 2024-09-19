@@ -11,6 +11,7 @@ import type {
 	StagesUpdate,
 } from "db/public";
 
+import type { AutoReturnType } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -237,6 +238,8 @@ export const getCommunityStages = (communityId: CommunitiesId) =>
 			.selectAll("stages")
 			.orderBy("order asc")
 	);
+
+export type CommunityStage = AutoReturnType<typeof getCommunityStagesFull>["executeTakeFirst"];
 
 export const getIntegrationInstanceBase = (trx = db) =>
 	trx

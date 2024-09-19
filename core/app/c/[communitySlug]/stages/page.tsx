@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import type { UsersId } from "db/public";
@@ -17,8 +18,11 @@ export const metadata: Metadata = {
 type Props = { params: { communitySlug: string }; searchParams: Record<string, string> };
 
 export default async function Page({ params, searchParams }: Props) {
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug(params.communitySlug);
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(params.communitySlug),
+	]);
+
 	if (!community) {
 		notFound();
 	}

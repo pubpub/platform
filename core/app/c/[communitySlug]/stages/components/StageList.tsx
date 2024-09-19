@@ -1,14 +1,14 @@
 import { Fragment, Suspense } from "react";
 import Link from "next/link";
 
-import type { CommunitiesId, MoveConstraint, StagesId } from "db/public";
+import type { CommunitiesId } from "db/public";
 import { Button } from "ui/button";
 
+import type { CommunityStage } from "../manage/page";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { StagesById, StageThingy } from "~/lib/stages";
 import type { MemberWithUser } from "~/lib/types";
 import PubRow from "~/app/components/PubRow";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubs } from "~/lib/server";
 import { getMembers } from "~/lib/server/member";
@@ -61,17 +61,7 @@ async function StageCard({
 	pageContext,
 	members,
 }: {
-	stage: {
-		name: string;
-		id: StagesId;
-		communityId: CommunitiesId;
-		createdAt: Date;
-		updatedAt: Date;
-		order: string;
-	} & {
-		moveConstraints: MoveConstraint[];
-		moveConstraintSources: MoveConstraint[];
-	};
+	stage: CommunityStage;
 	stageById: StagesById;
 	token: string;
 	members?: MemberWithUser[];
@@ -85,7 +75,7 @@ async function StageCard({
 					<IntegrationActions stage={stage} token={token} />
 				</Suspense>
 			</div>
-			<Suspense fallback={<PubListSkeleton amount={2} />}>
+			<Suspense fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} />}>
 				<StagePubs
 					stage={stage}
 					token={token}
