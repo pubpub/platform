@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { useLocalStorage } from "ui/hooks";
 
-import type { StagePayload } from "~/lib/types";
+import { CommunityStage } from "../../page";
 import { useStages } from "../../StagesContext";
 
 export type StageEditorContext = {
