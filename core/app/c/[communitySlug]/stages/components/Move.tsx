@@ -3,10 +3,9 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "ui/button";
-import { Loader2 } from "ui/icon";
+import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
-import { cn } from "utils";
 
 import type { PubPayload, StagePayload } from "~/lib/server/_legacy-integration-queries";
 import { isClientException, useServerAction } from "~/lib/serverActions";
@@ -114,7 +113,7 @@ export default function Move(props: Props) {
 								return stage.id === props.stage.id ? null : (
 									<Button
 										disabled={isMoving}
-										variant="ghost"
+										variant="outline"
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
@@ -125,8 +124,12 @@ export default function Move(props: Props) {
 												);
 											})
 										}
+										className="flex justify-start gap-x-1"
 									>
-										{stage.name}
+										<ArrowLeft className="h-4 w-4 shrink-0 opacity-50" />
+										<span className="overflow-clip text-ellipsis whitespace-nowrap">
+											{stage.name}
+										</span>
 									</Button>
 								);
 							})}

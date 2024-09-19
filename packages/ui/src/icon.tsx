@@ -3,6 +3,7 @@ export {
 	AlertCircle,
 	Archive,
 	ArchiveRestore,
+	ArrowLeft,
 	ArrowRight,
 	BadgeCheck,
 	Bookmark,
