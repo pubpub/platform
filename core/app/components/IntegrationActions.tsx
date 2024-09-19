@@ -9,10 +9,7 @@ import type {
 } from "db/public";
 import { Button } from "ui/button";
 
-import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { getIntegrationInstanceBase, getIntegrationInstancesForStage } from "~/lib/server/stages";
-import { XOR } from "~/lib/types";
+import { getIntegrationInstancesForStage } from "~/lib/server/stages";
 
 type Props = {
 	token: string;

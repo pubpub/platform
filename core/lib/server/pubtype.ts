@@ -1,8 +1,10 @@
-import { ExpressionBuilder, SelectQueryBuilder, sql } from "kysely";
+import type { ExpressionBuilder } from "kysely";
+
+import { SelectQueryBuilder, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { Database } from "db/Database";
 import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
-import { Database } from "db/Database";
 
 import type { XOR } from "../types";
 import type { GetManyParams } from "./pub";

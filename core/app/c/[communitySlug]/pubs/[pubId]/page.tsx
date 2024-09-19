@@ -8,6 +8,7 @@ import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
+import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -24,7 +25,6 @@ import { pubValuesByVal } from "~/lib/server";
 import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createToken } from "~/lib/server/token";
-import { MemberWithUser, PubWithValues } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/JsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
@@ -156,7 +156,14 @@ export default async function Page({
 						<div className="mb-1 text-lg font-bold">Integrations</div>
 						<div>
 							<Suspense>
-								<IntegrationActions pubId={pub.id as PubsId} token={token} />
+								{pub.stages[0]?.stageId && (
+									<IntegrationActions
+										pubId={pub.id as PubsId}
+										token={token}
+										stageId={pub.stages[0].stageId as StagesId}
+										type="pub"
+									/>
+								)}
 							</Suspense>
 						</div>
 					</div>
