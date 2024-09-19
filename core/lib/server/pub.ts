@@ -35,8 +35,8 @@ type PubNoChildren = {
 	values: PubValues;
 };
 
-type NestedPub<T extends PubNoChildren = PubNoChildren> = T & {
-	children: NestedPub[];
+type NestedPub<T extends PubNoChildren = PubNoChildren> = Omit<T, "children"> & {
+	children: NestedPub<T>[];
 };
 
 type FlatPub = PubNoChildren & {

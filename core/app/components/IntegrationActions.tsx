@@ -4,10 +4,12 @@ import { Button } from "ui/button";
 import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getIntegrationInstanceBase } from "~/lib/server/stages";
+import { XOR } from "~/lib/types";
 
 type Props = {
-	pubId: PubsId;
 	token: string;
+	pubId: PubsId;
+	integrationInstances?: IntegrationInstance[];
 };
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
@@ -43,11 +45,13 @@ const getButtons = (pubId: PubsId, instances: IntegrationInstance[], token: Prop
 };
 
 const IntegrationActions = async (props: Props) => {
-	const integrationInstances = await autoCache(
-		getIntegrationInstanceBase()
-			.innerJoin("PubsInStages", "integration_instances.stageId", "PubsInStages.stageId")
-			.where("PubsInStages.pubId", "=", props.pubId)
-	).execute();
+	const integrationInstances =
+		props?.integrationInstances ??
+		(await autoCache(
+			getIntegrationInstanceBase()
+				.innerJoin("PubsInStages", "integration_instances.stageId", "PubsInStages.stageId")
+				.where("PubsInStages.pubId", "=", props.pubId)
+		).execute());
 
 	const buttons = getButtons(props.pubId, integrationInstances, props.token);
 

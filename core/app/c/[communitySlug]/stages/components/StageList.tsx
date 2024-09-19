@@ -1,21 +1,17 @@
-import type { User as LuciaUser } from "lucia";
-
 import { Fragment, Suspense } from "react";
 import Link from "next/link";
 
 import type { CommunitiesId, MoveConstraint, StagesId } from "db/public";
-import { UsersId } from "db/public";
 import { Button } from "ui/button";
 
-import type {
-	CommunityMemberPayload,
-	StagePayload,
-} from "~/lib/server/_legacy-integration-queries";
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { StagesById, StageThingy } from "~/lib/stages";
+import type { MemberWithUser } from "~/lib/types";
 import PubRow from "~/app/components/PubRow";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStagePubs } from "~/lib/db/queries";
-import { getPubUsers } from "~/lib/permissions";
+import { getStageActions } from "~/lib/db/queries";
+import { getPubs } from "~/lib/server";
+import { getMembers } from "~/lib/server/member";
 import { getCommunityStages, getIntegrationInstancesForStage } from "~/lib/server/stages";
 import { getStageWorkflows, makeStagesById, moveConstraintSourcesForStage } from "~/lib/stages";
 import { StagePubActions } from "./StagePubActions";
@@ -23,11 +19,15 @@ import { StagePubActions } from "./StagePubActions";
 type Props = {
 	token: string;
 	communityId: CommunitiesId;
+	pageContext: PageContext;
 };
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 export async function StageList(props: Props) {
-	const communityStages = await getCommunityStages(props.communityId).execute();
+	const [communityStages, communityMembers] = await Promise.all([
+		getCommunityStages(props.communityId).execute(),
+		getMembers({ communityId: props.communityId }).execute(),
+	]);
 
 	const stageWorkflows = getStageWorkflows(communityStages);
 	const stageById = makeStagesById(communityStages);
@@ -42,6 +42,8 @@ export async function StageList(props: Props) {
 							stage={stage}
 							stageById={stageById}
 							token={props.token}
+							members={communityMembers}
+							pageContext={props.pageContext}
 						/>
 					))}
 				</div>
@@ -54,6 +56,8 @@ async function StageCard({
 	stage,
 	stageById,
 	token,
+	pageContext,
+	members,
 }: {
 	stage: {
 		name: string;
@@ -68,9 +72,9 @@ async function StageCard({
 	};
 	stageById: StagesById;
 	token: string;
+	members?: MemberWithUser[];
+	pageContext: PageContext;
 }) {
-	// const users = getPubUsers(stage.permissions);
-	// users should be just member but these are users
 	return (
 		<div key={stage.id} className="mb-20">
 			<div className="flex flex-row justify-between">
@@ -80,7 +84,13 @@ async function StageCard({
 				</Suspense>
 			</div>
 			<Suspense fallback={<SkeletonCard />}>
-				<StagePubs stage={stage} token={token} stageById={stageById} />
+				<StagePubs
+					stage={stage}
+					token={token}
+					stageById={stageById}
+					pageContext={pageContext}
+					members={members}
+				/>
 			</Suspense>
 		</div>
 	);
@@ -116,45 +126,49 @@ async function StagePubs({
 	stage,
 	token,
 	stageById,
+	pageContext,
+	members,
 }: {
 	stage: StageThingy;
 	token: string;
 	stageById: StagesById;
+	pageContext: PageContext;
+	members?: MemberWithUser[];
 }) {
-	const stagePubs = await getStagePubs(stage.id).execute();
+	const [stagePubs, actionInstances] = await Promise.all([
+		getPubs({ stageId: stage.id }),
+		getStageActions(stage.id).execute(),
+	]);
 
 	const sources = moveConstraintSourcesForStage(stage, stageById);
 	const destinations = stage.moveConstraints.map((stage) => stageById[stage.destinationId]);
+
 	return (
 		<div className="flex flex-col gap-9">
 			{stagePubs.map((pub, index, list) => {
+				// this way we don't pass unecessary data to the client
+				const { children, ...basePub } = pub;
 				return (
-					<Suspense
-						fallback={
-							<div className="flex flex-row items-center justify-center">
-								Loading...
-							</div>
-						}
-						key={pub.id}
-					>
-						<Fragment>
-							<PubRow
-								key={pub.id}
-								pubId={pub.id}
-								token={token}
-								actions={
-									<StagePubActions
-										key={stage.id}
-										moveFrom={sources}
-										moveTo={destinations}
-										pub={pub}
-										stage={stage}
-									/>
-								}
-							/>
-							{index < list.length - 1 && <hr />}
-						</Fragment>
-					</Suspense>
+					<Fragment key={pub.id}>
+						<PubRow
+							key={pub.id}
+							pub={pub}
+							token={token}
+							actions={
+								<StagePubActions
+									key={stage.id}
+									moveFrom={sources}
+									moveTo={destinations}
+									pub={basePub}
+									stage={stage}
+									actionInstances={actionInstances}
+									pageContext={pageContext}
+									members={members}
+								/>
+							}
+						/>
+						{index < list.length - 1 && <hr />}
+					</Fragment>
 				);
 			})}
 		</div>

@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsi
 import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
-import type { PubWithChildren } from "~/lib/server";
+import type { PubValues, PubWithChildren } from "~/lib/server";
 import type { XOR } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubCached } from "~/lib/server";
@@ -24,6 +24,8 @@ type Props = {
 type MinimalRecursivePubChildren = {
 	id: PubsId;
 	pubType: PubWithChildren["pubType"];
+	values: PubValues;
+	createdAt: Date;
 	children: MinimalRecursivePubChildren[];
 };
 const groupPubChildrenByPubType = (pubs: MinimalRecursivePubChildren[]) => {
@@ -36,13 +38,13 @@ const groupPubChildrenByPubType = (pubs: MinimalRecursivePubChildren[]) => {
 					pubs: [],
 				};
 			}
-			prev[pubType.id].pubs.push(curr as unknown as PubWithChildren["children"][number]);
+			prev[pubType.id].pubs.push(curr);
 			return prev;
 		},
 		{} as {
 			[key: string]: {
 				pubType: PubWithChildren["pubType"];
-				pubs: PubWithChildren["children"];
+				pubs: MinimalRecursivePubChildren[];
 			};
 		}
 	);
@@ -77,7 +79,7 @@ const ChildHierarchy = ({ pub }: { pub: MinimalRecursivePubChildren }) => {
 };
 
 const PubRow: React.FC<Props> = async (props: Props) => {
-	const pub = props.pubId ? await getPubCached(props.pubId) : props.pub;
+	const pub = (props.pubId ? await getPubCached(props.pubId) : props.pub) as PubWithChildren;
 	if (!pub) {
 		return null;
 	}
@@ -92,10 +94,10 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 						</div>
 						<div className="flex flex-row gap-x-2">
 							<Suspense>
-								<IntegrationActions pubId={pub.id as PubsId} token={props.token} />
+								<IntegrationActions pubId={pub.id} token={props.token} />
 							</Suspense>
 							<div>{props.actions}</div>
-							<PubDropDown pubId={pub.id as PubsId} />
+							<PubDropDown pubId={pub.id} />
 						</div>
 					</div>
 				</RowHeader>

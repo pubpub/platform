@@ -1,21 +1,27 @@
-import type {
-	CommunityMemberPayload,
-	PubPayload,
-	StagePayloadMoveConstraintDestination,
-} from "~/lib/server/_legacy-integration-queries";
+import { Suspense } from "react";
+
+import type { ActionInstances } from "db/public";
+
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { StagePayloadMoveConstraintDestination } from "~/lib/server/_legacy-integration-queries";
 import type { StageThingy } from "~/lib/stages";
-import { getMembers } from "~/lib/server/member";
-import Assign from "./Assign";
+import type { MemberWithUser, PubWithValues } from "~/lib/types";
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
+import { AssignWrapper } from "./AssignWrapper";
 import Move from "./Move";
 
 type Props = {
-	members: CommunityMemberPayload[];
-	pub: PubPayload;
+	members?: MemberWithUser[];
+	moveFrom: StagePayloadMoveConstraintDestination[];
+	moveTo: StagePayloadMoveConstraintDestination[];
+	pub: PubWithValues;
 	stage: StageThingy;
+	actionInstances: ActionInstances[];
+	pageContext: PageContext;
 };
 
 export const StagePubActions = async (props: Props) => {
-	const communityMembers = await getMembers({ communityId: props.stage.communityId }).execute();
 	return (
 		<div className="flex shrink-0 items-end gap-2">
 			<Move
@@ -24,7 +30,15 @@ export const StagePubActions = async (props: Props) => {
 				moveTo={props.moveTo}
 				moveFrom={props.moveFrom}
 			/>
-			<Assign members={communityMembers} pub={props.pub} />
+			<AssignWrapper pub={props.pub} members={props.members} />
+			<Suspense fallback={<SkeletonButton className="w-20" />}>
+				<PubsRunActionDropDownMenu
+					pubId={props.pub.id}
+					actionInstances={props.actionInstances}
+					pageContext={props.pageContext}
+					stage={props.stage}
+				/>
+			</Suspense>
 		</div>
 	);
 };

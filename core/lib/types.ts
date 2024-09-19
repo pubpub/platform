@@ -1,6 +1,14 @@
-import type { Communities, Members, PubFields, PubFieldsId, PubTypes, Users } from "db/public";
+import type {
+	Communities,
+	Members,
+	PubFields,
+	PubFieldsId,
+	Pubs,
+	PubTypes,
+	Users,
+} from "db/public";
 
-import type { QB } from "./server/cache/types";
+import type { PubValues } from "./server";
 
 export type UserWithMemberships = Omit<Users, "passwordHash"> & {
 	memberships: Members[];
@@ -18,6 +26,8 @@ export type UserLoginData = Omit<Users, "passwordHash">;
 export type UserSetting = Pick<Users, "firstName" | "lastName" | "email" | "slug"> & {
 	communities: Communities[];
 };
+
+export type PubWithValues = Omit<Pubs, "valuesBlob"> & { values: PubValues };
 
 /**
  * https://www.totaltypescript.com/concepts/the-prettify-helper
@@ -90,9 +100,3 @@ export type OR<T extends Record<string, unknown>, P extends Record<string, unkno
 	| ({ [K in keyof P]: P[K] } & { [K in keyof T]?: never })
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]: P[K] })
 >;
-
-export type AutoReturnType<T extends (...args: any[]) => QB<any>> = {
-	[K in "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"]: Awaited<
-		ReturnType<ReturnType<T>[K]>
-	>;
-};

@@ -2,7 +2,7 @@
 
 import assert from "assert";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -75,6 +75,15 @@ export function UserSelectClient({
 	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
+
+	useEffect(() => {
+		// remove the query param on unmount
+		return () => {
+			const newParams = new URLSearchParams(params);
+			newParams.delete(queryParamName);
+			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+		};
+	}, []);
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
