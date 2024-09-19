@@ -47,7 +47,8 @@
     "prosemirror-suggest": "^3.0.0",
     "prosemirror-transform": "^1.10.0",
     "prosemirror-view": "^1.34.2",
-    "ui": "workspace:*"
+    "ui": "workspace:*",
+    "uuid": "^9.0.0"
   },
   "prettier": "@pubpub/prettier-config"
 }

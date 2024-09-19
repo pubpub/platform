@@ -16,15 +16,19 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 
 import ContextAtom from "./components/ContextAtom";
 import SuggestPanel from "./components/SuggestPanel";
+import { suggest } from "prosemirror-suggest";
 
 export interface ContextEditorProps {
 	placeholder?: string;
 	initialDoc?: object;
+	pubId: string;
+	pubTypeId: string;
 	pubTypes: object /* pub types in given context */;
-	getPubs: () => {};
+	getPubs: (filter:string) => any[];
 	getPubById: () => {} /* function to get a pub, both for autocomplete, and for id? */;
 	onChange: () => {} /* Something that passes up view, state, etc so parent can handle onSave, etc */;
 	atomRenderingComponent: any /* A react component that takes in the ContextAtom pubtype and renders it accordingly */;
+
 }
 export interface PanelProps {
 	top: number;
@@ -109,11 +113,12 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	useEffect(() => {
 		/* Every Render */
 		if (view.current) {
-			const tr = view.current.state.tr.setMeta(reactPropsKey, props);
+			console.log('Updating');
+			const tr = view.current.state.tr.setMeta(reactPropsKey, {...props, suggestData, setSuggestData});
 			view.current?.dispatch(tr);
 		}
-	}, [props]);
-
+	}, [props, suggestData]);
+	console.log('in main editor', suggestData)
 	return (
 		<div id="context-editor-container" className="relative max-w-screen-sm">
 			<div ref={viewHost} className="font-serif"/>

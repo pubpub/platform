@@ -10,6 +10,7 @@ export default {
 		id: { default: null },
 		class: { default: null },
 		pubId: { default: null },
+		fieldSlug: {default: null},
 	},
 	parseDOM: [
 		{
