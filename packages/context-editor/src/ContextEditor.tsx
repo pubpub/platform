@@ -15,13 +15,14 @@ import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
 
 import ContextAtom from "./components/ContextAtom";
+import SuggestPanel from "./components/SuggestPanel";
 
 export interface ContextEditorProps {
 	placeholder?: string;
 	initialDoc?: object;
 	pubTypes: object /* pub types in given context */;
-	getPubsByTitle: () => {};
-	getPubValues: () => {} /* function to get a pub, both for autocomplete, and for id? */;
+	getPubs: () => {};
+	getPubById: () => {} /* function to get a pub, both for autocomplete, and for id? */;
 	onChange: () => {} /* Something that passes up view, state, etc so parent can handle onSave, etc */;
 	atomRenderingComponent: any /* A react component that takes in the ContextAtom pubtype and renders it accordingly */;
 }
@@ -43,15 +44,28 @@ const initPanelProps: PanelProps = {
 	node: undefined,
 };
 
-export default function WrappedEditor(props: ContextEditorProps) {
+export interface SuggestProps {
+	isOpen: boolean;
+	selectedIndex: number;
+	items: any[];
+	filter: string;
+}
+const initSuggestProps: SuggestProps = {
+	isOpen: false,
+	selectedIndex: 0,
+	items: [],
+	filter: '',
+};
+
+export default function ContextEditor(props: ContextEditorProps) {
 	return (
 		<ProsemirrorAdapterProvider>
-			<Editor {...props} />
+			<UnwrappedEditor {...props} />
 		</ProsemirrorAdapterProvider>
 	);
 }
 
-function Editor(props: ContextEditorProps) {
+function UnwrappedEditor(props: ContextEditorProps) {
 	const Renderer = useMemo(() => {
 		return () => {
 			return <ContextAtom />;
@@ -61,6 +75,7 @@ function Editor(props: ContextEditorProps) {
 	const viewHost = useRef<HTMLDivElement | null>(null);
 	const view = useRef<EditorView | null>(null);
 	const [panelPosition, setPanelPosition] = useState<PanelProps>(initPanelProps);
+	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
 
 	/* This useEffect approach of making the props available to prosemirror  */
 	/* plugins from: https://discuss.prosemirror.net/t/lightweight-react-integration-example/2680 */
@@ -69,7 +84,7 @@ function Editor(props: ContextEditorProps) {
 		const state = EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
 			schema: baseSchema,
-			plugins: basePlugins(baseSchema, props, setPanelPosition),
+			plugins: basePlugins(baseSchema, props, setPanelPosition, suggestData, setSuggestData),
 		});
 		if (viewHost.current) {
 			view.current = new EditorView(viewHost.current, {
@@ -100,9 +115,10 @@ function Editor(props: ContextEditorProps) {
 	}, [props]);
 
 	return (
-		<div className="editor-wrapper">
-			<div ref={viewHost} />
+		<div id="context-editor-container" className="relative max-w-screen-sm">
+			<div ref={viewHost} className="font-serif"/>
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
+			<SuggestPanel {...suggestData} />
 		</div>
 	);
 }

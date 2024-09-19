@@ -1,0 +1,22 @@
+[
+	{
+	  "id": "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
+	  "communityId": "f4888968-f213-498f-8136-aa818b0bd129",
+	  "createdAt": "2024-09-17T14:51:09.998",
+	  "parentId": null,
+	  "pubTypeId": "67704c04-4f04-46e9-b93e-e3988a992a9b",
+	  "updatedAt": "2024-09-17T14:51:09.998",
+	  "assigneeId": null,
+	  "values": {
+		"rd:content": "",
+		"rd:title": "Explorations of nano-particle trampolines",
+		"rd:published-date": ""
+	  },
+	  "stages": [
+		{
+		  "id": "69b92fb0-691e-447b-a83d-b9af85f4f95f"
+		}
+	  ],
+	  "children": []
+	}
+  ]

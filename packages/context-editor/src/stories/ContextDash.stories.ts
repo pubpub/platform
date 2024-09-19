@@ -1,20 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import ContextEditor from "../ContextEditor";
+import EditorDash from "./EditorDash";
 import initialDoc from "./initialDoc.json";
 import initialPubs from "./initialPubs.json";
 import initialTypes from "./initialTypes.json";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-	title: "ContextEditor",
-	component: ContextEditor,
+	title: "EditorDash",
+	component: EditorDash,
 	parameters: {},
 	tags: ["autodocs"],
 	argTypes: {
 		placeholder: { control: "text" },
 	},
-} satisfies Meta<typeof ContextEditor>;
+} satisfies Meta<typeof EditorDash>;
 
 export default meta;
 

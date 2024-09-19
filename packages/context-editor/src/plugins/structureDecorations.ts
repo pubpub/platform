@@ -25,8 +25,10 @@ function wrapWidget(
 		widget.addEventListener("click", (evt) => {
 			if (evt.target instanceof Element) {
 				const rect = evt.target.getBoundingClientRect();
+				const container = document.getElementById('context-editor-container');
+				const topOffset = (-1 * container.getBoundingClientRect().top) + container.scrollTop + 16;
 				setPanelPosition({
-					top: isBlock ? rect.top : rect.top - 17,
+					top: isBlock ? rect.top + 4 +topOffset: rect.top - 17 + topOffset,
 					left: rect.left,
 					bottom: rect.bottom,
 					// right: rect.right,
