@@ -25,10 +25,11 @@ function wrapWidget(
 		widget.addEventListener("click", (evt) => {
 			if (evt.target instanceof Element) {
 				const rect = evt.target.getBoundingClientRect();
-				const container = document.getElementById('context-editor-container');
-				const topOffset = (-1 * container.getBoundingClientRect().top) + container.scrollTop + 16;
+				const container = document.getElementById("context-editor-container");
+				const topOffset =
+					-1 * container.getBoundingClientRect().top + container.scrollTop + 16;
 				setPanelPosition({
-					top: isBlock ? rect.top + 4 +topOffset: rect.top - 17 + topOffset,
+					top: isBlock ? rect.top + 4 + topOffset : rect.top - 17 + topOffset,
 					left: rect.left,
 					bottom: rect.bottom,
 					// right: rect.right,
@@ -44,11 +45,24 @@ function wrapWidget(
 
 export default () => {
 	return new Plugin({
+		// view: () => {
+		// 	return {
+		// 		update: (editorView) => {
+		// 			const { panelPosition, setPanelPosition } = attributePanelKey.getState(
+		// 				editorView.state
+		// 			);
+		// 			// setPanelPosition({
+		// 			// 	...panelPosition,
+		// 			// 	// node: editorView.state.doc.nodeAt(panelPosition.pos),
+		// 			// });
+		// 		},
+		// 	};
+		// },
 		props: {
 			decorations: (state) => {
 				// console.log(state.doc.toJSON());
 				const decorations: Decoration[] = [];
-				const setPanelPosition = attributePanelKey.getState(state);
+				const { setPanelPosition } = attributePanelKey.getState(state);
 				state.doc.descendants((node, pos) => {
 					if (node.type.isBlock) {
 						decorations.push(

@@ -11,7 +11,7 @@ export default function ContextAtom() {
 			ref={contentRef}
 		>
 			{node.attrs.data?.type === "image" && <img src={node.attrs.data.src} />}
-			{node.attrs.data?.type !== "image" && JSON.stringify({ node }, null, 2)}
+			{/* node.attrs.data?.type !== "image" &&  */JSON.stringify({ node }, null, 2)}
 		</section>
 	);
 }

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { EditorView } from "prosemirror-view";
 
+import { Input } from "ui/input";
+import { Label } from "ui/label";
+
 import { PanelProps } from "../ContextEditor";
 
 const animationTimeMS = 150;
@@ -30,55 +33,117 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 				setPosition({ ...panelPosition });
 			}, 0);
 			setTimeout(() => {
-				setHeight(250);
+				setHeight(300);
 			}, animationTimeMS);
 		}
 	}, [panelPosition]);
-
+	const labelClass = "font-normal text-xs";
+	const inputClass = "h-8 text-xs rounded-sm border-neutral-300";
+	const node = position.node;
+	// if (!node) {
+	// 	return null;
+	// }
+	console.log("rerender");
+	const updateAttr = (attrKey, value) => {
+		setPosition({
+			...position,
+			node: {
+				...node,
+				attrs: { ...node.attrs, [attrKey]: value },
+			},
+		});
+		viewRef.current?.dispatch(
+			viewRef.current.state.tr.setNodeMarkup(
+				panelPosition.pos,
+				node.type,
+				{ ...node.attrs, [attrKey]: value },
+				node.marks
+			)
+		);
+	};
+	const updateData = (attrKey, value) => {
+		setPosition({
+			...position,
+			node: {
+				...node,
+				attrs: { ...node.attrs, data: { ...node.attrs.data, [attrKey]: value } },
+			},
+		});
+		viewRef.current?.dispatch(
+			viewRef.current.state.tr.setNodeMarkup(
+				panelPosition.pos,
+				node.type,
+				{ ...node.attrs, data: { ...node.attrs.data, [attrKey]: value } },
+				node.marks
+			)
+		);
+	};
 	return (
 		<>
-			<div
-				style={{
-					// borderTop: "1px solid #777",
-					position: "absolute",
-					background: "#f7f7f7",
-					top: position.top,
-					right: position.right,
-					width: 250,
-					padding: "1em",
-					height: height,
-					opacity: height ? 1 : 0,
-					overflow: "scroll",
-					borderLeft: "1px solid #999",
-					borderRight: "1px solid #999",
-					borderBottom: `${height ? 1 : 0}px solid #999`,
-					borderRadius: "0px 0px 2px 2px",
-					transition:
-						panelPosition.top === 0
-							? ""
-							: `height ${animationHeightMS}ms linear, opacity ${animationHeightMS}ms linear `,
-				}}
-			>
-				{panelPosition.top}
-				<hr />
-				<input
-					onChange={(evt) => {
-						const node = panelPosition.node;
-						if (node) {
-							viewRef.current?.dispatch(
-								viewRef.current.state.tr.setNodeMarkup(
-									panelPosition.pos,
-									node.type,
-									{ ...node.attrs, level: evt.target.value },
-									node.marks
-								)
-							);
-						}
+			{node && (
+				<div
+					style={{
+						// borderTop: "1px solid #777",
+						position: "absolute",
+						background: "#f7f7f7",
+						top: position.top,
+						right: position.right,
+						width: 300,
+						padding: "1em",
+						height: height,
+						opacity: height ? 1 : 0,
+						overflow: "scroll",
+						borderLeft: "1px solid #999",
+						borderRight: "1px solid #999",
+						borderBottom: `${height ? 1 : 0}px solid #999`,
+						borderRadius: "0px 0px 2px 2px",
+						transition:
+							panelPosition.top === 0
+								? ""
+								: `height ${animationHeightMS}ms linear, opacity ${animationHeightMS}ms linear `,
 					}}
-				/>
-				<hr />
-				{JSON.stringify(panelPosition.node?.attrs, null, 2)}
-			</div>
+				>
+					<div className="text-sm">Attributes</div>
+					{Object.keys(node.attrs).map((attrKey) => {
+						if (attrKey === "data") {
+							return null;
+						}
+						return (
+							<div>
+								<Label className={labelClass}>{attrKey}</Label>
+								<Input
+									className={inputClass}
+									type="text"
+									value={node.attrs[attrKey] || ""}
+									onChange={(evt) => {
+										updateAttr(attrKey, evt.target.value);
+									}}
+								/>
+							</div>
+						);
+					})}
+					{node.attrs.data && (
+						<>
+							<div className="mt-8 text-sm">Data</div>
+							{Object.keys(node.attrs.data).map((attrKey) => {
+								return (
+									<div>
+										<Label className={labelClass}>{attrKey}</Label>
+										<Input
+											className={inputClass}
+											type="text"
+											value={node.attrs.data[attrKey] || ""}
+											onChange={(evt) => {
+												updateData(attrKey, evt.target.value);
+											}}
+										/>
+									</div>
+								);
+							})}
+						</>
+					)}
+				</div>
+			)}
 			<div
 				style={{
 					background: "#777",

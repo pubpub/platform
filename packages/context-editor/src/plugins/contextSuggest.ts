@@ -124,9 +124,10 @@ export default (
 					{
 						pubId,
 						fieldSlug,
+						data: {}, /* Populate with data if available */
 					},
 					/* Try to pull value if it exists, otherwise initialize with blank paragraph */
-					view.state.schema.nodeFromJSON({ type: "paragraph" })
+					isAtom ? undefined : view.state.schema.nodeFromJSON({ type: "paragraph" })
 				)
 			);
 			view.dispatch(tr);

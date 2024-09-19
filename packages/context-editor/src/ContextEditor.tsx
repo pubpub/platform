@@ -7,6 +7,7 @@ import { EditorView } from "prosemirror-view";
 import { AttributePanel } from "./components/AttributePanel";
 // import applyDevTools from "prosemirror-dev-tools";
 import { basePlugins } from "./plugins";
+import { attributePanelKey } from "./plugins/attributePanel";
 import { reactPropsKey } from "./plugins/reactProps";
 import { baseSchema } from "./schemas";
 
@@ -14,9 +15,10 @@ import "./style.css";
 import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
 
+import { suggest } from "prosemirror-suggest";
+
 import ContextAtom from "./components/ContextAtom";
 import SuggestPanel from "./components/SuggestPanel";
-import { suggest } from "prosemirror-suggest";
 
 export interface ContextEditorProps {
 	placeholder?: string;
@@ -24,11 +26,10 @@ export interface ContextEditorProps {
 	pubId: string;
 	pubTypeId: string;
 	pubTypes: object /* pub types in given context */;
-	getPubs: (filter:string) => any[];
+	getPubs: (filter: string) => any[];
 	getPubById: () => {} /* function to get a pub, both for autocomplete, and for id? */;
 	onChange: () => {} /* Something that passes up view, state, etc so parent can handle onSave, etc */;
 	atomRenderingComponent: any /* A react component that takes in the ContextAtom pubtype and renders it accordingly */;
-
 }
 export interface PanelProps {
 	top: number;
@@ -58,7 +59,7 @@ const initSuggestProps: SuggestProps = {
 	isOpen: false,
 	selectedIndex: 0,
 	items: [],
-	filter: '',
+	filter: "",
 };
 
 export default function ContextEditor(props: ContextEditorProps) {
@@ -88,7 +89,14 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		const state = EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
 			schema: baseSchema,
-			plugins: basePlugins(baseSchema, props, setPanelPosition, suggestData, setSuggestData),
+			plugins: basePlugins(
+				baseSchema,
+				props,
+				panelPosition,
+				setPanelPosition,
+				suggestData,
+				setSuggestData
+			),
 		});
 		if (viewHost.current) {
 			view.current = new EditorView(viewHost.current, {
@@ -113,15 +121,17 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	useEffect(() => {
 		/* Every Render */
 		if (view.current) {
-			console.log('Updating');
-			const tr = view.current.state.tr.setMeta(reactPropsKey, {...props, suggestData, setSuggestData});
+			console.log("Updating");
+			const tr = view.current.state.tr
+				.setMeta(reactPropsKey, { ...props, suggestData, setSuggestData })
+				.setMeta(attributePanelKey, { panelPosition, setPanelPosition });
 			view.current?.dispatch(tr);
 		}
-	}, [props, suggestData]);
-	console.log('in main editor', suggestData)
+	}, [props, suggestData, panelPosition]);
+	console.log("in main editor", suggestData);
 	return (
 		<div id="context-editor-container" className="relative max-w-screen-sm">
-			<div ref={viewHost} className="font-serif"/>
+			<div ref={viewHost} className="font-serif" />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />
 		</div>

@@ -9,6 +9,7 @@ import contextSuggest from "./contextSuggest";
 export const basePlugins = (
 	schema: Schema,
 	props: ContextEditorProps,
+	panelPosition: PanelProps,
 	setPanelPosition: React.Dispatch<React.SetStateAction<PanelProps>>,
 	suggestData: any,
 	setSuggestData: any,
@@ -18,6 +19,6 @@ export const basePlugins = (
 		...exampleSetup({ schema, menuBar: false }),
 		reactProps(props),
 		structureDecorations(),
-		attributePanel(setPanelPosition),	
+		attributePanel(panelPosition, setPanelPosition),	
 	];
 };
