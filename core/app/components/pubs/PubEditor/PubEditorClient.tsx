@@ -29,12 +29,12 @@ import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
 import { useServerAction } from "~/lib/serverActions";
+import { PubField } from "~/lib/types";
 import * as actions from "./actions";
 import {
-	buildDefaultValues,
-	createDefaultFormElementDefsForPubType,
+	createEditorFormDefaultValuesFromPubFields,
+	createEditorFormSchemaFromPubFields,
 	createFieldsForSever,
-	createSchemaFromElements,
 } from "./helpers";
 
 type PubType = {
@@ -49,6 +49,7 @@ type Props = {
 	communityStages: Pick<Stages, "id" | "name" | "order">[];
 	parentId?: PubsId;
 	availablePubTypes: PubType["availablePubTypes"];
+	pubFields: Pick<PubField, "slug" | "schemaName">[];
 	pubValues: PubValues;
 	pubTypeId: PubTypes["id"];
 	formElements: React.ReactNode[];
@@ -74,8 +75,8 @@ export function PubEditorClient(props: Props) {
 	const runUpdatePub = useServerAction(actions.updatePub);
 
 	const path = usePathname();
-	const searchParams = useSearchParams();
 	const router = useRouter();
+	const searchParams = useSearchParams();
 
 	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 	urlSearchParams.delete(`${paramString}-pub-form`);
@@ -91,14 +92,12 @@ export function PubEditorClient(props: Props) {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const elements = selectedPubType ? createDefaultFormElementDefsForPubType(selectedPubType) : [];
-
 	const resolver = useMemo(
-		() => typeboxResolver(createSchemaFromElements(elements)),
+		() => typeboxResolver(createEditorFormSchemaFromPubFields(props.pubFields)),
 		[props.formElements]
 	);
 	const form = useForm({
-		defaultValues: buildDefaultValues(elements, props.pubValues),
+		defaultValues: createEditorFormDefaultValuesFromPubFields(props.pubFields, props.pubValues),
 		reValidateMode: "onChange",
 		resolver,
 	});

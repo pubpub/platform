@@ -77,7 +77,11 @@ const pubValues = (
 			.selectAll("pub_values")
 			.select(["slug", "pub_values.fieldId"])
 			.leftJoinLateral(
-				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
+				(eb) =>
+					eb
+						.selectFrom("pub_fields")
+						.select(["id", "name", "slug", "schemaName"])
+						.as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
 			.orderBy(["pub_values.fieldId", "pub_values.createdAt desc"])

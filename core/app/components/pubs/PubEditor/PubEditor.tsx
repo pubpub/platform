@@ -1,10 +1,12 @@
 import type { CommunitiesId, PubsId, PubValues, StagesId } from "db/public";
+import { expect } from "utils";
 
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
-import { AutoReturnType } from "~/lib/types";
+import { getPubFields } from "~/lib/server/pubFields";
+import { AutoReturnType, PubField } from "~/lib/types";
 import { FormElement } from "../../forms/FormElement";
-import { createDefaultFormElementDefsForPubType } from "./helpers";
+import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorClient } from "./PubEditorClient";
 import { getCommunityById, getStage } from "./queries";
 
@@ -51,17 +53,33 @@ export async function PubEditor(props: PubEditorProps) {
 
 	const pubValues = pub?.values ?? {};
 
-	let pubType: any;
+	let pubType: AutoReturnType<
+		typeof getCommunityById
+	>["executeTakeFirstOrThrow"]["pubTypes"][number];
+	let pubFields: Pick<PubField, "id" | "name" | "slug" | "schemaName">[];
 
-	if (props.searchParams.pubTypeId) {
-		pubType = community.pubTypes.find((p) => p.id === props.searchParams.pubTypeId);
-	} else if (pub === undefined) {
-		pubType = community.pubTypes[0];
+	if (pub === undefined) {
+		if (props.searchParams.pubTypeId) {
+			pubType = expect(
+				community.pubTypes.find((p) => p.id === props.searchParams.pubTypeId),
+				"URL contained invalid pub type id"
+			);
+			pubFields = Object.values(pubType.fields);
+		} else {
+			pubType = community.pubTypes[0];
+			pubFields = pubType.fields;
+		}
 	} else {
-		pubType = community.pubTypes.find((p) => p.id === pub.pubTypeId);
+		pubType = expect(
+			community.pubTypes.find((p) => p.id === pub.pubTypeId),
+			"Invalid community pub type"
+		);
+		pubFields = Object.values(
+			(await getPubFields({ pubId: pub.id }).executeTakeFirstOrThrow()).fields
+		);
 	}
 
-	const formElements = createDefaultFormElementDefsForPubType(pubType).map((formElementDef) => (
+	const formElements = makeFormElementDefFromPubFields(pubFields).map((formElementDef) => (
 		<FormElement
 			key={formElementDef.elementId}
 			element={formElementDef}
@@ -72,9 +90,6 @@ export async function PubEditor(props: PubEditorProps) {
 		/>
 	));
 
-	console.log("pubType", pubType);
-	console.log("formElements", formElements);
-
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
 	const currentStage = community.stages.find((stage) => stage.id === currentStageId);
 
@@ -84,6 +99,7 @@ export async function PubEditor(props: PubEditorProps) {
 			communityStages={community.stages}
 			availablePubTypes={community.pubTypes}
 			parentId={"parentId" in props ? props.parentId : undefined}
+			pubFields={pubFields}
 			pubValues={pubValues as unknown as PubValues}
 			pubTypeId={pubType?.id}
 			formElements={formElements}

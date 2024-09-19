@@ -16,20 +16,13 @@ import type {
 import { CoreSchemaType, ElementType } from "db/public";
 
 import type { Form, Form as PubPubForm } from "~/lib/server/form";
+import { PubField } from "~/lib/types";
 
 // Function to create an element object based on pubType parameter
-export function createDefaultFormElementDefsForPubType(pubType: {
-	id: PubTypesId;
-	name: string;
-	description: string | null;
-	fields: {
-		id: PubFieldsId;
-		name: string;
-		slug: string;
-		schemaName: CoreSchemaType | null;
-	}[];
-}): Form["elements"][number][] {
-	return pubType.fields.map((field, index) => ({
+export function makeFormElementDefFromPubFields(
+	pubFields: Pick<PubField, "id" | "name" | "slug" | "schemaName">[]
+): Form["elements"][number][] {
+	return pubFields.map((field, index) => ({
 		slug: field.slug || null,
 		schemaName: field.schemaName || null,
 		type: ElementType.pubfield,
@@ -47,48 +40,50 @@ export function createDefaultFormElementDefsForPubType(pubType: {
 	}));
 }
 
-export const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
+export const createEditorFormDefaultValuesFromPubFields = (
+	pubFields: Pick<PubField, "slug" | "schemaName">[],
+	pubValues: PubValues
+) => {
 	const defaultValues: FieldValues = { ...pubValues };
-	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
-	for (const de of dateElements) {
-		if (de.slug) {
-			const pubValue = pubValues[de.slug];
+	const dateFields = pubFields.filter((e) => e.schemaName === CoreSchemaType.DateTime);
+	for (const dateField of dateFields) {
+		if (dateField.slug) {
+			const pubValue = pubValues[dateField.slug];
 			if (pubValue) {
-				defaultValues[de.slug] = new Date(pubValue as string);
+				defaultValues[dateField.slug] = new Date(pubValue as string);
 			}
 		}
 	}
 	return defaultValues;
 };
 
-export const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
+export const createEditorFormSchemaFromPubFields = (
+	pubFields: Pick<PubField, "slug" | "schemaName">[]
+) => {
 	return Type.Object(
 		Object.fromEntries(
-			elements
-				// only add pubfields to the schema
-				.filter((e) => e.type === ElementType.pubfield)
-				.map(({ slug, schemaName }) => {
-					if (!schemaName) {
-						return [slug, undefined];
-					}
+			pubFields.map(({ slug, schemaName }) => {
+				if (!schemaName) {
+					return [slug, undefined];
+				}
 
-					const schema = getJsonSchemaByCoreSchemaType(schemaName);
-					if (!schema) {
-						return [slug, undefined];
-					}
+				const schema = getJsonSchemaByCoreSchemaType(schemaName);
+				if (!schema) {
+					return [slug, undefined];
+				}
 
-					if (schema.type !== "string") {
-						return [slug, Type.Optional(schema)];
-					}
+				if (schema.type !== "string") {
+					return [slug, Type.Optional(schema)];
+				}
 
-					// this allows for empty strings, which happens when you enter something
-					// in an input field and then delete it
-					// TODO: reevaluate whether this should be "" or undefined
-					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
-						error: schema.error ?? "Invalid value",
-					});
-					return [slug, schemaWithAllowedEmpty];
-				})
+				// this allows for empty strings, which happens when you enter something
+				// in an input field and then delete it
+				// TODO: reevaluate whether this should be "" or undefined
+				const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
+					error: schema.error ?? "Invalid value",
+				});
+				return [slug, schemaWithAllowedEmpty];
+			})
 		)
 	);
 };

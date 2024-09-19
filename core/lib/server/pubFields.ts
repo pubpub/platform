@@ -68,26 +68,6 @@ export const _getPubFields = (
 									.select("_PubFieldToPubType.A as id")
 							)
 						)
-						.$if(props.pubId !== undefined, (qb) =>
-							qb
-								.innerJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
-								.innerJoin("pubs", "pubs.id", "pub_values.pubId")
-								.where("pubs.id", "=", props.pubId!)
-								// all the pubfields associated with the pubtype of the pub, as long as we're not asking for values only
-								.$if(props.pubId !== undefined && props.valuesOnly !== true, (qb) =>
-									qb.union(
-										eb
-											.selectFrom("pubs")
-											.innerJoin(
-												"_PubFieldToPubType",
-												"pubs.pubTypeId",
-												"_PubFieldToPubType.B"
-											)
-											.where("pubs.id", "=", props.pubId!)
-											.select("_PubFieldToPubType.A as id")
-									)
-								)
-						)
 				)
 				.$if(props.communityId !== undefined, (qb) =>
 					qb.where("pub_fields.communityId", "=", props.communityId!)
