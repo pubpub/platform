@@ -116,7 +116,7 @@ model Pub {
   parentId String?
   children Pub[]   @relation("pub_parent")
 
-  values                   PubValue[]
+  values                   PubValue[]       @relation("original_pub")
   stages                   PubsInStages[]
   claims                   ActionClaim[]
   moves                    ActionMove[]
@@ -124,6 +124,7 @@ model Pub {
   permissions              Permission[]
   IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
+  relatedValues            PubValue[]       @relation("related_pub")
 
   @@map(name: "pubs")
 }
@@ -142,6 +143,7 @@ model PubField {
   isArchived       Boolean         @default(false)
   community        Community       @relation(fields: [communityId], references: [id])
   communityId      String
+  isRelation       Boolean         @default(false)
 
   values    PubValue[]
   pubTypes  PubType[]
@@ -176,18 +178,21 @@ model PubFieldSchema {
 }
 
 model PubValue {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
-  field     PubField @relation(fields: [fieldId], references: [id])
-  fieldId   String
-  value     Json
-  pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
+  field        PubField @relation(fields: [fieldId], references: [id])
+  fieldId      String
+  value        Json?
+  pub          Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade, name: "original_pub")
+  pubId        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  relatedPub   Pub?      @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
+  relatedPubId String?
 
   // Add userId and integrationId to track who created the value
 
   @@map(name: "pub_values")
+  @@unique([pubId, relatedPubId, fieldId])
 }
 
 model PubType {

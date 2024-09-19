@@ -329,6 +329,11 @@ export const pubValuesInclude = {
 				include: { schema: true },
 			},
 		},
+		where: {
+			field: {
+				isRelation: false,
+			},
+		},
 	},
 } satisfies Prisma.PubInclude;
 
