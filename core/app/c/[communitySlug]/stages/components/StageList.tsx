@@ -8,6 +8,7 @@ import type { CommunityStage } from "../manage/page";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { StagesById, StageThingy } from "~/lib/stages";
 import type { MemberWithUser } from "~/lib/types";
+import IntegrationActions from "~/app/components/IntegrationActions";
 import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubs } from "~/lib/server";
@@ -22,7 +23,6 @@ type Props = {
 	communityId: CommunitiesId;
 	pageContext: PageContext;
 };
-type IntegrationAction = { text: string; href: string; kind?: "stage" };
 
 export async function StageList(props: Props) {
 	const [communityStages, communityMembers, token] = await Promise.all([
@@ -72,7 +72,7 @@ async function StageCard({
 			<div className="flex flex-row justify-between">
 				<h3 className="mb-2 text-lg font-semibold">{stage.name}</h3>
 				<Suspense>
-					<IntegrationActions stage={stage} token={token} />
+					<IntegrationActions stageId={stage.id} token={token} type={"stage"} />
 				</Suspense>
 			</div>
 			<Suspense fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} />}>
@@ -86,32 +86,6 @@ async function StageCard({
 			</Suspense>
 		</div>
 	);
-}
-
-async function IntegrationActions({ stage, token }: { stage: StageThingy; token: string }) {
-	const integrationInstances = await getIntegrationInstancesForStage(stage.id).execute();
-	return integrationInstances.map((instance) => {
-		if (!Array.isArray(instance.integration.actions)) {
-			return null;
-		}
-		return (
-			<Fragment key={instance.id}>
-				{instance.integration.actions?.map((action: IntegrationAction) => {
-					if (action.kind === "stage") {
-						const href = new URL(action.href);
-						href.searchParams.set("instanceId", instance.id);
-						href.searchParams.set("token", token);
-						return (
-							<Button key={action.text} variant="outline" size="sm" asChild>
-								<Link href={href.toString()}>{action.text}</Link>
-							</Button>
-						);
-					}
-					return null;
-				})}
-			</Fragment>
-		);
-	});
 }
 
 async function StagePubs({

@@ -84,6 +84,8 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 		return null;
 	}
 
+	const pubStage = pub.stages[0];
+
 	return (
 		<>
 			<Row>
@@ -93,9 +95,16 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 							{pub.pubType.name}
 						</div>
 						<div className="flex flex-row gap-x-2">
-							<Suspense>
-								<IntegrationActions pubId={pub.id} token={props.token} />
-							</Suspense>
+							{pubStage && (
+								<Suspense>
+									<IntegrationActions
+										pubId={pub.id}
+										token={props.token}
+										stageId={pubStage.id}
+										type="pub"
+									/>
+								</Suspense>
+							)}
 							<div>{props.actions}</div>
 							<PubDropDown pubId={pub.id} />
 						</div>
