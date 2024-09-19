@@ -140,7 +140,9 @@ export const PubRowSkeleton = () => (
 );
 
 const PubRowWithFallBack = (props: Props) => (
-	<Suspense fallback={<PubRowSkeleton />}>{<PubRow {...props} />}</Suspense>
+	<Suspense fallback={<PubRowSkeleton />}>
+		<PubRow {...props} />
+	</Suspense>
 );
 
 export default PubRowWithFallBack;
