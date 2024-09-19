@@ -3,11 +3,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import type { CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
+import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
@@ -143,9 +144,9 @@ export default async function Page({
 								})}
 							</div>
 							<Move
-								pub={pub}
-								stage={pub.stages[0].stage}
-								communityStages={community.stages}
+								pubId={pub.id as PubsId}
+								stageId={pub.stages[0].stageId as StagesId}
+								communityStages={community.stages as unknown as CommunityStage[]}
 							/>
 						</div>
 					</div>

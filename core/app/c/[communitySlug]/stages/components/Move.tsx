@@ -2,30 +2,54 @@
 
 import { useState, useTransition } from "react";
 
+import type { PubsId, Stages, StagesId } from "db/public";
 import { Button } from "ui/button";
-import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon";
+import { ArrowLeft, Loader2 } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 
-import type { PubPayload, StagePayload } from "~/lib/server/_legacy-integration-queries";
+import type { CommunityStage } from "~/lib/server/stages";
+import type { XOR } from "~/lib/types";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { makeStagesById } from "~/lib/stages";
 import { move } from "./lib/actions";
 
 type Props = {
-	pub: PubPayload;
-	stage: Pick<StagePayload, "id" | "name">;
-	communityStages: StagePayload[];
+	pubId: PubsId;
+	stageId: StagesId;
+} & XOR<
+	{ communityStages: CommunityStage[] },
+	{
+		moveFrom: Stages[];
+		moveTo: Stages[];
+	}
+>;
+
+const makeSourcesAndDestinations = (props: Props) => {
+	if (!props.communityStages) {
+		return {
+			sources: props.moveFrom,
+			destinations: props.moveTo,
+		};
+	}
+
+	const stagesById = makeStagesById(props.communityStages);
+	const sources = stagesById[props.stageId].moveConstraintSources.map(
+		(mc) => stagesById[mc.stageId]
+	);
+	const destinations = stagesById[props.stageId].moveConstraints.map(
+		(mc) => stagesById[mc.destinationId]
+	);
+
+	return {
+		sources,
+		destinations,
+	};
 };
 
 export default function Move(props: Props) {
-	const stagesById = makeStagesById(props.communityStages);
-	const sources = stagesById[props.stage.id].moveConstraintSources.map(
-		(mc) => stagesById[mc.stageId]
-	);
-	const destinations = stagesById[props.stage.id].moveConstraints.map(
-		(mc) => stagesById[mc.destinationId]
-	);
+	const { sources, destinations } = makeSourcesAndDestinations(props);
+
 	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
 	const { toast } = useToast();
 
@@ -83,18 +107,14 @@ export default function Move(props: Props) {
 						<div data-testid="destinations" className="text-center">
 							<div className="mb-4 font-bold">Move this Pub to:</div>
 							{destinations.map((stage) => {
-								return stage.id === props.stage.id ? null : (
+								return stage.id === props.stageId ? null : (
 									<Button
 										variant="ghost"
 										disabled={isMoving}
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
-												await onMove(
-													props.pub.id,
-													props.stage.id,
-													stage.id
-												);
+												await onMove(props.pubId, props.stageId, stage.id);
 											})
 										}
 										className="mb-2"
@@ -110,18 +130,14 @@ export default function Move(props: Props) {
 							<div className="mb-4 font-bold">Move this Pub back to:</div>
 							{sources.map((stage) => {
 								<div className="mb-4">Move this Pub back to:</div>;
-								return stage.id === props.stage.id ? null : (
+								return stage.id === props.stageId ? null : (
 									<Button
 										disabled={isMoving}
 										variant="outline"
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
-												await onMove(
-													props.pub.id,
-													props.stage.id,
-													stage.id
-												);
+												await onMove(props.pubId, props.stageId, stage.id);
 											})
 										}
 										className="flex justify-start gap-x-1"

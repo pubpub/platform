@@ -239,7 +239,7 @@ export const getCommunityStages = (communityId: CommunitiesId) =>
 			.orderBy("order asc")
 	);
 
-export type CommunityStage = AutoReturnType<typeof getCommunityStagesFull>["executeTakeFirst"];
+export type CommunityStage = AutoReturnType<typeof getCommunityStages>["executeTakeFirstOrThrow"];
 
 export const getIntegrationInstanceBase = (trx = db) =>
 	trx

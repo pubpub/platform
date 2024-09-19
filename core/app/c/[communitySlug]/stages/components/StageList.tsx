@@ -1,19 +1,17 @@
 import { Fragment, Suspense } from "react";
-import Link from "next/link";
 
 import type { CommunitiesId } from "db/public";
-import { Button } from "ui/button";
 
-import type { CommunityStage } from "../manage/page";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { StagesById, StageThingy } from "~/lib/stages";
+import type { CommunityStage } from "~/lib/server/stages";
+import type { StagesById, StagewithConstraints } from "~/lib/stages";
 import type { MemberWithUser } from "~/lib/types";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubs } from "~/lib/server";
 import { getMembers } from "~/lib/server/member";
-import { getCommunityStages, getIntegrationInstancesForStage } from "~/lib/server/stages";
+import { getCommunityStages } from "~/lib/server/stages";
 import { getStageWorkflows, makeStagesById, moveConstraintSourcesForStage } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubActions } from "./StagePubActions";
@@ -95,7 +93,7 @@ async function StagePubs({
 	pageContext,
 	members,
 }: {
-	stage: StageThingy;
+	stage: StagewithConstraints;
 	token: string;
 	stageById: StagesById;
 	pageContext: PageContext;

@@ -2,11 +2,13 @@ import * as z from "zod";
 
 import type { MoveConstraint, Stages, StagesId } from "db/public";
 
-export type StageThingy = Stages & {
+export type StagewithConstraints = Stages & {
 	moveConstraints: MoveConstraint[];
 	moveConstraintSources: MoveConstraint[];
 };
-export type StagesById = { [key: StagesId]: StageThingy };
+export type StagesById<T extends StagewithConstraints = StagewithConstraints> = {
+	[key: StagesId]: T;
+};
 
 /**
  * Takes a stage, a map of stages to their IDs, and an optional list of stages
@@ -17,7 +19,7 @@ export type StagesById = { [key: StagesId]: StageThingy };
  * @param visited - (Optional) An array of visited stages, defaults to an empty array
  * @returns A new array of stages that have been visited
  */
-function createStageList<T extends StageThingy>(
+function createStageList<T extends StagewithConstraints>(
 	stage: T,
 	stages: StagesById,
 	visited: Array<T> = []
@@ -51,7 +53,7 @@ export const makeStagesById = <T extends { id: StagesId }>(stages: T[]): { [key:
  * @param stages
  * @returns
  */
-export function getStageWorkflows<T extends StageThingy>(stages: T[]): Array<Array<T>> {
+export function getStageWorkflows<T extends StagewithConstraints>(stages: T[]): Array<Array<T>> {
 	const stagesById = makeStagesById(stages);
 	// find all stages with edges that only point to them
 	const stageRoots = stages.filter((stage) => stage.moveConstraintSources.length === 0);
@@ -63,7 +65,10 @@ export function getStageWorkflows<T extends StageThingy>(stages: T[]): Array<Arr
 }
 
 // this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
-export function moveConstraintSourcesForStage(stage: StageThingy, stagesById: StagesById) {
+export function moveConstraintSourcesForStage<T extends StagewithConstraints>(
+	stage: T,
+	stagesById: StagesById<T>
+) {
 	return stage.moveConstraintSources.map((stage) => stagesById[stage.stageId]);
 }
 
