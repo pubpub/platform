@@ -27,8 +27,8 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 		return <SkeletonCard />;
 	}
 
-	const onAddAction = addAction.bind(null, stage.communityId, stage.id);
-	const onDeleteAction = deleteAction.bind(null, stage.communityId);
+	const onAddAction = addAction.bind(null, stage.id);
+	const onDeleteAction = deleteAction;
 
 	const { user } = await getLoginData();
 
