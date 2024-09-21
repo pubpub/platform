@@ -3,8 +3,8 @@ import { DOMOutputSpec, NodeSpec } from "prosemirror-model";
 export default {
 	attrs: {
 		level: { default: 1 },
-		fixedId: { default: "" },
-		id: { default: "" },
+		// fixedId: { default: "" },
+		id: { default: null },
 		class: { default: null },
 	},
 	content: "inline*",

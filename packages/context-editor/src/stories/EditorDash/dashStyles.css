@@ -13,4 +13,9 @@
 	.panel-content {
 		padding: 0px 16px;
 	}
+	pre {
+		font-family:  Courier, monospace;
+		line-height: 1.1;
+		color: #555;
+	}
 }

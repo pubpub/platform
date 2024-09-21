@@ -14,7 +14,7 @@ export default function JsonPanel({ editorState }) {
 		testdiv.innerHTML = renderToString(<ContextAtom nodeProp={node} />);
 		return testdiv;
 	};
-	console.log("domSerializer", domSerializer);
+	// console.log("domSerializer", domSerializer);
 	div = document.createElement("div");
 	domSerializer.serializeFragment(Fragment.from(editorState.doc.content), {}, div);
 
