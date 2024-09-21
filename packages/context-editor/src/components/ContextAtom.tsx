@@ -1,17 +1,19 @@
 import React from "react";
 import { useNodeViewContext } from "@prosemirror-adapter/react";
 
-export default function ContextAtom() {
+export default function ContextAtom({nodeProp}) {
 	const { contentRef, node, selected } = useNodeViewContext();
-	console.log('ContextAtom', node)
+	const goodNode = nodeProp || node;
+	if (!goodNode) { return null;}
+	console.log('ContextAtom', node, nodeProp)
 	return (
 		<section
 			style={{ outline: selected ? "1px solid #777" : "none" }}
 			role="presentation"
 			ref={contentRef}
 		>
-			{node.attrs.data?.type === "image" && <img src={node.attrs.data.src} />}
-			{/* node.attrs.data?.type !== "image" &&  */JSON.stringify({ node }, null, 2)}
+			{goodNode.attrs.data?.type === "image" && <img src={goodNode.attrs.data.src} />}
+			{/* goodNode.attrs.data?.type !== "image" &&  */JSON.stringify({ goodNode }, null, 2)}
 		</section>
 	);
 }

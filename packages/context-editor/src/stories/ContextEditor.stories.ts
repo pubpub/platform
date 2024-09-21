@@ -30,5 +30,8 @@ export const Primary: Story = {
 		pubId: "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
 		getPubs,
+		onChange: (state) => {
+			console.log(state)
+		}
 	},
 };

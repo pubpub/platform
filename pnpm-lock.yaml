@@ -783,6 +783,9 @@ importers:
       '@storybook/test':
         specifier: ^8.2.9
         version: 8.2.9(storybook@8.2.9)
+      '@tailwindcss/typography':
+        specifier: ^0.5.10
+        version: 0.5.10(tailwindcss@3.4.0)
       '@types/node':
         specifier: ^20
         version: 20.14.11
@@ -792,6 +795,9 @@ importers:
       '@types/react':
         specifier: ^18.3.5
         version: 18.3.5
+      lucide-react:
+        specifier: ^0.445.0
+        version: 0.445.0(react@18.2.0)
       prosemirror-dev-tools:
         specifier: ^4.1.0
         version: 4.1.0(@babel/core@7.25.2)(@types/react@18.3.5)(react-dom@18.2.0)(react@18.2.0)
@@ -12747,6 +12753,18 @@ packages:
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.3.3(ts-node@10.9.1)
 
+  /@tailwindcss/typography@0.5.10(tailwindcss@3.4.0):
+    resolution: {integrity: sha512-Pe8BuPJQJd3FfRnm6H0ulKIGoMEQS+Vq01R6M5aCrFB/ccR/shT+0kXLjouGC1gFLm9hopTFN+DMP0pfwRWzPw==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
+    dependencies:
+      lodash.castarray: 4.4.0
+      lodash.isplainobject: 4.0.6
+      lodash.merge: 4.6.2
+      postcss-selector-parser: 6.0.10
+      tailwindcss: 3.4.0
+    dev: true
+
   /@tanstack/react-table@8.13.2(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-b6mR3mYkjRtJ443QZh9sc7CvGTce81J35F/XMr0OoWbx0KIM7TTTdyNP2XKObvkLpYnLpCrYDwI3CZnLezWvpg==}
     engines: {node: '>=12'}
@@ -20074,6 +20092,14 @@ packages:
     dependencies:
       react: 18.2.0
     dev: false
+
+  /lucide-react@0.445.0(react@18.2.0):
+    resolution: {integrity: sha512-YrLf3aAHvmd4dZ8ot+mMdNFrFpJD7YRwQ2pUcBhgqbmxtrMP4xDzIorcj+8y+6kpuXBF4JB0NOCTUWIYetJjgA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0-rc
+    dependencies:
+      react: 18.2.0
+    dev: true
 
   /lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}

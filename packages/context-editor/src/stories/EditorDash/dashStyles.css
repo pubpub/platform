@@ -1,0 +1,16 @@
+#panel {
+	h1, h2, h3, h4, h5, h6 {
+		margin: 0;
+		border: 0px solid white;
+	}
+	h2.sticky {
+		font-size: 18px;
+		background: #fff;
+		border-bottom: 1px solid #ccc;
+		margin-bottom: 12px;
+		padding: 12px 12px;
+	}
+	.panel-content {
+		padding: 0px 16px;
+	}
+}

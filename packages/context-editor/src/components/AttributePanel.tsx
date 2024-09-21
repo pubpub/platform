@@ -43,7 +43,6 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 	// if (!node) {
 	// 	return null;
 	// }
-	console.log("rerender");
 	const updateAttr = (attrKey, value) => {
 		setPosition({
 			...position,
@@ -82,10 +81,11 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 		<>
 			{node && (
 				<div
+					className="drop-shadow-lg z-20"
 					style={{
 						// borderTop: "1px solid #777",
 						position: "absolute",
-						background: "#f7f7f7",
+						background: "#fff",
 						top: position.top,
 						right: position.right,
 						width: 300,
@@ -96,7 +96,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 						borderLeft: "1px solid #999",
 						borderRight: "1px solid #999",
 						borderBottom: `${height ? 1 : 0}px solid #999`,
-						borderRadius: "0px 0px 2px 2px",
+						borderRadius: "0px 0px 4px 4px",
 						transition:
 							panelPosition.top === 0
 								? ""
@@ -109,7 +109,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 							return null;
 						}
 						return (
-							<div>
+							<div key={attrKey}>
 								<Label className={labelClass}>{attrKey}</Label>
 								<Input
 									className={inputClass}
@@ -127,7 +127,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 							<div className="mt-8 text-sm">Data</div>
 							{Object.keys(node.attrs.data).map((attrKey) => {
 								return (
-									<div>
+									<div key={attrKey}>
 										<Label className={labelClass}>{attrKey}</Label>
 										<Input
 											className={inputClass}
@@ -145,6 +145,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 				</div>
 			)}
 			<div
+				className="z-20"
 				style={{
 					background: "#777",
 					height: "1px",

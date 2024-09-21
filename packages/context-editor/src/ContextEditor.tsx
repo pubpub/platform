@@ -26,9 +26,11 @@ export interface ContextEditorProps {
 	pubId: string;
 	pubTypeId: string;
 	pubTypes: object /* pub types in given context */;
-	getPubs: (filter: string) => any[];
+	getPubs: (filter: string) => Promise<any[]>;
 	getPubById: () => {} /* function to get a pub, both for autocomplete, and for id? */;
-	onChange: () => {} /* Something that passes up view, state, etc so parent can handle onSave, etc */;
+	onChange: (
+		state: any
+	) => void /* Something that passes up view, state, etc so parent can handle onSave, etc */;
 	atomRenderingComponent: any /* A react component that takes in the ContextAtom pubtype and renders it accordingly */;
 }
 export interface PanelProps {
@@ -63,9 +65,12 @@ const initSuggestProps: SuggestProps = {
 };
 
 export default function ContextEditor(props: ContextEditorProps) {
+	const memoEditor = useMemo(() => {
+		return <UnwrappedEditor {...props} />;
+	}, [props]);
 	return (
 		<ProsemirrorAdapterProvider>
-			<UnwrappedEditor {...props} />
+			{memoEditor}
 		</ProsemirrorAdapterProvider>
 	);
 }
@@ -121,14 +126,15 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	useEffect(() => {
 		/* Every Render */
 		if (view.current) {
-			console.log("Updating");
 			const tr = view.current.state.tr
 				.setMeta(reactPropsKey, { ...props, suggestData, setSuggestData })
 				.setMeta(attributePanelKey, { panelPosition, setPanelPosition });
 			view.current?.dispatch(tr);
 		}
+		/* It's not clear to me that any of the props need to trigger this to re-render.  */
+		/* Doing so in some cases (onChange for the EditorDash) cause an infinite re-render loop */
+		/* Figure out what I actually need to render on, and then clean up any useMemo calls if necessary */
 	}, [props, suggestData, panelPosition]);
-	console.log("in main editor", suggestData);
 	return (
 		<div id="context-editor-container" className="relative max-w-screen-sm">
 			<div ref={viewHost} className="font-serif" />
@@ -151,6 +157,11 @@ function UnwrappedEditor(props: ContextEditorProps) {
 [ ] Build autocomplete plugin that looks at pubtype props
 [ ] Build plugin that keeps idential local Context blocks in sync (e.g. Two Abstract includes should update simultaneously when done locally)
 [ ] Figure out if I actually need react props in plugins, and if not, simplify this file, by removing the reactProps plugin
+*/
+
+/* 
+[ ] 
+
 */
 
 /* 

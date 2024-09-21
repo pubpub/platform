@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import EditorDash from "./EditorDash";
+import EditorDash from "./EditorDash/EditorDash";
 import initialDoc from "./initialDoc.json";
 import initialPubs from "./initialPubs.json";
 import initialTypes from "./initialTypes.json";
@@ -10,7 +10,7 @@ import { getPubs } from "./mockUtils";
 const meta = {
 	title: "EditorDash",
 	component: EditorDash,
-	parameters: {},
+	parameters: { layout: "fullscreen" },
 	tags: ["autodocs"],
 	argTypes: {
 		placeholder: { control: "text" },
