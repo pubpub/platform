@@ -11,13 +11,13 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 		if (span) {
 			const rect = span.getBoundingClientRect();
 			setPosition([rect.top, rect.left]);
-			console.log("just set it");
+			// console.log("just set it");
 		}
 	}, [isOpen, filter]);
 	if (!isOpen) {
 		return null;
 	}
-	console.log(items);
+	// console.log(items);
 	return (
 		<div
 			className=""

@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { SuggestProps } from "../ContextEditor";
 import { reactPropsKey } from "./reactProps";
 
+
 const updateItems = async (view, filter) => {
 	const { pubTypes, getPubs, getPubsById, pubTypeId, suggestData, setSuggestData } =
 		reactPropsKey.getState(view.state);
@@ -92,12 +93,15 @@ export default (
 			let isAtom;
 			let pubId;
 			let fieldSlug;
+			let content;
 
 			if (selectedItemIsField) {
 				/* Eventually, we will check that selectedItem.schemaName !== JSONContent or whatever we name that structured type */
 				isAtom = selectedItem.schemaName !== "String";
 				pubId = rootPubId;
 				fieldSlug = selectedItem.slug;
+				// const existingContent = initial
+				/* TODO: I need to be able to getPubById so I can get initial values. */
 			} else if (selectedItemIsPub) {
 				isAtom = !selectedItem.values.some((value) => {
 					return field.slug === "rd:content";

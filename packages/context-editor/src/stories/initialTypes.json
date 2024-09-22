@@ -9,28 +9,28 @@
 		"fields": [
 			{
 				"id": "beaf3293-4906-4781-b2d4-76d16ba9c319",
-				"name": "Published Date",
+				"name": "published date",
 				"slug": "rd:published-date",
 				"schemaName": "DateTime",
 				"schema": null
 			},
 			{
 				"id": "320cd04c-5784-43ab-9a56-d98c9f18daef",
-				"name": "Content",
+				"name": "content",
 				"slug": "rd:content",
 				"schemaName": "String",
 				"schema": null
 			},
 			{
 				"id": "65a64b29-56dc-49d4-9a98-f291228fabde",
-				"name": "Title",
+				"name": "title",
 				"slug": "rd:title",
 				"schemaName": "String",
 				"schema": null
 			},
 			{
 				"id": "fe752e98-2bb7-4ad2-a951-d530f36c6b23",
-				"name": "Abstract",
+				"name": "abstract",
 				"slug": "rd:abstract",
 				"schemaName": "String",
 				"schema": null
@@ -47,7 +47,7 @@
 		"fields": [
 			{
 				"id": "68946fd6-f97a-4ef5-ad4d-f7c90e6358ef",
-				"name": "Code",
+				"name": "code",
 				"slug": "rd:code",
 				"schemaName": "String",
 				"schema": null
@@ -64,14 +64,14 @@
 		"fields": [
 			{
 				"id": "343ac44b-ada5-4e0f-83ff-9296cd80a2ea",
-				"name": "Source",
+				"name": "source",
 				"slug": "rd:source",
 				"schemaName": "String",
 				"schema": null
 			},
 			{
 				"id": "5efaf90c-4b44-4031-bffd-44897a982493",
-				"name": "Caption",
+				"name": "caption",
 				"slug": "rd:caption",
 				"schemaName": "String",
 				"schema": null
@@ -88,7 +88,7 @@
 		"fields": [
 			{
 				"id": "343ac44b-ada5-4e0f-83ff-9296cd80a2ea",
-				"name": "Source",
+				"name": "source",
 				"slug": "rd:source",
 				"schemaName": "String",
 				"schema": null
@@ -105,14 +105,14 @@
 		"fields": [
 			{
 				"id": "343ac44b-ada5-4e0f-83ff-9296cd80a2ea",
-				"name": "Source",
+				"name": "source",
 				"slug": "rd:source",
 				"schemaName": "String",
 				"schema": null
 			},
 			{
 				"id": "a12af4aa-5cf9-4e54-957a-92187bf69d7e",
-				"name": "Alt",
+				"name": "alt",
 				"slug": "rd:alt",
 				"schemaName": "String",
 				"schema": null
@@ -129,14 +129,14 @@
 		"fields": [
 			{
 				"id": "beaf3293-4906-4781-b2d4-76d16ba9c319",
-				"name": "Published Date",
+				"name": "published date",
 				"slug": "rd:published-date",
 				"schemaName": "DateTime",
 				"schema": null
 			},
 			{
 				"id": "320cd04c-5784-43ab-9a56-d98c9f18daef",
-				"name": "Content",
+				"name": "content",
 				"slug": "rd:content",
 				"schemaName": "String",
 				"schema": null

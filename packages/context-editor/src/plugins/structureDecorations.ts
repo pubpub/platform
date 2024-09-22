@@ -20,6 +20,11 @@ function wrapWidget(
 		widget.appendChild(widgetButtonChild);
 		if (isBlock) {
 			widgetButtonChild.innerHTML = `${node.type.name}${node.type.name === "heading" ? ` ${node.attrs.level}` : ""}`;
+			if (node.type.name.includes('context')) {
+				/* TODO: Look up the field name, and figure out if it's local to this doc or not. */
+				/* Need to find the pubType and use that name for atoms without fieldSlug */
+				widgetButtonChild.innerHTML = node.attrs.fieldSlug || 'rd:content';
+			}
 			widgetButtonChild.className = node.type.name;
 		}
 		widget.addEventListener("click", (evt) => {

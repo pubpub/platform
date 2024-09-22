@@ -145,26 +145,6 @@ function UnwrappedEditor(props: ContextEditorProps) {
 }
 
 /* 
-[x] Add decorations for every block and inline elem
-[x] Put event listeners on those decorations
-[x] Have it trigger a popup of some kind that's managed as a sibling
-[x] edits the prosemirror doc through some function calls
-[x] Clean code to be better structured
-[x] Build reference schema node for editing
-[x] Build reference schema node for atoms
-[ ] Build atom renderer for a few sample types (need to pass in pubTypes and pubs to seed values)
-[ ] Add plugins, schemas, etc for base work
-[ ] Build autocomplete plugin that looks at pubtype props
-[ ] Build plugin that keeps idential local Context blocks in sync (e.g. Two Abstract includes should update simultaneously when done locally)
-[ ] Figure out if I actually need react props in plugins, and if not, simplify this file, by removing the reactProps plugin
-*/
-
-/* 
-[ ] 
-
-*/
-
-/* 
 Notes:
 
 - All saves happen at the end when "save" or equialent is clicked
