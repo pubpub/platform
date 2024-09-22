@@ -1,4 +1,5 @@
 import React, { useEffect, useReducer, useState } from "react";
+import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react";
 
 import { Card, CardContent } from "ui/card";
 
@@ -10,7 +11,9 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 		const span = document.getElementsByClassName("autocomplete")[0];
 		if (span) {
 			const rect = span.getBoundingClientRect();
-			setPosition([rect.top, rect.left]);
+			const container = document.getElementById("context-editor-container");
+			const topOffset = -1 * container.getBoundingClientRect().top + container.scrollTop + 16;
+			setPosition([rect.top + 20 + topOffset, rect.left]);
 			// console.log("just set it");
 		}
 	}, [isOpen, filter]);
@@ -20,7 +23,7 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 	// console.log(items);
 	return (
 		<div
-			className=""
+			className="w-80 p-2"
 			style={{
 				background: "white",
 				border: "1px solid #777",
@@ -33,10 +36,24 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 				const itemIsPub = item.pubTypeId;
 				const itemIsField = item.schemaName;
 				return (
-					<div className={index === selectedIndex ? 'bg-neutral-400' : ''}>
-						{itemIsPub && <div>{item.values["rd:title"]}</div>}
-						{itemIsField && <div>Insert {item.name}</div>}
-						{!itemIsPub && !itemIsField && <div>Create and Insert {item.name}</div>}
+					<div
+						className={`rounded p-1 ${index === selectedIndex ? "bg-neutral-200" : ""}`}
+					>
+						{itemIsPub && (
+							<div className="flex items-center space-x-2">
+								<StickyNote size={16} /> <span className="truncate">Insert <span className="italic">{item.values["rd:title"]}</span></span>
+							</div>
+						)}
+						{itemIsField && (
+							<div className="flex items-center space-x-2">
+								<RectangleEllipsis size={16} /> <span className="truncate">Insert <span className="font-mono bg-neutral-200/80 rounded-md p-1">{item.name}</span></span>
+							</div>
+						)}
+						{!itemIsPub && !itemIsField && (
+							<div className="flex items-center space-x-2">
+								<ToyBrick size={16} /> <span className="truncate">Insert new <span>{item.name}</span></span>
+							</div>
+						)}
 					</div>
 				);
 			})}

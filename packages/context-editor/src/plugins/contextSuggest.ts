@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import { SuggestProps } from "../ContextEditor";
 import { reactPropsKey } from "./reactProps";
 
-
 const updateItems = async (view, filter) => {
 	const { pubTypes, getPubs, getPubsById, pubTypeId, suggestData, setSuggestData } =
 		reactPropsKey.getState(view.state);
@@ -19,7 +18,14 @@ const updateItems = async (view, filter) => {
 	const currentPubType = pubTypes.find((pubType) => {
 		return pubType.id === pubTypeId;
 	});
-	const newFieldItems = currentPubType.fields;
+	// const newFieldItems = currentPubType.fields;
+	const newFieldItems = fuzzy
+		.filter(filter || "", currentPubType.fields, {
+			extract: (el) => {
+				return el.name;
+			},
+		})
+		.map((result) => result.original);
 	const newPubItems = await getPubs(filter);
 	const newItems = [...newTypeItems, ...newFieldItems, ...newPubItems];
 	setSuggestData({
@@ -128,7 +134,7 @@ export default (
 					{
 						pubId,
 						fieldSlug,
-						data: {}, /* Populate with data if available */
+						data: {} /* Populate with data if available */,
 					},
 					/* Try to pull value if it exists, otherwise initialize with blank paragraph */
 					isAtom ? undefined : view.state.schema.nodeFromJSON({ type: "paragraph" })
