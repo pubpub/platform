@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropd
 import { ChevronDown, Play } from "ui/icon";
 
 import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
+import { ActionRunModal } from "./ActionRunModal";
 
 export type PageContext = {
 	params: Record<string, unknown>;
@@ -38,7 +39,7 @@ export const PubsRunActionDropDownMenu = ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
-					<ActionRunFormWrapper
+					<ActionRunModal
 						stage={stage}
 						pubId={pubId}
 						actionInstance={actionInstance}
