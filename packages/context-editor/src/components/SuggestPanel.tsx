@@ -37,21 +37,34 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 				const itemIsField = item.schemaName;
 				return (
 					<div
+						key={item.id}
 						className={`rounded p-1 ${index === selectedIndex ? "bg-neutral-200" : ""}`}
 					>
 						{itemIsPub && (
 							<div className="flex items-center space-x-2">
-								<StickyNote className="flex-shrink-0" size={16} /> <span className="truncate">Insert <span className="italic">{item.values["rd:title"]}</span></span>
+								<StickyNote className="flex-shrink-0" size={16} />{" "}
+								<span className="truncate">
+									Insert <span className="italic">{item.values["rd:title"]}</span>
+								</span>
 							</div>
 						)}
 						{itemIsField && (
 							<div className="flex items-center space-x-2">
-								<RectangleEllipsis className="flex-shrink-0" size={16} /> <span className="truncate">Insert <span className="font-mono bg-neutral-200/80 rounded-md p-1">{item.name}</span></span>
+								<RectangleEllipsis className="flex-shrink-0" size={16} />{" "}
+								<span className="truncate">
+									Insert{" "}
+									<span className="rounded-md bg-neutral-200/80 p-1 font-mono">
+										{item.name}
+									</span>
+								</span>
 							</div>
 						)}
 						{!itemIsPub && !itemIsField && (
 							<div className="flex items-center space-x-2">
-								<ToyBrick className="flex-shrink-0" size={16} /> <span className="truncate">Insert new <span>{item.name}</span></span>
+								<ToyBrick className="flex-shrink-0" size={16} />{" "}
+								<span className="truncate">
+									Insert new <span>{item.name}</span>
+								</span>
 							</div>
 						)}
 					</div>

@@ -38,14 +38,14 @@ function wrapWidget(
 				// console.log(currentPubId, currentPubTypeId, currentTypeName, currentFieldSlug);
 				let label;
 				if (currentPubId === pubId) {
-					label = currentField.name;
+					label = `~${currentField.name}`;
 				} else {
 					// if (currentField) {
 					// 	label = `${currentTypeName}/${currentField.name}`
 					// } else {
 					// 	label = currentTypeName;
 					// }
-					label = currentTypeName;
+					label = `/${currentTypeName}`;
 				}
 				/* TODO: Look up the field name, and figure out if it's local to this doc or not. */
 				/* Need to find the pubType and use that name for atoms without fieldSlug */

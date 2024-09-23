@@ -45,7 +45,7 @@ const PubList = (props) => {
 	
 	return props.list.map((item) => {
 		return (
-			<div className="pl-8 truncate" key={item.id}>
+			<div className="pl-8 truncate" key={item.pubId || item.id}>
 				<span className="font-bold">{getPubTypeName(item.pubTypeId)}</span>:{" "}
 				{/* {item.id || item.pubId} */}
 				{item.values["rd:title"] || item.values["rd:source"]}
