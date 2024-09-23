@@ -20,8 +20,10 @@ import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } fr
 import { ChevronDown, Loader2, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
 
+import { useSearchParamModal } from "~/lib/client/useSearchParamModal";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
+import { identifyingPubString } from "./identifyingPubString";
 import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 export const PubCreateForm = ({
@@ -88,9 +90,11 @@ export const PubCreateForm = ({
 
 	const runCreatePub = useServerAction(actions.createPub);
 
-	const { closeCrudForm } = usePubCRUDSearchParams({
-		method: "create",
-		identifyingString: currentStage?.id ?? communityId,
+	const { toggleModal } = useSearchParamModal({
+		identifyingString: identifyingPubString({
+			method: "create",
+			identifyingString: currentStage?.id ?? communityId,
+		}),
 	});
 
 	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
@@ -142,7 +146,7 @@ export const PubCreateForm = ({
 				title: "Success",
 				description: result.report,
 			});
-			closeCrudForm();
+			toggleModal(false);
 		}
 	};
 

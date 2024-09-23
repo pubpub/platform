@@ -7,6 +7,7 @@ import { AuthTokenType } from "db/public";
 import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
+import { modalSearchParamsCache } from "~/lib/server/modal";
 import { createToken } from "~/lib/server/token";
 import { getStageWorkflows, makeStagesById } from "~/lib/stages";
 import StageList from "./components/StageList";
@@ -27,7 +28,7 @@ export default async function Page({ params, searchParams }: Props) {
 		notFound();
 	}
 
-	pubCRUDSearchParamsCache.parse(searchParams);
+	modalSearchParamsCache.parse(searchParams);
 
 	const token = await createToken({
 		userId: user.id as UsersId,

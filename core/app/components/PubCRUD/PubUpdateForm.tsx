@@ -21,8 +21,10 @@ import { ChevronDown, Loader2, Pencil } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import type { getPubType } from "~/lib/server/pubtype";
+import { useSearchParamModal } from "~/lib/client/useSearchParamModal";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
+import { identifyingPubString } from "./identifyingPubString";
 import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 export const PubUpdateForm = ({
@@ -62,9 +64,11 @@ export const PubUpdateForm = ({
 
 	const runUpdatePub = useServerAction(actions.updatePub);
 
-	const { closeCrudForm } = usePubCRUDSearchParams({
-		method: "update",
-		identifyingString: pub.id,
+	const { toggleModal } = useSearchParamModal({
+		identifyingString: identifyingPubString({
+			method: "update",
+			identifyingString: pub.id,
+		}),
 	});
 
 	const onSubmit = async ({ stage, ...values }: { pubType: string; stage: string }) => {
@@ -86,7 +90,7 @@ export const PubUpdateForm = ({
 				title: "Success",
 				description: result.report,
 			});
-			closeCrudForm();
+			toggleModal(false);
 		}
 	};
 

@@ -13,6 +13,7 @@ import { getPageLoginData } from "~/lib/auth/loginData";
 import { getStage } from "~/lib/db/queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { modalSearchParamsCache } from "~/lib/server/modal";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
 import { StagePanel } from "./components/panel/StagePanel";
@@ -121,7 +122,7 @@ export default async function Page({ params, searchParams }: Props) {
 		return null;
 	}
 
-	pubCRUDSearchParamsCache.parse(searchParams);
+	modalSearchParamsCache.parse(searchParams);
 
 	const stages = await getCommunityStages(community.id).execute();
 

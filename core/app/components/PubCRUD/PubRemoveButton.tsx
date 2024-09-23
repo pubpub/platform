@@ -1,14 +1,17 @@
 import type { CRUDButtonProps } from "./PubCRUDDialogue";
 import type { PubRemoveProps } from "./PubRemove";
+import { isModalOpen } from "~/lib/server/modal";
+import { identifyingPubString } from "./identifyingPubString";
 import { PubCRUDDialogue } from "./PubCRUDDialogue";
-import { pubCRUDSearchParamsCache } from "./pubCRUDSearchParamsServer";
 import { PubRemove } from "./PubRemove";
 
 export const PubRemoveButton = (props: PubRemoveProps & { button?: CRUDButtonProps }) => {
-	const identifyingString = props.pubId;
+	const identifyingString = identifyingPubString({
+		method: "remove",
+		identifyingString: props.pubId,
+	});
 
-	const value = pubCRUDSearchParamsCache.get(`update-pub-form`);
-	const isOpen = value === identifyingString;
+	const isOpen = isModalOpen(identifyingString);
 	return (
 		<PubCRUDDialogue
 			method={"remove"}

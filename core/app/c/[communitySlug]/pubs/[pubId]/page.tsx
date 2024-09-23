@@ -20,6 +20,7 @@ import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries"
 import { getPubUsers } from "~/lib/permissions";
 import { pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { modalSearchParamsCache } from "~/lib/server/modal";
 import { createToken } from "~/lib/server/token";
 import { pubInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -101,7 +102,7 @@ export default async function Page({
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
 
-	pubCRUDSearchParamsCache.parse(searchParams);
+	modalSearchParamsCache.parse(searchParams);
 
 	return (
 		<div className="flex flex-col space-y-4">

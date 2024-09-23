@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from
 import { Pencil, Plus, Trash } from "ui/icon";
 import { cn } from "utils";
 
+import { SearchParamModal } from "~/lib/client/SearchParamModal";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
@@ -54,33 +55,10 @@ export const PubCRUDDialogue = ({
 	identifyingString: string;
 	button?: CRUDButtonProps;
 }) => {
-	const { isOpen, openCrudForm, closeCrudForm } = usePubCRUDSearchParams({
-		method,
-		identifyingString,
-	});
-
 	const crud = CRUDMap[method];
 
-	const close = useCallback(
-		(open: boolean) => {
-			if (open) {
-				openCrudForm();
-				return;
-			}
-
-			closeCrudForm();
-		},
-		[openCrudForm, closeCrudForm]
-	);
-
-	const [isReallyOpen, setIsReallyOpen] = React.useState(false);
-	useEffect(() => {
-		setIsReallyOpen(isOpen);
-	}, [isOpen]);
-
 	return (
-		<Dialog onOpenChange={close} defaultOpen={false} open={isReallyOpen}>
-			<DialogOverlay />
+		<SearchParamModal identifyingString={identifyingString}>
 			<DialogTrigger asChild>
 				<Button
 					variant={button?.variant ?? "outline"}
@@ -95,9 +73,8 @@ export const PubCRUDDialogue = ({
 			</DialogTrigger>
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
 				<DialogTitle>{crud.title}</DialogTitle>
-
-				{isOpen && <Suspense fallback={<SkeletonCard />}>{children}</Suspense>}
+				{children}
 			</DialogContent>
-		</Dialog>
+		</SearchParamModal>
 	);
 };

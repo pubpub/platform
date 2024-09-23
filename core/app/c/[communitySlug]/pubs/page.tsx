@@ -6,6 +6,7 @@ import { AuthTokenType } from "db/public";
 
 import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
 import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
+import { modalSearchParamsCache } from "~/lib/server/modal";
 import { createToken } from "~/lib/server/token";
 import { pubInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
@@ -49,7 +50,7 @@ export default async function Page({ params, searchParams }: Props) {
 		return null;
 	}
 
-	pubCRUDSearchParamsCache.parse(searchParams);
+	modalSearchParamsCache.parse(searchParams);
 
 	const token = await createToken({
 		userId: user.id as UsersId,
