@@ -23,7 +23,7 @@ import { toast } from "ui/use-toast";
 import { useSearchParamModal } from "~/lib/client/useSearchParamModal";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
-import { identifyingPubString } from "./identifyingPubString";
+import { createPubCRUDSearchParam } from "./pubCRUDSearchParam";
 import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 export const PubCreateForm = ({
@@ -91,7 +91,7 @@ export const PubCreateForm = ({
 	const runCreatePub = useServerAction(actions.createPub);
 
 	const { toggleModal } = useSearchParamModal({
-		identifyingString: identifyingPubString({
+		identifyingString: createPubCRUDSearchParam({
 			method: "create",
 			identifyingString: currentStage?.id ?? communityId,
 		}),

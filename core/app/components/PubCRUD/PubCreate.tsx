@@ -13,16 +13,9 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 import { UserSelectServer } from "../UserSelect/UserSelectServer";
 
-export type CreatePubProps = { parentId?: PubsId; searchParams?: Record<string, unknown> } & (
-	| {
-			communityId: CommunitiesId;
-			stageId?: never;
-	  }
-	| {
-			stageId: StagesId;
-			communityId?: never;
-	  }
-);
+export type CreatePubProps = { parentId?: PubsId; searchParams?: Record<string, unknown> } & {
+	stageId: StagesId;
+};
 
 const getCommunityById = <
 	K extends keyof Database,
@@ -132,26 +125,33 @@ const HackyUserIdSelect = async ({ searchParams }: { searchParams: Record<string
 };
 
 export async function PubCreate({
-	communityId,
 	stageId,
 	parentId,
 	searchParams,
 }: CreatePubProps & { searchParams?: Record<string, unknown> }) {
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		// TODO: show error
+		return null;
+	}
+
 	const query = stageId
 		? getStage(stageId).executeTakeFirstOrThrow()
 		: getCommunityById(
 				// @ts-expect-error FIXME: I don't know how to fix this,
 				// not sure what the common type between EB and the DB is
 				db,
-				communityId
+				community.id
 			).executeTakeFirstOrThrow();
 
 	const result = await query;
 
-	const { community, ...stage } = "communityId" in result ? result : { community: result };
+	const { community: fullCommunity, ...stage } =
+		"communityId" in result ? result : { community: result };
 	const currentStage = "id" in stage ? stage : null;
 
-	if (!community) {
+	if (!fullCommunity) {
 		return null;
 	}
 
@@ -161,8 +161,8 @@ export async function PubCreate({
 				<PubCreateForm
 					currentStage={currentStage}
 					communityId={community.id}
-					availableStages={community.stages}
-					availablePubTypes={community.pubTypes}
+					availableStages={fullCommunity.stages}
+					availablePubTypes={fullCommunity.pubTypes}
 					parentId={parentId}
 					__hack__memberIdField={<HackyUserIdSelect searchParams={searchParams ?? {}} />}
 				/>

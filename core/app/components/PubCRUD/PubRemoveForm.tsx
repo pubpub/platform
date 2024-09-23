@@ -11,7 +11,7 @@ import { toast } from "ui/use-toast";
 import { useSearchParamModal } from "~/lib/client/useSearchParamModal";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
-import { identifyingPubString } from "./identifyingPubString";
+import { createPubCRUDSearchParam } from "./pubCRUDSearchParam";
 
 export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 	const form = useForm({
@@ -22,7 +22,7 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 	const runRemovePub = useServerAction(actions.removePub);
 
 	const { toggleModal } = useSearchParamModal({
-		identifyingString: identifyingPubString({
+		identifyingString: createPubCRUDSearchParam({
 			method: "remove",
 			identifyingString: pubId,
 		}),

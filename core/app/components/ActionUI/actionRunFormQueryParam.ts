@@ -1,9 +1,9 @@
 import type { ActionInstancesId, PubsId } from "db/public";
 
+import { uuidRegex } from "~/lib/regexp";
+
 export const createActionRunFormQueryParam = (actionInstanceId: ActionInstancesId, pubId: PubsId) =>
 	`action-run-form-${actionInstanceId}-${pubId}` as const;
-
-const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
 
 const actionRunFormRegExp = new RegExp(
 	`^action-run-form-(${uuidRegex.source})-(${uuidRegex.source})$`
