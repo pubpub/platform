@@ -41,17 +41,17 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 					>
 						{itemIsPub && (
 							<div className="flex items-center space-x-2">
-								<StickyNote size={16} /> <span className="truncate">Insert <span className="italic">{item.values["rd:title"]}</span></span>
+								<StickyNote className="flex-shrink-0" size={16} /> <span className="truncate">Insert <span className="italic">{item.values["rd:title"]}</span></span>
 							</div>
 						)}
 						{itemIsField && (
 							<div className="flex items-center space-x-2">
-								<RectangleEllipsis size={16} /> <span className="truncate">Insert <span className="font-mono bg-neutral-200/80 rounded-md p-1">{item.name}</span></span>
+								<RectangleEllipsis className="flex-shrink-0" size={16} /> <span className="truncate">Insert <span className="font-mono bg-neutral-200/80 rounded-md p-1">{item.name}</span></span>
 							</div>
 						)}
 						{!itemIsPub && !itemIsField && (
 							<div className="flex items-center space-x-2">
-								<ToyBrick size={16} /> <span className="truncate">Insert new <span>{item.name}</span></span>
+								<ToyBrick className="flex-shrink-0" size={16} /> <span className="truncate">Insert new <span>{item.name}</span></span>
 							</div>
 						)}
 					</div>

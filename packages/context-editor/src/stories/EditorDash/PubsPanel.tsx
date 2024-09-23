@@ -2,8 +2,8 @@ import React, { useMemo, useState } from "react";
 import {getPubValues} from '../../utils/pubValues';
 import JsonView from '@uiw/react-json-view';
 
-export default function PubsPanel({ editorState }) {
-	const pubValues = getPubValues(editorState)
+export default function PubsPanel({ editorState, pubId }) {
+	const pubValues = getPubValues(editorState, pubId)
 	console.log(pubValues);
 	return (
 		<>

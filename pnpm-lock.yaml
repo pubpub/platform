@@ -804,6 +804,9 @@ importers:
       prosemirror-dev-tools:
         specifier: ^4.1.0
         version: 4.1.0(@babel/core@7.25.2)(@types/react@18.3.5)(react-dom@18.2.0)(react@18.2.0)
+      react-csv-to-table:
+        specifier: ^0.0.4
+        version: 0.0.4(react-dom@18.2.0)(react@18.2.0)
       storybook:
         specifier: ^8.2.9
         version: 8.2.9(@babel/preset-env@7.22.15)
@@ -22825,6 +22828,16 @@ packages:
     dependencies:
       react: 18.2.0
       tween-functions: 1.2.0
+    dev: true
+
+  /react-csv-to-table@0.0.4(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-YHdhavi7WgksHn3/S/pIHDy4zepeYjTQkTfmKcQv976OwNSWIUB7RlYJKmCFXAgfqkbiCNbtEIHnX1n3/rTfJA==}
+    peerDependencies:
+      react: ^16.8.6
+      react-dom: ^16.8.6
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: true
 
   /react-day-picker@8.10.0(date-fns@3.6.0)(react@18.2.0):

@@ -1,16 +1,19 @@
 import { Node } from "prosemirror-model";
-import { Plugin } from "prosemirror-state";
+import { EditorState, Plugin } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
 import { PanelProps } from "../ContextEditor";
 import { attributePanelKey } from "./attributePanel";
+import { reactPropsKey } from "./reactProps";
 
 function wrapWidget(
+	state: EditorState,
 	node: Node,
 	pos: number,
 	setPanelPosition: React.Dispatch<React.SetStateAction<PanelProps>>
 ) {
 	return () => {
+		const { pubTypes, pubId, pubTypeId } = reactPropsKey.getState(state);
 		const isBlock = node.isBlock;
 		const widget = document.createElement(isBlock ? "div" : "span");
 		widget.className = isBlock ? "wrap-widget" : "inline-wrap-widget";
@@ -20,10 +23,33 @@ function wrapWidget(
 		widget.appendChild(widgetButtonChild);
 		if (isBlock) {
 			widgetButtonChild.innerHTML = `${node.type.name}${node.type.name === "heading" ? ` ${node.attrs.level}` : ""}`;
-			if (node.type.name.includes('context')) {
+			if (node.type.name.includes("context")) {
+				const currentPubId = node.attrs.pubId;
+				const currentPubTypeId = node.attrs.pubTypeId;
+				const currentPubType = pubTypes.find((pubType) => {
+					return pubType.id === currentPubTypeId;
+				});
+
+				const currentFieldSlug = node.attrs.fieldSlug || "rd:content";
+				const currentField = currentPubType.fields.find((field) => {
+					return field.slug === currentFieldSlug;
+				});
+				const currentTypeName = currentPubType.name;
+				// console.log(currentPubId, currentPubTypeId, currentTypeName, currentFieldSlug);
+				let label;
+				if (currentPubId === pubId) {
+					label = currentField.name;
+				} else {
+					// if (currentField) {
+					// 	label = `${currentTypeName}/${currentField.name}`
+					// } else {
+					// 	label = currentTypeName;
+					// }
+					label = currentTypeName;
+				}
 				/* TODO: Look up the field name, and figure out if it's local to this doc or not. */
 				/* Need to find the pubType and use that name for atoms without fieldSlug */
-				widgetButtonChild.innerHTML = node.attrs.fieldSlug || 'rd:content';
+				widgetButtonChild.innerHTML = label;
 			}
 			widgetButtonChild.className = node.type.name;
 		}
@@ -71,13 +97,13 @@ export default () => {
 				state.doc.descendants((node, pos) => {
 					if (node.type.isBlock) {
 						decorations.push(
-							Decoration.widget(pos, wrapWidget(node, pos, setPanelPosition))
+							Decoration.widget(pos, wrapWidget(state, node, pos, setPanelPosition))
 						);
 					}
 					if (!node.type.isBlock && node.marks.length) {
 						/* If it's an inline node with marks */
 						decorations.push(
-							Decoration.widget(pos, wrapWidget(node, pos, setPanelPosition))
+							Decoration.widget(pos, wrapWidget(state, node, pos, setPanelPosition))
 						);
 					}
 				});

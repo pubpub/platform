@@ -7,6 +7,7 @@ export default {
 		id: { default: null },
 		class: { default: null },
 		pubId: { default: null },
+		pubTypeId: {default: null},
 		fieldSlug: {default: null},
 		data: { default: null },
 	},

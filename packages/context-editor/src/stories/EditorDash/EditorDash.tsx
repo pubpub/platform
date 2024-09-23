@@ -56,7 +56,7 @@ export default function EditorDash(props: ContextEditorProps) {
 				>
 					{activeDash === "json" && <JsonPanel editorState={editorState} />}
 					{activeDash === "site" && <SitePanel editorState={editorState} />}
-					{activeDash === "pubs" && <PubsPanel editorState={editorState} />}
+					{activeDash === "pubs" && <PubsPanel editorState={editorState} pubId={props.pubId} />}
 				</div>
 			)}
 		</div>

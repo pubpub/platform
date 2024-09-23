@@ -123,6 +123,22 @@
 				font-family: "Courier New", Courier, monospace;
 				border-radius: 3px;
 			}
+			audio {
+				filter: drop-shadow(0px 0px 20px green);
+				width: 100%;
+				margin: 2em 0em;
+			}
+			.dataset {
+				th {
+					background-color: #444;
+					color: #00ff00;
+					padding: 12px 15px;
+					border: 1px solid #dddddd;
+					position: sticky;
+					top: 0;
+					text-wrap: nowrap;
+				}
+			}
 		}
 		&.scholar {
 			font-family: "Times New Roman", Times, serif;
@@ -198,6 +214,55 @@
 				filter: grayscale(100%);
 			}
 		}
+		.dataset {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 20px 0;
+			font-family: "Arial", sans-serif;
+			font-size: 16px;
+			text-align: left;
+			display: block;
+			max-height: 300px;
+			overflow: scroll;
+			position: relative;
+
+			/* Header styling */
+			th {
+				background-color: #444;
+				color: white;
+				padding: 12px 15px;
+				border: 1px solid #dddddd;
+				position: sticky;
+				top: 0;
+				text-wrap: nowrap;
+			}
+
+			/* Row styling */
+			td {
+				padding: 12px 15px;
+				border: 1px solid #dddddd;
+				color: #333;
+			}
+
+			/* Alternating row colors */
+			tr:nth-child(even) {
+				background-color: #f2f2f2; /* Light grey for even rows */
+			}
+
+			tr:nth-child(odd) {
+				background-color: #ffffff; /* White for odd rows */
+			}
+
+			/* Hover effect on rows */
+			tr:hover {
+				background-color: #ddd;
+			}
+
+			/* Make the first column bold */
+			td:first-child {
+				font-weight: bold;
+			}
+		}
 	}
 	.aside {
 		padding: 1em;
@@ -212,7 +277,6 @@
 	.spin {
 		animation: spin 2s linear infinite;
 		transform-origin: 200px center;
-		
 	}
 
 	@keyframes spin {

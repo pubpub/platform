@@ -1,5 +1,6 @@
 import fuzzy from "fuzzy";
 import autocomplete, { Options } from "prosemirror-autocomplete";
+import { Slice } from "prosemirror-model";
 import { v4 as uuidv4 } from "uuid";
 
 import { SuggestProps } from "../ContextEditor";
@@ -25,7 +26,10 @@ const updateItems = async (view, filter) => {
 				return el.name;
 			},
 		})
-		.map((result) => result.original);
+		.map((result) => result.original)
+		.map((result) => {
+			return { ...result, parentTypeId: pubTypeId };
+		});
 	const newPubItems = await getPubs(filter);
 	const newItems = [...newTypeItems, ...newFieldItems, ...newPubItems];
 	setSuggestData({
@@ -60,7 +64,7 @@ export default (
 		},
 		onArrow: ({ view, kind }) => {
 			const { suggestData, setSuggestData } = reactPropsKey.getState(view.state);
-			console.log("suggestData", suggestData);
+			// console.log("suggestData", suggestData);
 			const currentIndex = suggestData.selectedIndex;
 			const itemLength = suggestData.items.length;
 			if (itemLength && kind === "ArrowDown") {
@@ -92,7 +96,8 @@ export default (
 			const selectedItem = suggestData.items[suggestData.selectedIndex];
 			const selectedItemIsPub = selectedItem.pubTypeId;
 			const selectedItemIsField = selectedItem.schemaName;
-			const selectedTypeId = selectedItem.pubTypeId || selectedItem.id;
+			const selectedTypeId =
+				selectedItem.pubTypeId || selectedItem.parentTypeId || selectedItem.id;
 			const selectedType = pubTypes.find((pubType) => {
 				return pubType.id === selectedTypeId;
 			});
@@ -101,7 +106,7 @@ export default (
 			let pubId;
 			let fieldSlug;
 			let content;
-
+			console.log("selectedItem", selectedItem);
 			if (selectedItemIsField) {
 				/* Eventually, we will check that selectedItem.schemaName !== JSONContent or whatever we name that structured type */
 				isAtom = selectedItem.schemaName !== "String";
@@ -110,8 +115,8 @@ export default (
 				// const existingContent = initial
 				/* TODO: I need to be able to getPubById so I can get initial values. */
 			} else if (selectedItemIsPub) {
-				isAtom = !selectedItem.values.some((value) => {
-					return field.slug === "rd:content";
+				isAtom = !Object.keys(selectedItem.values).some((key) => {
+					return key === "rd:content";
 				});
 				pubId = selectedItem.id;
 				fieldSlug = isAtom ? "" : "rd:content";
@@ -128,17 +133,34 @@ export default (
 			If it's a pub, we check if it has content, otherwise its' an atom
 			If it's a type, we check if it has content, otherwiseit's an atom
 			*/
-			const tr = view.state.tr.deleteRange(range.from, range.to).insert(
+
+			const existingContent =
+				fieldSlug === "rd:content" ? selectedItem.values["rd:content"] : undefined;
+			const initialContent = existingContent
+				? view.state.schema.nodeFromJSON(JSON.parse(existingContent)).content
+				: view.state.schema.nodeFromJSON({ type: "paragraph" });
+
+			// console.log("initialContent", initialContent);
+			const selectedItemFields = selectedType.fields
+				.map((field) => field.slug)
+				.reduce((prev, curr) => {
+					return { ...prev, [curr]: "" };
+				}, {});
+			const tr = view.state.tr.replaceRangeWith(
 				range.from,
+				range.to,
 				view.state.schema.node(
 					isAtom ? "contextAtom" : "contextDoc",
 					{
 						pubId,
 						fieldSlug,
-						data: {} /* Populate with data if available */,
+						pubTypeId: selectedTypeId,
+						data: !selectedItemIsField
+							? { ...selectedItemFields, ...selectedItem.values }  /* Populate with data if available */
+							: undefined,
 					},
 					/* Try to pull value if it exists, otherwise initialize with blank paragraph */
-					isAtom ? undefined : view.state.schema.nodeFromJSON({ type: "paragraph" })
+					isAtom ? undefined : initialContent
 				)
 			);
 			view.dispatch(tr);

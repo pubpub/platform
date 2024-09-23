@@ -92,6 +92,13 @@
 				"slug": "rd:source",
 				"schemaName": "String",
 				"schema": null
+			},
+			{
+				"id": "222ac44b-ada5-4e0f-83ff-9296cd80a333",
+				"name": "data",
+				"slug": "rd:data",
+				"schemaName": "String",
+				"schema": null
 			}
 		]
 	},

@@ -6,7 +6,7 @@
   "scripts": {
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "type-check": "tsc --noEmit",
-    "storybook": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build"
   },
   "devDependencies": {
@@ -27,6 +27,7 @@
     "@uiw/react-json-view": "2.0.0-alpha.27",
     "lucide-react": "^0.445.0",
     "prosemirror-dev-tools": "^4.1.0",
+    "react-csv-to-table": "^0.0.4",
     "storybook": "^8.2.9",
     "tailwindcss": "^3.3.3",
     "tsconfig": "workspace:*",

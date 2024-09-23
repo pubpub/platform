@@ -165,9 +165,13 @@ NodeView provider could:
 
 /* 
 1. [x] site preview first pass
-2. better real content in doc
-3. Pub panel redesign (give headers between each pub)
-4. Make contextatom and doc decoration titles better (pull from pubtype)
+2. ! better real content in doc
+	- image
+	- video
+	- dataset
+	- figure?
+3. ! Pub panel redesign (give headers between each pub)
+4. ! Make contextatom and doc decoration titles better (pull from pubtype)
 5. Make autocomplete pull from existing content data
 6. Put together talking points for demo
 	- Why structure
