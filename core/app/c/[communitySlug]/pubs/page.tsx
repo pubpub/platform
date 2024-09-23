@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
 import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
 import { createToken } from "~/lib/server/token";
 import { pubInclude, stageInclude } from "~/lib/types";
@@ -32,9 +33,12 @@ const getStages = async (communityId: string) => {
 	});
 };
 
-type Props = { params: { communitySlug: string } };
+type Props = {
+	params: { communitySlug: string };
+	searchParams: Record<string, string | string[] | undefined>;
+};
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
 	const { user } = await getPageLoginData();
 
 	const community = await prisma.community.findUnique({
@@ -44,6 +48,8 @@ export default async function Page({ params }: Props) {
 	if (!community) {
 		return null;
 	}
+
+	pubCRUDSearchParamsCache.parse(searchParams);
 
 	const token = await createToken({
 		userId: user.id as UsersId,

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense, useCallback, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog";
@@ -9,6 +8,7 @@ import { Pencil, Plus, Trash } from "ui/icon";
 import { cn } from "utils";
 
 import { SkeletonCard } from "../skeletons/SkeletonCard";
+import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 const CRUDMap = {
 	create: {
@@ -54,29 +54,23 @@ export const PubCRUDDialogue = ({
 	identifyingString: string;
 	button?: CRUDButtonProps;
 }) => {
-	const searchParams = useSearchParams();
-	const pathname = usePathname();
-	const router = useRouter();
-
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
+	const { isOpen, openCrudForm, closeCrudForm } = usePubCRUDSearchParams({
+		method,
+		identifyingString,
+	});
 
 	const crud = CRUDMap[method];
-	const queryParam = `${method}-pub-form`;
-
-	const isOpen = urlSearchParams.get(queryParam) === identifyingString;
 
 	const close = useCallback(
 		(open: boolean) => {
 			if (open) {
-				urlSearchParams.set(queryParam, identifyingString);
-				router.push(`${pathname}?${urlSearchParams.toString()}`);
+				openCrudForm();
 				return;
 			}
 
-			urlSearchParams.delete(queryParam);
-			router.push(`${pathname}?${urlSearchParams.toString()}`);
+			closeCrudForm();
 		},
-		[pathname, router, urlSearchParams]
+		[openCrudForm, closeCrudForm]
 	);
 
 	const [isReallyOpen, setIsReallyOpen] = React.useState(false);

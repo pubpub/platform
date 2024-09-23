@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
@@ -24,6 +23,7 @@ import { toast } from "ui/use-toast";
 import type { getPubType } from "~/lib/server/pubtype";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
+import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 export const PubUpdateForm = ({
 	pub,
@@ -62,23 +62,15 @@ export const PubUpdateForm = ({
 
 	const runUpdatePub = useServerAction(actions.updatePub);
 
-	const path = usePathname();
-	const searchParams = useSearchParams();
-	const router = useRouter();
-
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-	urlSearchParams.delete("update-pub-form");
-	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
-
-	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+	const { closeCrudForm } = usePubCRUDSearchParams({
+		method: "update",
+		identifyingString: pub.id,
+	});
 
 	const onSubmit = async ({ stage, ...values }: { pubType: string; stage: string }) => {
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			communityId: pubType.communityId as CommunitiesId,
-			path: pathWithoutFormParam,
 			stageId: stage as StagesId,
 			fields: Object.entries(values).reduce((acc, [key, value]) => {
 				const id = pubType?.fields.find((f) => f.slug === key)?.id;
@@ -94,7 +86,7 @@ export const PubUpdateForm = ({
 				title: "Success",
 				description: result.report,
 			});
-			closeForm();
+			closeCrudForm();
 		}
 	};
 

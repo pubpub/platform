@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import type { PubsId } from "db/public";
@@ -12,6 +10,7 @@ import { toast } from "ui/use-toast";
 
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
+import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 	const form = useForm({
@@ -21,22 +20,14 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 
 	const runRemovePub = useServerAction(actions.removePub);
 
-	const path = usePathname();
-	const searchParams = useSearchParams();
-	const router = useRouter();
-
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-	urlSearchParams.delete("remove-pub-form");
-	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
-
-	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+	const { closeCrudForm } = usePubCRUDSearchParams({
+		method: "remove",
+		identifyingString: pubId,
+	});
 
 	const onSubmit = async () => {
 		const result = await runRemovePub({
 			pubId,
-			path: pathWithoutFormParam,
 		});
 
 		if (result && "success" in result) {
@@ -44,7 +35,7 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 				title: "Success",
 				description: result.report,
 			});
-			closeForm();
+			closeCrudForm();
 		}
 	};
 
@@ -53,7 +44,7 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 				<p>Are you sure you want to remove this pub? This cannot be undone</p>
 				<div className="flex w-full items-center justify-end gap-x-4">
-					<Button type="button" onClick={closeForm}>
+					<Button type="button" onClick={closeCrudForm}>
 						Cancel
 					</Button>
 					<Button

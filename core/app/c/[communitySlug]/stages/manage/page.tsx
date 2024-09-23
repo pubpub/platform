@@ -7,6 +7,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { CommunitiesId, StagesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
+import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getStage } from "~/lib/db/queries";
@@ -119,6 +120,8 @@ export default async function Page({ params, searchParams }: Props) {
 	if (!community) {
 		return null;
 	}
+
+	pubCRUDSearchParamsCache.parse(searchParams);
 
 	const stages = await getCommunityStages(community.id).execute();
 

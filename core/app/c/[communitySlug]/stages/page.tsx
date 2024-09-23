@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { createToken } from "~/lib/server/token";
@@ -14,14 +15,20 @@ export const metadata: Metadata = {
 	title: "Workflows",
 };
 
-type Props = { params: { communitySlug: string } };
+type Props = {
+	params: { communitySlug: string };
+	searchParams: Record<string, string | string[] | undefined>;
+};
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
 	const { user } = await getPageLoginData();
 	const community = await getCommunityBySlug(params.communitySlug);
 	if (!community) {
 		notFound();
 	}
+
+	pubCRUDSearchParamsCache.parse(searchParams);
+
 	const token = await createToken({
 		userId: user.id as UsersId,
 		type: AuthTokenType.generic,

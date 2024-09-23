@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { ajvResolver } from "@hookform/resolvers/ajv";
 import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
@@ -23,6 +22,7 @@ import { toast } from "ui/use-toast";
 
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
+import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 export const PubCreateForm = ({
 	communityId,
@@ -88,17 +88,10 @@ export const PubCreateForm = ({
 
 	const runCreatePub = useServerAction(actions.createPub);
 
-	const path = usePathname();
-	const searchParams = useSearchParams();
-	const router = useRouter();
-
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-	urlSearchParams.delete("create-pub-form");
-	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
-
-	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+	const { closeCrudForm } = usePubCRUDSearchParams({
+		method: "create",
+		identifyingString: currentStage?.id ?? communityId,
+	});
 
 	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
 		if (!selectedStage) {
@@ -117,7 +110,6 @@ export const PubCreateForm = ({
 
 		const result = await runCreatePub({
 			communityId,
-			path: pathWithoutFormParam,
 			stageId: selectedStage?.id,
 			pubTypeId: selectedPubType?.id,
 			fields: Object.entries(values).reduce((acc, [key, value]) => {
@@ -150,7 +142,7 @@ export const PubCreateForm = ({
 				title: "Success",
 				description: result.report,
 			});
-			closeForm();
+			closeCrudForm();
 		}
 	};
 

@@ -11,6 +11,7 @@ import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActi
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
@@ -99,6 +100,8 @@ export default async function Page({
 			: [null, null];
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
+
+	pubCRUDSearchParamsCache.parse(searchParams);
 
 	return (
 		<div className="flex flex-col space-y-4">
