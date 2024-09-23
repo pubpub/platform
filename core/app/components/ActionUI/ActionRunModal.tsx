@@ -2,7 +2,7 @@ import "server-only";
 
 import { Suspense } from "react";
 
-import { DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle } from "ui/dialog";
 
 import type { PageContext } from "./PubsRunActionDropDownMenu";
 import { SearchParamModal } from "~/lib/client/SearchParamModal";
@@ -20,14 +20,16 @@ export const ActionRunModal = ({ pageContext }: { pageContext: PageContext }) =>
 
 	return (
 		<SearchParamModal identifyingString={modalString}>
-			<Suspense fallback={<SkeletonCard />}>
-				{isActionRunFormModalString && (
-					<ActionRunModalInner
-						identifyingString={modalString}
-						pageContext={pageContext}
-					/>
-				)}
-			</Suspense>
+			<DialogContent className="max-h-full overflow-y-auto">
+				<Suspense fallback={<SkeletonCard />}>
+					{isActionRunFormModalString && (
+						<ActionRunModalInner
+							identifyingString={modalString}
+							pageContext={pageContext}
+						/>
+					)}
+				</Suspense>
+			</DialogContent>
 		</SearchParamModal>
 	);
 };
@@ -57,17 +59,16 @@ const ActionRunModalInner = async ({
 	}
 
 	return (
-		<DialogContent className="max-h-full overflow-y-auto">
+		<>
 			<DialogHeader>
 				<DialogTitle>{actionInstance.name || actionInstance.action}</DialogTitle>
 			</DialogHeader>
-
 			<ActionRunFormWrapper
 				actionInstance={actionInstance}
 				pubId={pubId}
 				communityId={community.id}
 				pageContext={pageContext}
 			/>
-		</DialogContent>
+		</>
 	);
 };
