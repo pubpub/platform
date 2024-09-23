@@ -77,7 +77,7 @@ export function PubEditorClient(props: Props) {
 		[props.pubFields]
 	);
 
-	const resolver = useMemo(() => typeboxResolver(schema), [props.formElements]);
+	const resolver = useMemo(() => typeboxResolver(schema), [schema]);
 
 	const form = useForm({
 		defaultValues: createPubEditorDefaultValuesFromPubFields(
@@ -157,9 +157,6 @@ export function PubEditorClient(props: Props) {
 					<FormField
 						name="pubTypeId"
 						control={form.control}
-						rules={{
-							required: true,
-						}}
 						render={({ field }) => (
 							<FormItem
 								aria-label="Select Pub Type"
@@ -200,9 +197,6 @@ export function PubEditorClient(props: Props) {
 				<FormField
 					name="stageId"
 					control={form.control}
-					rules={{
-						required: true,
-					}}
 					render={({ field }) => (
 						<FormItem aria-label="Stage" className="flex flex-col items-start gap-2">
 							<FormLabel>Stage</FormLabel>
