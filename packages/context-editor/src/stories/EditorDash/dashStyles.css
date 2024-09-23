@@ -230,7 +230,7 @@
 			th {
 				background-color: #444;
 				color: white;
-				padding: 12px 15px;
+				padding: 8px 8px;
 				border: 1px solid #dddddd;
 				position: sticky;
 				top: 0;
@@ -239,7 +239,7 @@
 
 			/* Row styling */
 			td {
-				padding: 12px 15px;
+				padding: 4px 8px;
 				border: 1px solid #dddddd;
 				color: #333;
 			}
@@ -273,6 +273,12 @@
 		width: 60%;
 		float: right;
 		background-color: #f7f7f7;
+		box-shadow: -5px 10px 10px rgba(0,0,0,0.3);
+		p {
+			font-size: 14px !important;
+			line-height: 1.1;
+			margin-bottom: 0 !important;
+		}
 	}
 	.spin {
 		animation: spin 2s linear infinite;
@@ -288,7 +294,7 @@
 		}
 	}
 	.red {
-		color: red !important;
+		color: #b93131 !important;
 	}
 	.large {
 		font-size: 8em;

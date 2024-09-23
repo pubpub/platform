@@ -154,6 +154,7 @@ export default (
 					{
 						pubId,
 						fieldSlug,
+						parentPubId: rootPubId,
 						pubTypeId: selectedTypeId,
 						data: !selectedItemIsField
 							? { ...selectedItemFields, ...selectedItem.values }  /* Populate with data if available */

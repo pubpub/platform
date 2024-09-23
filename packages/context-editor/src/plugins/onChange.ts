@@ -9,7 +9,7 @@ export default () => {
 				update: (editorView) => {
 					// console.log(initialPubs[0].children[0].values['rd:content'])
 					const { onChange } = reactPropsKey.getState(editorView.state);
-					// console.log(JSON.stringify(editorView.state.doc.toJSON()));
+					// console.log(editorView.state.doc.toJSON());
 					onChange(editorView.state);
 				},
 			};

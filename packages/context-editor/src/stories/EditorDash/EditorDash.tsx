@@ -12,7 +12,7 @@ import "./dashStyles.css";
 
 export default function EditorDash(props: ContextEditorProps) {
 	const [editorState, setEditorState] = useState(null);
-	const [activeDash, setActiveDash] = useState("");
+	const [activeDash, setActiveDash] = useState("pubs");
 	const memoEditor = useMemo(() => {
 		return (
 			<ContextEditor

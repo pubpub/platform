@@ -21,6 +21,48 @@
 		"children": []
 	},
 	{
+		"id": "789b4157-4a7f-40d8-bb40-d9c17a6c7789",
+		"communityId": "f4888968-f213-498f-8136-aa818b0bd129",
+		"createdAt": "2024-09-17T14:51:09.998",
+		"parentId": null,
+		"pubTypeId": "67704c04-4f04-46e9-b93e-e3988a992a9b",
+		"updatedAt": "2024-09-17T14:51:09.998",
+		"assigneeId": null,
+		"values": {
+			"rd:content": "",
+			"rd:title": "Harnessing the Power of Microbial Communication: Towards Bacterial Wi-Fi Networks",
+			"rd:published-date": "",
+			"rd:abstract": ""
+		},
+		"stages": [
+			{
+				"id": "69b92fb0-691e-447b-a83d-b9af85f4f95f"
+			}
+		],
+		"children": []
+	},
+	{
+		"id": "b3454157-4a7f-40d8-bb40-d9c17a6cb345",
+		"communityId": "f4888968-f213-498f-8136-aa818b0bd129",
+		"createdAt": "2024-09-17T14:51:09.998",
+		"parentId": null,
+		"pubTypeId": "67704c04-4f04-46e9-b93e-e3988a992a9b",
+		"updatedAt": "2024-09-17T14:51:09.998",
+		"assigneeId": null,
+		"values": {
+			"rd:content": "",
+			"rd:title": "Temporal Distortion Fields in High-Speed Commuting: A Theoretical Framework for Time Dilation on Trains",
+			"rd:published-date": "",
+			"rd:abstract": ""
+		},
+		"stages": [
+			{
+				"id": "69b92fb0-691e-447b-a83d-b9af85f4f95f"
+			}
+		],
+		"children": []
+	},
+	{
 		"id": "a8777157-4a7f-40d8-bb40-d9c17a6c9180",
 		"communityId": "f4888968-f213-498f-8136-aa818b0bd129",
 		"createdAt": "2024-09-17T14:51:09.998",
