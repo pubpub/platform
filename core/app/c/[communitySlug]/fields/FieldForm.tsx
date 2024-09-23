@@ -294,9 +294,15 @@ export const FieldForm = ({
 											className="rounded"
 										/>
 									</FormControl>
-									<FormLabel>Is related to another field</FormLabel>
-									<FormMessage />
+									<FormLabel>
+										This field represents a reference to another Pub
+									</FormLabel>
 								</div>
+								<FormDescription>
+									Selecting this option will allow you to add a list of related
+									Pubs to any Pubs with this field
+								</FormDescription>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
