@@ -13,6 +13,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
+import { EditFormTitleButton } from "./EditFormTitleButton";
 
 const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
@@ -56,6 +57,11 @@ export default async function Page({
 				<>
 					<ClipboardPenLine size={24} strokeWidth={1} className="mr-2 text-slate-500" />{" "}
 					{form.name}
+				</>
+			}
+			editFormTitleButton={
+				<>
+					<EditFormTitleButton title={form.name} />
 				</>
 			}
 			headingAction={
