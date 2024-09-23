@@ -37,8 +37,14 @@ const PubListInner: React.FC<Props> = async (props) => {
 	);
 };
 
-export const PubListSkeleton = ({ amount = 10 }: { amount?: number }) => (
-	<div className={cn("flex flex-col gap-8")}>
+export const PubListSkeleton = ({
+	amount = 10,
+	className,
+}: {
+	amount?: number;
+	className?: string;
+}) => (
+	<div className={cn(["flex flex-col gap-8", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
 			<PubRowSkeleton key={index} />
 		))}

@@ -73,7 +73,9 @@ async function StageCard({
 					<IntegrationActions stageId={stage.id} token={token} type={"stage"} />
 				</Suspense>
 			</div>
-			<Suspense fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} />}>
+			<Suspense
+				fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
+			>
 				<StagePubs
 					stage={stage}
 					token={token}
@@ -114,7 +116,7 @@ async function StagePubs({
 	const destinations = stage.moveConstraints.map((stage) => stageById[stage.destinationId]);
 
 	return (
-		<div className="flex flex-col gap-9">
+		<div className="flex flex-col gap-8">
 			{stagePubs.map((pub, index, list) => {
 				// this way we don't pass unecessary data to the client
 				const { children, ...basePub } = pub;
