@@ -13,6 +13,7 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.URL]: [InputComponent.textInput],
 	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
+	[CoreSchemaType.Null]: [],
 } as const;
 
 export const componentConfigSchemas: Record<InputComponent, TAnySchema> = {
