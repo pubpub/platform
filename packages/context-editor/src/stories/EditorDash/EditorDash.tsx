@@ -30,7 +30,7 @@ export default function EditorDash(props: ContextEditorProps) {
 		{ key: "site", icon: <PanelTop size={16} /> },
 	];
 	return (
-		<div className="bg-[#f4f4f4]">
+		<div className="bg-[#f4f4f4] min-h-screen">
 			<div className="fixed right-0 flex h-screen flex-col justify-center space-y-2 p-2">
 				{dashes.map((dash) => {
 					return (

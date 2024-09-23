@@ -162,3 +162,9 @@ NodeView provider could:
 - Rendered as portals by some provider
 
 */
+
+/* 
+1. site preview first pass
+2. better real content in doc
+3. Pub panel redesign (give headers between each pub)
+*/

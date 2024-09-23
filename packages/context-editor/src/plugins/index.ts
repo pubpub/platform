@@ -7,6 +7,7 @@ import contextSuggest from "./contextSuggest";
 import onChange from "./onChange";
 import reactProps from "./reactProps";
 import structureDecorations from "./structureDecorations";
+import lorem from "./lorem";
 
 export const basePlugins = (
 	schema: Schema,
@@ -23,5 +24,6 @@ export const basePlugins = (
 		structureDecorations(),
 		attributePanel(panelPosition, setPanelPosition),
 		onChange(),
+		lorem(),
 	];
 };

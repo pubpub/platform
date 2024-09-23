@@ -32,6 +32,7 @@ const updateItems = async (view, filter) => {
 		...suggestData,
 		isOpen: true,
 		items: newItems,
+		selectedIndex: suggestData.items.length !== newItems.length ? 0 : suggestData.selectedIndex,
 	});
 };
 
