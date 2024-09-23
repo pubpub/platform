@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import type { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
 import { PubTitle } from "../PubTitle";
 
 test("PubTitle component includes the pub title", async () => {
@@ -30,6 +30,7 @@ test("PubTitle component includes the pub title", async () => {
 				pubId: "b5702ef8-29b9-43ad-866c-4c337f598d88",
 				createdAt: new Date(),
 				updatedAt: new Date(),
+				relatedPubId: null,
 				field: {
 					id: "e1cf1a7c-88ed-4a9d-8c76-6248ac636a87",
 					name: "Title",
@@ -42,6 +43,7 @@ test("PubTitle component includes the pub title", async () => {
 					schemaName: "String",
 					isArchived: false,
 					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
+					isRelation: false,
 				},
 			},
 			{
@@ -51,6 +53,7 @@ test("PubTitle component includes the pub title", async () => {
 				pubId: "b5702ef8-29b9-43ad-866c-4c337f598d88",
 				createdAt: new Date(),
 				updatedAt: new Date(),
+				relatedPubId: null,
 				field: {
 					id: "0e4deea4-4866-493d-a408-657b97549dd9",
 					name: "DOI",
@@ -63,6 +66,7 @@ test("PubTitle component includes the pub title", async () => {
 					schemaName: "String",
 					isArchived: false,
 					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
+					isRelation: false,
 				},
 			},
 			{
@@ -72,6 +76,7 @@ test("PubTitle component includes the pub title", async () => {
 				pubId: "b5702ef8-29b9-43ad-866c-4c337f598d88",
 				createdAt: new Date(),
 				updatedAt: new Date(),
+				relatedPubId: null,
 				field: {
 					id: "6ad9a55e-8451-448f-9961-2f0887dda882",
 					name: "URL",
@@ -84,6 +89,7 @@ test("PubTitle component includes the pub title", async () => {
 					schemaName: "URL",
 					isArchived: false,
 					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
+					isRelation: false,
 				},
 			},
 		],

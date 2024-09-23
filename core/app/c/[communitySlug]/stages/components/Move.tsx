@@ -1,21 +1,31 @@
 "use client";
 
+import { useState } from "react";
+
 import { Button } from "ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 
-import type { PubPayload, StagePayload, StagePayloadMoveConstraintDestination } from "~/lib/types";
+import type { PubPayload, StagePayload } from "~/lib/server/_legacy-integration-queries";
 import { isClientException, useServerAction } from "~/lib/serverActions";
+import { makeStagesById } from "~/lib/stages";
 import { move } from "./lib/actions";
 
 type Props = {
-	moveFrom?: StagePayloadMoveConstraintDestination[];
-	moveTo?: StagePayloadMoveConstraintDestination[];
 	pub: PubPayload;
-	stage: StagePayload;
+	stage: Pick<StagePayload, "id" | "name">;
+	communityStages: StagePayload[];
 };
 
 export default function Move(props: Props) {
+	const stagesById = makeStagesById(props.communityStages);
+	const sources = stagesById[props.stage.id].moveConstraintSources.map(
+		(mc) => stagesById[mc.stageId]
+	);
+	const destinations = stagesById[props.stage.id].moveConstraints.map(
+		(mc) => stagesById[mc.destinationId]
+	);
+	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
 	const { toast } = useToast();
 
 	const runMove = useServerAction(move);
@@ -24,6 +34,7 @@ export default function Move(props: Props) {
 		const err = await runMove(pubId, sourceStageId, destStageId);
 
 		if (isClientException(err)) {
+			setPopoverIsOpen(false);
 			return;
 		}
 
@@ -50,10 +61,15 @@ export default function Move(props: Props) {
 				</Button>
 			),
 		});
+		setPopoverIsOpen(false);
 	};
 
+	if (destinations.length === 0 && sources.length === 0) {
+		return null;
+	}
+
 	return (
-		<Popover>
+		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>
 				<Button size="sm" variant="outline">
 					Move
@@ -61,10 +77,10 @@ export default function Move(props: Props) {
 			</PopoverTrigger>
 			<PopoverContent>
 				<div className="flex flex-col">
-					{props.moveTo && (
-						<>
-							<div className="mb-4 text-center font-bold">Move this Pub to:</div>
-							{props.moveTo.map((stage) => {
+					{destinations.length > 0 && (
+						<div data-testid="destinations" className="text-center">
+							<div className="mb-4 font-bold">Move this Pub to:</div>
+							{destinations.map((stage) => {
 								return stage.id === props.stage.id ? null : (
 									<Button
 										variant="ghost"
@@ -78,12 +94,12 @@ export default function Move(props: Props) {
 									</Button>
 								);
 							})}
-						</>
+						</div>
 					)}
-					{props.moveFrom && (
-						<>
-							<div className="mb-4 text-center font-bold">Move this Pub back to:</div>
-							{props.moveFrom.map((stage) => {
+					{sources.length > 0 && (
+						<div data-testid="sources" className="text-center">
+							<div className="mb-4 font-bold">Move this Pub back to:</div>
+							{sources.map((stage) => {
 								<div className="mb-4">Move this Pub back to:</div>;
 								return stage.id === props.stage.id ? null : (
 									<Button
@@ -97,7 +113,7 @@ export default function Move(props: Props) {
 									</Button>
 								);
 							})}
-						</>
+						</div>
 					)}
 				</div>
 			</PopoverContent>

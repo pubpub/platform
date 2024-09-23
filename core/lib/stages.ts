@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import type { StagePayload, StagesById } from "./types";
+import type { StagePayload, StagesById } from "./server/_legacy-integration-queries";
 
 /**
  * takes a stage, a map of
@@ -56,11 +56,6 @@ export function getStageWorkflows(stages: StagePayload[]): Array<Array<StagePayl
 		return visited;
 	});
 	return stageWorkflows;
-}
-
-// this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
-export function moveConstraintSourcesForStage(stage: StagePayload, stagesById: StagesById) {
-	return stage.moveConstraintSources.map((stage) => stagesById[stage.stageId]);
 }
 
 export const StageFormSchema = z.object({

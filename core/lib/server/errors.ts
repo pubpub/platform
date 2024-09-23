@@ -3,7 +3,6 @@ import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
 import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-rest/serverless";
-import { NoResultError } from "kysely";
 import { DatabaseError } from "pg";
 
 import { logger } from "logger";

@@ -126,7 +126,11 @@ export const PubUpdateForm = ({
 							</FormDescription>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button size="sm" variant="outline">
+									<Button
+										size="sm"
+										variant="outline"
+										data-testid="stage-selector"
+									>
 										{availableStages.find((s) => s.id === field.value)?.name ||
 											currentStage?.name ||
 											"Select Stage"}

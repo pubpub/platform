@@ -1,6 +1,6 @@
 import { Button } from "ui/button";
 
-import type { PubPayload } from "~/lib/types";
+import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
 
 type Props = {
 	pub: PubPayload;

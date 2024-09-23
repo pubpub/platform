@@ -1,6 +1,4 @@
-import type { Community } from "@prisma/client";
-
-import type { CommunitiesId } from "db/public";
+import type { Communities, CommunitiesId } from "db/public";
 
 import { getLoginData } from "~/lib/auth/loginData";
 import { createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
@@ -25,7 +23,7 @@ const createCachedGetUser = ({
 }: {
 	email?: string;
 	currentEmail?: string;
-	community: Community;
+	community: Communities;
 }) => {
 	if (!email) {
 		return () => ({
@@ -102,7 +100,13 @@ const createCachedGetUser = ({
 
 export type MemberFormState = Awaited<ReturnType<ReturnType<typeof createCachedGetUser>>>;
 
-export const AddMember = async ({ email, community }: { email?: string; community: Community }) => {
+export const AddMember = async ({
+	email,
+	community,
+}: {
+	email?: string;
+	community: Communities;
+}) => {
 	const { user } = await getLoginData();
 
 	const getUserAndMember = createCachedGetUser({
@@ -116,12 +120,5 @@ export const AddMember = async ({ email, community }: { email?: string; communit
 		currentEmail: user?.email,
 	});
 
-	return (
-		<MemberInviteForm
-			state={state}
-			community={community}
-			email={email}
-			isSuperAdmin={user?.isSuperAdmin}
-		/>
-	);
+	return <MemberInviteForm state={state} email={email} isSuperAdmin={user?.isSuperAdmin} />;
 };

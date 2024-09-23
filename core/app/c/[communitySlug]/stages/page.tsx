@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
+
 import { notFound } from "next/navigation";
 
 import type { UsersId } from "db/public";
@@ -9,7 +10,7 @@ import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { modalSearchParamsCache } from "~/lib/server/modal";
 import { createToken } from "~/lib/server/token";
-import { getStageWorkflows, makeStagesById } from "~/lib/stages";
+import { getStageWorkflows } from "~/lib/stages";
 import StageList from "./components/StageList";
 
 export const metadata: Metadata = {
@@ -36,8 +37,6 @@ export default async function Page({ params, searchParams }: Props) {
 	});
 	const stageWorkflows = getStageWorkflows(community.stages);
 
-	const stageById = makeStagesById(community.stages);
-
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
@@ -46,8 +45,8 @@ export default async function Page({ params, searchParams }: Props) {
 			<StageList
 				members={community.members}
 				stageWorkflows={stageWorkflows}
-				stageById={stageById}
 				token={token}
+				communityStages={community.stages}
 			/>
 		</>
 	);

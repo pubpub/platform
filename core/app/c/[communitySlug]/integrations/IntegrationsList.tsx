@@ -11,10 +11,10 @@ import { Row, RowContent, RowFooter } from "~/app/components/Row";
 type Props = { instances: NonNullable<IntegrationData>; token: string };
 
 const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
-	const titleValue = pub.values.find((value) => {
-		return value.field.slug === "legacy-unjournal:title";
+	const titleValue = Object.entries(pub.values).find(([field, value]) => {
+		return field === "legacy-unjournal:title";
 	});
-	return titleValue?.value as string;
+	return titleValue?.[1] as string;
 };
 
 const getSettingsUrl = (instance: Props["instances"][number], token) => {

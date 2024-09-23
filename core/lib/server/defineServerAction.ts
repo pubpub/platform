@@ -1,5 +1,5 @@
 import { getURLFromRedirectError } from "next/dist/client/components/redirect";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { withServerActionInstrumentation } from "@sentry/nextjs";
 

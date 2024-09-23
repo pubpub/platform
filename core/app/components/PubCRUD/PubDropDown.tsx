@@ -15,7 +15,7 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="sm">
+				<Button variant="ghost" size="sm" data-testid="pub-dropdown-button">
 					<MoreVertical size="12" />
 				</Button>
 			</DropdownMenuTrigger>

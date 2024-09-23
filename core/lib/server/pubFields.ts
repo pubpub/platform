@@ -108,6 +108,7 @@ export const _getPubFields = (
 						isArchived: eb.ref("isArchived"),
 					}).as("json"),
 				])
+				.where("pub_fields.isRelation", "=", false)
 				.where("pub_fields.id", "in", eb.selectFrom("ids").select("id"))
 		)
 		.selectFrom("f")

@@ -12,7 +12,7 @@ import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/se
 import { TokenFailureReason, validateTokenSafe } from "~/lib/server/token";
 
 export const upload = defineServerAction(async function upload(pubId: string, fileName: string) {
-	return await generateSignedAssetUploadUrl(pubId, fileName);
+	return await generateSignedAssetUploadUrl(pubId as PubsId, fileName);
 });
 
 export const inviteUserToForm = defineServerAction(async function inviteUserToForm({

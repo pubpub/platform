@@ -1,14 +1,12 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
 import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
+import { pubInclude, stageInclude } from "~/lib/server/_legacy-integration-queries";
 import { modalSearchParamsCache } from "~/lib/server/modal";
 import { createToken } from "~/lib/server/token";
-import { pubInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import PubHeader from "./PubHeader";
 import PubList from "./PubList";

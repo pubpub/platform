@@ -1,47 +1,13 @@
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { GetPubTypeResponseBody } from "contracts";
 import type { CommunitiesId, FormsId, PubFieldsId, PubTypesId } from "db/public";
 
 import type { XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
-import prisma from "~/prisma/db";
 import { autoCache } from "./cache/autoCache";
-import { getCommunitySlug } from "./cache/getCommunitySlug";
-import { NotFoundError } from "./errors";
 import { GET_MANY_DEFAULT } from "./pub";
-
-export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponseBody> => {
-	const pubType = await prisma.pubType.findUnique({
-		where: { id: pubTypeId },
-		select: {
-			id: true,
-			name: true,
-			description: true,
-			fields: {
-				select: {
-					id: true,
-					name: true,
-					slug: true,
-					schema: {
-						select: {
-							id: true,
-							namespace: true,
-							name: true,
-							schema: true,
-						},
-					},
-				},
-			},
-		},
-	});
-	if (!pubType) {
-		throw new NotFoundError("Pub Type not found");
-	}
-	return pubType;
-};
 
 export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
 	"id",
@@ -72,6 +38,7 @@ export const getPubTypeBase = db.selectFrom("pub_types").select((eb) => [
 				).as("schema"),
 			])
 			.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
+			.where("pub_fields.isRelation", "=", false)
 	).as("fields"),
 ]);
 

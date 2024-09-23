@@ -1,21 +1,15 @@
 "use server";
 
-import type { Community } from "@prisma/client";
-
 import { cache } from "react";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { captureException } from "@sentry/nextjs";
 
-import type { Members, MembersId, UsersId } from "db/public";
+import type { MembersId, UsersId } from "db/public";
 import { MemberRole } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
-import type { SuggestedUser } from "~/lib/server/members";
+import type { UserWithMember } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
-import { env } from "~/lib/env/env.mjs";
-import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import * as Email from "~/lib/server/email";
@@ -24,16 +18,9 @@ import {
 	getMember as dbGetMember,
 	removeMember as dbRemoveMember,
 } from "~/lib/server/member";
-import { addUser, getUser } from "~/lib/server/user";
+import { addUser } from "~/lib/server/user";
 import { generateHash, slugifyString } from "~/lib/string";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
-
-export const revalidateMemberPathsAndTags = defineServerAction(
-	async function revalidateMemberPathsAndTags(community: Community) {
-		revalidatePath(`/c/${community.slug}/members`);
-		revalidateTagsForCommunity(["members", "users"]);
-	}
-);
 
 const isCommunityAdmin = cache(async () => {
 	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
@@ -75,7 +62,7 @@ export const addMember = defineServerAction(async function addMember({
 	user,
 	role,
 }: {
-	user: SuggestedUser;
+	user: UserWithMember;
 	role?: MemberRole;
 }) {
 	const result = await isCommunityAdmin();
@@ -107,8 +94,6 @@ export const addMember = defineServerAction(async function addMember({
 
 		// TODO: send email to user confirming their membership,
 		// don't just add them
-
-		revalidateMemberPathsAndTags(result.community);
 
 		return { member };
 	} catch (error) {
@@ -244,7 +229,6 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		revalidateMemberPathsAndTags(community);
 		return { success: true };
 	} catch (error) {
 		return {

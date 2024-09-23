@@ -1,18 +1,13 @@
-import type { User } from "@prisma/client";
-
 import { cache } from "react";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { StagesId } from "db/public";
-import { Rules } from "db/public";
-import { expect } from "utils";
 
 import type { RuleConfig } from "~/actions/types";
-import { RuleConfigs } from "~/actions/types";
 import { db } from "~/kysely/database";
-import { communityMemberInclude, pubValuesInclude, stageInclude } from "~/lib/types";
 import prisma from "~/prisma/db";
 import { pubValuesByRef } from "../server";
+import { communityMemberInclude, stageInclude } from "../server/_legacy-integration-queries";
 import { autoCache } from "../server/cache/autoCache";
 import { SAFE_USER_SELECT } from "../server/user";
 
