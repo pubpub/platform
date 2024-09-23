@@ -57,7 +57,14 @@ export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> 
 
 export type PubField = Pick<
 	PubFields,
-	"id" | "name" | "slug" | "updatedAt" | "schemaName" | "pubFieldSchemaId" | "isArchived"
+	| "id"
+	| "name"
+	| "slug"
+	| "updatedAt"
+	| "schemaName"
+	| "pubFieldSchemaId"
+	| "isArchived"
+	| "isRelation"
 >;
 
 /**

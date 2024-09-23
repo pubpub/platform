@@ -28,13 +28,33 @@ import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { slugifyString } from "~/lib/string";
 import * as actions from "./actions";
 
-const schema = z.object({
+const baseSchema = z.object({
 	id: z.string(),
-	name: z.string(),
-	schemaName: z.nativeEnum(CoreSchemaType),
-	slug: z.string().refine((s) => !s.includes(" "), { message: "Slug must not have spaces" }),
-	isRelation: z.boolean(),
+	name: z.string().min(1),
+	slug: z
+		.string()
+		.min(1)
+		.refine((s) => !s.includes(" "), { message: "Slug must not have spaces" }),
 });
+
+const schema = z.discriminatedUnion("isRelation", [
+	z
+		.object({
+			isRelation: z.literal(true),
+			schemaName: z.nativeEnum(CoreSchemaType).nullable(),
+		})
+		.merge(baseSchema),
+	z
+		.object({
+			isRelation: z.literal(false),
+			schemaName: z.nativeEnum(CoreSchemaType, {
+				errorMap: () => {
+					return { message: "Please select a schema type for this field" };
+				},
+			}),
+		})
+		.merge(baseSchema),
+]);
 
 type FormValues = z.infer<typeof schema>;
 
@@ -58,7 +78,7 @@ type FormType = UseFormReturn<
 >;
 
 const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: boolean }) => {
-	const schemaTypes = Object.values(CoreSchemaType);
+	const schemaTypes = Object.values(CoreSchemaType).filter((v) => v !== CoreSchemaType.Null);
 
 	return (
 		<FormField
@@ -131,8 +151,10 @@ const SlugField = ({
 	const watchName = watch("name");
 
 	useEffect(() => {
-		const autoSlug = slugifyString(watchName);
-		setValue("slug", autoSlug);
+		if (!readOnly) {
+			const autoSlug = slugifyString(watchName);
+			setValue("slug", autoSlug);
+		}
 	}, [watchName]);
 
 	return (
@@ -144,22 +166,27 @@ const SlugField = ({
 					<FormItem>
 						<FormLabel>Slug</FormLabel>
 						<FormControl>
-							<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
-								<span
-									className={cn("whitespace-nowrap pl-2", {
-										"opacity-50": readOnly,
-									})}
-								>
-									{communitySlug}:
-								</span>
-								<Input
-									placeholder="Slug"
-									disabled={readOnly}
-									// A little margin on focus or else the focus ring will cover the `:` after the community name
-									className="border-none pl-0 focus:ml-1"
-									{...field}
-								/>
-							</div>
+							{/* If readonly, only render a disabled input */}
+							{readOnly ? (
+								<Input placeholder="Slug" disabled {...field} />
+							) : (
+								// Otherwise, add a readonly slug, then an Input which the user can change
+								<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
+									<span
+										className={cn("whitespace-nowrap pl-2", {
+											"opacity-50": readOnly,
+										})}
+									>
+										{communitySlug}:
+									</span>
+									<Input
+										placeholder="Slug"
+										// A little margin on focus or else the focus ring will cover the `:` after the community name
+										className="border-none pl-0 focus:ml-1"
+										{...field}
+									/>
+								</div>
+							)}
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -188,19 +215,22 @@ export const FieldForm = ({
 	const community = useCommunity();
 	const isEditing = !!defaultValues;
 
-	const handleCreate = useCallback(async (values: FormValues & { slug: string }) => {
-		const result = await createField({
-			name: values.name,
-			slug: values.slug,
-			schemaName: values.schemaName,
-			communityId: community.id,
-			isRelation: values.isRelation,
-		});
-		if (didSucceed(result)) {
-			toast({ title: `Created field ${values.name}` });
-			onSubmitSuccess();
-		}
-	}, []);
+	const handleCreate = useCallback(
+		async (values: FormValues & { schemaName: CoreSchemaType }) => {
+			const result = await createField({
+				name: values.name,
+				slug: values.slug,
+				schemaName: values.schemaName,
+				communityId: community.id,
+				isRelation: values.isRelation,
+			});
+			if (didSucceed(result)) {
+				toast({ title: `Created field ${values.name}` });
+				onSubmitSuccess();
+			}
+		},
+		[]
+	);
 
 	const handleUpdate = useCallback(async (values: FormValues) => {
 		const result = await updateFieldName(values.id, values.name);
@@ -210,14 +240,17 @@ export const FieldForm = ({
 		}
 	}, []);
 
-	const handleSubmit = async (values: FormValues) => {
+	const handleSubmit = async (
+		values: FormValues & { schemaName: CoreSchemaType | null | undefined }
+	) => {
 		if (isEditing) {
 			handleUpdate(values);
 			return;
 		}
 
 		const slug = `${community?.slug}:${slugifyString(values.slug)}`;
-		handleCreate({ ...values, slug });
+		const schemaName = values.schemaName ?? CoreSchemaType.Null;
+		handleCreate({ ...values, slug, schemaName });
 	};
 
 	const form = useForm({
@@ -229,8 +262,6 @@ export const FieldForm = ({
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(handleSubmit)}>
 				<div className="mb-4 flex flex-col gap-6">
-					{/* Schema field is disabled if one has previously been selected */}
-					<SchemaSelectField isDisabled={!!defaultValues?.schemaName} form={form} />
 					<FormField
 						control={form.control}
 						name="name"
@@ -245,7 +276,6 @@ export const FieldForm = ({
 						)}
 					/>
 					<SlugField form={form} communitySlug={community.slug} readOnly={isEditing} />
-
 					<FormField
 						control={form.control}
 						name="isRelation"
@@ -265,10 +295,13 @@ export const FieldForm = ({
 										/>
 									</FormControl>
 									<FormLabel>Is related to another field</FormLabel>
+									<FormMessage />
 								</div>
 							</FormItem>
 						)}
-					></FormField>
+					/>
+					{/* Schema field is disabled if one has previously been selected */}
+					<SchemaSelectField isDisabled={!!defaultValues?.schemaName} form={form} />
 				</div>
 				{children}
 			</form>

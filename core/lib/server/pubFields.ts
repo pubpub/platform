@@ -131,7 +131,8 @@ export const _getPubFields = (
 						schemaName: eb.ref("pub_fields.schemaName"),
 						pubFieldSchemaId: eb.ref("pub_fields.pubFieldSchemaId"),
 						updatedAt: eb.ref("pub_fields.updatedAt"),
-						isArchived: eb.ref("isArchived"),
+						isArchived: eb.ref("pub_fields.isArchived"),
+						isRelation: eb.ref("pub_fields.isRelation"),
 					}).as("json"),
 				])
 				.$if(!props.includeRelations, (qb) => qb.where("pub_fields.isRelation", "=", false))

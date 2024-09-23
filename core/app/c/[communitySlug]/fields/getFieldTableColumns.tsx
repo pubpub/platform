@@ -21,6 +21,7 @@ export interface TableData {
 	updated: Date;
 	isArchived: boolean;
 	slug: string;
+	isRelation: boolean;
 }
 
 const ArchiveMenuItem = ({ field }: { field: TableData }) => {
