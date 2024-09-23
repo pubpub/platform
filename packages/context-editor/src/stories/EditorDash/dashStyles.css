@@ -223,4 +223,12 @@
 			transform: rotate(360deg);
 		}
 	}
+	.red {
+		color: red !important;
+	}
+	.large {
+		font-size: 8em;
+		line-height: 1;
+		vertical-align: bottom;
+	}
 }

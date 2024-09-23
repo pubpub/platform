@@ -164,7 +164,13 @@ NodeView provider could:
 */
 
 /* 
-1. site preview first pass
+1. [x] site preview first pass
 2. better real content in doc
 3. Pub panel redesign (give headers between each pub)
+4. Make contextatom and doc decoration titles better (pull from pubtype)
+5. Make autocomplete pull from existing content data
+6. Put together talking points for demo
+	- Why structure
+	- the doc itself is simpler than last, exports structure and complexity to pub types (and the renderer we choose to use)
+	- Need 1) default render type checkbox, 2)
 */

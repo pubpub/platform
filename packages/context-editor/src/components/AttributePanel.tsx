@@ -60,6 +60,31 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 			)
 		);
 	};
+	const updateMarkAttr = (index, attrKey, value) => {
+		console.log(node);
+		const markToReplace = node.marks[index];
+		// const newMarks = [...node.marks];
+		// newMarks[index].attrs[attrKey] = value;
+		// setPosition({
+		// 	...position,
+		// 	node: {
+		// 		...node,
+		// 		marks: newMarks
+		// 	},
+		// });
+		const newMark = viewRef.current?.state.schema.marks[markToReplace.type.name].create({
+			...markToReplace.attrs,
+			[attrKey]: value,
+		});
+
+		viewRef.current?.dispatch(
+			viewRef.current.state.tr.addMark(
+				panelPosition.pos,
+				panelPosition.pos + node.nodeSize,
+				newMark
+			)
+		);
+	};
 	const updateData = (attrKey, value) => {
 		setPosition({
 			...position,
@@ -81,7 +106,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 		<>
 			{node && (
 				<div
-					className="drop-shadow-lg z-20"
+					className="z-20 drop-shadow-lg"
 					style={{
 						// borderTop: "1px solid #777",
 						position: "absolute",
@@ -122,6 +147,37 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 							</div>
 						);
 					})}
+					{!!node.marks.length &&
+						node.marks.map((mark, index) => {
+							return (
+								<div>
+									<div className="text-sm font-bold mt-4">{mark.type.name}</div>
+									{Object.keys(mark.attrs).map((attrKey) => {
+										if (attrKey === "data") {
+											return null;
+										}
+										return (
+											<div key={attrKey}>
+												<Label className={labelClass}>{attrKey}</Label>
+												<Input
+													className={inputClass}
+													type="text"
+													defaultValue={mark.attrs[attrKey] || ""}
+													onChange={(evt) => {
+														updateMarkAttr(
+															index,
+															attrKey,
+															evt.target.value
+														);
+													}}
+												/>
+											</div>
+										);
+									})}
+								</div>
+							);
+						})}
+
 					{node.attrs.data && (
 						<>
 							<div className="mt-8 text-sm">Data</div>
