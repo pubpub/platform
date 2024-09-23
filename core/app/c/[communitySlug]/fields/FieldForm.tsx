@@ -8,6 +8,7 @@ import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 import { z } from "zod";
 
 import { CoreSchemaType } from "db/public";
+import { Checkbox } from "ui/checkbox";
 import {
 	Form,
 	FormControl,
@@ -20,6 +21,7 @@ import {
 import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
+import { cn } from "utils";
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
@@ -31,6 +33,7 @@ const schema = z.object({
 	name: z.string(),
 	schemaName: z.nativeEnum(CoreSchemaType),
 	slug: z.string().refine((s) => !s.includes(" "), { message: "Slug must not have spaces" }),
+	isRelation: z.boolean(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -40,6 +43,7 @@ const DEFAULT_VALUES = {
 	name: "",
 	schemaName: null,
 	slug: "",
+	isRelation: false,
 };
 
 type FormType = UseFormReturn<
@@ -47,6 +51,7 @@ type FormType = UseFormReturn<
 		name: string;
 		schemaName: CoreSchemaType | null;
 		slug: string;
+		isRelation: boolean;
 	},
 	any,
 	undefined
@@ -112,7 +117,15 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
  * The user can overwrite this value via the text input. The value here does not have
  * the community prepended—the community is automatically prepended in handleSubmit
  */
-const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: string }) => {
+const SlugField = ({
+	form,
+	communitySlug,
+	readOnly,
+}: {
+	form: FormType;
+	communitySlug: string;
+	readOnly?: boolean;
+}) => {
 	const { watch, setValue } = form;
 
 	const watchName = watch("name");
@@ -132,9 +145,16 @@ const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: str
 						<FormLabel>Slug</FormLabel>
 						<FormControl>
 							<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
-								<span className="whitespace-nowrap pl-2">{communitySlug}:</span>
+								<span
+									className={cn("whitespace-nowrap pl-2", {
+										"opacity-50": readOnly,
+									})}
+								>
+									{communitySlug}:
+								</span>
 								<Input
 									placeholder="Slug"
+									disabled={readOnly}
 									// A little margin on focus or else the focus ring will cover the `:` after the community name
 									className="border-none pl-0 focus:ml-1"
 									{...field}
@@ -154,7 +174,12 @@ export const FieldForm = ({
 	onSubmitSuccess,
 	children,
 }: {
-	defaultValues?: { name: string; schemaName: CoreSchemaType | null; slug: string };
+	defaultValues?: {
+		name: string;
+		schemaName: CoreSchemaType | null;
+		slug: string;
+		isRelation: boolean;
+	};
 	onSubmitSuccess: () => void;
 	children: ReactNode;
 }) => {
@@ -164,7 +189,13 @@ export const FieldForm = ({
 	const isEditing = !!defaultValues;
 
 	const handleCreate = useCallback(async (values: FormValues & { slug: string }) => {
-		const result = await createField(values.name, values.slug, values.schemaName, community.id);
+		const result = await createField({
+			name: values.name,
+			slug: values.slug,
+			schemaName: values.schemaName,
+			communityId: community.id,
+			isRelation: values.isRelation,
+		});
 		if (didSucceed(result)) {
 			toast({ title: `Created field ${values.name}` });
 			onSubmitSuccess();
@@ -213,7 +244,31 @@ export const FieldForm = ({
 							</FormItem>
 						)}
 					/>
-					{!isEditing ? <SlugField form={form} communitySlug={community.slug} /> : null}
+					<SlugField form={form} communitySlug={community.slug} readOnly={isEditing} />
+
+					<FormField
+						control={form.control}
+						name="isRelation"
+						render={({ field }) => (
+							<FormItem>
+								<div className="flex items-center gap-2">
+									<FormControl>
+										<Checkbox
+											disabled={isEditing}
+											checked={field.value}
+											onCheckedChange={(change) => {
+												if (typeof change === "boolean") {
+													field.onChange(change);
+												}
+											}}
+											className="rounded"
+										/>
+									</FormControl>
+									<FormLabel>Is related to another field</FormLabel>
+								</div>
+							</FormItem>
+						)}
+					></FormField>
 				</div>
 				{children}
 			</form>

@@ -8,15 +8,22 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
-export const createField = defineServerAction(async function createField(
-	name: string,
-	slug: string,
-	schemaName: CoreSchemaType,
-	communityId: CommunitiesId
-) {
+export const createField = defineServerAction(async function createField({
+	name,
+	slug,
+	schemaName,
+	communityId,
+	isRelation,
+}: {
+	name: string;
+	slug: string;
+	schemaName: CoreSchemaType;
+	communityId: CommunitiesId;
+	isRelation: boolean;
+}) {
 	try {
 		await autoRevalidate(
-			db.insertInto("pub_fields").values({ name, slug, schemaName, communityId })
+			db.insertInto("pub_fields").values({ name, slug, schemaName, communityId, isRelation })
 		).execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
