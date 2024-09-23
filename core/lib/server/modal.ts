@@ -10,5 +10,7 @@ export const modalSearchParamsCache = createSearchParamsCache({
 	[MODAL_SEARCH_PARAM]: modalSearchParamParser,
 });
 
+export const getModalSearchParam = () => modalSearchParamsCache.get(MODAL_SEARCH_PARAM);
+
 export const isModalOpen = (identifyingString: string) =>
 	modalSearchParamsCache.get(MODAL_SEARCH_PARAM) === identifyingString;

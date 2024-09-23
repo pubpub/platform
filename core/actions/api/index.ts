@@ -2,7 +2,9 @@
 
 import type * as z from "zod";
 
-import type { Event } from "db/public";
+import { cache } from "react";
+
+import type { Action, Event } from "db/public";
 
 import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
 import * as email from "../email/action";
@@ -21,17 +23,13 @@ export const actions = {
 	[move.action.name]: move.action,
 } as const;
 
-export const getActionByName = <N extends keyof typeof actions>(name: N) => {
+export const getActionByName = cache(<N extends Action>(name: N) => {
 	if (!(name in actions)) {
 		throw new Error(`Action ${name} not found`);
 	}
 
 	return actions[name];
-};
-
-export const getActionNames = () => {
-	return Object.keys(actions) as (keyof typeof actions)[];
-};
+});
 
 export const rules = {
 	[pubInStageForDuration.event]: pubInStageForDuration,

@@ -2,6 +2,7 @@ import type { StagesId } from "db/public";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { ActionRunModal } from "~/app/components/ActionUI/ActionRunModal";
 import { getStage } from "~/lib/db/queries";
 import { StagePanelActions } from "./StagePanelActions";
 import { StagePanelMembers } from "./StagePanelMembers";
@@ -48,6 +49,7 @@ export const StagePanel = async (props: Props) => {
 					<StagePanelMembers stageId={props.stageId} />
 				</TabsContent>
 			</Tabs>
+			<ActionRunModal pageContext={props.pageContext} />
 		</StagePanelSheet>
 	);
 };

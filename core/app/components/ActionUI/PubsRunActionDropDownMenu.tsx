@@ -1,12 +1,11 @@
 import "server-only";
 
-import type { ActionInstances, PubsId, Stages } from "db/public";
+import type { ActionInstances, PubsId } from "db/public";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
-import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
-import { ActionRunModal } from "./ActionRunModal";
+import { ActionRunFormButton } from "./ActionRunFormButton";
 
 export type PageContext = {
 	params: Record<string, unknown>;
@@ -16,13 +15,9 @@ export type PageContext = {
 export const PubsRunActionDropDownMenu = ({
 	actionInstances,
 	pubId,
-	stage,
-	pageContext,
 }: {
 	actionInstances: ActionInstances[];
 	pubId: PubsId;
-	stage: Stages;
-	pageContext: PageContext;
 }) => {
 	if (!actionInstances.length) {
 		return null;
@@ -39,12 +34,10 @@ export const PubsRunActionDropDownMenu = ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
-					<ActionRunModal
-						stage={stage}
-						pubId={pubId}
-						actionInstance={actionInstance}
-						pageContext={pageContext}
+					<ActionRunFormButton
 						key={actionInstance.id}
+						actionInstance={actionInstance}
+						pubId={pubId}
 					/>
 				))}
 			</DropdownMenuContent>
