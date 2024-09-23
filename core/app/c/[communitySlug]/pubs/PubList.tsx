@@ -23,6 +23,7 @@ const PubListInner: React.FC<Props> = async (props) => {
 			{ communityId: props.communityId },
 			{
 				limit: 1000,
+				onlyParents: false,
 			}
 		);
 	const [allPubs, token] = await Promise.all([pubsPromiseMaybe, props.token]);

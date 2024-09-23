@@ -282,6 +282,13 @@ export type GetManyParams = {
 	offset?: number;
 	orderBy?: "createdAt" | "updatedAt";
 	orderDirection?: "asc" | "desc";
+	/**
+	 * Only fetch "Top level" pubs and their children,
+	 * do not fetch child pubs separately from their parents
+	 *
+	 * @default true
+	 */
+	onlyParents?: boolean;
 };
 
 export const GET_MANY_DEFAULT = {
@@ -289,6 +296,7 @@ export const GET_MANY_DEFAULT = {
 	offset: 0,
 	orderBy: "createdAt",
 	orderDirection: "desc",
+	onlyParents: true,
 } as const;
 
 const GET_PUBS_DEFAULT = {
@@ -317,7 +325,7 @@ export const getPubs = async (
 					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 					.where("PubsInStages.stageId", "=", props.stageId!)
 			)
-			.where("pubs.parentId", "is", null)
+			.$if(Boolean(params.onlyParents), (eb) => eb.where("pubs.parentId", "is", null))
 			.limit(limit)
 			.offset(offset)
 			.orderBy(orderBy, orderDirection)

@@ -100,7 +100,13 @@ async function StagePubs({
 	members?: MemberWithUser[];
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
-		getPubs({ stageId: stage.id }),
+		getPubs(
+			{ stageId: stage.id },
+			{
+				onlyParents: false,
+				limit: 100,
+			}
+		),
 		getStageActions(stage.id).execute(),
 	]);
 
