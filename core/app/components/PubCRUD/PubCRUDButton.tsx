@@ -16,17 +16,13 @@ export type CRUDButtonProps = {
 };
 
 export const PubCRUDButton = ({
-	method,
-	identifyingString,
-	...button
-}: PubCRUDSearchParamProps & CRUDButtonProps) => {
-	const pubSearchParam = createPubCRUDSearchParam({
-		method,
-		identifyingString,
-	});
-	const crud = CRUDMap[method];
+	button,
+	...props
+}: PubCRUDSearchParamProps & { button?: CRUDButtonProps }) => {
+	const pubSearchParam = createPubCRUDSearchParam(props);
+	const crud = CRUDMap[props.method];
 
-	const { toggleModal } = useSearchParamModal({ identifyingString: pubSearchParam });
+	const { toggleModal } = useSearchParamModal({ modalSearchParameter: pubSearchParam });
 	return (
 		<Button
 			onClick={() => toggleModal(true)}

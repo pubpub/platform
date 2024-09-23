@@ -8,7 +8,7 @@ import { useSearchParamModal } from "./useSearchParamModal";
 
 export const SearchParamModal = ({
 	children,
-	identifyingString,
+	modalSearchParameter,
 }: {
 	children: React.ReactNode;
 	/**
@@ -16,10 +16,10 @@ export const SearchParamModal = ({
 	 * otherwise if multiple of the same button are rendered on the page
 	 * multiple forms will be opened at the same time.
 	 */
-	identifyingString: string;
+	modalSearchParameter: string | null;
 }) => {
-	const { isOpen, toggleModal } = useSearchParamModal({
-		identifyingString,
+	const { isOpen, toggleModal, currentModalSearchParam } = useSearchParamModal({
+		modalSearchParameter,
 	});
 
 	const [isReallyOpen, setIsReallyOpen] = React.useState(false);

@@ -5,7 +5,7 @@ import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { PubCRUDButton } from "~/app/components/PubCRUD/PubCRUDButton";
 import { PubDropDown } from "~/app/components/PubCRUD/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
@@ -32,12 +32,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap items-center justify-between">
 					<h4 className="mb-2 text-base font-semibold">Pubs</h4>
-					<Suspense fallback={<SkeletonCard />}>
-						<PubCreateButton
-							stageId={props.stageId as StagesId}
-							searchParams={props.pageContext.searchParams}
-						/>
-					</Suspense>
+					<PubCRUDButton method="create" identifyingString={props.stageId} />
 				</div>
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
@@ -46,8 +41,6 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 							<PubsRunActionDropDownMenu
 								actionInstances={stageActionInstances}
 								pubId={pub.id as PubsId}
-								stage={stage}
-								pageContext={props.pageContext}
 							/>
 							<PubDropDown pubId={pub.id as PubsId} />
 						</div>

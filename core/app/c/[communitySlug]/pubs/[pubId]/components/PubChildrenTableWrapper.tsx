@@ -33,12 +33,7 @@ const NoActions = () => {
 const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContext) => {
 	const stage = row.stages[0];
 	return stage && row.actionInstances.length > 0 ? (
-		<PubsRunActionDropDownMenu
-			actionInstances={row.actionInstances}
-			pubId={row.id}
-			stage={stage}
-			pageContext={pageContext}
-		/>
+		<PubsRunActionDropDownMenu actionInstances={row.actionInstances} pubId={row.id} />
 	) : (
 		<NoActions />
 	);

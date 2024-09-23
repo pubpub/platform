@@ -7,7 +7,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { CommunitiesId, StagesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
-import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
+import { PubCRUDModal } from "~/app/components/PubCRUD/PubCRUDModal";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getStage } from "~/lib/db/queries";
@@ -132,22 +132,25 @@ export default async function Page({ params, searchParams }: Props) {
 	};
 
 	return (
-		<StagesProvider stages={stages} communityId={community.id}>
-			<StageEditorProvider communitySlug={params.communitySlug}>
-				<LocalStorageProvider timeout={200}>
-					<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
-						<div className="relative h-full select-none">
-							<StageEditor />
-							{searchParams.editingStageId && (
-								<StagePanel
-									stageId={searchParams.editingStageId as StagesId}
-									pageContext={pageContext}
-								/>
-							)}
+		<>
+			<StagesProvider stages={stages} communityId={community.id}>
+				<StageEditorProvider communitySlug={params.communitySlug}>
+					<LocalStorageProvider timeout={200}>
+						<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
+							<div className="relative h-full select-none">
+								<StageEditor />
+								{searchParams.editingStageId && (
+									<StagePanel
+										stageId={searchParams.editingStageId as StagesId}
+										pageContext={pageContext}
+									/>
+								)}
+							</div>
 						</div>
-					</div>
-				</LocalStorageProvider>
-			</StageEditorProvider>
-		</StagesProvider>
+					</LocalStorageProvider>
+				</StageEditorProvider>
+			</StagesProvider>
+			<PubCRUDModal />
+		</>
 	);
 }

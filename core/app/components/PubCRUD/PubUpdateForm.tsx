@@ -25,7 +25,6 @@ import { useSearchParamModal } from "~/lib/client/useSearchParamModal";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { createPubCRUDSearchParam } from "./pubCRUDSearchParam";
-import { usePubCRUDSearchParams } from "./usePubCRUDSearchParams";
 
 export const PubUpdateForm = ({
 	pub,
@@ -65,7 +64,7 @@ export const PubUpdateForm = ({
 	const runUpdatePub = useServerAction(actions.updatePub);
 
 	const { toggleModal } = useSearchParamModal({
-		identifyingString: createPubCRUDSearchParam({
+		modalSearchParameter: createPubCRUDSearchParam({
 			method: "update",
 			identifyingString: pub.id,
 		}),

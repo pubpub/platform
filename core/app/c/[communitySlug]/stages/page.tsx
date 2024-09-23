@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import { pubCRUDSearchParamsCache } from "~/app/components/PubCRUD/pubCRUDSearchParamsServer";
+import { PubCRUDModal } from "~/app/components/PubCRUD/PubCRUDModal";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { modalSearchParamsCache } from "~/lib/server/modal";
@@ -48,6 +48,7 @@ export default async function Page({ params, searchParams }: Props) {
 				token={token}
 				communityStages={community.stages}
 			/>
+			<PubCRUDModal />
 		</>
 	);
 }

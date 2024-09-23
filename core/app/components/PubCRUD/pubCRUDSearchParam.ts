@@ -10,7 +10,7 @@ export type PubCRUDSearchParamProps =
 	  }
 	| {
 			method: "create";
-			identifyingString: string;
+			identifyingString?: string;
 	  };
 
 export const createPubCRUDSearchParam = ({

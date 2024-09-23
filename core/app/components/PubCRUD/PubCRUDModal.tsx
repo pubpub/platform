@@ -1,15 +1,14 @@
 import React from "react";
 
-import { PubsId, StagesId } from "db/public";
+import type { PubsId, StagesId } from "db/public";
 import { DialogContent, DialogTitle } from "ui/dialog";
 import { Skeleton } from "ui/skeleton";
 
 import type { PubCRUDMethod } from "./types";
 import { SearchParamModal } from "~/lib/client/SearchParamModal";
-import { getModalSearchParam } from "~/lib/server/modal";
 import { CRUDMap } from "./CRUDMap";
 import { PubCreate } from "./PubCreate";
-import { parsePubCRUDSearchParam } from "./pubCRUDSearchParam";
+import { createPubCRUDSearchParam, parsePubCRUDSearchParam } from "./pubCRUDSearchParam";
 import { PubRemove } from "./PubRemove";
 import { PubUpdate } from "./PubUpdate";
 
@@ -37,19 +36,13 @@ const PubCRUD = ({
 	return null;
 };
 
-export const PubCRUDDialogue = ({
-	// children,
-	parentId,
-}: {
-	//children: React.ReactNode;
-	parentId?: PubsId;
-}) => {
-	const pubCRUDSearchParam = getModalSearchParam() || "";
-
+export const PubCRUDModal = ({ parentId }: { parentId?: PubsId }) => {
 	const params = parsePubCRUDSearchParam();
 
+	const searchParam = params ? createPubCRUDSearchParam(params) : null;
+
 	return (
-		<SearchParamModal identifyingString={pubCRUDSearchParam}>
+		<SearchParamModal modalSearchParameter={searchParam}>
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
 				{params?.method ? (
 					<>

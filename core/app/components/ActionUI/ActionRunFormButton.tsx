@@ -17,7 +17,7 @@ export const ActionRunFormButton = ({
 	const action = getActionByName(actionInstance.action);
 	const runActionFormQueryParam = createActionRunFormQueryParam(actionInstance.id, pubId);
 
-	const { toggleModal } = useSearchParamModal({ identifyingString: runActionFormQueryParam });
+	const { toggleModal } = useSearchParamModal({ modalSearchParameter: runActionFormQueryParam });
 	return (
 		<Button
 			onClick={() => toggleModal(true)}

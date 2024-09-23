@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { PubCRUDModal } from "~/app/components/PubCRUD/PubCRUDModal";
 import { getLoginData, getPageLoginData } from "~/lib/auth/loginData";
 import { pubInclude, stageInclude } from "~/lib/server/_legacy-integration-queries";
 import { modalSearchParamsCache } from "~/lib/server/modal";
@@ -62,8 +63,9 @@ export default async function Page({ params, searchParams }: Props) {
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
+			<PubHeader />
 			<PubList pubs={pubs} token={token} />
+			<PubCRUDModal />
 		</>
 	);
 }

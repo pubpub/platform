@@ -1,4 +1,4 @@
-import type { PubsId } from "db/public";
+import type { PubsId, StagesId } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -8,8 +8,7 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
-import { PubRemoveButton } from "./PubRemoveButton";
-import { PubUpdateButton } from "./PubUpdateButton";
+import { PubCRUDButton } from "./PubCRUDButton";
 
 export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 	return (
@@ -21,23 +20,25 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="width">
 				<DropdownMenuItem asChild>
-					<PubUpdateButton
+					<PubCRUDButton
 						button={{
 							variant: "ghost",
 							title: "Edit Pub",
 							className: "w-full justify-start",
 						}}
-						pubId={pubId}
+						identifyingString={pubId}
+						method="update"
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<PubRemoveButton
+					<PubCRUDButton
+						identifyingString={pubId}
+						method="remove"
 						button={{
 							variant: "ghost",
 							title: "Remove Pub",
 							className: "w-full justify-start",
 						}}
-						pubId={pubId}
 					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>

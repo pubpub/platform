@@ -22,7 +22,7 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 	const runRemovePub = useServerAction(actions.removePub);
 
 	const { toggleModal } = useSearchParamModal({
-		identifyingString: createPubCRUDSearchParam({
+		modalSearchParameter: createPubCRUDSearchParam({
 			method: "remove",
 			identifyingString: pubId,
 		}),

@@ -19,7 +19,7 @@ export const ActionRunModal = ({ pageContext }: { pageContext: PageContext }) =>
 	const isActionRunFormModalString = /action-run-form/.test(modalString);
 
 	return (
-		<SearchParamModal identifyingString={modalString}>
+		<SearchParamModal modalSearchParameter={modalString}>
 			<DialogContent className="max-h-full overflow-y-auto">
 				<Suspense fallback={<SkeletonCard />}>
 					{isActionRunFormModalString && (

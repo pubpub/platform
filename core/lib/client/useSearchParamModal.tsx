@@ -1,27 +1,37 @@
 "use client";
 
+import { useCallback } from "react";
 import { useQueryState } from "nuqs";
 
 import { MODAL_SEARCH_PARAM, modalSearchParamParser } from "../server/modal";
 
-export const useSearchParamModal = ({ identifyingString }: { identifyingString: string }) => {
-	const [modalSearchParam, setModalSearchParam] = useQueryState(
+export const useSearchParamModal = <P extends string | null>({
+	modalSearchParameter,
+}: {
+	modalSearchParameter: P;
+}) => {
+	const [currentModalSearchParam, setModalSearchParam] = useQueryState(
 		MODAL_SEARCH_PARAM,
 		modalSearchParamParser
 	);
 
-	return {
-		modalSearchParam,
-		isOpen: modalSearchParam === identifyingString,
-		toggleModal: (open?: boolean) => {
+	const toggleModal = useCallback(
+		(open?: boolean) => {
 			if (open === undefined) {
 				setModalSearchParam(
-					modalSearchParam === identifyingString ? null : identifyingString
+					currentModalSearchParam === modalSearchParameter ? null : modalSearchParameter
 				);
 				return;
 			}
 
-			setModalSearchParam(open ? identifyingString : null);
+			setModalSearchParam(open ? modalSearchParameter : null);
 		},
+		[modalSearchParameter, currentModalSearchParam]
+	);
+
+	return {
+		currentModalSearchParam,
+		isOpen: Boolean(modalSearchParameter) && currentModalSearchParam === modalSearchParameter,
+		toggleModal: toggleModal as P extends null ? undefined : (open?: boolean) => void,
 	};
 };

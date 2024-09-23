@@ -14,9 +14,8 @@ import { ActionRunModal } from "~/app/components/ActionUI/ActionRunModal";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
-import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
 import { PubCRUDButton } from "~/app/components/PubCRUD/PubCRUDButton";
-import { PubCRUDDialogue } from "~/app/components/PubCRUD/PubCRUDDialogue";
+import { PubCRUDModal } from "~/app/components/PubCRUD/PubCRUDModal";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
@@ -209,7 +208,7 @@ export default async function Page({
 				</p>
 			</div>
 			<div className="mb-2">
-				<PubCRUDButton method="create" identifyingString="" title="Add New Pub" />
+				<PubCRUDButton method="create" button={{ title: "Add New Pub" }} />
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper
@@ -219,7 +218,7 @@ export default async function Page({
 				/>
 			</Suspense>
 			<ActionRunModal pageContext={{ params, searchParams }} />
-			<PubCRUDDialogue parentId={pub.id as PubsId} />
+			<PubCRUDModal parentId={pub.id as PubsId} />
 		</div>
 	);
 }
