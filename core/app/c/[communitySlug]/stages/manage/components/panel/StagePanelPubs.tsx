@@ -49,7 +49,10 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 								stage={stage}
 								pageContext={props.pageContext}
 							/>
-							<PubDropDown pubId={pub.id as PubsId} />
+							<PubDropDown
+								pubId={pub.id as PubsId}
+								searchParams={props.pageContext.searchParams}
+							/>
 						</div>
 					</div>
 				))}

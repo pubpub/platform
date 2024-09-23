@@ -3,6 +3,7 @@
 import { JSONPath } from "jsonpath-plus";
 
 import type { PubsId } from "db/public";
+import { JsonValue } from "contracts";
 import { logger } from "logger";
 
 import type { action } from "./action";
@@ -104,14 +105,17 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 			};
 		}
 
-		const fields = mappedOutputs.map(({ pubField, resValue }) => ({
-			slug: pubField,
-			value: resValue,
-		}));
+		const pubValues = mappedOutputs.reduce(
+			(acc, { pubField, resValue }) => {
+				acc[pubField] = resValue;
+				return acc;
+			},
+			{} as Record<string, JsonValue>
+		);
 
 		const updateResult = await _updatePub({
 			pubId: pub.id as PubsId,
-			fields,
+			pubValues,
 		});
 
 		if (updateResult.error) {

@@ -34,6 +34,7 @@ export const UserIdSelect = async ({
 			query={query}
 			queryParamName={queryParamName}
 			value={value}
+			allowPubFieldSubstitution={false}
 		/>
 	);
 };

@@ -132,7 +132,7 @@ export const ExternalFormWrapper = ({
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
-	const runUpdatePub = useServerAction(actions.upsertPubValues);
+	const runUpdatePub = useServerAction(actions.updatePub);
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => isButtonElement(e)),
@@ -145,7 +145,7 @@ export const ExternalFormWrapper = ({
 			evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
 			autoSave = false
 		) => {
-			const values = preparePayload({
+			const pubValues = preparePayload({
 				formElements,
 				formValues,
 			});
@@ -154,13 +154,13 @@ export const ExternalFormWrapper = ({
 			const stageId = submitButtonConfig?.stageId ?? undefined;
 			const result = await runUpdatePub({
 				pubId: pub.id as PubsId,
-				values,
+				pubValues,
 				stageId,
 			});
 			if (didSucceed(result)) {
 				const newParams = new URLSearchParams(params);
 				const currentTime = `${new Date().getTime()}`;
-				if (!autoSave && isComplete(formElements, values)) {
+				if (!autoSave && isComplete(formElements, pubValues)) {
 					const submitButtonId = evt?.nativeEvent.submitter?.id;
 					if (submitButtonId) {
 						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);

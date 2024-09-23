@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import type { CommunitiesId, PubsId } from "db/public";
+import type { CommunitiesId } from "db/public";
 import { cn } from "utils";
 
 import type { GetPubResult } from "~/lib/server";
@@ -10,6 +10,7 @@ import { getPubs } from "~/lib/server";
 
 type Props = {
 	token: string | Promise<string>;
+	searchParams: Record<string, unknown>;
 } & XOR<{ pubs: GetPubResult[] }, { communityId: CommunitiesId }>;
 
 /**
@@ -31,7 +32,14 @@ const PubListInner: React.FC<Props> = async (props) => {
 	return (
 		<div className={cn("flex flex-col gap-8")}>
 			{allPubs.map((pub) => {
-				return <PubRow key={pub.id} pub={pub} token={token} />;
+				return (
+					<PubRow
+						key={pub.id}
+						pub={pub}
+						token={token}
+						searchParams={props.searchParams}
+					/>
+				);
 			})}
 		</div>
 	);

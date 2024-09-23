@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { useForm } from "react-hook-form";
+import { Static } from "@sinclair/typebox";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 
 import type {
@@ -12,6 +13,7 @@ import type {
 	PubFieldSchema,
 	PubsId,
 	PubTypes,
+	PubTypesId,
 	PubValues,
 	Stages,
 	StagesId,
@@ -32,43 +34,31 @@ import { useServerAction } from "~/lib/serverActions";
 import { PubField } from "~/lib/types";
 import * as actions from "./actions";
 import {
-	createEditorFormDefaultValuesFromPubFields,
-	createEditorFormSchemaFromPubFields,
-	createFieldsForSever,
+	createPubEditorDefaultValuesFromPubFields,
+	createPubEditorSchemaFromPubFields,
 } from "./helpers";
 
-type PubType = {
-	availablePubTypes: (Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
-		fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
-			schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
-		})[];
+type AvailablePubType = Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
+	fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
+		schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
 	})[];
 };
 
 type Props = {
-	communityStages: Pick<Stages, "id" | "name" | "order">[];
-	parentId?: PubsId;
-	availablePubTypes: PubType["availablePubTypes"];
-	pubFields: Pick<PubField, "slug" | "schemaName">[];
-	pubValues: PubValues;
-	pubTypeId: PubTypes["id"];
-	formElements: React.ReactNode[];
-	pubId?: PubsId;
+	availablePubTypes: AvailablePubType[];
+	availableStages: Pick<Stages, "id" | "name" | "order">[];
+	communityId: CommunitiesId;
 	className?: string;
-} & {
-	currentStage?: Pick<Stages, "id" | "name" | "order"> | null;
+	formElements: React.ReactNode[];
+	parentId?: PubsId;
+	pubFields: Pick<PubField, "slug" | "schemaName">[];
+	pubId?: PubsId;
+	pubTypeId: PubTypes["id"];
+	pubValues: PubValues;
+	stageId?: StagesId;
 };
 
 export function PubEditorClient(props: Props) {
-	const pubType = props.availablePubTypes.find((type) => type.id === props.pubTypeId);
-
-	const [selectedPubType, setSelectedPubType] = useState<
-		(typeof props.availablePubTypes)[number] | null
-	>(pubType ?? null);
-	const [selectedStage, setSelectedStage] = useState<typeof props.currentStage>(
-		props.currentStage ?? null
-	);
-
 	const hasValues = Object.keys(props.pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
 	const runCreatePub = useServerAction(actions.createPub);
@@ -82,45 +72,45 @@ export function PubEditorClient(props: Props) {
 	urlSearchParams.delete(`${paramString}-pub-form`);
 	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
 
-	const handleSelect = useDebouncedCallback((value: (typeof props.availablePubTypes)[number]) => {
-		const newParams = new URLSearchParams(searchParams);
-		newParams.set("pubTypeId", value.id);
-		router.replace(`${path}?${newParams.toString()}`, { scroll: false });
+	const schema = useMemo(
+		() => createPubEditorSchemaFromPubFields(props.pubFields),
+		[props.pubFields]
+	);
+
+	const resolver = useMemo(() => typeboxResolver(schema), [props.formElements]);
+
+	const form = useForm({
+		defaultValues: createPubEditorDefaultValuesFromPubFields(
+			props.pubFields,
+			props.pubValues,
+			props.pubTypeId,
+			props.stageId
+		),
+		reValidateMode: "onChange",
+		resolver,
 	});
+
+	const handleSelectPubType = useDebouncedCallback(
+		(value: (typeof props.availablePubTypes)[number]) => {
+			const newParams = new URLSearchParams(searchParams);
+			newParams.set("pubTypeId", value.id);
+			router.replace(`${path}?${newParams.toString()}`, { scroll: false });
+		}
+	);
 
 	const closeForm = useCallback(() => {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const resolver = useMemo(
-		() => typeboxResolver(createEditorFormSchemaFromPubFields(props.pubFields)),
-		[props.formElements]
-	);
-	const form = useForm({
-		defaultValues: createEditorFormDefaultValuesFromPubFields(props.pubFields, props.pubValues),
-		reValidateMode: "onChange",
-		resolver,
-	});
-	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
-		if (!selectedStage) {
-			form.setError("stage", {
-				message: "Select a stage",
-			});
-			return;
-		}
-		if (!selectedPubType) {
-			form.setError("pubType", {
-				message: "Select a pub type",
-			});
-			return;
-		}
-		if (hasValues && props.pubId) {
+	const onSubmit: SubmitHandler<Static<typeof schema>> = async (data) => {
+		const { pubTypeId, stageId, ...pubValues } = data;
+
+		if (props.pubId) {
 			const result = await runUpdatePub({
-				pubId: props.pubId,
-				communityId: selectedPubType.communityId as CommunitiesId,
 				path: pathWithoutFormParam,
-				stageId: stage as StagesId,
-				fields: createFieldsForSever(values, selectedPubType),
+				pubId: props.pubId,
+				pubValues,
+				stageId: stageId as StagesId,
 			});
 
 			if (result && "success" in result) {
@@ -131,13 +121,20 @@ export function PubEditorClient(props: Props) {
 				closeForm();
 			}
 		} else {
+			if (!pubTypeId) {
+				form.setError("pubTypeId", {
+					message: "Select a pub type",
+				});
+				return;
+			}
+
 			const result = await runCreatePub({
-				communityId: selectedPubType.communityId,
-				pubTypeId: selectedPubType.id,
-				stageId: selectedStage?.id,
+				communityId: props.communityId,
 				parentId: props.parentId,
-				fields: createFieldsForSever(values, selectedPubType),
 				path: pathWithoutFormParam,
+				pubTypeId: pubTypeId as PubTypesId,
+				pubValues,
+				stageId: stageId as StagesId,
 			});
 			if (result && "success" in result) {
 				toast({
@@ -158,22 +155,26 @@ export function PubEditorClient(props: Props) {
 			>
 				{!props.pubId && (
 					<FormField
-						name="pubType"
+						name="pubTypeId"
 						control={form.control}
 						rules={{
 							required: true,
 						}}
 						render={({ field }) => (
 							<FormItem
-								aria-label="Email"
+								aria-label="Select Pub Type"
 								className="flex flex-col items-start gap-2"
 							>
 								<FormLabel>Pub Type</FormLabel>
-								<FormDescription>Select the type of pub</FormDescription>
+								<FormDescription>Assign a pub type to the pub</FormDescription>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button size="sm" variant="outline">
-											{selectedPubType?.name || "Select Pub Type"}
+											{field.value
+												? props.availablePubTypes.find(
+														(type) => type.id === field.value
+													)?.name
+												: "Select Pub Type"}
 											<ChevronDown size="16" />
 										</Button>
 									</DropdownMenuTrigger>
@@ -182,9 +183,8 @@ export function PubEditorClient(props: Props) {
 											<DropdownMenuItem
 												key={pubType.id}
 												onSelect={() => {
-													setSelectedPubType(pubType);
 													field.onChange(pubType.id);
-													handleSelect(pubType);
+													handleSelectPubType(pubType);
 												}}
 											>
 												{pubType.name}
@@ -192,14 +192,13 @@ export function PubEditorClient(props: Props) {
 										))}
 									</DropdownMenuContent>
 								</DropdownMenu>
-
 								<FormMessage />
 							</FormItem>
 						)}
 					/>
 				)}
 				<FormField
-					name="stage"
+					name="stageId"
 					control={form.control}
 					rules={{
 						required: true,
@@ -211,17 +210,20 @@ export function PubEditorClient(props: Props) {
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button size="sm" variant="outline">
-										{selectedStage?.name || "Select Stage"}
+										{field.value
+											? props.availableStages.find(
+													(stage) => stage.id === field.value
+												)?.name
+											: "Select Stage"}
 										<ChevronDown size="16" />
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
-									{props.communityStages.map((stage) => (
+									{props.availableStages.map((stage) => (
 										<DropdownMenuItem
 											key={stage.id}
 											onClick={() => {
 												field.onChange(stage.id);
-												setSelectedStage(stage);
 											}}
 										>
 											{stage.name}
@@ -229,21 +231,15 @@ export function PubEditorClient(props: Props) {
 									))}
 								</DropdownMenuContent>
 							</DropdownMenu>
-
 							<FormMessage />
 						</FormItem>
 					)}
 				/>
-				{selectedPubType && props.formElements}
+				{props.formElements}
 				<Button
 					type="submit"
 					className="flex items-center gap-x-2"
-					disabled={
-						form.formState.isSubmitting ||
-						!selectedStage ||
-						!selectedPubType ||
-						!form.formState.isValid
-					}
+					disabled={form.formState.isSubmitting || !form.formState.isValid}
 				>
 					{form.formState.isSubmitting ? (
 						<Loader2 className="h-4 w-4 animate-spin" />

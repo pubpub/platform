@@ -32,7 +32,7 @@ export default async function Page({ params, searchParams }: Props) {
 	return (
 		<>
 			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
-			<PubList communityId={community.id} token={tokenPromise} />
+			<PubList communityId={community.id} token={tokenPromise} searchParams={searchParams} />
 		</>
 	);
 }

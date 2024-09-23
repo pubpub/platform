@@ -60,6 +60,7 @@ type Props = {
 	queryParamName: string;
 	member?: MemberSelectUserWithMembership;
 	users: MemberSelectUser[];
+	allowPubFieldSubstitution: boolean;
 };
 
 export function UserSelectClient({
@@ -69,6 +70,7 @@ export function UserSelectClient({
 	queryParamName,
 	member,
 	users,
+	allowPubFieldSubstitution,
 }: Props) {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -99,59 +101,66 @@ export function UserSelectClient({
 			name={fieldName}
 			render={({ field }) => {
 				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
-				return (
+				const formItem = (
+					<FormItem className="flex flex-col gap-y-1">
+						<div className="flex items-center justify-between">
+							<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+								{fieldLabel}
+							</FormLabel>
+							{allowPubFieldSubstitution && <PubFieldSelectorToggleButton />}
+						</div>
+						<AutoComplete
+							name={fieldName}
+							value={selectedUserOption}
+							options={options}
+							empty={
+								<UserSelectAddUserButton
+									key={addUserButtonKey}
+									community={community}
+									email={inputValue}
+								/>
+							}
+							onInputValueChange={onInputValueChange}
+							onValueChange={async (option) => {
+								const user = users.find((user) => user.id === option.value);
+								if (!user) {
+									return;
+								}
+								if (isMemberSelectUserWithMembership(user)) {
+									setSelectedUser(user);
+									field.onChange(user.member.id);
+								} else {
+									const result = await runAddMember({
+										user,
+										role: MemberRole.contributor,
+									});
+									if (didSucceed(result)) {
+										const member = expect(result.member);
+										setSelectedUser({ ...user, member });
+										field.onChange(member.id);
+									}
+								}
+							}}
+							onClose={resetAddUserButton}
+							icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
+						/>
+						<FormMessage />
+						{allowPubFieldSubstitution && (
+							<PubFieldSelectorHider>
+								<PubFieldSelector />
+							</PubFieldSelectorHider>
+						)}
+					</FormItem>
+				);
+				return allowPubFieldSubstitution ? (
 					<PubFieldSelectorProvider
 						field={field}
 						allowedSchemas={[CoreSchemaType.MemberId]}
 					>
-						<FormItem className="flex flex-col gap-y-1">
-							<div className="flex items-center justify-between">
-								<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-									{fieldLabel}
-								</FormLabel>
-								<PubFieldSelectorToggleButton />
-							</div>
-							<AutoComplete
-								name={fieldName}
-								value={selectedUserOption}
-								options={options}
-								empty={
-									<UserSelectAddUserButton
-										key={addUserButtonKey}
-										community={community}
-										email={inputValue}
-									/>
-								}
-								onInputValueChange={onInputValueChange}
-								onValueChange={async (option) => {
-									const user = users.find((user) => user.id === option.value);
-									if (!user) {
-										return;
-									}
-									if (isMemberSelectUserWithMembership(user)) {
-										setSelectedUser(user);
-										field.onChange(user.member.id);
-									} else {
-										const result = await runAddMember({
-											user,
-											role: MemberRole.contributor,
-										});
-										if (didSucceed(result)) {
-											const member = expect(result.member);
-											setSelectedUser({ ...user, member });
-											field.onChange(member.id);
-										}
-									}
-								}}
-								onClose={resetAddUserButton}
-								icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
-							/>
-							<FormMessage />
-							<PubFieldSelectorHider>
-								<PubFieldSelector />
-							</PubFieldSelectorHider>
-						</FormItem>
+						{formItem}
 					</PubFieldSelectorProvider>
+				) : (
+					formItem
 				);
 			}}
 		/>

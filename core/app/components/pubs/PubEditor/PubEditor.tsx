@@ -91,19 +91,19 @@ export async function PubEditor(props: PubEditorProps) {
 	));
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const currentStage = community.stages.find((stage) => stage.id === currentStageId);
 
 	return (
 		<PubEditorClient
-			currentStage={currentStage}
-			communityStages={community.stages}
 			availablePubTypes={community.pubTypes}
+			availableStages={community.stages}
+			communityId={community.id}
+			formElements={formElements}
 			parentId={"parentId" in props ? props.parentId : undefined}
 			pubFields={pubFields}
-			pubValues={pubValues as unknown as PubValues}
-			pubTypeId={pubType?.id}
-			formElements={formElements}
 			pubId={pub?.id}
+			pubTypeId={pubType?.id}
+			pubValues={pubValues as unknown as PubValues}
+			stageId={currentStageId}
 		/>
 	);
 }
