@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,6 +18,26 @@ const editFormTitleSchema = z.object({
 	name: z.string().min(1, "Form name is required"),
 });
 
+type NotificationProps = {
+	message: string;
+	success?: boolean;
+};
+
+const NotificationComponent: React.FC<NotificationProps> = ({ message, success = true }) => {
+	return (
+		<div
+			className={`mx-auto flex max-w-lg items-center rounded-lg border p-4 shadow-md ${
+				success
+					? "border-green-200 bg-green-100 text-green-800"
+					: "border-red-200 bg-red-100 text-red-800"
+			}`}
+		>
+			<div className="mr-3 text-2xl">{success ? "✔️" : "❌"}</div>
+			<div className="text-lg font-semibold">{message}</div>
+		</div>
+	);
+};
+
 const EditFormTitleButton = ({ formId, name }: { formId: string; name: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -34,7 +54,7 @@ const EditFormTitleButton = ({ formId, name }: { formId: string; name: string })
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
-				description: "Name successfully updated",
+				description: <NotificationComponent message="Name successfully updated" />,
 			});
 			setIsOpen(false);
 		}
