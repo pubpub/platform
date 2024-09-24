@@ -9,9 +9,8 @@ export default defineConfig({
 		environment: "jsdom",
 		environmentMatchGlobs: [
 			["**/(!db).test.ts", "jsdom"],
-			// all tests in tests/ with .edge.test.ts will run in edge-runtime
+			// for database tests we don't want to use `jsdom`
 			["**/*.db.test.ts", "node"],
-			// ...
 		],
 		exclude: [
 			"**/playwright/**",
