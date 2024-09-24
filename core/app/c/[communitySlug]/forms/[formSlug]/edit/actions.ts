@@ -24,7 +24,7 @@ export const updateForm = defineServerAction(async function updateForm({ communi
 				.where("communityId", "=", communityId)
 				.returning("id")
 		);
-		console.log(form);
+		console.log("\n\n\n\n", form, "\n\n\n\n");
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			const column = error.constraint === "forms_slug_key" ? "slug" : "name";

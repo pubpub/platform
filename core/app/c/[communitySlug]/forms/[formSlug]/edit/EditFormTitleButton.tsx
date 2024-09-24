@@ -38,7 +38,6 @@ const EditFormTitleButton = ({ name, communityId }: { name: string; communityId:
 
 	const runUpdateFormTitle = useServerAction(updateForm);
 	const onSubmit = (data: z.infer<typeof editFormTitleSchema>) => {
-		console.log(data);
 		const result = runUpdateFormTitle({ communityId, name: data.name });
 		if (didSucceed(result)) {
 			toast({
