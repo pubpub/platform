@@ -1,8 +1,7 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 
-import type { JsonValue } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import { logger } from "logger";
 
@@ -10,6 +9,7 @@ import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
+import { PubValues } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -25,7 +25,7 @@ export const createPub = defineServerAction(async function createPub({
 	communityId: CommunitiesId;
 	stageId: StagesId;
 	pubTypeId: PubTypesId;
-	pubValues: Record<string, JsonValue>;
+	pubValues: PubValues;
 	path?: string | null;
 	parentId?: PubsId;
 }) {
@@ -96,7 +96,7 @@ export const _updatePub = async ({
 	pubTypeId,
 }: {
 	pubId: PubsId;
-	pubValues: Record<string, JsonValue>;
+	pubValues: PubValues;
 	stageId?: StagesId;
 	pubTypeId?: PubTypesId;
 }) => {
@@ -211,7 +211,7 @@ export const updatePub = defineServerAction(async function updatePub({
 }: {
 	pubId: PubsId;
 	pubTypeId?: PubTypesId;
-	pubValues: Record<string, JsonValue>;
+	pubValues: PubValues;
 	stageId?: StagesId;
 }) {
 	const loginData = await getLoginData();

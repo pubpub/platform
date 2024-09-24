@@ -3,11 +3,11 @@
 import { JSONPath } from "jsonpath-plus";
 
 import type { PubsId } from "db/public";
-import { JsonValue } from "contracts";
 import { logger } from "logger";
 
 import type { action } from "./action";
 import { _updatePub } from "~/app/components/pubs/PubEditor/actions";
+import { PubValues } from "~/lib/server";
 import { defineRun } from "../types";
 
 const findNestedStructure = (json: unknown, path: string) => {
@@ -105,13 +105,10 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 			};
 		}
 
-		const pubValues = mappedOutputs.reduce(
-			(acc, { pubField, resValue }) => {
-				acc[pubField] = resValue;
-				return acc;
-			},
-			{} as Record<string, JsonValue>
-		);
+		const pubValues = mappedOutputs.reduce((acc, { pubField, resValue }) => {
+			acc[pubField] = resValue;
+			return acc;
+		}, {} as PubValues);
 
 		const updateResult = await _updatePub({
 			pubId: pub.id as PubsId,

@@ -24,6 +24,7 @@ import { cn } from "utils";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
+import { PubValues } from "~/lib/server";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";
@@ -68,10 +69,7 @@ const preparePayload = ({
 /**
  * Date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (
-	elements: PubPubForm["elements"],
-	pubValues: Record<string, JsonValue>
-) => {
+const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
 	const defaultValues: FieldValues = { ...pubValues };
 	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
 	for (const de of dateElements) {

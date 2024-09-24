@@ -1,13 +1,11 @@
-import type { FieldValues } from "react-hook-form";
-
 import { TObject, TString, Type } from "@sinclair/typebox";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { FormElementsId, PubTypesId, PubValues, StagesId } from "db/public";
-import { JsonValue } from "contracts";
+import type { FormElementsId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 
 import type { Form } from "~/lib/server/form";
+import { PubValues } from "~/lib/server";
 import { PubField } from "~/lib/types";
 
 // Function to create an element object based on pubType parameter
@@ -34,7 +32,7 @@ export function makeFormElementDefFromPubFields(
 
 export const createPubEditorDefaultValuesFromPubFields = (
 	pubFields: Pick<PubField, "slug" | "schemaName">[],
-	pubValues: Record<string, JsonValue>,
+	pubValues: PubValues,
 	pubTypeId?: string,
 	stageId?: string
 ) => {

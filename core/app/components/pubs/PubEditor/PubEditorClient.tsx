@@ -14,11 +14,9 @@ import type {
 	PubsId,
 	PubTypes,
 	PubTypesId,
-	PubValues,
 	Stages,
 	StagesId,
 } from "db/public";
-import { JsonValue } from "contracts";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -31,6 +29,7 @@ import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
+import { PubValues } from "~/lib/server";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { PubField } from "~/lib/types";
 import * as actions from "./actions";
@@ -55,7 +54,7 @@ type Props = {
 	pubFields: Pick<PubField, "slug" | "schemaName">[];
 	pubId?: PubsId;
 	pubTypeId: PubTypes["id"];
-	pubValues: Record<string, JsonValue>;
+	pubValues: PubValues;
 	stageId?: StagesId;
 };
 

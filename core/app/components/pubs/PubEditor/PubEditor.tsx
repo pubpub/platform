@@ -1,4 +1,4 @@
-import type { CommunitiesId, PubsId, PubValues, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { expect } from "utils";
 
 import { db } from "~/kysely/database";
@@ -100,7 +100,7 @@ export async function PubEditor(props: PubEditorProps) {
 			pubFields={pubFields}
 			pubId={pub?.id}
 			pubTypeId={pubType?.id}
-			pubValues={pubValues as unknown as PubValues}
+			pubValues={pubValues}
 			stageId={currentStageId}
 		/>
 	);
