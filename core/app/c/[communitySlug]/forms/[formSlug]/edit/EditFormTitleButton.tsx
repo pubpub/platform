@@ -51,7 +51,7 @@ const EditFormTitleButton = ({ name, communityId }: { name: string; communityId:
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen} modal={true}>
 			<DialogTrigger asChild>
 				<Button
-					variant="ghost"
+					variant="link"
 					className="ml-2 text-sm text-gray-500 hover:text-blue-600 hover:underline"
 				>
 					Edit
