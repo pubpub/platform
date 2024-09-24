@@ -39,7 +39,8 @@ export class FieldsPage {
 	}
 
 	async addFieldsOfEachType() {
-		for (const schema of Object.values(CoreSchemaType)) {
+		const schemas = Object.values(CoreSchemaType).filter((s) => s !== CoreSchemaType.Null);
+		for (const schema of schemas) {
 			await this.addField(schema, schema);
 		}
 	}

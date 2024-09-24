@@ -2,8 +2,6 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import { CoreSchemaType } from "db/public";
-
 import { PubsPage } from "./fixtures/pubs-page";
 import { createCommunity, login } from "./helpers";
 

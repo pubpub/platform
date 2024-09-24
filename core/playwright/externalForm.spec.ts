@@ -61,12 +61,8 @@ test.describe("Rendering the external form", () => {
 	test("Can render the form with validation", async () => {
 		await expect(page.locator("h1").filter({ hasText: "Evaluation" })).toHaveCount(1);
 		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("not an email");
-		await expect(
-			page.locator("p").filter({ hasText: "Expected string to match 'email' format" })
-		).toHaveCount(1);
+		await expect(page.locator("p").filter({ hasText: "Invalid email address" })).toHaveCount(1);
 		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
-		await expect(
-			page.locator("p").filter({ hasText: "Expected string to match 'email' format" })
-		).toHaveCount(0);
+		await expect(page.locator("p").filter({ hasText: "Invalid email address" })).toHaveCount(0);
 	});
 });

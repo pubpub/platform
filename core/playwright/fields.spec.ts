@@ -32,7 +32,9 @@ test.describe("Creating a field", () => {
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
 		await fieldsPage.addFieldsOfEachType();
-		for (const schema of Object.values(CoreSchemaType)) {
+		for (const schema of Object.values(CoreSchemaType).filter(
+			(s) => s !== CoreSchemaType.Null
+		)) {
 			await expect(
 				page.getByRole("button", { name: `Select row ${schema} ${schema}` })
 			).toHaveCount(1);
@@ -85,6 +87,9 @@ test.describe("Creating a field", () => {
 		await page.getByTestId("isRelation-checkbox").click();
 		await page.getByRole("button", { name: "Create" }).click();
 		await expect(page.getByTestId("schema-select-form-message")).toHaveCount(0);
+
+		await page.getByRole("button", { name: "Updated" }).click();
+		await page.getByRole("menuitem", { name: "Desc" }).click();
 		const newRow = page.getByRole("button", { name: "Select row Relation field" });
 		await expect(newRow).toHaveCount(1);
 		await expect(newRow).toContainText("Null");
@@ -100,6 +105,8 @@ test.describe("Creating a field", () => {
 		await fieldsPage.selectFormat(CoreSchemaType.Boolean);
 		await page.getByRole("button", { name: "Create" }).click();
 
+		await page.getByRole("button", { name: "Updated" }).click();
+		await page.getByRole("menuitem", { name: "Desc" }).click();
 		const newRow = page.getByRole("button", { name: `Select row ${name}` });
 		await expect(newRow).toHaveCount(1);
 		await expect(newRow).toContainText("Boolean");
@@ -116,6 +123,9 @@ test.describe("Editing a field", () => {
 		await expect(page.getByTestId("isRelation-checkbox")).toBeDisabled();
 		await page.getByRole("textbox", { name: "name" }).fill("New Title");
 		await page.getByRole("button", { name: "Update" }).click();
+
+		await page.getByRole("button", { name: "Updated" }).click();
+		await page.getByRole("menuitem", { name: "Desc" }).click();
 		await expect(page.getByRole("button", { name: `Select row New Title String` })).toHaveCount(
 			1
 		);
