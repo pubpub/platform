@@ -59,11 +59,7 @@ export default async function Page({
 					{form.name}
 				</>
 			}
-			editFormTitleButton={
-				<>
-					<EditFormTitleButton name={form.name} communityId={communityId} />
-				</>
-			}
+			editFormTitleButton={<EditFormTitleButton name={form.name} communityId={communityId} />}
 			headingAction={
 				<div className="flex gap-2">
 					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
