@@ -57,9 +57,9 @@ export default async function Page({
 				<>
 					<ClipboardPenLine size={24} strokeWidth={1} className="mr-2 text-slate-500" />{" "}
 					{form.name}
+					<EditFormTitleButton formId={form.id} name={form.name} />
 				</>
 			}
-			editFormTitleButton={<EditFormTitleButton name={form.name} communityId={communityId} />}
 			headingAction={
 				<div className="flex gap-2">
 					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}

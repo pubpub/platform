@@ -8,7 +8,7 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
-export const updateForm = defineServerAction(async function updateForm({ communityId, name }) {
+export const updateForm = defineServerAction(async function updateForm({ formId, name }) {
 	const user = await getLoginData();
 
 	if (!user) {
@@ -18,18 +18,12 @@ export const updateForm = defineServerAction(async function updateForm({ communi
 	}
 	try {
 		const formUpdateQuery = await autoRevalidate(
-			db
-				.updateTable("forms")
-				.set({ name: name })
-				.where("communityId", "=", communityId)
-				.returning("id")
+			db.updateTable("forms").set({ name: name }).where("id", "=", formId)
 		);
-		//
 		await formUpdateQuery.execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
-			const column = error.constraint === "forms_slug_key" ? "slug" : "name";
-			return { error: `A form with this ${column} already exists. Choose a new ${column}` };
+			return { error: `A form with this name already exists. Choose a new name` };
 		}
 		logger.error({ msg: "error creating form", error });
 		return { error: "Form creation failed" };

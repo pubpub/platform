@@ -26,7 +26,7 @@ const editFormTitleSchema = z.object({
 	name: z.string().min(1, "Form name is required"),
 });
 
-const EditFormTitleButton = ({ name, communityId }: { name: string; communityId: string }) => {
+const EditFormTitleButton = ({ formId, name }: { formId: string; name: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 
 	const form = useForm<z.infer<typeof editFormTitleSchema>>({
@@ -37,12 +37,12 @@ const EditFormTitleButton = ({ name, communityId }: { name: string; communityId:
 	});
 
 	const runUpdateFormTitle = useServerAction(updateForm);
-	const onSubmit = (data: z.infer<typeof editFormTitleSchema>) => {
-		const result = runUpdateFormTitle({ communityId, name: data.name });
+	const onSubmit = async (data: z.infer<typeof editFormTitleSchema>) => {
+		const result = await runUpdateFormTitle({ formId, name: data.name });
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
-				description: "Form name was successfully updated",
+				description: "Name successfully updated",
 			});
 			setIsOpen(false);
 		}
@@ -52,13 +52,14 @@ const EditFormTitleButton = ({ name, communityId }: { name: string; communityId:
 			<DialogTrigger asChild>
 				<Button
 					variant="link"
-					className="ml-2 text-sm text-gray-500 hover:text-blue-600 hover:underline"
+					className="ml-2 text-sm text-blue-500 hover:text-blue-600 hover:underline"
 				>
 					Edit
 				</Button>
 			</DialogTrigger>
 			<DialogContent>
 				<DialogTitle>Edit Name</DialogTitle>
+				<hr />
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
 						<FormField
@@ -71,9 +72,6 @@ const EditFormTitleButton = ({ name, communityId }: { name: string; communityId:
 										<Input placeholder="Name" {...field} />
 									</FormControl>
 									<FormMessage />
-									<FormDescription>
-										Update the name of your form here
-									</FormDescription>
 								</FormItem>
 							)}
 						/>
