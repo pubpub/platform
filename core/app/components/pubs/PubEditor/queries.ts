@@ -61,16 +61,11 @@ export const getCommunityById = <EB extends ExpressionBuilder<Database, keyof Da
 				.selectFrom("stages")
 				.select(["stages.id", "stages.name", "stages.order"])
 				.orderBy("stages.order desc")
-				.where("stages.communityId", "=", communityId)
-		).as("stages"),
-	]);
+				.whereRef("stages.communityId", "=", eb.ref("communities.id"))
+ 		).as("stages"),
+	]).where("communities.id", "=", communityId);
 
-	const completeQuery =
-		typeof communityId === "string"
-			? query.where("communities.id", "=", communityId)
-			: query.whereRef("communities.id", "=", communityId);
-
-	return autoCache(completeQuery);
+	return autoCache(query);
 };
 
 export const getStage = (stageId: StagesId) =>

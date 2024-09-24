@@ -27,7 +27,6 @@ export type PubEditorProps = {
 
 export async function PubEditor(props: PubEditorProps) {
 	let pub: Awaited<ReturnType<typeof getPubCached>> | undefined;
-	let stage: AutoReturnType<typeof getStage>["executeTakeFirstOrThrow"] | undefined;
 	let community: AutoReturnType<typeof getCommunityById>["executeTakeFirstOrThrow"];
 
 	if ("pubId" in props) {
@@ -40,7 +39,6 @@ export async function PubEditor(props: PubEditorProps) {
 		).executeTakeFirstOrThrow();
 	} else if ("stageId" in props) {
 		const result = await getStage(props.stageId).executeTakeFirstOrThrow();
-		stage = result;
 		community = result.community;
 	} else {
 		community = await getCommunityById(

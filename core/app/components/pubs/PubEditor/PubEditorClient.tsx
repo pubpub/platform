@@ -30,7 +30,7 @@ import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
-import { useServerAction } from "~/lib/serverActions";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { PubField } from "~/lib/types";
 import * as actions from "./actions";
 import {
@@ -107,13 +107,12 @@ export function PubEditorClient(props: Props) {
 
 		if (props.pubId) {
 			const result = await runUpdatePub({
-				path: pathWithoutFormParam,
 				pubId: props.pubId,
 				pubValues,
 				stageId: stageId as StagesId,
 			});
 
-			if (result && "success" in result) {
+			if (didSucceed(result)) {
 				toast({
 					title: "Success",
 					description: "Pub successfully updated",
@@ -131,12 +130,11 @@ export function PubEditorClient(props: Props) {
 			const result = await runCreatePub({
 				communityId: props.communityId,
 				parentId: props.parentId,
-				path: pathWithoutFormParam,
 				pubTypeId: pubTypeId as PubTypesId,
 				pubValues,
 				stageId: stageId as StagesId,
 			});
-			if (result && "success" in result) {
+			if (didSucceed(result)) {
 				toast({
 					title: "Success",
 					description: "New pub created",

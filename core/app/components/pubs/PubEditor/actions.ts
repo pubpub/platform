@@ -10,6 +10,7 @@ import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
+import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
@@ -102,7 +103,9 @@ export const _updatePub = async ({
 	const result = await db.transaction().execute(async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
-			await trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId).execute();
+			await autoRevalidate(
+				trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId)
+			).execute();
 			await autoRevalidate(
 				trx.insertInto("PubsInStages").values({ pubId, stageId })
 			).execute();
@@ -124,21 +127,22 @@ export const _updatePub = async ({
 			};
 		}
 
-		const existingPubFieldValues = await db
-			.selectFrom("pub_fields")
-			.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
-			.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-			.distinctOn("pub_fields.id")
-			.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
-			.select([
-				"pub_values.id as pubValueId",
-				"pub_values.pubId",
-				"pub_fields.slug",
-				"pub_fields.name",
-				"pub_fields.schemaName",
-			])
-			.where("pub_fields.isRelation", "=", false)
-			.execute();
+		const existingPubFieldValues = await autoCache(
+			db
+				.selectFrom("pub_fields")
+				.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+				.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
+				.distinctOn("pub_fields.id")
+				.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+				.select([
+					"pub_values.id as pubValueId",
+					"pub_values.pubId",
+					"pub_fields.slug",
+					"pub_fields.name",
+					"pub_fields.schemaName",
+				])
+				.where("pub_fields.isRelation", "=", false)
+		).execute();
 
 		const validated = validatePubValuesBySchemaName({
 			fields: existingPubFieldValues,
@@ -194,9 +198,6 @@ export const _updatePub = async ({
 		};
 	});
 
-	// TODO: Remove this.
-	revalidateTag(`pubs_${pubId}`);
-
 	return result;
 };
 
@@ -204,13 +205,11 @@ export const updatePub = defineServerAction(async function updatePub({
 	pubId,
 	pubTypeId,
 	pubValues,
-	path,
 	stageId,
 }: {
 	pubId: PubsId;
 	pubTypeId?: PubTypesId;
 	pubValues: Record<string, JsonValue>;
-	path?: string | null;
 	stageId?: StagesId;
 }) {
 	const loginData = await getLoginData();
@@ -221,9 +220,6 @@ export const updatePub = defineServerAction(async function updatePub({
 
 	try {
 		const result = await _updatePub({ pubId, pubTypeId, pubValues, stageId });
-		if (path) {
-			revalidatePath(path);
-		}
 
 		return result;
 	} catch (error) {
