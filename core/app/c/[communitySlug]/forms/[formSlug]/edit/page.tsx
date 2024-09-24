@@ -61,7 +61,7 @@ export default async function Page({
 			}
 			editFormTitleButton={
 				<>
-					<EditFormTitleButton name={form.name} communityId={communityId}/>
+					<EditFormTitleButton name={form.name} communityId={communityId} />
 				</>
 			}
 			headingAction={

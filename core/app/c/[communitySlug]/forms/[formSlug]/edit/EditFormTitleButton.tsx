@@ -1,14 +1,21 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import router from "next/router";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from "ui/dialog";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
@@ -54,7 +61,7 @@ const EditFormTitleButton = ({ name, communityId }: { name: string; communityId:
 				<DialogTitle>Edit Name</DialogTitle>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
-						{/* <FormField
+						<FormField
 							control={form.control}
 							name="name"
 							render={({ field }) => (
@@ -64,9 +71,12 @@ const EditFormTitleButton = ({ name, communityId }: { name: string; communityId:
 										<Input placeholder="Name" {...field} />
 									</FormControl>
 									<FormMessage />
+									<FormDescription>
+										Update the name of your form here
+									</FormDescription>
 								</FormItem>
 							)}
-						/> */}
+						/>
 						<DialogFooter className="flex justify-end">
 							<Button
 								variant="secondary"

@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 
+<<<<<<< HEAD
+=======
+import { redirect } from "next/navigation";
+
+>>>>>>> 03f905da (sheesh)
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
