@@ -26,11 +26,15 @@ export class FieldsPage {
 		await this.newButton.click();
 	}
 
+	async selectFormat(format: CoreSchemaType) {
+		await this.formatBox.click();
+		await this.page.getByRole("option", { name: format }).click();
+	}
+
 	async addField(name: string, format: CoreSchemaType) {
 		await this.openNewFieldModal();
 		await this.nameBox.fill(name);
-		await this.formatBox.click();
-		await this.page.getByRole("option", { name: format }).click();
+		await this.selectFormat(format);
 		await this.page.getByRole("button", { name: "Create" }).click();
 	}
 

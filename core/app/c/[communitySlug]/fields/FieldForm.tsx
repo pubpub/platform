@@ -125,7 +125,7 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 					<FormDescription>
 						Defines the foundational structure of the field's data
 					</FormDescription>
-					<FormMessage />
+					<FormMessage data-testid="schema-select-form-message" />
 				</FormItem>
 			)}
 		/>
@@ -292,6 +292,7 @@ export const FieldForm = ({
 												}
 											}}
 											className="rounded"
+											data-testid="isRelation-checkbox"
 										/>
 									</FormControl>
 									<FormLabel>
