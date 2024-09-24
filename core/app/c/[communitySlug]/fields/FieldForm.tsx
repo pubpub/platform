@@ -86,7 +86,7 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 			name="schemaName"
 			render={({ field }) => (
 				<FormItem>
-					<FormLabel>Select a format</FormLabel>
+					<FormLabel disabled={isDisabled}>Select a format</FormLabel>
 					<Select
 						onValueChange={field.onChange}
 						defaultValue={field.value ?? undefined}
@@ -164,7 +164,7 @@ const SlugField = ({
 			render={({ field }) => {
 				return (
 					<FormItem>
-						<FormLabel>Slug</FormLabel>
+						<FormLabel disabled={readOnly}>Slug</FormLabel>
 						<FormControl>
 							{/* If readonly, only render a disabled input */}
 							{readOnly ? (
@@ -192,6 +192,42 @@ const SlugField = ({
 					</FormItem>
 				);
 			}}
+		/>
+	);
+};
+
+const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: boolean }) => {
+	return (
+		<FormField
+			control={form.control}
+			name="isRelation"
+			render={({ field }) => (
+				<FormItem>
+					<div className="flex items-center gap-2">
+						<FormControl>
+							<Checkbox
+								disabled={isDisabled}
+								checked={field.value}
+								onCheckedChange={(change) => {
+									if (typeof change === "boolean") {
+										field.onChange(change);
+									}
+								}}
+								className="rounded"
+								data-testid="isRelation-checkbox"
+							/>
+						</FormControl>
+						<FormLabel disabled={isDisabled}>
+							This field represents a reference to another Pub
+						</FormLabel>
+					</div>
+					<FormDescription>
+						Selecting this option will allow you to add a list of related Pubs to any
+						Pubs with this field
+					</FormDescription>
+					<FormMessage />
+				</FormItem>
+			)}
 		/>
 	);
 };
@@ -276,37 +312,7 @@ export const FieldForm = ({
 						)}
 					/>
 					<SlugField form={form} communitySlug={community.slug} readOnly={isEditing} />
-					<FormField
-						control={form.control}
-						name="isRelation"
-						render={({ field }) => (
-							<FormItem>
-								<div className="flex items-center gap-2">
-									<FormControl>
-										<Checkbox
-											disabled={isEditing}
-											checked={field.value}
-											onCheckedChange={(change) => {
-												if (typeof change === "boolean") {
-													field.onChange(change);
-												}
-											}}
-											className="rounded"
-											data-testid="isRelation-checkbox"
-										/>
-									</FormControl>
-									<FormLabel>
-										This field represents a reference to another Pub
-									</FormLabel>
-								</div>
-								<FormDescription>
-									Selecting this option will allow you to add a list of related
-									Pubs to any Pubs with this field
-								</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					<IsRelationCheckbox form={form} isDisabled={isEditing} />
 					{/* Schema field is disabled if one has previously been selected */}
 					<SchemaSelectField isDisabled={!!defaultValues?.schemaName} form={form} />
 				</div>
