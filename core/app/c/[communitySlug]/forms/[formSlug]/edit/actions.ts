@@ -17,13 +17,14 @@ export const updateForm = defineServerAction(async function updateForm({ communi
 		};
 	}
 	try {
-		await autoRevalidate(
+		const form = await autoRevalidate(
 			db
 				.updateTable("forms")
 				.set({ name: name })
 				.where("communityId", "=", communityId)
 				.returning("id")
 		);
+		console.log(form);
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			const column = error.constraint === "forms_slug_key" ? "slug" : "name";
