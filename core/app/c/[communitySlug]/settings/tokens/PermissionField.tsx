@@ -210,6 +210,7 @@ export const PermissionField = ({
 														{extraContraints({
 															context,
 															form,
+															// @ts-ignore FIXME: add better error handling
 															value: field.value,
 															onChange: field.onChange,
 														})}
