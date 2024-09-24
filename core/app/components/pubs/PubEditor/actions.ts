@@ -130,7 +130,7 @@ export const _updatePub = async ({
 		}
 
 		const existingPubFieldValues = await autoCache(
-			db
+			trx
 				.selectFrom("pub_fields")
 				.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
 				.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
@@ -161,7 +161,7 @@ export const _updatePub = async ({
 		try {
 			// Insert, update on conflict
 			await autoRevalidate(
-				db
+				trx
 					.insertInto("pub_values")
 					.values((eb) =>
 						Object.entries(pubValues).map(([pubFieldSlug, pubValue]) => ({
