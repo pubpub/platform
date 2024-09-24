@@ -69,7 +69,7 @@ export const siteApi = contract.router(
 				summary: "Creates a pub",
 				body: CreatePubRequestBodyWithNullsNew,
 				responses: {
-					201: z.array(pubWithChildrenSchema),
+					201: pubWithChildrenSchema,
 				},
 			},
 		},

@@ -15,7 +15,7 @@ export const pubInStageForDuration = defineRule({
 	}),
 	display: {
 		base: "a pub stays in this stage for...",
-		withConfig: ({ duration, interval }) =>
+		withConfig: ({ duration, interval }: { duration: number; interval: Interval }) =>
 			`a pub stays in this stage for ${duration} ${interval}s`,
 	},
 });

@@ -9,7 +9,7 @@ import type { action } from "./action";
 import { _updatePub } from "~/app/components/PubCRUD/actions";
 import { defineRun } from "../types";
 
-const findNestedStructure = (json: unknown, path) => {
+const findNestedStructure = (json: unknown, path: string) => {
 	if (typeof json !== "object") {
 		// TODO: handle this
 		return;

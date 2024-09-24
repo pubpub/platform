@@ -113,8 +113,9 @@ export const renderMemberFields = async ({
 		),
 	]);
 
-	const relevantAttrs = attributes.filter((attr) =>
-		(ALLOWED_MEMBER_ATTRIBUTES as ReadonlyArray<string>).includes(attr)
+	const relevantAttrs = attributes.filter(
+		(attr): attr is (typeof ALLOWED_MEMBER_ATTRIBUTES)[number] =>
+			(ALLOWED_MEMBER_ATTRIBUTES as ReadonlyArray<string>).includes(attr)
 	);
 	if (relevantAttrs.length) {
 		return relevantAttrs.map((attr) => user[attr]).join(" ");

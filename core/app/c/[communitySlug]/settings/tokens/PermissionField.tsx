@@ -11,13 +11,63 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { CreateTokenForm } from "./CreateTokenForm";
 
+/**
+ * This is a type for a configuration object for form fields. It allows you to specify
+ * what a certain Permission form field does in a type-safe way, depending on the earlier
+ * configuration of the `permissionsSchema`.
+ *
+ * Roughly this type means:
+ *
+ * Turn a type that looks like this,
+ * where `boolean | undefined` means that the field can be set to `true` or `false`, and
+ * `boolean | { stages: Stages[] } | undefined` means that the field can be set to `true` or `false`,
+ * or to an object with a `stages` field that is an array of stages:
+ * ```ts
+ * type InputShape =  {
+ * 	 community: {
+ * 		read: boolean | undefined
+ *   },
+ *   pub: {
+ * 		write: boolean | {
+ * 			stages: Stages[]
+ * 		} | undefined
+ *   }
+ * }
+ * ```
+ * into a type that looks like
+ * ```ts
+ * {
+ * 	 community: {
+ * 		read: ({ context, form, value, onChange }: {
+ * 			context: CreateTokenFormContext;
+ * 			form: CreateTokenForm;
+ * 			value: boolean;
+ * 			onChange: (...args: any[]) => void;
+ *        }) => JSX.Element
+ * },
+ *   pub: {
+ * 		write?: ({ context, form, value, onChange }: {
+ * 			context: CreateTokenFormContext;
+ * 			form: CreateTokenForm;
+ * 			value: boolean | {
+ * 				stages: Stages[]
+ * 			};
+ * 			onChange: (...args: any[]) => void;
+ *        }) => JSX.Element
+ *   } | undefined
+ * }
+ * ```
+ * The idea is that you can customize what form fields look like depending on the
+ * `permissionsSchema` configuration.
+ * E.g. the `write` field of the `pub` scope can be configured to only write to specific stages.
+ * You should be able to configure a custom element to do this.
+ *
+ */
 type PermissionContraintMap = {
 	[K in keyof ApiAccessPermissionConstraintsInput as ApiAccessPermissionConstraintsInput[K] extends never
 		? never
 		: K]: {
-		[T in keyof ApiAccessPermissionConstraintsInput[K] as boolean extends ApiAccessPermissionConstraintsInput[K][T]
-			? never
-			: T]: ({
+		[T in keyof ApiAccessPermissionConstraintsInput[K]]: ({
 			form,
 			context,
 			value,
@@ -48,10 +98,15 @@ const permissionContraintMap: PermissionContraintMap = {
 						label: stage.name,
 						value: stage.id,
 					}))}
+					/**
+					 * This just means: if it is set to `true`, allow it to act on all stages.
+					 * If it is set to `false`, allow it to act on no stages.
+					 * Otherwise just reuse the value of the `stages` field. (this is a bit of a cop-out as this situation should never come to pass)
+					 */
 					defaultValue={
 						value === true
 							? context.stages.map((stage) => stage.id)
-							: value === false
+							: !value
 								? []
 								: value.stages
 					}
@@ -83,7 +138,7 @@ const permissionContraintMap: PermissionContraintMap = {
 					defaultValue={
 						value === true
 							? context.stages.map((stage) => stage.id)
-							: value === false
+							: !value
 								? []
 								: value.stages
 					}
@@ -98,6 +153,7 @@ const permissionContraintMap: PermissionContraintMap = {
 	member: {},
 	pubType: {},
 };
+
 export const PermissionField = ({
 	form,
 	name,

@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+// @ts-expect-error no types for this package
 import tsconfigPaths from "vitest-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 

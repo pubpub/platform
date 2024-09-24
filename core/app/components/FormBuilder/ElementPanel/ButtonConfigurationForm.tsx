@@ -27,7 +27,7 @@ import { ChevronDown } from "ui/icon";
 import { Input } from "ui/input";
 import { cn } from "utils";
 
-import type { ButtonElement } from "../types";
+import type { ButtonElement, FormBuilderSchema } from "../types";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { useFormBuilder } from "../FormBuilderContext";
 import { ButtonOption } from "../SubmissionSettings";
@@ -46,7 +46,7 @@ export const ButtonConfigurationForm = ({
 }) => {
 	const { dispatch, update, stages } = useFormBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
-	const { getValues } = useFormContext();
+	const { getValues } = useFormContext<FormBuilderSchema>();
 	// Derive some initial values based on the state of the parent form when this panel was opened
 	const { button, buttonIndex, otherButtons, numElements } = useMemo(() => {
 		const elements = getValues()["elements"];
@@ -60,7 +60,7 @@ export const ButtonConfigurationForm = ({
 				})
 			: -1;
 		const button = buttonIndex === -1 ? undefined : elements[buttonIndex];
-		const otherButtons: ButtonElement[] = elements.filter(
+		const otherButtons = elements.filter(
 			(e) =>
 				isButtonElement(e) &&
 				e.elementId !== buttonIdentifier &&
