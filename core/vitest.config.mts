@@ -1,6 +1,5 @@
 import react from "@vitejs/plugin-react";
-// @ts-expect-error no types for this package
-import tsconfigPaths from "vitest-tsconfig-paths";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -8,6 +7,12 @@ export default defineConfig({
 	test: {
 		globalSetup: ["./globalSetup.ts"],
 		environment: "jsdom",
+		environmentMatchGlobs: [
+			["**/(!db).test.ts", "jsdom"],
+			// all tests in tests/ with .edge.test.ts will run in edge-runtime
+			["**/*.db.test.ts", "node"],
+			// ...
+		],
 		exclude: [
 			"**/playwright/**",
 			"**/node_modules/**",
