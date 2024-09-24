@@ -333,16 +333,16 @@ export const createPubRecursiveNew = async ({
 		};
 	}
 
-	const valueIdsWithValues = Object.entries(body.values).map(([slug, value]) => {
-		const valueId = filteredFields.find(
+	const valuesWithFieldIds = Object.entries(body.values).map(([slug, value]) => {
+		const field = filteredFields.find(
 			({ slug: slugInPubTypeFields }) => slug === slugInPubTypeFields
 		);
-		if (!valueId) {
+		if (!field) {
 			throw new NotFoundError(`No pub field found for slug '${slug}'`);
 		}
 		return {
-			id: valueId.id,
-			slug: valueId.slug,
+			id: field.id,
+			slug: field.slug,
 			value: JSON.stringify(value),
 		};
 	});
@@ -376,7 +376,7 @@ export const createPubRecursiveNew = async ({
 			trx
 				.insertInto("pub_values")
 				.values(
-					valueIdsWithValues.map(({ id, value }, index) => ({
+					valuesWithFieldIds.map(({ id, value }, index) => ({
 						// not sure this is the best way to do this
 						fieldId: id,
 						pubId: newPub.id,
