@@ -37,31 +37,29 @@ const EditFormTitleButton = ({ title }: { title: string }) => {
 					<DialogTitle>Edit Name</DialogTitle>
 				</DialogHeader>
 				<Form {...form}>
-					<form onSubmit={() => console.log("Eww")}>
-						<Suspense fallback={<SkeletonCard />}>
-							<div className="mb-4">
-								<FormLabel
+					<form>
+						<div className="mb-4">
+							{/* <FormLabel
 									htmlFor="formName"
 									className="block text-sm font-medium text-gray-700"
 								>
 									Form Name
-								</FormLabel>
-								{/* <FormField
-									control={form.control}
-									name="formName"
-									render={({ field }) => (
-										<div className="grid gap-2">
-											<FormItem>
-												<FormLabel>Form Name</FormLabel>
-												<FormControl>
-													<Input {...field} />
-												</FormControl>
-											</FormItem>
-										</div>
-									)}
-								/> */}
-							</div>
-						</Suspense>
+								</FormLabel> */}
+							<FormField
+								control={form.control}
+								name="formName"
+								render={({ field }) => (
+									<div className="grid gap-2">
+										<FormItem>
+											<FormLabel>Form Name</FormLabel>
+											<FormControl>
+												<Input {...field} />
+											</FormControl>
+										</FormItem>
+									</div>
+								)}
+							/>
+						</div>
 						<div className="flex justify-end">
 							<Button variant="secondary" className="mr-2">
 								Cancel
