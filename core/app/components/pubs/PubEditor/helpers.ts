@@ -4,6 +4,7 @@ import { TObject, TString, Type } from "@sinclair/typebox";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { FormElementsId, PubTypesId, PubValues, StagesId } from "db/public";
+import { JsonValue } from "contracts";
 import { CoreSchemaType, ElementType } from "db/public";
 
 import type { Form } from "~/lib/server/form";
@@ -33,7 +34,7 @@ export function makeFormElementDefFromPubFields(
 
 export const createPubEditorDefaultValuesFromPubFields = (
 	pubFields: Pick<PubField, "slug" | "schemaName">[],
-	pubValues: PubValues,
+	pubValues: Record<string, JsonValue>,
 	pubTypeId?: string,
 	stageId?: string
 ) => {

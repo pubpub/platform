@@ -18,6 +18,7 @@ import type {
 	Stages,
 	StagesId,
 } from "db/public";
+import { JsonValue } from "contracts";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -54,7 +55,7 @@ type Props = {
 	pubFields: Pick<PubField, "slug" | "schemaName">[];
 	pubId?: PubsId;
 	pubTypeId: PubTypes["id"];
-	pubValues: PubValues;
+	pubValues: Record<string, JsonValue>;
 	stageId?: StagesId;
 };
 
