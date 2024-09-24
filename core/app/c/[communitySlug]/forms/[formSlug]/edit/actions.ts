@@ -1,10 +1,11 @@
 "use server";
 
-import { logger } from "logger";
+import { log } from "console";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/auth/loginData";
+import { logError } from "~/lib/logging";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
@@ -25,7 +26,7 @@ export const updateForm = defineServerAction(async function updateForm({ formId,
 		if (isUniqueConstraintError(error)) {
 			return { error: `A form with this name already exists. Choose a new name` };
 		}
-		logger.error({ msg: "error creating form", error });
-		return { error: "Form creation failed" };
+		logError("error updating form", error);
+		return { error: "Form update failed" };
 	}
 });
