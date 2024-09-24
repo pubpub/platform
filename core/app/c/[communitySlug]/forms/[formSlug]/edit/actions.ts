@@ -1,7 +1,5 @@
 "use server";
 
-import { log } from "console";
-
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/auth/loginData";
