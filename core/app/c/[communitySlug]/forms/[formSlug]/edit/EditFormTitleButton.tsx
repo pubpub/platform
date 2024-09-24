@@ -1,40 +1,47 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import router from "next/router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogOverlay,
-	DialogTitle,
-	DialogTrigger,
-} from "ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from "ui/dialog";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
+import { toast } from "ui/use-toast";
 
-const editFormNameSchema = z.object({
-	formName: z.string().min(1, "Form name is required"),
+import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { updateForm } from "./actions";
+
+const editFormTitleSchema = z.object({
+	name: z.string().min(1, "Form name is required"),
 });
 
-const EditFormTitleButton = ({ title }: { title: string }) => {
-	const form = useForm<z.infer<typeof editFormNameSchema>>({
-		resolver: zodResolver(editFormNameSchema),
+const EditFormTitleButton = ({ name, communityId }: { name: string; communityId: string }) => {
+	const [isOpen, setIsOpen] = useState(false);
+
+	const form = useForm<z.infer<typeof editFormTitleSchema>>({
+		resolver: zodResolver(editFormTitleSchema),
 		defaultValues: {
-			formName: title,
+			name,
 		},
 	});
 
-	const onSubmit = (data: z.infer<typeof editFormNameSchema>) => {
-		console.log(data);
+	const runUpdateFormTitle = useServerAction(updateForm);
+	const onSubmit = (data: z.infer<typeof editFormTitleSchema>) => {
+		const result = runUpdateFormTitle({ communityId, name: data.name });
+		if (didSucceed(result)) {
+			toast({
+				title: "Success",
+				description: "Form name was successfully updated",
+			});
+			setIsOpen(false);
+		}
 	};
 	return (
-		<Dialog>
-			<DialogOverlay />
+		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen} modal={true}>
 			<DialogTrigger asChild>
 				<Button
 					variant="ghost"
@@ -47,24 +54,28 @@ const EditFormTitleButton = ({ title }: { title: string }) => {
 				<DialogTitle>Edit Name</DialogTitle>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
-						<FormField
+						{/* <FormField
 							control={form.control}
-							name="formName"
+							name="name"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Form Name</FormLabel>
 									<FormControl>
-										<Input defaultValue={field.value} {...field} />
+										<Input placeholder="Name" {...field} />
 									</FormControl>
 									<FormMessage />
-									<FormDescription>
-										Change the name of your form here.
-									</FormDescription>
 								</FormItem>
 							)}
-						/>
+						/> */}
 						<DialogFooter className="flex justify-end">
-							<Button variant="secondary" className="mr-2">
+							<Button
+								variant="secondary"
+								className="mr-2"
+								onClick={() => {
+									form.reset();
+									setIsOpen(false);
+								}}
+							>
 								Cancel
 							</Button>
 							<Button
