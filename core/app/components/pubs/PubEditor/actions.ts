@@ -113,7 +113,9 @@ export const _updatePub = async ({
 
 		// Update the pub type if a pub type was provided.
 		if (pubId !== undefined) {
-			await trx.updateTable("pubs").set({ pubTypeId }).where("id", "=", pubId).execute();
+			await autoRevalidate(
+				trx.updateTable("pubs").set({ pubTypeId }).where("id", "=", pubId)
+			).execute();
 		}
 
 		// First query for existing values so we know whether to insert or update.
