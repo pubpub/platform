@@ -7,7 +7,16 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
-import type { CommunitiesId, PubFields, PubFieldSchema, PubsId, PubTypes, Stages } from "db/public";
+import type { JsonValue } from "contracts";
+import type {
+	CommunitiesId,
+	PubFields,
+	PubFieldSchema,
+	PubFieldsId,
+	PubsId,
+	PubTypes,
+	Stages,
+} from "db/public";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
@@ -100,7 +109,11 @@ export const PubCreateForm = ({
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const onSubmit = async ({ pubType, stage, ...values }: { pubType: string; stage: string }) => {
+	const onSubmit = async ({
+		pubType,
+		stage,
+		...values
+	}: { pubType: string; stage: string } & Record<string, JsonValue>) => {
 		if (!selectedStage) {
 			form.setError("stage", {
 				message: "Select a stage",
@@ -120,28 +133,31 @@ export const PubCreateForm = ({
 			path: pathWithoutFormParam,
 			stageId: selectedStage?.id,
 			pubTypeId: selectedPubType?.id,
-			fields: Object.entries(values).reduce((acc, [key, value]) => {
-				// -- hack
-				if (key === "hack") {
-					const pubTypeMemberField = selectedPubType?.fields.find(
-						(field) => field.schemaName === CoreSchemaType.MemberId
-					);
-					if (!pubTypeMemberField) {
-						throw new Error("Member field not found");
+			fields: Object.entries(values).reduce(
+				(acc, [key, value]) => {
+					// -- hack
+					if (key === "hack") {
+						const pubTypeMemberField = selectedPubType?.fields.find(
+							(field) => field.schemaName === CoreSchemaType.MemberId
+						);
+						if (!pubTypeMemberField) {
+							throw new Error("Member field not found");
+						}
+
+						acc[pubTypeMemberField?.id] = { slug: pubTypeMemberField?.slug, value };
+						return acc;
 					}
 
-					acc[pubTypeMemberField?.id] = { slug: pubTypeMemberField?.slug, value };
+					// -- hack
+
+					const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
+					if (id) {
+						acc[id] = { slug: key, value };
+					}
 					return acc;
-				}
-
-				// -- hack
-
-				const id = selectedPubType?.fields.find((f) => f.slug === key)?.id;
-				if (id) {
-					acc[id] = { slug: key, value };
-				}
-				return acc;
-			}, {}),
+				},
+				{} as Record<PubFieldsId, { slug: string; value: JsonValue }>
+			),
 			parentId,
 		});
 

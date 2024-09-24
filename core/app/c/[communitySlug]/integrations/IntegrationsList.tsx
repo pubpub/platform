@@ -17,7 +17,7 @@ const getTitle = (pub: Props["instances"][number]["pubs"][number]) => {
 	return titleValue?.[1] as string;
 };
 
-const getSettingsUrl = (instance: Props["instances"][number], token) => {
+const getSettingsUrl = (instance: Props["instances"][number], token: string) => {
 	const url = new URL(instance.integration.settingsUrl);
 	url.searchParams.set("instanceId", instance.id);
 	url.searchParams.set("token", token);

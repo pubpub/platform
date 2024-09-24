@@ -1,5 +1,5 @@
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vitest-tsconfig-paths";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -7,6 +7,11 @@ export default defineConfig({
 	test: {
 		globalSetup: ["./globalSetup.ts"],
 		environment: "jsdom",
+		environmentMatchGlobs: [
+			["**/(!db).test.ts", "jsdom"],
+			// for database tests we don't want to use `jsdom`
+			["**/*.db.test.ts", "node"],
+		],
 		exclude: [
 			"**/playwright/**",
 			"**/node_modules/**",

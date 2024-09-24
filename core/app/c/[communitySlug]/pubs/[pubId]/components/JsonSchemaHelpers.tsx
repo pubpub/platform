@@ -32,27 +32,32 @@ export function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, va
 			default:
 				return <p>{JSON.stringify(value)}</p>;
 		}
-	} else {
-		const objectSchema = schema.properties as JSONSchemaType<AnySchema>;
-		const fields = Object.entries(objectSchema).map(([fieldKey, fieldSchema]) => {
-			return (
-				<>
-					{fieldSchema.title && (
-						<CardHeader>
-							<CardTitle className={cn("text-sm")}>{fieldSchema.title}</CardTitle>
-						</CardHeader>
-					)}
-					<CardContent>
-						{recursivelyGetScalarFields(
-							fieldSchema as JSONSchemaType<AnySchema>,
-							value![fieldKey]
-						)}
-					</CardContent>
-				</>
-			);
-		});
-		return fields;
 	}
+
+	const objectSchema = schema.properties as JSONSchemaType<AnySchema>;
+	const fields = Object.entries(objectSchema).map(([fieldKey, fieldSchema]) => {
+		const fieldValue =
+			typeof value === "object" && value !== null && !Array.isArray(value)
+				? value[fieldKey]
+				: null;
+
+		return (
+			<>
+				{fieldSchema.title && (
+					<CardHeader>
+						<CardTitle className={cn("text-sm")}>{fieldSchema.title}</CardTitle>
+					</CardHeader>
+				)}
+				<CardContent>
+					{recursivelyGetScalarFields(
+						fieldSchema as JSONSchemaType<AnySchema>,
+						fieldValue ?? null
+					)}
+				</CardContent>
+			</>
+		);
+	});
+	return fields;
 }
 
 export function renderField(fieldValue: PubValueWithFieldAndSchema) {

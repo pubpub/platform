@@ -7,8 +7,8 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
-import type { GetPubResponseBody } from "contracts";
-import type { CommunitiesId, PubsId, Stages, StagesId } from "db/public";
+import type { GetPubResponseBody, JsonValue } from "contracts";
+import type { CommunitiesId, PubFieldsId, PubsId, Stages, StagesId } from "db/public";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import {
@@ -74,19 +74,25 @@ export const PubUpdateForm = ({
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const onSubmit = async ({ stage, ...values }: { pubType: string; stage: string }) => {
+	const onSubmit = async ({
+		stage,
+		...values
+	}: { pubType: string; stage: string } & Record<string, JsonValue>) => {
 		const result = await runUpdatePub({
 			pubId: pub.id as PubsId,
 			communityId: pubType.communityId as CommunitiesId,
 			path: pathWithoutFormParam,
 			stageId: stage as StagesId,
-			fields: Object.entries(values).reduce((acc, [key, value]) => {
-				const id = pubType?.fields.find((f) => f.slug === key)?.id;
-				if (id) {
-					acc[id] = { slug: key, value };
-				}
-				return acc;
-			}, {}),
+			fields: Object.entries(values).reduce(
+				(acc, [key, value]) => {
+					const id = pubType?.fields.find((f) => f.slug === key)?.id;
+					if (id) {
+						acc[id] = { slug: key, value };
+					}
+					return acc;
+				},
+				{} as Record<PubFieldsId, { slug: string; value: JsonValue }>
+			),
 		});
 
 		if (result && "success" in result) {

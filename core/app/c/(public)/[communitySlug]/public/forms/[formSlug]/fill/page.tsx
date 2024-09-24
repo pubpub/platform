@@ -47,10 +47,11 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 
 export type FormFillPageParams = { formSlug: string; communitySlug: string };
 
-export type FormFillPageSearchParams = { pubId?: PubsId } & (
-	| { token: string; reason: string }
-	| { token?: never; reason?: never }
-);
+export type FormFillPageSearchParams = {
+	pubId?: PubsId;
+	submitId?: string;
+	saveStatus?: string;
+} & ({ token: string; reason: string } | { token?: never; reason?: never });
 
 const ExpiredTokenPage = ({
 	params,

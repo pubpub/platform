@@ -1,6 +1,7 @@
-import type { User } from "@prisma/client";
+import type { IntegrationInstanceState, User } from "@prisma/client";
 
 import { Prisma } from "@prisma/client";
+import { InputJsonValue } from "@prisma/client/runtime/library";
 
 import type { CreatePubRequestBodyWithNulls, GetPubTypeResponseBody } from "contracts";
 
@@ -156,9 +157,9 @@ export const getMembers = async (userIds: string[]) => {
 
 // pubs
 
-const toJSONNull = (json: CreatePubRequestBodyWithNulls["values"][1]) => {
+const toJSONNull = (json: CreatePubRequestBodyWithNulls["values"][1]): InputJsonValue => {
 	if (json === null) {
-		return Prisma.JsonNull;
+		return Prisma.JsonNull as unknown as InputJsonValue;
 	} else if (Array.isArray(json)) {
 		return json.map(toJSONNull);
 	} else if (typeof json === "object" && json !== null) {
@@ -480,7 +481,11 @@ export const getIntegrationInstanceConfig = async (instanceId: string) => {
 	return instance?.config ?? null;
 };
 
-export const setIntegrationInstanceState = async (instanceId: string, pubId: string, state) => {
+export const setIntegrationInstanceState = async (
+	instanceId: string,
+	pubId: string,
+	state: IntegrationInstanceState
+) => {
 	return await prisma.integrationInstanceState.upsert({
 		where: {
 			pub_instance: {
