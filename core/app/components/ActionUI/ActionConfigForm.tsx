@@ -1,5 +1,7 @@
 "use client";
 
+import type { z } from "zod";
+
 import { startTransition, useCallback } from "react";
 
 import type { ActionInstances, ActionInstancesId, Action as ActionName } from "db/public";
@@ -24,7 +26,7 @@ export const ActionConfigForm = (props: Props) => {
 	const runUpdateAction = useServerAction(updateAction);
 
 	const onSubmit = useCallback(
-		async (values) => {
+		async (values: z.infer<typeof action.config.schema>) => {
 			startTransition(async () => {
 				const result = await runUpdateAction(props.instance.id as ActionInstancesId, {
 					config: values,

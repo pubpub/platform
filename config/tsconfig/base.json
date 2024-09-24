@@ -17,7 +17,8 @@
 		"strict": true,
 		"incremental": true,
 		"allowJs": true,
-		"noEmit": true
+		"noEmit": true,
+		"noImplicitAny": true
 	},
 	"exclude": ["node_modules", "build", "dist", ".next"]
 }

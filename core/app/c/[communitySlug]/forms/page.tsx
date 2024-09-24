@@ -19,7 +19,13 @@ export const metadata: Metadata = {
 	title: "Forms",
 };
 
-export default async function Page({ params: { communitySlug } }) {
+export default async function Page({
+	params: { communitySlug },
+}: {
+	params: {
+		communitySlug: string;
+	};
+}) {
 	const { user } = await getPageLoginData();
 
 	if (!isCommunityAdmin(user, { slug: communitySlug })) {

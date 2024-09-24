@@ -1,4 +1,5 @@
 import type {
+	AliasedSelectQueryBuilder,
 	ExpressionBuilder,
 	ReferenceExpression,
 	SelectExpression,
@@ -12,7 +13,15 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
 import type { Database } from "db/Database";
-import type { CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import type {
+	CommunitiesId,
+	PubValues as DBPubValues,
+	Pubs,
+	PubsId,
+	PubTypesId,
+	StagesId,
+	UsersId,
+} from "db/public";
 
 import type { MaybeHas, XOR } from "../types";
 import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
@@ -72,7 +81,7 @@ const pubValues = (
 
 	const alias = "latest_values";
 	// Although kysely has selectNoFrom, this kind of query can't be generated without using raw sql
-	const jsonObjAgg = (subquery) =>
+	const jsonObjAgg = (subquery: AliasedSelectQueryBuilder<any, any>) =>
 		sql<PubValues>`(select json_object_agg(${sql.ref(alias)}.slug, ${sql.ref(
 			alias
 		)}.value) from ${subquery})`;
@@ -352,24 +361,26 @@ const maybeWithTrx = async <T>(
 /**
  * @throws
  */
-export const createPubRecursiveNew = async ({
+export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>({
 	body,
 	communityId,
 	parent,
 	trx,
 }:
 	| {
-			body: CreatePubRequestBodyWithNullsNew;
+			body: Body;
 			trx?: Transaction<Database>;
 			communityId: CommunitiesId;
 			parent?: never;
 	  }
 	| {
-			body: MaybeHas<CreatePubRequestBodyWithNullsNew, "stageId">;
+			body: MaybeHas<Body, "stageId">;
 			trx?: Transaction<Database>;
 			communityId: CommunitiesId;
 			parent: { id: PubsId };
-	  }) => {
+	  }): Promise<
+	"children" extends keyof Body ? PubWithChildren : Omit<PubWithChildren, "children">
+> => {
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
@@ -395,11 +406,13 @@ export const createPubRecursiveNew = async ({
 		values: body.values,
 	});
 
+	// TODO: this should throw instead, aborting the transaction
 	if (validated && validated.error) {
-		return {
-			error: validated.error,
-			cause: validated.error,
-		};
+		throw new Error(validated.error);
+		// return {
+		// 	error: validated.error,
+		// 	cause: validated.error,
+		// };
 	}
 
 	const valueIdsWithValues = Object.entries(body.values).map(([slug, value]) => {
@@ -483,7 +496,9 @@ export const createPubRecursiveNew = async ({
 		};
 	});
 
-	return result;
+	return result as "children" extends keyof Body
+		? PubWithChildren
+		: Omit<PubWithChildren, "children">;
 };
 
 export const deletePub = async (pubId: PubsId) =>

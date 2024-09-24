@@ -6,6 +6,7 @@ import { FormLabel } from "ui/form";
 import { FormInput, Pencil, Plus } from "ui/icon";
 import { cn } from "utils";
 
+import type { FormBuilderSchema } from "./types";
 import { useFormBuilder } from "./FormBuilderContext";
 import { isButtonElement } from "./types";
 
@@ -62,7 +63,7 @@ export const ButtonOption = ({
 export const SubmissionSettings = () => {
 	const { openButtonConfigPanel } = useFormBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
-	const { getValues } = useFormContext();
+	const { getValues } = useFormContext<FormBuilderSchema>();
 	const buttons = useMemo(() => {
 		const elements = getValues()["elements"];
 		return elements.filter((e) => isButtonElement(e));

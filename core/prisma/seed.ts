@@ -30,12 +30,10 @@ async function createUserMembers({
 	role: "editor" | "admin" | "contributor";
 	prismaCommunityIds: string[];
 }) {
-	let user;
-
 	await prisma.user.create({
 		data: {
 			slug,
-			email: user ? user.email : email,
+			email: email,
 			firstName,
 			lastName,
 			passwordHash: await createPasswordHash(password),
