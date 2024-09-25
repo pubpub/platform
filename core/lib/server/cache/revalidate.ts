@@ -32,7 +32,7 @@ export const revalidateTagsForCommunity = <S extends CacheScope>(
 	slugs.forEach((slug) => {
 		const tags = createCommunityCacheTags(scopes, slug);
 		tags.forEach((tag) => {
-			if (env.CACHE_LOG) {
+			if (env.CACHE_LOG === "true") {
 				logger.debug(`MANUAL REVALIDATE: revalidating tag: ${tag}`);
 			}
 			revalidateTag(tag);

@@ -29,7 +29,8 @@
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
 		"../packages/db/scripts/scripts/generateDatabaseObject.mts",
-		"../packages/db/src/prisma/comment-generator.ts"
+		"../packages/db/src/prisma/comment-generator.ts",
+		"cache-handler.js"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }

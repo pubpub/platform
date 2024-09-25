@@ -2,16 +2,13 @@ import "reactflow/dist/style.css";
 
 import type { Metadata } from "next";
 
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-
-import type { CommunitiesId, StagesId } from "db/public";
+import type { StagesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
-import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getStage } from "~/lib/db/queries";
-import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getCommunityStages } from "~/lib/server/stages";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
 import { StagePanel } from "./components/panel/StagePanel";
@@ -45,72 +42,6 @@ export async function generateMetadata({
 
 	return { title: stage.name };
 }
-
-const getCommunityStages = (communityId: CommunitiesId) =>
-	autoCache(
-		db
-			.selectFrom("stages")
-			.where("communityId", "=", communityId)
-			.select((eb) => [
-				jsonArrayFrom(
-					eb
-						.selectFrom("move_constraint")
-						.whereRef("move_constraint.stageId", "=", "stages.id")
-						.selectAll("move_constraint")
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("stages")
-									.whereRef("stages.id", "=", "move_constraint.destinationId")
-									.selectAll("stages")
-							)
-								.$notNull()
-								.as("destination"),
-						])
-				).as("moveConstraints"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("move_constraint")
-						.whereRef("move_constraint.destinationId", "=", "stages.id")
-						.selectAll("move_constraint")
-				).as("moveConstraintSources"),
-				eb
-					.selectFrom("PubsInStages")
-					.select((eb) =>
-						eb.fn
-							.count<number>("PubsInStages.pubId")
-							.filterWhereRef("PubsInStages.stageId", "=", "stages.id")
-							.as("pubsCount")
-					)
-					.as("pubsCount"),
-				// TODO: needs to be fancier and include member groups
-				eb
-					.selectFrom("permissions")
-					.innerJoin("_PermissionToStage", "permissions.id", "_PermissionToStage.A")
-					.innerJoin("members", "_PermissionToStage.B", "members.id")
-					.select((eb) =>
-						eb.fn
-							.count("_PermissionToStage.A")
-							.filterWhereRef("_PermissionToStage.B", "=", "stages.id")
-							.as("memberCount")
-					)
-					.as("memberCount"),
-
-				eb
-					.selectFrom("action_instances")
-					.whereRef("action_instances.stageId", "=", "stages.id")
-					.select((eb) =>
-						eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
-					)
-					.as("actionInstancesCount"),
-			])
-			.selectAll("stages")
-			.orderBy("order asc")
-	);
-
-export type CommunityStage = Awaited<
-	ReturnType<ReturnType<typeof getCommunityStages>["execute"]>
->[number];
 
 export default async function Page({ params, searchParams }: Props) {
 	await getPageLoginData();

@@ -61,7 +61,7 @@ describe("DataTable", () => {
 						</button>
 					),
 				},
-			];
+			] satisfies ColumnDef<Animal, string>[];
 			render(<DataTable columns={columnsWithButton} data={DATA} onRowClick={rowClick} />);
 			const button = screen.getByTestId(`test-btn-0`);
 			fireEvent.click(button);

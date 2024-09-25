@@ -15,6 +15,11 @@ const nextConfig = {
 		ignoreDuringBuilds: true,
 	},
 	reactStrictMode: true,
+	/**
+	 * This is necessary to get around Next.js hard 2MB limit
+	 * for cached fetches.
+	 */
+	cacheHandler: new URL("./cache-handler.mjs", import.meta.url).pathname,
 	images: {
 		remotePatterns: [
 			{

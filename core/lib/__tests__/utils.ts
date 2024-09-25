@@ -81,13 +81,13 @@ export const mockServerCode = async () => {
 	});
 
 	vi.mock("~/lib/server/cache/autoRevalidate", () => ({
-		autoRevalidate: (db) => {
+		autoRevalidate: (db: any) => {
 			return db;
 		},
 	}));
 
 	vi.mock("~/lib/server/cache/autoCache", () => ({
-		autoCache: (db) => {
+		autoCache: (db: any) => {
 			return db;
 		},
 	}));

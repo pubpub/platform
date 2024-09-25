@@ -1,5 +1,6 @@
 "use client";
 
+// @ts-expect-error No types for stoplight
 import { API } from "@stoplight/elements";
 
 import "@stoplight/elements/styles.min.css";

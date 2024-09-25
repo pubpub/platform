@@ -1,5 +1,7 @@
 "use client";
 
+import type { z } from "zod";
+
 import { Suspense, useCallback, useTransition } from "react";
 
 import type { ActionInstances, ActionInstancesId, PubsId } from "db/public";
@@ -37,7 +39,7 @@ export const ActionRunForm = ({
 	}
 
 	const onSubmit = useCallback(
-		async (values) => {
+		async (values: z.infer<typeof action.params.schema>) => {
 			startTransition(async () => {
 				const result = await runAction({
 					actionInstanceId: actionInstance.id as ActionInstancesId,

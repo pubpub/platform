@@ -41,7 +41,7 @@ export class NotFoundError extends HTTPStatusError<404> {
 }
 
 // For use in app router API routes
-export const handleErrors = async (routeHandler) => {
+export const handleErrors = async (routeHandler: () => Promise<NextResponse>) => {
 	try {
 		return await routeHandler();
 	} catch (error) {
