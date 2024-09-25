@@ -138,6 +138,7 @@ async function StagePubs({
 									members={members}
 								/>
 							}
+							searchParams={pageContext.searchParams}
 						/>
 						{index < list.length - 1 && <hr />}
 					</Fragment>

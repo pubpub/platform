@@ -12,13 +12,14 @@ import type { XOR } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubCached } from "~/lib/server";
 import IntegrationActions from "./IntegrationActions";
-import { PubDropDown } from "./PubCRUD/PubDropDown";
+import { PubDropDown } from "./pubs/PubDropDown";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 
 type Props = {
 	token: string;
 	actions?: React.ReactNode;
+	searchParams: Record<string, unknown>;
 } & XOR<{ pub: GetPubResult }, { pubId: PubsId }>;
 
 type MinimalRecursivePubChildren = {
@@ -106,7 +107,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 								</Suspense>
 							)}
 							<div>{props.actions}</div>
-							<PubDropDown pubId={pub.id} />
+							<PubDropDown pubId={pub.id} searchParams={props.searchParams} />
 						</div>
 					</div>
 				</RowHeader>

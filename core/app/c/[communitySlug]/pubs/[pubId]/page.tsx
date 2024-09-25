@@ -7,7 +7,7 @@ import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
+import type { PubValueWithFieldAndSchema } from "./components/jsonSchemaHelpers";
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
@@ -15,7 +15,7 @@ import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
-import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
@@ -27,7 +27,7 @@ import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
-import { renderField } from "./components/JsonSchemaHelpers";
+import { renderField } from "./components/jsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 
 export async function generateMetadata({
@@ -226,8 +226,8 @@ export default async function Page({
 				</p>
 			</div>
 			<div className="mb-2">
-				<PubCreateButton
-					label="Add New Pub"
+				<CreatePubButton
+					text="Add New Pub"
 					communityId={community.id as CommunitiesId}
 					parentId={pub.id as PubsId}
 					searchParams={searchParams}
