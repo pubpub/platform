@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Check, X } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
@@ -26,13 +27,13 @@ type NotificationProps = {
 const NotificationComponent: React.FC<NotificationProps> = ({ message, success = true }) => {
 	return (
 		<div
-			className={`mx-auto flex max-w-lg items-center rounded-lg border p-4 shadow-md ${
+			className={`mx-auto flex items-center ${
 				success
 					? "border-green-200 bg-green-100 text-green-800"
 					: "border-red-200 bg-red-100 text-red-800"
 			}`}
 		>
-			<div className="mr-3 text-2xl">{success ? "✔️" : "❌"}</div>
+			<div className="mr-3 text-2xl">{success ? <Check /> : <X />}</div>
 			<div className="text-lg font-semibold">{message}</div>
 		</div>
 	);
@@ -53,7 +54,7 @@ const EditFormTitleButton = ({ formId, name }: { formId: string; name: string })
 		const result = await runUpdateFormTitle({ formId, name: data.name });
 		if (didSucceed(result)) {
 			toast({
-				title: "Success",
+				className: "bg-green-100 border-green-200 text-green-800",
 				description: <NotificationComponent message="Name successfully updated" />,
 			});
 			setIsOpen(false);
