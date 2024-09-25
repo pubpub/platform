@@ -42,6 +42,29 @@ export const getMember = (
 	);
 };
 
+export const getMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
+	autoCache(
+		trx
+			.selectFrom("members")
+			.select((eb) => [
+				"members.id",
+				"members.userId",
+				"members.createdAt",
+				"members.updatedAt",
+				"members.role",
+				"members.communityId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "members.userId")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.where("members.communityId", "=", communityId)
+	);
+
 export const inviteMember = (props: NewMembers, trx = db) =>
 	autoRevalidate(
 		trx

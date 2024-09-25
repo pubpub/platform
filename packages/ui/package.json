@@ -326,7 +326,6 @@
 		"db": "workspace:*",
 		"lexical": "^0.15.0",
 		"lucide-react": "^0.357.0",
-		"next": "catalog:",
 		"react-day-picker": "^8.10.0",
 		"schemas": "workspace:*",
 		"tailwind-merge": "catalog:",
@@ -337,7 +336,8 @@
 		"react": "catalog:react18",
 		"react-hook-form": "^7.46.1",
 		"tailwindcss": "catalog:",
-		"zod": "catalog:"
+		"zod": "catalog:",
+		"next": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/eslint-config": "workspace:*",

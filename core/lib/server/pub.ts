@@ -1,9 +1,8 @@
 import type {
 	AliasedSelectQueryBuilder,
 	ExpressionBuilder,
-	RawBuilder,
+	ReferenceExpression,
 	SelectExpression,
-	SelectQueryBuilder,
 	StringReference,
 	Transaction,
 } from "kysely";
@@ -11,8 +10,12 @@ import type {
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { GetPubResponseBody, JsonValue } from "contracts";
-import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
+import type {
+	CreatePubRequestBodyWithNullsNew,
+	GetPubResponseBody,
+	JsonValue,
+	PubWithChildren,
+} from "contracts";
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
@@ -20,16 +23,18 @@ import type {
 	Pubs,
 	PubsId,
 	PubTypesId,
+	StagesId,
 	UsersId,
 } from "db/public";
 
-import type { MaybeHas } from "../types";
+import type { MaybeHas, Prettify, XOR } from "../types";
 import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
+import { getPubTypeBase } from "./pubtype";
 
 export type PubValues = Record<string, JsonValue>;
 
@@ -43,8 +48,8 @@ type PubNoChildren = {
 	values: PubValues;
 };
 
-type NestedPub<T extends PubNoChildren = PubNoChildren> = T & {
-	children: NestedPub[];
+type NestedPub<T extends PubNoChildren = PubNoChildren> = Omit<T, "children"> & {
+	children: NestedPub<T>[];
 };
 
 type FlatPub = PubNoChildren & {
@@ -102,9 +107,26 @@ const pubValues = (
 	).as("values");
 };
 
+export const pubType = ({
+	eb,
+	pubTypeIdRef,
+}: {
+	eb: ExpressionBuilder<Database, keyof Database>;
+	pubTypeIdRef: `${string}.pubTypeId` | `${string}.id`;
+}) =>
+	jsonObjectFrom(
+		getPubTypeBase(eb).whereRef(
+			"pub_types.id",
+			"=",
+			pubTypeIdRef as ReferenceExpression<Database, "pub_types">
+		)
+	)
+		.$notNull()
+		.as("pubType");
+
 // Converts a pub from having all its children (regardless of depth) in a flat array to a tree
 // structure. Assumes that pub.children are ordered by depth (leaves last)
-const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
+export const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
 	const pubList = [pub, ...pub.children];
 	const pubsMap = new Map();
 	pubList.forEach((pub) => pubsMap.set(pub.id, { ...pub, children: [] }));
@@ -127,21 +149,35 @@ const withPubChildren = ({
 	pubId,
 	pubIdRef,
 	communityId,
+	stageId,
 }: {
 	pubId?: PubsId;
 	pubIdRef?: StringReference<Database, keyof Database>;
 	communityId?: CommunitiesId;
+	stageId?: StagesId;
 }) => {
 	const { ref } = db.dynamic;
 
 	return db.withRecursive("children", (qc) => {
 		return qc
 			.selectFrom("pubs")
-			.select(["id", "parentId", "pubTypeId", "assigneeId", pubValuesByRef("pubs.id")])
+			.select((eb) => [
+				"id",
+				"parentId",
+				"pubTypeId",
+				"assigneeId",
+				pubValuesByRef("pubs.id"),
+				pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
+			])
 			.$if(!!pubId, (qb) => qb.where("pubs.parentId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parentId", "=", ref(pubIdRef!)))
 			.$if(!!communityId, (qb) =>
 				qb.where("pubs.communityId", "=", communityId!).where("pubs.parentId", "is", null)
+			)
+			.$if(!!stageId, (qb) =>
+				qb
+					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+					.where("PubsInStages.stageId", "=", stageId!)
 			)
 			.unionAll((eb) => {
 				return eb
@@ -153,6 +189,7 @@ const withPubChildren = ({
 						"pubs.pubTypeId",
 						"pubs.assigneeId",
 						pubValuesByRef("pubs.id"),
+						pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
 					]);
 			});
 	});
@@ -187,12 +224,20 @@ const pubColumns = [
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
 export const getPubBase = (
-	props: { pubId: PubsId; communityId?: never } | { communityId: CommunitiesId; pubId?: never }
+	props:
+		| { pubId: PubsId; communityId?: never; stageId?: never }
+		| { pubId?: never; communityId: CommunitiesId; stageId?: never }
+		| {
+				pubId?: never;
+				communityId?: never;
+				stageId: StagesId;
+		  }
 ) =>
 	withPubChildren(props)
 		.selectFrom("pubs")
 		.select((eb) => [
 			...pubColumns,
+			pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
 			pubAssignee(eb),
 			jsonArrayFrom(
 				eb
@@ -206,6 +251,7 @@ export const getPubBase = (
 					.select((eb) => [
 						...pubColumns,
 						"children.values",
+						"children.pubType",
 						jsonArrayFrom(
 							eb
 								.selectFrom("PubsInStages")
@@ -217,7 +263,7 @@ export const getPubBase = (
 			).as("children"),
 		])
 		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
-		.$if(!!props.communityId, (eb) => eb.select(pubValuesByRef("pubs.id")))
+		.$if(!props.pubId, (eb) => eb.select(pubValuesByRef("pubs.id")))
 		.$narrowType<{ values: PubValues }>();
 
 export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
@@ -242,11 +288,20 @@ export const getPubCached = async (pubId: PubsId) => {
 	return nestChildren(pub);
 };
 
+export type GetPubResult = Prettify<Awaited<ReturnType<typeof getPubCached>>>;
+
 export type GetManyParams = {
 	limit?: number;
 	offset?: number;
 	orderBy?: "createdAt" | "updatedAt";
 	orderDirection?: "asc" | "desc";
+	/**
+	 * Only fetch "Top level" pubs and their children,
+	 * do not fetch child pubs separately from their parents
+	 *
+	 * @default true
+	 */
+	onlyParents?: boolean;
 };
 
 export const GET_MANY_DEFAULT = {
@@ -254,6 +309,7 @@ export const GET_MANY_DEFAULT = {
 	offset: 0,
 	orderBy: "createdAt",
 	orderDirection: "desc",
+	onlyParents: true,
 } as const;
 
 const GET_PUBS_DEFAULT = {
@@ -263,17 +319,26 @@ const GET_PUBS_DEFAULT = {
 
 /**
  * Get a nested array of pubs and their children
+ *
+ * Either per community, or per stage
  */
 export const getPubs = async (
-	communityId: CommunitiesId,
+	props: XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>,
 	params: GetManyParams = GET_PUBS_DEFAULT
 ) => {
 	const { limit, offset, orderBy, orderDirection } = { ...GET_PUBS_DEFAULT, ...params };
 
 	const pubs = await autoCache(
-		getPubBase({ communityId })
-			.where("pubs.communityId", "=", communityId)
-			.where("pubs.parentId", "is", null)
+		getPubBase(props)
+			.$if(Boolean(props.communityId), (eb) =>
+				eb.where("pubs.communityId", "=", props.communityId!)
+			)
+			.$if(Boolean(props.stageId), (eb) =>
+				eb
+					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+					.where("PubsInStages.stageId", "=", props.stageId!)
+			)
+			.$if(Boolean(params.onlyParents), (eb) => eb.where("pubs.parentId", "is", null))
 			.limit(limit)
 			.offset(offset)
 			.orderBy(orderBy, orderDirection)
@@ -297,8 +362,12 @@ const maybeWithTrx = async <T>(
 	return await db.transaction().execute(fn);
 };
 
-type PubWithValues = Pubs & { values: DBPubValues[] };
-type PubWithChildren = PubWithValues & { children: PubWithValues[] };
+type PubWithoutChildren = Prettify<Omit<PubWithChildren, "children">>;
+type MaybeWithChildren<T extends { children?: unknown }> = keyof T extends "children"
+	? NonNullable<T["children"]> extends never
+		? PubWithoutChildren
+		: PubWithChildren
+	: PubWithoutChildren;
 
 /**
  * @throws
@@ -320,7 +389,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx?: Transaction<Database>;
 			communityId: CommunitiesId;
 			parent: { id: PubsId };
-	  }): Promise<"children" extends keyof Body ? PubWithChildren : PubWithValues> => {
+	  }): Promise<MaybeWithChildren<Body>> => {
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
@@ -412,7 +481,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			return {
 				...newPub,
 				values: pubValues,
-			};
+			} as PubWithoutChildren;
 		}
 
 		const children = await Promise.all(
@@ -433,10 +502,10 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			...newPub,
 			values: pubValues,
 			children,
-		};
+		} as PubWithChildren;
 	});
 
-	return result as "children" extends keyof Body ? PubWithChildren : PubWithValues;
+	return result as MaybeWithChildren<Body>;
 };
 
 export const deletePub = async (pubId: PubsId) =>

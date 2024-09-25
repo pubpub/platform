@@ -1,6 +1,15 @@
-import type { Communities, Members, PubFields, PubFieldsId, PubTypes, Users } from "db/public";
+import type {
+	Communities,
+	Members,
+	PubFields,
+	PubFieldsId,
+	Pubs,
+	PubTypes,
+	Users,
+} from "db/public";
 
-import type { QB } from "./server/cache/types";
+import type { PubValues } from "./server";
+import type { DirectAutoOutput } from "./server/cache/types";
 
 export type UserWithMemberships = Omit<Users, "passwordHash"> & {
 	memberships: Members[];
@@ -10,12 +19,16 @@ export type UserWithMember = Omit<Users, "passwordHash"> & {
 	member?: Members | null;
 };
 
+export type MemberWithUser = Members & { user: Omit<Users, "passwordHash"> };
+
 export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">;
 export type UserPutBody = Pick<Users, "firstName" | "lastName">;
 export type UserLoginData = Omit<Users, "passwordHash">;
 export type UserSetting = Pick<Users, "firstName" | "lastName" | "email" | "slug"> & {
 	communities: Communities[];
 };
+
+export type PubWithValues = Omit<Pubs, "valuesBlob"> & { values: PubValues };
 
 /**
  * https://www.totaltypescript.com/concepts/the-prettify-helper
@@ -89,7 +102,7 @@ export type OR<T extends Record<string, unknown>, P extends Record<string, unkno
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]: P[K] })
 >;
 
-export type AutoReturnType<T extends (...args: any[]) => QB<any>> = {
+export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> = {
 	[K in "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"]: Awaited<
 		ReturnType<ReturnType<T>[K]>
 	>;

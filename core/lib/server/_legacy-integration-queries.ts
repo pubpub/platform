@@ -1,7 +1,7 @@
 import type { IntegrationInstanceState, User } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/library";
 
 import { Prisma } from "@prisma/client";
-import { InputJsonValue } from "@prisma/client/runtime/library";
 
 import type { CreatePubRequestBodyWithNulls, GetPubTypeResponseBody } from "contracts";
 

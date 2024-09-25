@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { z } from "zod";
 
+import type { PubWithChildren } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
 import { api } from "contracts";
@@ -117,7 +118,7 @@ const handler = createNextHandler(
 					ApiAccessType.read
 				);
 
-				const pubs = await getPubs(community.id as CommunitiesId, req.query);
+				const pubs = await getPubs({ communityId: community.id }, req.query);
 
 				return {
 					status: 200,
@@ -139,10 +140,13 @@ const handler = createNextHandler(
 					);
 				}
 
-				const createdPub = await createPubRecursiveNew({
+				const createdPub = (await createPubRecursiveNew({
 					communityId: community?.id,
 					body,
-				});
+
+					// we cannot control the output type based on the input typee
+					// anyway, so it's better to just cast it to { children?: [] }
+				})) as PubWithChildren;
 
 				return {
 					status: 201,

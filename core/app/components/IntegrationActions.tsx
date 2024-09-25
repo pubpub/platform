@@ -1,33 +1,65 @@
+import { cache } from "react";
+
+import type {
+	IntegrationInstances,
+	IntegrationInstancesId,
+	Integrations,
+	PubsId,
+	StagesId,
+} from "db/public";
 import { Button } from "ui/button";
 
-import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
+import { getIntegrationInstancesForStage } from "~/lib/server/stages";
 
 type Props = {
-	pub: PubPayload;
 	token: string;
-};
+} & (
+	| {
+			type: "pub";
+			integrationInstances: IntegrationInstance[];
+			pubId: PubsId;
+			stageId?: never;
+	  }
+	| {
+			type: "pub";
+			integrationInstances?: never;
+			pubId: PubsId;
+			stageId: StagesId;
+	  }
+	| {
+			type: "stage";
+			integrationInstances?: IntegrationInstance[];
+			stageId: StagesId;
+			pubId?: never;
+	  }
+);
 
 type IntegrationAction = { text: string; href: string; kind?: "stage" };
+type IntegrationInstance = IntegrationInstances & { integration: Integrations };
 
-const getStatus = (pub: Props["pub"], integrationId: string) => {
-	const statusValue = pub.values.find((value) => {
-		return value.field.integrationId === integrationId;
-	});
-	return statusValue?.value as { text: string; color: string };
-};
-
-const getInstances = (pub: Props["pub"]) => {
-	return pub.integrationInstances.concat(
-		pub.stages.flatMap(({ stage }) => stage.integrationInstances)
-	);
-};
-
-const appendQueryParams = (instanceId: string, pubId: string, token: string) => {
+const appendQueryParams = (
+	props:
+		| {
+				type: "stage";
+				instanceId: IntegrationInstancesId;
+				token: string;
+		  }
+		| {
+				type: "pub";
+				instanceId: IntegrationInstancesId;
+				pubId: PubsId;
+				token: string;
+		  }
+) => {
 	return (action: IntegrationAction) => {
 		const url = new URL(action.href);
-		url.searchParams.set("instanceId", instanceId);
-		url.searchParams.set("pubId", pubId);
-		url.searchParams.set("token", token);
+		url.searchParams.set("instanceId", props.instanceId);
+		url.searchParams.set("token", props.token);
+
+		if (props.type === "pub") {
+			url.searchParams.set("pubId", props.pubId);
+		}
+
 		return {
 			...action,
 			href: url.toString(),
@@ -35,41 +67,72 @@ const appendQueryParams = (instanceId: string, pubId: string, token: string) => 
 	};
 };
 
-const getButtons = (pub: Props["pub"], token: Props["token"]) => {
-	const instances = getInstances(pub);
+const getButtons = ({
+	instances,
+	token,
+	...rest
+}: {
+	instances: IntegrationInstance[];
+	token: Props["token"];
+} & (
+	| {
+			type: "stage";
+			pubId?: never;
+	  }
+	| { type: "pub"; pubId: PubsId }
+)) => {
 	const buttons = instances
 		.map((instance) => {
 			const integration = instance.integration;
-			const status = getStatus(pub, integration.id);
 			const actions: IntegrationAction[] = (
 				Array.isArray(integration.actions) ? integration.actions : []
 			)
-				.filter((action: IntegrationAction) => action.kind !== "stage")
-				.map(appendQueryParams(instance.id, pub.id, token));
-			return { status, actions };
+				.filter((action: IntegrationAction) =>
+					rest.type === "stage" ? action.kind === "stage" : action.kind !== "stage"
+				)
+				.map(
+					appendQueryParams({
+						instanceId: instance.id,
+						token,
+						...rest,
+					})
+				);
+			return { actions };
 		})
 		.filter((instance) => instance && instance.actions.length);
 
 	return buttons;
 };
 
-const IntegrationActions = (props: Props) => {
-	const buttons = getButtons(props.pub, props.token);
+const cachedGetIntegrationActionsForStage = cache((stageId: StagesId) =>
+	getIntegrationInstancesForStage(stageId).execute()
+);
 
-	return buttons.length ? (
+const IntegrationActions = async (props: Props) => {
+	const integrationInstances =
+		props.integrationInstances ?? (await cachedGetIntegrationActionsForStage(props.stageId));
+
+	if (!integrationInstances.length) {
+		return null;
+	}
+
+	const buttons = getButtons({
+		...props,
+		instances: integrationInstances,
+	});
+
+	if (!buttons.length) {
+		return null;
+	}
+
+	return (
 		<ul className="flex list-none flex-row">
 			{buttons.map((button) => {
-				if (!Array.isArray(button.actions)) {
-					return null;
-				}
 				return button.actions.map((action: IntegrationAction) => {
 					if (!(action.text && action.href)) {
 						return null;
 					}
-					// Don't render "stage" only actions in the pub row
-					if (action.kind === "stage") {
-						return null;
-					}
+
 					return (
 						<li key={action.href} className="flex items-stretch">
 							<Button variant="outline" size="sm" key={action.href}>
@@ -81,7 +144,7 @@ const IntegrationActions = (props: Props) => {
 				});
 			})}
 		</ul>
-	) : null;
+	);
 };
 
 export default IntegrationActions;

@@ -12,7 +12,7 @@ export type PageContext = {
 	searchParams: Record<string, unknown>;
 };
 
-export const PubsRunActionDropDownMenu = ({
+export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
 	pubId,
 	stage,
