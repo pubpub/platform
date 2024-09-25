@@ -116,7 +116,7 @@ model Pub {
   parentId String?
   children Pub[]   @relation("pub_parent")
 
-  values                   PubValue[]       @relation("original_pub")
+  values                   PubValue[]                 @relation("original_pub")
   stages                   PubsInStages[]
   claims                   ActionClaim[]
   moves                    ActionMove[]
@@ -124,7 +124,7 @@ model Pub {
   permissions              Permission[]
   IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
-  relatedValues            PubValue[]       @relation("related_pub")
+  relatedValues            PubValue[]                 @relation("related_pub")
 
   @@map(name: "pubs")
 }
@@ -186,13 +186,13 @@ model PubValue {
   pubId        String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now()) @updatedAt
-  relatedPub   Pub?      @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
+  relatedPub   Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
   relatedPubId String?
 
   // Add userId and integrationId to track who created the value
 
-  @@map(name: "pub_values")
   @@unique([pubId, relatedPubId, fieldId])
+  @@map(name: "pub_values")
 }
 
 model PubType {

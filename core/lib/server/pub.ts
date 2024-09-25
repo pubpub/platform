@@ -93,14 +93,12 @@ const pubValues = (
 	return jsonObjAgg(
 		eb
 			.selectFrom("pub_values")
-			.distinctOn("pub_values.fieldId")
 			.selectAll("pub_values")
 			.select("slug")
 			.leftJoinLateral(
 				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
-			.orderBy(["pub_values.fieldId", "pub_values.createdAt desc"])
 			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pubId", "=", ref(pubIdRef!)))
 			.as(alias)
@@ -424,16 +422,16 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		// };
 	}
 
-	const valueIdsWithValues = Object.entries(body.values).map(([slug, value]) => {
-		const valueId = filteredFields.find(
+	const valuesWithFieldIds = Object.entries(body.values).map(([slug, value]) => {
+		const field = filteredFields.find(
 			({ slug: slugInPubTypeFields }) => slug === slugInPubTypeFields
 		);
-		if (!valueId) {
+		if (!field) {
 			throw new NotFoundError(`No pub field found for slug '${slug}'`);
 		}
 		return {
-			id: valueId.id,
-			slug: valueId.slug,
+			id: field.id,
+			slug: field.slug,
 			value: JSON.stringify(value),
 		};
 	});
@@ -467,7 +465,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx
 				.insertInto("pub_values")
 				.values(
-					valueIdsWithValues.map(({ id, value }, index) => ({
+					valuesWithFieldIds.map(({ id, value }, index) => ({
 						// not sure this is the best way to do this
 						fieldId: id,
 						pubId: newPub.id,
