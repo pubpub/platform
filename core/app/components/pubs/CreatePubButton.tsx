@@ -1,9 +1,10 @@
-import { CommunitiesId, StagesId } from "db/public";
-import { ButtonProps } from "ui/button";
+import type { CommunitiesId, StagesId } from "db/public";
+import type { ButtonProps } from "ui/button";
 import { Plus } from "ui/icon";
 
+import type { PubEditorProps } from "./PubEditor/PubEditor";
 import { PathAwareDialog } from "../PathAwareDialog";
-import { PubEditor, PubEditorProps } from "./PubEditor/PubEditor";
+import { PubEditor } from "./PubEditor/PubEditor";
 
 export type Props = PubEditorProps & {
 	variant?: ButtonProps["variant"];

@@ -55,10 +55,12 @@ type Props = {
 	formElements: React.ReactNode[];
 	parentId?: PubsId;
 	pubFields: Pick<PubField, "slug" | "schemaName">[];
-	pubId?: PubsId;
+	pubId: PubsId;
 	pubTypeId: PubTypes["id"];
 	pubValues: PubValues;
 	stageId?: StagesId;
+	/** Is updating or creating? */
+	isUpdating: boolean;
 };
 
 const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>) => {
@@ -121,7 +123,7 @@ export function PubEditorClient(props: Props) {
 	const onSubmit: SubmitHandler<Static<typeof schema>> = async (data) => {
 		const { pubTypeId, stageId, ...pubValues } = data;
 
-		if (props.pubId) {
+		if (props.isUpdating) {
 			const result = await runUpdatePub({
 				pubId: props.pubId,
 				pubValues,
@@ -144,6 +146,7 @@ export function PubEditorClient(props: Props) {
 			}
 
 			const result = await runCreatePub({
+				pubId: props.pubId,
 				communityId: props.communityId,
 				parentId: props.parentId,
 				pubTypeId: pubTypeId as PubTypesId,
@@ -167,7 +170,7 @@ export function PubEditorClient(props: Props) {
 				className={cn("relative flex flex-col gap-6", props.className)}
 				onBlur={(e) => e.preventDefault()}
 			>
-				{!props.pubId && (
+				{!props.isUpdating && (
 					<FormField
 						name="pubTypeId"
 						control={form.control}

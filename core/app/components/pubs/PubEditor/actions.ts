@@ -5,11 +5,11 @@ import { revalidatePath } from "next/cache";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import { logger } from "logger";
 
+import type { PubValues } from "~/lib/server";
 import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
-import { PubValues } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -21,6 +21,7 @@ export const createPub = defineServerAction(async function createPub({
 	pubValues,
 	path,
 	parentId,
+	pubId,
 }: {
 	communityId: CommunitiesId;
 	stageId: StagesId;
@@ -28,6 +29,7 @@ export const createPub = defineServerAction(async function createPub({
 	pubValues: PubValues;
 	path?: string | null;
 	parentId?: PubsId;
+	pubId?: PubsId;
 }) {
 	const { user } = await getLoginData();
 	if (!user) {
@@ -47,6 +49,7 @@ export const createPub = defineServerAction(async function createPub({
 					db
 						.insertInto("pubs")
 						.values({
+							id: pubId,
 							communityId: communityId,
 							pubTypeId: pubTypeId,
 							parentId: parentId,
