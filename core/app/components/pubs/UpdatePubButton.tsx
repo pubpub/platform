@@ -1,5 +1,5 @@
-import { PubsId } from "db/public";
-import { ButtonProps } from "ui/button";
+import type { PubsId } from "db/public";
+import type { ButtonProps } from "ui/button";
 import { Pencil } from "ui/icon";
 
 import type { PubEditorProps } from "./PubEditor/PubEditor";

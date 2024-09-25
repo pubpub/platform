@@ -3,7 +3,7 @@
 import type { Static, TObject } from "@sinclair/typebox";
 import type { SubmitHandler } from "react-hook-form";
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
@@ -55,10 +55,12 @@ type Props = {
 	formElements: React.ReactNode[];
 	parentId?: PubsId;
 	pubFields: Pick<PubField, "slug" | "schemaName">[];
-	pubId?: PubsId;
+	pubId: PubsId;
 	pubTypeId: PubTypes["id"];
 	pubValues: PubValues;
 	stageId?: StagesId;
+	/** Is updating or creating? */
+	isUpdating: boolean;
 };
 
 const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>) => {
@@ -83,6 +85,10 @@ export function PubEditorClient(props: Props) {
 	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 	urlSearchParams.delete(`${paramString}-pub-form`);
 	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
+
+	// Have the client cache the first pubId it gets so that the pubId isn't changing
+	// on re-render (only relevant on Create)
+	const [pubId, _] = useState(props.pubId);
 
 	const schema = useMemo(
 		() => createPubEditorSchemaFromPubFields(props.pubFields),
@@ -121,9 +127,9 @@ export function PubEditorClient(props: Props) {
 	const onSubmit: SubmitHandler<Static<typeof schema>> = async (data) => {
 		const { pubTypeId, stageId, ...pubValues } = data;
 
-		if (props.pubId) {
+		if (props.isUpdating) {
 			const result = await runUpdatePub({
-				pubId: props.pubId,
+				pubId,
 				pubValues,
 				stageId: stageId as StagesId,
 			});
@@ -144,6 +150,7 @@ export function PubEditorClient(props: Props) {
 			}
 
 			const result = await runCreatePub({
+				pubId,
 				communityId: props.communityId,
 				parentId: props.parentId,
 				pubTypeId: pubTypeId as PubTypesId,
@@ -167,7 +174,7 @@ export function PubEditorClient(props: Props) {
 				className={cn("relative flex flex-col gap-6", props.className)}
 				onBlur={(e) => e.preventDefault()}
 			>
-				{!props.pubId && (
+				{!props.isUpdating && (
 					<FormField
 						name="pubTypeId"
 						control={form.control}

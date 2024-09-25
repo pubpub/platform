@@ -1,10 +1,12 @@
+import { randomUUID } from "crypto";
+
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { expect } from "utils";
 
+import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getPubFields } from "~/lib/server/pubFields";
-import { AutoReturnType, PubField } from "~/lib/types";
 import { FormElement } from "../../forms/FormElement";
 import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorClient } from "./PubEditorClient";
@@ -56,6 +58,11 @@ export async function PubEditor(props: PubEditorProps) {
 	>["executeTakeFirstOrThrow"]["pubTypes"][number];
 	let pubFields: Pick<PubField, "id" | "name" | "slug" | "schemaName">[];
 
+	// Create the pubId before inserting into the DB if one doesn't exist.
+	// FileUpload needs the pubId when uploading the file before the pub exists
+	const isUpdating = !!pub?.id;
+	const pubId = pub?.id ?? (randomUUID() as PubsId);
+
 	if (pub === undefined) {
 		if (props.searchParams.pubTypeId) {
 			pubType = expect(
@@ -84,7 +91,7 @@ export async function PubEditor(props: PubEditorProps) {
 			searchParams={props.searchParams}
 			communitySlug={community.slug}
 			values={pubValues}
-			pubId={pub?.id}
+			pubId={pubId}
 		/>
 	));
 
@@ -98,10 +105,11 @@ export async function PubEditor(props: PubEditorProps) {
 			formElements={formElements}
 			parentId={"parentId" in props ? props.parentId : undefined}
 			pubFields={pubFields}
-			pubId={pub?.id}
+			pubId={pubId}
 			pubTypeId={pubType?.id}
 			pubValues={pubValues}
 			stageId={currentStageId}
+			isUpdating={isUpdating}
 		/>
 	);
 }

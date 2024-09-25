@@ -13,7 +13,7 @@ import { TextElement } from "./elements/TextElement";
 import { UserIdSelect } from "./elements/UserSelectElement";
 
 export type FormElementProps = {
-	pubId?: PubsId;
+	pubId: PubsId;
 	element: Form["elements"][number];
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
@@ -53,7 +53,7 @@ export const FormElement = ({
 	if (schemaName === CoreSchemaType.Boolean) {
 		return <BooleanElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.FileUpload && pubId) {
+	if (schemaName === CoreSchemaType.FileUpload) {
 		return <FileUploadElement pubId={pubId} {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.Vector3) {
