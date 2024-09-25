@@ -24,7 +24,7 @@ export const updateForm = defineServerAction(async function updateForm({ formId,
 		if (isUniqueConstraintError(error)) {
 			return { error: `A form with this name already exists. Choose a new name` };
 		}
-		logError("error updating form", error);
+		logError("error updating form name", error);
 		return { error: "Form update failed" };
 	}
 });
