@@ -38,12 +38,13 @@ async function generateDatabaseTables(destination: string, schemas = ["public"])
 	if (!tables) {
 		throw new Error("No tables found");
 	}
+	const filteredTables = tables
+		// do not include jobs and other tables
+		.filter((table) => table.schema && schemas.includes(table.schema));
 
-	const tableNames = tables
-		.filter((table) => table.schema && schemas.includes(table.schema))
-		.map((table) => table.name);
+	const tableNames = filteredTables.map((table) => table.name);
 
-	return writeFile(destinationPath, fileTemplate(tableNames, tables));
+	return writeFile(destinationPath, fileTemplate(tableNames, filteredTables));
 }
 
 const destination = process.argv[2];
