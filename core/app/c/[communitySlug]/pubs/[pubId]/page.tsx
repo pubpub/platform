@@ -7,7 +7,7 @@ import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
+import type { PubValueWithFieldAndSchema } from "./components/jsonSchemaHelpers";
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
