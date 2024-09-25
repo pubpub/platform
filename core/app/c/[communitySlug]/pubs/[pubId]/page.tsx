@@ -140,11 +140,13 @@ export default async function Page({
 									);
 								})}
 							</div>
-							<Move
-								pub={pub}
-								stage={pub.stages[0].stage}
-								communityStages={community.stages}
-							/>
+							{pub.stages[0] ? (
+								<Move
+									pub={pub}
+									stage={pub.stages[0].stage}
+									communityStages={community.stages}
+								/>
+							) : null}
 						</div>
 					</div>
 					<div>
