@@ -92,7 +92,7 @@ ARG PORT
 ENV NODE_ENV production
 
 # Copy the deployed contents
-COPY --from=withpackage /tmp/app \
+COPY --from=withpackage --chown=node:node /tmp/app \
   ./
 
 # Run the application as a non-root user.
