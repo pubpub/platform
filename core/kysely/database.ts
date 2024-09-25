@@ -8,6 +8,7 @@ import { databaseTables } from "db/table-names";
 import { logger } from "logger";
 
 import { env } from "~/lib/env/env.mjs";
+import { ArtificialLatencyPlugin } from "./artificial-latency-plugin";
 import { UpdatedAtPlugin } from "./updated-at-plugin";
 
 const int8TypeId = 20;
@@ -34,6 +35,15 @@ const tablesWithUpdateAt = databaseTables
 	.map((table) => table.name);
 
 const updatedAtPlugin = new UpdatedAtPlugin(tablesWithUpdateAt);
+/**
+ * For debugging and testing of latency
+ */
+const artificialLatencyPlugin =
+	env.KYSELY_ARTIFICIAL_LATENCY && env.NODE_ENV !== "production"
+		? new ArtificialLatencyPlugin(env.KYSELY_ARTIFICIAL_LATENCY)
+		: null;
+
+const plugins = [updatedAtPlugin, artificialLatencyPlugin].filter((plugin) => plugin !== null);
 
 // Database interface is passed to Kysely's constructor, and from now on, Kysely
 // knows your database structure.
@@ -42,5 +52,5 @@ const updatedAtPlugin = new UpdatedAtPlugin(tablesWithUpdateAt);
 export const db = new Kysely<Database>({
 	dialect,
 	log: kyselyLogger,
-	plugins: [updatedAtPlugin],
+	plugins,
 });

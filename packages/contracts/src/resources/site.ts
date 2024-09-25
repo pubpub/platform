@@ -21,7 +21,7 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 
 const contract = initContract();
 
-type PubWithChildren = z.infer<typeof pubsSchema> & {
+export type PubWithChildren = z.infer<typeof pubsSchema> & {
 	children?: PubWithChildren[];
 };
 

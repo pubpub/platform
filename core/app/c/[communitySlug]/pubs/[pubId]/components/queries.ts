@@ -57,7 +57,7 @@ const memberFields = (pubId: Expression<string>) =>
 	);
 
 const pubType = (pubTypeId: Expression<string>) =>
-	jsonObjectFrom(getPubTypeBase.whereRef("pub_types.id", "=", pubTypeId));
+	jsonObjectFrom(getPubTypeBase().whereRef("pub_types.id", "=", pubTypeId));
 
 export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTypesId) => {
 	return autoCache(
@@ -108,7 +108,7 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 			.selectFrom("all_children")
 			.select((eb) => [
 				jsonObjectFrom(
-					getPubTypeBase.where(
+					getPubTypeBase().where(
 						"pub_types.id",
 						"=",
 						eb.selectFrom("children_with_specific_pubtype").select("pubTypeId").limit(1)
