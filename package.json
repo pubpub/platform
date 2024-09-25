@@ -2,7 +2,7 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
-		"dev": "pnpm p:dev && turbo dev --ui tui",
+		"dev": "pnpm p:dev && turbo dev --filter=!integration-* --filter=!emails --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",

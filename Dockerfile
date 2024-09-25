@@ -11,13 +11,25 @@ ARG PORT=3000
 
 ARG PNPM_VERSION=9.10.0
 
+# this is necessary in order to be able to build the test image with 
+# something other than `alpine` as the base image
+# in order to be able to run `playwright` tests
+ARG BASE_IMAGE=alpine
+
 ################################################################################
 # Use node image for base image for all stages.
-FROM node:${NODE_VERSION}-alpine as base
+FROM node:${NODE_VERSION}-${BASE_IMAGE} as base
 
 
-# Install python deps for node-gyp
-RUN apk add g++ make py3-pip ca-certificates curl
+ENV dependencies="g++ make py3-pip ca-certificates curl postgresql"
+# Install python deps for node-gyp and postgres
+
+RUN if [[ ${BASE_IMAGE} == alpine]]; then \
+  apk add ${dependencies}; \
+  else \
+  apt update && apt install -y python3 curl postgresql make g++; \
+  fi
+
 
 # Setup RDS CA Certificates
 
@@ -37,8 +49,6 @@ RUN --mount=type=cache,target=/root/.npm \
 # Create a stage for building the application.
 FROM base as fetch-deps
 
-# install postgres utilities for scripts
-RUN apk add postgresql
 # if booting without a command, just sit and wait forever for a term signal
 CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 

@@ -6,6 +6,8 @@ services:
             context: .
             args:
                 - PACKAGE=core
+                # playwright does not work with alpine
+                - BASE_IMAGE=slim
             target: test-setup
         container_name: core
         env_file:
@@ -23,7 +25,7 @@ services:
             - PGPORT=5432
             - PGUSER=postgres
             - PGPASSWORD=postgres
-            - PUBPUB_URL=http://localhost:8080
+            - PUBPUB_URL=http://localhost:3000
             - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
         networks:
             - app-network
@@ -34,7 +36,9 @@ services:
             - jobs
         profiles:
             - test
+            - integration
         command: >
+            sh -c "pnpm --filter core run migrate-dev" && \
             sh -c "pnpm --filter core run test-run"
 
     jobs:
@@ -60,6 +64,7 @@ services:
         depends_on:
             - db
         profiles:
+            - integration
             - test
 
     db:
@@ -72,6 +77,7 @@ services:
             - app-network
         profiles:
             - test
+            - integration
         ports:
             - "5432:5432"
 
@@ -83,6 +89,35 @@ services:
             - app-network
         profiles:
             - test
+            - integration
+
+    integration-tests:
+        environment:
+            - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
+            - MAILGUN_SMTP_HOST=smtp.mailgun.org
+            - MAILGUN_SMTP_PORT=465
+            - MAILGUN_SMTP_USERNAME=omitted
+            - NEXT_PUBLIC_PUBPUB_URL=http://localhost:3000
+            - OTEL_SERVICE_NAME=core.core
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:3000
+            - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+        depends_on:
+            - db
+            - inbucket
+            - jobs
+            - core
+        image: ${INTEGRATION_TESTS_IMAGE}
+        profiles:
+            - integration
+        ports:
+            - 3000:3000
+        networks:
+            - app-network
 
     # app:
     #     build:
