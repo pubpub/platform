@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsi
 import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
-import type { PubValues, PubWithChildren } from "~/lib/server";
+import type { GetPubResult, PubValues } from "~/lib/server";
 import type { XOR } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubCached } from "~/lib/server";
@@ -19,11 +19,11 @@ import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 type Props = {
 	token: string;
 	actions?: React.ReactNode;
-} & XOR<{ pub: PubWithChildren }, { pubId: PubsId }>;
+} & XOR<{ pub: GetPubResult }, { pubId: PubsId }>;
 
 type MinimalRecursivePubChildren = {
 	id: PubsId;
-	pubType: PubWithChildren["pubType"];
+	pubType: GetPubResult["pubType"];
 	values: PubValues;
 	createdAt: Date;
 	children: MinimalRecursivePubChildren[];
@@ -43,7 +43,7 @@ const groupPubChildrenByPubType = (pubs: MinimalRecursivePubChildren[]) => {
 		},
 		{} as {
 			[key: string]: {
-				pubType: PubWithChildren["pubType"];
+				pubType: GetPubResult["pubType"];
 				pubs: MinimalRecursivePubChildren[];
 			};
 		}
@@ -79,7 +79,7 @@ const ChildHierarchy = ({ pub }: { pub: MinimalRecursivePubChildren }) => {
 };
 
 const PubRow: React.FC<Props> = async (props: Props) => {
-	const pub = (props.pubId ? await getPubCached(props.pubId) : props.pub) as PubWithChildren;
+	const pub = (props.pubId ? await getPubCached(props.pubId) : props.pub) as GetPubResult;
 	if (!pub) {
 		return null;
 	}

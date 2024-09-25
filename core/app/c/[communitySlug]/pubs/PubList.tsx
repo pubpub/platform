@@ -3,14 +3,14 @@ import { Suspense } from "react";
 import type { CommunitiesId, PubsId } from "db/public";
 import { cn } from "utils";
 
-import type { PubWithChildren } from "~/lib/server";
+import type { GetPubResult } from "~/lib/server";
 import type { XOR } from "~/lib/types";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
 import { getPubs } from "~/lib/server";
 
 type Props = {
 	token: string | Promise<string>;
-} & XOR<{ pubs: PubWithChildren[] }, { communityId: CommunitiesId }>;
+} & XOR<{ pubs: GetPubResult[] }, { communityId: CommunitiesId }>;
 
 /**
  * Renders a list pubs

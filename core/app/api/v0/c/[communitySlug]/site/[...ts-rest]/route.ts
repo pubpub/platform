@@ -2,9 +2,10 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { z } from "zod";
 
+import type { PubWithChildren } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
-import { api, PubWithChildren } from "contracts";
+import { api } from "contracts";
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
 import { db } from "~/kysely/database";
