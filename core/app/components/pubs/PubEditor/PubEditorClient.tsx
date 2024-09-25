@@ -1,10 +1,12 @@
 "use client";
 
+import type { Static, TObject } from "@sinclair/typebox";
+import type { SubmitHandler } from "react-hook-form";
+
 import React, { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Static } from "@sinclair/typebox";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 
 import type {
@@ -29,9 +31,10 @@ import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
-import { PubValues } from "~/lib/server";
+import type { PubValues } from "~/lib/server";
+import type { PubField } from "~/lib/types";
+import { Notice } from "~/app/(user)/login/Notice";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { PubField } from "~/lib/types";
 import * as actions from "./actions";
 import {
 	createPubEditorDefaultValuesFromPubFields,
@@ -58,6 +61,15 @@ type Props = {
 	stageId?: StagesId;
 };
 
+const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>) => {
+	return (
+		pubFields.every((field) => field.schemaName == null) &&
+		Object.keys(schema.properties).every(
+			(field) => field === "pubTypeId" || field === "stageId"
+		)
+	);
+};
+
 export function PubEditorClient(props: Props) {
 	const hasValues = Object.keys(props.pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
@@ -77,6 +89,11 @@ export function PubEditorClient(props: Props) {
 		[props.pubFields]
 	);
 
+	const noValidPubFields = useMemo(
+		() => hasNoValidPubFields(props.pubFields, schema),
+		[schema, props.pubFields]
+	);
+
 	const resolver = useMemo(() => typeboxResolver(schema), [schema]);
 
 	const form = useForm({
@@ -86,7 +103,6 @@ export function PubEditorClient(props: Props) {
 			props.pubTypeId,
 			props.stageId
 		),
-		reValidateMode: "onChange",
 		resolver,
 	});
 
@@ -228,10 +244,19 @@ export function PubEditorClient(props: Props) {
 					)}
 				/>
 				{props.formElements}
+				{noValidPubFields && (
+					<Notice
+						title={`Trying to ${paramString} a deprecated PubType`}
+						description="You can no longer edit or create Pubs of this PubType."
+						variant="destructive"
+					/>
+				)}
 				<Button
 					type="submit"
 					className="flex items-center gap-x-2"
-					disabled={form.formState.isSubmitting || !form.formState.isValid}
+					disabled={
+						form.formState.isSubmitting || !form.formState.isValid || noValidPubFields
+					}
 				>
 					{form.formState.isSubmitting ? (
 						<Loader2 className="h-4 w-4 animate-spin" />

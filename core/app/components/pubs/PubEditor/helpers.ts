@@ -56,28 +56,31 @@ export const createPubEditorSchemaFromPubFields = (
 	pubFields: Pick<PubField, "slug" | "schemaName">[]
 ): TObject<{ pubTypeId: TString; stageId: TString }> => {
 	const pubFieldSchemasBySlug = Object.fromEntries(
-		pubFields.map(({ slug, schemaName }) => {
-			if (!schemaName) {
-				return [slug, undefined];
-			}
+		pubFields
+			.map(({ slug, schemaName }) => {
+				if (!schemaName) {
+					return [slug, undefined];
+				}
 
-			const schema = getJsonSchemaByCoreSchemaType(schemaName);
-			if (!schema) {
-				return [slug, undefined];
-			}
+				const schema = getJsonSchemaByCoreSchemaType(schemaName);
+				if (!schema) {
+					return [slug, undefined];
+				}
 
-			if (schema.type !== "string") {
-				return [slug, Type.Optional(schema)];
-			}
+				if (schema.type !== "string") {
+					return [slug, Type.Optional(schema)];
+				}
 
-			// this allows for empty strings, which happens when you enter something
-			// in an input field and then delete it
-			// TODO: reevaluate whether this should be "" or undefined
-			const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
-				error: schema.error ?? "Invalid value",
-			});
-			return [slug, schemaWithAllowedEmpty];
-		})
+				// this allows for empty strings, which happens when you enter something
+				// in an input field and then delete it
+				// TODO: reevaluate whether this should be "" or undefined
+				const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
+					error: schema.error ?? "Invalid value",
+				});
+				return [slug, schemaWithAllowedEmpty];
+			})
+			// in order not to trow an error for legacy fields
+			.filter(([slug, schemaName]) => schemaName !== undefined)
 	);
 
 	return Type.Object<{ pubTypeId: TString; stageId: TString }>({
