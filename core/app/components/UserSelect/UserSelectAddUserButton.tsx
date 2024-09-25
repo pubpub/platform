@@ -14,7 +14,7 @@ type Props = {
 export const UserSelectAddUserButton = (props: Props) => {
 	const [open, setOpen] = useState(false);
 
-	const onClick = useCallback((e) => {
+	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
 		e.preventDefault();
 		setOpen(true);
 	}, []);

@@ -6,6 +6,7 @@
 			"~/*": ["./*"]
 		},
 		"strictNullChecks": true,
+		"noImplicitAny": null,
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
 	},
 	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "lib/env.mjs"],

@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
+
 import React from "react";
-import { Metadata } from "next";
 import partition from "lodash.partition";
 
 import { ClipboardPenLine } from "ui/icon";
@@ -18,7 +19,13 @@ export const metadata: Metadata = {
 	title: "Forms",
 };
 
-export default async function Page({ params: { communitySlug } }) {
+export default async function Page({
+	params: { communitySlug },
+}: {
+	params: {
+		communitySlug: string;
+	};
+}) {
 	const { user } = await getPageLoginData();
 
 	if (!isCommunityAdmin(user, { slug: communitySlug })) {

@@ -20,6 +20,7 @@ export const env = createEnv({
 		DATABASE_URL: z.string().url(),
 		JWT_SECRET: z.string(),
 		KYSELY_DEBUG: z.string().optional(),
+		KYSELY_ARTIFICIAL_LATENCY: z.coerce.number().optional(),
 		LOG_LEVEL: z.string().optional(),
 		MAILGUN_SMTP_PASSWORD: z.string(),
 		MAILGUN_SMTP_USERNAME: z.string(),

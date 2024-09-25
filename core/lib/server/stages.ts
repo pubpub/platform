@@ -11,6 +11,7 @@ import type {
 	StagesUpdate,
 } from "db/public";
 
+import type { AutoReturnType } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -18,7 +19,7 @@ import { pubValuesByRef } from "./pub";
 
 // TODO: Finish making this output match the type of getCommunityStages in
 // core/app/c/[communitySlug]/stages/page.tsx (add pub children and other missing joins)
-export const getCommunityStages = (communityId: CommunitiesId) =>
+export const getCommunityStagesFull = (communityId: CommunitiesId) =>
 	autoCache(
 		db
 			.selectFrom("stages")
@@ -175,3 +176,86 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.select(sql<PubsId[]>`array_agg("pubId")`.as("pubIds"))
 			.where("stageId", "=", stageId)
 	);
+
+export const getCommunityStages = (communityId: CommunitiesId) =>
+	autoCache(
+		db
+			.selectFrom("stages")
+			.where("communityId", "=", communityId)
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom("move_constraint")
+						.whereRef("move_constraint.stageId", "=", "stages.id")
+						.selectAll("move_constraint")
+						.select((eb) => [
+							jsonObjectFrom(
+								eb
+									.selectFrom("stages")
+									.whereRef("stages.id", "=", "move_constraint.destinationId")
+									.selectAll("stages")
+							)
+								.$notNull()
+								.as("destination"),
+						])
+				).as("moveConstraints"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("move_constraint")
+						.whereRef("move_constraint.destinationId", "=", "stages.id")
+						.selectAll("move_constraint")
+				).as("moveConstraintSources"),
+				eb
+					.selectFrom("PubsInStages")
+					.select((eb) =>
+						eb.fn
+							.count<number>("PubsInStages.pubId")
+							.filterWhereRef("PubsInStages.stageId", "=", "stages.id")
+							.as("pubsCount")
+					)
+					.as("pubsCount"),
+				// TODO: needs to be fancier and include member groups
+				eb
+					.selectFrom("permissions")
+					.innerJoin("_PermissionToStage", "permissions.id", "_PermissionToStage.A")
+					.innerJoin("members", "_PermissionToStage.B", "members.id")
+					.select((eb) =>
+						eb.fn
+							.count("_PermissionToStage.A")
+							.filterWhereRef("_PermissionToStage.B", "=", "stages.id")
+							.as("memberCount")
+					)
+					.as("memberCount"),
+
+				eb
+					.selectFrom("action_instances")
+					.whereRef("action_instances.stageId", "=", "stages.id")
+					.select((eb) =>
+						eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
+					)
+					.as("actionInstancesCount"),
+			])
+			.selectAll("stages")
+			.orderBy("order asc")
+	);
+
+export type CommunityStage = AutoReturnType<typeof getCommunityStages>["executeTakeFirstOrThrow"];
+
+export const getIntegrationInstanceBase = (trx = db) =>
+	trx
+		.selectFrom("integration_instances")
+		.selectAll("integration_instances")
+		.select((eb) =>
+			jsonObjectFrom(
+				eb
+					.selectFrom("integrations")
+					.selectAll("integrations")
+					.whereRef("integrations.id", "=", "integration_instances.integrationId")
+			)
+				.$notNull()
+				.as("integration")
+		);
+
+export const getIntegrationInstancesForStage = (stageId: StagesId) => {
+	return autoCache(getIntegrationInstanceBase().where("stageId", "=", stageId));
+};

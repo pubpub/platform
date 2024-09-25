@@ -96,8 +96,8 @@ test.describe("Submission buttons", () => {
 		page.on("request", (request) => {
 			if (request.method() === "POST" && request.url().includes(`forms/${FORM_SLUG}/edit`)) {
 				const data = request.postDataJSON();
-				const buttons = data[0].elements.filter((e) => e.type === "button");
-				const declineButton = buttons.find((b) => b.label === newData.label);
+				const buttons = data[0].elements.filter((e: any) => e.type === "button");
+				const declineButton = buttons.find((b: any) => b.label === newData.label);
 				expect(declineButton.content).toEqual(newData.content);
 			}
 		});

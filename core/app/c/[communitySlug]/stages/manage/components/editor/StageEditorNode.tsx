@@ -11,7 +11,7 @@ import { Button } from "ui/button";
 import { Settings } from "ui/icon";
 import { cn } from "utils";
 
-import type { CommunityStage } from "../../page";
+import type { CommunityStage } from "~/lib/server/stages";
 import { useStages } from "../../StagesContext";
 
 export const STAGE_NODE_WIDTH = 250;

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo } from "react";
 
+import type { Pubs } from "db/public";
 import { Button } from "ui/button";
 import {
 	Command,
@@ -16,14 +17,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { cn, expect } from "utils";
 
-import type { CommunityMemberPayload, PubPayload } from "~/lib/server/_legacy-integration-queries";
+import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
 import { useServerAction } from "~/lib/serverActions";
 import { assign } from "./lib/actions";
 
 type Props = {
-	members: CommunityMemberPayload[];
-	pub: PubPayload;
+	members: MemberWithUser[];
+	pub: PubWithValues;
 };
 
 export default function Assign(props: Props) {

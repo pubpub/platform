@@ -101,16 +101,16 @@ const stageMove = (pubId: PubsId, stageId?: StagesId) =>
 
 export const _upsertPubValues = async ({
 	pubId,
-	fields,
+	values,
 	stageId,
 }: {
 	pubId: PubsId;
-	fields: Record<string, JsonValue>;
+	values: Record<string, JsonValue>;
 	stageId?: StagesId;
 }) => {
 	// First query for existing values so we know whether to insert or update.
 	// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
-	const toBeUpdatedPubFieldSlugs = Object.keys(fields);
+	const toBeUpdatedPubFieldSlugs = Object.keys(values);
 
 	if (!toBeUpdatedPubFieldSlugs.length) {
 		await stageMove(pubId, stageId);
@@ -126,20 +126,13 @@ export const _upsertPubValues = async ({
 		.where((eb) =>
 			eb("pub_values.pubId", "=", pubId).or("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
 		)
-		.distinctOn("pub_fields.id")
-		.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
-		.select([
-			"pub_values.id as pubValueId",
-			"pub_values.pubId",
-			"pub_fields.slug",
-			"pub_fields.name",
-			"pub_fields.schemaName",
-		])
+		.distinctOn("pub_fields.slug")
+		.select(["pub_fields.slug", "pub_fields.name", "pub_fields.schemaName"])
 		.execute();
 
 	const validated = validatePubValuesBySchemaName({
 		fields: pubFields,
-		values: fields,
+		values,
 	});
 
 	if (validated && validated.error) {
@@ -154,11 +147,8 @@ export const _upsertPubValues = async ({
 		db
 			.insertInto("pub_values")
 			.values((eb) => {
-				return Object.entries(fields).map(([slug, value]) => {
+				return Object.entries(values).map(([slug, value]) => {
 					return {
-						id:
-							pubFields.find((pf) => pf.slug === slug && pf.pubId === pubId)
-								?.pubValueId ?? undefined,
 						pubId,
 						value: JSON.stringify(value),
 						fieldId: eb
@@ -169,7 +159,7 @@ export const _upsertPubValues = async ({
 				});
 			})
 			.onConflict((oc) =>
-				oc.column("id").doUpdateSet((eb) => ({
+				oc.constraint("pub_values_pubId_relatedPubId_fieldId_key").doUpdateSet((eb) => ({
 					value: eb.ref("excluded.value"),
 				}))
 			)
@@ -203,12 +193,12 @@ export const _upsertPubValues = async ({
 
 export const upsertPubValues = defineServerAction(async function upsertPubValues({
 	pubId,
-	fields,
+	values,
 	path,
 	stageId,
 }: {
 	pubId: PubsId;
-	fields: Record<string, JsonValue>;
+	values: Record<string, JsonValue>;
 	path?: string | null;
 	stageId?: StagesId;
 }) {
@@ -219,7 +209,7 @@ export const upsertPubValues = defineServerAction(async function upsertPubValues
 	}
 
 	try {
-		const result = await _upsertPubValues({ pubId, fields, stageId });
+		const result = await _upsertPubValues({ pubId, values, stageId });
 		if (path) {
 			revalidatePath(path);
 		}

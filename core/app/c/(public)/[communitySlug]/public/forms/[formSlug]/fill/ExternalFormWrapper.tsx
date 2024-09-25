@@ -141,20 +141,20 @@ export const ExternalFormWrapper = ({
 
 	const handleSubmit = useCallback(
 		async (
-			values: FieldValues,
+			formValues: FieldValues,
 			evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
 			autoSave = false
 		) => {
-			const fields = preparePayload({
+			const values = preparePayload({
 				formElements,
-				formValues: values,
+				formValues,
 			});
 			const submitButtonId = evt?.nativeEvent.submitter?.id;
 			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
 			const stageId = submitButtonConfig?.stageId ?? undefined;
 			const result = await runUpdatePub({
 				pubId: pub.id as PubsId,
-				fields,
+				values,
 				stageId,
 			});
 			if (didSucceed(result)) {

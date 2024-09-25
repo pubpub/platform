@@ -8,6 +8,8 @@ import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
+import type { CommunityStage } from "~/lib/server/stages";
+import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -103,6 +105,7 @@ export default async function Page({
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
 
+	const { stages, children, ...slimPub } = pub;
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8">
@@ -142,9 +145,11 @@ export default async function Page({
 							</div>
 							{pub.stages[0] ? (
 								<Move
-									pub={pub}
-									stage={pub.stages[0].stage}
-									communityStages={community.stages}
+									pubId={pub.id as PubsId}
+									stageId={pub.stages[0].stageId as StagesId}
+									communityStages={
+										community.stages as unknown as CommunityStage[]
+									}
 								/>
 							) : null}
 						</div>
@@ -155,7 +160,16 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Integrations</div>
 						<div>
-							<IntegrationActions pub={pub} token={token} />
+							<Suspense>
+								{pub.stages[0]?.stageId && (
+									<IntegrationActions
+										pubId={pub.id as PubsId}
+										token={token}
+										stageId={pub.stages[0].stageId as StagesId}
+										type="pub"
+									/>
+								)}
+							</Suspense>
 						</div>
 					</div>
 					<div>
@@ -198,7 +212,12 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
-							<Assign members={community.members} pub={pub} />
+							<Assign
+								// TODO: Remove this cast
+								members={community.members as unknown as MemberWithUser[]}
+								// TODO: Remove this cast
+								pub={slimPub as unknown as PubWithValues}
+							/>
 						</div>
 					</div>
 				</div>
