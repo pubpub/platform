@@ -17,10 +17,7 @@ const PubHeader: React.FC<Props> = ({ communityId, searchParams }) => {
 		<div className="mb-16 flex items-center justify-between">
 			<h1 className="flex-grow text-xl font-bold">Pubs</h1>
 			<div className="flex items-center gap-x-2">
-				<Suspense
-					fallback={<SkeletonButton className="w-20" />}
-					key={new Date().toString()}
-				>
+				<Suspense fallback={<SkeletonButton className="w-20" />}>
 					<CreatePubButton communityId={communityId} searchParams={searchParams} />
 				</Suspense>
 				<Button variant="outline" size="sm" asChild>
