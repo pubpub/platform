@@ -58,8 +58,8 @@ export async function PubEditor(props: PubEditorProps) {
 	>["executeTakeFirstOrThrow"]["pubTypes"][number];
 	let pubFields: Pick<PubField, "id" | "name" | "slug" | "schemaName">[];
 
-	// Create the pubId client side if one doesn't exist. The FileUpload needs
-	// the pubId when uploading the file before the pub exists
+	// Create the pubId before inserting into the DB if one doesn't exist.
+	// FileUpload needs the pubId when uploading the file before the pub exists
 	const isUpdating = !!pub?.id;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
 
