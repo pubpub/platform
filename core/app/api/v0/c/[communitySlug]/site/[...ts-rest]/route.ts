@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
-import { api } from "contracts";
+import { api, PubWithChildren } from "contracts";
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
 import { db } from "~/kysely/database";
@@ -139,10 +139,13 @@ const handler = createNextHandler(
 					);
 				}
 
-				const createdPub = await createPubRecursiveNew({
+				const createdPub = (await createPubRecursiveNew({
 					communityId: community?.id,
 					body,
-				});
+
+					// we cannot control the output type based on the input typee
+					// anyway, so it's better to just cast it to { children?: [] }
+				})) as PubWithChildren;
 
 				return {
 					status: 201,

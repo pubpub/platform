@@ -10,8 +10,12 @@ import type {
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { GetPubResponseBody, JsonValue } from "contracts";
-import type { CreatePubRequestBodyWithNullsNew } from "contracts/src/resources/site";
+import type {
+	CreatePubRequestBodyWithNullsNew,
+	GetPubResponseBody,
+	JsonValue,
+	PubWithChildren,
+} from "contracts";
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
@@ -23,7 +27,7 @@ import type {
 	UsersId,
 } from "db/public";
 
-import type { MaybeHas, XOR } from "../types";
+import type { MaybeHas, Prettify, XOR } from "../types";
 import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
@@ -284,7 +288,7 @@ export const getPubCached = async (pubId: PubsId) => {
 	return nestChildren(pub);
 };
 
-export type PubWithChildren = Awaited<ReturnType<typeof getPubCached>>;
+export type GetPubResult = Prettify<Awaited<ReturnType<typeof getPubCached>>>;
 
 export type GetManyParams = {
 	limit?: number;
@@ -358,6 +362,13 @@ const maybeWithTrx = async <T>(
 	return await db.transaction().execute(fn);
 };
 
+type PubWithoutChildren = Prettify<Omit<PubWithChildren, "children">>;
+type MaybeWithChildren<T extends { children?: unknown }> = keyof T extends "children"
+	? NonNullable<T["children"]> extends never
+		? PubWithoutChildren
+		: PubWithChildren
+	: PubWithoutChildren;
+
 /**
  * @throws
  */
@@ -378,9 +389,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx?: Transaction<Database>;
 			communityId: CommunitiesId;
 			parent: { id: PubsId };
-	  }): Promise<
-	"children" extends keyof Body ? PubWithChildren : Omit<PubWithChildren, "children">
-> => {
+	  }): Promise<MaybeWithChildren<Body>> => {
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
@@ -472,7 +481,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			return {
 				...newPub,
 				values: pubValues,
-			};
+			} as PubWithoutChildren;
 		}
 
 		const children = await Promise.all(
@@ -493,12 +502,10 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			...newPub,
 			values: pubValues,
 			children,
-		};
+		} as PubWithChildren;
 	});
 
-	return result as "children" extends keyof Body
-		? PubWithChildren
-		: Omit<PubWithChildren, "children">;
+	return result as MaybeWithChildren<Body>;
 };
 
 export const deletePub = async (pubId: PubsId) =>

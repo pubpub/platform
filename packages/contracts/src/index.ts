@@ -6,6 +6,7 @@ import { siteApi } from "./resources/site";
 
 export * from "./resources/integrations";
 export * from "./resources/internal";
+export * from "./resources/site";
 
 const contract = initContract();
 
