@@ -10,7 +10,7 @@ const meta: Meta<typeof MultiValueInput> = {
 	component: MultiValueInput,
 	tags: ["autodocs"],
 	argTypes: {},
-	args: { onChange: fn(), value: [] },
+	args: { onChange: fn(), values: [] },
 };
 export default meta;
 

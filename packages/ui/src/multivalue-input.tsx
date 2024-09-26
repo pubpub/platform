@@ -26,16 +26,14 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 				setPendingValue("");
 			}
 		};
+
 		return (
 			<div className="flex flex-col gap-2">
 				<Input
 					value={pendingValue}
 					onChange={(e) => setPendingValue(e.target.value)}
 					onKeyDown={(e) => {
-						if (e.key === "Enter") {
-							e.preventDefault();
-							addPendingValue();
-						} else if (e.key === "," || e.key === " ") {
+						if (e.key === "Enter" || e.key === ",") {
 							e.preventDefault();
 							addPendingValue();
 						}
@@ -48,8 +46,8 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 				<div className="flex flex-wrap gap-x-2 gap-y-2">
 					{values.map((value) => {
 						return (
-							<Badge key={value} variant="secondary">
-								<Button variant="ghost" className="px-1">
+							<Badge key={value} className="bg-muted-foreground py-1">
+								<Button variant="ghost" className="mr-1 h-5 px-0">
 									<GripVertical size="12"></GripVertical>
 								</Button>
 								{value}
@@ -58,7 +56,7 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 										onChange(values.filter((v) => v !== value));
 									}}
 									variant="ghost"
-									className="ml-2 px-1"
+									className="ml-2 h-3 p-0"
 								>
 									<XCircle size="12"></XCircle>
 								</Button>
