@@ -1,9 +1,9 @@
 "use client";
 
 import type { Static, TObject } from "@sinclair/typebox";
-import type { SubmitHandler } from "react-hook-form";
+import type { FieldPath, SubmitHandler, UseFormReturn } from "react-hook-form";
 
-import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
@@ -73,6 +73,8 @@ const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>
 	);
 };
 
+type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
+
 export function PubEditorClient(props: Props) {
 	const hasValues = Object.keys(props.pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
@@ -120,8 +122,12 @@ export function PubEditorClient(props: Props) {
 	});
 
 	// Re-validate the form when fields are toggled on/off.
-	useLayoutEffect(() => {
-		form.trigger(Object.keys(form.formState.touchedFields) as unknown as any);
+	useEffect(() => {
+		form.trigger(
+			Object.keys(form.formState.touchedFields) as unknown as FieldPath<
+				InferFormValues<typeof form>
+			>
+		);
 	}, [form, formElementToggle]);
 
 	const handleSelectPubType = useDebouncedCallback(
