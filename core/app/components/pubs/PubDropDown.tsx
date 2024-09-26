@@ -11,10 +11,15 @@ import {
 import { MoreVertical } from "ui/icon";
 
 import { SkeletonButton } from "../skeletons/SkeletonButton";
-import { PubRemoveButton } from "./PubRemoveButton";
-import { PubUpdateButton } from "./PubUpdateButton";
+import { RemovePubButton } from "./RemovePubButton";
+import { UpdatePubButton } from "./UpdatePubButton";
 
-export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
+type Props = {
+	pubId: PubsId;
+	searchParams: Record<string, unknown>;
+};
+
+export const PubDropDown = (props: Props) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -24,25 +29,21 @@ export const PubDropDown = ({ pubId }: { pubId: PubsId }) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="width">
 				<DropdownMenuItem asChild>
-					<Suspense fallback={<SkeletonButton />} key={pubId}>
-						<PubUpdateButton
-							button={{
-								variant: "ghost",
-								title: "Edit Pub",
-								className: "w-full justify-start",
-							}}
-							pubId={pubId}
+					<Suspense fallback={<SkeletonButton />} key={props.pubId}>
+						<UpdatePubButton
+							variant="ghost"
+							size="sm"
+							className="w-full justify-start"
+							pubId={props.pubId}
+							searchParams={props.searchParams}
 						/>
 					</Suspense>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<PubRemoveButton
-						button={{
-							variant: "ghost",
-							title: "Remove Pub",
-							className: "w-full justify-start",
-						}}
-						pubId={pubId}
+					<RemovePubButton
+						pubId={props.pubId}
+						variant="ghost"
+						className="w-full justify-start"
 					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>

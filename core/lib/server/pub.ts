@@ -94,9 +94,13 @@ const pubValues = (
 		eb
 			.selectFrom("pub_values")
 			.selectAll("pub_values")
-			.select("slug")
+			.select(["slug", "pub_values.fieldId"])
 			.leftJoinLateral(
-				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
+				(eb) =>
+					eb
+						.selectFrom("pub_fields")
+						.select(["id", "name", "slug", "schemaName"])
+						.as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
 			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import type { UsersId } from "db/public";
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
 	title: "Workflows",
 };
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, string> };
+type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
 
 export default async function Page({ params, searchParams }: Props) {
 	const [{ user }, community] = await Promise.all([

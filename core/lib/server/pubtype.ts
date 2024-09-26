@@ -1,6 +1,6 @@
 import type { ExpressionBuilder } from "kysely";
 
-import { SelectQueryBuilder, sql } from "kysely";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
