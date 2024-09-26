@@ -86,9 +86,9 @@ const pubValues = (
 	const alias = "latest_values";
 	// Although kysely has selectNoFrom, this kind of query can't be generated without using raw sql
 	const jsonObjAgg = (subquery: AliasedSelectQueryBuilder<any, any>) =>
-		sql<PubValues>`(select json_object_agg(${sql.ref(alias)}.slug, ${sql.ref(
+		sql<PubValues>`(select coalesce(json_object_agg(${sql.ref(alias)}.slug, ${sql.ref(
 			alias
-		)}.value) from ${subquery})`;
+		)}.value), '{}') from ${subquery})`;
 
 	return jsonObjAgg(
 		eb
