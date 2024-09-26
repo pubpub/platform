@@ -38,7 +38,7 @@ const EditFormTitleButton = ({ formId, name }: { formId: FormsId; name: string }
 				className: "rounded border-emerald-100 bg-emerald-50",
 				action: (
 					<div className="flex w-full gap-3 text-green-700">
-						<CircleCheck className="" /> Form Successfully Saved
+						<CircleCheck className="" /> Name Successfully Updated
 					</div>
 				),
 			});
