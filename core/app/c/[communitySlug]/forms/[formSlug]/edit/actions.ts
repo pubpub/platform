@@ -1,5 +1,7 @@
 "use server";
 
+import type { FormsId } from "db/public";
+
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -7,7 +9,13 @@ import { logError } from "~/lib/logging";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
-export const updateForm = defineServerAction(async function updateForm({ formId, name }) {
+export const updateForm = defineServerAction(async function updateForm({
+	formId,
+	name,
+}: {
+	formId: FormsId;
+	name: string;
+}) {
 	const user = await getLoginData();
 
 	if (!user) {

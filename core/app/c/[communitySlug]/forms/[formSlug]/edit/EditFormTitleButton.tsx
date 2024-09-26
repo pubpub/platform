@@ -5,10 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import type { FormsId } from "db/public";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Check, X } from "ui/icon";
+import { CircleCheck } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
@@ -19,27 +20,7 @@ const editFormTitleSchema = z.object({
 	name: z.string().min(1, "Form name is required"),
 });
 
-type NotificationProps = {
-	message: string;
-	success?: boolean;
-};
-
-const NotificationComponent: React.FC<NotificationProps> = ({ message, success = true }) => {
-	return (
-		<div
-			className={`mx-auto flex items-center ${
-				success
-					? "border-green-200 bg-green-100 text-green-800"
-					: "border-red-200 bg-red-100 text-red-800"
-			}`}
-		>
-			<div className="mr-3 text-2xl">{success ? <Check /> : <X />}</div>
-			<div className="text-lg font-semibold">{message}</div>
-		</div>
-	);
-};
-
-const EditFormTitleButton = ({ formId, name }: { formId: string; name: string }) => {
+const EditFormTitleButton = ({ formId, name }: { formId: FormsId; name: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 
 	const form = useForm<z.infer<typeof editFormTitleSchema>>({
@@ -54,8 +35,12 @@ const EditFormTitleButton = ({ formId, name }: { formId: string; name: string })
 		const result = await runUpdateFormTitle({ formId, name: data.name });
 		if (didSucceed(result)) {
 			toast({
-				className: "bg-green-100 border-green-200 text-green-800",
-				description: <NotificationComponent message="Name successfully updated" />,
+				className: "rounded border-emerald-100 bg-emerald-50",
+				action: (
+					<div className="flex w-full gap-3 text-green-700">
+						<CircleCheck className="" /> Form Successfully Saved
+					</div>
+				),
 			});
 			setIsOpen(false);
 		}
@@ -65,21 +50,24 @@ const EditFormTitleButton = ({ formId, name }: { formId: string; name: string })
 			<DialogTrigger asChild>
 				<Button
 					variant="link"
-					className="ml-2 text-sm text-blue-500 hover:text-blue-600 hover:underline"
+					className="text-sm text-blue-500 underline hover:text-blue-600"
 				>
 					Edit
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent className="flex max-w-[512px] flex-col items-start gap-[24px] p-[24px]">
 				<DialogTitle>Edit Name</DialogTitle>
-				<hr />
+				<div className="w-full border-t border-gray-200" />
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)}>
+					<form
+						onSubmit={form.handleSubmit(onSubmit)}
+						className="flex w-full flex-col items-start gap-6"
+					>
 						<FormField
 							control={form.control}
 							name="name"
 							render={({ field }) => (
-								<FormItem>
+								<FormItem className="w-full">
 									<FormLabel>Form Name</FormLabel>
 									<FormControl>
 										<Input placeholder="Name" {...field} />
@@ -88,10 +76,10 @@ const EditFormTitleButton = ({ formId, name }: { formId: string; name: string })
 								</FormItem>
 							)}
 						/>
-						<DialogFooter className="flex justify-end">
+						<DialogFooter className="flex w-full items-center justify-end gap-2">
 							<Button
+								type="button"
 								variant="secondary"
-								className="mr-2"
 								onClick={() => {
 									form.reset();
 									setIsOpen(false);
@@ -104,7 +92,7 @@ const EditFormTitleButton = ({ formId, name }: { formId: string; name: string })
 								variant="default"
 								className="bg-[#0090FF] hover:bg-[#0079E3]"
 							>
-								Save
+								Update
 							</Button>
 						</DialogFooter>
 					</form>
