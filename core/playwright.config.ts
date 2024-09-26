@@ -26,11 +26,13 @@ export default defineConfig({
 	// a
 	webServer: [
 		{
-			command: `pnpm --workspace-root exec preconstruct build && ${
-				process.env.TEST_DEV
-					? "pnpm --filter core dev"
-					: "pnpm --filter core build && pnpm --filter core start"
-			}`,
+			command: process.env.CI
+				? `curl ${baseURL}`
+				: `pnpm --workspace-root exec preconstruct build && ${
+						process.env.TEST_DEV
+							? "pnpm --filter core dev"
+							: "pnpm --filter core build && pnpm --filter core start"
+					}`,
 			timeout: 600_000,
 			url: baseURL,
 			stderr: "pipe",

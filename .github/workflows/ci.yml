@@ -58,7 +58,7 @@ jobs:
               run: echo ${{ steps.label.outputs.label }}
 
             - name: Build docker image
-              run: docker compose --profile test build
+              run: docker compose --profile integration build
 
             - name: Run migrations
               run: docker compose run core pnpm --filter core migrate-test
@@ -78,10 +78,10 @@ jobs:
             ############## Integration tests
 
             - name: Build compose
-              run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} docker compose up integration-tests -d
+              run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} docker compose run core pnpm --filter core playwright:test
 
             # - name: Test if up
             #   run: docker compose run core sh -c "curl http://integration-tests:3000"
 
-            - name: Run integration tests
-              run: docker compose -f docker-compose.test.yml run core pnpm --filter core playwright:test
+            # - name: Run integration tests
+            #   run: docker compose run core pnpm --filter core playwright:test
