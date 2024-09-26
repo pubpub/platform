@@ -1,6 +1,16 @@
 import { CoreSchemaType } from "db/public";
 
-import { Boolean, DateTime, Email, FileUpload, MemberId, String, URL, Vector3 } from "./schemas";
+import {
+	Boolean,
+	DateTime,
+	Email,
+	FileUpload,
+	MemberId,
+	Null,
+	String,
+	URL,
+	Vector3,
+} from "./schemas";
 
 export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 	switch (coreSchemaType) {
@@ -20,6 +30,8 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 			return MemberId;
 		case CoreSchemaType.FileUpload:
 			return FileUpload;
+		case CoreSchemaType.Null:
+			return Null;
 		default:
 			const _exhaustiveCheck: never = coreSchemaType;
 			return _exhaustiveCheck;

@@ -143,11 +143,15 @@ export default async function Page({
 									);
 								})}
 							</div>
-							<Move
-								pubId={pub.id as PubsId}
-								stageId={pub.stages[0].stageId as StagesId}
-								communityStages={community.stages as unknown as CommunityStage[]}
-							/>
+							{pub.stages[0] ? (
+								<Move
+									pubId={pub.id as PubsId}
+									stageId={pub.stages[0].stageId as StagesId}
+									communityStages={
+										community.stages as unknown as CommunityStage[]
+									}
+								/>
+							) : null}
 						</div>
 					</div>
 					<div>

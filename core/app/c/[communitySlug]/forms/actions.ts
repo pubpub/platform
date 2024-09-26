@@ -14,10 +14,12 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 import { _getPubFields } from "~/lib/server/pubFields";
 
 const componentsBySchemaTable = Object.entries(componentsBySchema)
-	.map(
-		([schema, components]) =>
-			`('${schema}'::"CoreSchemaType", '${components[0]}'::"InputComponent")`
-	)
+	.map(([schema, components]) => {
+		const component = components[0]
+			? `'${components[0]}'::"InputComponent"`
+			: `null::"InputComponent"`;
+		return `('${schema}'::"CoreSchemaType", ${component})`;
+	})
 	.join(", ");
 
 export const createForm = defineServerAction(async function createForm(
