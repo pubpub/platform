@@ -3,9 +3,10 @@
 import React, { forwardRef, Suspense, useCallback, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { Button, ButtonProps } from "ui/button";
+import type { ButtonProps } from "ui/button";
+import type { LucideIcon } from "ui/icon";
+import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog";
-import { LucideIcon } from "ui/icon";
 import { cn } from "utils";
 
 import { SkeletonCard } from "./skeletons/SkeletonCard";
