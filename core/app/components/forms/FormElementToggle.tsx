@@ -21,7 +21,7 @@ export const FormElementToggle = (props: Props) => {
 				pressed={isEnabled}
 				onClick={() => formElementToggle.toggle(props.name)}
 			/>
-			{props.children}
+			<div className="w-full">{props.children}</div>
 		</div>
 	);
 };

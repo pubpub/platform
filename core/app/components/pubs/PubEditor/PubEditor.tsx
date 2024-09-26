@@ -97,22 +97,29 @@ export async function PubEditor(props: PubEditorProps) {
 	));
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
+	const editor = (
+		<PubEditorClient
+			availablePubTypes={community.pubTypes}
+			availableStages={community.stages}
+			communityId={community.id}
+			formElements={formElements}
+			parentId={"parentId" in props ? props.parentId : undefined}
+			pubFields={pubFields}
+			pubId={pubId}
+			pubTypeId={pubType?.id}
+			pubValues={pubValues}
+			stageId={currentStageId}
+			isUpdating={isUpdating}
+		/>
+	);
+
+	if (isUpdating) {
+		return editor;
+	}
 
 	return (
 		<FormElementToggleProvider fields={pubFields.map((pubField) => pubField.slug)}>
-			<PubEditorClient
-				availablePubTypes={community.pubTypes}
-				availableStages={community.stages}
-				communityId={community.id}
-				formElements={formElements}
-				parentId={"parentId" in props ? props.parentId : undefined}
-				pubFields={pubFields}
-				pubId={pubId}
-				pubTypeId={pubType?.id}
-				pubValues={pubValues}
-				stageId={currentStageId}
-				isUpdating={isUpdating}
-			/>
+			{editor}
 		</FormElementToggleProvider>
 	);
 }
