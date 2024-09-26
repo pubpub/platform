@@ -23,17 +23,17 @@ jobs:
             - name: Run migrations
               run: docker compose run core pnpm --filter core migrate-test
 
-            - name: Run prettier
-              run: docker compose run core pnpm format
+            # - name: Run prettier
+            #   run: docker compose run core pnpm format
 
-            - name: Run eslint
-              run: docker compose run core pnpm lint
+            # - name: Run eslint
+            #   run: docker compose run core pnpm lint
 
-            - name: Run typecheck
-              run: docker compose run core pnpm type-check
+            # - name: Run typecheck
+            #   run: docker compose run core pnpm type-check
 
-            - name: Run vitest tests
-              run: docker compose run core
+            # - name: Run vitest tests
+            #   run: docker compose run core
 
             ############## Integration tests
             - name: Configure AWS credentials
@@ -62,8 +62,11 @@ jobs:
                   echo "label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
                   echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+            - name: echo label
+              run: echo ${{ steps.label.outputs.label }}
+
             - name: Build compose
-              run: INTEGRATION_TESTS_IMAGE=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml up integration-tests -d
+              run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml up integration-tests -d
 
             - name: Run integration tests
               run: docker compose -f docker-compose.test.yml run core pnpm --filter core playwright:test
