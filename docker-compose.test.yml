@@ -51,7 +51,9 @@ services:
             context: .
             args:
                 - PACKAGE=jobs
-            target: test-setup
+                # same as the above, improves caching
+                - BASE_IMAGE=slim
+            target: monorepo
         container_name: jobs
         env_file:
             - path: ./.env.docker-compose

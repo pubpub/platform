@@ -120,15 +120,7 @@ CMD pnpm start
 # to be used in `docker-compose.test.yml`
 FROM monorepo as test-setup
 
-RUN echo "Setting up ${PACKAGE} for testing"
-
-# Expose the port on which your app runs
-# not sure if necessary
-EXPOSE ${PORT}
-
-ENV PACKAGE=${PACKAGE}
-
 RUN pnpm --filter core prisma generate
 
 # install playwright
-RUN pnpm --filter core playwright install chromium --with-deps
+RUN pnpm --filter core exec playwright install chromium --with-deps 
