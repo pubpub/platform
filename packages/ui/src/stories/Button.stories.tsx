@@ -45,7 +45,6 @@ export const Link: Story = {
 export const Loading: Story = {
 	render: (args) => (
 		<Button {...args}>
-			{/* animate-spin not working? */}
 			<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 			Button
 		</Button>

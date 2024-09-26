@@ -7,7 +7,7 @@ https://stackoverflow.com/questions/72388980/consuming-a-component-library-that-
 
 module.exports = {
 	darkMode: ["class"],
-	content: ["./src/*.{js,jsx,ts,tsx}"],
+	content: ["./src/*.{js,jsx,ts,tsx}", "./src/stories/*.tsx"],
 	theme: {
 		container: {
 			center: true,
