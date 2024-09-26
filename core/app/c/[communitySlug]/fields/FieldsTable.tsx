@@ -21,6 +21,7 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 				updated: new Date(d.updatedAt),
 				isArchived: d.isArchived,
 				slug: d.slug,
+				isRelation: d.isRelation,
 			};
 		});
 	}, [fields]);

@@ -161,6 +161,7 @@ enum CoreSchemaType {
   URL
   MemberId
   FileUpload
+  Null
 }
 
 model PubFieldSchema {

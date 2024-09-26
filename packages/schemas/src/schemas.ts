@@ -93,3 +93,5 @@ export const FileUpload = Type.Array(
 		}
 	)
 );
+
+export const Null = Type.Null({ description: "An empty value" });
