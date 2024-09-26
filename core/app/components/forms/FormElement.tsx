@@ -1,8 +1,7 @@
-import Markdown from "react-markdown";
-
 import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
+import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
 import { BooleanElement } from "./elements/BooleanElement";
@@ -33,7 +32,13 @@ export const FormElement = ({
 	const { schemaName, label: labelProp, slug } = element;
 	if (!slug) {
 		if (element.type === ElementType.structural) {
-			return <Markdown>{element.content}</Markdown>;
+			return (
+				<div
+					className="prose"
+					// TODO: sanitize content
+					dangerouslySetInnerHTML={{ __html: expect(element.content) }}
+				/>
+			);
 		}
 		return null;
 	}
