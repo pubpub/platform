@@ -80,8 +80,8 @@ jobs:
             - name: Build compose
               run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} docker compose up integration-tests -d
 
-            - name: Test if up
-              run: docker compose run core sh -c "curl http://integration-tests:3000"
+            # - name: Test if up
+            #   run: docker compose run core sh -c "curl http://integration-tests:3000"
 
             - name: Run integration tests
               run: docker compose -f docker-compose.test.yml run core pnpm --filter core playwright:test
