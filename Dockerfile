@@ -20,11 +20,15 @@ ARG BASE_IMAGE=alpine
 # Use node image for base image for all stages.
 FROM node:${NODE_VERSION}-${BASE_IMAGE} as base
 
+# these are necessary to be able to use them inside of `base`
+ARG BASE_IMAGE
+ARG PNPM_VERSION
+
 
 ENV dependencies="g++ make py3-pip ca-certificates curl postgresql"
 # Install python deps for node-gyp and postgres
 
-RUN if [[ ${BASE_IMAGE} == alpine]]; then \
+RUN if [[ ${BASE_IMAGE} == alpine ]]; then \
   apk add ${dependencies}; \
   else \
   apt update && apt install -y python3 curl postgresql make g++; \
@@ -57,6 +61,7 @@ COPY ./pnpm-lock.yaml ./
 
 RUN pnpm fetch 
 
+################################################################################
 FROM fetch-deps as monorepo
 
 ADD . ./
@@ -65,6 +70,7 @@ RUN pnpm install -r --offline
 
 RUN pnpm p:build
 
+################################################################################
 FROM monorepo AS withpackage
 
 ARG PACKAGE
@@ -95,14 +101,11 @@ RUN if [[ ${PACKAGE} == core ]]; \
 FROM base AS app
 ARG PORT
 
-# # needed so that the CMD can use this var
-# ENV PACKAGE=$PACKAGE
-
 # Use production node environment by default.
 ENV NODE_ENV production
 
 # Copy the deployed contents
-COPY --from=withpackage /tmp/app \
+COPY --from=withpackage --chown=node:node /tmp/app \
   ./
 
 # Run the application as a non-root user.
@@ -113,7 +116,7 @@ EXPOSE $PORT
 # Run the application.
 CMD pnpm start
 
-
+################################################################################
 # to be used in `docker-compose.test.yml`
 FROM monorepo as test-setup
 
@@ -126,3 +129,6 @@ EXPOSE ${PORT}
 ENV PACKAGE=${PACKAGE}
 
 RUN pnpm --filter core prisma generate
+
+# install playwright
+RUN pnpm --filter core playwright install chromium --with-deps

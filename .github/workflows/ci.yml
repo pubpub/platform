@@ -5,6 +5,7 @@ on:
 
 env:
     CI: true
+    AWS_REGION: us-east-1
 
 jobs:
     ci:
@@ -34,7 +35,35 @@ jobs:
             - name: Run vitest tests
               run: docker compose run core
 
-    integration-tests:
-        name: Integration tests
-        runs-on: ubuntu-latest
-        needs: ci
+            ############## Integration tests
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ vars.IAM_ROLE_TO_ASSUME }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Get image tag based on SHA
+              id: gettag
+              # use shell substitution
+              run: echo "tag=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Get image labels
+              id: label
+              env:
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  IMAGE_TAG: ${{ steps.gettag.outputs.tag }}
+              run: |
+                  echo "label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+                  echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+            - name: Build compose
+              run: INTEGRATION_TESTS_IMAGE=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml up integration-tests -d
+
+            - name: Run integration tests
+              run: docker compose -f docker-compose.test.yml run core pnpm --filter core playwright:test
