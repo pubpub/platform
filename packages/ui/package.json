@@ -275,7 +275,9 @@
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"lint": "eslint **/*.tsx",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"storybook": "storybook dev -p 6006",
+		"build-storybook": "storybook build"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.1",
@@ -333,20 +335,31 @@
 		"utils": "workspace:*"
 	},
 	"peerDependencies": {
+		"next": "catalog:",
 		"react": "catalog:react18",
 		"react-hook-form": "^7.46.1",
 		"tailwindcss": "catalog:",
-		"zod": "catalog:",
-		"next": "catalog:"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@chromatic-com/storybook": "^1.9.0",
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
+		"@storybook/addon-essentials": "^8.3.3",
+		"@storybook/addon-interactions": "^8.3.3",
+		"@storybook/addon-links": "^8.3.3",
+		"@storybook/addon-onboarding": "^8.3.3",
+		"@storybook/blocks": "^8.3.3",
+		"@storybook/react": "^8.3.3",
+		"@storybook/react-vite": "^8.3.3",
+		"@storybook/test": "^8.3.3",
 		"@types/react": "catalog:react18",
 		"eslint": "catalog:",
+		"eslint-plugin-storybook": "^0.9.0",
 		"postcss": "catalog:",
 		"react": "catalog:react18",
 		"react-hook-form": "^7.46.1",
+		"storybook": "^8.3.3",
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
@@ -425,5 +438,10 @@
 			"customRenderers/fileUpload/fileUpload.tsx"
 		]
 	},
-	"prettier": "@pubpub/prettier-config"
+	"prettier": "@pubpub/prettier-config",
+	"eslintConfig": {
+		"extends": [
+			"plugin:storybook/recommended"
+		]
+	}
 }
