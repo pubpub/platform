@@ -27,6 +27,7 @@ const loginAsNew = async (page: Page) => {
 };
 
 test.describe("Auth with lucia", () => {
+	test.setTimeout(1_000);
 	test("Login as a lucia user", async ({ page }) => {
 		await loginAsNew(page);
 	});

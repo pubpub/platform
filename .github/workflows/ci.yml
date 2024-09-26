@@ -1,6 +1,9 @@
 name: "CI"
 on:
     workflow_call:
+        inputs:
+            image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
+                type: string # use this to force a container version.
         secrets:
             AWS_ACCESS_KEY_ID:
                 required: true
@@ -11,6 +14,9 @@ on:
 env:
     CI: true
     AWS_REGION: us-east-1
+
+    ECR_REPOSITORY_PREFIX: pubpub-v7
+    CONTAINER_NAME: core
 
 jobs:
     ci:
@@ -45,7 +51,7 @@ jobs:
                   ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
                   IMAGE_TAG: ${{ steps.gettag.outputs.tag }}
               run: |
-                  echo "label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+                  echo "label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME:-core}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
                   echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
             - name: echo label
@@ -72,7 +78,10 @@ jobs:
             ############## Integration tests
 
             - name: Build compose
-              run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml up integration-tests -d
+              run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} docker compose up integration-tests -d
+
+            - name: Test if up
+              run: docker compose run core sh -c "curl http://integration-tests:3000"
 
             - name: Run integration tests
               run: docker compose -f docker-compose.test.yml run core pnpm --filter core playwright:test
