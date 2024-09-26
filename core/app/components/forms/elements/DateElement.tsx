@@ -5,6 +5,8 @@ import { useFormContext } from "react-hook-form";
 
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
+import { useFormElementToggleContext } from "../FormElementToggleContext";
+
 const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mod.DatePicker), {
 	ssr: false,
 	// TODO: add better loading state
@@ -13,6 +15,9 @@ const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mo
 
 export const DateElement = ({ label, name }: ElementProps) => {
 	const { control } = useFormContext();
+	const formElementToggle = useFormElementToggleContext();
+	const isEnabled = formElementToggle.isEnabled(name);
+
 	return (
 		<FormField
 			name={name}
@@ -20,7 +25,11 @@ export const DateElement = ({ label, name }: ElementProps) => {
 			render={({ field }) => (
 				<FormItem className="grid gap-2">
 					<FormLabel>{label}</FormLabel>
-					<DatePicker date={field.value} setDate={(date) => field.onChange(date)} />
+					<DatePicker
+						disabled={!isEnabled}
+						date={field.value}
+						setDate={(date) => field.onChange(date)}
+					/>
 					<FormMessage />
 				</FormItem>
 			)}

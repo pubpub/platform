@@ -44,7 +44,10 @@ const CommandInput = React.forwardRef<
 	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & { icon?: React.ReactNode }
 >(({ className, icon, ...props }, ref) => (
 	<div
-		className="flex items-center rounded-lg border bg-background px-3 focus-within:border-blue-500"
+		className={cn(
+			"flex items-center rounded-lg border bg-background px-3 focus-within:border-blue-500",
+			props.disabled ? "border-gray-200 bg-gray-200 opacity-50" : "bg-background"
+		)}
 		cmdk-input-wrapper=""
 	>
 		{icon ?? <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />}

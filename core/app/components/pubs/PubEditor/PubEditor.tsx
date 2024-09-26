@@ -8,6 +8,7 @@ import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getPubFields } from "~/lib/server/pubFields";
 import { FormElement } from "../../forms/FormElement";
+import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
 import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorClient } from "./PubEditorClient";
 import { getCommunityById, getStage } from "./queries";
@@ -98,18 +99,20 @@ export async function PubEditor(props: PubEditorProps) {
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
 
 	return (
-		<PubEditorClient
-			availablePubTypes={community.pubTypes}
-			availableStages={community.stages}
-			communityId={community.id}
-			formElements={formElements}
-			parentId={"parentId" in props ? props.parentId : undefined}
-			pubFields={pubFields}
-			pubId={pubId}
-			pubTypeId={pubType?.id}
-			pubValues={pubValues}
-			stageId={currentStageId}
-			isUpdating={isUpdating}
-		/>
+		<FormElementToggleProvider fields={pubFields.map((pubField) => pubField.slug)}>
+			<PubEditorClient
+				availablePubTypes={community.pubTypes}
+				availableStages={community.stages}
+				communityId={community.id}
+				formElements={formElements}
+				parentId={"parentId" in props ? props.parentId : undefined}
+				pubFields={pubFields}
+				pubId={pubId}
+				pubTypeId={pubType?.id}
+				pubValues={pubValues}
+				stageId={currentStageId}
+				isUpdating={isUpdating}
+			/>
+		</FormElementToggleProvider>
 	);
 }
