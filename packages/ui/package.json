@@ -197,6 +197,10 @@
 			"module": "./pubFields/dist/ui-pubFields.esm.js",
 			"default": "./pubFields/dist/ui-pubFields.cjs.js"
 		},
+		"./multivalue-input": {
+			"module": "./multivalue-input/dist/ui-multivalue-input.esm.js",
+			"default": "./multivalue-input/dist/ui-multivalue-input.cjs.js"
+		},
 		"./customRenderers/confidence/confidence": {
 			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
 			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
@@ -255,6 +259,7 @@
 		"label",
 		"menubar",
 		"multi-select",
+		"multivalue-input",
 		"navigation-menu",
 		"pagination",
 		"popover",
@@ -423,6 +428,7 @@
 			"label.tsx",
 			"menubar.tsx",
 			"multi-select.tsx",
+			"multivalue-input.tsx",
 			"navigation-menu.tsx",
 			"pagination.tsx",
 			"popover.tsx",
