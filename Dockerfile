@@ -135,19 +135,26 @@ ENV NODE_ENV production
 
 FROM prod-setup AS next-app-integration-submissions
 WORKDIR /usr/src/app
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/standalone ./
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/standalone .
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/static ./integrations/evaluations/.next/static
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/public ./integrations/evaluations/public
+
 
 CMD node integrations/submissions/server.js
 
 FROM prod-setup AS next-app-integration-evaluations
 WORKDIR /usr/src/app
 COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/standalone ./
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/static ./integrations/submissions/.next/static
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/public ./integrations/submissions/public
 
 CMD node integrations/evaluations/server.js
 
 FROM prod-setup AS next-app-core
 WORKDIR /usr/src/app
 COPY --from=withpackage --chown=node:node /usr/src/app/core/.next/standalone ./
+COPY --from=withpackage --chown=node:node /usr/src/app/core/.next/static ./core/.next/static
+COPY --from=withpackage --chown=node:node /usr/src/app/core/public ./core/public
 
 CMD node core/server.js
 
