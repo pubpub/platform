@@ -6,9 +6,12 @@ import type { InputProps } from "ui/input";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
+import { useFormElementToggleContext } from "../FormElementToggleContext";
+
 export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
 	const { control } = useFormContext();
-
+	const formElementToggle = useFormElementToggleContext();
+	const isEnabled = formElementToggle.isEnabled(name);
 	return (
 		<FormField
 			control={control}
@@ -17,9 +20,14 @@ export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps)
 				const { value, ...fieldRest } = field;
 				return (
 					<FormItem>
-						<FormLabel>{label}</FormLabel>
+						<FormLabel disabled={!isEnabled}>{label}</FormLabel>
 						<FormControl>
-							<Input value={value ?? ""} {...fieldRest} {...rest} />
+							<Input
+								value={value ?? ""}
+								{...fieldRest}
+								{...rest}
+								disabled={!isEnabled}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>

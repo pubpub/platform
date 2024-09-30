@@ -15,9 +15,10 @@ export const DatePicker = forwardRef<
 	HTMLDivElement,
 	{
 		date?: Date;
+		disabled?: boolean;
 		setDate: (date?: Date) => void;
 	}
->(function DatePickerCmp({ date, setDate }, ref) {
+>(function DatePickerCmp({ date, setDate, disabled }, ref) {
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
@@ -33,7 +34,13 @@ export const DatePicker = forwardRef<
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-auto p-0" ref={ref}>
-				<Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+				<Calendar
+					disabled={disabled}
+					mode="single"
+					selected={date}
+					onSelect={setDate}
+					initialFocus
+				/>
 			</PopoverContent>
 		</Popover>
 	);

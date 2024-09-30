@@ -1,4 +1,4 @@
-import { ButtonProps } from "ui/button";
+import type { ButtonProps } from "ui/button";
 import { Trash } from "ui/icon";
 
 import type { PubRemoveProps } from "./RemovePubForm";

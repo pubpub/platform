@@ -69,6 +69,10 @@
 			"module": "./switch/dist/ui-switch.esm.js",
 			"default": "./switch/dist/ui-switch.cjs.js"
 		},
+		"./toggle": {
+			"module": "./toggle/dist/ui-toggle.esm.js",
+			"default": "./toggle/dist/ui-toggle.cjs.js"
+		},
 		"./command": {
 			"module": "./command/dist/ui-command.esm.js",
 			"default": "./command/dist/ui-command.cjs.js"
@@ -266,6 +270,7 @@
 		"textarea",
 		"toast",
 		"toaster",
+		"toggle",
 		"tokens",
 		"tooltip",
 		"use-toast",
@@ -311,6 +316,7 @@
 		"@radix-ui/react-switch": "^1.0.3",
 		"@radix-ui/react-tabs": "^1.0.4",
 		"@radix-ui/react-toast": "^1.1.4",
+		"@radix-ui/react-toggle": "^1.1.0",
 		"@radix-ui/react-tooltip": "^1.0.6",
 		"@tailwindcss/typography": "^0.5.10",
 		"@tanstack/react-table": "^8.13.2",
@@ -430,6 +436,7 @@
 			"textarea.tsx",
 			"toast.tsx",
 			"toaster.tsx",
+			"toggle.tsx",
 			"tokens/index.tsx",
 			"tooltip.tsx",
 			"use-toast.tsx",

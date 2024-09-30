@@ -5,6 +5,8 @@ import { useFormContext } from "react-hook-form";
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
+import { useFormElementToggleContext } from "../FormElementToggleContext";
+
 const Confidence = dynamic(
 	async () => import("ui/customRenderers/confidence/confidence").then((mod) => mod.Confidence),
 	{
@@ -16,6 +18,9 @@ const Confidence = dynamic(
 
 export const Vector3Element = ({ label, name }: ElementProps) => {
 	const { control } = useFormContext();
+	const formElementToggle = useFormElementToggleContext();
+	const isEnabled = formElementToggle.isEnabled(name);
+
 	return (
 		<FormField
 			control={control}
@@ -27,6 +32,7 @@ export const Vector3Element = ({ label, name }: ElementProps) => {
 					<FormControl>
 						<Confidence
 							{...field}
+							disabled={!isEnabled}
 							min={0}
 							max={100}
 							onValueChange={(event) => field.onChange(event)}

@@ -1,9 +1,9 @@
 "use client";
 
 import type { Static, TObject } from "@sinclair/typebox";
-import type { SubmitHandler } from "react-hook-form";
+import type { FieldPath, SubmitHandler, UseFormReturn } from "react-hook-form";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
@@ -35,6 +35,7 @@ import type { PubValues } from "~/lib/server";
 import type { PubField } from "~/lib/types";
 import { Notice } from "~/app/(user)/login/Notice";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { useFormElementToggleContext } from "../../forms/FormElementToggleContext";
 import * as actions from "./actions";
 import {
 	createPubEditorDefaultValuesFromPubFields,
@@ -72,6 +73,8 @@ const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>
 	);
 };
 
+type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
+
 export function PubEditorClient(props: Props) {
 	const hasValues = Object.keys(props.pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
@@ -82,6 +85,8 @@ export function PubEditorClient(props: Props) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
+	const formElementToggle = useFormElementToggleContext();
+
 	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 	urlSearchParams.delete(`${paramString}-pub-form`);
 	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
@@ -90,17 +95,20 @@ export function PubEditorClient(props: Props) {
 	// on re-render (only relevant on Create)
 	const [pubId, _] = useState(props.pubId);
 
-	const schema = useMemo(
-		() => createPubEditorSchemaFromPubFields(props.pubFields),
-		[props.pubFields]
+	const pubFieldsSchema = useMemo(
+		() =>
+			createPubEditorSchemaFromPubFields(
+				props.pubFields.filter((field) => formElementToggle.isEnabled(field.slug))
+			),
+		[props.pubFields, formElementToggle]
 	);
 
 	const noValidPubFields = useMemo(
-		() => hasNoValidPubFields(props.pubFields, schema),
-		[schema, props.pubFields]
+		() => hasNoValidPubFields(props.pubFields, pubFieldsSchema),
+		[pubFieldsSchema, props.pubFields]
 	);
 
-	const resolver = useMemo(() => typeboxResolver(schema), [schema]);
+	const resolver = useMemo(() => typeboxResolver(pubFieldsSchema), [pubFieldsSchema]);
 
 	const form = useForm({
 		defaultValues: createPubEditorDefaultValuesFromPubFields(
@@ -110,7 +118,17 @@ export function PubEditorClient(props: Props) {
 			props.stageId
 		),
 		resolver,
+		reValidateMode: "onBlur",
 	});
+
+	// Re-validate the form when fields are toggled on/off.
+	useEffect(() => {
+		form.trigger(
+			Object.keys(form.formState.touchedFields) as unknown as FieldPath<
+				InferFormValues<typeof form>
+			>
+		);
+	}, [form, formElementToggle]);
 
 	const handleSelectPubType = useDebouncedCallback(
 		(value: (typeof props.availablePubTypes)[number]) => {
@@ -124,13 +142,16 @@ export function PubEditorClient(props: Props) {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const onSubmit: SubmitHandler<Static<typeof schema>> = async (data) => {
+	const onSubmit: SubmitHandler<Static<typeof pubFieldsSchema>> = async (data) => {
 		const { pubTypeId, stageId, ...pubValues } = data;
+		const enabledPubValues = Object.fromEntries(
+			Object.entries(pubValues).filter(([slug]) => formElementToggle.isEnabled(slug))
+		) as PubValues;
 
 		if (props.isUpdating) {
 			const result = await runUpdatePub({
 				pubId,
-				pubValues,
+				pubValues: enabledPubValues,
 				stageId: stageId as StagesId,
 			});
 
@@ -154,7 +175,7 @@ export function PubEditorClient(props: Props) {
 				communityId: props.communityId,
 				parentId: props.parentId,
 				pubTypeId: pubTypeId as PubTypesId,
-				pubValues,
+				pubValues: enabledPubValues,
 				stageId: stageId as StagesId,
 			});
 			if (didSucceed(result)) {
