@@ -82,11 +82,6 @@ RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && 
 ENV DOCKERBUILD=1
 
 RUN pnpm --filter $PACKAGE build 
-# && \
-#   pnpm --filter $PACKAGE --prod deploy /tmp/app && \
-#   pnpm --filter $PACKAGE exec \
-# cp next.docker.config.js /tmp/app/next.config.js && \
-# cp core/.env.docker /tmp/app/.env
 
 # Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
 # RUN if [[ ${PACKAGE} == core ]]; \
@@ -97,9 +92,6 @@ RUN pnpm --filter $PACKAGE build
 #   mkdir -p /tmp/app/{} && \
 #   cp -a {}/. /tmp/app/{}/" ; \
 #   fi
-
-RUN ls -la integrations/submissions
-
 
 FROM withpackage as prepare-jobs
 
