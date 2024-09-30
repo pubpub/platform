@@ -7,6 +7,7 @@ import { defineConfig, devices } from "@playwright/test";
 // require('dotenv').config();
 
 const baseURL = `http://${process.env.INTEGRATION_TEST_HOST || "localhost"}:3000`;
+console.log(baseURL);
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -27,7 +28,7 @@ export default defineConfig({
 	webServer: [
 		{
 			command: process.env.CI
-				? `curl ${baseURL}`
+				? `echo ${baseURL}`
 				: `pnpm --workspace-root exec preconstruct build && ${
 						process.env.TEST_DEV
 							? "pnpm --filter core dev"

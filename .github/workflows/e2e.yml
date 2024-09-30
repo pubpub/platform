@@ -58,7 +58,7 @@ jobs:
               run: docker compose -f docker-compose.test.yml --profile test up -d
 
             - name: Run migrations
-              run: pnpm --filter core migrate-test
+              run: pnpm --filter core prisma migrate deploy
               env:
                   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
 
@@ -101,7 +101,7 @@ jobs:
               run: docker compose -f docker-compose.test.yml --profile integration up -d
               env:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
-                  # JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
+                  JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
 
             - name: Run integration tests
               run: pnpm --filter core playwright:test
