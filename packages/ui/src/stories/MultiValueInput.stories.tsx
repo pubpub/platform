@@ -24,6 +24,10 @@ export const WithValues: Story = {
 	args: { values: ["cat", "dog"] },
 };
 
+export const ReplacedPlaceholder: Story = {
+	args: { values: ["cat", "dog"], placeholder: "Add a value meow" },
+};
+
 export const Interactive: Story = {
 	args: {},
 	render: () => {
