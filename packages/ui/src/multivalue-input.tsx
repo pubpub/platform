@@ -45,7 +45,7 @@ const SortableValue = ({
 			className="bg-muted-foreground py-1"
 			data-testid={`sortable-value-${value}`}
 		>
-			<Button {...listeners} variant="ghost" className="mr-1 h-5 px-0">
+			<Button {...listeners} variant="ghost" className="mr-1 h-5 p-0">
 				<GripVertical size="12" />
 			</Button>
 			{value}
@@ -54,7 +54,7 @@ const SortableValue = ({
 					onRemove(value);
 				}}
 				variant="ghost"
-				className="ml-2 h-3 p-0"
+				className="ml-2 h-5 p-0"
 				data-testid="remove-button"
 			>
 				<XCircle size="12"></XCircle>
