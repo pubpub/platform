@@ -69,7 +69,7 @@ jobs:
               uses: docker/build-push-action@v5
               id: build-image
               env:
-                  REGISTRY_REF: ${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}${{env.PACKAGE}}:cache
+                  REGISTRY_REF: ${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}-${{env.PACKAGE}}:cache
                   LABEL: ${{ steps.label.outputs.label }}
                   TARGET: ${{ steps.label.outputs.target }}
               with:
