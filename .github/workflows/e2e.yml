@@ -101,6 +101,7 @@ jobs:
             #   run: INTEGRATION_TESTS_IMAGE_XXX=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml --profile integration build
 
             - name: Run integration tests
-              run: INTEGRATION_TESTS_IMAGE=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml --profile integration up -d && pnpm --filter core playwright:test
+              run: docker compose -f docker-compose.test.yml --profile integration up -d && pnpm --filter core playwright:test
               env:
                   INTEGRATION_TEST_HOST: localhost
+                  INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.label}}
