@@ -8,6 +8,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 
 import { upload } from "../actions";
 import { FileUploadPreview } from "../FileUpload";
+import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 const FileUpload = dynamic(
 	async () => import("ui/customRenderers/fileUpload/fileUpload").then((mod) => mod.FileUpload),
@@ -23,7 +24,10 @@ export const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId
 		return upload(pubId, fileName);
 	};
 	const { control, getValues } = useFormContext();
+	const formElementToggle = useFormElementToggleContext();
+	const isEnabled = formElementToggle.isEnabled(name);
 	const files = getValues()[name];
+
 	return (
 		<div>
 			<FormField
@@ -37,6 +41,7 @@ export const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId
 							<FormControl>
 								<FileUpload
 									{...field}
+									disabled={!isEnabled}
 									upload={signedUploadUrl}
 									onUpdateFiles={(event: any[]) => {
 										field.onChange(event);
