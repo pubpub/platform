@@ -49,15 +49,8 @@ services:
     #         sh -c "pnpm --filter core run test-run"
 
     # jobs:
-    #     build:
-    #         context: .
-    #         args:
-    #             - PACKAGE=jobs
-    #             # same as the above, improves caching
-    #             - BASE_IMAGE=slim
-    #         target: test-setup
     #     container_name: jobs
-    #     image: core-test-setup:${SHA:-latest}
+    #     image: ${JOBS_IMAGE:-pubpub-v7-jobs:latest}
     #     env_file:
     #         - path: ./.env.docker-compose
     #           required: false
@@ -68,14 +61,13 @@ services:
     #         - PGPORT=5432
     #         - PGUSER=postgres
     #         - PGPASSWORD=postgres
-    #         - PUBPUB_URL=http://localhost:8080
+    #         - PUBPUB_URL=http://localhost:3000
     #     networks:
     #         - app-network
     #     depends_on:
     #         - db
     #     profiles:
     #         - integration
-    #         - test
 
     db:
         extends:
@@ -104,8 +96,8 @@ services:
     integration-tests:
         environment:
             - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
-            - MAILGUN_SMTP_HOST=smtp.mailgun.org
-            - MAILGUN_SMTP_PORT=465
+            - MAILGUN_SMTP_HOST=inbucket
+            - MAILGUN_SMTP_PORT=54325
             - MAILGUN_SMTP_USERNAME=omitted
             - OTEL_SERVICE_NAME=core.core
             - PGDATABASE=postgres
@@ -124,7 +116,7 @@ services:
         depends_on:
             - db
             - inbucket
-        image: ${INTEGRATION_TESTS_IMAGE}
+        image: ${INTEGRATION_TESTS_IMAGE:-core:latest}
         profiles:
             - integration
         ports:
