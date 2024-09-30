@@ -69,6 +69,10 @@
 			"module": "./switch/dist/ui-switch.esm.js",
 			"default": "./switch/dist/ui-switch.cjs.js"
 		},
+		"./toggle": {
+			"module": "./toggle/dist/ui-toggle.esm.js",
+			"default": "./toggle/dist/ui-toggle.cjs.js"
+		},
 		"./command": {
 			"module": "./command/dist/ui-command.esm.js",
 			"default": "./command/dist/ui-command.cjs.js"
@@ -266,6 +270,7 @@
 		"textarea",
 		"toast",
 		"toaster",
+		"toggle",
 		"tokens",
 		"tooltip",
 		"use-toast",
@@ -309,6 +314,7 @@
 		"@radix-ui/react-switch": "^1.0.3",
 		"@radix-ui/react-tabs": "^1.0.4",
 		"@radix-ui/react-toast": "^1.1.4",
+		"@radix-ui/react-toggle": "^1.1.0",
 		"@radix-ui/react-tooltip": "^1.0.6",
 		"@tailwindcss/typography": "^0.5.10",
 		"@tanstack/react-table": "^8.13.2",
@@ -326,7 +332,6 @@
 		"db": "workspace:*",
 		"lexical": "^0.15.0",
 		"lucide-react": "^0.357.0",
-		"next": "catalog:",
 		"react-day-picker": "^8.10.0",
 		"schemas": "workspace:*",
 		"tailwind-merge": "catalog:",
@@ -334,6 +339,7 @@
 		"utils": "workspace:*"
 	},
 	"peerDependencies": {
+		"next": "catalog:",
 		"react": "catalog:react18",
 		"react-hook-form": "^7.46.1",
 		"tailwindcss": "catalog:",
@@ -417,6 +423,7 @@
 			"textarea.tsx",
 			"toast.tsx",
 			"toaster.tsx",
+			"toggle.tsx",
 			"tokens/index.tsx",
 			"tooltip.tsx",
 			"use-toast.tsx",

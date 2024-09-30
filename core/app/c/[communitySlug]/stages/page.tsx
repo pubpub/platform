@@ -6,28 +6,30 @@ import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import { getPageLoginData } from "~/lib/auth/loginData";
-import { getCommunityBySlug } from "~/lib/db/queries";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { createToken } from "~/lib/server/token";
-import { getStageWorkflows } from "~/lib/stages";
-import StageList from "./components/StageList";
+import { StageList } from "./components/StageList";
 
 export const metadata: Metadata = {
 	title: "Workflows",
 };
 
-type Props = { params: { communitySlug: string } };
+type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
 
-export default async function Page({ params }: Props) {
-	const { user } = await getPageLoginData();
-	const community = await getCommunityBySlug(params.communitySlug);
+export default async function Page({ params, searchParams }: Props) {
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(params.communitySlug),
+	]);
+
 	if (!community) {
 		notFound();
 	}
-	const token = await createToken({
+
+	const token = createToken({
 		userId: user.id as UsersId,
 		type: AuthTokenType.generic,
 	});
-	const stageWorkflows = getStageWorkflows(community.stages);
 
 	return (
 		<>
@@ -35,10 +37,12 @@ export default async function Page({ params }: Props) {
 				<h1 className="text-xl font-bold">Stages</h1>
 			</div>
 			<StageList
-				members={community.members}
-				stageWorkflows={stageWorkflows}
 				token={token}
-				communityStages={community.stages}
+				communityId={community.id}
+				pageContext={{
+					params,
+					searchParams,
+				}}
 			/>
 		</>
 	);

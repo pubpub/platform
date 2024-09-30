@@ -14,7 +14,7 @@ import {
 
 import type { CommunitiesId, StagesId } from "db/public";
 
-import type { CommunityStage } from "./page";
+import type { CommunityStage } from "~/lib/server/stages";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 

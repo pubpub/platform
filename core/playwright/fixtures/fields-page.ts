@@ -26,16 +26,21 @@ export class FieldsPage {
 		await this.newButton.click();
 	}
 
+	async selectFormat(format: CoreSchemaType) {
+		await this.formatBox.click();
+		await this.page.getByRole("option", { name: format }).click();
+	}
+
 	async addField(name: string, format: CoreSchemaType) {
 		await this.openNewFieldModal();
 		await this.nameBox.fill(name);
-		await this.formatBox.click();
-		await this.page.getByRole("option", { name: format }).click();
+		await this.selectFormat(format);
 		await this.page.getByRole("button", { name: "Create" }).click();
 	}
 
 	async addFieldsOfEachType() {
-		for (const schema of Object.values(CoreSchemaType)) {
+		const schemas = Object.values(CoreSchemaType).filter((s) => s !== CoreSchemaType.Null);
+		for (const schema of schemas) {
 			await this.addField(schema, schema);
 		}
 	}

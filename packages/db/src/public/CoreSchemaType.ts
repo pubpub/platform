@@ -13,6 +13,7 @@ export enum CoreSchemaType {
 	URL = "URL",
 	MemberId = "MemberId",
 	FileUpload = "FileUpload",
+	Null = "Null",
 }
 
 /** Zod schema for CoreSchemaType */

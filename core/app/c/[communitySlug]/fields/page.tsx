@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
+
 import partition from "lodash.partition";
 
 import type { CommunitiesId } from "db/public";
@@ -39,6 +40,7 @@ export default async function Page({ params }: Props) {
 	const community = await findCommunityBySlug(params.communitySlug);
 	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
+		includeRelations: true,
 	}).executeTakeFirst();
 
 	if (!pubFields || !pubFields.fields) {

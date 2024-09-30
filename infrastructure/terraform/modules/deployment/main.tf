@@ -217,6 +217,7 @@ module "service_flock" {
        { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
        { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
        { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+       { name = "PAGER", value = "less -S" },
      ]
 
      secrets = [

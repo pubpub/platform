@@ -23,7 +23,8 @@ import { cn } from "utils";
 
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
-import * as actions from "~/app/components/PubCRUD/actions";
+import * as actions from "~/app/components/pubs/PubEditor/actions";
+import { PubValues } from "~/lib/server";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";
@@ -68,10 +69,7 @@ const preparePayload = ({
 /**
  * Date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (
-	elements: PubPubForm["elements"],
-	pubValues: Record<string, JsonValue>
-) => {
+const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
 	const defaultValues: FieldValues = { ...pubValues };
 	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
 	for (const de of dateElements) {
@@ -132,7 +130,7 @@ export const ExternalFormWrapper = ({
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
-	const runUpdatePub = useServerAction(actions.upsertPubValues);
+	const runUpdatePub = useServerAction(actions.updatePub);
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => isButtonElement(e)),
@@ -141,26 +139,26 @@ export const ExternalFormWrapper = ({
 
 	const handleSubmit = useCallback(
 		async (
-			values: FieldValues,
+			formValues: FieldValues,
 			evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
 			autoSave = false
 		) => {
-			const fields = preparePayload({
+			const pubValues = preparePayload({
 				formElements,
-				formValues: values,
+				formValues,
 			});
 			const submitButtonId = evt?.nativeEvent.submitter?.id;
 			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
 			const stageId = submitButtonConfig?.stageId ?? undefined;
 			const result = await runUpdatePub({
 				pubId: pub.id as PubsId,
-				fields,
+				pubValues,
 				stageId,
 			});
 			if (didSucceed(result)) {
 				const newParams = new URLSearchParams(params);
 				const currentTime = `${new Date().getTime()}`;
-				if (!autoSave && isComplete(formElements, values)) {
+				if (!autoSave && isComplete(formElements, pubValues)) {
 					const submitButtonId = evt?.nativeEvent.submitter?.id;
 					if (submitButtonId) {
 						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);

@@ -19,11 +19,12 @@ import {
 	PubFieldSelectorToggleButton,
 } from "ui/pubFields";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { expect } from "utils";
+import { cn, expect } from "utils";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
 import { UserAvatar } from "../UserAvatar";
 import { isMemberSelectUserWithMembership } from "./types";
 import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
@@ -60,6 +61,7 @@ type Props = {
 	queryParamName: string;
 	member?: MemberSelectUserWithMembership;
 	users: MemberSelectUser[];
+	allowPubFieldSubstitution: boolean;
 };
 
 export function UserSelectClient({
@@ -69,12 +71,15 @@ export function UserSelectClient({
 	queryParamName,
 	member,
 	users,
+	allowPubFieldSubstitution,
 }: Props) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
+	const formElementToggle = useFormElementToggleContext();
+	const isEnabled = formElementToggle.isEnabled(fieldName);
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
@@ -86,6 +91,7 @@ export function UserSelectClient({
 	const [selectedUser, setSelectedUser] = useState(member);
 
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
+
 	const onInputValueChange = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
 		newParams.set(queryParamName, value);
@@ -98,59 +104,72 @@ export function UserSelectClient({
 			name={fieldName}
 			render={({ field }) => {
 				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
-				return (
+				const formItem = (
+					<FormItem className="flex flex-col gap-y-1">
+						<div className="flex items-center justify-between">
+							<FormLabel
+								className={cn(
+									"text-sm font-medium leading-none",
+									!isEnabled && "cursor-not-allowed opacity-50"
+								)}
+							>
+								{fieldLabel}
+							</FormLabel>
+							{allowPubFieldSubstitution && <PubFieldSelectorToggleButton />}
+						</div>
+						<AutoComplete
+							name={fieldName}
+							value={selectedUserOption}
+							options={options}
+							disabled={!isEnabled}
+							empty={
+								<UserSelectAddUserButton
+									key={addUserButtonKey}
+									community={community}
+									email={inputValue}
+								/>
+							}
+							onInputValueChange={onInputValueChange}
+							onValueChange={async (option) => {
+								const user = users.find((user) => user.id === option.value);
+								if (!user) {
+									return;
+								}
+								if (isMemberSelectUserWithMembership(user)) {
+									setSelectedUser(user);
+									field.onChange(user.member.id);
+								} else {
+									const result = await runAddMember({
+										user,
+										role: MemberRole.contributor,
+									});
+									if (didSucceed(result)) {
+										const member = expect(result.member);
+										setSelectedUser({ ...user, member });
+										field.onChange(member.id);
+									}
+								}
+							}}
+							onClose={resetAddUserButton}
+							icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
+						/>
+						<FormMessage />
+						{allowPubFieldSubstitution && (
+							<PubFieldSelectorHider>
+								<PubFieldSelector />
+							</PubFieldSelectorHider>
+						)}
+					</FormItem>
+				);
+				return allowPubFieldSubstitution ? (
 					<PubFieldSelectorProvider
 						field={field}
 						allowedSchemas={[CoreSchemaType.MemberId]}
 					>
-						<FormItem className="flex flex-col gap-y-1">
-							<div className="flex items-center justify-between">
-								<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-									{fieldLabel}
-								</FormLabel>
-								<PubFieldSelectorToggleButton />
-							</div>
-							<AutoComplete
-								name={fieldName}
-								value={selectedUserOption}
-								options={options}
-								empty={
-									<UserSelectAddUserButton
-										key={addUserButtonKey}
-										community={community}
-										email={inputValue}
-									/>
-								}
-								onInputValueChange={onInputValueChange}
-								onValueChange={async (option) => {
-									const user = users.find((user) => user.id === option.value);
-									if (!user) {
-										return;
-									}
-									if (isMemberSelectUserWithMembership(user)) {
-										setSelectedUser(user);
-										field.onChange(user.member.id);
-									} else {
-										const result = await runAddMember({
-											user,
-											role: MemberRole.contributor,
-										});
-										if (didSucceed(result)) {
-											const member = expect(result.member);
-											setSelectedUser({ ...user, member });
-											field.onChange(member.id);
-										}
-									}
-								}}
-								onClose={resetAddUserButton}
-								icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
-							/>
-							<FormMessage />
-							<PubFieldSelectorHider>
-								<PubFieldSelector />
-							</PubFieldSelectorHider>
-						</FormItem>
+						{formItem}
 					</PubFieldSelectorProvider>
+				) : (
+					formItem
 				);
 			}}
 		/>

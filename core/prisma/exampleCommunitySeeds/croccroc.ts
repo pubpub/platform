@@ -139,7 +139,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			role: MemberRole.admin,
 		})
 		.returning("id")
-		.executeTakeFirst();
+		.executeTakeFirstOrThrow();
 
 	const memberGroup = await db
 		.with("new_member_group", (db) =>
@@ -322,7 +322,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
 				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!.id,
-				value: JSON.stringify(users[0].id),
+				value: JSON.stringify(member.id),
 			},
 			{
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),

@@ -7,13 +7,15 @@ import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-import type { PubValueWithFieldAndSchema } from "./components/JsonSchemaHelpers";
+import type { PubValueWithFieldAndSchema } from "./components/jsonSchemaHelpers";
+import type { CommunityStage } from "~/lib/server/stages";
+import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
-import { PubCreateButton } from "~/app/components/PubCRUD/PubCreateButton";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
@@ -25,7 +27,7 @@ import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
-import { renderField } from "./components/JsonSchemaHelpers";
+import { renderField } from "./components/jsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 
 export async function generateMetadata({
@@ -103,6 +105,7 @@ export default async function Page({
 
 	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
 
+	const { stages, children, ...slimPub } = pub;
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8">
@@ -140,11 +143,15 @@ export default async function Page({
 									);
 								})}
 							</div>
-							<Move
-								pub={pub}
-								stage={pub.stages[0].stage}
-								communityStages={community.stages}
-							/>
+							{pub.stages[0] ? (
+								<Move
+									pubId={pub.id as PubsId}
+									stageId={pub.stages[0].stageId as StagesId}
+									communityStages={
+										community.stages as unknown as CommunityStage[]
+									}
+								/>
+							) : null}
 						</div>
 					</div>
 					<div>
@@ -153,7 +160,16 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Integrations</div>
 						<div>
-							<IntegrationActions pub={pub} token={token} />
+							<Suspense>
+								{pub.stages[0]?.stageId && (
+									<IntegrationActions
+										pubId={pub.id as PubsId}
+										token={token}
+										stageId={pub.stages[0].stageId as StagesId}
+										type="pub"
+									/>
+								)}
+							</Suspense>
 						</div>
 					</div>
 					<div>
@@ -196,7 +212,12 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
-							<Assign members={community.members} pub={pub} />
+							<Assign
+								// TODO: Remove this cast
+								members={community.members as unknown as MemberWithUser[]}
+								// TODO: Remove this cast
+								pub={slimPub as unknown as PubWithValues}
+							/>
 						</div>
 					</div>
 				</div>
@@ -209,8 +230,8 @@ export default async function Page({
 				</p>
 			</div>
 			<div className="mb-2">
-				<PubCreateButton
-					label="Add New Pub"
+				<CreatePubButton
+					text="Add New Pub"
 					communityId={community.id as CommunitiesId}
 					parentId={pub.id as PubsId}
 					searchParams={searchParams}

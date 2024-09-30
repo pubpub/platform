@@ -11,7 +11,7 @@ export type PubRemoveProps = {
 
 const PubRemoveForm = dynamic(
 	async () => {
-		return import("./PubRemoveForm").then((mod) => ({
+		return import("./RemovePubFormClient").then((mod) => ({
 			default: mod.PubRemoveForm,
 		}));
 	},
@@ -20,10 +20,8 @@ const PubRemoveForm = dynamic(
 
 export async function PubRemove({ pubId }: PubRemoveProps) {
 	return (
-		<>
-			<Suspense fallback={<div>Loading...</div>}>
-				<PubRemoveForm pubId={pubId} />
-			</Suspense>
-		</>
+		<Suspense fallback={<div>Loading...</div>}>
+			<PubRemoveForm pubId={pubId} />
+		</Suspense>
 	);
 }
