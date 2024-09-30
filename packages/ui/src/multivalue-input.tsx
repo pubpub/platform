@@ -40,7 +40,7 @@ const SortableValue = ({
 	return (
 		<Badge ref={setNodeRef} style={style} {...attributes} className="bg-muted-foreground py-1">
 			<Button {...listeners} variant="ghost" className="mr-1 h-5 px-0">
-				<GripVertical size="12"></GripVertical>
+				<GripVertical size="12" />
 			</Button>
 			{value}
 			<Button
