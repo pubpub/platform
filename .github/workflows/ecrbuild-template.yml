@@ -22,6 +22,7 @@ env:
     PACKAGE: ${{ inputs.package }}
     AWS_REGION: us-east-1 # set this to your preferred AWS region, e.g. us-west-1
     ECR_REPOSITORY_PREFIX: pubpub-v7 # set this to your Amazon ECR repository name
+    TARGET: ${{ inputs.target }}
 
 jobs:
     build:
@@ -63,7 +64,7 @@ jobs:
                     echo "target=monorepo" >> $GITHUB_OUTPUT
                   else
                     package_suffix="-${PACKAGE}"
-                    echo "target=${target:-next-app-${PACKAGE}}" >> $GITHUB_OUTPUT
+                    echo "target=${TARGET:-next-app-${PACKAGE}}" >> $GITHUB_OUTPUT
                   fi
                   echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
 
