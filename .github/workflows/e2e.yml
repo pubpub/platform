@@ -1,4 +1,3 @@
-name: "CI"
 on:
     workflow_call:
         inputs:
@@ -9,7 +8,6 @@ on:
                 required: true
             AWS_SECRET_ACCESS_KEY:
                 required: true
-    workflow_dispatch:
 
 env:
     CI: true
@@ -19,11 +17,12 @@ env:
     CONTAINER_NAME: core
 
 jobs:
-    ci:
-        timeout-minutes: 15
+    integration-tests:
+        # needs:
+        #     - build-all
+        #     - ci
+        name: Integration tests
         runs-on: ubuntu-latest
-        env:
-            COMPOSE_FILE: docker-compose.test.yml
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -52,11 +51,6 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
-            # - name: Build docker image
-            #   run: docker compose --profile integration build
-            - name: Start up DB
-              run: docker compose --profile test up -d
-
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
@@ -71,25 +65,37 @@ jobs:
             - name: generate prisma
               run: pnpm --filter core prisma generate
 
-            # - name: Run prettier
-            #   run: docker compose run core pnpm format
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ vars.IAM_ROLE_TO_ASSUME }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
 
-            # - name: Run eslint
-            #   run: docker compose run core pnpm lint
+            - name: Get image tag based on SHA
+              id: gettag
+              # use shell substitution
+              run: echo "tag=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
 
-            # - name: Run typecheck
-            #   run: docker compose run core pnpm type-check
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
 
-            - name: Run vitest tests
-              run: pnpm --filter core run test-run
+            - name: Get image labels
+              id: label
+              env:
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  IMAGE_TAG: ${{ steps.gettag.outputs.tag }}
+              run: |
+                  echo "label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-${CONTAINER_NAME}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+                  echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-            ############## Integration tests
+            - run: echo ${{ steps.label.outputs.label }}
 
+            - run: pnpx playwright install chromium --with-deps
             # - name: Build compose
-            #   run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} SHA=${{github.sha}} docker compose up -d integration-tests && docker compose run core pnpm --filter core playwright:test
+            #   run: INTEGRATION_TESTS_IMAGE_XXX=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml --profile integration build
 
-            # - name: Test if up
-            #   run: docker compose run core sh -c "curl http://integration-tests:3000"
-
-            # - name: Run integration tests
-            #   run: docker compose run core pnpm --filter core playwright:test
+            - name: Run integration tests
+              run: INTEGRATION_TESTS_IMAGE=${{ steps.label.outputs.label }} docker compose -f docker-compose.test.yml --profile integration up -d

@@ -31,6 +31,7 @@
 		"@preconstruct/cli": "^2.8.4",
 		"@pubpub/prettier-config": "workspace:*",
 		"@turbo/gen": "^2.1.1",
+		"concurrently": "^9.0.1",
 		"husky": "^8.0.3",
 		"lint-staged": "^13.2.2",
 		"pino-pretty": "^10.3.1",

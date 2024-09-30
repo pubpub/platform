@@ -122,9 +122,5 @@ FROM monorepo as test-setup
 
 RUN pnpm --filter core prisma generate
 
-RUN pnpm p:build
-
-RUN pnpm i
-
 # install playwright
 RUN pnpm --filter core exec playwright install chromium --with-deps 
