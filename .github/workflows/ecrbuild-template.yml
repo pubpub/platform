@@ -42,6 +42,13 @@ jobs:
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v2
 
+            - name: setup docker buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Create and use a new builder instance
+              run: |
+                  docker buildx create --name cached-builder --use
+
             - name: Get image label
               id: label
               env:
@@ -59,18 +66,31 @@ jobs:
                   echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
 
             - name: Build, tag, and push image to Amazon ECR
+              uses: docker/build-push-action@v5
               id: build-image
               env:
+                  REGISTRY_REF: ${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}${{env.PACKAGE}}:cache
                   LABEL: ${{ steps.label.outputs.label }}
                   TARGET: ${{ steps.label.outputs.target }}
-              run: |
-                  # Build a docker container and
-                  # push it to ECR so that it can
-                  # be deployed to ECS.
-                  docker build \
-                    --platform linux/amd64 \
-                    --build-arg PACKAGE=$PACKAGE \
-                    --target $TARGET \
-                    -t $LABEL \
-                    .
-                  docker push $LABEL
+              with:
+                  context: .
+                  cache-from: type=registry,ref=${{env.REGISTRY_REF}}
+                  cache-to: type=registry,mode=max,image-manifest=true,oci-mediatypes=true,ref=${{env.REGISTRY_REF }}
+                  builder: cached-builder
+                  build-args: |
+                      PACKAGE=${{ inputs.package }}
+                  target: ${{ steps.label.outputs.target }}
+                  tags: ${{ steps.label.outputs.label }}
+                  platforms: linux/amd64
+                  push: true
+              # run: |
+              #     # Build a docker container and
+              #     # push it to ECR so that it can
+              #     # be deployed to ECS.
+              #     docker build \
+              #       --platform linux/amd64 \
+              #       --build-arg PACKAGE=$PACKAGE \
+              #       --target $TARGET \
+              #       -t $LABEL \
+              #       .
+              #     docker push $LABEL
