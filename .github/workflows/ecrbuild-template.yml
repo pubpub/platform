@@ -10,6 +10,8 @@ on:
             runner:
                 type: string
                 default: ubuntu-latest
+            target:
+                type: string
         secrets:
             AWS_ACCESS_KEY_ID:
                 required: true
@@ -61,7 +63,7 @@ jobs:
                     echo "target=monorepo" >> $GITHUB_OUTPUT
                   else
                     package_suffix="-${PACKAGE}"
-                    echo "target=next-app-${PACKAGE}" >> $GITHUB_OUTPUT
+                    echo "target=${target:-next-app-${PACKAGE}}" >> $GITHUB_OUTPUT
                   fi
                   echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
 
