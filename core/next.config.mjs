@@ -12,7 +12,12 @@ import "./lib/env/env.mjs";
  */
 const nextConfig = {
 	output: "standalone",
+	typescript: {
+		// this gets checked in CI already
+		ignoreBuildErrors: true,
+	},
 	eslint: {
+		// this gets checked in CI already
 		ignoreDuringBuilds: true,
 	},
 	reactStrictMode: true,

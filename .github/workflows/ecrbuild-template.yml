@@ -61,7 +61,7 @@ jobs:
                     echo "target=monorepo" >> $GITHUB_OUTPUT
                   else
                     package_suffix="-${PACKAGE}"
-                    echo "target=app" >> $GITHUB_OUTPUT
+                    echo "target=next-app-${PACKAGE}" >> $GITHUB_OUTPUT
                   fi
                   echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
 
@@ -75,7 +75,7 @@ jobs:
               with:
                   context: .
                   cache-from: type=registry,ref=${{env.REGISTRY_REF}}
-                  cache-to: type=registry,mode=max,image-manifest=true,oci-mediatypes=true,ref=${{env.REGISTRY_REF }}
+                  cache-to: type=registry,mode=max,image-manifest=true,oci-mediatypes=true,ref=${{env.REGISTRY_REF}}
                   builder: cached-builder
                   build-args: |
                       PACKAGE=${{ inputs.package }}

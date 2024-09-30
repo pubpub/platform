@@ -8,7 +8,8 @@
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"start": "next start",
 		"lint": "echo 'No linting rules defined'",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"start-standalone": "node server.js"
 	},
 	"files": [
 		".next"

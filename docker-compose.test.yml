@@ -125,7 +125,8 @@ services:
             - db
             - inbucket
         # TODO: remove this backup image
-        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:9d706485e22da100437475716a909f48742e0c16}
+        # image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:9d706485e22da100437475716a909f48742e0c16}
+        image: core:latest
         profiles:
             - integration
         ports:
