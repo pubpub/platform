@@ -38,7 +38,13 @@ const SortableValue = ({
 		: undefined;
 
 	return (
-		<Badge ref={setNodeRef} style={style} {...attributes} className="bg-muted-foreground py-1">
+		<Badge
+			ref={setNodeRef}
+			style={style}
+			{...attributes}
+			className="bg-muted-foreground py-1"
+			data-testid={`sortable-value-${value}`}
+		>
 			<Button {...listeners} variant="ghost" className="mr-1 h-5 px-0">
 				<GripVertical size="12" />
 			</Button>
@@ -49,6 +55,7 @@ const SortableValue = ({
 				}}
 				variant="ghost"
 				className="ml-2 h-3 p-0"
+				data-testid="remove-button"
 			>
 				<XCircle size="12"></XCircle>
 			</Button>
@@ -93,6 +100,7 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 					placeholder="Type the value and hit enter"
 					{...props}
 					ref={ref}
+					data-testid="multivalue-input"
 				/>
 
 				<DndContext
