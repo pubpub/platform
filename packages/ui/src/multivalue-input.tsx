@@ -14,7 +14,7 @@ import { GripVertical, XCircle } from "./icon";
 import { Input } from "./input";
 
 type MultiValueInputProps = Omit<InputProps, "onChange"> & {
-	values: string[];
+	value: string[];
 	onChange: Dispatch<SetStateAction<string[]>>;
 };
 
@@ -64,7 +64,7 @@ const SortableValue = ({
 };
 
 export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps>(
-	({ values, onChange, ...props }, ref) => {
+	({ value: values, onChange, ...props }, ref) => {
 		const [pendingValue, setPendingValue] = useState("");
 		const [activeDrag, setActiveDrag] = useState<Active | null>(null);
 
