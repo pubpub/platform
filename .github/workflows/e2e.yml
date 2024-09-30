@@ -54,6 +54,9 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
+            - name: Start up DB
+              run: docker compose -f docker-compose.test.yml --profile test up -d
+
             - name: Run migrations
               run: pnpm --filter core migrate-test
               env:
