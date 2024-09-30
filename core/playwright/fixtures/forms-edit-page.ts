@@ -24,7 +24,6 @@ export class FormsEditPage {
 	async addFormElement(slug: string) {
 		await this.page.getByTestId(`field-button-${slug}`).click();
 		await this.saveForm();
-		await this.page.getByRole("button", { name: "Back" }).click();
 	}
 
 	async saveForm() {

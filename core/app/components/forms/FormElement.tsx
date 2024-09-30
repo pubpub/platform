@@ -1,8 +1,7 @@
-import Markdown from "react-markdown";
-
 import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
+import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
 import { BooleanElement } from "./elements/BooleanElement";
@@ -11,6 +10,7 @@ import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FIleUploadElement";
 import { TextElement } from "./elements/TextElement";
 import { UserIdSelect } from "./elements/UserSelectElement";
+import { FormElementToggle } from "./FormElementToggle";
 
 export type FormElementProps = {
 	pubId: PubsId;
@@ -33,7 +33,13 @@ export const FormElement = ({
 	const { schemaName, label: labelProp, slug } = element;
 	if (!slug) {
 		if (element.type === ElementType.structural) {
-			return <Markdown>{element.content}</Markdown>;
+			return (
+				<div
+					className="prose"
+					// TODO: sanitize content
+					dangerouslySetInnerHTML={{ __html: expect(element.content) }}
+				/>
+			);
 		}
 		return null;
 	}
@@ -43,28 +49,31 @@ export const FormElement = ({
 	}
 
 	const elementProps = { label: labelProp ?? "", name: slug };
+
+	let input: JSX.Element | undefined;
+
 	if (
 		schemaName === CoreSchemaType.String ||
 		schemaName === CoreSchemaType.Email ||
 		schemaName === CoreSchemaType.URL
 	) {
-		return <TextElement {...elementProps} />;
+		input = <TextElement {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.Boolean) {
-		return <BooleanElement {...elementProps} />;
+		input = <BooleanElement {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.FileUpload) {
-		return <FileUploadElement pubId={pubId} {...elementProps} />;
+		input = <FileUploadElement pubId={pubId} {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.Vector3) {
-		return <Vector3Element {...elementProps} />;
+		input = <Vector3Element {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.DateTime) {
-		return <DateElement {...elementProps} />;
+		input = <DateElement {...elementProps} />;
 	}
 	if (schemaName === CoreSchemaType.MemberId) {
 		const userId = values[element.slug!] as MembersId | undefined;
-		return (
+		input = (
 			<UserIdSelect
 				label={elementProps.label}
 				name={elementProps.name}
@@ -74,6 +83,10 @@ export const FormElement = ({
 				communitySlug={communitySlug}
 			/>
 		);
+	}
+
+	if (input) {
+		return <FormElementToggle {...elementProps}>{input}</FormElementToggle>;
 	}
 
 	throw new Error(`Invalid CoreSchemaType ${schemaName}`);

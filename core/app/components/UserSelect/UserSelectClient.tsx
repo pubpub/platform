@@ -19,11 +19,12 @@ import {
 	PubFieldSelectorToggleButton,
 } from "ui/pubFields";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { expect } from "utils";
+import { cn, expect } from "utils";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
 import { UserAvatar } from "../UserAvatar";
 import { isMemberSelectUserWithMembership } from "./types";
 import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
@@ -77,6 +78,8 @@ export function UserSelectClient({
 	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
+	const formElementToggle = useFormElementToggleContext();
+	const isEnabled = formElementToggle.isEnabled(fieldName);
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
@@ -104,7 +107,12 @@ export function UserSelectClient({
 				const formItem = (
 					<FormItem className="flex flex-col gap-y-1">
 						<div className="flex items-center justify-between">
-							<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+							<FormLabel
+								className={cn(
+									"text-sm font-medium leading-none",
+									!isEnabled && "cursor-not-allowed opacity-50"
+								)}
+							>
 								{fieldLabel}
 							</FormLabel>
 							{allowPubFieldSubstitution && <PubFieldSelectorToggleButton />}
@@ -113,6 +121,7 @@ export function UserSelectClient({
 							name={fieldName}
 							value={selectedUserOption}
 							options={options}
+							disabled={!isEnabled}
 							empty={
 								<UserSelectAddUserButton
 									key={addUserButtonKey}

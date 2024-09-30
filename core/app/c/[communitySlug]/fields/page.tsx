@@ -40,6 +40,7 @@ export default async function Page({ params }: Props) {
 	const community = await findCommunityBySlug(params.communitySlug);
 	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
+		includeRelations: true,
 	}).executeTakeFirst();
 
 	if (!pubFields || !pubFields.fields) {

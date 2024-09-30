@@ -18,26 +18,52 @@ import { autoCache } from "./cache/autoCache";
  */
 export const getPubFields = (
 	props:
-		| { pubId?: never; pubTypeId?: never; communityId?: never }
-		| { pubId: PubsId; valuesOnly?: boolean; pubTypeId?: never; communityId?: never }
+		| { pubId?: never; pubTypeId?: never; communityId?: never; includeRelations?: never }
+		| {
+				pubId: PubsId;
+				valuesOnly?: boolean;
+				pubTypeId?: never;
+				communityId?: never;
+				includeRelations?: never;
+		  }
 		| {
 				pubId?: never;
 				pubTypeId: PubTypesId;
 				communityId?: never;
+				includeRelations?: never;
 		  }
-		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId } = ({} = {})
+		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId; includeRelations?: never }
+		| {
+				pubId?: never;
+				pubTypeId?: never;
+				communityId: CommunitiesId;
+				includeRelations: boolean;
+		  } = ({} = {})
 ) => autoCache(_getPubFields(props));
 
 export const _getPubFields = (
 	props:
-		| { pubId?: never; pubTypeId?: never; communityId?: never }
-		| { pubId: PubsId; valuesOnly?: boolean; pubTypeId?: never; communityId?: never }
+		| { pubId?: never; pubTypeId?: never; communityId?: never; includeRelations?: never }
+		| {
+				pubId: PubsId;
+				valuesOnly?: boolean;
+				pubTypeId?: never;
+				communityId?: never;
+				includeRelations?: never;
+		  }
 		| {
 				pubId?: never;
 				pubTypeId: PubTypesId;
 				communityId?: never;
+				includeRelations?: never;
 		  }
-		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId } = {}
+		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId; includeRelations?: never }
+		| {
+				pubId?: never;
+				pubTypeId?: never;
+				communityId: CommunitiesId;
+				includeRelations: boolean;
+		  } = {}
 ) =>
 	db
 		.with("ids", (eb) =>
@@ -85,10 +111,11 @@ export const _getPubFields = (
 						schemaName: eb.ref("pub_fields.schemaName"),
 						pubFieldSchemaId: eb.ref("pub_fields.pubFieldSchemaId"),
 						updatedAt: eb.ref("pub_fields.updatedAt"),
-						isArchived: eb.ref("isArchived"),
+						isArchived: eb.ref("pub_fields.isArchived"),
+						isRelation: eb.ref("pub_fields.isRelation"),
 					}).as("json"),
 				])
-				.where("pub_fields.isRelation", "=", false)
+				.$if(!props.includeRelations, (qb) => qb.where("pub_fields.isRelation", "=", false))
 				.where("pub_fields.id", "in", eb.selectFrom("ids").select("id"))
 		)
 		.selectFrom("f")
