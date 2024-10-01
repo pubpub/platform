@@ -31,10 +31,12 @@ jobs:
             #   uses: aws-actions/amazon-ecr-login@v2
 
             - name: up
-              run: docker compose -f docker-compose.test.yml up aaa -d
+              run: docker compose -f docker-compose.test.yml up integration-tests -d
 
+            - name: local-curl
+              run: docker compose -f docker-compose.test.yml
             - name: curl
-              run: curl http://localhost:3000
+              run: curl http://172.18.0.4:3000
 
     # ci:
     #     uses: ./.github/workflows/ci.yml
