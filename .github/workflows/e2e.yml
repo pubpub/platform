@@ -71,6 +71,7 @@ jobs:
             - name: seed db
               run: pnpm --filter core prisma db seed
               env:
+                  SKIP_VALIDATION: true
                   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
 
             - name: Configure AWS credentials
