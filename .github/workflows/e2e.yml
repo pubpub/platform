@@ -99,9 +99,16 @@ jobs:
 
             - name: Start up core
               run: docker compose -f docker-compose.test.yml --profile integration up -d
-              env:
-                  INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
-                  JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
+              # env:
+              # INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
+              # JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
+
+            - name: Log out Container ID for health check
+              id: log-container-id
+              run: echo "CONTAINER_ID=$(docker compose -f docker-compose.test.yml ps integration-tests -q)" >> $GITHUB_OUTPUT
+
+            - name: Wait until container is healthy
+              run: while [ "`docker inspect -f {{.State.Health.Status}} ${{steps.log-container-id.outputs.CONTAINER_ID}}`" != "healthy" ]; do     sleep .2; done
 
             - name: Run integration tests
               run: pnpm --filter core playwright:test
