@@ -68,6 +68,11 @@ jobs:
             - name: generate prisma
               run: pnpm --filter core prisma generate
 
+            - name: seed db
+              run: pnpm --filter core prisma db seed
+              env:
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
