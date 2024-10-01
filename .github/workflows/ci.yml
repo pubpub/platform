@@ -61,13 +61,13 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
+            - name: preconstruct build with cache
+              run: pnpm pp:build
+
             - name: Run migrations
               run: pnpm --filter core migrate-test
               env:
                   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
-
-            - name: p:build
-              run: pnpm p:build
 
             - name: generate prisma
               run: pnpm --filter core prisma generate
