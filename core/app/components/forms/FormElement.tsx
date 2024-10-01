@@ -58,20 +58,15 @@ export const FormElement = ({
 		schemaName === CoreSchemaType.URL
 	) {
 		input = <TextElement {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.Boolean) {
+	} else if (schemaName === CoreSchemaType.Boolean) {
 		input = <BooleanElement {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.FileUpload) {
+	} else if (schemaName === CoreSchemaType.FileUpload) {
 		input = <FileUploadElement pubId={pubId} {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.Vector3) {
+	} else if (schemaName === CoreSchemaType.Vector3) {
 		input = <Vector3Element {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.DateTime) {
+	} else if (schemaName === CoreSchemaType.DateTime) {
 		input = <DateElement {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.MemberId) {
+	} else if (schemaName === CoreSchemaType.MemberId) {
 		const userId = values[element.slug!] as MembersId | undefined;
 		input = (
 			<UserIdSelect
@@ -83,6 +78,14 @@ export const FormElement = ({
 				communitySlug={communitySlug}
 			/>
 		);
+	} else if (schemaName === CoreSchemaType.Number) {
+		input = <TextElement {...elementProps} type="number" />;
+	} else if (schemaName === CoreSchemaType.NumericArray) {
+		// TODO: support NumericArray
+		return null;
+	} else if (schemaName === CoreSchemaType.StringArray) {
+		// TODO: support StringArray
+		return null;
 	}
 
 	if (input) {

@@ -27,6 +27,13 @@ export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps)
 								{...fieldRest}
 								{...rest}
 								disabled={!isEnabled}
+								onChange={(e) => {
+									field.onChange(
+										rest.type === "number"
+											? Number(e.target.value)
+											: e.target.value
+									);
+								}}
 							/>
 						</FormControl>
 						<FormMessage />
