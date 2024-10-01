@@ -61,8 +61,8 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
-            - name: preconstruct build with cache
-              run: pnpm pp:build
+            - name: p:build
+              run: pnpm p:build
 
             - name: Run migrations
               run: pnpm --filter core migrate-test

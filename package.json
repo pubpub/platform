@@ -8,7 +8,6 @@
 		"type-check": "turbo type-check",
 		"p:dev": "preconstruct dev",
 		"p:build": "preconstruct build",
-		"pp:build": "turbo run --single-package p:build",
 		"format": "turbo run format --continue",
 		"format:fix": "turbo format --continue",
 		"lint": "turbo lint --continue",

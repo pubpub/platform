@@ -37,11 +37,6 @@
 		"test-run": {
 			"dependsOn": ["^topo"],
 			"outputs": [".cache/.vitestcache"]
-		},
-		"p:build": {
-			"dependsOn": [],
-			"inputs": ["packages/**", "jobs/**"],
-			"outputs": [".cache/.preconstructcache"]
 		}
 	}
 }
