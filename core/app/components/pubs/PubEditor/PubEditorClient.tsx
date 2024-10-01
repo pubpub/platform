@@ -251,7 +251,11 @@ export function PubEditorClient(props: Props) {
 							<FormDescription>Select the stage you want the pub in</FormDescription>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button size="sm" variant="outline">
+									<Button
+										size="sm"
+										variant="outline"
+										data-testid="stage-selector"
+									>
 										{field.value
 											? availableStages.find(
 													(stage) => stage.id === field.value

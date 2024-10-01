@@ -48,7 +48,7 @@ test.describe("Moving a pub", () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		await pubsPage.goTo();
 		await page.getByTestId("pub-dropdown-button").click();
-		await page.getByRole("button", { name: "Edit Pub" }).click();
+		await page.getByRole("button", { name: "Update" }).click();
 		await page.getByTestId("stage-selector").click();
 		// Shelved is its own node in stages
 		await page.getByRole("menuitem", { name: "Shelved" }).click();
