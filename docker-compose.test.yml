@@ -1,53 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 
 services:
-    # core:
-    #     build:
-    #         context: .
-    #         args:
-    #             - PACKAGE=core
-    #             # playwright does not work with alpine
-    #             - BASE_IMAGE=slim
-    #         target: test-setup
-    #     image: core-test-setup:${SHA:-latest}
-    #     container_name: core
-    #     env_file:
-    #         - path: ./.env.docker-compose
-    #           required: false
-    #     environment:
-    #         #s non secret
-    #         - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
-    #         - MAILGUN_SMTP_HOST=smtp.mailgun.org
-    #         - MAILGUN_SMTP_PORT=465
-    #         - MAILGUN_SMTP_USERNAME=omitted
-    #         - OTEL_SERVICE_NAME=core.core
-    #         - PGDATABASE=postgres
-    #         - PGHOST=db
-    #         - PGPORT=5432
-    #         - PGUSER=postgres
-    #         - PGPASSWORD=postgres
-    #         - PUBPUB_URL=http://integration-tests:3000
-    #         - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-    #         - SKIP_VALIDATION=true
-    #         - CACHE_LOG=true
-    #         - LOG_LEVEL=debug
-    #         - CI=true
-    #         - INTEGRATION_TEST_HOST=integration-tests
-    #     networks:
-    #         - app-network
-    #     ports:
-    #         - "30000:3000"
-    #     depends_on:
-    #         - db
-    #         - jobs
-    #         - inbucket
-    #     profiles:
-    #         - test
-    #         - integration
-    #     command: >
-    #         sh -c "pnpm --filter core run migrate-dev" && \
-    #         sh -c "pnpm --filter core run test-run"
-
     # jobs:
     #     container_name: jobs
     #     image: ${JOBS_IMAGE:-pubpub-v7-jobs:latest}
@@ -125,7 +78,6 @@ services:
             inbucket:
                 condition: service_started
         image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:8a9203f7aea5ff74583ea697a9a8e3f8ed20664c}
-        # image: core:latest
         platform: linux/amd64
         healthcheck:
             test: ["CMD-SHELL", "curl http://integration-tests:3000/api/health"]
