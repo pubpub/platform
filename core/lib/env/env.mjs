@@ -30,7 +30,7 @@ export const env = createEnv({
 		HONEYCOMB_API_KEY: z.string().optional(),
 		PUBPUB_URL: z.string().url(),
 		INBUCKET_URL: z.string().url().optional(),
-		CI: z.string().optional(),
+		CI: z.string().or(z.boolean()).optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {
