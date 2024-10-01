@@ -68,18 +68,6 @@ services:
     #         - db
     #     profiles:
     #         - integration
-    aaa:
-        image: lipanski/docker-static-website:latest
-        ports:
-            - 3000:3000
-        networks:
-            - app-network
-        depends_on:
-            - db
-            - inbucket
-        profiles:
-            - integration
-        platform: linux/amd64
 
     db:
         extends:
