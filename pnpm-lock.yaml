@@ -6,6 +6,33 @@ settings:
 
 catalogs:
   default:
+    '@honeycombio/opentelemetry-node':
+      specifier: ^0.6.1
+      version: 0.6.1
+    '@opentelemetry/auto-instrumentations-node':
+      specifier: ^0.41.1
+      version: 0.41.1
+    '@sentry/nextjs':
+      specifier: ^8.29.0
+      version: 8.29.0
+    '@sinclair/typebox':
+      specifier: ^0.32.34
+      version: 0.32.35
+    '@ts-rest/core':
+      specifier: 3.45.2
+      version: 3.45.2
+    '@ts-rest/next':
+      specifier: 3.45.2
+      version: 3.45.2
+    '@ts-rest/open-api':
+      specifier: 3.45.2
+      version: 3.45.2
+    '@ts-rest/serverless':
+      specifier: 3.45.2
+      version: 3.45.2
+    '@types/node':
+      specifier: ^20
+      version: 20.16.5
     clsx:
       specifier: ^2.0.0
       version: 2.1.1
@@ -15,15 +42,24 @@ catalogs:
     eslint:
       specifier: ^9.9.0
       version: 9.10.0
+    next:
+      specifier: 14.2.9
+      version: 14.2.9
     postcss:
       specifier: ^8.4.27
       version: 8.4.45
+    prettier:
+      specifier: ^3.3.3
+      version: 3.3.3
     tailwind-merge:
       specifier: ^2.5.2
       version: 2.5.2
     tailwindcss:
       specifier: ^3.4.10
       version: 3.4.10
+    tsx:
+      specifier: ^4.19.0
+      version: 4.19.0
     typescript:
       specifier: ^5.6.2
       version: 5.6.2
@@ -34,9 +70,15 @@ catalogs:
     '@types/react':
       specifier: ^18.3.5
       version: 18.3.5
+    '@types/react-dom':
+      specifier: ^18.3.0
+      version: 18.3.0
     react:
       specifier: 18.3.1
       version: 18.3.1
+    react-dom:
+      specifier: 18.3.0
+      version: 18.3.0
 
 overrides:
   '@radix-ui/react-dismissable-layer': ^1.0.5
@@ -949,6 +991,12 @@ importers:
 
   packages/ui:
     dependencies:
+      '@dnd-kit/core':
+        specifier: ^6.1.0
+        version: 6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@dnd-kit/sortable':
+        specifier: ^8.0.0
+        version: 8.0.0(@dnd-kit/core@6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@hookform/resolvers':
         specifier: ^3.3.1
         version: 3.9.0(react-hook-form@7.53.0(react@18.3.1))
@@ -14104,6 +14152,14 @@ snapshots:
       react-dom: 18.3.0(react@18.3.1)
       tslib: 2.7.0
 
+  '@dnd-kit/core@6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@dnd-kit/accessibility': 3.1.0(react@18.3.1)
+      '@dnd-kit/utilities': 3.2.2(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      tslib: 2.7.0
+
   '@dnd-kit/modifiers@7.0.0(@dnd-kit/core@6.1.0(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@dnd-kit/core': 6.1.0(react-dom@18.3.0(react@18.3.1))(react@18.3.1)
@@ -14114,6 +14170,13 @@ snapshots:
   '@dnd-kit/sortable@8.0.0(@dnd-kit/core@6.1.0(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@dnd-kit/core': 6.1.0(react-dom@18.3.0(react@18.3.1))(react@18.3.1)
+      '@dnd-kit/utilities': 3.2.2(react@18.3.1)
+      react: 18.3.1
+      tslib: 2.7.0
+
+  '@dnd-kit/sortable@8.0.0(@dnd-kit/core@6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@dnd-kit/core': 6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@dnd-kit/utilities': 3.2.2(react@18.3.1)
       react: 18.3.1
       tslib: 2.7.0
