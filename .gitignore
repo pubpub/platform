@@ -65,3 +65,4 @@ core/supabase/.temp
 .env.docker-compose
 
 *storybook.log
+storybook-static
