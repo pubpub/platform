@@ -18,9 +18,6 @@ env:
 
 jobs:
     integration-tests:
-        # needs:
-        #     - build-all
-        #     - ci
         name: Integration tests
         runs-on: ubuntu-latest
         steps:
@@ -105,9 +102,9 @@ jobs:
 
             - name: Start up core
               run: docker compose -f docker-compose.test.yml --profile integration up -d
-              # env:
-              # INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
-              # JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
+              env:
+                  INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
+                  JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
 
             - name: Log out Container ID for health check
               id: log-container-id
