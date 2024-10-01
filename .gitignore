@@ -63,3 +63,5 @@ core/supabase/.temp
 **/Brewfile.lock.json
 
 .env.docker-compose
+
+.cache
