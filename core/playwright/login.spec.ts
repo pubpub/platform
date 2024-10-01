@@ -27,7 +27,6 @@ const loginAsNew = async (page: Page) => {
 };
 
 test.describe("Auth with lucia", () => {
-	test.setTimeout(1_000);
 	test("Login as a lucia user", async ({ page }) => {
 		await loginAsNew(page);
 	});
@@ -60,7 +59,7 @@ test.describe("Auth with lucia", () => {
 
 		const message = await (await inbucketClient.getMailbox("new")).getLatestMessage();
 
-		const url = message.message.body.text?.match(/http:\/\/.*reset/)?.[0];
+		const url = message.message.body.text?.match(/(http:\/\/.*?reset)\s/)?.[1];
 		await message.delete();
 
 		if (!url) {
@@ -86,13 +85,12 @@ test.describe("Auth with lucia", () => {
 		await page.waitForURL(/\/c\/\w+\/stages/);
 		await page.getByRole("link", { name: "Settings" }).click();
 		await page.getByRole("button", { name: "Reset" }).click();
-		await page.waitForSelector(
-			"body > div:nth-child(3) > ol > li > div > div.text-sm.opacity-90"
-		);
+		await page.waitForSelector("li[role='status'] > .grid > .opacity-90");
 
 		const message2 = await (await inbucketClient.getMailbox("new")).getLatestMessage();
 
-		const url2 = message2.message.body.text?.match(/http:\/\/.*\/reset/)?.[0];
+		const url2 = message2.message.body.text?.match(/(http:\/\/.*?reset)\s/)?.[1];
+
 		await message2.delete();
 
 		if (!url2) {
