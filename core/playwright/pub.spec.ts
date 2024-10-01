@@ -26,6 +26,7 @@ test.afterAll(async () => {
 });
 
 test.describe("Moving a pub", () => {
+	console.log("I am here to trigger a CI run");
 	test("Can move a pub across linked stages", async () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		await pubsPage.goToSeededPub();
