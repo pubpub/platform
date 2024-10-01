@@ -11,32 +11,20 @@ ARG PORT=3000
 
 ARG PNPM_VERSION=9.10.0
 
-# this is necessary in order to be able to build the test image with 
-# something other than `alpine` as the base image
-# in order to be able to run `playwright` tests
-ARG BASE_IMAGE=alpine
 
 ################################################################################
 # Use node image for base image for all stages.
-FROM node:${NODE_VERSION}-${BASE_IMAGE} as base
+FROM node:${NODE_VERSION}-alpine as base
 
 # these are necessary to be able to use them inside of `base`
 ARG BASE_IMAGE
 ARG PNPM_VERSION
 
 
-ENV dependencies="g++ make py3-pip ca-certificates curl postgresql"
-# Install python deps for node-gyp and postgres
-
-RUN if [[ ${BASE_IMAGE} == alpine ]]; then \
-  apk add ${dependencies}; \
-  else \
-  apt update && apt install -y python3 curl postgresql make g++; \
-  fi
-
+# Instll dependencies we need at the end
+RUN apk add ca-certificates curl postgresql
 
 # Setup RDS CA Certificates
-
 RUN curl -L \
   -o  /usr/local/share/ca-certificates/rds-global-bundle.pem \
   https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
@@ -49,27 +37,34 @@ WORKDIR /usr/src/app
 RUN --mount=type=cache,target=/root/.npm \
   npm install -g pnpm@${PNPM_VERSION}
 
+
+FROM base as fetch-deps
+
+
+# Copy pnpm-lock.yaml so that we can use pnpm to install dependencies
+COPY pnpm-lock.yaml ./
+
+# Could possibly be sped up using `turbo prune` 
+# https://turbo.build/repo/docs/guides/tools/docker
+RUN pnpm fetch
+
+# Install dependencies we only need to run pnpm install
+RUN apk add g++ make py3-pip 
+
 ################################################################################
 # Create a stage for building the application.
-FROM base as monorepo
+FROM fetch-deps as monorepo
 
 # if booting without a command, just sit and wait forever for a term signal
 CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 
-# # Copy pnpm-lock.yaml so that we can use pnpm to install dependencies
-# COPY ./pnpm-lock.yaml ./
-
-# RUN pnpm fetch 
-
+# Copy over the rest of the files
 ADD . ./
 
-RUN pnpm install -r --frozen-lockfile
+# Install from the fetched store
+RUN pnpm install -r --prefer-offline
 
 RUN pnpm p:build
-
-################################################################################
-# FROM fetch-deps as monorepo
-
 
 ################################################################################
 FROM monorepo AS withpackage
@@ -83,16 +78,6 @@ RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && 
 ENV DOCKERBUILD=1
 
 RUN pnpm --filter $PACKAGE build 
-
-# Necessary, perhaps, due to https://github.com/prisma/prisma/issues/15852
-# RUN if [[ ${PACKAGE} == core ]]; \
-#   then \
-#   find . -path '*/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client' \
-#   | xargs -r -I{} sh -c " \
-#   rm -rf /tmp/app/{} && \
-#   mkdir -p /tmp/app/{} && \
-#   cp -a {}/. /tmp/app/{}/" ; \
-#   fi
 
 FROM withpackage as prepare-jobs
 
@@ -133,23 +118,7 @@ EXPOSE $PORT
 # Use production node environment by default.
 ENV NODE_ENV production
 
-
-FROM prod-setup AS next-app-integration-submissions
-WORKDIR /usr/src/app
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/standalone .
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/static ./integrations/evaluations/.next/static
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/public ./integrations/evaluations/public
-
-
-CMD node integrations/submissions/server.js
-
-FROM prod-setup AS next-app-integration-evaluations
-WORKDIR /usr/src/app
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/standalone ./
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/static ./integrations/submissions/.next/static
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/public ./integrations/submissions/public
-
-CMD node integrations/evaluations/server.js
+### Core
 
 FROM prod-setup AS next-app-core
 WORKDIR /usr/src/app
@@ -159,31 +128,23 @@ COPY --from=withpackage --chown=node:node /usr/src/app/core/public ./core/public
 
 CMD node core/server.js
 
-################################################################################
-# Create the final image for next apps
-# FROM next-app-${PACKAGE} as next-app
+### Integration Submissions
 
-# ARG PORT
+FROM prod-setup AS next-app-integration-submissions
+WORKDIR /usr/src/app
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/standalone .
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/static ./integrations/evaluations/.next/static
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/public ./integrations/evaluations/public
 
-# # Use production node environment by default.
-# ENV NODE_ENV production
+CMD node integrations/submissions/server.js
 
-# # Run the application as a non-root user.
-# USER node
+### Integration Evaluations
 
-# # Expose the port that the application listens on.
-# EXPOSE $PORT
+FROM prod-setup AS next-app-integration-evaluations
+WORKDIR /usr/src/app
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/standalone ./
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/static ./integrations/submissions/.next/static
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/public ./integrations/submissions/public
 
-# # Use production node environment by default.
-# ENV NODE_ENV production
+CMD node integrations/evaluations/server.js
 
-# CMD server.js
-
-################################################################################
-# to be used in `docker-compose.test.yml`
-FROM monorepo as test-setup
-
-RUN pnpm --filter core prisma generate
-
-# install playwright
-RUN pnpm --filter core exec playwright install chromium --with-deps 
