@@ -55,7 +55,8 @@ services:
         environment:
             - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
             - MAILGUN_SMTP_HOST=inbucket
-            - MAILGUN_SMTP_PORT=54325
+            - MAILGUN_SMTP_PORT=2500
+            - INBUCKET_URL=http://inbucket:9000
             - MAILGUN_SMTP_USERNAME=omitted
             - OTEL_SERVICE_NAME=core.core
             - PGDATABASE=postgres
@@ -77,7 +78,7 @@ services:
                 condition: service_healthy
             inbucket:
                 condition: service_started
-        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:8a9203f7aea5ff74583ea697a9a8e3f8ed20664c}
+        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:66e78daaed7656bb0ec6e56e46f6a232134e28c8}
         platform: linux/amd64
         healthcheck:
             test: ["CMD-SHELL", "curl http://integration-tests:3000/api/health"]

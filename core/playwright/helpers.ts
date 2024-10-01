@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { env } from "~/lib/env/env.mjs";
 import { CommunityPage } from "./fixtures/community-page";
 import { InbucketClient } from "./inbucketClient";
 
@@ -26,6 +27,6 @@ export const createCommunity = async ({
 	);
 };
 
-const INBUCKET_TESTING_URL = "http://localhost:54324";
+const INBUCKET_TESTING_URL = env.INBUCKET_URL ?? "http://localhost:54324";
 
 export const inbucketClient = new InbucketClient(INBUCKET_TESTING_URL);

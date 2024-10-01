@@ -29,6 +29,8 @@ export const env = createEnv({
 		OTEL_SERVICE_NAME: z.string().optional(),
 		HONEYCOMB_API_KEY: z.string().optional(),
 		PUBPUB_URL: z.string().url(),
+		INBUCKET_URL: z.string().url().optional(),
+		CI: z.string().optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {
