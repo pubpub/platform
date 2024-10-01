@@ -129,8 +129,8 @@ services:
         depends_on:
             - db
             - inbucket
-        # image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:8a9203f7aea5ff74583ea697a9a8e3f8ed20664c}
-        image: core:latest
+        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:8a9203f7aea5ff74583ea697a9a8e3f8ed20664c}
+        # image: core:latest
         # platform: linux/amd64
         profiles:
             - integration
