@@ -52,8 +52,6 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
-            # - name: Build docker image
-            #   run: docker compose --profile integration build
             - name: Start up DB
               run: docker compose --profile test up -d
 
@@ -82,14 +80,3 @@ jobs:
 
             - name: Run vitest tests
               run: pnpm --filter core run test-run
-
-            ############## Integration tests
-
-            # - name: Build compose
-            #   run: INTEGRATION_TESTS_IMAGE_XXXXXX=${{ steps.label.outputs.label }} SHA=${{github.sha}} docker compose up -d integration-tests && docker compose run core pnpm --filter core playwright:test
-
-            # - name: Test if up
-            #   run: docker compose run core sh -c "curl http://integration-tests:3000"
-
-            # - name: Run integration tests
-            #   run: docker compose run core pnpm --filter core playwright:test
