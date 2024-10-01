@@ -55,9 +55,6 @@ RUN apk add g++ make py3-pip
 # Create a stage for building the application.
 FROM fetch-deps as monorepo
 
-# if booting without a command, just sit and wait forever for a term signal
-CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
-
 # Copy over the rest of the files
 ADD . ./
 
