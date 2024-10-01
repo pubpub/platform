@@ -33,8 +33,11 @@ jobs:
             - name: up
               run: docker compose -f docker-compose.test.yml up integration-tests -d
 
-            - name: local-curl
-              run: docker compose -f docker-compose.test.yml
+            - name: netstat
+              run: docker compose -f docker-compose.test.yml exec integration-tests sh -c "netstat -nultp"
+
+            # - name: local-curl
+            #   run: docker compose -f docker-compose.test.yml
             - name: curl
               run: curl http://172.18.0.4:3000
 
