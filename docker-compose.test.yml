@@ -74,6 +74,7 @@ services:
             - JWT_SECRET=xxx
             - MAILGUN_SMTP_PASSWORD=xxx
             - PORT=3000
+            - CI=true
         depends_on:
             jobs:
                 # TODO: add a healthcheck for jobs
@@ -82,7 +83,7 @@ services:
                 condition: service_healthy
             inbucket:
                 condition: service_started
-        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:14effd05e7844ea0f5540eef402ca315013e4f5b}
+        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:9494b52a53148804259a8438d2752cfb4a448fa5}
         platform: linux/amd64
         healthcheck:
             test: ["CMD-SHELL", "curl http://integration-tests:3000/api/health"]
