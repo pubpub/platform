@@ -8,6 +8,7 @@ import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 import { z } from "zod";
 
 import { CoreSchemaType } from "db/public";
+import { Checkbox } from "ui/checkbox";
 import {
 	Form,
 	FormControl,
@@ -20,18 +21,40 @@ import {
 import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
+import { cn } from "utils";
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { slugifyString } from "~/lib/string";
 import * as actions from "./actions";
 
-const schema = z.object({
+const baseSchema = z.object({
 	id: z.string(),
-	name: z.string(),
-	schemaName: z.nativeEnum(CoreSchemaType),
-	slug: z.string().refine((s) => !s.includes(" "), { message: "Slug must not have spaces" }),
+	name: z.string().min(1),
+	slug: z
+		.string()
+		.min(1)
+		.refine((s) => !s.includes(" "), { message: "Slug must not have spaces" }),
 });
+
+const schema = z.discriminatedUnion("isRelation", [
+	z
+		.object({
+			isRelation: z.literal(true),
+			schemaName: z.nativeEnum(CoreSchemaType).nullable(),
+		})
+		.merge(baseSchema),
+	z
+		.object({
+			isRelation: z.literal(false),
+			schemaName: z.nativeEnum(CoreSchemaType, {
+				errorMap: () => {
+					return { message: "Please select a schema type for this field" };
+				},
+			}),
+		})
+		.merge(baseSchema),
+]);
 
 type FormValues = z.infer<typeof schema>;
 
@@ -40,6 +63,7 @@ const DEFAULT_VALUES = {
 	name: "",
 	schemaName: null,
 	slug: "",
+	isRelation: false,
 };
 
 type FormType = UseFormReturn<
@@ -47,13 +71,14 @@ type FormType = UseFormReturn<
 		name: string;
 		schemaName: CoreSchemaType | null;
 		slug: string;
+		isRelation: boolean;
 	},
 	any,
 	undefined
 >;
 
 const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: boolean }) => {
-	const schemaTypes = Object.values(CoreSchemaType);
+	const schemaTypes = Object.values(CoreSchemaType).filter((v) => v !== CoreSchemaType.Null);
 
 	return (
 		<FormField
@@ -61,7 +86,7 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 			name="schemaName"
 			render={({ field }) => (
 				<FormItem>
-					<FormLabel>Select a format</FormLabel>
+					<FormLabel disabled={isDisabled}>Select a format</FormLabel>
 					<Select
 						onValueChange={field.onChange}
 						defaultValue={field.value ?? undefined}
@@ -100,7 +125,7 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 					<FormDescription>
 						Defines the foundational structure of the field's data
 					</FormDescription>
-					<FormMessage />
+					<FormMessage data-testid="schema-select-form-message" />
 				</FormItem>
 			)}
 		/>
@@ -112,14 +137,24 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
  * The user can overwrite this value via the text input. The value here does not have
  * the community prepended—the community is automatically prepended in handleSubmit
  */
-const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: string }) => {
+const SlugField = ({
+	form,
+	communitySlug,
+	readOnly,
+}: {
+	form: FormType;
+	communitySlug: string;
+	readOnly?: boolean;
+}) => {
 	const { watch, setValue } = form;
 
 	const watchName = watch("name");
 
 	useEffect(() => {
-		const autoSlug = slugifyString(watchName);
-		setValue("slug", autoSlug);
+		if (!readOnly) {
+			const autoSlug = slugifyString(watchName);
+			setValue("slug", autoSlug);
+		}
 	}, [watchName]);
 
 	return (
@@ -129,17 +164,29 @@ const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: str
 			render={({ field }) => {
 				return (
 					<FormItem>
-						<FormLabel>Slug</FormLabel>
+						<FormLabel disabled={readOnly}>Slug</FormLabel>
 						<FormControl>
-							<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
-								<span className="whitespace-nowrap pl-2">{communitySlug}:</span>
-								<Input
-									placeholder="Slug"
-									// A little margin on focus or else the focus ring will cover the `:` after the community name
-									className="border-none pl-0 focus:ml-1"
-									{...field}
-								/>
-							</div>
+							{/* If readonly, only render a disabled input */}
+							{readOnly ? (
+								<Input placeholder="Slug" disabled {...field} />
+							) : (
+								// Otherwise, add a readonly slug, then an Input which the user can change
+								<div className="mr-2 flex items-baseline rounded-md border border-input text-sm">
+									<span
+										className={cn("whitespace-nowrap pl-2", {
+											"opacity-50": readOnly,
+										})}
+									>
+										{communitySlug}:
+									</span>
+									<Input
+										placeholder="Slug"
+										// A little margin on focus or else the focus ring will cover the `:` after the community name
+										className="border-none pl-0 focus:ml-1"
+										{...field}
+									/>
+								</div>
+							)}
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -149,12 +196,53 @@ const SlugField = ({ form, communitySlug }: { form: FormType; communitySlug: str
 	);
 };
 
+const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: boolean }) => {
+	return (
+		<FormField
+			control={form.control}
+			name="isRelation"
+			render={({ field }) => (
+				<FormItem>
+					<div className="flex items-center gap-2">
+						<FormControl>
+							<Checkbox
+								disabled={isDisabled}
+								checked={field.value}
+								onCheckedChange={(change) => {
+									if (typeof change === "boolean") {
+										field.onChange(change);
+									}
+								}}
+								className="rounded"
+								data-testid="isRelation-checkbox"
+							/>
+						</FormControl>
+						<FormLabel disabled={isDisabled}>
+							This field represents a reference to another Pub
+						</FormLabel>
+					</div>
+					<FormDescription>
+						Selecting this option will allow you to add a list of related Pubs to any
+						Pubs with this field
+					</FormDescription>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
+};
+
 export const FieldForm = ({
 	defaultValues,
 	onSubmitSuccess,
 	children,
 }: {
-	defaultValues?: { name: string; schemaName: CoreSchemaType | null; slug: string };
+	defaultValues?: {
+		name: string;
+		schemaName: CoreSchemaType | null;
+		slug: string;
+		isRelation: boolean;
+	};
 	onSubmitSuccess: () => void;
 	children: ReactNode;
 }) => {
@@ -163,13 +251,22 @@ export const FieldForm = ({
 	const community = useCommunity();
 	const isEditing = !!defaultValues;
 
-	const handleCreate = useCallback(async (values: FormValues & { slug: string }) => {
-		const result = await createField(values.name, values.slug, values.schemaName, community.id);
-		if (didSucceed(result)) {
-			toast({ title: `Created field ${values.name}` });
-			onSubmitSuccess();
-		}
-	}, []);
+	const handleCreate = useCallback(
+		async (values: FormValues & { schemaName: CoreSchemaType }) => {
+			const result = await createField({
+				name: values.name,
+				slug: values.slug,
+				schemaName: values.schemaName,
+				communityId: community.id,
+				isRelation: values.isRelation,
+			});
+			if (didSucceed(result)) {
+				toast({ title: `Created field ${values.name}` });
+				onSubmitSuccess();
+			}
+		},
+		[]
+	);
 
 	const handleUpdate = useCallback(async (values: FormValues) => {
 		const result = await updateFieldName(values.id, values.name);
@@ -179,14 +276,17 @@ export const FieldForm = ({
 		}
 	}, []);
 
-	const handleSubmit = async (values: FormValues) => {
+	const handleSubmit = async (
+		values: FormValues & { schemaName: CoreSchemaType | null | undefined }
+	) => {
 		if (isEditing) {
 			handleUpdate(values);
 			return;
 		}
 
 		const slug = `${community?.slug}:${slugifyString(values.slug)}`;
-		handleCreate({ ...values, slug });
+		const schemaName = values.schemaName ?? CoreSchemaType.Null;
+		handleCreate({ ...values, slug, schemaName });
 	};
 
 	const form = useForm({
@@ -198,8 +298,6 @@ export const FieldForm = ({
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(handleSubmit)}>
 				<div className="mb-4 flex flex-col gap-6">
-					{/* Schema field is disabled if one has previously been selected */}
-					<SchemaSelectField isDisabled={!!defaultValues?.schemaName} form={form} />
 					<FormField
 						control={form.control}
 						name="name"
@@ -213,7 +311,10 @@ export const FieldForm = ({
 							</FormItem>
 						)}
 					/>
-					{!isEditing ? <SlugField form={form} communitySlug={community.slug} /> : null}
+					<SlugField form={form} communitySlug={community.slug} readOnly={isEditing} />
+					<IsRelationCheckbox form={form} isDisabled={isEditing} />
+					{/* Schema field is disabled if one has previously been selected */}
+					<SchemaSelectField isDisabled={!!defaultValues?.schemaName} form={form} />
 				</div>
 				{children}
 			</form>

@@ -11,6 +11,7 @@ import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
+import { FormElement } from "~/app/components/forms/FormElement";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
@@ -20,7 +21,6 @@ import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWit
 import { capitalize } from "~/lib/string";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
-import { InnerForm } from "./InnerForm";
 import { RequestLink } from "./RequestLink";
 import { SaveStatus } from "./SaveStatus";
 import { handleFormToken } from "./utils";
@@ -255,14 +255,16 @@ export default async function FormPage({
 							elements={form.elements}
 							className="col-span-2 col-start-2"
 						>
-							<InnerForm
-								pub={pub}
-								elements={form.elements}
-								// The following params are for rendering UserSelectServer
-								communitySlug={params.communitySlug}
-								searchParams={searchParams}
-								values={pub.values}
-							/>
+							{form.elements.map((e) => (
+								<FormElement
+									key={e.elementId}
+									pubId={pub.id as PubsId}
+									element={e}
+									searchParams={searchParams}
+									communitySlug={params.communitySlug}
+									values={pub.values}
+								/>
+							))}
 						</ExternalFormWrapper>
 					</div>
 				)}

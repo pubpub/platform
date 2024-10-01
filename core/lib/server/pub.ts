@@ -86,17 +86,21 @@ const pubValues = (
 	const alias = "latest_values";
 	// Although kysely has selectNoFrom, this kind of query can't be generated without using raw sql
 	const jsonObjAgg = (subquery: AliasedSelectQueryBuilder<any, any>) =>
-		sql<PubValues>`(select json_object_agg(${sql.ref(alias)}.slug, ${sql.ref(
+		sql<PubValues>`(select coalesce(json_object_agg(${sql.ref(alias)}.slug, ${sql.ref(
 			alias
-		)}.value) from ${subquery})`;
+		)}.value), '{}') from ${subquery})`;
 
 	return jsonObjAgg(
 		eb
 			.selectFrom("pub_values")
 			.selectAll("pub_values")
-			.select("slug")
+			.select(["slug", "pub_values.fieldId"])
 			.leftJoinLateral(
-				(eb) => eb.selectFrom("pub_fields").select(["slug", "id"]).as("fields"),
+				(eb) =>
+					eb
+						.selectFrom("pub_fields")
+						.select(["id", "name", "slug", "schemaName"])
+						.as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
 			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))

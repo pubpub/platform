@@ -18,6 +18,7 @@ type Props = {
 	 */
 	queryParamName: string;
 	value?: MembersId;
+	allowPubFieldSubstitution?: boolean;
 };
 
 export async function UserSelectServer({
@@ -27,6 +28,7 @@ export async function UserSelectServer({
 	query,
 	queryParamName,
 	value,
+	allowPubFieldSubstitution = true,
 }: Props) {
 	let member: MemberSelectUserWithMembership | undefined | null;
 
@@ -51,6 +53,7 @@ export async function UserSelectServer({
 				fieldName={fieldName}
 				queryParamName={queryParamName}
 				users={[]}
+				allowPubFieldSubstitution={allowPubFieldSubstitution}
 			/>
 		);
 	}
@@ -59,6 +62,7 @@ export async function UserSelectServer({
 		communityId: community.id,
 		query: { email: query ?? "" },
 	}).execute();
+
 	return (
 		<UserSelectClient
 			community={community}
@@ -67,6 +71,7 @@ export async function UserSelectServer({
 			queryParamName={queryParamName}
 			member={member ?? undefined}
 			users={users}
+			allowPubFieldSubstitution={allowPubFieldSubstitution}
 		/>
 	);
 }
