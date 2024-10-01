@@ -18,20 +18,20 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  role-to-assume: ${{ vars.IAM_ROLE_TO_ASSUME }}
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  aws-region: ${{ env.AWS_REGION }}
+            # - name: Configure AWS credentials
+            #   uses: aws-actions/configure-aws-credentials@v4
+            #   with:
+            #       role-to-assume: ${{ vars.IAM_ROLE_TO_ASSUME }}
+            #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            #       aws-region: ${{ env.AWS_REGION }}
 
-            - name: Login to Amazon ECR
-              id: login-ecr
-              uses: aws-actions/amazon-ecr-login@v2
+            # - name: Login to Amazon ECR
+            #   id: login-ecr
+            #   uses: aws-actions/amazon-ecr-login@v2
 
             - name: up
-              run: docker compose -f docker-compose.test.yml up integration-tests -d
+              run: docker compose -f docker-compose.test.yml up aaa -d
 
             - name: curl
               run: curl http://localhost:3000

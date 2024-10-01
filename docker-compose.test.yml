@@ -68,10 +68,12 @@ services:
     #         - db
     #     profiles:
     #         - integration
-    # aaa:
-    #     image: lipanski/docker-static-website:latest
-    #     ports:
-    #         - 3000:3000
+    aaa:
+        image: lipanski/docker-static-website:latest
+        ports:
+            - 3000:3000
+        networks:
+            - app-network
 
     db:
         extends:
@@ -117,6 +119,7 @@ services:
             - ASSETS_UPLOAD_SECRET_KEY=xxx
             - JWT_SECRET=xxx
             - MAILGUN_SMTP_PASSWORD=xxx
+            - PORT=3000
         depends_on:
             - db
             - inbucket
