@@ -4,11 +4,6 @@ on:
         inputs:
             image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
                 type: string # use this to force a container version.
-        secrets:
-            AWS_ACCESS_KEY_ID:
-                required: true
-            AWS_SECRET_ACCESS_KEY:
-                required: true
     workflow_dispatch:
 
 env:

@@ -86,14 +86,3 @@ jobs:
                   tags: ${{ steps.label.outputs.label }}
                   platforms: linux/amd64
                   push: true
-              # run: |
-              #     # Build a docker container and
-              #     # push it to ECR so that it can
-              #     # be deployed to ECS.
-              #     docker build \
-              #       --platform linux/amd64 \
-              #       --build-arg PACKAGE=$PACKAGE \
-              #       --target $TARGET \
-              #       -t $LABEL \
-              #       .
-              #     docker push $LABEL
