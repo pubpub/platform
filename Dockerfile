@@ -51,24 +51,25 @@ RUN --mount=type=cache,target=/root/.npm \
 
 ################################################################################
 # Create a stage for building the application.
-FROM base as fetch-deps
+FROM base as monorepo
 
 # if booting without a command, just sit and wait forever for a term signal
 CMD exec /bin/sh -c "trap : TERM INT; sleep infinity & wait"
 
-# Copy pnpm-lock.yaml so that we can use pnpm to install dependencies
-COPY ./pnpm-lock.yaml ./
+# # Copy pnpm-lock.yaml so that we can use pnpm to install dependencies
+# COPY ./pnpm-lock.yaml ./
 
-RUN pnpm fetch 
-
-################################################################################
-FROM fetch-deps as monorepo
+# RUN pnpm fetch 
 
 ADD . ./
 
-RUN pnpm install -r --offline 
+RUN pnpm install -r --frozen-lockfile
 
 RUN pnpm p:build
+
+################################################################################
+# FROM fetch-deps as monorepo
+
 
 ################################################################################
 FROM monorepo AS withpackage
