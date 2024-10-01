@@ -77,8 +77,8 @@ jobs:
                   TARGET: ${{ steps.label.outputs.target }}
               with:
                   context: .
-                  cache-from: type=registry,ref=${{env.REGISTRY_REF}}
-                  cache-to: type=registry,mode=max,image-manifest=true,oci-mediatypes=true,ref=${{env.REGISTRY_REF}}
+                  # cache-from: type=registry,ref=${{env.REGISTRY_REF}}
+                  # cache-to: type=registry,mode=max,image-manifest=true,oci-mediatypes=true,ref=${{env.REGISTRY_REF}}
                   builder: cached-builder
                   build-args: |
                       PACKAGE=${{ inputs.package }}
