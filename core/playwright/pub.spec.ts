@@ -25,37 +25,6 @@ test.afterAll(async () => {
 	await page.close();
 });
 
-test.describe("Creating a pub", () => {
-	test("Can create a pub without a stage", async () => {
-		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
-		const title = "Pub without a stage";
-		await pubsPage.goTo();
-		await page.getByRole("button", { name: "Create" }).click();
-		await page.getByLabel("Title").fill(title);
-		await page.getByLabel("Content").fill("Some content");
-		await page.getByRole("button", { name: "Create Pub" }).click();
-		await page.getByRole("link", { name: title }).click();
-		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
-		await expect(page.getByTestId("current-stage")).toHaveCount(0);
-	});
-
-	test("Can create a pub with a stage", async () => {
-		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
-		const title = "Pub with a stage";
-		const stage = "Submitted";
-		await pubsPage.goTo();
-		await page.getByRole("button", { name: "Create" }).click();
-		await page.getByLabel("Title").fill(title);
-		await page.getByLabel("Content").fill("Some content");
-		await page.getByRole("button", { name: "No stage" }).click();
-		await page.getByRole("menuitem", { name: stage }).click();
-		await page.getByRole("button", { name: "Create Pub" }).click();
-		await page.getByRole("link", { name: title }).click();
-		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
-		await expect(page.getByTestId("current-stage")).toHaveText(stage);
-	});
-});
-
 test.describe("Moving a pub", () => {
 	test("Can move a pub across linked stages", async () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
@@ -88,5 +57,36 @@ test.describe("Moving a pub", () => {
 		await pubsPage.goToSeededPub();
 		await expect(page.getByTestId("current-stage")).toHaveText("Shelved");
 		await expect(page.getByRole("button", { name: "Move" })).toHaveCount(0);
+	});
+});
+
+test.describe("Creating a pub", () => {
+	test("Can create a pub without a stage", async () => {
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		const title = "Pub without a stage";
+		await pubsPage.goTo();
+		await page.getByRole("button", { name: "Create" }).click();
+		await page.getByLabel("Title").fill(title);
+		await page.getByLabel("Content").fill("Some content");
+		await page.getByRole("button", { name: "Create Pub" }).click();
+		await page.getByRole("link", { name: title }).click();
+		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
+		await expect(page.getByTestId("current-stage")).toHaveCount(0);
+	});
+
+	test("Can create a pub with a stage", async () => {
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		const title = "Pub with a stage";
+		const stage = "Submitted";
+		await pubsPage.goTo();
+		await page.getByRole("button", { name: "Create" }).click();
+		await page.getByLabel("Title").fill(title);
+		await page.getByLabel("Content").fill("Some content");
+		await page.getByRole("button", { name: "No stage" }).click();
+		await page.getByRole("menuitem", { name: stage }).click();
+		await page.getByRole("button", { name: "Create Pub" }).click();
+		await page.getByRole("link", { name: title }).click();
+		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
+		await expect(page.getByTestId("current-stage")).toHaveText(stage);
 	});
 });
