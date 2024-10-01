@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
@@ -151,10 +153,6 @@ export default async function FormPage({
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
 	}
-	// TODO: eventually, we will be able to create a pub
-	if (!pub) {
-		return <NotFound>No pub found</NotFound>;
-	}
 
 	const { user, session } = await getLoginData();
 
@@ -196,7 +194,7 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+	const parentPub = pub?.parentId ? await getPub(pub.parentId as PubsId) : undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
@@ -208,23 +206,33 @@ export default async function FormPage({
 			id: user.id as UsersId,
 		},
 	};
-	const renderWithPubContext = {
-		communityId: community.id,
-		recipient: memberWithUser,
-		communitySlug: params.communitySlug,
-		pub,
-		parentPub,
-	};
 
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
 	if (submitId && submitElement) {
-		submitElement.content = await renderElementMarkdownContent(
-			submitElement,
-			renderWithPubContext
-		);
-	} else {
+		if (pub) {
+			// TODO: figure out when this is only after a pub is created
+			const renderWithPubContext = {
+				communityId: community.id,
+				recipient: memberWithUser,
+				communitySlug: params.communitySlug,
+				pub,
+				parentPub,
+			};
+			submitElement.content = await renderElementMarkdownContent(
+				submitElement,
+				renderWithPubContext
+			);
+		}
+	} else if (pub) {
+		const renderWithPubContext = {
+			communityId: community.id,
+			recipient: memberWithUser,
+			communitySlug: params.communitySlug,
+			pub,
+			parentPub,
+		};
 		const elementsWithMarkdownContent = form.elements.filter(
 			(element) => element.element === StructuralFormElement.p
 		);
@@ -234,6 +242,9 @@ export default async function FormPage({
 			})
 		);
 	}
+
+	const isUpdating = !!pub;
+	const pubId = pub?.id ?? (randomUUID() as PubsId);
 
 	return (
 		<div className="isolate min-h-screen">
@@ -251,18 +262,20 @@ export default async function FormPage({
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
 						<ExternalFormWrapper
-							pub={pub}
+							pubId={pubId as PubsId}
+							pubValues={pub ? pub.values : {}}
 							elements={form.elements}
+							isUpdating={isUpdating}
 							className="col-span-2 col-start-2"
 						>
 							{form.elements.map((e) => (
 								<FormElement
 									key={e.elementId}
-									pubId={pub.id as PubsId}
+									pubId={pubId as PubsId}
 									element={e}
 									searchParams={searchParams}
 									communitySlug={params.communitySlug}
-									values={pub.values}
+									values={pub ? pub.values : {}}
 								/>
 							))}
 						</ExternalFormWrapper>

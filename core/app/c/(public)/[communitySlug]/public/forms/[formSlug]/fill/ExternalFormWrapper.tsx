@@ -24,6 +24,7 @@ import { cn } from "utils";
 import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
@@ -116,21 +117,27 @@ const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
 };
 
 export const ExternalFormWrapper = ({
-	pub,
+	pubId,
 	elements,
 	className,
+	pubValues,
 	children,
+	isUpdating,
 }: {
-	pub: GetPubResponseBody;
+	pubId: PubsId;
 	elements: PubPubForm["elements"];
 	children: ReactNode;
+	pubValues: GetPubResponseBody["values"];
+	isUpdating: boolean;
 	className?: string;
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
+	const community = useCommunity();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.updatePub);
+	const runCreatePub = useServerAction(actions.createPub);
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => isButtonElement(e)),
@@ -150,14 +157,24 @@ export const ExternalFormWrapper = ({
 			const submitButtonId = evt?.nativeEvent.submitter?.id;
 			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
 			const stageId = submitButtonConfig?.stageId ?? undefined;
-			const result = await runUpdatePub({
-				pubId: pub.id as PubsId,
-				pubValues,
-				stageId,
-			});
+			let result;
+			if (isUpdating) {
+				result = await runUpdatePub({
+					pubId: pubId as PubsId,
+					pubValues,
+					stageId,
+				});
+			} else {
+				result = await runCreatePub({
+					pubId,
+					communityId: community.id,
+					stageId: "todo",
+				});
+			}
 			if (didSucceed(result)) {
 				const newParams = new URLSearchParams(params);
 				const currentTime = `${new Date().getTime()}`;
+				// todo: may have to check if updating or creating?
 				if (!autoSave && isComplete(formElements, pubValues)) {
 					const submitButtonId = evt?.nativeEvent.submitter?.id;
 					if (submitButtonId) {
@@ -170,7 +187,7 @@ export const ExternalFormWrapper = ({
 				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
-		[formElements, router, pathname, runUpdatePub, pub]
+		[formElements, router, pathname, runUpdatePub, pubId, community.id]
 	);
 
 	const resolver = useMemo(
@@ -180,7 +197,7 @@ export const ExternalFormWrapper = ({
 
 	const formInstance = useForm({
 		resolver,
-		defaultValues: buildDefaultValues(formElements, pub.values),
+		defaultValues: buildDefaultValues(formElements, pubValues),
 		shouldFocusError: false,
 	});
 
@@ -188,6 +205,10 @@ export const ExternalFormWrapper = ({
 
 	const handleAutoSave = useCallback(
 		(values: FieldValues, evt: React.BaseSyntheticEvent<SubmitEvent> | undefined) => {
+			// Only autosave on updating a pub, not on creating
+			if (!isUpdating) {
+				return;
+			}
 			// Don't auto save while editing the user ID field. the query params
 			// will clash and it will be a bad time :(
 			const { name } = evt?.target as HTMLInputElement;
