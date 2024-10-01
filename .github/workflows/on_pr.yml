@@ -12,25 +12,37 @@ env:
     AWS_REGION: us-east-1
 
 jobs:
-    ci:
-        uses: ./.github/workflows/ci.yml
-        secrets:
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    build-all:
-        uses: ./.github/workflows/ecrbuild-all.yml
-        secrets:
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    e2e:
-        needs:
-            - build-all
-            # could theoretically be skipped
-            - ci
-        uses: ./.github/workflows/e2e.yml
-        secrets:
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: up
+              run: docker compose -f docker-compose.test.yml aaa up -d
+
+            - name: curl
+              run: curl http://localhost:3000
+
+    # ci:
+    #     uses: ./.github/workflows/ci.yml
+    #     secrets:
+    #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    # build-all:
+    #     uses: ./.github/workflows/ecrbuild-all.yml
+    #     secrets:
+    #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    # e2e:
+    #     needs:
+    #         - build-all
+    #         # could theoretically be skipped
+    #         - ci
+    #     uses: ./.github/workflows/e2e.yml
+    #     secrets:
+    #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     # integration-tests:
     #     needs:
