@@ -54,13 +54,13 @@ jobs:
             - name: Start up DB
               run: docker compose -f docker-compose.test.yml --profile test up -d
 
+            - name: p:build
+              run: pnpm p:build
+
             - name: Run migrations
               run: pnpm --filter core prisma migrate deploy
               env:
                   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
-
-            - name: p:build
-              run: pnpm p:build
 
             - name: generate prisma
               run: pnpm --filter core prisma generate
