@@ -13,6 +13,8 @@
 		"src"
 	],
 	"dependencies": {
+		"zod": "catalog:",
+		"react": "catalog:react18",
 		"@honeycombio/opentelemetry-node": "catalog:",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@pubpub/sdk": "workspace:*",

@@ -1,26 +1,27 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 
 services:
-    # jobs:
-    #     container_name: jobs
-    #     image: ${JOBS_IMAGE:-pubpub-v7-jobs:latest}
-    #     env_file:
-    #         - path: ./.env.docker-compose
-    #           required: false
-    #     environment:
-    #         - OTEL_SERVICE_NAME=jobs.jobs
-    #         - PGDATABASE=postgres
-    #         - PGHOST=db
-    #         - PGPORT=5432
-    #         - PGUSER=postgres
-    #         - PGPASSWORD=postgres
-    #         - PUBPUB_URL=http://localhost:3000
-    #     networks:
-    #         - app-network
-    #     depends_on:
-    #         - db
-    #     profiles:
-    #         - integration
+    jobs:
+        container_name: jobs
+        image: ${JOBS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs:9494b52a53148804259a8438d2752cfb4a448fa5}
+        platform: linux/amd64
+        env_file:
+            - path: ./.env.docker-compose
+              required: false
+        environment:
+            - OTEL_SERVICE_NAME=jobs.jobs
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:3000
+        networks:
+            - app-network
+        depends_on:
+            - db
+        profiles:
+            - integration
 
     db:
         extends:
@@ -74,11 +75,14 @@ services:
             - MAILGUN_SMTP_PASSWORD=xxx
             - PORT=3000
         depends_on:
+            jobs:
+                # TODO: add a healthcheck for jobs
+                condition: service_started
             db:
                 condition: service_healthy
             inbucket:
                 condition: service_started
-        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:66e78daaed7656bb0ec6e56e46f6a232134e28c8}
+        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:14effd05e7844ea0f5540eef402ca315013e4f5b}
         platform: linux/amd64
         healthcheck:
             test: ["CMD-SHELL", "curl http://integration-tests:3000/api/health"]
