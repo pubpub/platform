@@ -24,6 +24,7 @@ export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps)
 						<FormLabel disabled={!isEnabled}>{label}</FormLabel>
 						<FormControl>
 							<Input
+								data-testid={name}
 								value={value ?? ""}
 								{...fieldRest}
 								{...rest}
