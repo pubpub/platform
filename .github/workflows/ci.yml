@@ -82,4 +82,4 @@ jobs:
               run: pnpm type-check
 
             - name: Run vitest tests
-              run: pnpm --filter core run test-run
+              run: pnpm test-run

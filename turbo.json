@@ -33,6 +33,10 @@
 		"test": {
 			"dependsOn": ["^topo"],
 			"outputs": [".cache/vitestcache"]
+		},
+		"test-run": {
+			"dependsOn": ["^topo"],
+			"outputs": [".cache/vitestcache"]
 		}
 	}
 }

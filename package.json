@@ -14,6 +14,7 @@
 		"lint:fix": "turbo lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
 		"lint:ws": "pnpm dlx sherif@latest",
 		"test": "turbo test",
+		"test-run": "turbo test-run",
 		"fix": "pnpm run lint:fix && pnpm run format:fix",
 		"dev:db:start": "docker compose -f docker-compose.base.yml up db -d",
 		"dev:db:stop": "docker compose -f docker-compose.base.yml down db",
