@@ -24,7 +24,7 @@ export const createPub = defineServerAction(async function createPub({
 	pubId,
 }: {
 	communityId: CommunitiesId;
-	stageId: StagesId;
+	stageId?: StagesId;
 	pubTypeId: PubTypesId;
 	pubValues: PubValues;
 	path?: string | null;
@@ -45,24 +45,26 @@ export const createPub = defineServerAction(async function createPub({
 	const pubValueEntries = Object.entries(pubValues);
 
 	try {
-		const query = db
-			.with("new_pub", (db) =>
-				db
-					.insertInto("pubs")
-					.values({
-						id: pubId,
-						communityId: communityId,
-						pubTypeId: pubTypeId,
-						parentId: parentId,
-					})
-					.returning("id")
-			)
-			.with("stage_create", (db) =>
-				db.insertInto("PubsInStages").values((eb) => ({
-					pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-					stageId,
-				}))
-			);
+		const pubQuery = db.with("new_pub", (db) =>
+			db
+				.insertInto("pubs")
+				.values({
+					id: pubId,
+					communityId: communityId,
+					pubTypeId: pubTypeId,
+					parentId: parentId,
+				})
+				.returning("id")
+		);
+
+		const query = stageId
+			? pubQuery.with("stage_create", (db) =>
+					db.insertInto("PubsInStages").values((eb) => ({
+						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+						stageId,
+					}))
+				)
+			: pubQuery;
 
 		await autoRevalidate(
 			// Running an `insertInto` with an empty array results in a SQL syntax

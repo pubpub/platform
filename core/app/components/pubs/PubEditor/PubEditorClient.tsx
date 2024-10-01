@@ -80,6 +80,12 @@ export function PubEditorClient(props: Props) {
 	const paramString = hasValues ? "update" : "create";
 	const runCreatePub = useServerAction(actions.createPub);
 	const runUpdatePub = useServerAction(actions.updatePub);
+	const availableStages = [
+		{ id: undefined, name: "No stage" },
+		...props.availableStages.map((s) => {
+			return { id: s.id, name: s.name };
+		}),
+	];
 
 	const path = usePathname();
 	const router = useRouter();
@@ -247,15 +253,15 @@ export function PubEditorClient(props: Props) {
 								<DropdownMenuTrigger asChild>
 									<Button size="sm" variant="outline">
 										{field.value
-											? props.availableStages.find(
+											? availableStages.find(
 													(stage) => stage.id === field.value
 												)?.name
-											: "Select Stage"}
+											: "No stage"}
 										<ChevronDown size="16" />
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
-									{props.availableStages.map((stage) => (
+									{availableStages.map((stage) => (
 										<DropdownMenuItem
 											key={stage.id}
 											onClick={() => {
