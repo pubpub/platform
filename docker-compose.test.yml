@@ -68,10 +68,10 @@ services:
     #         - db
     #     profiles:
     #         - integration
-    aaa:
-        image: lipanski/docker-static-website:latest
-        ports:
-            - 3000:3000
+    # aaa:
+    #     image: lipanski/docker-static-website:latest
+    #     ports:
+    #         - 3000:3000
 
     db:
         extends:
