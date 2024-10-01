@@ -33,8 +33,12 @@ jobs:
             - name: up
               run: docker compose -f docker-compose.test.yml up integration-tests -d
 
-            - name: sleep
-              run: sleep 10
+            - name: log out container id
+              id: log-container-id
+              run: echo "CONTAINER_ID=$(docker compose -f docker-compose.test.yml ps integration-tests -q)" >> $GITHUB_OUTPUT
+
+            - name: wait until container is healthy
+              run: while [ "`docker inspect -f {{.State.Health.Status}} ${{steps.log-container-id.outputs.CONTAINER_ID}}`" != "healthy" ]; do     sleep .2; done
 
             - name: netstat
               run: docker compose -f docker-compose.test.yml exec integration-tests sh -c "netstat -nultp"

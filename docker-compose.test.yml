@@ -138,7 +138,12 @@ services:
                 condition: service_started
         image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:8a9203f7aea5ff74583ea697a9a8e3f8ed20664c}
         # image: core:latest
-        # platform: linux/amd64
+        platform: linux/amd64
+        healthcheck:
+            test: ["CMD-SHELL", "curl http://integration-tests:3000/api/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
         profiles:
             - integration
         ports:
