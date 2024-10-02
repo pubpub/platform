@@ -138,7 +138,7 @@ export const ExternalFormWrapper = ({
 	const community = useCommunity();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.updatePub);
-	const runCreatePub = useServerAction(actions.createPub);
+	const runCreatePub = useServerAction(actions.createPubRecursive);
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => isButtonElement(e)),
@@ -171,16 +171,21 @@ export const ExternalFormWrapper = ({
 				});
 			} else {
 				result = await runCreatePub({
-					pubId: pub.id as PubsId,
+					body: {
+						id: pub.id as PubsId,
+						pubTypeId: pub.pubTypeId as PubTypesId,
+						values: pubValues as Record<string, any>,
+						stageId: stageId,
+					},
 					communityId: community.id,
-					pubTypeId: pub.pubTypeId as PubTypesId,
-					pubValues,
-					// stageId: "todo",
 				});
 			}
 			if (didSucceed(result)) {
 				const newParams = new URLSearchParams(params);
 				const currentTime = `${new Date().getTime()}`;
+				if (!isUpdating) {
+					newParams.set("pubId", pub.id);
+				}
 				// todo: may have to check if updating or creating?
 				if (!autoSave && isComplete(formElements, pubValues)) {
 					const submitButtonId = evt?.nativeEvent.submitter?.id;
