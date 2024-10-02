@@ -6,9 +6,9 @@ import { expect, fn, userEvent, within } from "@storybook/test";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "../button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form";
-import { MultiValueInput } from "../multivalue-input";
+import { Button } from "ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { MultiValueInput } from "ui/multivalue-input";
 
 const meta: Meta<typeof MultiValueInput> = {
 	title: "MultiValueInput",
