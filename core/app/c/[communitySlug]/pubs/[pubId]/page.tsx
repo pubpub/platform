@@ -17,7 +17,9 @@ import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActi
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { PubDropDown } from "~/app/components/pubs/PubDropDown";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
+import { UpdatePubButton } from "~/app/components/pubs/UpdatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
@@ -114,9 +116,12 @@ export default async function Page({
 	return (
 		<>
 			<div className="flex flex-col space-y-4">
-				<div className="mb-8">
-					<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
-					<PubTitle pub={pub} />
+				<div className="mb-8 flex items-baseline justify-between">
+					<div>
+						<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
+						<PubTitle pub={pub} />
+					</div>
+					<PubDropDown pubId={pub.id as PubsId} />
 				</div>
 				<div className="flex flex-wrap space-x-4">
 					<div className="flex-1">
