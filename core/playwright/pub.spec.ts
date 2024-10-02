@@ -89,4 +89,19 @@ test.describe("Creating a pub", () => {
 		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
 		await expect(page.getByTestId("current-stage")).toHaveText(stage);
 	});
+
+	test("Can create a pub with no values", async () => {
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		await page.getByRole("button", { name: "Create" }).click();
+		await page.getByLabel("Title").fill("asdf");
+		const toggles = await page.getByLabel("Toggle field").all();
+		for (const toggle of toggles) {
+			await toggle.click();
+		}
+		await page.getByRole("button", { name: "Create Pub" }).click();
+		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		);
+	});
 });
