@@ -6,6 +6,7 @@ import { useFormContext } from "react-hook-form";
 import type { PubsId } from "db/public";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
+import type { ElementProps } from "../types";
 import { upload } from "../actions";
 import { FileUploadPreview } from "../FileUpload";
 import { useFormElementToggleContext } from "../FormElementToggleContext";

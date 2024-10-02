@@ -1,4 +1,4 @@
-interface ElementProps {
+export interface ElementProps {
 	label: string;
 	name: string;
 }

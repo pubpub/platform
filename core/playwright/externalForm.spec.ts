@@ -23,6 +23,8 @@ test.beforeAll(async ({ browser }) => {
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
 	});
 
+	// this seems necessary
+	await page.waitForTimeout(1000);
 	/**
 	 * Fill out everything required to make an external form:
 	 * 1. Fields

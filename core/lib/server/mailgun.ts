@@ -6,7 +6,7 @@ export const smtpclient = nodemailer.createTransport({
 	pool: true,
 	host: env.MAILGUN_SMTP_HOST,
 	port: parseInt(env.MAILGUN_SMTP_PORT),
-	secure: env.MAILGUN_SMTP_HOST !== "localhost",
+	secure: env.MAILGUN_SMTP_HOST !== "localhost" && !env.CI,
 	auth: {
 		user: env.MAILGUN_SMTP_USERNAME,
 		pass: env.MAILGUN_SMTP_PASSWORD,
