@@ -152,18 +152,19 @@ export const _updatePub = async ({
 		const existingPubFieldValues = await autoCache(
 			trx
 				.selectFrom("pub_fields")
-				.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+				.leftJoin("pub_values", (join) =>
+					join
+						.onRef("pub_values.fieldId", "=", "pub_fields.id")
+						.on("pub_values.pubId", "=", pubId)
+				)
 				.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-				.distinctOn("pub_fields.id")
-				.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+				.where("pub_fields.isRelation", "=", false)
 				.select([
 					"pub_values.id as pubValueId",
-					"pub_values.pubId",
 					"pub_fields.slug",
 					"pub_fields.name",
 					"pub_fields.schemaName",
 				])
-				.where("pub_fields.isRelation", "=", false)
 		).execute();
 
 		const validated = validatePubValuesBySchemaName({
@@ -187,9 +188,7 @@ export const _updatePub = async ({
 						Object.entries(pubValues).map(([pubFieldSlug, pubValue]) => ({
 							id:
 								existingPubFieldValues.find(
-									(pubFieldValue) =>
-										pubFieldValue.slug === pubFieldSlug &&
-										pubFieldValue.pubId === pubId
+									(pubFieldValue) => pubFieldValue.slug === pubFieldSlug
 								)?.pubValueId ?? undefined,
 							pubId,
 							value: JSON.stringify(pubValue),

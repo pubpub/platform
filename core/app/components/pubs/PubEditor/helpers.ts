@@ -45,7 +45,7 @@ export const createPubEditorDefaultValuesFromPubFields = (
 			(acc, { slug }) => {
 				acc[slug] =
 					pubFields.find((e) => e.slug === slug)?.schemaName === CoreSchemaType.DateTime
-						? new Date(pubValues[slug] as string)
+						? pubValues[slug] && new Date(pubValues[slug] as string)
 						: pubValues[slug];
 				return acc;
 			},
