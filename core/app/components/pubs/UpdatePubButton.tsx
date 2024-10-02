@@ -2,11 +2,10 @@ import type { PubsId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Pencil } from "ui/icon";
 
-import type { PubEditorProps } from "./PubEditor/PubEditor";
 import { PathAwareDialogButton } from "../PathAwareDialogButton";
 import { createPubEditorSearchParamId } from "./PubEditor/pubEditorSearchParam";
 
-export type Props = PubEditorProps & {
+export type Props = {
 	pubId: PubsId;
 	variant?: ButtonProps["variant"];
 	size?: ButtonProps["size"];
