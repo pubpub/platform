@@ -15,43 +15,43 @@ export const ComponentConfig = ({ component, ...props }: ComponentConfigFormProp
 		case InputComponent.checkbox:
 			ConfigForm = dynamic(() => import("./Checkbox.tsx"), {
 				ssr: false,
-				loading: () => <Skeleton className="h-9 w-full" />,
+				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
 		case InputComponent.confidenceInterval:
 			ConfigForm = dynamic(() => import("./ConfidenceInterval.tsx"), {
 				ssr: false,
-				loading: () => <Skeleton className="h-9 w-full" />,
+				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
 		case InputComponent.datePicker:
 			ConfigForm = dynamic(() => import("./DatePicker.tsx"), {
 				ssr: false,
-				loading: () => <Skeleton className="h-9 w-full" />,
+				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
 		case InputComponent.fileUpload:
 			ConfigForm = dynamic(() => import("./FileUpload.tsx"), {
 				ssr: false,
-				loading: () => <Skeleton className="h-9 w-full" />,
+				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
 		case InputComponent.memberSelect:
 			ConfigForm = dynamic(() => import("./MemberSelect.tsx"), {
 				ssr: false,
-				loading: () => <Skeleton className="h-9 w-full" />,
+				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
 		case InputComponent.textArea:
 			ConfigForm = dynamic(() => import("./TextArea.tsx"), {
 				ssr: false,
-				loading: () => <Skeleton className="h-9 w-full" />,
+				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
 		case InputComponent.textInput:
 			ConfigForm = dynamic(() => import("./TextInput.tsx"), {
 				ssr: false,
-				loading: () => <Skeleton className="h-9 w-full" />,
+				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
 		default:

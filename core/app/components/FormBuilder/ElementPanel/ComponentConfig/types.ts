@@ -4,10 +4,8 @@ import type { CoreSchemaType, InputComponent } from "db/public";
 
 export type ComponentConfigFormProps = {
 	form: UseFormReturn<ConfigFormData>;
-	// onChange: () => void;
 	schemaName: CoreSchemaType;
 	component: InputComponent;
-	// value: unknown;
 };
 
 export type InnerFormProps = Omit<ComponentConfigFormProps, "component">;
