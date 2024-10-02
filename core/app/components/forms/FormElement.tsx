@@ -1,15 +1,19 @@
+import { defaultComponent } from "schemas";
+
 import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
-import { CoreSchemaType, ElementType } from "db/public";
+import { ElementType, InputComponent } from "db/public";
+import { logger } from "logger";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
-import { BooleanElement } from "./elements/BooleanElement";
-import { Vector3Element } from "./elements/ConfidenceElement";
+import { CheckboxElement } from "./elements/CheckboxElement";
+import { ConfidenceElement } from "./elements/ConfidenceElement";
 import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FIleUploadElement";
-import { TextElement } from "./elements/TextElement";
-import { UserIdSelect } from "./elements/UserSelectElement";
+import { MemberSelectElement } from "./elements/MemberSelectElement";
+import { TextAreaElement } from "./elements/TextAreaElement";
+import { TextInputElement } from "./elements/TextInputElement";
 import { FormElementToggle } from "./FormElementToggle";
 
 export type FormElementProps = {
@@ -20,9 +24,6 @@ export type FormElementProps = {
 	values: GetPubResponseBody["values"];
 };
 
-/**
- * Renders every CoreSchemaType EXCEPT MemberId!
- */
 export const FormElement = ({
 	pubId,
 	element,
@@ -30,7 +31,8 @@ export const FormElement = ({
 	communitySlug,
 	values,
 }: FormElementProps) => {
-	const { schemaName, label: labelProp, slug } = element;
+	const { component: componentProp, slug, schemaName, config } = element;
+	const component = componentProp ?? (schemaName && defaultComponent(schemaName));
 	if (!slug) {
 		if (element.type === ElementType.structural) {
 			return (
@@ -44,38 +46,36 @@ export const FormElement = ({
 		return null;
 	}
 
-	if (!schemaName) {
+	if (!schemaName || !component) {
 		return null;
 	}
 
-	const elementProps = { label: labelProp ?? "", name: slug };
+	const elementProps = { name: slug, schemaName, config };
 
 	let input: JSX.Element | undefined;
 
-	if (
-		schemaName === CoreSchemaType.String ||
-		schemaName === CoreSchemaType.Email ||
-		schemaName === CoreSchemaType.URL
-	) {
-		input = <TextElement {...elementProps} />;
+	if (component === InputComponent.textInput) {
+		input = <TextInputElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.Boolean) {
-		input = <BooleanElement {...elementProps} />;
+	if (component === InputComponent.textArea) {
+		input = <TextAreaElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.FileUpload) {
+	if (component === InputComponent.checkbox) {
+		input = <CheckboxElement {...elementProps} />;
+	}
+	if (component === InputComponent.fileUpload) {
 		input = <FileUploadElement pubId={pubId} {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.Vector3) {
-		input = <Vector3Element {...elementProps} />;
+	if (component === InputComponent.confidenceInterval) {
+		input = <ConfidenceElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.DateTime) {
+	if (component === InputComponent.datePicker) {
 		input = <DateElement {...elementProps} />;
 	}
-	if (schemaName === CoreSchemaType.MemberId) {
+	if (component === InputComponent.memberSelect) {
 		const userId = values[element.slug!] as MembersId | undefined;
 		input = (
-			<UserIdSelect
-				label={elementProps.label}
+			<MemberSelectElement
 				name={elementProps.name}
 				id={element.elementId}
 				searchParams={searchParams}
@@ -89,5 +89,11 @@ export const FormElement = ({
 		return <FormElementToggle {...elementProps}>{input}</FormElementToggle>;
 	}
 
-	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
+	logger.error({
+		msg: `Encountered unknown component when rendering form element`,
+		component,
+		element,
+		pubId,
+	});
+	return null;
 };

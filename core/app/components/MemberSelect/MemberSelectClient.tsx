@@ -10,7 +10,7 @@ import type { Communities } from "db/public";
 import type { Option } from "ui/autocomplete";
 import { CoreSchemaType, MemberRole } from "db/public";
 import { AutoComplete } from "ui/autocomplete";
-import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { UserCheck } from "ui/icon";
 import {
 	PubFieldSelector,
@@ -26,8 +26,8 @@ import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
 import { UserAvatar } from "../UserAvatar";
+import { MemberSelectAddUserButton } from "./MemberSelectAddUserButton";
 import { isMemberSelectUserWithMembership } from "./types";
-import { UserSelectAddUserButton } from "./UserSelectAddUserButton";
 
 const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 	value: user.id,
@@ -59,12 +59,13 @@ type Props = {
 	fieldLabel: string;
 	fieldName: string;
 	queryParamName: string;
+	helpText?: string;
 	member?: MemberSelectUserWithMembership;
 	users: MemberSelectUser[];
 	allowPubFieldSubstitution: boolean;
 };
 
-export function UserSelectClient({
+export function MemberSelectClient({
 	community,
 	fieldLabel,
 	fieldName,
@@ -72,6 +73,7 @@ export function UserSelectClient({
 	member,
 	users,
 	allowPubFieldSubstitution,
+	helpText,
 }: Props) {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -123,7 +125,7 @@ export function UserSelectClient({
 							options={options}
 							disabled={!isEnabled}
 							empty={
-								<UserSelectAddUserButton
+								<MemberSelectAddUserButton
 									key={addUserButtonKey}
 									community={community}
 									email={inputValue}
@@ -154,6 +156,7 @@ export function UserSelectClient({
 							icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
 						/>
 						<FormMessage />
+						{helpText && <FormDescription>{helpText}</FormDescription>}
 						{allowPubFieldSubstitution && (
 							<PubFieldSelectorHider>
 								<PubFieldSelector />

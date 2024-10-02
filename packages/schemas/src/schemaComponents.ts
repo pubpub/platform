@@ -1,4 +1,4 @@
-import { TObject, TSchema, Type } from "@sinclair/typebox";
+import { TObject, Type } from "@sinclair/typebox";
 
 import { CoreSchemaType, InputComponent } from "db/public";
 
@@ -16,75 +16,48 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.Null]: [],
 } as const;
 
-type ComponentConfig = {
-	label: string;
-	placeholder: string;
-	description?: string;
-	halfWidth?: true;
-	schema: TSchema;
-};
+export const checkboxConfigSchema = Type.Object({
+	checkboxLabel: Type.Optional(Type.String()),
+	groupLabel: Type.Optional(Type.String()),
+	defaultValue: Type.Boolean({ default: false }),
+	help: Type.Optional(Type.String()),
+});
 
-export const componentConfigSchemas: Record<InputComponent, ComponentConfig[]> = {
-	[InputComponent.checkbox]: [],
-	[InputComponent.textArea]: [
-		{
-			label: "Placeholder",
-			placeholder: "Temporary text hinting at expected input",
-			schema: Type.String(),
-		},
-		{
-			label: "Help Text",
-			placeholder: "Optional additional guidance",
-			description: "Appears below the field",
-			schema: Type.String(),
-		},
-	],
-	[InputComponent.textInput]: [
-		{
-			label: "Placeholder",
-			placeholder: "Temporary text hinting at expected input",
-			schema: Type.String(),
-		},
-		{
-			label: "Help Text",
-			placeholder: "Optional additional guidance",
-			description: "Appears below the field",
-			schema: Type.String(),
-		},
-	],
-	[InputComponent.datePicker]: [
-		{
-			label: "Help Text",
-			placeholder: "Optional additional guidance",
-			description: "Appears below the field",
-			schema: Type.String(),
-		},
-	],
-	[InputComponent.fileUpload]: [
-		{
-			label: "Help Text",
-			placeholder: "Optional additional guidance",
-			description: "Appears below the field",
-			schema: Type.String(),
-		},
-	],
-	[InputComponent.memberSelect]: [{ label: "", placeholder: "", schema: Type.Object({}) }],
-	[InputComponent.confidenceInterval]: [
-		{
-			label: "Description",
-			placeholder: "Optional additional guidance",
-			description: "Appears below the field",
-			schema: Type.String(),
-		},
-		{
-			label: "Range Start",
-			placeholder: "0",
-			schema: Type.Integer({}),
-		},
-		{
-			label: "Range Start",
-			placeholder: "100",
-			schema: Type.Integer({}),
-		},
-	],
+export const textAreaConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	placeholder: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	maxLength: Type.Optional(Type.Integer()),
+	minLength: Type.Optional(Type.Integer()),
+});
+export const textInputConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	placeholder: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const datePickerConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const fileUploadConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const memberSelectConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const confidenceIntervalConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+
+export const componentConfigSchemas: Record<InputComponent, TObject> = {
+	[InputComponent.checkbox]: checkboxConfigSchema,
+	[InputComponent.textArea]: textAreaConfigSchema,
+	[InputComponent.textInput]: textInputConfigSchema,
+	[InputComponent.datePicker]: datePickerConfigSchema,
+	[InputComponent.fileUpload]: fileUploadConfigSchema,
+	[InputComponent.memberSelect]: memberSelectConfigSchema,
+	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
 } as const;

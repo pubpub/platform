@@ -1,10 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
+import { fileUploadConfigSchema } from "schemas";
 
 import type { PubsId } from "db/public";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
 import { upload } from "../actions";
@@ -20,7 +22,7 @@ const FileUpload = dynamic(
 	}
 );
 
-export const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId: PubsId }) => {
+export const FileUploadElement = ({ pubId, name, config }: ElementProps & { pubId: PubsId }) => {
 	const signedUploadUrl = (fileName: string) => {
 		return upload(pubId, fileName);
 	};
@@ -28,6 +30,10 @@ export const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
 	const files = getValues()[name];
+
+	if (!Value.Check(fileUploadConfigSchema, config)) {
+		return null;
+	}
 
 	return (
 		<div>
@@ -38,7 +44,7 @@ export const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId
 					// Need the isolate to keep the FileUpload's huge z-index from covering our own header
 					return (
 						<FormItem className="isolate mb-6">
-							<FormLabel>{label}</FormLabel>
+							<FormLabel>{config.label}</FormLabel>
 							<FormControl>
 								<FileUpload
 									{...field}
@@ -49,6 +55,7 @@ export const FileUploadElement = ({ pubId, label, name }: ElementProps & { pubId
 									}}
 								/>
 							</FormControl>
+							<FormDescription>{config.help}</FormDescription>
 							<FormMessage />
 						</FormItem>
 					);
