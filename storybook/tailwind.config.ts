@@ -10,10 +10,6 @@ const config: Config = {
 		// CSS classes that our storybook stories themselves use
 		"./stories/*.tsx",
 	],
-	theme: {
-		extend: {},
-	},
-	plugins: [],
 };
 
 export default config;
