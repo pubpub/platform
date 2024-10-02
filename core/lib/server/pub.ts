@@ -465,19 +465,21 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			).executeTakeFirstOrThrow();
 		}
 
-		const pubValues = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					valuesWithFieldIds.map(({ id, value }, index) => ({
-						// not sure this is the best way to do this
-						fieldId: id,
-						pubId: newPub.id,
-						value: value,
-					}))
-				)
-				.returningAll()
-		).execute();
+		const pubValues = valuesWithFieldIds.length
+			? await autoRevalidate(
+					trx
+						.insertInto("pub_values")
+						.values(
+							valuesWithFieldIds.map(({ id, value }, index) => ({
+								// not sure this is the best way to do this
+								fieldId: id,
+								pubId: newPub.id,
+								value: value,
+							}))
+						)
+						.returningAll()
+				).execute()
+			: [];
 
 		if (!body.children) {
 			return {
