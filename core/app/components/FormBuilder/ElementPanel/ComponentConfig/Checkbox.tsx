@@ -51,11 +51,13 @@ export default ({ form }: InnerFormProps) => {
 				control={form.control}
 				name="config.defaultValue"
 				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Default value</FormLabel>
-						<FormControl>
-							<Checkbox checked={field.value} onCheckedChange={field.onChange} />
-						</FormControl>
+					<FormItem className="mt-2">
+						<div className="flex items-end gap-x-2">
+							<FormLabel>Default value</FormLabel>
+							<FormControl>
+								<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+							</FormControl>
+						</div>
 						<FormDescription>
 							Whether the field should default to being checked or not
 						</FormDescription>

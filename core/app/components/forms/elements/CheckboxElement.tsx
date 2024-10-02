@@ -26,9 +26,9 @@ export const CheckboxElement = ({ name, config }: ElementProps) => {
 			render={({ field }) => {
 				return (
 					<FormItem>
-						<div className="flex items-center gap-2">
+						<FormLabel className="flex">{config.groupLabel ?? name}</FormLabel>
+						<div className="flex items-end gap-x-2">
 							<FormControl>
-								<FormLabel>{config.groupLabel}</FormLabel>
 								<Checkbox
 									checked={
 										field.value != undefined
@@ -42,10 +42,9 @@ export const CheckboxElement = ({ name, config }: ElementProps) => {
 										}
 									}}
 									className="rounded"
-								>
-									{config.checkboxLabel}
-								</Checkbox>
+								/>
 							</FormControl>
+							<FormLabel>{config.checkboxLabel}</FormLabel>
 						</div>
 						<FormDescription>{config.help}</FormDescription>
 						<FormMessage />

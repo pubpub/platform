@@ -11,7 +11,12 @@ import { Input } from "ui/input";
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const TextInputElement = ({ name, config, ...rest }: ElementProps & InputProps) => {
+export const TextInputElement = ({
+	name,
+	config,
+	schemaName,
+	...rest
+}: ElementProps & InputProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
@@ -26,7 +31,7 @@ export const TextInputElement = ({ name, config, ...rest }: ElementProps & Input
 				const { value, ...fieldRest } = field;
 				return (
 					<FormItem>
-						<FormLabel disabled={!isEnabled}>{config.label}</FormLabel>
+						<FormLabel disabled={!isEnabled}>{config.label ?? name}</FormLabel>
 						<FormControl>
 							<Input
 								data-testid={name}

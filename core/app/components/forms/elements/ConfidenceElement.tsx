@@ -29,27 +29,29 @@ export const ConfidenceElement = ({ name, config }: ElementProps) => {
 	}
 
 	return (
-		<FormField
-			control={control}
-			name={name}
-			defaultValue={[0, 50, 100]}
-			render={({ field }) => (
-				<FormItem className="mb-6">
-					<FormLabel className="text-[0.9em]">{config.label}</FormLabel>
-					<FormControl>
-						<Confidence
-							{...field}
-							disabled={!isEnabled}
-							min={0}
-							max={100}
-							onValueChange={(event) => field.onChange(event)}
-							className="confidence"
-						/>
-					</FormControl>
-					<FormDescription>{config.help}</FormDescription>
-					<FormMessage />
-				</FormItem>
-			)}
-		/>
+		<>
+			<FormField
+				control={control}
+				name={name}
+				defaultValue={[0, 50, 100]}
+				render={({ field }) => (
+					<FormItem className="mb-6">
+						<FormLabel className="text-[0.9em]">{config.label ?? name}</FormLabel>
+						<FormControl>
+							<Confidence
+								{...field}
+								disabled={!isEnabled}
+								min={0}
+								max={100}
+								onValueChange={(event) => field.onChange(event)}
+								className="confidence"
+							/>
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+			<FormDescription>{config.help}</FormDescription>
+		</>
 	);
 };

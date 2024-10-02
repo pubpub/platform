@@ -11,7 +11,12 @@ import { Textarea } from "ui/textarea";
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const TextAreaElement = ({ name, config, ...rest }: ElementProps & TextareaProps) => {
+export const TextAreaElement = ({
+	name,
+	config,
+	schemaName,
+	...rest
+}: ElementProps & TextareaProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
@@ -26,7 +31,7 @@ export const TextAreaElement = ({ name, config, ...rest }: ElementProps & Textar
 				const { value, ...fieldRest } = field;
 				return (
 					<FormItem>
-						<FormLabel disabled={!isEnabled}>{config.label}</FormLabel>{" "}
+						<FormLabel disabled={!isEnabled}>{config.label ?? name}</FormLabel>{" "}
 						<FormControl>
 							<Textarea
 								maxLength={config.maxLength}

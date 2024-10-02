@@ -31,7 +31,7 @@ export const DateElement = ({ name, config }: ElementProps) => {
 			control={control}
 			render={({ field }) => (
 				<FormItem className="grid gap-2">
-					<FormLabel>{config.label}</FormLabel>
+					<FormLabel>{config.label ?? name}</FormLabel>
 					<DatePicker
 						disabled={!isEnabled}
 						date={field.value ?? new Date()}

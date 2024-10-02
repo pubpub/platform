@@ -44,7 +44,7 @@ export const FileUploadElement = ({ pubId, name, config }: ElementProps & { pubI
 					// Need the isolate to keep the FileUpload's huge z-index from covering our own header
 					return (
 						<FormItem className="isolate mb-6">
-							<FormLabel>{config.label}</FormLabel>
+							<FormLabel>{config.label ?? name}</FormLabel>
 							<FormControl>
 								<FileUpload
 									{...field}
