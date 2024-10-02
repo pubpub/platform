@@ -12,7 +12,10 @@ export const ActionRunFormButton = ({
 	pubId: PubsId;
 }) => {
 	const action = getActionByName(actionInstance.action);
-	const runActionFormQueryParam = createActionRunFormQueryParam(actionInstance.id, pubId);
+	const runActionFormQueryParam = createActionRunFormQueryParam({
+		actionInstanceId: actionInstance.id,
+		pubId,
+	});
 
 	return (
 		<PathAwareDialogButton id={runActionFormQueryParam} variant="ghost">
