@@ -63,3 +63,6 @@ core/supabase/.temp
 **/Brewfile.lock.json
 
 .env.docker-compose
+
+*storybook.log
+storybook-static
