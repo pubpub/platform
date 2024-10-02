@@ -448,6 +448,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx
 				.insertInto("pubs")
 				.values({
+					id: body.id as PubsId | undefined,
 					communityId: communityId,
 					pubTypeId: body.pubTypeId as PubTypesId,
 					assigneeId: body.assigneeId as UsersId,
