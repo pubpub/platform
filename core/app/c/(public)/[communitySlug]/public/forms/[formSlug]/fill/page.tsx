@@ -245,6 +245,7 @@ export default async function FormPage({
 
 	const isUpdating = !!pub;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
+	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 
 	return (
 		<div className="isolate min-h-screen">
@@ -262,8 +263,7 @@ export default async function FormPage({
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
 						<ExternalFormWrapper
-							pubId={pubId as PubsId}
-							pubValues={pub ? pub.values : {}}
+							pub={pubForForm}
 							elements={form.elements}
 							isUpdating={isUpdating}
 							className="col-span-2 col-start-2"

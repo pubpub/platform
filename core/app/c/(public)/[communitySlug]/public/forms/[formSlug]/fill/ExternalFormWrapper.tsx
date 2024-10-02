@@ -13,10 +13,10 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
+import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { GetPubResponseBody, JsonValue } from "contracts";
-import type { PubsId } from "db/public";
+import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
 import { cn } from "utils";
@@ -68,19 +68,22 @@ const preparePayload = ({
 };
 
 /**
- * Date pubValues need to be transformed to a Date type to pass validation
+ * Set all default values
+ * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
 const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
 	const defaultValues: FieldValues = { ...pubValues };
-	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
-	for (const de of dateElements) {
-		if (de.slug) {
-			const pubValue = pubValues[de.slug];
-			if (pubValue) {
-				defaultValues[de.slug] = new Date(pubValue as string);
+	for (const element of elements) {
+		if (element.slug && element.schemaName) {
+			const pubValue = pubValues[element.slug];
+			defaultValues[element.slug] =
+				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
+			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
+				defaultValues[element.slug] = new Date(pubValue as string);
 			}
 		}
 	}
+
 	return defaultValues;
 };
 
@@ -117,19 +120,17 @@ const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
 };
 
 export const ExternalFormWrapper = ({
-	pubId,
 	elements,
 	className,
-	pubValues,
 	children,
 	isUpdating,
+	pub,
 }: {
-	pubId: PubsId;
 	elements: PubPubForm["elements"];
 	children: ReactNode;
-	pubValues: GetPubResponseBody["values"];
 	isUpdating: boolean;
 	className?: string;
+	pub: Pick<GetPubResponseBody, "id" | "values" | "pubTypeId">;
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -143,6 +144,10 @@ export const ExternalFormWrapper = ({
 		() => partition(elements, (e) => isButtonElement(e)),
 		[elements]
 	);
+
+	const defaultValues = useMemo(() => {
+		return buildDefaultValues(formElements, pub.values);
+	}, [formElements, pub]);
 
 	const handleSubmit = useCallback(
 		async (
@@ -160,15 +165,17 @@ export const ExternalFormWrapper = ({
 			let result;
 			if (isUpdating) {
 				result = await runUpdatePub({
-					pubId: pubId as PubsId,
+					pubId: pub.id as PubsId,
 					pubValues,
 					stageId,
 				});
 			} else {
 				result = await runCreatePub({
-					pubId,
+					pubId: pub.id as PubsId,
 					communityId: community.id,
-					stageId: "todo",
+					pubTypeId: pub.pubTypeId as PubTypesId,
+					pubValues,
+					// stageId: "todo",
 				});
 			}
 			if (didSucceed(result)) {
@@ -187,7 +194,7 @@ export const ExternalFormWrapper = ({
 				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
-		[formElements, router, pathname, runUpdatePub, pubId, community.id]
+		[formElements, router, pathname, runUpdatePub, pub, community.id]
 	);
 
 	const resolver = useMemo(
@@ -197,7 +204,7 @@ export const ExternalFormWrapper = ({
 
 	const formInstance = useForm({
 		resolver,
-		defaultValues: buildDefaultValues(formElements, pubValues),
+		defaultValues,
 		shouldFocusError: false,
 	});
 
@@ -235,7 +242,7 @@ export const ExternalFormWrapper = ({
 			<form
 				onChange={formInstance.handleSubmit(handleAutoSave)}
 				onSubmit={formInstance.handleSubmit(handleSubmit)}
-				className={cn("relative flex flex-col gap-6", className)}
+				className={cn("relative isolate flex flex-col gap-6", className)}
 			>
 				{children}
 				<hr />

@@ -38,6 +38,32 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 	}
 }
 
+export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) {
+	switch (coreSchemaType) {
+		case CoreSchemaType.String:
+			return "";
+		case CoreSchemaType.Boolean:
+			return false;
+		case CoreSchemaType.Vector3:
+			return [];
+		case CoreSchemaType.DateTime:
+			return new Date();
+		case CoreSchemaType.Email:
+			return "";
+		case CoreSchemaType.URL:
+			return "";
+		case CoreSchemaType.MemberId:
+			return "";
+		case CoreSchemaType.FileUpload:
+			return {};
+		case CoreSchemaType.Null:
+			return undefined;
+		default:
+			const _exhaustiveCheck: never = coreSchemaType;
+			return _exhaustiveCheck;
+	}
+}
+
 export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
 export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons";
 export { registerFormats } from "./formats";
