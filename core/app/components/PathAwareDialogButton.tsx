@@ -27,7 +27,11 @@ export const PathAwareDialogButton = (props: PathAwareDialogueProps) => {
 			size={props?.size ?? "sm"}
 			className={cn("flex items-center gap-x-2 py-4", props?.className)}
 		>
-			{isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{props.children}</>}
+			{isPending ? (
+				<Loader2 className="h-4 w-4 animate-spin justify-self-center" />
+			) : (
+				<>{props.children}</>
+			)}
 		</Button>
 	);
 };

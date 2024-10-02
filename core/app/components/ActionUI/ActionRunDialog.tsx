@@ -5,10 +5,10 @@ import { Suspense } from "react";
 import type { ActionInstancesId, PubsId } from "db/public";
 import { DialogContent, DialogHeader, DialogTitle } from "ui/dialog";
 
+import type { PageContext } from "~/lib/types";
 import { getActionInstance } from "~/lib/server/actions";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPathAwareDialogSearchParam } from "~/lib/server/pathAwareDialogParams";
-import type { PageContext } from "~/lib/types";
 import { PathAwareDialog } from "../PathAwareDialog";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 import {
@@ -18,18 +18,18 @@ import {
 import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
 
 export const ActionRunDialog = ({ pageContext }: { pageContext: PageContext }) => {
-	const id = getPathAwareDialogSearchParam() || "";
+	const params = parseActionRunFormQueryParam(pageContext.searchParams);
 
-	const props = parseActionRunFormQueryParam(pageContext.searchParams);
+	const id = params ? createActionRunFormQueryParam(params) : null;
 
 	return (
 		<PathAwareDialog id={id}>
 			<DialogContent className="max-h-full overflow-y-auto">
 				<Suspense fallback={<SkeletonCard />}>
-					{props !== null && (
+					{params !== null && (
 						<ActionRunDialogInner
-							pubId={props.pubId}
-							actionInstanceId={props.actionInstanceId}
+							pubId={params.pubId}
+							actionInstanceId={params.actionInstanceId}
 							pageContext={pageContext}
 						/>
 					)}
