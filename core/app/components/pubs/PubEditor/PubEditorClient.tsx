@@ -78,7 +78,7 @@ type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
 export function PubEditorClient(props: Props) {
 	const hasValues = Object.keys(props.pubValues).length > 0;
 	const paramString = hasValues ? "update" : "create";
-	const runCreatePub = useServerAction(actions.createPub);
+	const runCreatePub = useServerAction(actions.createPubRecursive);
 	const runUpdatePub = useServerAction(actions.updatePub);
 	const availableStages = [
 		{ id: undefined, name: "No stage" },
@@ -177,12 +177,14 @@ export function PubEditorClient(props: Props) {
 			}
 
 			const result = await runCreatePub({
-				pubId,
+				body: {
+					id: pubId,
+					pubTypeId: pubTypeId as PubTypesId,
+					stageId: stageId as StagesId,
+					values: enabledPubValues as Record<string, any>,
+				},
 				communityId: props.communityId,
-				parentId: props.parentId,
-				pubTypeId: pubTypeId as PubTypesId,
-				pubValues: enabledPubValues,
-				stageId: stageId as StagesId,
+				parent: props.parentId ? { id: props.parentId } : undefined,
 			});
 			if (didSucceed(result)) {
 				toast({

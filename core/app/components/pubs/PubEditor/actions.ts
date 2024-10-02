@@ -10,9 +10,16 @@ import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
+import { createPubRecursiveNew } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+
+export const createPubRecursive = defineServerAction(async function createPubRecursive(
+	...[props]: Parameters<typeof createPubRecursiveNew>
+) {
+	return createPubRecursiveNew(props);
+});
 
 export const createPub = defineServerAction(async function createPub({
 	communityId,
@@ -24,7 +31,7 @@ export const createPub = defineServerAction(async function createPub({
 	pubId,
 }: {
 	communityId: CommunitiesId;
-	stageId?: StagesId;
+	stageId: StagesId;
 	pubTypeId: PubTypesId;
 	pubValues: PubValues;
 	path?: string | null;
@@ -45,26 +52,24 @@ export const createPub = defineServerAction(async function createPub({
 	const pubValueEntries = Object.entries(pubValues);
 
 	try {
-		const pubQuery = db.with("new_pub", (db) =>
-			db
-				.insertInto("pubs")
-				.values({
-					id: pubId,
-					communityId: communityId,
-					pubTypeId: pubTypeId,
-					parentId: parentId,
-				})
-				.returning("id")
-		);
-
-		const query = stageId
-			? pubQuery.with("stage_create", (db) =>
-					db.insertInto("PubsInStages").values((eb) => ({
-						pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-						stageId,
-					}))
-				)
-			: pubQuery;
+		const query = db
+			.with("new_pub", (db) =>
+				db
+					.insertInto("pubs")
+					.values({
+						id: pubId,
+						communityId: communityId,
+						pubTypeId: pubTypeId,
+						parentId: parentId,
+					})
+					.returning("id")
+			)
+			.with("stage_create", (db) =>
+				db.insertInto("PubsInStages").values((eb) => ({
+					pubId: eb.selectFrom("new_pub").select("new_pub.id"),
+					stageId,
+				}))
+			);
 
 		await autoRevalidate(
 			// Running an `insertInto` with an empty array results in a SQL syntax
