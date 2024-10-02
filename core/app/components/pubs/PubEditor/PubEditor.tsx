@@ -1,4 +1,7 @@
+import assert from "assert";
 import { randomUUID } from "crypto";
+
+import dynamic from "next/dynamic";
 
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { expect } from "utils";
@@ -6,11 +9,12 @@ import { expect } from "utils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
+import { SkeletonCard } from "../../skeletons/SkeletonCard";
 import { makeFormElementDefFromPubFields } from "./helpers";
-import { PubEditorClient } from "./PubEditorClient";
 import { getCommunityById, getStage } from "./queries";
 
 export type PubEditorProps = {
@@ -20,12 +24,21 @@ export type PubEditorProps = {
 			pubId: PubsId;
 			parentId?: PubsId;
 	  }
-	| {
-			communityId: CommunitiesId;
-	  }
+	// | {
+	// 		communityId: CommunitiesId;
+	//   }
 	| {
 			stageId: StagesId;
 	  }
+);
+
+const PubEditorClient = dynamic(
+	async () => {
+		return import("./PubEditorClient").then((mod) => ({
+			default: mod.PubEditorClient,
+		}));
+	},
+	{ ssr: false, loading: () => <SkeletonCard /> }
 );
 
 export async function PubEditor(props: PubEditorProps) {
@@ -44,11 +57,13 @@ export async function PubEditor(props: PubEditorProps) {
 		const result = await getStage(props.stageId).executeTakeFirstOrThrow();
 		community = result.community;
 	} else {
+		const commy = await findCommunityBySlug();
+		assert(commy);
 		community = await getCommunityById(
 			// @ts-expect-error FIXME: I don't know how to fix this,
 			// not sure what the common type between EB and the DB is
 			db,
-			props.communityId
+			commy.id
 		).executeTakeFirstOrThrow();
 	}
 
@@ -97,6 +112,7 @@ export async function PubEditor(props: PubEditorProps) {
 	));
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
+
 	const editor = (
 		<PubEditorClient
 			availablePubTypes={community.pubTypes}

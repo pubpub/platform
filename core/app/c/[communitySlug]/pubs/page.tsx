@@ -3,8 +3,11 @@ import type { Metadata } from "next";
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
+import { PubEditorModal } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { setupPathAwareDialogSearchParamCache } from "~/lib/server/pathAwareDialogParams";
 import { createToken } from "~/lib/server/token";
 import PubHeader from "./PubHeader";
 import PubList from "./PubList";
@@ -13,7 +16,10 @@ export const metadata: Metadata = {
 	title: "Pubs",
 };
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
+type Props = {
+	params: { communitySlug: string };
+	searchParams: Record<string, string | string[] | undefined>;
+};
 
 export default async function Page({ params, searchParams }: Props) {
 	const { user } = await getPageLoginData();
@@ -29,10 +35,13 @@ export default async function Page({ params, searchParams }: Props) {
 		type: AuthTokenType.generic,
 	});
 
+	setupPathAwareDialogSearchParamCache(searchParams);
+
 	return (
 		<>
 			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
 			<PubList communityId={community.id} token={tokenPromise} searchParams={searchParams} />
+			<PubEditorModal />
 		</>
 	);
 }

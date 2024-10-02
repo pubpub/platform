@@ -2,27 +2,29 @@ import type { ButtonProps } from "ui/button";
 import { Trash } from "ui/icon";
 
 import type { PubRemoveProps } from "./RemovePubForm";
-import { PathAwareDialog } from "../PathAwareDialog";
-import { PubRemove } from "./RemovePubForm";
+import { PathAwareDialogButton } from "../PathAwareDialogButton";
+import { createPubEditorSearchParamId } from "./PubEditor/pubEditorSearchParam";
 
 export type Props = PubRemoveProps & {
 	variant?: ButtonProps["variant"];
 	size?: ButtonProps["size"];
 	className?: string;
+	text?: string;
 };
 
 export const RemovePubButton = (props: Props) => {
+	const pubRemoveSearchParamId = createPubEditorSearchParamId({
+		method: "remove",
+		identifyingString: props.pubId,
+	});
+
 	return (
-		<PathAwareDialog
-			id={props.pubId}
-			title="Remove Pub"
-			icon={<Trash size="12" className="mb-0.5" />}
-			param="remove-pub-form"
-			buttonText="Remove"
-			buttonVariant={props.variant}
+		<PathAwareDialogButton
+			id={pubRemoveSearchParamId}
+			variant={props.variant}
 			className={props.className}
 		>
-			<PubRemove {...props} />
-		</PathAwareDialog>
+			<Trash size="12" className="mb-0.5" /> {props.text ?? "Remove Pub"}
+		</PathAwareDialogButton>
 	);
 };
