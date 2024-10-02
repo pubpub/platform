@@ -3,7 +3,7 @@ import type React from "react";
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
 import type { Action, ActionInstanceOf } from "../../types";
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { PageContext } from "~/lib/types";
 
 export type ActionFormFieldBaseProps<T extends Action, Type extends "config" | "params"> = {
 	actionInstance: ActionInstanceOf<T>;

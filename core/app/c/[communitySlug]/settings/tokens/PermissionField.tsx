@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useMemo } from "react";
-import { ControllerRenderProps } from "react-hook-form";
+import type { ControllerRenderProps } from "react-hook-form";
 
 import type { ApiAccessScope } from "db/public";
 import type { ApiAccessPermissionConstraintsInput, CreateTokenFormContext } from "db/types";

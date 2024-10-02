@@ -2,7 +2,6 @@ import { Fragment, Suspense } from "react";
 
 import type { CommunitiesId } from "db/public";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { CommunityStage } from "~/lib/server/stages";
 import type { StagesById, StagewithConstraints } from "~/lib/stages";
 import type { MemberWithUser } from "~/lib/types";
@@ -19,7 +18,6 @@ import { StagePubActions } from "./StagePubActions";
 type Props = {
 	token: string | Promise<string>;
 	communityId: CommunitiesId;
-	pageContext: PageContext;
 };
 
 export async function StageList(props: Props) {
@@ -43,7 +41,6 @@ export async function StageList(props: Props) {
 							stageById={stageById}
 							token={token}
 							members={communityMembers}
-							pageContext={props.pageContext}
 						/>
 					))}
 				</div>
@@ -56,14 +53,12 @@ async function StageCard({
 	stage,
 	stageById,
 	token,
-	pageContext,
 	members,
 }: {
 	stage: CommunityStage;
 	stageById: StagesById;
 	token: string;
 	members?: MemberWithUser[];
-	pageContext: PageContext;
 }) {
 	return (
 		<div key={stage.id} className="mb-20">
@@ -76,13 +71,7 @@ async function StageCard({
 			<Suspense
 				fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
 			>
-				<StagePubs
-					stage={stage}
-					token={token}
-					stageById={stageById}
-					pageContext={pageContext}
-					members={members}
-				/>
+				<StagePubs stage={stage} token={token} stageById={stageById} members={members} />
 			</Suspense>
 		</div>
 	);
@@ -92,13 +81,11 @@ async function StagePubs({
 	stage,
 	token,
 	stageById,
-	pageContext,
 	members,
 }: {
 	stage: StagewithConstraints;
 	token: string;
 	stageById: StagesById;
-	pageContext: PageContext;
 	members?: MemberWithUser[];
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
@@ -134,7 +121,6 @@ async function StagePubs({
 									pub={basePub}
 									stage={stage}
 									actionInstances={actionInstances}
-									pageContext={pageContext}
 									members={members}
 								/>
 							}

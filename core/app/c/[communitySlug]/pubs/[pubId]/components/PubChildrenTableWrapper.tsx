@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 import { cn } from "utils";
 
 import type { ChildPubRow } from "./types";
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { PageContext } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubChildrenTable } from "./PubChildrenTable";
 import { getPubChildrenTable } from "./queries";
@@ -33,12 +33,7 @@ const NoActions = () => {
 const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContext) => {
 	const stage = row.stages[0];
 	return stage && row.actionInstances.length > 0 ? (
-		<PubsRunActionDropDownMenu
-			actionInstances={row.actionInstances}
-			pubId={row.id}
-			stage={stage}
-			pageContext={pageContext}
-		/>
+		<PubsRunActionDropDownMenu actionInstances={row.actionInstances} pubId={row.id} />
 	) : (
 		<NoActions />
 	);

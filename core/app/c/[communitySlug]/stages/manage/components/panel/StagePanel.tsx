@@ -1,7 +1,8 @@
 import type { StagesId } from "db/public";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+
+
 import { getStage } from "~/lib/db/queries";
 import { StagePanelActions } from "./StagePanelActions";
 import { StagePanelMembers } from "./StagePanelMembers";
@@ -9,6 +10,7 @@ import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
 import { StagePanelRules } from "./StagePanelRules";
 import { StagePanelSheet } from "./StagePanelSheet";
+import type { PageContext } from "~/lib/types";
 
 type Props = {
 	stageId: StagesId | undefined;
@@ -40,7 +42,7 @@ export const StagePanel = async (props: Props) => {
 				<TabsContent value="pubs">
 					<StagePanelPubs
 						stageId={props.stageId as StagesId}
-						pageContext={props.pageContext}
+
 					/>
 				</TabsContent>
 				<TabsContent value="actions" className="space-y-2">

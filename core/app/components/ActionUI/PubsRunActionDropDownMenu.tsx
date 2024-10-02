@@ -5,23 +5,14 @@ import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 
-import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
-
-export type PageContext = {
-	params: Record<string, unknown>;
-	searchParams: Record<string, unknown>;
-};
+import { ActionRunFormButton } from "./ActionRunFormButton";
 
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
 	pubId,
-	stage,
-	pageContext,
 }: {
 	actionInstances: ActionInstances[];
 	pubId: PubsId;
-	stage: Stages;
-	pageContext: PageContext;
 }) => {
 	if (!actionInstances.length) {
 		return null;
@@ -38,11 +29,9 @@ export const PubsRunActionDropDownMenu = async ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
-					<ActionRunFormWrapper
-						stage={stage}
+					<ActionRunFormButton
 						pubId={pubId}
 						actionInstance={actionInstance}
-						pageContext={pageContext}
 						key={actionInstance.id}
 					/>
 				))}

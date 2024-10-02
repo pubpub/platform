@@ -2,20 +2,17 @@
 
 import type { z } from "zod";
 
-import { Suspense, useCallback, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 
 import type { ActionInstances, ActionInstancesId, PubsId } from "db/public";
 import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { Loader2, Play } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { useServerAction } from "~/lib/serverActions";
 
 export const ActionRunForm = ({
@@ -66,42 +63,22 @@ export const ActionRunForm = ({
 	);
 
 	return (
-		<Dialog>
-			<DialogTrigger asChild>
-				<Button
-					variant="ghost"
-					className="flex w-full items-center justify-start gap-x-4 px-4 py-2"
-				>
-					<action.icon size="14" className="flex-shrink-0" />
-					<span className="overflow-auto text-ellipsis">
-						{actionInstance.name || action.name}
-					</span>
-				</Button>
-			</DialogTrigger>
-			<DialogContent className="max-h-full overflow-y-auto">
-				<DialogHeader>
-					<DialogTitle>{actionInstance.name || action.name}</DialogTitle>
-				</DialogHeader>
-				<Suspense fallback={<SkeletonCard />}>
-					<AutoForm
-						values={actionInstance.config ?? {}}
-						fieldConfig={fieldConfig}
-						formSchema={action.params.schema}
-						dependencies={action.params.dependencies}
-						onSubmit={onSubmit}
-					>
-						<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
-							{isPending ? (
-								<Loader2 size="14" className="animate-spin" />
-							) : (
-								<>
-									<Play size="14" /> Run
-								</>
-							)}
-						</AutoFormSubmit>
-					</AutoForm>
-				</Suspense>
-			</DialogContent>
-		</Dialog>
+		<AutoForm
+			values={actionInstance.config ?? {}}
+			fieldConfig={fieldConfig}
+			formSchema={action.params.schema}
+			dependencies={action.params.dependencies}
+			onSubmit={onSubmit}
+		>
+			<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
+				{isPending ? (
+					<Loader2 size="14" className="animate-spin" />
+				) : (
+					<>
+						<Play size="14" /> Run
+					</>
+				)}
+			</AutoFormSubmit>
+		</AutoForm>
 	);
 };

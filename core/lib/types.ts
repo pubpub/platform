@@ -114,3 +114,8 @@ export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> 
 		ReturnType<ReturnType<T>[K]>
 	>;
 };
+
+export type PageContext = {
+	params: Record<string, string | string[] | undefined>;
+	searchParams: Record<string, string | string[] | undefined>;
+};

@@ -12,6 +12,7 @@ import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import MembersAvatars from "~/app/components/MemberAvatar";
@@ -184,11 +185,6 @@ export default async function Page({
 									<PubsRunActionDropDownMenu
 										actionInstances={actions}
 										pubId={pub.id as PubsId}
-										stage={stage!}
-										pageContext={{
-											params: params,
-											searchParams,
-										}}
 									/>
 								</div>
 							) : (
@@ -246,6 +242,7 @@ export default async function Page({
 				</Suspense>
 			</div>
 			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ params, searchParams }} />
 		</>
 	);
 }

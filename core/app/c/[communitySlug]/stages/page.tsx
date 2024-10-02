@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -42,15 +43,9 @@ export default async function Page({ params, searchParams }: Props) {
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Stages</h1>
 			</div>
-			<StageList
-				token={token}
-				communityId={community.id}
-				pageContext={{
-					params,
-					searchParams,
-				}}
-			/>
+			<StageList token={token} communityId={community.id} />
 			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ searchParams, params }} />
 		</>
 	);
 }

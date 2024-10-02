@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import type { StagesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getStage } from "~/lib/db/queries";
@@ -81,6 +82,7 @@ export default async function Page({ params, searchParams }: Props) {
 				</StageEditorProvider>
 			</StagesProvider>
 			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ searchParams, params }} />
 		</>
 	);
 }

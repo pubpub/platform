@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { StagesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+
 import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -11,6 +11,7 @@ import { getStage, getStageActions } from "~/lib/db/queries";
 import { addAction, deleteAction } from "../../actions";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
+import type { PageContext } from "~/lib/types";
 
 type PropsInner = {
 	stageId: StagesId;

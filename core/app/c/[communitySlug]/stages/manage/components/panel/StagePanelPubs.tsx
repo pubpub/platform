@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { PubsId, StagesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubDropDown } from "~/app/components/pubs/PubDropDown";
@@ -13,7 +13,6 @@ import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
 
 type PropsInner = {
 	stageId: StagesId;
-	pageContext: PageContext;
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
@@ -43,8 +42,6 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 							<PubsRunActionDropDownMenu
 								actionInstances={stageActionInstances}
 								pubId={pub.id as PubsId}
-								stage={stage}
-								pageContext={props.pageContext}
 							/>
 							<PubDropDown pubId={pub.id as PubsId} />
 						</div>
@@ -57,7 +54,6 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 
 type Props = {
 	stageId?: StagesId;
-	pageContext: PageContext;
 };
 
 export const StagePanelPubs = async (props: Props) => {
@@ -67,7 +63,7 @@ export const StagePanelPubs = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelPubsInner stageId={props.stageId} pageContext={props.pageContext} />
+			<StagePanelPubsInner stageId={props.stageId} />
 		</Suspense>
 	);
 };

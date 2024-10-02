@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -41,6 +42,7 @@ export default async function Page({ params, searchParams }: Props) {
 			<PubHeader />
 			<PubList communityId={community.id} token={tokenPromise} />
 			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ searchParams, params }} />
 		</>
 	);
 }

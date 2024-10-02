@@ -2,7 +2,6 @@ import { Suspense } from "react";
 
 import type { ActionInstances } from "db/public";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { StagewithConstraints } from "~/lib/stages";
 import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -17,7 +16,6 @@ type Props = {
 	pub: PubWithValues;
 	stage: StagewithConstraints;
 	actionInstances: ActionInstances[];
-	pageContext: PageContext;
 };
 
 export const StagePubActions = async (props: Props) => {
@@ -34,8 +32,6 @@ export const StagePubActions = async (props: Props) => {
 				<PubsRunActionDropDownMenu
 					pubId={props.pub.id}
 					actionInstances={props.actionInstances}
-					pageContext={props.pageContext}
-					stage={props.stage}
 				/>
 			</Suspense>
 		</div>
