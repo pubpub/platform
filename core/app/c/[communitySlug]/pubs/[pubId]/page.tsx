@@ -235,11 +235,7 @@ export default async function Page({
 					</p>
 				</div>
 				<div className="mb-2">
-					<CreatePubButton
-						text="Add New Pub"
-						parentId={pub.id as PubsId}
-						searchParams={searchParams}
-					/>
+					<CreatePubButton text="Add New Pub" parentId={pub.id as PubsId} />
 				</div>
 				<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 					<PubChildrenTableWrapper

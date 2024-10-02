@@ -1,6 +1,5 @@
 import React, { Suspense } from "react";
 
-import type { PubsId } from "db/public";
 import { DialogContent, DialogTitle } from "ui/dialog";
 import { Skeleton } from "ui/skeleton";
 
@@ -48,7 +47,6 @@ export const PubEditorDialog = ({
 	const params = parsePubEditorSearchParam();
 
 	const id = params ? createPubEditorSearchParamId(params) : null;
-	console.log(id);
 
 	return (
 		<PathAwareDialog id={id}>
