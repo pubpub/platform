@@ -27,8 +27,10 @@ export const usePathAwareDialogSearchParam = <P extends string | null>({
 
 	const toggleDialog = useCallback(
 		(open?: boolean) => {
+			console.log(open);
 			// toggle
 			if (open === undefined) {
+				console.log("here");
 				setPathAwareDialogSearchParam(currentPathAwareDialogSearchParam === id ? null : id);
 				return;
 			}
@@ -36,6 +38,7 @@ export const usePathAwareDialogSearchParam = <P extends string | null>({
 			// close
 			if (!open) {
 				setPathAwareDialogSearchParam(null);
+				return;
 			}
 
 			// open

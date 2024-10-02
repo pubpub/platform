@@ -1,66 +1,68 @@
 import React, { Suspense } from "react";
 
-import type { PubsId, StagesId } from "db/public";
+import type { PubsId } from "db/public";
 import { DialogContent, DialogTitle } from "ui/dialog";
 import { Skeleton } from "ui/skeleton";
 
-import type { PubEditorMethod } from "./types";
-import { SearchParamModal } from "~/lib/client/SearchParamModal";
+import type { ParsedPubEditorSearchParam } from "./pubEditorSearchParam";
 import { PathAwareDialog } from "../../PathAwareDialog";
 import { SkeletonCard } from "../../skeletons/SkeletonCard";
 import { PubRemove } from "../RemovePubForm";
 import { PubEditor } from "./PubEditor";
 import { createPubEditorSearchParamId, parsePubEditorSearchParam } from "./pubEditorSearchParam";
 
-const PubEdit = ({
-	method,
-	identifyingString,
-	parentId,
-}: {
-	method: PubEditorMethod;
-	identifyingString: string;
-	parentId?: PubsId;
-}) => {
-	if (method === "create") {
+function PubEdit({
+	searchParams,
+	...props
+}: ParsedPubEditorSearchParam & {
+	searchParams: Record<string, string | string[] | undefined>;
+}) {
+	if (props.method === "create") {
 		// return <PubCreate stageId={identifyingString as StagesId} parentId={parentId} />;
-		return <PubEditor pubId={identifyingString} parentId={parentId} />;
+		return (
+			<PubEditor
+				method="create"
+				stageId={props.stageId}
+				parentId={props.parentId}
+				searchParams={searchParams}
+			/>
+		);
 	}
 
-	if (method === "update") {
-		return <PubEditor pubId={identifyingString} />;
+	if (props.method === "update") {
+		return <PubEditor pubId={props.pubId} method="update" searchParams={searchParams} />;
 	}
 
-	if (method === "remove") {
-		return <PubRemove pubId={identifyingString as PubsId} />;
+	if (props.method === "remove") {
+		return <PubRemove pubId={props.pubId} />;
 	}
 
 	return null;
-};
+}
 
-export const PubEditorModal = ({ parentId }: { parentId?: PubsId }) => {
+export const PubEditorDialog = ({
+	searchParams,
+}: {
+	searchParams: Record<string, string | string[] | undefined>;
+}) => {
 	const params = parsePubEditorSearchParam();
 
-	const searchParam = params ? createPubEditorSearchParamId(params) : null;
+	const id = params ? createPubEditorSearchParamId(params) : null;
+	console.log(id);
 
 	return (
-		<PathAwareDialog id={searchParam}>
+		<PathAwareDialog id={id}>
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
 				{params?.method ? (
 					<>
 						<DialogTitle>{params.method}</DialogTitle>
 						<Suspense fallback={<SkeletonCard />}>
-							<PubEdit
-								method={params.method}
-								identifyingString={params.identifyingString}
-								parentId={parentId}
-							/>
+							<PubEdit searchParams={searchParams} {...params} />
 						</Suspense>
 					</>
 				) : (
 					<Skeleton className="h-4 w-52" />
 				)}
-
-				{/* {children} */}
 			</DialogContent>
 		</PathAwareDialog>
 	);

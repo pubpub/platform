@@ -12,8 +12,10 @@ export type PathAwareDialogProps = {
 	 * String that is necessary to identify this form from other froms,
 	 * otherwise if multiple of the same button are rendered on the page
 	 * multiple forms will	 be opened at the same time.
+	 *
+	 * The null options is used in the case where the searchParam is not there
 	 */
-	id: string;
+	id: string | null;
 };
 
 export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => {

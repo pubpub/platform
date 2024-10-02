@@ -1,5 +1,6 @@
 "use client";
 
+import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { Loader2 } from "ui/icon";
 import { cn } from "utils";
@@ -7,8 +8,8 @@ import { cn } from "utils";
 import { usePathAwareDialogSearchParam } from "~/lib/client/usePathAwareDialogSearchParam";
 
 export type PathAwareDialogueProps = {
-	variant?: "secondary" | "outline" | "ghost" | "default" | "destructive";
-	size?: "sm" | "default" | "lg" | "icon";
+	variant?: ButtonProps["variant"];
+	size?: ButtonProps["size"];
 	className?: string;
 	children?: React.ReactNode;
 	id: string;

@@ -5,9 +5,11 @@ import type { Metadata } from "next";
 import type { StagesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
+import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getStage } from "~/lib/db/queries";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { setupPathAwareDialogSearchParamCache } from "~/lib/server/pathAwareDialogParams";
 import { getCommunityStages } from "~/lib/server/stages";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
@@ -58,23 +60,27 @@ export default async function Page({ params, searchParams }: Props) {
 		searchParams,
 	};
 
+	setupPathAwareDialogSearchParamCache(searchParams);
 	return (
-		<StagesProvider stages={stages} communityId={community.id}>
-			<StageEditorProvider communitySlug={params.communitySlug}>
-				<LocalStorageProvider timeout={200}>
-					<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
-						<div className="relative h-full select-none">
-							<StageEditor />
-							{searchParams.editingStageId && (
-								<StagePanel
-									stageId={searchParams.editingStageId as StagesId}
-									pageContext={pageContext}
-								/>
-							)}
+		<>
+			<StagesProvider stages={stages} communityId={community.id}>
+				<StageEditorProvider communitySlug={params.communitySlug}>
+					<LocalStorageProvider timeout={200}>
+						<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
+							<div className="relative h-full select-none">
+								<StageEditor />
+								{searchParams.editingStageId && (
+									<StagePanel
+										stageId={searchParams.editingStageId as StagesId}
+										pageContext={pageContext}
+									/>
+								)}
+							</div>
 						</div>
-					</div>
-				</LocalStorageProvider>
-			</StageEditorProvider>
-		</StagesProvider>
+					</LocalStorageProvider>
+				</StageEditorProvider>
+			</StagesProvider>
+			<PubEditorDialog searchParams={searchParams} />
+		</>
 	);
 }

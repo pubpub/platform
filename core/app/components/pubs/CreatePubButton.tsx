@@ -1,24 +1,22 @@
-import type { CommunitiesId, StagesId } from "db/public";
+import type { PubsId, StagesId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Plus } from "ui/icon";
 
-import type { PubEditorProps } from "./PubEditor/PubEditor";
 import { PathAwareDialogButton } from "../PathAwareDialogButton";
 import { createPubEditorSearchParamId } from "./PubEditor/pubEditorSearchParam";
 
-export type Props = PubEditorProps & {
+export type Props = {
 	variant?: ButtonProps["variant"];
 	size?: ButtonProps["size"];
 	className?: string;
 	text?: string;
-} & { stageId?: StagesId };
+} & { stageId?: StagesId; parentId?: PubsId };
 
 export const CreatePubButton = (props: Props) => {
-	const id = props.stageId;
-
 	const pubCreateSearchParamId = createPubEditorSearchParamId({
 		method: "create",
-		identifyingString: id,
+		stageId: props.stageId,
+		parentId: props.parentId,
 	});
 
 	return (

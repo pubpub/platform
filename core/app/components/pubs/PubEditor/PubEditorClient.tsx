@@ -34,6 +34,7 @@ import { cn } from "utils";
 import type { PubValues } from "~/lib/server";
 import type { PubField } from "~/lib/types";
 import { Notice } from "~/app/(user)/login/Notice";
+import { usePathAwareDialogSearchParam } from "~/lib/client/usePathAwareDialogSearchParam";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { useFormElementToggleContext } from "../../forms/FormElementToggleContext";
 import * as actions from "./actions";
@@ -41,6 +42,7 @@ import {
 	createPubEditorDefaultValuesFromPubFields,
 	createPubEditorSchemaFromPubFields,
 } from "./helpers";
+import { createPubEditorSearchParamId } from "./pubEditorSearchParam";
 
 type AvailablePubType = Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
 	fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
@@ -61,7 +63,7 @@ type Props = {
 	pubValues: PubValues;
 	stageId?: StagesId;
 	/** Is updating or creating? */
-	isUpdating: boolean;
+	method: "create" | "update";
 };
 
 const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>) => {
@@ -76,8 +78,6 @@ const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>
 type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
 
 export function PubEditorClient(props: Props) {
-	const hasValues = Object.keys(props.pubValues).length > 0;
-	const paramString = hasValues ? "update" : "create";
 	const runCreatePub = useServerAction(actions.createPub);
 	const runUpdatePub = useServerAction(actions.updatePub);
 
@@ -85,11 +85,22 @@ export function PubEditorClient(props: Props) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	const formElementToggle = useFormElementToggleContext();
+	const { toggleDialog } = usePathAwareDialogSearchParam({
+		id: createPubEditorSearchParamId(
+			props.method === "create"
+				? {
+						method: "create",
+						stageId: props.stageId ?? undefined,
+						parentId: props.parentId ?? undefined,
+					}
+				: {
+						method: "update",
+						pubId: props.pubId,
+					}
+		),
+	});
 
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-	urlSearchParams.delete(`${paramString}-pub-form`);
-	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
+	const formElementToggle = useFormElementToggleContext();
 
 	// Have the client cache the first pubId it gets so that the pubId isn't changing
 	// on re-render (only relevant on Create)
@@ -139,8 +150,8 @@ export function PubEditorClient(props: Props) {
 	);
 
 	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+		toggleDialog(false);
+	}, [toggleDialog]);
 
 	const onSubmit: SubmitHandler<Static<typeof pubFieldsSchema>> = async (data) => {
 		const { pubTypeId, stageId, ...pubValues } = data;
@@ -148,43 +159,54 @@ export function PubEditorClient(props: Props) {
 			Object.entries(pubValues).filter(([slug]) => formElementToggle.isEnabled(slug))
 		) as PubValues;
 
-		if (props.isUpdating) {
-			const result = await runUpdatePub({
-				pubId,
-				pubValues: enabledPubValues,
-				stageId: stageId as StagesId,
-			});
+		const { method } = props;
+		switch (method) {
+			case "update": {
+				const result = await runUpdatePub({
+					pubId,
+					pubValues: enabledPubValues,
+					stageId: stageId as StagesId,
+				});
 
-			if (didSucceed(result)) {
-				toast({
-					title: "Success",
-					description: "Pub successfully updated",
-				});
-				closeForm();
-			}
-		} else {
-			if (!pubTypeId) {
-				form.setError("pubTypeId", {
-					message: "Select a pub type",
-				});
-				return;
-			}
+				if (didSucceed(result)) {
+					toast({
+						title: "Success",
+						description: "Pub successfully updated",
+					});
+					closeForm();
+				}
 
-			const result = await runCreatePub({
-				pubId,
-				communityId: props.communityId,
-				parentId: props.parentId,
-				pubTypeId: pubTypeId as PubTypesId,
-				pubValues: enabledPubValues,
-				stageId: stageId as StagesId,
-			});
-			if (didSucceed(result)) {
-				toast({
-					title: "Success",
-					description: "New pub created",
-				});
-				closeForm();
+				break;
 			}
+			case "create": {
+				if (!pubTypeId) {
+					form.setError("pubTypeId", {
+						message: "Select a pub type",
+					});
+					return;
+				}
+
+				const result = await runCreatePub({
+					pubId,
+					communityId: props.communityId,
+					parentId: props.parentId,
+					pubTypeId: pubTypeId as PubTypesId,
+					pubValues: enabledPubValues,
+					stageId: stageId as StagesId,
+				});
+
+				if (didSucceed(result)) {
+					toast({
+						title: "Success",
+						description: "New pub created",
+					});
+					closeForm();
+				}
+				break;
+			}
+			default:
+				// exhaustive switch
+				const _shouldBeNever: never = method;
 		}
 	};
 
@@ -195,7 +217,7 @@ export function PubEditorClient(props: Props) {
 				className={cn("relative flex flex-col gap-6", props.className)}
 				onBlur={(e) => e.preventDefault()}
 			>
-				{!props.isUpdating && (
+				{props.method === "create" && (
 					<FormField
 						name="pubTypeId"
 						control={form.control}
@@ -274,7 +296,7 @@ export function PubEditorClient(props: Props) {
 				{props.formElements}
 				{noValidPubFields && (
 					<Notice
-						title={`Trying to ${paramString} a deprecated PubType`}
+						title={`Trying to ${props.method} a deprecated PubType`}
 						description="You can no longer edit or create Pubs of this PubType."
 						variant="destructive"
 					/>
@@ -288,7 +310,7 @@ export function PubEditorClient(props: Props) {
 				>
 					{form.formState.isSubmitting ? (
 						<Loader2 className="h-4 w-4 animate-spin" />
-					) : hasValues ? (
+					) : props.method === "update" ? (
 						<>
 							<Pencil size="12" />
 							Update Pub

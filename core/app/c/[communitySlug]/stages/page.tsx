@@ -5,8 +5,10 @@ import { notFound } from "next/navigation";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { setupPathAwareDialogSearchParamCache } from "~/lib/server/pathAwareDialogParams";
 import { createToken } from "~/lib/server/token";
 import { StageList } from "./components/StageList";
 
@@ -14,7 +16,10 @@ export const metadata: Metadata = {
 	title: "Workflows",
 };
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
+type Props = {
+	params: { communitySlug: string };
+	searchParams: Record<string, string | string[] | undefined>;
+};
 
 export default async function Page({ params, searchParams }: Props) {
 	const [{ user }, community] = await Promise.all([
@@ -31,6 +36,7 @@ export default async function Page({ params, searchParams }: Props) {
 		type: AuthTokenType.generic,
 	});
 
+	setupPathAwareDialogSearchParamCache(searchParams);
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
@@ -44,6 +50,7 @@ export default async function Page({ params, searchParams }: Props) {
 					searchParams,
 				}}
 			/>
+			<PubEditorDialog searchParams={searchParams} />
 		</>
 	);
 }

@@ -15,7 +15,7 @@ export type Props = PubRemoveProps & {
 export const RemovePubButton = (props: Props) => {
 	const pubRemoveSearchParamId = createPubEditorSearchParamId({
 		method: "remove",
-		identifyingString: props.pubId,
+		pubId: props.pubId,
 	});
 
 	return (
@@ -24,7 +24,7 @@ export const RemovePubButton = (props: Props) => {
 			variant={props.variant}
 			className={props.className}
 		>
-			<Trash size="12" className="mb-0.5" /> {props.text ?? "Remove Pub"}
+			<Trash size="12" className="mb-0.5" /> {props.text ?? "Remove"}
 		</PathAwareDialogButton>
 	);
 };

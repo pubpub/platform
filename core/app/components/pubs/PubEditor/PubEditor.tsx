@@ -18,17 +18,16 @@ import { makeFormElementDefFromPubFields } from "./helpers";
 import { getCommunityById, getStage } from "./queries";
 
 export type PubEditorProps = {
-	searchParams: Record<string, unknown>;
+	searchParams: Record<string, string | string[] | undefined>;
 } & (
 	| {
+			method: "update";
 			pubId: PubsId;
-			parentId?: PubsId;
 	  }
-	// | {
-	// 		communityId: CommunitiesId;
-	//   }
 	| {
-			stageId: StagesId;
+			method: "create";
+			stageId?: StagesId;
+			parentId?: PubsId;
 	  }
 );
 
@@ -41,64 +40,98 @@ const PubEditorClient = dynamic(
 	{ ssr: false, loading: () => <SkeletonCard /> }
 );
 
-export async function PubEditor(props: PubEditorProps) {
-	let pub: Awaited<ReturnType<typeof getPubCached>> | undefined;
-	let community: AutoReturnType<typeof getCommunityById>["executeTakeFirstOrThrow"];
-
-	if ("pubId" in props) {
-		pub = await getPubCached(props.pubId);
-		community = await getCommunityById(
-			// @ts-expect-error FIXME: I don't know how to fix this,
-			// not sure what the common type between EB and the DB is
-			db,
-			pub.communityId
-		).executeTakeFirstOrThrow();
-	} else if ("stageId" in props) {
-		const result = await getStage(props.stageId).executeTakeFirstOrThrow();
-		community = result.community;
-	} else {
-		const commy = await findCommunityBySlug();
-		assert(commy);
-		community = await getCommunityById(
-			// @ts-expect-error FIXME: I don't know how to fix this,
-			// not sure what the common type between EB and the DB is
-			db,
-			commy.id
-		).executeTakeFirstOrThrow();
+const getPubTypeFromCommunity = (
+	community: AutoReturnType<typeof getCommunityById>["executeTakeFirstOrThrow"],
+	pubTypeId?: string
+) => {
+	if (!pubTypeId) {
+		const pubType = community.pubTypes[0];
+		const pubFields = pubType.fields;
+		return {
+			pubType,
+			pubFields,
+		};
 	}
+	const pubType = expect(
+		community.pubTypes.find((p) => p.id === pubTypeId),
+		"URL contained invalid pub type id"
+	);
+	const pubFields = Object.values(pubType.fields);
+	return {
+		pubType,
+		pubFields,
+	};
+};
 
-	const pubValues = pub?.values ?? {};
+const getCorrectPubEditorProps = async (props: PubEditorProps) => {
+	const comm = await findCommunityBySlug();
+	assert(comm);
 
-	let pubType: AutoReturnType<
-		typeof getCommunityById
-	>["executeTakeFirstOrThrow"]["pubTypes"][number];
-	let pubFields: Pick<PubField, "id" | "name" | "slug" | "schemaName">[];
+	if (props.method === "update") {
+		const [pub, community] = await Promise.all([
+			getPubCached(props.pubId),
+			getCommunityById(
+				// @ts-expect-error FIXME: I don't know how to fix this,
+				// not sure what the common type between EB and the DB is
+				db,
+				comm.id
+			).executeTakeFirstOrThrow(),
+		]);
 
-	// Create the pubId before inserting into the DB if one doesn't exist.
-	// FileUpload needs the pubId when uploading the file before the pub exists
-	const isUpdating = !!pub?.id;
-	const pubId = pub?.id ?? (randomUUID() as PubsId);
-
-	if (pub === undefined) {
-		if (props.searchParams.pubTypeId) {
-			pubType = expect(
-				community.pubTypes.find((p) => p.id === props.searchParams.pubTypeId),
-				"URL contained invalid pub type id"
-			);
-			pubFields = Object.values(pubType.fields);
-		} else {
-			pubType = community.pubTypes[0];
-			pubFields = pubType.fields;
-		}
-	} else {
-		pubType = expect(
+		const pubType = expect(
 			community.pubTypes.find((p) => p.id === pub.pubTypeId),
-			"Invalid community pub type"
+			"Invalid pub type"
 		);
-		pubFields = Object.values(
-			(await getPubFields({ pubId: pub.id }).executeTakeFirstOrThrow()).fields
-		);
+
+		// const pubFieldsResult = await getPubFields({ pubId: pub.id }).executeTakeFirstOrThrow();
+
+		const { pubFields } = getPubTypeFromCommunity(community, pubType.id);
+
+		return {
+			pub,
+			pubFields,
+			pubType,
+			community,
+			stage: null,
+			pubValues: pub.values,
+		};
 	}
+	// else it's a create form
+
+	if (props.method === "create" && props.stageId) {
+		const result = await getStage(props.stageId).executeTakeFirstOrThrow();
+		const { pubType, pubFields } = getPubTypeFromCommunity(
+			result.community,
+			props.searchParams.pubTypeId as string | undefined
+		);
+		return {
+			pub: null,
+			stage: result,
+			community: result.community,
+			pubType,
+			pubFields,
+			pubValues: {},
+		};
+	}
+
+	const community = await getCommunityById(
+		// @ts-expect-error FIXME: I don't know how to fix this,
+		// not sure what the common type between EB and the DB is
+		db,
+		comm.id
+	).executeTakeFirstOrThrow();
+
+	const { pubType, pubFields } = getPubTypeFromCommunity(
+		community,
+		props.searchParams.pubTypeId as string | undefined
+	);
+	return { community, pub: null, stage: null, pubType, pubFields, pubValues: {} };
+};
+
+export async function PubEditor(props: PubEditorProps) {
+	const { pub, pubFields, pubType, community, pubValues } = await getCorrectPubEditorProps(props);
+
+	const pubId = pub?.id ?? (randomUUID() as PubsId);
 
 	const formElements = makeFormElementDefFromPubFields(pubFields).map((formElementDef) => (
 		<FormElement
@@ -125,11 +158,11 @@ export async function PubEditor(props: PubEditorProps) {
 			pubTypeId={pubType?.id}
 			pubValues={pubValues}
 			stageId={currentStageId}
-			isUpdating={isUpdating}
+			method={props.method}
 		/>
 	);
 
-	if (isUpdating) {
+	if (props.method === "update") {
 		return editor;
 	}
 

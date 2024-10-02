@@ -4,6 +4,7 @@ import { Pencil } from "ui/icon";
 
 import type { PubEditorProps } from "./PubEditor/PubEditor";
 import { PathAwareDialogButton } from "../PathAwareDialogButton";
+import { createPubEditorSearchParamId } from "./PubEditor/pubEditorSearchParam";
 
 export type Props = PubEditorProps & {
 	pubId: PubsId;
@@ -13,9 +14,18 @@ export type Props = PubEditorProps & {
 };
 
 export const UpdatePubButton = (props: Props) => {
+	const identifyingString = createPubEditorSearchParamId({
+		method: "update",
+		pubId: props.pubId,
+	});
+
 	return (
-		<PathAwareDialogButton className={props.className} id={props.pubId}>
-			<Pencil size="12" className="mb-0.5" />
+		<PathAwareDialogButton
+			className={props.className}
+			id={identifyingString}
+			variant={props.variant}
+		>
+			<Pencil size="12" className="mb-0.5" /> Update
 		</PathAwareDialogButton>
 	);
 };
