@@ -25,6 +25,7 @@
 		"autoprefixer": "^10.4.14",
 		"postcss": "^8.4.47",
 		"prop-types": "^15.8.1",
+		"react": "catalog:react18",
 		"storybook": "^8.3.4",
 		"tailwindcss": "^3.4.13",
 		"tsconfig": "workspace:*"
@@ -34,8 +35,5 @@
 		"react-hook-form": "^7.46.1",
 		"ui": "workspace:",
 		"zod": "^3.23.8"
-	},
-	"peerDependencies": {
-		"react": "catalog:react18"
 	}
 }
