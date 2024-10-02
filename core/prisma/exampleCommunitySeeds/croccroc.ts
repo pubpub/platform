@@ -260,86 +260,113 @@ export default async function main(communityUUID: CommunitiesId) {
 		])
 		.execute();
 
+	// do not generate a ridiculous amount of pubs on CI
+	// eslint-disable-next-line no-restricted-properties
+	const numberOfPubs = process.env.CI ? 1 : 200;
+
 	await db
 		.with("new_pubs", (db) =>
 			db
 				.insertInto("pubs")
-				.values({
-					assigneeId: users[0].id,
-					communityId: communityUUID,
-					pubTypeId: submissionTypeId,
-				})
+				.values(
+					Array.from({ length: numberOfPubs }, (_, idx) => ({
+						assigneeId: users[0].id,
+						communityId: communityUUID,
+						pubTypeId: submissionTypeId,
+					}))
+				)
 				.returning("id")
 		)
 		.with("pubs_in_stages", (db) =>
-			db.insertInto("PubsInStages").values((eb) => [
-				{
-					pubId: eb.selectFrom("new_pubs").select("id"),
-					stageId: stages[0],
-				},
-			])
+			db.insertInto("PubsInStages").values((eb) =>
+				Array.from({ length: numberOfPubs }, (_, idx) => ({
+					pubId: eb.selectFrom("new_pubs").select("id").offset(idx).limit(1),
+					stageId: stages[(numberOfPubs - idx) % stages.length],
+				}))
+			)
 		)
 		.with("pubs_children", (db) =>
 			db
 				.insertInto("pubs")
-				.values((eb) => [
-					{
+				.values((eb) =>
+					Array.from({ length: numberOfPubs }, (_, idx) => ({
 						assigneeId: users[0].id,
 						communityId: communityUUID,
 						pubTypeId: evaluationTypeId,
-						parentId: eb.selectFrom("new_pubs").select("id"),
-					},
-				])
+						parentId: eb.selectFrom("new_pubs").select("id").offset(idx).limit(1),
+					}))
+				)
 				.returning("id")
 		)
 		.insertInto("pub_values")
-		.values((eb) => [
-			{
-				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:title`)!.id,
-				value: '"Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
-			},
-			{
-				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:content`)!.id,
-				value: '"# Abstract"',
-			},
-			{
-				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:title`)!.id,
-				value: '"Evaluation of Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
-			},
-			{
-				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:email`)!.id,
-				value: '"alivader@croc.com"',
-			},
-			{
-				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:url`)!.id,
-				value: '"https://croc.com"',
-			},
-			{
-				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!.id,
-				value: JSON.stringify(member.id),
-			},
-			{
-				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:email`)!.id,
-				value: '"crocochild@croc.com"',
-			},
-			{
-				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:url`)!.id,
-				value: '"https://croc.com"',
-			},
-			{
-				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
-				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!.id,
-				value: JSON.stringify(users[0].id),
-			},
-		])
+		.values((eb) =>
+			Array.from({ length: numberOfPubs }, (_, idx) => [
+				{
+					pubId: eb.selectFrom("new_pubs").select("new_pubs.id").offset(idx).limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:title`)!.id,
+					value: `"Ancient Giants #${idx}: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"`,
+				},
+				{
+					pubId: eb.selectFrom("new_pubs").select("new_pubs.id").offset(idx).limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:content`)!
+						.id,
+					value: `"# Abstract # ${idx}"`,
+				},
+				{
+					pubId: eb
+						.selectFrom("pubs_children")
+						.select("pubs_children.id")
+						.offset(idx)
+						.limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:title`)!.id,
+					value: `"Evaluation #${idx} of Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"`,
+				},
+				{
+					pubId: eb.selectFrom("new_pubs").select("new_pubs.id").offset(idx).limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:email`)!.id,
+					value: '"alivader@croc.com"',
+				},
+				{
+					pubId: eb.selectFrom("new_pubs").select("new_pubs.id").offset(idx).limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:url`)!.id,
+					value: '"https://croc.com"',
+				},
+				{
+					pubId: eb.selectFrom("new_pubs").select("new_pubs.id").offset(idx).limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!
+						.id,
+					value: JSON.stringify(member.id),
+				},
+				{
+					pubId: eb
+						.selectFrom("pubs_children")
+						.select("pubs_children.id")
+						.offset(idx)
+						.limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:email`)!.id,
+					value: '"crocochild@croc.com"',
+				},
+				{
+					pubId: eb
+						.selectFrom("pubs_children")
+						.select("pubs_children.id")
+						.offset(idx)
+						.limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:url`)!.id,
+					value: '"https://croc.com"',
+				},
+				{
+					pubId: eb
+						.selectFrom("pubs_children")
+						.select("pubs_children.id")
+						.offset(idx)
+						.limit(1),
+					fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!
+						.id,
+					value: JSON.stringify(users[0].id),
+				},
+			]).flat()
+		)
 		.execute();
 
 	const formSlug = "review" as const;
