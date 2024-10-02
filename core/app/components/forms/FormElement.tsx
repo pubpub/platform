@@ -6,6 +6,7 @@ import { ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
+import type { ElementProps } from "./types";
 import type { Form } from "~/lib/server/form";
 import { CheckboxElement } from "./elements/CheckboxElement";
 import { ConfidenceElement } from "./elements/ConfidenceElement";
@@ -50,7 +51,7 @@ export const FormElement = ({
 		return null;
 	}
 
-	const elementProps = { name: slug, schemaName, config };
+	const elementProps: ElementProps = { name: slug, schemaName, config };
 
 	let input: JSX.Element | undefined;
 
@@ -76,6 +77,7 @@ export const FormElement = ({
 		const userId = values[element.slug!] as MembersId | undefined;
 		input = (
 			<MemberSelectElement
+				config={elementProps.config}
 				name={elementProps.name}
 				id={element.elementId}
 				searchParams={searchParams}
