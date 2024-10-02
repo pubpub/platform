@@ -43,11 +43,11 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 		case CoreSchemaType.String:
 			return "";
 		case CoreSchemaType.Boolean:
-			return false;
+			return undefined;
 		case CoreSchemaType.Vector3:
 			return [];
 		case CoreSchemaType.DateTime:
-			return new Date();
+			return undefined;
 		case CoreSchemaType.Email:
 			return "";
 		case CoreSchemaType.URL:
@@ -55,7 +55,7 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 		case CoreSchemaType.MemberId:
 			return "";
 		case CoreSchemaType.FileUpload:
-			return {};
+			return undefined;
 		case CoreSchemaType.Null:
 			return undefined;
 		default:
