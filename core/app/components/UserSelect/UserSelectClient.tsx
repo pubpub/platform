@@ -1,9 +1,7 @@
 "use client";
 
-import assert from "assert";
-
-import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryState } from "nuqs";
 import { useDebouncedCallback } from "use-debounce";
 
 import type { Communities } from "db/public";
@@ -73,9 +71,6 @@ export function UserSelectClient({
 	users,
 	allowPubFieldSubstitution,
 }: Props) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
 	const formElementToggle = useFormElementToggleContext();
@@ -90,12 +85,19 @@ export function UserSelectClient({
 
 	const [selectedUser, setSelectedUser] = useState(member);
 
-	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
+	const [inputValue, setInputValue] = useQueryState(queryParamName, {
+		shallow: false,
+		defaultValue: selectedUser?.email ?? "",
+	});
+
+	useEffect(() => {
+		// remove the query param on unmount
+		return () => {
+			setInputValue(null);
+		};
+	}, []);
 
 	const onInputValueChange = useDebouncedCallback((value: string) => {
-		const newParams = new URLSearchParams(params);
-		newParams.set(queryParamName, value);
-		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		setInputValue(value);
 	}, 400);
 
