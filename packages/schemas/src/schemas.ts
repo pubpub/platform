@@ -31,7 +31,7 @@ export const Vector3 = Type.Array(
 	{
 		minItems: 3,
 		maxItems: 3,
-		descriptin:
+		description:
 			"An array of exactly three numbers. Can be used to specify a confidence interval, three-dimensional coordinates, etc.",
 		examples: [
 			[0, 0, 0],
