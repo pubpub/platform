@@ -54,7 +54,8 @@ const SortableValue = ({
 					onRemove(value);
 				}}
 				variant="ghost"
-				className="ml-2 h-5 p-0"
+				// height is smaller so hover is only over the xcircle
+				className="ml-2 h-3 p-0"
 				data-testid="remove-button"
 			>
 				<XCircle size="12"></XCircle>
