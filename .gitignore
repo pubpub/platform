@@ -65,3 +65,6 @@ core/supabase/.temp
 .env.docker-compose
 
 .cache
+
+*storybook.log
+storybook-static
