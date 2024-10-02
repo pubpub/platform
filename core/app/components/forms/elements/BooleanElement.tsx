@@ -5,6 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
+import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const BooleanElement = ({ label, name }: ElementProps) => {

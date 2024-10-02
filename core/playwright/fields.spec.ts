@@ -15,6 +15,7 @@ test.describe.configure({ mode: "serial" });
 let page: Page;
 
 test.beforeAll(async ({ browser }) => {
+	test.setTimeout(30_000);
 	page = await browser.newPage();
 	await login({ page });
 	await createCommunity({

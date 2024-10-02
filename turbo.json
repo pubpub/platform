@@ -13,11 +13,11 @@
 		"start": {},
 		"lint": {
 			"dependsOn": ["^topo"],
-			"outputs": ["node_modules/.cache/.eslintcache"]
+			"outputs": [".cache/.eslintcache"]
 		},
 		"type-check": {
 			"dependsOn": ["^topo"],
-			"outputs": ["node_modules/.cache/tsbuildinfo.json"]
+			"outputs": [".cache/tsbuildinfo.json"]
 		},
 		"dev": {
 			"cache": false,
@@ -27,12 +27,16 @@
 			"cache": false
 		},
 		"format": {
-			"outputs": ["node_modules/.cache/.prettiercache"],
+			"outputs": [".cache/.prettiercache"],
 			"outputLogs": "new-only"
 		},
 		"test": {
 			"dependsOn": ["^topo"],
-			"outputs": ["node_modules/.cache/vitestcache"]
+			"outputs": [".cache/.vitestcache"]
+		},
+		"test-run": {
+			"dependsOn": ["^topo"],
+			"outputs": [".cache/.vitestcache"]
 		}
 	}
 }
