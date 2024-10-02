@@ -10,7 +10,6 @@ import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { setupPathAwareDialogSearchParamCache } from "~/lib/server/pathAwareDialogParams";
 import { createToken } from "~/lib/server/token";
 import { StageList } from "./components/StageList";
 
@@ -38,7 +37,6 @@ export default async function Page({ params, searchParams }: Props) {
 		type: AuthTokenType.generic,
 	});
 
-	setupPathAwareDialogSearchParamCache(searchParams);
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">

@@ -8,7 +8,6 @@ import { DialogContent, DialogHeader, DialogTitle } from "ui/dialog";
 import type { PageContext } from "~/lib/types";
 import { getActionInstance } from "~/lib/server/actions";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getPathAwareDialogSearchParam } from "~/lib/server/pathAwareDialogParams";
 import { PathAwareDialog } from "../PathAwareDialog";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
 import {

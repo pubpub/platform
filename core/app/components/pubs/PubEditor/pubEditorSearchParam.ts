@@ -3,10 +3,7 @@ import { logger } from "logger";
 
 import type { PubEditorMethod } from "./types";
 import { uuidRegex } from "~/lib/regexp";
-import {
-	getPathAwareDialogSearchParam,
-	PATH_AWARE_DIALOG_SEARCH_PARAM,
-} from "~/lib/server/pathAwareDialogParams";
+import { PATH_AWARE_DIALOG_SEARCH_PARAM } from "~/lib/server/pathAwareDialogParams";
 
 export const createPubEditorSearchParamId = (props: ParsedPubEditorSearchParam) => {
 	if (props.method !== "create") {
@@ -51,8 +48,7 @@ export type ParsedPubEditorSearchParam =
 export const parsePubEditorSearchParam = (
 	searchParams?: Record<string, string | string[] | undefined>
 ) => {
-	const pathAwareDialogSearchParam =
-		searchParams?.[PATH_AWARE_DIALOG_SEARCH_PARAM] || getPathAwareDialogSearchParam() || "";
+	const pathAwareDialogSearchParam = searchParams?.[PATH_AWARE_DIALOG_SEARCH_PARAM] || "";
 
 	if (!pathAwareDialogSearchParam || typeof pathAwareDialogSearchParam !== "string") {
 		return null;

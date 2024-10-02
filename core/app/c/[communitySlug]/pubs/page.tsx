@@ -7,7 +7,6 @@ import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { setupPathAwareDialogSearchParamCache } from "~/lib/server/pathAwareDialogParams";
 import { createToken } from "~/lib/server/token";
 import { PubHeader } from "./PubHeader";
 import PubList from "./PubList";
@@ -34,8 +33,6 @@ export default async function Page({ params, searchParams }: Props) {
 		userId: user.id as UsersId,
 		type: AuthTokenType.generic,
 	});
-
-	setupPathAwareDialogSearchParamCache(searchParams);
 
 	return (
 		<>

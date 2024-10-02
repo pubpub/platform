@@ -44,7 +44,7 @@ export const PubEditorDialog = ({
 }: {
 	searchParams: Record<string, string | string[] | undefined>;
 }) => {
-	const params = parsePubEditorSearchParam();
+	const params = parsePubEditorSearchParam(searchParams);
 
 	const id = params ? createPubEditorSearchParamId(params) : null;
 

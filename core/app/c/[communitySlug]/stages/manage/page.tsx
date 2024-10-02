@@ -10,7 +10,6 @@ import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { getStage } from "~/lib/db/queries";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { setupPathAwareDialogSearchParamCache } from "~/lib/server/pathAwareDialogParams";
 import { getCommunityStages } from "~/lib/server/stages";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
@@ -61,7 +60,6 @@ export default async function Page({ params, searchParams }: Props) {
 		searchParams,
 	};
 
-	setupPathAwareDialogSearchParamCache(searchParams);
 	return (
 		<>
 			<StagesProvider stages={stages} communityId={community.id}>

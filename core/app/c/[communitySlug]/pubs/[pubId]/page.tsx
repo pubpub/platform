@@ -29,7 +29,6 @@ import { getPubUsers } from "~/lib/permissions";
 import { pubValuesByVal } from "~/lib/server";
 import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { setupPathAwareDialogSearchParamCache } from "~/lib/server/pathAwareDialogParams";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
 import { renderField } from "./components/jsonSchemaHelpers";
@@ -112,7 +111,6 @@ export default async function Page({
 
 	const { stages, children, ...slimPub } = pub;
 
-	setupPathAwareDialogSearchParamCache(searchParams);
 	return (
 		<>
 			<div className="flex flex-col space-y-4">

@@ -11,11 +11,9 @@ export const pathAwareDialogSearchParamsCache = createSearchParamsCache({
 });
 
 /**
- * This will make sure that the cache is populated
+ * When called at the top of a component, will allow subsequent calls to `getPathAwareDialogSearchParam` to return the same value.
+ * This is very much like a `jotai` atom, only on the server.
  *
- * Required to call on the searchparams of any page that uses the `PathAwareDialog` component
- *
- * TODO: Might be better to just do this inside the component
  */
 export const setupPathAwareDialogSearchParamCache = (
 	searchParams: Record<string, string | string[] | undefined>
