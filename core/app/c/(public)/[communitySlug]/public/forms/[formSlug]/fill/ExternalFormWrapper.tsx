@@ -21,13 +21,11 @@ import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
 import { cn } from "utils";
 
+import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
-import {
-	FormElementToggleContext,
-	useFormElementToggleContext,
-} from "~/app/components/forms/FormElementToggleContext";
+import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
@@ -89,12 +87,18 @@ const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValu
 	return defaultValues;
 };
 
-const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
+const createSchemaFromElements = (
+	elements: PubPubForm["elements"],
+	toggleContext: FormElementToggleContext
+) => {
 	return Type.Object(
 		Object.fromEntries(
 			elements
-				// only add pubfields to the schema
-				.filter((e) => e.type === ElementType.pubfield)
+				// only add enabled pubfields to the schema
+				.filter(
+					(e) =>
+						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
+				)
 				.map(({ slug, schemaName }) => {
 					if (!schemaName) {
 						return [slug, undefined];
@@ -182,8 +186,8 @@ export const ExternalFormWrapper = ({
 	);
 
 	const resolver = useMemo(
-		() => typeboxResolver(createSchemaFromElements(formElements)),
-		[formElements]
+		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
+		[formElements, toggleContext]
 	);
 
 	const formInstance = useForm({
