@@ -62,7 +62,7 @@ export default tseslint.config(
 			// "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
 			"no-console": "error",
 			"@typescript-eslint/consistent-type-imports": [
-				"warn",
+				"error",
 				{ prefer: "type-imports", fixStyle: "separate-type-imports" },
 			],
 		},
