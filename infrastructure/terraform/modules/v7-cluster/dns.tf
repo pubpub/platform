@@ -2,8 +2,8 @@ module "alb_certificate" {
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 4.0"
 
-  domain_name  = var.pubpub_hostname
-  zone_id      = var.route53_zone_id
+  domain_name = var.pubpub_hostname
+  zone_id     = var.route53_zone_id
 
   validation_method = "DNS"
 
@@ -14,7 +14,7 @@ module "alb_certificate" {
   wait_for_validation = true
 
   tags = {
-    Name = var.pubpub_hostname
+    Name        = var.pubpub_hostname
     Environment = var.environment
   }
 }

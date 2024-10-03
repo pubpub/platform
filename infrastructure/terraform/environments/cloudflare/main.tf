@@ -47,13 +47,13 @@ resource "aws_route53_zone" "duqduq" {
 # do this for all subdomains of duqduq that need to be NS'd to v7
 resource "cloudflare_record" "ns" {
   for_each = toset(["0", "1", "2", "3"])
-  type    = "NS"
+  type     = "NS"
 
   zone_id = data.cloudflare_zone.duqduq.id
 
-  name    = "blake.${local.duqduq_domain}"
+  name = "blake.${local.duqduq_domain}"
 
-  value   = aws_route53_zone.duqduq.name_servers[tonumber(each.key)]
+  value = aws_route53_zone.duqduq.name_servers[tonumber(each.key)]
 }
 
 
@@ -66,11 +66,11 @@ resource "aws_route53_zone" "pubpub" {
 }
 resource "cloudflare_record" "ns_pubpub" {
   for_each = toset(["0", "1", "2", "3"])
-  type    = "NS"
+  type     = "NS"
 
   zone_id = data.cloudflare_zone.pubpub.id
 
-  name    = "app.${local.pubpub_domain}"
+  name = "app.${local.pubpub_domain}"
 
-  value   = aws_route53_zone.pubpub.name_servers[tonumber(each.key)]
+  value = aws_route53_zone.pubpub.name_servers[tonumber(each.key)]
 }
