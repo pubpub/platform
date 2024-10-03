@@ -15,6 +15,7 @@ export const CheckboxElement = ({ name, config }: ElementProps) => {
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
 
+	Value.Default(checkboxConfigSchema, config);
 	if (!Value.Check(checkboxConfigSchema, config)) {
 		return null;
 	}
