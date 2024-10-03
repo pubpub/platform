@@ -27,6 +27,7 @@ export type InputElement = baseElement & {
 	type: ElementType.pubfield;
 	fieldId: PubFieldsId;
 	required: boolean | null;
+	// label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
 	label: never;
 	placeholder?: string | null;
 	help?: string | null;

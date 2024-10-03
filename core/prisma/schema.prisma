@@ -522,6 +522,7 @@ model FormElement {
   field     PubField?              @relation(fields: [fieldId], references: [id])
   formId    String
   order     Int?
+  // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
   label     String?
   element   StructuralFormElement?
   component InputComponent?
