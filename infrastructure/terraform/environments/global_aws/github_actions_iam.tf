@@ -12,15 +12,15 @@ resource "aws_iam_access_key" "github_actions" {
 resource "aws_iam_policy" "ecr" {
   name = "ECRAdmin"
   policy = jsonencode({
-    Version:  "2012-10-17",
-    Statement: [
+    Version : "2012-10-17",
+    Statement : [
       {
-        Sid: "EcrAdmin",
-        Effect: "Allow",
-        Action: [
+        Sid : "EcrAdmin",
+        Effect : "Allow",
+        Action : [
           "ecr:*"
         ],
-        Resource: [
+        Resource : [
           "*"
         ]
       }
@@ -32,22 +32,22 @@ resource "aws_iam_policy" "ecr" {
 resource "aws_iam_policy" "ecs" {
   name = "ECSUpdateService"
   policy = jsonencode({
-    Version:  "2012-10-17",
-    Statement: [
+    Version : "2012-10-17",
+    Statement : [
       {
-        Sid: "AllowPassRole",
-        Effect: "Allow",
-        Action: [
+        Sid : "AllowPassRole",
+        Effect : "Allow",
+        Action : [
           "iam:PassRole"
         ],
-        Resource: [
+        Resource : [
           "*"
         ]
       },
       {
-        Sid: "EcsUpdateService",
-        Effect: "Allow",
-        Action: [
+        Sid : "EcsUpdateService",
+        Effect : "Allow",
+        Action : [
           "ecs:UpdateService",
           "ecs:DescribeServices",
           "ecs:DescribeClusters",
@@ -65,7 +65,7 @@ resource "aws_iam_policy" "ecs" {
           "ecs:ListServices",
           "ecs:ListTaskDefinitions",
         ],
-        Resource: [
+        Resource : [
           "*"
         ]
       }

@@ -9,7 +9,7 @@ variable "environment" {
 
 variable "cidr" {
   description = "The CIDR block for the VPC"
-  default = "10.0.0.0/16"
+  default     = "10.0.0.0/16"
 }
 
 variable "private_subnets" {
@@ -56,15 +56,15 @@ variable "region" {
 
 variable "container_ingress_port" {
   description = "port to allow traffic in private security group"
-  type = number
+  type        = number
 }
 
 variable "pubpub_hostname" {
   description = "domain name where this will be served by ALB"
-  type = string
+  type        = string
 }
 
 variable "route53_zone_id" {
   description = "Zone ID of route53 zone that is already configured as the NS for your subdomain"
-  type = string
+  type        = string
 }
