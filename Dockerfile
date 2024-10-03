@@ -115,6 +115,9 @@ EXPOSE $PORT
 # Use production node environment by default.
 ENV NODE_ENV production
 
+# otherwise it will use the strange default docker hostname
+ENV HOSTNAME "0.0.0.0"
+
 ### Core
 
 FROM prod-setup AS next-app-core
