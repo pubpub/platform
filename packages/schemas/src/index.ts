@@ -45,7 +45,7 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 		case CoreSchemaType.Boolean:
 			return undefined;
 		case CoreSchemaType.Vector3:
-			return [];
+			return [0, 0, 0];
 		case CoreSchemaType.DateTime:
 			return undefined;
 		case CoreSchemaType.Email:
