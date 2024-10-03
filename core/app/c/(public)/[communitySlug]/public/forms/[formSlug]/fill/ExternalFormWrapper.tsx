@@ -24,6 +24,10 @@ import { cn } from "utils";
 import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
+import {
+	FormElementToggleContext,
+	useFormElementToggleContext,
+} from "~/app/components/forms/FormElementToggleContext";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
@@ -50,16 +54,18 @@ const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 const preparePayload = ({
 	formElements,
 	formValues,
+	toggleContext,
 }: {
 	formElements: PubPubForm["elements"];
 	formValues: FieldValues;
+	toggleContext: FormElementToggleContext;
 }) => {
 	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
 	for (const { slug } of formElements) {
-		if (slug) {
+		if (slug && toggleContext.isEnabled(slug)) {
 			payload[slug] = formValues[slug];
 		}
 	}
@@ -136,6 +142,7 @@ export const ExternalFormWrapper = ({
 		() => partition(elements, (e) => isButtonElement(e)),
 		[elements]
 	);
+	const toggleContext = useFormElementToggleContext();
 
 	const handleSubmit = useCallback(
 		async (
@@ -146,6 +153,7 @@ export const ExternalFormWrapper = ({
 			const pubValues = preparePayload({
 				formElements,
 				formValues,
+				toggleContext,
 			});
 			const submitButtonId = evt?.nativeEvent.submitter?.id;
 			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
@@ -170,7 +178,7 @@ export const ExternalFormWrapper = ({
 				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
-		[formElements, router, pathname, runUpdatePub, pub]
+		[formElements, router, pathname, runUpdatePub, pub, toggleContext]
 	);
 
 	const resolver = useMemo(

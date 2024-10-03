@@ -4,7 +4,7 @@ import type { PropsWithChildren } from "react";
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-type FormElementToggleContext = {
+export type FormElementToggleContext = {
 	isEnabled: (fieldSlug: string) => boolean;
 	toggle: (fieldSlug: string) => void;
 };

@@ -12,6 +12,7 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { FormElement } from "~/app/components/forms/FormElement";
+import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
@@ -250,22 +251,29 @@ export default async function FormPage({
 					<Completed element={submitElement} />
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
-						<ExternalFormWrapper
-							pub={pub}
-							elements={form.elements}
-							className="col-span-2 col-start-2"
+						<FormElementToggleProvider
+							fieldSlugs={form.elements.reduce(
+								(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
+								[]
+							)}
 						>
-							{form.elements.map((e) => (
-								<FormElement
-									key={e.elementId}
-									pubId={pub.id as PubsId}
-									element={e}
-									searchParams={searchParams}
-									communitySlug={params.communitySlug}
-									values={pub.values}
-								/>
-							))}
-						</ExternalFormWrapper>
+							<ExternalFormWrapper
+								pub={pub}
+								elements={form.elements}
+								className="col-span-2 col-start-2"
+							>
+								{form.elements.map((e) => (
+									<FormElement
+										key={e.elementId}
+										pubId={pub.id as PubsId}
+										element={e}
+										searchParams={searchParams}
+										communitySlug={params.communitySlug}
+										values={pub.values}
+									/>
+								))}
+							</ExternalFormWrapper>
+						</FormElementToggleProvider>
 					</div>
 				)}
 			</div>
