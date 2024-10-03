@@ -5,9 +5,9 @@
  * and the other is a form as in react-hook-form.
  */
 import type { ReactNode } from "react";
-import type { FieldValues } from "react-hook-form";
+import type { FieldPath, FieldValues } from "react-hook-form";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -194,7 +194,13 @@ export const ExternalFormWrapper = ({
 		resolver,
 		defaultValues: buildDefaultValues(formElements, pub.values),
 		shouldFocusError: false,
+		reValidateMode: "onBlur",
 	});
+
+	// Re-validate the form when fields are toggled on/off.
+	useEffect(() => {
+		formInstance.trigger(Object.keys(formInstance.formState.errors));
+	}, [formInstance, toggleContext]);
 
 	const isSubmitting = formInstance.formState.isSubmitting;
 
