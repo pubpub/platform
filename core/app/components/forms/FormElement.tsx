@@ -11,7 +11,7 @@ import type { Form } from "~/lib/server/form";
 import { CheckboxElement } from "./elements/CheckboxElement";
 import { ConfidenceElement } from "./elements/ConfidenceElement";
 import { DateElement } from "./elements/DateElement";
-import { FileUploadElement } from "./elements/FIleUploadElement";
+import { FileUploadElement } from "./elements/FileUploadElement";
 import { MemberSelectElement } from "./elements/MemberSelectElement";
 import { TextAreaElement } from "./elements/TextAreaElement";
 import { TextInputElement } from "./elements/TextInputElement";
