@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, PubTypesId } from "db/public";
 import { Action, CoreSchemaType, ElementType, MemberRole } from "db/public";
@@ -54,6 +55,24 @@ export default async function main(communityUUID: CommunitiesId) {
 				slug: `${slug}:member-id`,
 				communityId: communityUUID,
 				schemaName: CoreSchemaType.MemberId,
+			},
+			{
+				name: "ok?",
+				slug: `${slug}:ok`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.Boolean,
+			},
+			{
+				name: "File",
+				slug: `${slug}:file`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.FileUpload,
+			},
+			{
+				name: "Confidence",
+				slug: `${slug}:conf`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.Vector3,
 			},
 		])
 		.returning(["id", "slug", "name", "schemaName"])
@@ -362,7 +381,7 @@ export default async function main(communityUUID: CommunitiesId) {
 					fieldId: field.id,
 					order: idx + 1,
 					type: ElementType.pubfield,
-					label: field.name,
+					component: field.schemaName ? defaultComponent(field.schemaName) : undefined,
 				})),
 				{
 					formId: eb.selectFrom("form").select("id"),

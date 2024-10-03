@@ -27,7 +27,7 @@ export type InputElement = baseElement & {
 	type: ElementType.pubfield;
 	fieldId: PubFieldsId;
 	required: boolean | null;
-	label?: string | null;
+	label: never;
 	placeholder?: string | null;
 	help?: string | null;
 	element: never;
