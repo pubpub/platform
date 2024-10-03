@@ -92,6 +92,7 @@ module "service_core" {
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
+      { name = "HOSTNAME", value=var.HOSTNAME },
     ]
 
     secrets = [

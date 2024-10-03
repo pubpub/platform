@@ -62,6 +62,10 @@ variable "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY" {
   type = string
 }
 
+variable "HOSTNAME" {
+  description = "Hostname used by standalone Next app"
+}
+
 # TODO deprecate this in favor of a Terraformed bucket
 variable "ASSETS_BUCKET_NAME" {
   description = "Name of the S3 bucket to store assets"
