@@ -284,7 +284,9 @@
 	],
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"lint": "eslint **/*.tsx",
+		"lint:fix": "eslint --fix **/*.tsx",
 		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
