@@ -169,25 +169,28 @@ const CustomRenderer = (props: CustomRendererProps) => {
 				control={control}
 				name={fieldName}
 				defaultValue={fieldSchema.default ?? [0, 0, 0]}
-				render={({ field }) => (
-					<FormItem className="mb-6">
-						<FormLabel className="text-[0.9em]">{fieldSchema.title}</FormLabel>
-						<FormDescription
-							className="text-[0.8em]"
-							dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
-						/>
-						<FormControl>
-							<Confidence
-								{...field}
-								min={min}
-								max={max}
-								onValueChange={(event) => field.onChange(event)}
-								className="confidence"
+				render={({ field }) => {
+					const { onChange, ...fieldProps } = field;
+					return (
+						<FormItem className="mb-6">
+							<FormLabel className="text-[0.9em]">{fieldSchema.title}</FormLabel>
+							<FormDescription
+								className="text-[0.8em]"
+								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
 							/>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
+							<FormControl>
+								<Confidence
+									{...fieldProps}
+									min={min}
+									max={max}
+									onValueChange={onChange}
+									className="confidence"
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
 			/>
 		);
 	}
