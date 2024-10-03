@@ -1,5 +1,6 @@
 "use client";
 
+import { forwardRef } from "react";
 import dynamic from "next/dynamic";
 import { useFormContext } from "react-hook-form";
 
@@ -16,6 +17,13 @@ const Confidence = dynamic(
 		loading: () => <div>Loading...</div>,
 	}
 );
+
+// Workaround for forwarding refs to dynamic components
+// https://github.com/vercel/next.js/issues/4957#issuecomment-413841689
+const ForwardedRefConfidence = forwardRef<
+	React.ElementRef<typeof Confidence>,
+	React.ComponentPropsWithoutRef<typeof Confidence>
+>((props, ref) => <Confidence {...props} forwardedRef={ref} />);
 
 export const Vector3Element = ({ label, name }: ElementProps) => {
 	const { control } = useFormContext();
@@ -35,7 +43,7 @@ export const Vector3Element = ({ label, name }: ElementProps) => {
 					<FormItem className="mb-6">
 						<FormLabel className="text-[0.9em]">{label}</FormLabel>
 						<FormControl>
-							<Confidence
+							<ForwardedRefConfidence
 								{...fieldProps}
 								disabled={!isEnabled}
 								min={0}
