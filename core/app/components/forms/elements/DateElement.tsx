@@ -5,6 +5,7 @@ import { useFormContext } from "react-hook-form";
 
 import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
+import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mod.DatePicker), {

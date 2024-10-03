@@ -1,15 +1,18 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { sql } from "kysely";
 import { componentsBySchema } from "schemas";
 
 import type { CommunitiesId, CoreSchemaType, InputComponent, PubTypesId } from "db/public";
 import { logger } from "logger";
+import { assert, expect } from "utils";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { _getPubFields } from "~/lib/server/pubFields";
 
@@ -113,4 +116,8 @@ export const createForm = defineServerAction(async function createForm(
 		logger.error({ msg: "error creating form", error });
 		return { error: "Form creation failed" };
 	}
+
+	const community = await findCommunityBySlug();
+	assert(community);
+	redirect(`/c/${community.slug}/forms/${slug}/edit`);
 });

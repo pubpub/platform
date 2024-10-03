@@ -78,8 +78,14 @@ const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>
 type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
 
 export function PubEditorClient(props: Props) {
-	const runCreatePub = useServerAction(actions.createPub);
+	const runCreatePub = useServerAction(actions.createPubRecursive);
 	const runUpdatePub = useServerAction(actions.updatePub);
+	const availableStages = [
+		{ id: undefined, name: "No stage" },
+		...props.availableStages.map((s) => {
+			return { id: s.id, name: s.name };
+		}),
+	];
 
 	const path = usePathname();
 	const router = useRouter();
@@ -175,8 +181,6 @@ export function PubEditorClient(props: Props) {
 					});
 					closeForm();
 				}
-
-				break;
 			}
 			case "create": {
 				if (!pubTypeId) {
@@ -187,12 +191,14 @@ export function PubEditorClient(props: Props) {
 				}
 
 				const result = await runCreatePub({
-					pubId,
+					body: {
+						id: pubId,
+						pubTypeId: pubTypeId as PubTypesId,
+						stageId: stageId as StagesId,
+						values: enabledPubValues as Record<string, any>,
+					},
 					communityId: props.communityId,
-					parentId: props.parentId,
-					pubTypeId: pubTypeId as PubTypesId,
-					pubValues: enabledPubValues,
-					stageId: stageId as StagesId,
+					parent: props.parentId ? { id: props.parentId } : undefined,
 				});
 
 				if (didSucceed(result)) {
@@ -267,17 +273,21 @@ export function PubEditorClient(props: Props) {
 							<FormDescription>Select the stage you want the pub in</FormDescription>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button size="sm" variant="outline">
+									<Button
+										size="sm"
+										variant="outline"
+										data-testid="stage-selector"
+									>
 										{field.value
-											? props.availableStages.find(
+											? availableStages.find(
 													(stage) => stage.id === field.value
 												)?.name
-											: "Select Stage"}
+											: "No stage"}
 										<ChevronDown size="16" />
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
-									{props.availableStages.map((stage) => (
+									{availableStages.map((stage) => (
 										<DropdownMenuItem
 											key={stage.id}
 											onClick={() => {

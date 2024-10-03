@@ -87,7 +87,7 @@ export const createPubEditorSchemaFromPubFields = (
 
 	return Type.Object<{ pubTypeId: TString; stageId: TString }>({
 		pubTypeId: Type.String({ format: "uuid" }),
-		stageId: Type.String({ format: "uuid" }),
+		stageId: Type.Optional(Type.String({ format: "uuid" })),
 		...pubFieldSchemasBySlug,
 	});
 };

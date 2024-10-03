@@ -26,8 +26,10 @@
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
 		"test-run": "SKIP_VALIDATION=true vitest run --logHeapUsage",
+		"test-run-with-jobs": "pnpm exec concurrently \"pnpm --filter jobs dev\" \"pnpm --filter core test-run\" --success=first -k",
 		"type-check": "tsc --noEmit",
-		"type-check-watch": "tsc --watch"
+		"type-check-watch": "tsc --watch",
+		"start-standalone": "node server.js"
 	},
 	"files": [
 		".next",
