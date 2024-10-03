@@ -7,7 +7,9 @@
 		"dev": "cp .env.development ./node_modules/react-email/ && pnpm email dev -d src -p 3003",
 		"type-check": "tsc --noEmit",
 		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"lint": "eslint **/*.tsx",
+		"lint:fix": "eslint --fix **/*.tsx",
 		"export": "email export"
 	},
 	"devDependencies": {
