@@ -188,7 +188,6 @@ export const ExternalFormWrapper = ({
 				if (!isUpdating) {
 					newParams.set("pubId", pubId);
 				}
-				// todo: may have to check if updating or creating?
 				if (!autoSave && isComplete(formElements, pubValues)) {
 					const submitButtonId = evt?.nativeEvent.submitter?.id;
 					if (submitButtonId) {
