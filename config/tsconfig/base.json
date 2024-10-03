@@ -18,7 +18,8 @@
 		"incremental": true,
 		"allowJs": true,
 		"noEmit": true,
-		"noImplicitAny": true
+		"noImplicitAny": true,
+		"verbatimModuleSyntax": true
 	},
 	"exclude": ["node_modules", "build", "dist", ".next"]
 }
