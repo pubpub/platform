@@ -123,7 +123,7 @@ jobs:
                   task-definition: ${{ steps.task-def-service.outputs.task-definition }}
                   service: ${{ env.ECS_SERVICE }}
                   cluster: ${{ env.ECS_CLUSTER }}
-                  wait-for-service-stability: false
+                  wait-for-service-stability: true
 
             - name: Deploy Amazon ECS task definition including migrations
               id: deploy-service-and-migrations
@@ -134,3 +134,4 @@ jobs:
                   task-definition: ${{ steps.task-def-migration.outputs.task-definition }}
                   service: ${{ env.ECS_SERVICE }}
                   cluster: ${{ env.ECS_CLUSTER }}
+                  wait-for-service-stability: true
