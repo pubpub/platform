@@ -210,9 +210,9 @@ export default async function FormPage({
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
-	if (submitId && submitElement) {
-		if (pub) {
-			// TODO: figure out when this is only after a pub is created
+	// The post-submission page will only render once we have a pub
+	if (pub) {
+		if (submitId && submitElement) {
 			const renderWithPubContext = {
 				communityId: community.id,
 				recipient: memberWithUser,
@@ -224,23 +224,26 @@ export default async function FormPage({
 				submitElement,
 				renderWithPubContext
 			);
+		} else {
+			const renderWithPubContext = {
+				communityId: community.id,
+				recipient: memberWithUser,
+				communitySlug: params.communitySlug,
+				pub,
+				parentPub,
+			};
+			const elementsWithMarkdownContent = form.elements.filter(
+				(element) => element.element === StructuralFormElement.p
+			);
+			await Promise.all(
+				elementsWithMarkdownContent.map(async (element) => {
+					element.content = await renderElementMarkdownContent(
+						element,
+						renderWithPubContext
+					);
+				})
+			);
 		}
-	} else if (pub) {
-		const renderWithPubContext = {
-			communityId: community.id,
-			recipient: memberWithUser,
-			communitySlug: params.communitySlug,
-			pub,
-			parentPub,
-		};
-		const elementsWithMarkdownContent = form.elements.filter(
-			(element) => element.element === StructuralFormElement.p
-		);
-		await Promise.all(
-			elementsWithMarkdownContent.map(async (element) => {
-				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
-			})
-		);
 	}
 
 	const isUpdating = !!pub;

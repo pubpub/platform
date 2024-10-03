@@ -139,6 +139,8 @@ export const ExternalFormWrapper = ({
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.updatePub);
 	const runCreatePub = useServerAction(actions.createPubRecursive);
+	// Cache pubId
+	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => isButtonElement(e)),
@@ -165,14 +167,14 @@ export const ExternalFormWrapper = ({
 			let result;
 			if (isUpdating) {
 				result = await runUpdatePub({
-					pubId: pub.id as PubsId,
+					pubId: pubId,
 					pubValues,
 					stageId,
 				});
 			} else {
 				result = await runCreatePub({
 					body: {
-						id: pub.id as PubsId,
+						id: pubId,
 						pubTypeId: pub.pubTypeId as PubTypesId,
 						values: pubValues as Record<string, any>,
 						stageId: stageId,
@@ -184,7 +186,7 @@ export const ExternalFormWrapper = ({
 				const newParams = new URLSearchParams(params);
 				const currentTime = `${new Date().getTime()}`;
 				if (!isUpdating) {
-					newParams.set("pubId", pub.id);
+					newParams.set("pubId", pubId);
 				}
 				// todo: may have to check if updating or creating?
 				if (!autoSave && isComplete(formElements, pubValues)) {
