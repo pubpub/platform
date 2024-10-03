@@ -10,7 +10,7 @@ import { useFormBuilder } from "../FormBuilderContext";
 import { SubmissionSettings } from "../SubmissionSettings";
 import { isFieldInput } from "../types";
 import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
-import { InputElementConfigurationForm } from "./InputElementConfigurationForm";
+import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm";
 import { SelectAccess } from "./SelectAccess";
 import { SelectElement } from "./SelectElement";
 import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm";
@@ -50,7 +50,7 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 		case "editing":
 			const ConfigForm =
 				selectedElement && isFieldInput(selectedElement)
-					? InputElementConfigurationForm
+					? InputComponentConfigurationForm
 					: StructuralElementConfigurationForm;
 
 			return (

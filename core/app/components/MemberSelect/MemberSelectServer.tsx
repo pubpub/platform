@@ -3,7 +3,7 @@ import type { Communities, MembersId } from "db/public";
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { getMember } from "~/lib/server/member";
 import { getSuggestedUsers } from "~/lib/server/user";
-import { UserSelectClient } from "./UserSelectClient";
+import { MemberSelectClient } from "./MemberSelectClient";
 
 type Props = {
 	community: Communities;
@@ -19,15 +19,17 @@ type Props = {
 	queryParamName: string;
 	value?: MembersId;
 	allowPubFieldSubstitution?: boolean;
+	helpText?: string;
 };
 
-export async function UserSelectServer({
+export async function MemberSelectServer({
 	community,
 	fieldLabel,
 	fieldName,
 	query,
 	queryParamName,
 	value,
+	helpText,
 	allowPubFieldSubstitution = true,
 }: Props) {
 	let member: MemberSelectUserWithMembership | undefined | null;
@@ -47,7 +49,8 @@ export async function UserSelectServer({
 
 	if (!Boolean(query) && member === undefined) {
 		return (
-			<UserSelectClient
+			<MemberSelectClient
+				helpText={helpText}
 				community={community}
 				fieldLabel={fieldLabel}
 				fieldName={fieldName}
@@ -64,7 +67,8 @@ export async function UserSelectServer({
 	}).execute();
 
 	return (
-		<UserSelectClient
+		<MemberSelectClient
+			helpText={helpText}
 			community={community}
 			fieldLabel={fieldLabel}
 			fieldName={fieldName}

@@ -1,17 +1,24 @@
 "use client";
 
+import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
+import { checkboxConfigSchema } from "schemas";
 
 import { Checkbox } from "ui/checkbox";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const BooleanElement = ({ label, name }: ElementProps) => {
+export const CheckboxElement = ({ name, config }: ElementProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
+
+	Value.Default(checkboxConfigSchema, config);
+	if (!Value.Check(checkboxConfigSchema, config)) {
+		return null;
+	}
 
 	return (
 		<FormField
@@ -20,10 +27,15 @@ export const BooleanElement = ({ label, name }: ElementProps) => {
 			render={({ field }) => {
 				return (
 					<FormItem>
-						<div className="flex items-center gap-2">
+						<FormLabel className="flex">{config.groupLabel ?? name}</FormLabel>
+						<div className="flex items-end gap-x-2">
 							<FormControl>
 								<Checkbox
-									checked={Boolean(field.value)}
+									checked={
+										field.value != undefined
+											? Boolean(field.value)
+											: config.defaultValue
+									}
 									disabled={!isEnabled}
 									onCheckedChange={(change) => {
 										if (typeof change === "boolean") {
@@ -33,8 +45,9 @@ export const BooleanElement = ({ label, name }: ElementProps) => {
 									className="rounded"
 								/>
 							</FormControl>
-							<FormLabel>{label}</FormLabel>
+							<FormLabel>{config.checkboxLabel}</FormLabel>
 						</div>
+						<FormDescription>{config.help}</FormDescription>
 						<FormMessage />
 					</FormItem>
 				);

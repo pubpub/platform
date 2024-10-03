@@ -1,18 +1,28 @@
 "use client";
 
+import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
+import { textAreaConfigSchema } from "schemas";
 
-import type { InputProps } from "ui/input";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
+import type { TextareaProps } from "ui/textarea";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Textarea } from "ui/textarea";
 
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps) => {
+export const TextAreaElement = ({
+	name,
+	config,
+	schemaName,
+	...rest
+}: ElementProps & TextareaProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
+	if (!Value.Check(textAreaConfigSchema, config)) {
+		return null;
+	}
 	return (
 		<FormField
 			control={control}
@@ -21,9 +31,12 @@ export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps)
 				const { value, ...fieldRest } = field;
 				return (
 					<FormItem>
-						<FormLabel disabled={!isEnabled}>{label}</FormLabel>
+						<FormLabel disabled={!isEnabled}>{config.label ?? name}</FormLabel>{" "}
 						<FormControl>
-							<Input
+							<Textarea
+								maxLength={config.maxLength}
+								minLength={config.minLength}
+								placeholder={config.placeholder}
 								data-testid={name}
 								value={value ?? ""}
 								{...fieldRest}
@@ -31,6 +44,7 @@ export const TextElement = ({ label, name, ...rest }: ElementProps & InputProps)
 								disabled={!isEnabled}
 							/>
 						</FormControl>
+						<FormDescription>{config.help}</FormDescription>
 						<FormMessage />
 					</FormItem>
 				);
