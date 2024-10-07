@@ -107,7 +107,11 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 								const { description, icon: Icon } =
 									SCHEMA_TYPES_WITH_ICONS[schemaName];
 								return (
-									<SelectItem key={schemaName} value={schemaName}>
+									<SelectItem
+										data-testid={`select-${schemaName}`}
+										key={schemaName}
+										value={schemaName}
+									>
 										<div className="flex items-center gap-2">
 											<Icon className="w-4" />
 											<div className="flex flex-col items-start font-medium">
