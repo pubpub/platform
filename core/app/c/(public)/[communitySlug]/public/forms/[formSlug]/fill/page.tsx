@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { useMemo } from "react";
 import { notFound } from "next/navigation";
 
 import type { Communities, MembersId, PubsId, UsersId } from "db/public";
