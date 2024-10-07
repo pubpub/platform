@@ -5,7 +5,7 @@
  * and the other is a form as in react-hook-form.
  */
 import type { ReactNode } from "react";
-import type { FieldPath, FieldValues } from "react-hook-form";
+import type { FieldValues } from "react-hook-form";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
