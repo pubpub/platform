@@ -14,6 +14,8 @@ import {
 } from "ui/dropdown-menu";
 import { Ellipsis, History, ToyBrick } from "ui/icon";
 
+import { UnarchiveFormButton } from "~/app/components/FormBuilder/UnarchiveFormButton";
+
 export type TableForm = {
 	id: FormsId;
 	slug: string;
@@ -83,12 +85,6 @@ export const getFormTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
-				// TODO: remove this return so the actions column renders once archiving exists or
-				// there are other actions to take
-				return;
-				if (row.original.isArchived) {
-					return;
-				}
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -99,10 +95,17 @@ export const getFormTableColumns = () =>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="p-0">
 							<DropdownMenuItem asChild key={row.original.id}>
-								<ArchiveFormButton
-									className="w-full justify-start pl-3"
-									id={row.original.id}
-								/>
+								{row.original.isArchived ? (
+									<UnarchiveFormButton
+										className="w-full justify-start pl-3"
+										id={row.original.id}
+									/>
+								) : (
+									<ArchiveFormButton
+										className="w-full justify-start pl-3"
+										id={row.original.id}
+									/>
+								)}
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
