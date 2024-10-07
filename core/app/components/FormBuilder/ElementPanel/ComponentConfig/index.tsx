@@ -9,53 +9,38 @@ import { Skeleton } from "ui/skeleton";
 
 import type { ComponentConfigFormProps, InnerFormProps } from "./types.ts";
 
+const ALLOWED_PATHS = [
+	"Checkbox",
+	"ConfidenceInterval",
+	"DatePicker",
+	"FileUpload",
+	"MemberSelect",
+	"TextArea",
+	"TextInput",
+] as const;
+type AllowedPaths = (typeof ALLOWED_PATHS)[number];
+
+const toDynamic = (path: AllowedPaths): ComponentType<InnerFormProps> =>
+	// this dynamic import path needs to provide enough information for webpack/turbopack
+	// to be able to find it. The relative path and the extension are enough, but something like
+	// `import(path)` will not work.
+	dynamic(() => import(`./${path}.tsx`), {
+		ssr: false,
+		loading: () => <Skeleton className="h-full w-full" />,
+	});
+
+const EnumToPath = {
+	[InputComponent.checkbox]: toDynamic("Checkbox"),
+	[InputComponent.confidenceInterval]: toDynamic("ConfidenceInterval"),
+	[InputComponent.datePicker]: toDynamic("DatePicker"),
+	[InputComponent.fileUpload]: toDynamic("FileUpload"),
+	[InputComponent.memberSelect]: toDynamic("MemberSelect"),
+	[InputComponent.textArea]: toDynamic("TextArea"),
+	[InputComponent.textInput]: toDynamic("TextInput"),
+};
+
 export const ComponentConfig = ({ component, ...props }: ComponentConfigFormProps) => {
-	let ConfigForm: ComponentType<InnerFormProps>;
-	switch (component) {
-		case InputComponent.checkbox:
-			ConfigForm = dynamic(() => import("./Checkbox.tsx"), {
-				ssr: false,
-				loading: () => <Skeleton className="h-full w-full" />,
-			});
-			break;
-		case InputComponent.confidenceInterval:
-			ConfigForm = dynamic(() => import("./ConfidenceInterval.tsx"), {
-				ssr: false,
-				loading: () => <Skeleton className="h-full w-full" />,
-			});
-			break;
-		case InputComponent.datePicker:
-			ConfigForm = dynamic(() => import("./DatePicker.tsx"), {
-				ssr: false,
-				loading: () => <Skeleton className="h-full w-full" />,
-			});
-			break;
-		case InputComponent.fileUpload:
-			ConfigForm = dynamic(() => import("./FileUpload.tsx"), {
-				ssr: false,
-				loading: () => <Skeleton className="h-full w-full" />,
-			});
-			break;
-		case InputComponent.memberSelect:
-			ConfigForm = dynamic(() => import("./MemberSelect.tsx"), {
-				ssr: false,
-				loading: () => <Skeleton className="h-full w-full" />,
-			});
-			break;
-		case InputComponent.textArea:
-			ConfigForm = dynamic(() => import("./TextArea.tsx"), {
-				ssr: false,
-				loading: () => <Skeleton className="h-full w-full" />,
-			});
-			break;
-		case InputComponent.textInput:
-			ConfigForm = dynamic(() => import("./TextInput.tsx"), {
-				ssr: false,
-				loading: () => <Skeleton className="h-full w-full" />,
-			});
-			break;
-		default:
-			return null;
-	}
-	return <ConfigForm {...props} />;
+	const ConfigComponent = EnumToPath[component];
+
+	return <ConfigComponent {...props} />;
 };
