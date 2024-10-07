@@ -256,7 +256,7 @@ model Member {
   // admin status is ever removed.
   community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
-  user        User       @relation(fields: [userId], references: [id])
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now()) @updatedAt
@@ -279,7 +279,7 @@ enum MemberRole {
 model MemberGroup {
   id          String     @id @default(dbgenerated("gen_random_uuid()"))
   role        MemberRole @default(editor)
-  community   Community  @relation(fields: [communityId], references: [id])
+  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now()) @updatedAt
@@ -299,9 +299,9 @@ model Permission {
   // fields - if empty array, all fields
   // integrations - if empty array, all integrations
   // workflow actions? - can they move and claim?
-  member        Member?      @relation(fields: [memberId], references: [id])
+  member        Member?      @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberId      String?
-  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id])
+  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
@@ -437,7 +437,7 @@ model Form {
   name        String
   slug        String
   communityId String
-  community   Community      @relation(fields: [communityId], references: [id])
+  community   Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
   pubType     PubType        @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
   elements    FormElement[]
@@ -480,7 +480,7 @@ model FormElement {
   id        String                 @id @default(dbgenerated("gen_random_uuid()"))
   type      ElementType
   fieldId   String?
-  field     PubField?              @relation(fields: [fieldId], references: [id])
+  field     PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   formId    String
   order     Int?
   // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
@@ -490,8 +490,8 @@ model FormElement {
   config    Json?
   content   String?
   required  Boolean?
-  form      Form                   @relation(fields: [formId], references: [id])
-  stage     Stage?                 @relation(fields: [stageId], references: [id])
+  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stage     Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId   String?
 
   @@unique([type, label, formId])
