@@ -28,7 +28,7 @@ export class FieldsPage {
 
 	async selectFormat(format: CoreSchemaType) {
 		await this.formatBox.click();
-		await this.page.getByRole("option", { name: format }).click();
+		await this.page.getByTestId(`select-${format}`).click();
 	}
 
 	async addField(name: string, format: CoreSchemaType) {
