@@ -9,7 +9,7 @@ import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { componentConfigSchemas, componentsBySchema } from "schemas";
 
-import { InputComponent } from "db/src/public/InputComponent";
+import { CoreSchemaType, InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
@@ -21,6 +21,7 @@ import { Skeleton } from "ui/skeleton";
 import { Switch } from "ui/switch";
 import { Textarea } from "ui/textarea";
 
+import type { InputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
@@ -30,7 +31,7 @@ import { ComponentConfig } from "./ComponentConfig";
 type SchemaComponentData = {
 	name?: string;
 	placeholder?: string;
-	demoComponent?: () => JSX.Element;
+	demoComponent?: (props: { element: InputElement }) => JSX.Element;
 };
 
 const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.DatePicker), {
@@ -46,7 +47,14 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.textInput]: {
 		name: "Input",
 		placeholder: "For short text",
-		demoComponent: () => <Input placeholder="For short text" />,
+		demoComponent: ({ element }) => (
+			<Input
+				placeholder={
+					element.schemaName === CoreSchemaType.String ? "For short text" : "For numbers"
+				}
+				type={element.schemaName === CoreSchemaType.String ? "text" : "number"}
+			/>
+		),
 	},
 	[InputComponent.checkbox]: { name: "Checkbox", demoComponent: () => <Checkbox checked /> },
 	[InputComponent.datePicker]: {
@@ -68,10 +76,12 @@ const ComponentSelect = ({
 	components,
 	onChange,
 	value,
+	element,
 }: {
 	components: InputComponent[];
 	value: InputComponent;
 	onChange: (component: InputComponent) => void;
+	element: InputElement;
 }) => {
 	return (
 		<RadioGroup
@@ -84,7 +94,7 @@ const ComponentSelect = ({
 				return (
 					<RadioGroupCard key={c} value={c} className="flex h-[124px] w-full flex-col">
 						<div className="flex h-[88px] w-full items-center justify-center p-3">
-							{Component && <Component />}
+							{Component && <Component element={element} />}
 						</div>
 						<hr className="w-full" />
 						<div className="w-full text-center text-sm text-foreground">{name}</div>
@@ -154,6 +164,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 						<ComponentSelect
 							onChange={field.onChange}
 							value={field.value}
+							element={selectedElement}
 							components={allowedComponents}
 						/>
 					)}
