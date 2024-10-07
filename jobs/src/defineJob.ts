@@ -2,7 +2,7 @@ import type { JobHelpers } from "graphile-worker";
 
 import { logger as baseLogger } from "logger";
 
-import { Client } from "./clients";
+import type { Client } from "./clients";
 
 type Job<C extends Client, Payload, Output> = (
 	client: C,

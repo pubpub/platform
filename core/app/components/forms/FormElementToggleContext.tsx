@@ -1,17 +1,12 @@
 "use client";
 
-import {
-	createContext,
-	PropsWithChildren,
-	useCallback,
-	useContext,
-	useMemo,
-	useState,
-} from "react";
+import type { PropsWithChildren } from "react";
 
-type FormElementToggleContext = {
-	isEnabled: (field: string) => boolean;
-	toggle: (field: string) => void;
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
+
+export type FormElementToggleContext = {
+	isEnabled: (fieldSlug: string) => boolean;
+	toggle: (fieldSlug: string) => void;
 };
 
 const FormElementToggleContext = createContext<FormElementToggleContext>({
@@ -20,26 +15,26 @@ const FormElementToggleContext = createContext<FormElementToggleContext>({
 });
 
 type Props = PropsWithChildren<{
-	fields: string[];
+	fieldSlugs: string[];
 }>;
 
 export const FormElementToggleProvider = (props: Props) => {
-	const [enabledFields, setEnabledFields] = useState(new Set(props.fields));
+	const [enabledFields, setEnabledFields] = useState(new Set(props.fieldSlugs));
 
 	const isEnabled = useCallback(
-		(field: string) => {
-			return enabledFields.has(field);
+		(fieldSlug: string) => {
+			return enabledFields.has(fieldSlug);
 		},
 		[enabledFields]
 	);
 
 	const toggle = useCallback(
-		(field: string) => {
+		(fieldSlug: string) => {
 			const nextEnabledFields = new Set(enabledFields);
-			if (nextEnabledFields.has(field)) {
-				nextEnabledFields.delete(field);
+			if (nextEnabledFields.has(fieldSlug)) {
+				nextEnabledFields.delete(fieldSlug);
 			} else {
-				nextEnabledFields.add(field);
+				nextEnabledFields.add(fieldSlug);
 			}
 			setEnabledFields(nextEnabledFields);
 		},

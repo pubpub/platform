@@ -118,7 +118,7 @@ export async function PubEditor(props: PubEditorProps) {
 	}
 
 	return (
-		<FormElementToggleProvider fields={pubFields.map((pubField) => pubField.slug)}>
+		<FormElementToggleProvider fieldSlugs={pubFields.map((pubField) => pubField.slug)}>
 			{editor}
 		</FormElementToggleProvider>
 	);

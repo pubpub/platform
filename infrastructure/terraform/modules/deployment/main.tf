@@ -159,6 +159,7 @@ module "service_intg_submissions" {
   configuration = {
     environment = [
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
 
     secrets = [
@@ -192,6 +193,7 @@ module "service_intg_evaluations" {
   configuration = {
     environment = [
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
 
     secrets = [
@@ -209,7 +211,10 @@ module "service_bastion" {
   cluster_info = module.cluster.cluster_info
 
   repository_url = var.ecr_repository_urls.root
-  # TODO: add command
+  # Make bastion idle indefinitely, so we can ssh into it when needed
+  # If this is not here, the task will exit and try to restart immediately.
+  # TODO: Maybe there's a less hacky way to do this?
+  command = ["sh", "-c", "trap : TERM INT; sleep infinity & wait"]
 
   configuration = {
     environment = [
@@ -218,6 +223,7 @@ module "service_bastion" {
       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
       { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "PAGER", value = "less -S" },
     ]
 
