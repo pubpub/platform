@@ -1,12 +1,8 @@
-import { User } from "@pubpub/sdk";
+import type { User } from "@pubpub/sdk";
 
+import type { InstanceConfig } from "~/lib/types";
 import { client } from "~/lib/pubpub";
-import {
-	EvaluatorWhoAccepted,
-	EvaluatorWhoEvaluated,
-	EvaluatorWithInvite,
-	InstanceConfig,
-} from "~/lib/types";
+import { EvaluatorWhoAccepted, EvaluatorWhoEvaluated, EvaluatorWithInvite } from "~/lib/types";
 
 const DAYS_TO_ACCEPT_INVITE = 10;
 const DAYS_TO_REMIND_EVALUATOR = 5;

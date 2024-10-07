@@ -1,11 +1,12 @@
-import * as React from "react";
-import * as z from "zod";
+import type * as z from "zod";
 
+import * as React from "react";
+
+import type { AutoFormInputComponentProps } from "../types";
 import { FormControl, FormItem, FormLabel, FormMessage } from "../../form";
 import { RadioGroup, RadioGroupItem } from "../../radio-group";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
-import { AutoFormInputComponentProps } from "../types";
 import { getBaseSchema } from "../utils";
 
 export default function AutoFormRadioGroup({

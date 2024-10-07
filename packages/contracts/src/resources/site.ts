@@ -1,7 +1,8 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import { pubsSchema, pubTypesSchema, StagesId, stagesIdSchema, stagesSchema } from "db/public";
+import type { StagesId } from "db/public";
+import { pubsSchema, pubTypesSchema, stagesIdSchema, stagesSchema } from "db/public";
 
 import { CreatePubRequestBodyWithNulls, CreatePubRequestBodyWithNullsBase } from "./integrations";
 

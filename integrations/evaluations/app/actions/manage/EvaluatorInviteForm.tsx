@@ -4,7 +4,7 @@ import React, { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 
-import { GetPubResponseBody, User } from "@pubpub/sdk";
+import type { GetPubResponseBody, User } from "@pubpub/sdk";
 import { IntegrationAvatar } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
@@ -14,7 +14,8 @@ import { Calendar, Loader2, Plus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 import { useToast } from "ui/use-toast";
 
-import { EmailTemplate, Evaluator, hasUser, InstanceConfig, isInvited, isSaved } from "~/lib/types";
+import type { EmailTemplate, InstanceConfig } from "~/lib/types";
+import { Evaluator, hasUser, isInvited, isSaved } from "~/lib/types";
 import * as actions from "./actions";
 import { EvaluatorInviteFormInviteButton } from "./EvaluatorInviteFormInviteButton";
 import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
