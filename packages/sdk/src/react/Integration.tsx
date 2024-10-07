@@ -2,8 +2,9 @@ import * as React from "react";
 
 import { LocalStorageProvider } from "ui/hooks";
 
+import type { IntegrationProviderProps } from "./IntegrationProvider";
 import { IntegrationLayout } from "./IntegrationLayout";
-import { IntegrationProvider, IntegrationProviderProps } from "./IntegrationProvider";
+import { IntegrationProvider } from "./IntegrationProvider";
 
 export type IntegrationProps<T> = IntegrationProviderProps<T>;
 

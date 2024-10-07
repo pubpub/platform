@@ -1,9 +1,10 @@
 "use client";
 
+import type { JSONSchemaType } from "ajv";
+import type { Control, ControllerRenderProps } from "react-hook-form";
+
 import * as React from "react";
-// this import causes a cyclic dependency in pnpm but here we are
-import Ajv, { JSONSchemaType, JSONType } from "ajv";
-import { Control, ControllerRenderProps } from "react-hook-form";
+import Ajv from "ajv";
 
 import { GetPubTypeResponseBody } from "contracts";
 import { Checkbox } from "ui/checkbox";
@@ -14,8 +15,6 @@ import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 import { Textarea } from "ui/textarea";
 import { cn } from "utils";
-
-import type { PubValues } from "..";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
 type AnySchema = {};

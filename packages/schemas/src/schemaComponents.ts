@@ -1,4 +1,6 @@
-import { TObject, Type } from "@sinclair/typebox";
+import type { TObject } from "@sinclair/typebox";
+
+import { Type } from "@sinclair/typebox";
 
 import { CoreSchemaType, InputComponent } from "db/public";
 

@@ -1,11 +1,11 @@
 import * as React from "react";
 
+import type { AutoFormInputComponentProps } from "../types";
 import { DatePicker } from "../../date-picker";
 import { FormControl, FormItem, FormMessage } from "../../form";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
-import { AutoFormInputComponentProps } from "../types";
 
 export default function AutoFormDate({
 	label,

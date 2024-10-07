@@ -1,6 +1,5 @@
 import type { FieldArrayWithId } from "react-hook-form";
 
-import { ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Markdown from "react-markdown";

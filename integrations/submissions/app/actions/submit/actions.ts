@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 
-import { PubValues } from "@pubpub/sdk";
+import type { PubValues } from "@pubpub/sdk";
 
 import { getInstanceConfig } from "~/lib/instance";
 import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
