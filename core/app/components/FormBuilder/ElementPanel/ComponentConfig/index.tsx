@@ -39,8 +39,11 @@ const EnumToPath = {
 	[InputComponent.textInput]: toDynamic("TextInput"),
 };
 
-export const ComponentConfig = ({ component, ...props }: ComponentConfigFormProps) => {
-	const ConfigComponent = EnumToPath[component];
+export const ComponentConfig = <I extends InputComponent>({
+	component,
+	...props
+}: ComponentConfigFormProps<I>) => {
+	const ConfigComponent = EnumToPath[component] as ComponentType<InnerFormProps<I>>;
 
 	return <ConfigComponent {...props} />;
 };

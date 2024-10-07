@@ -1,9 +1,10 @@
+import type { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
 import type { InnerFormProps } from "./types";
 
-export default ({ form, schemaName }: InnerFormProps) => {
+export default ({ form, schemaName }: InnerFormProps<InputComponent.confidenceInterval>) => {
 	return (
 		<>
 			<FormField

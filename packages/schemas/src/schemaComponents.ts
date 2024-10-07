@@ -52,7 +52,7 @@ export const confidenceIntervalConfigSchema = Type.Object({
 	help: Type.Optional(Type.String()),
 });
 
-export const componentConfigSchemas: Record<InputComponent, TObject> = {
+export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
 	[InputComponent.textArea]: textAreaConfigSchema,
 	[InputComponent.textInput]: textInputConfigSchema,
@@ -60,4 +60,4 @@ export const componentConfigSchemas: Record<InputComponent, TObject> = {
 	[InputComponent.fileUpload]: fileUploadConfigSchema,
 	[InputComponent.memberSelect]: memberSelectConfigSchema,
 	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
-} as const;
+} as const satisfies Record<InputComponent, TObject>;
