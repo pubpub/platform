@@ -32,6 +32,8 @@ module "ecs_service" {
   # execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   # task_role_arn            = aws_iam_role.ecs_task_role.arn
 
+
+
   # TEMPLATE Container definition(s).
   container_definitions = merge({
 
@@ -65,6 +67,8 @@ module "ecs_service" {
       }]
 
       log_configuration = local.log_configuration
+
+      command = var.command
     }
     },
     {

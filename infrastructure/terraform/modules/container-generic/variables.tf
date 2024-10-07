@@ -92,3 +92,10 @@ variable "configuration" {
     }))
   })
 }
+
+variable "command" {
+  description = "Command to run when the container starts. Overrides the CMD specified by the Dockerfile"
+  # Empty array will just run default CMD defined in Dockerfile
+  default = []
+  type    = list(string)
+}
