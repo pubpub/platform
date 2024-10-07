@@ -1,8 +1,10 @@
 "use client";
 
-import { Control, useWatch } from "react-hook-form";
+import type { Control } from "react-hook-form";
 
-import { SuggestedMembersQuery } from "@pubpub/sdk";
+import { useWatch } from "react-hook-form";
+
+import type { SuggestedMembersQuery } from "@pubpub/sdk";
 import { Button } from "ui/button";
 import { FormControl, FormField, FormItem, FormMessage } from "ui/form";
 import { X } from "ui/icon";

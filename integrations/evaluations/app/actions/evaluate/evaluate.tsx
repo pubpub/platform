@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import { fullFormats } from "ajv-formats/dist/formats";
 import { useForm } from "react-hook-form";
 
-import { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
+import type { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
 import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
 import { Button } from "ui/button";
 import { Form } from "ui/form";
@@ -14,10 +14,11 @@ import { useLocalStorage } from "ui/hooks";
 import { Loader2 } from "ui/icon";
 import { useToast } from "ui/use-toast";
 
+import type { InstanceConfig } from "~/lib/types";
 import { Process } from "~/lib/components/Process";
 import { Research } from "~/lib/components/Research";
 import { getDeadline } from "~/lib/emails";
-import { EvaluatorWhoAccepted, InstanceConfig } from "~/lib/types";
+import { EvaluatorWhoAccepted } from "~/lib/types";
 import { submit, upload } from "./actions";
 
 type Props = {

@@ -93,7 +93,11 @@ export const FormElement = ({
 	}
 
 	if (input) {
-		return <FormElementToggle {...elementProps}>{input}</FormElementToggle>;
+		return element.required ? (
+			input
+		) : (
+			<FormElementToggle {...elementProps}>{input}</FormElementToggle>
+		);
 	}
 
 	logger.error({
