@@ -61,10 +61,6 @@ export default tseslint.config(
 			// "@typescript-eslint/no-misused-promises": [2, { checksVoidReturn: { attributes: false } }],
 			// "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
 			"no-console": "error",
-			"@typescript-eslint/consistent-type-imports": [
-				"error",
-				{ prefer: "type-imports", fixStyle: "separate-type-imports" },
-			],
 		},
 		languageOptions: {
 			parser: tseslint.parser,
