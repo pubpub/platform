@@ -395,19 +395,17 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
-	const pubFieldsForPubTypeObject = await getPubFields({
-		pubTypeId: body.pubTypeId as PubTypesId,
+	const pubFieldsForCommunityObject = await getPubFields({
+		communityId,
 	}).executeTakeFirst();
 
-	const pubFieldsForPubType = Object.values(pubFieldsForPubTypeObject?.fields ?? {});
+	const pubFieldsForCommunity = Object.values(pubFieldsForCommunityObject?.fields ?? {});
 
-	if (!pubFieldsForPubType?.length) {
-		throw new NotFoundError(
-			`No pub fields found for pub type ${body.pubTypeId}. This is likely because the pub type does not exist.`
-		);
+	if (!pubFieldsForCommunity?.length) {
+		throw new NotFoundError(`No pub fields found in community ${communityId}.`);
 	}
 
-	const filteredFields = pubFieldsForPubType.filter((field) => {
+	const filteredFields = pubFieldsForCommunity.filter((field) => {
 		const value = body.values[field.slug];
 		return Boolean(value);
 	});

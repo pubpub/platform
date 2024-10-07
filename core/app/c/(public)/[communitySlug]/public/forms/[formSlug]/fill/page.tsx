@@ -34,7 +34,7 @@ const NotFound = ({ children }: { children: ReactNode }) => {
 
 const Completed = ({ element }: { element: Form["elements"][number] | undefined }) => {
 	return (
-		<div className="flex w-full flex-col gap-2 pt-32 text-center">
+		<div data-testid="completed" className="flex w-full flex-col gap-2 pt-32 text-center">
 			{element ? (
 				<div
 					className="prose self-center text-center"
