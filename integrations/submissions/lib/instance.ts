@@ -1,5 +1,5 @@
+import type { InstanceConfig, InstanceState } from "./types";
 import { client } from "./pubpub";
-import { InstanceConfig, InstanceState } from "./types";
 
 export const getInstanceConfig = async (
 	instanceId: string
