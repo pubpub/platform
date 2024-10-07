@@ -92,3 +92,9 @@ variable "configuration" {
     }))
   })
 }
+
+variable "command" {
+  description = "Command to run when the container starts. Overrides the CMD specified by the Dockerfile"
+  default     = null
+  type        = string
+}

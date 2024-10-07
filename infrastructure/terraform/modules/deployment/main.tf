@@ -209,7 +209,10 @@ module "service_bastion" {
   cluster_info = module.cluster.cluster_info
 
   repository_url = var.ecr_repository_urls.root
-  # TODO: add command
+  # Make bastion idle indefinitely, so we can ssh into it when needed
+  # If this is not here, the task will exit and try to restart immediately.
+  # TODO: Maybe there's a less hacky way to do this?
+  command = "exec /bin/sh -c \"trap : TERM INT; sleep infinity & wait\""
 
   configuration = {
     environment = [
