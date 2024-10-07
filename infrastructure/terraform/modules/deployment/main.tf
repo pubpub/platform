@@ -165,6 +165,7 @@ module "service_intg_submissions" {
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
   }
 }
@@ -198,6 +199,7 @@ module "service_intg_evaluations" {
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
   }
 }
@@ -218,6 +220,7 @@ module "service_bastion" {
       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
       { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "PAGER", value = "less -S" },
     ]
 
