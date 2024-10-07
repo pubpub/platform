@@ -18,6 +18,7 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 
 import type { StagesId } from "db/public";
+import { useToast } from "ui/use-toast";
 import { expect } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
@@ -151,6 +152,7 @@ export const StageEditorGraph = () => {
 	const store = useStoreApi().getState();
 	const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+	const { toast } = useToast();
 
 	const onNodeContextMenu: NodeMouseHandler = (_, node) =>
 		store.addSelectedNodes([...selectedStages.map((stage) => stage.id), node.id]);
@@ -165,8 +167,13 @@ export const StageEditorGraph = () => {
 	);
 
 	const onNodesDelete = useCallback(
-		(nodes: Node[]) => {
-			deleteStages(nodes.map((node) => node.id as StagesId));
+		async (nodes: Node[]) => {
+			const formNames = await deleteStages(nodes.map((node) => node.id as StagesId));
+			// TODO: fix the grammar here if multiple stages are deleted
+			toast({
+				title: "Warning",
+				description: `The stage was deleted succesfully, but it was referenced by a submit button in the "${formNames}" form. You may wish to update that button.`,
+			});
 		},
 		[deleteStages]
 	);

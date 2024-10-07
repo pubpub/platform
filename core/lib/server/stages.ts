@@ -150,6 +150,7 @@ export const createStage = (props: NewStages) =>
 export const updateStage = (stageId: StagesId, props: StagesUpdate) =>
 	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId));
 
+// Returns the name of any forms where the submit button pointed to one of the deleted stages
 export const removeStages = (stageIds: StagesId[]) =>
 	autoRevalidate(
 		db
@@ -159,8 +160,15 @@ export const removeStages = (stageIds: StagesId[]) =>
 					.where("id", "in", stageIds as StagesId[])
 					.returning("id")
 			)
-			.deleteFrom("PubsInStages")
-			.where("stageId", "in", (eb) => eb.selectFrom("deleted_stages").select("id"))
+			.with("deleted_pub_connections", (db) =>
+				db
+					.deleteFrom("PubsInStages")
+					.where("stageId", "in", (eb) => eb.selectFrom("deleted_stages").select("id"))
+			)
+			.selectFrom("deleted_stages")
+			.innerJoin("form_elements", "form_elements.stageId", "deleted_stages.id")
+			.innerJoin("forms", "forms.id", "form_elements.formId")
+			.select("forms.name as formName")
 	);
 
 export const createMoveConstraint = (props: NewMoveConstraint) =>
