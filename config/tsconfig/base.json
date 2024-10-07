@@ -19,7 +19,8 @@
 		"allowJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"verbatimModuleSyntax": true
+		"verbatimModuleSyntax": true,
+		"strictBindCallApply": true
 	},
 	"exclude": ["node_modules", "build", "dist", ".next"]
 }
