@@ -2,15 +2,15 @@ variable "cluster_info" {
   description = "infrastructure values output from v7-cluster"
 
   type = object({
-    region = string
-    name = string
-    vpc_id = string
-    cluster_arn = string
-    environment = string
-    private_subnet_ids = list(string)
+    region                       = string
+    name                         = string
+    vpc_id                       = string
+    cluster_arn                  = string
+    environment                  = string
+    private_subnet_ids           = list(string)
     container_security_group_ids = list(string)
-    cloudwatch_log_group_name = string
-    lb_listener_arn = string
+    cloudwatch_log_group_name    = string
+    lb_listener_arn              = string
     # service_namespace_arn = string
   })
 }
@@ -21,25 +21,25 @@ variable "service_name" {
 
 variable "repository_url" {
   description = "url to the image repository (excluding tag)"
-  type = string
+  type        = string
 }
 variable "nginx_image" {
   description = "fully qualified nginx image to pull (including tag)"
-  type = string
-  default = null
+  type        = string
+  default     = null
 }
 
 variable "resources" {
   description = "resources available to this container service"
   type = object({
-    cpu = number
-    memory = number
+    cpu           = number
+    memory        = number
     desired_count = number
   })
 
   default = {
-    cpu = 512
-    memory = 1024
+    cpu           = 512
+    memory        = 1024
     desired_count = 1
   }
 }
@@ -47,8 +47,8 @@ variable "resources" {
 variable "init_containers" {
   description = "list of init container specs to run before starting"
   type = list(object({
-    name = string
-    image = string
+    name    = string
+    image   = string
     command = list(string)
   }))
   default = []
@@ -56,7 +56,7 @@ variable "init_containers" {
 
 variable "listener" {
   description = "specification of the inbound network addressibility"
-  default = null
+  default     = null
 
   type = object({
     service_name = string
@@ -72,8 +72,8 @@ variable "listener" {
     rule_priority = number
 
     from_port = number
-    to_port = number
-    protocol = string
+    to_port   = number
+    protocol  = string
   })
 }
 
@@ -83,12 +83,19 @@ variable "configuration" {
   type = object({
 
     environment = list(object({
-      name = string
+      name  = string
       value = string
     }))
     secrets = list(object({
-      name = string
+      name      = string
       valueFrom = string
     }))
   })
+}
+
+variable "command" {
+  description = "Command to run when the container starts. Overrides the CMD specified by the Dockerfile"
+  # Empty array will just run default CMD defined in Dockerfile
+  default = []
+  type    = list(string)
 }

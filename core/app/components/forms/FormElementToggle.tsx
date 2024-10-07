@@ -1,9 +1,10 @@
 "use client";
 
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 import { Toggle } from "ui/toggle";
 
+import type { ElementProps } from "./types";
 import { useFormElementToggleContext } from "./FormElementToggleContext";
 
 type Props = PropsWithChildren<ElementProps>;

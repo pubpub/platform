@@ -32,8 +32,8 @@ resource "aws_secretsmanager_secret" "honeycomb_api_key" {
 
 # generate password and make it accessible through aws secrets manager
 resource "random_password" "rds_db_password" {
-  length           = 16
-  special          = false
+  length  = 16
+  special = false
 }
 
 resource "aws_secretsmanager_secret" "rds_db_password" {
@@ -48,7 +48,7 @@ resource "aws_secretsmanager_secret_version" "password" {
 # network config
 resource "aws_db_subnet_group" "ecs_dbs" {
   name       = "${var.cluster_info.name}_ecs_db_${var.cluster_info.environment}"
-  subnet_ids         = var.cluster_info.private_subnet_ids
+  subnet_ids = var.cluster_info.private_subnet_ids
 
   tags = {
     Name = "subnet group for ECS RDS instances"
@@ -56,31 +56,31 @@ resource "aws_db_subnet_group" "ecs_dbs" {
 }
 
 resource "aws_security_group" "ecs_tasks_rds_instances" {
-  name = "${var.cluster_info.name}-sg-rds-${var.cluster_info.environment}"
+  name   = "${var.cluster_info.name}-sg-rds-${var.cluster_info.environment}"
   vpc_id = var.cluster_info.vpc_id
 
   ingress {
-    protocol = "tcp"
-    from_port = 5432
-    to_port = 5432
+    protocol        = "tcp"
+    from_port       = 5432
+    to_port         = 5432
     security_groups = var.cluster_info.container_security_group_ids
   }
 }
 
 # the actual database instance
 resource "aws_db_instance" "core_postgres" {
-  identifier                  = "${var.cluster_info.name}-core-postgres-${var.cluster_info.environment}"
-  allocated_storage           = 20
-  db_name                     = "${var.cluster_info.name}_${var.cluster_info.environment}_core_postgres"
-  db_subnet_group_name        = aws_db_subnet_group.ecs_dbs.name
-  engine                      = "postgres"
-  engine_version              = "14"
-  instance_class              = "db.t3.small"
-  vpc_security_group_ids      = [aws_security_group.ecs_tasks_rds_instances.id]
-  username                    = var.cluster_info.name
-  password                    = random_password.rds_db_password.result
-  parameter_group_name        = "default.postgres14"
-  skip_final_snapshot         = true
+  identifier             = "${var.cluster_info.name}-core-postgres-${var.cluster_info.environment}"
+  allocated_storage      = 20
+  db_name                = "${var.cluster_info.name}_${var.cluster_info.environment}_core_postgres"
+  db_subnet_group_name   = aws_db_subnet_group.ecs_dbs.name
+  engine                 = "postgres"
+  engine_version         = "14"
+  instance_class         = "db.t3.small"
+  vpc_security_group_ids = [aws_security_group.ecs_tasks_rds_instances.id]
+  username               = var.cluster_info.name
+  password               = random_password.rds_db_password.result
+  parameter_group_name   = "default.postgres14"
+  skip_final_snapshot    = true
 }
 
 # see https://github.com/terraform-aws-modules/terraform-aws-s3-bucket/tree/v4.1.0
@@ -88,11 +88,14 @@ module "assets_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
 
-  block_public_acls = false
-  bucket        = var.assets_bucket_url_name
+  block_public_acls        = false
+  block_public_policy      = false
+  ignore_public_acls       = false
+  restrict_public_buckets  = false
+  bucket                   = var.assets_bucket_url_name
   control_object_ownership = true
   object_ownership         = "ObjectWriter"
-  acl = "public-read"
+  acl                      = "public-read"
 }
 
 # TODO: replace this with a role-based system for ECS containers
@@ -107,14 +110,14 @@ resource "aws_iam_access_key" "asset_uploader" {
 
 
 resource "aws_iam_policy" "asset_uploads" {
-  name = "${var.cluster_info.name}-${var.cluster_info.environment}-asset-uploader"
+  name        = "${var.cluster_info.name}-${var.cluster_info.environment}-asset-uploader"
   description = "Allow "
-  policy      = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = "s3:PutObject"
+        Effect   = "Allow"
+        Action   = "s3:PutObject"
         Resource = "${module.assets_bucket.s3_bucket_arn}/*"
       }
     ]

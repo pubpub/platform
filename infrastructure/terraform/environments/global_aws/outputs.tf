@@ -4,7 +4,7 @@
 # put these creds in github actions secrets config
 output "github_actions_user_credential" {
   value = {
-    id = aws_iam_access_key.github_actions.id
+    id     = aws_iam_access_key.github_actions.id
     secret = aws_iam_access_key.github_actions.secret
   }
 

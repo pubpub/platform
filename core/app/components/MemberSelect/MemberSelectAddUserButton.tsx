@@ -4,14 +4,14 @@ import type { Communities } from "db/public";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-import { UserSelectAddUserForm } from "./UserSelectAddUserForm";
+import { MemberSelectAddUserForm } from "./MemberSelectAddUserForm";
 
 type Props = {
 	community: Communities;
 	email: string;
 };
 
-export const UserSelectAddUserButton = (props: Props) => {
+export const MemberSelectAddUserButton = (props: Props) => {
 	const [open, setOpen] = useState(false);
 
 	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -29,7 +29,7 @@ export const UserSelectAddUserButton = (props: Props) => {
 				<span>Member not found</span>
 				<p className="text-xs font-normal">Click to add a user to your community</p>
 			</Button>
-			{open && <UserSelectAddUserForm email={props.email} community={props.community} />}
+			{open && <MemberSelectAddUserForm email={props.email} community={props.community} />}
 		</>
 	);
 };

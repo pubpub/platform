@@ -1,6 +1,6 @@
 "use client";
 
-import type { Static, TSchema } from "@sinclair/typebox";
+import type { TSchema } from "@sinclair/typebox";
 
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
@@ -21,9 +21,12 @@ import { Skeleton } from "ui/skeleton";
 import { Switch } from "ui/switch";
 import { Textarea } from "ui/textarea";
 
+import type { InputElement } from "../types";
+import type { ConfigFormData } from "./ComponentConfig/types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
-import { InputElement, isFieldInput } from "../types";
+import { isFieldInput } from "../types";
+import { ComponentConfig } from "./ComponentConfig";
 
 type SchemaComponentData = {
 	name?: string;
@@ -102,44 +105,44 @@ const ComponentSelect = ({
 	);
 };
 
+const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
+
 type Props = {
 	index: number;
 };
 
-const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
-
-export const InputElementConfigurationForm = ({ index }: Props) => {
+export const InputComponentConfigurationForm = ({ index }: Props) => {
 	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
 	if (!selectedElement || !isFieldInput(selectedElement)) {
 		return null;
 	}
+	const { schemaName } = selectedElement;
+	const allowedComponents = componentsBySchema[schemaName];
 
-	const components = componentsBySchema[selectedElement.schemaName];
-	// const configSchema = componentConfigSchemas[selectedElement.schemaName]
-
-	const schema = useMemo(
-		() =>
-			Type.Object({
-				label: Nullable(Type.String({ default: "" })),
+	const form = useForm<ConfigFormData>({
+		// Dynamically set the resolver so that the schema can update based on the selected component
+		resolver: (values, context, options) => {
+			const schema = Type.Object({
 				required: Nullable(Type.Boolean({ default: true })),
 				component: Type.Enum(InputComponent),
-				//config: configSchema,
-			}),
-		[]
-	);
-
-	const resolver = useMemo(() => typeboxResolver(schema), [schema]);
-
-	const form = useForm<Static<typeof schema>>({
-		resolver,
+				config: componentConfigSchemas[values.component],
+			});
+			const createResolver = typeboxResolver(schema);
+			return createResolver(values, context, options);
+		},
 		defaultValues: selectedElement,
 	});
 
-	const onSubmit = (values: Static<typeof schema>) => {
+	const component = form.watch("component");
+
+	const onSubmit = (values: ConfigFormData) => {
 		update(index, { ...selectedElement, ...values, updated: true, configured: true });
 		dispatch({ eventName: "save" });
 	};
-
+	const configForm = useMemo(
+		() => <ComponentConfig schemaName={schemaName} form={form} component={component} />,
+		[component, schemaName]
+	);
 	return (
 		<Form {...form}>
 			<form
@@ -161,43 +164,32 @@ export const InputElementConfigurationForm = ({ index }: Props) => {
 						<ComponentSelect
 							onChange={field.onChange}
 							value={field.value}
-							components={components}
 							element={selectedElement}
+							components={allowedComponents}
 						/>
 					)}
 				/>
-				<FormField
-					control={form.control}
-					name="label"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Label</FormLabel>
-							<FormControl>
-								<Input {...field} placeholder="Tells the user what to input" />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				{/* TODO: Autoform style rendering of config  */}
+				{configForm}
 				<hr className="mt-4" />
-				<FormField
-					control={form.control}
-					name="required"
-					render={({ field }) => (
-						<FormItem className="mb-auto mt-1 flex items-center">
-							<FormControl>
-								<Switch
-									className="mr-2 data-[state=checked]:bg-emerald-400"
-									checked={field.value ?? undefined}
-									onCheckedChange={field.onChange}
-								/>
-							</FormControl>
-							<FormLabel className="!mt-0">Mark as required</FormLabel>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				{component !== InputComponent.checkbox && (
+					<FormField
+						control={form.control}
+						name="required"
+						render={({ field }) => (
+							<FormItem className="mb-auto mt-1 flex items-center">
+								<FormControl>
+									<Switch
+										className="mr-2 data-[state=checked]:bg-emerald-400"
+										checked={field.value ?? undefined}
+										onCheckedChange={field.onChange}
+									/>
+								</FormControl>
+								<FormLabel className="!mt-0">Mark as required</FormLabel>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				)}
 				<div className="grid grid-cols-2 gap-2">
 					<Button
 						type="button"

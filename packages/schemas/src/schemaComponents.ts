@@ -1,4 +1,4 @@
-import { TAnySchema, Type } from "@sinclair/typebox";
+import { TObject, Type } from "@sinclair/typebox";
 
 import { CoreSchemaType, InputComponent } from "db/public";
 
@@ -19,12 +19,48 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.Null]: [],
 } as const;
 
-export const componentConfigSchemas: Record<InputComponent, TAnySchema> = {
-	[InputComponent.checkbox]: Type.Object({}),
-	[InputComponent.textArea]: Type.Object({}),
-	[InputComponent.textInput]: Type.Object({}),
-	[InputComponent.datePicker]: Type.Object({}),
-	[InputComponent.fileUpload]: Type.Object({}),
-	[InputComponent.memberSelect]: Type.Object({}),
-	[InputComponent.confidenceInterval]: Type.Object({}),
+export const checkboxConfigSchema = Type.Object({
+	checkboxLabel: Type.Optional(Type.String()),
+	groupLabel: Type.Optional(Type.String()),
+	defaultValue: Type.Boolean({ default: false }),
+	help: Type.Optional(Type.String()),
+});
+
+export const textAreaConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	placeholder: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	maxLength: Type.Optional(Type.Integer()),
+	minLength: Type.Optional(Type.Integer()),
+});
+export const textInputConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	placeholder: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const datePickerConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const fileUploadConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const memberSelectConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+export const confidenceIntervalConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
+
+export const componentConfigSchemas: Record<InputComponent, TObject> = {
+	[InputComponent.checkbox]: checkboxConfigSchema,
+	[InputComponent.textArea]: textAreaConfigSchema,
+	[InputComponent.textInput]: textInputConfigSchema,
+	[InputComponent.datePicker]: datePickerConfigSchema,
+	[InputComponent.fileUpload]: fileUploadConfigSchema,
+	[InputComponent.memberSelect]: memberSelectConfigSchema,
+	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
 } as const;
