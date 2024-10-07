@@ -56,7 +56,12 @@ export const FormElement = ({
 	let input: JSX.Element | undefined;
 
 	if (component === InputComponent.textInput) {
-		input = <TextInputElement {...elementProps} />;
+		input = (
+			<TextInputElement
+				{...elementProps}
+				type={schemaName === CoreSchemaType.Number ? "number" : undefined}
+			/>
+		);
 	} else if (component === InputComponent.textArea) {
 		input = <TextAreaElement {...elementProps} />;
 	} else if (component === InputComponent.checkbox) {
@@ -79,8 +84,6 @@ export const FormElement = ({
 				communitySlug={communitySlug}
 			/>
 		);
-	} else if (schemaName === CoreSchemaType.Number) {
-		input = <TextInputElement {...elementProps} type="number" />;
 	} else if (schemaName === CoreSchemaType.NumericArray) {
 		// TODO: support NumericArray
 		return null;
