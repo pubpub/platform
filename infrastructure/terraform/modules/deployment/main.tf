@@ -159,13 +159,13 @@ module "service_intg_submissions" {
   configuration = {
     environment = [
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
 
     secrets = [
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
-      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
   }
 }
@@ -193,13 +193,13 @@ module "service_intg_evaluations" {
   configuration = {
     environment = [
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
 
     secrets = [
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
-      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
   }
 }
