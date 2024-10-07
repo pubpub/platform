@@ -214,7 +214,7 @@ module "service_bastion" {
   # Make bastion idle indefinitely, so we can ssh into it when needed
   # If this is not here, the task will exit and try to restart immediately.
   # TODO: Maybe there's a less hacky way to do this?
-  command = "exec /bin/sh -c \"trap : TERM INT; sleep infinity & wait\""
+  command = ["exec", "/bin/sh", "-c", "\"trap : TERM INT; sleep infinity & wait\""]
 
   configuration = {
     environment = [
