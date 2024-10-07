@@ -98,7 +98,9 @@ const renderElementMarkdownContent = async (
 	if (element.content === null) {
 		return "";
 	}
-	return renderMarkdownWithPub(element.content, renderWithPubContext);
+	return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
+		() => element.content
+	);
 };
 
 export async function generateMetadata({
