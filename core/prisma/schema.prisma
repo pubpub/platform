@@ -153,15 +153,18 @@ model PubField {
 }
 
 enum CoreSchemaType {
-  String
   Boolean
-  Vector3
   DateTime
   Email
-  URL
-  MemberId
   FileUpload
+  MemberId
   Null
+  Number
+  NumericArray
+  String
+  StringArray
+  URL
+  Vector3
 }
 
 model PubFieldSchema {
