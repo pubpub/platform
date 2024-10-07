@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
@@ -22,7 +23,13 @@ const FileUpload = dynamic(
 	}
 );
 
-export const FileUploadElement = ({ pubId, name, config }: ElementProps & { pubId: PubsId }) => {
+export const FileUploadElement = ({
+	pubId: propsPubId,
+	name,
+	config,
+}: ElementProps & { pubId: PubsId }) => {
+	// Cache the pubId which might be coming from a server side generated randomUuid() that changes
+	const [pubId, _] = useState(propsPubId);
 	const signedUploadUrl = (fileName: string) => {
 		return upload(pubId, fileName);
 	};
