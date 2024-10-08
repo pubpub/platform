@@ -121,6 +121,7 @@ export default ({ form }: InnerFormProps) => {
 								<Input
 									type="number"
 									{...field}
+									defaultValue={0}
 									onChange={(e) => {
 										field.onChange(e.target.valueAsNumber);
 									}}
