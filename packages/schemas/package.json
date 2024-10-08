@@ -5,6 +5,7 @@
 	"module": "dist/schemas.esm.js",
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit",
 		"test": "vitest run"
 	},

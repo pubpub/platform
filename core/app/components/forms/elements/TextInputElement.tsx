@@ -40,6 +40,13 @@ export const TextInputElement = ({
 								{...fieldRest}
 								{...rest}
 								disabled={!isEnabled}
+								onChange={(e) => {
+									field.onChange(
+										rest.type === "number"
+											? Number(e.target.value)
+											: e.target.value
+									);
+								}}
 							/>
 						</FormControl>
 						<FormDescription>{config.help}</FormDescription>

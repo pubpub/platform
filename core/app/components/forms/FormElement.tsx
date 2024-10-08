@@ -2,7 +2,7 @@ import { defaultComponent } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
-import { ElementType, InputComponent } from "db/public";
+import { CoreSchemaType, ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
@@ -56,24 +56,23 @@ export const FormElement = ({
 	let input: JSX.Element | undefined;
 
 	if (component === InputComponent.textInput) {
-		input = <TextInputElement {...elementProps} />;
-	}
-	if (component === InputComponent.textArea) {
+		input = (
+			<TextInputElement
+				{...elementProps}
+				type={schemaName === CoreSchemaType.Number ? "number" : undefined}
+			/>
+		);
+	} else if (component === InputComponent.textArea) {
 		input = <TextAreaElement {...elementProps} />;
-	}
-	if (component === InputComponent.checkbox) {
+	} else if (component === InputComponent.checkbox) {
 		input = <CheckboxElement {...elementProps} />;
-	}
-	if (component === InputComponent.fileUpload) {
+	} else if (component === InputComponent.fileUpload) {
 		input = <FileUploadElement pubId={pubId} {...elementProps} />;
-	}
-	if (component === InputComponent.confidenceInterval) {
+	} else if (component === InputComponent.confidenceInterval) {
 		input = <ConfidenceElement {...elementProps} />;
-	}
-	if (component === InputComponent.datePicker) {
+	} else if (component === InputComponent.datePicker) {
 		input = <DateElement {...elementProps} />;
-	}
-	if (component === InputComponent.memberSelect) {
+	} else if (component === InputComponent.memberSelect) {
 		const userId = values[element.slug!] as MembersId | undefined;
 		input = (
 			<MemberSelectElement
@@ -85,10 +84,20 @@ export const FormElement = ({
 				communitySlug={communitySlug}
 			/>
 		);
+	} else if (schemaName === CoreSchemaType.NumericArray) {
+		// TODO: support NumericArray
+		return null;
+	} else if (schemaName === CoreSchemaType.StringArray) {
+		// TODO: support StringArray
+		return null;
 	}
 
 	if (input) {
-		return <FormElementToggle {...elementProps}>{input}</FormElementToggle>;
+		return element.required ? (
+			input
+		) : (
+			<FormElementToggle {...elementProps}>{input}</FormElementToggle>
+		);
 	}
 
 	logger.error({

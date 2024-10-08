@@ -1,4 +1,6 @@
-import { TObject, Type } from "@sinclair/typebox";
+import type { TObject } from "@sinclair/typebox";
+
+import { Type } from "@sinclair/typebox";
 
 import { CoreSchemaType, InputComponent } from "db/public";
 
@@ -8,6 +10,9 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
 	[CoreSchemaType.String]: [InputComponent.textInput, InputComponent.textArea],
 	[CoreSchemaType.DateTime]: [InputComponent.datePicker],
+	[CoreSchemaType.Number]: [InputComponent.textInput],
+	[CoreSchemaType.NumericArray]: [],
+	[CoreSchemaType.StringArray]: [],
 	[CoreSchemaType.Email]: [InputComponent.textInput],
 	[CoreSchemaType.FileUpload]: [InputComponent.fileUpload],
 	[CoreSchemaType.URL]: [InputComponent.textInput],
