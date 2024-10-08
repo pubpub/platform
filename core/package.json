@@ -117,7 +117,7 @@
 	},
 	"devDependencies": {
 		"@hookform/devtools": "^4.3.1",
-		"@playwright/test": "^1.43.1",
+		"@playwright/test": "^1.48.0",
 		"@preconstruct/next": "^4.0.0",
 		"@prisma/generator-helper": "^5.14.0",
 		"@prisma/internals": "^5.14.0",
