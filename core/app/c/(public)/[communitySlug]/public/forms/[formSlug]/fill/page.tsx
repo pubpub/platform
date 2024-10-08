@@ -256,7 +256,7 @@ export default async function FormPage({
 						<FormElementToggleProvider
 							fieldSlugs={form.elements.reduce(
 								(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
-								[]
+								[] as string[]
 							)}
 						>
 							<ExternalFormWrapper

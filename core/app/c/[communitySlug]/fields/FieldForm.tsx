@@ -61,21 +61,13 @@ type FormValues = z.infer<typeof schema>;
 const DEFAULT_VALUES = {
 	id: "",
 	name: "",
-	schemaName: null,
+	// can't be `null` and `isRelation: false` by default so should be undefined
+	schemaName: undefined,
 	slug: "",
 	isRelation: false,
-};
+} as const;
 
-type FormType = UseFormReturn<
-	{
-		name: string;
-		schemaName: CoreSchemaType | null;
-		slug: string;
-		isRelation: boolean;
-	},
-	any,
-	undefined
->;
+type FormType = UseFormReturn<FormValues, any, undefined>;
 
 const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: boolean }) => {
 	const schemaTypes = Object.values(CoreSchemaType).filter((v) => v !== CoreSchemaType.Null);
@@ -243,10 +235,17 @@ export const FieldForm = ({
 }: {
 	defaultValues?: {
 		name: string;
-		schemaName: CoreSchemaType | null;
 		slug: string;
-		isRelation: boolean;
-	};
+	} & (
+		| {
+				schemaName: CoreSchemaType;
+				isRelation: false;
+		  }
+		| {
+				schemaName: null;
+				isRelation: true;
+		  }
+	);
 	onSubmitSuccess: () => void;
 	children: ReactNode;
 }) => {
@@ -293,7 +292,7 @@ export const FieldForm = ({
 		handleCreate({ ...values, slug, schemaName });
 	};
 
-	const form = useForm({
+	const form = useForm<FormValues>({
 		defaultValues: defaultValues ?? DEFAULT_VALUES,
 		resolver: zodResolver(schema),
 	});

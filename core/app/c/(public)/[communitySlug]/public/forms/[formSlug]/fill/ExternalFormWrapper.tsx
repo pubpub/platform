@@ -10,7 +10,7 @@ import type { FieldValues } from "react-hook-form";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
@@ -151,7 +151,7 @@ export const ExternalFormWrapper = ({
 	const handleSubmit = useCallback(
 		async (
 			formValues: FieldValues,
-			evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
+			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
 			const pubValues = preparePayload({
@@ -190,7 +190,7 @@ export const ExternalFormWrapper = ({
 		[formElements, toggleContext]
 	);
 
-	const formInstance = useForm({
+	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
 		resolver,
 		defaultValues: buildDefaultValues(formElements, pub.values),
 		shouldFocusError: false,
@@ -205,7 +205,7 @@ export const ExternalFormWrapper = ({
 	const isSubmitting = formInstance.formState.isSubmitting;
 
 	const handleAutoSave = useCallback(
-		(values: FieldValues, evt: React.BaseSyntheticEvent<SubmitEvent> | undefined) => {
+		(values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
 			// Don't auto save while editing the user ID field. the query params
 			// will clash and it will be a bad time :(
 			const { name } = evt?.target as HTMLInputElement;
