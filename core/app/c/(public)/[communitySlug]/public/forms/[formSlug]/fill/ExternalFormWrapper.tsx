@@ -4,13 +4,14 @@
  * Note: we have two "form"s at play here: one is the Form specific to PubPub (renamed to PubPubForm)
  * and the other is a form as in react-hook-form.
  */
+import type { Static } from "@sinclair/typebox";
 import type { ReactNode } from "react";
 import type { FieldValues } from "react-hook-form";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Static, Type } from "@sinclair/typebox";
+import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
@@ -24,6 +25,7 @@ import { cn } from "utils";
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
+import type { DefinitelyHas } from "~/lib/types";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
@@ -125,6 +127,12 @@ const createSchemaFromElements = (
 	);
 };
 
+const isSubmitEvent = (
+	e?: React.BaseSyntheticEvent
+): e is React.BaseSyntheticEvent<DefinitelyHas<SubmitEvent, "submitter">> => {
+	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter;
+};
+
 export const ExternalFormWrapper = ({
 	pub,
 	elements,
@@ -159,7 +167,7 @@ export const ExternalFormWrapper = ({
 				formValues,
 				toggleContext,
 			});
-			const submitButtonId = evt?.nativeEvent.submitter?.id;
+			const submitButtonId = isSubmitEvent(evt) ? evt?.nativeEvent.submitter?.id : null;
 			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
 			const stageId = submitButtonConfig?.stageId ?? undefined;
 			const result = await runUpdatePub({
@@ -171,7 +179,6 @@ export const ExternalFormWrapper = ({
 				const newParams = new URLSearchParams(params);
 				const currentTime = `${new Date().getTime()}`;
 				if (!autoSave && isComplete(formElements, pubValues)) {
-					const submitButtonId = evt?.nativeEvent.submitter?.id;
 					if (submitButtonId) {
 						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
 					}
