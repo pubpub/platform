@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
+import type { MaybeHas } from "~/lib/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { slugifyString } from "~/lib/string";
@@ -228,24 +229,14 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 	);
 };
 
+export type DefaultFieldFormValues = MaybeHas<FormValues, "id">;
+
 export const FieldForm = ({
 	defaultValues,
 	onSubmitSuccess,
 	children,
 }: {
-	defaultValues?: {
-		name: string;
-		slug: string;
-	} & (
-		| {
-				schemaName: CoreSchemaType;
-				isRelation: false;
-		  }
-		| {
-				schemaName: null;
-				isRelation: true;
-		  }
-	);
+	defaultValues?: DefaultFieldFormValues;
 	onSubmitSuccess: () => void;
 	children: ReactNode;
 }) => {
