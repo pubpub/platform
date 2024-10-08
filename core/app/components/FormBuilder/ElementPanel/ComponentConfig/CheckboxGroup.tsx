@@ -77,18 +77,21 @@ export default ({ form }: InnerFormProps) => {
 					</FormItem>
 				)}
 			/>
-			<FormField
-				control={form.control}
-				name="config.min"
-				render={({ field }) => (
-					<FormItem className="mt-2">
-						<div className="grid grid-cols-2 gap-2">
+			<div className="grid grid-cols-2 gap-2">
+				<FormField
+					control={form.control}
+					name="config.userShouldSelect"
+					render={({ field }) => (
+						<FormItem>
 							<div className="grid-rows-auto grid gap-2">
 								<FormLabel>User Should Select</FormLabel>
 								<FormControl>
-									<Select>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
 										<SelectTrigger>
-											<SelectValue defaultValue={MinMaxChoices.AtLeast} />
+											<SelectValue placeholder="Select" />
 										</SelectTrigger>
 										<SelectContent>
 											<SelectGroup>
@@ -104,15 +107,30 @@ export default ({ form }: InnerFormProps) => {
 									</Select>
 								</FormControl>
 							</div>
-							<div className="grid-rows-auto grid gap-2">
-								<FormLabel>Checkboxes</FormLabel>
-								<Input type="number" />
-							</div>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<FormField
+					control={form.control}
+					name="config.numCheckboxes"
+					render={({ field }) => (
+						<div className="grid-rows-auto grid gap-2">
+							<FormLabel>Checkboxes</FormLabel>
+							<FormControl>
+								<Input
+									type="number"
+									{...field}
+									onChange={(e) => {
+										field.onChange(e.target.valueAsNumber);
+									}}
+								/>
+							</FormControl>
+							<FormMessage />
 						</div>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
+					)}
+				/>
+			</div>
 		</div>
 	);
 };

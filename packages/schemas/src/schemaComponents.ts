@@ -69,6 +69,8 @@ export const multivalueConfigSchema = Type.Object({
 	help: Type.Optional(Type.String()),
 	values: Type.Array(Type.String()),
 	includeOther: Type.Optional(Type.Boolean()),
+	userShouldSelect: Type.Optional(Type.String()),
+	numCheckboxes: Type.Optional(Type.Number()),
 });
 
 export const componentConfigSchemas: Record<InputComponent, TObject> = {
