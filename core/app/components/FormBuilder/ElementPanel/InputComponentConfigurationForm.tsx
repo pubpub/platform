@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { ImagePlus } from "ui/icon";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
-import { RadioGroup, RadioGroupCard, RadioGroupItem } from "ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import {
 	Select,
 	SelectContent,
@@ -152,30 +152,39 @@ const ComponentSelect = ({
 	element: InputElement;
 }) => {
 	return (
-		<RadioGroup
-			className="grid grid-cols-2 gap-3"
-			defaultValue={value}
-			onValueChange={onChange}
-		>
+		<div className="grid grid-cols-2 gap-3">
 			{components.map((c) => {
 				const { name, demoComponent: Component } = componentInfo[c];
 				return (
-					<RadioGroupCard
-						key={c}
-						value={c}
-						className="flex h-[124px] w-full flex-col justify-between"
-					>
-						<div className="flex h-[88px] w-full items-center justify-center p-3">
-							{Component && <Component element={element} />}
+					<div key={c}>
+						{/* We use regular input instead of a RadioGroup here because the RadioGroup
+						renders buttons, and we cannot render buttons inside of buttons. Some of the demo components
+						need to render buttons. */}
+						<input
+							id={`component-${c}`}
+							name="component"
+							type="radio"
+							className="peer sr-only"
+							defaultChecked={value === c}
+							onChange={() => {
+								onChange(c);
+							}}
+						/>
+						<div className="flex h-[124px] w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
+							<label className="cursor-pointer" htmlFor={`component-${c}`}>
+								<div className="flex h-[88px] w-full items-center justify-center p-3">
+									{Component && <Component element={element} />}
+								</div>
+								<hr className="w-full" />
+								<div className="w-full py-2 text-center text-sm text-foreground">
+									{name}
+								</div>
+							</label>
 						</div>
-						<hr className="w-full" />
-						<div className="w-full py-2 text-center text-sm text-foreground">
-							{name}
-						</div>
-					</RadioGroupCard>
+					</div>
 				);
 			})}
-		</RadioGroup>
+		</div>
 	);
 };
 
