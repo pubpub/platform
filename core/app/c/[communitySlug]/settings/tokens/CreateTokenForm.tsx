@@ -58,8 +58,6 @@ export const createTokenFormSchema = apiAccessTokensInitializerSchema
 export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
 export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
 
-// import { apiAccessTokensInitializerSchema } from "db/public";
-
 export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
 	const form = useForm<CreateTokenFormSchema>({
 		resolver: zodResolver(createTokenFormSchema),

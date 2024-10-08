@@ -7,7 +7,7 @@
 import type { ReactNode } from "react";
 import type { FieldValues } from "react-hook-form";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -21,10 +21,12 @@ import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
 import { cn } from "utils";
 
+import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
+import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
+import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
-import { PubValues } from "~/lib/server";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";
@@ -50,16 +52,18 @@ const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 const preparePayload = ({
 	formElements,
 	formValues,
+	toggleContext,
 }: {
 	formElements: PubPubForm["elements"];
 	formValues: FieldValues;
+	toggleContext: FormElementToggleContext;
 }) => {
 	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
 	for (const { slug } of formElements) {
-		if (slug) {
+		if (slug && toggleContext.isEnabled(slug)) {
 			payload[slug] = formValues[slug];
 		}
 	}
@@ -83,12 +87,18 @@ const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValu
 	return defaultValues;
 };
 
-const createSchemaFromElements = (elements: PubPubForm["elements"]) => {
+const createSchemaFromElements = (
+	elements: PubPubForm["elements"],
+	toggleContext: FormElementToggleContext
+) => {
 	return Type.Object(
 		Object.fromEntries(
 			elements
-				// only add pubfields to the schema
-				.filter((e) => e.type === ElementType.pubfield)
+				// only add enabled pubfields to the schema
+				.filter(
+					(e) =>
+						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
+				)
 				.map(({ slug, schemaName }) => {
 					if (!schemaName) {
 						return [slug, undefined];
@@ -136,6 +146,7 @@ export const ExternalFormWrapper = ({
 		() => partition(elements, (e) => isButtonElement(e)),
 		[elements]
 	);
+	const toggleContext = useFormElementToggleContext();
 
 	const handleSubmit = useCallback(
 		async (
@@ -146,6 +157,7 @@ export const ExternalFormWrapper = ({
 			const pubValues = preparePayload({
 				formElements,
 				formValues,
+				toggleContext,
 			});
 			const submitButtonId = evt?.nativeEvent.submitter?.id;
 			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
@@ -170,19 +182,25 @@ export const ExternalFormWrapper = ({
 				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
-		[formElements, router, pathname, runUpdatePub, pub]
+		[formElements, router, pathname, runUpdatePub, pub, toggleContext]
 	);
 
 	const resolver = useMemo(
-		() => typeboxResolver(createSchemaFromElements(formElements)),
-		[formElements]
+		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
+		[formElements, toggleContext]
 	);
 
 	const formInstance = useForm({
 		resolver,
 		defaultValues: buildDefaultValues(formElements, pub.values),
 		shouldFocusError: false,
+		reValidateMode: "onBlur",
 	});
+
+	// Re-validate the form when fields are toggled on/off.
+	useEffect(() => {
+		formInstance.trigger(Object.keys(formInstance.formState.errors));
+	}, [formInstance, toggleContext]);
 
 	const isSubmitting = formInstance.formState.isSubmitting;
 

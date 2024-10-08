@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
-import { SafeUser } from "@pubpub/sdk";
+import type { SafeUser } from "@pubpub/sdk";
 import { expect } from "utils";
 
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";

@@ -10,85 +10,26 @@ import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
+import { createPubRecursiveNew } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
-export const createPub = defineServerAction(async function createPub({
-	communityId,
-	stageId,
-	pubTypeId,
-	pubValues,
-	path,
-	parentId,
-	pubId,
-}: {
-	communityId: CommunitiesId;
-	stageId: StagesId;
-	pubTypeId: PubTypesId;
-	pubValues: PubValues;
-	path?: string | null;
-	parentId?: PubsId;
-	pubId?: PubsId;
-}) {
+export const createPubRecursive = defineServerAction(async function createPubRecursive(
+	...[props]: Parameters<typeof createPubRecursiveNew>
+) {
 	const { user } = await getLoginData();
 	if (!user) {
 		throw new Error("Not logged in");
 	}
 
-	if (!isCommunityAdmin(user, { id: communityId })) {
+	if (!isCommunityAdmin(user, { id: props.communityId })) {
 		return {
 			error: "You need to be an admin",
 		};
 	}
-
-	const pubValueEntries = Object.entries(pubValues);
-
 	try {
-		const query = db
-			.with("new_pub", (db) =>
-				db
-					.insertInto("pubs")
-					.values({
-						id: pubId,
-						communityId: communityId,
-						pubTypeId: pubTypeId,
-						parentId: parentId,
-					})
-					.returning("id")
-			)
-			.with("stage_create", (db) =>
-				db.insertInto("PubsInStages").values((eb) => ({
-					pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-					stageId,
-				}))
-			);
-
-		await autoRevalidate(
-			// Running an `insertInto` with an empty array results in a SQL syntax
-			// error. I was not able to find a way to generate the insert into
-			// statement only if the array has on or more values. So I extracted the
-			// CTEs into a partial query builder above, then conditionally attach the
-			// insertInto if there are values, otherwise perform a null select to
-			// produce valid SQL.
-			pubValueEntries.length > 0
-				? query.insertInto("pub_values").values((eb) =>
-						pubValueEntries.map(([pubFieldSlug, pubValue]) => ({
-							pubId: eb.selectFrom("new_pub").select("new_pub.id"),
-							value: JSON.stringify(pubValue),
-							fieldId: eb
-								.selectFrom("pub_fields")
-								.where("pub_fields.slug", "=", pubFieldSlug)
-								.select("pub_fields.id"),
-						}))
-					)
-				: query.selectFrom("new_pub").select([])
-		).execute();
-
-		if (path) {
-			revalidatePath(path);
-		}
-
+		await createPubRecursiveNew(props);
 		return {
 			success: true,
 			report: `Successfully created a new Pub`,
@@ -145,18 +86,19 @@ export const _updatePub = async ({
 		const existingPubFieldValues = await autoCache(
 			trx
 				.selectFrom("pub_fields")
-				.leftJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+				.leftJoin("pub_values", (join) =>
+					join
+						.onRef("pub_values.fieldId", "=", "pub_fields.id")
+						.on("pub_values.pubId", "=", pubId)
+				)
 				.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-				.distinctOn("pub_fields.id")
-				.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+				.where("pub_fields.isRelation", "=", false)
 				.select([
 					"pub_values.id as pubValueId",
-					"pub_values.pubId",
 					"pub_fields.slug",
 					"pub_fields.name",
 					"pub_fields.schemaName",
 				])
-				.where("pub_fields.isRelation", "=", false)
 		).execute();
 
 		const validated = validatePubValuesBySchemaName({
@@ -180,9 +122,7 @@ export const _updatePub = async ({
 						Object.entries(pubValues).map(([pubFieldSlug, pubValue]) => ({
 							id:
 								existingPubFieldValues.find(
-									(pubFieldValue) =>
-										pubFieldValue.slug === pubFieldSlug &&
-										pubFieldValue.pubId === pubId
+									(pubFieldValue) => pubFieldValue.slug === pubFieldSlug
 								)?.pubValueId ?? undefined,
 							pubId,
 							value: JSON.stringify(pubValue),

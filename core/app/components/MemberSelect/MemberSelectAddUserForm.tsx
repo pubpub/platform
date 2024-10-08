@@ -27,7 +27,7 @@ const addUserFormSchema = z.object({
 	lastName: z.string().optional(),
 });
 
-export const UserSelectAddUserForm = ({ email, community }: Props) => {
+export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 	const [isPending, startTransition] = useTransition();
 	const runCreateUserWithMembership = useServerAction(createUserWithMembership);
 

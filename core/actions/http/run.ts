@@ -6,8 +6,8 @@ import type { PubsId } from "db/public";
 import { logger } from "logger";
 
 import type { action } from "./action";
+import type { PubValues } from "~/lib/server";
 import { _updatePub } from "~/app/components/pubs/PubEditor/actions";
-import { PubValues } from "~/lib/server";
 import { defineRun } from "../types";
 
 const findNestedStructure = (json: unknown, path: string) => {

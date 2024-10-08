@@ -2,16 +2,20 @@
 	"name": "jobs",
 	"version": "0.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
-		"start": "tsx -r ./src/tracing.ts ./src/index.ts",
+		"start": "tsx --import ./src/tracing.ts ./src/index.ts",
 		"dev": "dotenv -e .env.local -e .env.development tsx ./src/index.ts | pino-pretty",
 		"format": "prettier --check . --ignore-path ../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../.gitignore",
 		"type-check": "tsc --noEmit"
 	},
 	"files": [
 		"src"
 	],
 	"dependencies": {
+		"zod": "catalog:",
+		"react": "catalog:react18",
 		"@honeycombio/opentelemetry-node": "catalog:",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@pubpub/sdk": "workspace:*",

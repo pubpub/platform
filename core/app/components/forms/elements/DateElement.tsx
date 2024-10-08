@@ -1,10 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
+import { datePickerConfigSchema } from "schemas";
 
-import { FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
+import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mod.DatePicker), {
@@ -13,10 +16,14 @@ const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mo
 	loading: () => <div>Loading...</div>,
 });
 
-export const DateElement = ({ label, name }: ElementProps) => {
+export const DateElement = ({ name, config }: ElementProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
+
+	if (!Value.Check(datePickerConfigSchema, config)) {
+		return null;
+	}
 
 	return (
 		<FormField
@@ -24,12 +31,13 @@ export const DateElement = ({ label, name }: ElementProps) => {
 			control={control}
 			render={({ field }) => (
 				<FormItem className="grid gap-2">
-					<FormLabel>{label}</FormLabel>
+					<FormLabel>{config.label ?? name}</FormLabel>
 					<DatePicker
 						disabled={!isEnabled}
-						date={field.value}
+						date={field.value ?? new Date()}
 						setDate={(date) => field.onChange(date)}
 					/>
+					<FormDescription>{config.help}</FormDescription>
 					<FormMessage />
 				</FormItem>
 			)}

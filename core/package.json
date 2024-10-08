@@ -22,12 +22,15 @@
 		"prisma": "dotenv -e .env.local -e .env.development prisma",
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
 		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"start": "next start",
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
 		"test-run": "SKIP_VALIDATION=true vitest run --logHeapUsage",
+		"test-run-with-jobs": "pnpm exec concurrently \"pnpm --filter jobs dev\" \"pnpm --filter core test-run\" --success=first -k",
 		"type-check": "tsc --noEmit",
-		"type-check-watch": "tsc --watch"
+		"type-check-watch": "tsc --watch",
+		"start-standalone": "node server.js"
 	},
 	"files": [
 		".next",

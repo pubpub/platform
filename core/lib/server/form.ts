@@ -1,5 +1,6 @@
 import type { QueryCreator } from "kysely";
 
+import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type { CommunitiesId, FormsId, MembersId, PublicSchema, PubsId, UsersId } from "db/public";
@@ -33,12 +34,12 @@ export const getForm = (
 						.selectFrom("form_elements")
 						.leftJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
 						.whereRef("form_elements.formId", "=", "forms.id")
-						.select([
+						.select((eb) => [
 							"form_elements.id as elementId",
 							"form_elements.type",
 							"form_elements.fieldId",
 							"form_elements.component",
-							"form_elements.config",
+							eb.fn.coalesce("form_elements.config", sql`'{}'`).as("config"),
 							"form_elements.order",
 							"form_elements.label",
 							"form_elements.content",

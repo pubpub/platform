@@ -1,15 +1,20 @@
+import { defaultComponent } from "schemas";
+
 import type { GetPubResponseBody } from "contracts";
 import type { MembersId, PubsId } from "db/public";
-import { CoreSchemaType, ElementType } from "db/public";
+import { CoreSchemaType, ElementType, InputComponent } from "db/public";
+import { logger } from "logger";
 import { expect } from "utils";
 
+import type { ElementProps } from "./types";
 import type { Form } from "~/lib/server/form";
-import { BooleanElement } from "./elements/BooleanElement";
-import { Vector3Element } from "./elements/ConfidenceElement";
+import { CheckboxElement } from "./elements/CheckboxElement";
+import { ConfidenceElement } from "./elements/ConfidenceElement";
 import { DateElement } from "./elements/DateElement";
-import { FileUploadElement } from "./elements/FIleUploadElement";
-import { TextElement } from "./elements/TextElement";
-import { UserIdSelect } from "./elements/UserSelectElement";
+import { FileUploadElement } from "./elements/FileUploadElement";
+import { MemberSelectElement } from "./elements/MemberSelectElement";
+import { TextAreaElement } from "./elements/TextAreaElement";
+import { TextInputElement } from "./elements/TextInputElement";
 import { FormElementToggle } from "./FormElementToggle";
 
 export type FormElementProps = {
@@ -20,9 +25,6 @@ export type FormElementProps = {
 	values: GetPubResponseBody["values"];
 };
 
-/**
- * Renders every CoreSchemaType EXCEPT MemberId!
- */
 export const FormElement = ({
 	pubId,
 	element,
@@ -30,7 +32,8 @@ export const FormElement = ({
 	communitySlug,
 	values,
 }: FormElementProps) => {
-	const { schemaName, label: labelProp, slug } = element;
+	const { component: componentProp, slug, schemaName, config } = element;
+	const component = componentProp ?? (schemaName && defaultComponent(schemaName));
 	if (!slug) {
 		if (element.type === ElementType.structural) {
 			return (
@@ -44,38 +47,36 @@ export const FormElement = ({
 		return null;
 	}
 
-	if (!schemaName) {
+	if (!schemaName || !component) {
 		return null;
 	}
 
-	const elementProps = { label: labelProp ?? "", name: slug };
+	const elementProps: ElementProps = { name: slug, schemaName, config };
 
 	let input: JSX.Element | undefined;
 
-	if (
-		schemaName === CoreSchemaType.String ||
-		schemaName === CoreSchemaType.Email ||
-		schemaName === CoreSchemaType.URL
-	) {
-		input = <TextElement {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.Boolean) {
-		input = <BooleanElement {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.FileUpload) {
+	if (component === InputComponent.textInput) {
+		input = (
+			<TextInputElement
+				{...elementProps}
+				type={schemaName === CoreSchemaType.Number ? "number" : undefined}
+			/>
+		);
+	} else if (component === InputComponent.textArea) {
+		input = <TextAreaElement {...elementProps} />;
+	} else if (component === InputComponent.checkbox) {
+		input = <CheckboxElement {...elementProps} />;
+	} else if (component === InputComponent.fileUpload) {
 		input = <FileUploadElement pubId={pubId} {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.Vector3) {
-		input = <Vector3Element {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.DateTime) {
+	} else if (component === InputComponent.confidenceInterval) {
+		input = <ConfidenceElement {...elementProps} />;
+	} else if (component === InputComponent.datePicker) {
 		input = <DateElement {...elementProps} />;
-	}
-	if (schemaName === CoreSchemaType.MemberId) {
+	} else if (component === InputComponent.memberSelect) {
 		const userId = values[element.slug!] as MembersId | undefined;
 		input = (
-			<UserIdSelect
-				label={elementProps.label}
+			<MemberSelectElement
+				config={elementProps.config}
 				name={elementProps.name}
 				id={element.elementId}
 				searchParams={searchParams}
@@ -83,11 +84,27 @@ export const FormElement = ({
 				communitySlug={communitySlug}
 			/>
 		);
+	} else if (schemaName === CoreSchemaType.NumericArray) {
+		// TODO: support NumericArray
+		return null;
+	} else if (schemaName === CoreSchemaType.StringArray) {
+		// TODO: support StringArray
+		return null;
 	}
 
 	if (input) {
-		return <FormElementToggle {...elementProps}>{input}</FormElementToggle>;
+		return element.required ? (
+			input
+		) : (
+			<FormElementToggle {...elementProps}>{input}</FormElementToggle>
+		);
 	}
 
-	throw new Error(`Invalid CoreSchemaType ${schemaName}`);
+	logger.error({
+		msg: `Encountered unknown component when rendering form element`,
+		component,
+		element,
+		pubId,
+	});
+	return null;
 };

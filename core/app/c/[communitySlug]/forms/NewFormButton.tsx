@@ -53,7 +53,6 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 
 	const runCreateForm = useServerAction(createForm);
 	const community = useCommunity();
-	const router = useRouter();
 
 	const onSubmit = async ({ pubTypeName, name, slug }: z.infer<typeof schema>) => {
 		const pubTypeId = pubTypes.find((type) => type.name === pubTypeName)?.id;
@@ -72,7 +71,6 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 				description: "Form created",
 			});
 			form.reset();
-			router.push(`/c/${community.slug}/forms/${slug}/edit`);
 			setIsOpen(false);
 		}
 	};

@@ -1,9 +1,10 @@
 "use client";
 
+import type { JSONSchemaType } from "ajv";
+import type { Control, ControllerRenderProps } from "react-hook-form";
+
 import * as React from "react";
-// this import causes a cyclic dependency in pnpm but here we are
-import Ajv, { JSONSchemaType, JSONType } from "ajv";
-import { Control, ControllerRenderProps } from "react-hook-form";
+import Ajv from "ajv";
 
 import { GetPubTypeResponseBody } from "contracts";
 import { Checkbox } from "ui/checkbox";
@@ -14,8 +15,6 @@ import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 import { Textarea } from "ui/textarea";
 import { cn } from "utils";
-
-import type { PubValues } from "..";
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
 type AnySchema = {};
@@ -169,25 +168,28 @@ const CustomRenderer = (props: CustomRendererProps) => {
 				control={control}
 				name={fieldName}
 				defaultValue={fieldSchema.default ?? [0, 0, 0]}
-				render={({ field }) => (
-					<FormItem className="mb-6">
-						<FormLabel className="text-[0.9em]">{fieldSchema.title}</FormLabel>
-						<FormDescription
-							className="text-[0.8em]"
-							dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
-						/>
-						<FormControl>
-							<Confidence
-								{...field}
-								min={min}
-								max={max}
-								onValueChange={(event) => field.onChange(event)}
-								className="confidence"
+				render={({ field }) => {
+					const { onChange, ...fieldProps } = field;
+					return (
+						<FormItem className="mb-6">
+							<FormLabel className="text-[0.9em]">{fieldSchema.title}</FormLabel>
+							<FormDescription
+								className="text-[0.8em]"
+								dangerouslySetInnerHTML={{ __html: fieldSchema.description }}
 							/>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
+							<FormControl>
+								<Confidence
+									{...fieldProps}
+									min={min}
+									max={max}
+									onValueChange={onChange}
+									className="confidence"
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
 			/>
 		);
 	}

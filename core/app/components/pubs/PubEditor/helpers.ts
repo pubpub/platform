@@ -1,12 +1,14 @@
-import { TObject, TString, Type } from "@sinclair/typebox";
+import type { TObject, TString } from "@sinclair/typebox";
+
+import { Type } from "@sinclair/typebox";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { FormElementsId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 
+import type { PubValues } from "~/lib/server";
 import type { Form } from "~/lib/server/form";
-import { PubValues } from "~/lib/server";
-import { PubField } from "~/lib/types";
+import type { PubField } from "~/lib/types";
 
 // Function to create an element object based on pubType parameter
 export function makeFormElementDefFromPubFields(
@@ -43,7 +45,7 @@ export const createPubEditorDefaultValuesFromPubFields = (
 			(acc, { slug }) => {
 				acc[slug] =
 					pubFields.find((e) => e.slug === slug)?.schemaName === CoreSchemaType.DateTime
-						? new Date(pubValues[slug] as string)
+						? pubValues[slug] && new Date(pubValues[slug] as string)
 						: pubValues[slug];
 				return acc;
 			},
@@ -85,7 +87,7 @@ export const createPubEditorSchemaFromPubFields = (
 
 	return Type.Object<{ pubTypeId: TString; stageId: TString }>({
 		pubTypeId: Type.String({ format: "uuid" }),
-		stageId: Type.String({ format: "uuid" }),
+		stageId: Type.Optional(Type.String({ format: "uuid" })),
 		...pubFieldSchemasBySlug,
 	});
 };

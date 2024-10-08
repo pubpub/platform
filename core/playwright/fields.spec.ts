@@ -15,6 +15,7 @@ test.describe.configure({ mode: "serial" });
 let page: Page;
 
 test.beforeAll(async ({ browser }) => {
+	test.setTimeout(30_000);
 	page = await browser.newPage();
 	await login({ page });
 	await createCommunity({
@@ -32,9 +33,13 @@ test.describe("Creating a field", () => {
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
 		await fieldsPage.addFieldsOfEachType();
-		for (const schema of Object.values(CoreSchemaType).filter(
-			(s) => s !== CoreSchemaType.Null
-		)) {
+		for (const [index, schema] of Object.values(CoreSchemaType)
+			.filter((s) => s !== CoreSchemaType.Null)
+			.entries()) {
+			// Need to go to the next page at this point to see the remaining fields...
+			if (index === 8) {
+				await page.getByRole("button", { name: "Go to next page" }).click();
+			}
 			await expect(
 				page.getByRole("button", { name: `Select row ${schema} ${schema}` })
 			).toHaveCount(1);
