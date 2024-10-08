@@ -48,6 +48,18 @@ export const ComponentConfig = ({ component, ...props }: ComponentConfigFormProp
 				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
+		case InputComponent.radioGroup:
+			ConfigForm = dynamic(() => import("./RadioGroup.tsx"), {
+				ssr: false,
+				loading: () => <Skeleton className="h-full w-full" />,
+			});
+			break;
+		case InputComponent.selectDropdown:
+			ConfigForm = dynamic(() => import("./MultivalueBase.tsx"), {
+				ssr: false,
+				loading: () => <Skeleton className="h-full w-full" />,
+			});
+			break;
 		case InputComponent.textArea:
 			ConfigForm = dynamic(() => import("./TextArea.tsx"), {
 				ssr: false,

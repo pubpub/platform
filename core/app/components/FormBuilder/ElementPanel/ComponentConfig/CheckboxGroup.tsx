@@ -1,7 +1,6 @@
 import { Checkbox } from "ui/checkbox";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
-import { MultiValueInput } from "ui/multivalue-input";
 import {
 	Select,
 	SelectContent,
@@ -12,6 +11,7 @@ import {
 } from "ui/select";
 
 import type { InnerFormProps } from "./types";
+import MultivalueBase from "./MultivalueBase";
 
 enum MinMaxChoices {
 	AtLeast = "At Least",
@@ -19,49 +19,10 @@ enum MinMaxChoices {
 	Exactly = "Exactly",
 }
 
-export default ({ form }: InnerFormProps) => {
+export default (props: InnerFormProps) => {
+	const { form } = props;
 	return (
-		<div className="flex flex-col gap-6">
-			<FormField
-				control={form.control}
-				name="config.label"
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Label</FormLabel>
-						<FormControl>
-							<Input placeholder="Description of the selection" {...field} />
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-			<FormField
-				control={form.control}
-				name="config.description"
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Description</FormLabel>
-						<FormControl>
-							<Input placeholder="Optional additional guidance" {...field} />
-						</FormControl>
-						<FormDescription>Appears below the label</FormDescription>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-			<FormField
-				control={form.control}
-				name="config.values"
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>Checkbox Values</FormLabel>
-						<FormControl>
-							<MultiValueInput {...field} value={field.value ?? []} />
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
+		<MultivalueBase {...props} label="Checkbox">
 			<FormField
 				control={form.control}
 				name="config.includeOther"
@@ -132,6 +93,6 @@ export default ({ form }: InnerFormProps) => {
 					)}
 				/>
 			</div>
-		</div>
+		</MultivalueBase>
 	);
 };
