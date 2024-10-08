@@ -16,7 +16,16 @@ import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ImagePlus } from "ui/icon";
 import { Input } from "ui/input";
-import { RadioGroup, RadioGroupCard } from "ui/radio-group";
+import { Label } from "ui/label";
+import { RadioGroup, RadioGroupCard, RadioGroupItem } from "ui/radio-group";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "ui/select";
 import { Skeleton } from "ui/skeleton";
 import { Switch } from "ui/switch";
 import { Textarea } from "ui/textarea";
@@ -70,6 +79,65 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		name: "Combo Slider",
 		demoComponent: () => <Confidence value={[0, 50, 100]} min={0} max={100} />,
 	},
+	[InputComponent.checkboxGroup]: {
+		name: "Checkbox Group",
+		demoComponent: () => (
+			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-sm text-gray-500">
+				<div>Label</div>
+				<div className="flex items-center gap-1">
+					<Checkbox id="c1" />
+					<Label className="font-normal" htmlFor="c1">
+						Checkbox 1 value
+					</Label>
+				</div>
+				<div className="flex items-center gap-1">
+					<Checkbox id="c2" />
+					<Label className="font-normal" htmlFor="c2">
+						Checkbox 2 value
+					</Label>
+				</div>
+			</div>
+		),
+	},
+	[InputComponent.radioGroup]: {
+		name: "Radio Group",
+		demoComponent: () => (
+			<RadioGroup className="w-full text-left text-sm text-gray-500">
+				<div>Label</div>
+				<div className="flex items-center gap-1">
+					<RadioGroupItem value="1" id="r1" />
+					<Label className="font-normal" htmlFor="r1">
+						Radio 1 value
+					</Label>
+				</div>
+				<div className="flex items-center gap-1">
+					<RadioGroupItem value="2" id="r2" />
+					<Label className="font-normal" htmlFor="r2">
+						Radio 2 value
+					</Label>
+				</div>
+			</RadioGroup>
+		),
+	},
+	[InputComponent.selectDropdown]: {
+		name: "Select Dropdown",
+		demoComponent: () => (
+			<div className="flex flex-col gap-1 text-left text-sm text-gray-500">
+				<div>Label</div>
+				<Select>
+					<SelectTrigger className="text-left">
+						<SelectValue placeholder="Select an option" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectGroup className="text-left">
+							<SelectItem value="1">Select 1 value</SelectItem>
+							<SelectItem value="2">Select 2 value</SelectItem>
+						</SelectGroup>
+					</SelectContent>
+				</Select>
+			</div>
+		),
+	},
 } as const;
 
 const ComponentSelect = ({
@@ -92,12 +160,18 @@ const ComponentSelect = ({
 			{components.map((c) => {
 				const { name, demoComponent: Component } = componentInfo[c];
 				return (
-					<RadioGroupCard key={c} value={c} className="flex h-[124px] w-full flex-col">
+					<RadioGroupCard
+						key={c}
+						value={c}
+						className="flex h-[124px] w-full flex-col justify-between"
+					>
 						<div className="flex h-[88px] w-full items-center justify-center p-3">
 							{Component && <Component element={element} />}
 						</div>
 						<hr className="w-full" />
-						<div className="w-full text-center text-sm text-foreground">{name}</div>
+						<div className="w-full py-2 text-center text-sm text-foreground">
+							{name}
+						</div>
 					</RadioGroupCard>
 				);
 			})}

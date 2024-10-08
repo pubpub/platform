@@ -11,8 +11,16 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.String]: [InputComponent.textInput, InputComponent.textArea],
 	[CoreSchemaType.DateTime]: [InputComponent.datePicker],
 	[CoreSchemaType.Number]: [InputComponent.textInput],
-	[CoreSchemaType.NumericArray]: [],
-	[CoreSchemaType.StringArray]: [],
+	[CoreSchemaType.NumericArray]: [
+		InputComponent.checkboxGroup,
+		InputComponent.radioGroup,
+		InputComponent.selectDropdown,
+	],
+	[CoreSchemaType.StringArray]: [
+		InputComponent.checkboxGroup,
+		InputComponent.radioGroup,
+		InputComponent.selectDropdown,
+	],
 	[CoreSchemaType.Email]: [InputComponent.textInput],
 	[CoreSchemaType.FileUpload]: [InputComponent.fileUpload],
 	[CoreSchemaType.URL]: [InputComponent.textInput],
@@ -56,6 +64,12 @@ export const confidenceIntervalConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 });
+export const multivalueConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	values: Type.Array(Type.String()),
+	includeOther: Type.Optional(Type.Boolean()),
+});
 
 export const componentConfigSchemas: Record<InputComponent, TObject> = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
@@ -65,4 +79,7 @@ export const componentConfigSchemas: Record<InputComponent, TObject> = {
 	[InputComponent.fileUpload]: fileUploadConfigSchema,
 	[InputComponent.memberSelect]: memberSelectConfigSchema,
 	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
+	[InputComponent.checkboxGroup]: multivalueConfigSchema,
+	[InputComponent.radioGroup]: multivalueConfigSchema,
+	[InputComponent.selectDropdown]: multivalueConfigSchema,
 } as const;
