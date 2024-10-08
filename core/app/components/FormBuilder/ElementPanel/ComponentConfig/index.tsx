@@ -18,6 +18,12 @@ export const ComponentConfig = ({ component, ...props }: ComponentConfigFormProp
 				loading: () => <Skeleton className="h-full w-full" />,
 			});
 			break;
+		case InputComponent.checkboxGroup:
+			ConfigForm = dynamic(() => import("./CheckboxGroup.tsx"), {
+				ssr: false,
+				loading: () => <Skeleton className="h-full w-full" />,
+			});
+			break;
 		case InputComponent.confidenceInterval:
 			ConfigForm = dynamic(() => import("./ConfidenceInterval.tsx"), {
 				ssr: false,
