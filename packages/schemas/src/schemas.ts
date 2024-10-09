@@ -71,18 +71,22 @@ const getMinMaxFromCheckboxGroupConfig = (config: Static<typeof checkboxGroupCon
 		min = undefined;
 		max = numCheckboxes;
 	}
-	return { min, max };
+	const error =
+		min === undefined && max === undefined
+			? ""
+			: `Please select ${userShouldSelect?.toLocaleLowerCase()} ${config.numCheckboxes}`;
+	return { min, max, error };
 };
 
 export const getNumericArrayWithMinMax = (config: unknown) => {
 	if (!Value.Check(checkboxGroupConfigSchema, config)) {
 		return NumericArray;
 	}
-	const { min, max } = getMinMaxFromCheckboxGroupConfig(config);
+	const { min, max, error } = getMinMaxFromCheckboxGroupConfig(config);
 	return Type.Array(Type.Number({ error: "Invalid number" }), {
 		description: "An array of numbers",
 		examples: [[], [-1, 0, 2], [1.2, 17, 2.5, 2.7]],
-		error: `Invalid array of numbers. Please select ${config.userShouldSelect?.toLocaleLowerCase()} ${config.numCheckboxes}`,
+		error: `Invalid array of numbers. ${error}`,
 		minItems: min,
 		maxItems: max,
 	});
@@ -103,11 +107,11 @@ export const getStringArrayWithMinMax = (config: unknown) => {
 	if (!Value.Check(checkboxGroupConfigSchema, config)) {
 		return StringArray;
 	}
-	const { min, max } = getMinMaxFromCheckboxGroupConfig(config);
+	const { min, max, error } = getMinMaxFromCheckboxGroupConfig(config);
 	return Type.Array(Type.String({ error: "Invalid string" }), {
 		description: "An array of strings",
 		examples: [[], ["apple", "banana", "cherry"]],
-		error: `Invalid array of strings. Please select ${config.userShouldSelect?.toLocaleLowerCase()} ${config.numCheckboxes}`,
+		error: `Invalid array of strings. ${error}`,
 		minItems: min,
 		maxItems: max,
 	});
