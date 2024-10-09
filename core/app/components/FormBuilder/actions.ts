@@ -113,7 +113,7 @@ export const archiveForm = defineServerAction(async function archiveForm(id: For
 	}
 });
 
-export const unarchiveForm = defineServerAction(async function unarchiveForm(id: FormsId) {
+export const restoreForm = defineServerAction(async function unarchiveForm(id: FormsId) {
 	try {
 		await autoRevalidate(
 			db.updateTable("forms").set({ isArchived: false }).where("forms.id", "=", id)

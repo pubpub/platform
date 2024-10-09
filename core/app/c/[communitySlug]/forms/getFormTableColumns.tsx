@@ -14,7 +14,7 @@ import {
 } from "ui/dropdown-menu";
 import { Ellipsis, History, ToyBrick } from "ui/icon";
 
-import { UnarchiveFormButton } from "~/app/components/FormBuilder/UnarchiveFormButton";
+import { RestoreFormButton } from "~/app/components/FormBuilder/RestoreFormButton";
 
 export type TableForm = {
 	id: FormsId;
@@ -96,7 +96,7 @@ export const getFormTableColumns = () =>
 						<DropdownMenuContent align="end" className="p-0">
 							<DropdownMenuItem asChild key={row.original.id}>
 								{row.original.isArchived ? (
-									<UnarchiveFormButton
+									<RestoreFormButton
 										className="w-full justify-start pl-3"
 										id={row.original.id}
 									/>

@@ -4,21 +4,21 @@ import { useCallback } from "react";
 
 import type { FormsId } from "db/public";
 import { Button } from "ui/button";
-import { Archive, ArchiveRestore } from "ui/icon";
+import { ArchiveRestore } from "ui/icon";
 import { cn } from "utils";
 
 import { useServerAction } from "~/lib/serverActions";
-import { unarchiveForm } from "./actions";
+import { restoreForm } from "./actions";
 
 type Props = {
 	id: FormsId;
 	className?: string;
 };
 
-export const UnarchiveFormButton = ({ id, className }: Props) => {
-	const runUnarchiveForm = useServerAction(unarchiveForm);
+export const RestoreFormButton = ({ id, className }: Props) => {
+	const runRestoreForm = useServerAction(restoreForm);
 	const handleRemove = useCallback(async () => {
-		await runUnarchiveForm(id);
+		await runRestoreForm(id);
 	}, [id]);
 	return (
 		<Button
@@ -28,7 +28,7 @@ export const UnarchiveFormButton = ({ id, className }: Props) => {
 			className={cn("flex gap-2", className)}
 			onClick={handleRemove}
 		>
-			<ArchiveRestore size={12} /> Unarchive
+			<ArchiveRestore size={12} /> Restore
 		</Button>
 	);
 };
