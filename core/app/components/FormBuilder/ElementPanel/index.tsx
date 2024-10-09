@@ -2,7 +2,7 @@
 
 import { Button } from "ui/button";
 import { FormLabel } from "ui/form";
-import { PlusCircle } from "ui/icon";
+import { PlusCircle, X } from "ui/icon";
 import { Input } from "ui/input";
 
 import type { PanelState } from "../types";
