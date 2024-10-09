@@ -1,3 +1,5 @@
+import { MinMaxChoices } from "schemas";
+
 import { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -14,13 +16,7 @@ import {
 import type { ComponentConfigFormProps, FormType } from "./types";
 import MultivalueBase from "./MultivalueBase";
 
-enum MinMaxChoices {
-	AtLeast = "At Least",
-	AtMost = "At Most",
-	Exactly = "Exactly",
-}
-
-export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) => {
+export default (props: InnerFormProps) => {
 	const { form, component, ...rest } = props;
 	return (
 		<MultivalueBase
