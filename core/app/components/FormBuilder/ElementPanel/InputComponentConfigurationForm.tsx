@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
-import { componentsBySchema, getComponentConfigSchema } from "schemas";
+import { componentConfigSchemas, componentsBySchema } from "schemas";
 
 import { CoreSchemaType, InputComponent } from "db/public";
 import { Button } from "ui/button";
@@ -208,7 +208,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 			const schema = Type.Object({
 				required: Nullable(Type.Boolean({ default: true })),
 				component: Type.Enum(InputComponent),
-				config: getComponentConfigSchema(values.component, schemaName),
+				config: componentConfigSchemas[values.component],
 			});
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);
