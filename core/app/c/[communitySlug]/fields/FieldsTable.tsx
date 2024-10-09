@@ -26,8 +26,8 @@ type NonLegacyField = Omit<TableData, "schemaName" | "isRelation"> &
 		  }
 	);
 
-const isNotLegacyField = (field: TableData): field is NonLegacyField => {
-	return field.schemaName === null && field.isRelation === false;
+const isNonLegacyField = (field: TableData): field is NonLegacyField => {
+	return field.schemaName !== null || field.isRelation !== false;
 };
 
 export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
@@ -54,11 +54,9 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 	const columns = getFieldTableColumns();
 	const handleRowClick = (row: Row<TableData>) => {
 		// logic change: Legacy fields can no longer be edited
-		if (!isNotLegacyField(row.original)) {
-			return;
+		if (isNonLegacyField(row.original)) {
+			setEditField(row.original);
 		}
-
-		setEditField(row.original);
 	};
 
 	return (
