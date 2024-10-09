@@ -88,7 +88,11 @@ export const getFormTableColumns = () =>
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="h-8 w-8 p-0">
+							<Button
+								variant="ghost"
+								className="h-8 w-8 p-0"
+								data-testid={`${row.original.slug}-actions-button`}
+							>
 								<span className="sr-only">Open menu</span>
 								<Ellipsis className="h-4 w-4" />
 							</Button>
@@ -99,11 +103,13 @@ export const getFormTableColumns = () =>
 									<RestoreFormButton
 										className="w-full justify-start pl-3"
 										id={row.original.id}
+										data-testid={`${row.original.slug}-restore-button`}
 									/>
 								) : (
 									<ArchiveFormButton
 										className="w-full justify-start pl-3"
 										id={row.original.id}
+										data-testid={`${row.original.slug}-archive-button`}
 									/>
 								)}
 							</DropdownMenuItem>
