@@ -114,3 +114,40 @@ export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> 
 		ReturnType<ReturnType<T>[K]>
 	>;
 };
+
+/**
+ * PickByValue (from `utility-types`)
+ *
+ * From `T` pick a set of properties by value matching `ValueType`. Credit: [Piotr
+ * Lewandowski](https://medium.com/dailyjs/typescript-create-a-condition-based-subset-types-9d902cea5b8c)
+ *
+ * @example Type Props = { req: number; reqUndef: number | undefined; opt?: string; };
+ *
+ * // Expect: { req: number } type Props = PickByValue<Props, number>; // Expect: { req: number;
+ * reqUndef: number | undefined; } type Props = PickByValue<Props, number | undefined>;
+ */
+export type PickByValue<T, ValueType> = Pick<
+	T,
+	{ [Key in keyof T]-?: T[Key] extends ValueType ? Key : never }[keyof T]
+>;
+
+/**
+ * PickByValueExact (from `utility-types`)
+ *
+ * From `T` pick a set of properties by value matching exact `ValueType`.
+ *
+ * @example Type Props = { req: number; reqUndef: number | undefined; opt?: string; };
+ *
+ * // Expect: { req: number } type Props = PickByValueExact<Props, number>; // Expect: { reqUndef:
+ * number | undefined; } type Props = PickByValueExact<Props, number | undefined>;
+ */
+export type PickByValueExact<T, ValueType> = Pick<
+	T,
+	{
+		[Key in keyof T]-?: [ValueType] extends [T[Key]]
+			? [T[Key]] extends [ValueType]
+				? Key
+				: never
+			: never;
+	}[keyof T]
+>;

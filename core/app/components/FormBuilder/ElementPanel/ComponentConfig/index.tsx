@@ -1,26 +1,15 @@
 "use client";
 
-import type { ComponentType } from "react";
+import type React from "react";
 
 import dynamic from "next/dynamic";
 
 import { InputComponent } from "db/public";
 import { Skeleton } from "ui/skeleton";
 
-import type { ComponentConfigFormProps, InnerFormProps } from "./types.ts";
+import type { ComponentConfigFormProps } from "./types.ts";
 
-const ALLOWED_PATHS = [
-	"Checkbox",
-	"ConfidenceInterval",
-	"DatePicker",
-	"FileUpload",
-	"MemberSelect",
-	"TextArea",
-	"TextInput",
-] as const;
-type AllowedPaths = (typeof ALLOWED_PATHS)[number];
-
-const toDynamic = (path: AllowedPaths): ComponentType<InnerFormProps> =>
+const toDynamic = (path: string) =>
 	// this dynamic import path needs to provide enough information for webpack/turbopack
 	// to be able to find it. The relative path and the extension are enough, but something like
 	// `import(path)` will not work.
@@ -29,7 +18,7 @@ const toDynamic = (path: AllowedPaths): ComponentType<InnerFormProps> =>
 		loading: () => <Skeleton className="h-full w-full" />,
 	});
 
-const EnumToPath = {
+const InputCompomentMap = {
 	[InputComponent.checkbox]: toDynamic("Checkbox"),
 	[InputComponent.confidenceInterval]: toDynamic("ConfidenceInterval"),
 	[InputComponent.datePicker]: toDynamic("DatePicker"),
@@ -39,11 +28,13 @@ const EnumToPath = {
 	[InputComponent.textInput]: toDynamic("TextInput"),
 };
 
-export const ComponentConfig = <I extends InputComponent>({
-	component,
-	...props
-}: ComponentConfigFormProps<I>) => {
-	const ConfigComponent = EnumToPath[component] as ComponentType<InnerFormProps<I>>;
+export const ComponentConfig = <I extends InputComponent>(props: ComponentConfigFormProps<I>) => {
+	// ideally the compenent would be selected through some (generic) function, but for `dynamic`
+	// to work properly the components need to be defined already outside of the react tree,
+	// hence the map and the type cast
+	const ConfigComponent = InputCompomentMap[props.component] as React.FC<
+		ComponentConfigFormProps<I>
+	>;
 
 	return <ConfigComponent {...props} />;
 };
