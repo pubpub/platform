@@ -13,9 +13,10 @@ import { restoreForm } from "./actions";
 type Props = {
 	id: FormsId;
 	className?: string;
+	slug: string;
 };
 
-export const RestoreFormButton = ({ id, className }: Props) => {
+export const RestoreFormButton = ({ id, className, slug }: Props) => {
 	const runRestoreForm = useServerAction(restoreForm);
 	const handleRemove = useCallback(async () => {
 		await runRestoreForm(id);
@@ -27,6 +28,7 @@ export const RestoreFormButton = ({ id, className }: Props) => {
 			size="lg"
 			className={cn("flex gap-2", className)}
 			onClick={handleRemove}
+			data-testid={`${slug}-restore-button`}
 		>
 			<ArchiveRestore size={12} /> Restore
 		</Button>

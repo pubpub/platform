@@ -103,13 +103,13 @@ export const getFormTableColumns = () =>
 									<RestoreFormButton
 										className="w-full justify-start pl-3"
 										id={row.original.id}
-										data-testid={`${row.original.slug}-restore-button`}
+										slug={row.original.slug}
 									/>
 								) : (
 									<ArchiveFormButton
 										className="w-full justify-start pl-3"
 										id={row.original.id}
-										data-testid={`${row.original.slug}-archive-button`}
+										slug={row.original.slug}
 									/>
 								)}
 							</DropdownMenuItem>
