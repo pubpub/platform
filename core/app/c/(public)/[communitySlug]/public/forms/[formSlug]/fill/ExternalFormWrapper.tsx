@@ -14,10 +14,10 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
+import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { GetPubResponseBody, JsonValue } from "contracts";
-import type { PubsId } from "db/public";
+import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
 import { cn } from "utils";
@@ -28,6 +28,7 @@ import type { Form as PubPubForm } from "~/lib/server/form";
 import type { DefinitelyHas } from "~/lib/types";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
@@ -73,19 +74,22 @@ const preparePayload = ({
 };
 
 /**
- * Date pubValues need to be transformed to a Date type to pass validation
+ * Set all default values
+ * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
 const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
 	const defaultValues: FieldValues = { ...pubValues };
-	const dateElements = elements.filter((e) => e.schemaName === CoreSchemaType.DateTime);
-	for (const de of dateElements) {
-		if (de.slug) {
-			const pubValue = pubValues[de.slug];
-			if (pubValue) {
-				defaultValues[de.slug] = new Date(pubValue as string);
+	for (const element of elements) {
+		if (element.slug && element.schemaName) {
+			const pubValue = pubValues[element.slug];
+			defaultValues[element.slug] =
+				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
+			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
+				defaultValues[element.slug] = new Date(pubValue as string);
 			}
 		}
 	}
+
 	return defaultValues;
 };
 
@@ -134,27 +138,37 @@ const isSubmitEvent = (
 };
 
 export const ExternalFormWrapper = ({
-	pub,
 	elements,
 	className,
 	children,
+	isUpdating,
+	pub,
 }: {
-	pub: GetPubResponseBody;
 	elements: PubPubForm["elements"];
 	children: ReactNode;
+	isUpdating: boolean;
 	className?: string;
+	pub: Pick<GetPubResponseBody, "id" | "values" | "pubTypeId">;
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
+	const community = useCommunity();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.updatePub);
+	const runCreatePub = useServerAction(actions.createPubRecursive);
+	// Cache pubId
+	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => isButtonElement(e)),
 		[elements]
 	);
 	const toggleContext = useFormElementToggleContext();
+
+	const defaultValues = useMemo(() => {
+		return buildDefaultValues(formElements, pub.values);
+	}, [formElements, pub]);
 
 	const handleSubmit = useCallback(
 		async (
@@ -170,14 +184,30 @@ export const ExternalFormWrapper = ({
 			const submitButtonId = isSubmitEvent(evt) ? evt?.nativeEvent.submitter?.id : null;
 			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
 			const stageId = submitButtonConfig?.stageId ?? undefined;
-			const result = await runUpdatePub({
-				pubId: pub.id as PubsId,
-				pubValues,
-				stageId,
-			});
+			let result;
+			if (isUpdating) {
+				result = await runUpdatePub({
+					pubId: pubId,
+					pubValues,
+					stageId,
+				});
+			} else {
+				result = await runCreatePub({
+					body: {
+						id: pubId,
+						pubTypeId: pub.pubTypeId as PubTypesId,
+						values: pubValues as Record<string, any>,
+						stageId: stageId,
+					},
+					communityId: community.id,
+				});
+			}
 			if (didSucceed(result)) {
 				const newParams = new URLSearchParams(params);
 				const currentTime = `${new Date().getTime()}`;
+				if (!isUpdating) {
+					newParams.set("pubId", pubId);
+				}
 				if (!autoSave && isComplete(formElements, pubValues)) {
 					if (submitButtonId) {
 						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
@@ -189,7 +219,7 @@ export const ExternalFormWrapper = ({
 				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
-		[formElements, router, pathname, runUpdatePub, pub, toggleContext]
+		[formElements, router, pathname, runUpdatePub, pub, community.id, toggleContext]
 	);
 
 	const resolver = useMemo(
@@ -199,7 +229,7 @@ export const ExternalFormWrapper = ({
 
 	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
 		resolver,
-		defaultValues: buildDefaultValues(formElements, pub.values),
+		defaultValues,
 		shouldFocusError: false,
 		reValidateMode: "onBlur",
 	});
@@ -213,6 +243,10 @@ export const ExternalFormWrapper = ({
 
 	const handleAutoSave = useCallback(
 		(values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
+			// Only autosave on updating a pub, not on creating
+			if (!isUpdating) {
+				return;
+			}
 			// Don't auto save while editing the user ID field. the query params
 			// will clash and it will be a bad time :(
 			const { name } = evt?.target as HTMLInputElement;
@@ -239,7 +273,7 @@ export const ExternalFormWrapper = ({
 			<form
 				onChange={formInstance.handleSubmit(handleAutoSave)}
 				onSubmit={formInstance.handleSubmit(handleSubmit)}
-				className={cn("relative flex flex-col gap-6", className)}
+				className={cn("relative isolate flex flex-col gap-6", className)}
 			>
 				{children}
 				<hr />

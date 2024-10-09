@@ -98,7 +98,7 @@ jobs:
                   echo "jobs_label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-jobs}:$IMAGE_TAG" >> $GITHUB_OUTPUT
                   echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-            - run: pnpx playwright install chromium --with-deps
+            - run: pnpm --filter core exec playwright install chromium --with-deps
 
             - name: Start up core
               run: docker compose -f docker-compose.test.yml --profile integration up -d
