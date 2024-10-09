@@ -31,7 +31,7 @@ export default ({
 			/>
 			<FormField
 				control={form.control}
-				name="config.description"
+				name="config.help"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Description</FormLabel>

@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
 import { useForm } from "react-hook-form";
 import { componentConfigSchemas, componentsBySchema } from "schemas";
 
@@ -219,7 +220,15 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 	const component = form.watch("component");
 
 	const onSubmit = (values: ConfigFormData) => {
-		update(index, { ...selectedElement, ...values, updated: true, configured: true });
+		// Some `config` schemas have extra values which persist if we don't Clean first
+		const cleanedConfig = Value.Clean(componentConfigSchemas[values.component], values.config);
+		update(index, {
+			...selectedElement,
+			...values,
+			config: cleanedConfig,
+			updated: true,
+			configured: true,
+		});
 		dispatch({ eventName: "save" });
 	};
 	const configForm = useMemo(
