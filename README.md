@@ -80,7 +80,7 @@ pnpm --filter core migrate-dev
 ```
 
 ## Self-Hosting and Deployment
-Guidance for self-hosting and deployment is coming soon. In the meantime, you can read about how we currently deploy the app in [DEVELOPMENT.md](https://github.com/pubpub/platform/blob/main/development.md). With small modifications, most development teams can use the included terraform configuration to run the app on commodity cloud infrastructure of their choice.
+Guidance for self-hosting and deployment is coming soon. In the meantime, you can read about how we currently deploy the app in [DEVELOPMENT.md](https://github.com/pubpub/platform/blob/main/DEVELOPMENT.md). With small modifications, most development teams can use the included terraform configuration to run the app on commodity cloud infrastructure of their choice.
 
 ## Bugs, Feature Requests, Help, and Feedback
 We use the [Discussion Forum](https://github.com/pubpub/platform/discussions) for feature requests, ideas, and general feedback, and [GitHub Issues](https://github.com/pubpub/platform/issues/) for day-to-day development. Thus, if you're unsure where to post your feedback, start with a discussion. We can always transfer it to an issue later if needed.

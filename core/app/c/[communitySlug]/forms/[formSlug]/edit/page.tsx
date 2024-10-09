@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
@@ -14,6 +15,11 @@ import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 import { EditFormTitleButton } from "./EditFormTitleButton";
+
+const FormCopyButton = dynamic(
+	() => import("./FormCopyButton").then((module) => module.FormCopyButton),
+	{ ssr: false }
+);
 
 const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
@@ -61,7 +67,8 @@ export default async function Page({
 				</>
 			}
 			headingAction={
-				<div className="flex gap-2">
+				<div className="flex items-center gap-2">
+					<FormCopyButton formSlug={formSlug} />
 					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
 					<SaveFormButton form={formBuilderId} />
 				</div>
