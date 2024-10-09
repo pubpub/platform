@@ -1,21 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { CoreSchemaType } from "@prisma/client";
 import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { radioGroupConfigSchema } from "schemas";
 
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Input } from "ui/input";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) => {
-	const { control } = useFormContext();
+	const { control, formState } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+
+	const [other, setOther] = useState<string | number>();
 
 	Value.Default(radioGroupConfigSchema, config);
 	if (!Value.Check(radioGroupConfigSchema, config)) {
@@ -27,12 +31,18 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 			control={control}
 			name={name}
 			render={({ field }) => {
+				const handleRadioChange = (value: string) => {
+					field.onChange([isNumeric ? +value : value]);
+					setOther("");
+				};
 				return (
 					<FormItem>
-						<FormLabel className="flex">{config.label ?? name}</FormLabel>
+						<FormLabel className="flex">
+							{config.label ?? name} {field.value}
+						</FormLabel>
 						<FormControl>
 							<RadioGroup
-								onValueChange={(v) => field.onChange([isNumeric ? +v : v])}
+								onValueChange={handleRadioChange}
 								defaultValue={
 									Array.isArray(field.value) ? field.value[0] : undefined
 								}
@@ -46,15 +56,42 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 											key={v}
 										>
 											<FormControl>
-												<RadioGroupItem value={`${v}`} />
+												<RadioGroupItem
+													checked={
+														Array.isArray(field.value)
+															? field.value[0] === v
+															: false
+													}
+													value={`${v}`}
+												/>
 											</FormControl>
 											<FormLabel>{v}</FormLabel>
 										</FormItem>
 									);
 								})}
+								{config.includeOther ? (
+									<FormItem className="flex items-center gap-2 space-y-0">
+										<FormLabel>Other</FormLabel>
+										<FormControl>
+											<Input
+												type={isNumeric ? "number" : undefined}
+												className="h-6"
+												value={other}
+												onChange={(e) => {
+													const v = isNumeric
+														? e.target.valueAsNumber
+														: e.target.value;
+													setOther(v);
+													field.onChange([v]);
+												}}
+											/>
+										</FormControl>
+									</FormItem>
+								) : null}
 							</RadioGroup>
 						</FormControl>
 						<FormDescription>{config.help}</FormDescription>
+						{/* TODO: fix error on Other option */}
 						<FormMessage />
 					</FormItem>
 				);
