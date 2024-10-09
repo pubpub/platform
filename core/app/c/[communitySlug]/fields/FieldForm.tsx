@@ -62,11 +62,14 @@ type FormValues = z.infer<typeof schema>;
 const DEFAULT_VALUES = {
 	id: "",
 	name: "",
-	// can't be `null` and `isRelation: false` by default so should be undefined
-	schemaName: undefined,
+	// while the correct entry would be `undefined`,
+	// the Form will crash as soon as you select a schema,
+	// throwing some very esoteric React errors
+	// hence why we set it to `null` and do an unsafe cast
+	schemaName: null,
 	slug: "",
 	isRelation: false,
-} as const;
+} as unknown as DefaultFieldFormValues;
 
 type FormType = UseFormReturn<FormValues, any, undefined>;
 
