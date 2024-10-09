@@ -47,7 +47,14 @@ export default ({
 					<FormItem>
 						<FormLabel>{label} Values</FormLabel>
 						<FormControl>
-							<MultiValueInput {...field} value={field.value ?? []} />
+							<MultiValueInput
+								// type="number"
+								// onChange={(e: string[]) => {
+								// 	field.onChange(e.map((v) => +v));
+								// }}
+								{...field}
+								value={field.value ?? []}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>

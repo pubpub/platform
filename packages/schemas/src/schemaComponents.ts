@@ -64,10 +64,18 @@ export const confidenceIntervalConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 });
-export const multivalueConfigSchema = Type.Object({
+export const multiStringConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 	values: Type.Array(Type.String()),
+	includeOther: Type.Optional(Type.Boolean()),
+	userShouldSelect: Type.Optional(Type.String()),
+	numCheckboxes: Type.Optional(Type.Number()),
+});
+export const multiNumberConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	values: Type.Array(Type.Number()),
 	includeOther: Type.Optional(Type.Boolean()),
 	userShouldSelect: Type.Optional(Type.String()),
 	numCheckboxes: Type.Optional(Type.Number()),
@@ -81,7 +89,41 @@ export const componentConfigSchemas: Record<InputComponent, TObject> = {
 	[InputComponent.fileUpload]: fileUploadConfigSchema,
 	[InputComponent.memberSelect]: memberSelectConfigSchema,
 	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
-	[InputComponent.checkboxGroup]: multivalueConfigSchema,
-	[InputComponent.radioGroup]: multivalueConfigSchema,
-	[InputComponent.selectDropdown]: multivalueConfigSchema,
+	[InputComponent.checkboxGroup]: multiStringConfigSchema,
+	[InputComponent.radioGroup]: multiStringConfigSchema,
+	[InputComponent.selectDropdown]: multiStringConfigSchema,
 } as const;
+
+export const getComponentConfigSchema = (component: InputComponent, schemaName: CoreSchemaType) => {
+	const getMultiType = () => {
+		if (schemaName === CoreSchemaType.NumericArray) {
+			return multiNumberConfigSchema;
+		}
+		return multiStringConfigSchema;
+	};
+	switch (component) {
+		case InputComponent.checkbox:
+			return checkboxConfigSchema;
+		case InputComponent.checkboxGroup:
+			return getMultiType();
+		case InputComponent.confidenceInterval:
+			return confidenceIntervalConfigSchema;
+		case InputComponent.datePicker:
+			return datePickerConfigSchema;
+		case InputComponent.fileUpload:
+			return fileUploadConfigSchema;
+		case InputComponent.memberSelect:
+			return memberSelectConfigSchema;
+		case InputComponent.radioGroup:
+			return getMultiType();
+		case InputComponent.selectDropdown:
+			return getMultiType();
+		case InputComponent.textArea:
+			return textAreaConfigSchema;
+		case InputComponent.textInput:
+			return textInputConfigSchema;
+		default:
+			const _exhaustiveCheck: never = component;
+			return _exhaustiveCheck;
+	}
+};
