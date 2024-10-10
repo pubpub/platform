@@ -18,6 +18,15 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
+    run-e2e:
+        needs:
+            - ci
+            - build-all
+        uses: ./.github/workflows/e2e.yml
+        secrets:
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
     deploy-all:
         uses: ./.github/workflows/awsdeploy.yml
         needs: build-all
