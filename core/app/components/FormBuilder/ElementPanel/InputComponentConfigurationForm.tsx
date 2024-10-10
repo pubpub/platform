@@ -156,6 +156,7 @@ const ComponentSelect = ({
 		<div className="grid grid-cols-2 gap-3">
 			{components.map((c) => {
 				const { name, demoComponent: Component } = componentInfo[c];
+				const selected = value === c;
 				return (
 					<div key={c}>
 						{/* We use regular input instead of a RadioGroup here because the RadioGroup
@@ -166,14 +167,19 @@ const ComponentSelect = ({
 							name="component"
 							type="radio"
 							className="peer sr-only"
-							defaultChecked={value === c}
+							defaultChecked={selected}
 							onChange={() => {
 								onChange(c);
 							}}
 						/>
 						<div className="flex h-[124px] w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
 							<label className="cursor-pointer" htmlFor={`component-${c}`}>
-								<div className="flex h-[88px] w-full items-center justify-center p-3">
+								<div
+									// 'inert' allows demo components to not be interactive unless they are selected
+									// @ts-ignore inert isn't typed properly in React 18, but will be in 19
+									inert={selected ? undefined : ""}
+									className="flex h-[88px] w-full items-center justify-center p-3"
+								>
 									{Component && <Component element={element} />}
 								</div>
 								<hr className="w-full" />
