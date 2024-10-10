@@ -16,14 +16,11 @@ export const SubmitButtons = ({
 	// Use a default button if the user does not have buttons configured
 	if (buttons.length === 0) {
 		return (
-			<Button
-				id="submit-button-default"
-				type="submit"
-				disabled={isDisabled}
-				className={className}
-			>
-				Submit
-			</Button>
+			<div className={className}>
+				<Button id="submit-button-default" type="submit" disabled={isDisabled}>
+					Submit
+				</Button>
+			</div>
 		);
 	}
 	return (

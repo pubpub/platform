@@ -20,6 +20,7 @@ export function CopyButton({
 	className,
 	src,
 	variant = "ghost",
+	children,
 	...props
 }: CopyButtonProps) {
 	const [hasCopied, setHasCopied] = React.useState(false);
@@ -42,6 +43,7 @@ export function CopyButton({
 			{...props}
 		>
 			<span className="sr-only">Copy</span>
+			{children}
 			{hasCopied ? <Check /> : <Clipboard />}
 		</Button>
 	);

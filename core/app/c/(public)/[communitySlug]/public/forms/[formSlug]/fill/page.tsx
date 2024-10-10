@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
@@ -18,7 +20,10 @@ import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import {
+	renderMarkdownAsHtml,
+	renderMarkdownWithPub,
+} from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { capitalize } from "~/lib/string";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
@@ -32,7 +37,7 @@ const NotFound = ({ children }: { children: ReactNode }) => {
 
 const Completed = ({ element }: { element: Form["elements"][number] | undefined }) => {
 	return (
-		<div className="flex w-full flex-col gap-2 pt-32 text-center">
+		<div data-testid="completed" className="flex w-full flex-col gap-2 pt-32 text-center">
 			{element ? (
 				<div
 					className="prose self-center text-center"
@@ -93,14 +98,18 @@ const ExpiredTokenPage = ({
 
 const renderElementMarkdownContent = async (
 	element: Form["elements"][number],
-	renderWithPubContext: RenderWithPubContext
+	renderWithPubContext: RenderWithPubContext | undefined
 ) => {
 	if (element.content === null) {
 		return "";
 	}
-	return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
-		() => element.content
-	);
+	if (renderWithPubContext) {
+		// Parses the markdown with the pub and returns as HTML
+		return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
+			() => element.content
+		);
+	}
+	return renderMarkdownAsHtml(element.content);
 };
 
 export async function generateMetadata({
@@ -154,10 +163,6 @@ export default async function FormPage({
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
 	}
-	// TODO: eventually, we will be able to create a pub
-	if (!pub) {
-		return <NotFound>No pub found</NotFound>;
-	}
 
 	const { user, session } = await getLoginData();
 
@@ -199,7 +204,7 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+	const parentPub = pub?.parentId ? await getPub(pub.parentId as PubsId) : undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
@@ -211,32 +216,48 @@ export default async function FormPage({
 			id: user.id as UsersId,
 		},
 	};
-	const renderWithPubContext = {
-		communityId: community.id,
-		recipient: memberWithUser,
-		communitySlug: params.communitySlug,
-		pub,
-		parentPub,
-	};
 
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
 	if (submitId && submitElement) {
-		submitElement.content = await renderElementMarkdownContent(
-			submitElement,
-			renderWithPubContext
-		);
+		// The post-submission page will only render once we have a pub
+		if (pub) {
+			const renderWithPubContext = {
+				communityId: community.id,
+				recipient: memberWithUser,
+				communitySlug: params.communitySlug,
+				pub,
+				parentPub,
+			};
+			submitElement.content = await renderElementMarkdownContent(
+				submitElement,
+				renderWithPubContext
+			);
+		}
 	} else {
 		const elementsWithMarkdownContent = form.elements.filter(
 			(element) => element.element === StructuralFormElement.p
 		);
+		const renderWithPubContext = pub
+			? {
+					communityId: community.id,
+					recipient: memberWithUser,
+					communitySlug: params.communitySlug,
+					pub,
+					parentPub,
+				}
+			: undefined;
 		await Promise.all(
 			elementsWithMarkdownContent.map(async (element) => {
 				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
 			})
 		);
 	}
+
+	const isUpdating = !!pub;
+	const pubId = pub?.id ?? (randomUUID() as PubsId);
+	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 
 	return (
 		<div className="isolate min-h-screen">
@@ -260,18 +281,19 @@ export default async function FormPage({
 							)}
 						>
 							<ExternalFormWrapper
-								pub={pub}
+								pub={pubForForm}
 								elements={form.elements}
+								isUpdating={isUpdating}
 								className="col-span-2 col-start-2"
 							>
 								{form.elements.map((e) => (
 									<FormElement
 										key={e.elementId}
-										pubId={pub.id as PubsId}
+										pubId={pubId as PubsId}
 										element={e}
 										searchParams={searchParams}
 										communitySlug={params.communitySlug}
-										values={pub.values}
+										values={pub ? pub.values : {}}
 									/>
 								))}
 							</ExternalFormWrapper>

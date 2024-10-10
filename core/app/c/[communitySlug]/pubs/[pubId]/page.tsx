@@ -14,7 +14,6 @@ import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
-import MembersAvatars from "~/app/components/MemberAvatar";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
@@ -153,9 +152,6 @@ export default async function Page({
 								/>
 							) : null}
 						</div>
-					</div>
-					<div>
-						<MembersAvatars pub={pub} />
 					</div>
 					<div>
 						<div className="mb-1 text-lg font-bold">Integrations</div>

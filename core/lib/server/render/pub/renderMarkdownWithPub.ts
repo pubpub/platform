@@ -330,3 +330,16 @@ export const renderMarkdownWithPub = async (
 
 	return result.toString().trim();
 };
+
+export const renderMarkdownAsHtml = async (text: string) => {
+	const processor = unified()
+		.use(remarkParse)
+		.use(remarkDirective)
+		.use(remarkRehype)
+		.use(rehypeFormat)
+		.use(rehypeStringify);
+
+	const result = await processor.process(text);
+
+	return result.toString().trim();
+};
