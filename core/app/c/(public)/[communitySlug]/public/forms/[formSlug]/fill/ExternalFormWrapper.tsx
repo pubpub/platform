@@ -5,7 +5,7 @@
  * and the other is a form as in react-hook-form.
  */
 import type { ReactNode } from "react";
-import type { FieldValues } from "react-hook-form";
+import type { FieldValues, SubmitErrorHandler } from "react-hook-form";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -173,8 +173,10 @@ export const ExternalFormWrapper = ({
 				formValues,
 				toggleContext,
 			});
-			const submitButtonId = evt?.nativeEvent.submitter?.id;
-			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
+			const submitButtonId = evt?.nativeEvent?.submitter?.id;
+			const submitButtonConfig = submitButtonId
+				? buttonElements.find((b) => b.elementId === submitButtonId)
+				: undefined;
 			const stageId = submitButtonConfig?.stageId ?? undefined;
 			let result;
 			if (isUpdating) {
@@ -182,6 +184,7 @@ export const ExternalFormWrapper = ({
 					pubId: pubId,
 					pubValues,
 					stageId,
+					continueOnValidationError: autoSave,
 				});
 			} else {
 				result = await runCreatePub({
@@ -201,7 +204,7 @@ export const ExternalFormWrapper = ({
 					newParams.set("pubId", pubId);
 				}
 				if (!autoSave && isComplete(formElements, pubValues)) {
-					const submitButtonId = evt?.nativeEvent.submitter?.id;
+					const submitButtonId = evt?.nativeEvent?.submitter?.id;
 					if (submitButtonId) {
 						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
 					}
@@ -242,8 +245,8 @@ export const ExternalFormWrapper = ({
 			}
 			// Don't auto save while editing the user ID field. the query params
 			// will clash and it will be a bad time :(
-			const { name } = evt?.target as HTMLInputElement;
-			if (isUserSelectField(name, formElements)) {
+			const target = evt?.target as HTMLInputElement;
+			if (target?.name && isUserSelectField(target.name, formElements)) {
 				return;
 			}
 			if (saveTimer) {
@@ -252,19 +255,24 @@ export const ExternalFormWrapper = ({
 			const newTimer = setTimeout(async () => {
 				// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 				// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
-				if (formInstance.formState.isValid || saveTimer === undefined) {
-					handleSubmit(values, evt, true);
-				}
+				handleSubmit(values, evt, true);
 			}, SAVE_WAIT_MS);
 			setSaveTimer(newTimer);
 		},
 		[formElements, saveTimer, handleSubmit]
 	);
 
+	const handleAutoSaveOnError: SubmitErrorHandler<FieldValues> = (errors) => {
+		const validFields = Object.fromEntries(
+			Object.entries(formInstance.getValues()).filter(([name, value]) => !(name in errors))
+		);
+		handleAutoSave(validFields, undefined);
+	};
+
 	return (
 		<Form {...formInstance}>
 			<form
-				onChange={formInstance.handleSubmit(handleAutoSave)}
+				onChange={formInstance.handleSubmit(handleAutoSave, handleAutoSaveOnError)}
 				onSubmit={formInstance.handleSubmit(handleSubmit)}
 				className={cn("relative isolate flex flex-col gap-6", className)}
 			>

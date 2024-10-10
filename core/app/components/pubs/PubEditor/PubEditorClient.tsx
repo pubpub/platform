@@ -159,6 +159,7 @@ export function PubEditorClient(props: Props) {
 				pubId,
 				pubValues: enabledPubValues,
 				stageId: stageId as StagesId,
+				continueOnValidationError: false,
 			});
 
 			if (didSucceed(result)) {
