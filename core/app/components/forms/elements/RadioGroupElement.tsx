@@ -14,7 +14,7 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) => {
-	const { control, formState } = useFormContext();
+	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
@@ -37,9 +37,7 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 				};
 				return (
 					<FormItem>
-						<FormLabel className="flex">
-							{config.label ?? name} {field.value}
-						</FormLabel>
+						<FormLabel className="flex">{config.label ?? name}</FormLabel>
 						<FormControl>
 							<RadioGroup
 								onValueChange={handleRadioChange}
@@ -91,7 +89,6 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 							</RadioGroup>
 						</FormControl>
 						<FormDescription>{config.help}</FormDescription>
-						{/* TODO: fix error on Other option */}
 						<FormMessage />
 					</FormItem>
 				);
