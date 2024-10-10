@@ -29,7 +29,9 @@ jobs:
 
     deploy-all:
         uses: ./.github/workflows/awsdeploy.yml
-        needs: build-all
+        needs:
+            - build-all
+            - run-e2e
         with:
             proper-name: stevie
             environment: production
