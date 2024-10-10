@@ -6,7 +6,7 @@ import { CoreSchemaType, InputComponent } from "db/public";
 
 export const defaultComponent = (schemaName: CoreSchemaType) => componentsBySchema[schemaName][0];
 
-export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
+export const componentsBySchema = {
 	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
 	[CoreSchemaType.String]: [InputComponent.textInput, InputComponent.textArea],
 	[CoreSchemaType.DateTime]: [InputComponent.datePicker],
@@ -18,8 +18,10 @@ export const componentsBySchema: Record<CoreSchemaType, InputComponent[]> = {
 	[CoreSchemaType.URL]: [InputComponent.textInput],
 	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
+	[CoreSchemaType.HTML]: [],
+	[CoreSchemaType.ContextString]: [],
 	[CoreSchemaType.Null]: [],
-} as const;
+} as const satisfies Record<CoreSchemaType, InputComponent[]>;
 
 export const checkboxConfigSchema = Type.Object({
 	checkboxLabel: Type.Optional(Type.String()),
@@ -57,7 +59,7 @@ export const confidenceIntervalConfigSchema = Type.Object({
 	help: Type.Optional(Type.String()),
 });
 
-export const componentConfigSchemas: Record<InputComponent, TObject> = {
+export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
 	[InputComponent.textArea]: textAreaConfigSchema,
 	[InputComponent.textInput]: textInputConfigSchema,
@@ -65,4 +67,4 @@ export const componentConfigSchemas: Record<InputComponent, TObject> = {
 	[InputComponent.fileUpload]: fileUploadConfigSchema,
 	[InputComponent.memberSelect]: memberSelectConfigSchema,
 	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
-} as const;
+} as const satisfies Record<InputComponent, TObject>;

@@ -122,3 +122,23 @@ export const FileUpload = Type.Array(
 );
 
 export const Null = Type.Null({ description: "An empty value" });
+
+export const HTML = Type.String({
+	description: "HTML snippets, problably not entire documents",
+	// no pattern or format, there's no way to validate HTML using Regex, nor should we want to try
+	examples: [
+		"<div>Hello world</div>",
+		'<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>',
+	],
+	title: "HTML",
+});
+
+export const ContextString = Type.Object(
+	{
+		html: HTML,
+		data: Type.Record(Type.String(), Type.Any()),
+	},
+	{
+		description: "Our built in thing",
+	}
+);

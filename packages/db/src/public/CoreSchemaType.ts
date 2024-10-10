@@ -17,6 +17,8 @@ export enum CoreSchemaType {
 	Number = "Number",
 	NumericArray = "NumericArray",
 	StringArray = "StringArray",
+	HTML = "HTML",
+	ContextString = "ContextString",
 }
 
 /** Zod schema for CoreSchemaType */
