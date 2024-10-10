@@ -6,7 +6,7 @@
  */
 import type { Static } from "@sinclair/typebox";
 import type { ReactNode } from "react";
-import type { FieldValues, SubmitErrorHandler } from "react-hook-form";
+import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -36,6 +36,20 @@ import { SubmitButtons } from "./SubmitButtons";
 
 const SAVE_WAIT_MS = 5000;
 
+const useUnsavedChangesWarning = ({ isDirty }: FormState<FieldValues>) => {
+	useEffect(() => {
+		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+			if (isDirty) {
+				event.preventDefault();
+			}
+		};
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	}, [isDirty]);
+};
+
 const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) => {
 	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);
 	requiredElements.forEach((element) => {
@@ -55,10 +69,12 @@ const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 const preparePayload = ({
 	formElements,
 	formValues,
+	formState,
 	toggleContext,
 }: {
 	formElements: PubPubForm["elements"];
 	formValues: FieldValues;
+	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
 }) => {
 	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
@@ -66,7 +82,7 @@ const preparePayload = ({
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
 	for (const { slug } of formElements) {
-		if (slug && toggleContext.isEnabled(slug)) {
+		if (slug && toggleContext.isEnabled(slug) && formState.dirtyFields[slug]) {
 			payload[slug] = formValues[slug];
 		}
 	}
@@ -170,6 +186,18 @@ export const ExternalFormWrapper = ({
 		return buildDefaultValues(formElements, pub.values);
 	}, [formElements, pub]);
 
+	const resolver = useMemo(
+		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
+		[formElements, toggleContext]
+	);
+
+	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
+		resolver,
+		defaultValues,
+		shouldFocusError: false,
+		reValidateMode: "onBlur",
+	});
+
 	const handleSubmit = useCallback(
 		async (
 			formValues: FieldValues,
@@ -179,6 +207,7 @@ export const ExternalFormWrapper = ({
 			const pubValues = preparePayload({
 				formElements,
 				formValues,
+				formState: formInstance.formState,
 				toggleContext,
 			});
 			const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : null;
@@ -222,25 +251,24 @@ export const ExternalFormWrapper = ({
 				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
-		[formElements, router, pathname, runUpdatePub, pub, community.id, toggleContext]
+		[
+			formElements,
+			formInstance.formState,
+			router,
+			pathname,
+			runUpdatePub,
+			pub,
+			community.id,
+			toggleContext,
+		]
 	);
-
-	const resolver = useMemo(
-		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
-		[formElements, toggleContext]
-	);
-
-	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
-		resolver,
-		defaultValues,
-		shouldFocusError: false,
-		reValidateMode: "onBlur",
-	});
 
 	// Re-validate the form when fields are toggled on/off.
 	useEffect(() => {
 		formInstance.trigger(Object.keys(formInstance.formState.errors));
 	}, [formInstance, toggleContext]);
+
+	useUnsavedChangesWarning(formInstance.formState);
 
 	const isSubmitting = formInstance.formState.isSubmitting;
 
