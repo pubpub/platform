@@ -16,7 +16,7 @@ import {
 import type { ComponentConfigFormProps, FormType } from "./types";
 import MultivalueBase from "./MultivalueBase";
 
-export default (props: InnerFormProps) => {
+export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) => {
 	const { form, component, ...rest } = props;
 	return (
 		<MultivalueBase
