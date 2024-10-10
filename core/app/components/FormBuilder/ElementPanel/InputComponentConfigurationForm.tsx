@@ -203,7 +203,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 	const { schemaName } = selectedElement;
 	const allowedComponents = componentsBySchema[schemaName];
 
-	const form = useForm<ConfigFormData>({
+	const form = useForm<ConfigFormData<(typeof allowedComponents)[number]>>({
 		// Dynamically set the resolver so that the schema can update based on the selected component
 		resolver: (values, context, options) => {
 			const schema = Type.Object({
@@ -219,7 +219,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 
 	const component = form.watch("component");
 
-	const onSubmit = (values: ConfigFormData) => {
+	const onSubmit = (values: ConfigFormData<typeof component>) => {
 		// Some `config` schemas have extra values which persist if we don't Clean first
 		const cleanedConfig = Value.Clean(componentConfigSchemas[values.component], values.config);
 		update(index, {
