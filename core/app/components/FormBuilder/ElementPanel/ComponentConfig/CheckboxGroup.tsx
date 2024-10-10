@@ -1,3 +1,4 @@
+import { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
@@ -10,7 +11,7 @@ import {
 	SelectValue,
 } from "ui/select";
 
-import type { InnerFormProps } from "./types";
+import type { ComponentConfigFormProps, FormType } from "./types";
 import MultivalueBase from "./MultivalueBase";
 
 enum MinMaxChoices {
@@ -19,10 +20,16 @@ enum MinMaxChoices {
 	Exactly = "Exactly",
 }
 
-export default (props: InnerFormProps) => {
-	const { form } = props;
+export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) => {
+	const { form, component, ...rest } = props;
 	return (
-		<MultivalueBase {...props} label="Checkbox">
+		<MultivalueBase
+			{...rest}
+			component={InputComponent.selectDropdown}
+			// Cast to selectDropdown so we can reuse MultivalueBase
+			form={form as unknown as FormType<InputComponent.selectDropdown>}
+			label="Checkbox"
+		>
 			<FormField
 				control={form.control}
 				name="config.includeOther"

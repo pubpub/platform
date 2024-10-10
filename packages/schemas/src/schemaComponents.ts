@@ -67,7 +67,7 @@ export const confidenceIntervalConfigSchema = Type.Object({
 export const checkboxGroupConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-	values: Type.Array(Type.Union([Type.String(), Type.Number()])),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
 	includeOther: Type.Optional(Type.Boolean()),
 	userShouldSelect: Type.Optional(Type.String()),
 	numCheckboxes: Type.Optional(Type.Number()),
@@ -75,13 +75,13 @@ export const checkboxGroupConfigSchema = Type.Object({
 export const radioGroupConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-	values: Type.Array(Type.Union([Type.String(), Type.Number()])),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
 	includeOther: Type.Optional(Type.Boolean()),
 });
 export const selectDropdownConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-	values: Type.Array(Type.Union([Type.String(), Type.Number()])),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
 });
 
 export const componentConfigSchemas = {

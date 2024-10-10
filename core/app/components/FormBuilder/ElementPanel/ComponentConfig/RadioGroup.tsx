@@ -1,13 +1,20 @@
+import { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
-import type { InnerFormProps } from "./types";
+import type { ComponentConfigFormProps, FormType } from "./types";
 import MultivalueBase from "./MultivalueBase";
 
-export default (props: InnerFormProps) => {
-	const { form } = props;
+export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) => {
+	const { form, component, ...rest } = props;
 	return (
-		<MultivalueBase {...props} label="Radio">
+		<MultivalueBase
+			{...rest}
+			component={InputComponent.selectDropdown}
+			// Cast to selectDropdown so we can reuse MultivalueBase
+			form={form as unknown as FormType<InputComponent.selectDropdown>}
+			label="Radio"
+		>
 			<FormField
 				control={form.control}
 				name="config.includeOther"

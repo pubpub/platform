@@ -1,18 +1,21 @@
 import type { ReactNode } from "react";
 
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { MultiValueInput } from "ui/multivalue-input";
 
-import type { InnerFormProps } from "./types";
+import type { ComponentConfigFormProps } from "./types";
 
 export default ({
 	form,
 	schemaName,
-	label = "Dropdown",
+	label,
 	children,
-}: InnerFormProps & { label?: string; children?: ReactNode }) => {
+}: ComponentConfigFormProps<InputComponent.selectDropdown> & {
+	label: string;
+	children?: ReactNode;
+}) => {
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 	return (
 		<div className="flex flex-col gap-6">
@@ -58,7 +61,7 @@ export default ({
 									}
 									field.onChange(e);
 								}}
-								value={field.value ?? []}
+								value={field.value ? field.value.map((v) => `${v}`) : []}
 							/>
 						</FormControl>
 						<FormMessage />

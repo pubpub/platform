@@ -26,7 +26,7 @@ const InputCompomentMap = {
 	[InputComponent.fileUpload]: toDynamic("FileUpload"),
 	[InputComponent.memberSelect]: toDynamic("MemberSelect"),
 	[InputComponent.radioGroup]: toDynamic("RadioGroup"),
-	[InputComponent.selectDropdown]: toDynamic("MultivalueBase"),
+	[InputComponent.selectDropdown]: toDynamic("SelectDropdown"),
 	[InputComponent.textArea]: toDynamic("TextArea"),
 	[InputComponent.textInput]: toDynamic("TextInput"),
 };

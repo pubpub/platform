@@ -1,5 +1,6 @@
 import type { CoreSchemaType } from "@prisma/client";
 import type { Static } from "@sinclair/typebox";
+import type { Prettify } from "@ts-rest/core";
 import type { UseFormReturn } from "react-hook-form";
 import type { componentConfigSchemas } from "schemas";
 
@@ -16,3 +17,5 @@ export type ConfigFormData<I extends InputComponent> = {
 	component: I;
 	config: Static<(typeof componentConfigSchemas)[I]>;
 };
+
+export type FormType<I extends InputComponent> = UseFormReturn<ConfigFormData<I>>;
