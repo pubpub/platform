@@ -62,6 +62,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 											>
 												<FormControl>
 													<Checkbox
+														data-testid={`checkbox-${v}`}
 														disabled={!isEnabled}
 														checked={field.value?.includes(v)}
 														onCheckedChange={(checked) => {
@@ -99,7 +100,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 							</FormItem>
 						) : null}
 						<FormDescription>{config.help}</FormDescription>
-						<FormMessage />
+						<FormMessage data-testid="error-message" />
 					</FormItem>
 				);
 			}}
