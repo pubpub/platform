@@ -143,7 +143,6 @@ export const _updatePub = async ({
 							value: eb.ref("excluded.value"),
 						}))
 					)
-					.returningAll()
 			).execute();
 		} catch (error) {
 			return {
