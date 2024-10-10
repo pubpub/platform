@@ -55,7 +55,10 @@ export default function ForgotForm() {
 						)}
 					/>
 
-					<Button disabled={!form.formState.isDirty || form.formState.isSubmitting}>
+					<Button
+						type="submit"
+						disabled={!form.formState.isDirty || form.formState.isSubmitting}
+					>
 						Send reset email
 						{form.formState.isSubmitting && (
 							<Loader2 className="ml-4 h-4 w-4 animate-spin" />
