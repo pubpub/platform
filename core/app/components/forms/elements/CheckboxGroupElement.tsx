@@ -94,6 +94,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 										className="h-6"
 										onChange={handleOtherField}
 										data-testid="other-field"
+										disabled={!isEnabled}
 									/>
 								</FormControl>
 							</FormItem>

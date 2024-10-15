@@ -76,6 +76,7 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 												type={isNumeric ? "number" : undefined}
 												className="h-6"
 												value={other}
+												disabled={!isEnabled}
 												onChange={(e) => {
 													const { value, valueAsNumber } = e.target;
 													let v: string | number = value;
