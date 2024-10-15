@@ -52,5 +52,5 @@ enum Privileges {
 	editForm,
 	archiveForm,
 	createApiToken,
-	revokeApiToken
+	revokeApiToken,
 }
