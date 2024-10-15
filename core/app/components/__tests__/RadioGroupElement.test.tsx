@@ -5,11 +5,11 @@ import type { ReactNode } from "react";
 
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
-import { checkboxGroupConfigSchema, MinMaxChoices, radioGroupConfigSchema } from "schemas";
-import { getNumericArrayWithMinMax, NumericArray, StringArray } from "schemas/src/schemas";
+import { checkboxGroupConfigSchema, radioGroupConfigSchema } from "schemas";
+import { NumericArray, StringArray } from "schemas/src/schemas";
 import { expect, it, vi } from "vitest";
 
 import { CoreSchemaType } from "db/public";
