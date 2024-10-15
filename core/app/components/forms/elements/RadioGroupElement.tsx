@@ -19,7 +19,7 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 	const isEnabled = formElementToggle.isEnabled(name);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
-	const [other, setOther] = useState<string | number>();
+	const [other, setOther] = useState<string | number>("");
 
 	Value.Default(radioGroupConfigSchema, config);
 	if (!Value.Check(radioGroupConfigSchema, config)) {
@@ -61,6 +61,7 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 															: false
 													}
 													value={`${v}`}
+													data-testid={`radio-${v}`}
 												/>
 											</FormControl>
 											<FormLabel>{v}</FormLabel>
@@ -76,12 +77,21 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 												className="h-6"
 												value={other}
 												onChange={(e) => {
-													const v = isNumeric
-														? e.target.valueAsNumber
-														: e.target.value;
+													const { value, valueAsNumber } = e.target;
+													let v: string | number = value;
+													if (isNumeric) {
+														if (isNaN(valueAsNumber)) {
+															setOther("");
+															field.onChange([]);
+															return;
+														}
+														v = valueAsNumber;
+													}
+
 													setOther(v);
 													field.onChange([v]);
 												}}
+												data-testid="other-field"
 											/>
 										</FormControl>
 									</FormItem>

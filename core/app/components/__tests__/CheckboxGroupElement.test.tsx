@@ -9,7 +9,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { checkboxGroupConfigSchema, MinMaxChoices } from "schemas";
-import { getNumericArrayWithMinMax } from "schemas/src/schemas";
+import { getNumericArrayWithMinMax, getStringArrayWithMinMax } from "schemas/src/schemas";
 import { expect, it, vi } from "vitest";
 
 import { CoreSchemaType } from "db/public";
@@ -28,16 +28,18 @@ const ResizeObserverMock = vi.fn(() => ({
 vi.stubGlobal("ResizeObserver", ResizeObserverMock);
 
 const FormWrapper = ({
-	onSubmit,
 	config,
 	children,
+	isStringArray,
 }: {
-	onSubmit: any;
 	config: Static<typeof checkboxGroupConfigSchema>;
 	children: ReactNode;
+	isStringArray?: boolean;
 }) => {
 	const schema = Type.Object({
-		example: getNumericArrayWithMinMax(config),
+		example: isStringArray
+			? getStringArrayWithMinMax(config)
+			: getNumericArrayWithMinMax(config),
 	});
 
 	const form = useForm({
@@ -49,7 +51,7 @@ const FormWrapper = ({
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)}>
+			<form onSubmit={form.handleSubmit(vi.fn())}>
 				{children}
 				<button type="submit">Submit</button>
 			</form>
@@ -85,7 +87,7 @@ describe("Checkbox group element", () => {
 	it("renders a numeric array", async () => {
 		const config: Static<typeof checkboxGroupConfigSchema> = { values: [0, 1, 2, 3, 4, 5] };
 		render(
-			<FormWrapper onSubmit={vi.fn()} config={config}>
+			<FormWrapper config={config}>
 				<CheckboxGroupElement
 					name="example"
 					config={config}
@@ -104,11 +106,11 @@ describe("Checkbox group element", () => {
 			values: ["cats", "dogs", "squirrels", "otters"],
 		};
 		render(
-			<FormWrapper onSubmit={vi.fn()} config={config}>
+			<FormWrapper config={config} isStringArray>
 				<CheckboxGroupElement
 					name="example"
 					config={config}
-					schemaName={CoreSchemaType.NumericArray}
+					schemaName={CoreSchemaType.StringArray}
 				/>
 			</FormWrapper>
 		);
@@ -125,9 +127,8 @@ describe("Checkbox group element", () => {
 				userShouldSelect: MinMaxChoices.Exactly,
 				numCheckboxes: 2,
 			};
-			const submit = vi.fn();
 			render(
-				<FormWrapper onSubmit={submit} config={config}>
+				<FormWrapper config={config}>
 					<CheckboxGroupElement
 						name="example"
 						config={config}
@@ -157,9 +158,8 @@ describe("Checkbox group element", () => {
 				userShouldSelect: MinMaxChoices.AtLeast,
 				numCheckboxes: 2,
 			};
-			const submit = vi.fn();
 			render(
-				<FormWrapper onSubmit={submit} config={config}>
+				<FormWrapper config={config}>
 					<CheckboxGroupElement
 						name="example"
 						config={config}
@@ -186,9 +186,8 @@ describe("Checkbox group element", () => {
 				userShouldSelect: MinMaxChoices.AtMost,
 				numCheckboxes: 2,
 			};
-			const submit = vi.fn();
 			render(
-				<FormWrapper onSubmit={submit} config={config}>
+				<FormWrapper config={config}>
 					<CheckboxGroupElement
 						name="example"
 						config={config}
@@ -221,7 +220,7 @@ describe("Checkbox group element", () => {
 		it("can add and remove other field", async () => {
 			const user = userEvent.setup();
 			render(
-				<FormWrapper onSubmit={vi.fn()} config={config}>
+				<FormWrapper config={config}>
 					<CheckboxGroupElement
 						name="example"
 						config={config}
@@ -255,9 +254,8 @@ describe("Checkbox group element", () => {
 				numCheckboxes: 2,
 				includeOther: true,
 			};
-			const submit = vi.fn();
 			render(
-				<FormWrapper onSubmit={submit} config={config}>
+				<FormWrapper config={config}>
 					<CheckboxGroupElement
 						name="example"
 						config={config}
