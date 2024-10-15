@@ -15,6 +15,7 @@ import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FileUploadElement";
 import { MemberSelectElement } from "./elements/MemberSelectElement";
 import { RadioGroupElement } from "./elements/RadioGroupElement";
+import { SelectDropdownElement } from "./elements/SelectDropdownElement";
 import { TextAreaElement } from "./elements/TextAreaElement";
 import { TextInputElement } from "./elements/TextInputElement";
 import { FormElementToggle } from "./FormElementToggle";
@@ -91,8 +92,7 @@ export const FormElement = ({
 	} else if (component === InputComponent.checkboxGroup) {
 		input = <CheckboxGroupElement {...elementProps} />;
 	} else if (component === InputComponent.selectDropdown) {
-		// TODO: support select dropdown
-		return null;
+		input = <SelectDropdownElement {...elementProps} />;
 	}
 
 	if (input) {
