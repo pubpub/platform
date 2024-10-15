@@ -8,6 +8,7 @@ import type { ApiAccessPermissionsTable } from "./ApiAccessPermissions";
 import type { ApiAccessTokensTable } from "./ApiAccessTokens";
 import type { AuthTokensTable } from "./AuthTokens";
 import type { CommunitiesTable } from "./Communities";
+import type { CommunityToPermissionTable } from "./CommunityToPermission";
 import type { FormElementsTable } from "./FormElements";
 import type { FormsTable } from "./Forms";
 import type { FormToPermissionsTable } from "./FormToPermissions";
@@ -36,14 +37,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	api_access_permissions: ApiAccessPermissionsTable;
-
-	form_to_permissions: FormToPermissionsTable;
-
-	form_elements: FormElementsTable;
-
-	sessions: SessionsTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -101,4 +94,14 @@ export interface PublicSchema {
 	api_access_tokens: ApiAccessTokensTable;
 
 	api_access_logs: ApiAccessLogsTable;
+
+	api_access_permissions: ApiAccessPermissionsTable;
+
+	form_to_permissions: FormToPermissionsTable;
+
+	form_elements: FormElementsTable;
+
+	sessions: SessionsTable;
+
+	_CommunityToPermission: CommunityToPermissionTable;
 }

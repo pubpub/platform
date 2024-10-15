@@ -3,8 +3,10 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 import { z } from "zod";
 
 import type { MemberGroupsId } from "./MemberGroups";
+import type { MemberRole } from "./MemberRole";
 import type { MembersId } from "./Members";
 import { memberGroupsIdSchema } from "./MemberGroups";
+import { memberRoleSchema } from "./MemberRole";
 import { membersIdSchema } from "./Members";
 
 // @generated
@@ -24,6 +26,8 @@ export interface PermissionsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	role: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
 }
 
 export type Permissions = Selectable<PermissionsTable>;
@@ -40,6 +44,7 @@ export const permissionsSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	role: memberRoleSchema.nullable(),
 });
 
 export const permissionsInitializerSchema = z.object({
@@ -48,6 +53,7 @@ export const permissionsInitializerSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	role: memberRoleSchema.optional().nullable(),
 });
 
 export const permissionsMutatorSchema = z.object({
@@ -56,4 +62,5 @@ export const permissionsMutatorSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	role: memberRoleSchema.optional().nullable(),
 });
