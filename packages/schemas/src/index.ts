@@ -15,7 +15,7 @@ import {
 	Vector3,
 } from "./schemas";
 
-export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, config: unknown) {
+export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, config?: unknown) {
 	switch (coreSchemaType) {
 		case CoreSchemaType.Boolean:
 			return Boolean;

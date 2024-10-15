@@ -78,7 +78,7 @@ const getMinMaxFromCheckboxGroupConfig = (config: Static<typeof checkboxGroupCon
 	return { min, max, error };
 };
 
-export const getNumericArrayWithMinMax = (config: unknown) => {
+export const getNumericArrayWithMinMax = (config?: unknown) => {
 	if (!Value.Check(checkboxGroupConfigSchema, config)) {
 		return NumericArray;
 	}

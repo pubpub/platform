@@ -125,7 +125,7 @@ test.describe("Multivalue inputs", () => {
 		}
 
 		// Fill out the form
-		const title = "radio";
+		const title = "multivalue";
 		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
 		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
 		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
