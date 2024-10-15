@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { checkboxGroupConfigSchema, MinMaxChoices } from "schemas";
 import { getNumericArrayWithMinMax } from "schemas/src/schemas";
@@ -32,7 +33,7 @@ const FormWrapper = ({
 	children,
 }: {
 	onSubmit: any;
-	config: any;
+	config: Static<typeof checkboxGroupConfigSchema>;
 	children: ReactNode;
 }) => {
 	const schema = Type.Object({
@@ -69,8 +70,20 @@ const FormWrapper = ({
 };
 
 describe("Checkbox group element", () => {
-	it("renders a basic numeric array", async () => {
-		const config: Static<typeof checkboxGroupConfigSchema> = { values: [1, 2, 3, 4, 5] };
+	/** Helper to force the form to validate by clicking submit (so error messages render) */
+	const validateForm = async () => {
+		const submitButton = screen.getByText("Submit");
+		await act(async () => {
+			fireEvent.click(submitButton);
+		});
+	};
+	/** Helper that clicks a checkbox to check/uncheck it */
+	const check = (value: number | string) => {
+		const c = screen.getByTestId(`checkbox-${value}`);
+		fireEvent.click(c);
+	};
+	it("renders a numeric array", async () => {
+		const config: Static<typeof checkboxGroupConfigSchema> = { values: [0, 1, 2, 3, 4, 5] };
 		render(
 			<FormWrapper onSubmit={vi.fn()} config={config}>
 				<CheckboxGroupElement
@@ -86,20 +99,29 @@ describe("Checkbox group element", () => {
 		expect(screen.getByTestId("selected-1")).toBeDefined();
 	});
 
+	it("renders a string array", async () => {
+		const config: Static<typeof checkboxGroupConfigSchema> = {
+			values: ["cats", "dogs", "squirrels", "otters"],
+		};
+		render(
+			<FormWrapper onSubmit={vi.fn()} config={config}>
+				<CheckboxGroupElement
+					name="example"
+					config={config}
+					schemaName={CoreSchemaType.NumericArray}
+				/>
+			</FormWrapper>
+		);
+		expect(screen.getByTestId("checkbox-cats")).toBeDefined();
+		const c1 = screen.getByTestId("checkbox-cats");
+		fireEvent.click(c1);
+		expect(screen.getByTestId("selected-cats")).toBeDefined();
+	});
+
 	describe("min max checking", () => {
-		const validateForm = async () => {
-			const submitButton = screen.getByText("Submit");
-			await act(async () => {
-				fireEvent.click(submitButton);
-			});
-		};
-		const check = (value: number) => {
-			const c = screen.getByTestId(`checkbox-${value}`);
-			fireEvent.click(c);
-		};
 		it("exactly", async () => {
 			const config: Static<typeof checkboxGroupConfigSchema> = {
-				values: [1, 2, 3, 4, 5],
+				values: [0, 1, 2, 3, 4, 5],
 				userShouldSelect: MinMaxChoices.Exactly,
 				numCheckboxes: 2,
 			};
@@ -131,7 +153,7 @@ describe("Checkbox group element", () => {
 		});
 		it("at least", async () => {
 			const config: Static<typeof checkboxGroupConfigSchema> = {
-				values: [1, 2, 3, 4, 5],
+				values: [0, 1, 2, 3, 4, 5],
 				userShouldSelect: MinMaxChoices.AtLeast,
 				numCheckboxes: 2,
 			};
@@ -186,6 +208,82 @@ describe("Checkbox group element", () => {
 			await validateForm();
 			expect(screen.queryByTestId("error-message")?.textContent).toContain(
 				"Please select at most 2"
+			);
+		});
+	});
+
+	describe("other field", () => {
+		const config: Static<typeof checkboxGroupConfigSchema> = {
+			values: [0, 1, 2, 3, 4, 5],
+			includeOther: true,
+		};
+
+		it("can add and remove other field", async () => {
+			const user = userEvent.setup();
+			render(
+				<FormWrapper onSubmit={vi.fn()} config={config}>
+					<CheckboxGroupElement
+						name="example"
+						config={config}
+						schemaName={CoreSchemaType.NumericArray}
+					/>
+				</FormWrapper>
+			);
+			const otherField = screen.getByTestId("other-field");
+			// Add and remove an 'other' field
+			const otherValue = "7";
+			await user.type(otherField, otherValue);
+			expect(screen.queryAllByRole("listitem").length).toBe(1);
+			expect(screen.getByTestId("selected-7")).toBeDefined();
+			await user.type(otherField, "{backspace}");
+			expect(screen.queryByTestId("selected-7")).toBeNull();
+			expect(screen.queryByRole("listitem")).toBeNull();
+
+			// Add 'other' field back and also a regular checkbox
+			await user.type(otherField, otherValue);
+			await user.click(screen.getByTestId("checkbox-0"));
+			expect(screen.queryAllByRole("listitem").length).toBe(2);
+			expect(screen.getByTestId("selected-0")).toBeDefined();
+			expect(screen.getByTestId("selected-7")).toBeDefined();
+		});
+
+		it("handles other fields with min/max", async () => {
+			const user = userEvent.setup();
+			const config: Static<typeof checkboxGroupConfigSchema> = {
+				values: [0, 1, 2, 3, 4, 5],
+				userShouldSelect: MinMaxChoices.Exactly,
+				numCheckboxes: 2,
+				includeOther: true,
+			};
+			const submit = vi.fn();
+			render(
+				<FormWrapper onSubmit={submit} config={config}>
+					<CheckboxGroupElement
+						name="example"
+						config={config}
+						schemaName={CoreSchemaType.NumericArray}
+					/>
+				</FormWrapper>
+			);
+			// Only one 'other' field should be invalid
+			const otherField = screen.getByTestId("other-field");
+			const otherValue = "7";
+			await user.type(otherField, otherValue);
+			await validateForm();
+			expect(screen.queryByTestId("error-message")?.textContent).toContain(
+				"Please select exactly 2"
+			);
+			// Adding a checkbox gets us to exactly 2
+			expect(screen.getByTestId("checkbox-1")).toBeDefined();
+			check(1);
+			await validateForm();
+			expect(screen.queryByTestId("error-message")).toBeNull();
+
+			// Going one over puts us back in an error state
+			check(3);
+			await validateForm();
+			expect(screen.queryByTestId("error-message")?.textContent).toContain(
+				"Please select exactly 2"
 			);
 		});
 	});

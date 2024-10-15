@@ -95,6 +95,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 										type={isNumeric ? "number" : undefined}
 										className="h-6"
 										onChange={handleOtherField}
+										data-testid="other-field"
 									/>
 								</FormControl>
 							</FormItem>
