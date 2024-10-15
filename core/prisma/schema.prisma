@@ -307,7 +307,7 @@ model Permission {
   memberId      String?
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
-  role          MemberRole
+  role          MemberRole?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
   // We don't have a way in this right now to say 'All pubs in a community' or 'all pubs in a workflow'.
