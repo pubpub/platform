@@ -5,19 +5,19 @@ import { z } from "zod";
 
 /** Represents the enum public.CoreSchemaType */
 export enum CoreSchemaType {
-	String = "String",
 	Boolean = "Boolean",
-	Vector3 = "Vector3",
 	DateTime = "DateTime",
 	Email = "Email",
-	URL = "URL",
-	MemberId = "MemberId",
 	FileUpload = "FileUpload",
+	MemberId = "MemberId",
 	Null = "Null",
 	Number = "Number",
 	NumericArray = "NumericArray",
+	String = "String",
 	StringArray = "StringArray",
-	HTML = "HTML",
+	URL = "URL",
+	Vector3 = "Vector3",
+	RichText = "RichText",
 	ContextString = "ContextString",
 }
 

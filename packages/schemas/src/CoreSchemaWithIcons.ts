@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 
 import {
+	BookOpenText,
 	BoxSelect,
 	CalendarClock,
 	CheckSquare,
@@ -9,6 +10,7 @@ import {
 	ImagePlus,
 	Link,
 	Mail,
+	TextQuote,
 	Type,
 	User,
 } from "lucide-react";
@@ -65,6 +67,14 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 	[CoreSchemaType.Vector3]: {
 		description: "A set of 3 numbers",
 		icon: BoxSelect,
+	},
+	[CoreSchemaType.RichText]: {
+		description: "A string of HTML",
+		icon: TextQuote,
+	},
+	[CoreSchemaType.ContextString]: {
+		description: "A contextual string",
+		icon: BookOpenText,
 	},
 	[CoreSchemaType.Null]: {
 		description: "An empty value",

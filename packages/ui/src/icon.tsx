@@ -38,6 +38,8 @@ export {
 	Heading2,
 	Heading3,
 	History,
+	TextQuote,
+	BookOpenText,
 	ImagePlus,
 	Info,
 	Link,

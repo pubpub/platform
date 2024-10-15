@@ -165,7 +165,7 @@ enum CoreSchemaType {
   StringArray
   URL
   Vector3
-  HTML
+  RichText
   ContextString
 }
 
