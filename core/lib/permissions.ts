@@ -18,3 +18,39 @@ export const getPubUsers = (permissions: PermissionPayload[]) => {
 	}
 	return users;
 };
+
+enum Privileges {
+	movePub,
+	createPub,
+	viewPub,
+	updatePubValues,
+	createRelatedPub,
+	createPubWithForm,
+	editPubWithForm,
+	createPubField,
+	archivePubField,
+	editPubField,
+	createPubType,
+	editPubType,
+	deletePubType,
+	createStage,
+	deleteStage,
+	addMoveConstraint,
+	removeMoveConstraint,
+	addActionToStage,
+	editAction,
+	removeActionFromStage,
+	addPubMember,
+	addStageMember,
+	addFormMember,
+	addCommunityMember,
+	createMemberGroup,
+	addMemberToGroup,
+	removeMemberFromGroup,
+	addCommunity,
+	createForm,
+	editForm,
+	archiveForm,
+	createApiToken,
+	revokeApiToken
+}
