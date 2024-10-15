@@ -22,7 +22,11 @@ export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) =
 					<FormItem className="mt-2">
 						<div className="flex items-end gap-x-2">
 							<FormControl>
-								<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+								<Checkbox
+									data-testid="include-other"
+									checked={field.value}
+									onCheckedChange={field.onChange}
+								/>
 							</FormControl>
 							<FormLabel>Allow selection of 'Other' with custom string</FormLabel>
 						</div>
