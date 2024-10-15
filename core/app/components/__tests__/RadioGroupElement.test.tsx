@@ -68,18 +68,6 @@ const FormWrapper = ({
 };
 
 describe("Radio group element", () => {
-	/** Helper to force the form to validate by clicking submit (so error messages render) */
-	const validateForm = async () => {
-		const submitButton = screen.getByText("Submit");
-		await act(async () => {
-			fireEvent.click(submitButton);
-		});
-	};
-	/** Helper that clicks a radio to check/uncheck it */
-	const check = (value: number | string) => {
-		const c = screen.getByTestId(`radio-${value}`);
-		fireEvent.click(c);
-	};
 	it("renders a numeric array", async () => {
 		const config: Static<typeof radioGroupConfigSchema> = { values: [0, 1, 2, 3, 4, 5] };
 		render(
