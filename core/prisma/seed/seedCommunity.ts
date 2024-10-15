@@ -16,28 +16,36 @@ import type {
 	NewMembers,
 	PubTypes,
 	Stages,
-	StructuralFormElement,
 	Users,
 } from "db/public";
 import {
+	Action,
 	Action as ActionName,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
 	MemberRole,
+	StructuralFormElement,
 } from "db/public";
 import { logger } from "logger";
+import { expect } from "utils";
 
-import type { PubFieldsInitializer } from "./utils";
 import type { actions } from "~/actions/api";
 import { createPubRecursive } from "~/app/components/pubs/PubEditor/actions";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/auth/password";
 import { createPubRecursiveNew } from "~/lib/server";
 import { slugifyString } from "~/lib/string";
-import { createPubFields } from "./utils";
 
 export const arcadiaId = "758ba348-92c7-46ec-9612-7afda81e2d79" as CommunitiesId;
+
+export type PubFieldsInitializer = Record<
+	string,
+	{
+		relation?: true;
+		schemaName: CoreSchemaType;
+	}
+>;
 
 type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	string,
@@ -98,28 +106,54 @@ type PubInitializer<
 	PT extends PubTypeInitializer<PF>,
 	U extends UsersInitializer,
 	S extends StagesInitializer<U>,
-	K extends keyof PT = keyof PT,
-> = K extends K
-	? {
+> = {
+	[PubName in string]: {
+		[PubTypeName in keyof PT]: {
 			id?: string;
 			assignee?: keyof U;
-			pubType: K;
+			pubType: PubTypeName;
 			values: {
-				[KK in keyof PT[K] as KK extends keyof PF
-					? PF[KK] extends CoreSchemaType
-						? KK
-						: never
-					: never]: KK extends keyof PF
-					? PF[KK] extends CoreSchemaType
-						? InputTypeForCoreSchemaType<PF[KK]>
+				[FieldName in keyof PT[PubTypeName] as FieldName extends keyof PF
+					? FieldName
+					: never]?: FieldName extends keyof PF
+					? PF[FieldName]["schemaName"] extends CoreSchemaType
+						? InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>
 						: never
 					: never;
 			};
 			stage?: keyof S;
 			members?: (keyof U)[];
-			children?: PubInitializer<PF, PT, U, S>[];
-		}
-	: never;
+			children?: PubInitializer<PF, PT, U, S>;
+		};
+	}[keyof PT & string];
+};
+
+/**
+ * Intended shape looks like
+ *
+ * ```ts
+ * {
+ * 	// allow only the names of the actual pub
+ * 	"Some Pub": {
+ * 		// allow only pub fields that have `relation = true`
+ * 		"Some Relation": "Another Pub" // allow only the names of other pubs, but not the current Pub
+ * 	  }
+ * }
+ * ```
+ */
+type PubRelationsInitializer<
+	PF extends PubFieldsInitializer,
+	PT extends PubTypeInitializer<PF>,
+	PI extends PubInitializer<PF, PT, any, any>,
+> = {
+	[PubName in keyof PI]?: {
+		[RelationFieldName in keyof PT[PI[PubName]["pubType"]] as RelationFieldName extends keyof PF
+			? PF[RelationFieldName]["relation"] extends true
+				? RelationFieldName
+				: never
+			: never]: Exclude<keyof PI, PubName>;
+	};
+};
 
 type FormElementInitializer<
 	PF extends PubFieldsInitializer,
@@ -128,7 +162,7 @@ type FormElementInitializer<
 > = PT[PubType] extends infer PubFieldsForPubType
 	? {
 			[FieldName in keyof PubFieldsForPubType]: FieldName extends keyof PF
-				? (typeof componentsBySchema)[PF[FieldName]][number] extends infer Component extends
+				? (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
 						InputComponent
 					? {
 							type: ElementType.pubfield;
@@ -190,81 +224,82 @@ type FormInitializer<
 type CreatePubRecursiveInput = Parameters<typeof createPubRecursive>[0];
 
 const makePubInitializerMatchCreatePubRecursiveInput = <
-	// PFI extends PubFieldsInitializer,
-	// PTI extends PubTypeInitializer<PFI>,
-	// UI extends UsersInitializer,
-	// SI extends StagesInitializer<UI>,
 	PI extends PubInitializer<any, any, any, any>,
 >({
-	//	pubFields
+	community,
 	pubTypes,
 	users,
 	stages,
-	pub,
-	community,
+	pubs,
 	trx,
 }: {
-	//	pubFields: PubFields[];
+	community: Communities;
 	pubTypes: PubTypes[];
 	users: Users[];
 	stages: Stages[];
-	pub: PI;
-	community: Communities;
+	pubs: PI;
 	trx?: typeof db;
-}): CreatePubRecursiveInput => {
-	const pubType = pubTypes.find((pubType) => pubType.name === pub.pubType);
-	if (!pubType) {
-		throw new Error(
-			`Pub type ${pub.pubType as string} not found in the output of the created pub types.`
+}): CreatePubRecursiveInput[] => {
+	const result = Object.entries(pubs).map(([pubName, pub]) => {
+		const pubType = pubTypes.find((pubType) => pubType.name === pub.pubType);
+		if (!pubType) {
+			throw new Error(
+				`Pub type ${pub.pubType as string} not found in the output of the created pub types.`
+			);
+		}
+		const assigneeId = findBySlug(users, pub.assignee as string)?.id;
+		if (pub.assignee && !assigneeId) {
+			throw new Error(
+				`Assignee ${pub.assignee as string} not found in the output of the created users.`
+			);
+		}
+
+		const stageId = stages.find((stage) => stage.name === pub.stage)?.id;
+
+		if (pub.stage && !stageId) {
+			throw new Error(
+				`Stage ${pub.stage as string} not found in the output of the created stages.`
+			);
+		}
+
+		const values = Object.fromEntries(
+			Object.entries(pub.values).map(([valueTitle, info]) => [
+				`${community.slug}:${slugifyString(valueTitle)}`,
+				info,
+			])
 		);
-	}
-	const assigneeId = users.find((user) => user.slug === pub.assignee)?.id;
-	if (pub.assignee && !assigneeId) {
-		throw new Error(
-			`Assignee ${pub.assignee as string} not found in the output of the created users.`
-		);
-	}
 
-	const stageId = stages.find((stage) => stage.name === pub.stage)?.id;
-
-	if (pub.stage && !stageId) {
-		throw new Error(
-			`Stage ${pub.stage as string} not found in the output of the created stages.`
-		);
-	}
-
-	const values = Object.fromEntries(
-		Object.entries(pub.values).map(([valueTitle, info]) => [
-			`${community.slug}:${slugifyString(valueTitle)}`,
-			info,
-		])
-	);
-
-	const input = {
-		communityId: community.id,
-		trx,
-		body: {
-			id: pub?.id,
-			pubTypeId: pubType.id,
-			assigneeId: assigneeId,
-			stageId: stageId,
-			values,
-			children: pub.children?.map(
-				(pub) =>
+		const input = {
+			communityId: community.id,
+			// @ts-expect-error Cant assign a different trx to a trx, technically
+			trx,
+			body: {
+				id: pub?.id,
+				pubTypeId: pubType.id,
+				assigneeId: assigneeId,
+				stageId: stageId,
+				values,
+				children:
+					pub.children &&
 					makePubInitializerMatchCreatePubRecursiveInput({
 						pubTypes,
 						users,
 						stages,
 						community,
-						pub,
+						pubs: pub.children,
 						trx,
-					}).body
-			),
-		},
-	} satisfies CreatePubRecursiveInput;
+					}).map((child) => child.body),
+			},
+		} satisfies CreatePubRecursiveInput;
 
-	return input;
+		return input as CreatePubRecursiveInput;
+	});
+
+	return result;
 };
+
+const findBySlug = <T extends { slug: string }>(props: T[], slug: string) =>
+	props.find((prop) => new RegExp(`^${slug}-.*`).test(prop.slug));
 
 export const seedCommunity = async <
 	const PF extends PubFieldsInitializer,
@@ -272,7 +307,8 @@ export const seedCommunity = async <
 	const U extends UsersInitializer,
 	const S extends StagesInitializer<U>,
 	const SC extends StageConnectionsInitializer<S>,
-	const PI extends PubInitializer<PF, PT, U, S>[],
+	const PI extends PubInitializer<PF, PT, U, S>,
+	const PR extends PubRelationsInitializer<PF, PT, PI>,
 	const F extends FormInitializer<PF, PT, U, S>,
 >(
 	props: {
@@ -286,9 +322,10 @@ export const seedCommunity = async <
 		pubTypes: PT;
 		users: U;
 		stages: S;
-		stageConnections: SC;
+		stageConnections?: SC;
 		pubs: PI;
-		forms: F;
+		pubRelations?: PR;
+		forms?: F;
 	},
 	trx = db
 ) => {
@@ -297,18 +334,32 @@ export const seedCommunity = async <
 
 	const createdCommunity = await trx
 		.insertInto("communities")
-		.values(community)
+		.values({
+			...community,
+			slug: `${community.slug}-${new Date().toISOString()}`,
+		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
 	logger.info(`Successfully created community ${community.name}`);
 
 	const { id: communityId, slug: communitySlug } = createdCommunity;
 
-	const createdPubFields = await createPubFields({
-		pubFields: props.pubFields,
-		communityId,
-		communitySlug,
-	});
+	const createdPubFields = await trx
+		.insertInto("pub_fields")
+		.values(
+			Object.entries(props.pubFields).map(([name, info]) => {
+				const slug = slugifyString(name);
+				return {
+					name: name,
+					slug: `${communitySlug}:${slug}`,
+					communityId: communityId,
+					schemaName: info.schemaName,
+					isRelation: info.relation,
+				};
+			})
+		)
+		.returning(["id", "slug", "name", "schemaName", "isRelation"])
+		.execute();
 
 	const createdPubTypes = await trx
 		.insertInto("pub_types")
@@ -370,7 +421,7 @@ export const seedCommunity = async <
 
 	const userValues = await Promise.all(
 		Object.entries(props.users).map(async ([slug, userInfo]) => ({
-			slug,
+			slug: `${slug}-${new Date().toISOString()}`,
 			email: userInfo?.email ?? faker.internet.email(),
 			firstName: userInfo?.firstName ?? faker.person.firstName(),
 			lastName: userInfo?.lastName ?? faker.person.lastName(),
@@ -384,7 +435,8 @@ export const seedCommunity = async <
 	const possibleMembers = Object.entries(props.users)
 		.filter(([slug, userInfo]) => !!userInfo.role)
 		.flatMap(([slug, userWithRole]) => {
-			const createdUser = createdUsers.find((createdUser) => createdUser.slug === slug);
+			// const createdUser = createdUsers.find((createdUser) => createdUser.slug === slug);
+			const createdUser = findBySlug(createdUsers, slug);
 			if (!createdUser) {
 				return [];
 			}
@@ -447,7 +499,7 @@ export const seedCommunity = async <
 		(stage, idx) =>
 			stage.members?.map((member) => ({
 				stage,
-				member: usersWithMemberShips.find((user) => user.slug === member)!,
+				member: findBySlug(usersWithMemberShips, member as string)!,
 			})) ?? []
 	);
 
@@ -475,107 +527,151 @@ export const seedCommunity = async <
 		.returningAll()
 		.execute();
 
-	const stageConnectionsList = Object.entries(props.stageConnections).flatMap(
-		([stage, destinations]) => {
-			if (!destinations) {
-				return [];
-			}
+	const stageConnectionsList = props.stageConnections
+		? Object.entries(props.stageConnections).flatMap(([stage, destinations]) => {
+				if (!destinations) {
+					return [];
+				}
 
-			const currentStageId = consolidatedStages.find(
-				(consolidatedStage) => consolidatedStage.name === stage
-			)?.id;
+				const currentStageId = consolidatedStages.find(
+					(consolidatedStage) => consolidatedStage.name === stage
+				)?.id;
 
-			if (!currentStageId) {
-				throw new Error(
-					`Something went wrong during the creation of stage connections. Stage ${stage} not found in the output of the created stages.`
-				);
-			}
+				if (!currentStageId) {
+					throw new Error(
+						`Something went wrong during the creation of stage connections. Stage ${stage} not found in the output of the created stages.`
+					);
+				}
 
-			const { to, from } = destinations;
+				const { to, from } = destinations;
 
-			const tos =
-				to?.map((dest) => ({
-					stageId: currentStageId,
-					destinationId: consolidatedStages.find((stage) => stage.name === dest)!.id,
-				})) ?? [];
+				const tos =
+					to?.map((dest) => ({
+						stageId: currentStageId,
+						destinationId: consolidatedStages.find((stage) => stage.name === dest)!.id,
+					})) ?? [];
 
-			const froms =
-				from?.map((dest) => ({
-					stageId: consolidatedStages.find((stage) => stage.name === dest)!.id,
-					destinationId: currentStageId,
-				})) ?? [];
+				const froms =
+					from?.map((dest) => ({
+						stageId: consolidatedStages.find((stage) => stage.name === dest)!.id,
+						destinationId: currentStageId,
+					})) ?? [];
 
-			return [...tos, ...froms];
-		}
-	);
+				return [...tos, ...froms];
+			})
+		: [];
 
-	const createPubRecursiveInput = props.pubs.map((pub) =>
-		makePubInitializerMatchCreatePubRecursiveInput({
-			pubTypes: createdPubTypes,
-			users: createdUsers,
-			stages: createdStages,
-			community: createdCommunity,
-			pub,
-			trx,
-		})
-	);
+	const createPubRecursiveInput = makePubInitializerMatchCreatePubRecursiveInput({
+		pubTypes: createdPubTypes,
+		users: createdUsers,
+		stages: createdStages,
+		community: createdCommunity,
+		pubs: props.pubs,
+		trx,
+	});
 
 	const pubs = await Promise.all(createPubRecursiveInput.map(createPubRecursiveNew));
+	const topLevelPubNames = Object.keys(props.pubs);
 
-	const createdForms = await trx
-		.with("form", (eb) =>
-			eb
-				.insertInto("forms")
+	// necessary, because pubs don't really have names
+	const pubsWithNames = pubs.map((pub, idx) => {
+		const pubName = topLevelPubNames[idx];
+
+		return [pubName, pub] as const;
+	});
+
+	const findPubIdByName = (pubName: string) =>
+		pubsWithNames.find((pubNamePubTuple) => pubNamePubTuple[0] === pubName)?.[1]?.id;
+	const pubRelations = props.pubRelations
+		? await trx
+				.insertInto("pub_values")
 				.values(
-					Object.entries(props.forms).map(([formTitle, formInput]) => ({
-						id: formInput.id,
-						access: formInput.access,
-						isArchived: formInput.isArchived,
-						name: formTitle,
-						slug: formInput.slug ?? slugifyString(formTitle),
-						communityId: communityId,
-						pubTypeId: createdPubTypes.find(
-							(pubType) => pubType.name === formInput.pubType
-						)!.id,
-					}))
+					Object.entries(props.pubRelations).flatMap(([pubName, pubRelation]) => {
+						const mainPubId = findPubIdByName(pubName);
+						if (!mainPubId) {
+							throw new Error(`Could not find pub with name ${pubName}. Ah`);
+						}
+
+						return Object.entries(pubRelation).map(
+							([fieldName, pubName]: [fieldName: string, pubName: string]) => {
+								const field = createdPubFields.find(
+									(pubField) => pubField.name === fieldName
+								);
+								const relatedPubId = findPubIdByName(pubName);
+
+								return {
+									fieldId: expect(field?.id),
+									pubId: mainPubId,
+									relatedPubId: expect(relatedPubId),
+								};
+							}
+						);
+					})
 				)
 				.returningAll()
-		)
-		.with("form_elements", (db) =>
-			db
-				.insertInto("form_elements")
-				.values((eb) =>
-					Object.entries(props.forms).flatMap(([formTitle, formInput], idx) =>
-						formInput.elements.map((elementInput, elementIndex) => ({
-							formId: eb
-								.selectFrom("form")
-								.select("form.id")
-								.limit(1)
-								.offset(idx)
-								.where("form.name", "=", formTitle),
-							type: elementInput.type,
-							content: elementInput.content,
-							label: elementInput.label,
-							element: elementInput.element,
-							component: elementInput.component,
-							order: elementIndex,
-							config: elementInput.config,
-						}))
+				.execute()
+		: [];
+
+	const createdForms =
+		props.forms !== undefined
+			? await trx
+					.with("form", (eb) =>
+						eb
+							.insertInto("forms")
+							.values(
+								Object.entries(expect(props.forms)).map(
+									([formTitle, formInput]) => ({
+										id: formInput.id,
+										access: formInput.access,
+										isArchived: formInput.isArchived,
+										name: formTitle,
+										slug: formInput.slug ?? slugifyString(formTitle),
+										communityId: communityId,
+										pubTypeId: createdPubTypes.find(
+											(pubType) => pubType.name === formInput.pubType
+										)!.id,
+									})
+								)
+							)
+							.returningAll()
 					)
-				)
-				.returningAll()
-		)
-		.selectFrom("form")
-		.selectAll("form")
-		.select((eb) =>
-			jsonArrayFrom(
-				eb
-					.selectFrom("form_elements")
-					.selectAll("form_elements")
-					.whereRef("form_elements.formId", "=", "form.id")
-			).as("elements")
-		)
-		.execute();
+					.with("form_elements", (db) =>
+						db
+							.insertInto("form_elements")
+							.values((eb) =>
+								Object.entries(expect(props.forms)).flatMap(
+									([formTitle, formInput], idx) =>
+										formInput.elements.map((elementInput, elementIndex) => ({
+											formId: eb
+												.selectFrom("form")
+												.select("form.id")
+												.limit(1)
+												.offset(idx)
+												.where("form.name", "=", formTitle),
+											type: elementInput.type,
+											content: elementInput.content,
+											label: elementInput.label,
+											element: elementInput.element,
+											component: elementInput.component,
+											order: elementIndex,
+											config: elementInput.config,
+										}))
+								)
+							)
+							.returningAll()
+					)
+					.selectFrom("form")
+					.selectAll("form")
+					.select((eb) =>
+						jsonArrayFrom(
+							eb
+								.selectFrom("form_elements")
+								.selectAll("form_elements")
+								.whereRef("form_elements.formId", "=", "form.id")
+						).as("elements")
+					)
+					.execute()
+			: [];
 
 	const possibleActions = consolidatedStages.flatMap(
 		(stage, idx) =>
@@ -601,7 +697,35 @@ export const seedCommunity = async <
 		stagePermissions,
 		stageConnections: stageConnectionsList,
 		pubs: pubs,
+		pubRelations,
 		actions: createdActions,
 		forms: createdForms,
 	};
 };
+
+/**
+ * Convenience method in case you want to define the input of `seedCommunity` before actually calling it
+ */
+export const createSeed = <
+	const PF extends PubFieldsInitializer,
+	const PT extends PubTypeInitializer<PF>,
+	const U extends UsersInitializer,
+	const S extends StagesInitializer<U>,
+	const SC extends StageConnectionsInitializer<S>,
+	const PI extends PubInitializer<PF, PT, U, S>[],
+	const F extends FormInitializer<PF, PT, U, S>,
+>(props: {
+	community: {
+		id?: CommunitiesId;
+		name: string;
+		slug: string;
+		avatar?: string;
+	};
+	pubFields: PF;
+	pubTypes: PT;
+	users: U;
+	stages: S;
+	stageConnections: SC;
+	pubs: PI;
+	forms: F;
+}) => props;

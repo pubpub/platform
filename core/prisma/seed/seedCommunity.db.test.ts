@@ -20,31 +20,40 @@ describe("seedCommunity", () => {
 		const trx = getTrx();
 
 		const seedCommunity = await import("./seedCommunity").then((mod) => mod.seedCommunity);
-
 		const testUserId = crypto.randomUUID();
-		const community = await seedCommunity({
+
+		const submissionPubId = crypto.randomUUID();
+		const authorPubId = crypto.randomUUID();
+
+		const bigSeed1 = await seedCommunity({
 			community: {
 				name: "test",
-				slug: "test",
+				slug: "test-community",
 			},
 			pubFields: {
-				Title: CoreSchemaType.String,
+				Title: { schemaName: CoreSchemaType.String },
+				SubmissionAuthor: { schemaName: CoreSchemaType.Null, relation: true },
 			},
 			pubTypes: {
 				Submission: {
+					Title: true,
+				},
+				Author: {
 					Title: true,
 				},
 			},
 			users: {
 				test: {
 					id: testUserId,
+					firstName: "Testy",
+					email: "test@test.com",
+					lastName: "McTestFace",
 					role: MemberRole.admin,
 				},
-				hihi: {
+				hih: {
 					role: MemberRole.contributor,
 				},
 			},
-
 			stages: {
 				"Stage 1": {
 					members: ["test"],
@@ -61,24 +70,33 @@ describe("seedCommunity", () => {
 				},
 				"Stage 2": {},
 			},
-			pubs: [
-				{
+			pubs: {
+				"A Submission": {
+					id: submissionPubId,
 					pubType: "Submission",
 					values: {
 						Title: "HENK",
 					},
 					stage: "Stage 1",
-					children: [
-						{
+					children: {
+						"Child Submission": {
 							pubType: "Submission",
 							assignee: "test",
 							values: {
 								Title: "Freek",
 							},
 						},
-					],
+					},
 				},
-			],
+				"Author 1": {
+					id: authorPubId,
+					pubType: "Author",
+					values: {
+						Title: "De Heer Frederick",
+					},
+				},
+			},
+
 			forms: {
 				"submission-form": {
 					pubType: "Submission",
@@ -111,9 +129,178 @@ describe("seedCommunity", () => {
 					to: ["Stage 2"],
 				},
 			},
+			pubRelations: {
+				"A Submission": {
+					SubmissionAuthor: "Author 1",
+				},
+			},
 		});
 
-		console.dir(community, { depth: null });
-		expect(community).toBeDefined();
+		expect(bigSeed1).toBeDefined();
+
+		expect(bigSeed1).toMatchObject({
+			actions: [
+				{
+					action: "email",
+					config: {
+						body: "hello nerd",
+						subject: "hello nerd",
+					},
+					name: "",
+				},
+			],
+			community: {
+				avatar: null,
+				name: "test",
+			},
+			forms: [
+				{
+					access: "private",
+					elements: [
+						{
+							component: null,
+							config: null,
+							content: "# Hey, what is up.",
+							element: "p",
+							fieldId: null,
+							label: null,
+							order: 0,
+							required: null,
+							stageId: null,
+							type: "structural",
+						},
+						{
+							component: "textInput",
+							config: {
+								label: "Title hihihi",
+							},
+							content: null,
+							element: null,
+							fieldId: null,
+							label: null,
+							order: 1,
+							required: null,
+							stageId: null,
+							type: "pubfield",
+						},
+						{
+							component: null,
+							config: null,
+							content: "Submit",
+							element: null,
+							fieldId: null,
+							label: "Submit",
+							order: 2,
+							required: null,
+							stageId: null,
+							type: "button",
+						},
+					],
+					isArchived: false,
+					name: "submission-form",
+					slug: "submission-form",
+				},
+			],
+			members: [
+				{
+					role: "admin",
+				},
+				{
+					role: "contributor",
+				},
+			],
+			pubFields: [
+				{
+					isRelation: false,
+					name: "Title",
+					schemaName: "String",
+				},
+				{
+					isRelation: true,
+					name: "SubmissionAuthor",
+					schemaName: "Null",
+				},
+			],
+			pubTypes: [
+				{
+					description: null,
+					name: "Submission",
+				},
+				{
+					name: "Author",
+				},
+			],
+			pubfieldMaps: [
+				{
+					A: bigSeed1.pubFields[0].id,
+					B: bigSeed1.pubTypes[0].id,
+				},
+				{},
+			],
+			pubs: [
+				{
+					assigneeId: null,
+					children: [
+						{
+							assigneeId: bigSeed1.users[0].id,
+							values: [
+								{
+									relatedPubId: null,
+									value: "Freek",
+								},
+							],
+							valuesBlob: null,
+						},
+					],
+					parentId: null,
+					values: [
+						{
+							relatedPubId: null,
+							value: "HENK",
+						},
+					],
+					valuesBlob: null,
+				},
+				{},
+			],
+			stageConnections: [{}],
+			stagePermissions: [{}],
+			stages: [
+				{
+					actions: [
+						{
+							action: "email",
+							config: {
+								body: "hello nerd",
+								subject: "hello nerd",
+							},
+						},
+					],
+					members: ["test"],
+					name: "Stage 1",
+					order: "aa",
+				},
+				{
+					name: "Stage 2",
+					order: "bb",
+				},
+			],
+			users: [
+				{
+					isSuperAdmin: false,
+				},
+				{
+					isSuperAdmin: false,
+				},
+			],
+			pubRelations: [
+				{
+					pubId: submissionPubId,
+					relatedPubId: authorPubId,
+				},
+			],
+		});
+
+		rollback();
 	});
 });
