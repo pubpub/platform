@@ -45,9 +45,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 				};
 				return (
 					<FormItem>
-						<FormLabel>
-							{config.label ?? name} {`${field.value}`}
-						</FormLabel>
+						<FormLabel>{config.label ?? name}</FormLabel>
 						{config.values.map((v) => {
 							return (
 								<FormField
