@@ -62,7 +62,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 										key={field.id}
 										value={field.id}
 										keywords={keywords}
-										onSelect={onSelect}
+										onSelect={onSelect as (value: string) => void}
 									>
 										{field.name} ({field.slug})
 									</CommandItem>

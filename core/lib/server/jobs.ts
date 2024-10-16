@@ -5,7 +5,7 @@ import { makeWorkerUtils } from "graphile-worker";
 import type { JobOptions, SendEmailRequestBody } from "contracts";
 import { logger } from "logger";
 
-import type { ClientExceptionOptions } from "../serverActions";
+import type { ClientException, ClientExceptionOptions } from "../serverActions";
 import { env } from "../env/env.mjs";
 
 import "date-fns";
@@ -135,7 +135,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				});
 				return {
 					error: err,
-				};
+				} as ClientException;
 			}
 		},
 	};

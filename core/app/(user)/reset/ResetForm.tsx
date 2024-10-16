@@ -21,7 +21,7 @@ const resetPasswordSchema = z.object({
 
 export default function ResetForm() {
 	const router = useRouter();
-	const form = useForm({
+	const form = useForm<z.infer<typeof resetPasswordSchema>>({
 		resolver: zodResolver(resetPasswordSchema),
 	});
 	const runResetPassword = useServerAction(resetPassword);
