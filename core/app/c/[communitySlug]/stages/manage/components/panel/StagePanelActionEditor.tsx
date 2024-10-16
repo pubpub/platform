@@ -15,7 +15,7 @@ import * as actions from "../../actions";
 
 type Props = {
 	actionInstance: ActionInstances;
-	onDelete: (actionInstanceId: string) => Promise<unknown>;
+	onDelete: (actionInstanceId: ActionInstancesId) => Promise<unknown>;
 	communityId: string;
 	children: React.ReactNode;
 };

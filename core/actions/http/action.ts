@@ -1,13 +1,14 @@
 import dynamic from "next/dynamic";
 import * as z from "zod";
 
+import { Action } from "db/public";
 import { DependencyType } from "ui/auto-form";
 import { Globe } from "ui/icon";
 
 import { defineAction } from "../types";
 
 export const action = defineAction({
-	name: "http",
+	name: Action.http,
 	config: {
 		schema: z
 			.object({

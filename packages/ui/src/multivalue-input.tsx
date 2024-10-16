@@ -15,7 +15,7 @@ import { Input } from "./input";
 
 type MultiValueInputProps = Omit<InputProps, "onChange"> & {
 	value: string[];
-	onChange: Dispatch<SetStateAction<string[]>>;
+	onChange: Dispatch<string[]>;
 };
 
 const SortableValue = ({

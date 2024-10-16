@@ -1,11 +1,12 @@
 import * as z from "zod";
 
+import { Action } from "db/public";
 import { FileText } from "ui/icon";
 
 import { defineAction } from "../types";
 
 export const action = defineAction({
-	name: "pushToV6",
+	name: Action.pushToV6,
 	config: {
 		schema: z.object({
 			communitySlug: z.string().describe("Community slug"),
