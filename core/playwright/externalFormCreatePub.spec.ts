@@ -26,7 +26,7 @@ test.beforeAll(async ({ browser }) => {
 	});
 
 	// this seems necessary
-	await page.waitForTimeout(1000);
+	await page.waitForTimeout(2000);
 	/**
 	 * Fill out everything required to make an external form:
 	 * 1. Fields
