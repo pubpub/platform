@@ -149,8 +149,9 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 				<MultiValueInput
 					value={["Value 1"]}
 					onChange={() => {}}
+					// Shrink everything a little to fit into the display box better
 					className="h-8"
-					valueClassName="h-5"
+					valueClassName="h-5 px-1"
 				/>
 			</div>
 		),
