@@ -2,7 +2,11 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
+import { CoreSchemaType } from "db/public";
+
+import { FieldsPage } from "./fixtures/fields-page";
 import { PubsPage } from "./fixtures/pubs-page";
+import { PubTypePage } from "./fixtures/pubtype-page";
 import { createCommunity, login } from "./helpers";
 
 const now = new Date().getTime();
@@ -103,5 +107,16 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
 			1
 		);
+	});
+
+	test("Can create and edit a multivalue field", async () => {
+		// Add a multivalue field
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("Animals", CoreSchemaType.StringArray);
+
+		// Add it as a pub type
+		const pubtypePage = new PubTypePage(page, COMMUNITY_SLUG);
+		await pubtypePage.goto();
 	});
 });
