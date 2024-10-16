@@ -4,10 +4,11 @@
  * Note: we have two "form"s at play here: one is the Form specific to PubPub (renamed to PubPubForm)
  * and the other is a form as in react-hook-form.
  */
+import type { Static } from "@sinclair/typebox";
 import type { ReactNode } from "react";
 import type { FieldValues, SubmitErrorHandler } from "react-hook-form";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -24,6 +25,7 @@ import { cn } from "utils";
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
+import type { DefinitelyHas } from "~/lib/types";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
@@ -129,6 +131,12 @@ const createSchemaFromElements = (
 	);
 };
 
+const isSubmitEvent = (
+	e?: React.BaseSyntheticEvent
+): e is React.BaseSyntheticEvent<DefinitelyHas<SubmitEvent, "submitter">> => {
+	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter;
+};
+
 export const ExternalFormWrapper = ({
 	elements,
 	className,
@@ -165,7 +173,7 @@ export const ExternalFormWrapper = ({
 	const handleSubmit = useCallback(
 		async (
 			formValues: FieldValues,
-			evt: React.BaseSyntheticEvent<SubmitEvent> | undefined,
+			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
 			const pubValues = preparePayload({
@@ -173,7 +181,7 @@ export const ExternalFormWrapper = ({
 				formValues,
 				toggleContext,
 			});
-			const submitButtonId = evt?.nativeEvent?.submitter?.id;
+			const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : null;
 			const submitButtonConfig = submitButtonId
 				? buttonElements.find((b) => b.elementId === submitButtonId)
 				: undefined;
@@ -204,7 +212,6 @@ export const ExternalFormWrapper = ({
 					newParams.set("pubId", pubId);
 				}
 				if (!autoSave && isComplete(formElements, pubValues)) {
-					const submitButtonId = evt?.nativeEvent?.submitter?.id;
 					if (submitButtonId) {
 						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
 					}
@@ -223,7 +230,7 @@ export const ExternalFormWrapper = ({
 		[formElements, toggleContext]
 	);
 
-	const formInstance = useForm({
+	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
 		resolver,
 		defaultValues,
 		shouldFocusError: false,
@@ -238,7 +245,7 @@ export const ExternalFormWrapper = ({
 	const isSubmitting = formInstance.formState.isSubmitting;
 
 	const handleAutoSave = useCallback(
-		(values: FieldValues, evt: React.BaseSyntheticEvent<SubmitEvent> | undefined) => {
+		(values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
 			// Only autosave on updating a pub, not on creating
 			if (!isUpdating) {
 				return;

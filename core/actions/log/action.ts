@@ -1,11 +1,12 @@
 import * as z from "zod";
 
+import { Action } from "db/public";
 import { Terminal } from "ui/icon";
 
 import { defineAction } from "../types";
 
 export const action = defineAction({
-	name: "log",
+	name: Action.log,
 	config: {
 		schema: z.object({
 			debounce: z.number().optional().describe("Debounce time in milliseconds."),

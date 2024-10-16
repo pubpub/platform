@@ -116,7 +116,7 @@ export function PubEditorClient(props: Props) {
 
 	const resolver = useMemo(() => typeboxResolver(pubFieldsSchema), [pubFieldsSchema]);
 
-	const form = useForm({
+	const form = useForm<Static<typeof pubFieldsSchema>>({
 		defaultValues: createPubEditorDefaultValuesFromPubFields(
 			props.pubFields,
 			props.pubValues,
