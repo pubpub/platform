@@ -35,6 +35,13 @@ export const MultivalueInputElement = ({ name, config, schemaName }: ElementProp
 								disabled={!isEnabled}
 								type={isNumeric ? "number" : undefined}
 								{...field}
+								onChange={(newValues) => {
+									if (isNumeric) {
+										field.onChange(newValues.map((v) => +v));
+										return;
+									}
+									field.onChange(newValues);
+								}}
 							/>
 						</FormControl>
 						<FormDescription>{config.help}</FormDescription>
