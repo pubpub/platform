@@ -72,9 +72,10 @@ test.describe("Multivalue inputs", () => {
 	test("Can add a radio and checkbox multivalue input", async () => {
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
-		// Add a numeric array and string array
+		// Add a numeric array and string arrays
 		await fieldsPage.addField("Favorite numbers", CoreSchemaType.NumericArray);
 		await fieldsPage.addField("Favorite animals", CoreSchemaType.StringArray);
+		await fieldsPage.addField("Favorite fruits", CoreSchemaType.StringArray);
 		// Add these to existing form
 		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
 		await formEditPage.goto();
@@ -116,10 +117,28 @@ test.describe("Multivalue inputs", () => {
 		await page.getByTestId("include-other").click();
 		await formEditPage.saveFormElementConfiguration();
 
+		// Select dropdown with strings
+		await formEditPage.openAddForm();
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:favorite-fruits`);
+		const fruitElement = {
+			name: "Favorite fruits",
+			description: "Make sure it isn't a vegetable",
+		};
+		await page.getByTestId("component-selectDropdown").click();
+		await page.getByRole("textbox", { name: "Label" }).fill(fruitElement.name);
+		await page.getByRole("textbox", { name: "Description" }).fill(fruitElement.description);
+		const fruits = ["mangos", "pineapples", "figs"];
+		for (const fruit of fruits) {
+			await page.getByTestId("multivalue-input").fill(fruit);
+			await page.keyboard.press("Enter");
+			await expect(page.getByTestId(`sortable-value-${fruit}`)).toHaveCount(1);
+		}
+		await formEditPage.saveFormElementConfiguration();
+
 		// Save the form builder and go to external form
 		await formEditPage.saveForm();
 		await formEditPage.goToExternalForm();
-		for (const element of [numberElement, animalElement]) {
+		for (const element of [numberElement, animalElement, fruitElement]) {
 			await expect(page.getByText(element.name)).toHaveCount(1);
 			await expect(page.getByText(element.description)).toHaveCount(1);
 		}
@@ -134,6 +153,9 @@ test.describe("Multivalue inputs", () => {
 		// Checkbox group
 		await page.getByTestId("checkbox-cats").click();
 		await page.getByTestId("other-field").fill("otters");
+		// Select dropdown
+		await page.getByRole("combobox").click();
+		await page.getByRole("option", { name: "mangos" }).click();
 		await page.getByRole("button", { name: "Submit" }).click();
 
 		// Check the pub page to make sure the values we expect are there
@@ -143,5 +165,7 @@ test.describe("Multivalue inputs", () => {
 		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0");
 		await expect(page.getByText(animalElement.name)).toHaveCount(1);
 		await expect(page.getByTestId(`${animalElement.name}-value`)).toHaveText("cats,otters");
+		await expect(page.getByText(fruitElement.name)).toHaveCount(1);
+		await expect(page.getByTestId(`${fruitElement.name}-value`)).toHaveText("mangos");
 	});
 });
