@@ -26,14 +26,14 @@ const getCommunityStages = (communityId: CommunitiesId) =>
 
 export default async function Page({
 	params: { formSlug, communitySlug },
-	searchParams: { isDirty },
+	searchParams: { unsavedChanges },
 }: {
 	params: {
 		formSlug: string;
 		communitySlug: string;
 	};
 	searchParams: {
-		isDirty: boolean;
+		unsavedChanges: boolean;
 	};
 }) {
 	const { user } = await getPageLoginData();
@@ -74,7 +74,7 @@ export default async function Page({
 				<div className="flex items-center gap-2">
 					<FormCopyButton formSlug={formSlug} />
 					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
-					<SaveFormButton form={formBuilderId} disabled={!isDirty} />
+					<SaveFormButton form={formBuilderId} disabled={!unsavedChanges} />
 				</div>
 			}
 		>

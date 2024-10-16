@@ -180,9 +180,9 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 	React.useEffect(() => {
 		const newParams = new URLSearchParams(params);
 		if (form.formState.isDirty) {
-			newParams.set("isDirty", "true");
+			newParams.set("unsavedChanges", "true");
 		} else {
-			newParams.delete("isDirty");
+			newParams.delete("unsavedChanges");
 		}
 		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 	}, [form.formState.isDirty, params]);
