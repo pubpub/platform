@@ -26,11 +26,13 @@ const SortableValue = ({
 	value,
 	onRemove,
 	isActive,
+	disabled,
 	className,
 }: {
 	value: string;
 	onRemove: (v: string) => void;
 	isActive: boolean;
+	disabled?: boolean;
 	className?: string;
 }) => {
 	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: value });
@@ -48,10 +50,14 @@ const SortableValue = ({
 			ref={setNodeRef}
 			style={style}
 			{...attributes}
-			className={cn("bg-muted-foreground py-1", className)}
+			className={cn(
+				"bg-muted-foreground py-1",
+				{ "cursor-auto bg-gray-400 hover:bg-gray-400": disabled },
+				className
+			)}
 			data-testid={`sortable-value-${value}`}
 		>
-			<Button {...listeners} variant="ghost" className="mr-1 h-5 p-0">
+			<Button {...listeners} variant="ghost" className="mr-1 h-5 p-0" disabled={disabled}>
 				<GripVertical size="12" />
 			</Button>
 			{value}
@@ -63,6 +69,7 @@ const SortableValue = ({
 				// height is smaller so hover is only over the xcircle
 				className="ml-2 h-3 p-0"
 				data-testid="remove-button"
+				disabled={disabled}
 			>
 				<XCircle size="12"></XCircle>
 			</Button>
@@ -71,7 +78,7 @@ const SortableValue = ({
 };
 
 export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps>(
-	({ value: values, onChange, valueClassName, ...props }, ref) => {
+	({ value: values, onChange, valueClassName, disabled, ...props }, ref) => {
 		const [pendingValue, setPendingValue] = useState("");
 		const [activeDrag, setActiveDrag] = useState<Active | null>(null);
 
@@ -105,6 +112,7 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 						}
 					}}
 					placeholder="Type the value and hit enter"
+					disabled={disabled}
 					{...props}
 					ref={ref}
 					data-testid="multivalue-input"
@@ -115,6 +123,9 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 						setActiveDrag(active);
 					}}
 					onDragEnd={handleDragEnd}
+					// Need an id or else will get an error in the console
+					// https://github.com/clauderic/dnd-kit/issues/926
+					id="multivalue-dnd-context"
 				>
 					<SortableContext items={values}>
 						<div className="flex flex-wrap gap-x-2 gap-y-2">
@@ -127,6 +138,7 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 											onChange(values.filter((v) => v !== valueToRemove))
 										}
 										isActive={activeDrag?.id === value}
+										disabled={disabled}
 										className={valueClassName}
 									/>
 								);
