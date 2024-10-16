@@ -35,7 +35,10 @@ const SortableValue = ({
 	disabled?: boolean;
 	className?: string;
 }) => {
-	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: value });
+	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+		id: value,
+		disabled,
+	});
 
 	const style = transform
 		? {
