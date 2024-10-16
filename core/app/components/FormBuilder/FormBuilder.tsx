@@ -139,6 +139,9 @@ function PanelWrapper({
 }
 
 export function FormBuilder({ pubForm, id, stages }: Props) {
+	const router = useRouter();
+	const pathname = usePathname();
+	const params = useSearchParams();
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),
 		values: {
@@ -174,9 +177,6 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 
 	useUnsavedChangesWarning(form.formState.isDirty);
 
-	const router = useRouter();
-	const pathname = usePathname();
-	const params = useSearchParams();
 	React.useEffect(() => {
 		const newParams = new URLSearchParams(params);
 		if (form.formState.isDirty) {
