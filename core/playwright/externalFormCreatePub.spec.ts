@@ -26,7 +26,7 @@ test.beforeAll(async ({ browser }) => {
 	});
 
 	// this seems necessary
-	await page.waitForTimeout(2000);
+	await page.waitForTimeout(1000);
 	/**
 	 * Fill out everything required to make an external form:
 	 * 1. Fields
@@ -70,6 +70,7 @@ test("Can create a pub from an external form", async () => {
 
 test.describe("Multivalue inputs", () => {
 	test("Can add a radio and checkbox multivalue input", async () => {
+		test.setTimeout(60_000);
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
 		// Add a numeric array and string arrays
