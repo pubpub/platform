@@ -1,11 +1,13 @@
 // Adapted from https://gist.github.com/enesien/03ba5340f628c6c812b306da5fedd1a4
 
 import type { Active, DragEndEvent } from "@dnd-kit/core";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch } from "react";
 
 import React, { forwardRef, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable } from "@dnd-kit/sortable";
+
+import { cn } from "utils";
 
 import type { InputProps } from "./input";
 import { Badge } from "./badge";
@@ -16,16 +18,20 @@ import { Input } from "./input";
 type MultiValueInputProps = Omit<InputProps, "onChange"> & {
 	value: string[];
 	onChange: Dispatch<string[]>;
+	/** Classname to apply to value badges */
+	valueClassName?: string;
 };
 
 const SortableValue = ({
 	value,
 	onRemove,
 	isActive,
+	className,
 }: {
 	value: string;
 	onRemove: (v: string) => void;
 	isActive: boolean;
+	className?: string;
 }) => {
 	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: value });
 
@@ -42,7 +48,7 @@ const SortableValue = ({
 			ref={setNodeRef}
 			style={style}
 			{...attributes}
-			className="bg-muted-foreground py-1"
+			className={cn("bg-muted-foreground py-1", className)}
 			data-testid={`sortable-value-${value}`}
 		>
 			<Button {...listeners} variant="ghost" className="mr-1 h-5 p-0">
@@ -65,7 +71,7 @@ const SortableValue = ({
 };
 
 export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps>(
-	({ value: values, onChange, ...props }, ref) => {
+	({ value: values, onChange, valueClassName, ...props }, ref) => {
 		const [pendingValue, setPendingValue] = useState("");
 		const [activeDrag, setActiveDrag] = useState<Active | null>(null);
 
@@ -121,6 +127,7 @@ export const MultiValueInput = forwardRef<HTMLInputElement, MultiValueInputProps
 											onChange(values.filter((v) => v !== valueToRemove))
 										}
 										isActive={activeDrag?.id === value}
+										className={valueClassName}
 									/>
 								);
 							})}

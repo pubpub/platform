@@ -15,11 +15,13 @@ export const componentsBySchema = {
 		InputComponent.checkboxGroup,
 		InputComponent.radioGroup,
 		InputComponent.selectDropdown,
+		InputComponent.multivalueInput,
 	],
 	[CoreSchemaType.StringArray]: [
 		InputComponent.checkboxGroup,
 		InputComponent.radioGroup,
 		InputComponent.selectDropdown,
+		InputComponent.multivalueInput,
 	],
 	[CoreSchemaType.Email]: [InputComponent.textInput],
 	[CoreSchemaType.FileUpload]: [InputComponent.fileUpload],
@@ -83,6 +85,10 @@ export const selectDropdownConfigSchema = Type.Object({
 	help: Type.Optional(Type.String()),
 	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
 });
+export const multivalueInputConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
 
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
@@ -95,4 +101,5 @@ export const componentConfigSchemas = {
 	[InputComponent.checkboxGroup]: checkboxGroupConfigSchema,
 	[InputComponent.radioGroup]: radioGroupConfigSchema,
 	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
+	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;
