@@ -11,8 +11,16 @@ export const componentsBySchema = {
 	[CoreSchemaType.String]: [InputComponent.textInput, InputComponent.textArea],
 	[CoreSchemaType.DateTime]: [InputComponent.datePicker],
 	[CoreSchemaType.Number]: [InputComponent.textInput],
-	[CoreSchemaType.NumericArray]: [],
-	[CoreSchemaType.StringArray]: [],
+	[CoreSchemaType.NumericArray]: [
+		InputComponent.checkboxGroup,
+		InputComponent.radioGroup,
+		InputComponent.selectDropdown,
+	],
+	[CoreSchemaType.StringArray]: [
+		InputComponent.checkboxGroup,
+		InputComponent.radioGroup,
+		InputComponent.selectDropdown,
+	],
 	[CoreSchemaType.Email]: [InputComponent.textInput],
 	[CoreSchemaType.FileUpload]: [InputComponent.fileUpload],
 	[CoreSchemaType.URL]: [InputComponent.textInput],
@@ -56,6 +64,25 @@ export const confidenceIntervalConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 });
+export const checkboxGroupConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
+	includeOther: Type.Optional(Type.Boolean()),
+	userShouldSelect: Type.Optional(Type.String()),
+	numCheckboxes: Type.Optional(Type.Number()),
+});
+export const radioGroupConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
+	includeOther: Type.Optional(Type.Boolean()),
+});
+export const selectDropdownConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
+});
 
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
@@ -65,4 +92,7 @@ export const componentConfigSchemas = {
 	[InputComponent.fileUpload]: fileUploadConfigSchema,
 	[InputComponent.memberSelect]: memberSelectConfigSchema,
 	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
+	[InputComponent.checkboxGroup]: checkboxGroupConfigSchema,
+	[InputComponent.radioGroup]: radioGroupConfigSchema,
+	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;

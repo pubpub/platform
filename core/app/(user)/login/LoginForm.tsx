@@ -80,6 +80,7 @@ export default function LoginForm() {
 						<Button
 							className="flex w-full items-center gap-x-2"
 							disabled={form.formState.isSubmitting || !form.formState.isValid}
+							type="submit"
 						>
 							{form.formState.isSubmitting ? (
 								<Loader2 className="animate-spin" />

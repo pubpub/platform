@@ -20,10 +20,13 @@ const toDynamic = (path: string) =>
 
 const InputCompomentMap = {
 	[InputComponent.checkbox]: toDynamic("Checkbox"),
+	[InputComponent.checkboxGroup]: toDynamic("CheckboxGroup"),
 	[InputComponent.confidenceInterval]: toDynamic("ConfidenceInterval"),
 	[InputComponent.datePicker]: toDynamic("DatePicker"),
 	[InputComponent.fileUpload]: toDynamic("FileUpload"),
 	[InputComponent.memberSelect]: toDynamic("MemberSelect"),
+	[InputComponent.radioGroup]: toDynamic("RadioGroup"),
+	[InputComponent.selectDropdown]: toDynamic("SelectDropdown"),
 	[InputComponent.textArea]: toDynamic("TextArea"),
 	[InputComponent.textInput]: toDynamic("TextInput"),
 };

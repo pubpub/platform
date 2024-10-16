@@ -476,6 +476,9 @@ enum InputComponent {
   fileUpload
   memberSelect
   confidenceInterval
+  checkboxGroup
+  radioGroup
+  selectDropdown
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input
