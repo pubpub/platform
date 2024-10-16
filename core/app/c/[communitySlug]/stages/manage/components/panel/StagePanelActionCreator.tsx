@@ -78,7 +78,7 @@ const ActionCell = (props: ActionCellProps) => {
 };
 
 type Props = {
-	onAdd: (actionName: string) => Promise<unknown>;
+	onAdd: (actionName: Action["name"]) => Promise<unknown>;
 	isSuperAdmin?: boolean | null;
 };
 

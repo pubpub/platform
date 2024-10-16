@@ -47,7 +47,7 @@ type Props = {
 export const NewFormButton = ({ pubTypes }: Props) => {
 	const [isOpen, setIsOpen] = useState(false);
 
-	const form = useForm({
+	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 	});
 

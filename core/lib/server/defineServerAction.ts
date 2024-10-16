@@ -16,7 +16,7 @@ import { isClientExceptionOptions, makeClientException } from "../serverActions"
  * @returns
  */
 export const defineServerAction = <
-	T extends (...args: unknown[]) => Promise<unknown | ClientExceptionOptions>,
+	T extends (...args: any[]) => Promise<unknown | ClientExceptionOptions>,
 	A extends Parameters<T> = Parameters<T>,
 	R extends Awaited<ReturnType<T>> = Awaited<ReturnType<T>>,
 >(
