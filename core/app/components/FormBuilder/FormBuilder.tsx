@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useCallback, useReducer, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DndContext } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -13,6 +14,7 @@ import type { Stages } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem } from "ui/form";
+import { useUnsavedChangesWarning } from "ui/hooks";
 import { CircleCheck, X } from "ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { TokenProvider } from "ui/tokens";
@@ -170,6 +172,21 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		control: form.control,
 	});
 
+	useUnsavedChangesWarning(form.formState.isDirty);
+
+	const router = useRouter();
+	const pathname = usePathname();
+	const params = useSearchParams();
+	React.useEffect(() => {
+		const newParams = new URLSearchParams(params);
+		if (form.formState.isDirty) {
+			newParams.set("isDirty", "true");
+		} else {
+			newParams.delete("isDirty");
+		}
+		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+	}, [form.formState.isDirty, params]);
+
 	const runSaveForm = useServerAction(saveForm);
 	const onSubmit = async (formData: FormBuilderSchema) => {
 		//TODO: only submit dirty fields
@@ -239,6 +256,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 				dispatch={dispatch}
 				slug={pubForm.slug}
 				stages={stages}
+				isDirty={form.formState.isDirty}
 			>
 				<Tabs defaultValue="builder" className="pr-[380px]">
 					<div className="px-6">
