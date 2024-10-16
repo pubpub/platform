@@ -20,7 +20,10 @@ import { getCommunityRole } from "~/lib/auth/roles";
 import { getPub } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import {
+	renderMarkdownAsHtml,
+	renderMarkdownWithPub,
+} from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { capitalize } from "~/lib/string";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
@@ -95,14 +98,18 @@ const ExpiredTokenPage = ({
 
 const renderElementMarkdownContent = async (
 	element: Form["elements"][number],
-	renderWithPubContext: RenderWithPubContext
+	renderWithPubContext: RenderWithPubContext | undefined
 ) => {
 	if (element.content === null) {
 		return "";
 	}
-	return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
-		() => element.content
-	);
+	if (renderWithPubContext) {
+		// Parses the markdown with the pub and returns as HTML
+		return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
+			() => element.content
+		);
+	}
+	return renderMarkdownAsHtml(element.content);
 };
 
 export async function generateMetadata({
@@ -213,9 +220,9 @@ export default async function FormPage({
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
-	// The post-submission page will only render once we have a pub
-	if (pub) {
-		if (submitId && submitElement) {
+	if (submitId && submitElement) {
+		// The post-submission page will only render once we have a pub
+		if (pub) {
 			const renderWithPubContext = {
 				communityId: community.id,
 				recipient: memberWithUser,
@@ -227,26 +234,25 @@ export default async function FormPage({
 				submitElement,
 				renderWithPubContext
 			);
-		} else {
-			const renderWithPubContext = {
-				communityId: community.id,
-				recipient: memberWithUser,
-				communitySlug: params.communitySlug,
-				pub,
-				parentPub,
-			};
-			const elementsWithMarkdownContent = form.elements.filter(
-				(element) => element.element === StructuralFormElement.p
-			);
-			await Promise.all(
-				elementsWithMarkdownContent.map(async (element) => {
-					element.content = await renderElementMarkdownContent(
-						element,
-						renderWithPubContext
-					);
-				})
-			);
 		}
+	} else {
+		const elementsWithMarkdownContent = form.elements.filter(
+			(element) => element.element === StructuralFormElement.p
+		);
+		const renderWithPubContext = pub
+			? {
+					communityId: community.id,
+					recipient: memberWithUser,
+					communitySlug: params.communitySlug,
+					pub,
+					parentPub,
+				}
+			: undefined;
+		await Promise.all(
+			elementsWithMarkdownContent.map(async (element) => {
+				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
+			})
+		);
 	}
 
 	const isUpdating = !!pub;

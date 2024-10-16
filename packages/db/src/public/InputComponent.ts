@@ -12,6 +12,9 @@ export enum InputComponent {
 	fileUpload = "fileUpload",
 	memberSelect = "memberSelect",
 	confidenceInterval = "confidenceInterval",
+	checkboxGroup = "checkboxGroup",
+	radioGroup = "radioGroup",
+	selectDropdown = "selectDropdown",
 }
 
 /** Zod schema for InputComponent */

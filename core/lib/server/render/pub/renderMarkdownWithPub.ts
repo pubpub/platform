@@ -335,3 +335,16 @@ export const renderMarkdownWithPub = async (
 	const processor = processorBase.use(rehypeStringify);
 	return process(processor, text);
 };
+
+export const renderMarkdownAsHtml = async (text: string) => {
+	const processor = unified()
+		.use(remarkParse)
+		.use(remarkDirective)
+		.use(remarkRehype)
+		.use(rehypeFormat)
+		.use(rehypeStringify);
+
+	const result = await processor.process(text);
+
+	return result.toString().trim();
+};
