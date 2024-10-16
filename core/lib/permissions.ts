@@ -19,10 +19,11 @@ export const getPubUsers = (permissions: PermissionPayload[]) => {
 	return users;
 };
 
-enum Privileges {
+enum Capabilities {
 	movePub = "movePub",
 	createPub = "createPub",
 	viewPub = "viewPub",
+	deletePub = "deletePub",
 	updatePubValues = "updatePubValues",
 	createRelatedPub = "createRelatedPub",
 	createPubWithForm = "createPubWithForm",
@@ -33,21 +34,22 @@ enum Privileges {
 	createPubType = "createPubType",
 	editPubType = "editPubType",
 	deletePubType = "deletePubType",
+	runAction = "runAction",
+	viewStage = "viewStage",
 	createStage = "createStage",
+	manageStage = "manageStage", // includes managing stage name, actions, rules, and move constraints
 	deleteStage = "deleteStage",
-	addMoveConstraint = "addMoveConstraint",
-	removeMoveConstraint = "removeMoveConstraint",
-	addActionToStage = "addActionToStage",
-	editAction = "editAction",
-	removeActionFromStage = "removeActionFromStage",
 	addPubMember = "addPubMember",
+	removePubMember = "removePubMember",
 	addStageMember = "addStageMember",
+	removeStageMember = "removeStageMember",
 	addFormMember = "addFormMember",
+	removeFormMember = "removeFormMember",
 	addCommunityMember = "addCommunityMember",
-	createMemberGroup = "createMemberGroup",
-	addMemberToGroup = "addMemberToGroup",
-	removeMemberFromGroup = "removeMemberFromGroup",
+	removeCommunityMember = "removeCommunityMember",
+	manageMemberGroups = "manageMemberGroups",
 	addCommunity = "addCommunity",
+	editCommunity = "editCommunity",
 	createForm = "createForm",
 	editForm = "editForm",
 	archiveForm = "archiveForm",
