@@ -23,7 +23,6 @@ export const StagePanelOverviewManagement = (props: Props) => {
 	const onDeleteClick = async () => {
 		const formName = await props.onDelete();
 		if (formName) {
-			console.log(formName);
 			toast({
 				title: "Warning",
 				description: `The stage was deleted succesfully, but it was referenced by a submit button in the "${formName}" form. You may wish to update that button.`,
