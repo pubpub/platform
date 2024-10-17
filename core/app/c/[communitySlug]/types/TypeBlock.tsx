@@ -56,6 +56,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 							onClick={() => {
 								setEditing(!editing);
 							}}
+							data-testid={`edit-pubtype-${type.name}`}
 						>
 							<span className="sr-only">Edit Pub Type</span>
 							<Pencil size="12" />

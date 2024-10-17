@@ -15,6 +15,7 @@ export enum InputComponent {
 	checkboxGroup = "checkboxGroup",
 	radioGroup = "radioGroup",
 	selectDropdown = "selectDropdown",
+	multivalueInput = "multivalueInput",
 }
 
 /** Zod schema for InputComponent */

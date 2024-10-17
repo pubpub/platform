@@ -270,7 +270,7 @@ export function PubEditorClient(props: Props) {
 								<DropdownMenuContent>
 									{availableStages.map((stage) => (
 										<DropdownMenuItem
-											key={stage.id}
+											key={stage.id || "no-stage"}
 											onClick={() => {
 												field.onChange(stage.id);
 											}}

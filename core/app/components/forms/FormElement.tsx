@@ -14,6 +14,7 @@ import { ConfidenceElement } from "./elements/ConfidenceElement";
 import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FileUploadElement";
 import { MemberSelectElement } from "./elements/MemberSelectElement";
+import { MultivalueInputElement } from "./elements/MultivalueInputElement";
 import { RadioGroupElement } from "./elements/RadioGroupElement";
 import { SelectDropdownElement } from "./elements/SelectDropdownElement";
 import { TextAreaElement } from "./elements/TextAreaElement";
@@ -93,6 +94,8 @@ export const FormElement = ({
 		input = <CheckboxGroupElement {...elementProps} />;
 	} else if (component === InputComponent.selectDropdown) {
 		input = <SelectDropdownElement {...elementProps} />;
+	} else if (component === InputComponent.multivalueInput) {
+		input = <MultivalueInputElement {...elementProps} />;
 	}
 
 	if (input) {
