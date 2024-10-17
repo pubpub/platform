@@ -17,7 +17,7 @@ import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
-import { getPub } from "~/lib/server";
+import { getPub, getPubCached } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
 import {
@@ -157,7 +157,7 @@ export default async function FormPage({
 			slug: params.formSlug,
 			communityId: community.id,
 		}).executeTakeFirst(),
-		searchParams.pubId ? await getPub(searchParams.pubId) : undefined,
+		searchParams.pubId ? await getPubCached(searchParams.pubId) : undefined,
 	]);
 
 	if (!form) {

@@ -6,7 +6,7 @@
  */
 import type { Static } from "@sinclair/typebox";
 import type { ReactNode } from "react";
-import type { FieldValues } from "react-hook-form";
+import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -20,6 +20,7 @@ import type { GetPubResponseBody, JsonValue } from "contracts";
 import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
+import { useUnsavedChangesWarning } from "ui/hooks";
 import { cn } from "utils";
 
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
@@ -55,10 +56,12 @@ const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 const preparePayload = ({
 	formElements,
 	formValues,
+	formState,
 	toggleContext,
 }: {
 	formElements: PubPubForm["elements"];
 	formValues: FieldValues;
+	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
 }) => {
 	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
@@ -66,7 +69,12 @@ const preparePayload = ({
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
 	for (const { slug } of formElements) {
-		if (slug && toggleContext.isEnabled(slug)) {
+		if (
+			slug &&
+			toggleContext.isEnabled(slug) &&
+			// Only send fields that were changed.
+			formState.dirtyFields[slug]
+		) {
 			payload[slug] = formValues[slug];
 		}
 	}
@@ -170,6 +178,18 @@ export const ExternalFormWrapper = ({
 		return buildDefaultValues(formElements, pub.values);
 	}, [formElements, pub]);
 
+	const resolver = useMemo(
+		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
+		[formElements, toggleContext]
+	);
+
+	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
+		resolver,
+		defaultValues,
+		shouldFocusError: false,
+		reValidateMode: "onBlur",
+	});
+
 	const handleSubmit = useCallback(
 		async (
 			formValues: FieldValues,
@@ -179,10 +199,13 @@ export const ExternalFormWrapper = ({
 			const pubValues = preparePayload({
 				formElements,
 				formValues,
+				formState: formInstance.formState,
 				toggleContext,
 			});
-			const submitButtonId = isSubmitEvent(evt) ? evt?.nativeEvent.submitter?.id : null;
-			const submitButtonConfig = buttonElements.find((b) => b.elementId === submitButtonId);
+			const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : null;
+			const submitButtonConfig = submitButtonId
+				? buttonElements.find((b) => b.elementId === submitButtonId)
+				: undefined;
 			const stageId = submitButtonConfig?.stageId ?? undefined;
 			let result;
 			if (isUpdating) {
@@ -190,6 +213,7 @@ export const ExternalFormWrapper = ({
 					pubId: pubId,
 					pubValues,
 					stageId,
+					continueOnValidationError: autoSave,
 				});
 			} else {
 				result = await runCreatePub({
@@ -208,6 +232,19 @@ export const ExternalFormWrapper = ({
 				if (!isUpdating) {
 					newParams.set("pubId", pubId);
 				}
+
+				if (autoSave) {
+					// Reset dirty state to prevent the unsaved changes warning from
+					// blocking navigation.
+					// See https://stackoverflow.com/questions/63953501/react-hook-form-resetting-isdirty-without-clearing-form
+					formInstance.reset(
+						{},
+						{
+							keepValues: true,
+						}
+					);
+				}
+
 				if (!autoSave && isComplete(formElements, pubValues)) {
 					if (submitButtonId) {
 						newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
@@ -219,25 +256,24 @@ export const ExternalFormWrapper = ({
 				router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
-		[formElements, router, pathname, runUpdatePub, pub, community.id, toggleContext]
+		[
+			formElements,
+			formInstance.formState,
+			router,
+			pathname,
+			runUpdatePub,
+			pub,
+			community.id,
+			toggleContext,
+		]
 	);
-
-	const resolver = useMemo(
-		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
-		[formElements, toggleContext]
-	);
-
-	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
-		resolver,
-		defaultValues,
-		shouldFocusError: false,
-		reValidateMode: "onBlur",
-	});
 
 	// Re-validate the form when fields are toggled on/off.
 	useEffect(() => {
 		formInstance.trigger(Object.keys(formInstance.formState.errors));
 	}, [formInstance, toggleContext]);
+
+	useUnsavedChangesWarning(formInstance.formState.isDirty);
 
 	const isSubmitting = formInstance.formState.isSubmitting;
 
@@ -249,8 +285,8 @@ export const ExternalFormWrapper = ({
 			}
 			// Don't auto save while editing the user ID field. the query params
 			// will clash and it will be a bad time :(
-			const { name } = evt?.target as HTMLInputElement;
-			if (isUserSelectField(name, formElements)) {
+			const target = evt?.target as HTMLInputElement;
+			if (target?.name && isUserSelectField(target.name, formElements)) {
 				return;
 			}
 			if (saveTimer) {
@@ -259,19 +295,24 @@ export const ExternalFormWrapper = ({
 			const newTimer = setTimeout(async () => {
 				// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 				// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
-				if (formInstance.formState.isValid || saveTimer === undefined) {
-					handleSubmit(values, evt, true);
-				}
+				handleSubmit(values, evt, true);
 			}, SAVE_WAIT_MS);
 			setSaveTimer(newTimer);
 		},
 		[formElements, saveTimer, handleSubmit]
 	);
 
+	const handleAutoSaveOnError: SubmitErrorHandler<FieldValues> = (errors) => {
+		const validFields = Object.fromEntries(
+			Object.entries(formInstance.getValues()).filter(([name, value]) => !(name in errors))
+		);
+		handleAutoSave(validFields, undefined);
+	};
+
 	return (
 		<Form {...formInstance}>
 			<form
-				onChange={formInstance.handleSubmit(handleAutoSave)}
+				onChange={formInstance.handleSubmit(handleAutoSave, handleAutoSaveOnError)}
 				onSubmit={formInstance.handleSubmit(handleSubmit)}
 				className={cn("relative isolate flex flex-col gap-6", className)}
 			>

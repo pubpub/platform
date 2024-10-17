@@ -2,8 +2,10 @@
 
 import type { ChangeEvent } from "react";
 
+import { useMemo, useState } from "react";
 import { CoreSchemaType } from "@prisma/client";
 import { Value } from "@sinclair/typebox/value";
+import partition from "lodash.partition";
 import { useFormContext } from "react-hook-form";
 import { checkboxGroupConfigSchema } from "schemas";
 
@@ -15,10 +17,21 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps) => {
-	const { control } = useFormContext();
+	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+
+	// Keep track of what was checked via checkboxes so as not to duplicate with Other field
+	const { initialChecked, initialOther } = useMemo(() => {
+		const initialValues: (string | number)[] = getValues()[name];
+		const [initialChecked, initialOther] = partition(initialValues, (v) => {
+			return config.values.includes(v);
+		});
+		return { initialChecked, initialOther: initialOther[0] ?? "" };
+	}, []);
+	const [checked, setChecked] = useState<(string | number)[]>(initialChecked);
+	const [other, setOther] = useState<string | number>(initialOther);
 
 	Value.Default(checkboxGroupConfigSchema, config);
 	if (!Value.Check(checkboxGroupConfigSchema, config)) {
@@ -31,21 +44,25 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 			name={name}
 			render={({ field }) => {
 				const handleOtherField = (e: ChangeEvent<HTMLInputElement>) => {
-					const configValues: (string | number)[] = config.values;
-					const checkboxValues = field.value?.filter((f: string | number) =>
-						configValues.includes(f)
-					);
 					const value = isNumeric ? e.target.valueAsNumber : e.target.value;
+					if (checked.includes(value)) {
+						setOther(value);
+						return;
+					}
 					const inputIsEmpty = value === "" || (isNumeric && isNaN(value as number));
 					if (inputIsEmpty) {
-						field.onChange(checkboxValues);
+						setOther("");
+						field.onChange(checked);
 					} else {
-						field.onChange([...checkboxValues, value]);
+						setOther(value);
+						field.onChange([...checked, value]);
 					}
 				};
 				return (
 					<FormItem>
-						<FormLabel>{config.label ?? name}</FormLabel>
+						<FormLabel>
+							{config.label ?? name} {field.value.join(",")}
+						</FormLabel>
 						{config.values.map((v) => {
 							return (
 								<FormField
@@ -63,18 +80,18 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 														data-testid={`checkbox-${v}`}
 														disabled={!isEnabled}
 														checked={field.value?.includes(v)}
-														onCheckedChange={(checked) => {
-															return checked
-																? field.onChange([
-																		...field.value,
-																		v,
-																	])
-																: field.onChange(
-																		field.value?.filter(
-																			(f: string | number) =>
-																				f !== v
-																		)
+														onCheckedChange={(isChecked) => {
+															const newValues = isChecked
+																? [...field.value, v]
+																: field.value?.filter(
+																		(f: string | number) =>
+																			f !== v
 																	);
+															const newCheckedValues = isChecked
+																? [...checked, v]
+																: checked.filter((f) => f !== v);
+															setChecked(newCheckedValues);
+															field.onChange(newValues);
 														}}
 													/>
 												</FormControl>
@@ -95,6 +112,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 										onChange={handleOtherField}
 										data-testid="other-field"
 										disabled={!isEnabled}
+										value={other}
 									/>
 								</FormControl>
 							</FormItem>

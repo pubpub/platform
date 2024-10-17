@@ -30,16 +30,18 @@ vi.stubGlobal("ResizeObserver", ResizeObserverMock);
 const FormWrapper = ({
 	children,
 	isStringArray,
+	defaultValues,
 }: {
 	children: ReactNode;
 	isStringArray?: boolean;
+	defaultValues?: string[] | number[];
 }) => {
 	const schema = Type.Object({
 		example: isStringArray ? StringArray : NumericArray,
 	});
 
 	const form = useForm({
-		defaultValues: { example: [] },
+		defaultValues: { example: defaultValues ?? [] },
 		resolver: typeboxResolver(schema),
 		reValidateMode: "onBlur",
 	});
@@ -110,6 +112,21 @@ describe("Radio group element", () => {
 		expect(screen.getByTestId("selected-dogs")).toBeDefined();
 	});
 
+	it("can initialize", async () => {
+		const config: Static<typeof radioGroupConfigSchema> = { values: [0, 1, 2, 3, 4, 5] };
+		render(
+			<FormWrapper defaultValues={[0]}>
+				<RadioGroupElement
+					name="example"
+					config={config}
+					schemaName={CoreSchemaType.NumericArray}
+				/>
+			</FormWrapper>
+		);
+		expect(screen.getByTestId("radio-0").ariaChecked).toEqual("true");
+		expect(screen.getByTestId("selected-0")).toBeDefined();
+	});
+
 	describe("other field", () => {
 		const config: Static<typeof radioGroupConfigSchema> = {
 			values: [0, 1, 2, 3, 4, 5],
@@ -154,6 +171,24 @@ describe("Radio group element", () => {
 			expect(screen.queryAllByRole("listitem").length).toBe(1);
 			expect(screen.queryByTestId("selected-0")).toBeNull();
 			expect(screen.queryByTestId("selected-7")).toBeDefined();
+		});
+
+		it("can initialize other field", async () => {
+			const config: Static<typeof radioGroupConfigSchema> = {
+				values: [0, 1, 2, 3, 4, 5],
+				includeOther: true,
+			};
+			render(
+				<FormWrapper defaultValues={[123]}>
+					<RadioGroupElement
+						name="example"
+						config={config}
+						schemaName={CoreSchemaType.NumericArray}
+					/>
+				</FormWrapper>
+			);
+			expect((screen.getByTestId("other-field") as HTMLInputElement).value).toBe("123");
+			expect(screen.getByTestId("selected-123")).toBeDefined();
 		});
 	});
 });

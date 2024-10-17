@@ -23,6 +23,7 @@ type FormBuilderContext = {
 	dispatch: React.Dispatch<PanelEvent>;
 	slug: string;
 	stages: Stages[];
+	isDirty: boolean;
 };
 
 const FormBuilderContext = createContext<FormBuilderContext | undefined>(undefined);
