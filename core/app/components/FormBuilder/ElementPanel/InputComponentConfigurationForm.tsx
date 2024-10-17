@@ -15,6 +15,7 @@ import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { useUnsavedChangesWarning } from "ui/hooks";
 import { ImagePlus } from "ui/icon";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
@@ -227,6 +228,8 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 		defaultValues: selectedElement,
 	});
 
+	useUnsavedChangesWarning(form.formState.isDirty);
+
 	const component = form.watch("component");
 
 	const onSubmit = (values: ConfigFormData<typeof component>) => {
@@ -308,6 +311,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 						data-testid="save-configuration-button"
 						type="submit"
 						className="bg-blue-500 hover:bg-blue-600"
+						disabled={!form.formState.isDirty}
 					>
 						Save
 					</Button>
