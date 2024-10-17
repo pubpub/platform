@@ -145,9 +145,10 @@ test.describe("Creating a pub", () => {
 		await page.keyboard.press("Enter");
 		await page.getByTestId("remove-button").first().click();
 		await page.getByRole("button", { name: "Update Pub" }).click();
-		await page.getByTestId("pub-dropdown-button").first().click();
-		await expect(page.getByRole("heading", { name: "Pubs" })).toHaveCount(1);
-		// await page.goto(`/c/${COMMUNITY_SLUG}/pubs/${pubId}`);
-		// await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
+		await expect(
+			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+		).toHaveCount(1);
+		await page.goto(`/c/${COMMUNITY_SLUG}/pubs/${pubId}`);
+		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
 });
