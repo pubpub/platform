@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
+import type { MaybeHas } from "~/lib/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { slugifyString } from "~/lib/string";
@@ -61,21 +62,16 @@ type FormValues = z.infer<typeof schema>;
 const DEFAULT_VALUES = {
 	id: "",
 	name: "",
+	// while the correct entry would be `undefined`,
+	// the Form will crash as soon as you select a schema,
+	// throwing some very esoteric React errors
+	// hence why we set it to `null` and do an unsafe cast
 	schemaName: null,
 	slug: "",
 	isRelation: false,
-};
+} as unknown as DefaultFieldFormValues;
 
-type FormType = UseFormReturn<
-	{
-		name: string;
-		schemaName: CoreSchemaType | null;
-		slug: string;
-		isRelation: boolean;
-	},
-	any,
-	undefined
->;
+type FormType = UseFormReturn<FormValues, any, undefined>;
 
 const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: boolean }) => {
 	const schemaTypes = Object.values(CoreSchemaType).filter((v) => v !== CoreSchemaType.Null);
@@ -107,7 +103,11 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 								const { description, icon: Icon } =
 									SCHEMA_TYPES_WITH_ICONS[schemaName];
 								return (
-									<SelectItem key={schemaName} value={schemaName}>
+									<SelectItem
+										data-testid={`select-${schemaName}`}
+										key={schemaName}
+										value={schemaName}
+									>
 										<div className="flex items-center gap-2">
 											<Icon className="w-4" />
 											<div className="flex flex-col items-start font-medium">
@@ -232,17 +232,14 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 	);
 };
 
+export type DefaultFieldFormValues = MaybeHas<FormValues, "id">;
+
 export const FieldForm = ({
 	defaultValues,
 	onSubmitSuccess,
 	children,
 }: {
-	defaultValues?: {
-		name: string;
-		schemaName: CoreSchemaType | null;
-		slug: string;
-		isRelation: boolean;
-	};
+	defaultValues?: DefaultFieldFormValues;
 	onSubmitSuccess: () => void;
 	children: ReactNode;
 }) => {
@@ -289,7 +286,7 @@ export const FieldForm = ({
 		handleCreate({ ...values, slug, schemaName });
 	};
 
-	const form = useForm({
+	const form = useForm<FormValues>({
 		defaultValues: defaultValues ?? DEFAULT_VALUES,
 		resolver: zodResolver(schema),
 	});

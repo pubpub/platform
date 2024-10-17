@@ -395,35 +395,30 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
-	const pubFieldsForPubTypeObject = await getPubFields({
-		pubTypeId: body.pubTypeId as PubTypesId,
+	const pubFieldsForCommunityObject = await getPubFields({
+		communityId,
 	}).executeTakeFirst();
 
-	const pubFieldsForPubType = Object.values(pubFieldsForPubTypeObject?.fields ?? {});
+	const pubFieldsForCommunity = Object.values(pubFieldsForCommunityObject?.fields ?? {});
 
-	if (!pubFieldsForPubType?.length) {
-		throw new NotFoundError(
-			`No pub fields found for pub type ${body.pubTypeId}. This is likely because the pub type does not exist.`
-		);
+	if (!pubFieldsForCommunity?.length) {
+		throw new NotFoundError(`No pub fields found in community ${communityId}.`);
 	}
 
-	const filteredFields = pubFieldsForPubType.filter((field) => {
+	const filteredFields = pubFieldsForCommunity.filter((field) => {
 		const value = body.values[field.slug];
 		return Boolean(value);
 	});
 
-	const validated = validatePubValuesBySchemaName({
-		fields: filteredFields,
-		values: body.values,
-	});
+	const validationErrors = Object.values(
+		validatePubValuesBySchemaName({
+			fields: filteredFields,
+			values: body.values,
+		})
+	);
 
-	// TODO: this should throw instead, aborting the transaction
-	if (validated && validated.error) {
-		throw new Error(validated.error);
-		// return {
-		// 	error: validated.error,
-		// 	cause: validated.error,
-		// };
+	if (validationErrors.length) {
+		throw new Error(validationErrors.join(" "));
 	}
 
 	const valuesWithFieldIds = Object.entries(body.values).map(([slug, value]) => {

@@ -110,17 +110,18 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 			return acc;
 		}, {} as PubValues);
 
-		const updateResult = await _updatePub({
-			pubId: pub.id as PubsId,
-			pubValues,
-		});
-
-		if (updateResult.error) {
-			logger.debug(updateResult.error);
+		try {
+			await _updatePub({
+				pubId: pub.id as PubsId,
+				pubValues,
+				continueOnValidationError: false,
+			});
+		} catch (error) {
+			logger.debug(error);
 			return {
 				title: "Error",
-				error: `Failed to update fields: ${updateResult.error}`,
-				cause: updateResult.error,
+				error: `Failed to update fields: ${error}`,
+				cause: error,
 			};
 		}
 

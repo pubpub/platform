@@ -1,10 +1,11 @@
+import type { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
-import type { InnerFormProps } from "./types";
+import type { ComponentConfigFormProps } from "./types";
 
-export default ({ form }: InnerFormProps) => {
+export default ({ form }: ComponentConfigFormProps<InputComponent.checkbox>) => {
 	return (
 		<>
 			<FormField

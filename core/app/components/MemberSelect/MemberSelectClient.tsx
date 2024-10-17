@@ -96,8 +96,13 @@ export function MemberSelectClient({
 
 	const onInputValueChange = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
+		const oldParams = newParams.toString();
 		newParams.set(queryParamName, value);
-		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+		// Only change params when they are different, otherwise can cause race conditions
+		// if another component is trying to change the query params as well
+		if (oldParams !== newParams.toString()) {
+			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+		}
 		setInputValue(value);
 	}, 400);
 

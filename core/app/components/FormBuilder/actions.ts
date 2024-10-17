@@ -109,7 +109,16 @@ export const archiveForm = defineServerAction(async function archiveForm(id: For
 			db.updateTable("forms").set({ isArchived: true }).where("forms.id", "=", id)
 		).executeTakeFirstOrThrow();
 	} catch (error) {
-		logger.error({ msg: "error archiving form", error });
-		return { error: "Unable to archive form" };
+		return { error: "Unable to archive form", cause: error };
+	}
+});
+
+export const restoreForm = defineServerAction(async function unarchiveForm(id: FormsId) {
+	try {
+		await autoRevalidate(
+			db.updateTable("forms").set({ isArchived: false }).where("forms.id", "=", id)
+		).executeTakeFirstOrThrow();
+	} catch (error) {
+		return { error: "Unable to unarchive form", cause: error };
 	}
 });

@@ -21,7 +21,7 @@ const columnHelper = createColumnHelper<Animal>();
 const columns = [
 	columnHelper.accessor("name", { header: () => "Name", cell: (d) => d.getValue() }),
 	columnHelper.accessor("species", { header: () => "Species", cell: (d) => d.getValue() }),
-] as const satisfies ColumnDef<Animal, unknown>[];
+] as const satisfies ColumnDef<Animal, string>[];
 
 describe("DataTable", () => {
 	describe("paging", () => {
