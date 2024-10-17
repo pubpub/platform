@@ -31,10 +31,12 @@ const FormWrapper = ({
 	config,
 	children,
 	isStringArray,
+	defaultValues,
 }: {
 	config: Static<typeof checkboxGroupConfigSchema>;
 	children: ReactNode;
 	isStringArray?: boolean;
+	defaultValues?: string[] | number[];
 }) => {
 	const schema = Type.Object({
 		example: isStringArray
@@ -43,7 +45,7 @@ const FormWrapper = ({
 	});
 
 	const form = useForm({
-		defaultValues: { example: [] },
+		defaultValues: { example: defaultValues ?? [] },
 		resolver: typeboxResolver(schema),
 		reValidateMode: "onBlur",
 	});
@@ -118,6 +120,24 @@ describe("Checkbox group element", () => {
 		const c1 = screen.getByTestId("checkbox-cats");
 		fireEvent.click(c1);
 		expect(screen.getByTestId("selected-cats")).toBeDefined();
+	});
+
+	it("can initialize", async () => {
+		const config: Static<typeof checkboxGroupConfigSchema> = { values: [0, 1, 2, 3, 4, 5] };
+		const defaultValues = [0, 1];
+		render(
+			<FormWrapper config={config} defaultValues={defaultValues}>
+				<CheckboxGroupElement
+					name="example"
+					config={config}
+					schemaName={CoreSchemaType.NumericArray}
+				/>
+			</FormWrapper>
+		);
+		defaultValues.map((v) => {
+			expect(screen.getByTestId(`checkbox-${v}`).ariaChecked).toEqual("true");
+			expect(screen.getByTestId(`selected-${v}`)).toBeDefined();
+		});
 	});
 
 	describe("min max checking", () => {
@@ -280,6 +300,28 @@ describe("Checkbox group element", () => {
 			expect(screen.getByTestId("selected-1")).toBeDefined();
 			expect(screen.getByTestId("selected-3")).toBeDefined();
 			expect(screen.getByTestId("selected-13")).toBeDefined();
+		});
+
+		it("can initialize other field", async () => {
+			const config: Static<typeof checkboxGroupConfigSchema> = {
+				values: [0, 1, 2, 3, 4, 5],
+				includeOther: true,
+			};
+			const defaultValues = [0, 1, 72];
+			render(
+				<FormWrapper config={config} defaultValues={defaultValues}>
+					<CheckboxGroupElement
+						name="example"
+						config={config}
+						schemaName={CoreSchemaType.NumericArray}
+					/>
+				</FormWrapper>
+			);
+			[0, 1].map((v) => {
+				expect(screen.getByTestId(`checkbox-${v}`).ariaChecked).toEqual("true");
+				expect(screen.getByTestId(`selected-${v}`)).toBeDefined();
+			});
+			expect((screen.getByTestId("other-field") as HTMLInputElement).value).toBe("72");
 		});
 
 		it("handles other fields with min/max", async () => {

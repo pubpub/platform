@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CoreSchemaType } from "@prisma/client";
 import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
@@ -14,12 +14,17 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) => {
-	const { control } = useFormContext();
+	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
-	const [other, setOther] = useState<string | number>("");
+	const initialOther = useMemo(() => {
+		const initialValues: (string | number)[] = getValues()[name];
+		const other = initialValues.filter((iv) => !config.values.includes(iv));
+		return other[0] ?? "";
+	}, []);
+	const [other, setOther] = useState<string | number>(initialOther);
 
 	Value.Default(radioGroupConfigSchema, config);
 	if (!Value.Check(radioGroupConfigSchema, config)) {
@@ -57,7 +62,7 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 												<RadioGroupItem
 													checked={
 														Array.isArray(field.value)
-															? field.value[0] === v
+															? field.value.includes(v)
 															: false
 													}
 													value={`${v}`}
