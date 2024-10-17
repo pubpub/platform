@@ -246,6 +246,42 @@ describe("Checkbox group element", () => {
 			expect(screen.getByTestId("selected-7")).toBeDefined();
 		});
 
+		it("can handle other fields that overlap with checkbox values", async () => {
+			const config: Static<typeof checkboxGroupConfigSchema> = {
+				values: [0, 1, 2, 3, 4, 5],
+				includeOther: true,
+			};
+			const user = userEvent.setup();
+			render(
+				<FormWrapper config={config}>
+					<CheckboxGroupElement
+						name="example"
+						config={config}
+						schemaName={CoreSchemaType.NumericArray}
+					/>
+				</FormWrapper>
+			);
+			const otherField = screen.getByTestId("other-field");
+			await user.click(screen.getByTestId("checkbox-1"));
+			await user.type(otherField, "12");
+			expect(screen.queryAllByRole("listitem").length).toBe(2);
+			expect(screen.getByTestId("selected-1")).toBeDefined();
+			expect(screen.getByTestId("selected-12")).toBeDefined();
+			await user.click(screen.getByTestId("checkbox-3"));
+			expect(screen.queryAllByRole("listitem").length).toBe(3);
+			await user.type(otherField, "{backspace}{backspace}");
+			expect(screen.queryAllByRole("listitem").length).toBe(2);
+
+			// Add 1 as other, but 1 is already a checked value
+			await user.type(otherField, "1");
+			expect(screen.queryAllByRole("listitem").length).toBe(2);
+			await user.type(otherField, "3");
+			expect(screen.queryAllByRole("listitem").length).toBe(3);
+			expect(screen.getByTestId("selected-1")).toBeDefined();
+			expect(screen.getByTestId("selected-3")).toBeDefined();
+			expect(screen.getByTestId("selected-13")).toBeDefined();
+		});
+
 		it("handles other fields with min/max", async () => {
 			const user = userEvent.setup();
 			const config: Static<typeof checkboxGroupConfigSchema> = {
