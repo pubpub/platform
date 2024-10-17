@@ -14,7 +14,9 @@ export class PubTypePage {
 		await this.page.goto(`/c/${this.communitySlug}/types`);
 	}
 
-	async addFieldToPubType(pubtypeName: string, fieldSlug: string) {
-		// TODO
+	async addFieldToPubType(pubTypeName: string, fieldSlug: string) {
+		await this.page.getByTestId(`edit-pubtype-${pubTypeName}`).click();
+		await this.page.getByRole("combobox").click();
+		await this.page.getByRole("option", { name: fieldSlug }).click();
 	}
 }

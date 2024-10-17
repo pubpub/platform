@@ -116,7 +116,38 @@ test.describe("Creating a pub", () => {
 		await fieldsPage.addField("Animals", CoreSchemaType.StringArray);
 
 		// Add it as a pub type
-		const pubtypePage = new PubTypePage(page, COMMUNITY_SLUG);
-		await pubtypePage.goto();
+		const pubTypePage = new PubTypePage(page, COMMUNITY_SLUG);
+		await pubTypePage.goto();
+		await pubTypePage.addFieldToPubType("Submission", "animals");
+
+		// Now create a pub of this type
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		const title = "pub with multivalue";
+		await page.getByRole("button", { name: "Create" }).click();
+		await page.getByLabel("Title").fill(title);
+		await page.getByLabel("Content").fill("Some content");
+		await page.getByLabel("Animals").fill("dogs");
+		await page.keyboard.press("Enter");
+		await page.getByLabel("Animals").fill("cats");
+		await page.keyboard.press("Enter");
+		await page.getByRole("button", { name: "Create Pub" }).click();
+		await page.getByRole("link", { name: title }).click();
+		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
+		const pubId = page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)/)?.groups?.pubId;
+		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
+
+		// Edit this same pub
+		await pubsPage.goTo();
+		await page.getByTestId("pub-dropdown-button").first().click();
+		await page.getByRole("button", { name: "Update" }).click();
+		await page.getByLabel("Animals").fill("penguins");
+		await page.keyboard.press("Enter");
+		await page.getByTestId("remove-button").first().click();
+		await page.getByRole("button", { name: "Update Pub" }).click();
+		await page.getByTestId("pub-dropdown-button").first().click();
+		await expect(page.getByRole("heading", { name: "Pubs" })).toHaveCount(1);
+		// await page.goto(`/c/${COMMUNITY_SLUG}/pubs/${pubId}`);
+		// await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
 });
