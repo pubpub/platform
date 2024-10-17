@@ -10,6 +10,7 @@ import { zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
 import { MarkdownEditor } from "ui/editors";
 import { Form, FormField } from "ui/form";
+import { useUnsavedChangesWarning } from "ui/hooks";
 
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
@@ -38,6 +39,8 @@ export const StructuralElementConfigurationForm = ({ index }: Props) => {
 		resolver,
 		defaultValues: schema.parse(selectedElement),
 	});
+
+	useUnsavedChangesWarning(form.formState.isDirty);
 
 	const onSubmit = (values: z.infer<typeof schema>) => {
 		update(index, { ...selectedElement, ...values, updated: true, configured: true });
@@ -96,7 +99,11 @@ export const StructuralElementConfigurationForm = ({ index }: Props) => {
 					>
 						Cancel
 					</Button>
-					<Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+					<Button
+						type="submit"
+						className="bg-blue-500 hover:bg-blue-600"
+						disabled={!form.formState.isDirty}
+					>
 						Save
 					</Button>
 				</div>
