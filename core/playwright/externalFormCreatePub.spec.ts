@@ -69,7 +69,7 @@ test("Can create a pub from an external form", async () => {
 });
 
 test.describe("Multivalue inputs", () => {
-	test("Can add a radio and checkbox multivalue input", async () => {
+	test("Can add multivalue inputs", async () => {
 		test.setTimeout(60_000);
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
@@ -130,7 +130,7 @@ test.describe("Multivalue inputs", () => {
 		await page.getByRole("textbox", { name: "Description" }).fill(fruitElement.description);
 		const fruits = ["mangos", "pineapples", "figs"];
 		for (const fruit of fruits) {
-			await page.getByTestId("multivalue-input").fill(fruit);
+			await page.getByLabel("Dropdown Values").fill(fruit);
 			await page.keyboard.press("Enter");
 			await expect(page.getByTestId(`sortable-value-${fruit}`)).toHaveCount(1);
 		}
