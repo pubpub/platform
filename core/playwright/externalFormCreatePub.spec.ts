@@ -43,7 +43,8 @@ test.beforeAll(async ({ browser }) => {
 	// We are automatically redirected to the form editor. Add email element
 	const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
 	await formEditPage.openAddForm();
-	await formEditPage.addFormElement(`${COMMUNITY_SLUG}:email`);
+	await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:email`);
+	await formEditPage.saveForm();
 
 	// Go to the external form page
 	await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${FORM_SLUG}/fill`);
@@ -65,4 +66,107 @@ test("Can create a pub from an external form", async () => {
 	// Check the pub page that this pub was created
 	await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
 	await expect(page.getByRole("link", { name: title })).toHaveCount(1);
+});
+
+test.describe("Multivalue inputs", () => {
+	test("Can add a radio and checkbox multivalue input", async () => {
+		test.setTimeout(60_000);
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		// Add a numeric array and string arrays
+		await fieldsPage.addField("Favorite numbers", CoreSchemaType.NumericArray);
+		await fieldsPage.addField("Favorite animals", CoreSchemaType.StringArray);
+		await fieldsPage.addField("Favorite fruits", CoreSchemaType.StringArray);
+		// Add these to existing form
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
+		await formEditPage.goto();
+		await formEditPage.openAddForm();
+
+		// Radio button group with numbers
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:favorite-numbers`);
+		const numberElement = {
+			name: "Favorite numbers",
+			description: "Mine are odd, how about you?",
+		};
+		await page.getByTestId("component-radioGroup").click();
+		await page.getByRole("textbox", { name: "Label" }).fill(numberElement.name);
+		await page.getByRole("textbox", { name: "Description" }).fill(numberElement.description);
+		const numbers = [0, 1, 2, 3];
+		for (const number of numbers) {
+			await page.getByTestId("multivalue-input").fill(`${number}`);
+			await page.keyboard.press("Enter");
+			await expect(page.getByTestId(`sortable-value-${number}`)).toHaveCount(1);
+		}
+		await formEditPage.saveFormElementConfiguration();
+
+		// Checkbox group with strings
+		await formEditPage.openAddForm();
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:favorite-animals`);
+		const animalElement = {
+			name: "Favorite animals",
+			description: "Mine are furry, how about yours?",
+		};
+		await page.getByTestId("component-checkboxGroup").click();
+		await page.getByRole("textbox", { name: "Label" }).fill(animalElement.name);
+		await page.getByRole("textbox", { name: "Description" }).fill(animalElement.description);
+		const animals = ["cats", "dogs", "squirrels"];
+		for (const animal of animals) {
+			await page.getByTestId("multivalue-input").fill(animal);
+			await page.keyboard.press("Enter");
+			await expect(page.getByTestId(`sortable-value-${animal}`)).toHaveCount(1);
+		}
+		await page.getByTestId("include-other").click();
+		await formEditPage.saveFormElementConfiguration();
+
+		// Select dropdown with strings
+		await formEditPage.openAddForm();
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:favorite-fruits`);
+		const fruitElement = {
+			name: "Favorite fruits",
+			description: "Make sure it isn't a vegetable",
+		};
+		await page.getByTestId("component-selectDropdown").click();
+		await page.getByRole("textbox", { name: "Label" }).fill(fruitElement.name);
+		await page.getByRole("textbox", { name: "Description" }).fill(fruitElement.description);
+		const fruits = ["mangos", "pineapples", "figs"];
+		for (const fruit of fruits) {
+			await page.getByTestId("multivalue-input").fill(fruit);
+			await page.keyboard.press("Enter");
+			await expect(page.getByTestId(`sortable-value-${fruit}`)).toHaveCount(1);
+		}
+		await formEditPage.saveFormElementConfiguration();
+
+		// Save the form builder and go to external form
+		await formEditPage.saveForm();
+		await formEditPage.goToExternalForm();
+		for (const element of [numberElement, animalElement, fruitElement]) {
+			await expect(page.getByText(element.name)).toHaveCount(1);
+			await expect(page.getByText(element.description)).toHaveCount(1);
+		}
+
+		// Fill out the form
+		const title = "multivalue";
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
+		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
+		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
+		// Radio group
+		await page.getByTestId("radio-0").click();
+		// Checkbox group
+		await page.getByTestId("checkbox-cats").click();
+		await page.getByTestId("other-field").fill("otters");
+		// Select dropdown
+		await page.getByRole("combobox").click();
+		await page.getByRole("option", { name: "mangos" }).click();
+		await page.getByRole("button", { name: "Submit" }).click();
+
+		// Check the pub page to make sure the values we expect are there
+		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
+		await page.getByRole("link", { name: title }).click();
+		await expect(page.getByText(numberElement.name)).toHaveCount(1);
+		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0");
+		await expect(page.getByText(animalElement.name)).toHaveCount(1);
+		await expect(page.getByTestId(`${animalElement.name}-value`)).toHaveText("cats,otters");
+		await expect(page.getByText(fruitElement.name)).toHaveCount(1);
+		await expect(page.getByTestId(`${fruitElement.name}-value`)).toHaveText("mangos");
+	});
 });

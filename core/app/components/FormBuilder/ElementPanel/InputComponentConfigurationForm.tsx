@@ -174,7 +174,11 @@ const ComponentSelect = ({
 							}}
 						/>
 						<div className="flex h-[124px] w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
-							<label className="cursor-pointer" htmlFor={`component-${c}`}>
+							<label
+								className="cursor-pointer"
+								htmlFor={`component-${c}`}
+								data-testid={`component-${c}`}
+							>
 								<div
 									// 'inert' allows demo components to not be interactive unless they are selected
 									// @ts-ignore inert isn't typed properly in React 18, but will be in 19
@@ -304,6 +308,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 						Cancel
 					</Button>
 					<Button
+						data-testid="save-configuration-button"
 						type="submit"
 						className="bg-blue-500 hover:bg-blue-600"
 						disabled={!form.formState.isDirty}

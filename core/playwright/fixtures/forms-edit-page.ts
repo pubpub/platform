@@ -17,13 +17,20 @@ export class FormsEditPage {
 		await this.page.goto(`/c/${this.communitySlug}/forms/${this.formSlug}/edit`);
 	}
 
+	async goToExternalForm() {
+		await this.page.goto(`/c/${this.communitySlug}/public/forms/${this.formSlug}/fill`);
+	}
+
 	async openAddForm() {
 		await this.page.getByRole("button", { name: "Add New" }).click();
 	}
 
-	async addFormElement(slug: string) {
+	async openFormElementPanel(slug: string) {
 		await this.page.getByTestId(`field-button-${slug}`).click();
-		await this.saveForm();
+	}
+
+	async saveFormElementConfiguration() {
+		await this.page.getByTestId("save-configuration-button").click();
 	}
 
 	async saveForm() {

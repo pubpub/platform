@@ -113,12 +113,12 @@ const createSchemaFromElements = (
 					(e) =>
 						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
 				)
-				.map(({ slug, schemaName }) => {
+				.map(({ slug, schemaName, config }) => {
 					if (!schemaName) {
 						return [slug, undefined];
 					}
 
-					const schema = getJsonSchemaByCoreSchemaType(schemaName);
+					const schema = getJsonSchemaByCoreSchemaType(schemaName, config);
 					if (!schema) {
 						return [slug, undefined];
 					}
