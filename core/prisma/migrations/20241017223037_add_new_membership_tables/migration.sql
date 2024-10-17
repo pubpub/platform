@@ -17,6 +17,7 @@ CREATE TABLE "community_memberships" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    CHECK ( num_nonnulls("userId", "memberGroupId") = 1 )
     CONSTRAINT "community_memberships_pkey" PRIMARY KEY ("id")
 );
 
@@ -30,6 +31,7 @@ CREATE TABLE "pub_memberships" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    CHECK ( num_nonnulls("userId", "memberGroupId") = 1 )
     CONSTRAINT "pub_memberships_pkey" PRIMARY KEY ("id")
 );
 
@@ -43,6 +45,7 @@ CREATE TABLE "stage_memberships" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    CHECK ( num_nonnulls("userId", "memberGroupId") = 1 )
     CONSTRAINT "stage_memberships_pkey" PRIMARY KEY ("id")
 );
 
@@ -55,6 +58,7 @@ CREATE TABLE "form_memberships" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    CHECK ( num_nonnulls("userId", "memberGroupId") = 1 )
     CONSTRAINT "form_memberships_pkey" PRIMARY KEY ("id")
 );
 
