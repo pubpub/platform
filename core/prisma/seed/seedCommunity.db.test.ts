@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import type { PubsId, UsersId } from "db/public";
 import {
 	Action,
 	CoreSchemaType,
@@ -20,10 +21,11 @@ describe("seedCommunity", () => {
 		const trx = getTrx();
 
 		const seedCommunity = await import("./seedCommunity").then((mod) => mod.seedCommunity);
-		const testUserId = crypto.randomUUID();
+		const testUserId = crypto.randomUUID() as UsersId;
 
-		const submissionPubId = crypto.randomUUID();
-		const authorPubId = crypto.randomUUID();
+		const submissionPubId = crypto.randomUUID() as PubsId;
+		const authorPubId = crypto.randomUUID() as PubsId;
+		const author2PubId = crypto.randomUUID() as PubsId;
 
 		const bigSeed1 = await seedCommunity({
 			community: {
@@ -95,6 +97,13 @@ describe("seedCommunity", () => {
 						Title: "De Heer Frederick",
 					},
 				},
+				"Author 2": {
+					id: author2PubId,
+					pubType: "Author",
+					values: {
+						Title: "De Heer Frederick 2",
+					},
+				},
 			},
 
 			forms: {
@@ -131,7 +140,7 @@ describe("seedCommunity", () => {
 			},
 			pubRelations: {
 				"A Submission": {
-					SubmissionAuthor: "Author 1",
+					SubmissionAuthor: ["Author 1", "Author 2"],
 				},
 			},
 		});
@@ -239,6 +248,7 @@ describe("seedCommunity", () => {
 			],
 			pubs: [
 				{
+					id: submissionPubId,
 					assigneeId: null,
 					children: [
 						{
@@ -260,8 +270,10 @@ describe("seedCommunity", () => {
 						},
 					],
 					valuesBlob: null,
+					stageId: "",
 				},
-				{},
+				{ id: authorPubId },
+				{ id: author2PubId },
 			],
 			stageConnections: [{}],
 			stagePermissions: [{}],
@@ -297,6 +309,10 @@ describe("seedCommunity", () => {
 				{
 					pubId: submissionPubId,
 					relatedPubId: authorPubId,
+				},
+				{
+					pubId: submissionPubId,
+					relatedPubId: author2PubId,
 				},
 			],
 		});
