@@ -32,6 +32,11 @@ async function createUserMembers({
 }) {
 	await prisma.user.create({
 		data: {
+			CommunityMembership: {
+				createMany: {
+					data: prismaCommunityIds.map((communityId) => ({ communityId, role })),
+				},
+			},
 			slug,
 			email: email,
 			firstName,
