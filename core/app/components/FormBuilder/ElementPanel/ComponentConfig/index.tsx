@@ -30,6 +30,7 @@ const InputCompomentMap = {
 	[InputComponent.selectDropdown]: toDynamic("SelectDropdown"),
 	[InputComponent.textArea]: toDynamic("TextArea"),
 	[InputComponent.textInput]: toDynamic("TextInput"),
+	[InputComponent.richText]: toDynamic("RichText"),
 };
 
 export const ComponentConfig = <I extends InputComponent>(props: ComponentConfigFormProps<I>) => {
