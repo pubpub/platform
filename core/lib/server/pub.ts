@@ -26,6 +26,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import { expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
 import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
@@ -397,6 +398,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 
 	const pubFieldsForCommunityObject = await getPubFields({
 		communityId,
+		includeRelations: true,
 	}).executeTakeFirst();
 
 	const pubFieldsForCommunity = Object.values(pubFieldsForCommunityObject?.fields ?? {});
@@ -406,13 +408,21 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	}
 
 	const filteredFields = pubFieldsForCommunity.filter((field) => {
-		const value = body.values[field.slug];
+		const value = body.values[field.slug] ?? body.relatedPubs?.[field.slug];
 		return Boolean(value);
 	});
 
+	const normalizedValues = Object.fromEntries(
+		Object.entries(body.values).map(([slug, value]) =>
+			value && typeof value === "object" && "value" in value
+				? [slug, value.value]
+				: [slug, value]
+		)
+	);
+
 	const validated = validatePubValuesBySchemaName({
 		fields: filteredFields,
-		values: body.values,
+		values: normalizedValues,
 	});
 
 	// TODO: this should throw instead, aborting the transaction
@@ -431,10 +441,16 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		if (!field) {
 			throw new NotFoundError(`No pub field found for slug '${slug}'`);
 		}
+
+		const valueMaybeWithRelatedPubId =
+			value && typeof value === "object" && "value" in value
+				? { value: JSON.stringify(value.value), relatedPubId: value.relatedPubId as PubsId }
+				: { value: JSON.stringify(value) };
+
 		return {
 			id: field.id,
 			slug: field.slug,
-			value: JSON.stringify(value),
+			...valueMaybeWithRelatedPubId,
 		};
 	});
 
@@ -455,13 +471,19 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				.returningAll()
 		).executeTakeFirstOrThrow();
 
+		let createdStageId: StagesId | undefined;
 		if (stageId) {
-			await autoRevalidate(
-				trx.insertInto("PubsInStages").values((eb) => ({
-					pubId: newPub.id,
-					stageId: stageId,
-				}))
+			const result = await autoRevalidate(
+				trx
+					.insertInto("PubsInStages")
+					.values((eb) => ({
+						pubId: newPub.id,
+						stageId: expect(stageId),
+					}))
+					.returningAll()
 			).executeTakeFirstOrThrow();
+
+			createdStageId = result.stageId;
 		}
 
 		const pubValues = valuesWithFieldIds.length
@@ -469,26 +491,27 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 					trx
 						.insertInto("pub_values")
 						.values(
-							valuesWithFieldIds.map(({ id, value }, index) => ({
-								// not sure this is the best way to do this
+							valuesWithFieldIds.map(({ id, value, relatedPubId }, index) => ({
 								fieldId: id,
 								pubId: newPub.id,
-								value: value,
+								value,
+								relatedPubId,
 							}))
 						)
 						.returningAll()
 				).execute()
 			: [];
 
-		if (!body.children) {
+		if (!body.children && !body.relatedPubs) {
 			return {
 				...newPub,
+				stageId: createdStageId,
 				values: pubValues,
 			} as PubWithoutChildren;
 		}
 
 		const children = await Promise.all(
-			body.children.map(async (child) => {
+			body.children?.map(async (child) => {
 				const childPub = await createPubRecursiveNew({
 					body: child,
 					communityId,
@@ -498,16 +521,69 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 					trx,
 				});
 				return childPub;
+			}) ?? []
+		);
+
+		if (!body.relatedPubs) {
+			return {
+				...newPub,
+				stageId: createdStageId,
+				values: pubValues,
+				children: children.length ? children : undefined,
+			} as PubWithChildren;
+		}
+
+		const relatedPubs = await Promise.all(
+			Object.entries(body.relatedPubs).flatMap(async ([fieldSlug, relatedPubBodies]) => {
+				const field = pubFieldsForCommunity.find(({ slug }) => slug === fieldSlug);
+
+				if (!field) {
+					throw new NotFoundError(`No pub field found for slug '${fieldSlug}'`);
+				}
+
+				const relatedPubs = await Promise.all(
+					relatedPubBodies.flatMap(async ({ pub, value }) => {
+						const createdRelatedPub = await createPubRecursiveNew({
+							communityId,
+							body: pub,
+							trx,
+						});
+
+						if (!createdRelatedPub) {
+							throw new Error("Failed to create related pub");
+						}
+
+						const pubValue = await autoRevalidate(
+							trx
+								.insertInto("pub_values")
+								.values({
+									fieldId: field.id,
+									pubId: newPub.id,
+									value: JSON.stringify(value),
+									relatedPubId: createdRelatedPub.id,
+								})
+								.returningAll()
+						).executeTakeFirstOrThrow();
+
+						return {
+							...pubValue,
+							relatedPub: createdRelatedPub,
+						};
+					})
+				);
+
+				return relatedPubs;
 			})
 		);
 
 		return {
 			...newPub,
+			stageId: createdStageId,
 			values: pubValues,
 			children,
+			relatedPubs: relatedPubs.flat(),
 		} as PubWithChildren;
 	});
-
 	return result as MaybeWithChildren<Body>;
 };
 
