@@ -48,7 +48,7 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: pubTypes[0].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
 					[`${community.slug}:title`]: "test title",
 				},
@@ -71,13 +71,13 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: pubTypes[0].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
 					[`${community.slug}:title`]: "test title",
 				},
 				children: [
 					{
-						pubTypeId: pubTypes[0].id,
+						pubTypeId: pubTypes["Basic Pub"].id,
 						values: {
 							[`${community.slug}:title`]: "test child title",
 						},
@@ -100,17 +100,17 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: pubTypes[0].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
 					[`${community.slug}:title`]: "test title",
 				},
-				stageId: stages[0].id,
+				stageId: stages["Stage 1"].id,
 			},
 			trx,
 		});
 
 		expect(pub).toMatchObject({
-			stageId: stages[0].id,
+			stageId: stages["Stage 1"].id,
 			values: [{ value: "test title" }],
 		});
 	});
@@ -122,7 +122,7 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: pubTypes[0].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
 					[`${community.slug}:title`]: "test title",
 					[`${community.slug}:some-relation`]: {
@@ -149,7 +149,7 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: pubTypes[0].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
 					[`${community.slug}:title`]: "test title",
 				},
@@ -158,7 +158,7 @@ describe("createPubRecursive", () => {
 						{
 							value: "test relation value",
 							pub: {
-								pubTypeId: pubTypes[0].id,
+								pubTypeId: pubTypes["Basic Pub"].id,
 								values: {
 									[`${community.slug}:title`]: "test relation title",
 								},

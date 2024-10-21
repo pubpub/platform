@@ -12,7 +12,7 @@ import {
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
-const { testDb, getLoginData, createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx, rollback, commit } = createForEachMockedTransaction();
 
@@ -168,14 +168,10 @@ describe("seedCommunity", () => {
 			},
 		]);
 
-		expect(bigSeed1.users, "users").toMatchObject([
-			{
-				isSuperAdmin: false,
-			},
-			{
-				isSuperAdmin: false,
-			},
-		]);
+		expect(bigSeed1.users, "users").toMatchObject({
+			hih: {},
+			test: {},
+		});
 
 		expect(bigSeed1.members, "members").toMatchObject([
 			{
@@ -186,28 +182,28 @@ describe("seedCommunity", () => {
 			},
 		]);
 
-		expect(bigSeed1.pubFields, "pubFields").toMatchObject([
-			{
+		expect(bigSeed1.pubFields, "pubFields").toMatchObject({
+			Title: {
 				isRelation: false,
 				name: "Title",
 				schemaName: "String",
 			},
-			{
+			SubmissionAuthor: {
 				isRelation: true,
 				name: "SubmissionAuthor",
 				schemaName: "Number",
 			},
-		]);
+		});
 
-		expect(bigSeed1.pubTypes, "pubTypes").toMatchObject([
-			{
+		expect(bigSeed1.pubTypes, "pubTypes").toMatchObject({
+			Submission: {
 				description: null,
 				name: "Submission",
 			},
-			{
+			Author: {
 				name: "Author",
 			},
-		]);
+		});
 
 		expect(bigSeed1.pubs, "pubs").toMatchObject([
 			{ id: authorPubId },
@@ -216,7 +212,7 @@ describe("seedCommunity", () => {
 				assigneeId: null,
 				children: [
 					{
-						assigneeId: bigSeed1.users[0].id,
+						assigneeId: bigSeed1.users.test.id,
 						values: [
 							{
 								relatedPubId: null,
@@ -238,7 +234,7 @@ describe("seedCommunity", () => {
 					},
 				],
 				valuesBlob: null,
-				stageId: bigSeed1.stages.find((stage) => stage.name === "Stage 1")?.id,
+				stageId: bigSeed1.stages["Stage 1"].id,
 				relatedPubs: [
 					{
 						value: 1,
@@ -251,35 +247,20 @@ describe("seedCommunity", () => {
 
 		expect(bigSeed1.stageConnections, "stageConnections").toMatchObject([]);
 
-		expect(bigSeed1.stagePermissions, "stagePermissions").toMatchObject([
-			{
-				B: bigSeed1.stages.find((stage) => stage.name === "Stage 1")?.id,
-			},
-		]);
-
-		expect(bigSeed1.stages, "stages").toMatchObject([
-			{
-				actions: [
-					{
-						action: "email",
-						config: {
-							body: "hello nerd",
-							subject: "hello nerd",
-						},
-					},
-				],
+		expect(bigSeed1.stages, "stages").toMatchObject({
+			"Stage 1": {
 				members: ["test"],
 				name: "Stage 1",
 				order: "aa",
 			},
-			{
+			"Stage 2": {
 				name: "Stage 2",
 				order: "bb",
 			},
-		]);
+		});
 
-		expect(bigSeed1.forms, "forms").toMatchObject([
-			{
+		expect(bigSeed1.forms, "forms").toMatchObject({
+			"submission-form": {
 				access: "private",
 				elements: [
 					{
@@ -324,7 +305,7 @@ describe("seedCommunity", () => {
 				name: "submission-form",
 				slug: "submission-form",
 			},
-		]);
+		});
 
 		rollback();
 	});

@@ -13,8 +13,12 @@ import type {
 	Communities,
 	CommunitiesId,
 	FormAccessType,
+	FormElements,
+	Forms,
 	FormsId,
+	Members,
 	NewMembers,
+	PubFields,
 	PubsId,
 	PubTypes,
 	Stages,
@@ -325,30 +329,30 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 const findBySlug = <T extends { slug: string }>(props: T[], slug: string) =>
 	props.find((prop) => new RegExp(`^${slug}`).test(prop.slug));
 
-export const seedCommunity = async <
+type CommunitySeedInput = {
+	id?: CommunitiesId;
+	name: string;
+	slug: string;
+	avatar?: string;
+};
+
+export async function seedCommunity<
 	const PF extends PubFieldsInitializer,
 	const PT extends PubTypeInitializer<PF>,
 	const U extends UsersInitializer,
 	const S extends StagesInitializer<U>,
 	const SC extends StageConnectionsInitializer<S>,
 	const PI extends PubInitializer<PF, PT, U, S>[],
-	// const PR extends PubRelationsInitializer<PF, PT, PI>,
 	const F extends FormInitializer<PF, PT, U, S>,
 >(
 	props: {
-		community: {
-			id?: CommunitiesId;
-			name: string;
-			slug: string;
-			avatar?: string;
-		};
-		pubFields: PF;
-		pubTypes: PT;
-		users: U;
-		stages: S;
+		community: CommunitySeedInput;
+		pubFields?: PF;
+		pubTypes?: PT;
+		users?: U;
+		stages?: S;
 		stageConnections?: SC;
-		pubs: PI;
-		// pubRelations?: PubRelationsInitializer<PF, PT, PI>;
+		pubs?: PI;
 		forms?: F;
 	},
 	options?: {
@@ -359,7 +363,7 @@ export const seedCommunity = async <
 		randomSlug?: boolean;
 	},
 	trx = db
-) => {
+) {
 	const { community } = props;
 
 	logger.info(`Starting seed for ${community.name}`);
@@ -379,7 +383,8 @@ export const seedCommunity = async <
 
 	const { id: communityId, slug: communitySlug } = createdCommunity;
 
-	const pubFieldsList = Object.entries(props.pubFields);
+	const pubFieldsList = Object.entries(props.pubFields ?? {});
+
 	const createdPubFields = pubFieldsList.length
 		? await trx
 				.insertInto("pub_fields")
@@ -399,7 +404,16 @@ export const seedCommunity = async <
 				.execute()
 		: [];
 
-	const pubTypesList = Object.entries(props.pubTypes);
+	type PubFieldsByName<PF> = { [K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } };
+
+	const pubFieldsByName = Object.fromEntries(
+		createdPubFields.map((pubField) => [
+			pubFieldsList.find(([name]) => name === pubField.name)?.[0],
+			pubField,
+		])
+	) as PubFieldsByName<PF>;
+
+	const pubTypesList = Object.entries(props.pubTypes ?? {});
 	const createdPubTypes = pubTypesList.length
 		? await trx
 				.insertInto("pub_types")
@@ -443,8 +457,32 @@ export const seedCommunity = async <
 					.execute()
 			: [];
 
+	type PubTypesByName<PT, PF> = {
+		[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
+	};
+
+	const pubTypesWithPubFieldsByName = Object.fromEntries(
+		createdPubTypes.map((pubType) => [
+			pubType.name,
+			{
+				...pubType,
+				pubFields: Object.fromEntries(
+					createdPubFieldToPubTypes
+						.filter((pubFieldToPubType) => pubFieldToPubType.B === pubType.id)
+						.map((pubFieldToPubType) => {
+							const pubField = createdPubFields.find(
+								(pubField) => pubField.id === pubFieldToPubType.A
+							)!;
+
+							return [pubField.name, pubField] as const;
+						})
+				),
+			},
+		])
+	) as PubTypesByName<PT, PF>;
+
 	const userValues = await Promise.all(
-		Object.entries(props.users).map(async ([slug, userInfo]) => ({
+		Object.entries(props.users ?? {}).map(async ([slug, userInfo]) => ({
 			slug: options?.randomSlug === false ? slug : `${slug}-${new Date().toISOString()}`,
 			email: userInfo?.email ?? faker.internet.email(),
 			firstName: userInfo?.firstName ?? faker.person.firstName(),
@@ -458,7 +496,18 @@ export const seedCommunity = async <
 		? await trx.insertInto("users").values(userValues).returningAll().execute()
 		: [];
 
-	const possibleMembers = Object.entries(props.users)
+	type UsersBySlug<U> = {
+		[K in keyof U]: U[K] & Users;
+	};
+
+	const usersBySlug = Object.fromEntries(
+		createdUsers.map((user) => [
+			user.slug.replace(new RegExp(`-${new Date().getUTCFullYear()}.*`), ""),
+			user,
+		])
+	) as UsersBySlug<U>;
+
+	const possibleMembers = Object.entries(props.users ?? {})
 		.filter(([slug, userInfo]) => !!userInfo.role)
 		.flatMap(([slug, userWithRole]) => {
 			// const createdUser = createdUsers.find((createdUser) => createdUser.slug === slug);
@@ -485,7 +534,7 @@ export const seedCommunity = async <
 		member: createdMembers.find((member) => member.userId === user.id),
 	}));
 
-	const stageList = Object.entries(props.stages);
+	const stageList = Object.entries(props.stages ?? {});
 
 	const createdStages = stageList.length
 		? await trx
@@ -530,21 +579,51 @@ export const seedCommunity = async <
 							)
 							.returningAll()
 					)
-					.insertInto("_PermissionToStage")
-					.values((eb) =>
-						stageMembers.map(({ user: member, stage }, idx) => ({
-							A: eb
-								.selectFrom("new_permissions")
-								.select("new_permissions.id")
-								.limit(1)
-								.offset(idx)
-								.where("new_permissions.memberId", "=", member.member!.id),
-							B: stage.id,
-						}))
+					.with("new_permissions_to_stage", (db) =>
+						db
+							.insertInto("_PermissionToStage")
+							.values((eb) =>
+								stageMembers.map(({ user: member, stage }, idx) => ({
+									A: eb
+										.selectFrom("new_permissions")
+										.select("new_permissions.id")
+										.limit(1)
+										.offset(idx)
+										.where("new_permissions.memberId", "=", member.member!.id),
+									B: stage.id,
+								}))
+							)
+							.returningAll()
 					)
-					.returningAll()
+					.selectFrom("new_permissions")
+					.selectAll("new_permissions")
+					.select((eb) =>
+						eb
+							.selectFrom("new_permissions_to_stage")
+							.select("B")
+							.whereRef("new_permissions_to_stage.A", "=", "new_permissions.id")
+							.as("stageId")
+					)
 					.execute()
 			: [];
+
+	type StagesWithPermissionsByName<S> = {
+		[K in keyof S]: Omit<Stages, "name"> & { name: K } & {
+			permissions: typeof stagePermissions;
+		};
+	};
+
+	const stagesWithPermissionsByName = Object.fromEntries(
+		consolidatedStages.map((stage) => [
+			stage.name,
+			{
+				...stage,
+				permissions: stagePermissions.filter(
+					(permission) => permission.stageId === stage.id
+				),
+			},
+		])
+	) as StagesWithPermissionsByName<S>;
 
 	const stageConnectionsList = props.stageConnections
 		? await db
@@ -589,42 +668,18 @@ export const seedCommunity = async <
 				.execute()
 		: [];
 
-	const createPubRecursiveInput = makePubInitializerMatchCreatePubRecursiveInput({
-		pubTypes: createdPubTypes,
-		users: createdUsers,
-		stages: createdStages,
-		community: createdCommunity,
-		pubs: props.pubs,
-		trx,
-	});
+	const createPubRecursiveInput = props.pubs
+		? makePubInitializerMatchCreatePubRecursiveInput({
+				pubTypes: createdPubTypes,
+				users: createdUsers,
+				stages: createdStages,
+				community: createdCommunity,
+				pubs: props.pubs,
+				trx,
+			})
+		: [];
 
 	const createdPubs = await Promise.all(createPubRecursiveInput.map(createPubRecursiveNew));
-	const topLevelPubsWithNames = Object.entries(props.pubs);
-
-	// necessary, because pubs don't really have names
-	const pubsWithNames = createdPubs.map((pub, idx) => {
-		const [pubName, pubInput] = topLevelPubsWithNames[idx];
-
-		return [pubName, { ...pubInput, ...pub }] as const;
-	});
-
-	// const toBeCreatedPubsInStages = pubsWithNames.flatMap(([pubName, pub]) => {
-	// 	const pubId = pub.id;
-	// 	const stageId = createdStages.find((stage) => stage.name === pub.stage)?.id;
-
-	// 	if (!pubId || !stageId) {
-	// 		return [];
-	// 	}
-
-	// 	return [{ pubId, stageId }];
-	// });
-
-	// const createdPubsInStages = toBeCreatedPubsInStages.length
-	// 	? await db.insertInto("PubsInStages").values(toBeCreatedPubsInStages).execute()
-	// 	: [];
-
-	const findPubIdByName = (pubName: string) =>
-		pubsWithNames.find((pubNamePubTuple) => pubNamePubTuple[0] === pubName)?.[1]?.id;
 
 	const formList = props.forms ? Object.entries(props.forms) : [];
 	const createdForms =
@@ -648,7 +703,7 @@ export const seedCommunity = async <
 							)
 							.returningAll()
 					)
-					.with("form_elements", (db) =>
+					.with("form-elements", (db) =>
 						db
 							.insertInto("form_elements")
 							.values((eb) =>
@@ -681,14 +736,27 @@ export const seedCommunity = async <
 					.select((eb) =>
 						jsonArrayFrom(
 							eb
-								.selectFrom("form_elements")
-								.selectAll("form_elements")
-								.whereRef("form_elements.formId", "=", "form.id")
+								.selectFrom("form-elements")
+								.selectAll("form-elements")
+								.whereRef("form-elements.formId", "=", "form.id")
 						).as("elements")
 					)
 					.execute()
 			: [];
 
+	type FormsByName<F extends FormInitializer<any, any, any, any>> = {
+		[K in keyof F]: Omit<Forms, "name" | "pubType" | ""> & { name: K } & {
+			elements: {
+				[KK in keyof F[K]["elements"]]: F[K]["elements"][KK] & FormElements;
+			};
+		};
+	};
+
+	const formsByName = Object.fromEntries(
+		createdForms.map((form) => [form.name, form])
+	) as FormsByName<F>;
+
+	// actions last because they can reference form id's
 	const possibleActions = consolidatedStages.flatMap(
 		(stage, idx) =>
 			stage.actions?.map((action) => ({
@@ -698,25 +766,24 @@ export const seedCommunity = async <
 				config: JSON.stringify(action.config),
 			})) ?? []
 	);
+
 	const createdActions = possibleActions.length
 		? await trx.insertInto("action_instances").values(possibleActions).returningAll().execute()
 		: [];
 
 	return {
 		community: createdCommunity,
-		pubFields: createdPubFields,
-		pubTypes: createdPubTypes,
-		pubfieldMaps: createdPubFieldToPubTypes,
-		users: createdUsers,
+		pubFields: pubFieldsByName,
+		pubTypes: pubTypesWithPubFieldsByName,
+		users: usersBySlug,
 		members: createdMembers,
-		stages: consolidatedStages,
-		stagePermissions,
+		stages: stagesWithPermissionsByName,
 		stageConnections: stageConnectionsList,
 		pubs: createdPubs,
 		actions: createdActions,
-		forms: createdForms,
+		forms: formsByName,
 	};
-};
+}
 
 /**
  * Convenience method in case you want to define the input of `seedCommunity` before actually calling it
