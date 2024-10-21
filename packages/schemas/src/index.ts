@@ -10,6 +10,7 @@ import {
 	MemberId,
 	Null,
 	Number,
+	RichText,
 	String,
 	URL,
 	Vector3,
@@ -34,7 +35,7 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, co
 		case CoreSchemaType.NumericArray:
 			return getNumericArrayWithMinMax(config);
 		case CoreSchemaType.RichText:
-			return String;
+			return RichText;
 		case CoreSchemaType.String:
 			return String;
 		case CoreSchemaType.StringArray:

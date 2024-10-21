@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 
 import {
-	Baseline,
+	BookType,
 	BoxSelect,
 	CalendarClock,
 	CheckSquare,
@@ -73,6 +73,6 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 	},
 	[CoreSchemaType.RichText]: {
 		description: "Rich text of any length",
-		icon: Baseline,
+		icon: BookType,
 	},
 } as const;
