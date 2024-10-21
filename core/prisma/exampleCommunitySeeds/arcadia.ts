@@ -2,7 +2,6 @@ import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { seedCommunity } from "../seed/seedCommunity";
-import { getPubText, pubBodyHTML } from "./fixtures/arcadia";
 
 export const arcadiaSeed = (communityId?: CommunitiesId) =>
 	seedCommunity(
