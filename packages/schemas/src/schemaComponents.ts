@@ -12,11 +12,13 @@ export const componentsBySchema = {
 	[CoreSchemaType.DateTime]: [InputComponent.datePicker],
 	[CoreSchemaType.Number]: [InputComponent.textInput],
 	[CoreSchemaType.NumericArray]: [
+		InputComponent.multivalueInput,
 		InputComponent.checkboxGroup,
 		InputComponent.radioGroup,
 		InputComponent.selectDropdown,
 	],
 	[CoreSchemaType.StringArray]: [
+		InputComponent.multivalueInput,
 		InputComponent.checkboxGroup,
 		InputComponent.radioGroup,
 		InputComponent.selectDropdown,
@@ -67,7 +69,7 @@ export const confidenceIntervalConfigSchema = Type.Object({
 export const checkboxGroupConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())], { default: [] }),
 	includeOther: Type.Optional(Type.Boolean()),
 	userShouldSelect: Type.Optional(Type.String()),
 	numCheckboxes: Type.Optional(Type.Number()),
@@ -75,13 +77,17 @@ export const checkboxGroupConfigSchema = Type.Object({
 export const radioGroupConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())], { default: [] }),
 	includeOther: Type.Optional(Type.Boolean()),
 });
 export const selectDropdownConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())]),
+	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())], { default: [] }),
+});
+export const multivalueInputConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
 });
 
 export const componentConfigSchemas = {
@@ -95,4 +101,5 @@ export const componentConfigSchemas = {
 	[InputComponent.checkboxGroup]: checkboxGroupConfigSchema,
 	[InputComponent.radioGroup]: radioGroupConfigSchema,
 	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
+	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;

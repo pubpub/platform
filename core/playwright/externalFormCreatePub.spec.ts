@@ -69,7 +69,7 @@ test("Can create a pub from an external form", async () => {
 });
 
 test.describe("Multivalue inputs", () => {
-	test("Can add a radio and checkbox multivalue input", async () => {
+	test("Can add multivalue inputs", async () => {
 		test.setTimeout(60_000);
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
@@ -93,7 +93,7 @@ test.describe("Multivalue inputs", () => {
 		await page.getByRole("textbox", { name: "Description" }).fill(numberElement.description);
 		const numbers = [0, 1, 2, 3];
 		for (const number of numbers) {
-			await page.getByTestId("multivalue-input").fill(`${number}`);
+			await page.getByLabel("Radio Values").fill(`${number}`);
 			await page.keyboard.press("Enter");
 			await expect(page.getByTestId(`sortable-value-${number}`)).toHaveCount(1);
 		}
@@ -111,7 +111,7 @@ test.describe("Multivalue inputs", () => {
 		await page.getByRole("textbox", { name: "Description" }).fill(animalElement.description);
 		const animals = ["cats", "dogs", "squirrels"];
 		for (const animal of animals) {
-			await page.getByTestId("multivalue-input").fill(animal);
+			await page.getByLabel("Checkbox Values").fill(animal);
 			await page.keyboard.press("Enter");
 			await expect(page.getByTestId(`sortable-value-${animal}`)).toHaveCount(1);
 		}
@@ -130,7 +130,7 @@ test.describe("Multivalue inputs", () => {
 		await page.getByRole("textbox", { name: "Description" }).fill(fruitElement.description);
 		const fruits = ["mangos", "pineapples", "figs"];
 		for (const fruit of fruits) {
-			await page.getByTestId("multivalue-input").fill(fruit);
+			await page.getByLabel("Dropdown Values").fill(fruit);
 			await page.keyboard.press("Enter");
 			await expect(page.getByTestId(`sortable-value-${fruit}`)).toHaveCount(1);
 		}
@@ -138,6 +138,9 @@ test.describe("Multivalue inputs", () => {
 
 		// Save the form builder and go to external form
 		await formEditPage.saveForm();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
+		).toHaveCount(1);
 		await formEditPage.goToExternalForm();
 		for (const element of [numberElement, animalElement, fruitElement]) {
 			await expect(page.getByText(element.name)).toHaveCount(1);
