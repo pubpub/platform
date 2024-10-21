@@ -33,6 +33,8 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, co
 			return Number;
 		case CoreSchemaType.NumericArray:
 			return getNumericArrayWithMinMax(config);
+		case CoreSchemaType.RichText:
+			return String;
 		case CoreSchemaType.String:
 			return String;
 		case CoreSchemaType.StringArray:
@@ -65,6 +67,8 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 			return undefined;
 		case CoreSchemaType.NumericArray:
 			return [];
+		case CoreSchemaType.RichText:
+			return "";
 		case CoreSchemaType.String:
 			return "";
 		case CoreSchemaType.StringArray:
