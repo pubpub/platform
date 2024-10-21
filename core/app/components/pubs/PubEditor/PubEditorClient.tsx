@@ -116,7 +116,7 @@ export function PubEditorClient(props: Props) {
 
 	const resolver = useMemo(() => typeboxResolver(pubFieldsSchema), [pubFieldsSchema]);
 
-	const form = useForm({
+	const form = useForm<Static<typeof pubFieldsSchema>>({
 		defaultValues: createPubEditorDefaultValuesFromPubFields(
 			props.pubFields,
 			props.pubValues,
@@ -159,6 +159,7 @@ export function PubEditorClient(props: Props) {
 				pubId,
 				pubValues: enabledPubValues,
 				stageId: stageId as StagesId,
+				continueOnValidationError: false,
 			});
 
 			if (didSucceed(result)) {
@@ -269,7 +270,7 @@ export function PubEditorClient(props: Props) {
 								<DropdownMenuContent>
 									{availableStages.map((stage) => (
 										<DropdownMenuItem
-											key={stage.id}
+											key={stage.id || "no-stage"}
 											onClick={() => {
 												field.onChange(stage.id);
 											}}

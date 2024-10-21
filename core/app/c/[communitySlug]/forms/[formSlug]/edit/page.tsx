@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
@@ -14,17 +15,25 @@ import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 import { EditFormTitleButton } from "./EditFormTitleButton";
-import { FormCopyButton } from "./FormCopyButton";
+
+const FormCopyButton = dynamic(
+	() => import("./FormCopyButton").then((module) => module.FormCopyButton),
+	{ ssr: false }
+);
 
 const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
 export default async function Page({
 	params: { formSlug, communitySlug },
+	searchParams: { unsavedChanges },
 }: {
 	params: {
 		formSlug: string;
 		communitySlug: string;
+	};
+	searchParams: {
+		unsavedChanges: boolean;
 	};
 }) {
 	const { user } = await getPageLoginData();
@@ -65,7 +74,7 @@ export default async function Page({
 				<div className="flex items-center gap-2">
 					<FormCopyButton formSlug={formSlug} />
 					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
-					<SaveFormButton form={formBuilderId} />
+					<SaveFormButton form={formBuilderId} disabled={!unsavedChanges} />
 				</div>
 			}
 		>

@@ -48,11 +48,13 @@ export const _updatePub = async ({
 	pubValues,
 	stageId,
 	pubTypeId,
+	continueOnValidationError,
 }: {
 	pubId: PubsId;
 	pubValues: PubValues;
 	stageId?: StagesId;
 	pubTypeId?: PubTypesId;
+	continueOnValidationError: boolean;
 }) => {
 	const result = await db.transaction().execute(async (trx) => {
 		// Update the stage if a target stage was provided.
@@ -101,16 +103,20 @@ export const _updatePub = async ({
 				])
 		).execute();
 
-		const validated = validatePubValuesBySchemaName({
+		const validationErrors = validatePubValuesBySchemaName({
 			fields: existingPubFieldValues,
 			values: pubValues,
 		});
 
-		if (validated && validated.error) {
-			return {
-				error: validated.error,
-				cause: validated.error,
-			};
+		const invalidValueSlugs = Object.keys(validationErrors);
+		if (invalidValueSlugs.length) {
+			if (continueOnValidationError) {
+				for (const slug of invalidValueSlugs) {
+					delete pubValues[slug];
+				}
+			} else {
+				throw new Error(Object.values(validationErrors).join(" "));
+			}
 		}
 
 		try {
@@ -137,7 +143,6 @@ export const _updatePub = async ({
 							value: eb.ref("excluded.value"),
 						}))
 					)
-					.returningAll()
 			).execute();
 		} catch (error) {
 			return {
@@ -161,11 +166,13 @@ export const updatePub = defineServerAction(async function updatePub({
 	pubTypeId,
 	pubValues,
 	stageId,
+	continueOnValidationError,
 }: {
 	pubId: PubsId;
 	pubTypeId?: PubTypesId;
 	pubValues: PubValues;
 	stageId?: StagesId;
+	continueOnValidationError: boolean;
 }) {
 	const loginData = await getLoginData();
 
@@ -174,7 +181,13 @@ export const updatePub = defineServerAction(async function updatePub({
 	}
 
 	try {
-		const result = await _updatePub({ pubId, pubTypeId, pubValues, stageId });
+		const result = await _updatePub({
+			pubId,
+			pubTypeId,
+			pubValues,
+			stageId,
+			continueOnValidationError,
+		});
 
 		return result;
 	} catch (error) {

@@ -354,7 +354,6 @@ export const pubInclude = {
 		},
 	},
 	integrationInstances: { include: { integration: true } },
-	claims: { include: { user: true } },
 	children: {
 		...makeRecursiveInclude(
 			"children",

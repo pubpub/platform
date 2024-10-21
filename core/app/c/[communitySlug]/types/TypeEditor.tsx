@@ -131,7 +131,10 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 							</FormItem>
 						)}
 					/>
-					<Button disabled={!form.formState.isDirty || form.formState.isSubmitting}>
+					<Button
+						type="submit"
+						disabled={!form.formState.isDirty || form.formState.isSubmitting}
+					>
 						Create type
 						{form.formState.isSubmitting && (
 							<Loader2 className="ml-4 h-4 w-4 animate-spin" />

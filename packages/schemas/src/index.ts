@@ -8,17 +8,17 @@ import {
 	DateTime,
 	Email,
 	FileUpload,
+	getNumericArrayWithMinMax,
+	getStringArrayWithMinMax,
 	MemberId,
 	Null,
 	Number,
-	NumericArray,
 	String,
-	StringArray,
 	URL,
 	Vector3,
 } from "./schemas";
 
-export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
+export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, config?: unknown) {
 	switch (coreSchemaType) {
 		case CoreSchemaType.Boolean:
 			return Boolean;
@@ -35,11 +35,11 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 		case CoreSchemaType.Number:
 			return Number;
 		case CoreSchemaType.NumericArray:
-			return NumericArray;
+			return getNumericArrayWithMinMax(config);
 		case CoreSchemaType.String:
 			return String;
 		case CoreSchemaType.StringArray:
-			return StringArray;
+			return getStringArrayWithMinMax(config);
 		case CoreSchemaType.URL:
 			return URL;
 		case CoreSchemaType.Vector3:
@@ -90,4 +90,5 @@ export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
 export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons";
 export { registerFormats } from "./formats";
 export * from "./schemaComponents";
+export * from "./types";
 export { setErrorFunction } from "./errors";

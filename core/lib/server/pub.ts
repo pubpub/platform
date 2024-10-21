@@ -420,18 +420,15 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		)
 	);
 
-	const validated = validatePubValuesBySchemaName({
-		fields: filteredFields,
-		values: normalizedValues,
-	});
+	const validationErrors = Object.values(
+		validatePubValuesBySchemaName({
+			fields: filteredFields,
+			values: normalizedValues,
+		})
+	);
 
-	// TODO: this should throw instead, aborting the transaction
-	if (validated && validated.error) {
-		throw new Error(validated.error);
-		// return {
-		// 	error: validated.error,
-		// 	cause: validated.error,
-		// };
+	if (validationErrors.length) {
+		throw new Error(validationErrors.join(" "));
 	}
 
 	const valuesWithFieldIds = Object.entries(body.values).map(([slug, value]) => {
