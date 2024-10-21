@@ -1,6 +1,9 @@
+/* eslint-disable no-restricted-properties */
 import { spawnSync } from "child_process";
 
 import { config } from "dotenv";
+
+import { logger } from "logger";
 
 export const setup = async () => {
 	config({
@@ -11,7 +14,7 @@ export const setup = async () => {
 		return;
 	}
 
-	console.log("Resetting database...");
+	logger.info("Resetting database...");
 	const result = spawnSync(
 		"pnpm --filter core exec dotenv -e ./.env.test -e ./.env.test.local prisma migrate reset -- --preview-feature --force",
 		{
@@ -22,7 +25,7 @@ export const setup = async () => {
 	const { stderr, error } = result;
 
 	if (error) {
-		console.error(
+		logger.error(
 			"Something went wrong while trying to reset the database before running tests."
 		);
 		throw error;
