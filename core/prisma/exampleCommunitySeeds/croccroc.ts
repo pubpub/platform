@@ -165,7 +165,6 @@ export default async function main(communityUUID: CommunitiesId) {
 			db
 				.insertInto("member_groups")
 				.values({
-					role: MemberRole.editor,
 					communityId: communityUUID,
 				})
 				.returning("id")

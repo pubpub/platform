@@ -482,7 +482,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const memberGroup = await prisma.memberGroup.create({
 		data: {
-			role: MemberRole.admin,
 			communityId: communityUUID,
 			users: {
 				connect: [{ id: user2.id }],
