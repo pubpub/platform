@@ -1,8 +1,10 @@
+import type { Node } from "prosemirror-model";
+
 import { Value } from "@sinclair/typebox/value";
 import Ajv from "ajv";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
 import type { BasePubField } from "../corePubFields";
@@ -28,8 +30,21 @@ export const validatePubValuesBySchemaName = ({
 			errors[slug] = `Field ${field.slug} does not have a schemaName, cannot validate.`;
 			continue;
 		}
-		const jsonSchema = getJsonSchemaByCoreSchemaType(field.schemaName);
-		const result = Value.Check(jsonSchema, value);
+
+		let result = false;
+		// Rich text fields are a special case where we use prosemirror to validate
+		// as opposed to typebox
+		if (field.schemaName === CoreSchemaType.RichText) {
+			try {
+				(value as Node).check();
+				result = true;
+			} catch {
+				result = false;
+			}
+		} else {
+			const jsonSchema = getJsonSchemaByCoreSchemaType(field.schemaName);
+			result = Value.Check(jsonSchema, value);
+		}
 		if (!result) {
 			errors[slug] =
 				`Field ${field.slug} failed schema validation. Field "${field.name}" of type "${field.slug}" cannot be assigned to value: ${value} of type ${typeof value}.`;
