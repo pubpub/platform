@@ -116,53 +116,43 @@ type PubInitializer<
 	U extends UsersInitializer,
 	S extends StagesInitializer<U>,
 > = {
-	[PubName in string]: {
-		[PubTypeName in keyof PT]: {
-			id?: PubsId;
-			assignee?: keyof U;
-			pubType: PubTypeName;
-			values: {
-				[FieldName in keyof PT[PubTypeName] as FieldName extends keyof PF
-					? FieldName
-					: never]?: FieldName extends keyof PF
-					? PF[FieldName]["schemaName"] extends CoreSchemaType
-						? InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>
-						: never
-					: never;
-			};
-			stage?: keyof S;
-			members?: (keyof U)[];
-			children?: PubInitializer<PF, PT, U, S>;
+	[PubTypeName in keyof PT]: {
+		id?: PubsId;
+		assignee?: keyof U;
+		pubType: PubTypeName;
+		values: {
+			[FieldName in keyof PT[PubTypeName] as FieldName extends keyof PF
+				? FieldName
+				: never]?: FieldName extends keyof PF
+				? PF[FieldName]["schemaName"] extends CoreSchemaType
+					?
+							| InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>
+							| {
+									value: InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>;
+									relatedPubId: PubsId;
+							  }
+					: never
+				: never;
 		};
-	}[keyof PT & string];
-};
-
-/**
- * Intended shape looks like
- *
- * ```ts
- * {
- * 	// allow only the names of the actual pub
- * 	"Some Pub": {
- * 		// allow only pub fields that have `relation = true`
- * 		"Some Relation": ["Another Pub"] // allow only the names of other pubs, but not the current Pub
- * 	  }
- * }
- * ```
- */
-type PubRelationsInitializer<
-	PF extends PubFieldsInitializer,
-	PT extends PubTypeInitializer<PF>,
-	PI extends PubInitializer<PF, PT, any, any>,
-> = {
-	[PubName in keyof PI]?: {
-		[RelationFieldName in keyof PT[PI[PubName]["pubType"]] as RelationFieldName extends keyof PF
-			? PF[RelationFieldName]["relation"] extends true
-				? RelationFieldName
-				: never
-			: never]?: Exclude<keyof PI, PubName>[];
+		stage?: keyof S;
+		members?: (keyof U)[];
+		children?: PubInitializer<PF, PT, U, S>[];
+		relatedPubs?: {
+			[FieldName in keyof PT[PubTypeName] as FieldName extends keyof PF
+				? FieldName
+				: never]?: FieldName extends keyof PF
+				? PF[FieldName]["schemaName"] extends CoreSchemaType
+					? PF[FieldName]["relation"] extends true
+						? {
+								value: InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>;
+								relatedPub: PubInitializer<PF, PT, U, S>;
+							}[]
+						: never
+					: never
+				: never;
+		};
 	};
-};
+}[keyof PT & string];
 
 type FormElementInitializer<
 	PF extends PubFieldsInitializer,
@@ -247,10 +237,10 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 	pubTypes: PubTypes[];
 	users: Users[];
 	stages: Stages[];
-	pubs: PI;
+	pubs: PI[];
 	trx?: typeof db;
 }): CreatePubRecursiveInput[] => {
-	const result = Object.entries(pubs).map(([pubName, pub]) => {
+	const result = pubs.map((pub) => {
 		const pubType = pubTypes.find((pubType) => pubType.name === pub.pubType);
 		if (!pubType) {
 			throw new Error(
@@ -299,6 +289,30 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 						pubs: pub.children,
 						trx,
 					}).map((child) => child.body),
+
+				relatedPubs:
+					pub.relatedPubs &&
+					Object.fromEntries(
+						Object.entries(pub.relatedPubs)
+							.filter(([, info]) => !!info)
+							.map(([valueTitle, info]) => [
+								`${community.slug}:${slugifyString(valueTitle)}`,
+								expect(
+									info,
+									`Got unexpected empty related pub definition for ${valueTitle}`
+								).map((info) => ({
+									value: info.value,
+									pub: makePubInitializerMatchCreatePubRecursiveInput({
+										pubTypes,
+										users,
+										stages,
+										community,
+										pubs: [info.relatedPub],
+										trx,
+									})[0].body,
+								})),
+							])
+					),
 			},
 		} satisfies CreatePubRecursiveInput;
 
@@ -317,7 +331,7 @@ export const seedCommunity = async <
 	const U extends UsersInitializer,
 	const S extends StagesInitializer<U>,
 	const SC extends StageConnectionsInitializer<S>,
-	const PI extends PubInitializer<PF, PT, U, S>,
+	const PI extends PubInitializer<PF, PT, U, S>[],
 	// const PR extends PubRelationsInitializer<PF, PT, PI>,
 	const F extends FormInitializer<PF, PT, U, S>,
 >(
@@ -612,46 +626,6 @@ export const seedCommunity = async <
 	const findPubIdByName = (pubName: string) =>
 		pubsWithNames.find((pubNamePubTuple) => pubNamePubTuple[0] === pubName)?.[1]?.id;
 
-	const pubRelations = props.pubRelations
-		? await trx
-				.insertInto("pub_values")
-				.values(
-					Object.entries(props.pubRelations).flatMap(
-						([pubName, pubRelation]: [
-							pubName: string,
-							pubRelation: { [fieldName: string]: string[] },
-						]) => {
-							const mainPubId = findPubIdByName(pubName);
-							if (!mainPubId) {
-								throw new Error(`Could not find pub with name ${pubName}. Ah`);
-							}
-
-							return Object.entries(pubRelation).flatMap(
-								([fieldName, pubNames]: [
-									fieldName: string,
-									pubNames: string[],
-								]) => {
-									const field = createdPubFields.find(
-										(pubField) => pubField.name === fieldName
-									);
-
-									return pubNames.map((pubName) => ({
-										pubId: mainPubId,
-										fieldId: expect(field?.id, "Expected fieldId to exist"),
-										relatedPubId: expect(
-											findPubIdByName(pubName),
-											`Expected relatedPubId to exist for pubName ${pubName}`
-										),
-									}));
-								}
-							);
-						}
-					)
-				)
-				.returningAll()
-				.execute()
-		: [];
-
 	const formList = props.forms ? Object.entries(props.forms) : [];
 	const createdForms =
 		formList.length > 0
@@ -739,8 +713,6 @@ export const seedCommunity = async <
 		stagePermissions,
 		stageConnections: stageConnectionsList,
 		pubs: createdPubs,
-		// pubsInStages: createdPubsInStages,
-		pubRelations,
 		actions: createdActions,
 		forms: createdForms,
 	};

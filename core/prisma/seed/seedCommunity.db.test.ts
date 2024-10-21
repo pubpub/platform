@@ -34,11 +34,12 @@ describe("seedCommunity", () => {
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
-				SubmissionAuthor: { schemaName: CoreSchemaType.Null, relation: true },
+				SubmissionAuthor: { schemaName: CoreSchemaType.Number, relation: true },
 			},
 			pubTypes: {
 				Submission: {
 					Title: true,
+					SubmissionAuthor: true,
 				},
 				Author: {
 					Title: true,
@@ -72,39 +73,54 @@ describe("seedCommunity", () => {
 				},
 				"Stage 2": {},
 			},
-			pubs: {
-				"A Submission": {
+			pubs: [
+				{
+					id: authorPubId,
+					pubType: "Author",
+					values: {
+						Title: "De Heer Frederick I",
+					},
+				},
+				{
 					id: submissionPubId,
 					pubType: "Submission",
 					values: {
 						Title: "HENK",
+						SubmissionAuthor: { value: 0, relatedPubId: authorPubId },
 					},
 					stage: "Stage 1",
-					children: {
-						"Child Submission": {
+					children: [
+						{
 							pubType: "Submission",
 							assignee: "test",
 							values: {
 								Title: "Freek",
 							},
 						},
+					],
+					relatedPubs: {
+						SubmissionAuthor: [
+							{
+								// indicates that it's the first pub
+								value: 1,
+								relatedPub: {
+									pubType: "Author",
+									values: {
+										Title: "De Heer Frederick III",
+									},
+								},
+							},
+						],
 					},
 				},
-				"Author 1": {
-					id: authorPubId,
-					pubType: "Author",
-					values: {
-						Title: "De Heer Frederick",
-					},
-				},
-				"Author 2": {
+				{
 					id: author2PubId,
 					pubType: "Author",
 					values: {
-						Title: "De Heer Frederick 2",
+						Title: "De Heer Frederick II",
 					},
 				},
-			},
+			],
 
 			forms: {
 				"submission-form": {
@@ -133,189 +149,182 @@ describe("seedCommunity", () => {
 					],
 				},
 			},
-			stageConnections: {
-				"Stage 1": {
-					to: ["Stage 2"],
-				},
-			},
-			pubRelations: {
-				"A Submission": {
-					SubmissionAuthor: ["Author 1", "Author 2"],
-				},
-			},
 		});
 
 		expect(bigSeed1).toBeDefined();
 
-		expect(bigSeed1).toMatchObject({
-			actions: [
-				{
-					action: "email",
-					config: {
-						body: "hello nerd",
-						subject: "hello nerd",
-					},
-					name: "",
-				},
-			],
-			community: {
-				avatar: null,
-				name: "test",
-			},
-			forms: [
-				{
-					access: "private",
-					elements: [
-						{
-							component: null,
-							config: null,
-							content: "# Hey, what is up.",
-							element: "p",
-							fieldId: null,
-							label: null,
-							order: 0,
-							required: null,
-							stageId: null,
-							type: "structural",
-						},
-						{
-							component: "textInput",
-							config: {
-								label: "Title hihihi",
-							},
-							content: null,
-							element: null,
-							fieldId: null,
-							label: null,
-							order: 1,
-							required: null,
-							stageId: null,
-							type: "pubfield",
-						},
-						{
-							component: null,
-							config: null,
-							content: "Submit",
-							element: null,
-							fieldId: null,
-							label: "Submit",
-							order: 2,
-							required: null,
-							stageId: null,
-							type: "button",
-						},
-					],
-					isArchived: false,
-					name: "submission-form",
-					slug: "submission-form",
-				},
-			],
-			members: [
-				{
-					role: "admin",
-				},
-				{
-					role: "contributor",
-				},
-			],
-			pubFields: [
-				{
-					isRelation: false,
-					name: "Title",
-					schemaName: "String",
-				},
-				{
-					isRelation: true,
-					name: "SubmissionAuthor",
-					schemaName: "Null",
-				},
-			],
-			pubTypes: [
-				{
-					description: null,
-					name: "Submission",
-				},
-				{
-					name: "Author",
-				},
-			],
-			pubfieldMaps: [
-				{
-					A: bigSeed1.pubFields[0].id,
-					B: bigSeed1.pubTypes[0].id,
-				},
-				{},
-			],
-			pubs: [
-				{
-					id: submissionPubId,
-					assigneeId: null,
-					children: [
-						{
-							assigneeId: bigSeed1.users[0].id,
-							values: [
-								{
-									relatedPubId: null,
-									value: "Freek",
-								},
-							],
-							valuesBlob: null,
-						},
-					],
-					parentId: null,
-					values: [
-						{
-							relatedPubId: null,
-							value: "HENK",
-						},
-					],
-					valuesBlob: null,
-					stageId: "",
-				},
-				{ id: authorPubId },
-				{ id: author2PubId },
-			],
-			stageConnections: [{}],
-			stagePermissions: [{}],
-			stages: [
-				{
-					actions: [
-						{
-							action: "email",
-							config: {
-								body: "hello nerd",
-								subject: "hello nerd",
-							},
-						},
-					],
-					members: ["test"],
-					name: "Stage 1",
-					order: "aa",
-				},
-				{
-					name: "Stage 2",
-					order: "bb",
-				},
-			],
-			users: [
-				{
-					isSuperAdmin: false,
-				},
-				{
-					isSuperAdmin: false,
-				},
-			],
-			pubRelations: [
-				{
-					pubId: submissionPubId,
-					relatedPubId: authorPubId,
-				},
-				{
-					pubId: submissionPubId,
-					relatedPubId: author2PubId,
-				},
-			],
+		expect(bigSeed1.community, "community").toMatchObject({
+			name: "test",
 		});
+
+		expect(bigSeed1.actions, "actions").toMatchObject([
+			{
+				action: "email",
+				config: {
+					body: "hello nerd",
+					subject: "hello nerd",
+				},
+				name: "",
+			},
+		]);
+
+		expect(bigSeed1.users, "users").toMatchObject([
+			{
+				isSuperAdmin: false,
+			},
+			{
+				isSuperAdmin: false,
+			},
+		]);
+
+		expect(bigSeed1.members, "members").toMatchObject([
+			{
+				role: "admin",
+			},
+			{
+				role: "contributor",
+			},
+		]);
+
+		expect(bigSeed1.pubFields, "pubFields").toMatchObject([
+			{
+				isRelation: false,
+				name: "Title",
+				schemaName: "String",
+			},
+			{
+				isRelation: true,
+				name: "SubmissionAuthor",
+				schemaName: "Number",
+			},
+		]);
+
+		expect(bigSeed1.pubTypes, "pubTypes").toMatchObject([
+			{
+				description: null,
+				name: "Submission",
+			},
+			{
+				name: "Author",
+			},
+		]);
+
+		expect(bigSeed1.pubs, "pubs").toMatchObject([
+			{ id: authorPubId },
+			{
+				id: submissionPubId,
+				assigneeId: null,
+				children: [
+					{
+						assigneeId: bigSeed1.users[0].id,
+						values: [
+							{
+								relatedPubId: null,
+								value: "Freek",
+							},
+						],
+						valuesBlob: null,
+					},
+				],
+				parentId: null,
+				values: [
+					{
+						relatedPubId: null,
+						value: "HENK",
+					},
+					{
+						relatedPubId: authorPubId,
+						value: 0,
+					},
+				],
+				valuesBlob: null,
+				stageId: bigSeed1.stages.find((stage) => stage.name === "Stage 1")?.id,
+				relatedPubs: [
+					{
+						value: 1,
+						relatedPub: {},
+					},
+				],
+			},
+			{ id: author2PubId },
+		]);
+
+		expect(bigSeed1.stageConnections, "stageConnections").toMatchObject([]);
+
+		expect(bigSeed1.stagePermissions, "stagePermissions").toMatchObject([
+			{
+				B: bigSeed1.stages.find((stage) => stage.name === "Stage 1")?.id,
+			},
+		]);
+
+		expect(bigSeed1.stages, "stages").toMatchObject([
+			{
+				actions: [
+					{
+						action: "email",
+						config: {
+							body: "hello nerd",
+							subject: "hello nerd",
+						},
+					},
+				],
+				members: ["test"],
+				name: "Stage 1",
+				order: "aa",
+			},
+			{
+				name: "Stage 2",
+				order: "bb",
+			},
+		]);
+
+		expect(bigSeed1.forms, "forms").toMatchObject([
+			{
+				access: "private",
+				elements: [
+					{
+						component: null,
+						config: null,
+						content: "# Hey, what is up.",
+						element: "p",
+						fieldId: null,
+						label: null,
+						order: 0,
+						required: null,
+						stageId: null,
+						type: "structural",
+					},
+					{
+						component: "textInput",
+						config: {
+							label: "Title hihihi",
+						},
+						content: null,
+						element: null,
+						label: null,
+						order: 1,
+						required: null,
+						stageId: null,
+						type: "pubfield",
+					},
+					{
+						component: null,
+						config: null,
+						content: "Submit",
+						element: null,
+						fieldId: null,
+						label: "Submit",
+						order: 2,
+						required: null,
+						stageId: null,
+						type: "button",
+					},
+				],
+				isArchived: false,
+				name: "submission-form",
+				slug: "submission-form",
+			},
+		]);
 
 		rollback();
 	});

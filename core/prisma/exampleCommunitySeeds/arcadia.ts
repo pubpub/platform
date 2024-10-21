@@ -229,47 +229,47 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				},
 			},
 
-			pubs: {
-				"Header Navigation": {
+			pubs: [
+				{
 					pubType: "Navigation",
 					values: {},
-					children: {
-						"Home Link": {
+					children: [
+						{
 							pubType: "Navigation Item",
 							values: {
 								Title: "Home",
 								"External Link": "https://arcadia-research.pubpub.org",
 							},
 						},
-					},
+					],
 				},
-				"Footer Navigation": {
+				{
 					pubType: "Navigation",
 					values: {},
-					children: {
-						"Home Link": {
+					children: [
+						{
 							pubType: "Navigation Item",
 							values: {
 								Title: "Legal",
 								"External Link": "https://arcadia-research.pubpub.org/legal",
 							},
 						},
-					},
+					],
 				},
-				Header: {
+				{
 					pubType: "Header",
 					values: {
 						"Background Color": "#000000",
 						"Text Color": "#ffffff",
 					},
 				},
-				Site: {
+				{
 					pubType: "Site",
 					values: {
 						Title: "Arcadia Research",
 					},
 				},
-				"A Journal Article": {
+				{
 					pubType: "Journal Article",
 					stage: "Stage 1",
 					values: {
@@ -288,8 +288,8 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 						},
 						DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
 					},
-					children: {
-						"PDF Download 1": {
+					children: [
+						{
 							pubType: "PDF Download",
 							values: {
 								// "PDF Download": [
@@ -309,28 +309,28 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 								// ],
 							},
 						},
-						"Image 1": {
+						{
 							pubType: "Pub Image",
 							// TODO: fill in values
 							values: {},
 						},
-						"Table 1": {
+						{
 							pubType: "Table",
 							values: {
 								//
 							},
 						},
-						"Table 2": {
+						{
 							pubType: "Table",
 							values: {
 								CSV: [],
 								//
 							},
 						},
-					},
+					],
 				},
 
-				James: {
+				{
 					pubType: "Author",
 					values: {
 						Name: "James McJimothy",
@@ -338,20 +338,20 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 						Affiliation: "University of Somewhere",
 					},
 				},
-				Book: {
+				{
 					pubType: "Book",
 					values: {
 						Title: "A Book",
 						Year: "2022",
 					},
 				},
-				BookCite: {
+				{
 					pubType: "BookCitation",
 					values: {
 						"Page Range": ["33", "44"],
 					},
 				},
-			},
+			],
 
 			forms: {},
 
@@ -371,16 +371,6 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 			stageConnections: {
 				"Stage 1": {
 					to: ["Stage 2"],
-				},
-			},
-
-			pubRelations: {
-				BookCite: {
-					"Book Reference": ["Book"],
-				},
-				"A Journal Article": {
-					Contributor: ["James"],
-					"Book Citation": ["BookCite"],
 				},
 			},
 		},
