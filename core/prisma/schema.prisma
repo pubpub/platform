@@ -165,8 +165,6 @@ enum CoreSchemaType {
   StringArray
   URL
   Vector3
-  RichText
-  ContextString
 }
 
 model PubFieldSchema {

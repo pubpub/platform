@@ -1,12 +1,5 @@
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
-import {
-	Action,
-	CoreSchemaType,
-	ElementType,
-	InputComponent,
-	MemberRole,
-	StructuralFormElement,
-} from "db/public";
+import { CoreSchemaType } from "db/public";
 
 import { seedCommunity } from "../seed/seedCommunity";
 import { getPubText, pubBodyHTML } from "./fixtures/arcadia";
@@ -21,17 +14,17 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				avatar: "https://avatars.githubusercontent.com/u/100431031?s=200&v=4",
 			},
 			pubFields: {
-				Title: { schemaName: CoreSchemaType.RichText },
+				Title: { schemaName: CoreSchemaType.String },
 				Slug: { schemaName: CoreSchemaType.String },
 				"Publication Date": { schemaName: CoreSchemaType.DateTime },
 				"Creation Date": { schemaName: CoreSchemaType.DateTime },
 				"Last Edited": { schemaName: CoreSchemaType.DateTime },
 				// should be fileupload
 				Avatar: { schemaName: CoreSchemaType.String },
-				Description: { schemaName: CoreSchemaType.RichText },
-				Abstract: { schemaName: CoreSchemaType.RichText },
+				Description: { schemaName: CoreSchemaType.String },
+				Abstract: { schemaName: CoreSchemaType.String },
 				License: { schemaName: CoreSchemaType.String },
-				PubContent: { schemaName: CoreSchemaType.ContextString },
+				PubContent: { schemaName: CoreSchemaType.String },
 				DOI: { schemaName: CoreSchemaType.URL },
 				"Some Relation": {
 					schemaName: CoreSchemaType.String,
@@ -282,10 +275,7 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 							"Inspired by wasps co-opting viral capsids to deliver genes to the caterpillars they parasitize, we looked for capsid-like proteins in other species. We found capsid homologs in ticks and other parasites, suggesting this phenomenon could be wider spread than previously known.",
 						Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
 						License: "CC BY 4.0",
-						PubContent: {
-							html: "", //pubBodyHTML,
-							data: {}, //getPubText,
-						},
+						PubContent: "Some content",
 						DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
 					},
 					children: [
@@ -316,15 +306,12 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 						},
 						{
 							pubType: "Table",
-							values: {
-								//
-							},
+							values: {},
 						},
 						{
 							pubType: "Table",
 							values: {
 								CSV: [],
-								//
 							},
 						},
 					],

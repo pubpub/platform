@@ -414,7 +414,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 
 	const normalizedValues = Object.fromEntries(
 		Object.entries(body.values).map(([slug, value]) =>
-			value && typeof value === "object" && "value" in value
+			value != null && typeof value === "object" && "value" in value
 				? [slug, value.value]
 				: [slug, value]
 		)

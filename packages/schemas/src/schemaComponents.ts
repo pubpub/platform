@@ -18,8 +18,6 @@ export const componentsBySchema = {
 	[CoreSchemaType.URL]: [InputComponent.textInput],
 	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
-	[CoreSchemaType.RichText]: [],
-	[CoreSchemaType.ContextString]: [],
 	[CoreSchemaType.Null]: [],
 } as const satisfies Record<CoreSchemaType, InputComponent[]>;
 

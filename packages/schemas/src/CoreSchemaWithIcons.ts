@@ -68,14 +68,6 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 		description: "A set of 3 numbers",
 		icon: BoxSelect,
 	},
-	[CoreSchemaType.RichText]: {
-		description: "A string of HTML",
-		icon: TextQuote,
-	},
-	[CoreSchemaType.ContextString]: {
-		description: "A contextual string",
-		icon: BookOpenText,
-	},
 	[CoreSchemaType.Null]: {
 		description: "An empty value",
 		icon: CircleSlash,
