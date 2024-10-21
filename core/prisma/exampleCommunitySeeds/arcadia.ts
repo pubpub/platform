@@ -35,6 +35,7 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				"Pub Image": { schemaName: CoreSchemaType.FileUpload },
 				// a contributor is a relation to an Author
 				Contributor: {
+					// string here acts as a description of the contribution
 					schemaName: CoreSchemaType.String,
 					relation: true,
 					//TODO: when we have typed relations, add pubType: Author here
@@ -87,6 +88,7 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				Pages: { schemaName: CoreSchemaType.Null, relation: true },
 				Width: { schemaName: CoreSchemaType.String },
 				Privacy: { schemaName: CoreSchemaType.String },
+				Download: { schemaName: CoreSchemaType.String, relation: true },
 			},
 			pubTypes: {
 				Tag: {
@@ -191,6 +193,7 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 					"Book Citation": true,
 					Tag: true,
 					Editors: true,
+					Download: true,
 				},
 				"PDF Download": {
 					"PDF Download": true,
@@ -277,6 +280,30 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 						License: "CC BY 4.0",
 						PubContent: "Some content",
 						DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+					},
+					relatedPubs: {
+						Download: [
+							{
+								// acting as a description of the download
+								value: "PDF Download",
+								relatedPub: {
+									pubType: "PDF Download",
+									// can't really add the actual file here
+									values: {},
+								},
+							},
+						],
+						Contributor: [
+							{
+								value: "Editing & Draft Preparation",
+								relatedPub: {
+									pubType: "Author",
+									values: {
+										Name: "James McJimothy",
+									},
+								},
+							},
+						],
 					},
 					children: [
 						{
