@@ -6,7 +6,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { Database } from "db/Database";
 import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
 
-import type { XOR } from "../types";
+import type { Prettify, XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
@@ -76,6 +76,8 @@ export const getPubTypesForCommunity = async (
 			.limit(limit)
 			.offset(offset)
 	).execute();
+
+export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>;
 
 export const getAllPubTypesForCommunity = (communitySlug: string) => {
 	return autoCache(

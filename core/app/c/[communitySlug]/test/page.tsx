@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 
-import { useCallback } from "react";
 import { notFound } from "next/navigation";
 
 import { ContextEditorClient } from "~/app/components/ContextEditorClient";
 import { getPageLoginData } from "~/lib/auth/loginData";
-import { getAllPubTypesForCommunity, getPubs } from "~/lib/server";
+import { getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 export const metadata: Metadata = {
@@ -23,7 +22,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 
 	const [pubs, pubTypes] = await Promise.all([
 		getPubs({ communityId: community.id }),
-		getAllPubTypesForCommunity(communitySlug).execute(),
+		getPubTypesForCommunity(community.id),
 	]);
 
 	return (
