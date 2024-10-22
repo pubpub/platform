@@ -8,10 +8,9 @@ import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/auth/password";
 import { env } from "~/lib/env/env.mjs";
-import { arcadiaSeed } from "./exampleCommunitySeeds/arcadia";
+import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
 import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";
-
-// import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
+import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
 
 const prisma = new PrismaClient();
 
@@ -54,46 +53,26 @@ async function createUserMembers({
 		)
 		.returningAll()
 		.executeTakeFirstOrThrow();
-	// prisma.user.create({
-	// 	data: {
-	// 		slug,
-	// 		email: email,
-	// 		firstName,
-	// 		lastName,
-	// 		passwordHash: await createPasswordHash(password),
-	// 		avatar: "/demo/person.png",
-	// 		isSuperAdmin,
-	// 		memberships: {
-	// 			createMany: {
-	// 				data: prismaCommunityIds.map((communityId) => ({ communityId, role })),
-	// 			},
-	// 		},
-	// 	},
-	// });
 }
 
 async function main() {
 	const arcadiaId = crypto.randomUUID() as CommunitiesId;
 	const croccrocId = crypto.randomUUID() as CommunitiesId;
 
-	const prismaCommunityIds = [
-		// unJournalId, crocCrocId,
-		croccrocId,
-		arcadiaId,
-	];
+	const prismaCommunityIds = [unJournalId, croccrocId, arcadiaId];
 
-	// logger.info("migrate graphile");
-	// const workerUtils = await makeWorkerUtils({
-	// 	connectionString: env.DATABASE_URL,
-	// });
-	// await workerUtils.migrate();
+	logger.info("migrate graphile");
+	const workerUtils = await makeWorkerUtils({
+		connectionString: env.DATABASE_URL,
+	});
+	await workerUtils.migrate();
 
-	// logger.info("build crocroc");
-	// await buildCrocCroc(crocCrocId);
-	// logger.info("build unjournal");
-	// await buildUnjournal(prisma, unJournalId);
-	await seedCroccroc(croccrocId);
-	await arcadiaSeed(arcadiaId);
+	logger.info("build unjournal");
+	await Promise.all([
+		buildUnjournal(prisma, unJournalId),
+		seedCroccroc(croccrocId),
+		seedArcadia(arcadiaId),
+	]);
 
 	try {
 		await Promise.all([

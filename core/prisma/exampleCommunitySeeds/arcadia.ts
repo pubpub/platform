@@ -1,11 +1,9 @@
-import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
 import { seedCommunity } from "../seed/seedCommunity";
 
-export const arcadiaSeed = (communityId?: CommunitiesId) => {
-	const journalArticleId = crypto.randomUUID() as PubsId;
-
+export const seedArcadia = (communityId?: CommunitiesId) => {
 	return seedCommunity(
 		{
 			community: {
