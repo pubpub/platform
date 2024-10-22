@@ -1,12 +1,31 @@
 import { Value } from "@sinclair/typebox/value";
 import Ajv from "ajv";
+import { Schema } from "prosemirror-model";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
 import type { BasePubField } from "../../actions/corePubFields";
-import { validateAgainstContextEditorSchema } from "~/lib/server/contextEditor";
+
+/** Temporary stub schema while we have not imported the context editor yet */
+const STUB_SCHEMA = new Schema({
+	nodes: {
+		doc: { content: "paragraph+" },
+		paragraph: { content: "text*" },
+		text: { inline: true },
+	},
+});
+
+const validateAgainstContextEditorSchema = (value: unknown) => {
+	try {
+		const node = STUB_SCHEMA.nodeFromJSON(value);
+		node.check();
+		return true;
+	} catch {
+		return false;
+	}
+};
 
 /**
  * Validate all `values` against their corresponding field's `schemaName`.
