@@ -16,7 +16,6 @@ import type {
 	FormElements,
 	Forms,
 	FormsId,
-	Members,
 	NewMembers,
 	PubFields,
 	PubsId,
@@ -27,7 +26,6 @@ import type {
 	UsersId,
 } from "db/public";
 import {
-	Action,
 	Action as ActionName,
 	CoreSchemaType,
 	ElementType,
@@ -39,16 +37,10 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
-//import type { createPubRecursiveNew } from "~/lib/server";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/auth/password";
 import { createPubRecursiveNew } from "~/lib/server";
 import { slugifyString } from "~/lib/string";
-
-// Nimpl.getParams = (fn) => fn;
-// React.cache = (fn) => fn;
-
-export const arcadiaId = "758ba348-92c7-46ec-9612-7afda81e2d79" as CommunitiesId;
 
 export type PubFieldsInitializer = Record<
 	string,
@@ -64,7 +56,6 @@ type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 >;
 
 /**
- * Map of slug to other stuff.
  * If left empty, it will be filled out by `faker`,
  * except the `role`, which will be set to `MemberRole.editor` by default.
  * Set to `null` if you don't want to add the user as a member
@@ -72,6 +63,9 @@ type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 type UsersInitializer = Record<
 	string,
 	{
+		/**
+		 * @default randomUUID
+		 */
 		id?: UsersId;
 		email?: string;
 		/** Plain string, will be hashed */
@@ -85,6 +79,9 @@ type UsersInitializer = Record<
 
 type ActionInstanceInitializer = {
 	[K in ActionName]: {
+		/**
+		 * @default randomUUID
+		 */
 		id?: ActionInstancesId;
 		action: K;
 		name?: string;
@@ -121,10 +118,31 @@ type PubInitializer<
 	S extends StagesInitializer<U>,
 > = {
 	[PubTypeName in keyof PT]: {
+		/**
+		 * @default randomUUID
+		 */
 		id?: PubsId;
+		/**
+		 * Assignee of the pub.
+		 *
+		 * Users are referenced by their keys in the users object.
+		 */
 		assignee?: keyof U;
+		/**
+		 * Parent of the pub.
+		 *
+		 * If you set `alsoAsChild` when creating a relatedPub,
+		 * this will automatically set the parentId of the current pub.
+		 */
 		parentId?: PubsId;
+		/**
+		 * The name of the pubType you specified in the pubTypes object.
+		 */
 		pubType: PubTypeName;
+		/**
+		 * Values can be a simple object of `FieldName: value`
+		 * Or they can directly specify a relation by setting `value` and `relatedPubId`
+		 */
 		values: {
 			[FieldName in keyof PT[PubTypeName] as FieldName extends keyof PF
 				? FieldName
@@ -134,14 +152,48 @@ type PubInitializer<
 							| InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>
 							| {
 									value: InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>;
+									/**
+									 * Note: this PubId reference a pub at least one level higher than the current pub, or it must be created before this pub.
+									 */
 									relatedPubId: PubsId;
 							  }
 					: never
 				: never;
 		};
+		/**
+		 * The stages this pub is in.
+		 */
 		stage?: keyof S;
+		/**
+		 * The members of the pub.
+		 * Users are referenced by their keys in the users object.
+		 */
 		members?: (keyof U)[];
 		children?: PubInitializer<PF, PT, U, S>[];
+		/**
+		 * Relations can be specified inline
+		 *
+		 * @example
+		 * ```ts
+		 * {
+		 * 	relatedPubs: {
+		 * 		// relatedPubs are specified slightly differently than children
+		 * 		// as they need to be mapped to a certain field
+		 * 		Contributors: [{
+		 * 			value: 0,
+		 * 			// this will also add the same pub as a child
+		 * 			alsoAsChild: true,
+		 * 			pub: {
+		 * 				pubType: "Author",
+		 * 				values: {
+		 * 					Name: "John Doe",
+		 * 				}
+		 * 			}
+		 * 		}]
+		 * 	}
+		 * }
+		 * ```
+		 */
 		relatedPubs?: {
 			[FieldName in keyof PT[PubTypeName] as FieldName extends keyof PF
 				? FieldName
@@ -155,6 +207,9 @@ type PubInitializer<
 								 * useful because we cannot fetch related pubs in the frontend.
 								 */
 								alsoAsChild?: boolean;
+								/**
+								 * Acts as relation metadata
+								 */
 								value?: InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>;
 								pub: PubInitializer<PF, PT, U, S>;
 							}[]
@@ -355,6 +410,37 @@ type CommunitySeedInput = {
 	avatar?: string;
 };
 
+// ========
+// These are helper types to make the output of the seeding functions match the input more closely.
+type PubFieldsByName<PF> = { [K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } };
+
+type PubTypesByName<PT, PF> = {
+	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
+};
+
+type UsersBySlug<U> = {
+	[K in keyof U]: U[K] & Users;
+};
+
+type StagesWithPermissionsByName<S, StagePermissions> = {
+	[K in keyof S]: Omit<Stages, "name"> & { name: K } & {
+		permissions: StagePermissions;
+	};
+};
+
+type FormsByName<F extends FormInitializer<any, any, any, any>> = {
+	[K in keyof F]: Omit<Forms, "name" | "pubType" | ""> & { name: K } & {
+		elements: {
+			[KK in keyof F[K]["elements"]]: F[K]["elements"][KK] & FormElements;
+		};
+	};
+};
+// ===================================
+
+/**
+ * Create a community in a typesafe way
+ *
+ */
 export async function seedCommunity<
 	const PF extends PubFieldsInitializer,
 	const PT extends PubTypeInitializer<PF>,
@@ -365,12 +451,215 @@ export async function seedCommunity<
 	const F extends FormInitializer<PF, PT, U, S>,
 >(
 	props: {
+		/**
+		 * The community to create
+		 *
+		 * If `options.randomSlug` is not `false`, the current date will be added to the end
+		 * of the slug to prevent some collisions during testing.
+		 *
+		 * @example
+		 * ```ts
+		 * community: {
+		 * 	name: "My Community",
+		 * 	slug: "my-community",
+		 * }
+		 * ```
+		 */
 		community: CommunitySeedInput;
+		/**
+		 * The pub fields of the community
+		 *
+		 * The keys of the object are the names of the pub fields.
+		 * They are slugified and prefixed with the community slug automatically.
+		 *
+		 * @example
+		 * ```ts
+		 * {
+		 * 		pubFields: {
+		 * 			Name: { schemaName: CoreSchemaType.String },
+		 * 		// Specify a relation by setting `relation` to `true`
+		 * 		// The schema name will then be the schema of the relation metadata
+		 * 			Contributors: { schemaName: CoreSchemaType.StringArray, relation: true },
+		 * 	}
+		 * }
+		 * ```
+		 */
 		pubFields?: PF;
+		/**
+		 * The pub types of the community
+		 * Cannot be specified without `pubFields`
+		 *
+		 * @example
+		 * ```ts
+		 * {
+		 * 	pubFields: {
+		 * 		Title: { schemaName: CoreSchemaType.String },
+		 * 	},
+		 * 	pubTypes: {
+		 * 		Article: {
+		 * 			Title: "A Great Article",
+		 * 		}
+		 * }
+		 * ```
+		 */
 		pubTypes?: PT;
+		/**
+		 * An object where the keys are the slugs of the users and the values are the user objects.
+		 *
+		 * Will also automatically create members for these users if `role` is specified
+		 * Non-filled out fields will be auto-generated.
+		 *
+		 * If `options.randomSlug` is not `false`, the current date will be added to the end
+		 * of the slug to prevent some collisions during testing.
+		 *
+		 * Example
+		 *
+		 * ```ts
+		 * {
+		 * 	users: {
+		 * 		john: {
+		 * 			firstName: "John",
+		 * 			role: MemberRole.Admin,
+		 * 			password: "john-password",
+		 * 			email: "john@example.com",
+		 * 		}
+		 * 	}
+		 * }
+		 * ```
+		 * This will output
+		 * ```ts
+		 * {
+		 * 	john: {
+		 * 		slug: "john",
+		 * 		firstName: "John",
+		 * 		lastName: "Some random lastName",
+		 * 		avatar: "https://example.com/avatar.png",
+		 * 		passwordHash: "hashed-password",
+		 * 		email: "john@example.com",
+		 * 		member: {
+		 * 			id: "123",
+		 * 			role: MemberRole.Admin,
+		 * 		}
+		 * 	}
+		 * ```
+		 */
 		users?: U;
+		/**
+		 * The stages of the community.
+		 * You need to have defined users to be able to create stages.
+		 *
+		 *
+		 * You can specify both members and actions for stages.
+		 * The options for members are the keys of the users object.
+		 *
+		 * You can reference e.g. ids like so
+		 *
+		 * @example
+		 * ```ts
+		 * const testUserId = crypto.randomUUID() as UsersId;
+		 * {
+		 * 	users: {
+		 * 		john: {
+		 * 			id: testUserId,
+		 * 		}
+		 * 	},
+		 * 	stages: {
+		 * 		Idea: {
+		 * 			members: ["john"],
+		 * 			actions: [
+		 * 				{
+		 * 					action: Action.email,
+		 * 					config: {
+		 * 						body: "hello world",
+		 * 						subject: "hello",
+		 * 						recipient: testUserId,
+		 * 					},
+		 * 				},
+		 * 			],
+		 * 		}
+		 * 	}
+		 * }
+		 */
 		stages?: S;
+		/**
+		 * The stage connections of the community.
+		 *
+		 * ```ts
+		 * {
+		 * 	stages: {
+		 * 		Submitted: {},
+		 * 		Review: {},
+		 * 	},
+		 * 	stageConnections: {
+		 * 		Submitted: {
+		 * 			to: ["Review"],
+		 * 		}
+		 * 	}
+		 * }
+		 */
 		stageConnections?: SC;
+		/**
+		 * The pubs of the community.
+		 * One of the few configuration options that is an array instead of an object,
+		 * because Pubs do not have a name or a slug which could act as keys.
+		 * 
+		 * All Pubs are created sequentially, so if you give earlier pubs a specific ID, you
+		 * can reference them later
+
+		 * Example
+		 * ```ts
+		 * 	const authorId= crypto.randomUUID() as PubsId;
+		 * {
+		 * 	pubs: [
+		 * 		{
+		 * 			id: authorId,
+		 * 			pubType: "Author",
+		 * 			values: {
+		 * 				Name: "John Doe",
+		 * 			}
+		 * 		},
+		 * 		{
+		 * 			id: articlePubId,
+		 * 			pubType: "Article",
+		 * 			values: {
+		 * 				Title: "A Great Article",
+		 * 				// relations can be specified directly by Id as a value
+		 * 				// the referenced pub needs to be created beforehand
+		 * 				Contributors: {
+		 * 					value: "Editing",
+		 * 					relatedPubId: authorId,
+		 * 				}
+		 * 			},
+		 * 			// children are defined the same way as pubs
+		 * 			children: [
+		 * 				{
+		 * 					pubType: "Author",
+		 * 					values: {
+		 * 						Name: "John Doe",
+		 * 					}
+		 * 				}
+		 * 			],
+		 * 			// or relations can be specified by a nested pub
+		 * 			relatedPubs: {
+		 * 				// relatedPubs are specified slightly differently than children
+		 * 				// as they need to be mapped to a certain field
+		 * 				Contributors: [{
+		 * 					value: "Draft preparation",
+		 * 					// this will also add the same pub as a child
+		 * 					alsoAsChild: true,
+		 * 					pub: {
+		 * 						pubType: "Author",
+		 * 						values: {
+		 * 							Name: "John Doe",
+		 * 						}
+		 * 					}
+		 * 				}]
+		 * 			}
+		 * 		},
+		 * 	]
+		 * }
+		 * ```
+		 */
 		pubs?: PI;
 		forms?: F;
 	},
@@ -423,8 +712,6 @@ export async function seedCommunity<
 				.execute()
 		: [];
 
-	type PubFieldsByName<PF> = { [K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } };
-
 	const pubFieldsByName = Object.fromEntries(
 		createdPubFields.map((pubField) => [
 			pubFieldsList.find(([name]) => name === pubField.name)?.[0],
@@ -476,10 +763,6 @@ export async function seedCommunity<
 					.execute()
 			: [];
 
-	type PubTypesByName<PT, PF> = {
-		[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
-	};
-
 	const pubTypesWithPubFieldsByName = Object.fromEntries(
 		createdPubTypes.map((pubType) => [
 			pubType.name,
@@ -514,10 +797,6 @@ export async function seedCommunity<
 	const createdUsers = userValues.length
 		? await trx.insertInto("users").values(userValues).returningAll().execute()
 		: [];
-
-	type UsersBySlug<U> = {
-		[K in keyof U]: U[K] & Users;
-	};
 
 	const usersBySlug = Object.fromEntries(
 		createdUsers.map((user) => [
@@ -626,12 +905,6 @@ export async function seedCommunity<
 					.execute()
 			: [];
 
-	type StagesWithPermissionsByName<S> = {
-		[K in keyof S]: Omit<Stages, "name"> & { name: K } & {
-			permissions: typeof stagePermissions;
-		};
-	};
-
 	const stagesWithPermissionsByName = Object.fromEntries(
 		consolidatedStages.map((stage) => [
 			stage.name,
@@ -642,7 +915,7 @@ export async function seedCommunity<
 				),
 			},
 		])
-	) as StagesWithPermissionsByName<S>;
+	) as StagesWithPermissionsByName<S, typeof stagePermissions>;
 
 	const stageConnectionsList = props.stageConnections
 		? await db
@@ -767,14 +1040,6 @@ export async function seedCommunity<
 					)
 					.execute()
 			: [];
-
-	type FormsByName<F extends FormInitializer<any, any, any, any>> = {
-		[K in keyof F]: Omit<Forms, "name" | "pubType" | ""> & { name: K } & {
-			elements: {
-				[KK in keyof F[K]["elements"]]: F[K]["elements"][KK] & FormElements;
-			};
-		};
-	};
 
 	const formsByName = Object.fromEntries(
 		createdForms.map((form) => [form.name, form])
