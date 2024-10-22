@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ProsemirrorAdapterProvider, useNodeViewFactory } from "@prosemirror-adapter/react";
 import { Node } from "prosemirror-model";
