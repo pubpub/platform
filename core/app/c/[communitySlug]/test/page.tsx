@@ -8,7 +8,7 @@ import { getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 export const metadata: Metadata = {
-	title: "Community Settings",
+	title: "Test page",
 };
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
