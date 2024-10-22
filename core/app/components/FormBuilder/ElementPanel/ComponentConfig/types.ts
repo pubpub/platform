@@ -1,10 +1,8 @@
-import type { CoreSchemaType } from "@prisma/client";
 import type { Static } from "@sinclair/typebox";
-import type { Prettify } from "@ts-rest/core";
 import type { UseFormReturn } from "react-hook-form";
 import type { componentConfigSchemas } from "schemas";
 
-import type { InputComponent } from "db/public";
+import type { CoreSchemaType, InputComponent } from "db/public";
 
 export type ComponentConfigFormProps<I extends InputComponent> = {
 	form: UseFormReturn<ConfigFormData<I>>;

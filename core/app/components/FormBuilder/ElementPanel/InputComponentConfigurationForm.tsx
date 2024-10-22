@@ -156,6 +156,13 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 			</div>
 		),
 	},
+	[InputComponent.richText]: {
+		name: "Rich Text",
+		demoComponent: () => {
+			// TODO
+			return <div></div>;
+		},
+	},
 } as const;
 
 const ComponentSelect = ({
