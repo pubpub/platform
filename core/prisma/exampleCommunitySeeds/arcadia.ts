@@ -263,6 +263,7 @@ export const arcadiaSeed = (communityId?: CommunitiesId) => {
 			pubs: [
 				{
 					pubType: "Site",
+					stage: "Sites",
 					values: {
 						Title: "Arcadia Research",
 						Description:
@@ -381,11 +382,15 @@ export const arcadiaSeed = (communityId?: CommunitiesId) => {
 													stage: "Issues",
 													values: {
 														Title: "Issue 1",
+														ISSN: "2998-4084",
+														DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+														Description: "A cool description",
 													},
 													relatedPubs: {
 														Articles: [
 															{
 																value: null,
+																alsoAsChild: true,
 																pub: {
 																	pubType: "Journal Article",
 																	stage: "Articles",
