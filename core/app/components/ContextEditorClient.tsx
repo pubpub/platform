@@ -1,16 +1,33 @@
 "use client";
 
+import { useCallback } from "react";
 import { ContextEditor } from "context-editor";
 
-export const ContextEditorClient = () => {
-	const pubId = "3a4f931e-8903-4023-aac7-8abf99238538";
-	const pubTypeId = "b54cd264-8fe0-4a59-8e1b-0c66b82eca26";
+import type { GetPubsResult } from "~/lib/server";
+import type { PubTypeWithFieldIds } from "~/lib/types";
+
+export const ContextEditorClient = ({
+	pubs,
+	pubTypes,
+}: {
+	pubs: GetPubsResult;
+	pubTypes: PubTypeWithFieldIds[];
+}) => {
+	const getPubs = useCallback(
+		(filter: string) => {
+			return new Promise<any[]>((resolve, reject) => {
+				resolve(pubs);
+			});
+		},
+		[pubs]
+	);
+
 	return (
 		<ContextEditor
-			pubId={pubId}
-			pubTypeId={pubTypeId}
-			pubTypes={{}}
-			getPubs="todo"
+			pubId={pubs[0].id}
+			pubTypeId={pubTypes[0].id}
+			pubTypes={pubTypes}
+			getPubs={getPubs}
 			getPubById={() => {}}
 			atomRenderingComponent={() => {}}
 			onChange={(state) => {
