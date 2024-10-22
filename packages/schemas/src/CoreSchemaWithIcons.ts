@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
 import {
-	BookOpenText,
 	BoxSelect,
 	CalendarClock,
 	CheckSquare,
@@ -10,7 +9,6 @@ import {
 	ImagePlus,
 	Link,
 	Mail,
-	TextQuote,
 	Type,
 	User,
 } from "lucide-react";
