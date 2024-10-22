@@ -1,5 +1,3 @@
-import type { Node } from "prosemirror-model";
-
 import { Value } from "@sinclair/typebox/value";
 import Ajv from "ajv";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
@@ -8,6 +6,7 @@ import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
 import type { BasePubField } from "../corePubFields";
+import { validateAgainstContextEditorSchema } from "~/lib/server/contextEditor";
 
 /**
  * Validate all `values` against their corresponding field's `schemaName`.
@@ -35,12 +34,7 @@ export const validatePubValuesBySchemaName = ({
 		// Rich text fields are a special case where we use prosemirror to validate
 		// as opposed to typebox
 		if (field.schemaName === CoreSchemaType.RichText) {
-			try {
-				(value as Node).check();
-				result = true;
-			} catch {
-				result = false;
-			}
+			result = validateAgainstContextEditorSchema(value);
 		} else {
 			const jsonSchema = getJsonSchemaByCoreSchemaType(field.schemaName);
 			result = Value.Check(jsonSchema, value);
