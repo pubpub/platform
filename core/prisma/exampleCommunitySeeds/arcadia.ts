@@ -52,6 +52,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 				Tables: { schemaName: CoreSchemaType.Null, relation: true },
 				Citations: { schemaName: CoreSchemaType.String, relation: true },
 
+				ConnectedPubs: { schemaName: CoreSchemaType.String, relation: true },
+
 				"Issue Article": { schemaName: CoreSchemaType.Null, relation: true },
 				"Issue Volume": { schemaName: CoreSchemaType.String },
 				"Issue Number": { schemaName: CoreSchemaType.Number },
@@ -196,6 +198,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					"Inline Citation Style": true,
 					"Citation Style": true,
 					Tables: true,
+					ConnectedPubs: true,
 				},
 				"PDF Download": {
 					PDF: true,
@@ -425,6 +428,20 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																				},
 																			},
 																		],
+																		// connections in Legacy
+																		ConnectedPubs: [
+																			{
+																				value: "isCommentOn",
+																				pub: {
+																					pubType:
+																						"Journal Article",
+																					values: {
+																						Title: "A Comment on Capsid Identification",
+																					},
+																				},
+																			},
+																		],
+																		// all of the below are also added as children to make it easier to see them in the ui as of OCt 22
 																		Contributors: [
 																			{
 																				value: "Editing & Draft Preparation",
