@@ -123,6 +123,7 @@ type PubInitializer<
 	[PubTypeName in keyof PT]: {
 		id?: PubsId;
 		assignee?: keyof U;
+		parentId?: PubsId;
 		pubType: PubTypeName;
 		values: {
 			[FieldName in keyof PT[PubTypeName] as FieldName extends keyof PF
@@ -148,8 +149,14 @@ type PubInitializer<
 				? PF[FieldName]["schemaName"] extends CoreSchemaType
 					? PF[FieldName]["relation"] extends true
 						? {
-								value: InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>;
-								relatedPub: PubInitializer<PF, PT, U, S>;
+								/**
+								 * Also add this pub as a child of the current pub.
+								 * Experimental, will probably be removed in the future, currently
+								 * useful because we cannot fetch related pubs in the frontend.
+								 */
+								alsoAsChild?: boolean;
+								value?: InputTypeForCoreSchemaType<PF[FieldName]["schemaName"]>;
+								pub: PubInitializer<PF, PT, U, S>;
 							}[]
 						: never
 					: never
@@ -273,16 +280,50 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 			])
 		);
 
+		const rootPubId = pub.id ?? (crypto.randomUUID() as PubsId);
+
+		const relatedPubs = pub.relatedPubs
+			? Object.fromEntries(
+					Object.entries(pub.relatedPubs)
+						.filter(([, info]) => !!info)
+						.map(([valueTitle, info]) => [
+							`${community.slug}:${slugifyString(valueTitle)}`,
+							expect(
+								info,
+								`Got unexpected empty related pub definition for ${valueTitle}`
+							).map((info) => ({
+								value: info.value,
+								pub: makePubInitializerMatchCreatePubRecursiveInput({
+									pubTypes,
+									users,
+									stages,
+									community,
+									pubs: [
+										{
+											// this order means that parentId will get overridden if
+											// it's actually set
+											...(info.alsoAsChild ? { parentId: rootPubId } : {}),
+											...info.pub,
+										},
+									],
+									trx,
+								})[0].body,
+							})),
+						])
+				)
+			: undefined;
+
 		const input = {
 			communityId: community.id,
 			// @ts-expect-error Cant assign a different trx to a trx, technically
 			trx,
 			body: {
-				id: pub?.id,
+				id: rootPubId,
 				pubTypeId: pubType.id,
 				assigneeId: assigneeId,
 				stageId: stageId,
 				values,
+				parentId: pub.parentId,
 				children:
 					pub.children &&
 					makePubInitializerMatchCreatePubRecursiveInput({
@@ -294,29 +335,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 						trx,
 					}).map((child) => child.body),
 
-				relatedPubs:
-					pub.relatedPubs &&
-					Object.fromEntries(
-						Object.entries(pub.relatedPubs)
-							.filter(([, info]) => !!info)
-							.map(([valueTitle, info]) => [
-								`${community.slug}:${slugifyString(valueTitle)}`,
-								expect(
-									info,
-									`Got unexpected empty related pub definition for ${valueTitle}`
-								).map((info) => ({
-									value: info.value,
-									pub: makePubInitializerMatchCreatePubRecursiveInput({
-										pubTypes,
-										users,
-										stages,
-										community,
-										pubs: [info.relatedPub],
-										trx,
-									})[0].body,
-								})),
-							])
-					),
+				relatedPubs: relatedPubs,
 			},
 		} satisfies CreatePubRecursiveInput;
 
@@ -679,7 +698,12 @@ export async function seedCommunity<
 			})
 		: [];
 
-	const createdPubs = await Promise.all(createPubRecursiveInput.map(createPubRecursiveNew));
+	const createdPubs: Awaited<ReturnType<typeof createPubRecursiveNew>>[] = [];
+	// we do this one at a time because we allow pubs to be able to reference each other in the relatedPubs field
+	for (const input of createPubRecursiveInput) {
+		const pub = await createPubRecursiveNew(input);
+		createdPubs.push(pub);
+	}
 
 	const formList = props.forms ? Object.entries(props.forms) : [];
 	const createdForms =
@@ -756,7 +780,7 @@ export async function seedCommunity<
 		createdForms.map((form) => [form.name, form])
 	) as FormsByName<F>;
 
-	// actions last because they can reference form id's
+	// actions last because they can reference form and pub id's
 	const possibleActions = consolidatedStages.flatMap(
 		(stage, idx) =>
 			stage.actions?.map((action) => ({

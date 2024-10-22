@@ -27,7 +27,7 @@ describe("seedCommunity", () => {
 		const authorPubId = crypto.randomUUID() as PubsId;
 		const author2PubId = crypto.randomUUID() as PubsId;
 
-		const bigSeed1 = await seedCommunity({
+		const seededCommunity = await seedCommunity({
 			community: {
 				name: "test",
 				slug: "test-community",
@@ -103,10 +103,21 @@ describe("seedCommunity", () => {
 							{
 								// indicates that it's the first pub
 								value: 1,
-								relatedPub: {
+								pub: {
 									pubType: "Author",
 									values: {
 										Title: "De Heer Frederick III",
+									},
+								},
+							},
+							{
+								value: 2,
+								// also adds this pub as a child of the current pub
+								alsoAsChild: true,
+								pub: {
+									pubType: "Author",
+									values: {
+										Title: "De Heer Frederick IV",
 									},
 								},
 							},
@@ -151,13 +162,13 @@ describe("seedCommunity", () => {
 			},
 		});
 
-		expect(bigSeed1).toBeDefined();
+		expect(seededCommunity).toBeDefined();
 
-		expect(bigSeed1.community, "community").toMatchObject({
+		expect(seededCommunity.community, "community").toMatchObject({
 			name: "test",
 		});
 
-		expect(bigSeed1.actions, "actions").toMatchObject([
+		expect(seededCommunity.actions, "actions").toMatchObject([
 			{
 				action: "email",
 				config: {
@@ -168,12 +179,12 @@ describe("seedCommunity", () => {
 			},
 		]);
 
-		expect(bigSeed1.users, "users").toMatchObject({
+		expect(seededCommunity.users, "users").toMatchObject({
 			hih: {},
 			test: {},
 		});
 
-		expect(bigSeed1.members, "members").toMatchObject([
+		expect(seededCommunity.members, "members").toMatchObject([
 			{
 				role: "admin",
 			},
@@ -182,7 +193,7 @@ describe("seedCommunity", () => {
 			},
 		]);
 
-		expect(bigSeed1.pubFields, "pubFields").toMatchObject({
+		expect(seededCommunity.pubFields, "pubFields").toMatchObject({
 			Title: {
 				isRelation: false,
 				name: "Title",
@@ -195,7 +206,7 @@ describe("seedCommunity", () => {
 			},
 		});
 
-		expect(bigSeed1.pubTypes, "pubTypes").toMatchObject({
+		expect(seededCommunity.pubTypes, "pubTypes").toMatchObject({
 			Submission: {
 				description: null,
 				name: "Submission",
@@ -205,14 +216,14 @@ describe("seedCommunity", () => {
 			},
 		});
 
-		expect(bigSeed1.pubs, "pubs").toMatchObject([
+		expect(seededCommunity.pubs, "pubs").toMatchObject([
 			{ id: authorPubId },
 			{
 				id: submissionPubId,
 				assigneeId: null,
 				children: [
 					{
-						assigneeId: bigSeed1.users.test.id,
+						assigneeId: seededCommunity.users.test.id,
 						values: [
 							{
 								relatedPubId: null,
@@ -234,20 +245,31 @@ describe("seedCommunity", () => {
 					},
 				],
 				valuesBlob: null,
-				stageId: bigSeed1.stages["Stage 1"].id,
+				stageId: seededCommunity.stages["Stage 1"].id,
 				relatedPubs: [
 					{
 						value: 1,
-						relatedPub: {},
+						relatedPub: {
+							pubTypeId: seededCommunity.pubTypes["Author"].id,
+						},
+					},
+
+					{
+						value: 2,
+						relatedPub: {
+							// it has a parent
+							parentId: submissionPubId,
+							pubTypeId: seededCommunity.pubTypes["Author"].id,
+						},
 					},
 				],
 			},
 			{ id: author2PubId },
 		]);
 
-		expect(bigSeed1.stageConnections, "stageConnections").toMatchObject([]);
+		expect(seededCommunity.stageConnections, "stageConnections").toMatchObject([]);
 
-		expect(bigSeed1.stages, "stages").toMatchObject({
+		expect(seededCommunity.stages, "stages").toMatchObject({
 			"Stage 1": {
 				members: ["test"],
 				name: "Stage 1",
@@ -259,7 +281,7 @@ describe("seedCommunity", () => {
 			},
 		});
 
-		expect(bigSeed1.forms, "forms").toMatchObject({
+		expect(seededCommunity.forms, "forms").toMatchObject({
 			"submission-form": {
 				access: "private",
 				elements: [

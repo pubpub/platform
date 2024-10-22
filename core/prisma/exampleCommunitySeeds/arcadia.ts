@@ -1,10 +1,12 @@
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 
 import { seedCommunity } from "../seed/seedCommunity";
 
-export const arcadiaSeed = (communityId?: CommunitiesId) =>
-	seedCommunity(
+export const arcadiaSeed = (communityId?: CommunitiesId) => {
+	const journalArticleId = crypto.randomUUID() as PubsId;
+
+	return seedCommunity(
 		{
 			community: {
 				id: communityId,
@@ -25,15 +27,13 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				License: { schemaName: CoreSchemaType.String },
 				PubContent: { schemaName: CoreSchemaType.String },
 				DOI: { schemaName: CoreSchemaType.URL },
-				"Some Relation": {
-					schemaName: CoreSchemaType.String,
-					relation: true,
-				},
 				"PDF Download Displayname": { schemaName: CoreSchemaType.String },
-				"PDF Download": { schemaName: CoreSchemaType.FileUpload },
+				PDF: { schemaName: CoreSchemaType.FileUpload },
 				"Pub Image": { schemaName: CoreSchemaType.FileUpload },
+
+				Caption: { schemaName: CoreSchemaType.String },
 				// a contributor is a relation to an Author
-				Contributor: {
+				Contributors: {
 					// string here acts as a description of the contribution
 					schemaName: CoreSchemaType.String,
 					relation: true,
@@ -43,19 +43,24 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				ORCiD: { schemaName: CoreSchemaType.URL },
 				Affiliation: { schemaName: CoreSchemaType.String },
 				Year: { schemaName: CoreSchemaType.String },
-				"Book Reference": { schemaName: CoreSchemaType.Null, relation: true },
-				"Book Citation": { schemaName: CoreSchemaType.Null, relation: true },
-				"Page Range": { schemaName: CoreSchemaType.StringArray },
 				CSV: { schemaName: CoreSchemaType.FileUpload },
+				Tag: { schemaName: CoreSchemaType.Null, relation: true },
+				Editors: { schemaName: CoreSchemaType.Null, relation: true },
+
+				MemberId: { schemaName: CoreSchemaType.String },
+
+				Downloads: { schemaName: CoreSchemaType.String, relation: true },
+				Images: { schemaName: CoreSchemaType.Null, relation: true },
+				Tables: { schemaName: CoreSchemaType.Null, relation: true },
+				Citations: { schemaName: CoreSchemaType.String, relation: true },
+
 				"Issue Article": { schemaName: CoreSchemaType.Null, relation: true },
 				"Issue Volume": { schemaName: CoreSchemaType.String },
 				"Issue Number": { schemaName: CoreSchemaType.Number },
-				Tag: { schemaName: CoreSchemaType.Null, relation: true },
 				ISSN: { schemaName: CoreSchemaType.String },
 				Issues: { schemaName: CoreSchemaType.Null, relation: true },
 				Articles: { schemaName: CoreSchemaType.Null, relation: true },
 				Journals: { schemaName: CoreSchemaType.Null, relation: true },
-				Editors: { schemaName: CoreSchemaType.Null, relation: true },
 				// site settings
 
 				Header: { schemaName: CoreSchemaType.Null, relation: true },
@@ -87,19 +92,17 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				Pages: { schemaName: CoreSchemaType.Null, relation: true },
 				Width: { schemaName: CoreSchemaType.String },
 				Privacy: { schemaName: CoreSchemaType.String },
-				Download: { schemaName: CoreSchemaType.String, relation: true },
 			},
 			pubTypes: {
-				Tag: {
-					Title: true,
-				},
 				"Navigation Item": {
 					Title: true,
 					"External Link": true,
+					"Open In New Tab": true,
 					// nested navigation
-					"Navigation Item": true,
+					"Navigation Items": true,
 				},
 				Navigation: {
+					Title: true,
 					"Navigation Items": true,
 				},
 				"Banner Button": {
@@ -146,9 +149,15 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				},
 				Site: {
 					Title: true,
+					Description: true,
+					Slug: true,
 					Pages: true,
 					Journals: true,
 					Header: true,
+					Footer: true,
+				},
+				Tag: {
+					Title: true,
 				},
 				Journal: {
 					Title: true,
@@ -162,18 +171,11 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 				},
 				Issue: {
 					Title: true,
-					Description: true,
-					Slug: true,
-					Avatar: true,
-					"Last Edited": true,
-					"Publication Date": true,
-					DOI: true,
-					"Issue Article": true,
-					Tag: true,
-					Contributor: true,
-					License: true,
 					Articles: true,
-					Editors: true,
+					Description: true,
+					DOI: true,
+					Downloads: true,
+					ISSN: true,
 				},
 				"Journal Article": {
 					Title: true,
@@ -187,207 +189,357 @@ export const arcadiaSeed = (communityId?: CommunitiesId) =>
 					Description: true,
 					"Creation Date": true,
 					Avatar: true,
-					"Some Relation": true,
-					Contributor: true,
-					"Book Citation": true,
+					Contributors: true,
 					Tag: true,
 					Editors: true,
-					Download: true,
+					Downloads: true,
+					Images: true,
+					Citations: true,
+					"Inline Citation Style": true,
+					"Citation Style": true,
+					Tables: true,
 				},
 				"PDF Download": {
-					"PDF Download": true,
+					PDF: true,
 				},
 				"Pub Image": {
 					"Pub Image": true,
+					Caption: true,
 				},
 				Author: {
 					Name: true,
 					ORCiD: true,
 					Affiliation: true,
+					MemberId: true,
 				},
 				Editor: {
 					Name: true,
 					ORCiD: true,
 					Affiliation: true,
 				},
-				Book: {
+				ExternalBook: {
 					Title: true,
 					Year: true,
+					DOI: true,
+					"External Link": true,
 				},
-				BookCitation: {
-					"Book Reference": true,
-					"Page Range": true,
-					haths: false,
+				ExternalJournalArticle: {
+					Title: true,
+					Year: true,
+					DOI: true,
+					"External Link": true,
 				},
 				Table: {
+					Caption: true,
 					CSV: true,
 				},
 			},
-
+			users: {
+				"arcadia-user-1": {
+					email: "arcadia@pubpub.org",
+					role: MemberRole.admin,
+					password: "pubpub-arcadia",
+				},
+			},
+			stages: {
+				Articles: {
+					members: ["arcadia-user-1"],
+				},
+				// these stages are mostly here to provide slightly easier grouping of the relevant pubs
+				Sites: {},
+				Journals: {},
+				Issues: {},
+				Navigations: {},
+				Tags: {},
+				"Stage 2": {
+					members: ["arcadia-user-1"],
+				},
+			},
+			stageConnections: {
+				Articles: {
+					to: ["Stage 2"],
+				},
+			},
 			pubs: [
-				{
-					pubType: "Navigation",
-					values: {},
-					children: [
-						{
-							pubType: "Navigation Item",
-							values: {
-								Title: "Home",
-								"External Link": "https://arcadia-research.pubpub.org",
-							},
-						},
-					],
-				},
-				{
-					pubType: "Navigation",
-					values: {},
-					children: [
-						{
-							pubType: "Navigation Item",
-							values: {
-								Title: "Legal",
-								"External Link": "https://arcadia-research.pubpub.org/legal",
-							},
-						},
-					],
-				},
-				{
-					pubType: "Header",
-					values: {
-						"Background Color": "#000000",
-						"Text Color": "#ffffff",
-					},
-				},
 				{
 					pubType: "Site",
 					values: {
 						Title: "Arcadia Research",
-					},
-				},
-				{
-					pubType: "Journal Article",
-					stage: "Stage 1",
-					values: {
-						Title: "Identification of capsid-like proteins in venomous and parasitic animals",
-						"Publication Date": new Date(),
-						"Creation Date": new Date(),
-						"Last Edited": new Date(),
-						Avatar: "https://assets.pubpub.org/yhsu8e81/Arcadia_Pub type_Preview_Result (1)-71721329283073.png",
 						Description:
-							"Inspired by wasps co-opting viral capsids to deliver genes to the caterpillars they parasitize, we looked for capsid-like proteins in other species. We found capsid homologs in ticks and other parasites, suggesting this phenomenon could be wider spread than previously known.",
-						Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
-						License: "CC BY 4.0",
-						PubContent: "Some content",
-						DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+							"We’re reimagining scientific publication — welcome to the first draft! Arcadia's research appears here in short pubs and longer project narratives.",
 					},
 					relatedPubs: {
-						Download: [
+						Header: [
 							{
-								// acting as a description of the download
-								value: "PDF Download",
-								relatedPub: {
-									pubType: "PDF Download",
-									// can't really add the actual file here
-									values: {},
+								value: null,
+								alsoAsChild: true,
+								pub: {
+									pubType: "Header",
+									values: {
+										"Background Color": "#000000",
+										"Text Color": "#ffffff",
+									},
+									relatedPubs: {
+										Banner: [],
+										Navigation: [
+											{
+												value: null,
+												alsoAsChild: true,
+												pub: {
+													pubType: "Navigation",
+													stage: "Navigations",
+													values: {
+														Title: "Header Navigation",
+													},
+													relatedPubs: {
+														"Navigation Items": [
+															{
+																value: null,
+																alsoAsChild: true,
+																pub: {
+																	pubType: "Navigation Item",
+																	values: {
+																		Title: "Home",
+																		"External Link":
+																			"https://arcadia-research.pubpub.org",
+																	},
+																},
+															},
+														],
+													},
+												},
+											},
+										],
+									},
 								},
 							},
 						],
-						Contributor: [
+						Footer: [
 							{
-								value: "Editing & Draft Preparation",
-								relatedPub: {
-									pubType: "Author",
+								value: null,
+								alsoAsChild: true,
+								pub: {
+									pubType: "Footer",
 									values: {
-										Name: "James McJimothy",
+										Title: "Website Footer",
+										"Background Color": "#000000",
+										"Text Color": "#ffffff",
+									},
+									relatedPubs: {
+										Navigation: [
+											{
+												value: null,
+												alsoAsChild: true,
+												pub: {
+													pubType: "Navigation",
+													stage: "Navigations",
+													values: { Title: "Footer Navigation" },
+													relatedPubs: {
+														"Navigation Items": [
+															{
+																value: null,
+																alsoAsChild: true,
+																pub: {
+																	pubType: "Navigation Item",
+																	values: {
+																		Title: "Legal",
+																		"External Link":
+																			"https://arcadia-research.pubpub.org/legal",
+																		"Open In New Tab": true,
+																	},
+																},
+															},
+														],
+													},
+												},
+											},
+										],
+									},
+								},
+							},
+						],
+						Journals: [
+							{
+								value: null,
+								alsoAsChild: true,
+								pub: {
+									pubType: "Journal",
+									stage: "Journals",
+									values: {
+										Title: "Arcadia Research",
+										DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+										ISSN: "2998-4084",
+										Slug: "arcadia-research",
+									},
+									relatedPubs: {
+										Issues: [
+											{
+												value: null,
+												alsoAsChild: true,
+												pub: {
+													pubType: "Issue",
+													stage: "Issues",
+													values: {
+														Title: "Issue 1",
+													},
+													relatedPubs: {
+														Articles: [
+															{
+																value: null,
+																pub: {
+																	pubType: "Journal Article",
+																	stage: "Articles",
+																	values: {
+																		Title: "Identification of capsid-like proteins in venomous and parasitic animals",
+																		"Publication Date":
+																			new Date(),
+																		"Creation Date": new Date(),
+																		"Last Edited": new Date(),
+																		Avatar: "https://assets.pubpub.org/yhsu8e81/Arcadia_Pub type_Preview_Result (1)-71721329283073.png",
+																		Description:
+																			"Inspired by wasps co-opting viral capsids to deliver genes to the caterpillars they parasitize, we looked for capsid-like proteins in other species. We found capsid homologs in ticks and other parasites, suggesting this phenomenon could be wider spread than previously known.",
+																		Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
+																		License: "CC-BY 4.0",
+																		PubContent: "Some content",
+																		DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+																		"Inline Citation Style":
+																			"Author Year",
+																		"Citation Style": "APA 7",
+																	},
+
+																	// the relevant pubs are implemented as both children
+																	// and related pubs for demonstration purposes
+																	relatedPubs: {
+																		Tag: [
+																			{
+																				value: null,
+																				pub: {
+																					stage: "Tags",
+																					pubType: "Tag",
+																					values: {
+																						Title: "Icebox",
+																					},
+																				},
+																			},
+																		],
+																		Contributors: [
+																			{
+																				value: "Editing & Draft Preparation",
+																				alsoAsChild: true,
+																				pub: {
+																					pubType:
+																						"Author",
+																					values: {
+																						Name: "James McJimothy",
+																						ORCiD: "https://orcid.org/0000-0000-0000-0000",
+																						Affiliation:
+																							"University of Somewhere",
+																					},
+																				},
+																			},
+																		],
+																		Downloads: [
+																			{
+																				// acting as a description of the download
+																				value: "PDF Download",
+																				alsoAsChild: true,
+																				pub: {
+																					pubType:
+																						"PDF Download",
+																					// can't really add the actual file here
+																					values: {},
+																				},
+																			},
+																		],
+																		Tables: [
+																			{
+																				value: null,
+																				alsoAsChild: true,
+																				pub: {
+																					pubType:
+																						"Table",
+																					values: {
+																						Caption:
+																							"A beautiful table, about things.",
+																						CSV: [],
+																					},
+																				},
+																			},
+																			{
+																				value: null,
+																				alsoAsChild: true,
+																				pub: {
+																					pubType:
+																						"Table",
+																					values: {
+																						Caption:
+																							"A table, about things.",
+																						CSV: [],
+																					},
+																				},
+																			},
+																		],
+																		Images: [
+																			{
+																				value: null,
+																				alsoAsChild: true,
+																				pub: {
+																					pubType:
+																						"Pub Image",
+																					values: {
+																						Caption:
+																							"A beautiful image, about things.",
+																					},
+																				},
+																			},
+																		],
+																		Citations: [
+																			{
+																				value: "Chapter 5",
+																				alsoAsChild: true,
+																				pub: {
+																					pubType:
+																						"ExternalBook",
+																					values: {
+																						Title: "A Great Book",
+																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						Year: "2022",
+																					},
+																				},
+																			},
+																			{
+																				value: "pp. 35-53",
+																				alsoAsChild: true,
+																				pub: {
+																					pubType:
+																						"ExternalJournalArticle",
+																					values: {
+																						Title: "A Great Journal Article",
+																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						Year: "2022",
+																					},
+																				},
+																			},
+																		],
+																	},
+																},
+															},
+														],
+													},
+												},
+											},
+										],
 									},
 								},
 							},
 						],
 					},
-					children: [
-						{
-							pubType: "PDF Download",
-							values: {
-								// "PDF Download": [
-								// 	{
-								// 		fileMeta: {
-								// 			name: "arcadia-14b2-6f27.pdf",
-								// 			type: "application/pdf",
-								// 			relativePath: "arcadia-14b2-6f27.pdf",
-								// 		},
-								// 		fileName: "arcdaia-something.pdf",
-								// 		fileType: "application/pdf",
-								// 		fileSize: 400,
-								// 		fileSource: "https://some-source.com",
-								// 		fileUploadUrl: "https://some-source.com/arcdaia-something.pdf",
-								// 		id: "xxxx-xxxx-xxxx",
-								// 	},
-								// ],
-							},
-						},
-						{
-							pubType: "Pub Image",
-							// TODO: fill in values
-							values: {},
-						},
-						{
-							pubType: "Table",
-							values: {},
-						},
-						{
-							pubType: "Table",
-							values: {
-								CSV: [],
-							},
-						},
-					],
-				},
-
-				{
-					pubType: "Author",
-					values: {
-						Name: "James McJimothy",
-						ORCiD: "https://orcid.org/0000-0000-0000-0000",
-						Affiliation: "University of Somewhere",
-					},
-				},
-				{
-					pubType: "Book",
-					values: {
-						Title: "A Book",
-						Year: "2022",
-					},
-				},
-				{
-					pubType: "BookCitation",
-					values: {
-						"Page Range": ["33", "44"],
-					},
 				},
 			],
-
 			forms: {},
-
-			users: {
-				"arcadia-user-1": {},
-			},
-
-			stages: {
-				"Stage 1": {
-					members: ["arcadia-user-1"],
-				},
-				"Stage 2": {
-					members: ["arcadia-user-1"],
-				},
-			},
-
-			stageConnections: {
-				"Stage 1": {
-					to: ["Stage 2"],
-				},
-			},
 		},
 		{
 			randomSlug: false,
 		}
 	);
+};
