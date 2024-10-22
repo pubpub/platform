@@ -5,7 +5,7 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
-import type { BasePubField } from "../corePubFields";
+import type { BasePubField } from "../../actions/corePubFields";
 import { validateAgainstContextEditorSchema } from "~/lib/server/contextEditor";
 
 /**
