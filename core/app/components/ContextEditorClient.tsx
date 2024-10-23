@@ -1,9 +1,16 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ContextEditor } from "context-editor";
+import dynamic from "next/dynamic";
+
+import { Skeleton } from "ui/skeleton";
 
 import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
+
+const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
+	ssr: false,
+	loading: () => <Skeleton className="h-9 w-full" />,
+});
 
 export const ContextEditorClient = ({
 	pubs,
