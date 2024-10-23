@@ -1,6 +1,6 @@
-"use client";
+import type { Node } from "prosemirror-model";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 
 import { Skeleton } from "ui/skeleton";
@@ -17,13 +17,16 @@ export const ContextEditorClient = ({
 	pubs,
 	pubTypes,
 	className,
+	initialDoc,
+	onChange,
 }: {
 	pubs: GetPubsResult;
 	pubTypes: GetPubTypesResult;
+	// TODO: should probably be of type EditorState from prosemirror-state
+	onChange: (editorState: any) => void;
+	initialDoc?: Node;
 	className?: string;
 }) => {
-	// TODO: should probably be of type EditorState from prosemirror-state
-	const [editorState, setEditorState] = useState<any>(null);
 	const getPubs = useCallback(
 		(filter: string) => {
 			return new Promise<any[]>((resolve, reject) => {
@@ -46,9 +49,8 @@ export const ContextEditorClient = ({
 					return {};
 				}}
 				atomRenderingComponent={() => {}}
-				onChange={(state) => {
-					setEditorState(state);
-				}}
+				onChange={onChange}
+				initialDoc={initialDoc}
 			/>
 		);
 	}, [pubs, pubTypes]);

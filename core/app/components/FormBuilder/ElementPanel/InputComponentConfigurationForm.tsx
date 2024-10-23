@@ -167,6 +167,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 					<ContextEditorClient
 						pubs={[]}
 						pubTypes={[]}
+						onChange={() => {}}
 						className="-ml-6 -mt-6 h-16 w-full"
 					/>
 				</div>
