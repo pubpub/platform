@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import JsonView from "@uiw/react-json-view";
 
-import { getPubValues } from "../../../../../packages/context-editor/src/utils/pubValues";
+import { getPubValues } from "../../utils/pubValues";
 import initialPubs from "../initialPubs.json";
 import initialTypes from "../initialTypes.json";
 
