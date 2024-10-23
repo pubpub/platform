@@ -4,20 +4,23 @@ import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 
 import { Skeleton } from "ui/skeleton";
+import { cn } from "utils";
 
 import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
 
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
-	loading: () => <Skeleton className="h-9 w-full" />,
+	loading: () => <Skeleton className="h-16 w-full" />,
 });
 
 export const ContextEditorClient = ({
 	pubs,
 	pubTypes,
+	className,
 }: {
 	pubs: GetPubsResult;
 	pubTypes: GetPubTypesResult;
+	className?: string;
 }) => {
 	// TODO: should probably be of type EditorState from prosemirror-state
 	const [editorState, setEditorState] = useState<any>(null);
@@ -31,13 +34,17 @@ export const ContextEditorClient = ({
 	);
 
 	const memoEditor = useMemo(() => {
+		const pubId = pubs[0]?.id ?? "";
+		const pubTypeId = pubTypes[0]?.id ?? ";";
 		return (
 			<ContextEditor
-				pubId={pubs[0].id}
-				pubTypeId={pubTypes[0].id}
+				pubId={pubId}
+				pubTypeId={pubTypeId}
 				pubTypes={pubTypes}
 				getPubs={getPubs}
-				getPubById={() => {}}
+				getPubById={() => {
+					return {};
+				}}
 				atomRenderingComponent={() => {}}
 				onChange={(state) => {
 					setEditorState(state);
@@ -46,12 +53,5 @@ export const ContextEditorClient = ({
 		);
 	}, [pubs, pubTypes]);
 
-	return (
-		<div className="grid grid-cols-2">
-			<div>{memoEditor}</div>
-			<div className="overflow-auto text-xs">
-				<pre>{JSON.stringify(editorState?.doc.toJSON(), null, 2)}</pre>
-			</div>
-		</div>
-	);
+	return <div className={cn(className)}>{memoEditor}</div>;
 };
