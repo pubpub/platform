@@ -1,6 +1,6 @@
 import { Plugin, PluginKey } from "prosemirror-state";
 
-import { PanelProps } from "../ContextEditor";
+import type { PanelProps } from "../ContextEditor";
 
 export const attributePanelKey = new PluginKey("panel");
 export default (

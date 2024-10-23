@@ -1,4 +1,4 @@
-import { DOMOutputSpec, MarkSpec } from "prosemirror-model";
+import type { DOMOutputSpec, MarkSpec } from "prosemirror-model";
 
 export default {
 	attrs: {

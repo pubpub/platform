@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { renderToString } from "react-dom/server";
 
-import ContextAtom from "../../components/ContextAtom";
+import ContextAtom from "../../../../../packages/context-editor/src/components/ContextAtom";
 
 export default function JsonPanel({ editorState }) {
 	const [style, setStyle] = useState("base");
@@ -23,7 +23,7 @@ export default function JsonPanel({ editorState }) {
 	const styleColors = ["bg-neutral-200", "bg-emerald-100", "bg-orange-100"];
 	return (
 		<>
-			<h2 className="sticky z-20 left-0 top-0 flex items-center justify-between">
+			<h2 className="sticky left-0 top-0 z-20 flex items-center justify-between">
 				<span>Site</span>
 				<span className="flex space-x-2">
 					{styles.map((styleName, index) => {

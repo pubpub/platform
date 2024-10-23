@@ -80,7 +80,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 function UnwrappedEditor(props: ContextEditorProps) {
 	const Renderer = useMemo(() => {
 		return () => {
-			return <ContextAtom />;
+			return <ContextAtom nodeProp={undefined} />;
 		};
 	}, [props.atomRenderingComponent]);
 	const nodeViewFactory = useNodeViewFactory();

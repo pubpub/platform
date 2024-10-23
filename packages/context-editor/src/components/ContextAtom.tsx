@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useNodeViewContext } from "@prosemirror-adapter/react";
 import { CsvToHtmlTable } from "react-csv-to-table";
 
-export default function ContextAtom({ nodeProp }) {
+export default function ContextAtom({ nodeProp }: { nodeProp: Node}) {
 	const { contentRef, node, selected } = useNodeViewContext();
 	const [activeData, setActiveData] = useState("");
 	const activeNode = nodeProp || node;

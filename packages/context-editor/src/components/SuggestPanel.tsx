@@ -3,7 +3,7 @@ import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react";
 
 import { Card, CardContent } from "ui/card";
 
-import { SuggestProps } from "../ContextEditor";
+import type { SuggestProps } from "../ContextEditor";
 
 export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: SuggestProps) {
 	const [position, setPosition] = useState([0, 0]);

@@ -2,7 +2,7 @@ import { Node } from "prosemirror-model";
 import { EditorState, Plugin } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
-import { PanelProps } from "../ContextEditor";
+import type { PanelProps } from "../ContextEditor";
 import { attributePanelKey } from "./attributePanel";
 import { reactPropsKey } from "./reactProps";
 
