@@ -68,7 +68,7 @@ const preparePayload = ({
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug } of formElements) {
+	for (const { slug, schemaName } of formElements) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
@@ -76,6 +76,11 @@ const preparePayload = ({
 			formState.dirtyFields[slug]
 		) {
 			payload[slug] = formValues[slug];
+		}
+		// Workaround while context editor is infinitely rendering on toJSON()
+		if (slug && schemaName === CoreSchemaType.RichText) {
+			// We want toJSON but this isn't a plain json obj, so we stringify then parse in order to be able to pass it to the server action...
+			payload[slug] = JSON.parse(JSON.stringify(formValues[slug].toJSON()));
 		}
 	}
 	return payload;
