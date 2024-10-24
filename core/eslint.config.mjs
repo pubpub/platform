@@ -7,7 +7,13 @@ import reactConfig from "@pubpub/eslint-config/react";
 /** @type {import('typescript-eslint').Config} */
 export default [
 	{
-		ignores: [".next/**", "playwright-report/**", "playwright/.auth", "test-results/**"],
+		ignores: [
+			".next/**",
+			"playwright-report/**",
+			"playwright/.auth",
+			"test-results/**",
+			"**/*stub*.js",
+		],
 	},
 	...baseConfig,
 	...reactConfig,

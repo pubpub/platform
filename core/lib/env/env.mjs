@@ -18,7 +18,6 @@ export const env = createEnv({
 		 */
 		CACHE_LOG: z.string().optional(),
 		DATABASE_URL: z.string().url(),
-		JWT_SECRET: z.string(),
 		KYSELY_DEBUG: z.string().optional(),
 		KYSELY_ARTIFICIAL_LATENCY: z.coerce.number().optional(),
 		LOG_LEVEL: z.string().optional(),
