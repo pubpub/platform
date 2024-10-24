@@ -29,6 +29,7 @@ export const componentsBySchema = {
 	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
 	[CoreSchemaType.Null]: [],
+	[CoreSchemaType.RichText]: [InputComponent.richText],
 } as const satisfies Record<CoreSchemaType, InputComponent[]>;
 
 export const checkboxConfigSchema = Type.Object({
@@ -89,6 +90,10 @@ export const multivalueInputConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 });
+export const richTextInputConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+});
 
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
@@ -100,6 +105,7 @@ export const componentConfigSchemas = {
 	[InputComponent.confidenceInterval]: confidenceIntervalConfigSchema,
 	[InputComponent.checkboxGroup]: checkboxGroupConfigSchema,
 	[InputComponent.radioGroup]: radioGroupConfigSchema,
+	[InputComponent.richText]: richTextInputConfigSchema,
 	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
 	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;

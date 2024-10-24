@@ -29,8 +29,8 @@ import type {
 import { expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
-import { validatePubValuesBySchemaName } from "~/actions/_lib/validateFields";
 import { db } from "~/kysely/database";
+import { validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";

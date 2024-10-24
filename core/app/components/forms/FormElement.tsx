@@ -96,6 +96,9 @@ export const FormElement = ({
 		input = <SelectDropdownElement {...elementProps} />;
 	} else if (component === InputComponent.multivalueInput) {
 		input = <MultivalueInputElement {...elementProps} />;
+	} else if (component === InputComponent.richText) {
+		// TODO: Render the rich text component
+		return null;
 	}
 
 	if (input) {
