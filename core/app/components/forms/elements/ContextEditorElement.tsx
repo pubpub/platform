@@ -11,6 +11,7 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 
 import type { ElementProps } from "../types";
 import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
+import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 const EditorFormElement = ({
@@ -24,11 +25,19 @@ const EditorFormElement = ({
 	onChange: (state: any) => void;
 	initialValue?: Node;
 }) => {
+	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
 	const memoEditor = useMemo(() => {
+		if (!pubTypeId) {
+			// throw error? does editor require pubTypeId?
+			// or it might mean we are using this component without the context setup
+			return null;
+		}
 		return (
 			<ContextEditorClient
-				pubs={[]}
-				pubTypes={[]}
+				pubId={pubId}
+				pubs={pubs}
+				pubTypes={pubTypes}
+				pubTypeId={pubTypeId}
 				onChange={onChange}
 				initialDoc={initialValue}
 			/>
