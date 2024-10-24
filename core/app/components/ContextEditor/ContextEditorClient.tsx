@@ -1,26 +1,37 @@
-"use client";
+import type { Node } from "prosemirror-model";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 
+import type { PubsId, PubTypesId } from "db/public";
 import { Skeleton } from "ui/skeleton";
+import { cn } from "utils";
 
 import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
 
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
-	loading: () => <Skeleton className="h-9 w-full" />,
+	loading: () => <Skeleton className="h-16 w-full" />,
 });
 
 export const ContextEditorClient = ({
 	pubs,
 	pubTypes,
+	pubId,
+	pubTypeId,
+	className,
+	initialDoc,
+	onChange,
 }: {
 	pubs: GetPubsResult;
 	pubTypes: GetPubTypesResult;
-}) => {
+	pubId?: PubsId;
+	pubTypeId: PubTypesId;
 	// TODO: should probably be of type EditorState from prosemirror-state
-	const [editorState, setEditorState] = useState<any>(null);
+	onChange: (editorState: any) => void;
+	initialDoc?: Node;
+	className?: string;
+}) => {
 	const getPubs = useCallback(
 		(filter: string) => {
 			return new Promise<any[]>((resolve, reject) => {
@@ -31,27 +42,23 @@ export const ContextEditorClient = ({
 	);
 
 	const memoEditor = useMemo(() => {
+		// const pubId = pubs[0]?.id ?? "";
+		// const pubTypeId = pubTypes[0]?.id ?? ";";
 		return (
 			<ContextEditor
-				pubId={pubs[0].id}
-				pubTypeId={pubTypes[0].id}
+				pubId={pubId ?? ""} // fix?
+				pubTypeId={pubTypeId}
 				pubTypes={pubTypes}
 				getPubs={getPubs}
-				getPubById={() => {}}
-				atomRenderingComponent={() => {}}
-				onChange={(state) => {
-					setEditorState(state);
+				getPubById={() => {
+					return {};
 				}}
+				atomRenderingComponent={() => {}}
+				onChange={onChange}
+				initialDoc={initialDoc}
 			/>
 		);
 	}, [pubs, pubTypes]);
 
-	return (
-		<div className="grid grid-cols-2">
-			<div>{memoEditor}</div>
-			<div className="overflow-auto text-xs">
-				<pre>{JSON.stringify(editorState?.doc.toJSON(), null, 2)}</pre>
-			</div>
-		</div>
-	);
+	return <div className={cn(className)}>{memoEditor}</div>;
 };

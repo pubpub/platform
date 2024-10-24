@@ -12,12 +12,13 @@ import { expect } from "utils";
 import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
+import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
-import { getPub, getPubCached } from "~/lib/server";
+import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
 import {
@@ -152,12 +153,14 @@ export default async function FormPage({
 		return notFound();
 	}
 
-	const [form, pub] = await Promise.all([
+	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
 		}).executeTakeFirst(),
 		searchParams.pubId ? await getPubCached(searchParams.pubId) : undefined,
+		getPubs({ communityId: community.id }),
+		getPubTypesForCommunity(community.id),
 	]);
 
 	if (!form) {
@@ -280,23 +283,30 @@ export default async function FormPage({
 								[] as string[]
 							)}
 						>
-							<ExternalFormWrapper
-								pub={pubForForm}
-								elements={form.elements}
-								isUpdating={isUpdating}
-								className="col-span-2 col-start-2"
+							<ContextEditorContextProvider
+								pubId={pub?.id} // or maybe pubId ?
+								pubTypeId={form.pubTypeId}
+								pubs={pubs}
+								pubTypes={pubTypes}
 							>
-								{form.elements.map((e) => (
-									<FormElement
-										key={e.elementId}
-										pubId={pubId as PubsId}
-										element={e}
-										searchParams={searchParams}
-										communitySlug={params.communitySlug}
-										values={pub ? pub.values : {}}
-									/>
-								))}
-							</ExternalFormWrapper>
+								<ExternalFormWrapper
+									pub={pubForForm}
+									elements={form.elements}
+									isUpdating={isUpdating}
+									className="col-span-2 col-start-2"
+								>
+									{form.elements.map((e) => (
+										<FormElement
+											key={e.elementId}
+											pubId={pubId as PubsId}
+											element={e}
+											searchParams={searchParams}
+											communitySlug={params.communitySlug}
+											values={pub ? pub.values : {}}
+										/>
+									))}
+								</ExternalFormWrapper>
+							</ContextEditorContextProvider>
 						</FormElementToggleProvider>
 					</div>
 				)}
