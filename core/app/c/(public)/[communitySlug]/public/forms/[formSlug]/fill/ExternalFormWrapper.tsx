@@ -31,6 +31,7 @@ import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";
@@ -75,12 +76,10 @@ const preparePayload = ({
 			// Only send fields that were changed.
 			formState.dirtyFields[slug]
 		) {
-			payload[slug] = formValues[slug];
-		}
-		// Workaround while context editor is infinitely rendering on toJSON()
-		if (slug && schemaName === CoreSchemaType.RichText) {
-			// We want toJSON but this isn't a plain json obj, so we stringify then parse in order to be able to pass it to the server action...
-			payload[slug] = JSON.parse(JSON.stringify(formValues[slug].toJSON()));
+			payload[slug] =
+				schemaName === CoreSchemaType.RichText
+					? serializeProseMirrorDoc(formValues[slug])
+					: formValues[slug];
 		}
 	}
 	return payload;
