@@ -10,7 +10,7 @@ import { richTextInputConfigSchema } from "schemas";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
-import { ContextEditorClient } from "../../ContextEditorClient";
+import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 const EditorFormElement = ({
@@ -66,7 +66,6 @@ export const ContextEditorElement = ({ name, config }: ElementProps) => {
 					<EditorFormElement
 						label={config.label ?? name}
 						help={config.help}
-						// I think this should be state.doc.toJSON() but that causes infinite rendering :(
 						onChange={(state) => field.onChange(state.doc)}
 						initialValue={field.value}
 					/>

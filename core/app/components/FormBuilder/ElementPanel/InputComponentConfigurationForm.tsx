@@ -35,7 +35,7 @@ import { Textarea } from "ui/textarea";
 
 import type { InputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
-import { ContextEditorClient } from "~/app/components/ContextEditorClient";
+import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
 import { isFieldInput } from "../types";
