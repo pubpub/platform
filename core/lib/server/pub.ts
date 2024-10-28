@@ -21,6 +21,7 @@ import type {
 	CommunitiesId,
 	PubFieldsId,
 	PubsId,
+	PubTypes,
 	PubTypesId,
 	PubValuesId,
 	StagesId,
@@ -593,8 +594,12 @@ export const getPubStage = async (pubId: PubsId) =>
 
 interface UnprocessedPub {
 	pubId: PubsId;
+	depth: number;
 	parentId: PubsId | null;
+	stageId: StagesId | null;
+	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
+	pubType?: PubTypes;
 	createdAt: Date;
 	values: {
 		id: PubValuesId;
@@ -608,7 +613,10 @@ interface UnprocessedPub {
 }
 interface ProcessedPub {
 	id: PubsId;
+	stageId: StagesId | null;
+	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
+	pubType?: PubTypes;
 	parentId: PubsId | null;
 	values: {
 		value: unknown;
@@ -619,11 +627,66 @@ interface ProcessedPub {
 	updatedAt: Date;
 }
 
+type GetPubsWithRelatedValuesAndChildrenOptions = {
+	includePubType?: boolean;
+};
+
+export async function getPubsWithRelatedValuesAndChildren(
+	props: {
+		pubId: PubsId;
+	},
+	depth?: number,
+	options?: GetPubsWithRelatedValuesAndChildrenOptions
+): Promise<ProcessedPub>;
+export async function getPubsWithRelatedValuesAndChildren(
+	props:
+		| {
+				pubTypeId: PubTypesId;
+				stageId?: never;
+				communityId?: never;
+		  }
+		| {
+				pubTypeId?: never;
+				stageId: StagesId;
+				communityId?: never;
+		  }
+		| {
+				pubTypeId?: never;
+				stageId?: never;
+				communityId: CommunitiesId;
+		  },
+	depth?: number,
+	options?: GetPubsWithRelatedValuesAndChildrenOptions
+): Promise<ProcessedPub[]>;
 /**
  * Retrieves a pub and all its related values, children, and related pubs up to a given depth.
  */
-export async function getPubWithRelatedValuesAndChildren(
-	rootPubId: PubsId,
+export async function getPubsWithRelatedValuesAndChildren(
+	props:
+		| {
+				pubId: PubsId;
+				pubTypeId?: never;
+				stageId?: never;
+				communityId?: never;
+		  }
+		| {
+				pubId?: never;
+				pubTypeId: PubTypesId;
+				stageId?: never;
+				communityId?: never;
+		  }
+		| {
+				pubId?: never;
+				pubTypeId?: never;
+				stageId: StagesId;
+				communityId?: never;
+		  }
+		| {
+				pubId?: never;
+				pubTypeId?: never;
+				stageId?: never;
+				communityId: CommunitiesId;
+		  },
 	/**
 	 * The maximum depth to recurse to.
 	 * Needs to be set to some positive, non-infinite number to prevent infinite recursion.
@@ -632,8 +695,9 @@ export async function getPubWithRelatedValuesAndChildren(
 	 *
 	 * @default 2
 	 */
-	depth = 2
-): Promise<ProcessedPub> {
+	depth = 2,
+	options?: GetPubsWithRelatedValuesAndChildrenOptions
+): Promise<ProcessedPub | ProcessedPub[]> {
 	if (depth < 1) {
 		throw new Error("Depth must be a positive number");
 	}
@@ -656,7 +720,6 @@ export async function getPubWithRelatedValuesAndChildren(
 		.withRecursive("pub_tree", (cte) =>
 			cte
 				.selectFrom("pubs as p")
-
 				.leftJoin("pub_values as pv", (join) =>
 					join.on((eb) =>
 						eb.and([
@@ -665,10 +728,13 @@ export async function getPubWithRelatedValuesAndChildren(
 						])
 					)
 				)
+				.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
 				.select([
 					"p.id as pubId",
 					"p.pubTypeId",
+					"p.communityId",
 					"p.createdAt",
+					"PubsInStages.stageId",
 					"pv.id as valueId",
 					"pv.fieldId",
 					"pv.value",
@@ -678,7 +744,21 @@ export async function getPubWithRelatedValuesAndChildren(
 					sql<number>`1`.as("depth"),
 					"p.parentId",
 				])
-				.where("p.id", "=", rootPubId)
+				.where((eb) => {
+					if (props.pubId) {
+						return eb("p.id", "=", props.pubId);
+					}
+					if (props.stageId) {
+						return eb("PubsInStages.stageId", "=", props.stageId);
+					}
+					if (props.communityId) {
+						return eb("p.communityId", "=", props.communityId);
+					}
+					if (props.pubTypeId) {
+						return eb("p.pubTypeId", "=", props.pubTypeId);
+					}
+					throw new Error("No pubId, stageId, or communityId provided");
+				})
 				.union((qb) =>
 					qb
 						.selectFrom("pub_tree")
@@ -698,10 +778,13 @@ export async function getPubWithRelatedValuesAndChildren(
 								])
 							)
 						)
+						.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 						.select([
 							"pubs.id as pubId",
 							"pubs.pubTypeId",
+							"pubs.communityId",
 							"pubs.createdAt",
+							"PubsInStages.stageId",
 							"pub_values.id as valueId",
 							"pub_values.fieldId",
 							"pub_values.value",
@@ -721,6 +804,9 @@ export async function getPubWithRelatedValuesAndChildren(
 			"pub_tree.parentId",
 			"pub_tree.pubTypeId",
 			"pub_tree.createdAt",
+			"pub_tree.depth",
+			"pub_tree.stageId",
+			"pub_tree.communityId",
 			jsonArrayFrom(
 				eb
 					.selectFrom("pub_tree as inner")
@@ -745,26 +831,45 @@ export async function getPubWithRelatedValuesAndChildren(
 					.distinctOn("children.pubId")
 			).as("children"),
 		])
-		.groupBy(["pubId", "parentId", "depth", "pubTypeId", "createdAt"])
+		.$if(Boolean(options?.includePubType), (qb) =>
+			qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
+		)
+		.groupBy(["pubId", "parentId", "depth", "pubTypeId", "createdAt", "stageId", "communityId"])
 		.orderBy("depth")
 		.execute();
 
-	return nestRelatedPubsAndChildren(result as UnprocessedPub[], rootPubId);
+	if (props.pubId) {
+		return nestRelatedPubsAndChildren(result as UnprocessedPub[], props.pubId);
+	}
+
+	return nestRelatedPubsAndChildren(result as UnprocessedPub[]);
+	// return result
+	// 	// .filter((pub) => pub.depth === 1)
+	// 	.map((pub) => nestRelatedPubsAndChildren(result as UnprocessedPub[], pub.pubId));
 }
 
-function nestRelatedPubsAndChildren(pubs: UnprocessedPub[], rootPubId: PubsId): ProcessedPub {
+function nestRelatedPubsAndChildren(
+	pubs: UnprocessedPub[],
+	rootPubId?: PubsId
+): ProcessedPub | ProcessedPub[] {
 	// create a map of all pubs by their ID for easy lookup
-	const pubsById = new Map(pubs.map((pub) => [pub.pubId, pub]));
+	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.pubId, pub]));
 
+	const processedPubsById = new Map<PubsId, ProcessedPub>();
 	// helper function to process a single pub
 	function processPub(pubId: PubsId): ProcessedPub | undefined {
-		const pub = pubsById.get(pubId);
-		if (!pub) {
+		const alreadyProcessedPub = processedPubsById.get(pubId);
+		if (alreadyProcessedPub) {
+			return alreadyProcessedPub;
+		}
+
+		const unprocessedPub = unprocessedPubsById.get(pubId);
+		if (!unprocessedPub) {
 			return undefined;
 		}
 
 		// Process values and their related pubs
-		const processedValues = pub.values.map((value) => {
+		const processedValues = unprocessedPub.values.map((value) => {
 			const relatedPub = value.relatedPubId ? processPub(value.relatedPubId) : null;
 
 			return {
@@ -774,28 +879,43 @@ function nestRelatedPubsAndChildren(pubs: UnprocessedPub[], rootPubId: PubsId): 
 		});
 
 		// Process children recursively
-		const processedChildren = pub.children
+		const processedChildren = unprocessedPub.children
 			.map((child) => processPub(child.id))
 			.filter((child) => !!child);
 
-		return {
-			id: pub.pubId,
-			parentId: pub.parentId,
-			createdAt: pub.createdAt,
-			updatedAt: pub.values.reduce(
+		const processedPub: ProcessedPub = {
+			id: unprocessedPub.pubId,
+			stageId: unprocessedPub.stageId,
+			communityId: unprocessedPub.communityId,
+			parentId: unprocessedPub.parentId,
+			createdAt: unprocessedPub.createdAt,
+			updatedAt: unprocessedPub.values.reduce(
 				(max, value) => (value.updatedAt > max ? value.updatedAt : max),
-				pub.createdAt
+				unprocessedPub.createdAt
 			),
-			pubTypeId: pub.pubTypeId,
+			pubTypeId: unprocessedPub.pubTypeId,
+			pubType: unprocessedPub.pubType ?? undefined,
 			values: processedValues,
 			children: processedChildren,
 		};
+
+		processedPubsById.set(unprocessedPub.pubId, processedPub);
+		return processedPub;
 	}
 
-	// start processing from the root pub
-	const rootPub = processPub(rootPubId);
-	if (!rootPub) {
-		throw PubNotFoundError;
+	if (rootPubId) {
+		// start processing from the root pub
+		const rootPub = processPub(rootPubId);
+		if (!rootPub) {
+			throw PubNotFoundError;
+		}
+
+		return rootPub;
 	}
-	return rootPub;
+
+	const topLevelPubs = pubs.filter((pub) => pub.depth === 1);
+
+	return topLevelPubs
+		.map((pub) => processPub(pub.pubId))
+		.filter((processedPub) => !!processedPub);
 }

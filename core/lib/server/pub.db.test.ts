@@ -30,7 +30,6 @@ beforeAll(async () => {
 	const { getCommunityStages } = await import("./stages");
 
 	community = (await findCommunityBySlug("croccroc"))!;
-	community = (await findCommunityBySlug("croccroc"))!;
 	pubTypes = await getPubTypesForCommunity(community.id);
 	submissionPubType = pubTypes.find((pt) => pt.name === "Submission")!;
 	someStringField = submissionPubType.fields.find(
@@ -49,6 +48,7 @@ beforeAll(async () => {
 
 describe("createPubRecursive", () => {
 	it("should be able to create a simple pub", async () => {
+		const trx = getTrx();
 		const { createPubRecursiveNew } = await import("./pub");
 
 		const pub = await createPubRecursiveNew({
@@ -59,6 +59,7 @@ describe("createPubRecursive", () => {
 					[someStringField.slug]: "test",
 				},
 			},
+			trx,
 		});
 
 		expect(pub).toMatchObject({
@@ -217,9 +218,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			trx,
 		});
 
-		const { getPubWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const rootPubId = pub.id;
-		const pubValues = await getPubWithRelatedValuesAndChildren(rootPubId, 10);
+		const pubValues = await getPubsWithRelatedValuesAndChildren({ pubId: rootPubId }, 10);
 
 		expect(pubValues).toMatchObject({
 			values: [
@@ -326,9 +327,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		});
 
 		const rootPubId = pub.id;
-		const { getPubWithRelatedValuesAndChildren } = await import("./pub");
-		const pubWithRelatedValuesAndChildren = await getPubWithRelatedValuesAndChildren(
-			rootPubId,
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: rootPubId },
 			10
 		);
 
@@ -371,5 +372,40 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 			],
 		});
+	});
+
+	it("should be able to fetch all the pubs of a specific pubtype", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: submissionPubType.id,
+				values: {
+					[someStringField.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id },
+			10
+		);
+
+		console.log(pubWithRelatedValuesAndChildren.length);
+
+		expect(pubWithRelatedValuesAndChildren.length).toBe(3);
+
+		const submisionPubs = await getPubsWithRelatedValuesAndChildren(
+			{ pubTypeId: submissionPubType.id },
+			10,
+			{ includePubType: true }
+		);
+
+		console.dir(submisionPubs, { depth: null });
 	});
 });
