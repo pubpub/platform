@@ -29,6 +29,7 @@ export const getPubTypeBase = (trx: typeof db | ExpressionBuilder<Database, keyo
 					"pub_fields.name",
 					"pub_fields.slug",
 					"pub_fields.schemaName",
+					"pub_fields.isRelation",
 					jsonObjectFrom(
 						eb
 							.selectFrom("PubFieldSchema")

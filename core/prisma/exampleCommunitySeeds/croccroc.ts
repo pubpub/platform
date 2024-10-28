@@ -74,6 +74,13 @@ export default async function main(communityUUID: CommunitiesId) {
 				communityId: communityUUID,
 				schemaName: CoreSchemaType.Vector3,
 			},
+			{
+				name: "Related Pub",
+				slug: `${slug}:related-pub`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
+				isRelation: true,
+			},
 		])
 		.returning(["id", "slug", "name", "schemaName"])
 		.execute();

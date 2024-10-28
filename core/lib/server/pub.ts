@@ -19,10 +19,10 @@ import type {
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
-	PubValues as DBPubValues,
-	Pubs,
+	PubFieldsId,
 	PubsId,
 	PubTypesId,
+	PubValuesId,
 	StagesId,
 	UsersId,
 } from "db/public";
@@ -407,13 +407,14 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		throw new NotFoundError(`No pub fields found in community ${communityId}.`);
 	}
 
+	const values = body.values ?? {};
 	const filteredFields = pubFieldsForCommunity.filter((field) => {
-		const value = body.values[field.slug] ?? body.relatedPubs?.[field.slug];
+		const value = values[field.slug] ?? body.relatedPubs?.[field.slug];
 		return Boolean(value);
 	});
 
 	const normalizedValues = Object.fromEntries(
-		Object.entries(body.values).map(([slug, value]) =>
+		Object.entries(values).map(([slug, value]) =>
 			value != null && typeof value === "object" && "value" in value
 				? [slug, value.value]
 				: [slug, value]
@@ -431,7 +432,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		throw new Error(validationErrors.join(" "));
 	}
 
-	const valuesWithFieldIds = Object.entries(body.values).map(([slug, value]) => {
+	const valuesWithFieldIds = Object.entries(values).map(([slug, value]) => {
 		const field = filteredFields.find(
 			({ slug: slugInPubTypeFields }) => slug === slugInPubTypeFields
 		);
@@ -589,3 +590,212 @@ export const deletePub = async (pubId: PubsId) =>
 
 export const getPubStage = async (pubId: PubsId) =>
 	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
+
+interface UnprocessedPub {
+	pubId: PubsId;
+	parentId: PubsId | null;
+	pubTypeId: PubTypesId;
+	createdAt: Date;
+	values: {
+		id: PubValuesId;
+		fieldId: PubFieldsId;
+		value: unknown;
+		relatedPubId: PubsId | null;
+		createdAt: Date;
+		updatedAt: Date;
+	}[];
+	children: { id: PubsId }[];
+}
+interface ProcessedPub {
+	id: PubsId;
+	pubTypeId: PubTypesId;
+	parentId: PubsId | null;
+	values: {
+		value: unknown;
+		relatedPub?: ProcessedPub | undefined;
+	}[];
+	children: ProcessedPub[];
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+/**
+ * Retrieves a pub and all its related values, children, and related pubs up to a given depth.
+ */
+export async function getPubWithRelatedValuesAndChildren(
+	rootPubId: PubsId,
+	/**
+	 * The maximum depth to recurse to.
+	 * Needs to be set to some positive, non-infinite number to prevent infinite recursion.
+	 *
+	 * By default only fetches one layer deep, as that's probably most of what you need.
+	 *
+	 * @default 2
+	 */
+	depth = 2
+): Promise<ProcessedPub> {
+	if (depth < 1) {
+		throw new Error("Depth must be a positive number");
+	}
+
+	const result = await db
+		// this pub_tree CTE roughly returns an array like so
+		// [
+		// 	{ pubId: 1, rootId: 1, parentId: null, depth: 1, value: 'Some value', valueId: 1, relatedPubId: null},
+		//  { pubId: 1, rootId: 1, parentId: 1, depth: 1, value: 'Some relationship value', valueId: 2, relatedPubId: 3},
+		//  { pubId: 2, rootId: 1, parentId: 1, depth: 2, value: 'Some child value', valueId: 3, relatedPubId: null},
+		//  { pubId: 3, rootId: 1, parentId: 2, depth: 2, value: 'Some related value', valueId: 4, relatedPubId: null},
+		// ]
+		// so it's an array of length (pub + children + relatedPubs) * values,
+		// with information about their depth, parent, and pub they are related to
+		//
+		// we could instead only look for the related and child pubs and ignore the other values
+		// but this would mean we would later need to look up the values for each pub as a subquery
+		// this way, the only subqueries we need below are looking up information already stored in pub_tree,
+		// which is more efficient
+		.withRecursive("pub_tree", (cte) =>
+			cte
+				.selectFrom("pubs as p")
+
+				.leftJoin("pub_values as pv", (join) =>
+					join.on((eb) =>
+						eb.and([
+							eb("p.id", "=", eb.ref("pv.pubId")),
+							// eb("pv.relatedPubId", "is not", null),
+						])
+					)
+				)
+				.select([
+					"p.id as pubId",
+					"p.pubTypeId",
+					"p.createdAt",
+					"pv.id as valueId",
+					"pv.fieldId",
+					"pv.value",
+					"pv.relatedPubId",
+					"pv.createdAt as valueCreatedAt",
+					"pv.updatedAt as valueUpdatedAt",
+					sql<number>`1`.as("depth"),
+					"p.parentId",
+				])
+				.where("p.id", "=", rootPubId)
+				.union((qb) =>
+					qb
+						.selectFrom("pub_tree")
+						.innerJoin("pubs", (join) =>
+							join.on((eb) =>
+								eb.or([
+									eb("pubs.id", "=", eb.ref("pub_tree.relatedPubId")),
+									eb("pubs.parentId", "=", eb.ref("pub_tree.pubId")),
+								])
+							)
+						)
+						.leftJoin("pub_values", (join) =>
+							join.on((eb) =>
+								eb.and([
+									eb("pubs.id", "=", eb.ref("pub_values.pubId")),
+									// eb("pub_values.relatedPubId", "is not", null),
+								])
+							)
+						)
+						.select([
+							"pubs.id as pubId",
+							"pubs.pubTypeId",
+							"pubs.createdAt",
+							"pub_values.id as valueId",
+							"pub_values.fieldId",
+							"pub_values.value",
+							"pub_values.relatedPubId",
+							"pub_values.createdAt as valueCreatedAt",
+							"pub_values.updatedAt as valueUpdatedAt",
+							// increment the depth
+							sql<number>`pub_tree.depth + 1`.as("depth"),
+							"pubs.parentId",
+						])
+						.where("pub_tree.depth", "<", depth)
+				)
+		)
+		.selectFrom("pub_tree")
+		.select((eb) => [
+			"pub_tree.pubId",
+			"pub_tree.parentId",
+			"pub_tree.pubTypeId",
+			"pub_tree.createdAt",
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_tree as inner")
+					.select([
+						"inner.valueId as id",
+						"inner.fieldId",
+						"inner.value",
+						"inner.relatedPubId",
+						"inner.valueCreatedAt as createdAt",
+						"inner.valueUpdatedAt as updatedAt",
+					])
+					.whereRef("inner.pubId", "=", "pub_tree.pubId")
+					.orderBy("inner.valueCreatedAt desc")
+			).as("values"),
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_tree as children")
+					.select(["children.pubId as id"])
+					.whereRef("children.parentId", "=", "pub_tree.pubId")
+					// this distinctOn is necessary because otherwise this array will contain duplicates
+					// if a pub has more than one value and a child
+					.distinctOn("children.pubId")
+			).as("children"),
+		])
+		.groupBy(["pubId", "parentId", "depth", "pubTypeId", "createdAt"])
+		.orderBy("depth")
+		.execute();
+
+	return nestRelatedPubsAndChildren(result as UnprocessedPub[], rootPubId);
+}
+
+function nestRelatedPubsAndChildren(pubs: UnprocessedPub[], rootPubId: PubsId): ProcessedPub {
+	// create a map of all pubs by their ID for easy lookup
+	const pubsById = new Map(pubs.map((pub) => [pub.pubId, pub]));
+
+	// helper function to process a single pub
+	function processPub(pubId: PubsId): ProcessedPub | undefined {
+		const pub = pubsById.get(pubId);
+		if (!pub) {
+			return undefined;
+		}
+
+		// Process values and their related pubs
+		const processedValues = pub.values.map((value) => {
+			const relatedPub = value.relatedPubId ? processPub(value.relatedPubId) : null;
+
+			return {
+				value: value.value,
+				...(relatedPub && { relatedPub }),
+			};
+		});
+
+		// Process children recursively
+		const processedChildren = pub.children
+			.map((child) => processPub(child.id))
+			.filter((child) => !!child);
+
+		return {
+			id: pub.pubId,
+			parentId: pub.parentId,
+			createdAt: pub.createdAt,
+			updatedAt: pub.values.reduce(
+				(max, value) => (value.updatedAt > max ? value.updatedAt : max),
+				pub.createdAt
+			),
+			pubTypeId: pub.pubTypeId,
+			values: processedValues,
+			children: processedChildren,
+		};
+	}
+
+	// start processing from the root pub
+	const rootPub = processPub(rootPubId);
+	if (!rootPub) {
+		throw PubNotFoundError;
+	}
+	return rootPub;
+}

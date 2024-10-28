@@ -106,7 +106,7 @@ export const mockServerCode = async () => {
 
 	vi.mock("react", () => {
 		return {
-			cache: vi.fn(),
+			cache: (fn: any) => fn,
 		};
 	});
 
@@ -114,6 +114,12 @@ export const mockServerCode = async () => {
 		return {
 			cookies: vi.fn(),
 			headers: vi.fn(),
+		};
+	});
+
+	vi.mock("next/cache", () => {
+		return {
+			unstable_cache: (fn: any) => fn,
 		};
 	});
 
