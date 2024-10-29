@@ -130,73 +130,6 @@ export const mockServerCode = async () => {
 		};
 	};
 
-	/**
-	 * Sets up transactions for each test.
-	 *
-	 * This allows you to use any of our normal database functions
-	 * (including server actions!) inside of your tests.
-	 * All mutations will be rolled back at the end of the test.
-	 *
-	 * Should be called either inside of `describe` blocks,
-	 * or at the top level of a file.
-	 * Do not call inside of `test` blocks.
-	 *
-	 * TODO: might need to clean up connections at some point
-	 *
-	 * @usage
-	 *
-	 * **Basic example**
-	 * ```ts
-	 * const { getTrx, rollback, commit } = createForEachMockedTransaction();
-	 *
-	 * describe("my test", () => {
-	 *   test("my test", async () => {
-	 * 		const trx = getTrx();
-	 * 		await trx.insertInto("users").values({ email: "test@email.com" }).execute();
-	 *
-	 * 		const users1 = await trx.selectFrom("users").selectAll().where("email", "=", "test@email.com").execute();
-	 *
-	 * 		expect(users1.length).toEqual(1);
-	 *
-	 * 		rollback();
-	 *
-	 * 		const users2 = await trx.selectFrom("users").selectAll().where("email", "=", "test@email.com").execute();
-	 *
-	 * 		expect(users2.length).toEqual(0);
-	 *   });
-	 * });
-	 * ```
-	 *
-	 * **With imported file**
-	 * ```ts
-	 * const { getTrx, rollback, commit } = createForEachMockedTransaction();
-	 *
-	 * describe("my test", () => {
-	 *   test("my test", async () => {
-	 * 		const trx = getTrx();
-	 * 		// you NEED to dynamically import the function that you want to have
-	 *  	// use the mocked transaction.
-	 *  	// There's sadly no way to dynamically replace the import with a mocked transaction
-	 *   	// when using static imports.
-	 *    	const [getForm, createForm] = await Promise.all([
-	 * 			import("~/lib/server/form").then((m) => m.getForm),
-	 * 			import("~/lib/server/form").then((m) => m.createForm),
-	 * 		]);
-	 *
-	 * 		const newForm = await createForm(pubTypeId, "my form", "my-form-1", community.id);
-	 *
-	 * 		const form = await getForm({ slug: "my-form-1" }).executeTakeFirstOrThrow();
-	 * 		expect(form.name).toEqual("my form");
-	 * 		rollback();
-	 *
-	 * 		const form2 = await getForm({ slug: "my-form-1" }).executeTakeFirstOrThrow();
-	 *
-	 * 		expect(form2.length).toEqual(0);
-	 *   });
-	 * });
-	 * ```
-	 *
-	 */
 	const createForEachMockedTransaction = (db = testDb) => {
 		let trx: Transaction<PublicSchema> = {} as Transaction<PublicSchema>;
 		let rollback: () => void = () => {};
@@ -238,6 +171,73 @@ export const mockServerCode = async () => {
 		beginTransaction,
 		testDb,
 		createSingleMockedTransaction,
+		/**
+		 * Sets up transactions for each test.
+		 *
+		 * This allows you to use any of our normal database functions
+		 * (including server actions!) inside of your tests.
+		 * All mutations will be rolled back at the end of the test.
+		 *
+		 * Should be called either inside of `describe` blocks,
+		 * or at the top level of a file.
+		 * Do not call inside of `test` blocks.
+		 *
+		 * TODO: might need to clean up connections at some point
+		 *
+		 * @usage
+		 *
+		 * **Basic example**
+		 * ```ts
+		 * const { getTrx, rollback, commit } = createForEachMockedTransaction();
+		 *
+		 * describe("my test", () => {
+		 *   test("my test", async () => {
+		 * 		const trx = getTrx();
+		 * 		await trx.insertInto("users").values({ email: "test@email.com" }).execute();
+		 *
+		 * 		const users1 = await trx.selectFrom("users").selectAll().where("email", "=", "test@email.com").execute();
+		 *
+		 * 		expect(users1.length).toEqual(1);
+		 *
+		 * 		rollback();
+		 *
+		 * 		const users2 = await trx.selectFrom("users").selectAll().where("email", "=", "test@email.com").execute();
+		 *
+		 * 		expect(users2.length).toEqual(0);
+		 *   });
+		 * });
+		 * ```
+		 *
+		 * **With imported file**
+		 * ```ts
+		 * const { getTrx, rollback, commit } = createForEachMockedTransaction();
+		 *
+		 * describe("my test", () => {
+		 *   test("my test", async () => {
+		 * 		const trx = getTrx();
+		 * 		// you NEED to dynamically import the function that you want to have
+		 *  	// use the mocked transaction.
+		 *  	// There's sadly no way to dynamically replace the import with a mocked transaction
+		 *   	// when using static imports.
+		 *    	const [getForm, createForm] = await Promise.all([
+		 * 			import("~/lib/server/form").then((m) => m.getForm),
+		 * 			import("~/lib/server/form").then((m) => m.createForm),
+		 * 		]);
+		 *
+		 * 		const newForm = await createForm(pubTypeId, "my form", "my-form-1", community.id);
+		 *
+		 * 		const form = await getForm({ slug: "my-form-1" }).executeTakeFirstOrThrow();
+		 * 		expect(form.name).toEqual("my form");
+		 * 		rollback();
+		 *
+		 * 		const form2 = await getForm({ slug: "my-form-1" }).executeTakeFirstOrThrow();
+		 *
+		 * 		expect(form2.length).toEqual(0);
+		 *   });
+		 * });
+		 * ```
+		 *
+		 */
 		createForEachMockedTransaction,
 	};
 };

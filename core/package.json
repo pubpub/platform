@@ -24,7 +24,8 @@
 		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"start": "next start",
-		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset --preview-feature && pnpm clear-cache",
+		"reset-base": "dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force | pino-pretty",
+		"reset": "pnpm reset-base && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
 		"test-run": "SKIP_VALIDATION=true vitest run --logHeapUsage",
 		"test-run-with-jobs": "pnpm exec concurrently \"pnpm --filter jobs dev\" \"pnpm --filter core test-run\" --success=first -k",
@@ -37,7 +38,7 @@
 		"public"
 	],
 	"prisma": {
-		"seed": "tsx prisma/seed.ts"
+		"seed": "tsx --require ./prisma/seed/register-stub.js prisma/seed.ts"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.445.0",
