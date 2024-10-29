@@ -304,6 +304,8 @@ export type GetManyParams = {
 	 * @default true
 	 */
 	onlyParents?: boolean;
+	/** String to search pub */
+	search?: string;
 };
 
 export const GET_MANY_DEFAULT = {
@@ -328,7 +330,7 @@ export const getPubs = async (
 	props: XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>,
 	params: GetManyParams = GET_PUBS_DEFAULT
 ) => {
-	const { limit, offset, orderBy, orderDirection } = { ...GET_PUBS_DEFAULT, ...params };
+	const { limit, offset, orderBy, orderDirection, search } = { ...GET_PUBS_DEFAULT, ...params };
 
 	const pubs = await autoCache(
 		getPubBase(props)
@@ -341,6 +343,9 @@ export const getPubs = async (
 					.where("PubsInStages.stageId", "=", props.stageId!)
 			)
 			.$if(Boolean(params.onlyParents), (eb) => eb.where("pubs.parentId", "is", null))
+			// .$if(Boolean(search), (eb) =>
+			// 	eb.where(sql`pubs.values::jsonb::text`, "ilike", `%${search}%`)
+			// )
 			.limit(limit)
 			.offset(offset)
 			.orderBy(orderBy, orderDirection)
