@@ -60,7 +60,7 @@ jobs:
             - name: Run migrations
               run: pnpm --filter core prisma migrate deploy
               env:
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
             - name: generate prisma
               run: pnpm --filter core prisma generate
@@ -69,7 +69,7 @@ jobs:
               run: pnpm --filter core prisma db seed
               env:
                   SKIP_VALIDATION: true
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
