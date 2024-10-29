@@ -3,7 +3,7 @@ import { Braces, Files, PanelTop } from "lucide-react";
 
 import { Button } from "ui/button";
 
-import ContextEditor, { ContextEditorProps } from "../../ContextEditor";
+import ContextEditor, { type ContextEditorProps } from "../../ContextEditor";
 import JsonPanel from "./JsonPanel";
 import PubsPanel from "./PubsPanel";
 import SitePanel from "./SitePanel";

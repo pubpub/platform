@@ -1,6 +1,6 @@
 import { Value } from "@sinclair/typebox/value";
 import Ajv from "ajv";
-import { baseSchema } from "context-editor";
+import { baseSchema } from "context-editor/schemas";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
