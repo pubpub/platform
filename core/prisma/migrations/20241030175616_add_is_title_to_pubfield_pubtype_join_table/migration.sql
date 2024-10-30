@@ -66,4 +66,27 @@ WHERE
   AND "_PubFieldToPubType"."B" = FirstAvailablePubField.pubtype 
   AND FirstAvailablePubField.row_num = 1;
 
+INSERT INTO "_PubFieldToPubType" ("A", "B", "isTitle")
+SELECT
+  "newField"."id" AS "A",
+  pub_types.id AS "B",
+  true AS isTitle
+FROM
+  pub_types
+  LEFT JOIN LATERAL (
+    SELECT 
+      id, slug 
+    FROM pub_fields 
+    WHERE pub_fields.name ILIKE '%title%' 
+    AND pub_fields."communityId" = pub_types."communityId"
+    LIMIT 1
+  ) AS "newField" ON true
+WHERE
+  NOT EXISTS (
+    SELECT 1
+    FROM "_PubFieldToPubType"
+    WHERE "_PubFieldToPubType"."B" = pub_types.id
+    AND "_PubFieldToPubType"."isTitle" = true
+  );
+
 END;
