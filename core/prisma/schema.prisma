@@ -214,6 +214,7 @@ model PubType {
 model PubFieldToPubType {
   A           String 
   B           String  
+  isTitle     Boolean   @default(false)
 
   pubField    PubField  @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
   pubType     PubType   @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
