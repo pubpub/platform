@@ -5,6 +5,7 @@ import { expect, test } from "@playwright/test";
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
+import { PubsPage } from "./fixtures/pubs-page";
 import { createCommunity, login } from "./helpers";
 
 const now = new Date().getTime();
@@ -23,8 +24,6 @@ test.beforeAll(async ({ browser }) => {
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
 	});
 
-	// this seems necessary
-	await page.waitForTimeout(1000);
 	/**
 	 * Fill out everything required to make an external form:
 	 * 1. Fields
@@ -45,11 +44,13 @@ test.beforeAll(async ({ browser }) => {
 	// TODO: adding here is flaky when adding more than one...
 	await formEditPage.addFormElement(`${COMMUNITY_SLUG}:email`);
 
-	// Now we also need a pub! We'll use the one that automatically gets created in a community
-	await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
-	await page.getByRole("link", { name: "The Activity of Slugs I. The" }).click();
-	await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
-	const pubId = page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)/)?.groups?.pubId;
+	// Now we also need a pub!
+	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+	await pubsPage.goTo();
+	const pubId = await pubsPage.createPub({
+		pubType: "Submission",
+		values: { title: "The Activity of Slugs" },
+	});
 
 	// Finally, we can go to the external form page
 	await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${FORM_SLUG}/fill?pubId=${pubId}`);
