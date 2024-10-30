@@ -1,5 +1,8 @@
+import type { Static } from "@sinclair/typebox";
+
 import { CoreSchemaType } from "db/public";
 
+import * as Schemas from "./schemas";
 import {
 	Boolean,
 	DateTime,
@@ -49,6 +52,10 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, co
 			return _exhaustiveCheck;
 	}
 }
+
+export type JSONSchemaForCoreSchemaType<C extends CoreSchemaType> = (typeof Schemas)[C];
+
+export type InputTypeForCoreSchemaType<C extends CoreSchemaType> = Static<(typeof Schemas)[C]>;
 
 export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 	switch (coreSchemaType) {

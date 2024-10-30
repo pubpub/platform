@@ -1,50 +1,42 @@
-import { sql } from "kysely";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { PubWithChildren } from "contracts";
-import type { Communities, PubTypes } from "db/public";
 import { CoreSchemaType } from "db/public";
 
-import type { AutoReturnType } from "../types";
-import type { getPubTypesForCommunity } from "./pubtype";
-import type { getCommunityStages } from "./stages";
 import { mockServerCode } from "~/lib/__tests__/utils";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx } = createForEachMockedTransaction();
 
-// TODO: replace with community seed
-let community: Communities;
-let pubTypes: Awaited<ReturnType<typeof getPubTypesForCommunity>>;
-let submissionPubType: (typeof pubTypes)[number];
-let someStringField: (typeof submissionPubType.fields)[number];
-let someRelationField: (typeof submissionPubType.fields)[number];
-let pubs: PubWithChildren[];
-let stages: AutoReturnType<typeof getCommunityStages>["execute"];
-
-beforeAll(async () => {
-	const { getPubTypesForCommunity } = await import("./pubtype");
-	const { findCommunityBySlug } = await import("./community");
-	const { getPubs } = await import("./pub");
-	const { getCommunityStages } = await import("./stages");
-
-	community = (await findCommunityBySlug("croccroc"))!;
-	pubTypes = await getPubTypesForCommunity(community.id);
-	submissionPubType = pubTypes.find((pt) => pt.name === "Submission")!;
-	someStringField = submissionPubType.fields.find(
-		(f) => f.schemaName === CoreSchemaType.String && !f.isRelation
-	)!;
-	someRelationField = submissionPubType.fields.find(
-		(f) => f.schemaName === CoreSchemaType.String && f.isRelation
-	)!;
-
-	pubs = await getPubs({ communityId: community.id });
-	stages = await getCommunityStages(community.id).execute();
+const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
+	community: {
+		name: "test",
+		slug: "test-server-pub",
+	},
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+		"Some relation": { schemaName: CoreSchemaType.String, relation: true },
+	},
+	pubTypes: {
+		"Basic Pub": {
+			Title: true,
+			"Some relation": true,
+		},
+	},
+	pubs: [
+		{
+			pubType: "Basic Pub",
+			values: {
+				Title: "Some title",
+			},
+		},
+	],
+	stages: {
+		"Stage 1": {},
+	},
+	users: {},
 });
-
-// beforeAll(async () => {
-// });
 
 describe("createPubRecursive", () => {
 	it("should be able to create a simple pub", async () => {
@@ -54,18 +46,17 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: pubTypes[0].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "test",
+					[`${community.slug}:title`]: "test title",
 				},
 			},
-			trx,
 		});
 
 		expect(pub).toMatchObject({
 			values: [
 				{
-					value: "test",
+					value: "test title",
 				},
 			],
 		});
@@ -78,15 +69,15 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: submissionPubType.id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "test title",
+					[pubFields.Title.slug]: "test title",
 				},
 				children: [
 					{
-						pubTypeId: submissionPubType.id,
+						pubTypeId: pubTypes["Basic Pub"].id,
 						values: {
-							[someStringField.slug]: "test child title",
+							[pubFields.Title.slug]: "test child title",
 						},
 					},
 				],
@@ -107,17 +98,17 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: submissionPubType.id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "test title",
+					[pubFields.Title.slug]: "test title",
 				},
-				stageId: stages[0].id,
+				stageId: stages["Stage 1"].id,
 			},
 			trx,
 		});
 
 		expect(pub).toMatchObject({
-			stageId: stages[0].id,
+			stageId: stages["Stage 1"].id,
 			values: [{ value: "test title" }],
 		});
 	});
@@ -129,10 +120,10 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: submissionPubType.id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "test title",
-					[someRelationField.slug]: {
+					[pubFields.Title.slug]: "test title",
+					[pubFields["Some relation"].slug]: {
 						value: "test relation value",
 						relatedPubId: pubs[0].id,
 					},
@@ -156,18 +147,18 @@ describe("createPubRecursive", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: submissionPubType.id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "test title",
+					[pubFields.Title.slug]: "test title",
 				},
 				relatedPubs: {
-					[someRelationField.slug]: [
+					[pubFields["Some relation"].slug]: [
 						{
 							value: "test relation value",
 							pub: {
-								pubTypeId: submissionPubType.id,
+								pubTypeId: pubTypes["Basic Pub"].id,
 								values: {
-									[someStringField.slug]: "test relation title",
+									[pubFields.Title.slug]: "test relation title",
 								},
 							},
 						},
@@ -197,18 +188,18 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: submissionPubType.id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "Some title",
+					[pubFields.Title.slug]: "Some title",
 				},
 				relatedPubs: {
-					[someRelationField.slug]: [
+					[pubFields["Some relation"].slug]: [
 						{
 							value: "test relation value",
 							pub: {
-								pubTypeId: submissionPubType.id,
+								pubTypeId: pubTypes["Basic Pub"].id,
 								values: {
-									[someStringField.slug]: "test relation title",
+									[pubFields.Title.slug]: "test relation title",
 								},
 							},
 						},
@@ -242,24 +233,24 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: submissionPubType.id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "Some title",
+					[pubFields.Title.slug]: "Some title",
 				},
 				relatedPubs: {
-					[someRelationField.slug]: [
+					[pubFields["Some relation"].slug]: [
 						{
 							value: "test relation value",
 							pub: {
-								pubTypeId: submissionPubType.id,
+								pubTypeId: pubTypes["Basic Pub"].id,
 								values: {
-									[someStringField.slug]: "Nested Related Pub",
+									[pubFields.Title.slug]: "Nested Related Pub",
 								},
 								children: [
 									{
-										pubTypeId: submissionPubType.id,
+										pubTypeId: pubTypes["Basic Pub"].id,
 										values: {
-											[someStringField.slug]:
+											[pubFields.Title.slug]:
 												"Nested Child of Nested Related Pub",
 										},
 									},
@@ -270,28 +261,28 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 				children: [
 					{
-						pubTypeId: submissionPubType.id,
+						pubTypeId: pubTypes["Basic Pub"].id,
 						values: {
-							[someStringField.slug]: "Child of Root Pub",
+							[pubFields.Title.slug]: "Child of Root Pub",
 						},
 						relatedPubs: {
-							[someRelationField.slug]: [
+							[pubFields["Some relation"].slug]: [
 								{
 									value: "Nested Relation",
 									pub: {
-										pubTypeId: submissionPubType.id,
+										pubTypeId: pubTypes["Basic Pub"].id,
 										values: {
-											[someStringField.slug]:
+											[pubFields.Title.slug]:
 												"Nested Related Pub of Child of Root Pub",
 										},
 										relatedPubs: {
-											[someRelationField.slug]: [
+											[pubFields["Some relation"].slug]: [
 												{
 													value: "Double nested relation",
 													pub: {
-														pubTypeId: submissionPubType.id,
+														pubTypeId: pubTypes["Basic Pub"].id,
 														values: {
-															[someStringField.slug]:
+															[pubFields.Title.slug]:
 																"Double nested relation title",
 														},
 													},
@@ -303,9 +294,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 								{
 									value: "Nested Relation 2",
 									pub: {
-										pubTypeId: submissionPubType.id,
+										pubTypeId: pubTypes["Basic Pub"].id,
 										values: {
-											[someStringField.slug]:
+											[pubFields.Title.slug]:
 												"Nested Related Pub of Child of Root Pub 2",
 										},
 									},
@@ -314,9 +305,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 						},
 						children: [
 							{
-								pubTypeId: submissionPubType.id,
+								pubTypeId: pubTypes["Basic Pub"].id,
 								values: {
-									[someStringField.slug]: "Grandchild of Root Pub",
+									[pubFields.Title.slug]: "Grandchild of Root Pub",
 								},
 							},
 						],
@@ -347,26 +338,26 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			children: [
 				{
 					values: [
-						{ value: "Child of Root Pub" },
-						{
-							value: "Nested Relation 2",
-						},
 						{
 							value: "Nested Relation",
 							relatedPub: {
 								values: [
-									{
-										value: "Nested Related Pub of Child of Root Pub",
-									},
 									{
 										value: "Double nested relation",
 										relatedPub: {
 											values: [{ value: "Double nested relation title" }],
 										},
 									},
+									{
+										value: "Nested Related Pub of Child of Root Pub",
+									},
 								],
 							},
 						},
+						{
+							value: "Nested Relation 2",
+						},
+						{ value: "Child of Root Pub" },
 					],
 					children: [{ values: [{ value: "Grandchild of Root Pub" }] }],
 				},
@@ -381,9 +372,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
-				pubTypeId: submissionPubType.id,
+				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[someStringField.slug]: "test title",
+					[pubFields.Title.slug]: "test title",
 				},
 			},
 			trx,
@@ -396,16 +387,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			10
 		);
 
-		console.log(pubWithRelatedValuesAndChildren.length);
-
 		expect(pubWithRelatedValuesAndChildren.length).toBe(3);
 
 		const submisionPubs = await getPubsWithRelatedValuesAndChildren(
-			{ pubTypeId: submissionPubType.id },
+			{ pubTypeId: pubTypes["Basic Pub"].id },
 			10,
 			{ includePubType: true }
 		);
-
-		console.dir(submisionPubs, { depth: null });
 	});
 });
