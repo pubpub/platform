@@ -12,7 +12,9 @@ import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { GET_MANY_DEFAULT } from "./pub";
 
-export const getPubTypeBase = (trx: typeof db | ExpressionBuilder<Database, keyof Database> = db) =>
+export const getPubTypeBase = <DB extends Record<string, any>>(
+	trx: typeof db | ExpressionBuilder<DB, keyof DB> = db
+) =>
 	(trx as typeof db).selectFrom("pub_types").select((eb) => [
 		"pub_types.id",
 		"pub_types.description",

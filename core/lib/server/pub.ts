@@ -20,6 +20,7 @@ import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
 	PubFieldsId,
+	PublicSchema,
 	PubsId,
 	PubTypes,
 	PubTypesId,
@@ -111,11 +112,14 @@ const pubValues = (
 	).as("values");
 };
 
-export const pubType = ({
+export const pubType = <
+	DB extends Record<string, any>,
+	EB extends ExpressionBuilder<DB, keyof DB>,
+>({
 	eb,
 	pubTypeIdRef,
 }: {
-	eb: ExpressionBuilder<Database, keyof Database>;
+	eb: EB;
 	pubTypeIdRef: `${string}.pubTypeId` | `${string}.id`;
 }) =>
 	jsonObjectFrom(
@@ -841,6 +845,8 @@ export async function getPubsWithRelatedValuesAndChildren(
 	if (props.pubId) {
 		return nestRelatedPubsAndChildren(result as UnprocessedPub[], props.pubId);
 	}
+
+	result[0].pubType;
 
 	return nestRelatedPubsAndChildren(result as UnprocessedPub[]);
 	// return result
