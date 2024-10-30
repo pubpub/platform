@@ -35,7 +35,7 @@ services:
             - test
             - integration
         ports:
-            - "5432:5432"
+            - "5433:5432" # we are hosting it on a slightly different port in order to not have it conflict with the dev db we spin up
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U postgres"]
             interval: 5s
