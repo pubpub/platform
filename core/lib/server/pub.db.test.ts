@@ -338,26 +338,26 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			children: [
 				{
 					values: [
+						{ value: "Child of Root Pub" },
+						{
+							value: "Nested Relation 2",
+						},
 						{
 							value: "Nested Relation",
 							relatedPub: {
 								values: [
+									{
+										value: "Nested Related Pub of Child of Root Pub",
+									},
 									{
 										value: "Double nested relation",
 										relatedPub: {
 											values: [{ value: "Double nested relation title" }],
 										},
 									},
-									{
-										value: "Nested Related Pub of Child of Root Pub",
-									},
 								],
 							},
 						},
-						{
-							value: "Nested Relation 2",
-						},
-						{ value: "Child of Root Pub" },
 					],
 					children: [{ values: [{ value: "Grandchild of Root Pub" }] }],
 				},
