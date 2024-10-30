@@ -9,7 +9,7 @@ import type { Communities } from "db/public";
 import { MemberRole } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
@@ -86,7 +86,9 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 							render={({ field }) => (
 								<FormItem className="grid grid-cols-3 items-center gap-2">
 									<FormLabel>First Name</FormLabel>
-									<Input {...field} className="col-span-2 h-8" />
+									<FormControl>
+										<Input {...field} className="col-span-2 h-8" />
+									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -97,7 +99,9 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 							render={({ field }) => (
 								<FormItem className="grid grid-cols-3 items-center gap-2">
 									<FormLabel>Last Name</FormLabel>
-									<Input {...field} className="col-span-2 h-8" />
+									<FormControl>
+										<Input {...field} className="col-span-2 h-8" />
+									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
