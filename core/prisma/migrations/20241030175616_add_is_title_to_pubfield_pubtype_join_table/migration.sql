@@ -70,14 +70,20 @@ INSERT INTO "_PubFieldToPubType" ("A", "B", "isTitle")
 SELECT
   "newField"."id" AS "A",
   pub_types.id AS "B",
-  true AS isTitle
+  true AS isTitle,
+  pub_types.name,
+  "newField".slug
 FROM
   pub_types
   LEFT JOIN LATERAL (
     SELECT 
       id, slug 
     FROM pub_fields 
-    WHERE pub_fields.name ILIKE '%title%' 
+    WHERE (pub_fields."schemaName" = 'String' OR pub_fields."schemaName" = 'RichText' OR pub_fields."schemaName" = 'Number')
+      AND (
+          pub_fields.name ILIKE '%title%'
+          OR pub_fields.name ILIKE '%name%'
+      )
     AND pub_fields."communityId" = pub_types."communityId"
     LIMIT 1
   ) AS "newField" ON true
@@ -87,6 +93,7 @@ WHERE
     FROM "_PubFieldToPubType"
     WHERE "_PubFieldToPubType"."B" = pub_types.id
     AND "_PubFieldToPubType"."isTitle" = true
-  );
+  )
+  AND "newField".id IS NOT NULL;
 
 END;
