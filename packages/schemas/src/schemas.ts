@@ -1,7 +1,12 @@
+import type { Static } from "@sinclair/typebox";
+
 import { Type } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
 
 import { setErrorFunction } from "./errors";
 import { registerFormats } from "./formats";
+import { checkboxGroupConfigSchema } from "./schemaComponents";
+import { MinMaxChoices } from "./types";
 
 registerFormats();
 setErrorFunction();
@@ -52,6 +57,41 @@ export const NumericArray = Type.Array(
 	}
 );
 
+const getMinMaxFromCheckboxGroupConfig = (config: Static<typeof checkboxGroupConfigSchema>) => {
+	const { numCheckboxes, userShouldSelect } = config;
+	let min: number | undefined;
+	let max: number | undefined;
+	if (userShouldSelect === MinMaxChoices.Exactly) {
+		min = numCheckboxes;
+		max = numCheckboxes;
+	} else if (userShouldSelect === MinMaxChoices.AtLeast) {
+		min = numCheckboxes;
+		max = undefined;
+	} else if (userShouldSelect === MinMaxChoices.AtMost) {
+		min = undefined;
+		max = numCheckboxes;
+	}
+	const error =
+		min === undefined && max === undefined
+			? ""
+			: `Please select ${userShouldSelect?.toLocaleLowerCase()} ${config.numCheckboxes}`;
+	return { min, max, error };
+};
+
+export const getNumericArrayWithMinMax = (config?: unknown) => {
+	if (!Value.Check(checkboxGroupConfigSchema, config)) {
+		return NumericArray;
+	}
+	const { min, max, error } = getMinMaxFromCheckboxGroupConfig(config);
+	return Type.Array(Type.Number({ error: "Invalid number" }), {
+		description: "An array of numbers",
+		examples: [[], [-1, 0, 2], [1.2, 17, 2.5, 2.7]],
+		error: `Invalid array of numbers. ${error}`,
+		minItems: min,
+		maxItems: max,
+	});
+};
+
 export const StringArray = Type.Array(
 	Type.String({
 		error: "Invalid string",
@@ -62,6 +102,20 @@ export const StringArray = Type.Array(
 		error: "Invalid array of strings",
 	}
 );
+
+export const getStringArrayWithMinMax = (config: unknown) => {
+	if (!Value.Check(checkboxGroupConfigSchema, config)) {
+		return StringArray;
+	}
+	const { min, max, error } = getMinMaxFromCheckboxGroupConfig(config);
+	return Type.Array(Type.String({ error: "Invalid string" }), {
+		description: "An array of strings",
+		examples: [[], ["apple", "banana", "cherry"]],
+		error: `Invalid array of strings. ${error}`,
+		minItems: min,
+		maxItems: max,
+	});
+};
 
 export const DateTime = Type.Date({
 	description: "A moment in time",
@@ -122,3 +176,5 @@ export const FileUpload = Type.Array(
 );
 
 export const Null = Type.Null({ description: "An empty value" });
+
+export const RichText = Type.String({ description: "A string of rich text" });

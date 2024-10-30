@@ -42,7 +42,8 @@ test.beforeAll(async ({ browser }) => {
 	const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
 	await formEditPage.openAddForm();
 	// TODO: adding here is flaky when adding more than one...
-	await formEditPage.addFormElement(`${COMMUNITY_SLUG}:email`);
+	await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:email`);
+	await formEditPage.saveForm();
 
 	// Now we also need a pub!
 	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);

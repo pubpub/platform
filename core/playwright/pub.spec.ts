@@ -3,8 +3,11 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import type { PubsId } from "db/public";
+import { CoreSchemaType } from "db/public";
 
+import { FieldsPage } from "./fixtures/fields-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
+import { PubTypesPage } from "./fixtures/pub-types-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
 import { createCommunity, login } from "./helpers";
@@ -116,5 +119,48 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
 			1
 		);
+	});
+
+	test("Can create and edit a multivalue field", async () => {
+		// Add a multivalue field
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("Animals", CoreSchemaType.StringArray);
+
+		// Add it as a pub type
+		const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
+		await pubTypePage.goto();
+		await pubTypePage.addFieldToPubType("Submission", "animals");
+
+		// Now create a pub of this type
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		const title = "pub with multivalue";
+		await page.getByRole("button", { name: "Create" }).click();
+		await page.getByLabel("Title").fill(title);
+		await page.getByLabel("Content").fill("Some content");
+		await page.getByLabel("Animals").fill("dogs");
+		await page.keyboard.press("Enter");
+		await page.getByLabel("Animals").fill("cats");
+		await page.keyboard.press("Enter");
+		await page.getByRole("button", { name: "Create Pub" }).click();
+		await page.getByRole("link", { name: title }).click();
+		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
+		const pubId = page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)/)?.groups?.pubId;
+		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
+
+		// Edit this same pub
+		await pubsPage.goTo();
+		await page.getByTestId("pub-dropdown-button").first().click();
+		await page.getByRole("button", { name: "Update" }).click();
+		await page.getByLabel("Animals").fill("penguins");
+		await page.keyboard.press("Enter");
+		await page.getByTestId("remove-button").first().click();
+		await page.getByRole("button", { name: "Update Pub" }).click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+		).toHaveCount(1);
+		await page.goto(`/c/${COMMUNITY_SLUG}/pubs/${pubId}`);
+		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
 });

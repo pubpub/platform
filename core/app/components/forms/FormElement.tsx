@@ -9,10 +9,14 @@ import { expect } from "utils";
 import type { ElementProps } from "./types";
 import type { Form } from "~/lib/server/form";
 import { CheckboxElement } from "./elements/CheckboxElement";
+import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
 import { ConfidenceElement } from "./elements/ConfidenceElement";
 import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FileUploadElement";
 import { MemberSelectElement } from "./elements/MemberSelectElement";
+import { MultivalueInputElement } from "./elements/MultivalueInputElement";
+import { RadioGroupElement } from "./elements/RadioGroupElement";
+import { SelectDropdownElement } from "./elements/SelectDropdownElement";
 import { TextAreaElement } from "./elements/TextAreaElement";
 import { TextInputElement } from "./elements/TextInputElement";
 import { FormElementToggle } from "./FormElementToggle";
@@ -84,11 +88,16 @@ export const FormElement = ({
 				communitySlug={communitySlug}
 			/>
 		);
-	} else if (schemaName === CoreSchemaType.NumericArray) {
-		// TODO: support NumericArray
-		return null;
-	} else if (schemaName === CoreSchemaType.StringArray) {
-		// TODO: support StringArray
+	} else if (component === InputComponent.radioGroup) {
+		input = <RadioGroupElement {...elementProps} />;
+	} else if (component === InputComponent.checkboxGroup) {
+		input = <CheckboxGroupElement {...elementProps} />;
+	} else if (component === InputComponent.selectDropdown) {
+		input = <SelectDropdownElement {...elementProps} />;
+	} else if (component === InputComponent.multivalueInput) {
+		input = <MultivalueInputElement {...elementProps} />;
+	} else if (component === InputComponent.richText) {
+		// TODO: Render the rich text component
 		return null;
 	}
 

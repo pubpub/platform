@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/auth/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { createToken } from "~/lib/server/token";
@@ -35,6 +36,11 @@ export default async function Page({ params, searchParams }: Props) {
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Stages</h1>
+				<CreatePubButton
+					communityId={community.id}
+					text="Add Pub"
+					searchParams={searchParams}
+				/>
 			</div>
 			<StageList
 				token={token}

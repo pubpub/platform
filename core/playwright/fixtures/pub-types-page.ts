@@ -14,6 +14,12 @@ export class PubTypesPage {
 		await this.page.goto(`/c/${this.communitySlug}/types`);
 	}
 
+	async addFieldToPubType(pubTypeName: string, fieldSlug: string) {
+		await this.page.getByTestId(`edit-pubtype-${pubTypeName}`).click();
+		await this.page.getByRole("combobox").click();
+		await this.page.getByRole("option", { name: fieldSlug }).click();
+	}
+
 	async addType(name: string, description: string, fieldSlugs?: string[]) {
 		await this.page.getByRole("button", { name: "Create Type", exact: true }).click();
 		const dialog = this.page.getByRole("dialog", { name: "Create Type", exact: true });

@@ -19,6 +19,7 @@ import { useUnsavedChangesWarning } from "ui/hooks";
 import { ImagePlus } from "ui/icon";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
+import { MultiValueInput } from "ui/multivalue-input";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import {
 	Select,
@@ -140,6 +141,28 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 			</div>
 		),
 	},
+	[InputComponent.multivalueInput]: {
+		name: "Multivalue Input",
+		demoComponent: () => (
+			<div className="flex flex-col gap-1 text-left text-sm">
+				<div className="text-gray-500">Label</div>
+				<MultiValueInput
+					value={["Value 1"]}
+					onChange={() => {}}
+					// Shrink everything a little to fit into the display box better
+					className="h-8"
+					valueClassName="h-5 px-1"
+				/>
+			</div>
+		),
+	},
+	[InputComponent.richText]: {
+		name: "Rich Text",
+		demoComponent: () => {
+			// TODO
+			return <div></div>;
+		},
+	},
 } as const;
 
 const ComponentSelect = ({
@@ -173,18 +196,22 @@ const ComponentSelect = ({
 								onChange(c);
 							}}
 						/>
-						<div className="flex h-[124px] w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
-							<label className="cursor-pointer" htmlFor={`component-${c}`}>
+						<div className="flex h-32 w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
+							<label
+								className="cursor-pointer"
+								htmlFor={`component-${c}`}
+								data-testid={`component-${c}`}
+							>
 								<div
 									// 'inert' allows demo components to not be interactive unless they are selected
 									// @ts-ignore inert isn't typed properly in React 18, but will be in 19
 									inert={selected ? undefined : ""}
-									className="flex h-[88px] w-full items-center justify-center p-3"
+									className="flex h-24 w-full items-center justify-center p-3"
 								>
 									{Component && <Component element={element} />}
 								</div>
 								<hr className="w-full" />
-								<div className="w-full py-2 text-center text-sm text-foreground">
+								<div className="my-1 w-full text-center text-sm text-foreground">
 									{name}
 								</div>
 							</label>
@@ -304,6 +331,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 						Cancel
 					</Button>
 					<Button
+						data-testid="save-configuration-button"
 						type="submit"
 						className="bg-blue-500 hover:bg-blue-600"
 						disabled={!form.formState.isDirty}

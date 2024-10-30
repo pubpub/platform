@@ -15,8 +15,6 @@ import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
-import { crocCrocId } from "~/prisma/exampleCommunitySeeds/croccroc";
-import { unJournalId } from "~/prisma/exampleCommunitySeeds/unjournal";
 
 export const createCommunity = defineServerAction(async function createCommunity({
 	name,
@@ -120,12 +118,7 @@ export const removeCommunity = defineServerAction(async function removeCommunity
 			error: "User is not a super admin",
 		};
 	}
-	if (community.id === unJournalId || community.id === crocCrocId) {
-		return {
-			title: "Failed to remove community",
-			error: "Cannot remove example community",
-		};
-	}
+
 	try {
 		await db
 			.deleteFrom("communities")

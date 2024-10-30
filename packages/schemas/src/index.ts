@@ -1,21 +1,25 @@
+import type { Static } from "@sinclair/typebox";
+
 import { CoreSchemaType } from "db/public";
 
+import * as Schemas from "./schemas";
 import {
 	Boolean,
 	DateTime,
 	Email,
 	FileUpload,
+	getNumericArrayWithMinMax,
+	getStringArrayWithMinMax,
 	MemberId,
 	Null,
 	Number,
-	NumericArray,
+	RichText,
 	String,
-	StringArray,
 	URL,
 	Vector3,
 } from "./schemas";
 
-export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
+export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, config?: unknown) {
 	switch (coreSchemaType) {
 		case CoreSchemaType.Boolean:
 			return Boolean;
@@ -32,11 +36,13 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 		case CoreSchemaType.Number:
 			return Number;
 		case CoreSchemaType.NumericArray:
-			return NumericArray;
+			return getNumericArrayWithMinMax(config);
+		case CoreSchemaType.RichText:
+			return RichText;
 		case CoreSchemaType.String:
 			return String;
 		case CoreSchemaType.StringArray:
-			return StringArray;
+			return getStringArrayWithMinMax(config);
 		case CoreSchemaType.URL:
 			return URL;
 		case CoreSchemaType.Vector3:
@@ -46,6 +52,10 @@ export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 			return _exhaustiveCheck;
 	}
 }
+
+export type JSONSchemaForCoreSchemaType<C extends CoreSchemaType> = (typeof Schemas)[C];
+
+export type InputTypeForCoreSchemaType<C extends CoreSchemaType> = Static<(typeof Schemas)[C]>;
 
 export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 	switch (coreSchemaType) {
@@ -65,6 +75,8 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 			return undefined;
 		case CoreSchemaType.NumericArray:
 			return [];
+		case CoreSchemaType.RichText:
+			return "";
 		case CoreSchemaType.String:
 			return "";
 		case CoreSchemaType.StringArray:
@@ -83,4 +95,5 @@ export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
 export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons";
 export { registerFormats } from "./formats";
 export * from "./schemaComponents";
+export * from "./types";
 export { setErrorFunction } from "./errors";

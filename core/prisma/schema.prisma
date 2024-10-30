@@ -163,6 +163,7 @@ enum CoreSchemaType {
   Null
   Number
   NumericArray
+  RichText
   String
   StringArray
   URL
@@ -557,7 +558,9 @@ enum InputComponent {
   confidenceInterval
   checkboxGroup
   radioGroup
+  richText
   selectDropdown
+  multivalueInput
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input
