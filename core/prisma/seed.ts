@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { makeWorkerUtils } from "graphile-worker";
 
-import type { CommunitiesId, MembersId } from "db/public";
+import type { CommunitiesId, CommunityMembershipsId, MembersId } from "db/public";
 import { MemberRole } from "db/public";
 import { logger } from "logger";
 
@@ -31,7 +31,7 @@ async function createUserMembers({
 	firstName: string;
 	lastName: string | undefined;
 	isSuperAdmin: boolean;
-	role: "editor" | "admin" | "contributor";
+	role: MemberRole;
 	prismaCommunityIds: string[];
 }) {
 	const values = {
@@ -43,29 +43,32 @@ async function createUserMembers({
 		avatar: "/demo/person.png",
 		isSuperAdmin,
 	};
+
+	const memberships = prismaCommunityIds.map((id) => ({
+		id: crypto.randomUUID(),
+		communityId: id as CommunitiesId,
+		role,
+	}));
 	return db
 		.with("new_users", (db) => db.insertInto("users").values(values).returningAll())
 		.with("community_membership", (db) =>
-			db
-				.insertInto("community_memberships")
-				.values((eb) =>
-					prismaCommunityIds.map((id) => ({
-						userId: eb
-							.selectFrom("new_users")
-							.select("new_users.id")
-							.where("slug", "=", slug),
-						communityId: id as CommunitiesId,
-						role: MemberRole.editor,
-					}))
-				)
-				.returning("id")
+			db.insertInto("community_memberships").values((eb) =>
+				memberships.map((membership) => ({
+					...membership,
+					id: membership.id as CommunityMembershipsId,
+					userId: eb
+						.selectFrom("new_users")
+						.select("new_users.id")
+						.where("slug", "=", slug),
+				}))
+			)
 		)
 		.insertInto("members")
 		.values((eb) =>
-			prismaCommunityIds.map((id) => ({
-				id: eb.selectFrom("community_membership").select("id") as unknown as MembersId,
+			memberships.map((membership) => ({
+				...membership,
+				id: membership.id as MembersId,
 				userId: eb.selectFrom("new_users").select("new_users.id").where("slug", "=", slug),
-				communityId: id as CommunitiesId,
 			}))
 		)
 		.returningAll()
@@ -100,7 +103,7 @@ async function main() {
 				firstName: "Jill",
 				lastName: "Admin",
 				isSuperAdmin: true,
-				role: "admin",
+				role: MemberRole.admin,
 				prismaCommunityIds,
 			}),
 
@@ -111,7 +114,7 @@ async function main() {
 				firstName: "Jack",
 				lastName: "Editor",
 				isSuperAdmin: false,
-				role: "editor",
+				role: MemberRole.editor,
 				prismaCommunityIds,
 			}),
 
@@ -122,7 +125,7 @@ async function main() {
 				firstName: "Jenna",
 				lastName: "Contributor",
 				isSuperAdmin: false,
-				role: "contributor",
+				role: MemberRole.contributor,
 				prismaCommunityIds,
 			}),
 		]);

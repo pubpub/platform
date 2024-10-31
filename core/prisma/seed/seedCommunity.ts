@@ -12,6 +12,7 @@ import type {
 	ActionInstancesId,
 	Communities,
 	CommunitiesId,
+	CommunityMembershipsId,
 	FormAccessType,
 	FormElements,
 	Forms,
@@ -817,6 +818,7 @@ export async function seedCommunity<
 
 			return [
 				{
+					id: crypto.randomUUID() as MembersId,
 					userId: createdUser.id,
 					communityId,
 					role: userWithRole.role!,
@@ -827,15 +829,18 @@ export async function seedCommunity<
 	const createdMembers = possibleMembers?.length
 		? await trx
 				.with("community_membership", (db) =>
-					db.insertInto("community_memberships").values(possibleMembers).returning("id")
+					db.insertInto("community_memberships").values(
+						possibleMembers.map((m) => ({
+							...m,
+							id: m.id as unknown as CommunityMembershipsId,
+						}))
+					)
 				)
 				.insertInto("members")
-				.values((eb) =>
+				.values(
 					possibleMembers.map((m) => ({
 						...m,
-						id: eb
-							.selectFrom("community_membership")
-							.select("id") as unknown as MembersId,
+						id: m.id as MembersId,
 					}))
 				)
 				.returningAll()

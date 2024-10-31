@@ -1,11 +1,16 @@
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId, MembersId, MembersUpdate, NewMembers, UsersId } from "db/public";
-import type { CommunityMembershipsId } from "db/src/public/CommunityMemberships";
+import type {
+	CommunitiesId,
+	CommunityMembershipsId,
+	MembersId,
+	MembersUpdate,
+	NewMembers,
+	UsersId,
+} from "db/public";
 import { MemberRole } from "db/public";
 
 import type { XOR } from "../types";
-import type { userId } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
