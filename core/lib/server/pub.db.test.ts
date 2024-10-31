@@ -461,4 +461,59 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(pubs.length).toBe(1);
 	});
 
+	it("should be able to detect cycles, i.e. not go max-depth deep if a loop is detected", async () => {
+		const trx = getTrx();
+
+		const newPubId = crypto.randomUUID() as PubsId;
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				id: newPubId,
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "test relation value",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields["Some relation"].slug]: {
+										value: "Zoinks scoop I think we're rrrrrecurssinggg",
+										relatedPubId: newPubId,
+									},
+								},
+							},
+						},
+					],
+				},
+			},
+			trx,
+		});
+		expect(pub).toBeDefined();
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const [withCycleIncluded, withCycleExcluded] = (await Promise.all([
+			getPubsWithRelatedValuesAndChildren({ pubId: newPubId }, 10, { _debugDontNest: true }),
+			getPubsWithRelatedValuesAndChildren({ pubId: newPubId }, 10, {
+				cycle: "exclude",
+				_debugDontNest: true,
+			}),
+		])) as unknown as [UnprocessedPub[], UnprocessedPub[]];
+
+		expect(withCycleIncluded.length).toBe(3);
+
+		expect(withCycleIncluded.find((p) => p.isCycle)).toBeDefined();
+
+		expect(withCycleExcluded.length).toBe(2);
+
+		expect(withCycleExcluded.find((p) => p.isCycle)).toBeUndefined();
+	});
+
 });

@@ -605,6 +605,7 @@ export type UnprocessedPub = {
 	pubTypeId: PubTypesId;
 	pubType?: PubTypes;
 	createdAt: Date;
+	isCycle?: boolean;
 	values: {
 		id: PubValuesId;
 		fieldId: PubFieldsId;
@@ -634,6 +635,21 @@ export type ProcessedPub = {
 type GetPubsWithRelatedValuesAndChildrenOptions = {
 	includePubType?: boolean;
 	search?: string;
+	/**
+	 * Whether to include the first pub that is part of a cycle.
+	 * By default, the first "cycled" pub is included, marked with `isCycle: true`.
+	 *
+	 * This is useful if you want to show to users that a cycle has happened,
+	 * otherwise you might want to exclude it.
+	 *
+	 * @default "include"
+	 */
+	cycle?: "include" | "exclude";
+	/**
+	 * Only used for testing.
+	 * If true the raw result of the query is returned, without nesting the values and children.
+	 */
+	_debugDontNest?: boolean;
 } & GetManyParams;
 
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
@@ -733,8 +749,10 @@ export async function getPubsWithRelatedValuesAndChildren(
 					"pv.relatedPubId",
 					"pv.createdAt as valueCreatedAt",
 					"pv.updatedAt as valueUpdatedAt",
-					sql<number>`1`.as("depth"),
 					"p.parentId",
+					sql<number>`1`.as("depth"),
+					sql<boolean>`false`.as("isCycle"),
+					sql<PubsId[]>`array[p.id]`.as("path"),
 				])
 				.where((eb) => {
 					if (props.pubId) {
@@ -788,11 +806,22 @@ export async function getPubsWithRelatedValuesAndChildren(
 							"pub_values.relatedPubId",
 							"pub_values.createdAt as valueCreatedAt",
 							"pub_values.updatedAt as valueUpdatedAt",
+							"pubs.parentId",
 							// increment the depth
 							sql<number>`pub_tree.depth + 1`.as("depth"),
-							"pubs.parentId",
+							// this is a standard way to detect cycles
+							// we keep track of the path we've taken so far,
+							// and set a flag if we see a pub that is already in the path
+							// https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-CYCLE
+							sql<boolean>`pubs.id = any(pub_tree."path")`.as("isCycle"),
+							sql<PubsId[]>`array_append(pub_tree."path", pubs.id)`.as("path"),
 						])
 						.where("pub_tree.depth", "<", depth)
+						.where("pub_tree.isCycle", "=", false)
+						.$if(options?.cycle === "exclude", (qb) =>
+							// this makes sure we don't include the first pub that is part of a cycle
+							qb.where(sql<boolean>`pubs.id = any(pub_tree.path)`, "=", false)
+						)
 				)
 		)
 		.selectFrom("pub_tree")
@@ -800,14 +829,16 @@ export async function getPubsWithRelatedValuesAndChildren(
 			"pub_tree.pubId",
 			"pub_tree.parentId",
 			"pub_tree.pubTypeId",
-			"pub_tree.createdAt",
 			"pub_tree.depth",
 			"pub_tree.stageId",
 			"pub_tree.communityId",
+			"pub_tree.isCycle",
+			"pub_tree.path",
+			"pub_tree.createdAt",
 			jsonArrayFrom(
 				eb
 					.selectFrom("pub_tree as inner")
-					.select([
+					.select((eb) => [
 						"inner.valueId as id",
 						"inner.fieldId",
 						"inner.value",
@@ -816,6 +847,8 @@ export async function getPubsWithRelatedValuesAndChildren(
 						"inner.valueUpdatedAt as updatedAt",
 					])
 					.whereRef("inner.pubId", "=", "pub_tree.pubId")
+					// this prevents us from double fetching values if we have detected a cycle
+					.whereRef("inner.depth", "=", "pub_tree.depth")
 					.orderBy("inner.valueCreatedAt desc")
 			).as("values"),
 			jsonArrayFrom(
@@ -845,6 +878,8 @@ export async function getPubsWithRelatedValuesAndChildren(
 			"createdAt",
 			"stageId",
 			"communityId",
+			"isCycle",
+			"path",
 		])
 		.execute();
 
