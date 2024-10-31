@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
 import { Action } from "db/public";
@@ -14,6 +15,9 @@ const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
 const FORM_SLUG = `playwright-test-form-${now}`;
 const ACTION_NAME = "Invite evaluator";
+const firstName = faker.person.firstName();
+const lastName = faker.person.lastName();
+const email = `${firstName}@example.com`;
 
 test.describe.configure({ mode: "serial" });
 
@@ -63,7 +67,7 @@ test.only("Invite a user to fill out the form", async () => {
 	await runActionDialog.waitFor();
 
 	// Invite a new user to fill out the form
-	await runActionDialog.getByRole("combobox").fill("evaluator@example.com");
+	await runActionDialog.getByRole("combobox").fill(email);
 
 	const memberDialog = runActionDialog.getByRole("listbox", { name: "Suggestions", exact: true });
 	await memberDialog
@@ -73,8 +77,9 @@ test.only("Invite a user to fill out the form", async () => {
 		})
 		.click();
 
-	await memberDialog.getByLabel("First Name").fill("Anonymous");
-	await memberDialog.getByLabel("Last Name").fill("Malacologist");
+	await memberDialog.getByLabel("First Name").fill(firstName);
+	await memberDialog.getByLabel("Last Name").fill(lastName);
+	await memberDialog.getByRole("button", { name: "Submit", exact: true }).click();
 	await memberDialog
 		.getByRole("button", { name: "Submit", exact: true })
 		.click({ timeout: 15000 });
@@ -94,7 +99,7 @@ test.only("Invite a user to fill out the form", async () => {
 	await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
 	await runActionDialog.waitFor({ state: "hidden" });
 
-	const { message } = await (await inbucketClient.getMailbox("evaluator")).getLatestMessage();
+	const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
 	const url = message.body.text.match(/a href="([^"]+)"/)?.[0];
 	expect(url).toBeTruthy();
 	await page.goto(url!);
