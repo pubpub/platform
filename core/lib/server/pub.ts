@@ -1,13 +1,13 @@
 import type {
 	AliasedSelectQueryBuilder,
 	ExpressionBuilder,
+	Kysely,
 	ReferenceExpression,
 	SelectExpression,
 	StringReference,
-	Transaction,
 } from "kysely";
 
-import { sql } from "kysely";
+import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
@@ -361,13 +361,14 @@ const PubNotFoundError = new NotFoundError("Pub not found");
  * For recursive transactions
  */
 const maybeWithTrx = async <T>(
-	trx: Transaction<Database> | undefined,
+	trx: Transaction<Database> | Kysely<Database>,
 	fn: (trx: Transaction<Database>) => Promise<T>
 ): Promise<T> => {
-	if (trx) {
+	// could also use trx.isTransaction()
+	if (trx instanceof Transaction) {
 		return await fn(trx);
 	}
-	return await db.transaction().execute(fn);
+	return await trx.transaction().execute(fn);
 };
 
 type PubWithoutChildren = Prettify<Omit<PubWithChildren, "children">>;
@@ -384,20 +385,22 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	body,
 	communityId,
 	parent,
-	trx,
+	...options
 }:
 	| {
 			body: Body;
-			trx?: Transaction<Database>;
+			trx?: Kysely<Database>;
 			communityId: CommunitiesId;
 			parent?: never;
 	  }
 	| {
 			body: MaybeHas<Body, "stageId">;
-			trx?: Transaction<Database>;
+			trx?: Kysely<Database>;
 			communityId: CommunitiesId;
 			parent: { id: PubsId };
 	  }): Promise<MaybeWithChildren<Body>> => {
+	const trx = options?.trx ?? db;
+
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
@@ -614,7 +617,7 @@ export type UnprocessedPub = {
 		createdAt: Date;
 		updatedAt: Date;
 	}[];
-	children: { id: PubsId }[];
+	children?: { id: PubsId }[];
 };
 export type ProcessedPub = {
 	id: PubsId;
@@ -627,7 +630,7 @@ export type ProcessedPub = {
 		value: unknown;
 		relatedPub?: ProcessedPub | undefined;
 	}[];
-	children: ProcessedPub[];
+	children?: ProcessedPub[];
 	createdAt: Date;
 	updatedAt: Date;
 };
@@ -815,60 +818,68 @@ export async function getPubsWithRelatedValuesAndChildren(
 				.$if(Boolean(search), (qb) =>
 					qb.where((eb) => eb(sql`pv.value::jsonb::text`, "ilike", `%${search}%`))
 				)
-				.union((qb) =>
-					qb
-						.selectFrom("pub_tree")
-						.innerJoin("pubs", (join) =>
-							join.on((eb) =>
-								eb.or([
-									eb("pubs.id", "=", eb.ref("pub_tree.relatedPubId")),
-									eb("pubs.parentId", "=", eb.ref("pub_tree.pubId")),
-								])
+				// we don't even need to recurse if we don't want children or related pubs
+				.$if(withChildren || withRelatedPubs, (qb) =>
+					qb.union((qb) =>
+						qb
+							.selectFrom("pub_tree")
+
+							.innerJoin("pubs", (join) =>
+								join.on((eb) =>
+									eb.or([
+										...(withChildren
+											? [eb("pubs.id", "=", eb.ref("pub_tree.relatedPubId"))]
+											: []),
+										...(withRelatedPubs
+											? [eb("pubs.parentId", "=", eb.ref("pub_tree.pubId"))]
+											: []),
+									])
+								)
 							)
-						)
-						.leftJoin("pub_values", (join) =>
-							join.on((eb) =>
-								eb.and([
-									eb("pubs.id", "=", eb.ref("pub_values.pubId")),
-									// eb("pub_values.relatedPubId", "is not", null),
-								])
+							.leftJoin("pub_values", (join) =>
+								join.on((eb) =>
+									eb.and([
+										eb("pubs.id", "=", eb.ref("pub_values.pubId")),
+										// eb("pub_values.relatedPubId", "is not", null),
+									])
+								)
 							)
-						)
-						.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
-						.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-						.$if(Boolean(fieldSlugs), (qb) =>
-							qb.where("pub_fields.slug", "in", fieldSlugs!)
-						)
-						.select([
-							"pubs.id as pubId",
-							"pub_fields.schemaName as schemaName",
-							"pub_fields.slug as slug",
-							"pubs.pubTypeId",
-							"pubs.communityId",
-							"pubs.createdAt",
-							"PubsInStages.stageId",
-							"pub_values.id as valueId",
-							"pub_values.fieldId",
-							"pub_values.value",
-							"pub_values.relatedPubId",
-							"pub_values.createdAt as valueCreatedAt",
-							"pub_values.updatedAt as valueUpdatedAt",
-							"pubs.parentId",
-							// increment the depth
-							sql<number>`pub_tree.depth + 1`.as("depth"),
-							// this is a standard way to detect cycles
-							// we keep track of the path we've taken so far,
-							// and set a flag if we see a pub that is already in the path
-							// https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-CYCLE
-							sql<boolean>`pubs.id = any(pub_tree."path")`.as("isCycle"),
-							sql<PubsId[]>`array_append(pub_tree."path", pubs.id)`.as("path"),
-						])
-						.where("pub_tree.depth", "<", depth)
-						.where("pub_tree.isCycle", "=", false)
-						.$if(cycle === "exclude", (qb) =>
-							// this makes sure we don't include the first pub that is part of a cycle
-							qb.where(sql<boolean>`pubs.id = any(pub_tree.path)`, "=", false)
-						)
+							.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+							.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+							.$if(Boolean(fieldSlugs), (qb) =>
+								qb.where("pub_fields.slug", "in", fieldSlugs!)
+							)
+							.select([
+								"pubs.id as pubId",
+								"pub_fields.schemaName as schemaName",
+								"pub_fields.slug as slug",
+								"pubs.pubTypeId",
+								"pubs.communityId",
+								"pubs.createdAt",
+								"PubsInStages.stageId",
+								"pub_values.id as valueId",
+								"pub_values.fieldId",
+								"pub_values.value",
+								"pub_values.relatedPubId",
+								"pub_values.createdAt as valueCreatedAt",
+								"pub_values.updatedAt as valueUpdatedAt",
+								"pubs.parentId",
+								// increment the depth
+								sql<number>`pub_tree.depth + 1`.as("depth"),
+								// this is a standard way to detect cycles
+								// we keep track of the path we've taken so far,
+								// and set a flag if we see a pub that is already in the path
+								// https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-CYCLE
+								sql<boolean>`pubs.id = any(pub_tree."path")`.as("isCycle"),
+								sql<PubsId[]>`array_append(pub_tree."path", pubs.id)`.as("path"),
+							])
+							.where("pub_tree.depth", "<", depth)
+							.where("pub_tree.isCycle", "=", false)
+							.$if(cycle === "exclude", (qb) =>
+								// this makes sure we don't include the first pub that is part of a cycle
+								qb.where(sql<boolean>`pubs.id = any(pub_tree.path)`, "=", false)
+							)
+					)
 				)
 		)
 		.selectFrom("pub_tree")
@@ -915,11 +926,18 @@ export async function getPubsWithRelatedValuesAndChildren(
 					.selectFrom("pub_tree as children")
 					.select(["children.pubId as id"])
 					.whereRef("children.parentId", "=", "pub_tree.pubId")
-					// this distinctOn is necessary because otherwise this array will contain duplicates
-					// if a pub has more than one value and a child
-					.distinctOn("children.pubId")
 			).as("children"),
 		])
+		// .$if(withChildren, (qb) =>
+		// 	qb.select((eb) => [
+		// 		jsonArrayFrom(
+		// 			eb
+		// 				.selectFrom("pub_tree as children")
+		// 				.select(["children.pubId as id"])
+		// 				.whereRef("children.parentId", "=", "pub_tree.pubId")
+		// 		).as("children"),
+		// 	])
+		// )
 		.$if(Boolean(withPubType), (qb) =>
 			qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
 		)
@@ -998,9 +1016,9 @@ function nestRelatedPubsAndChildren(
 		});
 
 		// Process children recursively
-		const processedChildren = unprocessedPub.children
-			.map((child) => processPub(child.id, depth - 1))
-			.filter((child) => !!child);
+		const processedChildren = unprocessedPub?.children
+			?.map((child) => processPub(child.id, depth - 1))
+			?.filter((child) => !!child);
 
 		const processedPub: ProcessedPub = {
 			...unprocessedPub,

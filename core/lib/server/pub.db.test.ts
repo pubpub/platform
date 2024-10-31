@@ -349,6 +349,8 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10 }
 		);
 
+		console.dir(pubWithRelatedValuesAndChildren, { depth: null });
+
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
 				{ value: "Some title" },
@@ -580,5 +582,57 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 			],
 		});
+	});
+
+	it("is able to exclude children and related pubs from being fetched", async () => {
+		const trx = getTrx();
+
+		const { createPubRecursiveNew } = await import("./pub");
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+				children: [
+					{
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: { [pubFields.Title.slug]: "test child title" },
+					},
+				],
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "test relation value",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "related pub title",
+								},
+							},
+						},
+					],
+				},
+			},
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10, withChildren: false, withRelatedPubs: false }
+		);
+
+		expect(pubWithRelatedValuesAndChildren.children).toEqual([]);
+		expect(pubWithRelatedValuesAndChildren).toMatchObject({
+			values: [
+				{ value: "test title" },
+				{
+					value: "test relation value",
+				},
+			],
+		});
+
+		expect(pubWithRelatedValuesAndChildren.values[1].relatedPub).toBeUndefined();
 	});
 });
