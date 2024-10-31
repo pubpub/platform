@@ -516,4 +516,62 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(withCycleExcluded.find((p) => p.isCycle)).toBeUndefined();
 	});
 
+	it("it be able to only fetch fields for certain slugs", async () => {
+		const trx = getTrx();
+
+		const newPubId = crypto.randomUUID() as PubsId;
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				id: newPubId,
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+					[pubFields.Description.slug]: "test description",
+				},
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "test relation value",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "test relation title",
+								},
+							},
+						},
+					],
+				},
+			},
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const pubWithRelatedValuesAndChildren = (await getPubsWithRelatedValuesAndChildren(
+			{ pubId: newPubId },
+			10,
+			{
+				fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug],
+			}
+		)) as unknown as UnprocessedPub[];
+
+		expect(pubWithRelatedValuesAndChildren).toMatchObject({
+			values: [
+				{ value: "test title" },
+				{
+					value: "test relation value",
+					relatedPub: {
+						values: [
+							{
+								value: "test relation title",
+							},
+						],
+					},
+				},
+			],
+		});
+	});
 });

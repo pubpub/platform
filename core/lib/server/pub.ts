@@ -650,6 +650,7 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 * If true the raw result of the query is returned, without nesting the values and children.
 	 */
 	_debugDontNest?: boolean;
+	fieldSlugs?: string[];
 } & GetManyParams;
 
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
@@ -736,9 +737,15 @@ export async function getPubsWithRelatedValuesAndChildren(
 						])
 					)
 				)
+				.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+				.$if(Boolean(options?.fieldSlugs), (qb) =>
+					qb.where("pub_fields.slug", "in", options!.fieldSlugs!)
+				)
 				.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
 				.select([
 					"p.id as pubId",
+					"pub_fields.schemaName as schemaName",
+					"pub_fields.slug as slug",
 					"p.pubTypeId",
 					"p.communityId",
 					"p.createdAt",
@@ -793,9 +800,15 @@ export async function getPubsWithRelatedValuesAndChildren(
 								])
 							)
 						)
+						.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 						.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+						.$if(Boolean(options?.fieldSlugs), (qb) =>
+							qb.where("pub_fields.slug", "in", options!.fieldSlugs!)
+						)
 						.select([
 							"pubs.id as pubId",
+							"pub_fields.schemaName as schemaName",
+							"pub_fields.slug as slug",
 							"pubs.pubTypeId",
 							"pubs.communityId",
 							"pubs.createdAt",
@@ -845,6 +858,13 @@ export async function getPubsWithRelatedValuesAndChildren(
 						"inner.relatedPubId",
 						"inner.valueCreatedAt as createdAt",
 						"inner.valueUpdatedAt as updatedAt",
+						jsonObjectFrom(
+							eb
+								.selectFrom("pub_tree as inner2")
+								.select(["inner2.schemaName", "inner2.slug"])
+								.whereRef("inner2.valueId", "=", "inner.valueId")
+								.limit(1)
+						).as("field"),
 					])
 					.whereRef("inner.pubId", "=", "pub_tree.pubId")
 					// this prevents us from double fetching values if we have detected a cycle
