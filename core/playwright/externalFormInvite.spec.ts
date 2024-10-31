@@ -81,11 +81,11 @@ test.only("Invite a user to fill out the form", async () => {
 	await memberDialog.getByLabel("Last Name").fill(lastName);
 	await memberDialog.getByRole("button", { name: "Submit", exact: true }).click();
 	await memberDialog
-		.getByRole("button", { name: "Submit", exact: true })
-		.click({ timeout: 15000 });
-	await runActionDialog
-		.getByRole("option", { name: "Anonymous Malacologist", exact: true })
-		.click({ timeout: 15000 });
+		.getByRole("option", {
+			name: email,
+			exact: true,
+		})
+		.click();
 
 	await memberDialog.waitFor({ state: "hidden" });
 

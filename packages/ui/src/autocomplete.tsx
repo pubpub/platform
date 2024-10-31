@@ -165,6 +165,7 @@ export const AutoComplete = ({
 												"flex w-full items-center gap-2 rounded-lg",
 												!isSelected ? "pl-8" : null
 											)}
+											aria-label={option.label}
 										>
 											{isSelected ? <Check className="w-4" /> : null}
 											{option.node ?? option.label}
