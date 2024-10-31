@@ -9,9 +9,18 @@ import { z } from "zod";
 import type { PubFieldsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { Loader2, X } from "ui/icon";
 import { Input } from "ui/input";
+import { Label } from "ui/label";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
@@ -115,9 +124,8 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 							</FormItem>
 						)}
 					/>
-					<div className="text-md mb-1 mt-4 font-semibold">Fields</div>
 					{pubFields.length > 0 ? (
-						<ul>
+						<ul className="mb-1 mt-4">
 							<FormField
 								control={form.control}
 								name="titleField"
@@ -126,50 +134,63 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 										onValueChange={field.onChange}
 										defaultValue={field.value}
 									>
-										<div className="grid grid-cols-2 justify-items-center">
-											<div></div>
-											<div className="text-sm">
-												Title?
-												<FormMessage />
-											</div>
-										</div>
-										{pubFields.map((pubField, index) => (
-											<FormItem key={index}>
-												<li className="align-items-center grid grid-cols-2">
-													<div>
-														<Button
-															variant="ghost"
-															size="sm"
-															className="inline-flex h-6 px-1"
-															onClick={() => remove(index)}
-															aria-label="Remove field"
-														>
-															<span className="sr-only">
-																Remove field
-															</span>
-															<X size={14} />
-														</Button>
-														<FormLabel className="font-normal">
-															{pubField.name} ({pubField.slug})
-														</FormLabel>
-													</div>
-													<div className="justify-self-center">
-														{pubFieldCanBeTitle(pubField) ? (
-															<>
-																<FormControl>
-																	<RadioGroupItem
-																		value={pubField.fieldId}
-																	/>
-																</FormControl>
-																<FormLabel className="sr-only">
-																	{pubField.name} is title field
-																</FormLabel>
-															</>
-														) : null}
-													</div>
-												</li>
-											</FormItem>
-										))}
+										<table className="border-separate">
+											<thead>
+												<tr>
+													<th className="text-left">Fields</th>
+													<th>
+														Title
+														<FormDescription className="text-xs font-normal">
+															The selected field will be used as the
+															pub's name
+														</FormDescription>
+														<FormMessage />
+													</th>
+												</tr>
+											</thead>
+											<tbody>
+												{pubFields.map((pubField, index) => (
+													<tr key={index}>
+														<td>
+															<Button
+																variant="ghost"
+																size="sm"
+																className="inline-flex h-6 px-1"
+																onClick={() => remove(index)}
+																aria-label="Remove field"
+															>
+																<span className="sr-only">
+																	Remove field
+																</span>
+																<X size={14} />
+															</Button>
+															<Label className="font-normal">
+																{pubField.name} ({pubField.slug})
+															</Label>
+														</td>
+														<td>
+															<FormItem className="flex justify-center">
+																{pubFieldCanBeTitle(pubField) ? (
+																	<>
+																		<FormControl>
+																			<RadioGroupItem
+																				value={
+																					pubField.fieldId
+																				}
+																			/>
+																		</FormControl>
+																		<FormLabel className="sr-only">
+																			{pubField.name} is title
+																			field
+																		</FormLabel>
+																	</>
+																) : null}
+															</FormItem>
+														</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
 									</RadioGroup>
 								)}
 							/>
