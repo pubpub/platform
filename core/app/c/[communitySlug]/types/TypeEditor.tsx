@@ -18,6 +18,7 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
 import { createPubType } from "./actions";
 import { FieldSelect } from "./FieldSelect";
+import { pubFieldCanBeTitle } from "./utils";
 
 type Props = {
 	onTypeCreation: () => void;
@@ -38,14 +39,6 @@ const schema = z.object({
 		.min(1, { message: "Add at least one field" }),
 	titleField: z.string().min(1, { message: "Designate a title field" }),
 });
-
-const pubFieldCanBeTitle = (pubField: { schemaName: CoreSchemaType | null }) => {
-	return (
-		pubField.schemaName === CoreSchemaType.String ||
-		pubField.schemaName === CoreSchemaType.RichText ||
-		pubField.schemaName === CoreSchemaType.Number
-	);
-};
 
 export const TypeEditor = ({ onTypeCreation }: Props) => {
 	const form = useForm<z.infer<typeof schema>>({
