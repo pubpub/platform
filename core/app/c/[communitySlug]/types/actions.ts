@@ -22,17 +22,16 @@ export const updateTitleField = defineServerAction(async function updateTitleFie
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
-	try {
-		await autoRevalidate(
-			db
-				.updateTable("_PubFieldToPubType")
-				.set({ isTitle: true })
-				.where("A", "=", pubFieldId)
-				.where("B", "=", pubTypeId)
-		).execute();
-	} catch (e) {
-		console.log({ e });
-	}
+	await autoRevalidate(
+		db.updateTable("_PubFieldToPubType").set({ isTitle: false }).where("B", "=", pubTypeId)
+	).execute();
+	await autoRevalidate(
+		db
+			.updateTable("_PubFieldToPubType")
+			.set({ isTitle: true })
+			.where("A", "=", pubFieldId)
+			.where("B", "=", pubTypeId)
+	).execute();
 });
 
 export const removePubField = defineServerAction(async function removePubField(
