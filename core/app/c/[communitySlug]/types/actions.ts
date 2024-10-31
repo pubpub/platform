@@ -53,7 +53,8 @@ export const createPubType = defineServerAction(async function addPubType(
 	name: string,
 	communityId: CommunitiesId,
 	description: string | undefined,
-	fields: PubFieldsId[]
+	fields: PubFieldsId[],
+	titleField: PubFieldsId
 ) {
 	const pubType = await autoRevalidate(
 		db
@@ -72,6 +73,7 @@ export const createPubType = defineServerAction(async function addPubType(
 				fields.map((id) => ({
 					A: id,
 					B: eb.selectFrom("newType").select("id"),
+					isTitle: titleField === id,
 				}))
 			)
 	).executeTakeFirst();

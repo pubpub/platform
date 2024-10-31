@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { PubFieldsId } from "db/public";
+import type { CoreSchemaType, PubFieldsId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Command,
@@ -18,7 +18,12 @@ import { usePubFieldContext } from "ui/pubFields";
 
 export type FieldSelectProps = {
 	excludedFields: PubFieldsId[];
-	onFieldSelect: (fieldId: PubFieldsId, name: string, slug: string) => void;
+	onFieldSelect: (
+		fieldId: PubFieldsId,
+		name: string,
+		slug: string,
+		schemaName: CoreSchemaType | null
+	) => void;
 	modal?: boolean;
 };
 
@@ -31,7 +36,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 	);
 	const onSelect = (fieldId: PubFieldsId) => {
 		const field = fields[fieldId];
-		onFieldSelect(fieldId, field.name, field.slug);
+		onFieldSelect(fieldId, field.name, field.slug, field.schemaName);
 		setOpen(false);
 	};
 

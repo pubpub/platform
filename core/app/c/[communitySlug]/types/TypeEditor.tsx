@@ -1,16 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { notFound } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import type { PubFieldsId } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2, X } from "ui/icon";
 import { Input } from "ui/input";
+import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
@@ -24,12 +26,31 @@ type Props = {
 const schema = z.object({
 	name: z.string(),
 	description: z.string().optional(),
-	pubFields: z.array(z.object({ fieldId: z.string(), name: z.string(), slug: z.string() })),
+	pubFields: z
+		.array(
+			z.object({
+				fieldId: z.string(),
+				name: z.string(),
+				slug: z.string(),
+				schemaName: z.nativeEnum(CoreSchemaType).nullable(),
+			})
+		)
+		.min(1, { message: "Add at least one field" }),
+	titleField: z.string().min(1, { message: "Designate a title field" }),
 });
+
+const pubFieldCanBeTitle = (pubField: { schemaName: CoreSchemaType | null }) => {
+	return (
+		pubField.schemaName === CoreSchemaType.String ||
+		pubField.schemaName === CoreSchemaType.RichText ||
+		pubField.schemaName === CoreSchemaType.Number
+	);
+};
 
 export const TypeEditor = ({ onTypeCreation }: Props) => {
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
+		defaultValues: { name: "", description: "", pubFields: [], titleField: "" },
 	});
 
 	const {
@@ -41,8 +62,13 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 		name: "pubFields",
 	});
 
-	const onFieldSelect = (fieldId: PubFieldsId, name: string, slug: string) => {
-		append({ fieldId, name, slug });
+	const onFieldSelect = (
+		fieldId: PubFieldsId,
+		name: string,
+		slug: string,
+		schemaName: CoreSchemaType | null
+	) => {
+		append({ fieldId, name, slug, schemaName });
 	};
 
 	const community = useCommunity();
@@ -50,12 +76,18 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 		return notFound();
 	}
 	const runCreatePubType = useServerAction(createPubType);
-	const onSubmit = async ({ name, description, pubFields }: z.infer<typeof schema>) => {
+	const onSubmit = async ({
+		name,
+		description,
+		pubFields,
+		titleField,
+	}: z.infer<typeof schema>) => {
 		runCreatePubType(
 			name,
 			community.id,
 			description,
-			pubFields.map((f) => f.fieldId as PubFieldsId)
+			pubFields.map((f) => f.fieldId as PubFieldsId),
+			titleField as PubFieldsId
 		);
 		onTypeCreation();
 	};
@@ -91,25 +123,65 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 						)}
 					/>
 					<div className="text-md mb-1 mt-4 font-semibold">Fields</div>
-					<ul>
-						{pubFields.map((pubField, index) => (
-							<li key={index}>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="inline-flex h-6 px-1"
-									onClick={() => remove(index)}
-									aria-label="Remove field"
-								>
-									<span className="sr-only">Remove field</span>
-									<X size={14} />
-								</Button>
-								<FormLabel className="font-normal">
-									{pubField.name} ({pubField.slug})
-								</FormLabel>
-							</li>
-						))}
-					</ul>
+					{pubFields.length > 0 ? (
+						<ul>
+							<FormField
+								control={form.control}
+								name="titleField"
+								render={({ field }) => (
+									<RadioGroup
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
+										<div className="grid grid-cols-2 justify-items-center">
+											<div></div>
+											<div className="text-sm">
+												Title?
+												<FormMessage />
+											</div>
+										</div>
+										{pubFields.map((pubField, index) => (
+											<FormItem key={index}>
+												<li className="align-items-center grid grid-cols-2">
+													<div>
+														<Button
+															variant="ghost"
+															size="sm"
+															className="inline-flex h-6 px-1"
+															onClick={() => remove(index)}
+															aria-label="Remove field"
+														>
+															<span className="sr-only">
+																Remove field
+															</span>
+															<X size={14} />
+														</Button>
+														<FormLabel className="font-normal">
+															{pubField.name} ({pubField.slug})
+														</FormLabel>
+													</div>
+													<div className="justify-self-center">
+														{pubFieldCanBeTitle(pubField) ? (
+															<>
+																<FormControl>
+																	<RadioGroupItem
+																		value={pubField.fieldId}
+																	/>
+																</FormControl>
+																<FormLabel className="sr-only">
+																	{pubField.name} is title field
+																</FormLabel>
+															</>
+														) : null}
+													</div>
+												</li>
+											</FormItem>
+										))}
+									</RadioGroup>
+								)}
+							/>
+						</ul>
+					) : null}
 					<FormField
 						control={form.control}
 						name="pubFields"
