@@ -70,9 +70,7 @@ INSERT INTO "_PubFieldToPubType" ("A", "B", "isTitle")
 SELECT
   "newField"."id" AS "A",
   pub_types.id AS "B",
-  true AS isTitle,
-  pub_types.name,
-  "newField".slug
+  true AS isTitle
 FROM
   pub_types
   LEFT JOIN LATERAL (
@@ -96,4 +94,4 @@ WHERE
   )
   AND "newField".id IS NOT NULL;
 
-END;
+COMMIT;
