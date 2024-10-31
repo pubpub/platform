@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { Page } from "@playwright/test";
 
 import { faker } from "@faker-js/faker";
@@ -45,7 +46,7 @@ test.afterAll(async () => {
 	await page.close();
 });
 
-test.only("Invite a user to fill out the form", async () => {
+test("Invite a user to fill out the form", async ({ browser }) => {
 	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 	await pubsPage.goTo();
 	const pubId = await pubsPage.createPub({
@@ -97,10 +98,32 @@ test.only("Invite a user to fill out the form", async () => {
 		.fill(`Please fill out :link[this form]{form=${FORM_SLUG}}`);
 
 	await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
+	await page.getByRole("status").filter({ hasText: "Action ran successfully!" }).waitFor();
+	await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
 	await runActionDialog.waitFor({ state: "hidden" });
 
 	const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
-	const url = message.body.text.match(/a href="([^"]+)"/)?.[0];
+	const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
 	expect(url).toBeTruthy();
-	await page.goto(url!);
+
+	// Use the browser to decode the html entities in our URL
+	const decodedUrl = await page.evaluate((url) => {
+		const elem = document.createElement("div");
+		elem.innerHTML = url;
+		return elem.textContent!;
+	}, url!);
+
+	// Open a new page so that we're no longer logged in as admin
+	const newPage = await browser.newPage();
+	await newPage.goto(decodedUrl);
+	await page.getByText("Progress will be automatically saved").waitFor();
+
+	await page.getByLabel(`${COMMUNITY_SLUG}:content`).fill("LGTM");
+
+	// Make sure it autosaves
+	await page.getByText("Last saved at").waitFor({ timeout: 6000 });
+
+	await page.getByRole("button", { name: "Submit", exact: true }).click();
+
+	await page.getByText("Form Successfully Submitted").waitFor();
 });
