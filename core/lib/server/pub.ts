@@ -633,6 +633,25 @@ export type ProcessedPub = {
 };
 
 type GetPubsWithRelatedValuesAndChildrenOptions = {
+	/**
+	 * The maximum depth to recurse to.
+	 * Does not do anything if `includeChildren` and `includeRelatedPubs` is `false`.
+	 *
+	 * @default 2
+	 */
+	depth?: number;
+	/**
+	 * Whether to recursively fetch children up to depth `depth`.
+	 *
+	 * @default true
+	 */
+	includeChildren?: boolean;
+	/**
+	 * Whether to recursively fetch related pubs.
+	 *
+	 * @default true
+	 */
+	includeRelatedPubs?: boolean;
 	includePubType?: boolean;
 	search?: string;
 	/**
@@ -679,16 +698,21 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 			communityId: CommunitiesId;
 	  };
 
+const DEFAULT_OPTIONS = {
+	depth: 2,
+	includeChildren: true,
+	includeRelatedPubs: true,
+	cycle: "include",
+} as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
+
 export async function getPubsWithRelatedValuesAndChildren(
 	props: {
 		pubId: PubsId;
 	},
-	depth?: number,
 	options?: GetPubsWithRelatedValuesAndChildrenOptions
 ): Promise<ProcessedPub>;
 export async function getPubsWithRelatedValuesAndChildren(
 	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
-	depth?: number,
 	options?: GetPubsWithRelatedValuesAndChildrenOptions
 ): Promise<ProcessedPub[]>;
 /**
@@ -696,17 +720,25 @@ export async function getPubsWithRelatedValuesAndChildren(
  */
 export async function getPubsWithRelatedValuesAndChildren(
 	props: PubIdOrPubTypeIdOrStageIdOrCommunityId,
-	/**
-	 * The maximum depth to recurse to.
-	 * Needs to be set to some positive, non-infinite number to prevent infinite recursion.
-	 *
-	 * By default only fetches one layer deep, as that's probably most of what you need.
-	 *
-	 * @default 2
-	 */
-	depth = 2,
 	options?: GetPubsWithRelatedValuesAndChildrenOptions
 ): Promise<ProcessedPub | ProcessedPub[]> {
+	const {
+		depth,
+		includeChildren,
+		includeRelatedPubs,
+		cycle,
+		fieldSlugs,
+		orderBy,
+		orderDirection,
+		limit,
+		offset,
+		search,
+		includePubType,
+	} = {
+		...DEFAULT_OPTIONS,
+		...options,
+	};
+
 	if (depth < 1) {
 		throw new Error("Depth must be a positive number");
 	}
@@ -738,9 +770,7 @@ export async function getPubsWithRelatedValuesAndChildren(
 					)
 				)
 				.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
-				.$if(Boolean(options?.fieldSlugs), (qb) =>
-					qb.where("pub_fields.slug", "in", options!.fieldSlugs!)
-				)
+				.$if(Boolean(fieldSlugs), (qb) => qb.where("pub_fields.slug", "in", fieldSlugs!))
 				.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
 				.select([
 					"p.id as pubId",
@@ -776,10 +806,8 @@ export async function getPubsWithRelatedValuesAndChildren(
 					}
 					throw new Error("No pubId, stageId, or communityId provided");
 				})
-				.$if(Boolean(options?.search), (qb) =>
-					qb.where((eb) =>
-						eb(sql`pv.value::jsonb::text`, "ilike", `%${options!.search}%`)
-					)
+				.$if(Boolean(search), (qb) =>
+					qb.where((eb) => eb(sql`pv.value::jsonb::text`, "ilike", `%${search}%`))
 				)
 				.union((qb) =>
 					qb
@@ -802,8 +830,8 @@ export async function getPubsWithRelatedValuesAndChildren(
 						)
 						.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 						.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-						.$if(Boolean(options?.fieldSlugs), (qb) =>
-							qb.where("pub_fields.slug", "in", options!.fieldSlugs!)
+						.$if(Boolean(fieldSlugs), (qb) =>
+							qb.where("pub_fields.slug", "in", fieldSlugs!)
 						)
 						.select([
 							"pubs.id as pubId",
@@ -831,7 +859,7 @@ export async function getPubsWithRelatedValuesAndChildren(
 						])
 						.where("pub_tree.depth", "<", depth)
 						.where("pub_tree.isCycle", "=", false)
-						.$if(options?.cycle === "exclude", (qb) =>
+						.$if(cycle === "exclude", (qb) =>
 							// this makes sure we don't include the first pub that is part of a cycle
 							qb.where(sql<boolean>`pubs.id = any(pub_tree.path)`, "=", false)
 						)
@@ -886,14 +914,12 @@ export async function getPubsWithRelatedValuesAndChildren(
 					.distinctOn("children.pubId")
 			).as("children"),
 		])
-		.$if(Boolean(options?.includePubType), (qb) =>
+		.$if(Boolean(includePubType), (qb) =>
 			qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
 		)
-		.$if(Boolean(options?.orderBy), (qb) =>
-			qb.orderBy(options!.orderBy!, options?.orderDirection ?? "asc")
-		)
-		.$if(Boolean(options?.limit), (qb) => qb.limit(options!.limit!))
-		.$if(Boolean(options?.offset), (qb) => qb.offset(options!.offset!))
+		.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
+		.$if(Boolean(limit), (qb) => qb.limit(limit!))
+		.$if(Boolean(offset), (qb) => qb.offset(offset!))
 		// this is necessary to filter out all the duplicate entries for the values
 		.groupBy([
 			"pubId",
@@ -921,9 +947,6 @@ export async function getPubsWithRelatedValuesAndChildren(
 	}
 
 	return nestRelatedPubsAndChildren(result as UnprocessedPub[], { depth });
-	// return result
-	// 	// .filter((pub) => pub.depth === 1)
-	// 	.map((pub) => nestRelatedPubsAndChildren(result as UnprocessedPub[], pub.pubId));
 }
 
 function nestRelatedPubsAndChildren(

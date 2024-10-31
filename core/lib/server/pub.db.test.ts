@@ -233,7 +233,10 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const rootPubId = pub.id;
-		const pubValues = await getPubsWithRelatedValuesAndChildren({ pubId: rootPubId }, 10);
+		const pubValues = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: rootPubId },
+			{ depth: 10 }
+		);
 
 		expect(pubValues).toMatchObject({
 			values: [
@@ -343,7 +346,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
 			{ pubId: rootPubId },
-			10
+			{ depth: 10 }
 		);
 
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
@@ -406,15 +409,14 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
 			{ communityId: community.id },
-			10
+			{ depth: 10 }
 		);
 
 		expect(pubWithRelatedValuesAndChildren.length).toBe(5);
 
 		const submisionPubs = await getPubsWithRelatedValuesAndChildren(
 			{ pubTypeId: pubTypes["Basic Pub"].id },
-			10,
-			{ includePubType: true }
+			{ includePubType: true, depth: 10 }
 		);
 	});
 
@@ -442,8 +444,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
 			{ communityId: community.id },
-			10,
-			{ search: "friend" }
+			{ search: "friend", depth: 10 }
 		);
 
 		expect(pubWithRelatedValuesAndChildren.length).toBe(1);
@@ -454,9 +455,13 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const trx = getTrx();
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const pubs = await getPubsWithRelatedValuesAndChildren({ communityId: community.id }, 1, {
-			limit: 1,
-		});
+		const pubs = await getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id },
+			{
+				depth: 1,
+				limit: 1,
+			}
+		);
 
 		expect(pubs.length).toBe(1);
 	});
@@ -500,11 +505,14 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const [withCycleIncluded, withCycleExcluded] = (await Promise.all([
-			getPubsWithRelatedValuesAndChildren({ pubId: newPubId }, 10, { _debugDontNest: true }),
-			getPubsWithRelatedValuesAndChildren({ pubId: newPubId }, 10, {
-				cycle: "exclude",
-				_debugDontNest: true,
-			}),
+			getPubsWithRelatedValuesAndChildren(
+				{ pubId: newPubId },
+				{ depth: 10, _debugDontNest: true }
+			),
+			getPubsWithRelatedValuesAndChildren(
+				{ pubId: newPubId },
+				{ depth: 10, cycle: "exclude", _debugDontNest: true }
+			),
 		])) as unknown as [UnprocessedPub[], UnprocessedPub[]];
 
 		expect(withCycleIncluded.length).toBe(3);
@@ -552,10 +560,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = (await getPubsWithRelatedValuesAndChildren(
 			{ pubId: newPubId },
-			10,
-			{
-				fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug],
-			}
+			{ depth: 10, fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug] }
 		)) as unknown as UnprocessedPub[];
 
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
