@@ -42,7 +42,7 @@ export class PubTypesPage {
 		} else {
 			for (const slug of fieldSlugs) {
 				await fieldCombobox.click();
-				const option = await this.page.getByTestId(`option-${this.communitySlug}:${slug}`);
+				const option = this.page.getByTestId(`option-${this.communitySlug}:${slug}`);
 				await option.click();
 			}
 		}
