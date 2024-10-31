@@ -34,6 +34,25 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 				Title: "Some title",
 			},
 		},
+		{
+			pubType: "Basic Pub",
+			values: {
+				Title: "Another title",
+			},
+			relatedPubs: {
+				"Some relation": [
+					{
+						value: "test relation value",
+						pub: {
+							pubType: "Basic Pub",
+							values: {
+								Title: "A pub related to another Pub",
+							},
+						},
+					},
+				],
+			},
+		},
 	],
 	stages: {
 		"Stage 1": {},
@@ -390,7 +409,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			10
 		);
 
-		expect(pubWithRelatedValuesAndChildren.length).toBe(3);
+		expect(pubWithRelatedValuesAndChildren.length).toBe(5);
 
 		const submisionPubs = await getPubsWithRelatedValuesAndChildren(
 			{ pubTypeId: pubTypes["Basic Pub"].id },
@@ -430,4 +449,16 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(pubWithRelatedValuesAndChildren.length).toBe(1);
 		expect(pubWithRelatedValuesAndChildren[0].values[0].value).toBe("Hello friend");
 	});
+
+	it("should be able to limit the amount of top-level pubs retrieved", async () => {
+		const trx = getTrx();
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const pubs = await getPubsWithRelatedValuesAndChildren({ communityId: community.id }, 1, {
+			limit: 1,
+		});
+
+		expect(pubs.length).toBe(1);
+	});
+
 });

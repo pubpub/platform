@@ -831,17 +831,36 @@ export async function getPubsWithRelatedValuesAndChildren(
 		.$if(Boolean(options?.includePubType), (qb) =>
 			qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
 		)
-		.groupBy(["pubId", "parentId", "depth", "pubTypeId", "createdAt", "stageId", "communityId"])
-		.orderBy("depth")
+		.$if(Boolean(options?.orderBy), (qb) =>
+			qb.orderBy(options!.orderBy!, options?.orderDirection ?? "asc")
+		)
+		.$if(Boolean(options?.limit), (qb) => qb.limit(options!.limit!))
+		.$if(Boolean(options?.offset), (qb) => qb.offset(options!.offset!))
+		// this is necessary to filter out all the duplicate entries for the values
+		.groupBy([
+			"pubId",
+			"parentId",
+			"depth",
+			"pubTypeId",
+			"createdAt",
+			"stageId",
+			"communityId",
+		])
 		.execute();
 
-	if (props.pubId) {
-		return nestRelatedPubsAndChildren(result as UnprocessedPub[], props.pubId);
+	if (options?._debugDontNest) {
+		// @ts-expect-error We should not accomodate the return type for this option
+		return result;
 	}
 
-	result[0].pubType;
+	if (props.pubId) {
+		return nestRelatedPubsAndChildren(result as UnprocessedPub[], {
+			rootPubId: props.pubId,
+			depth,
+		});
+	}
 
-	return nestRelatedPubsAndChildren(result as UnprocessedPub[]);
+	return nestRelatedPubsAndChildren(result as UnprocessedPub[], { depth });
 	// return result
 	// 	// .filter((pub) => pub.depth === 1)
 	// 	.map((pub) => nestRelatedPubsAndChildren(result as UnprocessedPub[], pub.pubId));
@@ -849,14 +868,24 @@ export async function getPubsWithRelatedValuesAndChildren(
 
 function nestRelatedPubsAndChildren(
 	pubs: UnprocessedPub[],
-	rootPubId?: PubsId
+	{
+		rootPubId,
+		depth = 10,
+	}: {
+		rootPubId?: PubsId;
+		depth?: number;
+	}
 ): ProcessedPub | ProcessedPub[] {
 	// create a map of all pubs by their ID for easy lookup
 	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.pubId, pub]));
 
 	const processedPubsById = new Map<PubsId, ProcessedPub>();
 	// helper function to process a single pub
-	function processPub(pubId: PubsId): ProcessedPub | undefined {
+	function processPub(pubId: PubsId, depth: number): ProcessedPub | undefined {
+		if (depth < 0) {
+			return processedPubsById.get(pubId);
+		}
+
 		const alreadyProcessedPub = processedPubsById.get(pubId);
 		if (alreadyProcessedPub) {
 			return alreadyProcessedPub;
@@ -869,7 +898,9 @@ function nestRelatedPubsAndChildren(
 
 		// Process values and their related pubs
 		const processedValues = unprocessedPub.values.map((value) => {
-			const relatedPub = value.relatedPubId ? processPub(value.relatedPubId) : null;
+			const relatedPub = value.relatedPubId
+				? processPub(value.relatedPubId, depth - 1)
+				: null;
 
 			return {
 				value: value.value,
@@ -879,10 +910,11 @@ function nestRelatedPubsAndChildren(
 
 		// Process children recursively
 		const processedChildren = unprocessedPub.children
-			.map((child) => processPub(child.id))
+			.map((child) => processPub(child.id, depth - 1))
 			.filter((child) => !!child);
 
 		const processedPub: ProcessedPub = {
+			...unprocessedPub,
 			id: unprocessedPub.pubId,
 			stageId: unprocessedPub.stageId,
 			communityId: unprocessedPub.communityId,
@@ -904,7 +936,7 @@ function nestRelatedPubsAndChildren(
 
 	if (rootPubId) {
 		// start processing from the root pub
-		const rootPub = processPub(rootPubId);
+		const rootPub = processPub(rootPubId, depth - 1);
 		if (!rootPub) {
 			throw PubNotFoundError;
 		}
@@ -915,6 +947,6 @@ function nestRelatedPubsAndChildren(
 	const topLevelPubs = pubs.filter((pub) => pub.depth === 1);
 
 	return topLevelPubs
-		.map((pub) => processPub(pub.pubId))
+		.map((pub) => processPub(pub.pubId, depth - 1))
 		.filter((processedPub) => !!processedPub);
 }
