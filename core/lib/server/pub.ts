@@ -848,6 +848,11 @@ export async function getPubsWithRelatedValuesAndChildren(
 			"pub_tree.isCycle",
 			"pub_tree.path",
 			"pub_tree.createdAt",
+			// we return the updatedAt of the latest value, because the updatedAt of the pub itself
+			// does not really change over time
+			eb.fn
+				.coalesce(eb.fn.max("pub_tree.valueUpdatedAt"), "pub_tree.createdAt")
+				.as("updatedAt"),
 			jsonArrayFrom(
 				eb
 					.selectFrom("pub_tree as inner")
