@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
+import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
+import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 
@@ -16,6 +18,7 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 	},
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
+		Description: { schemaName: CoreSchemaType.String },
 		"Some relation": { schemaName: CoreSchemaType.String, relation: true },
 	},
 	pubTypes: {
@@ -394,5 +397,37 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			10,
 			{ includePubType: true }
 		);
+	});
+
+	it("should be able to search", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Hello friend",
+				},
+				children: [
+					{
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: { [pubFields.Title.slug]: "Hello ENEMY" },
+					},
+				],
+			},
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id },
+			10,
+			{ search: "friend" }
+		);
+
+		expect(pubWithRelatedValuesAndChildren.length).toBe(1);
+		expect(pubWithRelatedValuesAndChildren[0].values[0].value).toBe("Hello friend");
 	});
 });

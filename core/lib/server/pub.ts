@@ -596,7 +596,7 @@ export const deletePub = async (pubId: PubsId) =>
 export const getPubStage = async (pubId: PubsId) =>
 	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
 
-interface UnprocessedPub {
+export type UnprocessedPub = {
 	pubId: PubsId;
 	depth: number;
 	parentId: PubsId | null;
@@ -614,8 +614,8 @@ interface UnprocessedPub {
 		updatedAt: Date;
 	}[];
 	children: { id: PubsId }[];
-}
-interface ProcessedPub {
+};
+export type ProcessedPub = {
 	id: PubsId;
 	stageId: StagesId | null;
 	communityId: CommunitiesId;
@@ -629,11 +629,38 @@ interface ProcessedPub {
 	children: ProcessedPub[];
 	createdAt: Date;
 	updatedAt: Date;
-}
+};
 
 type GetPubsWithRelatedValuesAndChildrenOptions = {
 	includePubType?: boolean;
-};
+	search?: string;
+} & GetManyParams;
+
+type PubIdOrPubTypeIdOrStageIdOrCommunityId =
+	| {
+			pubId: PubsId;
+			pubTypeId?: never;
+			stageId?: never;
+			communityId?: never;
+	  }
+	| {
+			pubId?: never;
+			pubTypeId: PubTypesId;
+			stageId?: never;
+			communityId?: never;
+	  }
+	| {
+			pubId?: never;
+			pubTypeId?: never;
+			stageId: StagesId;
+			communityId?: never;
+	  }
+	| {
+			pubId?: never;
+			pubTypeId?: never;
+			stageId?: never;
+			communityId: CommunitiesId;
+	  };
 
 export async function getPubsWithRelatedValuesAndChildren(
 	props: {
@@ -643,22 +670,7 @@ export async function getPubsWithRelatedValuesAndChildren(
 	options?: GetPubsWithRelatedValuesAndChildrenOptions
 ): Promise<ProcessedPub>;
 export async function getPubsWithRelatedValuesAndChildren(
-	props:
-		| {
-				pubTypeId: PubTypesId;
-				stageId?: never;
-				communityId?: never;
-		  }
-		| {
-				pubTypeId?: never;
-				stageId: StagesId;
-				communityId?: never;
-		  }
-		| {
-				pubTypeId?: never;
-				stageId?: never;
-				communityId: CommunitiesId;
-		  },
+	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	depth?: number,
 	options?: GetPubsWithRelatedValuesAndChildrenOptions
 ): Promise<ProcessedPub[]>;
@@ -666,31 +678,7 @@ export async function getPubsWithRelatedValuesAndChildren(
  * Retrieves a pub and all its related values, children, and related pubs up to a given depth.
  */
 export async function getPubsWithRelatedValuesAndChildren(
-	props:
-		| {
-				pubId: PubsId;
-				pubTypeId?: never;
-				stageId?: never;
-				communityId?: never;
-		  }
-		| {
-				pubId?: never;
-				pubTypeId: PubTypesId;
-				stageId?: never;
-				communityId?: never;
-		  }
-		| {
-				pubId?: never;
-				pubTypeId?: never;
-				stageId: StagesId;
-				communityId?: never;
-		  }
-		| {
-				pubId?: never;
-				pubTypeId?: never;
-				stageId?: never;
-				communityId: CommunitiesId;
-		  },
+	props: PubIdOrPubTypeIdOrStageIdOrCommunityId,
 	/**
 	 * The maximum depth to recurse to.
 	 * Needs to be set to some positive, non-infinite number to prevent infinite recursion.
@@ -763,6 +751,11 @@ export async function getPubsWithRelatedValuesAndChildren(
 					}
 					throw new Error("No pubId, stageId, or communityId provided");
 				})
+				.$if(Boolean(options?.search), (qb) =>
+					qb.where((eb) =>
+						eb(sql`pv.value::jsonb::text`, "ilike", `%${options!.search}%`)
+					)
+				)
 				.union((qb) =>
 					qb
 						.selectFrom("pub_tree")
