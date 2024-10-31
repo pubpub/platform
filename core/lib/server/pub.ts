@@ -645,14 +645,19 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 *
 	 * @default true
 	 */
-	includeChildren?: boolean;
+	withChildren?: boolean;
 	/**
 	 * Whether to recursively fetch related pubs.
 	 *
 	 * @default true
 	 */
-	includeRelatedPubs?: boolean;
-	includePubType?: boolean;
+	withRelatedPubs?: boolean;
+	/**
+	 * Whether to include the pub type.
+	 *
+	 * @default false
+	 */
+	withPubType?: boolean;
 	search?: string;
 	/**
 	 * Whether to include the first pub that is part of a cycle.
@@ -700,8 +705,9 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 
 const DEFAULT_OPTIONS = {
 	depth: 2,
-	includeChildren: true,
-	includeRelatedPubs: true,
+	withChildren: true,
+	withRelatedPubs: true,
+	withPubType: false,
 	cycle: "include",
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
@@ -724,8 +730,8 @@ export async function getPubsWithRelatedValuesAndChildren(
 ): Promise<ProcessedPub | ProcessedPub[]> {
 	const {
 		depth,
-		includeChildren,
-		includeRelatedPubs,
+		withChildren,
+		withRelatedPubs,
 		cycle,
 		fieldSlugs,
 		orderBy,
@@ -733,7 +739,7 @@ export async function getPubsWithRelatedValuesAndChildren(
 		limit,
 		offset,
 		search,
-		includePubType,
+		withPubType,
 	} = {
 		...DEFAULT_OPTIONS,
 		...options,
@@ -914,7 +920,7 @@ export async function getPubsWithRelatedValuesAndChildren(
 					.distinctOn("children.pubId")
 			).as("children"),
 		])
-		.$if(Boolean(includePubType), (qb) =>
+		.$if(Boolean(withPubType), (qb) =>
 			qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
 		)
 		.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))

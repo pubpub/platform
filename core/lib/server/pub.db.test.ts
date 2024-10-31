@@ -414,10 +414,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		expect(pubWithRelatedValuesAndChildren.length).toBe(5);
 
-		const submisionPubs = await getPubsWithRelatedValuesAndChildren(
+		const submissionPubs = await getPubsWithRelatedValuesAndChildren(
 			{ pubTypeId: pubTypes["Basic Pub"].id },
-			{ includePubType: true, depth: 10 }
+			{ withPubType: true, depth: 10 }
 		);
+
+		expect(submissionPubs[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
 	});
 
 	it("should be able to search", async () => {
