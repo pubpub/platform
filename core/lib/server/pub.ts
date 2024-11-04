@@ -925,6 +925,7 @@ export async function getPubsWithRelatedValuesAndChildren(
 				eb
 					.selectFrom("pub_tree as children")
 					.select(["children.pubId as id"])
+					.distinctOn(["children.pubId"])
 					.whereRef("children.parentId", "=", "pub_tree.pubId")
 			).as("children"),
 		])
@@ -989,9 +990,9 @@ function nestRelatedPubsAndChildren(
 	const processedPubsById = new Map<PubsId, ProcessedPub>();
 	// helper function to process a single pub
 	function processPub(pubId: PubsId, depth: number): ProcessedPub | undefined {
-		if (depth < 0) {
-			return processedPubsById.get(pubId);
-		}
+		// if (depth < 0) {
+		// 	return processedPubsById.get(pubId);
+		// }
 
 		const alreadyProcessedPub = processedPubsById.get(pubId);
 		if (alreadyProcessedPub) {
