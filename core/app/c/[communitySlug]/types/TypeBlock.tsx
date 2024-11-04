@@ -50,7 +50,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 	const runAddPubField = useServerAction(addPubField);
 	const runUpdateTitleField = useServerAction(updateTitleField);
 	const fields = usePubFieldContext();
-	const titleField = type.fields.filter((f) => f.isTitle)[0].id;
+	const titleField = type.fields.filter((f) => f.isTitle)[0]?.id ?? "";
 	const handleTitleFieldChange = async (newTitleField: string) => {
 		await runUpdateTitleField(type.id, newTitleField as PubFieldsId);
 	};

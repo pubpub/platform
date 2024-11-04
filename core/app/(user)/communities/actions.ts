@@ -128,6 +128,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 						fields.map((field) => ({
 							A: field.id,
 							B: eb.selectFrom("core_pub_type").select("id"),
+							isTitle: field.slug === `${slug}:title`,
 						}))
 					),
 				{ communitySlug: slug }
