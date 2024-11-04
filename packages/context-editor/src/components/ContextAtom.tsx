@@ -50,6 +50,7 @@ export default function ContextAtom({ nodeProp }) {
 				});
 		}
 	}, [node]);
+
 	// console.log(activeNode, activeNode.attrs.data["rd:source"]);
 	return (
 		<section

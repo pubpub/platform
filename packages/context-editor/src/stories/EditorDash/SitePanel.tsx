@@ -11,7 +11,7 @@ export default function JsonPanel({ editorState }) {
 	const domSerializer = DOMSerializer.fromSchema(editorState.schema);
 	domSerializer.nodes.contextAtom = (node) => {
 		const testdiv = document.createElement("div");
-		console.log("node", node);
+		// console.log("node", node);
 		testdiv.innerHTML = renderToString(<ContextAtom nodeProp={node} />);
 		return testdiv;
 	};
