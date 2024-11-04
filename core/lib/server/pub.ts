@@ -619,6 +619,10 @@ export type UnprocessedPub = {
 		relatedPubId: PubsId | null;
 		createdAt: Date;
 		updatedAt: Date;
+		field: {
+			schemaName: CoreSchemaType;
+			slug: string;
+		};
 	}[];
 	children?: { id: PubsId }[];
 };
@@ -805,6 +809,11 @@ export async function getPubsWithRelatedValuesAndChildren<
 	props: PubIdOrPubTypeIdOrStageIdOrCommunityId,
 	options?: Options
 ): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
+	const opts = {
+		...DEFAULT_OPTIONS,
+		...options,
+	};
+
 	const {
 		depth,
 		withChildren,
@@ -818,10 +827,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		search,
 		withPubType,
 		withStage,
-	} = {
-		...DEFAULT_OPTIONS,
-		...options,
-	};
+	} = opts;
 
 	if (depth < 1) {
 		throw new Error("Depth must be a positive number");
@@ -1061,29 +1067,34 @@ export async function getPubsWithRelatedValuesAndChildren<
 	if (props.pubId) {
 		return nestRelatedPubsAndChildren(result as UnprocessedPub[], {
 			rootPubId: props.pubId,
-			depth,
-		});
+			...opts,
+		}) as ProcessedPub<Options>;
 	}
 
-	return nestRelatedPubsAndChildren(result as UnprocessedPub[], { depth });
+	return nestRelatedPubsAndChildren(result as UnprocessedPub[], {
+		...opts,
+	}) as ProcessedPub<Options>[];
 }
 
-function nestRelatedPubsAndChildren(
+function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndChildrenOptions>(
 	pubs: UnprocessedPub[],
-	{
-		rootPubId,
-		depth = 10,
-	}: {
+	options?: {
 		rootPubId?: PubsId;
-		depth?: number;
-	}
-): ProcessedPub | ProcessedPub[] {
+	} & Options
+): ProcessedPub<Options> | ProcessedPub<Options>[] {
+	const opts = {
+		...DEFAULT_OPTIONS,
+		...options,
+	};
+
+	const depth = opts.depth ?? DEFAULT_OPTIONS.depth;
+
 	// create a map of all pubs by their ID for easy lookup
 	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.pubId, pub]));
 
-	const processedPubsById = new Map<PubsId, ProcessedPub>();
-	// helper function to process a single pub
-	function processPub(pubId: PubsId, depth: number): ProcessedPub | undefined {
+	const processedPubsById = new Map<PubsId, ProcessedPub<Options>>();
+
+	function processPub(pubId: PubsId, depth: number): ProcessedPub<Options> | undefined {
 		// if (depth < 0) {
 		// 	return processedPubsById.get(pubId);
 		// }
@@ -1098,24 +1109,22 @@ function nestRelatedPubsAndChildren(
 			return undefined;
 		}
 
-		// Process values and their related pubs
 		const processedValues = unprocessedPub.values.map((value) => {
 			const relatedPub = value.relatedPubId
 				? processPub(value.relatedPubId, depth - 1)
 				: null;
 
 			return {
-				value: value.value,
+				...value,
 				...(relatedPub && { relatedPub }),
-			};
+			} as ProcessedPub<Options>["values"][number];
 		});
 
-		// Process children recursively
 		const processedChildren = unprocessedPub?.children
 			?.map((child) => processPub(child.id, depth - 1))
 			?.filter((child) => !!child);
 
-		const processedPub: ProcessedPub = {
+		const processedPub = {
 			...unprocessedPub,
 			id: unprocessedPub.pubId,
 			stageId: unprocessedPub.stageId,
@@ -1130,15 +1139,15 @@ function nestRelatedPubsAndChildren(
 			pubType: unprocessedPub.pubType ?? undefined,
 			values: processedValues,
 			children: processedChildren,
-		};
+		} as ProcessedPub<Options>;
 
 		processedPubsById.set(unprocessedPub.pubId, processedPub);
 		return processedPub;
 	}
 
-	if (rootPubId) {
+	if (opts.rootPubId) {
 		// start processing from the root pub
-		const rootPub = processPub(rootPubId, depth - 1);
+		const rootPub = processPub(opts.rootPubId, depth - 1);
 		if (!rootPub) {
 			throw PubNotFoundError;
 		}
