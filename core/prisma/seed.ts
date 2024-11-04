@@ -1,12 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import { makeWorkerUtils } from "graphile-worker";
 
+import type { CommunitiesId } from "db/public";
 import { logger } from "logger";
 
+import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/auth/password";
 import { env } from "~/lib/env/env.mjs";
-import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
+import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
+import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
 
 const prisma = new PrismaClient();
@@ -30,26 +33,33 @@ async function createUserMembers({
 	role: "editor" | "admin" | "contributor";
 	prismaCommunityIds: string[];
 }) {
-	await prisma.user.create({
-		data: {
-			slug,
-			email: email,
-			firstName,
-			lastName,
-			passwordHash: await createPasswordHash(password),
-			avatar: "/demo/person.png",
-			isSuperAdmin,
-			memberships: {
-				createMany: {
-					data: prismaCommunityIds.map((communityId) => ({ communityId, role })),
-				},
-			},
-		},
-	});
+	const values = {
+		slug,
+		email: email,
+		firstName,
+		lastName,
+		passwordHash: await createPasswordHash(password),
+		avatar: "/demo/person.png",
+		isSuperAdmin,
+	};
+	return db
+		.with("new_users", (db) => db.insertInto("users").values(values).returningAll())
+		.insertInto("members")
+		.values((eb) =>
+			prismaCommunityIds.map((id) => ({
+				userId: eb.selectFrom("new_users").select("new_users.id").where("slug", "=", slug),
+				communityId: id as CommunitiesId,
+			}))
+		)
+		.returningAll()
+		.executeTakeFirstOrThrow();
 }
 
 async function main() {
-	const prismaCommunityIds = [unJournalId, crocCrocId];
+	const arcadiaId = crypto.randomUUID() as CommunitiesId;
+	const croccrocId = crypto.randomUUID() as CommunitiesId;
+
+	const prismaCommunityIds = [unJournalId, croccrocId, arcadiaId];
 
 	logger.info("migrate graphile");
 	const workerUtils = await makeWorkerUtils({
@@ -57,44 +67,48 @@ async function main() {
 	});
 	await workerUtils.migrate();
 
-	logger.info("build crocroc");
-	await buildCrocCroc(crocCrocId);
 	logger.info("build unjournal");
-	await buildUnjournal(prisma, unJournalId);
+	await Promise.all([
+		buildUnjournal(prisma, unJournalId),
+		seedCroccroc(croccrocId),
+		seedArcadia(arcadiaId),
+	]);
 
 	try {
-		await createUserMembers({
-			email: "all@pubpub.org",
-			password: "pubpub-all",
-			slug: "all",
-			firstName: "Jill",
-			lastName: "Admin",
-			isSuperAdmin: true,
-			role: "admin",
-			prismaCommunityIds,
-		});
+		await Promise.all([
+			createUserMembers({
+				email: "all@pubpub.org",
+				password: "pubpub-all",
+				slug: "all",
+				firstName: "Jill",
+				lastName: "Admin",
+				isSuperAdmin: true,
+				role: "admin",
+				prismaCommunityIds,
+			}),
 
-		await createUserMembers({
-			email: "some@pubpub.org",
-			password: "pubpub-some",
-			slug: "some",
-			firstName: "Jack",
-			lastName: "Editor",
-			isSuperAdmin: false,
-			role: "editor",
-			prismaCommunityIds,
-		});
+			createUserMembers({
+				email: "some@pubpub.org",
+				password: "pubpub-some",
+				slug: "some",
+				firstName: "Jack",
+				lastName: "Editor",
+				isSuperAdmin: false,
+				role: "editor",
+				prismaCommunityIds,
+			}),
 
-		await createUserMembers({
-			email: "none@pubpub.org",
-			password: "pubpub-none",
-			slug: "none",
-			firstName: "Jenna",
-			lastName: "Contributor",
-			isSuperAdmin: false,
-			role: "contributor",
-			prismaCommunityIds,
-		});
+			createUserMembers({
+				email: "none@pubpub.org",
+				password: "pubpub-none",
+				slug: "none",
+				firstName: "Jenna",
+				lastName: "Contributor",
+				isSuperAdmin: false,
+				role: "contributor",
+				prismaCommunityIds,
+			}),
+		]);
 	} catch (error) {
 		logger.error(error);
 	}
