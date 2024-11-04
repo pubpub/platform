@@ -98,6 +98,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 
 		await memberDialog.getByLabel("First Name").fill(firstName);
 		await memberDialog.getByLabel("Last Name").fill(lastName);
+		await page.waitForTimeout(2000);
 		await memberDialog.getByRole("button", { name: "Submit", exact: true }).click();
 		await memberDialog
 			.getByRole("option", {
