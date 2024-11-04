@@ -70,7 +70,8 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 						}
 					},
 					(errors) => {
-						logger.error({
+						// eslint-disable-next-line no-console
+						console.error({
 							msg: "user couldn't be created because of validation errors",
 							errors,
 						});
