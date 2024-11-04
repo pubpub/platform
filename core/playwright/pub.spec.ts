@@ -78,6 +78,7 @@ test.describe("Moving a pub", () => {
 		// Shelved is its own node in stages
 		await page.getByRole("menuitem", { name: "Shelved" }).click();
 		await page.getByRole("button", { name: "Update Pub" }).click();
+		await page.getByRole("dialog", { name: "Update Pub" }).waitFor({ state: "hidden" });
 
 		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
 		await pubDetailsPage.goTo();
