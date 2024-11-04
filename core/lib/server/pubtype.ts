@@ -92,15 +92,17 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 						.selectFrom("_PubFieldToPubType")
 						.whereRef("B", "=", "pub_types.id")
 						.select((eb) =>
-							eb.fn.coalesce(
-								eb.fn.jsonAgg(
-									jsonBuildObject({
-										id: eb.ref("A"),
-										isTitle: eb.ref("isTitle"),
-									})
-								),
-								sql`'{}'`
-							)
+							eb.fn
+								.coalesce(
+									eb.fn.jsonAgg(
+										jsonBuildObject({
+											id: eb.ref("A"),
+											isTitle: eb.ref("isTitle"),
+										})
+									),
+									sql`'{}'`
+								)
+								.as("pub_field_titles")
 						)
 						.as("fields"),
 			])
