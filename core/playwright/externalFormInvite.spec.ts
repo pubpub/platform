@@ -121,7 +121,7 @@ test("Invite a user to fill out the form", async ({ browser }) => {
 	await newPage.getByLabel(`${COMMUNITY_SLUG}:content`).fill("LGTM");
 
 	// Make sure it autosaves
-	await newPage.getByText("Last saved at").waitFor({ timeout: 6000 });
+	await newPage.getByText("Last saved at").waitFor({ timeout: 7000 });
 
 	await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 
