@@ -19,6 +19,7 @@ import type {
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
+	CoreSchemaType,
 	PubFieldsId,
 	PublicSchema,
 	PubsId,
@@ -619,21 +620,6 @@ export type UnprocessedPub = {
 	}[];
 	children?: { id: PubsId }[];
 };
-export type ProcessedPub = {
-	id: PubsId;
-	stageId: StagesId | null;
-	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
-	pubType?: PubTypes;
-	parentId: PubsId | null;
-	values: {
-		value: unknown;
-		relatedPub?: ProcessedPub | undefined;
-	}[];
-	children?: ProcessedPub[];
-	createdAt: Date;
-	updatedAt: Date;
-};
 
 type GetPubsWithRelatedValuesAndChildrenOptions = {
 	/**
@@ -706,6 +692,72 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 			communityId: CommunitiesId;
 	  };
 
+/**
+ * Only add the `children` if the `withChildren` option has not been set to `false
+ */
+type MaybePubChildren<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
+	Options["withChildren"] extends false
+		? { children?: undefined }
+		: { children: ProcessedPub<Options>[] };
+
+/**
+ * Only add the `pubType` if the `withPubType` option has not been set to `false
+ */
+type MaybePubPubType<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
+	Options["withPubType"] extends true ? { pubType: PubTypes } : { pubType?: undefined };
+
+type MaybeWithRelatedPub<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
+	Options["withRelatedPubs"] extends false
+		? { relatedPub?: undefined }
+		: { relatedPub: ProcessedPub<Options>[] };
+
+/**
+ * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
+ *
+ * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
+ *
+ **/
+type MaybeOptions = Pick<
+	GetPubsWithRelatedValuesAndChildrenOptions,
+	"withChildren" | "withRelatedPubs" | "withPubType" | "withStage"
+>;
+
+export type ProcessedPub<Options extends MaybeOptions = {}> = {
+	id: PubsId;
+	stageId: StagesId | null;
+	communityId: CommunitiesId;
+	pubTypeId: PubTypesId;
+	parentId: PubsId | null;
+	/**
+	 * An array of values for the pub.
+	 */
+	values: ({
+		id: PubValuesId;
+		fieldId: PubFieldsId;
+		value: unknown;
+		relatedPubId: PubsId | null;
+		createdAt: Date;
+		updatedAt: Date;
+		/**
+		 * Information about the field that the value belongs to.
+		 */
+		field: {
+			schemaName: CoreSchemaType;
+			slug: string;
+		};
+	} & MaybeWithRelatedPub<Options>)[];
+	createdAt: Date;
+	/**
+	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
+	 *
+	 * We do this because the Pub itself is rarely if ever changed over time.
+	 * TODO: Possibly add the `updatedAt` of `PubsInStages` here as well?
+	 * At time of writing (2024/11/04) I don't think that table has an `updatedAt`.
+	 */
+	updatedAt: Date;
+} & MaybePubChildren<Options> &
+	MaybePubPubType<Options>;
+
 const DEFAULT_OPTIONS = {
 	depth: 2,
 	withChildren: true,
@@ -714,23 +766,29 @@ const DEFAULT_OPTIONS = {
 	cycle: "include",
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
-export async function getPubsWithRelatedValuesAndChildren(
+export async function getPubsWithRelatedValuesAndChildren<
+	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
+>(
 	props: {
 		pubId: PubsId;
 	},
-	options?: GetPubsWithRelatedValuesAndChildrenOptions
-): Promise<ProcessedPub>;
-export async function getPubsWithRelatedValuesAndChildren(
+	options?: Options
+): Promise<ProcessedPub<Options>>;
+export async function getPubsWithRelatedValuesAndChildren<
+	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
+>(
 	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
-	options?: GetPubsWithRelatedValuesAndChildrenOptions
-): Promise<ProcessedPub[]>;
+	options?: Options
+): Promise<ProcessedPub<Options>[]>;
 /**
  * Retrieves a pub and all its related values, children, and related pubs up to a given depth.
  */
-export async function getPubsWithRelatedValuesAndChildren(
+export async function getPubsWithRelatedValuesAndChildren<
+	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
+>(
 	props: PubIdOrPubTypeIdOrStageIdOrCommunityId,
-	options?: GetPubsWithRelatedValuesAndChildrenOptions
-): Promise<ProcessedPub | ProcessedPub[]> {
+	options?: Options
+): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
 	const {
 		depth,
 		withChildren,
@@ -826,7 +884,6 @@ export async function getPubsWithRelatedValuesAndChildren(
 						qb.union((qb) =>
 							qb
 								.selectFrom("pub_tree")
-
 								.innerJoin("pubs", (join) =>
 									join.on((eb) =>
 										eb.or([

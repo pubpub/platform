@@ -1,9 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
-import type { PubsId } from "db/public";
+import type { PubsId, PubTypes, Stages } from "db/public";
 import { CoreSchemaType } from "db/public";
 
-import type { UnprocessedPub } from "./pub";
+import type { ProcessedPub, UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 
@@ -249,6 +249,11 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 			],
 		});
+
+		// check that children are defined because `withChildren` is not `false`
+		expectTypeOf(pubValues.children).not.toEqualTypeOf<undefined>();
+		// check that relatedPub is defined because `withRelatedPubs` is not `false`
+		expectTypeOf(pubValues.values[0].relatedPub).not.toEqualTypeOf<undefined>();
 	});
 
 	it("should be able to fetch pubvalues with children", async () => {
@@ -346,8 +351,10 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
 			{ pubId: rootPubId },
-			{ depth: 10 }
+			{ depth: 10, withPubType: true }
 		);
+
+		expectTypeOf(pubWithRelatedValuesAndChildren.pubType).toEqualTypeOf<PubTypes>();
 
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
@@ -464,6 +471,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				limit: 1,
 			}
 		);
+
+		// checks whether the output is an array if `communityId` is provided
+		expectTypeOf(pubs).toEqualTypeOf<ProcessedPub[]>();
 
 		expect(pubs.length).toBe(1);
 	});
@@ -621,6 +631,8 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10, withChildren: false, withRelatedPubs: false }
 		);
 
+		expectTypeOf(pubWithRelatedValuesAndChildren.children).toEqualTypeOf<undefined>();
+
 		expect(pubWithRelatedValuesAndChildren.children).toEqual([]);
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
@@ -632,5 +644,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		});
 
 		expect(pubWithRelatedValuesAndChildren.values[1].relatedPub).toBeUndefined();
+		// check that the relatedPub is `undefined` in type as well as value due to `{withRelatedPubs: false}`
+		expectTypeOf(pubWithRelatedValuesAndChildren.values[1]).toMatchTypeOf<{
+			relatedPub?: undefined;
+		}>();
 	});
 });
