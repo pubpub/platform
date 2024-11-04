@@ -8,6 +8,7 @@ import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
 import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
+import { ContextAtom } from "./AtomRenderer";
 
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
@@ -53,7 +54,7 @@ export const ContextEditorClient = ({
 				getPubById={() => {
 					return {};
 				}}
-				atomRenderingComponent={() => {}}
+				atomRenderingComponent={ContextAtom}
 				onChange={onChange}
 				initialDoc={initialDoc}
 			/>
