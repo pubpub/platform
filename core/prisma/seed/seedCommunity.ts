@@ -370,7 +370,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 		const input = {
 			communityId: community.id,
-			// @ts-expect-error Cant assign a different trx to a trx, technically
 			trx,
 			body: {
 				id: rootPubId,
