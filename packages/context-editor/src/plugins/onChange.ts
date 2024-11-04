@@ -10,12 +10,7 @@ export default () => {
 			return {
 				update: (editorView) => {
 					// console.log(initialPubs[0].children[0].values['rd:content'])
-					const { onChange, initialDoc } = reactPropsKey.getState(editorView.state);
-					// console.log(editorView.state.doc.toJSON());
-					const initialDocNode = baseSchema.nodeFromJSON(initialDoc);
-					const isDiff = editorView.state.doc.content.findDiffStart(initialDocNode.content);
-					console.log(isDiff ? 'Changed true' : 'false')
-
+					const { onChange } = reactPropsKey.getState(editorView.state);
 					onChange(editorView.state);
 				},
 			};
