@@ -58,9 +58,13 @@ test.beforeAll(async ({ browser }) => {
 	});
 });
 
-test.afterAll(async () => {
+test.afterEach(async () => {
 	console.log("Browser console errors:\n");
 	console.log(errors);
+	errors = [];
+});
+
+test.afterAll(async () => {
 	await page.close();
 });
 
