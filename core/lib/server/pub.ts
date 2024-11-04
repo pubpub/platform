@@ -26,6 +26,7 @@ import type {
 	PubTypes,
 	PubTypesId,
 	PubValuesId,
+	Stages,
 	StagesId,
 	UsersId,
 } from "db/public";
@@ -610,6 +611,7 @@ export type UnprocessedPub = {
 	pubType?: PubTypes;
 	createdAt: Date;
 	isCycle?: boolean;
+	stage?: Stages;
 	values: {
 		id: PubValuesId;
 		fieldId: PubFieldsId;
@@ -647,6 +649,12 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 * @default false
 	 */
 	withPubType?: boolean;
+	/**
+	 * Whether to include the stage.
+	 *
+	 * @default false
+	 */
+	withStage?: boolean;
 	search?: string;
 	/**
 	 * Whether to include the first pub that is part of a cycle.
@@ -699,6 +707,12 @@ type MaybePubChildren<Options extends GetPubsWithRelatedValuesAndChildrenOptions
 	Options["withChildren"] extends false
 		? { children?: undefined }
 		: { children: ProcessedPub<Options>[] };
+
+/**
+ * Only add the `stage` if the `withStage` option has not been set to `false
+ */
+type MaybePubStage<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
+	Options["withStage"] extends true ? { stage: Stages } : { stage?: undefined };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
@@ -756,6 +770,7 @@ export type ProcessedPub<Options extends MaybeOptions = {}> = {
 	 */
 	updatedAt: Date;
 } & MaybePubChildren<Options> &
+	MaybePubStage<Options> &
 	MaybePubPubType<Options>;
 
 const DEFAULT_OPTIONS = {
@@ -763,6 +778,7 @@ const DEFAULT_OPTIONS = {
 	withChildren: true,
 	withRelatedPubs: true,
 	withPubType: false,
+	withStage: false,
 	cycle: "include",
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
@@ -801,6 +817,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		offset,
 		search,
 		withPubType,
+		withStage,
 	} = {
 		...DEFAULT_OPTIONS,
 		...options,
@@ -1003,16 +1020,19 @@ export async function getPubsWithRelatedValuesAndChildren<
 						.whereRef("children.parentId", "=", "pub_tree.pubId")
 				).as("children"),
 			])
-			// .$if(withChildren, (qb) =>
-			// 	qb.select((eb) => [
-			// 		jsonArrayFrom(
-			// 			eb
-			// 				.selectFrom("pub_tree as children")
-			// 				.select(["children.pubId as id"])
-			// 				.whereRef("children.parentId", "=", "pub_tree.pubId")
-			// 		).as("children"),
-			// 	])
-			// )
+			// TODO: is there a more efficient way to do this?
+			.$if(Boolean(withStage), (qb) =>
+				qb.select((eb) =>
+					jsonObjectFrom(
+						eb
+							.selectFrom("stages")
+							.selectAll("stages")
+							.where("pub_tree.stageId", "is not", null)
+							.whereRef("stages.id", "=", "pub_tree.stageId")
+							.limit(1)
+					).as("stage")
+				)
+			)
 			.$if(Boolean(withPubType), (qb) =>
 				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
 			)

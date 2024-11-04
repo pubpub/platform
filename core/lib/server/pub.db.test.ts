@@ -27,12 +27,16 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 			"Some relation": true,
 		},
 	},
+	stages: {
+		"Stage 1": {},
+	},
 	pubs: [
 		{
 			pubType: "Basic Pub",
 			values: {
 				Title: "Some title",
 			},
+			stage: "Stage 1",
 		},
 		{
 			pubType: "Basic Pub",
@@ -54,9 +58,6 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 			},
 		},
 	],
-	stages: {
-		"Stage 1": {},
-	},
 	users: {},
 });
 
@@ -648,5 +649,20 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expectTypeOf(pubWithRelatedValuesAndChildren.values[1]).toMatchTypeOf<{
 			relatedPub?: undefined;
 		}>();
+	});
+
+	it("should be able to retrieve the stage a pub is in", async () => {
+		const trx = getTrx();
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pubs[0].id },
+			{ withStage: true }
+		);
+
+		expectTypeOf(pub).toMatchTypeOf<{ stage: Stages }>();
+
+		expect(pub.stage.name).toBe("Stage 1");
 	});
 });
