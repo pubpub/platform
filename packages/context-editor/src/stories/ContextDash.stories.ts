@@ -36,6 +36,5 @@ export const Primary: Story = {
 		getPubs,
 		getPubById: ()=>undefined,
 		atomRenderingComponent: AtomRenderer,
-		disabled:true,
 	},
 };
