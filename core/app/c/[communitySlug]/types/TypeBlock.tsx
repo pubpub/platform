@@ -105,7 +105,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 									<tr>
 										<th>Fields</th>
 										<th>
-											<span>Title</span>
+											<span>Name</span>
 											{editing ? (
 												<p className="text-xs font-normal text-slate-500">
 													The selected field will be used as the pub's

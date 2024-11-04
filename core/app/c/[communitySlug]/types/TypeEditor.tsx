@@ -139,7 +139,7 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 												<tr>
 													<th className="text-left">Fields</th>
 													<th>
-														Title
+														Name
 														<FormDescription className="text-xs font-normal">
 															The selected field will be used as the
 															pub's name
