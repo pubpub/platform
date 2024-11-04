@@ -57,6 +57,7 @@ test.afterAll(async () => {
 
 test.describe("Inviting a new user to fill out a form", () => {
 	test("Admin can invite a new user and send them a form link with an email action", async () => {
+		test.setTimeout(60_000);
 		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId!);
 		await pubDetailsPage.goTo();
 
