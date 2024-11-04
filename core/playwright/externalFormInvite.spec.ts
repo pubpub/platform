@@ -116,14 +116,14 @@ test("Invite a user to fill out the form", async ({ browser }) => {
 	// Open a new page so that we're no longer logged in as admin
 	const newPage = await browser.newPage();
 	await newPage.goto(decodedUrl);
-	await page.getByText("Progress will be automatically saved").waitFor();
+	await newPage.getByText("Progress will be automatically saved").waitFor();
 
-	await page.getByLabel(`${COMMUNITY_SLUG}:content`).fill("LGTM");
+	await newPage.getByLabel(`${COMMUNITY_SLUG}:content`).fill("LGTM");
 
 	// Make sure it autosaves
-	await page.getByText("Last saved at").waitFor({ timeout: 6000 });
+	await newPage.getByText("Last saved at").waitFor({ timeout: 6000 });
 
-	await page.getByRole("button", { name: "Submit", exact: true }).click();
+	await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 
-	await page.getByText("Form Successfully Submitted").waitFor();
+	await newPage.getByText("Form Successfully Submitted").waitFor();
 });
