@@ -55,6 +55,8 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 			startTransition(() => {
 				return form.handleSubmit(
 					async ({ email, firstName, lastName }) => {
+						// eslint-disable-next-line no-console
+						console.error("running create user");
 						const result = await runCreateUserWithMembership({
 							email,
 							firstName,
@@ -63,6 +65,8 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 						});
 
 						if (didSucceed(result)) {
+							// eslint-disable-next-line no-console
+							console.error("create user succeeded");
 							toast({
 								title: "Success",
 								description: "User successfully invited",
