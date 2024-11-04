@@ -71,10 +71,10 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 					},
 					(errors) => {
 						// eslint-disable-next-line no-console
-						console.error({
-							msg: "user couldn't be created because of validation errors",
-							errors,
-						});
+						console.error(
+							"user couldn't be created because of validation errors",
+							JSON.stringify(errors)
+						);
 						// TODO: we should render this error somewhere
 					}
 				)();
