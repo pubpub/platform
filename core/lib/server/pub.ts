@@ -752,212 +752,229 @@ export async function getPubsWithRelatedValuesAndChildren(
 		throw new Error("Depth must be a positive number");
 	}
 
-	const result = await db
-		// this pub_tree CTE roughly returns an array like so
-		// [
-		// 	{ pubId: 1, rootId: 1, parentId: null, depth: 1, value: 'Some value', valueId: 1, relatedPubId: null},
-		//  { pubId: 1, rootId: 1, parentId: 1, depth: 1, value: 'Some relationship value', valueId: 2, relatedPubId: 3},
-		//  { pubId: 2, rootId: 1, parentId: 1, depth: 2, value: 'Some child value', valueId: 3, relatedPubId: null},
-		//  { pubId: 3, rootId: 1, parentId: 2, depth: 2, value: 'Some related value', valueId: 4, relatedPubId: null},
-		// ]
-		// so it's an array of length (pub + children + relatedPubs) * values,
-		// with information about their depth, parent, and pub they are related to
-		//
-		// we could instead only look for the related and child pubs and ignore the other values
-		// but this would mean we would later need to look up the values for each pub as a subquery
-		// this way, the only subqueries we need below are looking up information already stored in pub_tree,
-		// which is more efficient
-		.withRecursive("pub_tree", (cte) =>
-			cte
-				.selectFrom("pubs as p")
-				.leftJoin("pub_values as pv", (join) =>
-					join.on((eb) =>
-						eb.and([
-							eb("p.id", "=", eb.ref("pv.pubId")),
-							// eb("pv.relatedPubId", "is not", null),
-						])
-					)
-				)
-				.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
-				.$if(Boolean(fieldSlugs), (qb) => qb.where("pub_fields.slug", "in", fieldSlugs!))
-				.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
-				.select([
-					"p.id as pubId",
-					"pub_fields.schemaName as schemaName",
-					"pub_fields.slug as slug",
-					"p.pubTypeId",
-					"p.communityId",
-					"p.createdAt",
-					"PubsInStages.stageId",
-					"pv.id as valueId",
-					"pv.fieldId",
-					"pv.value",
-					"pv.relatedPubId",
-					"pv.createdAt as valueCreatedAt",
-					"pv.updatedAt as valueUpdatedAt",
-					"p.parentId",
-					sql<number>`1`.as("depth"),
-					sql<boolean>`false`.as("isCycle"),
-					sql<PubsId[]>`array[p.id]`.as("path"),
-				])
-				.where((eb) => {
-					if (props.pubId) {
-						return eb("p.id", "=", props.pubId);
-					}
-					if (props.stageId) {
-						return eb("PubsInStages.stageId", "=", props.stageId);
-					}
-					if (props.communityId) {
-						return eb("p.communityId", "=", props.communityId);
-					}
-					if (props.pubTypeId) {
-						return eb("p.pubTypeId", "=", props.pubTypeId);
-					}
-					throw new Error("No pubId, stageId, or communityId provided");
-				})
-				.$if(Boolean(search), (qb) =>
-					qb.where((eb) => eb(sql`pv.value::jsonb::text`, "ilike", `%${search}%`))
-				)
-				// we don't even need to recurse if we don't want children or related pubs
-				.$if(withChildren || withRelatedPubs, (qb) =>
-					qb.union((qb) =>
-						qb
-							.selectFrom("pub_tree")
-
-							.innerJoin("pubs", (join) =>
-								join.on((eb) =>
-									eb.or([
-										...(withChildren
-											? [eb("pubs.id", "=", eb.ref("pub_tree.relatedPubId"))]
-											: []),
-										...(withRelatedPubs
-											? [eb("pubs.parentId", "=", eb.ref("pub_tree.pubId"))]
-											: []),
-									])
-								)
-							)
-							.leftJoin("pub_values", (join) =>
-								join.on((eb) =>
-									eb.and([
-										eb("pubs.id", "=", eb.ref("pub_values.pubId")),
-										// eb("pub_values.relatedPubId", "is not", null),
-									])
-								)
-							)
-							.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
-							.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-							.$if(Boolean(fieldSlugs), (qb) =>
-								qb.where("pub_fields.slug", "in", fieldSlugs!)
-							)
-							.select([
-								"pubs.id as pubId",
-								"pub_fields.schemaName as schemaName",
-								"pub_fields.slug as slug",
-								"pubs.pubTypeId",
-								"pubs.communityId",
-								"pubs.createdAt",
-								"PubsInStages.stageId",
-								"pub_values.id as valueId",
-								"pub_values.fieldId",
-								"pub_values.value",
-								"pub_values.relatedPubId",
-								"pub_values.createdAt as valueCreatedAt",
-								"pub_values.updatedAt as valueUpdatedAt",
-								"pubs.parentId",
-								// increment the depth
-								sql<number>`pub_tree.depth + 1`.as("depth"),
-								// this is a standard way to detect cycles
-								// we keep track of the path we've taken so far,
-								// and set a flag if we see a pub that is already in the path
-								// https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-CYCLE
-								sql<boolean>`pubs.id = any(pub_tree."path")`.as("isCycle"),
-								sql<PubsId[]>`array_append(pub_tree."path", pubs.id)`.as("path"),
+	const result = await autoCache(
+		db
+			// this pub_tree CTE roughly returns an array like so
+			// [
+			// 	{ pubId: 1, rootId: 1, parentId: null, depth: 1, value: 'Some value', valueId: 1, relatedPubId: null},
+			//  { pubId: 1, rootId: 1, parentId: 1, depth: 1, value: 'Some relationship value', valueId: 2, relatedPubId: 3},
+			//  { pubId: 2, rootId: 1, parentId: 1, depth: 2, value: 'Some child value', valueId: 3, relatedPubId: null},
+			//  { pubId: 3, rootId: 1, parentId: 2, depth: 2, value: 'Some related value', valueId: 4, relatedPubId: null},
+			// ]
+			// so it's an array of length (pub + children + relatedPubs) * values,
+			// with information about their depth, parent, and pub they are related to
+			//
+			// we could instead only look for the related and child pubs and ignore the other values
+			// but this would mean we would later need to look up the values for each pub as a subquery
+			// this way, the only subqueries we need below are looking up information already stored in pub_tree,
+			// which is more efficient
+			.withRecursive("pub_tree", (cte) =>
+				cte
+					.selectFrom("pubs as p")
+					.leftJoin("pub_values as pv", (join) =>
+						join.on((eb) =>
+							eb.and([
+								eb("p.id", "=", eb.ref("pv.pubId")),
+								// eb("pv.relatedPubId", "is not", null),
 							])
-							.where("pub_tree.depth", "<", depth)
-							.where("pub_tree.isCycle", "=", false)
-							.$if(cycle === "exclude", (qb) =>
-								// this makes sure we don't include the first pub that is part of a cycle
-								qb.where(sql<boolean>`pubs.id = any(pub_tree.path)`, "=", false)
-							)
+						)
 					)
-				)
-		)
-		.selectFrom("pub_tree")
-		.select((eb) => [
-			"pub_tree.pubId",
-			"pub_tree.parentId",
-			"pub_tree.pubTypeId",
-			"pub_tree.depth",
-			"pub_tree.stageId",
-			"pub_tree.communityId",
-			"pub_tree.isCycle",
-			"pub_tree.path",
-			"pub_tree.createdAt",
-			// we return the updatedAt of the latest value, because the updatedAt of the pub itself
-			// does not really change over time
-			eb.fn
-				.coalesce(eb.fn.max("pub_tree.valueUpdatedAt"), "pub_tree.createdAt")
-				.as("updatedAt"),
-			jsonArrayFrom(
-				eb
-					.selectFrom("pub_tree as inner")
-					.select((eb) => [
-						"inner.valueId as id",
-						"inner.fieldId",
-						"inner.value",
-						"inner.relatedPubId",
-						"inner.valueCreatedAt as createdAt",
-						"inner.valueUpdatedAt as updatedAt",
-						jsonObjectFrom(
-							eb
-								.selectFrom("pub_tree as inner2")
-								.select(["inner2.schemaName", "inner2.slug"])
-								.whereRef("inner2.valueId", "=", "inner.valueId")
-								.limit(1)
-						).as("field"),
+					.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+					.$if(Boolean(fieldSlugs), (qb) =>
+						qb.where("pub_fields.slug", "in", fieldSlugs!)
+					)
+					.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
+					.select([
+						"p.id as pubId",
+						"pub_fields.schemaName as schemaName",
+						"pub_fields.slug as slug",
+						"p.pubTypeId",
+						"p.communityId",
+						"p.createdAt",
+						"PubsInStages.stageId",
+						"pv.id as valueId",
+						"pv.fieldId",
+						"pv.value",
+						"pv.relatedPubId",
+						"pv.createdAt as valueCreatedAt",
+						"pv.updatedAt as valueUpdatedAt",
+						"p.parentId",
+						sql<number>`1`.as("depth"),
+						sql<boolean>`false`.as("isCycle"),
+						sql<PubsId[]>`array[p.id]`.as("path"),
 					])
-					.whereRef("inner.pubId", "=", "pub_tree.pubId")
-					// this prevents us from double fetching values if we have detected a cycle
-					.whereRef("inner.depth", "=", "pub_tree.depth")
-					.orderBy("inner.valueCreatedAt desc")
-			).as("values"),
-			jsonArrayFrom(
-				eb
-					.selectFrom("pub_tree as children")
-					.select(["children.pubId as id"])
-					.distinctOn(["children.pubId"])
-					.whereRef("children.parentId", "=", "pub_tree.pubId")
-			).as("children"),
-		])
-		// .$if(withChildren, (qb) =>
-		// 	qb.select((eb) => [
-		// 		jsonArrayFrom(
-		// 			eb
-		// 				.selectFrom("pub_tree as children")
-		// 				.select(["children.pubId as id"])
-		// 				.whereRef("children.parentId", "=", "pub_tree.pubId")
-		// 		).as("children"),
-		// 	])
-		// )
-		.$if(Boolean(withPubType), (qb) =>
-			qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
-		)
-		.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
-		.$if(Boolean(limit), (qb) => qb.limit(limit!))
-		.$if(Boolean(offset), (qb) => qb.offset(offset!))
-		// this is necessary to filter out all the duplicate entries for the values
-		.groupBy([
-			"pubId",
-			"parentId",
-			"depth",
-			"pubTypeId",
-			"createdAt",
-			"stageId",
-			"communityId",
-			"isCycle",
-			"path",
-		])
-		.execute();
+					.where((eb) => {
+						if (props.pubId) {
+							return eb("p.id", "=", props.pubId);
+						}
+						if (props.stageId) {
+							return eb("PubsInStages.stageId", "=", props.stageId);
+						}
+						if (props.communityId) {
+							return eb("p.communityId", "=", props.communityId);
+						}
+						if (props.pubTypeId) {
+							return eb("p.pubTypeId", "=", props.pubTypeId);
+						}
+						throw new Error("No pubId, stageId, or communityId provided");
+					})
+					.$if(Boolean(search), (qb) =>
+						qb.where((eb) => eb(sql`pv.value::jsonb::text`, "ilike", `%${search}%`))
+					)
+					// we don't even need to recurse if we don't want children or related pubs
+					.$if(withChildren || withRelatedPubs, (qb) =>
+						qb.union((qb) =>
+							qb
+								.selectFrom("pub_tree")
+
+								.innerJoin("pubs", (join) =>
+									join.on((eb) =>
+										eb.or([
+											...(withChildren
+												? [
+														eb(
+															"pubs.id",
+															"=",
+															eb.ref("pub_tree.relatedPubId")
+														),
+													]
+												: []),
+											...(withRelatedPubs
+												? [
+														eb(
+															"pubs.parentId",
+															"=",
+															eb.ref("pub_tree.pubId")
+														),
+													]
+												: []),
+										])
+									)
+								)
+								.leftJoin("pub_values", (join) =>
+									join.on((eb) =>
+										eb.and([
+											eb("pubs.id", "=", eb.ref("pub_values.pubId")),
+											// eb("pub_values.relatedPubId", "is not", null),
+										])
+									)
+								)
+								.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+								.$if(Boolean(fieldSlugs), (qb) =>
+									qb.where("pub_fields.slug", "in", fieldSlugs!)
+								)
+								.select([
+									"pubs.id as pubId",
+									"pub_fields.schemaName as schemaName",
+									"pub_fields.slug as slug",
+									"pubs.pubTypeId",
+									"pubs.communityId",
+									"pubs.createdAt",
+									"PubsInStages.stageId",
+									"pub_values.id as valueId",
+									"pub_values.fieldId",
+									"pub_values.value",
+									"pub_values.relatedPubId",
+									"pub_values.createdAt as valueCreatedAt",
+									"pub_values.updatedAt as valueUpdatedAt",
+									"pubs.parentId",
+									// increment the depth
+									sql<number>`pub_tree.depth + 1`.as("depth"),
+									// this is a standard way to detect cycles
+									// we keep track of the path we've taken so far,
+									// and set a flag if we see a pub that is already in the path
+									// https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-CYCLE
+									sql<boolean>`pubs.id = any(pub_tree."path")`.as("isCycle"),
+									sql<PubsId[]>`array_append(pub_tree."path", pubs.id)`.as(
+										"path"
+									),
+								])
+								.where("pub_tree.depth", "<", depth)
+								.where("pub_tree.isCycle", "=", false)
+								.$if(cycle === "exclude", (qb) =>
+									// this makes sure we don't include the first pub that is part of a cycle
+									qb.where(sql<boolean>`pubs.id = any(pub_tree.path)`, "=", false)
+								)
+						)
+					)
+			)
+			.selectFrom("pub_tree")
+			.select((eb) => [
+				"pub_tree.pubId",
+				"pub_tree.parentId",
+				"pub_tree.pubTypeId",
+				"pub_tree.depth",
+				"pub_tree.stageId",
+				"pub_tree.communityId",
+				"pub_tree.isCycle",
+				"pub_tree.path",
+				"pub_tree.createdAt",
+				// we return the updatedAt of the latest value, because the updatedAt of the pub itself
+				// does not really change over time
+				eb.fn
+					.coalesce(eb.fn.max("pub_tree.valueUpdatedAt"), "pub_tree.createdAt")
+					.as("updatedAt"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("pub_tree as inner")
+						.select((eb) => [
+							"inner.valueId as id",
+							"inner.fieldId",
+							"inner.value",
+							"inner.relatedPubId",
+							"inner.valueCreatedAt as createdAt",
+							"inner.valueUpdatedAt as updatedAt",
+							jsonObjectFrom(
+								eb
+									.selectFrom("pub_tree as inner2")
+									.select(["inner2.schemaName", "inner2.slug"])
+									.whereRef("inner2.valueId", "=", "inner.valueId")
+									.limit(1)
+							).as("field"),
+						])
+						.whereRef("inner.pubId", "=", "pub_tree.pubId")
+						// this prevents us from double fetching values if we have detected a cycle
+						.whereRef("inner.depth", "=", "pub_tree.depth")
+						.orderBy("inner.valueCreatedAt desc")
+				).as("values"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("pub_tree as children")
+						.select(["children.pubId as id"])
+						.distinctOn(["children.pubId"])
+						.whereRef("children.parentId", "=", "pub_tree.pubId")
+				).as("children"),
+			])
+			// .$if(withChildren, (qb) =>
+			// 	qb.select((eb) => [
+			// 		jsonArrayFrom(
+			// 			eb
+			// 				.selectFrom("pub_tree as children")
+			// 				.select(["children.pubId as id"])
+			// 				.whereRef("children.parentId", "=", "pub_tree.pubId")
+			// 		).as("children"),
+			// 	])
+			// )
+			.$if(Boolean(withPubType), (qb) =>
+				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
+			)
+			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
+			.$if(Boolean(limit), (qb) => qb.limit(limit!))
+			.$if(Boolean(offset), (qb) => qb.offset(offset!))
+			// this is necessary to filter out all the duplicate entries for the values
+			.groupBy([
+				"pubId",
+				"parentId",
+				"depth",
+				"pubTypeId",
+				"createdAt",
+				"stageId",
+				"communityId",
+				"isCycle",
+				"path",
+			])
+	).execute();
 
 	if (options?._debugDontNest) {
 		// @ts-expect-error We should not accomodate the return type for this option
