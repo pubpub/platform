@@ -349,8 +349,6 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10 }
 		);
 
-		console.dir(pubWithRelatedValuesAndChildren, { depth: null });
-
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
 				{ value: "Some title" },
