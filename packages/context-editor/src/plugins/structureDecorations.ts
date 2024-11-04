@@ -13,7 +13,7 @@ function wrapWidget(
 	setPanelPosition: React.Dispatch<React.SetStateAction<PanelProps>>
 ) {
 	return () => {
-		const { pubTypes, pubId, pubTypeId } = reactPropsKey.getState(state);
+		const { pubTypes, pubId, pubTypeId, disabled } = reactPropsKey.getState(state);
 		const isBlock = node.isBlock;
 		const widget = document.createElement(isBlock ? "div" : "span");
 		widget.className = isBlock ? "wrap-widget" : "inline-wrap-widget";
@@ -53,23 +53,25 @@ function wrapWidget(
 			}
 			widgetButtonChild.className = node.type.name;
 		}
-		widget.addEventListener("click", (evt) => {
-			if (evt.target instanceof Element) {
-				const rect = evt.target.getBoundingClientRect();
-				const container = document.getElementById("context-editor-container");
-				const topOffset =
-					-1 * container.getBoundingClientRect().top + container.scrollTop + 16;
-				setPanelPosition({
-					top: isBlock ? rect.top + 4 + topOffset : rect.top - 17 + topOffset,
-					left: rect.left,
-					bottom: rect.bottom,
-					// right: rect.right,
-					right: -250,
-					pos,
-					node,
-				});
-			}
-		});
+		if (!disabled) {
+			widget.addEventListener("click", (evt) => {
+				if (evt.target instanceof Element) {
+					const rect = evt.target.getBoundingClientRect();
+					const container = document.getElementById("context-editor-container");
+					const topOffset =
+						-1 * container.getBoundingClientRect().top + container.scrollTop + 16;
+					setPanelPosition({
+						top: isBlock ? rect.top + 4 + topOffset : rect.top - 17 + topOffset,
+						left: rect.left,
+						bottom: rect.bottom,
+						// right: rect.right,
+						right: -250,
+						pos,
+						node,
+					});
+				}
+			});
+		}
 		return widget;
 	};
 }

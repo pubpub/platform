@@ -5,6 +5,7 @@ import initialDoc from "./initialDoc.json";
 import initialPubs from "./initialPubs.json";
 import initialTypes from "./initialTypes.json";
 import { getPubs } from "./mockUtils";
+import AtomRenderer from "./AtomRenderer";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -32,6 +33,8 @@ export const Primary: Story = {
 		getPubs,
 		onChange: (state) => {
 			console.log(state)
-		}
+		},
+		getPubById: ()=>undefined,
+		atomRenderingComponent: AtomRenderer,
 	},
 };

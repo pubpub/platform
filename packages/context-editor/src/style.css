@@ -99,6 +99,13 @@
 		}
 	}
 }
+.disabled {
+	.wrap-widget, .inline-wrap-widget {
+		button {
+			pointer-events: none;
+		}
+	}
+}
 .ProseMirror h1,
 .ProseMirror h2,
 .ProseMirror h3,

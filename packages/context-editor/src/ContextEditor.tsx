@@ -7,7 +7,6 @@ import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
 import { AttributePanel } from "./components/AttributePanel";
-// import applyDevTools from "prosemirror-dev-tools";
 import { basePlugins } from "./plugins";
 import { attributePanelKey } from "./plugins/attributePanel";
 import { reactPropsKey } from "./plugins/reactProps";
@@ -17,9 +16,6 @@ import "./style.css";
 import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
 
-import { suggest } from "prosemirror-suggest";
-
-import ContextAtom from "./components/ContextAtom";
 import SuggestPanel from "./components/SuggestPanel";
 
 export interface ContextEditorProps {
@@ -29,11 +25,13 @@ export interface ContextEditorProps {
 	pubTypeId: string;
 	pubTypes: object /* pub types in given context */;
 	getPubs: (filter: string) => Promise<any[]>;
-	getPubById: () => {} /* function to get a pub, both for autocomplete, and for id? */;
+	getPubById: (id: string) => {} | undefined /* function to get a pub, both for autocomplete, and for id? */;
 	onChange: (
 		state: any
 	) => void /* Something that passes up view, state, etc so parent can handle onSave, etc */;
-	atomRenderingComponent: any /* A react component that takes in the ContextAtom pubtype and renders it accordingly */;
+	atomRenderingComponent: React.ComponentType<{ nodeProp: any }> /* A react component that takes in the ContextAtom pubtype and renders it accordingly */;
+	className?: string;
+	disabled?: boolean;
 }
 export interface PanelProps {
 	top: number;
@@ -80,7 +78,8 @@ export default function ContextEditor(props: ContextEditorProps) {
 function UnwrappedEditor(props: ContextEditorProps) {
 	const Renderer = useMemo(() => {
 		return () => {
-			return <ContextAtom nodeProp={undefined} />;
+			const AtomRenderingComponent = props.atomRenderingComponent;
+			return <AtomRenderingComponent nodeProp={undefined} />;
 		};
 	}, [props.atomRenderingComponent]);
 	const nodeViewFactory = useNodeViewFactory();
@@ -128,6 +127,9 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	useEffect(() => {
 		/* Every Render */
 		if (view.current) {
+			view.current.setProps({
+				editable: ()=> !props.disabled
+			})
 			const tr = view.current.state.tr
 				.setMeta(reactPropsKey, { ...props, suggestData, setSuggestData })
 				.setMeta(attributePanelKey, { panelPosition, setPanelPosition });
@@ -138,7 +140,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		/* Figure out what I actually need to render on, and then clean up any useMemo calls if necessary */
 	}, [props, suggestData, panelPosition]);
 	return (
-		<div id="context-editor-container" className="relative max-w-screen-sm">
+		<div id="context-editor-container" className={`relative max-w-screen-sm ${props.disabled ? 'disabled' : ''} ${props.className}`}>
 			<div ref={viewHost} className="font-serif" />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { renderToString } from "react-dom/server";
 
-import ContextAtom from "../../../../../packages/context-editor/src/components/ContextAtom";
+import ContextAtom from "../AtomRenderer";
 
 export default function JsonPanel({ editorState }) {
 	const [style, setStyle] = useState("base");
