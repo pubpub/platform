@@ -35,6 +35,7 @@ import { Textarea } from "ui/textarea";
 
 import type { InputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
+import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
 import { isFieldInput } from "../types";
@@ -159,8 +160,18 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.richText]: {
 		name: "Rich Text",
 		demoComponent: () => {
-			// TODO
-			return <div></div>;
+			return (
+				// Negative margins to make things look ok while ContextEditor doesn't expose styling
+				<div className="-mt-4 w-full text-sm">
+					<div className="text-gray-500">Label</div>
+					<ContextEditorClient
+						pubs={[]}
+						pubTypes={[]}
+						onChange={() => {}}
+						className="-ml-6 -mt-6 h-16 w-full"
+					/>
+				</div>
+			);
 		},
 	},
 } as const;

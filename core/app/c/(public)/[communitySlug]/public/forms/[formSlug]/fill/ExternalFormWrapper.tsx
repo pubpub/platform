@@ -31,6 +31,7 @@ import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";
@@ -68,14 +69,17 @@ const preparePayload = ({
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug } of formElements) {
+	for (const { slug, schemaName } of formElements) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
 			// Only send fields that were changed.
 			formState.dirtyFields[slug]
 		) {
-			payload[slug] = formValues[slug];
+			payload[slug] =
+				schemaName === CoreSchemaType.RichText
+					? serializeProseMirrorDoc(formValues[slug])
+					: formValues[slug];
 		}
 	}
 	return payload;
