@@ -1,30 +1,42 @@
 import * as z from "zod";
 
-import type { StagePayload, StagesById } from "./types";
+import type { MoveConstraint, Stages, StagesId } from "db/public";
+
+export type StagewithConstraints = Stages & {
+	moveConstraints: MoveConstraint[];
+	moveConstraintSources: MoveConstraint[];
+};
+export type StagesById<T extends StagewithConstraints = StagewithConstraints> = {
+	[key: StagesId]: T;
+};
 
 /**
- * takes a stage, a map of
- * stages to their IDs and a list of stages
- * that have been visited so far, sets the head and returns a
- * list of stages that can be reached from the stage provided
- * @param stage
- * @param map of stages
- * @param visited stages
- * @returns
+ * Takes a stage, a map of stages to their IDs, and an optional list of stages
+ * that have been visited so far. Returns a list of stages that can be reached
+ * from the stage provided without mutating the visited stages.
+ * @param stage - The current stage
+ * @param stages - A map of stage IDs to stage objects
+ * @param visited - (Optional) An array of visited stages, defaults to an empty array
+ * @returns A new array of stages that have been visited
  */
-function createStageList(
-	stage: StagePayload,
+function createStageList<T extends StagewithConstraints>(
+	stage: T,
 	stages: StagesById,
-	visited: Array<StagePayload>
-): void {
+	visited: Array<T> = []
+): Array<T> {
+	// If the stage has already been visited, return the current visited list
 	if (visited.includes(stage)) {
-		return;
+		return visited;
 	}
-	visited.push(stage);
-	for (const constraint of stage.moveConstraints) {
+
+	// Add the current stage to the visited list (non-mutating)
+	const newVisited = [...visited, stage];
+
+	// Recursively process the stages reachable from this stage
+	return stage.moveConstraints.reduce((acc, constraint) => {
 		const nextStage = stages[constraint.destinationId];
-		createStageList(nextStage, stages, visited);
-	}
+		return createStageList<T>(nextStage as T, stages, acc);
+	}, newVisited);
 }
 
 /**
@@ -32,12 +44,8 @@ function createStageList(
  * @param stages
  * @returns  a map of stages at the index provided in the ID
  */
-export const makeStagesById = (stages: StagePayload[]): StagesById => {
-	const stagesById: StagesById = {};
-	for (const stage of stages) {
-		stagesById[stage.id] = stage;
-	}
-	return stagesById;
+export const makeStagesById = <T extends { id: StagesId }>(stages: T[]): { [key: StagesId]: T } => {
+	return Object.fromEntries(stages.map((stage) => [stage.id, stage]));
 };
 
 /**
@@ -45,21 +53,22 @@ export const makeStagesById = (stages: StagePayload[]): StagesById => {
  * @param stages
  * @returns
  */
-export function getStageWorkflows(stages: StagePayload[]): Array<Array<StagePayload>> {
+export function getStageWorkflows<T extends StagewithConstraints>(stages: T[]): Array<Array<T>> {
 	const stagesById = makeStagesById(stages);
 	// find all stages with edges that only point to them
 	const stageRoots = stages.filter((stage) => stage.moveConstraintSources.length === 0);
 	// for each stage, create a list of stages that can be reached from it
 	const stageWorkflows = stageRoots.map((stage) => {
-		const visited: Array<StagePayload> = [];
-		createStageList(stage, stagesById, visited);
-		return visited;
+		return createStageList(stage, stagesById);
 	});
-	return stageWorkflows;
+	return stageWorkflows as T[][];
 }
 
 // this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
-export function moveConstraintSourcesForStage(stage: StagePayload, stagesById: StagesById) {
+export function moveConstraintSourcesForStage<T extends StagewithConstraints>(
+	stage: T,
+	stagesById: StagesById<T>
+) {
 	return stage.moveConstraintSources.map((stage) => stagesById[stage.stageId]);
 }
 

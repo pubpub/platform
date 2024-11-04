@@ -21,7 +21,7 @@ const columnHelper = createColumnHelper<Animal>();
 const columns = [
 	columnHelper.accessor("name", { header: () => "Name", cell: (d) => d.getValue() }),
 	columnHelper.accessor("species", { header: () => "Species", cell: (d) => d.getValue() }),
-] as const satisfies ColumnDef<Animal, unknown>[];
+] as const satisfies ColumnDef<Animal, string>[];
 
 describe("DataTable", () => {
 	describe("paging", () => {
@@ -61,7 +61,7 @@ describe("DataTable", () => {
 						</button>
 					),
 				},
-			];
+			] satisfies ColumnDef<Animal, string>[];
 			render(<DataTable columns={columnsWithButton} data={DATA} onRowClick={rowClick} />);
 			const button = screen.getByTestId(`test-btn-0`);
 			fireEvent.click(button);

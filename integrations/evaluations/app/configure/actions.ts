@@ -3,8 +3,8 @@
 import { headers } from "next/headers";
 import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 
+import type { InstanceConfig } from "~/lib/types";
 import { setInstanceConfig } from "~/lib/instance";
-import { InstanceConfig } from "~/lib/types";
 
 export const configure = (instanceId: string, instanceConfig: InstanceConfig) => {
 	return withServerActionInstrumentation(

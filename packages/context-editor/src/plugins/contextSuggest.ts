@@ -1,9 +1,9 @@
 import fuzzy from "fuzzy";
-import autocomplete, { Options } from "prosemirror-autocomplete";
+import autocomplete, { type Options } from "prosemirror-autocomplete";
 import { Slice } from "prosemirror-model";
 import { v4 as uuidv4 } from "uuid";
 
-import { SuggestProps } from "../ContextEditor";
+import type { SuggestProps } from "../ContextEditor";
 import { reactPropsKey } from "./reactProps";
 
 const updateItems = async (view, filter) => {

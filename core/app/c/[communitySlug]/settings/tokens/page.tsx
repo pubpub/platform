@@ -1,12 +1,20 @@
+import type { Metadata } from "next";
+
 import { notFound } from "next/navigation";
 
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
 import { CreateTokenForm } from "./CreateTokenForm";
 import { ExistingToken } from "./ExistingToken";
 
+export const metadata: Metadata = {
+	title: "API Access Tokens",
+};
+
 export default async function Page({ params }: { params: { communitySlug: string } }) {
+	await getPageLoginData();
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
 		return notFound();

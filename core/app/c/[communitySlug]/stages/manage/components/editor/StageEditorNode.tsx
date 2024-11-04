@@ -1,36 +1,26 @@
-import { KeyboardEvent, memo, useCallback, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+import type { NodeProps } from "reactflow";
+
+import { memo, useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Handle, NodeProps, Position } from "reactflow";
+import { Handle, Position } from "reactflow";
 
+import type { StagesId } from "db/public";
 import { Button } from "ui/button";
 import { Settings } from "ui/icon";
-import { cn, expect } from "utils";
+import { cn } from "utils";
 
-import { StagePayload } from "~/lib/types";
+import type { CommunityStage } from "~/lib/server/stages";
 import { useStages } from "../../StagesContext";
 
 export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;
 
-export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) => {
+export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>) => {
 	const pathname = usePathname();
 	const { updateStageName } = useStages();
 	const [isEditingName, setIsEditingName] = useState(false);
-	const members = useMemo(
-		() =>
-			props.data.stage.permissions.reduce((acc, permission) => {
-				if (permission.memberGroup !== null) {
-					for (const user of permission.memberGroup.users) {
-						acc.add(user.id);
-					}
-				} else {
-					acc.add(expect(permission.memberId));
-				}
-				return acc;
-			}, new Set<string>()),
-		[props.data]
-	);
 	const nodeRef = useRef<HTMLDivElement>(null);
 	const nameRef = useRef<HTMLHeadingElement>(null);
 
@@ -60,7 +50,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 		if (isEditingName) {
 			window.getSelection()?.removeAllRanges();
 			if (nameRef.current) {
-				updateStageName(props.data.stage.id, nameRef.current.textContent!);
+				updateStageName(props.data.stage.id as StagesId, nameRef.current.textContent!);
 			}
 			setIsEditingName(false);
 		}
@@ -100,17 +90,17 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: StagePayload }>) 
 				<ul className="m-0 flex list-none gap-2 p-0">
 					<li>
 						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
-							{props.data.stage.pubs.length} pubs
+							{props.data.stage.pubsCount} pubs
 						</Button>
 					</li>
 					<li>
 						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
-							{props.data.stage.actionInstances.length} actions
+							{props.data.stage.actionInstancesCount} actions
 						</Button>
 					</li>
 					<li>
 						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
-							{members.size} members
+							{props.data.stage.actionInstancesCount} members
 						</Button>
 					</li>
 				</ul>

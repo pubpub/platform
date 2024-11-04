@@ -4,7 +4,7 @@ import { EditorView } from "prosemirror-view";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
-import { PanelProps } from "../ContextEditor";
+import type { PanelProps } from "../ContextEditor";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;

@@ -7,7 +7,8 @@ import { formElementsInitializerSchema } from "db/public";
 import { logger } from "logger";
 
 import type { FormBuilderSchema } from "./types";
-import { db, isUniqueConstraintError } from "~/kysely/database";
+import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
@@ -108,7 +109,16 @@ export const archiveForm = defineServerAction(async function archiveForm(id: For
 			db.updateTable("forms").set({ isArchived: true }).where("forms.id", "=", id)
 		).executeTakeFirstOrThrow();
 	} catch (error) {
-		logger.error({ msg: "error archiving form", error });
-		return { error: "Unable to archive form" };
+		return { error: "Unable to archive form", cause: error };
+	}
+});
+
+export const restoreForm = defineServerAction(async function unarchiveForm(id: FormsId) {
+	try {
+		await autoRevalidate(
+			db.updateTable("forms").set({ isArchived: false }).where("forms.id", "=", id)
+		).executeTakeFirstOrThrow();
+	} catch (error) {
+		return { error: "Unable to unarchive form", cause: error };
 	}
 });

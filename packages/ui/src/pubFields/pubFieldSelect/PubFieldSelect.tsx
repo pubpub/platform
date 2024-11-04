@@ -173,7 +173,7 @@ export const PubFieldSelect = () => {
 				value: pubField.slug,
 				label: pubField.slug,
 				node: (
-					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400 ">
+					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400">
 						{pubField.slug}
 					</span>
 				),

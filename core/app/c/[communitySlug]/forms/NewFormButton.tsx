@@ -47,13 +47,12 @@ type Props = {
 export const NewFormButton = ({ pubTypes }: Props) => {
 	const [isOpen, setIsOpen] = useState(false);
 
-	const form = useForm({
+	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 	});
 
 	const runCreateForm = useServerAction(createForm);
 	const community = useCommunity();
-	const router = useRouter();
 
 	const onSubmit = async ({ pubTypeName, name, slug }: z.infer<typeof schema>) => {
 		const pubTypeId = pubTypes.find((type) => type.name === pubTypeName)?.id;
@@ -72,7 +71,6 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 				description: "Form created",
 			});
 			form.reset();
-			router.push(`/c/${community.slug}/forms/${slug}/edit`);
 			setIsOpen(false);
 		}
 	};

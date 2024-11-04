@@ -3,7 +3,6 @@ import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
 import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-rest/serverless";
-import { NoResultError } from "kysely";
 import { DatabaseError } from "pg";
 
 import { logger } from "logger";
@@ -42,7 +41,7 @@ export class NotFoundError extends HTTPStatusError<404> {
 }
 
 // For use in app router API routes
-export const handleErrors = async (routeHandler) => {
+export const handleErrors = async (routeHandler: () => Promise<NextResponse>) => {
 	try {
 		return await routeHandler();
 	} catch (error) {

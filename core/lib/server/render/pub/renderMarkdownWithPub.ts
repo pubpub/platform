@@ -271,6 +271,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 							expect(attrs.form),
 							context.recipient.id,
 							context.recipient.user.id,
+							context.communityId,
 							context.pub.id
 						);
 					}
@@ -304,6 +305,15 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 	};
 };
 
+const process = async <T extends Processor<Node, Node, Node, any, string>>(
+	processor: T,
+	text: string
+) => {
+	const result = await processor.process(text);
+
+	return result.toString().trim();
+};
+
 export const renderMarkdownWithPub = async (
 	text: string,
 	context: utils.RenderWithPubContext,
@@ -316,14 +326,23 @@ export const renderMarkdownWithPub = async (
 		.use(remarkRehype)
 		.use(rehypeFormat);
 
-	let processor: Processor<Node, Node, Node, Node, string>;
-
 	if (asMarkdown) {
 		// Convert the HTML back to markdown using rehype-remark
-		processor = processorBase.use(rehypeRemark).use(remarkStringify);
-	} else {
-		processor = processorBase.use(rehypeStringify);
+		const processor = processorBase.use(rehypeRemark).use(remarkStringify);
+		return process(processor, text);
 	}
+
+	const processor = processorBase.use(rehypeStringify);
+	return process(processor, text);
+};
+
+export const renderMarkdownAsHtml = async (text: string) => {
+	const processor = unified()
+		.use(remarkParse)
+		.use(remarkDirective)
+		.use(remarkRehype)
+		.use(rehypeFormat)
+		.use(rehypeStringify);
 
 	const result = await processor.process(text);
 

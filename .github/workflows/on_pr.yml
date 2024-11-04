@@ -8,11 +8,24 @@ on:
             - opened
             - synchronize
 
+env:
+    AWS_REGION: us-east-1
+
 jobs:
     ci:
         uses: ./.github/workflows/ci.yml
     build-all:
         uses: ./.github/workflows/ecrbuild-all.yml
+        secrets:
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    e2e:
+        needs:
+            - build-all
+            # could theoretically be skipped, but in practice is always faster
+            # than waiting for the build-all job to finish anyway
+            - ci
+        uses: ./.github/workflows/e2e.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

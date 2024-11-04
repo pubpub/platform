@@ -1,4 +1,5 @@
-import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
+import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
+
 import { z } from "zod";
 
 import type { PubFieldsId } from "./PubFields";
@@ -18,13 +19,15 @@ export interface PubValuesTable {
 
 	fieldId: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>;
 
-	value: ColumnType<unknown, unknown, unknown>;
+	value: ColumnType<unknown | null, unknown | null, unknown | null>;
 
 	pubId: ColumnType<PubsId, PubsId, PubsId>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	relatedPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 }
 
 export type PubValues = Selectable<PubValuesTable>;
@@ -38,26 +41,29 @@ export const pubValuesIdSchema = z.string().uuid() as unknown as z.Schema<PubVal
 export const pubValuesSchema = z.object({
 	id: pubValuesIdSchema,
 	fieldId: pubFieldsIdSchema,
-	value: z.unknown(),
+	value: z.unknown().nullable(),
 	pubId: pubsIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	relatedPubId: pubsIdSchema.nullable(),
 });
 
 export const pubValuesInitializerSchema = z.object({
 	id: pubValuesIdSchema.optional(),
 	fieldId: pubFieldsIdSchema,
-	value: z.unknown(),
+	value: z.unknown().optional().nullable(),
 	pubId: pubsIdSchema,
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	relatedPubId: pubsIdSchema.optional().nullable(),
 });
 
 export const pubValuesMutatorSchema = z.object({
 	id: pubValuesIdSchema.optional(),
 	fieldId: pubFieldsIdSchema.optional(),
-	value: z.unknown().optional(),
+	value: z.unknown().optional().nullable(),
 	pubId: pubsIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	relatedPubId: pubsIdSchema.optional().nullable(),
 });

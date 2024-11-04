@@ -1,5 +1,5 @@
 import { getURLFromRedirectError } from "next/dist/client/components/redirect";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { withServerActionInstrumentation } from "@sentry/nextjs";
 
@@ -16,7 +16,7 @@ import { isClientExceptionOptions, makeClientException } from "../serverActions"
  * @returns
  */
 export const defineServerAction = <
-	T extends (...args: unknown[]) => Promise<unknown | ClientExceptionOptions>,
+	T extends (...args: any[]) => Promise<unknown | ClientExceptionOptions>,
 	A extends Parameters<T> = Parameters<T>,
 	R extends Awaited<ReturnType<T>> = Awaited<ReturnType<T>>,
 >(

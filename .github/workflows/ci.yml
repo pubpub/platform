@@ -1,15 +1,24 @@
 name: "CI"
 on:
     workflow_call:
+        inputs:
+            image-tag-override: # example: latest, 7037e37a18a379d583164441baff9e594cc479f8
+                type: string # use this to force a container version.
     workflow_dispatch:
 
 env:
     CI: true
+    AWS_REGION: us-east-1
+
+    ECR_REPOSITORY_PREFIX: pubpub-v7
+    CONTAINER_NAME: core
 
 jobs:
     ci:
         timeout-minutes: 15
         runs-on: ubuntu-latest
+        env:
+            COMPOSE_FILE: docker-compose.test.yml
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -17,46 +26,60 @@ jobs:
             - name: Install Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20.13.1
+                  node-version: 20
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v3
+            - uses: pnpm/action-setup@v4
+              name: Install pnpm
               with:
-                  version: 8
                   run_install: false
 
             - name: Get pnpm store directory
+              id: get-store-path
               shell: bash
               run: |
-                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
-            # Setup and try to restore cache
             - name: Setup pnpm cache
               uses: actions/cache@v4
               with:
-                  path: ${{ env.STORE_PATH }}
+                  path: ${{ steps.get-store-path.outputs.STORE_PATH }}
                   key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
-            - name: install dependencies
-              run: pnpm install
+            - name: Cache turbo
+              uses: actions/cache@v4
+              with:
+                  path: .turbo
+                  key: ${{ runner.os }}-turbo-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-turbo-
 
-            # this makes sure all the packages are properly linked
-            - name: preconstruct build
+            - name: Start up DB
+              run: docker compose --profile test up -d
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --prefer-offline
+
+            - name: p:build
               run: pnpm p:build
 
-            - name: generate prisma types
+            - name: Run migrations
+              run: pnpm --filter core migrate-test
+              env:
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+            - name: generate prisma
               run: pnpm --filter core prisma generate
 
-            - name: check formatting
-              run: pnpm run format
+            - name: Run prettier
+              run: pnpm format
 
-            - name: lint
-              run: pnpm run lint
+            - name: Run eslint
+              run: pnpm lint
 
-            - name: type-check
-              run: pnpm run type-check
+            - name: Run typecheck
+              run: pnpm type-check
 
-            - name: test
-              run: pnpm run test
+            - name: Run vitest tests
+              run: pnpm test-run

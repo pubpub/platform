@@ -15,7 +15,7 @@ import {
 	User,
 } from "contracts";
 
-import { Manifest, ManifestJson } from "./manifest";
+import type { Manifest, ManifestJson } from "./manifest";
 
 /**
  * Derive a union of readable keys from a manifest.

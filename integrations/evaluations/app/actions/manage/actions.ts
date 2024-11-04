@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
 
-import { SuggestedMembersQuery } from "@pubpub/sdk";
+import type { SuggestedMembersQuery } from "@pubpub/sdk";
 import { expect } from "utils";
 
 import {
@@ -17,13 +17,7 @@ import {
 import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 import { cookie } from "~/lib/request";
-import {
-	assertHasAccepted,
-	assertIsInvited,
-	EvaluatorWhoAccepted,
-	EvaluatorWithInvite,
-	isInvited,
-} from "~/lib/types";
+import { assertHasAccepted, isInvited } from "~/lib/types";
 import { InviteFormEvaluator } from "./types";
 
 export const save = async (

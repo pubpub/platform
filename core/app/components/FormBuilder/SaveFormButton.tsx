@@ -6,9 +6,10 @@ import { cn } from "utils";
 type Props = {
 	form: string;
 	className?: string;
+	disabled?: boolean;
 };
 
-export const SaveFormButton = ({ form, className }: Props) => {
+export const SaveFormButton = ({ form, className, disabled }: Props) => {
 	return (
 		<Button
 			variant="default"
@@ -17,6 +18,7 @@ export const SaveFormButton = ({ form, className }: Props) => {
 			form={form}
 			type="submit"
 			data-testid="save-form-button"
+			disabled={disabled}
 		>
 			Save
 		</Button>

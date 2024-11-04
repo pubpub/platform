@@ -7,24 +7,24 @@ import { Button } from "ui/button";
 import { Mail } from "ui/icon";
 import { toast } from "ui/use-toast";
 
+import * as actions from "~/app/components/forms/actions";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
 
 export const RequestLink = ({
 	formSlug,
-	communitySlug,
 	token,
 	pubId,
 }: {
 	formSlug: string;
-	communitySlug: string;
 	token: string;
 	pubId: PubsId;
 }) => {
 	const useRequestLink = useServerAction(actions.inviteUserToForm);
+	const { id: communityId } = useCommunity();
 
 	const requestLink = useCallback(async () => {
-		const link = await useRequestLink({ slug: formSlug, token, pubId });
+		const link = await useRequestLink({ slug: formSlug, token, pubId, communityId });
 
 		if (link && link.error) {
 			return;
@@ -34,7 +34,7 @@ export const RequestLink = ({
 			title: "Link sent",
 			description: "Successfully requested new link",
 		});
-	}, [token, formSlug, communitySlug, pubId]);
+	}, [token, formSlug, pubId, communityId]);
 
 	return (
 		<Button

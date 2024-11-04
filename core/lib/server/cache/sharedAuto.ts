@@ -3,7 +3,7 @@ import type { CompiledQuery, OperationNode, Simplify } from "kysely";
 import { QueryNode, SelectQueryNode, TableNode } from "kysely";
 
 import type { Database } from "db/Database";
-import { databaseTables } from "db/table-names";
+import { databaseTableNames } from "db/table-names";
 
 import type { AutoOptions, DirectAutoOutput, ExecuteCreatorFn, QB } from "./types";
 
@@ -132,8 +132,9 @@ export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
 
 	const tableArray = Array.from(tables ?? []);
 
-	const filteredTables = tableArray.filter((table): table is (typeof databaseTables)[number] =>
-		databaseTables.some((dbTable) => dbTable === table)
+	const filteredTables = tableArray.filter(
+		(table): table is (typeof databaseTableNames)[number] =>
+			databaseTableNames.some((dbTable) => dbTable === table)
 	);
 
 	return filteredTables;

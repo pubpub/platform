@@ -1,7 +1,8 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import { pubsSchema, pubTypesSchema, StagesId, stagesIdSchema, stagesSchema } from "db/public";
+import type { StagesId } from "db/public";
+import { pubsSchema, pubTypesSchema, stagesIdSchema, stagesSchema } from "db/public";
 
 import { CreatePubRequestBodyWithNulls, CreatePubRequestBodyWithNullsBase } from "./integrations";
 
@@ -21,7 +22,7 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 
 const contract = initContract();
 
-type PubWithChildren = z.infer<typeof pubsSchema> & {
+export type PubWithChildren = z.infer<typeof pubsSchema> & {
 	children?: PubWithChildren[];
 };
 
@@ -69,7 +70,7 @@ export const siteApi = contract.router(
 				summary: "Creates a pub",
 				body: CreatePubRequestBodyWithNullsNew,
 				responses: {
-					201: z.array(pubWithChildrenSchema),
+					201: pubWithChildrenSchema,
 				},
 			},
 		},

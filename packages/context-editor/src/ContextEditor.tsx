@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ProsemirrorAdapterProvider, useNodeViewFactory } from "@prosemirror-adapter/react";
 import { Node } from "prosemirror-model";
@@ -78,7 +80,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 function UnwrappedEditor(props: ContextEditorProps) {
 	const Renderer = useMemo(() => {
 		return () => {
-			return <ContextAtom />;
+			return <ContextAtom nodeProp={undefined} />;
 		};
 	}, [props.atomRenderingComponent]);
 	const nodeViewFactory = useNodeViewFactory();

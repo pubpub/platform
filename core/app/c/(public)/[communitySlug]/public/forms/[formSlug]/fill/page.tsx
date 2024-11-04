@@ -1,9 +1,9 @@
-import assert from "assert";
+import { randomUUID } from "crypto";
 
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { notFound, redirect, RedirectType } from "next/navigation";
-import { Session, User } from "lucia";
+import { notFound } from "next/navigation";
 
 import type { Communities, MembersId, PubsId, UsersId } from "db/public";
 import { MemberRole, StructuralFormElement } from "db/public";
@@ -13,16 +13,20 @@ import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
+import { FormElement } from "~/app/components/forms/FormElement";
+import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
 import { getLoginData } from "~/lib/auth/loginData";
 import { getCommunityRole } from "~/lib/auth/roles";
-import { getPub } from "~/lib/server";
+import { getPub, getPubCached } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import {
+	renderMarkdownAsHtml,
+	renderMarkdownWithPub,
+} from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { capitalize } from "~/lib/string";
 import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
-import { InnerForm } from "./InnerForm";
 import { RequestLink } from "./RequestLink";
 import { SaveStatus } from "./SaveStatus";
 import { handleFormToken } from "./utils";
@@ -33,7 +37,7 @@ const NotFound = ({ children }: { children: ReactNode }) => {
 
 const Completed = ({ element }: { element: Form["elements"][number] | undefined }) => {
 	return (
-		<div className="flex w-full flex-col gap-2 pt-32 text-center">
+		<div data-testid="completed" className="flex w-full flex-col gap-2 pt-32 text-center">
 			{element ? (
 				<div
 					className="prose self-center text-center"
@@ -49,10 +53,11 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 
 export type FormFillPageParams = { formSlug: string; communitySlug: string };
 
-export type FormFillPageSearchParams = { pubId?: PubsId } & (
-	| { token: string; reason: string }
-	| { token?: never; reason?: never }
-);
+export type FormFillPageSearchParams = {
+	pubId?: PubsId;
+	submitId?: string;
+	saveStatus?: string;
+} & ({ token: string; reason: string } | { token?: never; reason?: never });
 
 const ExpiredTokenPage = ({
 	params,
@@ -83,7 +88,6 @@ const ExpiredTokenPage = ({
 				</p>
 				<RequestLink
 					formSlug={params.formSlug}
-					communitySlug={params.communitySlug}
 					token={searchParams.token}
 					pubId={searchParams.pubId as PubsId}
 				/>
@@ -94,13 +98,46 @@ const ExpiredTokenPage = ({
 
 const renderElementMarkdownContent = async (
 	element: Form["elements"][number],
-	renderWithPubContext: RenderWithPubContext
+	renderWithPubContext: RenderWithPubContext | undefined
 ) => {
 	if (element.content === null) {
 		return "";
 	}
-	return renderMarkdownWithPub(element.content, renderWithPubContext);
+	if (renderWithPubContext) {
+		// Parses the markdown with the pub and returns as HTML
+		return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
+			() => element.content
+		);
+	}
+	return renderMarkdownAsHtml(element.content);
 };
+
+export async function generateMetadata({
+	params,
+	searchParams,
+}: {
+	params: FormFillPageParams;
+	searchParams: FormFillPageSearchParams;
+}): Promise<Metadata> {
+	const community = await findCommunityBySlug(params.communitySlug);
+
+	if (!community) {
+		return { title: "Community Not Found" };
+	}
+
+	const form = await getForm({
+		slug: params.formSlug,
+		communityId: community.id,
+	}).executeTakeFirst();
+
+	if (!form) {
+		return { title: "Form Not Found" };
+	}
+
+	return {
+		title: form.name,
+	};
+}
 
 export default async function FormPage({
 	params,
@@ -118,17 +155,13 @@ export default async function FormPage({
 	const [form, pub] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
-			communityId: community?.id,
+			communityId: community.id,
 		}).executeTakeFirst(),
-		searchParams.pubId ? await getPub(searchParams.pubId) : undefined,
+		searchParams.pubId ? await getPubCached(searchParams.pubId) : undefined,
 	]);
 
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
-	}
-	// TODO: eventually, we will be able to create a pub
-	if (!pub) {
-		return <NotFound>No pub found</NotFound>;
 	}
 
 	const { user, session } = await getLoginData();
@@ -171,7 +204,7 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+	const parentPub = pub?.parentId ? await getPub(pub.parentId as PubsId) : undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
@@ -183,31 +216,48 @@ export default async function FormPage({
 			id: user.id as UsersId,
 		},
 	};
-	const renderWithPubContext = {
-		recipient: memberWithUser,
-		communitySlug: params.communitySlug,
-		pub,
-		parentPub,
-	};
 
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
 	if (submitId && submitElement) {
-		submitElement.content = await renderElementMarkdownContent(
-			submitElement,
-			renderWithPubContext
-		);
+		// The post-submission page will only render once we have a pub
+		if (pub) {
+			const renderWithPubContext = {
+				communityId: community.id,
+				recipient: memberWithUser,
+				communitySlug: params.communitySlug,
+				pub,
+				parentPub,
+			};
+			submitElement.content = await renderElementMarkdownContent(
+				submitElement,
+				renderWithPubContext
+			);
+		}
 	} else {
 		const elementsWithMarkdownContent = form.elements.filter(
 			(element) => element.element === StructuralFormElement.p
 		);
+		const renderWithPubContext = pub
+			? {
+					communityId: community.id,
+					recipient: memberWithUser,
+					communitySlug: params.communitySlug,
+					pub,
+					parentPub,
+				}
+			: undefined;
 		await Promise.all(
 			elementsWithMarkdownContent.map(async (element) => {
 				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
 			})
 		);
 	}
+
+	const isUpdating = !!pub;
+	const pubId = pub?.id ?? (randomUUID() as PubsId);
+	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 
 	return (
 		<div className="isolate min-h-screen">
@@ -224,20 +274,30 @@ export default async function FormPage({
 					<Completed element={submitElement} />
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
-						<ExternalFormWrapper
-							pub={pub}
-							elements={form.elements}
-							className="col-span-2 col-start-2"
+						<FormElementToggleProvider
+							fieldSlugs={form.elements.reduce(
+								(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
+								[] as string[]
+							)}
 						>
-							<InnerForm
-								pub={pub}
+							<ExternalFormWrapper
+								pub={pubForForm}
 								elements={form.elements}
-								// The following params are for rendering UserSelectServer
-								communitySlug={params.communitySlug}
-								searchParams={searchParams}
-								values={pub.values}
-							/>
-						</ExternalFormWrapper>
+								isUpdating={isUpdating}
+								className="col-span-2 col-start-2"
+							>
+								{form.elements.map((e) => (
+									<FormElement
+										key={e.elementId}
+										pubId={pubId as PubsId}
+										element={e}
+										searchParams={searchParams}
+										communitySlug={params.communitySlug}
+										values={pub ? pub.values : {}}
+									/>
+								))}
+							</ExternalFormWrapper>
+						</FormElementToggleProvider>
 					</div>
 				)}
 			</div>

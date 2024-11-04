@@ -1,7 +1,7 @@
 import { exampleSetup } from "prosemirror-example-setup";
 import { Schema } from "prosemirror-model";
 
-import { ContextEditorProps, PanelProps } from "../ContextEditor";
+import type { ContextEditorProps, PanelProps } from "../ContextEditor";
 import attributePanel from "./attributePanel";
 import contextSuggest from "./contextSuggest";
 import onChange from "./onChange";

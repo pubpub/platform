@@ -21,6 +21,7 @@ export interface TableData {
 	updated: Date;
 	isArchived: boolean;
 	slug: string;
+	isRelation: boolean;
 }
 
 const ArchiveMenuItem = ({ field }: { field: TableData }) => {
@@ -98,7 +99,7 @@ export const getFieldTableColumns = () =>
 			accessorKey: "slug",
 			cell: ({ row }) => (
 				<div className="pr-10">
-					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400 ">
+					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400">
 						{row.original.slug}
 					</span>
 				</div>

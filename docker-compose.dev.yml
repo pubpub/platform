@@ -12,8 +12,6 @@ services:
       - MAILGUN_SMTP_HOST=smtp.mailgun.org
       - MAILGUN_SMTP_PORT=465
       - MAILGUN_SMTP_USERNAME=omitted
-      - NEXT_PUBLIC_PUBPUB_URL=http://localhost:8080
-      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
       - OTEL_SERVICE_NAME=core.core
       - PGDATABASE=postgres
       - PGHOST=host.docker.internal
@@ -21,7 +19,6 @@ services:
       - PGUSER=postgres
       - PGPASSWORD=postgres
       - PUBPUB_URL=http://localhost:8080
-      - SUPABASE_URL=http://host.docker.internal:54321
     networks:
       - app-network
     ports:

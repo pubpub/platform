@@ -23,8 +23,7 @@ jobs:
                   sha_short=$(git describe --always --abbrev=40 --dirty)
                   echo "Building containers with tag:"
                   echo "$sha_short"
-    # TODO: restore the commented `needs` lines once we implement
-    # Docker build caching in github actions
+
     build-base:
         uses: ./.github/workflows/ecrbuild-template.yml
         secrets:
@@ -38,7 +37,8 @@ jobs:
         with:
             package: core
             # we require a bigger lad
-            runner: ubuntu-latest-m
+            # We are now public, default public runner is big enough
+            # runner: ubuntu-latest-m
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -59,6 +59,7 @@ jobs:
         #   - build-base
         with:
             package: jobs
+            target: jobs
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

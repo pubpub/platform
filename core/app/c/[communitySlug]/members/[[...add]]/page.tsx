@@ -1,4 +1,4 @@
-import type { Community } from "@prisma/client";
+import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -7,15 +7,19 @@ import type { CommunitiesId } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import prisma from "~/prisma/db";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { AddMember } from "./AddMember";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { MemberTable } from "./MemberTable";
 
-const getCachedMembers = (community: Community) =>
+export const metadata: Metadata = {
+	title: "Members",
+};
+
+const getCachedMembers = (communityId: CommunitiesId) =>
 	autoCache(
 		db
 			.selectFrom("members")
@@ -42,7 +46,7 @@ const getCachedMembers = (community: Community) =>
 					.$notNull()
 					.as("user"),
 			])
-			.where("communityId", "=", community.id as CommunitiesId)
+			.where("communityId", "=", communityId)
 	);
 
 export default async function Page({
@@ -63,15 +67,13 @@ export default async function Page({
 		return notFound();
 	}
 
-	const community = await prisma.community.findUnique({
-		where: { slug: communitySlug },
-	});
+	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
 		return notFound();
 	}
 
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 	const isAdmin = isCommunityAdmin(user, community);
 
 	// we don't want to show the members page to non-admins
@@ -81,7 +83,7 @@ export default async function Page({
 
 	const page = parseInt(searchParams.page ?? "1", 10);
 
-	const members = await getCachedMembers(community).execute();
+	const members = await getCachedMembers(community.id).execute();
 
 	if (!members.length && page !== 1) {
 		return notFound();
@@ -105,7 +107,6 @@ export default async function Page({
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Members</h1>
 				<AddMemberDialog
-					community={community}
 					open={!!add}
 					content={<AddMember community={community} email={searchParams.email} />}
 				/>

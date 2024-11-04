@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, PubTypesId } from "db/public";
 import { Action, CoreSchemaType, ElementType, MemberRole } from "db/public";
@@ -54,6 +55,24 @@ export default async function main(communityUUID: CommunitiesId) {
 				slug: `${slug}:member-id`,
 				communityId: communityUUID,
 				schemaName: CoreSchemaType.MemberId,
+			},
+			{
+				name: "ok?",
+				slug: `${slug}:ok`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.Boolean,
+			},
+			{
+				name: "File",
+				slug: `${slug}:file`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.FileUpload,
+			},
+			{
+				name: "Confidence",
+				slug: `${slug}:conf`,
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.Vector3,
 			},
 		])
 		.returning(["id", "slug", "name", "schemaName"])
@@ -139,7 +158,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			role: MemberRole.admin,
 		})
 		.returning("id")
-		.executeTakeFirst();
+		.executeTakeFirstOrThrow();
 
 	const memberGroup = await db
 		.with("new_member_group", (db) =>
@@ -322,7 +341,7 @@ export default async function main(communityUUID: CommunitiesId) {
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
 				fieldId: persistedPubFields.find((field) => field.slug === `${slug}:member-id`)!.id,
-				value: JSON.stringify(users[0].id),
+				value: JSON.stringify(member.id),
 			},
 			{
 				pubId: eb.selectFrom("pubs_children").select("pubs_children.id"),
@@ -362,7 +381,7 @@ export default async function main(communityUUID: CommunitiesId) {
 					fieldId: field.id,
 					order: idx + 1,
 					type: ElementType.pubfield,
-					label: field.name,
+					component: field.schemaName ? defaultComponent(field.schemaName) : undefined,
 				})),
 				{
 					formId: eb.selectFrom("form").select("id"),

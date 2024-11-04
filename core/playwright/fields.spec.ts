@@ -15,6 +15,7 @@ test.describe.configure({ mode: "serial" });
 let page: Page;
 
 test.beforeAll(async ({ browser }) => {
+	test.setTimeout(30_000);
 	page = await browser.newPage();
 	await login({ page });
 	await createCommunity({
@@ -32,7 +33,13 @@ test.describe("Creating a field", () => {
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
 		await fieldsPage.addFieldsOfEachType();
-		for (const schema of Object.values(CoreSchemaType)) {
+		for (const [index, schema] of Object.values(CoreSchemaType)
+			.filter((s) => s !== CoreSchemaType.Null)
+			.entries()) {
+			// Need to go to the next page at this point to see the remaining fields...
+			if (index === 8) {
+				await page.getByRole("button", { name: "Go to next page" }).click();
+			}
 			await expect(
 				page.getByRole("button", { name: `Select row ${schema} ${schema}` })
 			).toHaveCount(1);
@@ -69,6 +76,46 @@ test.describe("Creating a field", () => {
 		await page.getByRole("textbox", { name: "name" }).fill("another test name");
 		await expect(page.getByRole("textbox", { name: "slug" })).toHaveValue("another-test-name");
 	});
+
+	test("Schema is only required if field is not a relationship field", async () => {
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.openNewFieldModal();
+		await page.getByRole("textbox", { name: "name" }).fill("Relation field");
+		await page.getByRole("button", { name: "Create" }).click();
+		await expect(page.getByTestId("schema-select-form-message")).toHaveText(
+			"Please select a schema type for this field"
+		);
+
+		// Mark that this field isRelation, then the format should no longer be required
+		// and the submission should go through with default Null schema
+		await page.getByTestId("isRelation-checkbox").click();
+		await page.getByRole("button", { name: "Create" }).click();
+		await expect(page.getByTestId("schema-select-form-message")).toHaveCount(0);
+
+		await page.getByRole("button", { name: "Updated" }).click();
+		await page.getByRole("menuitem", { name: "Desc" }).click();
+		const newRow = page.getByRole("button", { name: "Select row Relation field" });
+		await expect(newRow).toHaveCount(1);
+		await expect(newRow).toContainText("Null");
+	});
+
+	test("Schema can be selected for a relationship field", async () => {
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.openNewFieldModal();
+		const name = "Boolean relation field";
+		await page.getByRole("textbox", { name: "name" }).fill(name);
+		await page.getByTestId("isRelation-checkbox").click();
+		await fieldsPage.selectFormat(CoreSchemaType.Boolean);
+		await page.getByRole("button", { name: "Create" }).click();
+
+		await page.getByRole("button", { name: "Updated" }).click();
+		await page.getByRole("menuitem", { name: "Desc" }).click();
+		const newRow = page.getByRole("button", { name: `Select row ${name}` });
+		await expect(newRow).toHaveCount(1);
+		await expect(newRow).toContainText("Boolean");
+	});
 });
 
 test.describe("Editing a field", () => {
@@ -77,9 +124,13 @@ test.describe("Editing a field", () => {
 		await fieldsPage.goto();
 		await page.getByRole("button", { name: "Select row Title String" }).click();
 		await expect(page.getByRole("dialog").getByRole("combobox")).toBeDisabled();
-		await expect(page.getByRole("textbox", { name: "slug" })).toHaveCount(0);
+		await expect(page.getByRole("textbox", { name: "slug" })).toBeDisabled();
+		await expect(page.getByTestId("isRelation-checkbox")).toBeDisabled();
 		await page.getByRole("textbox", { name: "name" }).fill("New Title");
 		await page.getByRole("button", { name: "Update" }).click();
+
+		await page.getByRole("button", { name: "Updated" }).click();
+		await page.getByRole("menuitem", { name: "Desc" }).click();
 		await expect(page.getByRole("button", { name: `Select row New Title String` })).toHaveCount(
 			1
 		);

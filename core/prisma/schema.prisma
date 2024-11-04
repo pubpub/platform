@@ -8,7 +8,7 @@ datasource db {
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  previewFeatures = ["fullTextSearch", "tracing"]
 }
 
 generator comments {
@@ -28,8 +28,6 @@ model User {
   isSuperAdmin Boolean  @default(false)
   passwordHash String?
 
-  claims         ActionClaim[]
-  moves          ActionMove[]
   memberships    Member[]
   memberGroups   MemberGroup[]
   AuthToken      AuthToken[]
@@ -116,14 +114,13 @@ model Pub {
   parentId String?
   children Pub[]   @relation("pub_parent")
 
-  values                   PubValue[]
+  values                   PubValue[]                 @relation("original_pub")
   stages                   PubsInStages[]
-  claims                   ActionClaim[]
-  moves                    ActionMove[]
   integrationInstances     IntegrationInstance[]
   permissions              Permission[]
   IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
+  relatedValues            PubValue[]                 @relation("related_pub")
 
   @@map(name: "pubs")
 }
@@ -142,6 +139,7 @@ model PubField {
   isArchived       Boolean         @default(false)
   community        Community       @relation(fields: [communityId], references: [id])
   communityId      String
+  isRelation       Boolean         @default(false)
 
   values    PubValue[]
   pubTypes  PubType[]
@@ -151,14 +149,19 @@ model PubField {
 }
 
 enum CoreSchemaType {
-  String
   Boolean
-  Vector3
   DateTime
   Email
-  URL
-  MemberId
   FileUpload
+  MemberId
+  Null
+  Number
+  NumericArray
+  RichText
+  String
+  StringArray
+  URL
+  Vector3
 }
 
 model PubFieldSchema {
@@ -176,14 +179,16 @@ model PubFieldSchema {
 }
 
 model PubValue {
-  id        String   @id @default(dbgenerated("gen_random_uuid()"))
-  field     PubField @relation(fields: [fieldId], references: [id])
-  fieldId   String
-  value     Json
-  pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
+  field        PubField @relation(fields: [fieldId], references: [id])
+  fieldId      String
+  value        Json?
+  pub          Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade, name: "original_pub")
+  pubId        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  relatedPub   Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
+  relatedPubId String?
 
   // Add userId and integrationId to track who created the value
 
@@ -218,9 +223,6 @@ model Stage {
   pubs                  PubsInStages[]
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
-  claims                ActionClaim[]
-  movesFrom             ActionMove[]          @relation("move_source_stage")
-  movesTo               ActionMove[]          @relation("move_destination_stage")
   integrationInstances  IntegrationInstance[]
   permissions           Permission[]
   actionInstances       ActionInstance[]
@@ -250,38 +252,6 @@ model MoveConstraint {
   @@map(name: "move_constraint")
 }
 
-model ActionClaim {
-  id         String    @id @default(dbgenerated("gen_random_uuid()"))
-  stage      Stage     @relation(fields: [stageId], references: [id])
-  stageId    String
-  pub        Pub       @relation(fields: [pubId], references: [id])
-  pubId      String
-  user       User      @relation(fields: [userId], references: [id])
-  userId     String
-  releasedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @default(now()) @updatedAt
-
-  @@map(name: "action_claim")
-}
-
-model ActionMove {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()"))
-  sourceStage        Stage    @relation("move_source_stage", fields: [sourceStageId], references: [id])
-  sourceStageId      String
-  destinationStage   Stage    @relation("move_destination_stage", fields: [destinationStageId], references: [id])
-  destinationStageId String
-  pub                Pub      @relation(fields: [pubId], references: [id])
-  pubId              String
-  user               User     @relation(fields: [userId], references: [id])
-  userId             String
-  note               String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @default(now()) @updatedAt
-
-  @@map(name: "action_move")
-}
-
 model Member {
   id          String     @id @default(dbgenerated("gen_random_uuid()"))
   role        MemberRole @default(editor)
@@ -290,7 +260,7 @@ model Member {
   // admin status is ever removed.
   community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
-  user        User       @relation(fields: [userId], references: [id])
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now()) @updatedAt
@@ -313,7 +283,7 @@ enum MemberRole {
 model MemberGroup {
   id          String     @id @default(dbgenerated("gen_random_uuid()"))
   role        MemberRole @default(editor)
-  community   Community  @relation(fields: [communityId], references: [id])
+  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now()) @updatedAt
@@ -333,9 +303,9 @@ model Permission {
   // fields - if empty array, all fields
   // integrations - if empty array, all integrations
   // workflow actions? - can they move and claim?
-  member        Member?      @relation(fields: [memberId], references: [id])
+  member        Member?      @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberId      String?
-  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id])
+  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
@@ -471,7 +441,7 @@ model Form {
   name        String
   slug        String
   communityId String
-  community   Community      @relation(fields: [communityId], references: [id])
+  community   Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
   pubType     PubType        @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
   elements    FormElement[]
@@ -507,6 +477,11 @@ enum InputComponent {
   fileUpload
   memberSelect
   confidenceInterval
+  checkboxGroup
+  radioGroup
+  richText
+  selectDropdown
+  multivalueInput
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input
@@ -514,17 +489,18 @@ model FormElement {
   id        String                 @id @default(dbgenerated("gen_random_uuid()"))
   type      ElementType
   fieldId   String?
-  field     PubField?              @relation(fields: [fieldId], references: [id])
+  field     PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   formId    String
   order     Int?
+  // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
   label     String?
   element   StructuralFormElement?
   component InputComponent?
   config    Json?
   content   String?
   required  Boolean?
-  form      Form                   @relation(fields: [formId], references: [id])
-  stage     Stage?                 @relation(fields: [stageId], references: [id])
+  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stage     Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId   String?
 
   @@unique([type, label, formId])

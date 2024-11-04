@@ -14,6 +14,8 @@ import {
 } from "ui/dropdown-menu";
 import { Ellipsis, History, ToyBrick } from "ui/icon";
 
+import { RestoreFormButton } from "~/app/components/FormBuilder/RestoreFormButton";
+
 export type TableForm = {
 	id: FormsId;
 	slug: string;
@@ -83,26 +85,33 @@ export const getFormTableColumns = () =>
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
-				// TODO: remove this return so the actions column renders once archiving exists or
-				// there are other actions to take
-				return;
-				if (row.original.isArchived) {
-					return;
-				}
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="h-8 w-8 p-0">
+							<Button
+								variant="ghost"
+								className="h-8 w-8 p-0"
+								data-testid={`${row.original.slug}-actions-button`}
+							>
 								<span className="sr-only">Open menu</span>
 								<Ellipsis className="h-4 w-4" />
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="p-0">
 							<DropdownMenuItem asChild key={row.original.id}>
-								<ArchiveFormButton
-									className="w-full justify-start pl-3"
-									id={row.original.id}
-								/>
+								{row.original.isArchived ? (
+									<RestoreFormButton
+										className="w-full justify-start pl-3"
+										id={row.original.id}
+										slug={row.original.slug}
+									/>
+								) : (
+									<ArchiveFormButton
+										className="w-full justify-start pl-3"
+										id={row.original.id}
+										slug={row.original.slug}
+									/>
+								)}
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>

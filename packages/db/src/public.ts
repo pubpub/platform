@@ -1,7 +1,5 @@
 export * from "./public/Action";
-export * from "./public/ActionClaim";
 export * from "./public/ActionInstances";
-export * from "./public/ActionMove";
 export * from "./public/ActionRuns";
 export * from "./public/ActionRunStatus";
 export * from "./public/ApiAccessLogs";
@@ -19,6 +17,7 @@ export * from "./public/FormAccessType";
 export * from "./public/FormElements";
 export * from "./public/Forms";
 export * from "./public/FormToPermissions";
+export * from "./public/InputComponent";
 export * from "./public/IntegrationInstances";
 export * from "./public/IntegrationInstanceState";
 export * from "./public/IntegrationInstanceToPub";

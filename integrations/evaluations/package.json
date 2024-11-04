@@ -6,47 +6,50 @@
 		"dev": "next dev -p 3001 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true next build",
 		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"start": "next start",
 		"lint": "echo 'No linting rules defined'",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"start-standalone": "node server.js"
 	},
 	"files": [
 		".next"
 	],
 	"dependencies": {
-		"@honeycombio/opentelemetry-node": "^0.6.1",
+		"@honeycombio/opentelemetry-node": "catalog:",
 		"@hookform/resolvers": "^3.3.1",
-		"@opentelemetry/auto-instrumentations-node": "^0.41.1",
+		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@pubpub/sdk": "workspace:*",
-		"@sentry/nextjs": "^7.106.1",
-		"@t3-oss/env-nextjs": "^0.9.2",
+		"@sentry/nextjs": "catalog:",
+		"@t3-oss/env-nextjs": "^0.11.1",
 		"@ts-react/form": "^1.8.3",
 		"ajv": "^8.12.0",
 		"ajv-errors": "^3.0.0",
 		"ajv-formats": "^2.1.1",
-		"clsx": "^2.0.0",
-		"next": "14.2.4",
+		"clsx": "catalog:",
+		"next": "catalog:",
 		"parse5-sax-parser": "^7.0.0",
-		"react": "18.2.0",
-		"react-dom": "18.2.0",
+		"react": "catalog:react18",
+		"react-dom": "catalog:react18",
 		"react-hook-form": "^7.46.1",
-		"tailwind-merge": "^1.14.0",
+		"tailwind-merge": "catalog:",
 		"ui": "workspace:*",
 		"utils": "workspace:*",
-		"zod": "^3.23.8"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@preconstruct/next": "^4.0.0",
 		"@pubpub/prettier-config": "workspace:*",
 		"@tailwindcss/typography": "^0.5.10",
-		"@types/node": "20.3.1",
-		"@types/react": "18.2.78",
-		"@types/react-dom": "18.2.25",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:react18",
+		"react": "catalog:react18",
+		"react-dom": "catalog:react18",
 		"autoprefixer": "^10.4.14",
 		"logger": "workspace:*",
-		"postcss": "^8.4.27",
-		"tailwindcss": "^3.3.3",
+		"postcss": "catalog:",
+		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
-		"typescript": "5.4.2"
+		"typescript": "catalog:"
 	}
 }

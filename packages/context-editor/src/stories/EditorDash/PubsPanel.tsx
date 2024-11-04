@@ -29,7 +29,7 @@ function buildNestedList(pubs) {
 		// 	result.push(objectMap[obj.id]);
 		// }
 	});
-	
+
 	pubs.forEach((pub) => {
 		const parentId = pub.parentId || pub.parentPubId;
 
@@ -42,10 +42,9 @@ function buildNestedList(pubs) {
 }
 
 const PubList = (props) => {
-	
 	return props.list.map((item) => {
 		return (
-			<div className="pl-8 truncate" key={item.pubId || item.id}>
+			<div className="truncate pl-8" key={item.pubId || item.id}>
 				<span className="font-bold">{getPubTypeName(item.pubTypeId)}</span>:{" "}
 				{/* {item.id || item.pubId} */}
 				{item.values["rd:title"] || item.values["rd:source"]}

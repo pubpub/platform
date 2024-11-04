@@ -22,9 +22,9 @@ terraform {
 module "cluster" {
   source = "../v7-cluster"
 
-  name = var.name
+  name        = var.name
   environment = var.environment
-  region = var.region
+  region      = var.region
 
   pubpub_hostname = var.pubpub_hostname
 
@@ -38,7 +38,7 @@ module "cluster" {
 module "core_dependency_services" {
   source = "../core-services"
 
-  cluster_info = module.cluster.cluster_info
+  cluster_info           = module.cluster.cluster_info
   assets_bucket_url_name = var.ASSETS_BUCKET_NAME
 }
 
@@ -53,20 +53,20 @@ module "service_core" {
   cluster_info = module.cluster.cluster_info
 
   repository_url = var.ecr_repository_urls.core
-  nginx_image = "${var.ecr_repository_urls.nginx}:latest"
+  nginx_image    = "${var.ecr_repository_urls.nginx}:latest"
 
   listener = {
-    service_name = "core"
-    public = true
-    path_prefix = "/"
+    service_name  = "core"
+    public        = true
+    path_prefix   = "/"
     rule_priority = 100
-    from_port = 3000
-    to_port = 3000
-    protocol = "tcp"
+    from_port     = 3000
+    to_port       = 3000
+    protocol      = "tcp"
   }
 
   init_containers = [{
-    name = "migrations"
+    name  = "migrations"
     image = "${var.ecr_repository_urls.root}:latest"
     command = [
       "pnpm", "--filter", "core", "migrate-docker",
@@ -92,6 +92,7 @@ module "service_core" {
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
+      { name = "HOSTNAME", value = var.HOSTNAME },
     ]
 
     secrets = [
@@ -135,106 +136,113 @@ module "service_flock" {
   }
 }
 
- module "service_intg_submissions" {
-   source = "../container-generic"
+module "service_intg_submissions" {
+  source = "../container-generic"
 
-   service_name = "integration-submissions"
-   cluster_info = module.cluster.cluster_info
+  service_name = "integration-submissions"
+  cluster_info = module.cluster.cluster_info
 
-   repository_url = var.ecr_repository_urls.intg_submissions
-  nginx_image = "${var.ecr_repository_urls.nginx}:latest"
+  repository_url = var.ecr_repository_urls.intg_submissions
+  nginx_image    = "${var.ecr_repository_urls.nginx}:latest"
 
-   listener = {
-     service_name = "submissions"
-     public = true
-     path_prefix = "/intg/submissions/"
-     # lower number means this will be evaluated BEFORE the catch-all to core.
-     rule_priority = 80
-     from_port = 3000
-     to_port = 3000
-     protocol = "tcp"
-   }
+  listener = {
+    service_name = "submissions"
+    public       = true
+    path_prefix  = "/intg/submissions/"
+    # lower number means this will be evaluated BEFORE the catch-all to core.
+    rule_priority = 80
+    from_port     = 3000
+    to_port       = 3000
+    protocol      = "tcp"
+  }
 
-   configuration = {
-     environment = [
-       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
-     ]
+  configuration = {
+    environment = [
+      { name = "PUBPUB_URL", value = local.PUBPUB_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
+    ]
 
-     secrets = [
-       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
-       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
-       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
-     ]
-   }
- }
+    secrets = [
+      { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+      { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+    ]
+  }
+}
 
- module "service_intg_evaluations" {
-   source = "../container-generic"
+module "service_intg_evaluations" {
+  source = "../container-generic"
 
-   service_name = "integration-evaluations"
-   cluster_info = module.cluster.cluster_info
+  service_name = "integration-evaluations"
+  cluster_info = module.cluster.cluster_info
 
-   repository_url = var.ecr_repository_urls.intg_evaluations
-  nginx_image = "${var.ecr_repository_urls.nginx}:latest"
+  repository_url = var.ecr_repository_urls.intg_evaluations
+  nginx_image    = "${var.ecr_repository_urls.nginx}:latest"
 
-   listener = {
-     service_name = "evaluations"
-     public = true
-     path_prefix = "/intg/evaluations/"
-     # these may not be equal, so just set it adjacent to non-conflicting rule for submissions
-     rule_priority = 81
-     from_port = 3000
-     to_port = 3000
-     protocol = "tcp"
-   }
+  listener = {
+    service_name = "evaluations"
+    public       = true
+    path_prefix  = "/intg/evaluations/"
+    # these may not be equal, so just set it adjacent to non-conflicting rule for submissions
+    rule_priority = 81
+    from_port     = 3000
+    to_port       = 3000
+    protocol      = "tcp"
+  }
 
-   configuration = {
-     environment = [
-       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
-     ]
+  configuration = {
+    environment = [
+      { name = "PUBPUB_URL", value = local.PUBPUB_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
+    ]
 
-     secrets = [
-       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
-       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
-       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
-     ]
-   }
- }
+    secrets = [
+      { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
+      { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
+      { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
+    ]
+  }
+}
 
- module "service_bastion" {
-   source = "../container-generic"
+module "service_bastion" {
+  source = "../container-generic"
 
-   service_name = "bastion"
-   cluster_info = module.cluster.cluster_info
+  service_name = "bastion"
+  cluster_info = module.cluster.cluster_info
 
-   repository_url = var.ecr_repository_urls.root
-   # TODO: add command
+  repository_url = var.ecr_repository_urls.root
+  # Make bastion idle indefinitely, so we can ssh into it when needed
+  # If this is not here, the task will exit and try to restart immediately.
+  # TODO: Maybe there's a less hacky way to do this?
+  command = ["sh", "-c", "trap : TERM INT; sleep infinity & wait"]
 
-   configuration = {
-     environment = [
-       { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
-       { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
-       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
-       { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
-       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
-     ]
+  configuration = {
+    environment = [
+      { name = "PGUSER", value = module.core_dependency_services.rds_connection_components.user },
+      { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
+      { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
+      { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
+      { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
+      { name = "HOSTNAME", value = var.HOSTNAME },
+      { name = "PAGER", value = "less -S" },
+    ]
 
-     secrets = [
-       { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
+    secrets = [
+      { name = "PGPASSWORD", valueFrom = module.core_dependency_services.secrets.rds_db_password },
 
-       # Bastion needs  supabase creds in case of seed script
-       { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
-     ]
-   }
+      # Bastion needs  supabase creds in case of seed script
+      { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
+    ]
+  }
 
-   resources = {
-     cpu = 1024
-     memory = 2048 # need slightly beefier machine for the bastion
+  resources = {
+    cpu    = 1024
+    memory = 2048 # need slightly beefier machine for the bastion
 
-     # TODO: disable autoscaling, which makes no sense for a bastion
-     desired_count = 1
-   }
- }
+    # TODO: disable autoscaling, which makes no sense for a bastion
+    desired_count = 1
+  }
+}
 
 
 # N.B. This invocation means that the deployment including honeycomb cannot succeed
@@ -256,6 +264,6 @@ data "aws_secretsmanager_secret_version" "honeycomb_api_key" {
 module "observability_honeycomb_integration" {
   source = "../honeycomb-integration"
 
-  cluster_info = module.cluster.cluster_info
+  cluster_info      = module.cluster.cluster_info
   HONEYCOMB_API_KEY = data.aws_secretsmanager_secret_version.honeycomb_api_key.secret_string
 }

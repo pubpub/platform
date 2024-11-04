@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,6 +21,7 @@ export const loginFormSchema = z.object({
 });
 
 export default function LoginForm() {
+	const searchParams = useSearchParams();
 	const form = useForm<z.infer<typeof loginFormSchema>>({
 		resolver: zodResolver(loginFormSchema),
 	});
@@ -31,6 +32,7 @@ export default function LoginForm() {
 		await runLoginWithPassword({
 			email: formData.email,
 			password: formData.password,
+			redirectTo: searchParams.get("redirectTo") ?? null,
 		});
 	};
 
@@ -78,6 +80,7 @@ export default function LoginForm() {
 						<Button
 							className="flex w-full items-center gap-x-2"
 							disabled={form.formState.isSubmitting || !form.formState.isValid}
+							type="submit"
 						>
 							{form.formState.isSubmitting ? (
 								<Loader2 className="animate-spin" />

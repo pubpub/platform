@@ -13,9 +13,10 @@ import { archiveForm } from "./actions";
 type Props = {
 	id: FormsId;
 	className?: string;
+	slug: string;
 };
 
-export const ArchiveFormButton = ({ id, className }: Props) => {
+export const ArchiveFormButton = ({ id, className, slug }: Props) => {
 	const runArchiveForm = useServerAction(archiveForm);
 	const handleRemove = useCallback(async () => {
 		await runArchiveForm(id);
@@ -27,6 +28,7 @@ export const ArchiveFormButton = ({ id, className }: Props) => {
 			size="lg"
 			className={cn("flex gap-2", className)}
 			onClick={handleRemove}
+			data-testid={`${slug}-archive-button`}
 		>
 			<Archive size={12} /> Archive
 		</Button>

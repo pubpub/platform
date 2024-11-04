@@ -2,22 +2,30 @@
 
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
-import { makeEnvPublic } from "next-runtime-env";
 
 import "./lib/env/env.mjs";
 
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
-makeEnvPublic("PUBPUB_URL");
-
 /**
  * @type {import("next").NextConfig}
  */
 const nextConfig = {
+	output: "standalone",
+	typescript: {
+		// this gets checked in CI already
+		ignoreBuildErrors: true,
+	},
 	eslint: {
+		// this gets checked in CI already
 		ignoreDuringBuilds: true,
 	},
 	reactStrictMode: true,
+	/**
+	 * This is necessary to get around Next.js hard 2MB limit
+	 * for cached fetches.
+	 */
+	cacheHandler: new URL("./cache-handler.mjs", import.meta.url).pathname,
 	images: {
 		remotePatterns: [
 			{
@@ -55,55 +63,29 @@ const nextConfig = {
 };
 
 const modifiedConfig = withPreconstruct(
-	withSentryConfig(
-		nextConfig,
-		{
-			// For all available options, see:
-			// https://github.com/getsentry/sentry-webpack-plugin#options
+	withSentryConfig(nextConfig, {
+		// For all available options, see:
+		// https://github.com/getsentry/sentry-webpack-plugin#options
 
-			// Suppresses source map uploading logs during build
-			silent: true,
-			org: "kfg",
-			project: "v7-core",
-		},
-		{
-			// For all available options, see:
-			// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+		// Suppresses source map uploading logs during build
+		silent: true,
+		org: "kfg",
+		project: "v7-core",
+		// For all available options, see:
+		// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-			// Upload a larger set of source maps for prettier stack traces (increases build time)
-			widenClientFileUpload: true,
+		// Upload a larger set of source maps for prettier stack traces (increases build time)
+		widenClientFileUpload: true,
 
-			// Transpiles SDK to be compatible with IE11 (increases bundle size)
-			transpileClientSDK: true,
+		// Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
+		// tunnelRoute: "/monitoring",
 
-			// Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
-			// tunnelRoute: "/monitoring",
+		// Hides source maps from generated client bundles
+		hideSourceMaps: true,
 
-			// Hides source maps from generated client bundles
-			hideSourceMaps: true,
-
-			// Automatically tree-shake Sentry logger statements to reduce bundle size
-			disableLogger: true,
-		}
-	)
+		// Automatically tree-shake Sentry logger statements to reduce bundle size
+		disableLogger: true,
+	})
 );
 
-export default (phase, { defaultConfig }) => {
-	// return modifiedConfig;
-	if (phase !== "phase-development-server") {
-		return modifiedConfig;
-	}
-
-	return {
-		...modifiedConfig,
-		experimental: {
-			...modifiedConfig.experimental,
-			serverComponentsExternalPackages: [
-				...(modifiedConfig.experimental?.serverComponentsExternalPackages ?? []),
-				// we need this to be external (for now) during dev, but not during build
-				// https://github.com/expatfile/next-runtime-env/issues/123
-				"next-runtime-env",
-			],
-		},
-	};
-};
+export default modifiedConfig;

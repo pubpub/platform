@@ -1,4 +1,6 @@
-import { expect, Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "@playwright/test";
 
 import { inbucketClient } from "./helpers";
 
@@ -57,7 +59,7 @@ test.describe("Auth with lucia", () => {
 
 		const message = await (await inbucketClient.getMailbox("new")).getLatestMessage();
 
-		const url = message.message.body.text?.match(/http:\/\/.*reset/)?.[0];
+		const url = message.message.body.text?.match(/(http:\/\/.*?reset)\s/)?.[1];
 		await message.delete();
 
 		if (!url) {
@@ -83,13 +85,13 @@ test.describe("Auth with lucia", () => {
 		await page.waitForURL(/\/c\/\w+\/stages/);
 		await page.getByRole("link", { name: "Settings" }).click();
 		await page.getByRole("button", { name: "Reset" }).click();
-		await page.waitForSelector(
-			"body > div:nth-child(3) > ol > li > div > div.text-sm.opacity-90"
-		);
+		await expect(
+			page.getByRole("status").filter({ hasText: "Password reset email sent" })
+		).toHaveCount(1);
 
 		const message2 = await (await inbucketClient.getMailbox("new")).getLatestMessage();
 
-		const url2 = message2.message.body.text?.match(/http:\/\/.*\/reset/)?.[0];
+		const url2 = message2.message.body.text?.match(/http:\/\/.*reset/)?.[0];
 		await message2.delete();
 
 		if (!url2) {

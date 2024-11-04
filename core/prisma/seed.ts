@@ -3,6 +3,7 @@ import { makeWorkerUtils } from "graphile-worker";
 
 import { logger } from "logger";
 
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/auth/password";
 import { env } from "~/lib/env/env.mjs";
 import { default as buildCrocCroc, crocCrocId } from "./exampleCommunitySeeds/croccroc";
@@ -29,12 +30,10 @@ async function createUserMembers({
 	role: "editor" | "admin" | "contributor";
 	prismaCommunityIds: string[];
 }) {
-	let user;
-
 	await prisma.user.create({
 		data: {
 			slug,
-			email: user ? user.email : email,
+			email: email,
 			firstName,
 			lastName,
 			passwordHash: await createPasswordHash(password),
@@ -105,7 +104,11 @@ main()
 		await prisma.$disconnect();
 	})
 	.catch(async (e) => {
-		logger.error(e);
+		if (!isUniqueConstraintError(e)) {
+			logger.error(e);
+			await prisma.$disconnect();
+			process.exit(1);
+		}
+		logger.info("Attempted to add duplicate entries, db is already seeded?");
 		await prisma.$disconnect();
-		process.exit(1);
 	});

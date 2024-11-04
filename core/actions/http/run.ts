@@ -6,10 +6,11 @@ import type { PubsId } from "db/public";
 import { logger } from "logger";
 
 import type { action } from "./action";
-import { _updatePub } from "~/app/components/PubCRUD/actions";
+import type { PubValues } from "~/lib/server";
+import { _updatePub } from "~/app/components/pubs/PubEditor/actions";
 import { defineRun } from "../types";
 
-const findNestedStructure = (json: unknown, path) => {
+const findNestedStructure = (json: unknown, path: string) => {
 	if (typeof json !== "object") {
 		// TODO: handle this
 		return;
@@ -104,22 +105,23 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 			};
 		}
 
-		const fields = mappedOutputs.map(({ pubField, resValue }) => ({
-			slug: pubField,
-			value: resValue,
-		}));
+		const pubValues = mappedOutputs.reduce((acc, { pubField, resValue }) => {
+			acc[pubField] = resValue;
+			return acc;
+		}, {} as PubValues);
 
-		const updateResult = await _updatePub({
-			pubId: pub.id as PubsId,
-			fields,
-		});
-
-		if (updateResult.error) {
-			logger.debug(updateResult.error);
+		try {
+			await _updatePub({
+				pubId: pub.id as PubsId,
+				pubValues,
+				continueOnValidationError: false,
+			});
+		} catch (error) {
+			logger.debug(error);
 			return {
 				title: "Error",
-				error: `Failed to update fields: ${updateResult.error}`,
-				cause: updateResult.error,
+				error: `Failed to update fields: ${error}`,
+				cause: error,
 			};
 		}
 

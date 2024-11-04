@@ -1,46 +1,69 @@
-import type { Prisma } from "@prisma/client";
-
-import { redirect } from "next/navigation";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { db } from "~/kysely/database";
+import { getPageLoginData } from "~/lib/auth/loginData";
+import { pubValuesByRef } from "~/lib/server";
+import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { createToken } from "~/lib/server/token";
-import prisma from "~/prisma/db";
 import IntegrationsList from "./IntegrationsList";
 
-export type IntegrationData = Prisma.PromiseReturnType<typeof getCommunityIntegrations>;
+export type IntegrationData = Awaited<ReturnType<typeof getCommunityIntegrations>>;
 
 const getCommunityIntegrations = async (communitySlug: string) => {
-	const community = await prisma.community.findUnique({
-		where: { slug: communitySlug },
-	});
+	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return null;
 	}
-	return await prisma.integrationInstance.findMany({
-		where: { communityId: community.id },
-		include: {
-			integration: true,
-			pubs: { include: { values: { include: { field: true } } } },
-			stage: true,
-		},
-	});
+
+	return autoCache(
+		db
+			.selectFrom("integration_instances")
+			.selectAll("integration_instances")
+
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("integrations")
+						.selectAll("integrations")
+						.whereRef("integrations.id", "=", "integration_instances.integrationId")
+				)
+					.$notNull()
+					.as("integration"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("pubs")
+						.selectAll("pubs")
+						.innerJoin(
+							"_IntegrationInstanceToPub",
+							"_IntegrationInstanceToPub.B",
+							"pubs.id"
+						)
+						.select(pubValuesByRef("pubs.id"))
+						.whereRef("_IntegrationInstanceToPub.A", "=", "integration_instances.id")
+				).as("pubs"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("stages")
+						.selectAll("stages")
+						.whereRef("stages.id", "=", "integration_instances.stageId")
+				).as("stage"),
+			])
+			.where("communityId", "=", community.id)
+	).execute();
 };
 
 type Props = { params: { communitySlug: string } };
 
 export default async function Page({ params }: Props) {
+	const { user } = await getPageLoginData();
+
 	const integrations = await getCommunityIntegrations(params.communitySlug);
 	if (!integrations) {
 		return null;
-	}
-
-	const { user } = await getLoginData();
-
-	if (!user) {
-		redirect("/login");
 	}
 
 	const token = await createToken({ userId: user.id as UsersId, type: AuthTokenType.generic });

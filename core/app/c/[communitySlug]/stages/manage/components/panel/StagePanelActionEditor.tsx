@@ -8,7 +8,6 @@ import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ChevronUp, Pencil, Trash } from "ui/icon";
 import { Input } from "ui/input";
-import { Separator } from "ui/separator";
 
 import { getActionByName } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
@@ -16,7 +15,7 @@ import * as actions from "../../actions";
 
 type Props = {
 	actionInstance: ActionInstances;
-	onDelete: (actionInstanceId: string) => Promise<unknown>;
+	onDelete: (actionInstanceId: ActionInstancesId) => Promise<unknown>;
 	communityId: string;
 	children: React.ReactNode;
 };
@@ -45,7 +44,6 @@ export const StagePanelActionEditor = (props: Props) => {
 							defaultValue={props.actionInstance.name || action.name}
 							onBlur={async (evt) => {
 								await actions.updateAction(
-									props.communityId,
 									props.actionInstance.id as ActionInstancesId,
 									{
 										name: evt.target.value?.trim(),

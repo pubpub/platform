@@ -11,8 +11,8 @@ import { Badge } from "ui/badge";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
+import type { ChildPubRow, ChildPubRowPubType } from "./types";
 import { UserCard } from "~/app/components/UserCard";
-import { ChildPubRow, ChildPubRowPubType } from "./types";
 
 const createdAtDateOptions = {
 	month: "short",

@@ -1,5 +1,5 @@
 import { useFormContext } from "react-hook-form";
-import { componentsBySchema, defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import { ElementType, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
@@ -8,10 +8,9 @@ import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
-import type { PanelState } from "../types";
+import type { FormElementData, PanelState } from "../types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
-import { FormElementData, isFieldInput } from "../types";
 
 export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 	const fields = usePubFieldContext();

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import type { StagesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -12,20 +13,22 @@ import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
 
 type PropsInner = {
-	stageId: string;
+	stageId: StagesId;
 	pageContext: PageContext;
 };
 
 const StagePanelActionsInner = async (props: PropsInner) => {
-	const stage = await getStage(props.stageId);
-	const actionInstances = await getStageActions(props.stageId);
+	const [stage, actionInstances] = await Promise.all([
+		getStage(props.stageId).executeTakeFirst(),
+		getStageActions(props.stageId).execute(),
+	]);
 
 	if (stage === undefined) {
 		return <SkeletonCard />;
 	}
 
-	const onAddAction = addAction.bind(null, stage.communityId, stage.id);
-	const onDeleteAction = deleteAction.bind(null, stage.communityId);
+	const onAddAction = addAction.bind(null, stage.id);
+	const onDeleteAction = deleteAction;
 
 	const { user } = await getLoginData();
 
@@ -68,7 +71,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 };
 
 type Props = {
-	stageId?: string;
+	stageId?: StagesId;
 	pageContext: PageContext;
 };
 

@@ -17,7 +17,7 @@ const Command = React.forwardRef<
 	<CommandPrimitive
 		ref={ref}
 		className={cn(
-			"flex h-full w-full flex-col overflow-hidden rounded-md bg-white text-slate-950 ",
+			"flex h-full w-full flex-col overflow-hidden rounded-md bg-white text-slate-950",
 			className
 		)}
 		{...props}
@@ -44,7 +44,10 @@ const CommandInput = React.forwardRef<
 	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & { icon?: React.ReactNode }
 >(({ className, icon, ...props }, ref) => (
 	<div
-		className="flex items-center rounded-lg border bg-background px-3 focus-within:border-blue-500"
+		className={cn(
+			"flex items-center rounded-lg border bg-background px-3 focus-within:border-blue-500",
+			props.disabled ? "border-gray-200 bg-gray-200 opacity-50" : "bg-background"
+		)}
 		cmdk-input-wrapper=""
 	>
 		{icon ?? <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />}
@@ -90,7 +93,7 @@ const CommandGroup = React.forwardRef<
 	<CommandPrimitive.Group
 		ref={ref}
 		className={cn(
-			"overflow-hidden p-1 text-slate-950  [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-slate-500",
+			"overflow-hidden p-1 text-slate-950 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-slate-500",
 			className
 		)}
 		{...props}

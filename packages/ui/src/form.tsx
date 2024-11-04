@@ -79,14 +79,18 @@ FormItem.displayName = "FormItem";
 
 const FormLabel = React.forwardRef<
 	React.ElementRef<typeof LabelPrimitive.Root>,
-	React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
+	React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & { disabled?: boolean }
+>(({ className, disabled, ...props }, ref) => {
 	const { error, formItemId } = useFormField();
 
 	return (
 		<Label
 			ref={ref}
-			className={cn(error && "text-red-500 dark:text-red-900", className)}
+			className={cn(
+				error && "text-red-500 dark:text-red-900",
+				{ "opacity-50": disabled },
+				className
+			)}
 			htmlFor={formItemId}
 			{...props}
 		/>
@@ -136,7 +140,16 @@ const FormMessage = React.forwardRef<
 	React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
 	const { error, formMessageId, name } = useFormField();
-	const body = error ? String(error?.message) : children;
+	let body = children;
+	if (error) {
+		if (error.message) {
+			body = String(error.message);
+		}
+		if (Array.isArray(error)) {
+			body = error[0]?.message;
+		}
+	}
+
 	if (!body) {
 		return null;
 	}

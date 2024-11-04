@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
@@ -7,18 +8,35 @@ import { PubFieldProvider } from "ui/pubFields";
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
+import { EditFormTitleButton } from "./EditFormTitleButton";
+
+const FormCopyButton = dynamic(
+	() => import("./FormCopyButton").then((module) => module.FormCopyButton),
+	{ ssr: false }
+);
 
 const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
-export default async function Page({ params: { formSlug, communitySlug } }) {
-	const { user } = await getLoginData();
+export default async function Page({
+	params: { formSlug, communitySlug },
+	searchParams: { unsavedChanges },
+}: {
+	params: {
+		formSlug: string;
+		communitySlug: string;
+	};
+	searchParams: {
+		unsavedChanges: boolean;
+	};
+}) {
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug();
 
 	if (!community) {
@@ -26,10 +44,6 @@ export default async function Page({ params: { formSlug, communitySlug } }) {
 	}
 
 	const communityStages = await getCommunityStages(community.id).execute();
-
-	if (!user) {
-		return null;
-	}
 
 	if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return null;
@@ -53,12 +67,14 @@ export default async function Page({ params: { formSlug, communitySlug } }) {
 				<>
 					<ClipboardPenLine size={24} strokeWidth={1} className="mr-2 text-slate-500" />{" "}
 					{form.name}
+					<EditFormTitleButton formId={form.id} name={form.name} />
 				</>
 			}
 			headingAction={
-				<div className="flex gap-2">
+				<div className="flex items-center gap-2">
+					<FormCopyButton formSlug={formSlug} />
 					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
-					<SaveFormButton form={formBuilderId} />
+					<SaveFormButton form={formBuilderId} disabled={!unsavedChanges} />
 				</div>
 			}
 		>

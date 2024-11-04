@@ -1,7 +1,14 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
-import type { CommunitiesId, CoreSchemaType, Event, PubsId, StagesId } from "db/public";
+import type {
+	Action as ActionName,
+	CommunitiesId,
+	CoreSchemaType,
+	Event,
+	PubsId,
+	StagesId,
+} from "db/public";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
@@ -58,7 +65,7 @@ export type Action<
 	P extends ActionPubType = ActionPubType,
 	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
-	N extends string = string,
+	N extends ActionName = ActionName,
 > = {
 	id?: string;
 	name: N;
@@ -130,7 +137,7 @@ export const defineAction = <
 	T extends ActionPubType,
 	C extends ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional,
-	N extends string,
+	N extends ActionName,
 >(
 	action: Action<T, C, A, N>
 ) => action;

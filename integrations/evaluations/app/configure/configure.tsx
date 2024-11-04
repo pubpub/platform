@@ -23,7 +23,7 @@ import { Textarea } from "ui/textarea";
 import { useToast } from "ui/use-toast";
 import { cn } from "utils";
 
-import { InstanceConfig } from "~/lib/types";
+import type { InstanceConfig } from "~/lib/types";
 import { configure } from "./actions";
 
 type BaseProps = {

@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { RequestCookies, ResponseCookies } from "next/dist/server/web/spec-extension/cookies";
 import { NextResponse } from "next/server";
 
-import { User } from "@pubpub/sdk";
+import type { User } from "@pubpub/sdk";
 
 import { client } from "./lib/pubpub";
 

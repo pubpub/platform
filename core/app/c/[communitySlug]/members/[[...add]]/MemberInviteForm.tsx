@@ -1,6 +1,5 @@
 "use client";
 
-import type { Community } from "@prisma/client";
 import type { z } from "zod";
 
 import { useCallback, useEffect, useTransition } from "react";
@@ -29,21 +28,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { toast } from "ui/use-toast";
 
 import type { MemberFormState } from "./AddMember";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const MemberInviteForm = ({
-	community,
 	state,
 	email,
 	isSuperAdmin,
 }: {
-	community: Community;
 	state: MemberFormState;
 	email?: string;
 	isSuperAdmin?: boolean;
 }) => {
+	const community = useCommunity();
+
 	const runCreateUserWithMembership = useServerAction(actions.createUserWithMembership);
 	const runAddMember = useServerAction(actions.addMember);
 	const [isPending, startTransition] = useTransition();

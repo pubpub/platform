@@ -1,16 +1,14 @@
 "use client";
 
+import type { graphlib } from "@dagrejs/dagre";
+import type { Connection, Edge, Node, NodeMouseHandler, OnSelectionChangeParams } from "reactflow";
+
 import { useCallback, useEffect, useMemo } from "react";
-import Dagre, { graphlib } from "@dagrejs/dagre";
+import Dagre from "@dagrejs/dagre";
 import ReactFlow, {
 	Background,
-	Connection,
 	Controls,
-	Edge,
 	MarkerType,
-	Node,
-	NodeMouseHandler,
-	OnSelectionChangeParams,
 	ReactFlowProvider,
 	useEdgesState,
 	useNodesState,
@@ -19,9 +17,10 @@ import ReactFlow, {
 
 import "reactflow/dist/style.css";
 
+import type { StagesId } from "db/public";
 import { expect } from "utils";
 
-import { StagePayload } from "~/lib/types";
+import type { CommunityStage } from "~/lib/server/stages";
 import { useStages } from "../../StagesContext";
 import { useStageEditor } from "./StageEditorContext";
 import { StageEditorContextMenu } from "./StageEditorContextMenu";
@@ -29,7 +28,7 @@ import { StageEditorKeyboardControls } from "./StageEditorKeyboardControls";
 import { StageEditorMenubar } from "./StageEditorMenubar";
 import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageEditorNode } from "./StageEditorNode";
 
-const makeNode = (stage: StagePayload) => {
+const makeNode = (stage: CommunityStage) => {
 	return {
 		id: stage.id,
 		data: { stage },
@@ -44,7 +43,7 @@ const makeEdge = (
 	id: string,
 	source: string,
 	target: string,
-	moveConstraint: StagePayload["moveConstraintSources"][number]
+	moveConstraint: CommunityStage["moveConstraintSources"][number]
 ) => {
 	return {
 		id,
@@ -58,7 +57,7 @@ const makeEdge = (
 	};
 };
 
-const makeEdges = (edges: Map<string, Edge>, stage: StagePayload) => {
+const makeEdges = (edges: Map<string, Edge>, stage: CommunityStage) => {
 	for (const prevEdge of stage.moveConstraintSources) {
 		const edgeId = `${prevEdge.stageId}:${stage.id}`;
 		if (!edges.has(edgeId)) {
@@ -105,7 +104,7 @@ const makeLayoutedElements = (graph: graphlib.Graph, nodes: Node[], edges: Edge[
 };
 
 const useLayout = (
-	stages: StagePayload[],
+	stages: CommunityStage[],
 	getExistingNodePosition: (nodeId: string) => { x: number; y: number } | undefined
 ) => {
 	const graph = useMemo(
@@ -159,7 +158,7 @@ export const StageEditorGraph = () => {
 	const onConnect = useCallback(
 		({ source, target }: Connection) => {
 			if (source && target) {
-				createMoveConstraint(source, target);
+				createMoveConstraint(source as StagesId, target as StagesId);
 			}
 		},
 		[createMoveConstraint]
@@ -167,14 +166,16 @@ export const StageEditorGraph = () => {
 
 	const onNodesDelete = useCallback(
 		(nodes: Node[]) => {
-			deleteStages(nodes.map((node) => node.id));
+			deleteStages(nodes.map((node) => node.id as StagesId));
 		},
 		[deleteStages]
 	);
 
 	const onEdgesDelete = useCallback(
 		(edges: Edge[]) => {
-			deleteMoveConstraints(edges.map((edge) => [edge.source, edge.target]));
+			deleteMoveConstraints(
+				edges.map((edge) => [edge.source as StagesId, edge.target as StagesId])
+			);
 		},
 		[deleteMoveConstraints]
 	);

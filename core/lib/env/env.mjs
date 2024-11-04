@@ -1,14 +1,11 @@
-/* eslint-disable n/no-process-env */
 // @ts-check
 
 import { createEnv } from "@t3-oss/env-nextjs";
-import { env as runtimeEnv } from "next-runtime-env";
 import { z } from "zod";
 
 export const env = createEnv({
 	shared: {
 		NODE_ENV: z.enum(["development", "production", "test"]).optional(),
-		NEXT_PUBLIC_PUBPUB_URL: z.string(),
 	},
 	server: {
 		API_KEY: z.string(),
@@ -19,10 +16,11 @@ export const env = createEnv({
 		/**
 		 * Whether or not to verbosely log `memoize` cache hits and misses
 		 */
-		CACHE_LOG: z.boolean().optional(),
+		CACHE_LOG: z.string().optional(),
 		DATABASE_URL: z.string().url(),
 		JWT_SECRET: z.string(),
 		KYSELY_DEBUG: z.string().optional(),
+		KYSELY_ARTIFICIAL_LATENCY: z.coerce.number().optional(),
 		LOG_LEVEL: z.string().optional(),
 		MAILGUN_SMTP_PASSWORD: z.string(),
 		MAILGUN_SMTP_USERNAME: z.string(),
@@ -31,12 +29,13 @@ export const env = createEnv({
 		OTEL_SERVICE_NAME: z.string().optional(),
 		HONEYCOMB_API_KEY: z.string().optional(),
 		PUBPUB_URL: z.string().url(),
+		INBUCKET_URL: z.string().url().optional(),
+		CI: z.string().or(z.boolean()).optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
-		NEXT_PUBLIC_PUBPUB_URL: runtimeEnv("NEXT_PUBLIC_PUBPUB_URL"),
 	},
-	skipValidation: true, //Boolean(process.env.SKIP_VALIDATION),
+	skipValidation: Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
 });

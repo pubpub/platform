@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+
+services:
+    jobs:
+        container_name: jobs
+        image: ${JOBS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs:9494b52a53148804259a8438d2752cfb4a448fa5}
+        platform: linux/amd64
+        env_file:
+            - path: ./.env.docker-compose
+              required: false
+        environment:
+            - OTEL_SERVICE_NAME=jobs.jobs
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:3000
+        networks:
+            - app-network
+        depends_on:
+            - db
+        profiles:
+            - integration
+
+    db:
+        extends:
+            file: ./docker-compose.base.yml
+            service: db
+        volumes:
+            - postgres_test_data:/var/lib/postgresql/data
+        networks:
+            - app-network
+        profiles:
+            - test
+            - integration
+        ports:
+            - "5432:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    inbucket:
+        extends:
+            file: ./docker-compose.base.yml
+            service: inbucket
+        networks:
+            - app-network
+        profiles:
+            - test
+            - integration
+
+    integration-tests:
+        environment:
+            - ASSETS_BUCKET_NAME=assets.byron.pubpub.org
+            - MAILGUN_SMTP_HOST=inbucket
+            - MAILGUN_SMTP_PORT=2500
+            - INBUCKET_URL=http://inbucket:9000
+            - MAILGUN_SMTP_USERNAME=omitted
+            - OTEL_SERVICE_NAME=core.core
+            - PGDATABASE=postgres
+            - PGHOST=db
+            - PGPORT=5432
+            - PGUSER=postgres
+            - PGPASSWORD=postgres
+            - PUBPUB_URL=http://localhost:3000
+            - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+            - API_KEY=xxx
+            - ASSETS_REGION=us-east-1
+            - ASSETS_UPLOAD_KEY=xxx
+            - ASSETS_UPLOAD_SECRET_KEY=xxx
+            - JWT_SECRET=xxx
+            - MAILGUN_SMTP_PASSWORD=xxx
+            - PORT=3000
+            - CI=true
+        depends_on:
+            jobs:
+                # TODO: add a healthcheck for jobs
+                condition: service_started
+            db:
+                condition: service_healthy
+            inbucket:
+                condition: service_started
+        image: ${INTEGRATION_TESTS_IMAGE:-246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:9494b52a53148804259a8438d2752cfb4a448fa5}
+        platform: linux/amd64
+        healthcheck:
+            test: ["CMD-SHELL", "curl http://integration-tests:3000/api/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        profiles:
+            - integration
+        ports:
+            - 3000:3000
+        networks:
+            - app-network
+
+volumes:
+    postgres_test_data:
+        driver: local
+
+networks:
+    app-network:

@@ -1,4 +1,5 @@
-import { type ColumnType, type Insertable, type Selectable, type Updateable } from "kysely";
+import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
+
 import { z } from "zod";
 
 import type { PubsId } from "./Pubs";

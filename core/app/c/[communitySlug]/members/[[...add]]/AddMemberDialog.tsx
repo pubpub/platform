@@ -1,24 +1,20 @@
 "use client";
 
+import type { Community } from "@prisma/client";
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Community } from "@prisma/client";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
 import { UserPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
-export const AddMemberDialog = ({
-	open,
-	community,
-	content,
-}: {
-	open: boolean;
-	community: Community;
-	content: React.ReactNode;
-}) => {
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
+
+export const AddMemberDialog = ({ open, content }: { open: boolean; content: React.ReactNode }) => {
 	const router = useRouter();
+	const community = useCommunity();
 	const [actuallyOpen, setActuallyOpen] = useState(false);
 
 	// This is a workaround to make sure the dialog only opens on the client side,

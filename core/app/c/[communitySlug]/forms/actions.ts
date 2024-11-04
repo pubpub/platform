@@ -1,22 +1,28 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { sql } from "kysely";
 import { componentsBySchema } from "schemas";
 
-import type { CommunitiesId, CoreSchemaType, PubTypesId } from "db/public";
-import type { InputComponent } from "db/src/public/InputComponent";
+import type { CommunitiesId, CoreSchemaType, InputComponent, PubTypesId } from "db/public";
 import { logger } from "logger";
+import { assert, expect } from "utils";
 
-import { db, isUniqueConstraintError } from "~/kysely/database";
+import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { _getPubFields } from "~/lib/server/pubFields";
 
 const componentsBySchemaTable = Object.entries(componentsBySchema)
-	.map(
-		([schema, components]) =>
-			`('${schema}'::"CoreSchemaType", '${components[0]}'::"InputComponent")`
-	)
+	.map(([schema, components]) => {
+		const component = components[0]
+			? `'${components[0]}'::"InputComponent"`
+			: `null::"InputComponent"`;
+		return `('${schema}'::"CoreSchemaType", ${component})`;
+	})
 	.join(", ");
 
 export const createForm = defineServerAction(async function createForm(
@@ -25,6 +31,14 @@ export const createForm = defineServerAction(async function createForm(
 	slug: string,
 	communityId: CommunitiesId
 ) {
+	const user = await getLoginData();
+
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+
 	try {
 		await autoRevalidate(
 			db
@@ -102,4 +116,8 @@ export const createForm = defineServerAction(async function createForm(
 		logger.error({ msg: "error creating form", error });
 		return { error: "Form creation failed" };
 	}
+
+	const community = await findCommunityBySlug();
+	assert(community);
+	redirect(`/c/${community.slug}/forms/${slug}/edit`);
 });

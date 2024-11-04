@@ -1,11 +1,12 @@
 import * as z from "zod";
 
+import { Action } from "db/public";
 import { MoveHorizontal } from "ui/icon";
 
 import { defineAction } from "../types";
 
 export const action = defineAction({
-	name: "move",
+	name: Action.move,
 	config: {
 		schema: z.object({
 			stage: z.string().uuid().describe("Destination stage"),

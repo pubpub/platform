@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+
 import partition from "lodash.partition";
 
 import type { CommunitiesId } from "db/public";
@@ -8,13 +9,17 @@ import { cn } from "utils";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getCommunityBySlug } from "~/lib/db/queries";
+import { getPageLoginData } from "~/lib/auth/loginData";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
 import { FieldsTable } from "./FieldsTable";
 import { NewFieldButton } from "./NewFieldButton";
 
 type Props = { params: { communitySlug: string } };
+
+export const metadata: Metadata = {
+	title: "Fields",
+};
 
 const EmptyState = ({ className }: { className?: string }) => {
 	return (
@@ -31,13 +36,11 @@ const EmptyState = ({ className }: { className?: string }) => {
 };
 
 export default async function Page({ params }: Props) {
-	const loginData = await getLoginData();
-	if (!loginData) {
-		return notFound();
-	}
-	const community = await getCommunityBySlug(params.communitySlug);
+	const loginData = await getPageLoginData();
+	const community = await findCommunityBySlug(params.communitySlug);
 	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
+		includeRelations: true,
 	}).executeTakeFirst();
 
 	if (!pubFields || !pubFields.fields) {

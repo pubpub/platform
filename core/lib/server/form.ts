@@ -1,5 +1,6 @@
 import type { QueryCreator } from "kysely";
 
+import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type { CommunitiesId, FormsId, MembersId, PublicSchema, PubsId, UsersId } from "db/public";
@@ -17,30 +18,28 @@ import { getUser } from "./user";
  * Get a form by either slug or id
  */
 export const getForm = (
-	props: XOR<{ slug: string }, { id: FormsId }> & { communityId?: CommunitiesId },
+	props: XOR<{ slug: string }, { id: FormsId }> & { communityId: CommunitiesId },
 	trx: typeof db | QueryCreator<PublicSchema> = db
 ) =>
 	autoCache(
 		trx
 			.selectFrom("forms")
+			.where("forms.communityId", "=", props.communityId)
 			.$if(Boolean(props.slug), (eb) => eb.where("forms.slug", "=", props.slug!))
 			.$if(Boolean(props.id), (eb) => eb.where("forms.id", "=", props.id!))
-			.$if(Boolean(props.communityId), (eb) =>
-				eb.where("forms.communityId", "=", props.communityId!)
-			)
-			.selectAll()
+			.selectAll("forms")
 			.select((eb) =>
 				jsonArrayFrom(
 					eb
 						.selectFrom("form_elements")
 						.leftJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
 						.whereRef("form_elements.formId", "=", "forms.id")
-						.select([
+						.select((eb) => [
 							"form_elements.id as elementId",
 							"form_elements.type",
 							"form_elements.fieldId",
 							"form_elements.component",
-							"form_elements.config",
+							eb.fn.coalesce("form_elements.config", sql`'{}'`).as("config"),
 							"form_elements.order",
 							"form_elements.label",
 							"form_elements.content",
@@ -96,11 +95,14 @@ export const userHasPermissionToForm = async (
  * Gives a community member permission to a form
  */
 export const addMemberToForm = async (
-	props: { memberId: MembersId } & XOR<{ slug: string }, { id: FormsId }>
+	props: { communityId: CommunitiesId; memberId: MembersId } & XOR<
+		{ slug: string },
+		{ id: FormsId }
+	>
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
-	const { memberId, ...formSlugOrId } = props;
-	const form = await getForm(formSlugOrId).executeTakeFirstOrThrow();
+	const { memberId, ...getFormProps } = props;
+	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
 
 	const existingPermission = await autoCache(
 		db
@@ -149,12 +151,17 @@ const createExpiresAtDate = (
 ) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
 export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }> &
-	XOR<{ email: string }, { userId: UsersId }> & { pubId?: PubsId; expiresInDays?: number };
+	XOR<{ email: string }, { userId: UsersId }> & {
+		pubId?: PubsId;
+		expiresInDays?: number;
+		communityId: CommunitiesId;
+	};
 
 export const createFormInviteLink = async (props: FormInviteLinkProps) => {
-	const formPromise = getForm(
-		props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }
-	).executeTakeFirstOrThrow();
+	const formPromise = getForm({
+		communityId: props.communityId,
+		...(props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }),
+	}).executeTakeFirstOrThrow();
 
 	const userPromise = getUser(
 		props.userId !== undefined ? { id: props.userId } : { email: props.email }

@@ -11,7 +11,7 @@ module "firehose_failure_bucket" {
   force_destroy = true
 
   lifecycle_rule = [{
-    id = "expiration-30-days"
+    id      = "expiration-30-days"
     enabled = true
     expiration = {
       days = 30
@@ -25,7 +25,7 @@ module "honeycomb-aws-cloudwatch-metrics-integration" {
   name = "${var.cluster_info.name}-${var.cluster_info.environment}-cw-metrics"
 
   honeycomb_api_key      = var.HONEYCOMB_API_KEY // Honeycomb API key.
-  honeycomb_dataset_name = "cloudwatch-metrics" // Your Honeycomb dataset name that will receive the metrics.
+  honeycomb_dataset_name = "cloudwatch-metrics"  // Your Honeycomb dataset name that will receive the metrics.
 
   s3_failure_bucket_arn = module.firehose_failure_bucket.s3_bucket_arn
 }
@@ -42,5 +42,5 @@ module "honeycomb-aws-cloudwatch-logs-integration" {
 
   #honeycomb
   honeycomb_api_key      = var.HONEYCOMB_API_KEY // Honeycomb API key.
-  honeycomb_dataset_name = "cloudwatch-logs" // Your Honeycomb dataset name that will receive the logs.
+  honeycomb_dataset_name = "cloudwatch-logs"     // Your Honeycomb dataset name that will receive the logs.
 }

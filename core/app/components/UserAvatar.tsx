@@ -1,4 +1,4 @@
-import { Users } from "db/public";
+import type { Users } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 type Props = {
