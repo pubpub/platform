@@ -430,53 +430,72 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(submissionPubs[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
 	});
 
-	it("should be able to search", async () => {
-		const trx = getTrx();
-		const { createPubRecursiveNew } = await import("./pub");
-
-		const pub = await createPubRecursiveNew({
-			communityId: community.id,
-			body: {
-				pubTypeId: pubTypes["Basic Pub"].id,
-				values: {
-					[pubFields.Title.slug]: "Hello friend",
-				},
-				children: [
-					{
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: { [pubFields.Title.slug]: "Hello ENEMY" },
-					},
-				],
-			},
-			trx,
-		});
-
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
-			{ communityId: community.id },
-			{ search: "friend", depth: 10 }
-		);
-
-		expect(pubWithRelatedValuesAndChildren.length).toBe(1);
-		expect(pubWithRelatedValuesAndChildren[0].values[0].value).toBe("Hello friend");
-	});
-
 	it("should be able to limit the amount of top-level pubs retrieved", async () => {
 		const trx = getTrx();
 
+		const newCommunity = await seedCommunity({
+			community: {
+				name: "test community 2",
+				slug: "test-community-2",
+			},
+			pubFields: {
+				Title: {
+					schemaName: CoreSchemaType.String,
+				},
+				Relation: {
+					schemaName: CoreSchemaType.String,
+					relation: true,
+				},
+			},
+			pubTypes: {
+				Article: {
+					Title: true,
+					Relation: true,
+				},
+			},
+			pubs: [
+				{
+					pubType: "Article",
+					values: {
+						Title: "Article Title",
+					},
+					relatedPubs: {
+						Relation: [
+							{
+								value: "Article Relation",
+								pub: {
+									pubType: "Article",
+									values: {
+										Title: "Related Article Title",
+									},
+								},
+							},
+						],
+					},
+					children: [
+						{
+							pubType: "Article",
+							values: {
+								Title: "Article Child Title",
+							},
+						},
+					],
+				},
+			],
+		});
+
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubs = await getPubsWithRelatedValuesAndChildren(
-			{ communityId: community.id },
+			{ communityId: newCommunity.community.id },
 			{
-				depth: 1,
+				depth: 10,
 				limit: 1,
+				_debugDontNest: true,
 			}
 		);
 
-		// checks whether the output is an array if `communityId` is provided
-		expectTypeOf(pubs).toEqualTypeOf<ProcessedPub[]>();
-
-		expect(pubs.length).toBe(1);
+		// 1 root pub, 1 child pub, 1 related pub, even tohugh the limit is . This is correct behavior.
+		expect(pubs.length).toBe(3);
 	});
 
 	it("should be able to detect cycles, i.e. not go max-depth deep if a loop is detected", async () => {

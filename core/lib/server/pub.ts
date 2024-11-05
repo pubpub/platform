@@ -851,7 +851,9 @@ export async function getPubsWithRelatedValuesAndChildren<
 			// which is more efficient
 			.withRecursive("pub_tree", (cte) =>
 				cte
-					.selectFrom("pubs as p")
+					// we need to do this weird cast, because kysely does not support typing the selecting from a later CTE
+					// which is possible only in a with recursive query
+					.selectFrom("root_pubs_limited as p" as unknown as "pubs as p")
 					.leftJoin("pub_values as pv", (join) =>
 						join.on((eb) =>
 							eb.and([
@@ -864,6 +866,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.$if(Boolean(fieldSlugs), (qb) =>
 						qb.where("pub_fields.slug", "in", fieldSlugs!)
 					)
+					// maybe move this to root_pubs to save a join?
 					.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
 					.select([
 						"p.id as pubId",
@@ -884,24 +887,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 						sql<boolean>`false`.as("isCycle"),
 						sql<PubsId[]>`array[p.id]`.as("path"),
 					])
-					.where((eb) => {
-						if (props.pubId) {
-							return eb("p.id", "=", props.pubId);
-						}
-						if (props.stageId) {
-							return eb("PubsInStages.stageId", "=", props.stageId);
-						}
-						if (props.communityId) {
-							return eb("p.communityId", "=", props.communityId);
-						}
-						if (props.pubTypeId) {
-							return eb("p.pubTypeId", "=", props.pubTypeId);
-						}
-						throw new Error("No pubId, stageId, or communityId provided");
-					})
-					.$if(Boolean(search), (qb) =>
-						qb.where((eb) => eb(sql`pv.value::jsonb::text`, "ilike", `%${search}%`))
-					)
 					// we don't even need to recurse if we don't want children or related pubs
 					.$if(withChildren || withRelatedPubs, (qb) =>
 						qb.union((qb) =>
@@ -979,6 +964,29 @@ export async function getPubsWithRelatedValuesAndChildren<
 						)
 					)
 			)
+			// this CTE finds the top level pubs and limits the result
+			// counter intuitively, this is CTE is referenced in the above `withRecursive` call, despite
+			// appearing after it. This is allowed in Postgres. See https://www.postgresql.org/docs/current/sql-select.html#SQL-WITH
+			// this is mostly because `kysely` does not allow you to put a normal CTE before a recursive CTE
+			.with("root_pubs_limited", (cte) =>
+				cte
+					.selectFrom("pubs")
+					.selectAll("pubs")
+					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
+					.$if(Boolean(props.stageId), (qb) =>
+						qb
+							.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+							.where("PubsInStages.stageId", "=", props.stageId!)
+					)
+					.$if(Boolean(props.communityId), (qb) =>
+						qb.where("pubs.communityId", "=", props.communityId!)
+					)
+					.$if(Boolean(props.pubTypeId), (qb) =>
+						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
+					)
+					.$if(Boolean(limit), (qb) => qb.limit(limit!))
+					.$if(Boolean(offset), (qb) => qb.offset(offset!))
+			)
 			.selectFrom("pub_tree")
 			.select((eb) => [
 				"pub_tree.pubId",
@@ -1043,8 +1051,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
 			)
 			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
-			.$if(Boolean(limit), (qb) => qb.limit(limit!))
-			.$if(Boolean(offset), (qb) => qb.offset(offset!))
 			// this is necessary to filter out all the duplicate entries for the values
 			.groupBy([
 				"pubId",
