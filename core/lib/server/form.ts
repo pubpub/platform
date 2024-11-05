@@ -3,14 +3,7 @@ import type { QueryCreator } from "kysely";
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type {
-	CommunitiesId,
-	CommunityMembershipsId,
-	FormsId,
-	PublicSchema,
-	PubsId,
-	UsersId,
-} from "db/public";
+import type { CommunitiesId, FormsId, PublicSchema, PubsId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import type { XOR } from "../types";
@@ -116,18 +109,7 @@ export const addMemberToForm = async (
 
 	if (existingPermission === undefined) {
 		await autoRevalidate(
-			db
-				.with("new_permission", (db) =>
-					db.insertInto("permissions").values({ memberId }).returning("id")
-				)
-				.with("form_membership", (db) =>
-					db.insertInto("form_memberships").values({ formId: form.id, userId })
-				)
-				.insertInto("form_to_permissions")
-				.values((eb) => ({
-					formId: form.id,
-					permissionId: eb.selectFrom("new_permission").select("new_permission.id"),
-				}))
+			db.insertInto("form_memberships").values({ formId: form.id, userId })
 		).execute();
 	}
 };

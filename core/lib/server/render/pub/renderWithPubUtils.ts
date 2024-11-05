@@ -98,10 +98,10 @@ export const renderMemberFields = async ({
 
 	const userQuery = autoCache(
 		db
-			.selectFrom("members")
-			.innerJoin("users", "users.id", "members.userId")
+			.selectFrom("community_memberships")
+			.innerJoin("users", "users.id", "community_memberships.userId")
 			.select(ALLOWED_MEMBER_ATTRIBUTES)
-			.where("members.id", "=", memberId)
+			.where("community_memberships.id", "=", memberId)
 	);
 
 	const [, user] = await Promise.all([
