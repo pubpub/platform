@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
-import { SidebarProvider, SidebarTrigger } from "ui/sidebar";
+import { Sidebar, SidebarProvider, SidebarTrigger } from "ui/sidebar";
 import { cn } from "utils";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
@@ -29,7 +29,7 @@ export async function generateMetadata({
 	};
 }
 
-export const COLLAPSIBLE_TYPE = "icon";
+export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon";
 
 export default async function MainLayout({ children, params }: Props) {
 	const { user } = await getLoginData();
@@ -62,7 +62,7 @@ export default async function MainLayout({ children, params }: Props) {
 					<SideNav
 						community={community}
 						availableCommunities={availableCommunities}
-						collapsible="icon"
+						collapsible={COLLAPSIBLE_TYPE}
 					/>
 
 					<div className="relative flex-auto px-4 py-4 md:px-12">
