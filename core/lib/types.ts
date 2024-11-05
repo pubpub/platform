@@ -65,7 +65,7 @@ export type Equal<a, b> =
 export type Expect<a extends true> = a;
 
 export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> & {
-	fields: PubFieldsId[];
+	fields: { id: PubFieldsId; isTitle: boolean }[];
 };
 
 export type PubField = Pick<
