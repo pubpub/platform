@@ -36,11 +36,13 @@ const EditorFormElement = ({
 	help,
 	onChange,
 	initialValue,
+	disabled,
 }: {
 	label: string;
 	help?: string;
 	onChange: (state: any) => void;
 	initialValue?: Node;
+	disabled?: boolean;
 }) => {
 	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
 	const [initialDoc, setInitialDoc] = useState(initialValue);
@@ -67,6 +69,7 @@ const EditorFormElement = ({
 					}
 				}}
 				initialDoc={initialDoc}
+				disabled={disabled}
 			/>
 		);
 	}, [onChange]);
@@ -104,6 +107,7 @@ export const ContextEditorElement = ({ name, config }: ElementProps) => {
 						help={config.help}
 						onChange={(state) => field.onChange(state.doc)}
 						initialValue={field.value}
+						disabled={!isEnabled}
 					/>
 				);
 			}}

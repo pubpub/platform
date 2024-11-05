@@ -23,6 +23,7 @@ export const ContextEditorClient = ({
 	className,
 	initialDoc,
 	onChange,
+	disabled,
 }: {
 	pubs: GetPubsResult;
 	pubTypes: GetPubTypesResult;
@@ -32,6 +33,7 @@ export const ContextEditorClient = ({
 	onChange: (editorState: any) => void;
 	initialDoc?: Node;
 	className?: string;
+	disabled?: boolean;
 }) => {
 	const getPubs = useCallback(
 		(filter: string) => {
@@ -43,8 +45,6 @@ export const ContextEditorClient = ({
 	);
 
 	const memoEditor = useMemo(() => {
-		// const pubId = pubs[0]?.id ?? "";
-		// const pubTypeId = pubTypes[0]?.id ?? ";";
 		return (
 			<ContextEditor
 				pubId={pubId ?? ""} // fix?
@@ -57,9 +57,10 @@ export const ContextEditorClient = ({
 				atomRenderingComponent={ContextAtom}
 				onChange={onChange}
 				initialDoc={initialDoc}
+				disabled={disabled}
 			/>
 		);
-	}, [pubs, pubTypes]);
+	}, [pubs, pubTypes, disabled]);
 
 	return <div className={cn(className)}>{memoEditor}</div>;
 };
