@@ -100,7 +100,7 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 											isTitle: eb.ref("isTitle"),
 										})
 									),
-									sql`'{}'`
+									sql`json_build_array()`
 								)
 								.as("pub_field_titles")
 						)
