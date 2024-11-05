@@ -11,6 +11,11 @@ generator client {
   previewFeatures = ["fullTextSearch", "tracing"]
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+  output   = "."
+}
+
 generator comments {
   provider = "pnpm exec tsx prisma/comment-generator.ts"
 }
