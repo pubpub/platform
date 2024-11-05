@@ -1,4 +1,4 @@
-import type { Node } from "prosemirror-model";
+import type { ContextEditorProps } from "context-editor";
 
 import { useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
@@ -29,12 +29,8 @@ export const ContextEditorClient = ({
 	pubTypes: GetPubTypesResult;
 	pubId?: PubsId;
 	pubTypeId: PubTypesId;
-	// TODO: should probably be of type EditorState from prosemirror-state
-	onChange: (editorState: any) => void;
-	initialDoc?: Node;
-	className?: string;
-	disabled?: boolean;
-}) => {
+	// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
+} & Pick<ContextEditorProps, "onChange" | "initialDoc" | "className" | "disabled">) => {
 	const getPubs = useCallback(
 		(filter: string) => {
 			return new Promise<any[]>((resolve, reject) => {
