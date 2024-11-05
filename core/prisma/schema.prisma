@@ -223,16 +223,15 @@ model PubType {
 }
 
 model PubFieldToPubType {
-  A           String 
-  B           String  
-  isTitle     Boolean   @default(false)
+  A       String
+  B       String
+  isTitle Boolean @default(false)
 
-  pubField    PubField  @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  pubType     PubType   @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  pubField PubField @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  pubType  PubType  @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@unique([A, B], name: "_PubFieldToPubType_AB_unique")
   @@index([B], name: "_PubFieldToPubType_B_index")
-
   @@map(name: "_PubFieldToPubType")
 }
 
@@ -332,6 +331,8 @@ model CommunityMembership {
   userId        String?
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
 
@@ -349,6 +350,8 @@ model PubMembership {
   userId        String?
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
 
@@ -366,6 +369,8 @@ model StageMembership {
   userId        String?
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
 
@@ -383,6 +388,8 @@ model FormMembership {
   userId        String?
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
 
