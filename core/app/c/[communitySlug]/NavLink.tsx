@@ -2,14 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useSelectedLayoutSegment } from "next/navigation";
+import { usePathname } from "next/navigation";
 
-import { CollapsibleTrigger } from "ui/collapsible";
-import { DropdownMenuTrigger } from "ui/dropdown-menu";
-import { useLocalStorage } from "ui/hooks";
-import { ChevronDown } from "ui/icon";
 import { SidebarMenuButton, SidebarMenuSubButton } from "ui/sidebar";
-import { cn } from "utils";
 
 type Props = {
 	href: string;
@@ -38,23 +33,15 @@ export default function NavLink({ href, text, icon, count, isChild, hasChildren,
 			{icon}
 			<div className="flex-auto text-sm">{text}</div>
 			{count && <div className="rounded-md border border-gray-200 px-2 text-sm">{count}</div>}
-			{/**
-			 * dropdown button for submenus
-			 */}
-			{hasChildren && (
-				<CollapsibleTrigger className="absolute right-2 z-10 flex h-full w-8 items-center justify-center">
-					<ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
-				</CollapsibleTrigger>
-			)}
 		</Link>
 	);
 
 	return isChild ? (
-		<SidebarMenuSubButton asChild isActive={isActive}>
+		<SidebarMenuSubButton isActive={isActive} asChild>
 			{content}
 		</SidebarMenuSubButton>
 	) : (
-		<SidebarMenuButton asChild isActive={isActive}>
+		<SidebarMenuButton isActive={isActive} asChild>
 			{content}
 		</SidebarMenuButton>
 	);
