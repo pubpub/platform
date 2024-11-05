@@ -875,6 +875,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 						"p.pubTypeId",
 						"p.communityId",
 						"p.createdAt",
+						"p.updatedAt",
 						"PubsInStages.stageId",
 						"pv.id as valueId",
 						"pv.fieldId",
@@ -936,6 +937,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 									"pubs.pubTypeId",
 									"pubs.communityId",
 									"pubs.createdAt",
+									"pubs.updatedAt",
 									"PubsInStages.stageId",
 									"pub_values.id as valueId",
 									"pub_values.fieldId",
@@ -1001,7 +1003,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 				// we return the updatedAt of the latest value, because the updatedAt of the pub itself
 				// does not really change over time
 				eb.fn
-					.coalesce(eb.fn.max("pub_tree.valueUpdatedAt"), "pub_tree.createdAt")
+					.coalesce(eb.fn.max("pub_tree.valueUpdatedAt"), "pub_tree.updatedAt")
 					.as("updatedAt"),
 				jsonArrayFrom(
 					eb
@@ -1051,12 +1053,14 @@ export async function getPubsWithRelatedValuesAndChildren<
 				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
 			)
 			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
+			.orderBy("depth asc")
 			// this is necessary to filter out all the duplicate entries for the values
 			.groupBy([
 				"pubId",
 				"parentId",
 				"depth",
 				"pubTypeId",
+				"updatedAt",
 				"createdAt",
 				"stageId",
 				"communityId",
