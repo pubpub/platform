@@ -82,7 +82,10 @@ jobs:
             - name: Get image tag based on SHA
               id: gettag
               # use shell substitution
-              run: echo "tag=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
+              run: |
+                  git status
+                  PAGER=cat git diff
+                  echo "tag=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
 
             - name: Login to Amazon ECR
               id: login-ecr
