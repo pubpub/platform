@@ -126,7 +126,6 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 															<RemoveFieldButton
 																pubFieldId={field.id}
 																pubTypeId={type.id}
-																disabled={isTitle}
 															/>
 														</div>
 													)}

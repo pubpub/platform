@@ -46,7 +46,7 @@ const schema = z.object({
 			})
 		)
 		.min(1, { message: "Add at least one field" }),
-	titleField: z.string().min(1, { message: "Designate a title field" }),
+	titleField: z.string(),
 });
 
 export const TypeEditor = ({ onTypeCreation }: Props) => {
