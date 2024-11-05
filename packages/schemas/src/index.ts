@@ -76,7 +76,7 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 		case CoreSchemaType.NumericArray:
 			return [];
 		case CoreSchemaType.RichText:
-			return "";
+			return undefined;
 		case CoreSchemaType.String:
 			return "";
 		case CoreSchemaType.StringArray:

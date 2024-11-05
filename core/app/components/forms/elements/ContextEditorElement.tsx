@@ -2,8 +2,9 @@
 
 import type { Node } from "prosemirror-model";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Value } from "@sinclair/typebox/value";
+import { docHasChanged } from "context-editor";
 import { useFormContext } from "react-hook-form";
 import { richTextInputConfigSchema } from "schemas";
 
@@ -13,6 +14,22 @@ import type { ElementProps } from "../types";
 import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+
+const EMPTY_DOC = {
+	type: "doc",
+	attrs: {
+		meta: {},
+	},
+	content: [
+		{
+			type: "paragraph",
+			attrs: {
+				id: null,
+				class: null,
+			},
+		},
+	],
+};
 
 const EditorFormElement = ({
 	label,
@@ -26,6 +43,8 @@ const EditorFormElement = ({
 	initialValue?: Node;
 }) => {
 	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
+	const [initialDoc, setInitialDoc] = useState(initialValue);
+
 	const memoEditor = useMemo(() => {
 		if (!pubTypeId) {
 			// throw error? does editor require pubTypeId?
@@ -38,8 +57,16 @@ const EditorFormElement = ({
 				pubs={pubs}
 				pubTypes={pubTypes}
 				pubTypeId={pubTypeId}
-				onChange={onChange}
-				initialDoc={initialValue}
+				onChange={(state) => {
+					// Control changing the state more granularly or else the dirty field will trigger on load
+					// Since we can't control the dirty state directly, even this workaround does not handle the case of
+					// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
+					const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
+					if (hasChanged) {
+						onChange(state);
+					}
+				}}
+				initialDoc={initialDoc}
 			/>
 		);
 	}, [onChange]);
