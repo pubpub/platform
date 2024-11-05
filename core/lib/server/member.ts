@@ -5,7 +5,7 @@ import type {
 	CommunityMembershipsId,
 	MembersId,
 	MembersUpdate,
-	NewMembers,
+	NewCommunityMemberships,
 	UsersId,
 } from "db/public";
 import { MemberRole } from "db/public";
@@ -75,22 +75,22 @@ export const getMembers = ({ communityId }: { communityId: CommunitiesId }, trx 
 			.where("community_memberships.communityId", "=", communityId)
 	);
 
-export const inviteMember = (props: NewMembers, trx = db) =>
+export const inviteMember = (props: NewCommunityMemberships & { userId: UsersId }, trx = db) =>
 	autoRevalidate(
 		trx
-			.with("community_membership", (db) =>
+			.with("member", (db) =>
 				db
-					.insertInto("community_memberships")
+					.insertInto("members")
 					.values({
 						userId: props.userId,
 						communityId: props.communityId,
 						role: props.role ?? MemberRole.editor,
 					})
-					.returning("community_memberships.id")
+					.returning("members.id")
 			)
-			.insertInto("members")
+			.insertInto("community_memberships")
 			.values((eb) => ({
-				id: eb.selectFrom("community_membership").select("id") as unknown as MembersId,
+				id: eb.selectFrom("member").select("id") as unknown as CommunityMembershipsId,
 				userId: props.userId,
 				communityId: props.communityId,
 				role: props.role,

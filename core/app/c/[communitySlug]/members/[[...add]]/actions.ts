@@ -89,7 +89,7 @@ export const addMember = defineServerAction(async function addMember({
 		const member = await dbAddMember({
 			userId: user.id as UsersId,
 			communityId: result.community.id,
-			role,
+			role: role ?? MemberRole.editor,
 		}).executeTakeFirst();
 
 		// TODO: send email to user confirming their membership,

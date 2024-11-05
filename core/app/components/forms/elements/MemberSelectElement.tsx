@@ -3,7 +3,7 @@
 import { Value } from "@sinclair/typebox/value";
 import { memberSelectConfigSchema } from "schemas";
 
-import type { MembersId } from "db/public";
+import type { CommunityMembershipsId, MembersId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -19,7 +19,7 @@ export const MemberSelectElement = async ({
 }: {
 	name: string;
 	id: string;
-	value?: MembersId;
+	value?: CommunityMembershipsId;
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
 	config: any;
