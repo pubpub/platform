@@ -1,67 +1,140 @@
-import { Button } from "ui/button";
-import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
-import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
+import {
+	Activity,
+	Form,
+	FormInput,
+	Integration,
+	Pub,
+	RefreshCw,
+	Settings,
+	Stages,
+	ToyBrick,
+	UsersRound,
+} from "ui/icon";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarGroup,
+	SidebarGroupContent,
+	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuItem,
+	SidebarRail,
+	SidebarSeparator,
+} from "ui/sidebar";
 
 import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
+import type { DefinitelyHas } from "~/lib/types";
 import { getLoginData } from "~/lib/auth/loginData";
 import { isCommunityAdmin } from "~/lib/auth/roles";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
+import { NavLinkSubMenu } from "./NavLinkSubMenu";
 
 type Props = {
 	community: NonNullable<CommunityData>;
 	availableCommunities: NonNullable<AvailableCommunitiesData>;
+	collapsible?: Parameters<typeof Sidebar>[0]["collapsible"];
 };
+
+export type LinkDefinition = {
+	href: string;
+	text: string;
+	icon: React.ReactNode;
+	minimumAccessRole: "superadmin" | "admin" | null;
+	pattern?: string;
+	children?: LinkDefinition[];
+};
+
+const defaultLinks: LinkDefinition[] = [
+	{
+		href: "/pubs",
+		text: "All Pubs",
+		icon: <Pub size={16} />,
+		minimumAccessRole: null,
+	},
+];
+
+const viewLinks: LinkDefinition[] = [
+	{
+		href: "/activity/actions",
+		text: "Action Log",
+		icon: <Activity className="h-4 w-4" />,
+		minimumAccessRole: "admin",
+	},
+];
+
+const manageLinks: LinkDefinition[] = [
+	{
+		href: "/stages",
+		text: "Workflows",
+		icon: <Stages size={16} />,
+		minimumAccessRole: null,
+		pattern: "/stages$",
+		children: [
+			{
+				href: "/stages/manage",
+				text: "Stage editor",
+				icon: <RefreshCw size={16} />,
+				minimumAccessRole: "admin",
+				pattern: "/stages/manage",
+			},
+		],
+	},
+	{
+		href: "/types",
+		text: "Types",
+		icon: <ToyBrick size={16} />,
+		minimumAccessRole: "admin",
+	},
+	{
+		href: "/fields",
+		text: "Fields",
+		icon: <FormInput size={16} />,
+		minimumAccessRole: "admin",
+	},
+	{
+		href: "/forms",
+		text: "Forms",
+		icon: <Form size={16} />,
+		minimumAccessRole: "admin",
+	},
+	{
+		href: "/integrations",
+		text: "Integrations",
+		icon: <Integration size={16} />,
+		minimumAccessRole: "admin",
+	},
+	{
+		href: "/members",
+		text: "Members",
+		icon: <UsersRound size={16} />,
+		minimumAccessRole: "admin",
+	},
+	{
+		href: "/settings",
+		text: "Settings",
+		icon: <Settings className="h-4 w-4" />,
+		minimumAccessRole: "superadmin",
+		pattern: "/settings$",
+		children: [
+			{
+				href: "/settings/tokens",
+				text: "API Tokens",
+				icon: <Settings className="h-4 w-4" />,
+				minimumAccessRole: "superadmin",
+			},
+		],
+	},
+];
 
 const Links = ({
 	prefix,
 	isAdmin,
-}: {
-	/* The community prefix, e.g. "/c/community-slug"
-	 */
-	prefix: string;
-	/* Whether the user is an admin */
-	isAdmin?: boolean;
-}) => {
-	return (
-		<>
-			<NavLink
-				href={`${prefix}/pubs`}
-				text={"All Pubs"}
-				icon={<img src="/icons/pub.svg" alt="" />}
-			/>
-		</>
-	);
-};
-
-const ViewLinks = ({
-	prefix,
-	isAdmin,
-}: {
-	/* The community prefix, e.g. "/c/community-slug"
-	 */
-	prefix: string;
-	/* Whether the user is an admin */
-	isAdmin?: boolean;
-}) => {
-	return (
-		<>
-			{isAdmin && (
-				<NavLink
-					href={`${prefix}/activity/actions`}
-					text="Action Log"
-					icon={<Activity className="h-4 w-4" />}
-				/>
-			)}
-		</>
-	);
-};
-
-const ManageLinks = ({
-	prefix,
-	isAdmin,
 	isSuperAdmin,
+	links,
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
@@ -72,60 +145,53 @@ const ManageLinks = ({
 	 * Whether the user is a super admin
 	 */
 	isSuperAdmin?: boolean;
+	links: LinkDefinition[];
 }) => {
 	return (
 		<>
-			<NavLink
-				href={`${prefix}/stages`}
-				text={"Workflows"}
-				icon={<img src="/icons/stages.svg" alt="" />}
-			/>
-			{isAdmin && (
-				<NavLink
-					href={`${prefix}/stages/manage`}
-					text={"Stage editor"}
-					icon={<RefreshCw size={16} />}
-				/>
-			)}
-			{isAdmin && (
-				<NavLink href={`${prefix}/types`} text={"Types"} icon={<ToyBrick size={16} />} />
-			)}
-			{isAdmin && (
-				<NavLink href={`${prefix}/fields`} text={"Fields"} icon={<FormInput size={16} />} />
-			)}
-			{isAdmin && (
-				<NavLink
-					href={`${prefix}/forms`}
-					text={"Forms"}
-					icon={<img src="/icons/form.svg" alt="" />}
-				/>
-			)}
-			<NavLink
-				href={`${prefix}/integrations`}
-				text={"Integrations"}
-				icon={<img src="/icons/integration.svg" alt="" />}
-			/>
-			{isAdmin && (
-				<NavLink
-					href={`${prefix}/members`}
-					text={"Members"}
-					icon={<img src="/icons/members.svg" alt="" />}
-				/>
-			)}
-			{isSuperAdmin && (
-				<NavLink
-					href={`${prefix}/settings`}
-					text={"Settings"}
-					icon={<Settings className="h-4 w-4" />}
-				/>
-			)}
+			{links
+				.filter((link) => {
+					if (link.minimumAccessRole === null) {
+						return true;
+					}
+
+					if (link.minimumAccessRole === "admin") {
+						return isSuperAdmin || isAdmin;
+					}
+
+					if (link.minimumAccessRole === "superadmin") {
+						return isSuperAdmin;
+					}
+
+					return false;
+				})
+				.map((link) => {
+					if (!link.children || link.children.length === 0) {
+						return (
+							<NavLink
+								key={link.href}
+								href={`${prefix}${link.href}`}
+								text={link.text}
+								icon={link.icon}
+								pattern={link.pattern}
+							/>
+						);
+					}
+
+					return (
+						<NavLinkSubMenu
+							link={link as DefinitelyHas<LinkDefinition, "children">}
+							prefix={prefix}
+							key={link.href}
+						/>
+					);
+				})}
 		</>
 	);
 };
 
-const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
+const SideNav: React.FC<Props> = async function ({ community, availableCommunities, collapsible }) {
 	const prefix = `/c/${community.slug}`;
-	const divider = <div className="my-4 h-[1px] bg-gray-200" />;
 
 	const { user } = await getLoginData();
 
@@ -134,67 +200,59 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 	const isSuperAdmin = user?.isSuperAdmin;
 
 	return (
-		<>
-			<header className="flex h-14 w-full items-center justify-between gap-4 border-b px-4 md:hidden lg:h-[60px] lg:px-6">
-				<Sheet>
-					<SheetTrigger asChild>
-						<Button variant="outline" size="icon" className="shrink-0">
-							<Menu className="h-5 w-5" />
-							<span className="sr-only">Toggle navigation menu</span>
-						</Button>
-					</SheetTrigger>
-					<SheetContent
-						side="left"
-						className="mr-4 flex flex-col justify-between bg-gray-50 pb-8"
-					>
-						<nav className="grid gap-2 pr-6 text-lg font-medium">
-							<Links prefix={prefix} isAdmin={isAdmin} />
-						</nav>
-						<div>
-							<LoginSwitcher />
-						</div>
-					</SheetContent>
-				</Sheet>
-				<CommunitySwitcher
-					community={community}
-					availableCommunities={availableCommunities}
-				/>
-			</header>
-			<div
-				className={
-					"fixed hidden h-screen w-[250px] flex-col bg-gray-50 p-4 shadow-inner md:flex"
-				}
-			>
-				<div className="flex-auto">
-					<CommunitySwitcher
-						community={community}
-						availableCommunities={availableCommunities}
-					/>
-					{divider}
-					<div className="flex h-full max-h-screen flex-col gap-2">
-						<div className="flex-1">
-							<nav className="grid items-start pr-2 pt-2 text-sm font-medium">
-								<Links prefix={prefix} isAdmin={isAdmin} />
-								{divider}
-								<span className="font-semibold text-gray-500">VIEWS</span>
-								<ViewLinks prefix={prefix} isAdmin={isAdmin} />
-							</nav>
-							<nav className="grid items-start pr-2 pt-4 text-sm font-medium">
-								<span className="font-semibold text-gray-500">MANAGE</span>
-								<ManageLinks
-									prefix={prefix}
-									isAdmin={isAdmin}
-									isSuperAdmin={isSuperAdmin}
-								/>
-							</nav>
-						</div>
+		<Sidebar collapsible={collapsible}>
+			<SidebarHeader>
+				<SidebarMenu>
+					<SidebarMenuItem className={`h-full`}>
+						<CommunitySwitcher
+							community={community}
+							availableCommunities={availableCommunities}
+						/>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarHeader>
+			<SidebarContent>
+				<SidebarSeparator />
+				<div className="flex h-full max-h-screen flex-col gap-2">
+					<div className="flex-1">
+						<SidebarGroup>
+							<SidebarGroupContent>
+								<SidebarMenu>
+									<Links prefix={prefix} isAdmin={isAdmin} links={defaultLinks} />
+								</SidebarMenu>
+							</SidebarGroupContent>
+						</SidebarGroup>
+						<SidebarSeparator />
+						<SidebarGroup>
+							<SidebarGroupLabel>Views</SidebarGroupLabel>
+							<SidebarGroupContent>
+								<SidebarMenu>
+									<Links prefix={prefix} isAdmin={isAdmin} links={viewLinks} />
+								</SidebarMenu>
+							</SidebarGroupContent>
+						</SidebarGroup>
+						<SidebarSeparator />
+						<SidebarGroup>
+							<SidebarGroupLabel>Manage</SidebarGroupLabel>
+							<SidebarGroupContent>
+								<SidebarMenu>
+									<Links
+										prefix={prefix}
+										isAdmin={isAdmin}
+										isSuperAdmin={isSuperAdmin}
+										links={manageLinks}
+									/>
+								</SidebarMenu>
+							</SidebarGroupContent>
+						</SidebarGroup>
 					</div>
 				</div>
-				<div>
-					<LoginSwitcher />
-				</div>
-			</div>
-		</>
+			</SidebarContent>
+			<SidebarFooter>
+				<LoginSwitcher />
+			</SidebarFooter>
+			<SidebarRail />
+		</Sidebar>
 	);
 };
 

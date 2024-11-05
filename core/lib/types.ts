@@ -54,7 +54,7 @@ export type MaybeHas<T extends Record<string, unknown>, K extends keyof T> = T e
 export type DefinitelyHas<T, K extends keyof T> = T extends T
 	? Prettify<
 			Omit<T, K> & {
-				[P in K]: NonNullable<T[P]>;
+				[P in K]-?: NonNullable<T[P]>;
 			}
 		>
 	: never;
