@@ -116,35 +116,51 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 									</tr>
 								</thead>
 								<tbody>
-									{type.fields.map(({ id, isTitle }) => {
-										const field = fields[id];
-										return (
-											<tr key={field.id}>
-												<td>
-													{editing && (
-														<div className="mr-1 inline-flex">
-															<RemoveFieldButton
-																pubFieldId={field.id}
-																pubTypeId={type.id}
-															/>
-														</div>
-													)}
-													{field.name} (
-													<span className="bg-gray-100 font-mono">
-														{field.slug}
-													</span>
-													)
-												</td>
-												<td>
-													<IsTitleCell
-														pubField={field}
-														isTitle={isTitle}
-														isEditing={editing}
-													/>
-												</td>
-											</tr>
-										);
-									})}
+									{type.fields
+										// Sort so that title is first, then alphabetical
+										.sort((a, b) => {
+											const aField = fields[a.id];
+											const bField = fields[b.id];
+											if (a.isTitle) {
+												return -2;
+											}
+											if (b.isTitle) {
+												return 2;
+											}
+											if (aField.name === bField.name) {
+												return 0;
+											}
+											return aField.name > bField.name ? 1 : -1;
+										})
+										.map(({ id, isTitle }) => {
+											const field = fields[id];
+											return (
+												<tr key={field.id}>
+													<td>
+														{editing && (
+															<div className="mr-1 inline-flex">
+																<RemoveFieldButton
+																	pubFieldId={field.id}
+																	pubTypeId={type.id}
+																/>
+															</div>
+														)}
+														{field.name} (
+														<span className="bg-gray-100 font-mono">
+															{field.slug}
+														</span>
+														)
+													</td>
+													<td>
+														<IsTitleCell
+															pubField={field}
+															isTitle={isTitle}
+															isEditing={editing}
+														/>
+													</td>
+												</tr>
+											);
+										})}
 								</tbody>
 							</table>
 						</RadioGroup>
