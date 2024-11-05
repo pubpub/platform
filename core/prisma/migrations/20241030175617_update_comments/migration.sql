@@ -62,22 +62,6 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 
 
--- Model community_memberships comments
-
-
-
--- Model pub_memberships comments
-
-
-
--- Model stage_memberships comments
-
-
-
--- Model form_memberships comments
-
-
-
 -- Model permissions comments
 
 

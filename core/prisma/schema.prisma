@@ -153,7 +153,7 @@ model PubField {
   isRelation       Boolean         @default(false)
 
   values    PubValue[]
-  pubTypes  PubType[]
+  pubTypes  PubFieldToPubType[]
   FormInput FormElement[]
 
   @@map(name: "pub_fields")
@@ -215,11 +215,25 @@ model PubType {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
-  fields PubField[]
+  fields PubFieldToPubType[]
   pubs   Pub[]
   Form   Form[]
 
   @@map(name: "pub_types")
+}
+
+model PubFieldToPubType {
+  A           String 
+  B           String  
+  isTitle     Boolean   @default(false)
+
+  pubField    PubField  @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  pubType     PubType   @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@unique([A, B], name: "_PubFieldToPubType_AB_unique")
+  @@index([B], name: "_PubFieldToPubType_B_index")
+
+  @@map(name: "_PubFieldToPubType")
 }
 
 model Stage {

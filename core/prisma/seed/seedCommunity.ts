@@ -54,7 +54,7 @@ export type PubFieldsInitializer = Record<
 
 type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	string,
-	Partial<Record<keyof PF, true>>
+	Partial<Record<keyof PF, { isTitle: boolean }>>
 >;
 
 /**
@@ -414,7 +414,9 @@ type CommunitySeedInput = {
 
 // ========
 // These are helper types to make the output of the seeding functions match the input more closely.
-type PubFieldsByName<PF> = { [K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } };
+type PubFieldsByName<PF> = {
+	[K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean };
+};
 
 type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
@@ -499,7 +501,7 @@ export async function seedCommunity<
 		 * 	},
 		 * 	pubTypes: {
 		 * 		Article: {
-		 * 			Title: "A Great Article",
+		 * 			Title: { isTitle: true },
 		 * 		}
 		 * }
 		 * ```
@@ -741,7 +743,8 @@ export async function seedCommunity<
 					.insertInto("_PubFieldToPubType")
 					.values(
 						pubTypesList.flatMap(([pubTypeName, fields], idx) =>
-							Object.keys(fields).flatMap((field) => {
+							Object.entries(fields).flatMap(([field, meta]) => {
+								const isTitle = meta?.isTitle ?? false;
 								const fieldId = createdPubFields.find(
 									(createdField) => createdField.name === field
 								)?.id;
@@ -756,6 +759,7 @@ export async function seedCommunity<
 									{
 										A: fieldId,
 										B: pubTypeId,
+										isTitle,
 									},
 								];
 							})
@@ -778,7 +782,10 @@ export async function seedCommunity<
 								(pubField) => pubField.id === pubFieldToPubType.A
 							)!;
 
-							return [pubField.name, pubField] as const;
+							return [
+								pubField.name,
+								{ ...pubField, isTitle: pubFieldToPubType.isTitle },
+							] as const;
 						})
 				),
 			},

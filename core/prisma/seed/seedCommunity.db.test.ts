@@ -38,11 +38,11 @@ describe("seedCommunity", () => {
 			},
 			pubTypes: {
 				Submission: {
-					Title: true,
-					SubmissionAuthor: true,
+					Title: { isTitle: true },
+					SubmissionAuthor: { isTitle: false },
 				},
 				Author: {
-					Title: true,
+					Title: { isTitle: true },
 				},
 			},
 			users: {
