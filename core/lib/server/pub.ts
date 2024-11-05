@@ -709,24 +709,24 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
  */
 type MaybePubChildren<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
 	Options["withChildren"] extends false
-		? { children?: undefined }
+		? { children?: never }
 		: { children: ProcessedPub<Options>[] };
 
 /**
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
-	Options["withStage"] extends true ? { stage: Stages } : { stage?: undefined };
+	Options["withStage"] extends true ? { stage: Stages } : { stage?: never };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
  */
 type MaybePubPubType<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
-	Options["withPubType"] extends true ? { pubType: PubTypes } : { pubType?: undefined };
+	Options["withPubType"] extends true ? { pubType: PubTypes } : { pubType?: never };
 
 type MaybeWithRelatedPub<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
 	Options["withRelatedPubs"] extends false
-		? { relatedPub?: undefined }
+		? { relatedPub?: never }
 		: { relatedPub: ProcessedPub<Options>[] };
 
 /**
