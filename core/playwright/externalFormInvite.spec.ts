@@ -2,7 +2,7 @@
 import type { Page } from "@playwright/test";
 
 import { faker } from "@faker-js/faker";
-import { expect, test } from "@playwright/test";
+import { errors, expect, test } from "@playwright/test";
 
 import type { PubsId } from "db/public";
 import { Action } from "db/public";
@@ -25,16 +25,9 @@ test.describe.configure({ mode: "serial" });
 
 let page: Page;
 let pubId: PubsId;
-let errors: string[] = [];
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
-	page.on("console", (message) => {
-		if (message.type() === "error") {
-			errors.push(message.text());
-		}
-	});
-
 	await login({ page });
 	await createCommunity({
 		page,
@@ -56,12 +49,6 @@ test.beforeAll(async ({ browser }) => {
 		stage: "Evaluating",
 		values: { title: "The Activity of Snails" },
 	});
-});
-
-test.afterEach(async () => {
-	console.log("Browser console errors:\n");
-	console.log(errors);
-	errors = [];
 });
 
 test.afterAll(async () => {
@@ -98,6 +85,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 
 		await memberDialog.getByLabel("First Name").fill(firstName);
 		await memberDialog.getByLabel("Last Name").fill(lastName);
+		// TODO: figure out how to remove this timeout without making the test flaky
 		await page.waitForTimeout(2000);
 		await memberDialog.getByRole("button", { name: "Submit", exact: true }).click();
 		await memberDialog
@@ -141,6 +129,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await newPage.getByLabel(`${COMMUNITY_SLUG}:content`).fill("LGTM");
 
 		// Make sure it autosaves
+		// It should happen after 5s, but it seems to take ~6 usually
 		await newPage.getByText("Last saved at").waitFor({ timeout: 7000 });
 
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
