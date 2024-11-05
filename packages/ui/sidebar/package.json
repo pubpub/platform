@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-sidebar.cjs.js",
+	"module": "dist/ui-sidebar.esm.js"
+}
