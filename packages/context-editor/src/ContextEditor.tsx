@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ProsemirrorAdapterProvider, useNodeViewFactory } from "@prosemirror-adapter/react";
@@ -20,19 +20,24 @@ import SuggestPanel from "./components/SuggestPanel";
 
 export interface ContextEditorProps {
 	placeholder?: string;
-	initialDoc?: object;
-	pubId: string;
-	pubTypeId: string;
-	pubTypes: object /* pub types in given context */;
-	getPubs: (filter: string) => Promise<any[]>;
-	getPubById: (id: string) => {} | undefined /* function to get a pub, both for autocomplete, and for id? */;
-	onChange: (
-		state: any
-	) => void /* Something that passes up view, state, etc so parent can handle onSave, etc */;
-	atomRenderingComponent: React.ComponentType<{ nodeProp: any }> /* A react component that takes in the ContextAtom pubtype and renders it accordingly */;
 	className?: string;
 	disabled?: boolean;
+	initialDoc?: object;
+	pubId: string /* id of the current pub whose field is being directly edited */;
+	pubTypeId: string /* id of the current pubType of the pub whose field is being directly edited */;
+	pubTypes: object /* pub types in given context */;
+	getPubs: (filter: string) => Promise<any[]>;
+	getPubById: (
+		id: string
+	) => {} | undefined /* function to get a pub, both for autocomplete, and for id? */;
+	onChange: (
+		state: any
+	) => void /* Function that passes up editorState so parent can handle onSave, etc */;
+	atomRenderingComponent: React.ComponentType<{
+		nodeProp: any;
+	}> /* A react component that is given the ContextAtom pubtype and renders it accordingly */;
 }
+
 export interface PanelProps {
 	top: number;
 	left: number;
@@ -57,6 +62,7 @@ export interface SuggestProps {
 	items: any[];
 	filter: string;
 }
+
 const initSuggestProps: SuggestProps = {
 	isOpen: false,
 	selectedIndex: 0,
@@ -68,11 +74,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 	const memoEditor = useMemo(() => {
 		return <UnwrappedEditor {...props} />;
 	}, [props]);
-	return (
-		<ProsemirrorAdapterProvider>
-			{memoEditor}
-		</ProsemirrorAdapterProvider>
-	);
+	return <ProsemirrorAdapterProvider>{memoEditor}</ProsemirrorAdapterProvider>;
 }
 
 function UnwrappedEditor(props: ContextEditorProps) {
@@ -128,8 +130,8 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		/* Every Render */
 		if (view.current) {
 			view.current.setProps({
-				editable: ()=> !props.disabled
-			})
+				editable: () => !props.disabled,
+			});
 			const tr = view.current.state.tr
 				.setMeta(reactPropsKey, { ...props, suggestData, setSuggestData })
 				.setMeta(attributePanelKey, { panelPosition, setPanelPosition });
@@ -140,45 +142,13 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		/* Figure out what I actually need to render on, and then clean up any useMemo calls if necessary */
 	}, [props, suggestData, panelPosition]);
 	return (
-		<div id="context-editor-container" className={`relative max-w-screen-sm ${props.disabled ? 'disabled' : ''} ${props.className}`}>
+		<div
+			id="context-editor-container"
+			className={`relative max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
+		>
 			<div ref={viewHost} className="font-serif" />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />
 		</div>
 	);
 }
-
-/* 
-Notes:
-
-- All saves happen at the end when "save" or equialent is clicked
-At that point, it parses the doc and pulls out all the field values
-that need to be persisted to different pubs.
-- For IncludeAtom blocks I think we need to pass in a rendering function that is given a
-prosemirror node and returns a rendered react output. That component is then used 
-by the NodeView to put whatever we need in the doc.
-*/
-
-/* 
-NodeView provider could:
-- Create a bunch of objects with ids
-- Have those id values parsed
-- Rendered as portals by some provider
-
-*/
-
-/* 
-1. [x] site preview first pass
-2. ! better real content in doc
-	- image
-	- video
-	- dataset
-	- figure?
-3. ! Pub panel redesign (give headers between each pub)
-4. ! Make contextatom and doc decoration titles better (pull from pubtype)
-5. Make autocomplete pull from existing content data
-6. Put together talking points for demo
-	- Why structure
-	- the doc itself is simpler than last, exports structure and complexity to pub types (and the renderer we choose to use)
-	- Need 1) default render type checkbox, 2)
-*/
