@@ -107,7 +107,7 @@ Table pub_fields {
   communityId String [not null]
   isRelation Boolean [not null, default: false]
   values pub_values [not null]
-  pubTypes pub_types [not null]
+  pubTypes _PubFieldToPubType [not null]
   FormInput form_elements [not null]
 }
 
@@ -146,9 +146,21 @@ Table pub_types {
   communityId String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-  fields pub_fields [not null]
+  fields _PubFieldToPubType [not null]
   pubs pubs [not null]
   Form forms [not null]
+}
+
+Table _PubFieldToPubType {
+  A String [not null]
+  B String [not null]
+  isTitle Boolean [not null, default: false]
+  pubField pub_fields [not null]
+  pubType pub_types [not null]
+
+  indexes {
+    (A, B) [unique]
+  }
 }
 
 Table stages {
@@ -489,11 +501,6 @@ Table PermissionToPub {
   pubsId String [ref: > pubs.id]
 }
 
-Table PubFieldToPubType {
-  pubtypesId String [ref: > pub_types.id]
-  fieldsId String [ref: > pub_fields.id]
-}
-
 Table PermissionToStage {
   permissionsId String [ref: > permissions.id]
   stagesId String [ref: > stages.id]
@@ -622,6 +629,10 @@ Ref: pub_values.pubId > pubs.id [delete: Cascade]
 Ref: pub_values.relatedPubId > pubs.id [delete: Cascade]
 
 Ref: pub_types.communityId > communities.id
+
+Ref: _PubFieldToPubType.A > pub_fields.id [delete: Cascade]
+
+Ref: _PubFieldToPubType.B > pub_types.id [delete: Cascade]
 
 Ref: stages.communityId > communities.id
 
