@@ -1,13 +1,12 @@
 import type { JsonValue } from "contracts";
 import type {
 	ActionInstances,
+	CommunityMembershipsId,
 	CoreSchemaType,
-	MembersId,
 	PubFieldsId,
 	PubsId,
 	PubTypesId,
 	Stages,
-	StagesId,
 } from "db/public";
 
 export type ChildPubRowPubType = {
@@ -21,7 +20,7 @@ export type ChildPubRowPubType = {
 };
 
 export type ChildPubRowMemberField = {
-	id: MembersId;
+	id: CommunityMembershipsId;
 	fieldId: PubFieldsId;
 	user: {
 		avatar: string | null;
