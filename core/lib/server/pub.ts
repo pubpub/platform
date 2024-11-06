@@ -619,10 +619,8 @@ export type UnprocessedPub = {
 		relatedPubId: PubsId | null;
 		createdAt: Date;
 		updatedAt: Date;
-		field: {
-			schemaName: CoreSchemaType;
-			slug: string;
-		};
+		schemaName: CoreSchemaType;
+		fieldSlug: string;
 	}[];
 	children?: { id: PubsId }[];
 };
@@ -759,10 +757,8 @@ export type ProcessedPub<Options extends MaybeOptions = {}> = {
 		/**
 		 * Information about the field that the value belongs to.
 		 */
-		field: {
-			schemaName: CoreSchemaType;
-			slug: string;
-		};
+		schemaName: CoreSchemaType;
+		fieldSlug: string;
 	} & MaybeWithRelatedPub<Options>)[];
 	createdAt: Date;
 	/**
@@ -1001,13 +997,8 @@ export async function getPubsWithRelatedValuesAndChildren<
 							"inner.relatedPubId",
 							"inner.valueCreatedAt as createdAt",
 							"inner.valueUpdatedAt as updatedAt",
-							jsonObjectFrom(
-								eb
-									.selectFrom("pub_tree as inner2")
-									.select(["inner2.schemaName", "inner2.slug"])
-									.whereRef("inner2.valueId", "=", "inner.valueId")
-									.limit(1)
-							).as("field"),
+							"inner.schemaName",
+							"inner.slug as fieldSlug",
 						])
 						.whereRef("inner.pubId", "=", "pub_tree.pubId")
 						// this prevents us from double fetching values if we have detected a cycle
