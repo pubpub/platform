@@ -57,7 +57,7 @@ test.describe("Community members", () => {
 		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
 		await membersPage.goto();
 		await membersPage.searchMembers("all@pubpub.org");
-		expect(await page.getByText("No results.")).not.toBeAttached();
+		expect(page.getByText("No results.")).not.toBeAttached();
 	});
 
 	test("Can remove a member", async () => {
@@ -65,7 +65,7 @@ test.describe("Community members", () => {
 		await membersPage.goto();
 		await membersPage.addExistingUser("some@pubpub.org");
 		await membersPage.removeMember("some@pubpub.org");
-		expect(await page.getByText("No results.")).toBeVisible();
+		expect(page.getByText("No results.")).toBeVisible();
 	});
 
 	test("New user signup", async ({ page }) => {
