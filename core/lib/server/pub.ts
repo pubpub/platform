@@ -854,14 +854,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					// we need to do this weird cast, because kysely does not support typing the selecting from a later CTE
 					// which is possible only in a with recursive query
 					.selectFrom("root_pubs_limited as p" as unknown as "pubs as p")
-					.leftJoin("pub_values as pv", (join) =>
-						join.on((eb) =>
-							eb.and([
-								eb("p.id", "=", eb.ref("pv.pubId")),
-								// eb("pv.relatedPubId", "is not", null),
-							])
-						)
-					)
+					.leftJoin("pub_values as pv", "p.id", "pv.pubId")
 					.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
 					.$if(Boolean(fieldSlugs), (qb) =>
 						qb.where("pub_fields.slug", "in", fieldSlugs!)
@@ -917,14 +910,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 										])
 									)
 								)
-								.leftJoin("pub_values", (join) =>
-									join.on((eb) =>
-										eb.and([
-											eb("pubs.id", "=", eb.ref("pub_values.pubId")),
-											// eb("pub_values.relatedPubId", "is not", null),
-										])
-									)
-								)
+								.leftJoin("pub_values", "pubs.id", "pub_values.pubId")
 								.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 								.$if(Boolean(fieldSlugs), (qb) =>
