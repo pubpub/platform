@@ -7,6 +7,30 @@ import type { PubField } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 
+type PubFieldsInput =
+	| {
+			pubId?: never;
+			pubTypeId?: never;
+			communityId: CommunitiesId;
+			includeRelations?: boolean;
+			slugs?: string[];
+	  }
+	| {
+			pubId: PubsId;
+			valuesOnly?: boolean;
+			pubTypeId?: never;
+			communityId: CommunitiesId;
+			includeRelations?: boolean;
+			slugs?: string[];
+	  }
+	| {
+			pubId?: never;
+			pubTypeId: PubTypesId;
+			communityId: CommunitiesId;
+			includeRelations?: boolean;
+			slugs?: string[];
+	  };
+
 /**
  * Get pub fields
  *
@@ -15,56 +39,11 @@ import { autoCache } from "./cache/autoCache";
  * When props.valuesOnly is true, only return the pub fields associated with the pub through pub values, not through the pub type
  * @param props.pubTypeId - When supplied, return all the pub fields associated with the pub type
  * @param props.communityId - When supplied, return all the pub fields associated with the community ID
+ * @param props.slugs - Adds a `where('pub_fields.slug', 'in', props.slugs)` clause
  */
-export const getPubFields = (
-	props:
-		| { pubId?: never; pubTypeId?: never; communityId?: never; includeRelations?: never }
-		| {
-				pubId: PubsId;
-				valuesOnly?: boolean;
-				pubTypeId?: never;
-				communityId?: never;
-				includeRelations?: never;
-		  }
-		| {
-				pubId?: never;
-				pubTypeId: PubTypesId;
-				communityId?: never;
-				includeRelations?: never;
-		  }
-		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId; includeRelations?: never }
-		| {
-				pubId?: never;
-				pubTypeId?: never;
-				communityId: CommunitiesId;
-				includeRelations: boolean;
-		  } = ({} = {})
-) => autoCache(_getPubFields(props));
+export const getPubFields = (props: PubFieldsInput) => autoCache(_getPubFields(props));
 
-export const _getPubFields = (
-	props:
-		| { pubId?: never; pubTypeId?: never; communityId?: never; includeRelations?: never }
-		| {
-				pubId: PubsId;
-				valuesOnly?: boolean;
-				pubTypeId?: never;
-				communityId?: never;
-				includeRelations?: never;
-		  }
-		| {
-				pubId?: never;
-				pubTypeId: PubTypesId;
-				communityId?: never;
-				includeRelations?: never;
-		  }
-		| { pubId?: never; pubTypeId?: never; communityId: CommunitiesId; includeRelations?: never }
-		| {
-				pubId?: never;
-				pubTypeId?: never;
-				communityId: CommunitiesId;
-				includeRelations: boolean;
-		  } = {}
-) =>
+export const _getPubFields = (props: PubFieldsInput) =>
 	db
 		.with("ids", (eb) =>
 			eb
@@ -95,9 +74,8 @@ export const _getPubFields = (
 							)
 						)
 				)
-				.$if(props.communityId !== undefined, (qb) =>
-					qb.where("pub_fields.communityId", "=", props.communityId!)
-				)
+				.where("pub_fields.communityId", "=", props.communityId)
+				.$if(Boolean(props.slugs), (qb) => qb.where("pub_fields.slug", "in", props.slugs!))
 		)
 		.with("f", (eb) =>
 			eb
