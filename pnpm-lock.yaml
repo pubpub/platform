@@ -1058,10 +1058,10 @@ importers:
         specifier: ^2.1.5
         version: 2.2.1(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-dialog':
-        specifier: ^1.0.4
+        specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-dropdown-menu':
-        specifier: ^2.0.5
+        specifier: ^2.1.1
         version: 2.1.1(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-hover-card':
         specifier: ^1.0.7
@@ -1088,13 +1088,13 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-separator':
-        specifier: ^1.0.3
+        specifier: ^1.1.0
         version: 1.1.0(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-slider':
         specifier: ^1.1.2
         version: 1.2.0(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-slot':
-        specifier: ^1.0.2
+        specifier: ^1.1.0
         version: 1.1.0(@types/react@18.3.5)(react@18.3.1)
       '@radix-ui/react-switch':
         specifier: ^1.0.3
@@ -1109,7 +1109,7 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-tooltip':
-        specifier: ^1.0.6
+        specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tailwindcss/typography':
         specifier: ^0.5.10
@@ -1286,8 +1286,8 @@ importers:
         specifier: ^8.3.4
         version: 8.3.4
       tailwindcss:
-        specifier: ^3.4.13
-        version: 3.4.13(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2))
+        specifier: 'catalog:'
+        version: 3.4.10(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2))
       tsconfig:
         specifier: workspace:*
         version: link:../config/tsconfig
@@ -11625,11 +11625,6 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
-  tailwindcss@3.4.13:
-    resolution: {integrity: sha512-KqjHOJKogOUt5Bs752ykCeiwvi0fKVkr5oqsFNt/8px/tA8scFPIlkygsf6jXrfCqGHz7VflA6+yytWuM+XhFw==}
-    engines: {node: '>=14.0.0'}
-    hasBin: true
-
   tapable@2.2.1:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
@@ -18995,7 +18990,7 @@ snapshots:
 
   '@types/accepts@1.3.7':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/aria-query@5.0.4': {}
 
@@ -19028,7 +19023,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/bunyan@1.8.9':
     dependencies:
@@ -19040,7 +19035,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/content-disposition@0.5.8': {}
 
@@ -19051,11 +19046,11 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/express': 4.17.21
       '@types/keygrip': 1.0.6
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/cors@2.8.17':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/d3-array@3.2.1': {}
 
@@ -19207,7 +19202,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.5':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
       '@types/qs': 6.9.15
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -19226,7 +19221,7 @@ snapshots:
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/hapi__catbox@10.2.6': {}
 
@@ -19247,7 +19242,7 @@ snapshots:
 
   '@types/hapi__shot@4.1.6':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/har-format@1.2.15': {}
 
@@ -19347,7 +19342,7 @@ snapshots:
 
   '@types/mysql@2.15.26':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/node@12.20.55': {}
 
@@ -19420,7 +19415,7 @@ snapshots:
 
   '@types/resolve@1.17.1':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/resolve@1.20.6': {}
 
@@ -19438,7 +19433,7 @@ snapshots:
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
       '@types/send': 0.17.4
 
   '@types/shimmer@1.2.0': {}
@@ -19451,7 +19446,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
 
   '@types/tinycolor2@1.4.6': {}
 
@@ -20918,7 +20913,7 @@ snapshots:
     dependencies:
       '@types/cookie': 0.4.1
       '@types/cors': 2.8.17
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.4.2
@@ -24186,13 +24181,6 @@ snapshots:
 
   possible-typed-array-names@1.0.0: {}
 
-  postcss-import@15.1.0(postcss@8.4.45):
-    dependencies:
-      postcss: 8.4.45
-      postcss-value-parser: 4.2.0
-      read-cache: 1.0.0
-      resolve: 1.22.8
-
   postcss-import@15.1.0(postcss@8.4.47):
     dependencies:
       postcss: 8.4.47
@@ -24200,31 +24188,18 @@ snapshots:
       read-cache: 1.0.0
       resolve: 1.22.8
 
-  postcss-js@4.0.1(postcss@8.4.45):
-    dependencies:
-      camelcase-css: 2.0.1
-      postcss: 8.4.45
-
   postcss-js@4.0.1(postcss@8.4.47):
     dependencies:
       camelcase-css: 2.0.1
       postcss: 8.4.47
 
-  postcss-load-config@4.0.2(postcss@8.4.45)(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2)):
+  postcss-load-config@4.0.2(postcss@8.4.47)(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2)):
     dependencies:
       lilconfig: 3.1.2
       yaml: 2.5.1
     optionalDependencies:
-      postcss: 8.4.45
+      postcss: 8.4.47
       ts-node: 10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2)
-
-  postcss-load-config@4.0.2(postcss@8.4.45)(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2)):
-    dependencies:
-      lilconfig: 3.1.2
-      yaml: 2.5.1
-    optionalDependencies:
-      postcss: 8.4.45
-      ts-node: 10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2)
 
   postcss-load-config@4.0.2(postcss@8.4.47)(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2)):
     dependencies:
@@ -24233,11 +24208,6 @@ snapshots:
     optionalDependencies:
       postcss: 8.4.47
       ts-node: 10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2)
-
-  postcss-nested@6.2.0(postcss@8.4.45):
-    dependencies:
-      postcss: 8.4.45
-      postcss-selector-parser: 6.1.2
 
   postcss-nested@6.2.0(postcss@8.4.47):
     dependencies:
@@ -24408,7 +24378,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.5.4
+      '@types/node': 22.7.5
       long: 5.2.3
 
   proxy-addr@2.0.7:
@@ -25543,11 +25513,11 @@ snapshots:
       normalize-path: 3.0.0
       object-hash: 3.0.0
       picocolors: 1.1.0
-      postcss: 8.4.45
-      postcss-import: 15.1.0(postcss@8.4.45)
-      postcss-js: 4.0.1(postcss@8.4.45)
-      postcss-load-config: 4.0.2(postcss@8.4.45)(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2))
-      postcss-nested: 6.2.0(postcss@8.4.45)
+      postcss: 8.4.47
+      postcss-import: 15.1.0(postcss@8.4.47)
+      postcss-js: 4.0.1(postcss@8.4.47)
+      postcss-load-config: 4.0.2(postcss@8.4.47)(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2))
+      postcss-nested: 6.2.0(postcss@8.4.47)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.8
       sucrase: 3.35.0
@@ -25555,33 +25525,6 @@ snapshots:
       - ts-node
 
   tailwindcss@3.4.10(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2)):
-    dependencies:
-      '@alloc/quick-lru': 5.2.0
-      arg: 5.0.2
-      chokidar: 3.6.0
-      didyoumean: 1.2.2
-      dlv: 1.1.3
-      fast-glob: 3.3.2
-      glob-parent: 6.0.2
-      is-glob: 4.0.3
-      jiti: 1.21.6
-      lilconfig: 2.1.0
-      micromatch: 4.0.8
-      normalize-path: 3.0.0
-      object-hash: 3.0.0
-      picocolors: 1.1.0
-      postcss: 8.4.45
-      postcss-import: 15.1.0(postcss@8.4.45)
-      postcss-js: 4.0.1(postcss@8.4.45)
-      postcss-load-config: 4.0.2(postcss@8.4.45)(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2))
-      postcss-nested: 6.2.0(postcss@8.4.45)
-      postcss-selector-parser: 6.1.2
-      resolve: 1.22.8
-      sucrase: 3.35.0
-    transitivePeerDependencies:
-      - ts-node
-
-  tailwindcss@3.4.13(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2)):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2

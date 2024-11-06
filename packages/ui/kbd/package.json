@@ -1,0 +1,4 @@
+{
+	"main": "dist/ui-kbd.cjs.js",
+	"module": "dist/ui-kbd.esm.js"
+}

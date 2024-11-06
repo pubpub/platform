@@ -1,11 +1,21 @@
 import type { ReactNode } from "react";
 
+import { SidebarTrigger } from "ui/sidebar";
+
+import { HEADER_HEIGHT } from "~/lib/ui";
+import { COLLAPSIBLE_TYPE } from "./layout";
+
 const Heading = ({ title, action }: { title: ReactNode; action: ReactNode }) => {
 	return (
-		<header className="z-40 flex h-[72px] items-center justify-between border-b bg-gray-50 p-4 shadow-md">
-			<h1 className="text-lg font-semibold">
-				<div className="flex flex-row items-center">{title}</div>
-			</h1>
+		<header
+			className={`flex h-[${HEADER_HEIGHT}px] items-center justify-between border-b bg-gray-50 p-4 shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
+		>
+			<div className="flex items-center">
+				{COLLAPSIBLE_TYPE === "icon" ? null : <SidebarTrigger />}
+				<h1 className="text-lg font-semibold">
+					<div className="flex flex-row items-center">{title}</div>
+				</h1>
+			</div>
 			{action}
 		</header>
 	);

@@ -14,6 +14,7 @@ import {
 	MenubarShortcut,
 	MenubarTrigger,
 } from "ui/menubar";
+import { SidebarTrigger } from "ui/sidebar";
 
 import { useStages } from "../../StagesContext";
 import { useStageEditor } from "./StageEditorContext";
@@ -38,6 +39,7 @@ export const StageEditorMenubar = () => {
 
 	return (
 		<Menubar className="absolute left-3 top-3 z-50">
+			<SidebarTrigger className="h-6 w-6 hover:bg-muted" />
 			<MenubarMenu>
 				<MenubarTrigger>File</MenubarTrigger>
 				<MenubarContent>
