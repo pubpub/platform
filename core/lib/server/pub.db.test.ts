@@ -449,8 +449,8 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			},
 			pubTypes: {
 				Article: {
-					Title: true,
-					Relation: true,
+					Title: { isTitle: true },
+					Relation: { isTitle: false },
 				},
 			},
 			pubs: [
