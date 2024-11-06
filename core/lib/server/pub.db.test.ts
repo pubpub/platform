@@ -494,7 +494,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			}
 		);
 
-		// 1 root pub, 1 child pub, 1 related pub, even tohugh the limit is . This is correct behavior.
+		// 1 root pub, 1 child pub, 1 related pub, even though the limit is 1. This is correct behavior.
 		expect(pubs.length).toBe(3);
 	});
 
@@ -556,7 +556,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(withCycleExcluded.find((p) => p.isCycle)).toBeUndefined();
 	});
 
-	it("it be able to only fetch fields for certain slugs", async () => {
+	it("should be able to only fetch fields for certain slugs", async () => {
 		const trx = getTrx();
 
 		const newPubId = crypto.randomUUID() as PubsId;
