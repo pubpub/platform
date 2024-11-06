@@ -594,13 +594,11 @@ export const updatePub = async ({
 	pubId,
 	pubValues,
 	stageId,
-	pubTypeId,
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
 	pubValues: PubValues;
 	stageId?: StagesId;
-	pubTypeId?: PubTypesId;
 	continueOnValidationError: boolean;
 }) => {
 	const result = await db.transaction().execute(async (trx) => {
@@ -611,13 +609,6 @@ export const updatePub = async ({
 			).execute();
 			await autoRevalidate(
 				trx.insertInto("PubsInStages").values({ pubId, stageId })
-			).execute();
-		}
-
-		// Update the pub type if a pub type was provided.
-		if (pubId !== undefined) {
-			await autoRevalidate(
-				trx.updateTable("pubs").set({ pubTypeId }).where("id", "=", pubId)
 			).execute();
 		}
 
