@@ -38,10 +38,6 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 
 
--- Model _PubFieldToPubType comments
-
-
-
 -- Model stages comments
 
 

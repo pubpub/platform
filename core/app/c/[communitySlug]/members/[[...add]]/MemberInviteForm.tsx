@@ -145,20 +145,23 @@ export const MemberInviteForm = ({
 					name="email"
 					control={form.control}
 					render={({ field }) => (
-						<FormItem aria-label="Email">
+						<FormItem>
 							<FormLabel>Email</FormLabel>
+
 							<div className="flex items-center gap-x-2">
-								<Input
-									type="email"
-									{...field}
-									onChange={(e) => {
-										field.onChange(e);
-										// call(e);
-										startTransition(async () => {
-											await debouncedEmailCheck(e.target.value);
-										});
-									}}
-								/>
+								<FormControl>
+									<Input
+										type="email"
+										{...field}
+										onChange={(e) => {
+											field.onChange(e);
+											// call(e);
+											startTransition(async () => {
+												await debouncedEmailCheck(e.target.value);
+											});
+										}}
+									/>
+								</FormControl>
 								{isPending && <Loader2 className="h-4 w-4 animate-spin" />}
 							</div>
 							{state.state === "initial" ? (
@@ -184,7 +187,9 @@ export const MemberInviteForm = ({
 							render={({ field }) => (
 								<FormItem aria-label="First Name">
 									<FormLabel>First Name</FormLabel>
-									<Input {...field} />
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -194,7 +199,9 @@ export const MemberInviteForm = ({
 							render={({ field }) => (
 								<FormItem aria-label="Last Name">
 									<FormLabel>Last Name</FormLabel>
-									<Input {...field} />
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}

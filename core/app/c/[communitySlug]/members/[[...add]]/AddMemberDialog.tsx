@@ -1,12 +1,10 @@
 "use client";
 
-import type { Community } from "@prisma/client";
-
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { UserPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
@@ -42,7 +40,10 @@ export const AddMemberDialog = ({ open, content }: { open: boolean; content: Rea
 				</TooltipTrigger>
 			</Tooltip>
 
-			<DialogContent>{content}</DialogContent>
+			<DialogContent>
+				<DialogTitle>Add Member</DialogTitle>
+				{content}
+			</DialogContent>
 		</Dialog>
 	);
 };

@@ -1,5 +1,4 @@
 export interface PubTitleProps {
-	id: string;
 	values: { field: { slug: string }; value: unknown }[] | Record<string, unknown>;
 	createdAt: Date;
 }
