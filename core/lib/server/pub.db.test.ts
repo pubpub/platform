@@ -23,8 +23,8 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 	},
 	pubTypes: {
 		"Basic Pub": {
-			Title: true,
-			"Some relation": true,
+			Title: { isTitle: true },
+			"Some relation": { isTitle: false },
 		},
 	},
 	stages: {
