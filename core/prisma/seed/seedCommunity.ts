@@ -158,7 +158,7 @@ type PubInitializer<
 									 * Note: this PubId reference a pub at least one level higher than the current pub, or it must be created before this pub.
 									 */
 									relatedPubId: PubsId;
-							  }
+							  }[]
 					: never
 				: never;
 		};
