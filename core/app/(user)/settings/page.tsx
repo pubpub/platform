@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getLoginData } from "lib/auth/loginData";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 
 import LogoutButton from "~/app/components/LogoutButton";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { UserInfoForm } from "./UserInfoForm";
 

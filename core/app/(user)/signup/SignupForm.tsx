@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
-import { signup } from "~/lib/auth/actions";
+import { signup } from "~/lib/authentication/actions";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 
 registerFormats();

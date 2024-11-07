@@ -2,7 +2,7 @@ import React from "react";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { AddCommunity } from "./AddCommunityDialog";
 import { CommunityTable } from "./CommunityTable";
 

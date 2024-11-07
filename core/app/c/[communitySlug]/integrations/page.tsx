@@ -4,7 +4,7 @@ import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";

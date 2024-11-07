@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 
 export default async function Page() {
 	const { user } = await getLoginData();

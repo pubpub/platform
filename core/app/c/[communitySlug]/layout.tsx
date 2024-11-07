@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getCommunityRole } from "~/lib/auth/roles";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import SideNav from "./SideNav";
 

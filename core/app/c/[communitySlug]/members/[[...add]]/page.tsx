@@ -7,8 +7,8 @@ import type { CommunitiesId } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { AddMember } from "./AddMember";

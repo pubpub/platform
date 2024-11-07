@@ -39,7 +39,7 @@ import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
 import { db } from "~/kysely/database";
-import { createPasswordHash } from "~/lib/auth/password";
+import { createPasswordHash } from "~/lib/authentication/password";
 import { createPubRecursiveNew } from "~/lib/server";
 import { slugifyString } from "~/lib/string";
 

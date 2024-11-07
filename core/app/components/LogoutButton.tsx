@@ -3,7 +3,7 @@
 import { Button } from "ui/button";
 import { LogOut } from "ui/icon";
 
-import * as actions from "~/lib/auth/actions";
+import * as actions from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
 export default function LogoutButton() {
