@@ -664,6 +664,147 @@ const reconcilePubValues = async ({
 	throw new Error(validationErrors.map(({ error }) => error).join(" "));
 };
 
+type AddPubRelationsInput = { value: unknown; slug: string } & XOR<
+	{ relatedPubId: PubsId },
+	{ relatedPub: CreatePubRequestBodyWithNullsNew }
+>;
+type UpdatePubRelationsInput = { value: unknown; slug: string; relatedPubId: PubsId };
+
+type RemovePubRelationsInput = { value?: never; slug: string; relatedPubId: PubsId };
+
+export const normalizeRelationValues = (
+	relations: AddPubRelationsInput[] | UpdatePubRelationsInput[]
+) => {
+	return relations
+		.filter((relation) => relation.value !== undefined)
+		.map((relation) => ({ slug: relation.slug, value: relation.value }));
+};
+
+export const addPubRelations = async ({
+	pubId,
+	relations,
+	communityId,
+	trx = db,
+}: {
+	pubId: PubsId;
+	relations: AddPubRelationsInput[];
+	communityId: CommunitiesId;
+	trx?: typeof db;
+}) => {
+	const normalizedRelationValues = normalizeRelationValues(relations);
+
+	const validatedRelationValues = await reconcilePubValues({
+		pubValues: normalizedRelationValues,
+		communityId,
+		includeRelations: true,
+		continueOnValidationError: false,
+	});
+
+	const { newPubs, existingPubs } = relations.reduce(
+		(acc, rel) => {
+			const fieldId = validatedRelationValues.find(({ slug }) => slug === rel.slug)?.fieldId;
+			assert(fieldId, `No pub field found for slug '${rel.slug}'`);
+
+			if (rel.relatedPub) {
+				acc.newPubs.push({ ...rel, fieldId });
+			} else {
+				acc.existingPubs.push({ ...rel, fieldId });
+			}
+
+			return acc;
+		},
+		{
+			newPubs: [] as (AddPubRelationsInput & {
+				relatedPubId?: never;
+				fieldId: PubFieldsId;
+			})[],
+			existingPubs: [] as (AddPubRelationsInput & {
+				relatedPub?: never;
+				fieldId: PubFieldsId;
+			})[],
+		}
+	);
+
+	await maybeWithTrx(trx, async (trx) => {
+		const newlyCreatedPubs = await Promise.all(
+			newPubs.map((pub) =>
+				createPubRecursiveNew({
+					trx,
+					communityId,
+					body: pub.relatedPub,
+				})
+			)
+		);
+
+		// assumed they keep their order
+
+		const newPubsWithRelatedPubId = newPubs.map((pub, index) => ({
+			...pub,
+			relatedPubId: expect(newlyCreatedPubs[index].id),
+		}));
+
+		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...existingPubs] as {
+			relatedPubId: PubsId;
+			value: unknown;
+			slug: string;
+			fieldId: PubFieldsId;
+		}[];
+
+		const createdRelations = await autoRevalidate(
+			trx
+				.insertInto("pub_values")
+				.values(
+					allRelationsToCreate.map(({ relatedPubId, value, slug, fieldId }) => ({
+						pubId,
+						relatedPubId,
+						value: JSON.stringify(value),
+						fieldId,
+					}))
+				)
+				.onConflict((oc) =>
+					oc
+						.columns(["pubId", "fieldId", "relatedPubId"])
+						.where("relatedPubId", "is not", null)
+						.doNothing()
+				)
+		).execute();
+
+		return createdRelations;
+	});
+};
+
+/**
+ * - `add`: add the current related pubs, overriding existing ones.
+ * - `remove`: remove the values with these relatedPubIds from the relations.
+ * - `replace`: replace all related pubs with these related pubs instead.
+ */
+type RelatedPubsUpdateInput =
+	| {
+			mode: "add" | "replace";
+			values: {
+				[Slug in string]: (
+					| {
+							value: JSON;
+							relatedPubId: PubsId;
+							relatedPub?: never;
+					  }
+					| {
+							value: JSON;
+							relatedPubId?: never;
+							relatedPub: CreatePubRequestBodyWithNullsNew;
+					  }
+				)[];
+			};
+	  }
+	| {
+			mode: "remove";
+			values: {
+				[Slug in string]: {
+					relatedPubId: PubsId;
+				};
+			};
+	  };
+
 export const updatePub = async ({
 	pubId,
 	pubValues,

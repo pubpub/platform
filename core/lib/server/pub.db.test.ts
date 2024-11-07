@@ -685,3 +685,245 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(pub.stage.name).toBe("Stage 1");
 	});
 });
+
+describe("addPubRelations", () => {
+	it("should be able to add relations to existing pubs", async () => {
+		const trx = getTrx();
+		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		await addPubRelations({
+			pubId: pub.id,
+			communityId: community.id,
+			relations: [
+				{
+					slug: pubFields["Some relation"].slug,
+					value: "test relation value",
+					relatedPubId: pubs[0].id,
+				},
+			],
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		expect(updatedPub).toMatchObject({
+			values: [
+				{ value: "test title" },
+				{
+					value: "test relation value",
+					relatedPub: { values: [{ value: "Some title" }] },
+				},
+			],
+		});
+	});
+
+	it("should be able to create new pubs as relations", async () => {
+		const trx = getTrx();
+		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		await addPubRelations({
+			pubId: pub.id,
+			communityId: community.id,
+			relations: [
+				{
+					slug: pubFields["Some relation"].slug,
+					value: "test relation value",
+					relatedPub: {
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: {
+							[pubFields.Title.slug]: "new related pub",
+						},
+					},
+				},
+			],
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		expect(updatedPub).toMatchObject({
+			values: [
+				{ value: "test title" },
+				{
+					value: "test relation value",
+					relatedPub: { values: [{ value: "new related pub" }] },
+				},
+			],
+		});
+	});
+
+	it("should validate relation values against schema", async () => {
+		const trx = getTrx();
+		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		// Should throw error for invalid value type
+		await expect(
+			addPubRelations({
+				pubId: pub.id,
+				communityId: community.id,
+				relations: [
+					{
+						slug: pubFields["Some relation"].slug,
+						value: 123, // Number instead of string
+						relatedPubId: pubs[0].id,
+					},
+				],
+				trx,
+			})
+		).rejects.toThrow(pubFields["Some relation"].slug);
+	});
+
+	it("should throw error for non-existent field slugs", async () => {
+		const trx = getTrx();
+		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		await expect(
+			addPubRelations({
+				pubId: pub.id,
+				communityId: community.id,
+				relations: [
+					{
+						slug: "non-existent-field",
+						value: "test value",
+						relatedPubId: pubs[0].id,
+					},
+				],
+				trx,
+			})
+		).rejects.toThrow(`No pub field found for slug 'non-existent-field'`);
+	});
+
+	it("should throw error for non-existent related pub id", async () => {
+		const trx = getTrx();
+		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		const nonExistentPubId = crypto.randomUUID() as PubsId;
+
+		await expect(
+			addPubRelations({
+				pubId: pub.id,
+				communityId: community.id,
+				relations: [
+					{
+						slug: pubFields["Some relation"].slug,
+						value: "test value",
+						relatedPubId: nonExistentPubId,
+					},
+				],
+				trx,
+			})
+		).rejects.toThrow();
+	});
+
+	it("should be able to add multiple relations at once", async () => {
+		const trx = getTrx();
+		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		await addPubRelations({
+			pubId: pub.id,
+			communityId: community.id,
+			relations: [
+				{
+					slug: pubFields["Some relation"].slug,
+					value: "relation 1",
+					relatedPubId: pubs[0].id,
+				},
+				{
+					slug: pubFields["Some relation"].slug,
+					value: "relation 2",
+					relatedPub: {
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: {
+							[pubFields.Title.slug]: "new related pub",
+						},
+					},
+				},
+			],
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		expect(updatedPub.values).toHaveLength(3); // title + 2 relations
+		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(2);
+	});
+});
