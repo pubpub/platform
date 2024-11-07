@@ -81,7 +81,12 @@ export async function PubEditor(props: PubEditorProps) {
 			"Invalid community pub type"
 		);
 		pubFields = Object.values(
-			(await getPubFields({ pubId: pub.id }).executeTakeFirstOrThrow()).fields
+			(
+				await getPubFields({
+					pubId: pub.id,
+					communityId: community.id,
+				}).executeTakeFirstOrThrow()
+			).fields
 		);
 	}
 

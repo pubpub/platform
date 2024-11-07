@@ -12,9 +12,10 @@ import { isCommunityAdmin } from "~/lib/auth/roles";
 import { createPubRecursiveNew } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { updatePub as _updatePub } from "~/lib/server/pub";
-import { validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+import { __validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	...[props]: Parameters<typeof createPubRecursiveNew>
@@ -63,10 +64,17 @@ export const updatePub = defineServerAction(async function updatePub({
 		throw new Error("Not logged in");
 	}
 
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		throw new Error("Community not found");
+	}
+
 	try {
 		const result = await _updatePub({
 			pubId,
 			pubTypeId,
+			communityId: community.id,
 			pubValues,
 			stageId,
 			continueOnValidationError,
