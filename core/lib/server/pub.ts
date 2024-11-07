@@ -13,6 +13,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type {
 	CreatePubRequestBodyWithNullsNew,
 	GetPubResponseBody,
+	Json,
 	JsonValue,
 	PubWithChildren,
 } from "contracts";
@@ -927,12 +928,12 @@ export const updatePub = async ({
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
-	pubValues: CreatePubRequestBodyWithNullsNew["values"];
+	pubValues: Record<string, Json>;
 	communityId: CommunitiesId;
 	stageId?: StagesId;
 	continueOnValidationError: boolean;
 }) => {
-	const result = await db.transaction().execute(async (trx) => {
+	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
 			await autoRevalidate(

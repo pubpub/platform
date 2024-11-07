@@ -238,6 +238,66 @@ describe("createPubRecursive", () => {
 	});
 });
 
+describe("updatePub", () => {
+	it("should be able to update pub values", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew, updatePub } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Original title",
+				},
+			},
+		});
+
+		await updatePub({
+			pubId: pub.id,
+			pubValues: {
+				[pubFields.Title.slug]: "Updated title",
+			},
+			communityId: community.id,
+			continueOnValidationError: false,
+		});
+
+		const updatedPub = await trx
+			.selectFrom("pub_values")
+			.select(["value"])
+			.where("pubId", "=", pub.id)
+			.execute();
+
+		expect(updatedPub[0].value as string).toBe("Updated title");
+	});
+
+	it("should error if trying to update relationship values", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew, updatePub } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+		});
+
+		await expect(
+			updatePub({
+				pubId: pub.id,
+				pubValues: {
+					[pubFields["Some relation"].slug]: "test relation value",
+				},
+				communityId: community.id,
+				continueOnValidationError: false,
+			})
+		).rejects.toThrow(/No pub field found for slug .*:some-relation/);
+	});
+});
+
 describe("getPubsWithRelatedValuesAndChildren", () => {
 	it("should be able to recursively fetch pubvalues", async () => {
 		const trx = getTrx();
