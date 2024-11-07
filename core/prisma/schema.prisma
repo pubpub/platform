@@ -670,13 +670,56 @@ enum ApiAccessScope {
   pubType
 }
 
-model FormToPermission {
-  form         Form       @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId       String
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  permissionId String
+enum Capabilities {
+  movePub
+  createPub
+  viewPub
+  deletePub
+  updatePubValues
+  createRelatedPub
+  createPubWithForm
+  editPubWithForm
+  createPubField
+  archivePubField
+  editPubField
+  createPubType
+  editPubType
+  deletePubType
+  runAction
+  viewStage
+  createStage
+  manageStage // includes managing stage name, actions, rules, and move constraints
+  deleteStage
+  addPubMember
+  removePubMember
+  addStageMember
+  removeStageMember
+  addFormMember
+  removeFormMember
+  addCommunityMember
+  removeCommunityMember
+  manageMemberGroups
+  addCommunity
+  editCommunity
+  createForm
+  editForm
+  archiveForm
+  createApiToken
+  revokeApiToken
+}
 
-  // prevents user getting assigned permissions to a form multiple times
-  @@unique([formId, permissionId])
-  @@map(name: "form_to_permissions")
+enum MembershipType {
+  community
+  stage
+  pub
+  form
+}
+
+model MembershipCapabilities {
+  role       MemberRole
+  type       MembershipType
+  capability Capabilities
+
+  @@id([role, type, capability])
+  @@map(name: "membership_capabilities")
 }

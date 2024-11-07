@@ -19,7 +19,7 @@ import type { IntegrationInstanceToPubTable } from "./IntegrationInstanceToPub";
 import type { IntegrationsTable } from "./Integrations";
 import type { MemberGroupsTable } from "./MemberGroups";
 import type { MemberGroupToUserTable } from "./MemberGroupToUser";
-import type { MembersTable } from "./Members";
+import type { MembershipCapabilitiesTable } from "./MembershipCapabilities";
 import type { MoveConstraintTable } from "./MoveConstraint";
 import type { PermissionsTable } from "./Permissions";
 import type { PermissionToPubTable } from "./PermissionToPub";
@@ -113,4 +113,6 @@ export interface PublicSchema {
 	stage_memberships: StageMembershipsTable;
 
 	form_memberships: FormMembershipsTable;
+
+	membership_capabilities: MembershipCapabilitiesTable;
 }

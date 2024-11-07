@@ -54,10 +54,6 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 
 
--- Model members comments
-
-
-
 -- Model member_groups comments
 
 
@@ -75,10 +71,6 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 
 -- Model form_memberships comments
-
-
-
--- Model permissions comments
 
 
 
