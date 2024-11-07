@@ -380,6 +380,10 @@ type MaybeWithChildren<T extends { children?: unknown }> = keyof T extends "chil
 		: PubWithChildren
 	: PubWithoutChildren;
 
+const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
+	Array.isArray(value) &&
+	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
+
 /**
  * @throws
  */
@@ -424,10 +428,8 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	});
 
 	const normalizedValues = Object.fromEntries(
-		Object.entries(values).map(([slug, value]) =>
-			value != null && typeof value === "object" && "value" in value
-				? [slug, value.value]
-				: [slug, value]
+		Object.entries(values).flatMap(([slug, value]) =>
+			isRelatedPubInit(value) ? value.map((v) => [slug, v.value]) : [[slug, value]]
 		)
 	);
 
@@ -442,24 +444,31 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		throw new Error(validationErrors.join(" "));
 	}
 
-	const valuesWithFieldIds = Object.entries(values).map(([slug, value]) => {
+	const valuesWithFieldIds = Object.entries(values).flatMap(([slug, value]) => {
 		const field = filteredFields.find(
 			({ slug: slugInPubTypeFields }) => slug === slugInPubTypeFields
 		);
+
 		if (!field) {
 			throw new NotFoundError(`No pub field found for slug '${slug}'`);
 		}
 
-		const valueMaybeWithRelatedPubId =
-			value && typeof value === "object" && "value" in value
-				? { value: JSON.stringify(value.value), relatedPubId: value.relatedPubId as PubsId }
-				: { value: JSON.stringify(value) };
+		if (isRelatedPubInit(value)) {
+			console.log("isRelatedPubInit");
+			console.log(value);
+		}
+		const valuesMaybeWithRelatedPubId = isRelatedPubInit(value)
+			? value.map((v) => ({
+					value: JSON.stringify(v.value),
+					relatedPubId: v.relatedPubId as PubsId,
+				}))
+			: [{ value: JSON.stringify(value), relatedPubId: undefined }];
 
-		return {
+		return valuesMaybeWithRelatedPubId.map((v) => ({
 			id: field.id,
 			slug: field.slug,
-			...valueMaybeWithRelatedPubId,
-		};
+			...v,
+		}));
 	});
 
 	/**

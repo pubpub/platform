@@ -146,10 +146,12 @@ describe("createPubRecursive", () => {
 				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
 					[pubFields.Title.slug]: "test title",
-					[pubFields["Some relation"].slug]: {
-						value: "test relation value",
-						relatedPubId: pubs[0].id,
-					},
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "test relation value",
+							relatedPubId: pubs[0].id,
+						},
+					],
 				},
 			},
 			trx,
@@ -198,6 +200,39 @@ describe("createPubRecursive", () => {
 					value: "test relation value",
 					relatedPub: { values: [{ value: "test relation title" }] },
 				},
+			],
+		});
+	});
+
+	it("should be able to create a pub with multiple relations in one go", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Main pub",
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "relation 1",
+							relatedPubId: pubs[0].id,
+						},
+						{
+							value: "relation 2",
+							relatedPubId: pubs[1].id,
+						},
+					],
+				},
+			},
+		});
+
+		expect(pub).toMatchObject({
+			values: [
+				{ value: "Main pub" },
+				{ value: "relation 1", relatedPubId: pubs[0].id },
+				{ value: "relation 2", relatedPubId: pubs[1].id },
 			],
 		});
 	});
@@ -520,10 +555,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 							pub: {
 								pubTypeId: pubTypes["Basic Pub"].id,
 								values: {
-									[pubFields["Some relation"].slug]: {
-										value: "Zoinks scoop I think we're rrrrrecurssinggg",
-										relatedPubId: newPubId,
-									},
+									[pubFields["Some relation"].slug]: [
+										{
+											value: "Zoinks scoop I think we're rrrrrecurssinggg",
+											relatedPubId: newPubId,
+										},
+									],
 								},
 							},
 						},
