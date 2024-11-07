@@ -1163,7 +1163,7 @@ describe("removePubRelations", () => {
 			},
 		});
 
-		const { removeAllPubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
+		const { removeAllPubRelationsBySlugs, getPubsWithRelatedValuesAndChildren } = await import(
 			"./pub"
 		);
 
@@ -1175,9 +1175,9 @@ describe("removePubRelations", () => {
 		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
 
 		// Remove all relations for the field
-		const removedRelatedPubIds = await removeAllPubRelationsBySlug({
+		const removedRelatedPubIds = await removeAllPubRelationsBySlugs({
 			pubId: pub.id,
-			slug: pubFields["Some relation"].slug,
+			slugs: [pubFields["Some relation"].slug],
 			communityId: community.id,
 		});
 
@@ -1208,12 +1208,184 @@ describe("removePubRelations", () => {
 			},
 		});
 
-		const { removeAllPubRelationsBySlug } = await import("./pub");
+		const { removeAllPubRelationsBySlugs } = await import("./pub");
 
 		await expect(
-			removeAllPubRelationsBySlug({
+			removeAllPubRelationsBySlugs({
 				pubId: pub.id,
-				slug: "non-existent-field",
+				slugs: ["non-existent-field"],
+				communityId: community.id,
+			})
+		).rejects.toThrow("No pub field found for slug 'non-existent-field'");
+	});
+});
+
+describe("replacePubRelationsBySlug", () => {
+	it("should replace all relations for given field slugs with new relations", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		// Create initial pub with relations
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "Related pub 1",
+								},
+							},
+							value: "relation value 1",
+						},
+						{
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "Related pub 2",
+								},
+							},
+							value: "relation value 2",
+						},
+					],
+				},
+			},
+		});
+
+		// Create new pubs to relate
+		const newRelatedPub1 = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "New related pub 1",
+				},
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "new relation value 1",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "New related pub 1",
+								},
+							},
+						},
+					],
+				},
+			},
+		});
+
+		const newRelatedPub2 = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "New related pub 2",
+				},
+			},
+		});
+
+		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
+			"./pub"
+		);
+
+		// Replace relations
+		await replacePubRelationsBySlug({
+			pubId: pub.id,
+			relations: {
+				[pubFields["Some relation"].slug]: [
+					{
+						relatedPubId: newRelatedPub1.id,
+						value: "new relation value 1",
+					},
+					{
+						relatedPubId: newRelatedPub2.id,
+						value: "new relation value 2",
+					},
+				],
+			},
+			communityId: community.id,
+		});
+
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		const relationValues = updatedPub.values.filter((v) => v.relatedPub);
+
+		expect(relationValues).toHaveLength(2);
+		expect(relationValues.map((v) => v.relatedPub.id).sort()).toEqual(
+			[newRelatedPub1.id, newRelatedPub2.id].sort()
+		);
+		expect(relationValues.map((v) => v.value).sort()).toEqual(
+			["new relation value 1", "new relation value 2"].sort()
+		);
+	});
+
+	it("should handle empty relations object", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+		});
+
+		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
+			"./pub"
+		);
+
+		await replacePubRelationsBySlug({
+			pubId: pub.id,
+			relations: {},
+			communityId: community.id,
+		});
+
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(0);
+	});
+
+	it("should throw error when field slug does not exist", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+		});
+
+		const { replacePubRelationsBySlug } = await import("./pub");
+
+		await expect(
+			replacePubRelationsBySlug({
+				pubId: pub.id,
+				relations: {
+					"non-existent-field": [
+						{
+							relatedPubId: "some-id" as PubsId,
+							value: "some value",
+						},
+					],
+				},
 				communityId: community.id,
 			})
 		).rejects.toThrow("No pub field found for slug 'non-existent-field'");

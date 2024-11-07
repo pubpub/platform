@@ -606,7 +606,12 @@ export const deletePub = async (pubId: PubsId) =>
 export const getPubStage = async (pubId: PubsId) =>
 	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
 
-const consolidatePubValues = async <T extends { slug: string }>(
+/**
+ * Consolidates field slugs with their corresponding field IDs and schema names from the community.
+ * Validates that all provided slugs exist in the community.
+ * @throws Error if any slugs don't exist in the community
+ */
+const consolidateFieldSlugs = async <T extends { slug: string }>(
 	pubValues: T[],
 	communityId: CommunitiesId
 ) => {
@@ -659,7 +664,7 @@ const validatePubValues = async ({
 	communityId: CommunitiesId;
 	continueOnValidationError?: boolean;
 }) => {
-	const pubValuesWithSchemaNameAndFieldId = await consolidatePubValues(pubValues, communityId);
+	const pubValuesWithSchemaNameAndFieldId = await consolidateFieldSlugs(pubValues, communityId);
 
 	const validationErrors = validatePubValuesBySchemaName(pubValuesWithSchemaNameAndFieldId);
 
@@ -692,6 +697,14 @@ export const normalizeRelationValues = (
 		.map((relation) => ({ slug: relation.slug, value: relation.value }));
 };
 
+/**
+ * Upserts pub relations by either creating new related pubs or linking to existing ones.
+ *
+ * This function handles two cases:
+ * 1. Creating brand new pubs and linking them as relations (via relatedPub)
+ * 2. Linking to existing pubs (via relatedPubId)
+ *
+ */
 export const upsertPubRelations = async ({
 	pubId,
 	relations,
@@ -787,6 +800,10 @@ export const upsertPubRelations = async ({
 	});
 };
 
+/**
+ * Removes specific pub relations by deleting pub_values entries that match the provided relations.
+ * Each relation must specify a field slug and relatedPubId to identify which relation to remove.
+ */
 export const removePubRelations = async ({
 	pubId,
 	relations,
@@ -798,7 +815,7 @@ export const removePubRelations = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	const consolidatedRelations = await consolidatePubValues(relations, communityId);
+	const consolidatedRelations = await consolidateFieldSlugs(relations, communityId);
 
 	const removed = await autoRevalidate(
 		trx
@@ -820,32 +837,70 @@ export const removePubRelations = async ({
 /**
  * Removes all relations for a given field slug and pubId
  */
-export const removeAllPubRelationsBySlug = async ({
+export const removeAllPubRelationsBySlugs = async ({
 	pubId,
-	slug,
+	slugs,
 	communityId,
 	trx = db,
 }: {
 	pubId: PubsId;
-	slug: string;
+	slugs: string[];
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	const fields = await consolidatePubValues([{ slug }], communityId);
-	const fieldId = fields[0].fieldId;
-
-	assert(fieldId, `No field found for slug '${slug}'`);
+	const fields = await consolidateFieldSlugs(
+		slugs.map((slug) => ({ slug })),
+		communityId
+	);
+	const fieldIds = fields.map(({ fieldId }) => fieldId);
+	if (!fieldIds.length) {
+		throw new Error(`No fields found for slugs: ${slugs.join(", ")}`);
+	}
 
 	const removed = await autoRevalidate(
 		trx
 			.deleteFrom("pub_values")
 			.where("pubId", "=", pubId)
-			.where("fieldId", "=", fieldId)
+			.where("fieldId", "in", fieldIds)
 			.where("relatedPubId", "is not", null)
 			.returning("relatedPubId")
 	).execute();
 
 	return removed.map(({ relatedPubId }) => relatedPubId);
+};
+
+/**
+ * Replaces all relations for given field slugs with new relations.
+ * First removes all existing relations for the provided slugs, then adds the new relations.
+ *
+ * If the `relations` object is empty, this function does nothing.
+ */
+export const replacePubRelationsBySlug = async ({
+	pubId,
+	relations,
+	communityId,
+	trx = db,
+}: {
+	pubId: PubsId;
+	relations: Record<string, Omit<AddPubRelationsInput, "slug">[]>;
+	communityId: CommunitiesId;
+	trx?: typeof db;
+}) => {
+	if (!Object.keys(relations).length) {
+		return;
+	}
+
+	await maybeWithTrx(trx, async (trx) => {
+		const slugs = Object.keys(relations);
+
+		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, trx });
+
+		const relationsWithSlug = slugs.flatMap((slug) =>
+			relations[slug].map((relation) => ({ ...relation, slug }) as AddPubRelationsInput)
+		);
+
+		await upsertPubRelations({ pubId, relations: relationsWithSlug, communityId, trx });
+	});
 };
 
 export const updatePub = async ({
@@ -891,7 +946,6 @@ export const updatePub = async ({
 		}
 
 		try {
-			// Insert, update on conflict
 			await autoRevalidate(
 				trx
 					.insertInto("pub_values")
