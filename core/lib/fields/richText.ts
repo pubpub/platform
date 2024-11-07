@@ -46,6 +46,8 @@ interface PubCreate {
 
 /**
  * Parse rich text values to get values (overwritten pubfields) and children (related pubs)
+ * in order to pass into a `createPub` function.
+ *
  * If an editor has something like
  *
  * paragraph
