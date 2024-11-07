@@ -692,54 +692,6 @@ export const normalizeRelationValues = (
 		.map((relation) => ({ slug: relation.slug, value: relation.value }));
 };
 
-export const editPubRelations = async ({
-	pubId,
-	relations,
-	communityId,
-	trx = db,
-}: {
-	pubId: PubsId;
-	communityId: CommunitiesId;
-	trx: typeof db;
-	relations: {
-		add?: AddPubRelationsInput[];
-		update?: UpdatePubRelationsInput[];
-		remove?: RemovePubRelationsInput[];
-	};
-}) => {
-	// check that no relatedPubId is used in more than one method
-
-	const methodsWithRelations = (["add", "update", "remove"] as const).filter(
-		(method) => relations[method]?.length
-	);
-
-	if (methodsWithRelations.length === 0) {
-		throw new Error("No relations provided");
-	}
-
-	const relatedPubIds = new Set<string>();
-
-	for (const method of methodsWithRelations) {
-		for (const relation of relations[method] ?? []) {
-			const key = `${relation.slug}:${relation.relatedPubId}`;
-			if (relatedPubIds.has(key)) {
-				throw new Error(
-					`Related pub ID ${relation.relatedPubId} is used multiple times with slug ${relation.slug}`
-				);
-			}
-			if (relation.relatedPubId) {
-				relatedPubIds.add(key);
-			}
-		}
-	}
-
-	const validatedPubValues = await validatePubValues({
-		pubValues: normalizeRelationValues(relations.add ?? []),
-		communityId,
-		continueOnValidationError: false,
-	});
-};
-
 export const upsertPubRelations = async ({
 	pubId,
 	relations,
