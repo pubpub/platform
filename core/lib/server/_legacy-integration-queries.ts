@@ -3,7 +3,7 @@ import type { InputJsonValue } from "@prisma/client/runtime/library";
 
 import { Prisma } from "@prisma/client";
 
-import type { CreatePubRequestBodyWithNulls, GetPubTypeResponseBody } from "contracts";
+import type { CreatePubRequestBodyWithNulls, GetPubTypeResponseBody, JsonValue } from "contracts";
 
 import prisma from "~/prisma/db";
 import { slugifyString } from "../string";
@@ -64,20 +64,18 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 			name: true,
 			description: true,
 			fields: {
+				select: {
+					id: true,
+					name: true,
+					slug: true,
+				},
 				include: {
-					pubField: {
+					schema: {
 						select: {
 							id: true,
+							namespace: true,
 							name: true,
-							slug: true,
-							schema: {
-								select: {
-									id: true,
-									namespace: true,
-									name: true,
-									schema: true,
-								},
-							},
+							schema: true,
 						},
 					},
 				},
@@ -87,8 +85,7 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 	if (!pubType) {
 		throw new NotFoundError("Pub Type not found");
 	}
-	const { fields, ...rest } = pubType;
-	return { ...rest, fields: fields.map((f) => f.pubField) };
+	return pubType as GetPubTypeResponseBody;
 };
 
 export const getSuggestedMembers = async (
@@ -185,7 +182,7 @@ const normalizePubValues = async (
 			},
 			pubTypes: {
 				some: {
-					B: pubTypeId,
+					id: pubTypeId,
 				},
 			},
 		},

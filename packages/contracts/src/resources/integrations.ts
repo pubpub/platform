@@ -23,7 +23,7 @@ export const User = SafeUser.and(
 export type User = z.infer<typeof User>;
 
 // Json value types taken from prisma
-export type JsonObject = { [Key in string]?: JsonValue };
+export type JsonObject = { [Key in string]: JsonValue };
 export interface JsonArray extends Array<JsonValue> {}
 export type JsonValue = string | number | boolean | JsonObject | JsonArray | null;
 export type InputJsonObject = { readonly [Key in string]?: InputJsonValue | null };

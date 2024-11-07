@@ -73,7 +73,6 @@ export const updatePub = defineServerAction(async function updatePub({
 	try {
 		const result = await _updatePub({
 			pubId,
-			pubTypeId,
 			communityId: community.id,
 			pubValues,
 			stageId,
