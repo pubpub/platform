@@ -1051,3 +1051,86 @@ describe("upsertPubRelations", () => {
 		expect(updatedRelation?.value).toBe("updated value");
 	});
 });
+
+describe("removePubRelations", () => {
+	it("should remove pub relations", async () => {
+		const trx = getTrx();
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pubs = await Promise.all([
+			createPubRecursiveNew({
+				communityId: community.id,
+				body: {
+					pubTypeId: pubTypes["Basic Pub"].id,
+					values: {
+						[pubFields.Title.slug]: "Related pub 1",
+					},
+				},
+			}),
+			createPubRecursiveNew({
+				communityId: community.id,
+				body: {
+					pubTypeId: pubTypes["Basic Pub"].id,
+					values: {
+						[pubFields.Title.slug]: "Related pub 2",
+					},
+				},
+			}),
+		]);
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Main pub",
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "relation 1",
+							relatedPubId: pubs[0].id,
+						},
+						{
+							value: "relation 2",
+							relatedPubId: pubs[1].id,
+						},
+					],
+				},
+			},
+		});
+
+		const { removePubRelations, getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		// check that the pub has 2 relations
+		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
+
+		// Remove one of the relations
+		await removePubRelations({
+			pubId: pub.id,
+			relations: [
+				{
+					slug: pubFields["Some relation"].slug,
+					relatedPubId: pubs[0].id,
+				},
+			],
+		});
+
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		// Should still have title + 1 remaining relation
+		expect(updatedPub.values).toHaveLength(2);
+
+		// First relation should be removed
+		const remainingRelation = updatedPub.values.find((v) => v.relatedPub);
+		expect(remainingRelation?.relatedPub?.id).toBe(pubs[1].id);
+		expect(remainingRelation?.value).toBe("relation 2");
+	});
+});

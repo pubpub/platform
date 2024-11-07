@@ -453,10 +453,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			throw new NotFoundError(`No pub field found for slug '${slug}'`);
 		}
 
-		if (isRelatedPubInit(value)) {
-			console.log("isRelatedPubInit");
-			console.log(value);
-		}
 		const valuesMaybeWithRelatedPubId = isRelatedPubInit(value)
 			? value.map((v) => ({
 					value: JSON.stringify(v.value),
@@ -834,11 +830,25 @@ export const upsertPubRelations = async ({
 	});
 };
 
-type UpdatedPubRelationsInput = {
-	relatedPubId: PubsId;
-	value: JsonValue;
-	slug: string;
-	fieldId: PubFieldsId;
+export const removePubRelations = async ({
+	pubId,
+	relations,
+	trx = db,
+}: {
+	pubId: PubsId;
+	relations: RemovePubRelationsInput[];
+	trx?: typeof db;
+}) => {
+	await autoRevalidate(
+		trx
+			.deleteFrom("pub_values")
+			.where("pubId", "=", pubId)
+			.where(
+				"relatedPubId",
+				"in",
+				relations.map(({ relatedPubId }) => relatedPubId)
+			)
+	).execute();
 };
 
 export const updatePub = async ({
