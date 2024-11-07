@@ -1118,11 +1118,11 @@ export const createSeed = <
 		slug: string;
 		avatar?: string;
 	};
-	pubFields: PF;
-	pubTypes: PT;
-	users: U;
-	stages: S;
-	stageConnections: SC;
-	pubs: PI;
-	forms: F;
+	pubFields?: PF;
+	pubTypes?: PT;
+	users?: U;
+	stages?: S;
+	stageConnections?: SC;
+	pubs?: PI;
+	forms?: F;
 }) => props;

@@ -686,10 +686,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 	});
 });
 
-describe("addPubRelations", () => {
+describe("upsertPubRelations", () => {
 	it("should be able to add relations to existing pubs", async () => {
 		const trx = getTrx();
-		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
+			"./pub"
+		);
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -735,7 +737,9 @@ describe("addPubRelations", () => {
 
 	it("should be able to create new pubs as relations", async () => {
 		const trx = getTrx();
-		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
+			"./pub"
+		);
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -785,7 +789,9 @@ describe("addPubRelations", () => {
 
 	it("should validate relation values against schema", async () => {
 		const trx = getTrx();
-		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
+			"./pub"
+		);
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -817,7 +823,9 @@ describe("addPubRelations", () => {
 
 	it("should throw error for non-existent field slugs", async () => {
 		const trx = getTrx();
-		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
+			"./pub"
+		);
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -848,7 +856,9 @@ describe("addPubRelations", () => {
 
 	it("should throw error for non-existent related pub id", async () => {
 		const trx = getTrx();
-		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
+			"./pub"
+		);
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -881,7 +891,9 @@ describe("addPubRelations", () => {
 
 	it("should be able to add multiple relations at once", async () => {
 		const trx = getTrx();
-		const { addPubRelations, createPubRecursiveNew } = await import("./pub");
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
+			"./pub"
+		);
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -925,5 +937,80 @@ describe("addPubRelations", () => {
 
 		expect(updatedPub.values).toHaveLength(3); // title + 2 relations
 		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(2);
+	});
+
+	it("should be able to upsert relations - overwriting existing and creating new ones", async () => {
+		const trx = getTrx();
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
+			"./pub"
+		);
+
+		// Create initial pub with a relation
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			trx,
+		});
+
+		// Add initial relation
+		await addPubRelations({
+			pubId: pub.id,
+			communityId: community.id,
+			relations: [
+				{
+					slug: pubFields["Some relation"].slug,
+					value: "original value",
+					relatedPubId: pubs[0].id,
+				},
+			],
+			trx,
+		});
+
+		// Upsert relations - overwrite existing and add new
+		await addPubRelations({
+			pubId: pub.id,
+			communityId: community.id,
+			relations: [
+				{
+					// Overwrite existing relation
+					slug: pubFields["Some relation"].slug,
+					value: "updated value",
+					relatedPubId: pubs[0].id,
+				},
+				{
+					// Add new relation
+					slug: pubFields["Some relation"].slug,
+					value: "new relation",
+					relatedPub: {
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: {
+							[pubFields.Title.slug]: "new related pub",
+						},
+					},
+				},
+			],
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		expect(updatedPub.values).toHaveLength(3); // title + 2 relations
+
+		const relationValues = updatedPub.values.filter((v) => v.relatedPub).map((v) => v.value);
+		expect(relationValues).toContain("updated value");
+		expect(relationValues).toContain("new relation");
+
+		// Verify the first relation was updated
+		const updatedRelation = updatedPub.values.find((v) => v.relatedPub?.id === pubs[0].id);
+		expect(updatedRelation?.value).toBe("updated value");
 	});
 });

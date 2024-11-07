@@ -680,7 +680,56 @@ export const normalizeRelationValues = (
 		.map((relation) => ({ slug: relation.slug, value: relation.value }));
 };
 
-export const addPubRelations = async ({
+export const editPubRelations = async ({
+	pubId,
+	relations,
+	communityId,
+	trx = db,
+}: {
+	pubId: PubsId;
+	communityId: CommunitiesId;
+	trx: typeof db;
+	relations: {
+		add?: AddPubRelationsInput[];
+		update?: UpdatePubRelationsInput[];
+		remove?: RemovePubRelationsInput[];
+	};
+}) => {
+	// check that no relatedPubId is used in more than one method
+
+	const methodsWithRelations = (["add", "update", "remove"] as const).filter(
+		(method) => relations[method]?.length
+	);
+
+	if (methodsWithRelations.length === 0) {
+		throw new Error("No relations provided");
+	}
+
+	const relatedPubIds = new Set<string>();
+
+	for (const method of methodsWithRelations) {
+		for (const relation of relations[method] ?? []) {
+			const key = `${relation.slug}:${relation.relatedPubId}`;
+			if (relatedPubIds.has(key)) {
+				throw new Error(
+					`Related pub ID ${relation.relatedPubId} is used multiple times with slug ${relation.slug}`
+				);
+			}
+			if (relation.relatedPubId) {
+				relatedPubIds.add(key);
+			}
+		}
+	}
+
+	const validatedPubValues = await reconcilePubValues({
+		includeRelations: true,
+		pubValues: normalizeRelationValues(relations.add ?? []),
+		communityId,
+		continueOnValidationError: false,
+	});
+};
+
+export const upsertPubRelations = async ({
 	pubId,
 	relations,
 	communityId,
@@ -765,7 +814,10 @@ export const addPubRelations = async ({
 					oc
 						.columns(["pubId", "fieldId", "relatedPubId"])
 						.where("relatedPubId", "is not", null)
-						.doNothing()
+						// upsert
+						.doUpdateSet((eb) => ({
+							value: eb.ref("excluded.value"),
+						}))
 				)
 		).execute();
 
@@ -773,37 +825,12 @@ export const addPubRelations = async ({
 	});
 };
 
-/**
- * - `add`: add the current related pubs, overriding existing ones.
- * - `remove`: remove the values with these relatedPubIds from the relations.
- * - `replace`: replace all related pubs with these related pubs instead.
- */
-type RelatedPubsUpdateInput =
-	| {
-			mode: "add" | "replace";
-			values: {
-				[Slug in string]: (
-					| {
-							value: JSON;
-							relatedPubId: PubsId;
-							relatedPub?: never;
-					  }
-					| {
-							value: JSON;
-							relatedPubId?: never;
-							relatedPub: CreatePubRequestBodyWithNullsNew;
-					  }
-				)[];
-			};
-	  }
-	| {
-			mode: "remove";
-			values: {
-				[Slug in string]: {
-					relatedPubId: PubsId;
-				};
-			};
-	  };
+type UpdatedPubRelationsInput = {
+	relatedPubId: PubsId;
+	value: JsonValue;
+	slug: string;
+	fieldId: PubFieldsId;
+};
 
 export const updatePub = async ({
 	pubId,
@@ -815,7 +842,6 @@ export const updatePub = async ({
 	pubId: PubsId;
 	pubValues: CreatePubRequestBodyWithNullsNew["values"];
 	communityId: CommunitiesId;
-	relatedPubs?: RelatedPubsUpdateInput;
 	stageId?: StagesId;
 	continueOnValidationError: boolean;
 }) => {
@@ -1011,7 +1037,7 @@ type MaybePubPubType<Options extends GetPubsWithRelatedValuesAndChildrenOptions>
 type MaybeWithRelatedPub<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
 	Options["withRelatedPubs"] extends false
 		? { relatedPub?: never }
-		: { relatedPub: ProcessedPub<Options>[] };
+		: { relatedPub: ProcessedPub<Options> };
 
 /**
  * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
