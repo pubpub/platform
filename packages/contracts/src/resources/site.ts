@@ -16,7 +16,6 @@ export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBo
 	stageId?: StagesId;
 	children?: CreatePubRequestBodyWithNulls[];
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
-	values: Record<string, Json | { value: Json; relatedPubId: PubsId }>;
 };
 
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
