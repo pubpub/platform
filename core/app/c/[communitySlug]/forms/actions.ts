@@ -60,7 +60,7 @@ export const createForm = defineServerAction(async function createForm(
 						.selectAll("c")
 				)
 				.with("fields", () =>
-					_getPubFields({ pubTypeId })
+					_getPubFields({ pubTypeId, communityId })
 						.clearSelect()
 						.select((eb) => [
 							eb.ref("f.id").as("fieldId"),
