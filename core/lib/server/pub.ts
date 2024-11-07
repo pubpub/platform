@@ -21,7 +21,6 @@ import type {
 	CommunitiesId,
 	CoreSchemaType,
 	PubFieldsId,
-	PublicSchema,
 	PubsId,
 	PubTypes,
 	PubTypesId,
@@ -30,7 +29,8 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { expect } from "utils";
+import { logger } from "logger";
+import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -39,7 +39,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
-import { validatePubValuesBySchemaName } from "./validateFields";
+import { __validatePubValuesBySchemaName, validatePubValuesBySchemaName } from "./validateFields";
 
 export type PubValues = Record<string, JsonValue>;
 
@@ -406,12 +406,12 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
-	const pubFieldsForCommunityObject = await getPubFields({
+	const { fields } = await getPubFields({
 		communityId,
 		includeRelations: true,
-	}).executeTakeFirst();
+	}).executeTakeFirstOrThrow();
 
-	const pubFieldsForCommunity = Object.values(pubFieldsForCommunityObject?.fields ?? {});
+	const pubFieldsForCommunity = Object.values(fields);
 
 	if (!pubFieldsForCommunity?.length) {
 		throw new NotFoundError(`No pub fields found in community ${communityId}.`);
@@ -432,7 +432,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	);
 
 	const validationErrors = Object.values(
-		validatePubValuesBySchemaName({
+		__validatePubValuesBySchemaName({
 			fields: filteredFields,
 			values: normalizedValues,
 		})
@@ -601,14 +601,80 @@ export const deletePub = async (pubId: PubsId) =>
 export const getPubStage = async (pubId: PubsId) =>
 	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
 
+const reconcilePubValues = async ({
+	pubValues,
+	communityId,
+	includeRelations = false,
+	continueOnValidationError = false,
+}: {
+	pubValues: { slug: string; value: unknown }[];
+	communityId: CommunitiesId;
+	includeRelations?: boolean;
+	continueOnValidationError?: boolean;
+}) => {
+	const toBeUpdatedPubFieldSlugs = Array.from(new Set(pubValues.map(({ slug }) => slug)));
+
+	if (toBeUpdatedPubFieldSlugs.length === 0) {
+		return [];
+	}
+
+	const { fields } = await getPubFields({
+		communityId,
+		slugs: toBeUpdatedPubFieldSlugs,
+		includeRelations,
+	}).executeTakeFirstOrThrow();
+
+	const pubFields = Object.values(fields);
+
+	const pubValuesThatDontExistInCommunity = pubFields.filter(
+		(field) => !toBeUpdatedPubFieldSlugs.includes(field.slug)
+	);
+
+	if (pubValuesThatDontExistInCommunity.length) {
+		throw new Error(
+			`Pub values contain fields that do not exist in the community: ${pubValuesThatDontExistInCommunity.map(({ slug }) => slug).join(", ")}`
+		);
+	}
+
+	const pubValuesWithSchemaNameAndFieldId = pubValues.map(({ slug, value }) => {
+		const field = pubFields.find((field) => field.slug === slug);
+		assert(field, `No pub field found for slug '${slug}'`);
+		assert(field.schemaName, `No schemaName defined for field '${slug}'`);
+
+		return {
+			slug,
+			value,
+			fieldId: field.id,
+			schemaName: field.schemaName,
+		};
+	});
+
+	const validationErrors = validatePubValuesBySchemaName(pubValuesWithSchemaNameAndFieldId);
+
+	if (!validationErrors.length) {
+		return pubValuesWithSchemaNameAndFieldId;
+	}
+
+	if (continueOnValidationError) {
+		return pubValuesWithSchemaNameAndFieldId.filter(
+			({ slug }) => !validationErrors.find(({ slug: errorSlug }) => errorSlug === slug)
+		);
+	}
+
+	throw new Error(validationErrors.map(({ error }) => error).join(" "));
+};
+
 export const updatePub = async ({
 	pubId,
 	pubValues,
+	communityId,
 	stageId,
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
-	pubValues: PubValues;
+	pubValues: CreatePubRequestBodyWithNullsNew["values"];
+	communityId: CommunitiesId;
+	relatedPubs?: RelatedPubsUpdateInput;
 	stageId?: StagesId;
 	continueOnValidationError: boolean;
 }) => {
@@ -623,49 +689,22 @@ export const updatePub = async ({
 			).execute();
 		}
 
-		// First query for existing values so we know whether to insert or update.
-		// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
-		const toBeUpdatedPubFieldSlugs = Object.keys(pubValues);
+		const vals = Object.entries(pubValues).flatMap(([slug, value]) => ({
+			slug,
+			value,
+		}));
 
-		if (!toBeUpdatedPubFieldSlugs.length) {
-			return {
-				success: true,
-				report: "Pub updated successfully",
-			};
-		}
-
-		const existingPubFieldValues = await autoCache(
-			trx
-				.selectFrom("pub_fields")
-				.leftJoin("pub_values", (join) =>
-					join
-						.onRef("pub_values.fieldId", "=", "pub_fields.id")
-						.on("pub_values.pubId", "=", pubId)
-				)
-				.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-				.where("pub_fields.isRelation", "=", false)
-				.select([
-					"pub_values.id as pubValueId",
-					"pub_fields.slug",
-					"pub_fields.name",
-					"pub_fields.schemaName",
-				])
-		).execute();
-
-		const validationErrors = validatePubValuesBySchemaName({
-			fields: existingPubFieldValues,
-			values: pubValues,
+		const pubValuesWithSchemaNameAndFieldId = await reconcilePubValues({
+			pubValues: vals,
+			communityId,
+			continueOnValidationError,
 		});
 
-		const invalidValueSlugs = Object.keys(validationErrors);
-		if (invalidValueSlugs.length) {
-			if (continueOnValidationError) {
-				for (const slug of invalidValueSlugs) {
-					delete pubValues[slug];
-				}
-			} else {
-				throw new Error(Object.values(validationErrors).join(" "));
-			}
+		if (!pubValuesWithSchemaNameAndFieldId.length) {
+			return {
+				success: true,
+				report: "Pub not updated, no pub values to update",
+			};
 		}
 
 		try {
@@ -673,27 +712,25 @@ export const updatePub = async ({
 			await autoRevalidate(
 				trx
 					.insertInto("pub_values")
-					.values((eb) =>
-						Object.entries(pubValues).map(([pubFieldSlug, pubValue]) => ({
-							id:
-								existingPubFieldValues.find(
-									(pubFieldValue) => pubFieldValue.slug === pubFieldSlug
-								)?.pubValueId ?? undefined,
+					.values(
+						pubValuesWithSchemaNameAndFieldId.map(({ value, fieldId }) => ({
 							pubId,
-							value: JSON.stringify(pubValue),
-							fieldId: eb
-								.selectFrom("pub_fields")
-								.where("pub_fields.slug", "=", pubFieldSlug)
-								.select("pub_fields.id"),
+							fieldId,
+							value: JSON.stringify(value),
 						}))
 					)
 					.onConflict((oc) =>
-						oc.column("id").doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-						}))
+						oc
+							// we have a unique index on pubId and fieldId where relatedPubId is null
+							.columns(["pubId", "fieldId"])
+							.where("relatedPubId", "is", null)
+							.doUpdateSet((eb) => ({
+								value: eb.ref("excluded.value"),
+							}))
 					)
 			).execute();
 		} catch (error) {
+			logger.error(error);
 			return {
 				title: "Failed to update pub",
 				error: `${error.reason}`,
