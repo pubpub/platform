@@ -1,6 +1,14 @@
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId, MembersId, MembersUpdate, NewMembers, UsersId } from "db/public";
+import type {
+	CommunitiesId,
+	CommunityMembershipsId,
+	MembersId,
+	MembersUpdate,
+	NewMembers,
+	UsersId,
+} from "db/public";
+import { MemberRole } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -68,17 +76,50 @@ export const getMembers = ({ communityId }: { communityId: CommunitiesId }, trx 
 export const inviteMember = (props: NewMembers, trx = db) =>
 	autoRevalidate(
 		trx
+			.with("community_membership", (db) =>
+				db
+					.insertInto("community_memberships")
+					.values({
+						userId: props.userId,
+						communityId: props.communityId,
+						role: props.role ?? MemberRole.editor,
+					})
+					.returning("community_memberships.id")
+			)
 			.insertInto("members")
-			.values({
+			.values((eb) => ({
+				id: eb.selectFrom("community_membership").select("id") as unknown as MembersId,
 				userId: props.userId,
 				communityId: props.communityId,
 				role: props.role,
-			})
+			}))
 			.returningAll()
 	);
 
-export const updateMember = (props: MembersUpdate & { id: MembersId }, trx = db) =>
-	autoRevalidate(trx.updateTable("members").set(props).where("id", "=", props.id).returningAll());
+export const updateMember = ({ id, ...props }: MembersUpdate & { id: MembersId }, trx = db) =>
+	autoRevalidate(
+		trx
+			.with("community_membership", (db) =>
+				db
+					.updateTable("community_memberships")
+					.set(props)
+					.where("id", "=", id as unknown as CommunityMembershipsId)
+			)
+			.updateTable("members")
+			.set(props)
+			.where("id", "=", id)
+			.returningAll()
+	);
 
 export const removeMember = (props: MembersId, trx = db) =>
-	autoRevalidate(trx.deleteFrom("members").where("id", "=", props).returningAll());
+	autoRevalidate(
+		trx
+			.with("community_membership", (db) =>
+				db
+					.deleteFrom("community_memberships")
+					.where("id", "=", props as unknown as CommunityMembershipsId)
+			)
+			.deleteFrom("members")
+			.where("id", "=", props)
+			.returningAll()
+	);

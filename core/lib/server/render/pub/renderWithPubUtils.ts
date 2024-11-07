@@ -71,7 +71,7 @@ export const renderFormInviteLink = async (
 	communityId: CommunitiesId,
 	pubId?: string
 ) => {
-	await addMemberToForm({ memberId, communityId, slug: formSlug });
+	await addMemberToForm({ memberId, userId, communityId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, communityId, pubId: pubId as PubsId });
 };
 

@@ -15,11 +15,10 @@ export class CommunityPage {
 
 	async addCommunity(name: string, slug: string) {
 		await this.page.getByRole("button", { name: "Create Community" }).click();
+		const createCommunityDialog = this.page.getByRole("dialog", { name: "Create Community" });
 		await this.nameBox.fill(name);
 		await this.slugBox.fill(slug);
-		await this.page
-			.getByRole("dialog")
-			.getByRole("button", { name: "Create Community" })
-			.click();
+		await createCommunityDialog.getByRole("button", { name: "Create Community" }).click();
+		await createCommunityDialog.waitFor({ state: "hidden" });
 	}
 }

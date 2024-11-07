@@ -11,6 +11,11 @@ generator client {
   previewFeatures = ["fullTextSearch", "tracing"]
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+  output   = "."
+}
+
 generator comments {
   provider = "pnpm exec tsx prisma/comment-generator.ts"
 }
@@ -28,13 +33,17 @@ model User {
   isSuperAdmin Boolean  @default(false)
   passwordHash String?
 
-  memberships    Member[]
-  memberGroups   MemberGroup[]
-  AuthToken      AuthToken[]
-  assignedPubs   Pub[]
-  actionRuns     ActionRun[]
-  ApiAccessToken ApiAccessToken[]
-  Session        Session[]
+  memberships         Member[]
+  memberGroups        MemberGroup[]
+  AuthToken           AuthToken[]
+  assignedPubs        Pub[]
+  actionRuns          ActionRun[]
+  ApiAccessToken      ApiAccessToken[]
+  Session             Session[]
+  FormMembership      FormMembership[]
+  CommunityMembership CommunityMembership[]
+  PubMembership       PubMembership[]
+  StageMembership     StageMembership[]
 
   @@map(name: "users")
 }
@@ -94,6 +103,7 @@ model Community {
   APIAccessToken       ApiAccessToken[]
   Form                 Form[]
   pubFields            PubField[]
+  CommunityMembership  CommunityMembership[]
 
   @@map(name: "communities")
 }
@@ -121,6 +131,7 @@ model Pub {
   IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
   relatedValues            PubValue[]                 @relation("related_pub")
+  PubMembership            PubMembership[]
 
   @@map(name: "pubs")
 }
@@ -212,16 +223,15 @@ model PubType {
 }
 
 model PubFieldToPubType {
-  A           String 
-  B           String  
-  isTitle     Boolean   @default(false)
+  A       String
+  B       String
+  isTitle Boolean @default(false)
 
-  pubField    PubField  @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  pubType     PubType   @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  pubField PubField @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  pubType  PubType  @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@unique([A, B], name: "_PubFieldToPubType_AB_unique")
   @@index([B], name: "_PubFieldToPubType_B_index")
-
   @@map(name: "_PubFieldToPubType")
 }
 
@@ -241,6 +251,7 @@ model Stage {
   permissions           Permission[]
   actionInstances       ActionInstance[]
   formElements          FormElement[]
+  StageMembership       StageMembership[]
 
   @@map(name: "stages")
 }
@@ -295,17 +306,96 @@ enum MemberRole {
 }
 
 model MemberGroup {
-  id          String     @id @default(dbgenerated("gen_random_uuid()"))
-  role        MemberRole @default(editor)
-  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now()) @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
 
-  permissions Permission[]
-  users       User[]
+  permissions          Permission[]
+  users                User[]
+  formMemberships      FormMembership[]
+  communityMemberships CommunityMembership[]
+  pubMemberships       PubMembership[]
+  stageMemberships     StageMembership[]
 
   @@map(name: "member_groups")
+}
+
+model CommunityMembership {
+  id            String       @id @default(dbgenerated("gen_random_uuid()"))
+  role          MemberRole
+  community     Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId   String
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
+  memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+
+  @@unique([communityId, userId])
+  @@unique([communityId, memberGroupId])
+  @@map(name: "community_memberships")
+}
+
+model PubMembership {
+  id            String       @id @default(dbgenerated("gen_random_uuid()"))
+  role          MemberRole
+  pub           Pub          @relation(fields: [pubId], references: [id], onDelete: Cascade)
+  pubId         String
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
+  memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+
+  @@unique([pubId, userId])
+  @@unique([pubId, memberGroupId])
+  @@map(name: "pub_memberships")
+}
+
+model StageMembership {
+  id            String       @id @default(dbgenerated("gen_random_uuid()"))
+  role          MemberRole
+  stage         Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId       String
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
+  memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+
+  @@unique([stageId, userId])
+  @@unique([stageId, memberGroupId])
+  @@map(name: "stage_memberships")
+}
+
+model FormMembership {
+  id            String       @id @default(dbgenerated("gen_random_uuid()"))
+  // Unlike other membership tables, form memberships don't have a role (yet)
+  form          Form         @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId        String
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
+  memberGroupId String?
+  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
+  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+
+  @@unique([formId, userId])
+  @@unique([formId, memberGroupId])
+  @@map(name: "form_memberships")
 }
 
 model Permission {
@@ -462,7 +552,8 @@ model Form {
   isArchived  Boolean        @default(false)
   access      FormAccessType @default(private)
 
-  permissions FormToPermission[]
+  permissions    FormToPermission[]
+  FormMembership FormMembership[]
 
   @@unique([name, communityId])
   @@unique([slug, communityId])

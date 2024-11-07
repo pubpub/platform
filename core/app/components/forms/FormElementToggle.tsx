@@ -16,6 +16,7 @@ export const FormElementToggle = (props: Props) => {
 		<div className="flex gap-2">
 			<Toggle
 				aria-label="Toggle field"
+				data-testid={`${props.name}-toggle`}
 				className={
 					"z-50 h-full w-2 min-w-2 rounded-full p-0 data-[state=off]:bg-gray-200 data-[state=on]:bg-gray-400 data-[state=off]:opacity-50"
 				}

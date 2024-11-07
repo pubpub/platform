@@ -95,13 +95,13 @@ export const userHasPermissionToForm = async (
  * Gives a community member permission to a form
  */
 export const addMemberToForm = async (
-	props: { communityId: CommunitiesId; memberId: MembersId } & XOR<
+	props: { communityId: CommunitiesId; memberId: MembersId; userId: UsersId } & XOR<
 		{ slug: string },
 		{ id: FormsId }
 	>
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
-	const { memberId, ...getFormProps } = props;
+	const { memberId, userId, ...getFormProps } = props;
 	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
 
 	const existingPermission = await autoCache(
@@ -118,6 +118,9 @@ export const addMemberToForm = async (
 			db
 				.with("new_permission", (db) =>
 					db.insertInto("permissions").values({ memberId }).returning("id")
+				)
+				.with("form_membership", (db) =>
+					db.insertInto("form_memberships").values({ formId: form.id, userId })
 				)
 				.insertInto("form_to_permissions")
 				.values((eb) => ({

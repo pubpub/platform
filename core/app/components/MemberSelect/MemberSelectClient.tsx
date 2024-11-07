@@ -94,7 +94,7 @@ export function MemberSelectClient({
 
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
 
-	const onInputValueChange = useDebouncedCallback((value: string) => {
+	const updateSearchParams = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
 		const oldParams = newParams.toString();
 		newParams.set(queryParamName, value);
@@ -103,8 +103,12 @@ export function MemberSelectClient({
 		if (oldParams !== newParams.toString()) {
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		}
-		setInputValue(value);
 	}, 400);
+
+	const onInputValueChange = (value: string) => {
+		setInputValue(value);
+		updateSearchParams(value);
+	};
 
 	return (
 		<FormField
