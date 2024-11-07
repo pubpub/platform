@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { CoreSchemaType } from "db/public";
 
-import { validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+import { __validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 const JSON_EXAMPLE = {
 	content: [
@@ -29,7 +29,7 @@ test.each([
 		{ name: "Rich Text", slug: "community:richtext", schemaName: CoreSchemaType.RichText },
 	];
 	const values = { "community:richtext": value };
-	const result = validatePubValuesBySchemaName({ fields, values });
+	const result = __validatePubValuesBySchemaName({ fields, values });
 	if (expected) {
 		expect(result).toStrictEqual({});
 	} else {

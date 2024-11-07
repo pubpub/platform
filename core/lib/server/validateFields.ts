@@ -27,10 +27,42 @@ const validateAgainstContextEditorSchema = (value: unknown) => {
 	}
 };
 
+export const validatePubValuesBySchemaName = (
+	values: { slug: string; value: unknown; schemaName: CoreSchemaType }[]
+) => {
+	const errors: { slug: string; error: string }[] = [];
+	for (const { slug, value, schemaName } of values) {
+		if (schemaName === CoreSchemaType.RichText) {
+			const result = validateAgainstContextEditorSchema(value);
+
+			if (!result) {
+				errors.push({
+					slug,
+					error: `Field ${slug} failed schema validation. Field of type "${slug}" cannot be assigned to value: ${value} of type ${typeof value}.`,
+				});
+			}
+			continue;
+		}
+
+		const jsonSchema = getJsonSchemaByCoreSchemaType(schemaName);
+		const result = Value.Check(jsonSchema, value);
+
+		if (!result) {
+			errors.push({
+				slug,
+				error: `Field ${slug} failed schema validation. Field of type "${slug}" cannot be assigned to value: ${value} of type ${typeof value}.`,
+			});
+		}
+	}
+
+	return errors;
+};
+
 /**
  * Validate all `values` against their corresponding field's `schemaName`.
+ * @deprecated
  */
-export const validatePubValuesBySchemaName = ({
+export const __validatePubValuesBySchemaName = ({
 	fields,
 	values,
 }: {
