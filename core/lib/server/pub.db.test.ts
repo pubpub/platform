@@ -1110,15 +1110,19 @@ describe("removePubRelations", () => {
 		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
 
 		// Remove one of the relations
-		await removePubRelations({
+		const removedRelatedPubIds = await removePubRelations({
 			pubId: pub.id,
+			communityId: community.id,
 			relations: [
 				{
 					slug: pubFields["Some relation"].slug,
 					relatedPubId: pubs[0].id,
 				},
 			],
+			trx,
 		});
+
+		expect(removedRelatedPubIds).toEqual([pubs[0].id]);
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
 			{ pubId: pub.id },
@@ -1132,5 +1136,86 @@ describe("removePubRelations", () => {
 		const remainingRelation = updatedPub.values.find((v) => v.relatedPub);
 		expect(remainingRelation?.relatedPub?.id).toBe(pubs[1].id);
 		expect(remainingRelation?.value).toBe("relation 2");
+	});
+
+	it("should remove all relations for a given field slug", async () => {
+		const trx = getTrx();
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields["Title"].slug]: "Test pub",
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "relation 1",
+							relatedPubId: pubs[0].id,
+						},
+						{
+							value: "relation 2",
+							relatedPubId: pubs[1].id,
+						},
+					],
+				},
+			},
+		});
+
+		const { removeAllPubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
+			"./pub"
+		);
+
+		// Verify initial state has 2 relations
+		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
+
+		// Remove all relations for the field
+		const removedRelatedPubIds = await removeAllPubRelationsBySlug({
+			pubId: pub.id,
+			slug: pubFields["Some relation"].slug,
+			communityId: community.id,
+		});
+
+		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort());
+
+		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: pub.id },
+			{ depth: 10 }
+		);
+
+		// Should only have title value left
+		expect(updatedPub.values).toHaveLength(1);
+		expect(updatedPub.values.find((v) => v.relatedPub)).toBeUndefined();
+	});
+
+	it("should throw error when field slug does not exist", async () => {
+		const trx = getTrx();
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+		});
+
+		const { removeAllPubRelationsBySlug } = await import("./pub");
+
+		await expect(
+			removeAllPubRelationsBySlug({
+				pubId: pub.id,
+				slug: "non-existent-field",
+				communityId: community.id,
+			})
+		).rejects.toThrow("No pub field found for slug 'non-existent-field'");
 	});
 });

@@ -606,17 +606,10 @@ export const deletePub = async (pubId: PubsId) =>
 export const getPubStage = async (pubId: PubsId) =>
 	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
 
-const reconcilePubValues = async ({
-	pubValues,
-	communityId,
-	includeRelations = false,
-	continueOnValidationError = false,
-}: {
-	pubValues: { slug: string; value: unknown }[];
-	communityId: CommunitiesId;
-	includeRelations?: boolean;
-	continueOnValidationError?: boolean;
-}) => {
+const consolidatePubValues = async <T extends { slug: string }>(
+	pubValues: T[],
+	communityId: CommunitiesId
+) => {
 	const toBeUpdatedPubFieldSlugs = Array.from(new Set(pubValues.map(({ slug }) => slug)));
 
 	if (toBeUpdatedPubFieldSlugs.length === 0) {
@@ -626,7 +619,7 @@ const reconcilePubValues = async ({
 	const { fields } = await getPubFields({
 		communityId,
 		slugs: toBeUpdatedPubFieldSlugs,
-		includeRelations,
+		includeRelations: true,
 	}).executeTakeFirstOrThrow();
 
 	const pubFields = Object.values(fields);
@@ -641,18 +634,32 @@ const reconcilePubValues = async ({
 		);
 	}
 
-	const pubValuesWithSchemaNameAndFieldId = pubValues.map(({ slug, value }) => {
+	const pubValuesWithSchemaNameAndFieldId = pubValues.map(({ slug, ...rest }) => {
 		const field = pubFields.find((field) => field.slug === slug);
 		assert(field, `No pub field found for slug '${slug}'`);
 		assert(field.schemaName, `No schemaName defined for field '${slug}'`);
 
 		return {
 			slug,
-			value,
 			fieldId: field.id,
 			schemaName: field.schemaName,
+			...rest,
 		};
 	});
+
+	return pubValuesWithSchemaNameAndFieldId;
+};
+
+const validatePubValues = async ({
+	pubValues,
+	communityId,
+	continueOnValidationError = false,
+}: {
+	pubValues: { slug: string; value: unknown }[];
+	communityId: CommunitiesId;
+	continueOnValidationError?: boolean;
+}) => {
+	const pubValuesWithSchemaNameAndFieldId = await consolidatePubValues(pubValues, communityId);
 
 	const validationErrors = validatePubValuesBySchemaName(pubValuesWithSchemaNameAndFieldId);
 
@@ -726,8 +733,7 @@ export const editPubRelations = async ({
 		}
 	}
 
-	const validatedPubValues = await reconcilePubValues({
-		includeRelations: true,
+	const validatedPubValues = await validatePubValues({
 		pubValues: normalizeRelationValues(relations.add ?? []),
 		communityId,
 		continueOnValidationError: false,
@@ -747,10 +753,9 @@ export const upsertPubRelations = async ({
 }) => {
 	const normalizedRelationValues = normalizeRelationValues(relations);
 
-	const validatedRelationValues = await reconcilePubValues({
+	const validatedRelationValues = await validatePubValues({
 		pubValues: normalizedRelationValues,
 		communityId,
-		includeRelations: true,
 		continueOnValidationError: false,
 	});
 
@@ -833,22 +838,62 @@ export const upsertPubRelations = async ({
 export const removePubRelations = async ({
 	pubId,
 	relations,
+	communityId,
 	trx = db,
 }: {
 	pubId: PubsId;
 	relations: RemovePubRelationsInput[];
+	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	await autoRevalidate(
+	const consolidatedRelations = await consolidatePubValues(relations, communityId);
+
+	const removed = await autoRevalidate(
 		trx
 			.deleteFrom("pub_values")
 			.where("pubId", "=", pubId)
-			.where(
-				"relatedPubId",
-				"in",
-				relations.map(({ relatedPubId }) => relatedPubId)
+			.where((eb) =>
+				eb.or(
+					consolidatedRelations.map(({ relatedPubId, fieldId }) =>
+						eb.and([eb("fieldId", "=", fieldId), eb("relatedPubId", "=", relatedPubId)])
+					)
+				)
 			)
+			.returning(["pub_values.relatedPubId"])
 	).execute();
+
+	return removed.map(({ relatedPubId }) => relatedPubId);
+};
+
+/**
+ * Removes all relations for a given field slug and pubId
+ */
+export const removeAllPubRelationsBySlug = async ({
+	pubId,
+	slug,
+	communityId,
+	trx = db,
+}: {
+	pubId: PubsId;
+	slug: string;
+	communityId: CommunitiesId;
+	trx?: typeof db;
+}) => {
+	const fields = await consolidatePubValues([{ slug }], communityId);
+	const fieldId = fields[0].fieldId;
+
+	assert(fieldId, `No field found for slug '${slug}'`);
+
+	const removed = await autoRevalidate(
+		trx
+			.deleteFrom("pub_values")
+			.where("pubId", "=", pubId)
+			.where("fieldId", "=", fieldId)
+			.where("relatedPubId", "is not", null)
+			.returning("relatedPubId")
+	).execute();
+
+	return removed.map(({ relatedPubId }) => relatedPubId);
 };
 
 export const updatePub = async ({
@@ -880,7 +925,7 @@ export const updatePub = async ({
 			value,
 		}));
 
-		const pubValuesWithSchemaNameAndFieldId = await reconcilePubValues({
+		const pubValuesWithSchemaNameAndFieldId = await validatePubValues({
 			pubValues: vals,
 			communityId,
 			continueOnValidationError,
