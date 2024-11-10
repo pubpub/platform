@@ -49,13 +49,13 @@ export type NewMembershipCapabilities = Insertable<MembershipCapabilitiesTable>;
 export type MembershipCapabilitiesUpdate = Updateable<MembershipCapabilitiesTable>;
 
 export const membershipCapabilitiesRoleSchema =
-	memberRole as unknown as z.Schema<MembershipCapabilitiesRole>;
+	memberRoleSchema as unknown as z.Schema<MembershipCapabilitiesRole>;
 
 export const membershipCapabilitiesTypeSchema =
-	membershipType as unknown as z.Schema<MembershipCapabilitiesType>;
+	membershipTypeSchema as unknown as z.Schema<MembershipCapabilitiesType>;
 
 export const membershipCapabilitiesCapabilitySchema =
-	capabilities as unknown as z.Schema<MembershipCapabilitiesCapability>;
+	capabilitiesSchema as unknown as z.Schema<MembershipCapabilitiesCapability>;
 
 export const membershipCapabilitiesSchema = z.object({
 	role: membershipCapabilitiesRoleSchema,
