@@ -38,11 +38,18 @@ module.exports = {
 			imports.push(...innerType.typeImports);
 		}
 
+		let typeDefinition = [`${type} & { __brand: '${escapeString(name)}' }`];
+
+		/* this is the custom part */
+		if (column.type.kind === "enum") {
+			typeDefinition = [`${type}`];
+		}
+
 		return {
 			declarationType: "typeDeclaration",
 			name,
 			exportAs: "named",
-			typeDefinition: [`${type} & { __brand: '${escapeString(name)}' }`],
+			typeDefinition,
 			typeImports: imports,
 			comment: [`Identifier type for ${details.schemaName}.${details.name}`],
 		};
