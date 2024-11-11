@@ -35,16 +35,10 @@ function wrapWidget(
 					return field.slug === currentFieldSlug;
 				});
 				const currentTypeName = currentPubType.name;
-				// console.log(currentPubId, currentPubTypeId, currentTypeName, currentFieldSlug);
 				let label;
 				if (currentPubId === pubId) {
 					label = `~${currentField.name}`;
 				} else {
-					// if (currentField) {
-					// 	label = `${currentTypeName}/${currentField.name}`
-					// } else {
-					// 	label = currentTypeName;
-					// }
 					label = `/${currentTypeName}`;
 				}
 				/* TODO: Look up the field name, and figure out if it's local to this doc or not. */
@@ -64,7 +58,6 @@ function wrapWidget(
 						top: isBlock ? rect.top + 4 + topOffset : rect.top - 17 + topOffset,
 						left: rect.left,
 						bottom: rect.bottom,
-						// right: rect.right,
 						right: -250,
 						pos,
 						node,
@@ -78,22 +71,8 @@ function wrapWidget(
 
 export default () => {
 	return new Plugin({
-		// view: () => {
-		// 	return {
-		// 		update: (editorView) => {
-		// 			const { panelPosition, setPanelPosition } = attributePanelKey.getState(
-		// 				editorView.state
-		// 			);
-		// 			// setPanelPosition({
-		// 			// 	...panelPosition,
-		// 			// 	// node: editorView.state.doc.nodeAt(panelPosition.pos),
-		// 			// });
-		// 		},
-		// 	};
-		// },
 		props: {
 			decorations: (state) => {
-				// console.log(state.doc.toJSON());
 				const decorations: Decoration[] = [];
 				const { setPanelPosition } = attributePanelKey.getState(state);
 				state.doc.descendants((node, pos) => {

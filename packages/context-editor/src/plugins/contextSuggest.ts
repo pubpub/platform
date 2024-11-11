@@ -1,6 +1,5 @@
 import fuzzy from "fuzzy";
 import autocomplete, { type Options } from "prosemirror-autocomplete";
-import { Slice } from "prosemirror-model";
 import { v4 as uuidv4 } from "uuid";
 
 import type { SuggestProps } from "../ContextEditor";
@@ -53,12 +52,6 @@ export default (
 			{ name: "reference", trigger: "@" },
 		],
 		onOpen: ({ view, range, filter, trigger, type }) => {
-			const { suggestData, setSuggestData } = reactPropsKey.getState(view.state);
-
-			// setSuggestData({
-			// 	...suggestData,
-			// 	isOpen: true,
-			// });
 			updateItems(view, filter);
 			return true;
 		},
@@ -105,7 +98,6 @@ export default (
 			let isAtom;
 			let pubId;
 			let fieldSlug;
-			let content;
 			console.log("selectedItem", selectedItem);
 			if (selectedItemIsField) {
 				/* Eventually, we will check that selectedItem.schemaName !== JSONContent or whatever we name that structured type */
