@@ -16,7 +16,7 @@ type Target =
 
 export const userCan = async (capability: Capabilities, target: Target, userId: UsersId) => {
 	if (target.type === MembershipType.pub) {
-		const result = await db
+		const capabilitiesQuery = db
 			.with("stage", (db) =>
 				db
 					.selectFrom("PubsInStages")
@@ -56,54 +56,40 @@ export const userCan = async (capability: Capabilities, target: Target, userId: 
 					.whereRef("communityId", "=", db.selectFrom("community").select("communityId"))
 					.select("role")
 			)
-			.selectNoFrom((eb) =>
-				eb
-					.exists(
-						eb
-							.selectFrom("membership_capabilities")
-							.where((eb) =>
-								eb.or([
-									eb.and([
-										eb(
-											"membership_capabilities.role",
-											"in",
-											eb.selectFrom("stage_ms").select("role")
-										),
-										eb(
-											"membership_capabilities.type",
-											"=",
-											MembershipType.stage
-										),
-									]),
-									eb.and([
-										eb(
-											"membership_capabilities.role",
-											"in",
-											eb.selectFrom("pub_ms").select("role")
-										),
-										eb("membership_capabilities.type", "=", MembershipType.pub),
-									]),
-									eb.and([
-										eb(
-											"membership_capabilities.role",
-											"in",
-											eb.selectFrom("community_ms").select("role")
-										),
-										eb(
-											"membership_capabilities.type",
-											"=",
-											MembershipType.community
-										),
-									]),
-								])
-							)
-							.where("membership_capabilities.capability", "=", capability)
-							.select("capability")
-					)
-					.as("hasCapability")
-			)
-			.executeTakeFirst();
 
-		return Boolean(result?.hasCapability);
+			.selectFrom("membership_capabilities")
+			.where((eb) =>
+				eb.or([
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("stage_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.stage),
+					]),
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("pub_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.pub),
+					]),
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("community_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.community),
+					]),
+				])
+			)
+			.where("membership_capabilities.capability", "=", capability)
+			.limit(1)
+			.select("capability");
+
+		return Boolean((await capabilitiesQuery.execute()).length);
 	}
 };
