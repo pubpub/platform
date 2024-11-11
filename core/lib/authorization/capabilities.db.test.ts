@@ -7,7 +7,9 @@ import { MembershipType } from "db/src/public/MembershipType";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { mockServerCode } from "../__tests__/utils";
 
-await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode();
+
+const { getTrx } = createForEachMockedTransaction();
 
 const { pubs, users } = await seedCommunity({
 	community: {
@@ -61,25 +63,21 @@ const { pubs, users } = await seedCommunity({
 			firstName: "Admin",
 			role: MemberRole.admin,
 			password: "password",
-			email: "admin@example.com",
 		},
 		communityEditor: {
 			firstName: "Editor",
 			role: MemberRole.editor,
 			password: "password",
-			email: "editor@example.com",
 		},
 		communityContributor: {
 			firstName: "Contributor",
 			role: MemberRole.contributor,
 			password: "password",
-			email: "contributor@example.com",
 		},
 	},
 });
 
 describe("Pub membership grants appropriate capabilities", async () => {
-	const { userCan } = await import("./capabilities");
 	test.each([
 		{
 			capability: Capabilities.updatePubValues,
@@ -98,8 +96,10 @@ describe("Pub membership grants appropriate capabilities", async () => {
 			user,
 			expectation,
 		}) => {
+			const { userCan } = await import("./capabilities");
+
 			expect(
-				userCan(
+				await userCan(
 					capability,
 					{
 						type,

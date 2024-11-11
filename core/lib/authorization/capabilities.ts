@@ -23,6 +23,9 @@ export const userCan = async (capability: Capabilities, target: Target, userId: 
 					.where("PubsInStages.pubId", "=", target.pubId)
 					.select("PubsInStages.stageId")
 			)
+			.with("community", (db) =>
+				db.selectFrom("pubs").where("pubs.id", "=", target.pubId).select("pubs.communityId")
+			)
 			.with("stage_ms", (db) =>
 				db
 					.selectFrom("stage_memberships")
@@ -37,14 +40,21 @@ export const userCan = async (capability: Capabilities, target: Target, userId: 
 							eb.selectFrom("stage").select("stageId")
 						)
 					)
+					.select("role")
 			)
 			.with("pub_ms", (db) =>
-				db.selectFrom("pub_memberships").where("pub_memberships.userId", "=", userId)
+				db
+					.selectFrom("pub_memberships")
+					.where("pub_memberships.userId", "=", userId)
+					.where("pub_memberships.pubId", "=", target.pubId)
+					.select("role")
 			)
 			.with("community_ms", (db) =>
 				db
 					.selectFrom("community_memberships")
 					.where("community_memberships.userId", "=", userId)
+					.whereRef("communityId", "=", db.selectFrom("community").select("communityId"))
+					.select("role")
 			)
 			.selectNoFrom((eb) =>
 				eb
@@ -88,6 +98,7 @@ export const userCan = async (capability: Capabilities, target: Target, userId: 
 								])
 							)
 							.where("membership_capabilities.capability", "=", capability)
+							.select("capability")
 					)
 					.as("hasCapability")
 			)
