@@ -12,7 +12,6 @@ import { attributePanelKey } from "./plugins/attributePanel";
 import { reactPropsKey } from "./plugins/reactProps";
 import { baseSchema } from "./schemas";
 
-import "./style.css";
 import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
 

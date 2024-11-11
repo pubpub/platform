@@ -10,6 +10,8 @@ import { cn } from "utils";
 import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
 import { ContextAtom } from "./AtomRenderer";
 
+import "context-editor/style.css";
+
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
 	loading: () => <Skeleton className="h-16 w-full" />,

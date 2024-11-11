@@ -65,5 +65,20 @@
 			"schemas/index.ts"
 		]
 	},
+	"exports": {
+		".": {
+			"module": "./dist/context-editor.esm.js",
+			"default": "./dist/context-editor.cjs.js"
+		},
+		"./schemas": {
+			"module": "./schemas/dist/context-editor-schemas.esm.js",
+			"default": "./schemas/dist/context-editor-schemas.cjs.js"
+		},
+		"./package.json": "./package.json",
+		"./style.css": {
+			"module": "./src/style.css",
+			"default": "./src/style.css"
+		}
+	},
 	"prettier": "@pubpub/prettier-config"
 }
