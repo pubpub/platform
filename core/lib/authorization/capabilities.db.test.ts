@@ -60,54 +60,71 @@ const { pubs, users } = await seedCommunity({
 	],
 	users: {
 		communityAdmin: {
-			firstName: "Admin",
+			firstName: "Community",
+			lastName: "Admin",
 			role: MemberRole.admin,
-			password: "password",
 		},
 		communityEditor: {
-			firstName: "Editor",
+			firstName: "Community",
+			lastName: "Editor",
 			role: MemberRole.editor,
-			password: "password",
 		},
 		communityContributor: {
-			firstName: "Contributor",
+			firstName: "Community",
+			lastName: "Contributor",
 			role: MemberRole.contributor,
-			password: "password",
 		},
 	},
 });
 
-describe("Pub membership grants appropriate capabilities", async () => {
-	test.each([
-		{
-			capability: Capabilities.updatePubValues,
-			target: { type: MembershipType.pub, pub: pubs[0] },
-			user: users.communityAdmin,
-			expectation: true,
-		},
-	] as const)(
-		"$user.firstName $capability on pub $pub.values.Title = $expectation",
-		async ({
-			capability,
-			target: {
-				type,
-				pub: { id: pubId },
-			},
-			user,
-			expectation,
-		}) => {
-			const { userCan } = await import("./capabilities");
-
+describe("Community membership grants appropriate capabilities", async () => {
+	const { userCan } = await import("./capabilities");
+	test("Community admin has all capabilities", async () => {
+		Object.values(Capabilities).forEach(async (capability) => {
 			expect(
 				await userCan(
 					capability,
-					{
-						type,
-						pubId,
-					},
-					user.id
+					{ type: MembershipType.pub, pubId: pubs[0].id },
+					users.communityAdmin.id
 				)
-			).toBe(expectation);
-		}
-	);
+			).toBe(true);
+		});
+	});
+	test("Community contributor has no capabilities", async () => {
+		Object.values(Capabilities).forEach(async (capability) => {
+			expect(
+				await userCan(
+					capability,
+					{ type: MembershipType.pub, pubId: pubs[0].id },
+					users.communityContributor.id
+				)
+			).toBe(false);
+		});
+	});
+
+	test.each([
+		["can", Capabilities.movePub],
+		["can", Capabilities.createPub],
+		["can", Capabilities.viewPub],
+		["can", Capabilities.deletePub],
+		["can", Capabilities.updatePubValues],
+		["can", Capabilities.createRelatedPub],
+		["can", Capabilities.createPubWithForm],
+		["can", Capabilities.editPubWithForm],
+		["can", Capabilities.runAction],
+		["can", Capabilities.viewStage],
+		["can't", Capabilities.addPubMember],
+		["can't", Capabilities.createStage],
+	])(`Community editor %s %s`, async (expectation, capability) => {
+		expect(
+			await userCan(
+				capability,
+				{
+					type: MembershipType.pub,
+					pubId: pubs[0].id,
+				},
+				users.communityEditor.id
+			)
+		).toBe(expectation === "can");
+	});
 });
