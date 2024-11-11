@@ -4,8 +4,8 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 
+import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { mockServerCode } from "../__tests__/utils";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
