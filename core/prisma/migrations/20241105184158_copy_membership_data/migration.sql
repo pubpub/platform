@@ -9,6 +9,7 @@ INSERT INTO "form_memberships" ("formId", "userId")
     JOIN "permissions"
         ON "permissions"."id" = "form_to_permissions"."permissionId"
     JOIN "members"
-        ON "members"."id" = "permissions"."memberId";
+        ON "members"."id" = "permissions"."memberId"
+    ON CONFLICT DO NOTHING;
 
 COMMIT;
