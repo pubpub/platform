@@ -93,7 +93,10 @@ const createCachedGetUser = ({
 			return { user, state: "user-found" as const, error: null };
 		},
 		{
-			revalidateTags: createCommunityCacheTags(["members", "users"], community.slug),
+			revalidateTags: createCommunityCacheTags(
+				["community_memberships", "users"],
+				community.slug
+			),
 		}
 	);
 };

@@ -1,4 +1,4 @@
-import type { CommunitiesId, MembersId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
@@ -20,7 +20,7 @@ export type RenderWithPubPub = {
 
 export type RenderWithPubContext = {
 	recipient: {
-		id: MembersId;
+		id: CommunityMembershipsId;
 		user: {
 			id: UsersId;
 			firstName: string;
@@ -66,12 +66,12 @@ const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: str
 
 export const renderFormInviteLink = async (
 	formSlug: string,
-	memberId: MembersId,
+	memberId: CommunityMembershipsId,
 	userId: UsersId,
 	communityId: CommunitiesId,
 	pubId?: string
 ) => {
-	await addMemberToForm({ memberId, communityId, slug: formSlug });
+	await addMemberToForm({ userId, communityId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, communityId, pubId: pubId as PubsId });
 };
 
@@ -84,7 +84,7 @@ export const renderMemberFields = async ({
 	fieldSlug: string;
 	communitySlug: string;
 	attributes: string[];
-	memberId: MembersId;
+	memberId: CommunityMembershipsId;
 }) => {
 	// Make sure this field is a member type
 	const fieldIsMemberTypeQuery = autoCache(
@@ -98,10 +98,10 @@ export const renderMemberFields = async ({
 
 	const userQuery = autoCache(
 		db
-			.selectFrom("members")
-			.innerJoin("users", "users.id", "members.userId")
+			.selectFrom("community_memberships")
+			.innerJoin("users", "users.id", "community_memberships.userId")
 			.select(ALLOWED_MEMBER_ATTRIBUTES)
-			.where("members.id", "=", memberId)
+			.where("community_memberships.id", "=", memberId)
 	);
 
 	const [, user] = await Promise.all([

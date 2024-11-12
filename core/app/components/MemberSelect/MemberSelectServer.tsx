@@ -1,4 +1,4 @@
-import type { Communities, MembersId } from "db/public";
+import type { Communities, CommunityMembershipsId } from "db/public";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { getMember } from "~/lib/server/member";
@@ -17,7 +17,7 @@ type Props = {
 	 * would result in the same query parameter being used for all instances.
 	 */
 	queryParamName: string;
-	value?: MembersId;
+	value?: CommunityMembershipsId;
 	allowPubFieldSubstitution?: boolean;
 	helpText?: string;
 };

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { notFound } from "next/navigation";
 
-import type { Communities, MembersId, PubsId, UsersId } from "db/public";
+import type { Communities, PubsId } from "db/public";
 import { MemberRole, StructuralFormElement } from "db/public";
 import { expect } from "utils";
 
@@ -90,7 +90,8 @@ const ExpiredTokenPage = ({
 				<RequestLink
 					formSlug={params.formSlug}
 					token={searchParams.token}
-					pubId={searchParams.pubId as PubsId}
+					// TODO: handle undefined pubId
+					pubId={searchParams.pubId!}
 				/>
 			</div>
 		</div>
@@ -207,16 +208,16 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub?.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+	const parentPub = pub?.parentId ? await getPub(pub.parentId) : undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
 	const memberWithUser = {
 		...member,
-		id: member.id as MembersId,
+		id: member.id,
 		user: {
 			...user,
-			id: user.id as UsersId,
+			id: user.id,
 		},
 	};
 
@@ -298,7 +299,7 @@ export default async function FormPage({
 									{form.elements.map((e) => (
 										<FormElement
 											key={e.elementId}
-											pubId={pubId as PubsId}
+											pubId={pubId}
 											element={e}
 											searchParams={searchParams}
 											communitySlug={params.communitySlug}

@@ -1,7 +1,7 @@
 import type { ExpressionBuilder } from "kysely";
 
 import { sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
 import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
@@ -12,7 +12,9 @@ import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { GET_MANY_DEFAULT } from "./pub";
 
-export const getPubTypeBase = (trx: typeof db | ExpressionBuilder<Database, keyof Database> = db) =>
+export const getPubTypeBase = <DB extends Record<string, any>>(
+	trx: typeof db | ExpressionBuilder<DB, keyof DB> = db
+) =>
 	(trx as typeof db).selectFrom("pub_types").select((eb) => [
 		"pub_types.id",
 		"pub_types.description",
@@ -29,6 +31,7 @@ export const getPubTypeBase = (trx: typeof db | ExpressionBuilder<Database, keyo
 					"pub_fields.name",
 					"pub_fields.slug",
 					"pub_fields.schemaName",
+					"pub_fields.isRelation",
 					jsonObjectFrom(
 						eb
 							.selectFrom("PubFieldSchema")
@@ -94,12 +97,22 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 						.selectFrom("_PubFieldToPubType")
 						.whereRef("B", "=", "pub_types.id")
 						.select((eb) =>
-							eb.fn.coalesce(eb.fn.agg("array_agg", ["A"]), sql`'{}'`).as("fields")
+							eb.fn
+								.coalesce(
+									eb.fn.jsonAgg(
+										jsonBuildObject({
+											id: eb.ref("A"),
+											isTitle: eb.ref("isTitle"),
+										})
+									),
+									sql`json_build_array()`
+								)
+								.as("pub_field_titles")
 						)
 						.as("fields"),
 			])
 			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
-			.$narrowType<{ fields: PubFieldsId[] }>()
+			.$narrowType<{ fields: { id: PubFieldsId; isTitle: boolean }[] }>()
 	);
 };
 

@@ -1,0 +1,721 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table users {
+  id String [pk]
+  slug String [unique, not null]
+  email String [unique, not null]
+  firstName String [not null]
+  lastName String
+  orcid String
+  avatar String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  isSuperAdmin Boolean [not null, default: false]
+  passwordHash String
+  memberships members [not null]
+  memberGroups member_groups [not null]
+  AuthToken auth_tokens [not null]
+  assignedPubs pubs [not null]
+  actionRuns action_runs [not null]
+  ApiAccessToken api_access_tokens [not null]
+  Session sessions [not null]
+  formMemberships form_memberships [not null]
+  communityMemberships community_memberships [not null]
+  pubMemberships pub_memberships [not null]
+  stageMemberships stage_memberships [not null]
+}
+
+Table sessions {
+  id String [pk]
+  userId String [not null]
+  user users [not null]
+  expiresAt DateTime [not null]
+  type AuthTokenType [not null, default: 'generic', note: 'With what type of token is this session created? Used for determining on a page-by-page basis whether to allow a certain session to access it. For instance, a verify email token/session should not allow you to access the password reset page.']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table auth_tokens {
+  id String [pk]
+  hash String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  expiresAt DateTime [not null]
+  isUsed Boolean [not null, default: false]
+  user users [not null]
+  userId String [not null]
+  type AuthTokenType [not null, default: 'generic']
+}
+
+Table communities {
+  id String [pk]
+  name String [not null]
+  slug String [unique, not null]
+  avatar String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  pubTypes pub_types [not null]
+  pubs pubs [not null]
+  integrationInstances integration_instances [not null]
+  members members [not null]
+  memberGroups member_groups [not null]
+  stages stages [not null]
+  APIAccessToken api_access_tokens [not null]
+  Form forms [not null]
+  pubFields pub_fields [not null]
+  CommunityMembership community_memberships [not null]
+}
+
+Table pubs {
+  id String [pk]
+  valuesBlob Json
+  pubType pub_types [not null]
+  pubTypeId String [not null]
+  community communities [not null]
+  communityId String [not null]
+  assigneeId String
+  assignee users
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  parent pubs
+  parentId String
+  children pubs [not null]
+  values pub_values [not null]
+  stages PubsInStages [not null]
+  integrationInstances integration_instances [not null]
+  permissions permissions [not null]
+  IntegrationInstanceState IntegrationInstanceState [not null]
+  actionRuns action_runs [not null]
+  relatedValues pub_values [not null]
+  members pub_memberships [not null]
+}
+
+Table pub_fields {
+  id String [pk]
+  name String [not null]
+  slug String [unique, not null]
+  integration integrations
+  integrationId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  schema PubFieldSchema
+  schemaName CoreSchemaType
+  pubFieldSchemaId String
+  isArchived Boolean [not null, default: false]
+  community communities [not null]
+  communityId String [not null]
+  isRelation Boolean [not null, default: false]
+  values pub_values [not null]
+  pubTypes _PubFieldToPubType [not null]
+  FormInput form_elements [not null]
+}
+
+Table PubFieldSchema {
+  id String [pk]
+  namespace String [not null]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  schema Json [not null, note: '@type(JSONSchemaType<any>, \'ajv\', true, false, true)']
+  PubFields pub_fields [not null]
+
+  indexes {
+    (name, namespace) [unique]
+  }
+}
+
+Table pub_values {
+  id String [pk]
+  field pub_fields [not null]
+  fieldId String [not null]
+  value Json
+  pub pubs [not null]
+  pubId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  relatedPub pubs
+  relatedPubId String
+}
+
+Table pub_types {
+  id String [pk]
+  name String [not null]
+  description String
+  community communities [not null]
+  communityId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  fields _PubFieldToPubType [not null]
+  pubs pubs [not null]
+  Form forms [not null]
+}
+
+Table _PubFieldToPubType {
+  A String [not null]
+  B String [not null]
+  isTitle Boolean [not null, default: false]
+  pubField pub_fields [not null]
+  pubType pub_types [not null]
+
+  indexes {
+    (A, B) [unique]
+  }
+}
+
+Table stages {
+  id String [pk]
+  name String [not null]
+  order String [not null]
+  community communities [not null]
+  communityId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  pubs PubsInStages [not null]
+  moveConstraints move_constraint [not null]
+  moveConstraintSources move_constraint [not null]
+  integrationInstances integration_instances [not null]
+  permissions permissions [not null]
+  actionInstances action_instances [not null]
+  formElements form_elements [not null]
+  members stage_memberships [not null]
+}
+
+Table PubsInStages {
+  pub pubs [not null]
+  pubId String [not null]
+  stage stages [not null]
+  stageId String [not null]
+
+  indexes {
+    (pubId, stageId) [pk]
+  }
+}
+
+Table move_constraint {
+  stage stages [not null]
+  stageId String [not null]
+  destination stages [not null]
+  destinationId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (stageId, destinationId) [pk]
+  }
+}
+
+Table members {
+  id String [pk]
+  role MemberRole [not null, default: 'editor']
+  community communities [not null]
+  communityId String [not null]
+  user users [not null]
+  userId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  permissions permissions [not null]
+
+  indexes {
+    (userId, communityId) [unique]
+  }
+}
+
+Table member_groups {
+  id String [pk]
+  community communities [not null]
+  communityId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  permissions permissions [not null]
+  users users [not null]
+  formMemberships form_memberships [not null]
+  communityMemberships community_memberships [not null]
+  pubMemberships pub_memberships [not null]
+  stageMemberships stage_memberships [not null]
+}
+
+Table community_memberships {
+  id String [pk]
+  role MemberRole [not null]
+  community communities [not null]
+  communityId String [not null]
+  user users
+  userId String
+  memberGroup member_groups
+  memberGroupId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (communityId, userId) [unique]
+    (communityId, memberGroupId) [unique]
+  }
+}
+
+Table pub_memberships {
+  id String [pk]
+  role MemberRole [not null]
+  pub pubs [not null]
+  pubId String [not null]
+  user users
+  userId String
+  memberGroup member_groups
+  memberGroupId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (pubId, userId) [unique]
+    (pubId, memberGroupId) [unique]
+  }
+}
+
+Table stage_memberships {
+  id String [pk]
+  role MemberRole [not null]
+  stage stages [not null]
+  stageId String [not null]
+  user users
+  userId String
+  memberGroup member_groups
+  memberGroupId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (stageId, userId) [unique]
+    (stageId, memberGroupId) [unique]
+  }
+}
+
+Table form_memberships {
+  id String [pk]
+  form forms [not null]
+  formId String [not null]
+  user users
+  userId String
+  memberGroup member_groups
+  memberGroupId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (formId, userId) [unique]
+    (formId, memberGroupId) [unique]
+  }
+}
+
+Table permissions {
+  id String [pk]
+  member members
+  memberId String
+  memberGroup member_groups
+  memberGroupId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  pubs pubs [not null]
+  stages stages [not null]
+  forms form_to_permissions [not null]
+}
+
+Table integrations {
+  id String [pk]
+  name String [not null]
+  actions Json [not null]
+  settingsUrl String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  instances integration_instances [not null]
+  pubFields pub_fields [not null]
+}
+
+Table integration_instances {
+  id String [pk]
+  name String [not null]
+  integration integrations [not null]
+  integrationId String [not null]
+  community communities [not null]
+  communityId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  stage stages
+  stageId String
+  config Json
+  pubs pubs [not null]
+  IntegrationInstanceState IntegrationInstanceState [not null]
+}
+
+Table IntegrationInstanceState {
+  pub pubs [not null]
+  pubId String [not null]
+  instance integration_instances [not null]
+  instanceId String [not null]
+  state Json [not null]
+
+  indexes {
+    (pubId, instanceId) [unique]
+  }
+}
+
+Table action_instances {
+  id String [pk]
+  name String [not null, default: '']
+  action Action [not null]
+  stage stages [not null]
+  stageId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  config Json
+  rules rules [not null]
+  runs action_runs [not null]
+}
+
+Table action_runs {
+  id String [pk]
+  actionInstance action_instances
+  actionInstanceId String
+  pub pubs
+  pubId String
+  config Json
+  event Event
+  params Json
+  status ActionRunStatus [not null]
+  result Json [not null]
+  user users
+  userId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table rules {
+  id String [pk]
+  event Event [not null]
+  actionInstance action_instances [not null]
+  actionInstanceId String [not null]
+  config Json
+
+  indexes {
+    (actionInstanceId, event) [unique]
+  }
+}
+
+Table forms {
+  id String [pk]
+  name String [not null]
+  slug String [not null]
+  communityId String [not null]
+  community communities [not null]
+  pubType pub_types [not null]
+  pubTypeId String [not null]
+  elements form_elements [not null]
+  isArchived Boolean [not null, default: false]
+  access FormAccessType [not null, default: 'private']
+  permissions form_to_permissions [not null]
+  FormMembership form_memberships [not null]
+
+  indexes {
+    (name, communityId) [unique]
+    (slug, communityId) [unique]
+  }
+}
+
+Table form_elements {
+  id String [pk]
+  type ElementType [not null]
+  fieldId String
+  field pub_fields
+  formId String [not null]
+  order Int
+  label String
+  element StructuralFormElement
+  component InputComponent
+  config Json
+  content String
+  required Boolean
+  form forms [not null]
+  stage stages
+  stageId String
+
+  indexes {
+    (type, label, formId) [unique]
+    (fieldId, formId) [unique]
+  }
+}
+
+Table api_access_tokens {
+  id String [pk]
+  token String [unique, not null]
+  name String [not null]
+  description String
+  communityId String [not null]
+  community communities [not null]
+  expiration DateTime [not null]
+  issuedBy users [not null]
+  issuedById String [not null]
+  issuedAt DateTime [default: `now()`, not null]
+  accessRules api_access_permissions [not null]
+  logs api_access_logs [not null]
+}
+
+Table api_access_logs {
+  id String [pk]
+  accessTokenId String [not null]
+  accessToken api_access_tokens [not null]
+  timestamp DateTime [default: `now()`, not null]
+  action String [not null]
+}
+
+Table api_access_permissions {
+  id String [pk]
+  apiAccessTokenId String [not null]
+  apiAccessToken api_access_tokens [not null]
+  scope ApiAccessScope [not null]
+  accessType ApiAccessType [not null]
+  constraints Json [note: '@type(ApiAccessPermissionConstraints, \'../types\', true, false, true)']
+}
+
+Table form_to_permissions {
+  form forms [not null]
+  formId String [not null]
+  permission permissions [not null]
+  permissionId String [not null]
+
+  indexes {
+    (formId, permissionId) [unique]
+  }
+}
+
+Table MemberGroupToUser {
+  membergroupsId String [ref: > member_groups.id]
+  usersId String [ref: > users.id]
+}
+
+Table IntegrationInstanceToPub {
+  integrationinstancesId String [ref: > integration_instances.id]
+  pubsId String [ref: > pubs.id]
+}
+
+Table PermissionToPub {
+  permissionsId String [ref: > permissions.id]
+  pubsId String [ref: > pubs.id]
+}
+
+Table PermissionToStage {
+  permissionsId String [ref: > permissions.id]
+  stagesId String [ref: > stages.id]
+}
+
+Enum AuthTokenType {
+  generic
+  passwordReset
+  signup
+  verifyEmail
+}
+
+Enum CoreSchemaType {
+  Boolean
+  DateTime
+  Email
+  FileUpload
+  MemberId
+  Null
+  Number
+  NumericArray
+  RichText
+  String
+  StringArray
+  URL
+  Vector3
+}
+
+Enum MemberRole {
+  admin
+  editor
+  contributor
+}
+
+Enum Action {
+  log
+  pdf
+  email
+  pushToV6
+  http
+  move
+}
+
+Enum ActionRunStatus {
+  scheduled
+  success
+  failure
+}
+
+Enum Event {
+  pubEnteredStage
+  pubLeftStage
+  pubInStageForDuration
+}
+
+Enum FormAccessType {
+  private
+  inviteOnly
+  public
+}
+
+Enum StructuralFormElement {
+  h2
+  h3
+  p
+  hr
+}
+
+Enum ElementType {
+  pubfield
+  structural
+  button
+}
+
+Enum InputComponent {
+  textArea
+  textInput
+  datePicker
+  checkbox
+  fileUpload
+  memberSelect
+  confidenceInterval
+  checkboxGroup
+  radioGroup
+  richText
+  selectDropdown
+  multivalueInput
+}
+
+Enum ApiAccessType {
+  read
+  write
+  archive
+}
+
+Enum ApiAccessScope {
+  community
+  pub
+  stage
+  member
+  pubType
+}
+
+Ref: sessions.userId > users.id
+
+Ref: auth_tokens.userId > users.id
+
+Ref: pubs.pubTypeId > pub_types.id
+
+Ref: pubs.communityId > communities.id
+
+Ref: pubs.assigneeId > users.id
+
+Ref: pubs.parentId - pubs.id [delete: Cascade]
+
+Ref: pub_fields.integrationId > integrations.id
+
+Ref: pub_fields.pubFieldSchemaId > PubFieldSchema.id
+
+Ref: pub_fields.communityId > communities.id
+
+Ref: pub_values.fieldId > pub_fields.id
+
+Ref: pub_values.pubId > pubs.id [delete: Cascade]
+
+Ref: pub_values.relatedPubId > pubs.id [delete: Cascade]
+
+Ref: pub_types.communityId > communities.id
+
+Ref: _PubFieldToPubType.A > pub_fields.id [delete: Cascade]
+
+Ref: _PubFieldToPubType.B > pub_types.id [delete: Cascade]
+
+Ref: stages.communityId > communities.id
+
+Ref: PubsInStages.pubId > pubs.id [delete: Cascade]
+
+Ref: PubsInStages.stageId > stages.id [delete: Cascade]
+
+Ref: move_constraint.stageId > stages.id [delete: Cascade]
+
+Ref: move_constraint.destinationId > stages.id [delete: Cascade]
+
+Ref: members.communityId > communities.id [delete: Cascade]
+
+Ref: members.userId > users.id [delete: Cascade]
+
+Ref: member_groups.communityId > communities.id [delete: Cascade]
+
+Ref: community_memberships.communityId > communities.id [delete: Cascade]
+
+Ref: community_memberships.userId > users.id [delete: Cascade]
+
+Ref: community_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: pub_memberships.pubId > pubs.id [delete: Cascade]
+
+Ref: pub_memberships.userId > users.id [delete: Cascade]
+
+Ref: pub_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: stage_memberships.stageId > stages.id [delete: Cascade]
+
+Ref: stage_memberships.userId > users.id [delete: Cascade]
+
+Ref: stage_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: form_memberships.formId > forms.id [delete: Cascade]
+
+Ref: form_memberships.userId > users.id [delete: Cascade]
+
+Ref: form_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: permissions.memberId > members.id [delete: Cascade]
+
+Ref: permissions.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: integration_instances.integrationId > integrations.id
+
+Ref: integration_instances.communityId > communities.id
+
+Ref: integration_instances.stageId > stages.id
+
+Ref: IntegrationInstanceState.pubId > pubs.id
+
+Ref: IntegrationInstanceState.instanceId > integration_instances.id
+
+Ref: action_instances.stageId > stages.id [delete: Cascade]
+
+Ref: action_runs.actionInstanceId > action_instances.id [delete: Cascade]
+
+Ref: action_runs.pubId > pubs.id
+
+Ref: action_runs.userId > users.id
+
+Ref: rules.actionInstanceId > action_instances.id [delete: Cascade]
+
+Ref: forms.communityId > communities.id [delete: Cascade]
+
+Ref: forms.pubTypeId > pub_types.id
+
+Ref: form_elements.fieldId > pub_fields.id [delete: Cascade]
+
+Ref: form_elements.formId > forms.id [delete: Cascade]
+
+Ref: form_elements.stageId > stages.id [delete: Set Null]
+
+Ref: api_access_tokens.communityId > communities.id
+
+Ref: api_access_tokens.issuedById > users.id
+
+Ref: api_access_logs.accessTokenId > api_access_tokens.id
+
+Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id
+
+Ref: form_to_permissions.formId > forms.id [delete: Cascade]
+
+Ref: form_to_permissions.permissionId > permissions.id [delete: Cascade]

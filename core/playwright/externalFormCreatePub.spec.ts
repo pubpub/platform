@@ -25,8 +25,6 @@ test.beforeAll(async ({ browser }) => {
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
 	});
 
-	// this seems necessary
-	await page.waitForTimeout(1000);
 	/**
 	 * Fill out everything required to make an external form:
 	 * 1. Fields
@@ -161,10 +159,13 @@ test.describe("Multivalue inputs", () => {
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "mangos" }).click();
 		await page.getByRole("button", { name: "Submit" }).click();
+		await page.getByText("Form Successfully Submitted").waitFor();
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
 		await page.getByRole("link", { name: title }).click();
+		// Make sure pub details page has loaded before making assertions
+		await page.getByText("Current Stage").waitFor();
 		await expect(page.getByText(numberElement.name)).toHaveCount(1);
 		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0");
 		await expect(page.getByText(animalElement.name)).toHaveCount(1);

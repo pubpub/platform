@@ -64,16 +64,20 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 			name: true,
 			description: true,
 			fields: {
-				select: {
-					id: true,
-					name: true,
-					slug: true,
-					schema: {
+				include: {
+					pubField: {
 						select: {
 							id: true,
-							namespace: true,
 							name: true,
-							schema: true,
+							slug: true,
+							schema: {
+								select: {
+									id: true,
+									namespace: true,
+									name: true,
+									schema: true,
+								},
+							},
 						},
 					},
 				},
@@ -83,7 +87,8 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 	if (!pubType) {
 		throw new NotFoundError("Pub Type not found");
 	}
-	return pubType;
+	const { fields, ...rest } = pubType;
+	return { ...rest, fields: fields.map((f) => f.pubField) };
 };
 
 export const getSuggestedMembers = async (
@@ -180,7 +185,7 @@ const normalizePubValues = async (
 			},
 			pubTypes: {
 				some: {
-					id: pubTypeId,
+					B: pubTypeId,
 				},
 			},
 		},
@@ -292,35 +297,6 @@ export const makeRecursiveInclude = <T extends string, U extends {}>(
 	} as RecursiveInclude<T, U>;
 };
 
-export const permissionInclude = {
-	member: {
-		include: {
-			user: {
-				select: {
-					id: true,
-					firstName: true,
-					lastName: true,
-					avatar: true,
-					email: true,
-				},
-			},
-		},
-	},
-	memberGroup: {
-		include: {
-			users: {
-				select: {
-					id: true,
-					firstName: true,
-					lastName: true,
-					avatar: true,
-					email: true,
-				},
-			},
-		},
-	},
-} satisfies Prisma.PermissionInclude;
-
 export const pubValuesInclude = {
 	values: {
 		distinct: ["fieldId"],
@@ -365,19 +341,18 @@ export const pubInclude = {
 			3
 		),
 	},
-	permissions: { include: permissionInclude },
+	members: {
+		include: {
+			user: true,
+		},
+	},
 } satisfies Prisma.PubInclude;
-
-export type PermissionPayload = Prisma.PermissionGetPayload<{ include: typeof permissionInclude }>;
-
-export type PermissionPayloadUser = NonNullable<PermissionPayload["member"]>["user"];
-export type PermissionPayloadMember = NonNullable<PermissionPayload["member"]>;
 
 export const communityMemberInclude = {
 	user: true,
 };
 
-export type CommunityMemberPayload = Prisma.MemberGetPayload<{
+export type CommunityMemberPayload = Prisma.CommunityMembershipGetPayload<{
 	include: typeof communityMemberInclude;
 }>;
 
@@ -385,7 +360,6 @@ export const stageInclude = {
 	actionInstances: true,
 	pubs: { include: { pub: { include: pubInclude } } },
 	integrationInstances: { include: { integration: true } },
-	permissions: { include: permissionInclude },
 	moveConstraints: { include: { destination: true } },
 	moveConstraintSources: true,
 } satisfies Prisma.StageInclude;

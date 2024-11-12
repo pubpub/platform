@@ -136,7 +136,7 @@ test("PubTitle component includes the pub title", async () => {
 		],
 		integrationInstances: [],
 		children: [],
-		permissions: [],
+		members: [],
 	};
 
 	render(<PubTitle pub={pub} />);

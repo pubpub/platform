@@ -18,6 +18,24 @@ export const addPubField = defineServerAction(async function addPubField(
 	).execute();
 });
 
+export const updateTitleField = defineServerAction(async function updateTitleField(
+	pubTypeId: PubTypesId,
+	pubFieldId: PubFieldsId
+) {
+	await db.transaction().execute(async (trx) => {
+		await autoRevalidate(
+			trx.updateTable("_PubFieldToPubType").set({ isTitle: false }).where("B", "=", pubTypeId)
+		).execute();
+		await autoRevalidate(
+			trx
+				.updateTable("_PubFieldToPubType")
+				.set({ isTitle: true })
+				.where("A", "=", pubFieldId)
+				.where("B", "=", pubTypeId)
+		).execute();
+	});
+});
+
 export const removePubField = defineServerAction(async function removePubField(
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
@@ -53,7 +71,8 @@ export const createPubType = defineServerAction(async function addPubType(
 	name: string,
 	communityId: CommunitiesId,
 	description: string | undefined,
-	fields: PubFieldsId[]
+	fields: PubFieldsId[],
+	titleField: PubFieldsId
 ) {
 	const pubType = await autoRevalidate(
 		db
@@ -72,6 +91,7 @@ export const createPubType = defineServerAction(async function addPubType(
 				fields.map((id) => ({
 					A: id,
 					B: eb.selectFrom("newType").select("id"),
+					isTitle: titleField === id,
 				}))
 			)
 	).executeTakeFirst();
