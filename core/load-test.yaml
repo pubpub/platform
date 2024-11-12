@@ -26,4 +26,6 @@ config:
 scenarios:
     - flow:
           - get:
+                url: "/login"
+          - get:
                 url: "/forgot"
