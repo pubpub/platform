@@ -548,7 +548,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const member = await prisma.member.create({
+	const member = await prisma.communityMembership.create({
 		data: {
 			userId: user1.id,
 			communityId: communityUUID,
@@ -611,67 +611,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				order: "hh",
 			},
 		],
-	});
-
-	await prisma.permission.create({
-		data: {
-			member: {
-				connect: { id: member.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[0] }],
-			},
-			// pubs: {
-			// 	connect: [{ id: submission.id }],
-			// },
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			memberGroup: {
-				connect: { id: memberGroup.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[0] }],
-			},
-			// pubs: {
-			// 	connect: [{ id: submission.id }],
-			// },
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			memberGroup: {
-				connect: { id: memberGroup.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[1] }],
-			},
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			memberGroup: {
-				connect: { id: memberGroup.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[2] }],
-			},
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			member: {
-				connect: { id: member.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[3] }],
-			},
-		},
 	});
 
 	//  Submitted can be moved to: Consent, To Evaluate, Under Evaluation, Shelved

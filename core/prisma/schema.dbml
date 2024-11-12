@@ -21,10 +21,10 @@ Table users {
   actionRuns action_runs [not null]
   ApiAccessToken api_access_tokens [not null]
   Session sessions [not null]
-  FormMembership form_memberships [not null]
-  CommunityMembership community_memberships [not null]
-  PubMembership pub_memberships [not null]
-  StageMembership stage_memberships [not null]
+  formMemberships form_memberships [not null]
+  communityMemberships community_memberships [not null]
+  pubMemberships pub_memberships [not null]
+  stageMemberships stage_memberships [not null]
 }
 
 Table sessions {
@@ -88,7 +88,7 @@ Table pubs {
   IntegrationInstanceState IntegrationInstanceState [not null]
   actionRuns action_runs [not null]
   relatedValues pub_values [not null]
-  PubMembership pub_memberships [not null]
+  members pub_memberships [not null]
 }
 
 Table pub_fields {
@@ -178,7 +178,7 @@ Table stages {
   permissions permissions [not null]
   actionInstances action_instances [not null]
   formElements form_elements [not null]
-  StageMembership stage_memberships [not null]
+  members stage_memberships [not null]
 }
 
 Table PubsInStages {

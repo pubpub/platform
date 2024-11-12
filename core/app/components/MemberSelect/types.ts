@@ -1,11 +1,11 @@
-import type { Members, Users } from "db/public";
+import type { CommunityMemberships, Users } from "db/public";
 
 export type MemberSelectUserWithMembership = Omit<Users, "passwordHash"> & {
-	member: Members;
+	member: Omit<CommunityMemberships, "memberGroupId">;
 };
 
 export type MemberSelectUser = Omit<MemberSelectUserWithMembership, "member"> & {
-	member?: Members | null;
+	member?: Omit<CommunityMemberships, "memberGroupId"> | null;
 };
 
 export const isMemberSelectUserWithMembership = (

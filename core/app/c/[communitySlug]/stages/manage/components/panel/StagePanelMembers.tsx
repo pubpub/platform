@@ -17,7 +17,7 @@ const StagePanelMembersInner = async (props: PropsInner) => {
 		<Card>
 			<CardContent className="space-y-2 p-4">
 				<h4 className="mb-2 text-base font-semibold">Members</h4>
-				{members.map(({ user }) => (
+				{members.map((user) => (
 					<div key={user.id} className="flex items-center justify-between">
 						{user.firstName} {user.lastName}
 					</div>

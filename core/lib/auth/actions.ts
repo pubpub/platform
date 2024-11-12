@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { captureException } from "@sentry/nextjs";
 import { z } from "zod";
 
-import type { Communities, Members, Users, UsersId } from "db/public";
+import type { Communities, CommunityMemberships, Users, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import type { Prettify } from "../types";
@@ -25,14 +25,18 @@ const schema = z.object({
 
 type LoginUser = Prettify<
 	Omit<Users, "orcid" | "avatar"> & {
-		memberships: (Members & { community: Communities | null })[];
+		memberships: (CommunityMemberships & { community: Communities | null })[];
 	}
 >;
 
 const getUserWithPasswordHash = async (props: Parameters<typeof getUser>[0]) =>
 	getUser(props).select("users.passwordHash").executeTakeFirst();
 
-function redirectUser(memberships?: (Members & { community: Communities | null })[]): never {
+function redirectUser(
+	memberships?: (Omit<CommunityMemberships, "memberGroupId"> & {
+		community: Communities | null;
+	})[]
+): never {
 	if (!memberships?.length) {
 		redirect("/settings");
 	}

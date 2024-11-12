@@ -1,14 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { v4 as uuidv4 } from "uuid";
 
-import type { CommunitiesId, MembersId, PubTypesId, UsersId } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
-import { expect } from "utils";
+import type { CommunitiesId } from "db/public";
+import { MemberRole } from "db/public";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
-import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/auth/loginData";
@@ -59,26 +56,13 @@ export const createCommunity = defineServerAction(async function createCommunity
 						})
 						.returning("id")
 				)
-				.with("community_membership", (db) =>
-					db
-						.insertInto("community_memberships")
-						.values((eb) => ({
-							userId: user.id,
-							communityId: eb.selectFrom("new_community").select("new_community.id"),
-							role: MemberRole.admin,
-						}))
-						.returning("community_memberships.id")
-				)
-				.insertInto("members")
+				.insertInto("community_memberships")
 				.values((eb) => ({
-					id: eb
-						.selectFrom("community_membership")
-						.select("community_membership.id") as unknown as MembersId,
 					userId: user.id,
 					communityId: eb.selectFrom("new_community").select("new_community.id"),
 					role: MemberRole.admin,
 				}))
-				.returning("id"),
+				.returning("community_memberships.id"),
 			{ communitySlug: slug }
 		).executeTakeFirstOrThrow();
 		revalidatePath("/");
