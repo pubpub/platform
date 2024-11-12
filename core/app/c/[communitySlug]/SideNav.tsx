@@ -80,7 +80,7 @@ const ManageLinks = ({
 				text={"Workflows"}
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
-			{isSuperAdmin && (
+			{isAdmin && (
 				<NavLink
 					href={`${prefix}/stages/manage`}
 					text={"Stage editor"}

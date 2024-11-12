@@ -107,10 +107,19 @@ const _runActionInstance = async (
 	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {});
 
 	if (!parsedConfig.success) {
-		return {
+		const err = {
 			error: "Invalid config",
 			cause: parsedConfig.error,
 		};
+		if (args.actionInstanceArgs) {
+			// Check if the args passed can substitute for missing or invalid config
+			const argsParsedAsConfig = action.config.schema.safeParse(args.actionInstanceArgs);
+			if (!argsParsedAsConfig.success) {
+				return err;
+			}
+		} else {
+			return err;
+		}
 	}
 
 	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});

@@ -1,15 +1,16 @@
 import type { SyntheticEvent } from "react";
 
-import { useCallback, useTransition } from "react";
+import { useCallback, useEffect, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import type { Communities } from "db/public";
 import { MemberRole } from "db/public";
+import { logger } from "logger";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
@@ -40,6 +41,10 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 		},
 	});
 
+	useEffect(() => {
+		form.setValue("email", email);
+	}, [form, email]);
+
 	// NOTE: We run `form.handleSubmit` manually here because the UserSelect
 	// component may be used within a <form> and that breaks HTML semantics/
 	// a11y practices.
@@ -48,21 +53,30 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 			e.preventDefault();
 
 			startTransition(() => {
-				return form.handleSubmit(async ({ email, firstName, lastName }) => {
-					const result = await runCreateUserWithMembership({
-						email,
-						firstName,
-						lastName,
-						role: MemberRole.contributor,
-					});
-
-					if (didSucceed(result)) {
-						toast({
-							title: "Success",
-							description: "User successfully invited",
+				return form.handleSubmit(
+					async ({ email, firstName, lastName }) => {
+						const result = await runCreateUserWithMembership({
+							email,
+							firstName,
+							lastName,
+							role: MemberRole.contributor,
 						});
+
+						if (didSucceed(result)) {
+							toast({
+								title: "Success",
+								description: "User successfully invited",
+							});
+						}
+					},
+					(errors) => {
+						logger.warn({
+							msg: "user couldn't be created because of validation errors",
+							errors,
+						});
+						// TODO: we should render this error somewhere
 					}
-				})();
+				)();
 			});
 		},
 		[form, community]
@@ -86,7 +100,9 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 							render={({ field }) => (
 								<FormItem className="grid grid-cols-3 items-center gap-2">
 									<FormLabel>First Name</FormLabel>
-									<Input {...field} className="col-span-2 h-8" />
+									<FormControl>
+										<Input {...field} className="col-span-2 h-8" />
+									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -97,7 +113,9 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 							render={({ field }) => (
 								<FormItem className="grid grid-cols-3 items-center gap-2">
 									<FormLabel>Last Name</FormLabel>
-									<Input {...field} className="col-span-2 h-8" />
+									<FormControl>
+										<Input {...field} className="col-span-2 h-8" />
+									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}

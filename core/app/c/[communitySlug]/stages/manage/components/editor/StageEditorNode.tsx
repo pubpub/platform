@@ -12,6 +12,7 @@ import { Settings } from "ui/icon";
 import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
+import { slugifyString } from "~/lib/string";
 import { useStages } from "../../StagesContext";
 
 export const STAGE_NODE_WIDTH = 250;
@@ -73,9 +74,18 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 			ref={nodeRef}
 			tabIndex={0}
 			role="button"
+			data-testid={`stage-${slugifyString(props.data.stage.name)}`}
 		>
-			<Handle type="target" position={Position.Left} />
-			<Handle type="source" position={Position.Right} />
+			<Handle
+				type="target"
+				position={Position.Left}
+				data-testid={`move-constraint-target-handle`}
+			/>
+			<Handle
+				type="source"
+				position={Position.Right}
+				data-testid={`move-constraint-source-handle`}
+			/>
 			<div className="flex flex-col">
 				<div>
 					<p
@@ -83,6 +93,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 						contentEditable
 						suppressContentEditableWarning
 						ref={nameRef}
+						aria-label="Edit stage name"
 					>
 						{props.data.stage.name}
 					</p>
@@ -105,7 +116,10 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					</li>
 				</ul>
 			</div>
-			<Link href={`${pathname}?editingStageId=${props.data.stage.id}`}>
+			<Link
+				href={`${pathname}?editingStageId=${props.data.stage.id}`}
+				aria-label="Configure stage"
+			>
 				<Settings className="h-4 w-4" />
 			</Link>
 		</div>

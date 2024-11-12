@@ -4,7 +4,7 @@ import { logger } from "logger";
 
 import { env } from "./lib/env/env.mjs";
 
-logger.info("Running instrumentation hook for nodejs...");
+logger.info("Running instrumentation hook for edge...");
 
 if (env.NODE_ENV === "production") {
 	logger.info("Instrumenting Sentry...");

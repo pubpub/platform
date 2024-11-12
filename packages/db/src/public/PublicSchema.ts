@@ -8,7 +8,9 @@ import type { ApiAccessPermissionsTable } from "./ApiAccessPermissions";
 import type { ApiAccessTokensTable } from "./ApiAccessTokens";
 import type { AuthTokensTable } from "./AuthTokens";
 import type { CommunitiesTable } from "./Communities";
+import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
+import type { FormMembershipsTable } from "./FormMemberships";
 import type { FormsTable } from "./Forms";
 import type { FormToPermissionsTable } from "./FormToPermissions";
 import type { IntegrationInstancesTable } from "./IntegrationInstances";
@@ -26,16 +28,26 @@ import type { PrismaMigrationsTable } from "./PrismaMigrations";
 import type { PubFieldsTable } from "./PubFields";
 import type { PubFieldSchemaTable } from "./PubFieldSchema";
 import type { PubFieldToPubTypeTable } from "./PubFieldToPubType";
+import type { PubMembershipsTable } from "./PubMemberships";
 import type { PubsTable } from "./Pubs";
 import type { PubsInStagesTable } from "./PubsInStages";
 import type { PubTypesTable } from "./PubTypes";
 import type { PubValuesTable } from "./PubValues";
 import type { RulesTable } from "./Rules";
 import type { SessionsTable } from "./Sessions";
+import type { StageMembershipsTable } from "./StageMemberships";
 import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
+	community_memberships: CommunityMembershipsTable;
+
+	pub_memberships: PubMembershipsTable;
+
+	stage_memberships: StageMembershipsTable;
+
+	form_memberships: FormMembershipsTable;
+
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;

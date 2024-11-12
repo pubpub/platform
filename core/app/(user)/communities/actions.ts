@@ -3,13 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import type { CommunitiesId, PubTypesId, UsersId } from "db/public";
+import type { CommunitiesId, MembersId, PubTypesId, UsersId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
 import { corePubFields } from "~/actions/corePubFields";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/auth/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -46,20 +47,9 @@ export const createCommunity = defineServerAction(async function createCommunity
 		};
 	}
 	try {
-		const communityExists = await db
-			.selectFrom("communities")
-			.selectAll()
-			.where("slug", "=", `${slug}`)
-			.executeTakeFirst();
-
-		if (communityExists) {
-			return {
-				title: "Failed to create community",
-				error: "Community with that slug already exists",
-			};
-		} else {
-			const c = expect(
-				await autoRevalidate(
+		await autoRevalidate(
+			db
+				.with("new_community", (db) =>
 					db
 						.insertInto("communities")
 						.values({
@@ -67,216 +57,39 @@ export const createCommunity = defineServerAction(async function createCommunity
 							slug: slugifyString(slug),
 							avatar,
 						})
-						.returning(["id", "name", "slug", "avatar", "createdAt"]),
-					{ communitySlug: slug }
-				).executeTakeFirst()
-			);
-			const communityUUID = c.id as CommunitiesId;
-
-			const pubTypeId: string = uuidv4();
-
-			const corePubSlugs = corePubFields.map((field) => field.slug);
-
-			const memberPromise = autoRevalidate(
-				db
-					.insertInto("members")
-					.values({
-						userId: user.id as UsersId,
-						communityId: c.id as CommunitiesId,
-						role: MemberRole.admin,
-					})
-					.returning("id"),
-				{ communitySlug: c.slug }
-			).executeTakeFirst();
-
-			const pubFieldsPromise = autoRevalidate(
-				db
-					.insertInto("pub_fields")
-					.values([
-						{
-							name: "Title",
-							slug: `${slug}:title`,
-							communityId: communityUUID,
-							schemaName: CoreSchemaType.String,
-						},
-						{
-							name: "Content",
-							slug: `${slug}:content`,
-							communityId: communityUUID,
-							schemaName: CoreSchemaType.String,
-						},
-					])
-					.returning(["id", "slug"]),
-				{ communitySlug: slug }
-			).execute();
-
-			const [fields, member] = await Promise.all([pubFieldsPromise, memberPromise]);
-			const pubTypesPromise = autoRevalidate(
-				db
-					.with("core_pub_type", (db) =>
-						db
-							.insertInto("pub_types")
-							.values({
-								id: pubTypeId as PubTypesId,
-								name: "Submission",
-								communityId: c.id as CommunitiesId,
-							})
-							.returning("id")
-					)
-					.insertInto("_PubFieldToPubType")
-					.values((eb) =>
-						fields.map((field) => ({
-							A: field.id,
-							B: eb.selectFrom("core_pub_type").select("id"),
+						.returning("id")
+				)
+				.with("community_membership", (db) =>
+					db
+						.insertInto("community_memberships")
+						.values((eb) => ({
+							userId: user.id,
+							communityId: eb.selectFrom("new_community").select("new_community.id"),
+							role: MemberRole.admin,
 						}))
-					),
-				{ communitySlug: slug }
-			).execute();
-
-			const stagesPromise = autoRevalidate(
-				db
-					.insertInto("stages")
-					.values([
-						{
-							communityId: communityUUID,
-							name: "Submitted",
-							order: "aa",
-						},
-						{
-							communityId: communityUUID,
-							name: "Ask Author for Consent",
-							order: "bb",
-						},
-						{
-							communityId: communityUUID,
-							name: "To Evaluate",
-							order: "cc",
-						},
-						{
-							communityId: communityUUID,
-							name: "Under Evaluation",
-							order: "dd",
-						},
-						{
-							communityId: communityUUID,
-							name: "In Production",
-							order: "ff",
-						},
-						{
-							communityId: communityUUID,
-							name: "Published",
-							order: "gg",
-						},
-						{
-							communityId: communityUUID,
-							name: "Shelved",
-							order: "hh",
-						},
-					])
-					.returning("id"),
-				{ communitySlug: slug }
-			).execute();
-
-			const [_, stagesReturn] = await Promise.all([pubTypesPromise, stagesPromise]);
-			const stages = stagesReturn.map((stage) => stage.id);
-
-			const permissionPromise = autoRevalidate(
-				db
-					.with("new_permission", (db) =>
-						db
-							.insertInto("permissions")
-							.values({
-								memberId: member?.id,
-							})
-							.returning("id")
-					)
-					.insertInto("_PermissionToStage")
-					.values((eb) => [
-						{
-							A: eb.selectFrom("new_permission").select("id"),
-							B: stages[0],
-						},
-						{
-							A: eb.selectFrom("new_permission").select("id"),
-							B: stages[1],
-						},
-						{
-							A: eb.selectFrom("new_permission").select("id"),
-							B: stages[2],
-						},
-						{
-							A: eb.selectFrom("new_permission").select("id"),
-							B: stages[3],
-						},
-					]),
-				{ communitySlug: slug }
-			).execute();
-
-			const moveConstraintPromise = autoRevalidate(
-				db.insertInto("move_constraint").values([
-					{
-						//  Submitted can be moved to: Consent, To Evaluate, Under Evaluation, Shelved
-						stageId: stages[0],
-						destinationId: stages[1],
-					},
-					{
-						stageId: stages[1],
-						destinationId: stages[2],
-					},
-					{
-						stageId: stages[2],
-						destinationId: stages[3],
-					},
-					{
-						stageId: stages[3],
-						destinationId: stages[4],
-					},
-					{
-						stageId: stages[4],
-						destinationId: stages[5],
-					},
-				]),
-				{ communitySlug: slug }
-			).execute();
-
-			const createPubPromise = autoRevalidate(
-				db
-					.with("new_pubs", (db) =>
-						db
-							.insertInto("pubs")
-							.values({
-								communityId: communityUUID,
-								pubTypeId: pubTypeId as PubTypesId,
-							})
-							.returning("id")
-					)
-					.with("pubs_in_stages", (db) =>
-						db.insertInto("PubsInStages").values((eb) => [
-							{
-								pubId: eb.selectFrom("new_pubs").select("id"),
-								stageId: stages[0],
-							},
-						])
-					)
-					.insertInto("pub_values")
-					.values((eb) => [
-						{
-							pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-							fieldId: fields.find((field) => field.slug === `${slug}:title`)!.id,
-							value: '"The Activity of Slugs I. The Induction of Activity by Changing Temperatures"',
-						},
-						{
-							pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
-							fieldId: fields.find((field) => field.slug === `${slug}:content`)!.id,
-							value: '"LONG LIVE THE SLUGS"',
-						},
-					]),
-				{ communitySlug: slug }
-			).execute();
-			await Promise.all([permissionPromise, moveConstraintPromise, createPubPromise]);
-		}
+						.returning("community_memberships.id")
+				)
+				.insertInto("members")
+				.values((eb) => ({
+					id: eb
+						.selectFrom("community_membership")
+						.select("community_membership.id") as unknown as MembersId,
+					userId: user.id,
+					communityId: eb.selectFrom("new_community").select("new_community.id"),
+					role: MemberRole.admin,
+				}))
+				.returning("id"),
+			{ communitySlug: slug }
+		).executeTakeFirstOrThrow();
 		revalidatePath("/");
 	} catch (error) {
+		if (isUniqueConstraintError(error) && error.constraint === "communities_slug_key") {
+			return {
+				title: "Failed to create community",
+				error: "A community with that slug already exists",
+				cause: error,
+			};
+		}
 		return {
 			title: "Failed to create community",
 			error: "An unexpected error occurred",

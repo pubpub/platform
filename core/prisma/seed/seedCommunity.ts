@@ -12,10 +12,12 @@ import type {
 	ActionInstancesId,
 	Communities,
 	CommunitiesId,
+	CommunityMembershipsId,
 	FormAccessType,
 	FormElements,
 	Forms,
 	FormsId,
+	MembersId,
 	NewMembers,
 	PubFields,
 	PubsId,
@@ -52,7 +54,7 @@ export type PubFieldsInitializer = Record<
 
 type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	string,
-	Partial<Record<keyof PF, true>>
+	Partial<Record<keyof PF, { isTitle: boolean }>>
 >;
 
 /**
@@ -370,7 +372,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 		const input = {
 			communityId: community.id,
-			// @ts-expect-error Cant assign a different trx to a trx, technically
 			trx,
 			body: {
 				id: rootPubId,
@@ -412,7 +413,9 @@ type CommunitySeedInput = {
 
 // ========
 // These are helper types to make the output of the seeding functions match the input more closely.
-type PubFieldsByName<PF> = { [K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } };
+type PubFieldsByName<PF> = {
+	[K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean };
+};
 
 type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
@@ -497,7 +500,7 @@ export async function seedCommunity<
 		 * 	},
 		 * 	pubTypes: {
 		 * 		Article: {
-		 * 			Title: "A Great Article",
+		 * 			Title: { isTitle: true },
 		 * 		}
 		 * }
 		 * ```
@@ -739,7 +742,8 @@ export async function seedCommunity<
 					.insertInto("_PubFieldToPubType")
 					.values(
 						pubTypesList.flatMap(([pubTypeName, fields], idx) =>
-							Object.keys(fields).flatMap((field) => {
+							Object.entries(fields).flatMap(([field, meta]) => {
+								const isTitle = meta?.isTitle ?? false;
 								const fieldId = createdPubFields.find(
 									(createdField) => createdField.name === field
 								)?.id;
@@ -754,6 +758,7 @@ export async function seedCommunity<
 									{
 										A: fieldId,
 										B: pubTypeId,
+										isTitle,
 									},
 								];
 							})
@@ -776,7 +781,10 @@ export async function seedCommunity<
 								(pubField) => pubField.id === pubFieldToPubType.A
 							)!;
 
-							return [pubField.name, pubField] as const;
+							return [
+								pubField.name,
+								{ ...pubField, isTitle: pubFieldToPubType.isTitle },
+							] as const;
 						})
 				),
 			},
@@ -816,6 +824,7 @@ export async function seedCommunity<
 
 			return [
 				{
+					id: crypto.randomUUID() as MembersId,
 					userId: createdUser.id,
 					communityId,
 					role: userWithRole.role!,
@@ -824,7 +833,24 @@ export async function seedCommunity<
 		});
 
 	const createdMembers = possibleMembers?.length
-		? await trx.insertInto("members").values(possibleMembers).returningAll().execute()
+		? await trx
+				.with("community_membership", (db) =>
+					db.insertInto("community_memberships").values(
+						possibleMembers.map((m) => ({
+							...m,
+							id: m.id as unknown as CommunityMembershipsId,
+						}))
+					)
+				)
+				.insertInto("members")
+				.values(
+					possibleMembers.map((m) => ({
+						...m,
+						id: m.id as MembersId,
+					}))
+				)
+				.returningAll()
+				.execute()
 		: [];
 
 	const usersWithMemberShips = createdUsers.map((user) => ({
