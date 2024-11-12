@@ -1,3 +1,5 @@
+import type { EditorState } from "prosemirror-state";
+
 import React, { useMemo, useState } from "react";
 import JsonView from "@uiw/react-json-view";
 
@@ -5,18 +7,18 @@ import { getPubValues } from "../../utils/pubValues";
 import initialPubs from "../initialPubs.json";
 import initialTypes from "../initialTypes.json";
 
-const getPubTypeName = (pubTypeId) => {
+const getPubTypeName = (pubTypeId: string) => {
 	return initialTypes.find((type) => {
 		return type.id === pubTypeId;
 	})?.name;
 };
 
-function buildNestedList(pubs) {
+function buildNestedList(pubs: any) {
 	// Create a map to hold references to each object by its id
-	const pubMap = {};
+	const pubMap: { [key: string]: any } = {};
 
 	// Loop through the list again to build the hierarchy
-	pubs.forEach((pub) => {
+	pubs.forEach((pub: any) => {
 		const parentId = pub.parentId || pub.parentPubId;
 
 		if (!parentId) {
@@ -30,7 +32,7 @@ function buildNestedList(pubs) {
 		// }
 	});
 
-	pubs.forEach((pub) => {
+	pubs.forEach((pub: any) => {
 		const parentId = pub.parentId || pub.parentPubId;
 
 		if (parentId) {
@@ -41,8 +43,8 @@ function buildNestedList(pubs) {
 	return Object.values(pubMap);
 }
 
-const PubList = (props) => {
-	return props.list.map((item) => {
+const PubList = (props: any) => {
+	return props.list.map((item: any) => {
 		return (
 			<div className="truncate pl-8" key={item.pubId || item.id}>
 				<span className="font-bold">{getPubTypeName(item.pubTypeId)}</span>:{" "}
@@ -57,7 +59,7 @@ const PubList = (props) => {
 	});
 };
 
-function filterDuplicatesById(arr) {
+function filterDuplicatesById(arr: any[]) {
 	const seenIds = new Set();
 
 	return arr.filter((obj) => {
@@ -71,8 +73,13 @@ function filterDuplicatesById(arr) {
 	});
 }
 
-export default function PubsPanel({ editorState, pubId }) {
-	const pubValues = getPubValues(editorState, pubId);
+type Props = {
+	editorState: EditorState;
+	pubId: string;
+};
+
+export default function PubsPanel({ editorState, pubId }: Props) {
+	const pubValues: { [key: string]: any } = getPubValues(editorState, pubId);
 	const allPubs = filterDuplicatesById([...initialPubs, ...Object.values(pubValues)]);
 	// console.log("allPubs", allPubs);
 	const nestedPubs = buildNestedList(allPubs);

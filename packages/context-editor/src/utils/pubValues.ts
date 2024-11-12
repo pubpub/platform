@@ -2,7 +2,7 @@ import deepMerge from "deepmerge";
 import { EditorState } from "prosemirror-state";
 
 export const getPubValues = (editorState: EditorState, pubId: string) => {
-	const editedPubs = {};
+	const editedPubs: { [key: string]: { id: string; pubTypeId: string; values: any } } = {};
 	editedPubs[pubId] = {
 		id: pubId,
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",

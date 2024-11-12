@@ -40,10 +40,12 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 	const labelClass = "font-normal text-xs";
 	const inputClass = "h-8 text-xs rounded-sm border-neutral-300";
 	const node = position.node;
-	// if (!node) {
-	// 	return null;
-	// }
-	const updateAttr = (attrKey, value) => {
+	if (!node) {
+		return null;
+	}
+	const nodeAttrs = node.attrs || {};
+	const nodeMarks = node.marks || [];
+	const updateAttr = (attrKey: string, value: string) => {
 		setPosition({
 			...position,
 			node: {
@@ -60,9 +62,9 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 			)
 		);
 	};
-	const updateMarkAttr = (index, attrKey, value) => {
-		console.log(node);
-		const markToReplace = node.marks[index];
+	const updateMarkAttr = (index: number, attrKey: string, value: string) => {
+		// console.log(node);
+		const markToReplace = nodeMarks[index];
 		// const newMarks = [...node.marks];
 		// newMarks[index].attrs[attrKey] = value;
 		// setPosition({
@@ -77,27 +79,31 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 			[attrKey]: value,
 		});
 
+		if (!newMark) {
+			return null;
+		}
+
 		viewRef.current?.dispatch(
 			viewRef.current.state.tr.addMark(
 				panelPosition.pos,
-				panelPosition.pos + node.nodeSize,
+				panelPosition.pos + (node.nodeSize || 0),
 				newMark
 			)
 		);
 	};
-	const updateData = (attrKey, value) => {
+	const updateData = (attrKey: string, value: string) => {
 		setPosition({
 			...position,
 			node: {
 				...node,
-				attrs: { ...node.attrs, data: { ...node.attrs.data, [attrKey]: value } },
+				attrs: { ...nodeAttrs, data: { ...nodeAttrs.data, [attrKey]: value } },
 			},
 		});
 		viewRef.current?.dispatch(
 			viewRef.current.state.tr.setNodeMarkup(
 				panelPosition.pos,
 				node.type,
-				{ ...node.attrs, data: { ...node.attrs.data, [attrKey]: value } },
+				{ ...node.attrs, data: { ...nodeAttrs.data, [attrKey]: value } },
 				node.marks
 			)
 		);
@@ -129,7 +135,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 					}}
 				>
 					<div className="text-sm">Attributes</div>
-					{Object.keys(node.attrs).map((attrKey) => {
+					{Object.keys(nodeAttrs).map((attrKey) => {
 						if (attrKey === "data") {
 							return null;
 						}
@@ -139,7 +145,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 								<Input
 									className={inputClass}
 									type="text"
-									value={node.attrs[attrKey] || ""}
+									value={nodeAttrs[attrKey] || ""}
 									onChange={(evt) => {
 										updateAttr(attrKey, evt.target.value);
 									}}
@@ -147,8 +153,8 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 							</div>
 						);
 					})}
-					{!!node.marks.length &&
-						node.marks.map((mark, index) => {
+					{!!nodeMarks.length &&
+						nodeMarks.map((mark, index) => {
 							return (
 								<div key={mark.type.name}>
 									<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
@@ -178,17 +184,17 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 							);
 						})}
 
-					{node.attrs.data && (
+					{nodeAttrs.data && (
 						<>
 							<div className="mt-8 text-sm">Data</div>
-							{Object.keys(node.attrs.data).map((attrKey) => {
+							{Object.keys(nodeAttrs.data).map((attrKey) => {
 								return (
 									<div key={attrKey}>
 										<Label className={labelClass}>{attrKey}</Label>
 										<Input
 											className={inputClass}
 											type="text"
-											value={node.attrs.data[attrKey] || ""}
+											value={nodeAttrs.data[attrKey] || ""}
 											onChange={(evt) => {
 												updateData(attrKey, evt.target.value);
 											}}

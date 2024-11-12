@@ -12,15 +12,16 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 		if (span) {
 			const rect = span.getBoundingClientRect();
 			const container = document.getElementById("context-editor-container");
-			const topOffset = -1 * container.getBoundingClientRect().top + container.scrollTop + 16;
-			setPosition([rect.top + 20 + topOffset, rect.left]);
-			// console.log("just set it");
+			if (container) {
+				const topOffset =
+					-1 * container.getBoundingClientRect().top + container.scrollTop + 16;
+				setPosition([rect.top + 20 + topOffset, rect.left]);
+			}
 		}
 	}, [isOpen, filter]);
 	if (!isOpen) {
 		return null;
 	}
-	// console.log(items);
 	return (
 		<div
 			className="w-80 p-2"

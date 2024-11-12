@@ -43,7 +43,7 @@ export interface PanelProps {
 	right: number | string;
 	bottom: number;
 	pos: number;
-	node?: Node;
+	node?: Partial<Node>;
 }
 
 const initPanelProps: PanelProps = {
