@@ -10,6 +10,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useForm } from "react-hook-form";
 import { componentConfigSchemas, componentsBySchema } from "schemas";
 
+import type { PubTypesId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
@@ -168,6 +169,8 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 						pubs={[]}
 						pubTypes={[]}
 						onChange={() => {}}
+						// Casting since this is a demo component where the pubTypeId doesn't really matter
+						pubTypeId={"" as PubTypesId}
 						className="-ml-6 -mt-6 h-16 w-full"
 					/>
 				</div>
