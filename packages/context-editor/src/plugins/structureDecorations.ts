@@ -26,12 +26,12 @@ function wrapWidget(
 			if (node.type.name.includes("context")) {
 				const currentPubId = node.attrs.pubId;
 				const currentPubTypeId = node.attrs.pubTypeId;
-				const currentPubType = pubTypes.find((pubType) => {
+				const currentPubType = pubTypes.find((pubType: any) => {
 					return pubType.id === currentPubTypeId;
 				});
 
 				const currentFieldSlug = node.attrs.fieldSlug || "rd:content";
-				const currentField = currentPubType.fields.find((field) => {
+				const currentField = currentPubType.fields.find((field: any) => {
 					return field.slug === currentFieldSlug;
 				});
 				const currentTypeName = currentPubType.name;
@@ -52,16 +52,18 @@ function wrapWidget(
 				if (evt.target instanceof Element) {
 					const rect = evt.target.getBoundingClientRect();
 					const container = document.getElementById("context-editor-container");
-					const topOffset =
-						-1 * container.getBoundingClientRect().top + container.scrollTop + 16;
-					setPanelPosition({
-						top: isBlock ? rect.top + 4 + topOffset : rect.top - 17 + topOffset,
-						left: rect.left,
-						bottom: rect.bottom,
-						right: -250,
-						pos,
-						node,
-					});
+					if (container) {
+						const topOffset =
+							-1 * container.getBoundingClientRect().top + container.scrollTop + 16;
+						setPanelPosition({
+							top: isBlock ? rect.top + 4 + topOffset : rect.top - 17 + topOffset,
+							left: rect.left,
+							bottom: rect.bottom,
+							right: -250,
+							pos,
+							node,
+						});
+					}
 				}
 			});
 		}

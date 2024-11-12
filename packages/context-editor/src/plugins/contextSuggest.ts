@@ -1,4 +1,5 @@
 import type { Options } from "prosemirror-autocomplete";
+import type { EditorView } from "prosemirror-view";
 
 import fuzzy from "fuzzy";
 import autocomplete from "prosemirror-autocomplete";
@@ -7,23 +8,23 @@ import { v4 as uuidv4 } from "uuid";
 import type { SuggestProps } from "../ContextEditor";
 import { reactPropsKey } from "./reactProps";
 
-const updateItems = async (view, filter) => {
+const updateItems = async (view: EditorView, filter: string) => {
 	const { pubTypes, getPubs, getPubsById, pubTypeId, suggestData, setSuggestData } =
 		reactPropsKey.getState(view.state);
 	const newTypeItems = fuzzy
 		.filter(filter || "", pubTypes, {
-			extract: (el) => {
+			extract: (el: any) => {
 				return el.name;
 			},
 		})
 		.map((result) => result.original);
-	const currentPubType = pubTypes.find((pubType) => {
+	const currentPubType = pubTypes.find((pubType: any) => {
 		return pubType.id === pubTypeId;
 	});
 	// const newFieldItems = currentPubType.fields;
 	const newFieldItems = fuzzy
 		.filter(filter || "", currentPubType.fields, {
-			extract: (el) => {
+			extract: (el: any) => {
 				return el.name;
 			},
 		})
@@ -54,7 +55,7 @@ export default (
 			{ name: "reference", trigger: "@" },
 		],
 		onOpen: ({ view, range, filter, trigger, type }) => {
-			updateItems(view, filter);
+			updateItems(view, filter || "");
 			return true;
 		},
 		onArrow: ({ view, kind }) => {
@@ -77,7 +78,7 @@ export default (
 			return true;
 		},
 		onFilter: ({ view, filter }) => {
-			updateItems(view, filter);
+			updateItems(view, filter || "");
 			return true;
 		},
 		onEnter: ({ view, range }) => {
@@ -93,7 +94,7 @@ export default (
 			const selectedItemIsField = selectedItem.schemaName;
 			const selectedTypeId =
 				selectedItem.pubTypeId || selectedItem.parentTypeId || selectedItem.id;
-			const selectedType = pubTypes.find((pubType) => {
+			const selectedType = pubTypes.find((pubType: any) => {
 				return pubType.id === selectedTypeId;
 			});
 
@@ -116,7 +117,7 @@ export default (
 				fieldSlug = isAtom ? "" : "rd:content";
 			} else {
 				/* If they chose a type, we're making something new */
-				isAtom = !selectedItem.fields.some((field) => {
+				isAtom = !selectedItem.fields.some((field: any) => {
 					return field.slug === "rd:content";
 				});
 				pubId = uuidv4();
@@ -136,8 +137,8 @@ export default (
 
 			// console.log("initialContent", initialContent);
 			const selectedItemFields = selectedType.fields
-				.map((field) => field.slug)
-				.reduce((prev, curr) => {
+				.map((field: any) => field.slug)
+				.reduce((prev: any, curr: any) => {
 					return { ...prev, [curr]: "" };
 				}, {});
 			const tr = view.state.tr.replaceRangeWith(

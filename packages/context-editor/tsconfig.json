@@ -5,6 +5,6 @@
 		"jsx": "react",
 		"resolveJsonModule": true
 	},
-	"include": ["."],
+	"include": [".", ".d.ts"],
 	"exclude": ["dist", "build", "node_modules"]
 }

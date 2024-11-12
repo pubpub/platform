@@ -1,10 +1,16 @@
+import type { EditorState } from "prosemirror-state";
+
 import React, { useMemo, useState } from "react";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { renderToString } from "react-dom/server";
 
 import ContextAtom from "../AtomRenderer";
 
-export default function JsonPanel({ editorState }) {
+type Props = {
+	editorState: EditorState;
+};
+
+export default function JsonPanel({ editorState }: Props) {
 	const [style, setStyle] = useState("base");
 	let div;
 
