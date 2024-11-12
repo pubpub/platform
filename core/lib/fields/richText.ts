@@ -53,14 +53,14 @@ export const parseRichTextForPubFieldsAndRelatedPubs = ({
 	newValues,
 }: {
 	pubId: PubsId;
-	elements: { slug: string; schemaName: CoreSchemaType }[];
+	elements: { slug: string | null; schemaName: CoreSchemaType | null }[];
 	newValues: Record<string, JsonValue>;
 }) => {
 	const payload: Record<string, JsonValue> = { ...newValues };
 	const pubs: PubCreate[] = [];
 	const richTextElement = elements.filter((e) => e.schemaName === CoreSchemaType.RichText)[0];
 	// If there is no rich text field, do not alter any fields
-	if (!richTextElement) {
+	if (!richTextElement || !richTextElement.slug) {
 		return { values: payload, relatedPubs: pubs };
 	}
 	const richTextValue = newValues[richTextElement.slug];

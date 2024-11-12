@@ -1,5 +1,5 @@
 import { getPubValues } from "context-editor";
-import { describe, expect, it, test, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
