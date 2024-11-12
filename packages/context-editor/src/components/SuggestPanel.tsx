@@ -13,9 +13,10 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 			const rect = span.getBoundingClientRect();
 			const container = document.getElementById("context-editor-container");
 			if (container) {
-				const topOffset =
-					-1 * container.getBoundingClientRect().top + container.scrollTop + 16;
-				setPosition([rect.top + 20 + topOffset, rect.left]);
+				const containerBound = container.getBoundingClientRect();
+				const topOffset = -1 * containerBound.top + container.scrollTop + 16;
+				const leftOffset = -1 * containerBound.left + 16;
+				setPosition([rect.top + 20 + topOffset, rect.left + leftOffset]);
 			}
 		}
 	}, [isOpen, filter]);
