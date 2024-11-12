@@ -47,38 +47,31 @@ const EditorFormElement = ({
 	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
 	const [initialDoc] = useState(initialValue);
 
-	const memoEditor = useMemo(() => {
-		if (!pubTypeId) {
-			// throw error? does editor require pubTypeId?
-			// or it might mean we are using this component without the context setup
-			return null;
-		}
-		return (
-			<ContextEditorClient
-				pubId={pubId}
-				pubs={pubs}
-				pubTypes={pubTypes}
-				pubTypeId={pubTypeId}
-				onChange={(state) => {
-					// Control changing the state more granularly or else the dirty field will trigger on load
-					// Since we can't control the dirty state directly, even this workaround does not handle the case of
-					// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
-					const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
-					if (hasChanged) {
-						onChange(state);
-					}
-				}}
-				initialDoc={initialDoc}
-				disabled={disabled}
-			/>
-		);
-	}, [onChange]);
-
 	return (
 		<FormItem>
 			<FormLabel className="flex">{label}</FormLabel>
 			<div className="w-full">
-				<FormControl>{memoEditor}</FormControl>
+				<FormControl>
+					{pubTypeId ? (
+						<ContextEditorClient
+							pubId={pubId}
+							pubs={pubs}
+							pubTypes={pubTypes}
+							pubTypeId={pubTypeId}
+							onChange={(state) => {
+								// Control changing the state more granularly or else the dirty field will trigger on load
+								// Since we can't control the dirty state directly, even this workaround does not handle the case of
+								// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
+								const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
+								if (hasChanged) {
+									onChange(state);
+								}
+							}}
+							initialDoc={initialDoc}
+							disabled={disabled}
+						/>
+					) : null}
+				</FormControl>
 			</div>
 			<FormDescription>{help}</FormDescription>
 			<FormMessage />
