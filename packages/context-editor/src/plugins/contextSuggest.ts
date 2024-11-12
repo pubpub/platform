@@ -1,9 +1,10 @@
+import { randomUUID } from "crypto";
+
 import type { Options } from "prosemirror-autocomplete";
 import type { EditorView } from "prosemirror-view";
 
 import fuzzy from "fuzzy";
 import autocomplete from "prosemirror-autocomplete";
-import { v4 as uuidv4 } from "uuid";
 
 import type { SuggestProps } from "../ContextEditor";
 import { reactPropsKey } from "./reactProps";
@@ -120,7 +121,7 @@ export default (
 				isAtom = !selectedItem.fields.some((field: any) => {
 					return field.slug === "rd:content";
 				});
-				pubId = uuidv4();
+				pubId = randomUUID();
 				fieldSlug = isAtom ? "" : "rd:content";
 			}
 			/* 
