@@ -64,9 +64,6 @@ const EditorFormElement = ({
 					// Since we can't control the dirty state directly, even this workaround does not handle the case of
 					// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
 					const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
-					// TODO: there's a bug here—inserting @sub doesn't replace the content if we check for hasChanged first
-					// might need a different way to control dirty state, or make a change on the editor side?
-					// Only happens if it's the first node though
 					if (hasChanged) {
 						onChange(state);
 					}
