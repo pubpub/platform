@@ -31,7 +31,10 @@ import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
-import { serializeProseMirrorDoc } from "~/lib/fields/richText";
+import {
+	parseRichTextForPubFieldsAndRelatedPubs,
+	serializeProseMirrorDoc,
+} from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";
@@ -55,20 +58,28 @@ const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 };
 
 const preparePayload = ({
+	pubId,
 	formElements,
 	formValues,
 	formState,
 	toggleContext,
 }: {
+	pubId: PubsId;
 	formElements: PubPubForm["elements"];
 	formValues: FieldValues;
 	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
 }) => {
+	const payload: Record<string, JsonValue> = {};
+	// First, check if any fields should be overwritten by data from a rich text field
+	const { values } = parseRichTextForPubFieldsAndRelatedPubs({
+		pubId,
+		elements: formElements,
+		newValues: formValues,
+	});
 	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
-	const payload: Record<string, JsonValue> = {};
 	for (const { slug, schemaName } of formElements) {
 		if (
 			slug &&
@@ -78,8 +89,8 @@ const preparePayload = ({
 		) {
 			payload[slug] =
 				schemaName === CoreSchemaType.RichText
-					? serializeProseMirrorDoc(formValues[slug])
-					: formValues[slug];
+					? serializeProseMirrorDoc(values[slug] as any)
+					: values[slug];
 		}
 	}
 	return payload;
@@ -201,6 +212,7 @@ export const ExternalFormWrapper = ({
 			autoSave = false
 		) => {
 			const pubValues = preparePayload({
+				pubId,
 				formElements,
 				formValues,
 				formState: formInstance.formState,
