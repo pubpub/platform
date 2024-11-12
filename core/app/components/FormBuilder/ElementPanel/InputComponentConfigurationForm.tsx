@@ -162,16 +162,15 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		name: "Rich Text",
 		demoComponent: () => {
 			return (
-				// Negative margins to make things look ok while ContextEditor doesn't expose styling
-				<div className="-mt-4 w-full text-sm">
-					<div className="text-gray-500">Label</div>
+				<div className="isolate h-full w-full text-sm">
+					<div className="relative z-10 bg-white text-gray-500">Label</div>
 					<ContextEditorClient
 						pubs={[]}
 						pubTypes={[]}
 						onChange={() => {}}
 						// Casting since this is a demo component where the pubTypeId doesn't really matter
 						pubTypeId={"" as PubTypesId}
-						className="-ml-6 -mt-6 h-16 w-full"
+						className="-ml-6 -mt-4 h-full w-full overflow-scroll"
 					/>
 				</div>
 			);

@@ -56,9 +56,10 @@ export const ContextEditorClient = ({
 				onChange={onChange}
 				initialDoc={initialDoc}
 				disabled={disabled}
+				className={className}
 			/>
 		);
 	}, [pubs, pubTypes, disabled]);
 
-	return <div className={cn(className)}>{memoEditor}</div>;
+	return memoEditor;
 };
