@@ -1,442 +1,442 @@
 {
-    "type": "doc",
-    "attrs": {
-        "meta": {}
-    },
-    "content": [
-        {
-            "type": "heading",
-            "attrs": {
-                "level": 3,
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Introduction"
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "Quantum biology"
-                },
-                {
-                    "type": "text",
-                    "text": " is an emerging field that seeks to explain biological processes through the principles of quantum mechanics. While traditional biological models rely on classical physics, recent research has explored the "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "quantum effects"
-                },
-                {
-                    "type": "text",
-                    "text": " in photosynthesis, enzyme catalysis, and even "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "cellular regeneration"
-                },
-                {
-                    "type": "text",
-                    "text": " (Smith et al., 2021). One theory proposes that quantum flux—defined as the movement of quantum particles across fields—could potentially accelerate "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "cellular repair"
-                },
-                {
-                    "type": "text",
-                    "text": " by interacting with "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "subatomic particles"
-                },
-                {
-                    "type": "text",
-                    "text": " within cells (Jones & Ray, 2023)."
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "In this paper, we aim to evaluate the efficacy of "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "quantum flux transmutation"
-                },
-                {
-                    "type": "text",
-                    "text": " as a tool for enhancing cellular regeneration. We hypothesize that modulating quantum flux will result in faster tissue recovery times in "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "in vitro"
-                },
-                {
-                    "type": "text",
-                    "text": " models compared to control groups."
-                }
-            ]
-        },
-        {
-            "type": "heading",
-            "attrs": {
-                "level": 3,
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Materials and Methods"
-                }
-            ]
-        },
-        {
-            "type": "heading",
-            "attrs": {
-                "level": 4,
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Quantum Flux Modulation Device"
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "To simulate the trampoline effect, we employed an external piezoelectric actuator capable of generating oscillatory motions at frequencies ranging from 1 Hz to 100 kHz. The nano-particles were subjected to these oscillations, allowing us to observe their dynamic behavior under varying force magnitudes and frequencies. Real-time tracking was achieved using high-resolution scanning electron microscopy (SEM) and atomic force microscopy (AFM), providing insights into particle displacement, energy transfer, and oscillatory patterns."
-                }
-            ]
-        },
-        {
-            "type": "contextAtom",
-            "attrs": {
-                "id": null,
-                "class": null,
-                "pubId": "0f021008-bf95-4afc-9f45-bafe584a0432",
+	"type": "doc",
+	"attrs": {
+		"meta": {}
+	},
+	"content": [
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 3,
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Introduction"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "Quantum biology"
+				},
+				{
+					"type": "text",
+					"text": " is an emerging field that seeks to explain biological processes through the principles of quantum mechanics. While traditional biological models rely on classical physics, recent research has explored the "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "quantum effects"
+				},
+				{
+					"type": "text",
+					"text": " in photosynthesis, enzyme catalysis, and even "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "cellular regeneration"
+				},
+				{
+					"type": "text",
+					"text": " (Smith et al., 2021). One theory proposes that quantum flux—defined as the movement of quantum particles across fields—could potentially accelerate "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "cellular repair"
+				},
+				{
+					"type": "text",
+					"text": " by interacting with "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "subatomic particles"
+				},
+				{
+					"type": "text",
+					"text": " within cells (Jones & Ray, 2023)."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "In this paper, we aim to evaluate the efficacy of "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "quantum flux transmutation"
+				},
+				{
+					"type": "text",
+					"text": " as a tool for enhancing cellular regeneration. We hypothesize that modulating quantum flux will result in faster tissue recovery times in "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "in vitro"
+				},
+				{
+					"type": "text",
+					"text": " models compared to control groups."
+				}
+			]
+		},
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 3,
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Materials and Methods"
+				}
+			]
+		},
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 4,
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Quantum Flux Modulation Device"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "To simulate the trampoline effect, we employed an external piezoelectric actuator capable of generating oscillatory motions at frequencies ranging from 1 Hz to 100 kHz. The nano-particles were subjected to these oscillations, allowing us to observe their dynamic behavior under varying force magnitudes and frequencies. Real-time tracking was achieved using high-resolution scanning electron microscopy (SEM) and atomic force microscopy (AFM), providing insights into particle displacement, energy transfer, and oscillatory patterns."
+				}
+			]
+		},
+		{
+			"type": "contextAtom",
+			"attrs": {
+				"id": null,
+				"class": null,
+				"pubId": "0f021008-bf95-4afc-9f45-bafe584a0432",
 				"parentPubId": "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
-                "pubTypeId": "9956ccd9-50b5-42b1-a14b-199eb26f2a12",
-                "fieldSlug": "",
-                "data": {
-                    "rd:source": "/image1.jpeg",
-                    "rd:alt": "Hello!"
-                }
-            }
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "The trampolines were fabricated using polydimethylsiloxane (PDMS) substrates, which were spin-coated onto glass slides to achieve a uniform thickness of approximately 100 nanometers. The nano-particles, comprising gold (Au) and silica (SiO₂) spheres ranging in diameter from 10 to 50 nanometers, were deposited onto the PDMS surface via self-assembly techniques. This allowed for a controlled dispersion of particles across the trampoline's surface."
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "For quantitative analysis, particle trajectories were extracted from the high-speed microscopy footage, and displacement data was plotted against the oscillation frequencies. Fourier transforms were applied to the data to identify resonant frequencies, where the particles exhibited maximum displacement. The energy dissipation of particles during oscillation was calculated based on velocity and trajectory length, offering a detailed understanding of the interactions between the particles and the elastic substrate."
-                }
-            ]
-        },
-        {
-            "type": "contextAtom",
-            "attrs": {
-                "id": null,
-                "class": null,
-                "pubId": "8b16c459-51b5-33b1-2b4b-177eb26f2cc5",
+				"pubTypeId": "9956ccd9-50b5-42b1-a14b-199eb26f2a12",
+				"fieldSlug": "",
+				"data": {
+					"rd:source": "/image1.jpeg",
+					"rd:alt": "Hello!"
+				}
+			}
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "The trampolines were fabricated using polydimethylsiloxane (PDMS) substrates, which were spin-coated onto glass slides to achieve a uniform thickness of approximately 100 nanometers. The nano-particles, comprising gold (Au) and silica (SiO₂) spheres ranging in diameter from 10 to 50 nanometers, were deposited onto the PDMS surface via self-assembly techniques. This allowed for a controlled dispersion of particles across the trampoline's surface."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "For quantitative analysis, particle trajectories were extracted from the high-speed microscopy footage, and displacement data was plotted against the oscillation frequencies. Fourier transforms were applied to the data to identify resonant frequencies, where the particles exhibited maximum displacement. The energy dissipation of particles during oscillation was calculated based on velocity and trajectory length, offering a detailed understanding of the interactions between the particles and the elastic substrate."
+				}
+			]
+		},
+		{
+			"type": "contextAtom",
+			"attrs": {
+				"id": null,
+				"class": null,
+				"pubId": "8b16c459-51b5-33b1-2b4b-177eb26f2cc5",
 				"parentPubId": "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
-                "pubTypeId": "9956ccd9-50b5-42b1-a14b-199eb26f2a12",
-                "fieldSlug": "",
-                "data": {
-                    "rd:source": "/image0.jpg",
-                    "rd:alt": "Math"
-                }
-            }
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Another remarkable observation was the energy dissipation patterns of the nano-particles. Particles oscillating on the trampoline-like surface not only displaced but also exhibited varying levels of damping, depending on the membrane’s elasticity and the external frequency. The energy transfer between the oscillating membrane and the nano-particles was found to be highly efficient at specific \"sweet spot\" frequencies. These frequencies caused the particles to oscillate with minimal damping, preserving their kinetic energy over extended periods. Such insights could prove invaluable in applications where energy conservation at the nano-scale is critical, such as in nano-sensing devices and other energy-sensitive nano-technologies."
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Beyond the dynamic motion, the structural integrity of both the nano-particles and the elastic membrane was meticulously monitored throughout the experiment. Over time, continuous oscillations led to minimal wear on the membrane surface, even after extended high-frequency oscillations. The resilience of the PDMS substrate, combined with the non-destructive interaction between the particles and the membrane, suggests that nano-particle trampolines could be viable for long-term applications. This stability is particularly promising for industrial and biomedical fields, where devices are expected to perform consistently over long periods without significant degradation."
-                }
-            ]
-        },
-        {
-            "type": "heading",
-            "attrs": {
-                "level": 4,
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Experimental Setup"
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "We developed a custom-built "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "quantum flux modulation"
-                },
-                {
-                    "type": "text",
-                    "text": " device (QFMD), based on principles outlined by Watanabe et al. (2022). The QFMD utilizes a tunable magnetic resonance field to manipulate quantum particles in a targeted area. "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "The device was calibrated"
-                },
-                {
-                    "type": "text",
-                    "text": " to emit flux waves at 3.5 THz, the optimal frequency for interacting with cellular nuclei (Doe & Baker, 2020)."
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "Sample preparation"
-                },
-                {
-                    "type": "text",
-                    "text": ": Lab-grown human fibroblast cells were divided into two groups: a control group, which received no quantum flux exposure, and an experimental group exposed to QFMD for 10 minutes per day over a 7-day period."
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "The results from our initial tests demonstrate a strong correlation between the frequency of oscillation and the amplitude of particle displacement. As expected, particles exhibited minimal movement at low frequencies, with significant displacement occurring as the oscillation frequency increased. A particularly noteworthy finding was the emergence of resonance-like behavior, where certain nano-particles showed a drastic increase in oscillatory motion at specific frequencies, suggesting that the trampoline effect could be fine-tuned for selective particle manipulation. This behavior opens the door for tailored applications, such as selectively targeting specific particle sizes or materials through controlled oscillations."
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Interestingly, the material composition of the nano-particles played a crucial role in how they interacted with the elastic membrane. Gold nano-particles, due to their higher density, exhibited more pronounced responses at lower frequencies compared to silica nano-particles, which responded more significantly at higher frequencies. This divergence in behavior underscores the potential of nano-particle trampolines to serve as selective filters for different particle types. By adjusting the external stimuli, it may be possible to sort or categorize particles based on their mass and composition, providing a new method for nano-particle separation in microfluidic environments."
-                }
-            ]
-        },
-        {
-            "type": "paragraph",
-            "attrs": {
-                "id": null,
-                "class": null
-            },
-            "content": [
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "Measurement of regeneration"
-                },
-                {
-                    "type": "text",
-                    "text": ": The rate of "
-                },
-                {
-                    "type": "text",
-                    "marks": [
-                        {
-                            "type": "em",
-                            "attrs": {
-                                "id": null,
-                                "class": null
-                            }
-                        }
-                    ],
-                    "text": "cellular regeneration"
-                },
-                {
-                    "type": "text",
-                    "text": " was assessed using high-resolution time-lapse microscopy and by quantifying mitotic activity."
-                }
-            ]
-        }
-    ]
+				"pubTypeId": "9956ccd9-50b5-42b1-a14b-199eb26f2a12",
+				"fieldSlug": "",
+				"data": {
+					"rd:source": "/image0.jpg",
+					"rd:alt": "Math"
+				}
+			}
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Another remarkable observation was the energy dissipation patterns of the nano-particles. Particles oscillating on the trampoline-like surface not only displaced but also exhibited varying levels of damping, depending on the membrane’s elasticity and the external frequency. The energy transfer between the oscillating membrane and the nano-particles was found to be highly efficient at specific \"sweet spot\" frequencies. These frequencies caused the particles to oscillate with minimal damping, preserving their kinetic energy over extended periods. Such insights could prove invaluable in applications where energy conservation at the nano-scale is critical, such as in nano-sensing devices and other energy-sensitive nano-technologies."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Beyond the dynamic motion, the structural integrity of both the nano-particles and the elastic membrane was meticulously monitored throughout the experiment. Over time, continuous oscillations led to minimal wear on the membrane surface, even after extended high-frequency oscillations. The resilience of the PDMS substrate, combined with the non-destructive interaction between the particles and the membrane, suggests that nano-particle trampolines could be viable for long-term applications. This stability is particularly promising for industrial and biomedical fields, where devices are expected to perform consistently over long periods without significant degradation."
+				}
+			]
+		},
+		{
+			"type": "heading",
+			"attrs": {
+				"level": 4,
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Experimental Setup"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "We developed a custom-built "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "quantum flux modulation"
+				},
+				{
+					"type": "text",
+					"text": " device (QFMD), based on principles outlined by Watanabe et al. (2022). The QFMD utilizes a tunable magnetic resonance field to manipulate quantum particles in a targeted area. "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "The device was calibrated"
+				},
+				{
+					"type": "text",
+					"text": " to emit flux waves at 3.5 THz, the optimal frequency for interacting with cellular nuclei (Doe & Baker, 2020)."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "Sample preparation"
+				},
+				{
+					"type": "text",
+					"text": ": Lab-grown human fibroblast cells were divided into two groups: a control group, which received no quantum flux exposure, and an experimental group exposed to QFMD for 10 minutes per day over a 7-day period."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "The results from our initial tests demonstrate a strong correlation between the frequency of oscillation and the amplitude of particle displacement. As expected, particles exhibited minimal movement at low frequencies, with significant displacement occurring as the oscillation frequency increased. A particularly noteworthy finding was the emergence of resonance-like behavior, where certain nano-particles showed a drastic increase in oscillatory motion at specific frequencies, suggesting that the trampoline effect could be fine-tuned for selective particle manipulation. This behavior opens the door for tailored applications, such as selectively targeting specific particle sizes or materials through controlled oscillations."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"text": "Interestingly, the material composition of the nano-particles played a crucial role in how they interacted with the elastic membrane. Gold nano-particles, due to their higher density, exhibited more pronounced responses at lower frequencies compared to silica nano-particles, which responded more significantly at higher frequencies. This divergence in behavior underscores the potential of nano-particle trampolines to serve as selective filters for different particle types. By adjusting the external stimuli, it may be possible to sort or categorize particles based on their mass and composition, providing a new method for nano-particle separation in microfluidic environments."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "Measurement of regeneration"
+				},
+				{
+					"type": "text",
+					"text": ": The rate of "
+				},
+				{
+					"type": "text",
+					"marks": [
+						{
+							"type": "em",
+							"attrs": {
+								"id": null,
+								"class": null
+							}
+						}
+					],
+					"text": "cellular regeneration"
+				},
+				{
+					"type": "text",
+					"text": " was assessed using high-resolution time-lapse microscopy and by quantifying mitotic activity."
+				}
+			]
+		}
+	]
 }

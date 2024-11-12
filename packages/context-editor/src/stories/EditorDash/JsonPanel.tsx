@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
-import JsonView from '@uiw/react-json-view';
-
+import JsonView from "@uiw/react-json-view";
 
 export default function JsonPanel({ editorState }) {
 	return (

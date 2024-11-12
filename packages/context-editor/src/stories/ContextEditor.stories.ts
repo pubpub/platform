@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import ContextEditor from "../ContextEditor";
+import AtomRenderer from "./AtomRenderer";
 import initialDoc from "./initialDoc.json";
 import initialPubs from "./initialPubs.json";
 import initialTypes from "./initialTypes.json";
 import { getPubs } from "./mockUtils";
-import AtomRenderer from "./AtomRenderer";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -32,9 +32,9 @@ export const Primary: Story = {
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
 		getPubs,
 		onChange: (state) => {
-			console.log(state)
+			console.log(state);
 		},
-		getPubById: ()=>undefined,
+		getPubById: () => undefined,
 		atomRenderingComponent: AtomRenderer,
 	},
 };

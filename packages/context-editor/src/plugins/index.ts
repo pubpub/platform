@@ -4,10 +4,10 @@ import { Schema } from "prosemirror-model";
 import type { ContextEditorProps, PanelProps } from "../ContextEditor";
 import attributePanel from "./attributePanel";
 import contextSuggest from "./contextSuggest";
+import lorem from "./lorem";
 import onChange from "./onChange";
 import reactProps from "./reactProps";
 import structureDecorations from "./structureDecorations";
-import lorem from "./lorem";
 
 export const basePlugins = (
 	schema: Schema,

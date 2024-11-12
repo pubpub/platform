@@ -7,9 +7,9 @@ export default {
 		id: { default: null },
 		class: { default: null },
 		pubId: { default: null },
-		pubTypeId: {default: null},
-		parentPubId: {default: null},
-		fieldSlug: {default: null},
+		pubTypeId: { default: null },
+		parentPubId: { default: null },
+		fieldSlug: { default: null },
 		data: { default: null },
 	},
 	parseDOM: [

@@ -151,7 +151,7 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 						node.marks.map((mark, index) => {
 							return (
 								<div key={mark.type.name}>
-									<div className="text-sm font-bold mt-4">{mark.type.name}</div>
+									<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
 									{Object.keys(mark.attrs).map((attrKey) => {
 										if (attrKey === "data") {
 											return null;

@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"noEmit": true,
 		"jsx": "react",
-		"resolveJsonModule": true,
+		"resolveJsonModule": true
 	},
 	"include": ["."],
 	"exclude": ["dist", "build", "node_modules"]
