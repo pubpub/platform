@@ -1,4 +1,4 @@
-import type { Communities, CommunityMembershipsId, MembersId } from "db/public";
+import type { Communities, CommunityMembershipsId } from "db/public";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { getMember } from "~/lib/server/member";

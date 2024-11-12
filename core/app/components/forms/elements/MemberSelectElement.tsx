@@ -3,7 +3,7 @@
 import { Value } from "@sinclair/typebox/value";
 import { memberSelectConfigSchema } from "schemas";
 
-import type { CommunityMembershipsId, MembersId } from "db/public";
+import type { CommunityMembershipsId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";

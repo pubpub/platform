@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { captureException } from "@sentry/nextjs";
 import { z } from "zod";
 
-import type { Communities, CommunityMemberships, Members, Users, UsersId } from "db/public";
+import type { Communities, CommunityMemberships, Users, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import type { Prettify } from "../types";
@@ -25,7 +25,7 @@ const schema = z.object({
 
 type LoginUser = Prettify<
 	Omit<Users, "orcid" | "avatar"> & {
-		memberships: (Members & { community: Communities | null })[];
+		memberships: (CommunityMemberships & { community: Communities | null })[];
 	}
 >;
 

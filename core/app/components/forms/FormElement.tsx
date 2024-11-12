@@ -1,7 +1,7 @@
 import { defaultComponent } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
-import type { CommunityMembershipsId, MembersId, PubsId } from "db/public";
+import type { CommunityMembershipsId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";

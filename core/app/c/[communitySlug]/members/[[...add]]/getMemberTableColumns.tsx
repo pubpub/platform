@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { MemberRole } from "db/public";
+import type { CommunityMembershipsId, MemberRole } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -20,7 +20,7 @@ import { MoreVertical } from "ui/icon";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
-	id: string;
+	id: CommunityMembershipsId;
 	avatar: string | null;
 	email: string;
 	firstName: string;
