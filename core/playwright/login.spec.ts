@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { inbucketClient } from "./helpers";
+import * as flows from "./login.flows";
 
 const authFile = "playwright/.auth/user.json";
 
@@ -17,22 +18,13 @@ test.describe("general auth", () => {
 	});
 });
 
-const loginAsNew = async (page: Page) => {
-	await page.goto("/login");
-	await page.getByLabel("email").fill("new@pubpub.org");
-	await page.getByRole("textbox", { name: "password" }).fill("pubpub-new");
-	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL(/.*\/c\/\w+\/stages.*/);
-	await expect(page.getByRole("link", { name: "Workflows" })).toBeVisible();
-};
-
 test.describe("Auth with lucia", () => {
 	test("Login as a lucia user", async ({ page }) => {
-		await loginAsNew(page);
+		await flows.login(page);
 	});
 
 	test("Logout as a lucia user", async ({ page }) => {
-		await loginAsNew(page);
+		await flows.login(page);
 
 		const cookies = await page.context().cookies();
 		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy();

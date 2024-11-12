@@ -1,18 +1,25 @@
 config:
     target: https://app.pubpub.org
+    engines:
+        playwright: {}
+    processor: "./load-test-flows.ts"
     phases:
         - duration: 60
           arrivalRate: 1
-          rampTo: 5
+          rampTo: 2
           name: Warm up phase
-        - duration: 60
-          arrivalRate: 5
-          rampTo: 10
-          name: Ramp up load
-        - duration: 30
-          arrivalRate: 10
-          rampTo: 30
-          name: Spike phase
+        # - duration: 60
+        #   arrivalRate: 1
+        #   rampTo: 5
+        #   name: Warm up phase
+        # - duration: 60
+        #   arrivalRate: 5
+        #   rampTo: 10
+        #   name: Ramp up load
+        # - duration: 30
+        #   arrivalRate: 10
+        #   rampTo: 30
+        #   name: Spike phase
     plugins:
         ensure: {}
         apdex: {}
@@ -24,8 +31,5 @@ config:
             - http.response_time.p99: 100
             - http.response_time.p95: 75
 scenarios:
-    - flow:
-          - get:
-                url: "/login"
-          - get:
-                url: "/forgot"
+    - engine: playwright
+      testFunction: "loginFlow"
