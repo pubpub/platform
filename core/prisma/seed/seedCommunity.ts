@@ -17,8 +17,7 @@ import type {
 	FormElements,
 	Forms,
 	FormsId,
-	MembersId,
-	NewMembers,
+	NewCommunityMemberships,
 	PubFields,
 	PubsId,
 	PubTypes,
@@ -824,31 +823,17 @@ export async function seedCommunity<
 
 			return [
 				{
-					id: crypto.randomUUID() as MembersId,
 					userId: createdUser.id,
 					communityId,
 					role: userWithRole.role!,
-				} satisfies NewMembers,
+				} satisfies NewCommunityMemberships,
 			];
 		});
 
 	const createdMembers = possibleMembers?.length
 		? await trx
-				.with("community_membership", (db) =>
-					db.insertInto("community_memberships").values(
-						possibleMembers.map((m) => ({
-							...m,
-							id: m.id as unknown as CommunityMembershipsId,
-						}))
-					)
-				)
-				.insertInto("members")
-				.values(
-					possibleMembers.map((m) => ({
-						...m,
-						id: m.id as MembersId,
-					}))
-				)
+				.insertInto("community_memberships")
+				.values(possibleMembers)
 				.returningAll()
 				.execute()
 		: [];
@@ -890,44 +875,18 @@ export async function seedCommunity<
 		)
 		.filter((stageMember) => stageMember.user.member != undefined);
 
-	const stagePermissions =
+	const stageMemberships =
 		stageMembers.length > 0
 			? await trx
-					.with("new_permissions", (db) =>
-						db
-							.insertInto("permissions")
-							.values((eb) =>
-								stageMembers.map(({ user }) => ({
-									memberId: user.member!.id,
-								}))
-							)
-							.returningAll()
+					.insertInto("stage_memberships")
+					.values((eb) =>
+						stageMembers.map((stageMember) => ({
+							role: stageMember.user.member?.role ?? MemberRole.editor,
+							stageId: stageMember.stage.id,
+							userId: stageMember.user.id,
+						}))
 					)
-					.with("new_permissions_to_stage", (db) =>
-						db
-							.insertInto("_PermissionToStage")
-							.values((eb) =>
-								stageMembers.map(({ user: member, stage }, idx) => ({
-									A: eb
-										.selectFrom("new_permissions")
-										.select("new_permissions.id")
-										.limit(1)
-										.offset(idx)
-										.where("new_permissions.memberId", "=", member.member!.id),
-									B: stage.id,
-								}))
-							)
-							.returningAll()
-					)
-					.selectFrom("new_permissions")
-					.selectAll("new_permissions")
-					.select((eb) =>
-						eb
-							.selectFrom("new_permissions_to_stage")
-							.select("B")
-							.whereRef("new_permissions_to_stage.A", "=", "new_permissions.id")
-							.as("stageId")
-					)
+					.returningAll()
 					.execute()
 			: [];
 
@@ -936,12 +895,12 @@ export async function seedCommunity<
 			stage.name,
 			{
 				...stage,
-				permissions: stagePermissions.filter(
+				permissions: stageMemberships.filter(
 					(permission) => permission.stageId === stage.id
 				),
 			},
 		])
-	) as StagesWithPermissionsByName<S, typeof stagePermissions>;
+	) as StagesWithPermissionsByName<S, typeof stageMemberships>;
 
 	const stageConnectionsList = props.stageConnections
 		? await db

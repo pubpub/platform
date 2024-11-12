@@ -2,7 +2,7 @@
 
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { MembersId } from "db/public";
+import type { CommunityMembershipsId } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
@@ -12,7 +12,6 @@ import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
-import { smtpclient } from "~/lib/server/mailgun";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { defineRun } from "../types";
 
@@ -30,19 +29,19 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			parentPub = await getPubCached(parentId);
 		}
 
-		const recipientId = expect(args?.recipient ?? config.recipient) as MembersId;
+		const recipientId = expect(args?.recipient ?? config.recipient) as CommunityMembershipsId;
 
 		// TODO: similar to the assignee, the recipient args/config should accept
 		// the pub assignee, a pub field, a static email address, a member, or a
 		// member group.
 		const recipient = await db
-			.selectFrom("members")
+			.selectFrom("community_memberships")
 			.select((eb) => [
-				"members.id",
+				"community_memberships.id",
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
-						.whereRef("users.id", "=", "members.userId")
+						.whereRef("users.id", "=", "community_memberships.userId")
 						.selectAll("users")
 				)
 					.$notNull()

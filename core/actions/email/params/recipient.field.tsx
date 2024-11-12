@@ -1,4 +1,4 @@
-import type { MembersId } from "db/public";
+import type { CommunityMembershipsId } from "db/public";
 
 import { defineActionFormFieldServerComponent } from "~/actions/_lib/custom-form-field/defineConfigServerComponent";
 import { MemberSelectServer } from "~/app/components/MemberSelect/MemberSelectServer";
@@ -22,7 +22,7 @@ const component = defineActionFormFieldServerComponent(
 				fieldName="recipient"
 				fieldLabel="Recipient email address"
 				community={community}
-				value={actionInstance.config?.recipient as MembersId}
+				value={actionInstance.config?.recipient as CommunityMembershipsId | undefined}
 				query={query}
 				queryParamName={queryParamName}
 			/>

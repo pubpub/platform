@@ -34,16 +34,16 @@ model User {
   passwordHash String?
 
   memberships         Member[]
-  memberGroups        MemberGroup[]
-  AuthToken           AuthToken[]
-  assignedPubs        Pub[]
-  actionRuns          ActionRun[]
-  ApiAccessToken      ApiAccessToken[]
-  Session             Session[]
-  FormMembership      FormMembership[]
-  CommunityMembership CommunityMembership[]
-  PubMembership       PubMembership[]
-  StageMembership     StageMembership[]
+  memberGroups         MemberGroup[]
+  AuthToken            AuthToken[]
+  assignedPubs         Pub[]
+  actionRuns           ActionRun[]
+  ApiAccessToken       ApiAccessToken[]
+  Session              Session[]
+  formMemberships      FormMembership[]
+  communityMemberships CommunityMembership[]
+  pubMemberships       PubMembership[]
+  stageMemberships     StageMembership[]
 
   @@map(name: "users")
 }
@@ -131,7 +131,7 @@ model Pub {
   IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
   relatedValues            PubValue[]                 @relation("related_pub")
-  PubMembership            PubMembership[]
+  members                  PubMembership[]
 
   @@map(name: "pubs")
 }
@@ -251,7 +251,7 @@ model Stage {
   permissions           Permission[]
   actionInstances       ActionInstance[]
   formElements          FormElement[]
-  StageMembership       StageMembership[]
+  members               StageMembership[]
 
   @@map(name: "stages")
 }
