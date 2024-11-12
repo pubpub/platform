@@ -79,7 +79,8 @@
 		"./style.css": {
 			"module": "./src/style.css",
 			"default": "./src/style.css"
-		}
+		},
+		"./tailwind.config.js": "./tailwind.config.js"
 	},
 	"prettier": "@pubpub/prettier-config"
 }
