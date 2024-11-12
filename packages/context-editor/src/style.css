@@ -100,7 +100,8 @@
 	}
 }
 .disabled {
-	.wrap-widget, .inline-wrap-widget {
+	.wrap-widget,
+	.inline-wrap-widget {
 		button {
 			pointer-events: none;
 		}

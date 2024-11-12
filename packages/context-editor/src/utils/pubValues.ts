@@ -23,7 +23,8 @@ export const getPubValues = (editorState: EditorState, pubId: string) => {
 			if (node.type.name === "contextDoc") {
 				const fieldSlug = node.attrs.fieldSlug || "rd:content";
 				/* TODO: remove demo example from abstract */
-				content.values[fieldSlug] = fieldSlug === 'rd:abstract' ? node.textContent : node.toJSON().content;
+				content.values[fieldSlug] =
+					fieldSlug === "rd:abstract" ? node.textContent : node.toJSON().content;
 			}
 			const existingContent = editedPubs[node.attrs.pubId];
 			editedPubs[node.attrs.pubId] = deepMerge(existingContent, content);

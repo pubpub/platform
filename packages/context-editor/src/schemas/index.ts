@@ -1,17 +1,17 @@
 import { Schema } from "prosemirror-model";
+
+import contextAtom from "./contextAtom";
+import contextDoc from "./contextDoc";
 // import { marks, nodes } from "prosemirror-schema-basic";
 
 /* Nodes */
 import doc from "./doc";
-import paragraph from "./paragraph";
-import text from "./text";
+import em from "./em";
 import heading from "./heading";
-import contextDoc from "./contextDoc";
-import contextAtom from "./contextAtom";
-
+import paragraph from "./paragraph";
 /* Marks */
 import strong from "./strong";
-import em from "./em";
+import text from "./text";
 
 export const baseSchema = new Schema({
 	nodes: {

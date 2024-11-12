@@ -15,7 +15,7 @@ const packageSource = (id) => path.join(packagePath(id), "src", "**/*.{ts,tsx}")
 /** @type {import('tailwindcss').Config} */
 module.exports = {
 	presets: [sharedConfig],
-	plugins: [require("@tailwindcss/forms"), require('@tailwindcss/typography'),],
+	plugins: [require("@tailwindcss/forms"), require("@tailwindcss/typography")],
 	content: ["./src/**/*.{ts,tsx}", packageSource("ui")],
 	theme: {
 		extend: {

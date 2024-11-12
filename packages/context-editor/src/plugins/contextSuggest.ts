@@ -1,5 +1,7 @@
+import type { Options } from "prosemirror-autocomplete";
+
 import fuzzy from "fuzzy";
-import autocomplete, { type Options } from "prosemirror-autocomplete";
+import autocomplete from "prosemirror-autocomplete";
 import { v4 as uuidv4 } from "uuid";
 
 import type { SuggestProps } from "../ContextEditor";
@@ -149,7 +151,10 @@ export default (
 						parentPubId: rootPubId,
 						pubTypeId: selectedTypeId,
 						data: !selectedItemIsField
-							? { ...selectedItemFields, ...selectedItem.values }  /* Populate with data if available */
+							? {
+									...selectedItemFields,
+									...selectedItem.values,
+								} /* Populate with data if available */
 							: undefined,
 					},
 					/* Try to pull value if it exists, otherwise initialize with blank paragraph */
