@@ -617,3 +617,57 @@ enum ApiAccessScope {
   member
   pubType
 }
+
+enum Capabilities {
+  movePub
+  createPub
+  viewPub
+  deletePub
+  updatePubValues
+  createRelatedPub
+  createPubWithForm
+  editPubWithForm
+  createPubField
+  archivePubField
+  editPubField
+  createPubType
+  editPubType
+  deletePubType
+  runAction
+  viewStage
+  createStage
+  manageStage // includes managing stage name, actions, rules, and move constraints
+  deleteStage
+  addPubMember
+  removePubMember
+  addStageMember
+  removeStageMember
+  addFormMember
+  removeFormMember
+  addCommunityMember
+  removeCommunityMember
+  manageMemberGroups
+  addCommunity
+  editCommunity
+  createForm
+  editForm
+  archiveForm
+  createApiToken
+  revokeApiToken
+}
+
+enum MembershipType {
+  community
+  stage
+  pub
+  form
+}
+
+model MembershipCapabilities {
+  role       MemberRole
+  type       MembershipType
+  capability Capabilities
+
+  @@id([role, type, capability])
+  @@map(name: "membership_capabilities")
+}

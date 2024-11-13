@@ -440,6 +440,16 @@ Table api_access_permissions {
   constraints Json [note: '@type(ApiAccessPermissionConstraints, \'../types\', true, false, true)']
 }
 
+Table membership_capabilities {
+  role MemberRole [not null]
+  type MembershipType [not null]
+  capability Capabilities [not null]
+
+  indexes {
+    (role, type, capability) [pk]
+  }
+}
+
 Table MemberGroupToUser {
   membergroupsId String [ref: > member_groups.id]
   usersId String [ref: > users.id]
@@ -546,6 +556,51 @@ Enum ApiAccessScope {
   stage
   member
   pubType
+}
+
+Enum Capabilities {
+  movePub
+  createPub
+  viewPub
+  deletePub
+  updatePubValues
+  createRelatedPub
+  createPubWithForm
+  editPubWithForm
+  createPubField
+  archivePubField
+  editPubField
+  createPubType
+  editPubType
+  deletePubType
+  runAction
+  viewStage
+  createStage
+  manageStage
+  deleteStage
+  addPubMember
+  removePubMember
+  addStageMember
+  removeStageMember
+  addFormMember
+  removeFormMember
+  addCommunityMember
+  removeCommunityMember
+  manageMemberGroups
+  addCommunity
+  editCommunity
+  createForm
+  editForm
+  archiveForm
+  createApiToken
+  revokeApiToken
+}
+
+Enum MembershipType {
+  community
+  stage
+  pub
+  form
 }
 
 Ref: sessions.userId > users.id

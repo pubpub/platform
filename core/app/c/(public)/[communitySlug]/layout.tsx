@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getCommunityRole } from "~/lib/auth/roles";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 type Props = { children: React.ReactNode; params: { communitySlug: string } };

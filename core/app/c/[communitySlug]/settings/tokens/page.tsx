@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";

@@ -18,7 +18,7 @@ import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { pubValuesByVal } from "~/lib/server";
 import { pubInclude } from "~/lib/server/_legacy-integration-queries";

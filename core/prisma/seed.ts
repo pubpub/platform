@@ -7,7 +7,7 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
-import { createPasswordHash } from "~/lib/auth/password";
+import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env.mjs";
 import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
 import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";

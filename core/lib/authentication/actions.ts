@@ -10,8 +10,8 @@ import { AuthTokenType } from "db/public";
 
 import type { Prettify } from "../types";
 import { db } from "~/kysely/database";
-import { lucia, validateRequest } from "~/lib/auth/lucia";
-import { validatePassword } from "~/lib/auth/password";
+import { lucia, validateRequest } from "~/lib/authentication/lucia";
+import { validatePassword } from "~/lib/authentication/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getUser, setUserPassword, updateUser } from "~/lib/server/user";
 import * as Email from "../server/email";

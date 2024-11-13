@@ -11,7 +11,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
-import * as actions from "~/lib/auth/actions";
+import * as actions from "~/lib/authentication/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 const forgotPasswordSchema = z.object({

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import type { CommunitiesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { createToken } from "~/lib/server/token";
 import PubHeader from "./PubHeader";
