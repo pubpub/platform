@@ -6,7 +6,7 @@ Firstly, [install Artillery](https://www.artillery.io/docs/get-started/get-artil
 npm install -g artillery@latest
 ```
 
-Set the environment variable `ARTILLERY_CLOUD_API_KEY` to your [Artillery Cloud API](https://app.artillery.io/login) key.
+Optional: set the environment variable `ARTILLERY_CLOUD_API_KEY` to your [Artillery Cloud API](https://app.artillery.io/login) key. This is only needed in order for the results to report to Artillery Cloud.
 
 Run the load tests against our production environment from your machine with the following command:
 
