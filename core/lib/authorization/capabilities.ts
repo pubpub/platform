@@ -159,5 +159,53 @@ export const userCan = async <T extends Target>(
 			.select("capability");
 
 		return Boolean((await capabilitiesQuery.execute()).length);
+	} else if (target.type === MembershipType.stage) {
+		const capabilitiesQuery = db
+			.with("community", (db) =>
+				db
+					.selectFrom("stages")
+					.where("stages.id", "=", target.stageId)
+					.select("stages.communityId")
+			)
+			.with("stage_ms", (db) =>
+				db
+					.selectFrom("stage_memberships")
+					.where("stage_memberships.userId", "=", userId)
+					.where("stage_memberships.stageId", "=", target.stageId)
+					.select("role")
+			)
+			.with("community_ms", (db) =>
+				db
+					.selectFrom("community_memberships")
+					.where("community_memberships.userId", "=", userId)
+					.whereRef("communityId", "=", db.selectFrom("community").select("communityId"))
+					.select("role")
+			)
+			.selectFrom("membership_capabilities")
+			.where((eb) =>
+				eb.or([
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("stage_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.stage),
+					]),
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("community_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.community),
+					]),
+				])
+			)
+			.where("membership_capabilities.capability", "=", capability)
+			.limit(1)
+			.select("capability");
+
+		return Boolean((await capabilitiesQuery.execute()).length);
 	}
 };
