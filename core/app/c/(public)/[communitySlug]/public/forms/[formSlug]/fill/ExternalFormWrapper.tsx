@@ -5,6 +5,7 @@
  * and the other is a form as in react-hook-form.
  */
 import type { Static } from "@sinclair/typebox";
+import type { Node } from "prosemirror-model";
 import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
@@ -89,7 +90,7 @@ const preparePayload = ({
 		) {
 			payload[slug] =
 				schemaName === CoreSchemaType.RichText
-					? serializeProseMirrorDoc(values[slug] as any)
+					? serializeProseMirrorDoc(values[slug] as unknown as Node)
 					: values[slug];
 		}
 	}

@@ -91,6 +91,62 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 		});
 	});
 
+	it("should collapse multipart fields", () => {
+		// Adding a Title field with two parts
+		vi.mocked(getPubValues).mockReturnValue({
+			"": {
+				pubId: "",
+				parentPubId: "",
+				pubTypeId: "6a944264-3c0a-47e1-8589-c5bed4448f35",
+				values: {
+					"croccroc:title": [
+						{
+							type: "paragraph",
+							attrs: {
+								id: null,
+								class: null,
+							},
+							content: [
+								{
+									type: "text",
+									text: "new title",
+								},
+							],
+						},
+						{
+							type: "paragraph",
+							attrs: {
+								id: null,
+								class: null,
+							},
+							content: [
+								{
+									type: "text",
+									text: "second part",
+								},
+							],
+						},
+					],
+				},
+			},
+		});
+		const elements = [
+			{ slug: "croccroc:title", schemaName: CoreSchemaType.String },
+			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText },
+		];
+		const { values } = parseRichTextForPubFieldsAndRelatedPubs({
+			pubId,
+			elements,
+			newValues: {
+				"croccroc:richtext": "todo",
+			},
+		});
+		expect(values).toEqual({
+			"croccroc:richtext": "todo",
+			"croccroc:title": "new title, second part",
+		});
+	});
+
 	it("returns children pub", () => {
 		// Adding a pub of type Submission
 		vi.mocked(getPubValues).mockReturnValue({

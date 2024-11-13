@@ -2,7 +2,7 @@
 
 import type { Node } from "prosemirror-model";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { docHasChanged } from "context-editor";
 import { useFormContext } from "react-hook-form";
