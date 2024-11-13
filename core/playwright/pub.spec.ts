@@ -164,4 +164,47 @@ test.describe("Creating a pub", () => {
 		await page.goto(`/c/${COMMUNITY_SLUG}/pubs/${pubId}`);
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
+
+	test("Can create and edit a rich text field", async () => {
+		// Add a multivalue field
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("Rich text", CoreSchemaType.RichText);
+
+		// Add it as a pub type
+		const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
+		await pubTypePage.goto();
+		await pubTypePage.addType("Editor", "editor", ["title", "rich-text"]);
+
+		// Now create a pub of this type
+		const actualTitle = "new title";
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		await page.getByRole("button", { name: "Create" }).click();
+		await page.getByRole("button", { name: "Submission" }).click();
+		await page.getByRole("menuitem", { name: "Editor" }).click();
+		// Need to toggle this to enabled because of bug: https://github.com/pubpub/platform/issues/776
+		await page.getByTestId(`${COMMUNITY_SLUG}:rich-text-toggle`).click();
+		await page.getByLabel("Title").fill("old title");
+		// It seems for ProseMirror, Keyboard actions trigger things better than using .fill()
+		await page.locator(".ProseMirror").click();
+		await page.keyboard.type("@title");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type(actualTitle);
+		await page.getByRole("button", { name: "Create Pub" }).click();
+		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
+
+		// Now update
+		await page.getByTestId("pub-dropdown-button").first().click();
+		await page.getByRole("button", { name: "Update" }).click();
+		await page.locator(".ProseMirror").click();
+		await page.keyboard.type("prefix ");
+
+		await page.getByRole("button", { name: "Update Pub" }).click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+		).toHaveCount(1);
+		await pubsPage.goTo();
+		await expect(page.getByRole("link", { name: `prefix ${actualTitle}` })).toHaveCount(1);
+	});
 });
