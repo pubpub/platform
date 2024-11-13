@@ -5,6 +5,11 @@ config:
         playwright: {}
     # Path to JavaScript file that defines Playwright test functions
     processor: "./load-test-flows.ts"
+    phases:
+        - duration: 60
+          arrivalRate: 1
+          rampTo: 2
+          name: Warm up phase
 scenarios:
     - engine: playwright
       testFunction: "loginFlow"
