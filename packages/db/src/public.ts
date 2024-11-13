@@ -26,6 +26,7 @@ export * from "./public/Integrations";
 export * from "./public/MemberGroups";
 export * from "./public/MemberGroupToUser";
 export * from "./public/MemberRole";
+export * from "./public/MembershipCapabilities";
 export * from "./public/MoveConstraint";
 export * from "./public/PrismaMigrations";
 export * from "./public/PubFields";
