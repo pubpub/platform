@@ -33,7 +33,6 @@ model User {
   isSuperAdmin Boolean  @default(false)
   passwordHash String?
 
-  memberships         Member[]
   memberGroups         MemberGroup[]
   AuthToken            AuthToken[]
   assignedPubs         Pub[]
@@ -97,13 +96,12 @@ model Community {
   pubTypes             PubType[]
   pubs                 Pub[]
   integrationInstances IntegrationInstance[]
-  members              Member[]
   memberGroups         MemberGroup[]
   stages               Stage[]
   APIAccessToken       ApiAccessToken[]
   Form                 Form[]
   pubFields            PubField[]
-  CommunityMembership  CommunityMembership[]
+  members              CommunityMembership[]
 
   @@map(name: "communities")
 }
@@ -127,7 +125,6 @@ model Pub {
   values                   PubValue[]                 @relation("original_pub")
   stages                   PubsInStages[]
   integrationInstances     IntegrationInstance[]
-  permissions              Permission[]
   IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
   relatedValues            PubValue[]                 @relation("related_pub")
@@ -248,7 +245,6 @@ model Stage {
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
   integrationInstances  IntegrationInstance[]
-  permissions           Permission[]
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
@@ -277,25 +273,6 @@ model MoveConstraint {
   @@map(name: "move_constraint")
 }
 
-model Member {
-  id          String     @id @default(dbgenerated("gen_random_uuid()"))
-  role        MemberRole @default(editor)
-  // If admin, the permissions are irrelevant because they have acccess to everything, but we
-  // may want to keep the permissions around (though grayed our and with a note?) in case their
-  // admin status is ever removed.
-  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now()) @updatedAt
-
-  permissions Permission[]
-
-  @@unique([userId, communityId])
-  @@map(name: "members")
-}
-
 enum MemberRole {
   // community-wide administrator
   admin
@@ -312,7 +289,6 @@ model MemberGroup {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
-  permissions          Permission[]
   users                User[]
   formMemberships      FormMembership[]
   communityMemberships CommunityMembership[]
@@ -396,33 +372,6 @@ model FormMembership {
   @@unique([formId, userId])
   @@unique([formId, memberGroupId])
   @@map(name: "form_memberships")
-}
-
-model Permission {
-  // This is essentially a 'role' - we just don't allow you to name it and repeatedly
-  // use it across different members and groups. Wouldn't be too hard to adapt to that
-  // in the future though.
-  id            String       @id @default(dbgenerated("gen_random_uuid()"))
-  // Specific permission options here
-  // fields - if empty array, all fields
-  // integrations - if empty array, all integrations
-  // workflow actions? - can they move and claim?
-  member        Member?      @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  memberId      String?
-  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-  memberGroupId String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @default(now()) @updatedAt
-  // We don't have a way in this right now to say 'All pubs in a community' or 'all pubs in a workflow'.
-  // Our assumption is that the former should just be a community admin, and the latter should just have
-  // access to some parent pub whose children are the contents of a workflow. If that winds up being
-  // a bad assumption, wouldn't be too hard to add a `workflows Workflow[]` value below.
-
-  pubs   Pub[]
-  stages Stage[]
-  forms  FormToPermission[]
-
-  @@map(name: "permissions")
 }
 
 model Integration {
@@ -552,8 +501,7 @@ model Form {
   isArchived  Boolean        @default(false)
   access      FormAccessType @default(private)
 
-  permissions    FormToPermission[]
-  FormMembership FormMembership[]
+  members FormMembership[]
 
   @@unique([name, communityId])
   @@unique([slug, communityId])

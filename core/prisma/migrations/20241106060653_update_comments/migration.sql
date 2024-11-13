@@ -119,10 +119,6 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../types'', true, false, true)';
 
 
--- Model membership_capabilities comments
-
-
-
 -- Enum AuthTokenType comments
 
 COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This will just authenticate you with a regular session.
@@ -182,15 +178,5 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 
 -- Enum ApiAccessScope comments
-
-
-
-
--- Enum Capabilities comments
-
-
-
-
--- Enum MembershipType comments
 
 
