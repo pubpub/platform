@@ -22,12 +22,10 @@ const { pubs, users, stages } = await seedCommunity({
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
 		Description: { schemaName: CoreSchemaType.String },
-		"Some relation": { schemaName: CoreSchemaType.String, relation: true },
 	},
 	pubTypes: {
 		"Basic Pub": {
 			Title: { isTitle: true },
-			"Some relation": { isTitle: false },
 		},
 	},
 	stages: {
@@ -40,25 +38,6 @@ const { pubs, users, stages } = await seedCommunity({
 				Title: "Some title",
 			},
 			stage: "Stage 1",
-		},
-		{
-			pubType: "Basic Pub",
-			values: {
-				Title: "Another title",
-			},
-			relatedPubs: {
-				"Some relation": [
-					{
-						value: "test relation value",
-						pub: {
-							pubType: "Basic Pub",
-							values: {
-								Title: "A pub related to another Pub",
-							},
-						},
-					},
-				],
-			},
 		},
 	],
 	users: {
