@@ -56,7 +56,7 @@ type CapabilitiesArg = {
 	[MembershipType.form]: typeof formCapabilities;
 };
 
-type Target = PubTarget | StageTarget | CommunityTarget | FormTarget;
+type Target = PubTarget | StageTarget;
 
 type PubTarget = {
 	type: MembershipType.pub;
