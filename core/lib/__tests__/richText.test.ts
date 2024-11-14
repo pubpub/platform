@@ -48,11 +48,11 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 		});
 	});
 
-	it("should overwrite pubfields", () => {
+	it("should overwrite string pubfields", () => {
 		// Adding a Title field
 		vi.mocked(getPubValues).mockReturnValue({
-			"": {
-				pubId: "",
+			[pubId]: {
+				pubId: pubId,
 				parentPubId: "",
 				pubTypeId: "6a944264-3c0a-47e1-8589-c5bed4448f35",
 				values: {
@@ -94,8 +94,8 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 	it("should collapse multipart fields", () => {
 		// Adding a Title field with two parts
 		vi.mocked(getPubValues).mockReturnValue({
-			"": {
-				pubId: "",
+			[pubId]: {
+				pubId: pubId,
 				parentPubId: "",
 				pubTypeId: "6a944264-3c0a-47e1-8589-c5bed4448f35",
 				values: {
