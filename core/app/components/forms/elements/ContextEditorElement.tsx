@@ -47,30 +47,32 @@ const EditorFormElement = ({
 	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
 	const [initialDoc] = useState(initialValue);
 
+	if (!pubId || !pubTypeId) {
+		return null;
+	}
+
 	return (
 		<FormItem>
 			<FormLabel className="flex">{label}</FormLabel>
 			<div className="w-full">
 				<FormControl>
-					{pubTypeId ? (
-						<ContextEditorClient
-							pubId={pubId}
-							pubs={pubs}
-							pubTypes={pubTypes}
-							pubTypeId={pubTypeId}
-							onChange={(state) => {
-								// Control changing the state more granularly or else the dirty field will trigger on load
-								// Since we can't control the dirty state directly, even this workaround does not handle the case of
-								// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
-								const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
-								if (hasChanged) {
-									onChange(state);
-								}
-							}}
-							initialDoc={initialDoc}
-							disabled={disabled}
-						/>
-					) : null}
+					<ContextEditorClient
+						pubId={pubId}
+						pubs={pubs}
+						pubTypes={pubTypes}
+						pubTypeId={pubTypeId}
+						onChange={(state) => {
+							// Control changing the state more granularly or else the dirty field will trigger on load
+							// Since we can't control the dirty state directly, even this workaround does not handle the case of
+							// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
+							const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
+							if (hasChanged) {
+								onChange(state);
+							}
+						}}
+						initialDoc={initialDoc}
+						disabled={disabled}
+					/>
 				</FormControl>
 			</div>
 			<FormDescription>{help}</FormDescription>

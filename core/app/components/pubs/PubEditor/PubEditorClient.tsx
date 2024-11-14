@@ -93,22 +93,27 @@ const preparePayload = ({
 	toggleContext: FormElementToggleContext;
 	pubFields: Props["pubFields"];
 }) => {
+	// 1. Only send enabled fields
+	const payload: Record<string, JsonValue> = {};
+	for (const { slug } of pubFields) {
+		if (toggleContext.isEnabled(slug)) {
+			payload[slug] = pubValues[slug];
+		}
+	}
+	// 2. Let RichText fields overwrite any values (including disabled fields)
 	const { values } = parseRichTextForPubFieldsAndRelatedPubs({
 		pubId,
 		elements: pubFields,
-		newValues: pubValues,
+		newValues: payload,
 	});
-	const payload: Record<string, JsonValue> = {};
+	// 3. Serialize the rich text node so we can send to the server
 	for (const { slug, schemaName } of pubFields) {
-		if (toggleContext.isEnabled(slug)) {
-			payload[slug] =
-				schemaName === CoreSchemaType.RichText
-					? serializeProseMirrorDoc(values[slug] as unknown as Node)
-					: values[slug];
+		if (schemaName === CoreSchemaType.RichText && slug) {
+			values[slug] = serializeProseMirrorDoc(values[slug] as unknown as Node);
 		}
 	}
 
-	return payload;
+	return values;
 };
 
 type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
