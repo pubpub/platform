@@ -69,18 +69,24 @@ export const parseRichTextForPubFieldsAndRelatedPubs = ({
 	}
 	const editorPubValues = getPubValues({ doc: richTextValue } as any, pubId);
 
-	Object.entries(editorPubValues).map(([pubId, data]) => {
-		// This is a pubfield addition
-		if (pubId === "") {
+	Object.entries(editorPubValues).map(([nodePubId, data]) => {
+		// Field on the current pub
+		if (nodePubId === pubId) {
 			const { values } = data;
-			// TODO: what to do about multiple values in a field? Currently just joining on a comma
 			Object.entries(values).map(([fieldSlug, fieldValues]) => {
+				// This is a DocValue, which we parse through the content fields
+				// TODO: We currently just do a concat on all the text fields, assuming we want a string.
+				// May want to check that this schemaName === String first? This is kinda equivalent to what is
+				// hardcoded in https://github.com/pubpub/platform/blob/1de6413bbc18283f40e058c7bf4db2c762d5aedf/packages/context-editor/src/utils/pubValues.ts#L51
 				if (Array.isArray(fieldValues)) {
 					payload[fieldSlug] = fieldValues
 						.map((fieldValue) => fieldValue.content.map((c) => c.text).join(", "))
 						.join(", ");
+				} else {
+					payload[fieldSlug] = fieldValues;
 				}
 			});
+			// This is a related pub
 		} else {
 			// do we need to pass parent pub id?
 			const { pubId, parentPubId, ...pub } = data;
