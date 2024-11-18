@@ -1,4 +1,3 @@
-import type { JsonValue } from "contracts";
 import type { CoreSchemaType } from "db/src/public/CoreSchemaType";
 
 /**
@@ -19,10 +18,18 @@ export const mergeValuesWithFields = <
 ) => {
 	const fieldMap = new Map<string, P>(fields.map((field) => [field.slug, field]));
 
-	const slugsWithFields = slugs.filter((slug) => !fieldMap.has(slug.slug));
+	return slugs
+		.map((s) => {
+			const field = fieldMap.get(s.slug);
 
-	return slugsWithFields.map((slug) => ({
-		...fieldMap.get(slug.slug),
-		...slug,
-	}));
+			if (!field) {
+				return null;
+			}
+
+			return {
+				...field,
+				...s,
+			};
+		})
+		.filter((s) => s !== null);
 };

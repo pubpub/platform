@@ -33,8 +33,9 @@ import type {
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { MaybeHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, MaybeHas, Prettify, PubField, XOR } from "../types";
 import { db } from "~/kysely/database";
+import { mergeValuesWithFields } from "../fields/utils";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
@@ -615,16 +616,16 @@ export const getPubStage = async (pubId: PubsId) =>
  * Validates that all provided slugs exist in the community.
  * @throws Error if any slugs don't exist in the community
  */
-const consolidateFieldSlugs = async <T extends { slug: string }>({
+const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
 	includeRelations = true,
 }: {
-	slugs: T[];
+	slugs: string[];
 	communityId: CommunitiesId;
 	includeRelations?: boolean;
 }) => {
-	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs.map(({ slug }) => slug)));
+	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs));
 
 	if (toBeUpdatedPubFieldSlugs.length === 0) {
 		return [];
@@ -638,30 +639,32 @@ const consolidateFieldSlugs = async <T extends { slug: string }>({
 
 	const pubFields = Object.values(fields);
 
-	const slugsThatDontExistInCommunity = pubFields.filter(
-		(field) => !toBeUpdatedPubFieldSlugs.includes(field.slug)
+	const slugsThatDontExistInCommunity = toBeUpdatedPubFieldSlugs.filter(
+		(slug) => !pubFields.find((field) => field.slug === slug)
 	);
 
 	if (slugsThatDontExistInCommunity.length) {
 		throw new Error(
-			`Pub values contain fields that do not exist in the community: ${slugsThatDontExistInCommunity.map(({ slug }) => slug).join(", ")}`
+			`Pub values contain fields that do not exist in the community: ${slugsThatDontExistInCommunity.join(", ")}`
 		);
 	}
 
-	const slugsWithSchemaNameAndFieldId = slugs.map(({ slug, ...rest }) => {
-		const field = pubFields.find((field) => field.slug === slug);
-		assert(field, `No pub field found for slug '${slug}'`);
-		assert(field.schemaName, `No schemaName defined for field '${slug}'`);
+	const fieldsWithSchemaName = pubFields.filter((field) => field.schemaName !== null);
 
-		return {
-			slug,
-			fieldId: field.id,
-			schemaName: field.schemaName,
-			...rest,
-		};
-	});
+	if (fieldsWithSchemaName.length !== pubFields.length) {
+		throw new Error(
+			`Pub values contain fields that do not have a schema name: ${pubFields
+				.filter((field) => field.schemaName === null)
+				.map(({ slug }) => slug)
+				.join(", ")}`
+		);
+	}
 
-	return slugsWithSchemaNameAndFieldId;
+	return pubFields.map((field) => ({
+		slug: field.slug,
+		fieldId: field.id,
+		schemaName: expect(field.schemaName),
+	}));
 };
 
 const validatePubValues = async ({
@@ -675,20 +678,22 @@ const validatePubValues = async ({
 	continueOnValidationError?: boolean;
 	includeRelations?: boolean;
 }) => {
-	const pubValuesWithSchemaNameAndFieldId = await consolidateFieldSlugs({
-		slugs: pubValues,
+	const relevantPubFields = await getFieldInfoForSlugs({
+		slugs: pubValues.map(({ slug }) => slug),
 		communityId,
 		includeRelations,
 	});
 
-	const validationErrors = validatePubValuesBySchemaName(pubValuesWithSchemaNameAndFieldId);
+	const mergedPubFields = mergeValuesWithFields(pubValues, relevantPubFields);
+
+	const validationErrors = validatePubValuesBySchemaName(mergedPubFields);
 
 	if (!validationErrors.length) {
-		return pubValuesWithSchemaNameAndFieldId;
+		return mergedPubFields;
 	}
 
 	if (continueOnValidationError) {
-		return pubValuesWithSchemaNameAndFieldId.filter(
+		return mergedPubFields.filter(
 			({ slug }) => !validationErrors.find(({ slug: errorSlug }) => errorSlug === slug)
 		);
 	}
@@ -830,11 +835,13 @@ export const removePubRelations = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	const consolidatedRelations = await consolidateFieldSlugs({
-		slugs: relations,
+	const consolidatedRelations = await getFieldInfoForSlugs({
+		slugs: relations.map(({ slug }) => slug),
 		communityId,
 		includeRelations: true,
 	});
+
+	const mergedRelations = mergeValuesWithFields(relations, consolidatedRelations);
 
 	const removed = await autoRevalidate(
 		trx
@@ -842,7 +849,7 @@ export const removePubRelations = async ({
 			.where("pubId", "=", pubId)
 			.where((eb) =>
 				eb.or(
-					consolidatedRelations.map(({ relatedPubId, fieldId }) =>
+					mergedRelations.map(({ fieldId, relatedPubId }) =>
 						eb.and([eb("fieldId", "=", fieldId), eb("relatedPubId", "=", relatedPubId)])
 					)
 				)
@@ -867,8 +874,8 @@ export const removeAllPubRelationsBySlugs = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	const fields = await consolidateFieldSlugs({
-		slugs: slugs.map((slug) => ({ slug })),
+	const fields = await getFieldInfoForSlugs({
+		slugs: slugs,
 		communityId,
 		includeRelations: true,
 	});

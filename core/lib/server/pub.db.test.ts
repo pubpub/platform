@@ -271,7 +271,7 @@ describe("updatePub", () => {
 		expect(updatedPub[0].value as string).toBe("Updated title");
 	});
 
-	it("should error if trying to update relationship values", async () => {
+	it("should error if trying to update relationship values with updatePub", async () => {
 		const trx = getTrx();
 		const { createPubRecursiveNew, updatePub } = await import("./pub");
 
@@ -294,7 +294,9 @@ describe("updatePub", () => {
 				communityId: community.id,
 				continueOnValidationError: false,
 			})
-		).rejects.toThrow(/No pub field found for slug .*:some-relation/);
+		).rejects.toThrow(
+			/Pub values contain fields that do not exist in the community: .*?:some-relation/
+		);
 	});
 });
 
@@ -918,7 +920,7 @@ describe("upsertPubRelations", () => {
 		).rejects.toThrow(pubFields["Some relation"].slug);
 	});
 
-	it("should throw error for non-existent field slugs", async () => {
+	it("should throw error for fields that do not exist in the community", async () => {
 		const trx = getTrx();
 		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
 			"./pub"
@@ -948,7 +950,9 @@ describe("upsertPubRelations", () => {
 				],
 				trx,
 			})
-		).rejects.toThrow(`No pub field found for slug 'non-existent-field'`);
+		).rejects.toThrow(
+			`Pub values contain fields that do not exist in the community: non-existent-field`
+		);
 	});
 
 	it("should throw error for non-existent related pub id", async () => {
@@ -1276,7 +1280,9 @@ describe("removePubRelations", () => {
 				slugs: ["non-existent-field"],
 				communityId: community.id,
 			})
-		).rejects.toThrow("No pub field found for slug 'non-existent-field'");
+		).rejects.toThrow(
+			"Pub values contain fields that do not exist in the community: non-existent-field"
+		);
 	});
 });
 
@@ -1448,6 +1454,8 @@ describe("replacePubRelationsBySlug", () => {
 				},
 				communityId: community.id,
 			})
-		).rejects.toThrow("No pub field found for slug 'non-existent-field'");
+		).rejects.toThrow(
+			"Pub values contain fields that do not exist in the community: non-existent-field"
+		);
 	});
 });
