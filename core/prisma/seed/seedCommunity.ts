@@ -39,7 +39,7 @@ import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
 import { db } from "~/kysely/database";
-import { createPasswordHash } from "~/lib/auth/password";
+import { createPasswordHash } from "~/lib/authentication/password";
 import { createPubRecursiveNew } from "~/lib/server";
 import { slugifyString } from "~/lib/string";
 
@@ -157,7 +157,7 @@ type PubInitializer<
 									 * Note: this PubId reference a pub at least one level higher than the current pub, or it must be created before this pub.
 									 */
 									relatedPubId: PubsId;
-							  }
+							  }[]
 					: never
 				: never;
 		};
@@ -1077,11 +1077,11 @@ export const createSeed = <
 		slug: string;
 		avatar?: string;
 	};
-	pubFields: PF;
-	pubTypes: PT;
-	users: U;
-	stages: S;
-	stageConnections: SC;
-	pubs: PI;
-	forms: F;
+	pubFields?: PF;
+	pubTypes?: PT;
+	users?: U;
+	stages?: S;
+	stageConnections?: SC;
+	pubs?: PI;
+	forms?: F;
 }) => props;

@@ -32,6 +32,7 @@ export type ActionPub<T extends ActionPubType> = {
 		lastName: string | null;
 		email: string;
 	};
+	communityId: CommunitiesId;
 };
 
 export type RunProps<T extends Action> =

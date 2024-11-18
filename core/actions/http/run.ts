@@ -7,7 +7,7 @@ import { logger } from "logger";
 
 import type { action } from "./action";
 import type { PubValues } from "~/lib/server";
-import { _updatePub } from "~/app/components/pubs/PubEditor/actions";
+import { updatePub } from "~/lib/server/pub";
 import { defineRun } from "../types";
 
 const findNestedStructure = (json: unknown, path: string) => {
@@ -111,8 +111,9 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 		}, {} as PubValues);
 
 		try {
-			await _updatePub({
+			await updatePub({
 				pubId: pub.id as PubsId,
+				communityId: pub.communityId,
 				pubValues,
 				continueOnValidationError: false,
 			});

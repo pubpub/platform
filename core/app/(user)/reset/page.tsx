@@ -1,7 +1,7 @@
 import { AuthTokenType } from "db/public";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 import ResetForm from "./ResetForm";
 
 export default async function Page({

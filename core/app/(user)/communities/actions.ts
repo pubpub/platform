@@ -8,7 +8,7 @@ import { MemberRole } from "db/public";
 import type { TableCommunity } from "./getCommunityTableColumns";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";

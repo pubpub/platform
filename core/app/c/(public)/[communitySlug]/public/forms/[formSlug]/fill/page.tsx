@@ -16,8 +16,8 @@ import { ContextEditorContextProvider } from "~/app/components/ContextEditor/Con
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getCommunityRole } from "~/lib/auth/roles";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { getCommunityRole } from "~/lib/authentication/roles";
 import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";

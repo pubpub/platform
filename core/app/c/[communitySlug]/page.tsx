@@ -1,4 +1,4 @@
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 
 export default async function Page() {
 	await getPageLoginData();

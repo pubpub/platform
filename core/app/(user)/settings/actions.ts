@@ -8,7 +8,7 @@ import type { UsersId } from "db/public";
 
 import type { userInfoFormSchema } from "./UserInfoForm";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { updateUser } from "~/lib/server/user";

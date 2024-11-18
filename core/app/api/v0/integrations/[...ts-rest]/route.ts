@@ -4,7 +4,7 @@ import type { PubsId } from "db/public";
 import { api } from "contracts";
 import { logger } from "logger";
 
-import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
+import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env.mjs";
 import { deletePub, generateSignedAssetUploadUrl, getPub, tsRestHandleErrors } from "~/lib/server";
 import { emailUser } from "~/lib/server/_legacy-integration-email";

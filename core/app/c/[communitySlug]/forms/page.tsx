@@ -7,8 +7,8 @@ import { ClipboardPenLine } from "ui/icon";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContentLayout } from "../ContentLayout";

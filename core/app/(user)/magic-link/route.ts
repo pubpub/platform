@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
-import { lucia } from "~/lib/auth/lucia";
+import { lucia } from "~/lib/authentication/lucia";
 import { env } from "~/lib/env/env.mjs";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 

@@ -8,7 +8,7 @@ import { AuthTokenType } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
-import { createMagicLink } from "../auth/createMagicLink";
+import { createMagicLink } from "../authentication/createMagicLink";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";

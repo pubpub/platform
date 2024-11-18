@@ -12,18 +12,14 @@ import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
 import type { FormMembershipsTable } from "./FormMemberships";
 import type { FormsTable } from "./Forms";
-import type { FormToPermissionsTable } from "./FormToPermissions";
 import type { IntegrationInstancesTable } from "./IntegrationInstances";
 import type { IntegrationInstanceStateTable } from "./IntegrationInstanceState";
 import type { IntegrationInstanceToPubTable } from "./IntegrationInstanceToPub";
 import type { IntegrationsTable } from "./Integrations";
 import type { MemberGroupsTable } from "./MemberGroups";
 import type { MemberGroupToUserTable } from "./MemberGroupToUser";
-import type { MembersTable } from "./Members";
+import type { MembershipCapabilitiesTable } from "./MembershipCapabilities";
 import type { MoveConstraintTable } from "./MoveConstraint";
-import type { PermissionsTable } from "./Permissions";
-import type { PermissionToPubTable } from "./PermissionToPub";
-import type { PermissionToStageTable } from "./PermissionToStage";
 import type { PrismaMigrationsTable } from "./PrismaMigrations";
 import type { PubFieldsTable } from "./PubFields";
 import type { PubFieldSchemaTable } from "./PubFieldSchema";
@@ -40,14 +36,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	community_memberships: CommunityMembershipsTable;
-
-	pub_memberships: PubMembershipsTable;
-
-	stage_memberships: StageMembershipsTable;
-
-	form_memberships: FormMembershipsTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -57,8 +45,6 @@ export interface PublicSchema {
 	pub_types: PubTypesTable;
 
 	stages: StagesTable;
-
-	members: MembersTable;
 
 	member_groups: MemberGroupsTable;
 
@@ -77,12 +63,6 @@ export interface PublicSchema {
 	integration_instances: IntegrationInstancesTable;
 
 	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
-
-	permissions: PermissionsTable;
-
-	_PermissionToPub: PermissionToPubTable;
-
-	_PermissionToStage: PermissionToStageTable;
 
 	_MemberGroupToUser: MemberGroupToUserTable;
 
@@ -108,9 +88,17 @@ export interface PublicSchema {
 
 	api_access_permissions: ApiAccessPermissionsTable;
 
-	form_to_permissions: FormToPermissionsTable;
-
 	form_elements: FormElementsTable;
 
 	sessions: SessionsTable;
+
+	community_memberships: CommunityMembershipsTable;
+
+	pub_memberships: PubMembershipsTable;
+
+	stage_memberships: StageMembershipsTable;
+
+	form_memberships: FormMembershipsTable;
+
+	membership_capabilities: MembershipCapabilitiesTable;
 }

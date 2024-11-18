@@ -8,7 +8,7 @@ import type { CommunitiesId, NewUsers, UsersId, UsersUpdate } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
-import { createPasswordHash } from "../auth/password";
+import { createPasswordHash } from "../authentication/password";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 

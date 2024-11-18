@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 
 import { PubFieldProvider } from "ui/pubFields";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
