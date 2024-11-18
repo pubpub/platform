@@ -14,6 +14,7 @@ import {
 	createPubRecursiveNew,
 	getPubCached,
 	getPubs,
+	getPubsWithRelatedValuesAndChildren,
 	getPubType,
 	getPubTypesForCommunity,
 	NotFoundError,
@@ -118,7 +119,11 @@ const handler = createNextHandler(
 					ApiAccessType.read
 				);
 
-				const pubs = await getPubs({ communityId: community.id }, req.query);
+				// const pubs = await getPubs({ communityId: community.id }, req.query);
+				const pubs = await getPubsWithRelatedValuesAndChildren(
+					{ communityId: community.id },
+					req.query
+				);
 
 				return {
 					status: 200,
