@@ -9,7 +9,7 @@ import type { CoreSchemaType } from "db/src/public/CoreSchemaType";
  * @param fields Array of objects with slug and schemaName properties
  * @returns Array of merged objects with slug and value properties
  */
-export const mergeValuesWithFields = <
+export const mergeSlugsWithFields = <
 	T extends { slug: string },
 	P extends { slug: string; schemaName: CoreSchemaType },
 >(
