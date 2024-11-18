@@ -1,12 +1,8 @@
 import { Value } from "@sinclair/typebox/value";
-import Ajv from "ajv";
 import { Schema } from "prosemirror-model";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
-import { logger } from "logger";
-
-import type { BasePubField } from "../../actions/corePubFields";
 
 /** Temporary stub schema while we have not imported the context editor yet */
 const STUB_SCHEMA = new Schema({
@@ -60,9 +56,9 @@ export const validatePubValuesBySchemaName = (
 
 /**
  * Validate all `values` against their corresponding field's `schemaName`.
- * @deprecated
+ * @deprecated Use `validatePubValuesBySchemaName` instead.
  */
-export const __validatePubValuesBySchemaName = ({
+export const _deprecated_validatePubValuesBySchemaName = ({
 	fields,
 	values,
 }: {
@@ -96,39 +92,4 @@ export const __validatePubValuesBySchemaName = ({
 		}
 	}
 	return errors;
-};
-
-/**
- * TODO: Replace this with a more robust validation implementation
- *
- * This currently does not allow for mapping of field values to a schema
- */
-export const validatePubValues = ({
-	fields,
-	values,
-}: {
-	fields: BasePubField[];
-	values: Record<string, unknown>;
-}) => {
-	const validator = new Ajv();
-
-	for (const field of fields) {
-		const value = values[field.slug];
-
-		if (value === undefined) {
-			return { error: `Field ${field.slug} not found in pub values` };
-		}
-
-		try {
-			const val = validator.validate(field.schema.schema, value);
-			if (val !== true) {
-				return {
-					error: `Field ${field.slug} failed schema validation. Field "${field.name}" of type "${field.slug}" cannot be assigned to value: ${value} of type ${typeof value}`,
-				};
-			}
-		} catch (e) {
-			logger.error(e);
-			return { error: `Field ${field.slug} failed schema validation` };
-		}
-	}
 };

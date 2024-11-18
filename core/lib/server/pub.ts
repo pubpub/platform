@@ -40,7 +40,10 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
-import { __validatePubValuesBySchemaName, validatePubValuesBySchemaName } from "./validateFields";
+import {
+	_deprecated_validatePubValuesBySchemaName,
+	validatePubValuesBySchemaName,
+} from "./validateFields";
 
 export type PubValues = Record<string, JsonValue>;
 
@@ -435,7 +438,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	);
 
 	const validationErrors = Object.values(
-		__validatePubValuesBySchemaName({
+		_deprecated_validatePubValuesBySchemaName({
 			fields: filteredFields,
 			values: normalizedValues,
 		})

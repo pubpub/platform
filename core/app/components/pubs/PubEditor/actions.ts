@@ -15,7 +15,7 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { updatePub as _updatePub } from "~/lib/server/pub";
-import { __validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+import { _deprecated_validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	...[props]: Parameters<typeof createPubRecursiveNew>
