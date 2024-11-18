@@ -7,7 +7,7 @@ import type { PubField } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 
-type PubFieldsInput =
+type GetPubFieldsInput =
 	| {
 			pubId?: never;
 			pubTypeId?: never;
@@ -41,9 +41,9 @@ type PubFieldsInput =
  * @param props.communityId - When supplied, return all the pub fields associated with the community ID
  * @param props.slugs - Adds a `where('pub_fields.slug', 'in', props.slugs)` clause
  */
-export const getPubFields = (props: PubFieldsInput) => autoCache(_getPubFields(props));
+export const getPubFields = (props: GetPubFieldsInput) => autoCache(_getPubFields(props));
 
-export const _getPubFields = (props: PubFieldsInput) =>
+export const _getPubFields = (props: GetPubFieldsInput) =>
 	db
 		.with("ids", (eb) =>
 			eb
