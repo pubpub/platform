@@ -1,21 +1,12 @@
 import { Value } from "@sinclair/typebox/value";
-import { Schema } from "prosemirror-model";
+import { baseSchema } from "context-editor/schemas";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
 
-/** Temporary stub schema while we have not imported the context editor yet */
-const STUB_SCHEMA = new Schema({
-	nodes: {
-		doc: { content: "paragraph+" },
-		paragraph: { content: "text*" },
-		text: { inline: true },
-	},
-});
-
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
-		const node = STUB_SCHEMA.nodeFromJSON(value);
+		const node = baseSchema.nodeFromJSON(value);
 		node.check();
 		return true;
 	} catch {

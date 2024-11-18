@@ -5,8 +5,9 @@ import { expect } from "utils";
 
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
-import { getPubCached } from "~/lib/server";
+import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { getPubFields } from "~/lib/server/pubFields";
+import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
 import { makeFormElementDefFromPubFields } from "./helpers";
@@ -51,6 +52,11 @@ export async function PubEditor(props: PubEditorProps) {
 			props.communityId
 		).executeTakeFirstOrThrow();
 	}
+
+	const [pubs, pubTypes] = await Promise.all([
+		getPubs({ communityId: community.id }),
+		getPubTypesForCommunity(community.id),
+	]);
 
 	const pubValues = pub?.values ?? {};
 
@@ -103,19 +109,26 @@ export async function PubEditor(props: PubEditorProps) {
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
 	const editor = (
-		<PubEditorClient
-			availablePubTypes={community.pubTypes}
-			availableStages={community.stages}
-			communityId={community.id}
-			formElements={formElements}
-			parentId={"parentId" in props ? props.parentId : undefined}
-			pubFields={pubFields}
-			pubId={pubId}
-			pubTypeId={pubType?.id}
-			pubValues={pubValues}
-			stageId={currentStageId}
-			isUpdating={isUpdating}
-		/>
+		<ContextEditorContextProvider
+			pubId={pub?.id}
+			pubTypeId={pubType.id}
+			pubs={pubs}
+			pubTypes={pubTypes}
+		>
+			<PubEditorClient
+				availablePubTypes={community.pubTypes}
+				availableStages={community.stages}
+				communityId={community.id}
+				formElements={formElements}
+				parentId={"parentId" in props ? props.parentId : undefined}
+				pubFields={pubFields}
+				pubId={pubId}
+				pubTypeId={pubType?.id}
+				pubValues={pubValues}
+				stageId={currentStageId}
+				isUpdating={isUpdating}
+			/>
+		</ContextEditorContextProvider>
 	);
 
 	if (isUpdating) {

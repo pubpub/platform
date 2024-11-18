@@ -362,6 +362,8 @@ export const getPubs = async (
 	return pubs.map(nestChildren);
 };
 
+export type GetPubsResult = Prettify<Awaited<ReturnType<typeof getPubs>>>;
+
 const PubNotFoundError = new NotFoundError("Pub not found");
 
 /**

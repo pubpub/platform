@@ -1,7 +1,7 @@
 "use client";
 
 import type { Static, TObject } from "@sinclair/typebox";
-import type { FieldPath, SubmitHandler, UseFormReturn } from "react-hook-form";
+import type { FieldPath, FieldValues, SubmitHandler, UseFormReturn } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -9,6 +9,7 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 
+import type { JsonValue } from "contracts";
 import type {
 	CommunitiesId,
 	PubFields,
@@ -19,6 +20,7 @@ import type {
 	Stages,
 	StagesId,
 } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import {
 	DropdownMenu,
@@ -31,9 +33,11 @@ import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
+import type { FormElementToggleContext } from "../../forms/FormElementToggleContext";
 import type { PubValues } from "~/lib/server";
 import type { PubField } from "~/lib/types";
 import { Notice } from "~/app/(user)/login/Notice";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { useFormElementToggleContext } from "../../forms/FormElementToggleContext";
 import * as actions from "./actions";
@@ -71,6 +75,29 @@ const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>
 			(field) => field === "pubTypeId" || field === "stageId"
 		)
 	);
+};
+
+/** Only send enabled fields, and transform RichText fields */
+const preparePayload = ({
+	pubValues,
+	toggleContext,
+	pubFields,
+}: {
+	pubValues: FieldValues;
+	toggleContext: FormElementToggleContext;
+	pubFields: Props["pubFields"];
+}) => {
+	const payload: Record<string, JsonValue> = {};
+	for (const { slug, schemaName } of pubFields) {
+		if (toggleContext.isEnabled(slug)) {
+			payload[slug] =
+				schemaName === CoreSchemaType.RichText
+					? serializeProseMirrorDoc(pubValues[slug])
+					: pubValues[slug];
+		}
+	}
+
+	return payload;
 };
 
 type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
@@ -150,9 +177,11 @@ export function PubEditorClient(props: Props) {
 
 	const onSubmit: SubmitHandler<Static<typeof pubFieldsSchema>> = async (data) => {
 		const { pubTypeId, stageId, ...pubValues } = data;
-		const enabledPubValues = Object.fromEntries(
-			Object.entries(pubValues).filter(([slug]) => formElementToggle.isEnabled(slug))
-		) as PubValues;
+		const enabledPubValues = preparePayload({
+			pubValues,
+			toggleContext: formElementToggle,
+			pubFields: props.pubFields,
+		});
 
 		if (props.isUpdating) {
 			const result = await runUpdatePub({

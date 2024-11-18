@@ -11,6 +11,7 @@ import type { Form } from "~/lib/server/form";
 import { CheckboxElement } from "./elements/CheckboxElement";
 import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
 import { ConfidenceElement } from "./elements/ConfidenceElement";
+import { ContextEditorElement } from "./elements/ContextEditorElement";
 import { DateElement } from "./elements/DateElement";
 import { FileUploadElement } from "./elements/FileUploadElement";
 import { MemberSelectElement } from "./elements/MemberSelectElement";
@@ -97,8 +98,7 @@ export const FormElement = ({
 	} else if (component === InputComponent.multivalueInput) {
 		input = <MultivalueInputElement {...elementProps} />;
 	} else if (component === InputComponent.richText) {
-		// TODO: Render the rich text component
-		return null;
+		input = <ContextEditorElement {...elementProps} />;
 	}
 
 	if (input) {
