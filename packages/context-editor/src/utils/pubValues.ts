@@ -1,5 +1,6 @@
+import type { Node } from "prosemirror-model";
+
 import deepMerge from "deepmerge";
-import { EditorState } from "prosemirror-state";
 
 interface DocValue {
 	type: string;
@@ -24,7 +25,7 @@ interface EditedPubs {
 	};
 }
 
-export const getPubValues = (editorState: EditorState, pubId: string) => {
+export const getPubValues = (editorState: { doc: Node }, pubId: string) => {
 	const editedPubs: EditedPubs = {};
 	// TODO: figure out how to handle "main content"
 	// editedPubs[pubId] = {

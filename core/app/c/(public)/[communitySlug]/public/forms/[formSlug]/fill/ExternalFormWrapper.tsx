@@ -59,47 +59,34 @@ const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 };
 
 const preparePayload = ({
-	pubId,
 	formElements,
 	formValues,
 	formState,
 	toggleContext,
 }: {
-	pubId: PubsId;
 	formElements: PubPubForm["elements"];
 	formValues: FieldValues;
 	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
 }) => {
-	// 1. For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
+	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
 	// For example, if a pub has an 'email' field but the form does not,
-	// we do not want to pass an empty `email` field to the upsert (it will fail validation).
-	// Also do not send disabled or untouched fields
+	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug } of formElements) {
+	for (const { slug, schemaName } of formElements) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
 			// Only send fields that were changed.
 			formState.dirtyFields[slug]
 		) {
-			payload[slug] = formValues[slug];
+			payload[slug] =
+				schemaName === CoreSchemaType.RichText
+					? serializeProseMirrorDoc(formValues[slug])
+					: formValues[slug];
 		}
 	}
-	// 2. Let RichText fields overwrite any values (including disabled fields)
-	const { values } = parseRichTextForPubFieldsAndRelatedPubs({
-		pubId,
-		elements: formElements,
-		newValues: payload,
-	});
-	// 3. Serialize the rich text node so we can send to the server. Need to do this last
-	// since we need RichText in its unserialized form to operate on above.
-	for (const { slug, schemaName } of formElements) {
-		if (schemaName === CoreSchemaType.RichText && slug) {
-			values[slug] = serializeProseMirrorDoc(values[slug] as unknown as Node);
-		}
-	}
-	return values;
+	return payload;
 };
 
 /**
@@ -218,7 +205,6 @@ export const ExternalFormWrapper = ({
 			autoSave = false
 		) => {
 			const pubValues = preparePayload({
-				pubId,
 				formElements,
 				formValues,
 				formState: formInstance.formState,

@@ -35,6 +35,7 @@ import { assert, expect } from "utils";
 
 import type { DefinitelyHas, MaybeHas, Prettify, PubField, XOR } from "../types";
 import { db } from "~/kysely/database";
+import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { mergeSlugsWithFields } from "../fields/utils";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -893,8 +894,21 @@ export const updatePub = async ({
 			value,
 		}));
 
+		const relevantPubFields = await getFieldInfoForSlugs({
+			slugs: vals.map(({ slug }) => slug),
+			communityId,
+			// do not update relations, and error if a relation slug is included
+			includeRelations: false,
+		});
+		const mergedPubFields = mergeSlugsWithFields(vals, relevantPubFields);
+		// Allow rich text fields to overwrite other fields
+		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
+			pubId,
+			values: mergedPubFields,
+		});
+
 		const pubValuesWithSchemaNameAndFieldId = await validatePubValues({
-			pubValues: vals,
+			pubValues: processedVals,
 			communityId,
 			continueOnValidationError,
 			// do not update relations, and error if a relation slug is included

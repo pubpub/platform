@@ -1,7 +1,6 @@
 "use client";
 
 import type { Static, TObject } from "@sinclair/typebox";
-import type { Node } from "prosemirror-model";
 import type { FieldPath, FieldValues, SubmitHandler, UseFormReturn } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -38,10 +37,7 @@ import type { FormElementToggleContext } from "../../forms/FormElementToggleCont
 import type { PubValues } from "~/lib/server";
 import type { PubField } from "~/lib/types";
 import { Notice } from "~/app/(user)/login/Notice";
-import {
-	parseRichTextForPubFieldsAndRelatedPubs,
-	serializeProseMirrorDoc,
-} from "~/lib/fields/richText";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { useFormElementToggleContext } from "../../forms/FormElementToggleContext";
 import * as actions from "./actions";
@@ -83,37 +79,25 @@ const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>
 
 /** Only send enabled fields, and transform RichText fields */
 const preparePayload = ({
-	pubId,
 	pubValues,
 	toggleContext,
 	pubFields,
 }: {
-	pubId: PubsId;
 	pubValues: FieldValues;
 	toggleContext: FormElementToggleContext;
 	pubFields: Props["pubFields"];
 }) => {
-	// 1. Only send enabled fields
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug } of pubFields) {
-		if (toggleContext.isEnabled(slug)) {
-			payload[slug] = pubValues[slug];
-		}
-	}
-	// 2. Let RichText fields overwrite any values (including disabled fields)
-	const { values } = parseRichTextForPubFieldsAndRelatedPubs({
-		pubId,
-		elements: pubFields,
-		newValues: payload,
-	});
-	// 3. Serialize the rich text node so we can send to the server
 	for (const { slug, schemaName } of pubFields) {
-		if (schemaName === CoreSchemaType.RichText && slug) {
-			values[slug] = serializeProseMirrorDoc(values[slug] as unknown as Node);
+		if (toggleContext.isEnabled(slug)) {
+			payload[slug] =
+				schemaName === CoreSchemaType.RichText
+					? serializeProseMirrorDoc(pubValues[slug])
+					: pubValues[slug];
 		}
 	}
 
-	return values;
+	return payload;
 };
 
 type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
@@ -194,7 +178,6 @@ export function PubEditorClient(props: Props) {
 	const onSubmit: SubmitHandler<Static<typeof pubFieldsSchema>> = async (data) => {
 		const { pubTypeId, stageId, ...pubValues } = data;
 		const enabledPubValues = preparePayload({
-			pubId,
 			pubValues,
 			toggleContext: formElementToggle,
 			pubFields: props.pubFields,
