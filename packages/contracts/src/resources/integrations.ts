@@ -1,6 +1,8 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
+import { pubsIdSchema } from "db/public";
+
 // Auth types
 
 export const SafeUser = z.object({
@@ -21,7 +23,7 @@ export const User = SafeUser.and(
 export type User = z.infer<typeof User>;
 
 // Json value types taken from prisma
-export type JsonObject = { [Key in string]?: JsonValue };
+export type JsonObject = { [Key in string]: JsonValue };
 export interface JsonArray extends Array<JsonValue> {}
 export type JsonValue = string | number | boolean | JsonObject | JsonArray | null;
 export type InputJsonObject = { readonly [Key in string]?: InputJsonValue | null };
@@ -94,7 +96,9 @@ export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
 // TODO: there has to be a better way to allow the API requests to include nulls in json fields
 export const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
 	id: z.string().optional(),
-	values: z.record(jsonSchema),
+	values: z.record(
+		z.union([jsonSchema, z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }).array()])
+	),
 	assigneeId: z.string().optional(),
 });
 

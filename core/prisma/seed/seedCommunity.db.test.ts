@@ -86,7 +86,7 @@ describe("seedCommunity", () => {
 					pubType: "Submission",
 					values: {
 						Title: "HENK",
-						SubmissionAuthor: { value: 0, relatedPubId: authorPubId },
+						SubmissionAuthor: [{ value: 0, relatedPubId: authorPubId }],
 					},
 					stage: "Stage 1",
 					children: [

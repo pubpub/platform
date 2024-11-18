@@ -88,7 +88,7 @@ export const _getPubType = async (pubTypeId: string): Promise<GetPubTypeResponse
 		throw new NotFoundError("Pub Type not found");
 	}
 	const { fields, ...rest } = pubType;
-	return { ...rest, fields: fields.map((f) => f.pubField) };
+	return { ...rest, fields: fields.map((f) => f.pubField) } as GetPubTypeResponseBody;
 };
 
 export const getSuggestedMembers = async (

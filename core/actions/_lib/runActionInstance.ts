@@ -13,7 +13,6 @@ import type { ClientException, ClientExceptionOptions } from "~/lib/serverAction
 import { db } from "~/kysely/database";
 import { getPub, getPubCached } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { validatePubValues } from "../../lib/server/validateFields";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
 import { resolveWithPubfields } from "./resolvePubfields";
@@ -169,6 +168,7 @@ const _runActionInstance = async (
 				values: pub.values as any,
 				assignee: pub.assignee ?? undefined,
 				parentId: pub.parentId,
+				communityId: pub.communityId,
 			},
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,

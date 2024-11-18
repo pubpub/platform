@@ -12,8 +12,10 @@ import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { createPubRecursiveNew } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+import { updatePub as _updatePub } from "~/lib/server/pub";
+import { _deprecated_validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	...[props]: Parameters<typeof createPubRecursiveNew>
@@ -43,124 +45,6 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	}
 });
 
-export const _updatePub = async ({
-	pubId,
-	pubValues,
-	stageId,
-	pubTypeId,
-	continueOnValidationError,
-}: {
-	pubId: PubsId;
-	pubValues: PubValues;
-	stageId?: StagesId;
-	pubTypeId?: PubTypesId;
-	continueOnValidationError: boolean;
-}) => {
-	const result = await db.transaction().execute(async (trx) => {
-		// Update the stage if a target stage was provided.
-		if (stageId !== undefined) {
-			await autoRevalidate(
-				trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId)
-			).execute();
-			await autoRevalidate(
-				trx.insertInto("PubsInStages").values({ pubId, stageId })
-			).execute();
-		}
-
-		// Update the pub type if a pub type was provided.
-		if (pubId !== undefined) {
-			await autoRevalidate(
-				trx.updateTable("pubs").set({ pubTypeId }).where("id", "=", pubId)
-			).execute();
-		}
-
-		// First query for existing values so we know whether to insert or update.
-		// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
-		const toBeUpdatedPubFieldSlugs = Object.keys(pubValues);
-
-		if (!toBeUpdatedPubFieldSlugs.length) {
-			return {
-				success: true,
-				report: "Pub updated successfully",
-			};
-		}
-
-		const existingPubFieldValues = await autoCache(
-			trx
-				.selectFrom("pub_fields")
-				.leftJoin("pub_values", (join) =>
-					join
-						.onRef("pub_values.fieldId", "=", "pub_fields.id")
-						.on("pub_values.pubId", "=", pubId)
-				)
-				.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-				.where("pub_fields.isRelation", "=", false)
-				.select([
-					"pub_values.id as pubValueId",
-					"pub_fields.slug",
-					"pub_fields.name",
-					"pub_fields.schemaName",
-				])
-		).execute();
-
-		const validationErrors = validatePubValuesBySchemaName({
-			fields: existingPubFieldValues,
-			values: pubValues,
-		});
-
-		const invalidValueSlugs = Object.keys(validationErrors);
-		if (invalidValueSlugs.length) {
-			if (continueOnValidationError) {
-				for (const slug of invalidValueSlugs) {
-					delete pubValues[slug];
-				}
-			} else {
-				throw new Error(Object.values(validationErrors).join(" "));
-			}
-		}
-
-		try {
-			// Insert, update on conflict
-			await autoRevalidate(
-				trx
-					.insertInto("pub_values")
-					.values((eb) =>
-						Object.entries(pubValues).map(([pubFieldSlug, pubValue]) => ({
-							id:
-								existingPubFieldValues.find(
-									(pubFieldValue) => pubFieldValue.slug === pubFieldSlug
-								)?.pubValueId ?? undefined,
-							pubId,
-							value: JSON.stringify(pubValue),
-							fieldId: eb
-								.selectFrom("pub_fields")
-								.where("pub_fields.slug", "=", pubFieldSlug)
-								.select("pub_fields.id"),
-						}))
-					)
-					.onConflict((oc) =>
-						oc.column("id").doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-						}))
-					)
-			).execute();
-		} catch (error) {
-			return {
-				title: "Failed to update pub",
-				error: `${error.reason}`,
-				cause: error,
-			};
-		}
-
-		return {
-			success: true,
-			report: "Pub updated successfully",
-		};
-	});
-
-	return result;
-};
-
 export const updatePub = defineServerAction(async function updatePub({
 	pubId,
 	pubTypeId,
@@ -180,10 +64,16 @@ export const updatePub = defineServerAction(async function updatePub({
 		throw new Error("Not logged in");
 	}
 
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		throw new Error("Community not found");
+	}
+
 	try {
 		const result = await _updatePub({
 			pubId,
-			pubTypeId,
+			communityId: community.id,
 			pubValues,
 			stageId,
 			continueOnValidationError,
