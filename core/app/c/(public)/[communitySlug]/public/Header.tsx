@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { Button } from "ui/button";
 
-import { FormLinkCopyButton } from "~/app/components/forms/FormLinkCopyButton";
+import { CopyCurrentUrlButton } from "~/app/components/CopyCurrentUrlButton";
 import Logo from "~/app/components/Logo";
 import { HEADER_HEIGHT } from "~/lib/ui";
 
@@ -18,9 +18,9 @@ export const Header = ({ children }: { children: ReactNode }) => {
 			{children}
 			<div className="mr-6 flex flex-1 justify-end">
 				<Button variant="outline" className="border-foreground">
-					<FormLinkCopyButton className="flex h-8 w-auto gap-1 p-3">
+					<CopyCurrentUrlButton className="flex h-8 w-auto gap-1 p-3">
 						Copy link
-					</FormLinkCopyButton>
+					</CopyCurrentUrlButton>
 				</Button>
 			</div>
 		</div>
