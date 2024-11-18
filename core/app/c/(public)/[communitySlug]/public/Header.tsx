@@ -1,10 +1,21 @@
 import type { ReactNode } from "react";
 
+import dynamic from "next/dynamic";
+
 import { Button } from "ui/button";
 
-import { CopyCurrentUrlButton } from "~/app/components/CopyCurrentUrlButton";
 import Logo from "~/app/components/Logo";
 import { HEADER_HEIGHT } from "~/lib/ui";
+
+const CopyCurrentUrlButton = dynamic(
+	() =>
+		import("~/app/components/CopyCurrentUrlButton").then(
+			(module) => module.CopyCurrentUrlButton
+		),
+	{
+		ssr: false,
+	}
+);
 
 export const Header = ({ children }: { children: ReactNode }) => {
 	return (
