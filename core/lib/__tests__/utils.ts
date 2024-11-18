@@ -92,7 +92,7 @@ export const mockServerCode = async () => {
 		},
 	}));
 
-	vi.mock("~/lib/auth/loginData", () => {
+	vi.mock("~/lib/authentication/loginData", () => {
 		return {
 			getLoginData: getLoginData,
 		};

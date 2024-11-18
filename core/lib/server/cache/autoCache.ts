@@ -104,9 +104,9 @@ const executeWithCache = <
  * 		"lastName",
  * 		"avatar",
  * 		jsonObjectAgg(
- * 			eb.selectFrom("members").selectAll().whereRef("members.user_id", "=", "users.id")
+ * 			eb.selectFrom("community_memberships").selectAll("community_memberships").whereRef("community_memberships.user_id", "=", "users.id")
  * 		)
- * 			.where("community_id", "=", communityId)
+ * 			.where("community_memberships.communityId", "=", communityId)
  * 			.as("memberships"),
  * 	])
  * );
@@ -145,7 +145,7 @@ const executeWithCache = <
  * 		"lastName",
  * 		"avatar",
  * 		jsonObjectAgg(
- * 			eb.selectFrom("members").selectAll().whereRef("members.user_id", "=", "users.id")
+ * 			eb.selectFrom("community_memberships").selectAll("community_memberships").whereRef("community_memberships.user_id", "=", "users.id")
  * 		)
  * 			.where("community_id", "=", "s")
  * 			.as("memberships"),

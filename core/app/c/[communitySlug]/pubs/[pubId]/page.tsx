@@ -18,9 +18,8 @@ import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
-import { getPubUsers } from "~/lib/permissions";
 import { pubValuesByVal } from "~/lib/server";
 import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -87,7 +86,7 @@ export default async function Page({
 	if (!pub) {
 		return null;
 	}
-	const users = getPubUsers(pub.permissions);
+
 	const community = await getCommunityBySlug(params.communitySlug);
 
 	if (community === null) {
@@ -193,14 +192,20 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Members</div>
 						<div className="flex flex-row flex-wrap">
-							{users.map((user) => {
+							{pub.members.map((member) => {
 								return (
-									<div key={user.id}>
-										<Avatar className="mr-2 h-8 w-8">
-											<AvatarImage src={user.avatar || undefined} />
-											<AvatarFallback>{user.firstName[0]}</AvatarFallback>
-										</Avatar>
-									</div>
+									member.user && (
+										<div key={member.user.id}>
+											<Avatar className="mr-2 h-8 w-8">
+												<AvatarImage
+													src={member.user.avatar || undefined}
+												/>
+												<AvatarFallback>
+													{member.user.firstName[0]}
+												</AvatarFallback>
+											</Avatar>
+										</div>
+									)
 								);
 							})}
 						</div>

@@ -5,7 +5,14 @@ import { cookies } from "next/headers";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { Lucia } from "lucia";
 
-import type { Communities, Members, Sessions, SessionsId, Users, UsersId } from "db/public";
+import type {
+	Communities,
+	CommunityMemberships,
+	Sessions,
+	SessionsId,
+	Users,
+	UsersId,
+} from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
@@ -13,7 +20,7 @@ import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
 
 type UserWithMembersShips = Omit<Users, "passwordHash"> & {
-	memberships: (Members & {
+	memberships: (CommunityMemberships & {
 		community: Communities;
 	})[];
 };
@@ -54,35 +61,35 @@ class KyselyAdapter implements Adapter {
 	): Promise<[session: DatabaseSession | null, user: DatabaseUser | null]> {
 		const session = await db
 			.selectFrom("sessions")
-			.selectAll()
+			.selectAll("sessions")
 			.select((eb) => [
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
-						.selectAll()
+						.selectAll("users")
 						.select((eb) => [
 							"users.id",
 							jsonArrayFrom(
 								eb
-									.selectFrom("members")
-									.selectAll()
+									.selectFrom("community_memberships")
+									.selectAll("community_memberships")
 									.select((eb) => [
-										"members.id",
+										"community_memberships.id",
 										jsonObjectFrom(
 											eb
 												.selectFrom("communities")
-												.selectAll()
+												.selectAll("communities")
 												.select(["communities.id"])
 												.whereRef(
 													"communities.id",
 													"=",
-													"members.communityId"
+													"community_memberships.communityId"
 												)
 										)
 											.$notNull()
 											.as("community"),
 									])
-									.whereRef("members.userId", "=", "users.id")
+									.whereRef("community_memberships.userId", "=", "users.id")
 							)
 								.$notNull()
 								.as("memberships"),

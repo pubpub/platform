@@ -1,13 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import { makeWorkerUtils } from "graphile-worker";
 
-import type { CommunitiesId, CommunityMembershipsId, MembersId } from "db/public";
+import type { CommunitiesId, CommunityMembershipsId } from "db/public";
 import { MemberRole } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
-import { createPasswordHash } from "~/lib/auth/password";
+import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env.mjs";
 import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
 import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";
@@ -51,23 +51,11 @@ async function createUserMembers({
 	}));
 	return db
 		.with("new_users", (db) => db.insertInto("users").values(values).returningAll())
-		.with("community_membership", (db) =>
-			db.insertInto("community_memberships").values((eb) =>
-				memberships.map((membership) => ({
-					...membership,
-					id: membership.id as CommunityMembershipsId,
-					userId: eb
-						.selectFrom("new_users")
-						.select("new_users.id")
-						.where("slug", "=", slug),
-				}))
-			)
-		)
-		.insertInto("members")
+		.insertInto("community_memberships")
 		.values((eb) =>
 			memberships.map((membership) => ({
 				...membership,
-				id: membership.id as MembersId,
+				id: membership.id as CommunityMembershipsId,
 				userId: eb.selectFrom("new_users").select("new_users.id").where("slug", "=", slug),
 			}))
 		)

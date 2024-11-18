@@ -1,6 +1,6 @@
 import { AuthTokenType } from "db/public";
-import { getLoginData } from "lib/auth/loginData";
 
+import { getLoginData } from "~/lib/authentication/loginData";
 import { SignupForm } from "./SignupForm";
 
 export default async function Page() {

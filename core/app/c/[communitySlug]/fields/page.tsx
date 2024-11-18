@@ -9,7 +9,7 @@ import { cn } from "utils";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
 import { FieldsTable } from "./FieldsTable";

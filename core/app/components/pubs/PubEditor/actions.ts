@@ -7,8 +7,8 @@ import { logger } from "logger";
 
 import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { createPubRecursiveNew } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";

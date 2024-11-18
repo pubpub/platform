@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import type { StagesId } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getStage } from "~/lib/db/queries";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";

@@ -1,7 +1,5 @@
 "use client";
 
-import assert from "assert";
-
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";

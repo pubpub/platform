@@ -8,7 +8,7 @@ import type { CommunitiesId, NewUsers, UsersId, UsersUpdate } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
-import { createPasswordHash } from "../auth/password";
+import { createPasswordHash } from "../authentication/password";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 
@@ -34,14 +34,14 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 			...SAFE_USER_SELECT,
 			jsonArrayFrom(
 				eb
-					.selectFrom("members")
+					.selectFrom("community_memberships")
 					.select((eb) => [
-						"members.id",
-						"members.userId",
-						"members.createdAt",
-						"members.updatedAt",
-						"members.role",
-						"members.communityId",
+						"community_memberships.id",
+						"community_memberships.userId",
+						"community_memberships.createdAt",
+						"community_memberships.updatedAt",
+						"community_memberships.role",
+						"community_memberships.communityId",
 						jsonObjectFrom(
 							eb
 								.selectFrom("communities")
@@ -53,11 +53,14 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 									"communities.createdAt",
 									"communities.updatedAt",
 								])
-								.whereRef("communities.id", "=", "members.communityId")
+								.whereRef(
+									"communities.id",
+									"=",
+									"community_memberships.communityId"
+								)
 						).as("community"),
 					])
-					// for some reason doing "members.userId" doesn't work
-					.whereRef("userId", "=", "users.id")
+					.whereRef("community_memberships.userId", "=", "users.id")
 			).as("memberships"),
 		])
 		.$if(Boolean(userIdOrEmail.email), (eb) =>
@@ -98,10 +101,10 @@ export const getSuggestedUsers = ({
 				eb.select((eb) => [
 					jsonObjectFrom(
 						eb
-							.selectFrom("members")
-							.selectAll("members")
-							.whereRef("members.userId", "=", "users.id")
-							.where("members.communityId", "=", communityId!)
+							.selectFrom("community_memberships")
+							.selectAll("community_memberships")
+							.whereRef("community_memberships.userId", "=", "users.id")
+							.where("community_memberships.communityId", "=", communityId!)
 					).as("member"),
 				])
 			)
@@ -142,9 +145,9 @@ export const updateUser = async (
 	// as we would need to know the result of this query in order to tag it
 	// properly, which is obviously impossible
 	const communitySlugs = await trx
-		.selectFrom("members")
+		.selectFrom("community_memberships")
 		.where("userId", "=", id)
-		.innerJoin("communities", "members.communityId", "communities.id")
+		.innerJoin("communities", "community_memberships.communityId", "communities.id")
 		.select(["communities.slug"])
 		.execute();
 

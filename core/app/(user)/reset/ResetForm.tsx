@@ -12,7 +12,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
-import { resetPassword } from "~/lib/auth/actions";
+import { resetPassword } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
 const resetPasswordSchema = z.object({

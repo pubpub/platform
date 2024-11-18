@@ -60,7 +60,7 @@ We are using [Lucia](https://github.com/lucia-auth/lucia) for authentication.
 
 It is a very minimal session-based authentication system.
 
-See [core/lib/auth/README.md](core/lib/auth/README.md) for more information.
+See [core/lib/authentication/README.md](core/lib/authentication/README.md) for more information.
 
 # Testing
 

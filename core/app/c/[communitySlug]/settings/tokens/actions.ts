@@ -9,7 +9,7 @@ import type {
 } from "db/public";
 
 import type { CreateTokenFormSchema } from "./CreateTokenForm";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { createApiAccessToken, deleteApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";

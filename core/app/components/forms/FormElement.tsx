@@ -1,7 +1,7 @@
 import { defaultComponent } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
-import type { MembersId, PubsId } from "db/public";
+import type { CommunityMembershipsId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
@@ -77,7 +77,7 @@ export const FormElement = ({
 	} else if (component === InputComponent.datePicker) {
 		input = <DateElement {...elementProps} />;
 	} else if (component === InputComponent.memberSelect) {
-		const userId = values[element.slug!] as MembersId | undefined;
+		const userId = values[element.slug!] as CommunityMembershipsId | undefined;
 		input = (
 			<MemberSelectElement
 				config={elementProps.config}

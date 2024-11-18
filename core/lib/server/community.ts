@@ -48,9 +48,9 @@ export type CommunityData = Awaited<ReturnType<typeof findCommunityByPubId>>;
 // TODO: cache this
 export const getAvailableCommunities = async (userId: UsersId) => {
 	return await db
-		.selectFrom("members")
-		.where("members.userId", "=", userId)
-		.innerJoin("communities", "communities.id", "members.communityId")
+		.selectFrom("community_memberships")
+		.where("community_memberships.userId", "=", userId)
+		.innerJoin("communities", "communities.id", "community_memberships.communityId")
 		.selectAll("communities")
 		.execute();
 };

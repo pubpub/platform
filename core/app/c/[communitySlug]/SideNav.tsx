@@ -3,8 +3,8 @@ import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/ico
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
-import { getLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
