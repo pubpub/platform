@@ -75,22 +75,22 @@ const preparePayload = ({
 	// For example, if a pub has an 'email' field but the form does not,
 	// we do not want to pass an empty `email` field to the upsert (it will fail validation).
 	// Also do not send disabled or untouched fields
-	const payload: Record<string, JsonValue> = {};
-	for (const { slug } of formElements) {
-		if (
-			slug &&
-			toggleContext.isEnabled(slug) &&
-			// Only send fields that were changed.
-			formState.dirtyFields[slug]
-		) {
-			payload[slug] = formValues[slug];
-		}
-	}
+	const newValues = formElements
+		.filter(
+			(e) =>
+				e.slug !== null &&
+				toggleContext.isEnabled(e.slug) &&
+				Boolean(formState.dirtyFields[e.slug])
+		)
+		.map((e) => ({
+			slug: e.slug!,
+			value: formValues[e.slug!],
+			schemaName: e.schemaName,
+		}));
 	// 2. Let RichText fields overwrite any values (including disabled fields)
 	const { values } = parseRichTextForPubFieldsAndRelatedPubs({
 		pubId,
-		elements: formElements,
-		newValues: payload,
+		newValues,
 	});
 	// 3. Serialize the rich text node so we can send to the server. Need to do this last
 	// since we need RichText in its unserialized form to operate on above.

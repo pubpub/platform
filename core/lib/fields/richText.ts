@@ -1,6 +1,5 @@
-import type { Node } from "prosemirror-model";
-
 import { getPubValues } from "context-editor";
+import { Node } from "prosemirror-model";
 
 import type { JsonValue } from "contracts";
 import type { PubsId } from "db/public";
@@ -23,7 +22,21 @@ interface PubCreate {
 	};
 }
 
+type NonRichTextValue = {
+	slug: string;
+	schemaName: Omit<CoreSchemaType, CoreSchemaType.RichText> | null;
+	value: JsonValue;
+};
+
+type RichTextValue = {
+	slug: string;
+	schemaName: CoreSchemaType.RichText;
+	value: Node;
+};
+
 /**
+ * Note: the RichText value is expected to be a valid prosemirror node.
+ *
  * Parse rich text values to get values (overwritten pubfields) and related pubs
  * in order to pass into a `createPub` function.
  *
@@ -49,50 +62,73 @@ interface PubCreate {
  */
 export const parseRichTextForPubFieldsAndRelatedPubs = ({
 	pubId,
-	elements,
 	newValues,
 }: {
 	pubId: PubsId;
-	elements: { slug: string | null; schemaName: CoreSchemaType | null }[];
-	newValues: Record<string, JsonValue>;
+	newValues: (NonRichTextValue | RichTextValue)[];
 }) => {
-	const payload: Record<string, JsonValue> = { ...newValues };
 	const pubs: PubCreate[] = [];
-	const richTextElement = elements.filter((e) => e.schemaName === CoreSchemaType.RichText)[0];
-	// If there is no rich text field, do not alter any fields
-	if (!richTextElement || !richTextElement.slug) {
-		return { values: payload, relatedPubs: pubs };
-	}
-	const richTextValue = newValues[richTextElement.slug];
-	if (!richTextValue) {
-		return { values: payload, relatedPubs: pubs };
-	}
-	const editorPubValues = getPubValues({ doc: richTextValue } as any, pubId);
 
-	Object.entries(editorPubValues).map(([nodePubId, data]) => {
-		// Field on the current pub
-		if (nodePubId === pubId) {
-			const { values } = data;
-			Object.entries(values).map(([fieldSlug, fieldValues]) => {
-				// This is a DocValue, which we parse through the content fields
-				// TODO: We currently just do a concat on all the text fields, assuming we want a string.
-				// May want to check that this schemaName === String first? This is kinda equivalent to what is
-				// hardcoded in https://github.com/pubpub/platform/blob/1de6413bbc18283f40e058c7bf4db2c762d5aedf/packages/context-editor/src/utils/pubValues.ts#L51
-				if (Array.isArray(fieldValues)) {
-					payload[fieldSlug] = fieldValues
-						.map((fieldValue) => fieldValue.content.map((c) => c.text).join(", "))
-						.join(", ");
-				} else {
-					payload[fieldSlug] = fieldValues;
-				}
-			});
-			// This is a related pub
-		} else {
+	// separate out the rich text values and the payload
+	const { richText, payload } = newValues.reduce<{
+		richText: RichTextValue[];
+		payload: Record<string, JsonValue>;
+	}>(
+		(acc, e) => {
+			if (e.schemaName === CoreSchemaType.RichText) {
+				acc.richText.push(e as RichTextValue);
+				return acc;
+			}
+
+			acc.payload[e.slug!] = e.value as JsonValue;
+			return acc;
+		},
+		{ richText: [], payload: {} }
+	);
+	// If there are no rich text fields, return the payload as is
+	if (!richText.length) {
+		return { values: payload, relatedPubs: pubs };
+	}
+
+	const firstRichTextElement = richText[0];
+
+	const richTextValue = firstRichTextElement.value;
+
+	// bail out and just return the payload if the rich text value is not a valid prosemirror node
+	// maybe it should throw an error instead?
+	if (!richTextValue || !(richTextValue instanceof Node)) {
+		return { values: payload, relatedPubs: pubs };
+	}
+
+	const editorPubValues = getPubValues({ doc: richTextValue }, pubId);
+
+	for (const [nodePubId, data] of Object.entries(editorPubValues)) {
+		// This is a related pub
+		if (nodePubId !== pubId) {
 			// do we need to pass parent pub id?
 			const { pubId, parentPubId, ...pub } = data;
 			pubs.push({ id: pubId, ...pub });
+			continue;
 		}
-	});
+
+		// Field on the current pub
+		const { values } = data;
+
+		for (const [fieldSlug, fieldValues] of Object.entries(values)) {
+			if (!Array.isArray(fieldValues)) {
+				payload[fieldSlug] = fieldValues;
+				continue;
+			}
+
+			// This is a DocValue, which we parse through the content fields
+			// TODO: We currently just do a concat on all the text fields, assuming we want a string.
+			// May want to check that this schemaName === String first? This is kinda equivalent to what is
+			// hardcoded in https://github.com/pubpub/platform/blob/1de6413bbc18283f40e058c7bf4db2c762d5aedf/packages/context-editor/src/utils/pubValues.ts#L51
+			payload[fieldSlug] = fieldValues
+				.map((fieldValue) => fieldValue.content.map((c) => c.text).join(", "))
+				.join(", ");
+		}
+	}
 
 	return { values: payload, relatedPubs: pubs };
 };

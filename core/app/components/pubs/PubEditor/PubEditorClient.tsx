@@ -94,17 +94,14 @@ const preparePayload = ({
 	pubFields: Props["pubFields"];
 }) => {
 	// 1. Only send enabled fields
-	const payload: Record<string, JsonValue> = {};
-	for (const { slug } of pubFields) {
-		if (toggleContext.isEnabled(slug)) {
-			payload[slug] = pubValues[slug];
-		}
-	}
+	const newValues = pubFields
+		.filter((e) => toggleContext.isEnabled(e.slug))
+		.map((e) => ({ slug: e.slug, value: pubValues[e.slug], schemaName: e.schemaName }));
+
 	// 2. Let RichText fields overwrite any values (including disabled fields)
 	const { values } = parseRichTextForPubFieldsAndRelatedPubs({
 		pubId,
-		elements: pubFields,
-		newValues: payload,
+		newValues,
 	});
 	// 3. Serialize the rich text node so we can send to the server
 	for (const { slug, schemaName } of pubFields) {

@@ -1,4 +1,5 @@
 import { getPubValues } from "context-editor";
+import { Node } from "prosemirror-model";
 import { describe, expect, it, vi } from "vitest";
 
 import type { PubsId } from "db/public";
@@ -12,39 +13,39 @@ vi.mock("context-editor", () => ({
 
 describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 	const pubId = crypto.randomUUID() as PubsId;
-	it("should do nothing if there is no rich text field", () => {
-		const elements = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String },
-			{ slug: "croccroc:content", schemaName: CoreSchemaType.String },
+	it("should do just return the payload if there is no rich text field", () => {
+		const newValues = [
+			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "my title" },
+			{ slug: "croccroc:content", schemaName: CoreSchemaType.String, value: "my content" },
 		];
-		const newValues = { "croccroc:title": "my title", "croccroc:content": "my content" };
 		const { values } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
-			elements,
 			newValues,
 		});
-		expect(values).toEqual(newValues);
+		expect(values).toEqual({
+			"croccroc:title": "my title",
+			"croccroc:content": "my content",
+		});
 	});
 
 	it("should not overwrite if another field is not referenced", () => {
 		// getPubValues returns an empty dictionary if we only have text (no pubfields, pubs, etc.)
 		vi.mocked(getPubValues).mockReturnValue({});
 
-		const elements = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText },
+		const newValues = [
+			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "original title" },
+			{
+				slug: "croccroc:richtext",
+				schemaName: CoreSchemaType.RichText as const,
+				value: new Node(),
+			},
 		];
 		const { values } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
-			elements,
-			newValues: {
-				"croccroc:title": "original title",
-				"croccroc:richtext": "todo",
-			},
+			newValues,
 		});
 		expect(values).toEqual({
 			"croccroc:title": "original title",
-			"croccroc:richtext": "todo",
 		});
 	});
 
@@ -74,19 +75,19 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 				},
 			},
 		});
-		const elements = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText },
+		const newValues = [
+			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "new title" },
+			{
+				slug: "croccroc:richtext",
+				schemaName: CoreSchemaType.RichText as const,
+				value: new Node(),
+			},
 		];
 		const { values } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
-			elements,
-			newValues: {
-				"croccroc:richtext": "todo",
-			},
+			newValues,
 		});
 		expect(values).toEqual({
-			"croccroc:richtext": "todo",
 			"croccroc:title": "new title",
 		});
 	});
@@ -130,19 +131,23 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 				},
 			},
 		});
-		const elements = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText },
+		const newValues = [
+			{
+				slug: "croccroc:title",
+				schemaName: CoreSchemaType.String,
+				value: "new title, second part",
+			},
+			{
+				slug: "croccroc:richtext",
+				schemaName: CoreSchemaType.RichText as const,
+				value: new Node(),
+			},
 		];
 		const { values } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
-			elements,
-			newValues: {
-				"croccroc:richtext": "todo",
-			},
+			newValues,
 		});
 		expect(values).toEqual({
-			"croccroc:richtext": "todo",
 			"croccroc:title": "new title, second part",
 		});
 	});
@@ -166,18 +171,18 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 				},
 			},
 		});
-		const elements = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText },
+		const newValues = [
+			{
+				slug: "croccroc:richtext",
+				schemaName: CoreSchemaType.RichText as const,
+				value: new Node(),
+			},
 		];
-		const newValues = { "croccroc:richtext": "todo" };
 		const { values, relatedPubs } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
-			elements,
 			newValues,
 		});
-		// No change to pub fields
-		expect(values).toEqual(newValues);
+		expect(values).toEqual({});
 		// But there should be related pubs
 		expect(relatedPubs).toEqual([
 			{
