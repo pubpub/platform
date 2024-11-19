@@ -1,30 +1,27 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "@playwright/test";
 
+import { LoginPage } from "./fixtures/login-page";
 import { inbucketClient } from "./helpers";
-import * as flows from "./login.flows";
-
-const authFile = "playwright/.auth/user.json";
+import * as loginFlows from "./login.flows";
 
 test.describe("general auth", () => {
 	test("Login with invalid credentials", async ({ page }) => {
-		await page.goto("/login");
-		await page.getByLabel("email").fill("all@pubpub.org");
-		await page.getByRole("textbox", { name: "password" }).fill("pubpub-all-wrong");
-		await page.getByRole("button", { name: "Sign in" }).click();
-
+		const loginPage = new LoginPage(page);
+		await loginPage.goto();
+		await loginPage.login("all@pubpub.org", "pubpub-all-wrong");
 		await page.getByText("Incorrect email or password", { exact: true }).waitFor();
 	});
 });
 
 test.describe("Auth with lucia", () => {
 	test("Login as a lucia user", async ({ page }) => {
-		await flows.login(page);
+		await loginFlows.login(page, "new@pubpub.org", "pubpub-new");
 	});
 
 	test("Logout as a lucia user", async ({ page }) => {
-		await flows.login(page);
+		const loginPage = new LoginPage(page);
+		await loginPage.goto();
+		await loginPage.login("new@pubpub.org", "pubpub-new");
 
 		const cookies = await page.context().cookies();
 		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy();
