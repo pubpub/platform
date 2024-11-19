@@ -54,6 +54,18 @@ const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.and(
 	})
 );
 
+const upsertPubRelationsSchema = z.record(
+	z.array(
+		z.union([
+			z.object({
+				value: jsonSchema,
+				pub: CreatePubRequestBodyWithNullsNew,
+			}),
+			z.object({ value: jsonSchema, pubId: pubsIdSchema }),
+		])
+	)
+);
+
 export const siteApi = contract.router(
 	{
 		pubs: {
@@ -93,6 +105,50 @@ export const siteApi = contract.router(
 				body: CreatePubRequestBodyWithNullsNew,
 				responses: {
 					201: pubWithChildrenSchema,
+				},
+			},
+			update: {
+				method: "PATCH",
+				path: "/pubs/:pubId",
+				body: z.record(jsonSchema),
+				responses: {
+					200: pubWithChildrenSchema,
+				},
+			},
+			archive: {
+				method: "DELETE",
+				body: z.never(),
+				path: "/pubs/:pubId",
+				responses: {
+					200: pubWithChildrenSchema,
+				},
+			},
+			relations: {
+				update: {
+					method: "PATCH",
+					path: "/pubs/:pubId/relations",
+					body: upsertPubRelationsSchema,
+					responses: {
+						200: pubWithChildrenSchema,
+					},
+				},
+				replace: {
+					method: "PUT",
+					path: "/pubs/:pubId/relations",
+					body: upsertPubRelationsSchema,
+					responses: {
+						200: pubWithChildrenSchema,
+					},
+				},
+				remove: {
+					method: "DELETE",
+					description:
+						"Removes pub relations by slug. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.",
+					path: "/pubs/:pubId/relations",
+					body: z.record(z.union([z.literal("*"), z.array(pubsIdSchema)])),
+					responses: {
+						200: pubWithChildrenSchema,
+					},
 				},
 			},
 		},
