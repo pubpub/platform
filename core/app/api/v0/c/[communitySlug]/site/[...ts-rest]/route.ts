@@ -12,13 +12,16 @@ import { db } from "~/kysely/database";
 import { getStage } from "~/lib/db/queries";
 import {
 	createPubRecursiveNew,
+	deletePub,
 	getPubCached,
 	getPubs,
+	getPubsWithRelatedValuesAndChildren,
 	getPubType,
 	getPubTypesForCommunity,
 	NotFoundError,
 	tsRestHandleErrors,
 	UnauthorizedError,
+	updatePub,
 } from "~/lib/server";
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -153,6 +156,36 @@ const handler = createNextHandler(
 					body: createdPub,
 				};
 			},
+			update: async ({ params, body }) => {
+				const { community } = await checkAuthorization(
+					ApiAccessScope.pub,
+					ApiAccessType.write
+				);
+				const updatedPub = await updatePub({
+					pubValues: body,
+					pubId: params.pubId as PubsId,
+					communityId: community.id,
+					continueOnValidationError: false,
+				});
+
+				const pub = await getPubsWithRelatedValuesAndChildren({
+					pubId: params.pubId as PubsId,
+				});
+
+				return {
+					status: 200,
+					body: pub,
+				};
+			},
+			archive: async ({ params }) => {
+				await checkAuthorization(ApiAccessScope.pub, ApiAccessType.write);
+				await deletePub(params.pubId as PubsId);
+				return {
+					status: 200,
+					body: null,
+				};
+			},
+			relations: {},
 		},
 		pubTypes: {
 			get: async (req) => {

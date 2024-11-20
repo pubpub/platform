@@ -908,40 +908,29 @@ export const updatePub = async ({
 			};
 		}
 
-		try {
-			await autoRevalidate(
-				trx
-					.insertInto("pub_values")
-					.values(
-						pubValuesWithSchemaNameAndFieldId.map(({ value, fieldId }) => ({
-							pubId,
-							fieldId,
-							value: JSON.stringify(value),
+		const result = await autoRevalidate(
+			trx
+				.insertInto("pub_values")
+				.values(
+					pubValuesWithSchemaNameAndFieldId.map(({ value, fieldId }) => ({
+						pubId,
+						fieldId,
+						value: JSON.stringify(value),
+					}))
+				)
+				.onConflict((oc) =>
+					oc
+						// we have a unique index on pubId and fieldId where relatedPubId is null
+						.columns(["pubId", "fieldId"])
+						.where("relatedPubId", "is", null)
+						.doUpdateSet((eb) => ({
+							value: eb.ref("excluded.value"),
 						}))
-					)
-					.onConflict((oc) =>
-						oc
-							// we have a unique index on pubId and fieldId where relatedPubId is null
-							.columns(["pubId", "fieldId"])
-							.where("relatedPubId", "is", null)
-							.doUpdateSet((eb) => ({
-								value: eb.ref("excluded.value"),
-							}))
-					)
-			).execute();
-		} catch (error) {
-			logger.error(error);
-			return {
-				title: "Failed to update pub",
-				error: `${error.reason}`,
-				cause: error,
-			};
-		}
+				)
+				.returningAll()
+		).execute();
 
-		return {
-			success: true,
-			report: "Pub updated successfully",
-		};
+		return result;
 	});
 
 	return result;

@@ -120,7 +120,7 @@ export const siteApi = contract.router(
 				body: z.never(),
 				path: "/pubs/:pubId",
 				responses: {
-					200: pubWithChildrenSchema,
+					200: z.null(),
 				},
 			},
 			relations: {
