@@ -89,13 +89,7 @@ export const updatePub = defineServerAction(async function updatePub({
 	}
 });
 
-export const removePub = defineServerAction(async function removePub({
-	pubId,
-	path,
-}: {
-	pubId: PubsId;
-	path?: string | null;
-}) {
+export const removePub = defineServerAction(async function removePub({ pubId }: { pubId: PubsId }) {
 	const { user } = await getLoginData();
 
 	if (!user) {
@@ -122,9 +116,6 @@ export const removePub = defineServerAction(async function removePub({
 	try {
 		await autoRevalidate(db.deleteFrom("pubs").where("pubs.id", "=", pubId)).executeTakeFirst();
 
-		if (path) {
-			revalidatePath(path);
-		}
 		return {
 			success: true,
 			report: `Successfully removed the pub`,
