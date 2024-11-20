@@ -6,6 +6,7 @@ import type { FieldPath, FieldValues, SubmitHandler, UseFormReturn } from "react
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { parseAsString, useQueryState } from "nuqs";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -114,10 +115,6 @@ export function PubEditorClient(props: Props) {
 		}),
 	];
 
-	const path = usePathname();
-	const router = useRouter();
-	const searchParams = useSearchParams();
-
 	const { toggleDialog } = usePathAwareDialogSearchParam({
 		id: createPubEditorSearchParamId(
 			props.method === "create"
@@ -132,6 +129,14 @@ export function PubEditorClient(props: Props) {
 					}
 		),
 	});
+
+	// we use this somewhere above, not sure why
+	const [, setPubTypeId] = useQueryState(
+		"pubTypeId",
+		parseAsString.withOptions({
+			shallow: false,
+		})
+	);
 
 	const formElementToggle = useFormElementToggleContext();
 
@@ -173,14 +178,6 @@ export function PubEditorClient(props: Props) {
 			>
 		);
 	}, [form, formElementToggle]);
-
-	const handleSelectPubType = useDebouncedCallback(
-		(value: (typeof props.availablePubTypes)[number]) => {
-			const newParams = new URLSearchParams(searchParams);
-			newParams.set("pubTypeId", value.id);
-			router.replace(`${path}?${newParams.toString()}`, { scroll: false });
-		}
-	);
 
 	const closeForm = useCallback(() => {
 		toggleDialog(false);
@@ -281,7 +278,7 @@ export function PubEditorClient(props: Props) {
 												key={pubType.id}
 												onSelect={() => {
 													field.onChange(pubType.id);
-													handleSelectPubType(pubType);
+													setPubTypeId(pubType.id);
 												}}
 											>
 												{pubType.name}
