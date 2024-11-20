@@ -75,10 +75,16 @@ async function main() {
 	});
 	await workerUtils.migrate();
 
+	// do not seed arcadia if the minimal seed flag is set
+	// this is because it will slow down ci/testing
+	// this flag is set in the `globalSetup.ts` file
+	// eslint-disable-next-line no-restricted-properties
+	const arcadiaPromise = process.env.MINIMAL_SEED ? null : seedArcadia(arcadiaId);
+
 	await Promise.all([
 		buildUnjournal(prisma, unJournalId),
 		seedCroccroc(croccrocId),
-		seedArcadia(arcadiaId),
+		arcadiaPromise,
 	]);
 
 	try {
