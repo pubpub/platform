@@ -56,7 +56,7 @@ export const parseRichTextForPubFieldsAndRelatedPubs = ({
 	const pubs: PubCreate[] = [];
 
 	// Find a rich text value if one exists
-	let richTextValue: Node;
+	let richTextValue: Node | undefined = undefined;
 	for (const [slug, value] of Object.entries(values)) {
 		try {
 			richTextValue = baseSchema.nodeFromJSON(value);
