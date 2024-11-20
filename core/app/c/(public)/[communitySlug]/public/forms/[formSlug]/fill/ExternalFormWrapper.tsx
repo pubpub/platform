@@ -5,7 +5,6 @@
  * and the other is a form as in react-hook-form.
  */
 import type { Static } from "@sinclair/typebox";
-import type { Node } from "prosemirror-model";
 import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
@@ -32,10 +31,7 @@ import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
-import {
-	parseRichTextForPubFieldsAndRelatedPubs,
-	serializeProseMirrorDoc,
-} from "~/lib/fields/richText";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { SubmitButtons } from "./SubmitButtons";
