@@ -418,7 +418,14 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
-	const values = body.values ?? {};
+	let values = body.values ?? {};
+	if (body.id) {
+		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
+			pubId: body.id as PubsId,
+			values,
+		});
+		values = processedVals;
+	}
 	const normalizedValues = Object.entries(values).flatMap(([slug, value]) =>
 		isRelatedPubInit(value)
 			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
