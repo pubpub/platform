@@ -1,68 +1,85 @@
-import { getPubValues } from "context-editor";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { PubsId } from "db/public";
-import { CoreSchemaType } from "db/public";
 
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
-
-vi.mock("context-editor", () => ({
-	getPubValues: vi.fn(),
-	baseSchema: {
-		nodeFromJSON: vi.fn(),
-	},
-}));
 
 describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 	const pubId = crypto.randomUUID() as PubsId;
 	it("should do nothing if there is no rich text field", () => {
-		const values = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "my title" },
-			{ slug: "croccroc:content", schemaName: CoreSchemaType.String, value: "my content" },
-		];
+		const values = {
+			"croccroc:title": "my title",
+			"croccroc:content": "my content",
+		};
+
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
 		});
-		expect(result).toEqual([
-			{
-				slug: "croccroc:title",
-				value: "my title",
-			},
-			{ slug: "croccroc:content", value: "my content" },
-		]);
+		expect(result).toEqual({
+			"croccroc:title": "my title",
+			"croccroc:content": "my content",
+		});
 	});
 
 	it("should not overwrite if another field is not referenced", () => {
-		// getPubValues returns an empty dictionary if we only have text (no pubfields, pubs, etc.)
-		vi.mocked(getPubValues).mockReturnValue({});
+		const richTextValue = {
+			type: "doc",
+			attrs: {
+				meta: {},
+			},
+			content: [
+				{
+					type: "paragraph",
+					attrs: {
+						id: null,
+						class: null,
+					},
+					content: [
+						{
+							type: "text",
+							text: "rich text",
+						},
+					],
+				},
+			],
+		};
 
-		const values = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "original title" },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText, value: "stub" },
-		];
+		const values = {
+			"croccroc:title": "original title",
+
+			"croccroc:richtext": richTextValue,
+		};
+
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
 		});
-		expect(result).toEqual([
-			{
-				slug: "croccroc:title",
-				value: "original title",
-			},
-			{ slug: "croccroc:richtext", value: "stub" },
-		]);
+		expect(result).toEqual({
+			"croccroc:title": "original title",
+			"croccroc:richtext": richTextValue,
+		});
 	});
 
 	it("should overwrite string pubfields", () => {
-		// Adding a Title field
-		vi.mocked(getPubValues).mockReturnValue({
-			[pubId]: {
-				pubId: pubId,
-				parentPubId: "",
-				pubTypeId: "6a944264-3c0a-47e1-8589-c5bed4448f35",
-				values: {
-					"croccroc:title": [
+		const richTextValue = {
+			type: "doc",
+			attrs: {
+				meta: {},
+			},
+			content: [
+				{
+					type: "contextDoc",
+					attrs: {
+						id: null,
+						class: null,
+						pubId,
+						pubTypeId: "9d661d47-b671-41a6-97ae-afd6b37f32fb",
+						parentPubId: pubId,
+						fieldSlug: "croccroc:title",
+						data: null,
+					},
+					content: [
 						{
 							type: "paragraph",
 							attrs: {
@@ -78,34 +95,44 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 						},
 					],
 				},
-			},
-		});
-		const values = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "old title" },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText, value: "stub" },
-		];
+			],
+		};
+		const values = {
+			"croccroc:title": "old title",
+
+			"croccroc:richtext": richTextValue,
+		};
+
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
 		});
-		expect(result).toEqual([
-			{ slug: "croccroc:title", value: "new title" },
-			{
-				slug: "croccroc:richtext",
-				value: "stub",
-			},
-		]);
+		expect(result).toEqual({
+			"croccroc:title": "new title",
+			"croccroc:richtext": richTextValue,
+		});
 	});
 
 	it("should collapse multipart fields", () => {
 		// Adding a Title field with two parts
-		vi.mocked(getPubValues).mockReturnValue({
-			[pubId]: {
-				pubId: pubId,
-				parentPubId: "",
-				pubTypeId: "6a944264-3c0a-47e1-8589-c5bed4448f35",
-				values: {
-					"croccroc:title": [
+		const richTextValue = {
+			type: "doc",
+			attrs: {
+				meta: {},
+			},
+			content: [
+				{
+					type: "contextDoc",
+					attrs: {
+						id: null,
+						class: null,
+						pubId,
+						pubTypeId: "9d661d47-b671-41a6-97ae-afd6b37f32fb",
+						parentPubId: pubId,
+						fieldSlug: "croccroc:title",
+						data: null,
+					},
+					content: [
 						{
 							type: "paragraph",
 							attrs: {
@@ -134,62 +161,69 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 						},
 					],
 				},
-			},
-		});
-		const values = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "old title" },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText, value: "stub" },
-		];
+			],
+		};
+		const values = { "croccroc:title": "old title", "croccroc:richtext": richTextValue };
+
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
 		});
-		expect(result).toEqual([
-			{ slug: "croccroc:title", value: "new title, second part" },
-			{
-				slug: "croccroc:richtext",
-				value: "stub",
-			},
-		]);
+		expect(result).toEqual({
+			"croccroc:title": "new title, second part",
+			"croccroc:richtext": richTextValue,
+		});
 	});
 
 	it("returns children pub", () => {
 		// Adding a pub of type Submission
-		vi.mocked(getPubValues).mockReturnValue({
-			"4066997a-3059-4d97-9a3a-8e1f93842a30": {
-				pubId: "4066997a-3059-4d97-9a3a-8e1f93842a30",
-				parentPubId: "",
-				pubTypeId: "800b2e16-f22b-4930-a639-151d24ccaa1e",
-				values: {
-					"croccroc:title": "",
-					"croccroc:content": "",
-					"croccroc:email": "",
-					"croccroc:url": "",
-					"croccroc:memberid": "",
-					"croccroc:ok": "",
-					"croccroc:file": "",
-					"croccroc:confidence": "",
-				},
+		const richTextValue = {
+			type: "doc",
+			attrs: {
+				meta: {},
 			},
-		});
-		const values = [
-			{ slug: "croccroc:title", schemaName: CoreSchemaType.String, value: "old title" },
-			{ slug: "croccroc:richtext", schemaName: CoreSchemaType.RichText, value: "stub" },
-		];
+			content: [
+				{
+					type: "contextAtom",
+					attrs: {
+						id: null,
+						class: null,
+						pubId: "974d0c6a-6e71-4021-b92b-333417ad9a54",
+						pubTypeId: "0cd60de6-6c79-49d3-b08d-61d3ecce19ab",
+						parentPubId: "c351d99b-ed13-4052-8652-9b663a976d2c",
+						fieldSlug: "",
+						data: {
+							"croccroc:title": "",
+							"croccroc:content": "",
+							"croccroc:email": "",
+							"croccroc:url": "",
+							"croccroc:memberid": "",
+							"croccroc:ok": "",
+							"croccroc:file": "",
+							"croccroc:confidence": "",
+						},
+					},
+				},
+			],
+		};
+		const values = {
+			"croccroc:title": "old title",
+			"croccroc:richtext": richTextValue,
+		};
 		const { values: result, relatedPubs } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
 		});
 		// No change to pub fields
-		expect(result).toEqual([
-			{ slug: "croccroc:title", value: "old title" },
-			{ slug: "croccroc:richtext", value: "stub" },
-		]);
+		expect(result).toEqual({
+			"croccroc:title": "old title",
+			"croccroc:richtext": richTextValue,
+		});
 		// But there should be related pubs
 		expect(relatedPubs).toEqual([
 			{
-				id: "4066997a-3059-4d97-9a3a-8e1f93842a30",
-				pubTypeId: "800b2e16-f22b-4930-a639-151d24ccaa1e",
+				id: "974d0c6a-6e71-4021-b92b-333417ad9a54",
+				pubTypeId: "0cd60de6-6c79-49d3-b08d-61d3ecce19ab",
 				values: {
 					"croccroc:title": "",
 					"croccroc:content": "",

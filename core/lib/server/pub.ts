@@ -889,26 +889,19 @@ export const updatePub = async ({
 			).execute();
 		}
 
-		const vals = Object.entries(pubValues).flatMap(([slug, value]) => ({
+		// Allow rich text fields to overwrite other fields
+		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
+			pubId,
+			values: pubValues,
+		});
+
+		const vals = Object.entries(processedVals).flatMap(([slug, value]) => ({
 			slug,
 			value,
 		}));
 
-		const relevantPubFields = await getFieldInfoForSlugs({
-			slugs: vals.map(({ slug }) => slug),
-			communityId,
-			// do not update relations, and error if a relation slug is included
-			includeRelations: false,
-		});
-		const mergedPubFields = mergeSlugsWithFields(vals, relevantPubFields);
-		// Allow rich text fields to overwrite other fields
-		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
-			pubId,
-			values: mergedPubFields,
-		});
-
 		const pubValuesWithSchemaNameAndFieldId = await validatePubValues({
-			pubValues: processedVals,
+			pubValues: vals,
 			communityId,
 			continueOnValidationError,
 			// do not update relations, and error if a relation slug is included
