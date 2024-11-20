@@ -1,7 +1,7 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import type { PubsId, StagesId } from "db/public";
+import type { StagesId } from "db/public";
 import { pubsIdSchema, pubsSchema, pubTypesSchema, stagesIdSchema, stagesSchema } from "db/public";
 
 import type { Json } from "./integrations";
@@ -67,7 +67,7 @@ export const siteApi = contract.router(
 					pubId: z.string().uuid(),
 				}),
 				responses: {
-					200: pubWithChildrenSchema,
+					200: z.any(),
 				},
 			},
 			getMany: {
@@ -77,13 +77,16 @@ export const siteApi = contract.router(
 				description:
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
 				query: z.object({
+					depth: z.number().default(2).optional(),
 					limit: z.number().default(10).optional(),
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
 					orderDirection: z.enum(["asc", "desc"]).optional(),
+					withChildren: z.boolean().default(true).optional(),
+					withRelatedPubs: z.boolean().default(true).optional(),
 				}),
 				responses: {
-					200: z.array(pubWithChildrenSchema),
+					200: z.any(),
 				},
 			},
 			create: {

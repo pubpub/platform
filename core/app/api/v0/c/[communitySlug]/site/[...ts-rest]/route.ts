@@ -119,7 +119,6 @@ const handler = createNextHandler(
 					ApiAccessType.read
 				);
 
-				// const pubs = await getPubs({ communityId: community.id }, req.query);
 				const pubs = await getPubsWithRelatedValuesAndChildren(
 					{ communityId: community.id },
 					req.query
