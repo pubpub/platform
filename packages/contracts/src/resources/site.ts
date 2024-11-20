@@ -59,9 +59,9 @@ const upsertPubRelationsSchema = z.record(
 		z.union([
 			z.object({
 				value: jsonSchema,
-				pub: CreatePubRequestBodyWithNullsNew,
+				relatedPub: CreatePubRequestBodyWithNullsNew,
 			}),
-			z.object({ value: jsonSchema, pubId: pubsIdSchema }),
+			z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }),
 		])
 	)
 );

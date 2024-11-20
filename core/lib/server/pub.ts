@@ -366,6 +366,16 @@ export type GetPubsResult = Prettify<Awaited<ReturnType<typeof getPubs>>>;
 
 const PubNotFoundError = new NotFoundError("Pub not found");
 
+const doesPubExist = async (pubId: PubsId, communitiyId: CommunitiesId) => {
+	const pub = await db
+		.selectFrom("pubs")
+		.select("id")
+		.where("id", "=", pubId)
+		.where("communityId", "=", communitiyId)
+		.executeTakeFirst();
+	return !!pub;
+};
+
 /**
  * For recursive transactions
  */
@@ -574,6 +584,7 @@ const getFieldInfoForSlugs = async ({
 	);
 
 	if (slugsThatDontExistInCommunity.length) {
+		console.log(slugsThatDontExistInCommunity, fields, toBeUpdatedPubFieldSlugs);
 		throw new Error(
 			`Pub values contain fields that do not exist in the community: ${slugsThatDontExistInCommunity.join(", ")}`
 		);
@@ -666,6 +677,11 @@ export const upsertPubRelations = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
+	const pubExists = await doesPubExist(pubId, communityId);
+	if (!pubExists) {
+		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
+	}
+
 	const normalizedRelationValues = normalizeRelationValues(relations);
 
 	const validatedRelationValues = await validatePubValues({
@@ -710,6 +726,7 @@ export const upsertPubRelations = async ({
 			)
 		);
 
+		console.log("BBB", newlyCreatedPubs);
 		// assumed they keep their order
 
 		const newPubsWithRelatedPubId = newPubs.map((pub, index) => ({
@@ -769,6 +786,11 @@ export const removePubRelations = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
+	const pubExists = await doesPubExist(pubId, communityId);
+	if (!pubExists) {
+		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
+	}
+
 	const consolidatedRelations = await getFieldInfoForSlugs({
 		slugs: relations.map(({ slug }) => slug),
 		communityId,
@@ -808,6 +830,11 @@ export const removeAllPubRelationsBySlugs = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
+	const pubExists = await doesPubExist(pubId, communityId);
+	if (!pubExists) {
+		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
+	}
+
 	const fields = await getFieldInfoForSlugs({
 		slugs: slugs,
 		communityId,
@@ -843,7 +870,7 @@ export const replacePubRelationsBySlug = async ({
 	trx = db,
 }: {
 	pubId: PubsId;
-	relations: Record<string, Omit<AddPubRelationsInput, "slug">[]>;
+	relations: AddPubRelationsInput[];
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
@@ -852,15 +879,11 @@ export const replacePubRelationsBySlug = async ({
 	}
 
 	await maybeWithTrx(trx, async (trx) => {
-		const slugs = Object.keys(relations);
+		const slugs = relations.map(({ slug }) => slug);
 
 		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, trx });
 
-		const relationsWithSlug = slugs.flatMap((slug) =>
-			relations[slug].map((relation) => ({ ...relation, slug }) as AddPubRelationsInput)
-		);
-
-		await upsertPubRelations({ pubId, relations: relationsWithSlug, communityId, trx });
+		await upsertPubRelations({ pubId, relations, communityId, trx });
 	});
 };
 
@@ -877,6 +900,11 @@ export const updatePub = async ({
 	stageId?: StagesId;
 	continueOnValidationError: boolean;
 }) => {
+	const pubExists = await doesPubExist(pubId, communityId);
+	if (!pubExists) {
+		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
+	}
+
 	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {

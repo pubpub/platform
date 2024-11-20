@@ -19,9 +19,13 @@ import {
 	getPubType,
 	getPubTypesForCommunity,
 	NotFoundError,
+	removeAllPubRelationsBySlugs,
+	removePubRelations,
+	replacePubRelationsBySlug,
 	tsRestHandleErrors,
 	UnauthorizedError,
 	updatePub,
+	upsertPubRelations,
 } from "~/lib/server";
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -193,7 +197,120 @@ const handler = createNextHandler(
 					body: null,
 				};
 			},
-			relations: {},
+			relations: {
+				remove: async ({ params, body }) => {
+					const { community } = await checkAuthorization(
+						ApiAccessScope.pub,
+						ApiAccessType.write
+					);
+
+					const { all, some } = Object.entries(body).reduce(
+						(acc, [fieldSlug, pubIds]) => {
+							if (pubIds === "*") {
+								acc.all.push(fieldSlug);
+							} else {
+								acc.some.push(
+									...pubIds.map((relatedPubId) => ({
+										slug: fieldSlug,
+										relatedPubId,
+									}))
+								);
+							}
+							return acc;
+						},
+						{
+							all: [] as string[],
+							some: [] as { slug: string; relatedPubId: PubsId }[],
+						}
+					);
+
+					const [removedAllSettled, removedSomeSettled] = await Promise.allSettled([
+						removeAllPubRelationsBySlugs({
+							pubId: params.pubId as PubsId,
+							slugs: all,
+							communityId: community.id,
+						}),
+						removePubRelations({
+							pubId: params.pubId as PubsId,
+							relations: some,
+							communityId: community.id,
+						}),
+					]);
+
+					if (
+						removedAllSettled.status === "rejected" ||
+						removedSomeSettled.status === "rejected"
+					) {
+						return {
+							status: 400,
+							body: `Failed to remove pub relations: ${
+								removedAllSettled.status === "rejected"
+									? removedAllSettled.reason
+									: removedSomeSettled.status === "rejected"
+										? removedSomeSettled.reason
+										: ""
+							}`,
+						};
+					}
+
+					return {
+						status: 200,
+						body: null,
+					};
+				},
+				update: async ({ params, body }) => {
+					const { community } = await checkAuthorization(
+						ApiAccessScope.pub,
+						ApiAccessType.write
+					);
+
+					const relations = Object.entries(body).flatMap(([slug, data]) =>
+						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
+					);
+
+					console.log("AAA", relations, community);
+					try {
+						await upsertPubRelations({
+							pubId: params.pubId as PubsId,
+							relations,
+							communityId: community.id,
+						});
+
+						return {
+							status: 200,
+							body: null,
+						};
+					} catch (e) {
+						console.error(e);
+						return {
+							status: 400,
+							body: e.message,
+						};
+					}
+				},
+				replace: async ({ params, body }) => {
+					const { community } = await checkAuthorization(
+						ApiAccessScope.pub,
+						ApiAccessType.write
+					);
+
+					const relations = Object.entries(body).flatMap(([slug, data]) =>
+						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
+					);
+					console.log("AAA", relations, community);
+
+					const updatedPub = await replacePubRelationsBySlug({
+						pubId: params.pubId as PubsId,
+						relations,
+						communityId: community.id,
+					});
+
+					return {
+						status: 200,
+						body: updatedPub,
+					};
+				},
+			},
 		},
 		pubTypes: {
 			get: async (req) => {
