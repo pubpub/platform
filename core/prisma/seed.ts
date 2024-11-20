@@ -75,7 +75,6 @@ async function main() {
 	});
 	await workerUtils.migrate();
 
-	logger.info("build unjournal");
 	await Promise.all([
 		buildUnjournal(prisma, unJournalId),
 		seedCroccroc(croccrocId),
@@ -124,6 +123,8 @@ async function main() {
 main()
 	.then(async () => {
 		await prisma.$disconnect();
+		logger.info("Finished seeding, exiting...");
+		process.exit(0);
 	})
 	.catch(async (e) => {
 		if (!isUniqueConstraintError(e)) {
