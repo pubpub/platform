@@ -15,13 +15,15 @@ test.describe("general auth", () => {
 
 test.describe("Auth with lucia", () => {
 	test("Login as a lucia user", async ({ page }) => {
-		await loginFlows.login(page, "new@pubpub.org", "pubpub-new");
+		const loginPage = new LoginPage(page);
+		await loginPage.goto();
+		await loginPage.loginAndWaitForNavigation("new@pubpub.org", "pubpub-new");
 	});
 
 	test("Logout as a lucia user", async ({ page }) => {
 		const loginPage = new LoginPage(page);
 		await loginPage.goto();
-		await loginPage.login("new@pubpub.org", "pubpub-new");
+		await loginPage.loginAndWaitForNavigation("new@pubpub.org", "pubpub-new");
 
 		const cookies = await page.context().cookies();
 		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy();

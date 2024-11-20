@@ -11,7 +11,6 @@ export class LoginPage {
 		await this.page.getByLabel("email").fill(email);
 		await this.page.getByRole("textbox", { name: "password" }).fill(password);
 		await this.page.getByRole("button", { name: "Sign in" }).click();
-		await this.page.waitForURL(/.*\/c\/\w+\/stages.*/);
 	}
 
 	async loginAndWaitForNavigation(email = "all@pubpub.org", password = "pubpub-all") {
