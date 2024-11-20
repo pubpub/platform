@@ -74,7 +74,7 @@ export function renderField(fieldValue: PubValueWithFieldAndSchema) {
 			<CardHeader>
 				<CardTitle className={cn("text-base")}>{fieldTitle}</CardTitle>
 			</CardHeader>
-			<CardContent>{renderedField}</CardContent>
+			<CardContent data-testid={`${fieldTitle}-value`}>{renderedField}</CardContent>
 		</>
 	);
 }

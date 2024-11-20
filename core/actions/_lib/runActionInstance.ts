@@ -16,7 +16,6 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
 import { resolveWithPubfields } from "./resolvePubfields";
-import { validatePubValues } from "./validateFields";
 
 export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
 
@@ -107,10 +106,19 @@ const _runActionInstance = async (
 	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {});
 
 	if (!parsedConfig.success) {
-		return {
+		const err = {
 			error: "Invalid config",
 			cause: parsedConfig.error,
 		};
+		if (args.actionInstanceArgs) {
+			// Check if the args passed can substitute for missing or invalid config
+			const argsParsedAsConfig = action.config.schema.safeParse(args.actionInstanceArgs);
+			if (!argsParsedAsConfig.success) {
+				return err;
+			}
+		} else {
+			return err;
+		}
 	}
 
 	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
@@ -160,6 +168,7 @@ const _runActionInstance = async (
 				values: pub.values as any,
 				assignee: pub.assignee ?? undefined,
 				parentId: pub.parentId,
+				communityId: pub.communityId,
 			},
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,

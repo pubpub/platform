@@ -1,5 +1,6 @@
 import * as z from "zod";
 
+import { Action } from "db/public";
 import { Mail } from "ui/icon";
 
 import {
@@ -10,7 +11,7 @@ import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 
 export const action = defineAction({
-	name: "email",
+	name: Action.email,
 	config: {
 		schema: z.object({
 			recipient: z.string().uuid().describe("Recipient"),

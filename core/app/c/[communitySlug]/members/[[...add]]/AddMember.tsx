@@ -1,6 +1,6 @@
 import type { Communities, CommunitiesId } from "db/public";
 
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { createCommunityCacheTags } from "~/lib/server/cache/cacheTags";
 import { memoize } from "~/lib/server/cache/memoize";
 import { getMember } from "~/lib/server/member";
@@ -93,7 +93,10 @@ const createCachedGetUser = ({
 			return { user, state: "user-found" as const, error: null };
 		},
 		{
-			revalidateTags: createCommunityCacheTags(["members", "users"], community.slug),
+			revalidateTags: createCommunityCacheTags(
+				["community_memberships", "users"],
+				community.slug
+			),
 		}
 	);
 };

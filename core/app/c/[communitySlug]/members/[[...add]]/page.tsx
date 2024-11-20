@@ -7,8 +7,8 @@ import type { CommunitiesId } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { AddMember } from "./AddMember";
@@ -22,12 +22,12 @@ export const metadata: Metadata = {
 const getCachedMembers = (communityId: CommunitiesId) =>
 	autoCache(
 		db
-			.selectFrom("members")
+			.selectFrom("community_memberships")
 			.select((eb) => [
-				"members.id as id",
-				"members.role",
-				"members.communityId",
-				"createdAt",
+				"community_memberships.id as id",
+				"community_memberships.role",
+				"community_memberships.communityId",
+				"community_memberships.createdAt",
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
@@ -41,7 +41,7 @@ const getCachedMembers = (communityId: CommunitiesId) =>
 							"users.isSuperAdmin as isSuperAdmin",
 							"users.slug as slug",
 						])
-						.whereRef("users.id", "=", "members.userId")
+						.whereRef("users.id", "=", "community_memberships.userId")
 				)
 					.$notNull()
 					.as("user"),

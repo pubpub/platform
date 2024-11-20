@@ -12,7 +12,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
-import { resetPassword } from "~/lib/auth/actions";
+import { resetPassword } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
 const resetPasswordSchema = z.object({
@@ -21,7 +21,7 @@ const resetPasswordSchema = z.object({
 
 export default function ResetForm() {
 	const router = useRouter();
-	const form = useForm({
+	const form = useForm<z.infer<typeof resetPasswordSchema>>({
 		resolver: zodResolver(resetPasswordSchema),
 	});
 	const runResetPassword = useServerAction(resetPassword);

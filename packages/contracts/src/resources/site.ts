@@ -1,22 +1,45 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import { pubsSchema, pubTypesSchema, StagesId, stagesIdSchema, stagesSchema } from "db/public";
+import type { PubsId, StagesId } from "db/public";
+import { pubsIdSchema, pubsSchema, pubTypesSchema, stagesIdSchema, stagesSchema } from "db/public";
 
-import { CreatePubRequestBodyWithNulls, CreatePubRequestBodyWithNullsBase } from "./integrations";
+import type { Json } from "./integrations";
+import {
+	CreatePubRequestBodyWithNulls,
+	CreatePubRequestBodyWithNullsBase,
+	JsonInput,
+	jsonSchema,
+} from "./integrations";
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
 	stageId?: StagesId;
-	children?: (Omit<CreatePubRequestBodyWithNulls, "stageId"> & { stageId?: StagesId })[];
+	children?: CreatePubRequestBodyWithNulls[];
+	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
 };
 
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
 	stageId: stagesIdSchema.optional(),
+	values: z.record(
+		jsonSchema.or(
+			z.object({
+				value: jsonSchema,
+				relatedPubId: pubsIdSchema,
+			})
+		)
+	),
 });
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
 	CreatePubRequestBodyWithNullsWithStageId.extend({
 		children: z.lazy(() => CreatePubRequestBodyWithNullsNew.array().optional()),
+		relatedPubs: z
+			.lazy(() =>
+				z.record(
+					z.array(z.object({ value: jsonSchema, pub: CreatePubRequestBodyWithNullsNew }))
+				)
+			)
+			.optional(),
 	});
 
 const contract = initContract();

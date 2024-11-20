@@ -7,7 +7,7 @@ _Open-source technology for creating full-stack knowledge applications for commu
 As noted in [our recent announcement](https://www.knowledgefutures.org/updates/pubpub-platform/), Knowledge Futures has been hard at work on PubPub Platform, a tool that allows communities of all kinds to build knowledge applications tailored to their needs. We believe PubPub platform offers a major improvement for communities that want more flexibility, customization, and the ability to either use centralized hosting or self-host, while keeping the experimental, easy-to-use philosophy that Knowledge Futures has always strived for. We invite you to install and explore the alpha version of PubPub Platform, and we welcome your feedback.
 
 Learn More:
-[Documentation](https://knowledgefutures.helpjuice.com) | [PubPub Platform](https://knowledgefutures.org/pubpub) | [Knowledge Futures](https://www.knowledgefutures.org/) | [Newsletter](https://pubpub.us5.list-manage.com/subscribe?u=9b9b78707f3dd62d0d47ec03d&id=be26e45660) | [Roadmap](https://github.com/orgs/pubpub/projects/46/views/1)
+[Documentation](https://help.knowledgefutures.org) | [PubPub Platform](https://knowledgefutures.org/pubpub) | [Knowledge Futures](https://www.knowledgefutures.org/) | [Newsletter](https://pubpub.us5.list-manage.com/subscribe?u=9b9b78707f3dd62d0d47ec03d&id=be26e45660) | [Roadmap](https://github.com/orgs/pubpub/projects/46/views/1)
 
 **PubPub Platform is currently an alpha release, which means the code is subject to frequent, breaking changes. We do not yet recommend running PubPub Platform for production projects.** 
 
@@ -80,7 +80,7 @@ pnpm --filter core migrate-dev
 ```
 
 ## Self-Hosting and Deployment
-Guidance for self-hosting and deployment is coming soon. In the meantime, you can read about how we currently deploy the app in [DEVELOPMENT.md](https://github.com/pubpub/platform/blob/main/development.md). With small modifications, most development teams can use the included terraform configuration to run the app on commodity cloud infrastructure of their choice.
+Guidance for self-hosting and deployment is coming soon. In the meantime, you can read about how we currently deploy the app in [DEVELOPMENT.md](https://github.com/pubpub/platform/blob/main/DEVELOPMENT.md). With small modifications, most development teams can use the included terraform configuration to run the app on commodity cloud infrastructure of their choice.
 
 ## Bugs, Feature Requests, Help, and Feedback
 We use the [Discussion Forum](https://github.com/pubpub/platform/discussions) for feature requests, ideas, and general feedback, and [GitHub Issues](https://github.com/pubpub/platform/issues/) for day-to-day development. Thus, if you're unsure where to post your feedback, start with a discussion. We can always transfer it to an issue later if needed.
@@ -118,7 +118,7 @@ Request descriptions should use to our Pull Request template, including a clear 
 Finally, we request that any complex code, new terminology, potentially decisions you made, or any areas you'd like feedback on be commented on inline in GitHub's files changed interface.
 
 ## User-Facing Documentation
-User-facing documentation is a work in progress, and can be found at https://knowledgefutures.helpjuice.org. 
+User-facing documentation is a work in progress, and can be found at https://help.knowledgefutures.org. 
 
 ## Supporting Services
 Thank you to these groups for providing their tools for free to PubPub's open source mission.

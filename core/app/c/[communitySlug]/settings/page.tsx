@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 
 export const metadata: Metadata = {
 	title: "Community Settings",

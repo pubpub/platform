@@ -13,9 +13,10 @@ import { removePubField } from "./actions";
 type Props = {
 	pubTypeId: string;
 	pubFieldId: string;
+	disabled?: boolean;
 };
 
-export const RemoveFieldButton = ({ pubFieldId, pubTypeId }: Props) => {
+export const RemoveFieldButton = ({ pubFieldId, pubTypeId, disabled }: Props) => {
 	const runRemoveField = useServerAction(removePubField);
 	const handleRemove = useCallback(async () => {
 		await runRemoveField(pubTypeId as PubTypesId, pubFieldId as PubFieldsId);
@@ -28,6 +29,7 @@ export const RemoveFieldButton = ({ pubFieldId, pubTypeId }: Props) => {
 					size="sm"
 					className="flex h-5 gap-2 px-2"
 					onClick={handleRemove}
+					disabled={disabled}
 				>
 					<span className="sr-only">Remove field</span>
 					<X size={10} />

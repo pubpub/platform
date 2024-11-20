@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Check, Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
-import * as actions from "~/lib/auth/actions";
+import * as actions from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
 export const loginFormSchema = z.object({
@@ -80,6 +80,7 @@ export default function LoginForm() {
 						<Button
 							className="flex w-full items-center gap-x-2"
 							disabled={form.formState.isSubmitting || !form.formState.isValid}
+							type="submit"
 						>
 							{form.formState.isSubmitting ? (
 								<Loader2 className="animate-spin" />

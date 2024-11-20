@@ -7,7 +7,7 @@ import { LocalStorageProvider } from "ui/hooks";
 
 import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getStage } from "~/lib/db/queries";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";

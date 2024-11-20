@@ -1,13 +1,14 @@
 import type { QueryCreator } from "kysely";
 
+import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId, FormsId, MembersId, PublicSchema, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, FormsId, PublicSchema, PubsId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
-import { createMagicLink } from "../auth/createMagicLink";
+import { createMagicLink } from "../authentication/createMagicLink";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
@@ -33,12 +34,12 @@ export const getForm = (
 						.selectFrom("form_elements")
 						.leftJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
 						.whereRef("form_elements.formId", "=", "forms.id")
-						.select([
+						.select((eb) => [
 							"form_elements.id as elementId",
 							"form_elements.type",
 							"form_elements.fieldId",
 							"form_elements.component",
-							"form_elements.config",
+							eb.fn.coalesce("form_elements.config", sql`'{}'`).as("config"),
 							"form_elements.order",
 							"form_elements.label",
 							"form_elements.content",
@@ -62,29 +63,27 @@ export const userHasPermissionToForm = async (
 ) => {
 	const formPermission = await autoCache(
 		db
-			.selectFrom("permissions")
-			.innerJoin("members", "members.id", "permissions.memberId")
-
+			.selectFrom("form_memberships")
 			// userId / email split
 			.$if(Boolean(props.email), (eb) =>
 				eb
-					.innerJoin("users", "users.id", "members.userId")
+					.innerJoin("users", "users.id", "form_memberships.userId")
 					.where("users.email", "=", props.email!)
 			)
-			.$if(Boolean(props.userId), (eb) => eb.where("members.userId", "=", props.userId!))
-
-			.innerJoin("form_to_permissions", "permissionId", "permissions.id")
+			.$if(Boolean(props.userId), (eb) =>
+				eb.where("form_memberships.userId", "=", props.userId!)
+			)
 
 			// formSlug / formId split
 			.$if(Boolean(props.formSlug), (eb) =>
 				eb
-					.innerJoin("forms", "forms.id", "form_to_permissions.formId")
+					.innerJoin("forms", "forms.id", "form_memberships.formId")
 					.where("forms.slug", "=", props.formSlug!)
 			)
 			.$if(Boolean(props.formId), (eb) =>
-				eb.where("form_to_permissions.formId", "=", props.formId!)
+				eb.where("form_memberships.formId", "=", props.formId!)
 			)
-			.select(["permissions.id"])
+			.select(["form_memberships.id"])
 	).executeTakeFirst();
 
 	return Boolean(formPermission);
@@ -94,35 +93,23 @@ export const userHasPermissionToForm = async (
  * Gives a community member permission to a form
  */
 export const addMemberToForm = async (
-	props: { communityId: CommunitiesId; memberId: MembersId } & XOR<
-		{ slug: string },
-		{ id: FormsId }
-	>
+	props: { communityId: CommunitiesId; userId: UsersId } & XOR<{ slug: string }, { id: FormsId }>
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
-	const { memberId, ...getFormProps } = props;
+	const { userId, ...getFormProps } = props;
 	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
 
 	const existingPermission = await autoCache(
 		db
-			.selectFrom("form_to_permissions")
-			.innerJoin("permissions", "permissions.id", "form_to_permissions.permissionId")
-			.selectAll()
-			.where("form_to_permissions.formId", "=", form.id)
-			.where("permissions.memberId", "=", memberId)
+			.selectFrom("form_memberships")
+			.selectAll("form_memberships")
+			.where("form_memberships.formId", "=", form.id)
+			.where("form_memberships.userId", "=", userId)
 	).executeTakeFirst();
 
 	if (existingPermission === undefined) {
 		await autoRevalidate(
-			db
-				.with("new_permission", (db) =>
-					db.insertInto("permissions").values({ memberId }).returning("id")
-				)
-				.insertInto("form_to_permissions")
-				.values((eb) => ({
-					formId: form.id,
-					permissionId: eb.selectFrom("new_permission").select("new_permission.id"),
-				}))
+			db.insertInto("form_memberships").values({ formId: form.id, userId })
 		).execute();
 	}
 };

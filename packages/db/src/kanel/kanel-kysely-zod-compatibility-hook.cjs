@@ -56,6 +56,15 @@ const renameImportToUseSchemaSuffix = (typeImport) => {
 const makeUuid = (line) => line.replace(/z.string\(\) /, "z.string().uuid() ");
 
 /**
+ * tables with composite primary keys that are NOT FK references to another table's PK end up
+ * generating redundant schema types for each column. and they're invalid because they don't have
+ * the Schema prefix that we append to the imports later in this hook.
+ * @param {string} line
+ */
+const appendSchemaToIdentifiers = (line) =>
+	line.replace(/^([^.]+) as unknown/, "$1Schema as unknown");
+
+/**
  * @type {import("kanel").PreRenderHook}
  *
  * Does two things:
@@ -95,7 +104,7 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 
 						const declValue = Array.isArray(declaration.value)
 							? declaration.value.map(replaceSchemaCast) // these are all the id schemas.
-							: makeUuid(declaration.value);
+							: appendSchemaToIdentifiers(makeUuid(declaration.value));
 
 						return {
 							...declaration,

@@ -12,6 +12,7 @@
 	],
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit",
 		"generate-db-table-names": "dotenv -e .env.local -e .env.development tsx ./scripts/generateDbTableNames.ts ./src/table-names.ts public | pino-pretty",
 		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w src/"
@@ -19,6 +20,7 @@
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
 	"dependencies": {
+		"@kristiandupont/recase": "^1.3.1",
 		"logger": "workspace:*",
 		"utils": "workspace:*"
 	},

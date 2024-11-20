@@ -6,7 +6,7 @@ import { api } from "contracts";
 import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";
 import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
 import { runActionInstance } from "~/actions/api/server";
-import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
+import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env.mjs";
 import { tsRestHandleErrors } from "~/lib/server";
 

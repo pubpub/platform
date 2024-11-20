@@ -2,14 +2,14 @@
 
 import { cache } from "react";
 
-import type { MembersId, UsersId } from "db/public";
+import type { UsersId } from "db/public";
 import { MemberRole } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import type { UserWithMember } from "~/lib/types";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/auth/roles";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import * as Email from "~/lib/server/email";
@@ -89,7 +89,7 @@ export const addMember = defineServerAction(async function addMember({
 		const member = await dbAddMember({
 			userId: user.id as UsersId,
 			communityId: result.community.id,
-			role,
+			role: role ?? MemberRole.editor,
 		}).executeTakeFirst();
 
 		// TODO: send email to user confirming their membership,
@@ -220,7 +220,7 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		const removedMember = await dbRemoveMember(member.id as MembersId).executeTakeFirst();
+		const removedMember = await dbRemoveMember(member.id).executeTakeFirst();
 
 		if (!removedMember) {
 			return {

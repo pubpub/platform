@@ -10,7 +10,7 @@ import { logger } from "logger";
 import type { XOR } from "../types";
 import type { FormInviteLinkProps } from "./form";
 import { db } from "~/kysely/database";
-import { createMagicLink } from "~/lib/auth/createMagicLink";
+import { createMagicLink } from "~/lib/authentication/createMagicLink";
 import { createFormInviteLink } from "./form";
 import { smtpclient } from "./mailgun";
 

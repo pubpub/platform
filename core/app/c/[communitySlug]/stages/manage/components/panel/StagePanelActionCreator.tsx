@@ -44,6 +44,7 @@ const ActionCell = (props: ActionCellProps) => {
 			className="flex cursor-pointer flex-col space-y-1 rounded-md border bg-accent p-3 shadow-md transition-colors hover:bg-background hover:text-accent-foreground hover:shadow-lg focus:bg-background focus:text-accent-foreground focus:shadow-lg"
 			onClick={onClick}
 			onKeyDown={onKeyDown}
+			data-testid={`${props.action.name}-button`}
 		>
 			<div className="flex space-x-4">
 				<props.action.icon />
@@ -78,7 +79,7 @@ const ActionCell = (props: ActionCellProps) => {
 };
 
 type Props = {
-	onAdd: (actionName: string) => Promise<unknown>;
+	onAdd: (actionName: Action["name"]) => Promise<unknown>;
 	isSuperAdmin?: boolean | null;
 };
 
@@ -102,7 +103,7 @@ export const StagePanelActionCreator = (props: Props) => {
 				<DialogTrigger asChild>
 					<Button variant="secondary">Add an action</Button>
 				</DialogTrigger>
-				<DialogContent>
+				<DialogContent data-testid={"add-action-dialog"}>
 					<DialogHeader>
 						<DialogTitle>Add an action</DialogTitle>
 						<DialogDescription>

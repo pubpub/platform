@@ -44,6 +44,25 @@ test.describe("Creating a form", () => {
 		await formsPage.addForm("another form", FORM_SLUG);
 		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
 	});
+	test("Can archive and restore a form", async () => {
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		await formsPage.goto();
+
+		// Open actions menu and archive form
+		await page.getByTestId(`${FORM_SLUG}-actions-button`).click();
+		await page.getByTestId(`${FORM_SLUG}-archive-button`).click();
+
+		// Now that there's an archived form, it should be under the archived tab
+		await page.getByRole("tablist").getByText("Archived").click();
+
+		// Restore that form
+		await page.getByTestId(`${FORM_SLUG}-actions-button`).click();
+		await page.getByTestId(`${FORM_SLUG}-restore-button`).click();
+
+		// After restoring, there shouldn't be an archived tab anymore
+		expect(await page.getByRole("tablist")).not.toBeAttached();
+		expect(await page.getByTestId(`${FORM_SLUG}-actions-button`)).toBeAttached();
+	});
 });
 
 test.describe("Submission buttons", () => {

@@ -1,8 +1,6 @@
-import {
-	DefaultErrorFunction,
-	ErrorFunctionParameter,
-	SetErrorFunction,
-} from "@sinclair/typebox/errors";
+import type { ErrorFunctionParameter } from "@sinclair/typebox/errors";
+
+import { DefaultErrorFunction, SetErrorFunction } from "@sinclair/typebox/errors";
 
 // It is possible to augument TB interfaces in the following way such that you get
 // auto-complete and static checking for additional 'known' properties, but it is

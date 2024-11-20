@@ -15,6 +15,10 @@
 			"dependsOn": ["^topo"],
 			"outputs": [".cache/.eslintcache"]
 		},
+		"lint:fix": {
+			"dependsOn": ["^topo"],
+			"outputs": [".cache/.eslintcache"]
+		},
 		"type-check": {
 			"dependsOn": ["^topo"],
 			"outputs": [".cache/tsbuildinfo.json"]
@@ -27,6 +31,10 @@
 			"cache": false
 		},
 		"format": {
+			"outputs": [".cache/.prettiercache"],
+			"outputLogs": "new-only"
+		},
+		"format:fix": {
 			"outputs": [".cache/.prettiercache"],
 			"outputLogs": "new-only"
 		},

@@ -2,10 +2,8 @@ import { cache } from "react";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { StagesId } from "db/public";
-import { expect } from "utils";
 
 import type { RuleConfig } from "~/actions/types";
-import { RuleConfigs } from "~/actions/types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
 import { pubValuesByRef } from "../server";
@@ -51,21 +49,10 @@ export const getStagePubs = cache((stageId: StagesId) => {
 export const getStageMembers = cache((stageId: StagesId) => {
 	return autoCache(
 		db
-			.selectFrom("members")
-			.innerJoin("permissions", "permissions.memberId", "members.id")
-			.innerJoin("_PermissionToStage", "_PermissionToStage.A", "permissions.id")
-			.where("_PermissionToStage.B", "=", stageId)
-			.selectAll("members")
-			.select((eb) =>
-				jsonObjectFrom(
-					eb
-						.selectFrom("users")
-						.select(SAFE_USER_SELECT)
-						.whereRef("users.id", "=", "members.userId")
-				)
-					.$notNull()
-					.as("user")
-			)
+			.selectFrom("stage_memberships")
+			.where("stage_memberships.stageId", "=", stageId)
+			.innerJoin("users", "users.id", "stage_memberships.userId")
+			.select(SAFE_USER_SELECT)
 	);
 });
 

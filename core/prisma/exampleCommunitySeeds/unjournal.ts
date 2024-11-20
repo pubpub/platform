@@ -4,7 +4,7 @@ import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId, PubFieldsId, PubTypesId, StagesId } from "db/public";
-import { MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 
 import { db } from "~/kysely/database";
 import { env } from "../../lib/env/env.mjs";
@@ -288,18 +288,26 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	await prisma.pubField.createMany({
 		data: [
-			{ id: fieldIds[0], name: "Title", slug: "unjournal:title", communityId: communityUUID },
+			{
+				id: fieldIds[0],
+				name: "Title",
+				slug: "unjournal:title",
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
+			},
 			{
 				id: fieldIds[1],
 				name: "Description",
 				slug: "unjournal:description",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[2],
 				name: "Manager's Notes",
 				slug: "unjournal:managers-notes",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[3],
@@ -307,12 +315,14 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				pubFieldSchemaId: anonymitySchema.id,
 				slug: "unjournal:anonymity",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.Boolean,
 			},
 			{
 				id: fieldIds[4],
 				name: "Please enter your 'salted hashtag' here if you know it. Otherwise please enter an anonymous psuedonym here",
 				slug: "unjournal:hashtag",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[5],
@@ -320,6 +330,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				pubFieldSchemaId: evaluationSchema.id,
 				slug: "unjournal:evaluation",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[15],
@@ -327,21 +338,36 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				pubFieldSchemaId: fileUploadSchema.id,
 				slug: "unjournal:fileUpload",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.FileUpload,
 			},
 			{
 				id: fieldIds[6],
 				name: "Evaluated Paper",
 				slug: "unjournal:evaluated-paper",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
-			{ id: fieldIds[7], name: "Tags", slug: "unjournal:tags", communityId: communityUUID },
-			{ id: fieldIds[8], name: "DOI", slug: "unjournal:doi", communityId: communityUUID },
+			{
+				id: fieldIds[7],
+				name: "Tags",
+				slug: "unjournal:tags",
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.StringArray,
+			},
+			{
+				id: fieldIds[8],
+				name: "DOI",
+				slug: "unjournal:doi",
+				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
+			},
 			{
 				id: fieldIds[9],
 				name: "Metrics",
 				pubFieldSchemaId: metricsSchema.id,
 				slug: "unjournal:metrics",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[10],
@@ -349,6 +375,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				slug: "unjournal:predictions",
 				pubFieldSchemaId: predictionsSchema.id,
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[11],
@@ -356,6 +383,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				slug: "unjournal:confidential-comments",
 				pubFieldSchemaId: confidentialCommentsSchema.id,
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[12],
@@ -363,6 +391,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				slug: "unjournal:survey",
 				pubFieldSchemaId: surveySchema.id,
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[13],
@@ -370,6 +399,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				slug: "unjournal:feedback",
 				pubFieldSchemaId: feedbackSchema.id,
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.String,
 			},
 			{
 				id: fieldIds[14],
@@ -377,12 +407,14 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				pubFieldSchemaId: evaluator.id,
 				slug: "unjournal:evaluator",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.MemberId,
 			},
 			{
 				id: fieldIds[16],
 				name: "URL",
 				slug: "unjournal:url",
 				communityId: communityUUID,
+				schemaName: CoreSchemaType.URL,
 			},
 		],
 	});
@@ -393,28 +425,51 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			id: submissionTypeId,
 			name: "Submission",
 			communityId: communityUUID,
-			fields: {
-				connect: [
-					{ id: fieldIds[0] }, // title
-					{ id: fieldIds[1] }, // description
-					{ id: fieldIds[2] }, // manager's notes
-					{ id: fieldIds[8] }, // doi
-					{ id: fieldIds[16] }, // url
-				],
-			},
 		},
 	});
+	await db
+		.insertInto("_PubFieldToPubType")
+		.values([
+			// title
+			{ A: fieldIds[0] as PubFieldsId, B: submissionTypeId as PubTypesId, isTitle: true },
+			// description, manager's notes, doi, url
+			...[fieldIds[1], fieldIds[2], fieldIds[8], fieldIds[16]].map((fieldId) => {
+				return {
+					A: fieldId as PubFieldsId,
+					B: submissionTypeId as PubTypesId,
+					isTitle: false,
+				};
+			}),
+		])
+		.execute();
+
 	const evaluationSummaryTypeId = "2981e8ca-dabe-416f-bce0-fcc418036529";
 	await prisma.pubType.create({
 		data: {
 			id: evaluationSummaryTypeId,
 			name: "Evaluation Summary",
 			communityId: communityUUID,
-			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }, { id: fieldIds[2] }],
-			},
 		},
 	});
+	await db
+		.insertInto("_PubFieldToPubType")
+		.values([
+			// title
+			{
+				A: fieldIds[0] as PubFieldsId,
+				B: evaluationSummaryTypeId as PubTypesId,
+				isTitle: true,
+			},
+			// description, manager's notes
+			...[fieldIds[1], fieldIds[2]].map((fieldId) => {
+				return {
+					A: fieldId as PubFieldsId,
+					B: evaluationSummaryTypeId as PubTypesId,
+					isTitle: false,
+				};
+			}),
+		])
+		.execute();
 
 	const authorResponseTypeId = "d2ad1f23-f310-4974-8d45-3c55a3dc0638";
 	await prisma.pubType.create({
@@ -422,11 +477,21 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			id: authorResponseTypeId,
 			name: "Author Response",
 			communityId: communityUUID,
-			fields: {
-				connect: [{ id: fieldIds[0] }, { id: fieldIds[1] }],
-			},
 		},
 	});
+	await db
+		.insertInto("_PubFieldToPubType")
+		.values([
+			// title
+			{ A: fieldIds[0] as PubFieldsId, B: authorResponseTypeId as PubTypesId, isTitle: true },
+			// description
+			{
+				A: fieldIds[1] as PubFieldsId,
+				B: authorResponseTypeId as PubTypesId,
+				isTitle: false,
+			},
+		])
+		.execute();
 
 	const evaluationTypeId = "81d18691-3ac4-42c1-b55b-d3b2c065b9ad";
 	await prisma.pubType.create({
@@ -434,23 +499,34 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			id: evaluationTypeId,
 			name: "Evaluation",
 			communityId: communityUUID,
-			fields: {
-				connect: [
-					{ id: fieldIds[0] },
-					{ id: fieldIds[3] },
-					{ id: fieldIds[4] },
-					{ id: fieldIds[5] },
-					{ id: fieldIds[9] },
-					{ id: fieldIds[10] },
-					{ id: fieldIds[11] },
-					{ id: fieldIds[12] },
-					{ id: fieldIds[13] },
-					{ id: fieldIds[14] }, // evaluator
-					{ id: fieldIds[15] },
-				],
-			},
 		},
 	});
+	await db
+		.insertInto("_PubFieldToPubType")
+		.values([
+			// title
+			{ A: fieldIds[0] as PubFieldsId, B: evaluationTypeId as PubTypesId, isTitle: true },
+			// description, manager's notes
+			...[
+				fieldIds[3],
+				fieldIds[4],
+				fieldIds[5],
+				fieldIds[9],
+				fieldIds[10],
+				fieldIds[11],
+				fieldIds[12],
+				fieldIds[13],
+				fieldIds[14],
+				fieldIds[15],
+			].map((fieldId) => {
+				return {
+					A: fieldId as PubFieldsId,
+					B: evaluationTypeId as PubTypesId,
+					isTitle: false,
+				};
+			}),
+		])
+		.execute();
 
 	const user1 = await prisma.user.create({
 		data: {
@@ -472,7 +548,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		},
 	});
 
-	const member = await prisma.member.create({
+	const member = await prisma.communityMembership.create({
 		data: {
 			userId: user1.id,
 			communityId: communityUUID,
@@ -482,7 +558,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 
 	const memberGroup = await prisma.memberGroup.create({
 		data: {
-			role: MemberRole.admin,
 			communityId: communityUUID,
 			users: {
 				connect: [{ id: user2.id }],
@@ -536,67 +611,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				order: "hh",
 			},
 		],
-	});
-
-	await prisma.permission.create({
-		data: {
-			member: {
-				connect: { id: member.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[0] }],
-			},
-			// pubs: {
-			// 	connect: [{ id: submission.id }],
-			// },
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			memberGroup: {
-				connect: { id: memberGroup.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[0] }],
-			},
-			// pubs: {
-			// 	connect: [{ id: submission.id }],
-			// },
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			memberGroup: {
-				connect: { id: memberGroup.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[1] }],
-			},
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			memberGroup: {
-				connect: { id: memberGroup.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[2] }],
-			},
-		},
-	});
-
-	await prisma.permission.create({
-		data: {
-			member: {
-				connect: { id: member.id },
-			},
-			stages: {
-				connect: [{ id: stageIds[3] }],
-			},
-		},
 	});
 
 	//  Submitted can be moved to: Consent, To Evaluate, Under Evaluation, Shelved

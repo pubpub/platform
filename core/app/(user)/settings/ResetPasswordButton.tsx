@@ -7,7 +7,7 @@ import { Loader2 } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import type { UserLoginData } from "~/lib/types";
-import { sendForgotPasswordMail } from "~/lib/auth/actions";
+import { sendForgotPasswordMail } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
 export const ResetPasswordButton = ({ user }: { user: UserLoginData }) => {
@@ -34,7 +34,7 @@ export const ResetPasswordButton = ({ user }: { user: UserLoginData }) => {
 
 	return (
 		<form action={onSubmit}>
-			<Button className="flex items-center gap-x-2">
+			<Button type="submit" className="flex items-center gap-x-2">
 				{status.pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>Reset</span>}
 			</Button>
 		</form>

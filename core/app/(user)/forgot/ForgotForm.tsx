@@ -11,7 +11,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
 
-import * as actions from "~/lib/auth/actions";
+import * as actions from "~/lib/authentication/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 const forgotPasswordSchema = z.object({
@@ -19,7 +19,7 @@ const forgotPasswordSchema = z.object({
 });
 
 export default function ForgotForm() {
-	const form = useForm({
+	const form = useForm<z.infer<typeof forgotPasswordSchema>>({
 		resolver: zodResolver(forgotPasswordSchema),
 	});
 
@@ -55,7 +55,10 @@ export default function ForgotForm() {
 						)}
 					/>
 
-					<Button disabled={!form.formState.isDirty || form.formState.isSubmitting}>
+					<Button
+						type="submit"
+						disabled={!form.formState.isDirty || form.formState.isSubmitting}
+					>
 						Send reset email
 						{form.formState.isSubmitting && (
 							<Loader2 className="ml-4 h-4 w-4 animate-spin" />

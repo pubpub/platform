@@ -115,6 +115,9 @@ EXPOSE $PORT
 # Use production node environment by default.
 ENV NODE_ENV production
 
+# otherwise it will use the strange default docker hostname
+ENV HOSTNAME "0.0.0.0"
+
 ### Core
 
 FROM prod-setup AS next-app-core
@@ -122,6 +125,8 @@ WORKDIR /usr/src/app
 COPY --from=withpackage --chown=node:node /usr/src/app/core/.next/standalone ./
 COPY --from=withpackage --chown=node:node /usr/src/app/core/.next/static ./core/.next/static
 COPY --from=withpackage --chown=node:node /usr/src/app/core/public ./core/public
+# needed to set the database url correctly based on PGHOST variables
+COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./core/.env
 
 CMD node core/server.js
 
@@ -130,8 +135,10 @@ CMD node core/server.js
 FROM prod-setup AS next-app-integration-submissions
 WORKDIR /usr/src/app
 COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/standalone .
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/static ./integrations/evaluations/.next/static
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/public ./integrations/evaluations/public
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/static ./integrations/submissions/.next/static
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/public ./integrations/submissions/public
+# needed to set the database url correctly based on PGHOST variables
+COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./integrations/submissions/.env
 
 CMD node integrations/submissions/server.js
 
@@ -140,8 +147,10 @@ CMD node integrations/submissions/server.js
 FROM prod-setup AS next-app-integration-evaluations
 WORKDIR /usr/src/app
 COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/standalone ./
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/static ./integrations/submissions/.next/static
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/public ./integrations/submissions/public
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/static ./integrations/evaluations/.next/static
+COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/public ./integrations/evaluations/public
+# needed to set the database url correctly based on PGHOST variables
+COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./integrations/evaluations/.env
 
 CMD node integrations/evaluations/server.js
 

@@ -5,7 +5,7 @@ import { AuthTokenType } from "db/public";
 
 import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { createToken } from "~/lib/server/token";
 import { PubHeader } from "./PubHeader";

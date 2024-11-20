@@ -1,10 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 
 import {
+	BookType,
 	BoxSelect,
 	CalendarClock,
 	CheckSquare,
 	CircleSlash,
+	Hash,
 	ImagePlus,
 	Link,
 	Mail,
@@ -28,6 +30,18 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 	[CoreSchemaType.String]: {
 		description: "Text of any length",
 		icon: Type,
+	},
+	[CoreSchemaType.Number]: {
+		description: "A numeric value",
+		icon: Hash,
+	},
+	[CoreSchemaType.StringArray]: {
+		description: "An array of strings",
+		icon: Type,
+	},
+	[CoreSchemaType.NumericArray]: {
+		description: "An array of numbers",
+		icon: Hash,
 	},
 	[CoreSchemaType.DateTime]: {
 		description: "A moment in time",
@@ -56,5 +70,9 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 	[CoreSchemaType.Null]: {
 		description: "An empty value",
 		icon: CircleSlash,
+	},
+	[CoreSchemaType.RichText]: {
+		description: "Rich text of any length",
+		icon: BookType,
 	},
 } as const;

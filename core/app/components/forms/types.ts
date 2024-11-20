@@ -1,4 +1,7 @@
+import type { CoreSchemaType } from "db/public";
+
 export interface ElementProps {
-	label: string;
 	name: string;
+	config: any;
+	schemaName: CoreSchemaType;
 }

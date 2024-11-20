@@ -28,13 +28,13 @@ const memberFields = (pubId: Expression<string>) =>
 			.selectFrom("pub_values")
 			.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 			.innerJoin(
-				"members",
-				"members.id",
-				sql`pub_values.value #>> '{}'` as unknown as "members.id"
+				"community_memberships",
+				"community_memberships.id",
+				sql`pub_values.value #>> '{}'` as unknown as "community_memberships.id"
 			)
 			.select((eb) => [
-				"members.id",
-				"members.userId",
+				"community_memberships.id",
+				"community_memberships.userId",
 				"pub_fields.id as fieldId",
 				jsonObjectFrom(
 					eb
@@ -45,7 +45,7 @@ const memberFields = (pubId: Expression<string>) =>
 							"users.avatar",
 							"users.email",
 						])
-						.whereRef("users.id", "=", "members.userId")
+						.whereRef("users.id", "=", "community_memberships.userId")
 				)
 					.$notNull()
 					.as("user"),

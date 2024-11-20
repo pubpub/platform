@@ -15,7 +15,7 @@ import * as actions from "../../actions";
 
 type Props = {
 	actionInstance: ActionInstances;
-	onDelete: (actionInstanceId: string) => Promise<unknown>;
+	onDelete: (actionInstanceId: ActionInstancesId) => Promise<unknown>;
 	communityId: string;
 	children: React.ReactNode;
 };
@@ -34,12 +34,18 @@ export const StagePanelActionEditor = (props: Props) => {
 	}
 
 	return (
-		<Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+		<Collapsible
+			open={isOpen}
+			onOpenChange={setIsOpen}
+			className="w-full"
+			data-testid={`action-instance-${props.actionInstance.name}`}
+		>
 			<div className="flex w-full items-center justify-between space-x-4 border-b bg-slate-100 px-3 py-2 text-sm">
 				<div className="flex items-center gap-2 overflow-auto">
 					<action.icon size="14" className="flex-shrink-0" />
 					{isOpen ? (
 						<Input
+							aria-label="Edit action name"
 							className="flex-grow-1 ml-1 h-8 p-0 pl-1"
 							defaultValue={props.actionInstance.name || action.name}
 							onBlur={async (evt) => {
@@ -59,7 +65,7 @@ export const StagePanelActionEditor = (props: Props) => {
 				</div>
 				<div className="flex gap-1">
 					<CollapsibleTrigger asChild>
-						<Button variant="ghost" size="sm">
+						<Button variant="ghost" size="sm" aria-label="Edit action">
 							{isOpen ? <ChevronUp size={16} /> : <Pencil size={16} />}
 						</Button>
 					</CollapsibleTrigger>
