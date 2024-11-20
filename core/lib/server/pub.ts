@@ -535,10 +535,10 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	return result as MaybeWithChildren<Body>;
 };
 
-export const deletePub = async (pubId: PubsId) =>
+export const deletePub = (pubId: PubsId) =>
 	autoRevalidate(db.deleteFrom("pubs").where("id", "=", pubId));
 
-export const getPubStage = async (pubId: PubsId) =>
+export const getPubStage = (pubId: PubsId) =>
 	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
 
 /**

@@ -117,10 +117,11 @@ export const siteApi = contract.router(
 			},
 			archive: {
 				method: "DELETE",
-				body: z.never(),
+				body: z.never().nullish(),
 				path: "/pubs/:pubId",
 				responses: {
 					200: z.null(),
+					404: z.literal("Pub not found"),
 				},
 			},
 			relations: {

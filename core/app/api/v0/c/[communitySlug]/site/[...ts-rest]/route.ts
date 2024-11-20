@@ -179,7 +179,15 @@ const handler = createNextHandler(
 			},
 			archive: async ({ params }) => {
 				await checkAuthorization(ApiAccessScope.pub, ApiAccessType.write);
-				await deletePub(params.pubId as PubsId);
+				const result = await deletePub(params.pubId as PubsId).executeTakeFirst();
+
+				if (result?.numDeletedRows !== BigInt(1)) {
+					return {
+						status: 404,
+						body: "Pub not found",
+					};
+				}
+
 				return {
 					status: 200,
 					body: null,
