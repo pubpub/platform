@@ -3,19 +3,10 @@ import type { Page } from "@playwright/test";
 
 import { CoreSchemaType } from "db/public";
 
-import { env } from "~/lib/env/env.mjs";
 import { CommunityPage } from "./fixtures/community-page";
 import { FieldsPage } from "./fixtures/fields-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { InbucketClient } from "./inbucketClient";
-
-export const login = async ({ page }: { page: Page }) => {
-	await page.goto("/login");
-	await page.getByLabel("email").fill("all@pubpub.org");
-	await page.getByRole("textbox", { name: "password" }).fill("pubpub-all");
-	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL(/\/c\/\w+\/stages/);
-};
 
 export const createCommunity = async ({
 	page,

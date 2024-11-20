@@ -7,7 +7,8 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { FormsPage } from "./fixtures/forms-page";
-import { createCommunity, login } from "./helpers";
+import { LoginPage } from "./fixtures/login-page";
+import { createCommunity } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -20,7 +21,11 @@ let page: Page;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
-	await login({ page });
+
+	const loginPage = new LoginPage(page);
+	await loginPage.goto();
+	await loginPage.loginAndWaitForNavigation();
+
 	await createCommunity({
 		page,
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
