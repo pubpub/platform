@@ -104,6 +104,15 @@ const checkAuthorization = async <T extends ApiAccessScope, AT extends ApiAccess
 	return { authorization: constraints as Exclude<typeof constraints, false>, community };
 };
 
+const shouldReturnRepresentation = () => {
+	const prefer = headers().get("Prefer");
+
+	if (prefer === "return=representation") {
+		return true;
+	}
+	return false;
+};
+
 const handler = createNextHandler(
 	siteApi,
 	{
@@ -160,6 +169,14 @@ const handler = createNextHandler(
 					body,
 				});
 
+				const returnRepresentation = shouldReturnRepresentation();
+
+				if (!returnRepresentation) {
+					return {
+						status: 204,
+					};
+				}
+
 				return {
 					status: 201,
 					body: createdPub,
@@ -187,6 +204,14 @@ const handler = createNextHandler(
 					continueOnValidationError: false,
 				});
 
+				const returnRepresentation = shouldReturnRepresentation();
+
+				if (!returnRepresentation) {
+					return {
+						status: 204,
+					};
+				}
+
 				const pub = await getPubsWithRelatedValuesAndChildren({
 					pubId: params.pubId as PubsId,
 					communityId: community.id,
@@ -210,7 +235,6 @@ const handler = createNextHandler(
 
 				return {
 					status: 200,
-					body: null,
 				};
 			},
 			relations: {
@@ -278,6 +302,14 @@ const handler = createNextHandler(
 						};
 					}
 
+					const returnRepresentation = shouldReturnRepresentation();
+
+					if (!returnRepresentation) {
+						return {
+							status: 204,
+						};
+					}
+
 					const pub = await getPubsWithRelatedValuesAndChildren({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
@@ -313,6 +345,14 @@ const handler = createNextHandler(
 						communityId: community.id,
 					});
 
+					const returnRepresentation = shouldReturnRepresentation();
+
+					if (!returnRepresentation) {
+						return {
+							status: 204,
+						};
+					}
+
 					const pub = await getPubsWithRelatedValuesAndChildren({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
@@ -346,6 +386,14 @@ const handler = createNextHandler(
 						relations,
 						communityId: community.id,
 					});
+
+					const returnRepresentation = shouldReturnRepresentation();
+
+					if (!returnRepresentation) {
+						return {
+							status: 204,
+						};
+					}
 
 					const pub = await getPubsWithRelatedValuesAndChildren({
 						pubId: params.pubId as PubsId,
