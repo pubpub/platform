@@ -1190,7 +1190,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 								.innerJoin("pubs", (join) =>
 									join.on((eb) =>
 										eb.or([
-											...(withChildren
+											...(withRelatedPubs
 												? [
 														eb(
 															"pubs.id",
@@ -1199,7 +1199,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 														),
 													]
 												: []),
-											...(withRelatedPubs
+											...(withChildren
 												? [
 														eb(
 															"pubs.parentId",
@@ -1308,14 +1308,18 @@ export async function getPubsWithRelatedValuesAndChildren<
 						.whereRef("inner.depth", "=", "pub_tree.depth")
 						.orderBy("inner.valueCreatedAt desc")
 				).as("values"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("pub_tree as children")
-						.select(["children.pubId as id"])
-						.distinctOn(["children.pubId"])
-						.whereRef("children.parentId", "=", "pub_tree.pubId")
-				).as("children"),
 			])
+			.$if(Boolean(withChildren), (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("pub_tree as children")
+							.select(["children.pubId as id"])
+							.distinctOn(["children.pubId"])
+							.whereRef("children.parentId", "=", "pub_tree.pubId")
+					).as("children")
+				)
+			)
 			// TODO: is there a more efficient way to do this?
 			.$if(Boolean(withStage), (qb) =>
 				qb.select((eb) =>
