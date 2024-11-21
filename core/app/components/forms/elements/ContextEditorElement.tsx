@@ -4,7 +4,7 @@ import type { Node } from "prosemirror-model";
 
 import { useState } from "react";
 import { Value } from "@sinclair/typebox/value";
-import { docHasChanged } from "context-editor";
+import { docHasChanged } from "context-editor/utils";
 import { useFormContext } from "react-hook-form";
 import { richTextInputConfigSchema } from "schemas";
 

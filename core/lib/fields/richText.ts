@@ -1,4 +1,5 @@
-import { baseSchema, getPubValues } from "context-editor";
+import { baseSchema } from "context-editor/schemas";
+import { getPubValues } from "context-editor/utils";
 import { Node } from "prosemirror-model";
 
 import type { JsonValue } from "contracts";
