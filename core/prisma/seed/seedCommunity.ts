@@ -11,6 +11,7 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 import type { ProcessedPub } from "contracts";
 import type {
 	ActionInstancesId,
+	ApiAccessTokensId,
 	Communities,
 	CommunitiesId,
 	CommunityMembershipsId,
@@ -29,6 +30,8 @@ import type {
 } from "db/public";
 import {
 	Action as ActionName,
+	ApiAccessScope,
+	ApiAccessType,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
@@ -42,6 +45,7 @@ import type { actions } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createPubRecursiveNew } from "~/lib/server";
+import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { slugifyString } from "~/lib/string";
 
 export type PubFieldsInitializer = Record<
@@ -452,6 +456,7 @@ export async function seedCommunity<
 	const SC extends StageConnectionsInitializer<S>,
 	const PI extends PubInitializer<PF, PT, U, S>[],
 	const F extends FormInitializer<PF, PT, U, S>,
+	WithApiToken extends boolean | `${string}.${string}` | undefined = undefined,
 >(
 	props: {
 		/**
@@ -667,6 +672,12 @@ export async function seedCommunity<
 		forms?: F;
 	},
 	options?: {
+		/**
+		 * Whether or not to create an API token for the community.
+		 * If a string is provided, it will be used as the id part of the token.
+		 * @default false
+		 */
+		withApiToken?: WithApiToken;
 		/**
 		 * Whether or not to add a random number to the end of slugs, helps prevent errors during testing.
 		 * @default true
@@ -1046,6 +1057,42 @@ export async function seedCommunity<
 		? await trx.insertInto("action_instances").values(possibleActions).returningAll().execute()
 		: [];
 
+	let apiToken: string | undefined = undefined;
+
+	if (options?.withApiToken) {
+		const [tokenId, tokenString] =
+			typeof options.withApiToken === "string"
+				? options.withApiToken.split(".")
+				: [crypto.randomUUID(), undefined];
+
+		const issuedById = createdMembers.find(
+			(member) => member.role === MemberRole.admin
+		)?.userId;
+
+		if (!issuedById) {
+			throw new Error(
+				"Attempting to create an API token without an admin member. You should create an admin member in the seed if you intend to be able to use the API."
+			);
+		}
+
+		const { token } = await createApiAccessToken({
+			token: {
+				name: "seed token",
+				communityId,
+				expiration: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12),
+				description: "Default seed token. Should not be used in production.",
+				issuedAt: new Date(),
+				id: tokenId as ApiAccessTokensId,
+				issuedById,
+				// @ts-expect-error - this is a predefined token
+				token: tokenString,
+			},
+			permissions: allPermissions,
+		}).executeTakeFirstOrThrow();
+
+		apiToken = token;
+	}
+
 	return {
 		community: createdCommunity,
 		pubFields: pubFieldsByName,
@@ -1057,6 +1104,11 @@ export async function seedCommunity<
 		pubs: createdPubs,
 		actions: createdActions,
 		forms: formsByName,
+		apiToken: apiToken as WithApiToken extends string
+			? `${string}.${WithApiToken}`
+			: WithApiToken extends boolean
+				? string
+				: undefined,
 	};
 }
 

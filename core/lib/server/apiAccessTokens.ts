@@ -8,6 +8,7 @@ import type {
 	NewApiAccessPermissions,
 	NewApiAccessTokens,
 } from "db/public";
+import { ApiAccessScope, ApiAccessType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -145,3 +146,13 @@ export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }) =>
 			.deleteFrom("api_access_logs")
 			.where("accessTokenId", "=", id)
 	);
+
+/**
+ * Simple flat list of all permissions
+ */
+export const allPermissions = Object.values(ApiAccessScope).flatMap((scope) =>
+	Object.values(ApiAccessType).map((accessType) => ({
+		scope,
+		accessType,
+	}))
+);

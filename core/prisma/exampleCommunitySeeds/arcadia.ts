@@ -564,6 +564,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 		},
 		{
 			randomSlug: false,
+			withApiToken: "xxxxxxxxxxxxxxxx.00000000-0000-0000-0000-000000000000",
 		}
 	);
 };
