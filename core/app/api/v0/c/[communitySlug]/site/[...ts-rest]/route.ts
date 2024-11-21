@@ -108,15 +108,14 @@ const handler = createNextHandler(
 	siteApi,
 	{
 		pubs: {
-			get: async (req, res) => {
+			get: async ({ params }) => {
 				const { community } = await checkAuthorization(
 					ApiAccessScope.pub,
 					ApiAccessType.read
 				);
-				const { pubId } = req.params;
 
 				const pub = await getPubsWithRelatedValuesAndChildren({
-					pubId: pubId as PubsId,
+					pubId: params.pubId as PubsId,
 					communityId: community.id,
 				});
 
@@ -125,7 +124,7 @@ const handler = createNextHandler(
 					body: pub,
 				};
 			},
-			getMany: async (req, args) => {
+			getMany: async ({ query }) => {
 				const { community } = await checkAuthorization(
 					ApiAccessScope.pub,
 					ApiAccessType.read
@@ -133,7 +132,7 @@ const handler = createNextHandler(
 
 				const pubs = await getPubsWithRelatedValuesAndChildren({
 					communityId: community.id,
-					...req.query,
+					...query,
 				});
 
 				return {
