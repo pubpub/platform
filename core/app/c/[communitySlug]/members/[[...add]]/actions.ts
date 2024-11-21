@@ -59,11 +59,11 @@ const isCommunityAdmin = cache(async () => {
  *   error occurs.
  */
 export const addMember = defineServerAction(async function addMember({
-	user,
+	userId,
 	role,
 }: {
-	user: UserWithMember;
-	role?: MemberRole;
+	userId: UsersId;
+	role: MemberRole;
 }) {
 	const result = await isCommunityAdmin();
 	if (result.error !== null) {
@@ -75,7 +75,7 @@ export const addMember = defineServerAction(async function addMember({
 
 	try {
 		const existingMember = await dbGetMember({
-			userId: user.id as UsersId,
+			userId,
 			communityId: result.community.id,
 		}).executeTakeFirst();
 
@@ -87,9 +87,9 @@ export const addMember = defineServerAction(async function addMember({
 		}
 
 		const member = await dbAddMember({
-			userId: user.id as UsersId,
+			userId,
 			communityId: result.community.id,
-			role: role ?? MemberRole.editor,
+			role,
 		}).executeTakeFirst();
 
 		// TODO: send email to user confirming their membership,

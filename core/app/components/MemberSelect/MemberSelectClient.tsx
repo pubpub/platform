@@ -149,7 +149,7 @@ export function MemberSelectClient({
 									field.onChange(user.member.id);
 								} else {
 									const result = await runAddMember({
-										user,
+										userId: user.id,
 										role: MemberRole.contributor,
 									});
 									if (didSucceed(result)) {

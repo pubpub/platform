@@ -1,34 +1,35 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 
+import type { MemberRole, NewUsers, UsersId } from "db/public";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { UserPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import { MemberInviteForm } from "./MemberInviteForm";
 
-export const AddMemberDialog = ({ open, content }: { open: boolean; content: React.ReactNode }) => {
-	const router = useRouter();
-	const community = useCommunity();
-	const [actuallyOpen, setActuallyOpen] = useState(false);
-
-	// This is a workaround to make sure the dialog only opens on the client side,
-	// the dialog component does not server render well opened
-	// see https://github.com/radix-ui/primitives/issues/1386#issuecomment-1171798282
-	useEffect(() => {
-		setActuallyOpen(open);
-	}, []);
-
+export const AddMemberDialog = ({
+	isSuperAdmin,
+	existingMembers,
+	addMember,
+	addUserMember,
+}: {
+	addMember: ({ userId, role }: { userId: UsersId; role: MemberRole }) => Promise<unknown>;
+	addUserMember: ({
+		email,
+		firstName,
+		lastName,
+		isSuperAdmin,
+		role,
+	}: Omit<NewUsers, "slug"> & { role: MemberRole }) => Promise<unknown>;
+	isSuperAdmin: boolean;
+	existingMembers: UsersId[];
+}) => {
+	const [open, setOpen] = useState(false);
 	return (
-		<Dialog
-			open={actuallyOpen}
-			onOpenChange={(open) => {
-				router.push(`/c/${community.slug}/members${open ? "/add" : ""}`);
-			}}
-		>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<Tooltip>
 				<TooltipContent> Add a user to your community</TooltipContent>
 				<TooltipTrigger asChild>
@@ -42,7 +43,13 @@ export const AddMemberDialog = ({ open, content }: { open: boolean; content: Rea
 
 			<DialogContent>
 				<DialogTitle>Add Member</DialogTitle>
-				{content}
+				<MemberInviteForm
+					addMember={addMember}
+					addUserMember={addUserMember}
+					isSuperAdmin={isSuperAdmin}
+					closeForm={() => setOpen(false)}
+					existingMembers={existingMembers}
+				/>
 			</DialogContent>
 		</Dialog>
 	);

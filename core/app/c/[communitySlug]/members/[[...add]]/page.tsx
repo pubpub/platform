@@ -11,7 +11,7 @@ import { getPageLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { AddMember } from "./AddMember";
+import { addMember, createUserWithMembership } from "./actions";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { MemberTable } from "./MemberTable";
 
@@ -32,7 +32,7 @@ const getCachedMembers = (communityId: CommunitiesId) =>
 					eb
 						.selectFrom("users")
 						.select([
-							"userId as id",
+							"users.id as id",
 							"users.firstName as firstName",
 							"users.lastName as lastName",
 							"users.avatar as avatar",
@@ -107,8 +107,10 @@ export default async function Page({
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Members</h1>
 				<AddMemberDialog
-					open={!!add}
-					content={<AddMember community={community} email={searchParams.email} />}
+					addMember={addMember}
+					addUserMember={createUserWithMembership}
+					existingMembers={members.map((member) => member.user.id)}
+					isSuperAdmin={user.isSuperAdmin}
 				/>
 			</div>
 			<MemberTable members={tableMembers} />
