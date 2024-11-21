@@ -13,6 +13,7 @@ import { getStage } from "~/lib/db/queries";
 import {
 	createPubRecursiveNew,
 	deletePub,
+	doesPubExist,
 	getPubCached,
 	getPubs,
 	getPubsWithRelatedValuesAndChildren,
@@ -164,6 +165,16 @@ const handler = createNextHandler(
 					ApiAccessScope.pub,
 					ApiAccessType.write
 				);
+
+				const { exists } = await doesPubExist(
+					params.pubId as PubsId,
+					community.id as CommunitiesId
+				);
+
+				if (!exists) {
+					throw new NotFoundError(`Pub ${params.pubId} not found`);
+				}
+
 				const updatedPub = await updatePub({
 					pubValues: body,
 					pubId: params.pubId as PubsId,
@@ -202,6 +213,15 @@ const handler = createNextHandler(
 						ApiAccessScope.pub,
 						ApiAccessType.write
 					);
+
+					const { exists } = await doesPubExist(
+						params.pubId as PubsId,
+						community.id as CommunitiesId
+					);
+
+					if (!exists) {
+						throw new NotFoundError(`Pub ${params.pubId} not found`);
+					}
 
 					const { all, some } = Object.entries(body).reduce(
 						(acc, [fieldSlug, pubIds]) => {
@@ -263,6 +283,15 @@ const handler = createNextHandler(
 						ApiAccessType.write
 					);
 
+					const { exists } = await doesPubExist(
+						params.pubId as PubsId,
+						community.id as CommunitiesId
+					);
+
+					if (!exists) {
+						throw new NotFoundError(`Pub ${params.pubId} not found`);
+					}
+
 					const relations = Object.entries(body).flatMap(([slug, data]) =>
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
 					);
@@ -292,6 +321,14 @@ const handler = createNextHandler(
 						ApiAccessType.write
 					);
 
+					const { exists } = await doesPubExist(
+						params.pubId as PubsId,
+						community.id as CommunitiesId
+					);
+
+					if (!exists) {
+						throw new NotFoundError(`Pub ${params.pubId} not found`);
+					}
 					const relations = Object.entries(body).flatMap(([slug, data]) =>
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
 					);

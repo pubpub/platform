@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import type { PubsId, PubTypes, Stages } from "db/public";
 import { CoreSchemaType } from "db/public";
 
-import type { ProcessedPub, UnprocessedPub } from "./pub";
+import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 
@@ -1364,18 +1364,18 @@ describe("replacePubRelationsBySlug", () => {
 		// Replace relations
 		await replacePubRelationsBySlug({
 			pubId: pub.id,
-			relations: {
-				[pubFields["Some relation"].slug]: [
-					{
-						relatedPubId: newRelatedPub1.id,
-						value: "new relation value 1",
-					},
-					{
-						relatedPubId: newRelatedPub2.id,
-						value: "new relation value 2",
-					},
-				],
-			},
+			relations: [
+				{
+					slug: pubFields["Some relation"].slug,
+					relatedPubId: newRelatedPub1.id,
+					value: "new relation value 1",
+				},
+				{
+					slug: pubFields["Some relation"].slug,
+					relatedPubId: newRelatedPub2.id,
+					value: "new relation value 2",
+				},
+			],
 			communityId: community.id,
 		});
 
@@ -1387,7 +1387,7 @@ describe("replacePubRelationsBySlug", () => {
 		const relationValues = updatedPub.values.filter((v) => v.relatedPub);
 
 		expect(relationValues).toHaveLength(2);
-		expect(relationValues.map((v) => v.relatedPub.id).sort()).toEqual(
+		expect(relationValues.map((v) => v.relatedPub?.id).sort()).toEqual(
 			[newRelatedPub1.id, newRelatedPub2.id].sort()
 		);
 		expect(relationValues.map((v) => v.value).sort()).toEqual(
@@ -1414,7 +1414,7 @@ describe("replacePubRelationsBySlug", () => {
 
 		await replacePubRelationsBySlug({
 			pubId: pub.id,
-			relations: {},
+			relations: [],
 			communityId: community.id,
 		});
 
@@ -1444,14 +1444,13 @@ describe("replacePubRelationsBySlug", () => {
 		await expect(
 			replacePubRelationsBySlug({
 				pubId: pub.id,
-				relations: {
-					"non-existent-field": [
-						{
-							relatedPubId: "some-id" as PubsId,
-							value: "some value",
-						},
-					],
-				},
+				relations: [
+					{
+						slug: "non-existent-field",
+						relatedPubId: "some-id" as PubsId,
+						value: "some value",
+					},
+				],
 				communityId: community.id,
 			})
 		).rejects.toThrow(

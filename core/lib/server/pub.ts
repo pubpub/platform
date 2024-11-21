@@ -23,6 +23,7 @@ import type {
 	CommunitiesId,
 	CoreSchemaType,
 	PubFieldsId,
+	Pubs,
 	PubsId,
 	PubTypes,
 	PubTypesId,
@@ -367,14 +368,38 @@ export type GetPubsResult = Prettify<Awaited<ReturnType<typeof getPubs>>>;
 
 const PubNotFoundError = new NotFoundError("Pub not found");
 
-const doesPubExist = async (pubId: PubsId, communitiyId: CommunitiesId) => {
-	const pub = await db
-		.selectFrom("pubs")
-		.select("id")
-		.where("id", "=", pubId)
-		.where("communityId", "=", communitiyId)
-		.executeTakeFirst();
-	return !!pub;
+/**
+ * Utility function to check if a pub exists in a community
+ */
+export const doPubsExist = async (
+	pubIds: PubsId[],
+	communitiyId: CommunitiesId,
+	trx = db
+): Promise<{ exists: boolean; pubs: Pubs[] }> => {
+	const pubs = await autoCache(
+		trx
+			.selectFrom("pubs")
+			.where("id", "in", pubIds)
+			.where("communityId", "=", communitiyId)
+			.selectAll()
+	).execute();
+
+	return {
+		exists: pubIds.every((pubId) => !!pubs.find((p) => p.id === pubId)),
+		pubs,
+	};
+};
+
+/**
+ * Utility function to check if a pub exists in a community
+ */
+export const doesPubExist = async (
+	pubId: PubsId,
+	communitiyId: CommunitiesId,
+	trx = db
+): Promise<{ exists: false; pub?: undefined } | { exists: true; pub: Pubs }> => {
+	const { exists, pubs } = await doPubsExist([pubId], communitiyId, trx);
+	return exists ? { exists: true as const, pub: pubs[0] } : { exists: false as const };
 };
 
 /**
@@ -665,6 +690,8 @@ export const normalizeRelationValues = (
  * 1. Creating brand new pubs and linking them as relations (via relatedPub)
  * 2. Linking to existing pubs (via relatedPubId)
  *
+ * Note: it is the responsibility of the caller to ensure that the pub exists
+ *
  */
 export const upsertPubRelations = async ({
 	pubId,
@@ -677,11 +704,6 @@ export const upsertPubRelations = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	const pubExists = await doesPubExist(pubId, communityId);
-	if (!pubExists) {
-		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
-	}
-
 	const normalizedRelationValues = normalizeRelationValues(relations);
 
 	const validatedRelationValues = await validatePubValues({
@@ -773,6 +795,8 @@ export const upsertPubRelations = async ({
 /**
  * Removes specific pub relations by deleting pub_values entries that match the provided relations.
  * Each relation must specify a field slug and relatedPubId to identify which relation to remove.
+ *
+ * Note: it is the responsibility of the caller to ensure that the pub exists
  */
 export const removePubRelations = async ({
 	pubId,
@@ -785,11 +809,6 @@ export const removePubRelations = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	const pubExists = await doesPubExist(pubId, communityId);
-	if (!pubExists) {
-		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
-	}
-
 	const consolidatedRelations = await getFieldInfoForSlugs({
 		slugs: relations.map(({ slug }) => slug),
 		communityId,
@@ -817,6 +836,8 @@ export const removePubRelations = async ({
 
 /**
  * Removes all relations for a given field slug and pubId
+ *
+ * Note: it is the responsibility of the caller to ensure that the pub exists
  */
 export const removeAllPubRelationsBySlugs = async ({
 	pubId,
@@ -829,11 +850,6 @@ export const removeAllPubRelationsBySlugs = async ({
 	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	const pubExists = await doesPubExist(pubId, communityId);
-	if (!pubExists) {
-		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
-	}
-
 	const fields = await getFieldInfoForSlugs({
 		slugs: slugs,
 		communityId,
@@ -899,11 +915,6 @@ export const updatePub = async ({
 	stageId?: StagesId;
 	continueOnValidationError: boolean;
 }) => {
-	const pubExists = await doesPubExist(pubId, communityId);
-	if (!pubExists) {
-		throw new NotFoundError(`Pub with id ${pubId} does not exist in community`);
-	}
-
 	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
