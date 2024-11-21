@@ -1214,9 +1214,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 								.leftJoin("pub_values", "pubs.id", "pub_values.pubId")
 								.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-								.$if(Boolean(fieldSlugs), (qb) =>
-									qb.where("pub_fields.slug", "in", fieldSlugs!)
-								)
 								.select([
 									"pubs.id as pubId",
 									"pub_fields.schemaName as schemaName",
