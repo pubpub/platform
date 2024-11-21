@@ -3,6 +3,26 @@
 	"version": "0.0.1",
 	"main": "dist/context-editor.cjs.js",
 	"module": "dist/context-editor.esm.js",
+	"exports": {
+		".": {
+			"module": "./dist/context-editor.esm.js",
+			"default": "./dist/context-editor.cjs.js"
+		},
+		"./utils": {
+			"module": "./utils/dist/context-editor-utils.esm.js",
+			"default": "./utils/dist/context-editor-utils.cjs.js"
+		},
+		"./schemas": {
+			"module": "./schemas/dist/context-editor-schemas.esm.js",
+			"default": "./schemas/dist/context-editor-schemas.cjs.js"
+		},
+		"./package.json": "./package.json",
+		"./style.css": {
+			"module": "./src/style.css",
+			"default": "./src/style.css"
+		},
+		"./tailwind.config.js": "./tailwind.config.js"
+	},
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit",
@@ -61,6 +81,16 @@
 		"uuid": "^9.0.0"
 	},
 	"preconstruct": {
+		"exports": {
+			"extra": {
+				"./package.json": "./package.json",
+				"./style.css": {
+					"module": "./src/style.css",
+					"default": "./src/style.css"
+				},
+				"./tailwind.config.js": "./tailwind.config.js"
+			}
+		},
 		"entrypoints": [
 			"index.ts",
 			"schemas/index.ts",
