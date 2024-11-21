@@ -229,6 +229,19 @@ const preferRepresentationHeaderSchema = z.object({
 		.default("return=minimal"),
 });
 
+const getPubQuerySchema = z.object({
+	depth: z
+		.number()
+		.default(2)
+		.describe(
+			"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and its children."
+		),
+	withChildren: z.boolean().default(true).describe("Whether to fetch children."),
+	withRelatedPubs: z.boolean().default(true).describe("Whether to fetch related pubs."),
+	withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
+	withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+});
+
 export const siteApi = contract.router(
 	{
 		pubs: {
@@ -241,6 +254,7 @@ export const siteApi = contract.router(
 				pathParams: z.object({
 					pubId: z.string().uuid(),
 				}),
+				query: getPubQuerySchema,
 				responses: {
 					200: processedPubSchema,
 				},
@@ -251,7 +265,9 @@ export const siteApi = contract.router(
 				summary: "Gets a list of pubs",
 				description:
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
-				query: z.object({
+				query: getPubQuerySchema.extend({
+					pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
+					stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
 					limit: z.number().default(10).optional(),
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),

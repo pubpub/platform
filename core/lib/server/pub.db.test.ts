@@ -26,6 +26,9 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 			Title: { isTitle: true },
 			"Some relation": { isTitle: false },
 		},
+		"Minimal Pub": {
+			Title: { isTitle: true },
+		},
 	},
 	stages: {
 		"Stage 1": {},
@@ -55,6 +58,13 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 						},
 					},
 				],
+			},
+		},
+		{
+			stage: "Stage 1",
+			pubType: "Minimal Pub",
+			values: {
+				Title: "Minimal pub",
 			},
 		},
 	],
@@ -283,6 +293,7 @@ describe("updatePub", () => {
 					[pubFields.Title.slug]: "Test pub",
 				},
 			},
+			trx,
 		});
 
 		await expect(
@@ -495,36 +506,46 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		});
 	});
 
-	it("should be able to fetch all the pubs of a specific pubtype", async () => {
+	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
 		const trx = getTrx();
 		const { createPubRecursiveNew } = await import("./pub");
 
-		const pub = await createPubRecursiveNew({
-			communityId: community.id,
-			body: {
-				pubTypeId: pubTypes["Basic Pub"].id,
-				values: {
-					[pubFields.Title.slug]: "test title",
-				},
-			},
-			trx,
-		});
-
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
-		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+		const allPubs = await getPubsWithRelatedValuesAndChildren(
 			{ communityId: community.id },
 			{ depth: 10 }
 		);
 
-		expect(pubWithRelatedValuesAndChildren.length).toBe(5);
+		expect(allPubs.length).toBe(5);
 
-		const submissionPubs = await getPubsWithRelatedValuesAndChildren(
-			{ pubTypeId: pubTypes["Basic Pub"].id, communityId: community.id },
-			{ withPubType: true, depth: 10 }
-		);
+		const [minimalPubs, pubsInStage1, basicPubsInStage1] = await Promise.all([
+			getPubsWithRelatedValuesAndChildren(
+				{ pubTypeId: pubTypes["Minimal Pub"].id, communityId: community.id },
+				{ withPubType: true, depth: 10 }
+			),
+			getPubsWithRelatedValuesAndChildren(
+				{ stageId: stages["Stage 1"].id, communityId: community.id },
+				{ withStage: true, depth: 10 }
+			),
+			getPubsWithRelatedValuesAndChildren(
+				{
+					pubTypeId: pubTypes["Basic Pub"].id,
+					stageId: stages["Stage 1"].id,
+					communityId: community.id,
+				},
+				{ withPubType: true, withStage: true, depth: 10 }
+			),
+		]);
 
-		expect(submissionPubs[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
+		expect(minimalPubs.length).toBe(1);
+		expect(minimalPubs[0].pubType?.id).toBe(pubTypes["Minimal Pub"].id);
+
+		expect(pubsInStage1.length).toBe(2);
+
+		expect(basicPubsInStage1.length).toBe(1);
+		expect(basicPubsInStage1[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
+		expect(basicPubsInStage1[0].stage?.id).toBe(stages["Stage 1"].id);
 	});
 
 	it("should be able to limit the amount of top-level pubs retrieved", async () => {

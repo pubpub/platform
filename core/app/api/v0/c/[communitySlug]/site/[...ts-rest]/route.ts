@@ -117,16 +117,19 @@ const handler = createNextHandler(
 	siteApi,
 	{
 		pubs: {
-			get: async ({ params }) => {
+			get: async ({ params, query }) => {
 				const { community } = await checkAuthorization(
 					ApiAccessScope.pub,
 					ApiAccessType.read
 				);
 
-				const pub = await getPubsWithRelatedValuesAndChildren({
-					pubId: params.pubId as PubsId,
-					communityId: community.id,
-				});
+				const pub = await getPubsWithRelatedValuesAndChildren(
+					{
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					},
+					query
+				);
 
 				return {
 					status: 200,
@@ -139,10 +142,16 @@ const handler = createNextHandler(
 					ApiAccessType.read
 				);
 
-				const pubs = await getPubsWithRelatedValuesAndChildren({
-					communityId: community.id,
-					...query,
-				});
+				const { pubTypeId, stageId, ...rest } = query;
+
+				const pubs = await getPubsWithRelatedValuesAndChildren(
+					{
+						communityId: community.id,
+						pubTypeId,
+						stageId,
+					},
+					rest
+				);
 
 				return {
 					status: 200,

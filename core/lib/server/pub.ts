@@ -1073,20 +1073,8 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	  }
 	| {
 			pubId?: never;
-			pubTypeId: PubTypesId;
-			stageId?: never;
-			communityId: CommunitiesId;
-	  }
-	| {
-			pubId?: never;
-			pubTypeId?: never;
-			stageId: StagesId;
-			communityId: CommunitiesId;
-	  }
-	| {
-			pubId?: never;
-			pubTypeId?: never;
-			stageId?: never;
+			pubTypeId?: PubTypesId;
+			stageId?: StagesId;
 			communityId: CommunitiesId;
 	  };
 
