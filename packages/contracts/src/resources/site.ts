@@ -2,13 +2,21 @@ import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
 import type { PubsId, StagesId } from "db/public";
-import { pubsIdSchema, pubsSchema, pubTypesSchema, stagesIdSchema, stagesSchema } from "db/public";
+import {
+	communitiesIdSchema,
+	communityMembershipsSchema,
+	pubsIdSchema,
+	pubsSchema,
+	pubTypesSchema,
+	stagesIdSchema,
+	stagesSchema,
+	usersSchema,
+} from "db/public";
 
 import type { Json } from "./integrations";
 import {
 	CreatePubRequestBodyWithNulls,
 	CreatePubRequestBodyWithNullsBase,
-	JsonInput,
 	jsonSchema,
 } from "./integrations";
 
@@ -18,6 +26,8 @@ export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBo
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
 	values: Record<string, Json | { value: Json; relatedPubId: PubsId }>;
 };
+
+export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
 
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
 	stageId: stagesIdSchema.optional(),
@@ -157,6 +167,24 @@ export const siteApi = contract.router(
 				responses: {
 					200: stagesSchema.array(),
 				},
+			},
+		},
+		searchUsers: {
+			path: "/searchUsers",
+			method: "GET",
+			summary: "Get a list of matching users for autocomplete",
+			description:
+				"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
+			query: z.object({
+				communityId: communitiesIdSchema,
+				email: z.string(),
+				name: z.string().optional(),
+				limit: z.number().optional(),
+			}),
+			responses: {
+				200: safeUserSchema
+					.extend({ member: communityMembershipsSchema.nullable().optional() })
+					.array(),
 			},
 		},
 	},
