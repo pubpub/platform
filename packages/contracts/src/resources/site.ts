@@ -279,6 +279,9 @@ export const siteApi = contract.router(
 			},
 			relations: {
 				update: {
+					summary: "Update pub relation fields",
+					description:
+						"Updates pub relations for the specified slugs. Only adds or modifies specified relations, leaves existing relations alone. If you want to replace all relations for a field, use PUT.",
 					method: "PATCH",
 					path: "/pubs/:pubId/relations",
 					body: upsertPubRelationsSchema,
@@ -287,6 +290,9 @@ export const siteApi = contract.router(
 					},
 				},
 				replace: {
+					summary: "Replace pub relation fields",
+					description:
+						"Replaces all pub relations for the specified slugs. If you want to add or modify relations without overwriting existing ones, use PATCH.",
 					method: "PUT",
 					path: "/pubs/:pubId/relations",
 					body: upsertPubRelationsSchema,
@@ -295,9 +301,10 @@ export const siteApi = contract.router(
 					},
 				},
 				remove: {
-					method: "DELETE",
+					summary: "Remove pub relation fields",
 					description:
-						"Removes pub relations by slug. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.",
+						"Removes related pubs from the specified pubfields. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.\n Note: This endpoint does not remove the related pubs themselves, only the relations.",
+					method: "DELETE",
 					path: "/pubs/:pubId/relations",
 					body: z.record(z.union([z.literal("*"), z.array(pubsIdSchema)])),
 					responses: {
