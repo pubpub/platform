@@ -1,8 +1,31 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import type { PubsId, StagesId } from "db/public";
-import { pubsIdSchema, pubsSchema, pubTypesSchema, stagesIdSchema, stagesSchema } from "db/public";
+import type {
+	CommunitiesId,
+	CoreSchemaType,
+	PubFieldsId,
+	PubsId,
+	PubTypes,
+	PubTypesId,
+	PubValuesId,
+	Stages,
+	StagesId,
+} from "db/public";
+import {
+	communitiesIdSchema,
+	coreSchemaTypeSchema,
+	pubFieldsIdSchema,
+	pubFieldsSchema,
+	pubsIdSchema,
+	pubsSchema,
+	pubTypesIdSchema,
+	pubTypesSchema,
+	pubValuesIdSchema,
+	pubValuesSchema,
+	stagesIdSchema,
+	stagesSchema,
+} from "db/public";
 
 import type { Json } from "./integrations";
 import {
@@ -66,6 +89,136 @@ const upsertPubRelationsSchema = z.record(
 	)
 );
 
+/**
+ * Only add the `children` if the `withChildren` option has not been set to `false
+ */
+type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"] extends false
+	? { children?: never }
+	: { children: ProcessedPub<Options>[] };
+
+/**
+ * Only add the `stage` if the `withStage` option has not been set to `false
+ */
+type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
+	? { stage: Stages }
+	: { stage?: never };
+
+/**
+ * Only add the `pubType` if the `withPubType` option has not been set to `false
+ */
+type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] extends true
+	? { pubType: PubTypes }
+	: { pubType?: never };
+
+type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
+	? { relatedPub?: never; relatedPubId: PubsId | null }
+	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null };
+
+/**
+ * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
+ *
+ * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
+ *
+ **/
+type MaybePubOptions = {
+	/**
+	 * Whether to recursively fetch children up to depth `depth`.
+	 *
+	 * @default true
+	 */
+	withChildren?: boolean;
+	/**
+	 * Whether to recursively fetch related pubs.
+	 *
+	 * @default true
+	 */
+	withRelatedPubs?: boolean;
+	/**
+	 * Whether to include the pub type.
+	 *
+	 * @default false
+	 */
+	withPubType?: boolean;
+	/**
+	 * Whether to include the stage.
+	 *
+	 * @default false
+	 */
+	withStage?: boolean;
+};
+
+type ValueBase = {
+	id: PubValuesId;
+	fieldId: PubFieldsId;
+	value: unknown;
+	createdAt: Date;
+	updatedAt: Date;
+	/**
+	 * Information about the field that the value belongs to.
+	 */
+	schemaName: CoreSchemaType;
+	fieldSlug: string;
+};
+
+type ProcessedPubBase = {
+	id: PubsId;
+	stageId: StagesId | null;
+	communityId: CommunitiesId;
+	pubTypeId: PubTypesId;
+	parentId: PubsId | null;
+	createdAt: Date;
+	/**
+	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
+	 *
+	 * We do this because the Pub itself is rarely if ever changed over time.
+	 * TODO: Possibly add the `updatedAt` of `PubsInStages` here as well?
+	 * At time of writing (2024/11/04) I don't think that table has an `updatedAt`.
+	 */
+	updatedAt: Date;
+};
+
+export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
+	values: (ValueBase & MaybePubRelatedPub<Options>)[];
+} & MaybePubChildren<Options> &
+	MaybePubStage<Options> &
+	MaybePubPubType<Options>;
+
+interface NonGenericProcessedPub extends ProcessedPubBase {
+	stage?: Stages;
+	pubType?: PubTypes;
+	children?: NonGenericProcessedPub[];
+	values: (ValueBase & {
+		relatedPub?: NonGenericProcessedPub | null;
+		relatedPubId: PubsId | null;
+	})[];
+}
+
+const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
+	id: pubsIdSchema,
+	stageId: stagesIdSchema.nullable(),
+	communityId: communitiesIdSchema,
+	pubTypeId: pubTypesIdSchema,
+	parentId: pubsIdSchema.nullable(),
+	values: z.array(
+		pubValuesSchema.extend({
+			value: jsonSchema,
+			fieldSlug: z.string(),
+			schemaName: coreSchemaTypeSchema,
+			relatedPubId: pubsIdSchema.nullable(),
+			relatedPub: z.lazy(() => processedPubSchema.nullish()),
+		})
+	),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+	stage: stagesSchema.optional(),
+	pubType: pubTypesSchema
+		.extend({
+			fields: z.array(pubFieldsSchema),
+		})
+		.optional(),
+	children: z.lazy(() => z.array(processedPubSchema)).optional(),
+});
+
 export const siteApi = contract.router(
 	{
 		pubs: {
@@ -79,7 +232,7 @@ export const siteApi = contract.router(
 					pubId: z.string().uuid(),
 				}),
 				responses: {
-					200: pubWithChildrenSchema,
+					200: processedPubSchema,
 				},
 			},
 			getMany: {
@@ -95,7 +248,7 @@ export const siteApi = contract.router(
 					orderDirection: z.enum(["asc", "desc"]).optional(),
 				}),
 				responses: {
-					200: z.array(pubWithChildrenSchema),
+					200: z.array(processedPubSchema),
 				},
 			},
 			create: {
@@ -104,7 +257,7 @@ export const siteApi = contract.router(
 				summary: "Creates a pub",
 				body: CreatePubRequestBodyWithNullsNew,
 				responses: {
-					201: pubWithChildrenSchema,
+					201: processedPubSchema,
 				},
 			},
 			update: {
@@ -112,7 +265,7 @@ export const siteApi = contract.router(
 				path: "/pubs/:pubId",
 				body: z.record(jsonSchema),
 				responses: {
-					200: pubWithChildrenSchema,
+					200: processedPubSchema,
 				},
 			},
 			archive: {
@@ -130,7 +283,7 @@ export const siteApi = contract.router(
 					path: "/pubs/:pubId/relations",
 					body: upsertPubRelationsSchema,
 					responses: {
-						200: pubWithChildrenSchema,
+						200: processedPubSchema,
 					},
 				},
 				replace: {
@@ -138,7 +291,7 @@ export const siteApi = contract.router(
 					path: "/pubs/:pubId/relations",
 					body: upsertPubRelationsSchema,
 					responses: {
-						200: pubWithChildrenSchema,
+						200: processedPubSchema,
 					},
 				},
 				remove: {
@@ -148,7 +301,7 @@ export const siteApi = contract.router(
 					path: "/pubs/:pubId/relations",
 					body: z.record(z.union([z.literal("*"), z.array(pubsIdSchema)])),
 					responses: {
-						200: pubWithChildrenSchema,
+						200: processedPubSchema,
 					},
 				},
 			},

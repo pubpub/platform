@@ -15,6 +15,7 @@ import type {
 	GetPubResponseBody,
 	Json,
 	JsonValue,
+	ProcessedPub,
 	PubWithChildren,
 } from "contracts";
 import type { Database } from "db/Database";
@@ -584,7 +585,6 @@ const getFieldInfoForSlugs = async ({
 	);
 
 	if (slugsThatDontExistInCommunity.length) {
-		console.log(slugsThatDontExistInCommunity, fields, toBeUpdatedPubFieldSlugs);
 		throw new Error(
 			`Pub values contain fields that do not exist in the community: ${slugsThatDontExistInCommunity.join(", ")}`
 		);
@@ -726,7 +726,6 @@ export const upsertPubRelations = async ({
 			)
 		);
 
-		console.log("BBB", newlyCreatedPubs);
 		// assumed they keep their order
 
 		const newPubsWithRelatedPubId = newPubs.map((pub, index) => ({
@@ -1063,77 +1062,6 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 			stageId?: never;
 			communityId: CommunitiesId;
 	  };
-
-/**
- * Only add the `children` if the `withChildren` option has not been set to `false
- */
-type MaybePubChildren<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
-	Options["withChildren"] extends false
-		? { children?: never }
-		: { children: ProcessedPub<Options>[] };
-
-/**
- * Only add the `stage` if the `withStage` option has not been set to `false
- */
-type MaybePubStage<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
-	Options["withStage"] extends true ? { stage: Stages } : { stage?: never };
-
-/**
- * Only add the `pubType` if the `withPubType` option has not been set to `false
- */
-type MaybePubPubType<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
-	Options["withPubType"] extends true ? { pubType: PubTypes } : { pubType?: never };
-
-type MaybeWithRelatedPub<Options extends GetPubsWithRelatedValuesAndChildrenOptions> =
-	Options["withRelatedPubs"] extends false
-		? { relatedPub?: never }
-		: { relatedPub: ProcessedPub<Options> };
-
-/**
- * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
- *
- * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
- *
- **/
-type MaybeOptions = Pick<
-	GetPubsWithRelatedValuesAndChildrenOptions,
-	"withChildren" | "withRelatedPubs" | "withPubType" | "withStage"
->;
-
-export type ProcessedPub<Options extends MaybeOptions = {}> = {
-	id: PubsId;
-	stageId: StagesId | null;
-	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
-	parentId: PubsId | null;
-	/**
-	 * An array of values for the pub.
-	 */
-	values: ({
-		id: PubValuesId;
-		fieldId: PubFieldsId;
-		value: unknown;
-		relatedPubId: PubsId | null;
-		createdAt: Date;
-		updatedAt: Date;
-		/**
-		 * Information about the field that the value belongs to.
-		 */
-		schemaName: CoreSchemaType;
-		fieldSlug: string;
-	} & MaybeWithRelatedPub<Options>)[];
-	createdAt: Date;
-	/**
-	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
-	 *
-	 * We do this because the Pub itself is rarely if ever changed over time.
-	 * TODO: Possibly add the `updatedAt` of `PubsInStages` here as well?
-	 * At time of writing (2024/11/04) I don't think that table has an `updatedAt`.
-	 */
-	updatedAt: Date;
-} & MaybePubChildren<Options> &
-	MaybePubStage<Options> &
-	MaybePubPubType<Options>;
 
 const DEFAULT_OPTIONS = {
 	depth: 2,
