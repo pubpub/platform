@@ -230,6 +230,7 @@ export const userCan = async <T extends CapabilityTarget>(
 			.where("membership_capabilities.capability", "=", capability)
 			.limit(1)
 			.select("capability");
+
 		return Boolean((await capabilitiesQuery.execute()).length);
 	}
 	return false;

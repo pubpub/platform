@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
+
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { userCan } from "~/lib/authorization/capabilities";
 import { pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -27,7 +31,17 @@ export default async function Page({
 
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
-		return notFound();
+		notFound();
+	}
+
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const isAdmin = isCommunityAdmin(user, community);
