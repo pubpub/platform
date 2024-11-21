@@ -7,7 +7,8 @@ import { CoreSchemaType } from "db/public";
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
-import { createCommunity, login } from "./helpers";
+import { LoginPage } from "./fixtures/login-page";
+import { createCommunity } from "./helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
@@ -19,7 +20,11 @@ let page: Page;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
-	await login({ page });
+
+	const loginPage = new LoginPage(page);
+	await loginPage.goto();
+	await loginPage.loginAndWaitForNavigation();
+
 	await createCommunity({
 		page,
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },

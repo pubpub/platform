@@ -6,7 +6,7 @@ import type { ButtonProps } from "./button";
 import { Button } from "./button";
 import { Check, Clipboard } from "./icon";
 
-interface CopyButtonProps extends ButtonProps {
+export interface CopyButtonProps extends ButtonProps {
 	value: string;
 	src?: string;
 }

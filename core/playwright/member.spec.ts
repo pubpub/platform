@@ -3,8 +3,9 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
+import { LoginPage } from "./fixtures/login-page";
 import { MembersPage } from "./fixtures/member-page";
-import { createCommunity, inbucketClient, login } from "./helpers";
+import { createCommunity, inbucketClient } from "./helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
@@ -15,7 +16,11 @@ let page: Page;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
-	await login({ page });
+
+	const loginPage = new LoginPage(page);
+	await loginPage.goto();
+	await loginPage.loginAndWaitForNavigation();
+
 	await createCommunity({
 		page,
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
