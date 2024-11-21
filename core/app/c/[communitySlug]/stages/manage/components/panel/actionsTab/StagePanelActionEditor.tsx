@@ -11,7 +11,7 @@ import { Input } from "ui/input";
 
 import { getActionByName } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "../../actions";
+import * as actions from "../../../actions";
 
 type Props = {
 	actionInstance: ActionInstances;

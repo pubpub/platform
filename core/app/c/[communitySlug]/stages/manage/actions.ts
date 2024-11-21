@@ -6,7 +6,7 @@ import type { Action, ActionInstancesId, CommunitiesId, RulesId, StagesId } from
 import { Event, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
-import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
+import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";

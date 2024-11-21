@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import type { Action, ActionInstances, ActionInstancesId, CommunitiesId } from "db/public";
 import { Event } from "db/public";
+import { AutoFormObject } from "ui/auto-form";
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -23,8 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import type { Rules } from "~/actions/_lib/rules";
 import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
-import AutoFormObject from "../../../../../../../../packages/ui/src/auto-form/fields/object";
-import { addRule } from "../../actions";
+import { addRule } from "../../../actions";
 
 type Props = {
 	// onAdd: (event: Event, actionInstanceId: ActionInstancesId) => Promise<unknown>;
