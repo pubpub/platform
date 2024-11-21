@@ -2,7 +2,15 @@
 
 import { captureException } from "@sentry/nextjs";
 
-import type { Action, ActionInstancesId, CommunitiesId, RulesId, StagesId } from "db/public";
+import type {
+	Action,
+	ActionInstancesId,
+	CommunitiesId,
+	MemberRole,
+	RulesId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import { Event, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
@@ -293,4 +301,24 @@ export const deleteRule = defineServerAction(async function deleteRule(ruleId: R
 		// 		revalidateTag(`community-stages_${communityId}`);
 		// 		revalidateTag(`community-action-runs_${communityId}`);
 	}
+});
+
+export const removeStageMember = defineServerAction(async function removeStageMember(
+	userId: UsersId,
+	stageId: StagesId
+) {
+	await autoRevalidate(
+		db
+			.deleteFrom("stage_memberships")
+			.where("stage_memberships.stageId", "=", stageId)
+			.where("stage_memberships.userId", "=", userId)
+	);
+});
+
+export const addStageMember = defineServerAction(async function removeStageMember(
+	userId: UsersId,
+	stageId: StagesId,
+	role: MemberRole
+) {
+	await autoRevalidate(db.insertInto("stage_memberships").values({ userId, stageId, role }));
 });
