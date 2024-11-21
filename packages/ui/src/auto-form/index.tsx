@@ -150,4 +150,6 @@ export { DependencyType } from "./types";
 
 export { zodToHtmlInputProps } from "./utils";
 
+export { AutoFormObject };
+
 export default AutoForm;

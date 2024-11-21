@@ -3,11 +3,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { getStage } from "~/lib/db/queries";
-import { StagePanelActions } from "./StagePanelActions";
+import { StagePanelActions } from "./actionsTab/StagePanelActions";
+import { StagePanelRules } from "./actionsTab/StagePanelRules";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
-import { StagePanelRules } from "./StagePanelRules";
 import { StagePanelSheet } from "./StagePanelSheet";
 
 type Props = {

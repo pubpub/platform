@@ -8,7 +8,7 @@ import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigF
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getStage, getStageActions } from "~/lib/db/queries";
-import { addAction, deleteAction } from "../../actions";
+import { addAction, deleteAction } from "../../../actions";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
 

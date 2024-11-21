@@ -10,7 +10,7 @@ import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
 import { getActionByName, humanReadableEvent } from "~/actions/api";
 import { useServerAction } from "~/lib/serverActions";
-import { deleteRule } from "../../actions";
+import { deleteRule } from "../../../actions";
 
 type Props = {
 	communityId: CommunitiesId;
