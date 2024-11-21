@@ -184,6 +184,7 @@ const handler = createNextHandler(
 
 				const pub = await getPubsWithRelatedValuesAndChildren({
 					pubId: params.pubId as PubsId,
+					communityId: community.id,
 				});
 
 				return {
@@ -272,9 +273,14 @@ const handler = createNextHandler(
 						};
 					}
 
+					const pub = await getPubsWithRelatedValuesAndChildren({
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					});
+
 					return {
 						status: 200,
-						body: null,
+						body: pub,
 					};
 				},
 				update: async ({ params, body }) => {
@@ -296,24 +302,21 @@ const handler = createNextHandler(
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
 					);
 
-					try {
-						await upsertPubRelations({
-							pubId: params.pubId as PubsId,
-							relations,
-							communityId: community.id,
-						});
+					await upsertPubRelations({
+						pubId: params.pubId as PubsId,
+						relations,
+						communityId: community.id,
+					});
 
-						return {
-							status: 200,
-							body: null,
-						};
-					} catch (e) {
-						console.error(e);
-						return {
-							status: 400,
-							body: e.message,
-						};
-					}
+					const pub = await getPubsWithRelatedValuesAndChildren({
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					});
+
+					return {
+						status: 200,
+						body: pub,
+					};
 				},
 				replace: async ({ params, body }) => {
 					const { community } = await checkAuthorization(
@@ -333,15 +336,20 @@ const handler = createNextHandler(
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
 					);
 
-					const updatedPub = await replacePubRelationsBySlug({
+					await replacePubRelationsBySlug({
 						pubId: params.pubId as PubsId,
 						relations,
 						communityId: community.id,
 					});
 
+					const pub = await getPubsWithRelatedValuesAndChildren({
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					});
+
 					return {
 						status: 200,
-						body: updatedPub,
+						body: pub,
 					};
 				},
 			},
