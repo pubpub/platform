@@ -332,7 +332,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const rootPubId = pub.id;
 		const pubValues = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: rootPubId },
+			{ pubId: rootPubId, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -448,7 +448,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const rootPubId = pub.id;
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: rootPubId },
+			{ pubId: rootPubId, communityId: community.id },
 			{ depth: 10, withPubType: true }
 		);
 
@@ -520,7 +520,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(pubWithRelatedValuesAndChildren.length).toBe(5);
 
 		const submissionPubs = await getPubsWithRelatedValuesAndChildren(
-			{ pubTypeId: pubTypes["Basic Pub"].id },
+			{ pubTypeId: pubTypes["Basic Pub"].id, communityId: community.id },
 			{ withPubType: true, depth: 10 }
 		);
 
@@ -637,11 +637,11 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const [withCycleIncluded, withCycleExcluded] = (await Promise.all([
 			getPubsWithRelatedValuesAndChildren(
-				{ pubId: newPubId },
+				{ pubId: newPubId, communityId: community.id },
 				{ depth: 10, _debugDontNest: true }
 			),
 			getPubsWithRelatedValuesAndChildren(
-				{ pubId: newPubId },
+				{ pubId: newPubId, communityId: community.id },
 				{ depth: 10, cycle: "exclude", _debugDontNest: true }
 			),
 		])) as unknown as [UnprocessedPub[], UnprocessedPub[]];
@@ -690,7 +690,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = (await getPubsWithRelatedValuesAndChildren(
-			{ pubId: newPubId },
+			{ pubId: newPubId, communityId: community.id },
 			{ depth: 10, fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug] }
 		)) as unknown as UnprocessedPub[];
 
@@ -746,7 +746,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10, withChildren: false, withRelatedPubs: false }
 		);
 
@@ -775,7 +775,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const pub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pubs[0].id },
+			{ pubId: pubs[0].id, communityId: community.id },
 			{ withStage: true }
 		);
 
@@ -819,7 +819,7 @@ describe("upsertPubRelations", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -871,7 +871,7 @@ describe("upsertPubRelations", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1032,7 +1032,7 @@ describe("upsertPubRelations", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1100,7 +1100,7 @@ describe("upsertPubRelations", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1167,7 +1167,7 @@ describe("removePubRelations", () => {
 
 		// check that the pub has 2 relations
 		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1189,7 +1189,7 @@ describe("removePubRelations", () => {
 		expect(removedRelatedPubIds).toEqual([pubs[0].id]);
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1233,7 +1233,7 @@ describe("removePubRelations", () => {
 
 		// Verify initial state has 2 relations
 		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
@@ -1248,7 +1248,7 @@ describe("removePubRelations", () => {
 		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort());
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1380,7 +1380,7 @@ describe("replacePubRelationsBySlug", () => {
 		});
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1419,7 +1419,7 @@ describe("replacePubRelationsBySlug", () => {
 		});
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 

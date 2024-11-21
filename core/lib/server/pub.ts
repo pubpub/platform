@@ -1053,19 +1053,19 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 			pubId: PubsId;
 			pubTypeId?: never;
 			stageId?: never;
-			communityId?: never;
+			communityId: CommunitiesId;
 	  }
 	| {
 			pubId?: never;
 			pubTypeId: PubTypesId;
 			stageId?: never;
-			communityId?: never;
+			communityId: CommunitiesId;
 	  }
 	| {
 			pubId?: never;
 			pubTypeId?: never;
 			stageId: StagesId;
-			communityId?: never;
+			communityId: CommunitiesId;
 	  }
 	| {
 			pubId?: never;
@@ -1086,16 +1086,16 @@ const DEFAULT_OPTIONS = {
 export async function getPubsWithRelatedValuesAndChildren<
 	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
 >(
-	props: {
-		pubId: PubsId;
-	},
+	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
+	// if only pubId + communityId is provided, we return a single pub
 ): Promise<ProcessedPub<Options>>;
 export async function getPubsWithRelatedValuesAndChildren<
 	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
 >(
 	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
+	// if any other props are provided, we return an array of pubs
 ): Promise<ProcessedPub<Options>[]>;
 /**
  * Retrieves a pub and all its related values, children, and related pubs up to a given depth.
@@ -1257,14 +1257,12 @@ export async function getPubsWithRelatedValuesAndChildren<
 				cte
 					.selectFrom("pubs")
 					.selectAll("pubs")
+					.where("pubs.communityId", "=", props.communityId)
 					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
 					.$if(Boolean(props.stageId), (qb) =>
 						qb
 							.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 							.where("PubsInStages.stageId", "=", props.stageId!)
-					)
-					.$if(Boolean(props.communityId), (qb) =>
-						qb.where("pubs.communityId", "=", props.communityId!)
 					)
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
