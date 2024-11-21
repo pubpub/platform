@@ -416,13 +416,6 @@ const maybeWithTrx = async <T>(
 	return await trx.transaction().execute(fn);
 };
 
-type PubWithoutChildren = Prettify<Omit<PubWithChildren, "children">>;
-type MaybeWithChildren<T extends { children?: unknown }> = keyof T extends "children"
-	? NonNullable<T["children"]> extends never
-		? PubWithoutChildren
-		: PubWithChildren
-	: PubWithoutChildren;
-
 const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
 	Array.isArray(value) &&
 	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
@@ -447,7 +440,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx?: Kysely<Database>;
 			communityId: CommunitiesId;
 			parent: { id: PubsId };
-	  }): Promise<MaybeWithChildren<Body>> => {
+	  }): Promise<ProcessedPub> => {
 	const trx = options?.trx ?? db;
 
 	const parentId = parent?.id ?? body.parentId;
@@ -513,13 +506,24 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						.returningAll()
 				).execute()
 			: [];
+		const hydratedValues = pubValues.map((v) => {
+			const correspondingValue = valuesWithFieldIds.find(
+				({ fieldId }) => fieldId === v.fieldId
+			)!;
+			return {
+				...v,
+				schemaName: correspondingValue?.schemaName,
+				fieldSlug: correspondingValue?.slug,
+			};
+		});
 
 		if (!body.children && !body.relatedPubs) {
 			return {
 				...newPub,
-				stageId: createdStageId,
-				values: pubValues,
-			} as PubWithoutChildren;
+				stageId: createdStageId ?? null,
+				values: hydratedValues,
+				children: [],
+			} satisfies ProcessedPub;
 		}
 
 		// TODO: could be parallelized with relatedPubs if we want to
@@ -540,10 +544,10 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		if (!body.relatedPubs) {
 			return {
 				...newPub,
-				stageId: createdStageId,
-				values: pubValues,
-				children: children.length ? children : undefined,
-			} as PubWithChildren;
+				stageId: createdStageId ?? null,
+				values: hydratedValues,
+				children: children.length ? children : [],
+			} satisfies ProcessedPub;
 		}
 
 		// this fn itself calls createPubRecursiveNew, be mindful of infinite loops
@@ -563,12 +567,12 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		return {
 			...newPub,
 			stageId: createdStageId,
-			values: pubValues,
+			values: [...pubValues, ...relatedPubs],
 			children,
-			relatedPubs,
-		} as PubWithChildren;
+		} as ProcessedPub;
 	});
-	return result as MaybeWithChildren<Body>;
+
+	return result;
 };
 
 export const deletePub = (pubId: PubsId) =>
@@ -703,7 +707,7 @@ export const upsertPubRelations = async ({
 	relations: AddPubRelationsInput[];
 	communityId: CommunitiesId;
 	trx?: typeof db;
-}) => {
+}): Promise<ProcessedPub["values"]> => {
 	const normalizedRelationValues = normalizeRelationValues(relations);
 
 	const validatedRelationValues = await validatePubValues({
@@ -737,7 +741,7 @@ export const upsertPubRelations = async ({
 		}
 	);
 
-	return await maybeWithTrx(trx, async (trx) => {
+	const pubRelations = await maybeWithTrx(trx, async (trx) => {
 		const newlyCreatedPubs = await Promise.all(
 			newPubs.map((pub) =>
 				createPubRecursiveNew({
@@ -762,7 +766,7 @@ export const upsertPubRelations = async ({
 			fieldId: PubFieldsId;
 		}[];
 
-		const createdRelations = await autoRevalidate(
+		const pubRelations = await autoRevalidate(
 			trx
 				.insertInto("pub_values")
 				.values(
@@ -785,11 +789,23 @@ export const upsertPubRelations = async ({
 				.returningAll()
 		).execute();
 
-		return createdRelations.map((relation) => ({
-			...relation,
-			relatedPub: newlyCreatedPubs.find(({ id }) => id === relation.relatedPubId),
-		}));
+		const createdRelations = pubRelations.map((relation) => {
+			const correspondingValue = validatedRelationValues.find(
+				({ fieldId }) => fieldId === relation.fieldId
+			)!;
+
+			return {
+				...relation,
+				schemaName: correspondingValue.schemaName,
+				fieldSlug: correspondingValue.slug,
+				relatedPub: newlyCreatedPubs.find(({ id }) => id === relation.relatedPubId),
+			};
+		});
+
+		return createdRelations;
 	});
+
+	return pubRelations;
 };
 
 /**

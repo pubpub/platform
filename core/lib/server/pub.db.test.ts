@@ -194,8 +194,8 @@ describe("createPubRecursive", () => {
 		});
 
 		expect(pub).toMatchObject({
-			values: [{ value: "test title" }],
-			relatedPubs: [
+			values: [
+				{ value: "test title" },
 				{
 					value: "test relation value",
 					relatedPub: { values: [{ value: "test relation title" }] },

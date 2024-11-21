@@ -109,10 +109,16 @@ const handler = createNextHandler(
 	{
 		pubs: {
 			get: async (req, res) => {
-				await checkAuthorization(ApiAccessScope.pub, ApiAccessType.read);
+				const { community } = await checkAuthorization(
+					ApiAccessScope.pub,
+					ApiAccessType.read
+				);
 				const { pubId } = req.params;
 
-				const pub = await getPubCached(pubId as PubsId);
+				const pub = await getPubsWithRelatedValuesAndChildren({
+					pubId: pubId as PubsId,
+					communityId: community.id,
+				});
 
 				return {
 					status: 200,
@@ -125,7 +131,10 @@ const handler = createNextHandler(
 					ApiAccessType.read
 				);
 
-				const pubs = await getPubs({ communityId: community.id }, req.query);
+				const pubs = await getPubsWithRelatedValuesAndChildren({
+					communityId: community.id,
+					...req.query,
+				});
 
 				return {
 					status: 200,
@@ -147,13 +156,10 @@ const handler = createNextHandler(
 					);
 				}
 
-				const createdPub = (await createPubRecursiveNew({
+				const createdPub = await createPubRecursiveNew({
 					communityId: community?.id,
 					body,
-
-					// we cannot control the output type based on the input typee
-					// anyway, so it's better to just cast it to { children?: [] }
-				})) as PubWithChildren;
+				});
 
 				return {
 					status: 201,

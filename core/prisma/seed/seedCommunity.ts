@@ -8,6 +8,7 @@ import type {
 import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
+import type { ProcessedPub } from "contracts";
 import type {
 	ActionInstancesId,
 	Communities,
@@ -956,7 +957,7 @@ export async function seedCommunity<
 			})
 		: [];
 
-	const createdPubs: Awaited<ReturnType<typeof createPubRecursiveNew>>[] = [];
+	const createdPubs: ProcessedPub[] = [];
 	// we do this one at a time because we allow pubs to be able to reference each other in the relatedPubs field
 	for (const input of createPubRecursiveInput) {
 		const pub = await createPubRecursiveNew(input);
