@@ -4,14 +4,14 @@ import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
-import type { CommunitiesId, NewUsers, UsersId, UsersUpdate } from "db/public";
+import type { CommunitiesId, NewUsers, Users, UsersId, UsersUpdate } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "../authentication/password";
-import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 
+export type SafeUser = Omit<Users, "passwordHash">;
 export const SAFE_USER_SELECT = [
 	"users.id",
 	"users.email",
@@ -93,32 +93,32 @@ export const getSuggestedUsers = ({
 		  };
 	limit?: number;
 }) =>
-	autoCache(
-		db
-			.selectFrom("users")
-			.select([...SAFE_USER_SELECT])
-			.$if(Boolean(communityId), (eb) =>
-				eb.select((eb) => [
-					jsonObjectFrom(
-						eb
-							.selectFrom("community_memberships")
-							.selectAll("community_memberships")
-							.whereRef("community_memberships.userId", "=", "users.id")
-							.where("community_memberships.communityId", "=", communityId!)
-					).as("member"),
-				])
-			)
-			.where((eb) =>
-				eb.or([
-					...(query.email ? [eb("email", "ilike", `${query.email}%`)] : []),
-					...(query.firstName
-						? [eb("firstName", "ilike", `${query.firstName}%`)]
-						: ([] as const)),
-					...(query.lastName ? [eb("lastName", "ilike", `${query.lastName}%`)] : []),
-				])
-			)
-			.limit(limit)
-	);
+	// We don't cache this because users change frequently and outside of any community, so we can't
+	// efficiently cache them anyways
+	db
+		.selectFrom("users")
+		.select([...SAFE_USER_SELECT])
+		.$if(Boolean(communityId), (eb) =>
+			eb.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("community_memberships")
+						.selectAll("community_memberships")
+						.whereRef("community_memberships.userId", "=", "users.id")
+						.where("community_memberships.communityId", "=", communityId!)
+				).as("member"),
+			])
+		)
+		.where((eb) =>
+			eb.or([
+				...(query.email ? [eb("email", "ilike", `${query.email}%`)] : []),
+				...(query.firstName
+					? [eb("firstName", "ilike", `${query.firstName}%`)]
+					: ([] as const)),
+				...(query.lastName ? [eb("lastName", "ilike", `${query.lastName}%`)] : []),
+			])
+		)
+		.limit(limit);
 
 export const setUserPassword = cache(
 	async (props: { userId: UsersId; password: string }, trx = db) => {
@@ -159,6 +159,7 @@ export const updateUser = async (
 			.returning(SAFE_USER_SELECT),
 		{
 			communitySlug: communitySlugs.map((slug) => slug.slug),
+			additionalRevalidateTags: ["all-users"],
 		}
 	).executeTakeFirstOrThrow((err) => new Error(`Unable to update user ${id}`));
 

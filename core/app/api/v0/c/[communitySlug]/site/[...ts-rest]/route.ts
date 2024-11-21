@@ -9,6 +9,7 @@ import { api } from "contracts";
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
 import { db } from "~/kysely/database";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { getStage } from "~/lib/db/queries";
 import {
 	createPubRecursiveNew,
@@ -24,6 +25,7 @@ import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
+import { getSuggestedUsers } from "~/lib/server/user";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(
@@ -212,6 +214,22 @@ const handler = createNextHandler(
 					body: stages,
 				};
 			},
+		},
+		searchUsers: async (req, res) => {
+			const { user } = await getLoginData();
+			const users = await getSuggestedUsers({
+				communityId: req.query.communityId,
+				query: {
+					email: req.query.email,
+					firstName: req.query.name,
+					lastName: req.query.name,
+				},
+				limit: req.query.limit,
+			}).execute();
+			return {
+				status: 200,
+				body: users,
+			};
 		},
 	},
 	{
