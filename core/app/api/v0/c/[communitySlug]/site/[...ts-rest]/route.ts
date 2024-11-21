@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { PubWithChildren } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
-import { api } from "contracts";
+import { siteApi } from "contracts";
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
 import { db } from "~/kysely/database";
@@ -104,7 +104,7 @@ const checkAuthorization = async <T extends ApiAccessScope, AT extends ApiAccess
 };
 
 const handler = createNextHandler(
-	api.site,
+	siteApi,
 	{
 		pubs: {
 			get: async (req, res) => {
@@ -113,7 +113,6 @@ const handler = createNextHandler(
 
 				const pub = await getPubCached(pubId as PubsId);
 
-				res.responseHeaders.set("Access-Control-Allow-Origin", "*");
 				return {
 					status: 200,
 					body: pub,
@@ -268,7 +267,6 @@ const handler = createNextHandler(
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
 					);
 
-					console.log("AAA", relations, community);
 					try {
 						await upsertPubRelations({
 							pubId: params.pubId as PubsId,
@@ -297,7 +295,6 @@ const handler = createNextHandler(
 					const relations = Object.entries(body).flatMap(([slug, data]) =>
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
 					);
-					console.log("AAA", relations, community);
 
 					const updatedPub = await replacePubRelationsBySlug({
 						pubId: params.pubId as PubsId,
