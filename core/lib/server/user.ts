@@ -1,15 +1,37 @@
-import type { SelectExpression } from "kysely";
+import type { InsertResult, SelectExpression, Transaction } from "kysely";
 
 import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { Email } from "schemas/src/schemas";
 
 import type { Database } from "db/Database";
-import type { CommunitiesId, NewUsers, Users, UsersId, UsersUpdate } from "db/public";
+import type {
+	CommunitiesId,
+	MemberRole,
+	NewUsers,
+	PubsId,
+	StagesId,
+	Users,
+	UsersId,
+	UsersUpdate,
+} from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
+import type { CapabilityTarget } from "../authorization/capabilities";
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
+import { getLoginData } from "../authentication/loginData";
 import { createPasswordHash } from "../authentication/password";
+import { isCommunityAdmin } from "../authentication/roles";
+import { userCan } from "../authorization/capabilities";
+import { getCommunityBySlug } from "../db/queries";
+import { generateHash, slugifyString } from "../string";
 import { autoRevalidate } from "./cache/autoRevalidate";
+import { getCommunitySlug } from "./cache/getCommunitySlug";
+import { findCommunityBySlug } from "./community";
+import { signupInvite } from "./email";
+import { addCommunityMember, addPubMember, addStageMember } from "./member";
 
 export type SafeUser = Omit<Users, "passwordHash">;
 export const SAFE_USER_SELECT = [
@@ -170,3 +192,125 @@ export const addUser = (props: NewUsers, trx = db) =>
 	autoRevalidate(trx.insertInto("users").values(props).returning(SAFE_USER_SELECT), {
 		additionalRevalidateTags: ["all-users"],
 	});
+
+export const createUserWithMembership = async (data: {
+	firstName: string;
+	lastName?: string | null;
+	email: string;
+	isSuperAdmin?: boolean;
+	membership:
+		| {
+				type: MembershipType.community;
+				role: MemberRole;
+		  }
+		| { type: MembershipType.stage; role: MemberRole; stageId: StagesId }
+		| { type: MembershipType.pub; role: MemberRole; pubId: PubsId };
+}) => {
+	const { firstName, lastName, email, membership, isSuperAdmin } = data;
+
+	try {
+		const { user } = await getLoginData();
+		const community = await findCommunityBySlug(getCommunitySlug());
+
+		if (!user) {
+			return {
+				error: "You must be logged in to add a member",
+			};
+		}
+
+		if (!community) {
+			return {
+				error: "Community not found",
+			};
+		}
+
+		if (!user?.isSuperAdmin && isSuperAdmin) {
+			return {
+				title: "Failed to add member",
+				error: "You cannot add members as super admins",
+			};
+		}
+
+		let membershipQuery: (trx: Transaction<Database>, userId: UsersId) => Promise<unknown>;
+		let target: CapabilityTarget;
+		let capability: Capabilities;
+		switch (membership.type) {
+			case MembershipType.stage:
+				capability = Capabilities.addStageMember;
+				target = { stageId: membership.stageId, type: membership.type };
+				membershipQuery = (trx, userId) =>
+					addStageMember({ ...membership, userId }, trx).execute();
+				break;
+			case MembershipType.community:
+				capability = Capabilities.addCommunityMember;
+				target = { communityId: community.id, type: membership.type };
+				membershipQuery = (trx, userId) =>
+					addCommunityMember(
+						{
+							...membership,
+							communityId: community.id,
+							userId,
+						},
+						trx
+					).execute();
+				break;
+			case MembershipType.pub:
+				capability = Capabilities.addPubMember;
+				target = { pubId: membership.pubId, type: membership.type };
+				membershipQuery = async (trx, userId) =>
+					addPubMember(
+						{
+							...membership,
+							userId,
+						},
+						trx
+					).execute();
+				break;
+		}
+
+		if (!(await userCan(capability, target, user.id))) {
+			return {
+				title: "Failed to add member",
+				error: `You do not have permission to add members to this ${membership.type}`,
+			};
+		}
+
+		const trx = db.transaction();
+
+		const inviteUserResult = await trx.execute(async (trx) => {
+			const newUser = await addUser(
+				{
+					email,
+					firstName,
+					lastName,
+					slug: `${slugifyString(firstName)}${
+						lastName ? `-${slugifyString(lastName)}` : ""
+					}-${generateHash(4, "0123456789")}`,
+					isSuperAdmin: isSuperAdmin === true,
+				},
+				trx
+			).executeTakeFirstOrThrow();
+
+			await membershipQuery(trx, newUser.id);
+
+			const result = await signupInvite(
+				{
+					user: newUser,
+					community,
+					role: membership.role,
+				},
+				trx
+			).send();
+
+			return result;
+		});
+
+		return inviteUserResult;
+	} catch (error) {
+		return {
+			title: "Failed to add member",
+			error: "An unexpected error occurred",
+			cause: error,
+		};
+	}
+};

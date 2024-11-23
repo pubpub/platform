@@ -4,7 +4,11 @@ import type {
 	CommunitiesId,
 	CommunityMembershipsId,
 	CommunityMembershipsUpdate,
+	MemberRole,
 	NewCommunityMemberships,
+	NewPubMemberships,
+	NewStageMemberships,
+	StagesId,
 	UsersId,
 } from "db/public";
 
@@ -15,9 +19,9 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { SAFE_USER_SELECT } from "./user";
 
 /**
- * Either get a member by their id, or by userId and communityId
+ * Either get a member by their community membership id, or by userId and communityId
  */
-export const getMember = (
+export const getCommunityMember = (
 	props: XOR<{ id: CommunityMembershipsId }, { userId: UsersId; communityId: CommunitiesId }>,
 	trx = db
 ) => {
@@ -50,7 +54,7 @@ export const getMember = (
 	);
 };
 
-export const getMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
+export const getCommunityMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
 	autoCache(
 		trx
 			.selectFrom("community_memberships")
@@ -73,7 +77,10 @@ export const getMembers = ({ communityId }: { communityId: CommunitiesId }, trx 
 			.where("community_memberships.communityId", "=", communityId)
 	);
 
-export const inviteMember = (props: NewCommunityMemberships & { userId: UsersId }, trx = db) =>
+export const addCommunityMember = (
+	props: NewCommunityMemberships & { userId: UsersId },
+	trx = db
+) =>
 	autoRevalidate(
 		trx
 			.insertInto("community_memberships")
@@ -85,13 +92,27 @@ export const inviteMember = (props: NewCommunityMemberships & { userId: UsersId 
 			.returningAll()
 	);
 
-export const updateMember = (
-	{ id, ...props }: CommunityMembershipsUpdate & { id: CommunityMembershipsId },
-	trx = db
-) =>
-	autoRevalidate(
-		trx.updateTable("community_memberships").set(props).where("id", "=", id).returningAll()
-	);
-
-export const removeMember = (props: CommunityMembershipsId, trx = db) =>
+export const removeCommunityMember = (props: CommunityMembershipsId, trx = db) =>
 	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
+
+export const addStageMember = (
+	{
+		userId,
+		stageId,
+		role,
+	}: NewStageMemberships & {
+		userId: UsersId;
+	},
+	trx = db
+) => autoRevalidate(trx.insertInto("stage_memberships").values({ userId, stageId, role }));
+
+export const addPubMember = (
+	{
+		userId,
+		pubId,
+		role,
+	}: NewPubMemberships & {
+		userId: UsersId;
+	},
+	trx = db
+) => autoRevalidate(trx.insertInto("pub_memberships").values({ userId, pubId, role }));

@@ -11,7 +11,7 @@ import { getPageLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { addMember, createUserWithMembership } from "./actions";
+import { addMember, createUserWithCommunityMembership } from "./actions";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { MemberTable } from "./MemberTable";
 
@@ -108,7 +108,7 @@ export default async function Page({
 				<h1 className="text-xl font-bold">Members</h1>
 				<AddMemberDialog
 					addMember={addMember}
-					addUserMember={createUserWithMembership}
+					addUserMember={createUserWithCommunityMembership}
 					existingMembers={members.map((member) => member.user.id)}
 					isSuperAdmin={user.isSuperAdmin}
 				/>
