@@ -65,6 +65,7 @@ services:
             - PGPORT=5432
             - PGUSER=postgres
             - PGPASSWORD=postgres
+            - NEXT_PUBLIC_PUBPUB_URL=http://localhost:3000
             - PUBPUB_URL=http://localhost:3000
             - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
             - API_KEY=xxx
