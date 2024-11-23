@@ -111,7 +111,7 @@ export const getSuggestedUsers = ({
 		)
 		.where((eb) =>
 			eb.or([
-				...(query.email ? [eb("email", "ilike", `${query.email}%`)] : []),
+				...(query.email ? [eb("email", "=", `${query.email}`)] : []),
 				...(query.firstName
 					? [eb("firstName", "ilike", `${query.firstName}%`)]
 					: ([] as const)),
