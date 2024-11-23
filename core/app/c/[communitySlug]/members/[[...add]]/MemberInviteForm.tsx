@@ -2,8 +2,9 @@
 
 import type { z } from "zod";
 
-import { useTransition } from "react";
+import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { skipToken } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
 import type { NewUsers, UsersId } from "db/public";
@@ -54,7 +55,6 @@ export const MemberInviteForm = ({
 
 	const runCreateUserWithMembership = useServerAction(addUserMember);
 	const runAddMember = useServerAction(addMember);
-	const [isPending, startTransition] = useTransition();
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
@@ -62,18 +62,31 @@ export const MemberInviteForm = ({
 			role: MemberRole.editor,
 			isSuperAdmin: false,
 		},
+		mode: "onChange",
 	});
 	const email = form.watch("email");
 	const emailState = form.getFieldState("email", form.formState);
 	const query = { email, limit: 1, communityId: community.id };
-	const { data: userSuggestions } = client.searchUsers.useQuery({
-		queryKey: ["searchUsers", query],
-		queryData: { query },
-		enabled: email && (!emailState.error || emailState.error.type === "alreadyMember"),
+	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember");
+	const { data: userSuggestions, status } = client.searchUsers.useQuery({
+		queryKey: ["searchUsers", query, community.slug],
+		queryData: shouldSearch ? { query, params: { communitySlug: community.slug } } : skipToken,
 	});
-	const user = userSuggestions.body[0];
+	const user = userSuggestions?.body?.[0];
+	const isPending = email && !emailState.invalid && status === "pending";
 
-	const userIsAlreadyMember = existingMembers.includes(user.id);
+	const userIsAlreadyMember = useMemo(
+		() => user && existingMembers.includes(user.id),
+		[user, existingMembers]
+	);
+	useEffect(() => {
+		if (userIsAlreadyMember) {
+			form.setError("email", {
+				type: "alreadyMember",
+				message: "This user is already a member",
+			});
+		}
+	}, [userIsAlreadyMember, form.setError, user, email]);
 
 	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
 		if (!user) {
@@ -128,12 +141,6 @@ export const MemberInviteForm = ({
 				<FormField
 					name="email"
 					control={form.control}
-					rules={{
-						validate: {
-							alreadyMember: () =>
-								user && userIsAlreadyMember && "User is already a member",
-						},
-					}}
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Email</FormLabel>
@@ -160,7 +167,7 @@ export const MemberInviteForm = ({
 						</FormItem>
 					)}
 				/>
-				{!user && (
+				{!user && emailState.isDirty && (
 					<>
 						<FormField
 							name="firstName"
@@ -207,7 +214,7 @@ export const MemberInviteForm = ({
 						)}
 					</>
 				)}
-				{user && (
+				{email && !emailState.invalid && (
 					<FormField
 						control={form.control}
 						name="role"
@@ -231,7 +238,7 @@ export const MemberInviteForm = ({
 								<FormDescription>
 									Select the role for this user.
 									<ul className="list-inside list-disc">
-										<li> Admins can do anything.</li>
+										<li>Admins can do anything.</li>
 										<li>Editors are able to edit most things</li>
 										<li>
 											Contributors are only able to see forms and other public
