@@ -135,7 +135,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 
 		// Make sure it autosaves
 		// It should happen after 5s, but it seems to take ~6 usually
-		await newPage.getByText("Last saved at").waitFor({ timeout: 7000 });
+		await newPage.getByText("Last saved at").waitFor({ timeout: 15000 });
 
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 
