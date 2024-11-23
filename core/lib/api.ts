@@ -5,5 +5,5 @@ import { siteApi } from "contracts";
 import { env } from "./env/env.mjs";
 
 export const client = initTsrReactQuery(siteApi, {
-	baseUrl: env.PUBPUB_URL,
+	baseUrl: env.NEXT_PUBLIC_PUBPUB_URL,
 });
