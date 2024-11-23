@@ -12,12 +12,14 @@ import type {
 	UsersId,
 } from "db/public";
 import { Event, stagesIdSchema } from "db/public";
+import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import {
 	createActionInstance,
 	getActionInstance,
@@ -27,6 +29,7 @@ import {
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { addStageMember as insertStageMember } from "~/lib/server/member";
 import { createRule, removeRule } from "~/lib/server/rules";
 import {
 	createMoveConstraint as createMoveConstraintDb,
@@ -35,6 +38,7 @@ import {
 	removeStages,
 	updateStage,
 } from "~/lib/server/stages";
+import { createUserWithMembership } from "~/lib/server/user";
 
 async function deleteMoveConstraints(moveConstraintIds: [StagesId, StagesId][]) {
 	await autoRevalidate(
@@ -312,13 +316,63 @@ export const removeStageMember = defineServerAction(async function removeStageMe
 			.deleteFrom("stage_memberships")
 			.where("stage_memberships.stageId", "=", stageId)
 			.where("stage_memberships.userId", "=", userId)
-	);
+	).execute();
 });
 
-export const addStageMember = defineServerAction(async function removeStageMember(
-	userId: UsersId,
+export const addStageMember = defineServerAction(async function addStageMember(
 	stageId: StagesId,
-	role: MemberRole
+	{
+		userId,
+		role,
+	}: {
+		userId: UsersId;
+		role: MemberRole;
+	}
 ) {
-	await autoRevalidate(db.insertInto("stage_memberships").values({ userId, stageId, role }));
+	try {
+		await insertStageMember({ userId, stageId, role }).execute();
+	} catch (error) {
+		if (isUniqueConstraintError(error)) {
+			return {
+				title: "Failed to add member",
+				error: "User is already a member of this stage",
+			};
+		}
+	}
+});
+
+export const addUserWithStageMembership = defineServerAction(
+	async function addUserWithStageMembership(
+		stageId: StagesId,
+		data: {
+			firstName: string;
+			lastName?: string | null;
+			email: string;
+			role: MemberRole;
+			isSuperAdmin?: boolean;
+		}
+	) {
+		await createUserWithMembership({
+			...data,
+			membership: {
+				stageId,
+				role: data.role,
+				type: MembershipType.stage,
+			},
+		});
+	}
+);
+
+export const setStageMemberRole = defineServerAction(async function setStageMemberRole(
+	stageId: StagesId,
+	role: MemberRole,
+	userId: UsersId
+) {
+	await autoRevalidate(
+		db
+			.updateTable("stage_memberships")
+			.where("stageId", "=", stageId)
+			.where("userId", "=", userId)
+			.set({ role })
+	).execute();
 });

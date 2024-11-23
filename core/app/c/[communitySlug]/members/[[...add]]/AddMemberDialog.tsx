@@ -16,6 +16,7 @@ export const AddMemberDialog = ({
 	addMember,
 	addUserMember,
 }: {
+	// There's probably a better type for these functions that should be server actions
 	addMember: ({ userId, role }: { userId: UsersId; role: MemberRole }) => Promise<unknown>;
 	addUserMember: ({
 		email,
@@ -34,7 +35,7 @@ export const AddMemberDialog = ({
 				<TooltipContent> Add a user to your community</TooltipContent>
 				<TooltipTrigger asChild>
 					<DialogTrigger asChild>
-						<Button variant="outline" className="flex items-center gap-x-2">
+						<Button variant="outline" className="inline-flex items-center gap-x-2">
 							<UserPlus size="16" /> Add Member
 						</Button>
 					</DialogTrigger>

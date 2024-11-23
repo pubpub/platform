@@ -13,6 +13,7 @@ import { StagePanelSheet } from "./StagePanelSheet";
 type Props = {
 	stageId: StagesId | undefined;
 	pageContext: PageContext;
+	isSuperAdmin: boolean;
 };
 
 export const StagePanel = async (props: Props) => {
@@ -48,7 +49,7 @@ export const StagePanel = async (props: Props) => {
 					<StagePanelRules stageId={props.stageId} />
 				</TabsContent>
 				<TabsContent value="members">
-					<StagePanelMembers stageId={props.stageId} />
+					<StagePanelMembers stageId={props.stageId} isSuperAdmin={props.isSuperAdmin} />
 				</TabsContent>
 			</Tabs>
 		</StagePanelSheet>

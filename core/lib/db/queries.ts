@@ -53,6 +53,7 @@ export const getStageMembers = cache((stageId: StagesId) => {
 			.where("stage_memberships.stageId", "=", stageId)
 			.innerJoin("users", "users.id", "stage_memberships.userId")
 			.select(SAFE_USER_SELECT)
+			.select("stage_memberships.role")
 	);
 });
 
