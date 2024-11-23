@@ -190,7 +190,10 @@ export const siteApi = contract.router(
 	{
 		pathPrefix: "/api/v0/c/:communitySlug/site",
 		baseHeaders: z.object({
-			authorization: z.string().regex(/^Bearer /),
+			authorization: z
+				.string()
+				.regex(/^Bearer /)
+				.optional(),
 		}),
 	}
 );
