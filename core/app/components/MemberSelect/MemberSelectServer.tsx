@@ -1,7 +1,7 @@
 import type { Communities, CommunityMembershipsId } from "db/public";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
-import { getCommunityMember } from "~/lib/server/member";
+import { selectCommunityMember } from "~/lib/server/member";
 import { getSuggestedUsers } from "~/lib/server/user";
 import { MemberSelectClient } from "./MemberSelectClient";
 
@@ -35,7 +35,7 @@ export async function MemberSelectServer({
 	let member: MemberSelectUserWithMembership | undefined | null;
 
 	if (value !== undefined) {
-		const inbetweenMember = await getCommunityMember({
+		const inbetweenMember = await selectCommunityMember({
 			id: value,
 		}).executeTakeFirst();
 

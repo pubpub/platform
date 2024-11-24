@@ -3,12 +3,9 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type {
 	CommunitiesId,
 	CommunityMembershipsId,
-	CommunityMembershipsUpdate,
-	MemberRole,
 	NewCommunityMemberships,
 	NewPubMemberships,
 	NewStageMemberships,
-	StagesId,
 	UsersId,
 } from "db/public";
 
@@ -21,7 +18,7 @@ import { SAFE_USER_SELECT } from "./user";
 /**
  * Either get a member by their community membership id, or by userId and communityId
  */
-export const getCommunityMember = (
+export const selectCommunityMember = (
 	props: XOR<{ id: CommunityMembershipsId }, { userId: UsersId; communityId: CommunitiesId }>,
 	trx = db
 ) => {
@@ -54,7 +51,7 @@ export const getCommunityMember = (
 	);
 };
 
-export const getCommunityMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
+export const selectCommunityMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
 	autoCache(
 		trx
 			.selectFrom("community_memberships")
@@ -77,7 +74,7 @@ export const getCommunityMembers = ({ communityId }: { communityId: CommunitiesI
 			.where("community_memberships.communityId", "=", communityId)
 	);
 
-export const addCommunityMember = (
+export const insertCommunityMember = (
 	props: NewCommunityMemberships & { userId: UsersId },
 	trx = db
 ) =>
@@ -92,10 +89,10 @@ export const addCommunityMember = (
 			.returningAll()
 	);
 
-export const removeCommunityMember = (props: CommunityMembershipsId, trx = db) =>
+export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
 	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
 
-export const addStageMember = (
+export const insertStageMember = (
 	{
 		userId,
 		stageId,
@@ -106,7 +103,7 @@ export const addStageMember = (
 	trx = db
 ) => autoRevalidate(trx.insertInto("stage_memberships").values({ userId, stageId, role }));
 
-export const addPubMember = (
+export const insertPubMember = (
 	{
 		userId,
 		pubId,

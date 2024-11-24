@@ -7,18 +7,14 @@ import { MemberRole } from "db/public";
 import { MembershipType } from "db/src/public/MembershipType";
 
 import type { TableMember } from "./getMemberTableColumns";
+import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import {
-	addCommunityMember as dbAddMember,
-	getCommunityMember as dbGetMember,
-	removeCommunityMember as dbRemoveMember,
-} from "~/lib/server/member";
+import { deleteCommunityMember, insertCommunityMember } from "~/lib/server/member";
 import { createUserWithMembership } from "~/lib/server/user";
-import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 const isCommunityAdmin = cache(async () => {
 	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
@@ -72,7 +68,7 @@ export const addMember = defineServerAction(async function addMember({
 	}
 
 	try {
-		const member = await dbAddMember({
+		const member = await insertCommunityMember({
 			userId,
 			communityId: result.community.id,
 			role,
@@ -158,7 +154,7 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		const removedMember = await dbRemoveMember(member.id).executeTakeFirst();
+		const removedMember = await deleteCommunityMember(member.id).executeTakeFirst();
 
 		if (!removedMember) {
 			return {

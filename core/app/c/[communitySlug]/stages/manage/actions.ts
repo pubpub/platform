@@ -29,7 +29,7 @@ import {
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { addStageMember as insertStageMember } from "~/lib/server/member";
+import { insertStageMember } from "~/lib/server/member";
 import { createRule, removeRule } from "~/lib/server/rules";
 import {
 	createMoveConstraint as createMoveConstraintDb,

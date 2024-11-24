@@ -31,7 +31,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
 import { signupInvite } from "./email";
-import { addCommunityMember, addPubMember, addStageMember } from "./member";
+import { insertCommunityMember, insertPubMember, insertStageMember } from "./member";
 
 export type SafeUser = Omit<Users, "passwordHash">;
 export const SAFE_USER_SELECT = [
@@ -239,13 +239,13 @@ export const createUserWithMembership = async (data: {
 				capability = Capabilities.addStageMember;
 				target = { stageId: membership.stageId, type: membership.type };
 				membershipQuery = (trx, userId) =>
-					addStageMember({ ...membership, userId }, trx).execute();
+					insertStageMember({ ...membership, userId }, trx).execute();
 				break;
 			case MembershipType.community:
 				capability = Capabilities.addCommunityMember;
 				target = { communityId: community.id, type: membership.type };
 				membershipQuery = (trx, userId) =>
-					addCommunityMember(
+					insertCommunityMember(
 						{
 							...membership,
 							communityId: community.id,
@@ -258,7 +258,7 @@ export const createUserWithMembership = async (data: {
 				capability = Capabilities.addPubMember;
 				target = { pubId: membership.pubId, type: membership.type };
 				membershipQuery = async (trx, userId) =>
-					addPubMember(
+					insertPubMember(
 						{
 							...membership,
 							userId,

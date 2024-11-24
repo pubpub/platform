@@ -6,13 +6,13 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type { CommunitiesId } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
+import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { addMember, createUserWithCommunityMembership } from "./actions";
-import { AddMemberDialog } from "./AddMemberDialog";
 import { MemberTable } from "./MemberTable";
 
 export const metadata: Metadata = {
