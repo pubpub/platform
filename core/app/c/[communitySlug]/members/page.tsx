@@ -50,23 +50,17 @@ const getCachedMembers = (communityId: CommunitiesId) =>
 	);
 
 export default async function Page({
-	params: { communitySlug, add },
+	params: { communitySlug },
 	searchParams,
 }: {
 	params: {
 		communitySlug: string;
-		// this controls whether the add member dialog is open
-		add?: string[];
 	};
 	searchParams: {
 		page?: string;
 		email?: string;
 	};
 }) {
-	if (add && add[0] !== "add") {
-		return notFound();
-	}
-
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {

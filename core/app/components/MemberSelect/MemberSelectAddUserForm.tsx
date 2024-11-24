@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
-import { createUserWithCommunityMembership } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
+import { createUserWithCommunityMembership } from "~/app/c/[communitySlug]/members/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 type Props = {
