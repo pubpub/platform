@@ -69,7 +69,7 @@ export default async function Page({ params, searchParams }: Props) {
 								<StagePanel
 									stageId={searchParams.editingStageId as StagesId}
 									pageContext={pageContext}
-									isSuperAdmin={user.isSuperAdmin}
+									user={user}
 								/>
 							)}
 						</div>

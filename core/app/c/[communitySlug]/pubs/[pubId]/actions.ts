@@ -1,10 +1,13 @@
 "use server";
 
 import type { MemberRole, PubsId, UsersId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { insertPubMember } from "~/lib/server/member";
@@ -14,6 +17,20 @@ export const removePubMember = defineServerAction(async function removePubMember
 	userId: UsersId,
 	pubId: PubsId
 ) {
+	const { user } = await getLoginData();
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+	if (
+		!(await userCan(Capabilities.removePubMember, { type: MembershipType.pub, pubId }, user.id))
+	) {
+		return {
+			title: "Unauthorized",
+			error: "You are not authorized to remove a pub member",
+		};
+	}
 	await autoRevalidate(
 		db
 			.deleteFrom("pub_memberships")
@@ -33,6 +50,25 @@ export const addPubMember = defineServerAction(async function addPubMember(
 	}
 ) {
 	try {
+		const { user } = await getLoginData();
+		if (!user) {
+			return {
+				error: "Not logged in",
+			};
+		}
+		if (
+			!(await userCan(
+				Capabilities.addPubMember,
+				{ type: MembershipType.pub, pubId },
+				user.id
+			))
+		) {
+			return {
+				title: "Unauthorized",
+				error: "You are not authorized to add a pub member",
+			};
+		}
+
 		await insertPubMember({ userId, pubId, role }).execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
@@ -69,6 +105,20 @@ export const setPubMemberRole = defineServerAction(async function setPubMemberRo
 	role: MemberRole,
 	userId: UsersId
 ) {
+	const { user } = await getLoginData();
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+	if (
+		!(await userCan(Capabilities.removePubMember, { type: MembershipType.pub, pubId }, user.id))
+	) {
+		return {
+			title: "Unauthorized",
+			error: "You are not authorized to set a pub member's role",
+		};
+	}
 	await autoRevalidate(
 		db
 			.updateTable("pub_memberships")

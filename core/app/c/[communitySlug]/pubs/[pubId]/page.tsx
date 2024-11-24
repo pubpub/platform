@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 
 import type { CommunitiesId, MemberRole, PubsId, StagesId, UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PubValueWithFieldAndSchema } from "./components/jsonSchemaHelpers";
@@ -22,6 +24,7 @@ import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
 import { pubValuesByVal } from "~/lib/server";
 import { pubInclude } from "~/lib/server/_legacy-integration-queries";
@@ -69,9 +72,11 @@ export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { pubId: string; communitySlug: string };
+	params: { pubId: PubsId; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
+	const { pubId, communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 
 	const token = await createToken({
@@ -79,9 +84,27 @@ export default async function Page({
 		type: AuthTokenType.generic,
 	});
 
-	if (!params.pubId || !params.communitySlug) {
+	if (!pubId || !communitySlug) {
 		return null;
 	}
+
+	const canAddMember = await userCan(
+		Capabilities.addPubMember,
+		{
+			type: MembershipType.pub,
+			pubId,
+		},
+		user.id
+	);
+	const canRemoveMember = await userCan(
+		Capabilities.removePubMember,
+		{
+			type: MembershipType.pub,
+			pubId,
+		},
+		user.id
+	);
+
 	// TODO: use unstable_cache without chidren not rendereing
 	const getPub = (pubId: string) =>
 		prisma.pub.findUnique({
@@ -91,12 +114,12 @@ export default async function Page({
 			},
 		});
 
-	const pub = await getPub(params.pubId);
+	const pub = await getPub(pubId);
 	if (!pub) {
 		return null;
 	}
 
-	const community = await getCommunityBySlug(params.communitySlug);
+	const community = await getCommunityBySlug(communitySlug);
 
 	if (community === null) {
 		notFound();
@@ -148,7 +171,7 @@ export default async function Page({
 							);
 						})}
 				</div>
-				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 font-semibold shadow-inner">
+				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 					<div>
 						<div className="mb-1 text-lg font-bold">Current Stage</div>
 						<div className="ml-4 flex items-center gap-2 font-medium">
@@ -163,7 +186,7 @@ export default async function Page({
 							</div>
 							{pub.stages[0] ? (
 								<Move
-									pubId={pub.id as PubsId}
+									pubId={pubId}
 									stageId={pub.stages[0].stageId as StagesId}
 									communityStages={
 										community.stages as unknown as CommunityStage[]
@@ -178,7 +201,7 @@ export default async function Page({
 							<Suspense>
 								{pub.stages[0]?.stageId && (
 									<IntegrationActions
-										pubId={pub.id as PubsId}
+										pubId={pubId}
 										token={token}
 										stageId={pub.stages[0].stageId as StagesId}
 										type="pub"
@@ -193,7 +216,7 @@ export default async function Page({
 							<div className="ml-4">
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
-									pubId={pub.id as PubsId}
+									pubId={pubId}
 									stage={stage!}
 									pageContext={{
 										params: params,
@@ -212,23 +235,21 @@ export default async function Page({
 					<div className="flex flex-col gap-y-4">
 						<div className="mb-2 flex justify-between">
 							<span className="text-lg font-bold">Members</span>
-							<AddMemberDialog
-								addMember={addPubMember.bind(null, pub.id as PubsId)}
-								addUserMember={addUserWithPubMembership.bind(
-									null,
-									pub.id as PubsId
-								)}
-								existingMembers={pub.members.map(
-									(member) => member.userId as UsersId
-								)}
-								isSuperAdmin={user.isSuperAdmin}
-							/>
+							{canAddMember && (
+								<AddMemberDialog
+									addMember={addPubMember.bind(null, pubId)}
+									addUserMember={addUserWithPubMembership.bind(null, pubId)}
+									existingMembers={members.map((member) => member.id)}
+									isSuperAdmin={user.isSuperAdmin}
+								/>
+							)}
 						</div>
 						<MembersList
 							members={members}
 							setRole={setPubMemberRole}
 							removeMember={removePubMember}
-							targetId={pub.id as PubsId}
+							targetId={pubId}
+							readOnly={!canRemoveMember}
 						/>
 					</div>
 					<div>

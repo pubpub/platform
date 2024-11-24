@@ -12,6 +12,7 @@ import type {
 	UsersId,
 } from "db/public";
 import { Event, stagesIdSchema } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
 
@@ -20,6 +21,8 @@ import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import {
 	createActionInstance,
 	getActionInstance,
@@ -311,6 +314,24 @@ export const removeStageMember = defineServerAction(async function removeStageMe
 	userId: UsersId,
 	stageId: StagesId
 ) {
+	const { user } = await getLoginData();
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+	if (
+		!(await userCan(
+			Capabilities.removeStageMember,
+			{ type: MembershipType.stage, stageId },
+			user.id
+		))
+	) {
+		return {
+			title: "Unauthorized",
+			error: "You are not authorized to remove a stage member",
+		};
+	}
 	await autoRevalidate(
 		db
 			.deleteFrom("stage_memberships")
@@ -330,6 +351,25 @@ export const addStageMember = defineServerAction(async function addStageMember(
 	}
 ) {
 	try {
+		const { user } = await getLoginData();
+		if (!user) {
+			return {
+				error: "Not logged in",
+			};
+		}
+		if (
+			!(await userCan(
+				Capabilities.addStageMember,
+				{ type: MembershipType.stage, stageId },
+				user.id
+			))
+		) {
+			return {
+				title: "Unauthorized",
+				error: "You are not authorized to add a stage member",
+			};
+		}
+
 		await insertStageMember({ userId, stageId, role }).execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
@@ -368,6 +408,24 @@ export const setStageMemberRole = defineServerAction(async function setStageMemb
 	role: MemberRole,
 	userId: UsersId
 ) {
+	const { user } = await getLoginData();
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+	if (
+		!(await userCan(
+			Capabilities.removeStageMember,
+			{ type: MembershipType.stage, stageId },
+			user.id
+		))
+	) {
+		return {
+			title: "Unauthorized",
+			error: "You are not authorized to set a stage member's role",
+		};
+	}
 	await autoRevalidate(
 		db
 			.updateTable("stage_memberships")

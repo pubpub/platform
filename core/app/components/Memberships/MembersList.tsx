@@ -1,8 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Card, CardContent } from "ui/card";
-import { cn } from "utils";
 
 import type { MembersListProps, TargetId } from "./types";
 import { RemoveMemberButton } from "./RemoveMemberButton";
@@ -13,6 +11,7 @@ export const MembersList = <T extends TargetId>({
 	setRole,
 	removeMember,
 	targetId,
+	readOnly,
 }: MembersListProps<T>) => {
 	return (
 		<>
@@ -32,17 +31,26 @@ export const MembersList = <T extends TargetId>({
 							<div className="text-xs text-gray-400">{user.email}</div>
 						</div>
 					</div>
-					<RoleSelect
-						role={user.role}
-						userId={user.id}
-						targetId={targetId}
-						setRole={setRole}
-					/>
-					<RemoveMemberButton
-						userId={user.id}
-						targetId={targetId}
-						removeMember={removeMember}
-					/>
+					{readOnly ? (
+						<span className="rounded-full bg-blue-500 px-4 py-2 text-sm font-medium capitalize text-slate-50">
+							{user.role}
+						</span>
+					) : (
+						<>
+							<RoleSelect
+								role={user.role}
+								userId={user.id}
+								targetId={targetId}
+								setRole={setRole}
+							/>
+
+							<RemoveMemberButton
+								userId={user.id}
+								targetId={targetId}
+								removeMember={removeMember}
+							/>
+						</>
+					)}
 				</div>
 			))}
 		</>

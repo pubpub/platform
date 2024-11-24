@@ -1,3 +1,5 @@
+import type { User } from "lucia";
+
 import type { StagesId } from "db/public";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
@@ -13,7 +15,7 @@ import { StagePanelSheet } from "./StagePanelSheet";
 type Props = {
 	stageId: StagesId | undefined;
 	pageContext: PageContext;
-	isSuperAdmin: boolean;
+	user: User;
 };
 
 export const StagePanel = async (props: Props) => {
@@ -49,7 +51,7 @@ export const StagePanel = async (props: Props) => {
 					<StagePanelRules stageId={props.stageId} />
 				</TabsContent>
 				<TabsContent value="members">
-					<StagePanelMembers stageId={props.stageId} isSuperAdmin={props.isSuperAdmin} />
+					<StagePanelMembers stageId={props.stageId} user={props.user} />
 				</TabsContent>
 			</Tabs>
 		</StagePanelSheet>
