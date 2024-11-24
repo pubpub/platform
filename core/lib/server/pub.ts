@@ -33,7 +33,7 @@ import type {
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { DefinitelyHas, MaybeHas, Prettify, PubField, XOR } from "../types";
+import type { MaybeHas, Prettify, XOR } from "../types";
 import { db } from "~/kysely/database";
 import { mergeSlugsWithFields } from "../fields/utils";
 import { autoCache } from "./cache/autoCache";
@@ -41,10 +41,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
-import {
-	_deprecated_validatePubValuesBySchemaName,
-	validatePubValuesBySchemaName,
-} from "./validateFields";
+import { validatePubValuesBySchemaName } from "./validateFields";
 
 export type PubValues = Record<string, JsonValue>;
 
@@ -1493,3 +1490,14 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 		.map((pub) => processPub(pub.pubId, depth - 1))
 		.filter((processedPub) => !!processedPub);
 }
+
+export const getPubTitle = (pubId: PubsId) =>
+	db
+		.selectFrom("pubs")
+		.where("pubs.id", "=", pubId)
+		.innerJoin("pub_values", "pub_values.pubId", "pubs.id")
+		.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+		.innerJoin("_PubFieldToPubType", "A", "pub_fields.id")
+		.where("_PubFieldToPubType.isTitle", "=", true)
+		.select("pub_values.value as title")
+		.$narrowType<{ title: string }>();

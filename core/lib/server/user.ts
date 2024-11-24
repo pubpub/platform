@@ -1,8 +1,7 @@
-import type { InsertResult, SelectExpression, Transaction } from "kysely";
+import type { SelectExpression, Transaction } from "kysely";
 
 import { cache } from "react";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-import { Email } from "schemas/src/schemas";
 
 import type { Database } from "db/Database";
 import type {
@@ -23,15 +22,14 @@ import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
 import { createPasswordHash } from "../authentication/password";
-import { isCommunityAdmin } from "../authentication/roles";
 import { userCan } from "../authorization/capabilities";
-import { getCommunityBySlug } from "../db/queries";
 import { generateHash, slugifyString } from "../string";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
 import { signupInvite } from "./email";
 import { insertCommunityMember, insertPubMember, insertStageMember } from "./member";
+import { getPubTitle } from "./pub";
 
 export type SafeUser = Omit<Users, "passwordHash">;
 export const SAFE_USER_SELECT = [
@@ -231,6 +229,7 @@ export const createUserWithMembership = async (data: {
 			};
 		}
 
+		let nameQuery: (trx: Transaction<Database>) => Promise<string>;
 		let membershipQuery: (trx: Transaction<Database>, userId: UsersId) => Promise<unknown>;
 		let target: CapabilityTarget;
 		let capability: Capabilities;
@@ -238,6 +237,14 @@ export const createUserWithMembership = async (data: {
 			case MembershipType.stage:
 				capability = Capabilities.addStageMember;
 				target = { stageId: membership.stageId, type: membership.type };
+				nameQuery = async (trx = db) => {
+					const { name } = await trx
+						.selectFrom("stages")
+						.select("name")
+						.where("id", "=", membership.stageId)
+						.executeTakeFirstOrThrow();
+					return name;
+				};
 				membershipQuery = (trx, userId) =>
 					insertStageMember({ ...membership, userId }, trx).execute();
 				break;
@@ -257,6 +264,10 @@ export const createUserWithMembership = async (data: {
 			case MembershipType.pub:
 				capability = Capabilities.addPubMember;
 				target = { pubId: membership.pubId, type: membership.type };
+				nameQuery = async (trx = db) => {
+					const { title } = await getPubTitle(membership.pubId).executeTakeFirstOrThrow();
+					return title;
+				};
 				membershipQuery = async (trx, userId) =>
 					insertPubMember(
 						{
@@ -293,11 +304,14 @@ export const createUserWithMembership = async (data: {
 
 			await membershipQuery(trx, newUser.id);
 
+			const name = nameQuery ? await nameQuery(trx) : community.name;
+
 			const result = await signupInvite(
 				{
 					user: newUser,
 					community,
 					role: membership.role,
+					membership: { type: membership.type, name },
 				},
 				trx
 			).send();

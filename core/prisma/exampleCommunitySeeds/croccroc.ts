@@ -8,6 +8,7 @@ import {
 	StructuralFormElement,
 } from "db/public";
 
+import { env } from "~/lib/env/env.mjs";
 import { seedCommunity } from "../seed/seedCommunity";
 
 export async function seedCroccroc(communityId?: CommunitiesId) {
@@ -19,7 +20,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				id: communityId,
 				name: "CrocCroc",
 				slug: "croccroc",
-				avatar: "/demo/croc.png",
+				avatar: env.PUBPUB_URL + "/demo/croc.png",
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
