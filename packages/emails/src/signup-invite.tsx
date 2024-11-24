@@ -50,7 +50,7 @@ export const SignupInvite = ({
 					<Container className="mx-auto my-[40px] w-[465px] rounded border border-solid border-[#eaeaea] p-[20px]">
 						<Section className="mt-[32px]">
 							<Img
-								src={community.avatar ?? `${baseUrl}/static/logo.svg`}
+								src={community.avatar ?? `${baseUrl}/apple-icon.png`}
 								width="40"
 								height="40"
 								alt="PubPub"
