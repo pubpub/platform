@@ -24,6 +24,7 @@ import { getLoginData } from "../authentication/loginData";
 import { createPasswordHash } from "../authentication/password";
 import { userCan } from "../authorization/capabilities";
 import { generateHash, slugifyString } from "../string";
+import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
@@ -238,11 +239,9 @@ export const createUserWithMembership = async (data: {
 				capability = Capabilities.addStageMember;
 				target = { stageId: membership.stageId, type: membership.type };
 				nameQuery = async (trx = db) => {
-					const { name } = await trx
-						.selectFrom("stages")
-						.select("name")
-						.where("id", "=", membership.stageId)
-						.executeTakeFirstOrThrow();
+					const { name } = await autoCache(
+						trx.selectFrom("stages").select("name").where("id", "=", membership.stageId)
+					).executeTakeFirstOrThrow();
 					return name;
 				};
 				membershipQuery = (trx, userId) =>
@@ -265,7 +264,9 @@ export const createUserWithMembership = async (data: {
 				capability = Capabilities.addPubMember;
 				target = { pubId: membership.pubId, type: membership.type };
 				nameQuery = async (trx = db) => {
-					const { title } = await getPubTitle(membership.pubId).executeTakeFirstOrThrow();
+					const { title } = await autoCache(
+						getPubTitle(membership.pubId, trx)
+					).executeTakeFirstOrThrow();
 					return title;
 				};
 				membershipQuery = async (trx, userId) =>

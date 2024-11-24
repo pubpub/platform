@@ -1491,8 +1491,8 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 		.filter((processedPub) => !!processedPub);
 }
 
-export const getPubTitle = (pubId: PubsId) =>
-	db
+export const getPubTitle = (pubId: PubsId, trx = db) =>
+	trx
 		.selectFrom("pubs")
 		.where("pubs.id", "=", pubId)
 		.innerJoin("pub_values", "pub_values.pubId", "pubs.id")
