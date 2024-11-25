@@ -1,3 +1,4 @@
+import type { MemberRole } from "@prisma/client";
 import type {
 	AliasedSelectQueryBuilder,
 	ExpressionBuilder,
@@ -30,12 +31,13 @@ import type {
 	PubValuesId,
 	Stages,
 	StagesId,
+	Users,
 	UsersId,
 } from "db/public";
-import { logger } from "logger";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
+import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { mergeSlugsWithFields } from "../fields/utils";
@@ -44,6 +46,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
+import { SAFE_USER_SELECT } from "./user";
 import { validatePubValuesBySchemaName } from "./validateFields";
 
 export type PubValues = Record<string, JsonValue>;
@@ -519,6 +522,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				...v,
 				schemaName: correspondingValue?.schemaName,
 				fieldSlug: correspondingValue?.slug,
+				fieldName: correspondingValue?.fieldName,
 			};
 		});
 
@@ -639,6 +643,7 @@ const getFieldInfoForSlugs = async ({
 		slug: field.slug,
 		fieldId: field.id,
 		schemaName: expect(field.schemaName),
+		fieldName: field.name,
 	}));
 };
 
@@ -804,6 +809,7 @@ export const upsertPubRelations = async ({
 				schemaName: correspondingValue.schemaName,
 				fieldSlug: correspondingValue.slug,
 				relatedPub: newlyCreatedPubs.find(({ id }) => id === relation.relatedPubId),
+				fieldName: correspondingValue.fieldName,
 			};
 		});
 
@@ -1008,6 +1014,7 @@ export type UnprocessedPub = {
 	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
 	pubType?: PubTypes;
+	members?: SafeUser & { role: MemberRole };
 	createdAt: Date;
 	isCycle?: boolean;
 	stage?: Stages;
@@ -1020,6 +1027,7 @@ export type UnprocessedPub = {
 		updatedAt: Date;
 		schemaName: CoreSchemaType;
 		fieldSlug: string;
+		fieldName: string;
 	}[];
 	children?: { id: PubsId }[];
 };
@@ -1056,6 +1064,12 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 * @default false
 	 */
 	withStage?: boolean;
+	/**
+	 * Whether to include members of the pub.
+	 *
+	 * @default false
+	 */
+	withMembers?: boolean;
 	search?: string;
 	/**
 	 * Whether to include the first pub that is part of a cycle.
@@ -1095,6 +1109,7 @@ const DEFAULT_OPTIONS = {
 	withRelatedPubs: true,
 	withPubType: false,
 	withStage: false,
+	withMembers: false,
 	cycle: "include",
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
@@ -1139,6 +1154,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		search,
 		withPubType,
 		withStage,
+		withMembers,
 	} = opts;
 
 	if (depth < 1) {
@@ -1177,6 +1193,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 						"p.id as pubId",
 						"pub_fields.schemaName as schemaName",
 						"pub_fields.slug as slug",
+						"pub_fields.name as fieldName",
 						"p.pubTypeId",
 						"p.communityId",
 						"p.createdAt",
@@ -1229,6 +1246,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 									"pubs.id as pubId",
 									"pub_fields.schemaName as schemaName",
 									"pub_fields.slug as slug",
+									"pub_fields.name as fieldName",
 									"pubs.pubTypeId",
 									"pubs.communityId",
 									"pubs.createdAt",
@@ -1306,6 +1324,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 							"inner.valueUpdatedAt as updatedAt",
 							"inner.schemaName",
 							"inner.slug as fieldSlug",
+							"inner.fieldName",
 						])
 						.whereRef("inner.pubId", "=", "pub_tree.pubId")
 						// this prevents us from double fetching values if we have detected a cycle
@@ -1339,6 +1358,17 @@ export async function getPubsWithRelatedValuesAndChildren<
 			)
 			.$if(Boolean(withPubType), (qb) =>
 				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
+			)
+			.$if(Boolean(withMembers), (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("pub_memberships")
+							.whereRef("pub_memberships.pubId", "=", "pub_tree.pubId")
+							.innerJoin("users", "users.id", "pub_memberships.userId")
+							.select(["pub_memberships.role", ...SAFE_USER_SELECT])
+					).as("members")
+				)
 			)
 			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
 			.orderBy("depth asc")
@@ -1437,6 +1467,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			pubType: unprocessedPub.pubType ?? undefined,
 			values: processedValues,
 			children: processedChildren,
+			members: unprocessedPub.members ?? [],
 		} as ProcessedPub<Options>;
 
 		processedPubsById.set(unprocessedPub.pubId, processedPub);

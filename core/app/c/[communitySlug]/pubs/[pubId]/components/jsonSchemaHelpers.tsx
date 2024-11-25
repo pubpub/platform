@@ -60,21 +60,15 @@ export function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, va
 	return fields;
 }
 
-export function renderField(fieldValue: PubValueWithFieldAndSchema) {
-	const JSONSchema = fieldValue.field.schema
-		? (fieldValue.field.schema.schema as JSONSchemaType<AnySchema>)
-		: null;
-	const fieldTitle = (JSONSchema && JSONSchema.title) || fieldValue.field.name;
-	const renderedField = JSONSchema
-		? recursivelyGetScalarFields(JSONSchema, fieldValue.value)
-		: fieldValue.value && fieldValue.value.toString();
+export const renderPubValue = ({ fieldName, value }: { fieldName: string; value: JsonValue }) => {
+	const renderedField = value?.toString();
 	return (
 		<>
 			<Separator />
 			<CardHeader>
-				<CardTitle className={cn("text-base")}>{fieldTitle}</CardTitle>
+				<CardTitle className={cn("text-base")}>{fieldName}</CardTitle>
 			</CardHeader>
-			<CardContent data-testid={`${fieldTitle}-value`}>{renderedField}</CardContent>
+			<CardContent data-testid={`${fieldName}-value`}>{renderedField}</CardContent>
 		</>
 	);
-}
+};
