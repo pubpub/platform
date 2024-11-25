@@ -773,7 +773,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		expectTypeOf(pubWithRelatedValuesAndChildren.children).toEqualTypeOf<undefined>();
 
-		expect(pubWithRelatedValuesAndChildren.children).toEqual([]);
+		expect(pubWithRelatedValuesAndChildren.children).toEqual(undefined);
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
 				{ value: "test title" },
