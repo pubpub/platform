@@ -21,7 +21,7 @@ export default defineConfig({
 	webServer: [
 		{
 			command: process.env.CI
-				? `docker compose -f docker-compose.test.yml --profile integration logs`
+				? `echo ${baseURL}`
 				: `pnpm --workspace-root exec preconstruct build && ${
 						process.env.TEST_DEV
 							? "pnpm --filter core dev"
