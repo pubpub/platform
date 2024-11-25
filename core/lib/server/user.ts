@@ -289,23 +289,23 @@ export const createUserWithMembership = async (data: {
 		const trx = db.transaction();
 
 		const inviteUserResult = await trx.execute(async (trx) => {
-			const newUser = await addUser(
-				{
-					email,
-					firstName,
-					lastName,
-					slug: `${slugifyString(firstName)}${
-						lastName ? `-${slugifyString(lastName)}` : ""
-					}-${generateHash(4, "0123456789")}`,
-					isSuperAdmin: isSuperAdmin === true,
-				},
-				trx
-			).executeTakeFirstOrThrow();
+			const [name, newUser] = await Promise.all([
+				nameQuery ? nameQuery(trx) : Promise.resolve(community.name),
+				addUser(
+					{
+						email,
+						firstName,
+						lastName,
+						slug: `${slugifyString(firstName)}${
+							lastName ? `-${slugifyString(lastName)}` : ""
+						}-${generateHash(4, "0123456789")}`,
+						isSuperAdmin: isSuperAdmin === true,
+					},
+					trx
+				).executeTakeFirstOrThrow(),
+			]);
 
 			await membershipQuery(trx, newUser.id);
-
-			const name = nameQuery ? await nameQuery(trx) : community.name;
-
 			const result = await signupInvite(
 				{
 					user: newUser,
