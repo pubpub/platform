@@ -101,7 +101,7 @@ jobs:
             - run: pnpm --filter core exec playwright install chromium --with-deps
 
             - name: Start up core
-              run: docker compose -f docker-compose.test.yml --profile integration up -d; sleep 5; docker compose logs;
+              run: docker compose -f docker-compose.test.yml --profile integration up -d
               env:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
                   JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
