@@ -122,11 +122,13 @@ export function signupInvite(
 	},
 	trx = db
 ) {
+	const expiresAt = new Date();
+	expiresAt.setDate(expiresAt.getDate() + 7);
 	return buildSend(async () => {
 		const magicLink = await createMagicLink(
 			{
 				type: AuthTokenType.signup,
-				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+				expiresAt,
 				path: `/signup?redirectTo=${encodeURIComponent(
 					`/c/${props.community.slug}/stages`
 				)}`,
