@@ -19,8 +19,7 @@ import {
 	createPubRecursiveNew,
 	deletePub,
 	doesPubExist,
-	getPubCached,
-	getPubs,
+	ForbiddenError,
 	getPubsWithRelatedValuesAndChildren,
 	getPubType,
 	getPubTypesForCommunity,
@@ -61,7 +60,7 @@ const getAuthorization = async () => {
 
 	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
 	if (!apiKeyParse.success) {
-		throw new Error("Invalid token");
+		throw new ForbiddenError("Invalid token");
 	}
 	const apiKey = apiKeyParse.data;
 
@@ -69,7 +68,7 @@ const getAuthorization = async () => {
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
-		throw new Error(`No community found for slug ${communitySlug}`);
+		throw new NotFoundError(`No community found for slug ${communitySlug}`);
 	}
 
 	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
@@ -121,7 +120,7 @@ const checkAuthorization = async <
 
 		const constraints = authorization[token.scope][token.type];
 		if (!constraints) {
-			throw new UnauthorizedError(`You are not authorized to ${token.type} ${token.scope}`);
+			throw new ForbiddenError(`You are not authorized to ${token.type} ${token.scope}`);
 		}
 
 		return { authorization: constraints as Exclude<typeof constraints, false>, community };
@@ -144,13 +143,13 @@ const checkAuthorization = async <
 	}
 
 	if (!community) {
-		throw new Error(`No community found for slug ${communitySlug}`);
+		throw new NotFoundError(`No community found for slug ${communitySlug}`);
 	}
 
 	const can = await userCan(cookies.capability, cookies.target, user.id);
 
 	if (!can) {
-		throw new UnauthorizedError(
+		throw new ForbiddenError(
 			`You are not authorized to ${cookies.capability} ${cookies.target.type}`
 		);
 	}
@@ -227,7 +226,7 @@ const handler = createNextHandler(
 					authorization !== true &&
 					!authorization.stages.includes(body.stageId as StagesId)
 				) {
-					throw new UnauthorizedError(
+					throw new ForbiddenError(
 						`You are not authorized to create a pub in stage ${body.stageId}`
 					);
 				}
@@ -506,7 +505,7 @@ const handler = createNextHandler(
 				).executeTakeFirst();
 
 				if (!pubType) {
-					throw new NotFoundError("No pub type found");
+					throw new NotFoundError(`No pub type found for id ${req.params.pubTypeId}`);
 				}
 
 				return {
