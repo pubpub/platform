@@ -117,3 +117,6 @@ jobs:
               run: pnpm --filter core playwright:test
               env:
                   INTEGRATION_TEST_HOST: localhost
+            - name: Print container logs
+              if: failure()
+              run: docker compose -f docker-compose.test.yml --profile integration logs
