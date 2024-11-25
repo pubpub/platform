@@ -8,8 +8,11 @@ export class LoginPage {
 	}
 
 	async login(email = "all@pubpub.org", password = "pubpub-all") {
+		await this.page.waitForTimeout(500);
 		await this.page.getByLabel("email").fill(email);
+		await this.page.waitForTimeout(500);
 		await this.page.getByRole("textbox", { name: "password" }).fill(password);
+		await this.page.waitForTimeout(500);
 		await this.page.getByRole("button", { name: "Sign in" }).click();
 	}
 
