@@ -183,7 +183,7 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	MaybePubStage<Options> &
 	MaybePubPubType<Options>;
 
-interface NonGenericProcessedPub extends ProcessedPubBase {
+export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages;
 	pubType?: PubTypes;
 	children?: NonGenericProcessedPub[];
