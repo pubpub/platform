@@ -26,7 +26,6 @@ import { userCan } from "../authorization/capabilities";
 import { generateHash, slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
 import { signupInvite } from "./email";
 import { insertCommunityMember, insertPubMember, insertStageMember } from "./member";
@@ -209,7 +208,7 @@ export const createUserWithMembership = async (data: {
 
 	try {
 		const { user } = await getLoginData();
-		const community = await findCommunityBySlug(getCommunitySlug());
+		const community = await findCommunityBySlug();
 
 		if (!user) {
 			return {
