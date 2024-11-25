@@ -12,7 +12,7 @@ export const PubHeader = () => {
 			<h1 className="flex-grow text-xl font-bold">Pubs</h1>
 			<div className="flex items-center gap-x-2">
 				<Suspense fallback={<SkeletonButton className="w-20" />}>
-					<CreatePubButton />
+					<CreatePubButton text="Create" />
 				</Suspense>
 				<Button variant="outline" size="sm" asChild>
 					<Link href="types">Manage Types</Link>

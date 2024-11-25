@@ -53,7 +53,9 @@ export const PubEditorDialog = ({
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
 				{params?.method ? (
 					<>
-						<DialogTitle>{params.method}</DialogTitle>
+						<DialogTitle>
+							{params.method[0].toUpperCase() + params.method.slice(1)} Pub
+						</DialogTitle>
 						<Suspense fallback={<SkeletonCard />}>
 							<PubEdit searchParams={searchParams} {...params} />
 						</Suspense>
