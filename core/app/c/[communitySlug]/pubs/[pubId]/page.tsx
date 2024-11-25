@@ -136,7 +136,7 @@ export default async function Page({
 				<div className="flex-1">
 					{pub.values
 						.filter((value) => {
-							return value.fieldSlug.split(":")[1] !== "title";
+							return value.fieldName !== "Title";
 						})
 						.map((value) => {
 							return (
