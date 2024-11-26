@@ -1,12 +1,25 @@
 import { Suspense } from "react";
 
 import type { CommunitiesId } from "db/public";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationEllipsis,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "ui/pagination";
 import { cn } from "utils";
 
 import type { GetPubResult } from "~/lib/server";
 import type { XOR } from "~/lib/types";
+import { BasicPagination } from "~/app/components/Pagination";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
-import { getPubs } from "~/lib/server";
+import { getPubs, getPubsCount, getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+
+const PAGE_SIZE = 2;
 
 type Props = {
 	token: string | Promise<string>;
@@ -45,6 +58,49 @@ const PubListInner: React.FC<Props> = async (props) => {
 	);
 };
 
+type PaginatedPubListProps = {
+	communityId: CommunitiesId;
+	page: number;
+	searchParams: Record<string, unknown>;
+	/**
+	 * Needs to be provided for the pagination to work
+	 *
+	 * @default `/c/${communitySlug}/pubs`
+	 */
+	basePath?: string;
+};
+
+const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
+	const [count, pubs] = await Promise.all([
+		getPubsCount({ communityId: props.communityId }),
+		getPubs(
+			{ communityId: props.communityId },
+			{ limit: PAGE_SIZE, offset: (props.page - 1) * PAGE_SIZE }
+		),
+	]);
+
+	const totalPages = Math.ceil(count / PAGE_SIZE);
+
+	const communitySlug = getCommunitySlug();
+	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
+
+	return (
+		<div className={cn("flex flex-col gap-8")}>
+			{pubs.map((pub) => {
+				return (
+					<PubRow token={""} key={pub.id} pub={pub} searchParams={props.searchParams} />
+				);
+			})}
+			<BasicPagination
+				basePath={basePath}
+				searchParams={props.searchParams}
+				page={props.page}
+				totalPages={totalPages}
+			/>
+		</div>
+	);
+};
+
 export const PubListSkeleton = ({
 	amount = 10,
 	className,
@@ -59,7 +115,7 @@ export const PubListSkeleton = ({
 	</div>
 );
 
-const PubList: React.FC<Props> = async (props) => {
+export const PubList: React.FC<Props> = async (props) => {
 	return (
 		<Suspense fallback={<PubListSkeleton />}>
 			<PubListInner {...props} />
@@ -67,4 +123,10 @@ const PubList: React.FC<Props> = async (props) => {
 	);
 };
 
-export default PubList;
+export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) => {
+	return (
+		<Suspense fallback={<PubListSkeleton />}>
+			<PaginatedPubListInner {...props} />
+		</Suspense>
+	);
+};
