@@ -283,7 +283,7 @@ export const siteApi = contract.router(
 				query: getPubQuerySchema.extend({
 					pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
 					stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
-					limit: z.number().default(10).optional(),
+					limit: z.number().default(10),
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
 					orderDirection: z.enum(["asc", "desc"]).optional(),
@@ -390,7 +390,7 @@ export const siteApi = contract.router(
 				description:
 					"Get a list of pub types by ID. This endpoint is used by the PubPub site builder to get a list of pub types.",
 				query: z.object({
-					limit: z.number().default(10).optional(),
+					limit: z.number().default(10),
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
 					orderDirection: z.enum(["asc", "desc"]).optional(),
@@ -421,7 +421,7 @@ export const siteApi = contract.router(
 				description:
 					"Get a list of stages by ID. This endpoint is used by the PubPub site builder to get a list of stages.",
 				query: z.object({
-					limit: z.number().default(10).optional(),
+					limit: z.number().default(10),
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
 					orderDirection: z.enum(["asc", "desc"]).optional(),
