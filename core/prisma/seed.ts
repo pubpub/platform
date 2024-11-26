@@ -93,44 +93,40 @@ async function main() {
 		arcadiaPromise,
 	]);
 
-	try {
-		await Promise.all([
-			createUserMembers({
-				email: "all@pubpub.org",
-				password: "pubpub-all",
-				slug: "all",
-				firstName: "Jill",
-				lastName: "Admin",
-				isSuperAdmin: true,
-				role: MemberRole.admin,
-				prismaCommunityIds,
-			}),
+	await Promise.all([
+		createUserMembers({
+			email: "all@pubpub.org",
+			password: "pubpub-all",
+			slug: "all",
+			firstName: "Jill",
+			lastName: "Admin",
+			isSuperAdmin: true,
+			role: MemberRole.admin,
+			prismaCommunityIds,
+		}),
 
-			createUserMembers({
-				email: "some@pubpub.org",
-				password: "pubpub-some",
-				slug: "some",
-				firstName: "Jack",
-				lastName: "Editor",
-				isSuperAdmin: false,
-				role: MemberRole.editor,
-				prismaCommunityIds,
-			}),
+		createUserMembers({
+			email: "some@pubpub.org",
+			password: "pubpub-some",
+			slug: "some",
+			firstName: "Jack",
+			lastName: "Editor",
+			isSuperAdmin: false,
+			role: MemberRole.editor,
+			prismaCommunityIds,
+		}),
 
-			createUserMembers({
-				email: "none@pubpub.org",
-				password: "pubpub-none",
-				slug: "none",
-				firstName: "Jenna",
-				lastName: "Contributor",
-				isSuperAdmin: false,
-				role: MemberRole.contributor,
-				prismaCommunityIds,
-			}),
-		]);
-	} catch (error) {
-		logger.error(error);
-	}
+		createUserMembers({
+			email: "none@pubpub.org",
+			password: "pubpub-none",
+			slug: "none",
+			firstName: "Jenna",
+			lastName: "Contributor",
+			isSuperAdmin: false,
+			role: MemberRole.contributor,
+			prismaCommunityIds,
+		}),
+	]);
 }
 main()
 	.then(async () => {
