@@ -74,7 +74,7 @@ test.describe("Auth with lucia", () => {
 		await page.getByRole("button", { name: "Sign in" }).click();
 
 		await page.waitForURL(/\/c\/\w+\/stages/);
-		await page.getByRole("link", { name: "Settings" }).click();
+		await page.getByRole("link", { name: "Settings" }).last().click();
 		await page.getByRole("button", { name: "Reset" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Password reset email sent" })
