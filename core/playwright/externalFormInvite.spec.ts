@@ -110,7 +110,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await runActionDialog.waitFor({ state: "hidden" });
 	});
 	// fails with large number of pubs in the db
-	test.fixme("New user can fill out the form from the email link", async ({ browser }) => {
+	test("New user can fill out the form from the email link", async ({ browser }) => {
 		const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
 		const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
 		expect(url).toBeTruthy();
