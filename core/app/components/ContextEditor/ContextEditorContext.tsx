@@ -2,7 +2,7 @@
 
 import type { PropsWithChildren } from "react";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 import type { PubsId, PubTypesId } from "db/public";
 
@@ -23,9 +23,14 @@ const ContextEditorContext = createContext<ContextEditorContext>({
 type Props = PropsWithChildren<ContextEditorContext>;
 
 export const ContextEditorContextProvider = (props: Props) => {
-	const { children, ...value } = props;
+	const [cachedPubId] = useState(props.pubId);
+	const { children, pubId, ...value } = props;
 
-	return <ContextEditorContext.Provider value={value}>{children}</ContextEditorContext.Provider>;
+	return (
+		<ContextEditorContext.Provider value={{ ...value, pubId: cachedPubId }}>
+			{children}
+		</ContextEditorContext.Provider>
+	);
 };
 
 export const useContextEditorContext = () => useContext(ContextEditorContext);

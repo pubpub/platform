@@ -35,6 +35,7 @@ import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
 import { db } from "~/kysely/database";
+import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { mergeSlugsWithFields } from "../fields/utils";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -414,7 +415,14 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
-	const values = body.values ?? {};
+	let values = body.values ?? {};
+	if (body.id) {
+		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
+			pubId: body.id as PubsId,
+			values,
+		});
+		values = processedVals;
+	}
 	const normalizedValues = Object.entries(values).flatMap(([slug, value]) =>
 		isRelatedPubInit(value)
 			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
@@ -885,7 +893,13 @@ export const updatePub = async ({
 			).execute();
 		}
 
-		const vals = Object.entries(pubValues).flatMap(([slug, value]) => ({
+		// Allow rich text fields to overwrite other fields
+		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
+			pubId,
+			values: pubValues,
+		});
+
+		const vals = Object.entries(processedVals).flatMap(([slug, value]) => ({
 			slug,
 			value,
 		}));
