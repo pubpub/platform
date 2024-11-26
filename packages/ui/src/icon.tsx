@@ -74,4 +74,6 @@ export {
 	XCircle,
 } from "lucide-react";
 
+export { siGoogledrive as GoogleDrive } from "simple-icons";
+
 export type { LucideIcon } from "lucide-react";

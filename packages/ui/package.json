@@ -343,6 +343,7 @@
 		"lucide-react": "^0.357.0",
 		"react-day-picker": "^8.10.0",
 		"schemas": "workspace:*",
+		"simple-icons": "^13.18.0",
 		"tailwind-merge": "catalog:",
 		"tailwindcss-animate": "^1.0.6",
 		"utils": "workspace:*"
