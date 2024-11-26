@@ -676,7 +676,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																	},
 																},
 															},
-															...articleSeed(1_000, true),
+															...articleSeed(100, true),
 														],
 													},
 												},
