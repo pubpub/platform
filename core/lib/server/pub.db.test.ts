@@ -527,7 +527,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(submissionPubs[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
 	});
 
-	it("should be able to limit the amount of top-level pubs retrieved", async () => {
+	it("should be able to limit the amount of top-level pubs retrieved while still fetching children and related pubs", async () => {
 		const trx = getTrx();
 
 		const newCommunity = await seedCommunity({
@@ -586,13 +586,15 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ communityId: newCommunity.community.id },
 			{
 				depth: 10,
-				limit: 1,
+				limit: 3,
 				_debugDontNest: true,
+				orderBy: "createdAt",
+				orderDirection: "desc",
 			}
 		);
 
-		// 1 root pub, 1 child pub, 1 related pub, even though the limit is 1. This is correct behavior.
-		expect(pubs.length).toBe(3);
+		// 3 root pubs, one of which has 1 child pub & 1 related pub, even though the limit is 3. This is correct behavior.
+		expect(pubs.length).toBe(5);
 	});
 
 	it("should be able to detect cycles, i.e. not go max-depth deep if a loop is detected", async () => {
