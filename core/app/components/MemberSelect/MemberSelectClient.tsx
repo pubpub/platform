@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 import { cn, expect } from "utils";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
-import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
+import { addMember } from "~/app/c/[communitySlug]/members/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
 import { UserAvatar } from "../UserAvatar";
@@ -149,7 +149,7 @@ export function MemberSelectClient({
 									field.onChange(user.member.id);
 								} else {
 									const result = await runAddMember({
-										user,
+										userId: user.id,
 										role: MemberRole.contributor,
 									});
 									if (didSucceed(result)) {

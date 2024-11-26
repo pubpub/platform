@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { z } from "zod";
 
-import type { PubWithChildren } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
 import { siteApi } from "contracts";
@@ -10,7 +9,7 @@ import { ApiAccessScope, ApiAccessType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 
-import type { Target } from "~/lib/authorization/capabilities";
+import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
@@ -36,6 +35,7 @@ import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
+import { getSuggestedUsers } from "~/lib/server/user";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(
@@ -97,7 +97,7 @@ const getAuthorization = async () => {
 const checkAuthorization = async <
 	S extends ApiAccessScope,
 	AT extends ApiAccessType,
-	T extends Target,
+	T extends CapabilityTarget,
 >({
 	token,
 	cookies,
@@ -111,7 +111,7 @@ const checkAuthorization = async <
 				capability: Parameters<typeof userCan>[0];
 				target: T;
 		  }
-		| false;
+		| boolean;
 }) => {
 	const authorizationTokenWithBearer = headers().get("Authorization");
 
@@ -144,6 +144,11 @@ const checkAuthorization = async <
 
 	if (!community) {
 		throw new NotFoundError(`No community found for slug ${communitySlug}`);
+	}
+
+	// Handle cases where we only want to check for login but have no specific capability yet
+	if (typeof cookies === "boolean") {
+		return { authorization: true as const, community };
 	}
 
 	const can = await userCan(cookies.capability, cookies.target, user.id);
@@ -562,6 +567,28 @@ const handler = createNextHandler(
 				return {
 					status: 200,
 					body: stages,
+				};
+			},
+		},
+		users: {
+			search: async (req) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+					cookies: true,
+				});
+
+				const users = await getSuggestedUsers({
+					communityId: community.id,
+					query: {
+						email: req.query.email,
+						firstName: req.query.name,
+						lastName: req.query.name,
+					},
+					limit: req.query.limit,
+				}).execute();
+				return {
+					status: 200,
+					body: users,
 				};
 			},
 		},

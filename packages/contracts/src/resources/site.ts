@@ -14,24 +14,23 @@ import type {
 } from "db/public";
 import {
 	communitiesIdSchema,
+	communityMembershipsSchema,
 	coreSchemaTypeSchema,
-	pubFieldsIdSchema,
 	pubFieldsSchema,
 	pubsIdSchema,
 	pubsSchema,
 	pubTypesIdSchema,
 	pubTypesSchema,
-	pubValuesIdSchema,
 	pubValuesSchema,
 	stagesIdSchema,
 	stagesSchema,
+	usersSchema,
 } from "db/public";
 
 import type { Json } from "./integrations";
 import {
 	CreatePubRequestBodyWithNulls,
 	CreatePubRequestBodyWithNullsBase,
-	JsonInput,
 	jsonSchema,
 } from "./integrations";
 
@@ -40,6 +39,8 @@ export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBo
 	children?: CreatePubRequestBodyWithNulls[];
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
 };
+
+export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
 
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
 	stageId: stagesIdSchema.optional(),
@@ -428,6 +429,26 @@ export const siteApi = contract.router(
 				}),
 				responses: {
 					200: stagesSchema.array(),
+				},
+			},
+		},
+		users: {
+			search: {
+				path: "/users/search",
+				method: "GET",
+				summary: "Get a list of matching users for autocomplete",
+				description:
+					"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
+				query: z.object({
+					communityId: communitiesIdSchema,
+					email: z.string(),
+					name: z.string().optional(),
+					limit: z.number().optional(),
+				}),
+				responses: {
+					200: safeUserSchema
+						.extend({ member: communityMembershipsSchema.nullable().optional() })
+						.array(),
 				},
 			},
 		},

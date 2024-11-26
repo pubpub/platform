@@ -15,7 +15,11 @@ import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { UnauthorizedError } from "./errors";
-import { generateToken } from "./token";
+
+const generateToken = () => {
+	const bytesLength = 16;
+	return crypto.randomBytes(bytesLength).toString("base64url");
+};
 
 const getTokenBase = db
 	.selectFrom("api_access_tokens")

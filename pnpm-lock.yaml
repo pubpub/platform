@@ -19,17 +19,20 @@ catalogs:
       specifier: ^0.32.34
       version: 0.32.35
     '@ts-rest/core':
-      specifier: 3.45.2
-      version: 3.45.2
+      specifier: 3.51.0
+      version: 3.51.0
     '@ts-rest/next':
-      specifier: 3.45.2
-      version: 3.45.2
+      specifier: 3.51.0
+      version: 3.51.0
     '@ts-rest/open-api':
-      specifier: 3.45.2
-      version: 3.45.2
+      specifier: 3.51.0
+      version: 3.51.0
+    '@ts-rest/react-query':
+      specifier: 3.51.0
+      version: 3.51.0
     '@ts-rest/serverless':
-      specifier: 3.45.2
-      version: 3.45.2
+      specifier: 3.51.0
+      version: 3.51.0
     '@types/node':
       specifier: ^20
       version: 20.16.5
@@ -275,21 +278,27 @@ importers:
       '@t3-oss/env-nextjs':
         specifier: ^0.11.1
         version: 0.11.1(typescript@5.6.2)(zod@3.23.8)
+      '@tanstack/react-query':
+        specifier: '5'
+        version: 5.61.0(react@18.3.1)
       '@tanstack/react-table':
         specifier: ^8.13.2
         version: 8.20.5(react-dom@18.3.0(react@18.3.1))(react@18.3.1)
       '@ts-rest/core':
         specifier: 'catalog:'
-        version: 3.45.2(zod@3.23.8)
+        version: 3.51.0(@types/node@20.16.5)(zod@3.23.8)
       '@ts-rest/next':
         specifier: 'catalog:'
-        version: 3.45.2(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)
+        version: 3.51.0(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)
       '@ts-rest/open-api':
         specifier: 'catalog:'
-        version: 3.45.2(zod@3.23.8)
+        version: 3.51.0(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(zod@3.23.8)
+      '@ts-rest/react-query':
+        specifier: 'catalog:'
+        version: 3.51.0(@tanstack/react-query@5.61.0(react@18.3.1))(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(react@18.3.1)(zod@3.23.8)
       '@ts-rest/serverless':
         specifier: 'catalog:'
-        version: 3.45.2(@types/aws-lambda@8.10.145)(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)
+        version: 3.51.0(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(@types/aws-lambda@8.10.145)(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)
       ajv:
         specifier: ^8.12.0
         version: 8.17.1
@@ -468,6 +477,9 @@ importers:
       '@tailwindcss/forms':
         specifier: ^0.5.6
         version: 0.5.9(tailwindcss@3.4.13(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@20.16.5)(typescript@5.6.2)))
+      '@tanstack/react-query-devtools':
+        specifier: ^5.61.3
+        version: 5.61.3(@tanstack/react-query@5.61.0(react@18.3.1))(react@18.3.1)
       '@testing-library/react':
         specifier: ^16.0.1
         version: 16.0.1(@testing-library/dom@10.4.0)(@types/react-dom@18.3.0)(@types/react@18.3.5)(react-dom@18.3.0(react@18.3.1))(react@18.3.1)
@@ -761,7 +773,7 @@ importers:
         version: link:../packages/sdk
       '@ts-rest/core':
         specifier: 'catalog:'
-        version: 3.45.2(zod@3.23.8)
+        version: 3.51.0(@types/node@20.16.5)(zod@3.23.8)
       contracts:
         specifier: workspace:*
         version: link:../packages/contracts
@@ -956,7 +968,7 @@ importers:
         version: link:../../config/prettier
       '@ts-rest/core':
         specifier: 'catalog:'
-        version: 3.45.2(zod@3.23.8)
+        version: 3.51.0(@types/node@22.7.5)(zod@3.23.8)
       tsconfig:
         specifier: workspace:*
         version: link:../../config/tsconfig
@@ -987,7 +999,7 @@ importers:
         version: link:../../config/prettier
       '@ts-rest/core':
         specifier: 'catalog:'
-        version: 3.45.2(zod@3.23.8)
+        version: 3.51.0(@types/node@22.7.5)(zod@3.23.8)
       '@types/pg':
         specifier: ^8.11.6
         version: 8.11.8
@@ -1125,7 +1137,7 @@ importers:
         version: 3.9.0(react-hook-form@7.53.0(react@18.3.1))
       '@ts-rest/core':
         specifier: 'catalog:'
-        version: 3.45.2(zod@3.23.8)
+        version: 3.51.0(@types/node@20.16.5)(zod@3.23.8)
       ajv:
         specifier: ^8.12.0
         version: 8.17.1
@@ -6290,6 +6302,23 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20'
 
+  '@tanstack/query-core@5.60.6':
+    resolution: {integrity: sha512-tI+k0KyCo1EBJ54vxK1kY24LWj673ujTydCZmzEZKAew4NqZzTaVQJEuaG1qKj2M03kUHN46rchLRd+TxVq/zQ==}
+
+  '@tanstack/query-devtools@5.61.3':
+    resolution: {integrity: sha512-AoRco+DMw7Xy9fFs+5BxBop82YPKs1/tWpTPoO1iYVwPLmAU+znnLfWyZ8Qr5OiEqoS0dCyEe6F5V11/JkCK/A==}
+
+  '@tanstack/react-query-devtools@5.61.3':
+    resolution: {integrity: sha512-bR/TaiOSqTq0M5dmYY+pJeSnl5QAuCaRRmJg+Q5hEqt6uTHgKz5WO4jdi8BywRJiZhpXLirlUAIOXJsZ8ukqSA==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.61.3
+      react: ^18 || ^19
+
+  '@tanstack/react-query@5.61.0':
+    resolution: {integrity: sha512-SBzV27XAeCRBOQ8QcC94w2H1Md0+LI0gTWwc3qRJoaGuewKn5FNW4LSqwPFJZVEItfhMfGT7RpZuSFXjTi12pQ==}
+    peerDependencies:
+      react: ^18 || ^19
+
   '@tanstack/react-table@8.20.5':
     resolution: {integrity: sha512-WEHopKw3znbUZ61s9i0+i9g8drmDo6asTWbrQh8Us63DAk/M0FkmIqERew6P71HI75ksZ2Pxyuf4vvKh9rAkiA==}
     engines: {node: '>=12'}
@@ -6344,35 +6373,55 @@ packages:
       react-hook-form: ^7.39.0
       zod: ^3.19.0
 
-  '@ts-rest/core@3.45.2':
-    resolution: {integrity: sha512-Eiv+Sa23MbsAd1Gx9vNJ+IFCDyLZNdJ+UuGMKbFvb+/NmgcBR1VL1UIVtEkd5DJxpYMMd8SLvW91RgB2TS8iPw==}
+  '@ts-rest/core@3.51.0':
+    resolution: {integrity: sha512-v6lnWEcpZj1UgN9wb84XQ+EORP1QEtncFumoXMJjno5ZUV6vdjKze3MYcQN0C6vjBpIJPQEaI/gab2jr4/0KzQ==}
     peerDependencies:
+      '@types/node': ^18.18.7 || >=20.8.4
       zod: ^3.22.3
     peerDependenciesMeta:
+      '@types/node':
+        optional: true
       zod:
         optional: true
 
-  '@ts-rest/next@3.45.2':
-    resolution: {integrity: sha512-UDWV+QBr9Kcq62b7zAL/VwVI9gwEFkxIfLlw/8LaYFDvDdUw9IlLPfSAPdhztwk+AOxUbMqQhw1do2Yrk4nhEw==}
+  '@ts-rest/next@3.51.0':
+    resolution: {integrity: sha512-bvnd27rja+Zvi1/tUcVhLr5JxTc6fEMfWfm2JJd/p6Q+JwwzRY/dLy/XD5qm4/rHUtGmsF/tGJZfgC8dD2Mokw==}
     peerDependencies:
+      '@ts-rest/core': ~3.51.0
       next: ^12.0.0 || ^13.0.0 || ^14.0.0
       zod: ^3.22.3
     peerDependenciesMeta:
       zod:
         optional: true
 
-  '@ts-rest/open-api@3.45.2':
-    resolution: {integrity: sha512-TG5GvD0eyicMR3HjEAMTO2ulO7x/ADSn5bfLF/ZDdVXla48PiQdwhG4NsjVbsUDCghwx+6y5u2aTYjypzdiXQg==}
+  '@ts-rest/open-api@3.51.0':
+    resolution: {integrity: sha512-fvpvRr6HIbAMNZR//QQQi75z5qTxMEBMRtmbaBXVi5e1WVVwOK7P6YBaGWTQp6DXSvsZVULX5VZXmsDd1Z1dew==}
     peerDependencies:
+      '@ts-rest/core': ~3.51.0
       zod: ^3.22.3
 
-  '@ts-rest/serverless@3.45.2':
-    resolution: {integrity: sha512-7+37i9s9j/5OfdzLB17/PDQBco9v38WYn3fbYLr6x/zHYQqq8RfXXbmHYGvFdE+y3eizat2J0pM2Djqsb4Uppg==}
+  '@ts-rest/react-query@3.51.0':
+    resolution: {integrity: sha512-pWrbyRqvcvmjvm+ORu3zE3sPFqsS6CHOq5vra/UtyLEgXrcnEA+fu/7d9tj/+BLRwe0kOWvalu2S3/d3SDxvFQ==}
     peerDependencies:
+      '@tanstack/react-query': ^4.0.0 || ^5.0.0
+      '@ts-rest/core': ~3.51.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      zod: ^3.22.3
+    peerDependenciesMeta:
+      zod:
+        optional: true
+
+  '@ts-rest/serverless@3.51.0':
+    resolution: {integrity: sha512-BjwmLPgnYifdDjSpSvhZk+v1P+3CiM/jpxKNUgdw8RfgnDy/+aaOPmAcSkjhBCOIu6ASChuv/sNpiuWx3YyPUw==}
+    peerDependencies:
+      '@azure/functions': ^4.0.0
+      '@ts-rest/core': ~3.51.0
       '@types/aws-lambda': ^8.10.115
       next: ^12.0.0 || ^13.0.0 || ^14.0.0
       zod: ^3.22.3
     peerDependenciesMeta:
+      '@azure/functions':
+        optional: true
       '@types/aws-lambda':
         optional: true
       next:
@@ -7472,7 +7521,7 @@ packages:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
 
   buffer-equal-constant-time@1.0.1:
-    resolution: {integrity: sha1-+OcRMvf/5uAaXJaXpMbz5I1cyBk=}
+    resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -7779,7 +7828,7 @@ packages:
     resolution: {integrity: sha512-OFNPdQAXnQhDSKioX8/XYT6sdUlXwpeMjfd6ApxMJfyZ4GxmLR1xvMERctlYhlHwIiz6CSpBc2+qYKjHGZw4TQ==}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   concat-stream@1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -9719,7 +9768,6 @@ packages:
     resolution: {integrity: sha512-t0etAxTUk1w5MYdNOkZBZ8rvYYN5iL+2dHCCx/DpkFm/bW28M6y5nUS83D4XdZiHy35Fpaw6LBb+F88fHZnVCw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
-    bundledDependencies: []
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
@@ -19814,6 +19862,21 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.4.13(ts-node@10.9.2(@swc/core@1.7.24(@swc/helpers@0.5.13))(@types/node@22.7.5)(typescript@5.6.2))
 
+  '@tanstack/query-core@5.60.6': {}
+
+  '@tanstack/query-devtools@5.61.3': {}
+
+  '@tanstack/react-query-devtools@5.61.3(@tanstack/react-query@5.61.0(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-devtools': 5.61.3
+      '@tanstack/react-query': 5.61.0(react@18.3.1)
+      react: 18.3.1
+
+  '@tanstack/react-query@5.61.0(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-core': 5.60.6
+      react: 18.3.1
+
   '@tanstack/react-table@8.20.5(react-dom@18.3.0(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@tanstack/table-core': 8.20.5
@@ -19874,25 +19937,41 @@ snapshots:
       react-hook-form: 7.53.0(react@18.3.1)
       zod: 3.23.8
 
-  '@ts-rest/core@3.45.2(zod@3.23.8)':
+  '@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8)':
     optionalDependencies:
+      '@types/node': 20.16.5
       zod: 3.23.8
 
-  '@ts-rest/next@3.45.2(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)':
+  '@ts-rest/core@3.51.0(@types/node@22.7.5)(zod@3.23.8)':
+    optionalDependencies:
+      '@types/node': 22.7.5
+      zod: 3.23.8
+
+  '@ts-rest/next@3.51.0(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)':
     dependencies:
+      '@ts-rest/core': 3.51.0(@types/node@20.16.5)(zod@3.23.8)
       next: 14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       zod: 3.23.8
 
-  '@ts-rest/open-api@3.45.2(zod@3.23.8)':
+  '@ts-rest/open-api@3.51.0(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(zod@3.23.8)':
     dependencies:
       '@anatine/zod-openapi': 1.14.2(openapi3-ts@2.0.2)(zod@3.23.8)
+      '@ts-rest/core': 3.51.0(@types/node@20.16.5)(zod@3.23.8)
       openapi3-ts: 2.0.2
       zod: 3.23.8
 
-  '@ts-rest/serverless@3.45.2(@types/aws-lambda@8.10.145)(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)':
+  '@ts-rest/react-query@3.51.0(@tanstack/react-query@5.61.0(react@18.3.1))(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(react@18.3.1)(zod@3.23.8)':
     dependencies:
-      '@ts-rest/core': 3.45.2(zod@3.23.8)
+      '@tanstack/react-query': 5.61.0(react@18.3.1)
+      '@ts-rest/core': 3.51.0(@types/node@20.16.5)(zod@3.23.8)
+      react: 18.3.1
+    optionalDependencies:
+      zod: 3.23.8
+
+  '@ts-rest/serverless@3.51.0(@ts-rest/core@3.51.0(@types/node@20.16.5)(zod@3.23.8))(@types/aws-lambda@8.10.145)(next@14.2.9(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.48.0)(react-dom@18.3.0(react@18.3.1))(react@18.3.1))(zod@3.23.8)':
+    dependencies:
+      '@ts-rest/core': 3.51.0(@types/node@20.16.5)(zod@3.23.8)
       itty-router: 5.0.18
     optionalDependencies:
       '@types/aws-lambda': 8.10.145
@@ -19989,7 +20068,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.16.5
+      '@types/node': 22.7.5
 
   '@types/bunyan@1.8.9':
     dependencies:
@@ -20001,7 +20080,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 20.16.5
+      '@types/node': 22.7.5
 
   '@types/content-disposition@0.5.8': {}
 
@@ -20176,7 +20255,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.5':
     dependencies:
-      '@types/node': 20.16.5
+      '@types/node': 22.7.5
       '@types/qs': 6.9.15
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -20316,7 +20395,7 @@ snapshots:
 
   '@types/mysql@2.15.26':
     dependencies:
-      '@types/node': 20.16.5
+      '@types/node': 22.7.5
 
   '@types/node@12.20.55': {}
 
@@ -20413,7 +20492,7 @@ snapshots:
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 20.16.5
+      '@types/node': 22.7.5
       '@types/send': 0.17.4
 
   '@types/shimmer@1.2.0': {}

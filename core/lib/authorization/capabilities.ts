@@ -56,7 +56,7 @@ type CapabilitiesArg = {
 	[MembershipType.form]: typeof formCapabilities;
 };
 
-export type Target = PubTarget | StageTarget;
+export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
 
 type PubTarget = {
 	type: MembershipType.pub;
@@ -78,7 +78,7 @@ type FormTarget = {
 	formId: FormsId;
 };
 
-export const userCan = async <T extends Target>(
+export const userCan = async <T extends CapabilityTarget>(
 	capability: CapabilitiesArg[T["type"]][number],
 	target: T,
 	userId: UsersId
@@ -207,5 +207,30 @@ export const userCan = async <T extends Target>(
 			.select("capability");
 
 		return Boolean((await capabilitiesQuery.execute()).length);
+	} else if (target.type === MembershipType.community) {
+		const capabilitiesQuery = db
+			.with("community_ms", (db) =>
+				db
+					.selectFrom("community_memberships")
+					.where("community_memberships.userId", "=", userId)
+					.where("community_memberships.communityId", "=", target.communityId)
+					.select("role")
+			)
+			.selectFrom("membership_capabilities")
+			.where((eb) =>
+				eb.and([
+					eb(
+						"membership_capabilities.role",
+						"in",
+						eb.selectFrom("community_ms").select("role")
+					),
+					eb("membership_capabilities.type", "=", MembershipType.community),
+				])
+			)
+			.where("membership_capabilities.capability", "=", capability)
+			.limit(1)
+			.select("capability");
+		return Boolean((await capabilitiesQuery.execute()).length);
 	}
+	return false;
 };

@@ -1,18 +1,21 @@
+import type { User } from "lucia";
+
 import type { StagesId } from "db/public";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { getStage } from "~/lib/db/queries";
-import { StagePanelActions } from "./StagePanelActions";
+import { StagePanelActions } from "./actionsTab/StagePanelActions";
+import { StagePanelRules } from "./actionsTab/StagePanelRules";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
-import { StagePanelRules } from "./StagePanelRules";
 import { StagePanelSheet } from "./StagePanelSheet";
 
 type Props = {
 	stageId: StagesId | undefined;
 	pageContext: PageContext;
+	user: User;
 };
 
 export const StagePanel = async (props: Props) => {
@@ -48,7 +51,7 @@ export const StagePanel = async (props: Props) => {
 					<StagePanelRules stageId={props.stageId} />
 				</TabsContent>
 				<TabsContent value="members">
-					<StagePanelMembers stageId={props.stageId} />
+					<StagePanelMembers stageId={props.stageId} user={props.user} />
 				</TabsContent>
 			</Tabs>
 		</StagePanelSheet>

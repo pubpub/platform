@@ -2,14 +2,27 @@
 
 import { captureException } from "@sentry/nextjs";
 
-import type { Action, ActionInstancesId, CommunitiesId, RulesId, StagesId } from "db/public";
+import type {
+	Action,
+	ActionInstancesId,
+	CommunitiesId,
+	MemberRole,
+	RulesId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import { Event, stagesIdSchema } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
 
-import type { CreateRuleSchema } from "./components/panel/StagePanelRuleCreator";
+import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import {
 	createActionInstance,
 	getActionInstance,
@@ -19,6 +32,7 @@ import {
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { insertStageMember } from "~/lib/server/member";
 import { createRule, removeRule } from "~/lib/server/rules";
 import {
 	createMoveConstraint as createMoveConstraintDb,
@@ -27,6 +41,7 @@ import {
 	removeStages,
 	updateStage,
 } from "~/lib/server/stages";
+import { createUserWithMembership } from "~/lib/server/user";
 
 async function deleteMoveConstraints(moveConstraintIds: [StagesId, StagesId][]) {
 	await autoRevalidate(
@@ -293,4 +308,129 @@ export const deleteRule = defineServerAction(async function deleteRule(ruleId: R
 		// 		revalidateTag(`community-stages_${communityId}`);
 		// 		revalidateTag(`community-action-runs_${communityId}`);
 	}
+});
+
+export const removeStageMember = defineServerAction(async function removeStageMember(
+	userId: UsersId,
+	stageId: StagesId
+) {
+	const { user } = await getLoginData();
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+	if (
+		!(await userCan(
+			Capabilities.removeStageMember,
+			{ type: MembershipType.stage, stageId },
+			user.id
+		))
+	) {
+		return {
+			title: "Unauthorized",
+			error: "You are not authorized to remove a stage member",
+		};
+	}
+	await autoRevalidate(
+		db
+			.deleteFrom("stage_memberships")
+			.where("stage_memberships.stageId", "=", stageId)
+			.where("stage_memberships.userId", "=", userId)
+	).execute();
+});
+
+export const addStageMember = defineServerAction(async function addStageMember(
+	stageId: StagesId,
+	{
+		userId,
+		role,
+	}: {
+		userId: UsersId;
+		role: MemberRole;
+	}
+) {
+	try {
+		const { user } = await getLoginData();
+		if (!user) {
+			return {
+				error: "Not logged in",
+			};
+		}
+		if (
+			!(await userCan(
+				Capabilities.addStageMember,
+				{ type: MembershipType.stage, stageId },
+				user.id
+			))
+		) {
+			return {
+				title: "Unauthorized",
+				error: "You are not authorized to add a stage member",
+			};
+		}
+
+		await insertStageMember({ userId, stageId, role }).execute();
+	} catch (error) {
+		if (isUniqueConstraintError(error)) {
+			return {
+				title: "Failed to add member",
+				error: "User is already a member of this stage",
+			};
+		}
+	}
+});
+
+export const addUserWithStageMembership = defineServerAction(
+	async function addUserWithStageMembership(
+		stageId: StagesId,
+		data: {
+			firstName: string;
+			lastName?: string | null;
+			email: string;
+			role: MemberRole;
+			isSuperAdmin?: boolean;
+		}
+	) {
+		await createUserWithMembership({
+			...data,
+			membership: {
+				stageId,
+				role: data.role,
+				type: MembershipType.stage,
+			},
+		});
+	}
+);
+
+export const setStageMemberRole = defineServerAction(async function setStageMemberRole(
+	stageId: StagesId,
+	role: MemberRole,
+	userId: UsersId
+) {
+	const { user } = await getLoginData();
+	if (!user) {
+		return {
+			error: "Not logged in",
+		};
+	}
+	if (
+		!(await userCan(
+			Capabilities.removeStageMember,
+			{ type: MembershipType.stage, stageId },
+			user.id
+		))
+	) {
+		return {
+			title: "Unauthorized",
+			error: "You are not authorized to set a stage member's role",
+		};
+	}
+	await autoRevalidate(
+		db
+			.updateTable("stage_memberships")
+			.where("stageId", "=", stageId)
+			.where("userId", "=", userId)
+			.set({ role })
+	).execute();
 });
