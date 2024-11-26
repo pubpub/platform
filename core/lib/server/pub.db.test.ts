@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import type { PubsId, PubTypes, Stages } from "db/public";
 import { CoreSchemaType } from "db/public";
 
-import type { ProcessedPub, UnprocessedPub } from "./pub";
+import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 
@@ -25,6 +25,9 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 		"Basic Pub": {
 			Title: { isTitle: true },
 			"Some relation": { isTitle: false },
+		},
+		"Minimal Pub": {
+			Title: { isTitle: true },
 		},
 	},
 	stages: {
@@ -55,6 +58,13 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 						},
 					},
 				],
+			},
+		},
+		{
+			stage: "Stage 1",
+			pubType: "Minimal Pub",
+			values: {
+				Title: "Minimal pub",
 			},
 		},
 	],
@@ -194,8 +204,8 @@ describe("createPubRecursive", () => {
 		});
 
 		expect(pub).toMatchObject({
-			values: [{ value: "test title" }],
-			relatedPubs: [
+			values: [
+				{ value: "test title" },
 				{
 					value: "test relation value",
 					relatedPub: { values: [{ value: "test relation title" }] },
@@ -283,6 +293,7 @@ describe("updatePub", () => {
 					[pubFields.Title.slug]: "Test pub",
 				},
 			},
+			trx,
 		});
 
 		await expect(
@@ -332,7 +343,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const rootPubId = pub.id;
 		const pubValues = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: rootPubId },
+			{ pubId: rootPubId, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -448,7 +459,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const rootPubId = pub.id;
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: rootPubId },
+			{ pubId: rootPubId, communityId: community.id },
 			{ depth: 10, withPubType: true }
 		);
 
@@ -495,36 +506,46 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		});
 	});
 
-	it("should be able to fetch all the pubs of a specific pubtype", async () => {
+	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
 		const trx = getTrx();
 		const { createPubRecursiveNew } = await import("./pub");
 
-		const pub = await createPubRecursiveNew({
-			communityId: community.id,
-			body: {
-				pubTypeId: pubTypes["Basic Pub"].id,
-				values: {
-					[pubFields.Title.slug]: "test title",
-				},
-			},
-			trx,
-		});
-
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
-		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+		const allPubs = await getPubsWithRelatedValuesAndChildren(
 			{ communityId: community.id },
 			{ depth: 10 }
 		);
 
-		expect(pubWithRelatedValuesAndChildren.length).toBe(5);
+		expect(allPubs.length).toBe(5);
 
-		const submissionPubs = await getPubsWithRelatedValuesAndChildren(
-			{ pubTypeId: pubTypes["Basic Pub"].id },
-			{ withPubType: true, depth: 10 }
-		);
+		const [minimalPubs, pubsInStage1, basicPubsInStage1] = await Promise.all([
+			getPubsWithRelatedValuesAndChildren(
+				{ pubTypeId: pubTypes["Minimal Pub"].id, communityId: community.id },
+				{ withPubType: true, depth: 10 }
+			),
+			getPubsWithRelatedValuesAndChildren(
+				{ stageId: stages["Stage 1"].id, communityId: community.id },
+				{ withStage: true, depth: 10 }
+			),
+			getPubsWithRelatedValuesAndChildren(
+				{
+					pubTypeId: pubTypes["Basic Pub"].id,
+					stageId: stages["Stage 1"].id,
+					communityId: community.id,
+				},
+				{ withPubType: true, withStage: true, depth: 10 }
+			),
+		]);
 
-		expect(submissionPubs[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
+		expect(minimalPubs.length).toBe(1);
+		expect(minimalPubs[0].pubType?.id).toBe(pubTypes["Minimal Pub"].id);
+
+		expect(pubsInStage1.length).toBe(2);
+
+		expect(basicPubsInStage1.length).toBe(1);
+		expect(basicPubsInStage1[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
+		expect(basicPubsInStage1[0].stage?.id).toBe(stages["Stage 1"].id);
 	});
 
 	it("should be able to limit the amount of top-level pubs retrieved", async () => {
@@ -637,11 +658,11 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const [withCycleIncluded, withCycleExcluded] = (await Promise.all([
 			getPubsWithRelatedValuesAndChildren(
-				{ pubId: newPubId },
+				{ pubId: newPubId, communityId: community.id },
 				{ depth: 10, _debugDontNest: true }
 			),
 			getPubsWithRelatedValuesAndChildren(
-				{ pubId: newPubId },
+				{ pubId: newPubId, communityId: community.id },
 				{ depth: 10, cycle: "exclude", _debugDontNest: true }
 			),
 		])) as unknown as [UnprocessedPub[], UnprocessedPub[]];
@@ -690,7 +711,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = (await getPubsWithRelatedValuesAndChildren(
-			{ pubId: newPubId },
+			{ pubId: newPubId, communityId: community.id },
 			{ depth: 10, fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug] }
 		)) as unknown as UnprocessedPub[];
 
@@ -746,13 +767,13 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10, withChildren: false, withRelatedPubs: false }
 		);
 
 		expectTypeOf(pubWithRelatedValuesAndChildren.children).toEqualTypeOf<undefined>();
 
-		expect(pubWithRelatedValuesAndChildren.children).toEqual([]);
+		expect(pubWithRelatedValuesAndChildren.children).toEqual(undefined);
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
 				{ value: "test title" },
@@ -775,7 +796,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const pub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pubs[0].id },
+			{ pubId: pubs[0].id, communityId: community.id },
 			{ withStage: true }
 		);
 
@@ -819,7 +840,7 @@ describe("upsertPubRelations", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -871,7 +892,7 @@ describe("upsertPubRelations", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1032,7 +1053,7 @@ describe("upsertPubRelations", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1100,7 +1121,7 @@ describe("upsertPubRelations", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1167,7 +1188,7 @@ describe("removePubRelations", () => {
 
 		// check that the pub has 2 relations
 		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1189,7 +1210,7 @@ describe("removePubRelations", () => {
 		expect(removedRelatedPubIds).toEqual([pubs[0].id]);
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1233,7 +1254,7 @@ describe("removePubRelations", () => {
 
 		// Verify initial state has 2 relations
 		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
@@ -1248,7 +1269,7 @@ describe("removePubRelations", () => {
 		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort());
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1364,30 +1385,30 @@ describe("replacePubRelationsBySlug", () => {
 		// Replace relations
 		await replacePubRelationsBySlug({
 			pubId: pub.id,
-			relations: {
-				[pubFields["Some relation"].slug]: [
-					{
-						relatedPubId: newRelatedPub1.id,
-						value: "new relation value 1",
-					},
-					{
-						relatedPubId: newRelatedPub2.id,
-						value: "new relation value 2",
-					},
-				],
-			},
+			relations: [
+				{
+					slug: pubFields["Some relation"].slug,
+					relatedPubId: newRelatedPub1.id,
+					value: "new relation value 1",
+				},
+				{
+					slug: pubFields["Some relation"].slug,
+					relatedPubId: newRelatedPub2.id,
+					value: "new relation value 2",
+				},
+			],
 			communityId: community.id,
 		});
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
 		const relationValues = updatedPub.values.filter((v) => v.relatedPub);
 
 		expect(relationValues).toHaveLength(2);
-		expect(relationValues.map((v) => v.relatedPub.id).sort()).toEqual(
+		expect(relationValues.map((v) => v.relatedPub?.id).sort()).toEqual(
 			[newRelatedPub1.id, newRelatedPub2.id].sort()
 		);
 		expect(relationValues.map((v) => v.value).sort()).toEqual(
@@ -1414,12 +1435,12 @@ describe("replacePubRelationsBySlug", () => {
 
 		await replacePubRelationsBySlug({
 			pubId: pub.id,
-			relations: {},
+			relations: [],
 			communityId: community.id,
 		});
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: pub.id },
+			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
@@ -1444,14 +1465,13 @@ describe("replacePubRelationsBySlug", () => {
 		await expect(
 			replacePubRelationsBySlug({
 				pubId: pub.id,
-				relations: {
-					"non-existent-field": [
-						{
-							relatedPubId: "some-id" as PubsId,
-							value: "some value",
-						},
-					],
-				},
+				relations: [
+					{
+						slug: "non-existent-field",
+						relatedPubId: "some-id" as PubsId,
+						value: "some value",
+					},
+				],
 				communityId: community.id,
 			})
 		).rejects.toThrow(
