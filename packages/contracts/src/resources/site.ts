@@ -432,22 +432,24 @@ export const siteApi = contract.router(
 				},
 			},
 		},
-		searchUsers: {
-			path: "/searchUsers",
-			method: "GET",
-			summary: "Get a list of matching users for autocomplete",
-			description:
-				"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
-			query: z.object({
-				communityId: communitiesIdSchema,
-				email: z.string(),
-				name: z.string().optional(),
-				limit: z.number().optional(),
-			}),
-			responses: {
-				200: safeUserSchema
-					.extend({ member: communityMembershipsSchema.nullable().optional() })
-					.array(),
+		users: {
+			search: {
+				path: "/users/search",
+				method: "GET",
+				summary: "Get a list of matching users for autocomplete",
+				description:
+					"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
+				query: z.object({
+					communityId: communitiesIdSchema,
+					email: z.string(),
+					name: z.string().optional(),
+					limit: z.number().optional(),
+				}),
+				responses: {
+					200: safeUserSchema
+						.extend({ member: communityMembershipsSchema.nullable().optional() })
+						.array(),
+				},
 			},
 		},
 	},

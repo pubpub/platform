@@ -111,7 +111,7 @@ const checkAuthorization = async <
 				capability: Parameters<typeof userCan>[0];
 				target: T;
 		  }
-		| false;
+		| boolean;
 }) => {
 	const authorizationTokenWithBearer = headers().get("Authorization");
 
@@ -144,6 +144,11 @@ const checkAuthorization = async <
 
 	if (!community) {
 		throw new NotFoundError(`No community found for slug ${communitySlug}`);
+	}
+
+	// Handle cases where we only want to check for login but have no specific capability yet
+	if (typeof cookies === "boolean") {
+		return { authorization: true as const, community };
 	}
 
 	const can = await userCan(cookies.capability, cookies.target, user.id);
@@ -565,21 +570,27 @@ const handler = createNextHandler(
 				};
 			},
 		},
-		searchUsers: async (req, res) => {
-			const { user } = await getLoginData();
-			const users = await getSuggestedUsers({
-				communityId: req.query.communityId,
-				query: {
-					email: req.query.email,
-					firstName: req.query.name,
-					lastName: req.query.name,
-				},
-				limit: req.query.limit,
-			}).execute();
-			return {
-				status: 200,
-				body: users,
-			};
+		users: {
+			search: async (req) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+					cookies: true,
+				});
+
+				const users = await getSuggestedUsers({
+					communityId: community.id,
+					query: {
+						email: req.query.email,
+						firstName: req.query.name,
+						lastName: req.query.name,
+					},
+					limit: req.query.limit,
+				}).execute();
+				return {
+					status: 200,
+					body: users,
+				};
+			},
 		},
 	},
 	{
