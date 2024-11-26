@@ -86,7 +86,7 @@ export const MemberInviteForm = ({
 				message: "This user is already a member",
 			});
 		}
-	}, [userIsAlreadyMember, form.setError, user, email]);
+	}, [userIsAlreadyMember, form.setError]);
 
 	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
 		if (!user) {
