@@ -285,7 +285,7 @@ export default async function FormPage({
 							)}
 						>
 							<ContextEditorContextProvider
-								pubId={pub?.id} // or maybe pubId ?
+								pubId={pubId}
 								pubTypeId={form.pubTypeId}
 								pubs={pubs}
 								pubTypes={pubTypes}
