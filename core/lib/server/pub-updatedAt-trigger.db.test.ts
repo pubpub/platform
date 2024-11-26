@@ -75,8 +75,7 @@ describe("updatedAt trigger", () => {
 			},
 		});
 
-		const compareUpdatedAt = async () => {
-			const updatedAtBefore = pub.updatedAt;
+		const compareUpdatedAt = async (updatedAtBefore: Date) => {
 			const newPub = await testDb
 				.selectFrom("pubs")
 				.select("updatedAt")
@@ -84,6 +83,8 @@ describe("updatedAt trigger", () => {
 				.executeTakeFirstOrThrow();
 
 			expect(newPub.updatedAt.getTime()).toBeGreaterThan(updatedAtBefore.getTime());
+
+			return newPub.updatedAt;
 		};
 
 		// update some pub value
@@ -97,7 +98,7 @@ describe("updatedAt trigger", () => {
 			)
 			.executeTakeFirst();
 
-		await compareUpdatedAt();
+		const afterUpdateUpdatedAt = await compareUpdatedAt(pub.updatedAt);
 
 		const insertResult = await testDb
 			.insertInto("pub_values")
@@ -110,7 +111,7 @@ describe("updatedAt trigger", () => {
 
 		expect(insertResult.numInsertedOrUpdatedRows).toBe(BigInt(1));
 
-		await compareUpdatedAt();
+		const afterInsertUpdatedAt = await compareUpdatedAt(afterUpdateUpdatedAt);
 
 		const insertOnConflict = await testDb
 			.insertInto("pub_values")
@@ -133,6 +134,8 @@ describe("updatedAt trigger", () => {
 
 		expect(insertOnConflict.numInsertedOrUpdatedRows).toBe(BigInt(1));
 
+		const afterInsertOnConflictUpdatedAt = await compareUpdatedAt(afterInsertUpdatedAt);
+
 		const deleteResult = await testDb
 			.deleteFrom("pub_values")
 			.where((eb) =>
@@ -142,6 +145,6 @@ describe("updatedAt trigger", () => {
 
 		expect(deleteResult.numDeletedRows).toBe(BigInt(1));
 
-		await compareUpdatedAt();
+		await compareUpdatedAt(afterInsertOnConflictUpdatedAt);
 	});
 });
