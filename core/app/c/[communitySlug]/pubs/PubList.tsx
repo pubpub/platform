@@ -16,10 +16,10 @@ import type { GetPubResult } from "~/lib/server";
 import type { XOR } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
-import { getPubs, getPubsCount, getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubs, getPubsCount } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 20;
 
 type Props = {
 	token: string | Promise<string>;
@@ -38,6 +38,7 @@ const PubListInner: React.FC<Props> = async (props) => {
 			{
 				limit: 1000,
 				onlyParents: false,
+				orderBy: "updatedAt",
 			}
 		);
 	const [allPubs, token] = await Promise.all([pubsPromiseMaybe, props.token]);
@@ -75,7 +76,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 		getPubsCount({ communityId: props.communityId }),
 		getPubs(
 			{ communityId: props.communityId },
-			{ limit: PAGE_SIZE, offset: (props.page - 1) * PAGE_SIZE }
+			{ limit: PAGE_SIZE, offset: (props.page - 1) * PAGE_SIZE, orderBy: "updatedAt" }
 		),
 	]);
 
