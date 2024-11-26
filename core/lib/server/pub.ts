@@ -1515,3 +1515,26 @@ export const getPubTitle = (pubId: PubsId, trx = db) =>
 		.where("_PubFieldToPubType.isTitle", "=", true)
 		.select("pub_values.value as title")
 		.$narrowType<{ title: string }>();
+
+/**
+ * Get the number of pubs in a community, optionally additionally filtered by stage and pub type
+ */
+export const getPubsCount = async (props: {
+	communityId: CommunitiesId;
+	stageId?: StagesId;
+	pubTypeId?: PubTypesId;
+}): Promise<number> => {
+	const pubs = await db
+		.selectFrom("pubs")
+		.where("pubs.communityId", "=", props.communityId)
+		.$if(Boolean(props.stageId), (qb) =>
+			qb
+				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+				.where("PubsInStages.stageId", "=", props.stageId!)
+		)
+		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "=", props.pubTypeId!))
+		.select((eb) => eb.fn.countAll<number>().as("count"))
+		.executeTakeFirstOrThrow();
+
+	return pubs.count;
+};

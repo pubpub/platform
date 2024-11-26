@@ -71,7 +71,7 @@ async function main() {
 	// this flag is set in the `globalSetup.ts` file
 	// and in e2e.yml
 	// eslint-disable-next-line no-restricted-properties
-	const shouldSeedArcadia = Boolean(process.env.SEED_ARCADIA);
+	const shouldSeedArcadia = !Boolean(process.env.MINIMAL_SEED);
 
 	const prismaCommunityIds = [
 		unJournalId,
