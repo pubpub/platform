@@ -1,15 +1,6 @@
 import { Suspense } from "react";
 
 import type { CommunitiesId } from "db/public";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationEllipsis,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-} from "ui/pagination";
 import { cn } from "utils";
 
 import type { GetPubResult } from "~/lib/server";
@@ -19,7 +10,7 @@ import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
 import { getPubs, getPubsCount } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 type Props = {
 	token: string | Promise<string>;
