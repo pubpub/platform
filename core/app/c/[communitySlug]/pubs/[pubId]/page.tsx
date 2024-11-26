@@ -157,9 +157,7 @@ export default async function Page({
 						<div className="ml-4 flex items-center gap-2 font-medium">
 							{pub.stage ? (
 								<>
-									<div key={pub.stage.id} data-testid="current-stage">
-										{pub.stage.name}
-									</div>
+									<div data-testid="current-stage">{pub.stage.name}</div>
 									<Move
 										pubId={pub.id}
 										stageId={pub.stage.id as StagesId}
