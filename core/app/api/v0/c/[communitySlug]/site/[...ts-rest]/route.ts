@@ -7,15 +7,19 @@ import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
 import { siteApi } from "contracts";
 import { ApiAccessScope, ApiAccessType } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
+import type { Target } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
 import {
 	createPubRecursiveNew,
 	deletePub,
 	doesPubExist,
-	getPubCached,
-	getPubs,
+	ForbiddenError,
 	getPubsWithRelatedValuesAndChildren,
 	getPubType,
 	getPubTypesForCommunity,
@@ -56,7 +60,7 @@ const getAuthorization = async () => {
 
 	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
 	if (!apiKeyParse.success) {
-		throw new Error("Invalid token");
+		throw new ForbiddenError("Invalid token");
 	}
 	const apiKey = apiKeyParse.data;
 
@@ -64,7 +68,7 @@ const getAuthorization = async () => {
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
-		throw new Error(`No community found for slug ${communitySlug}`);
+		throw new NotFoundError(`No community found for slug ${communitySlug}`);
 	}
 
 	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
@@ -90,18 +94,67 @@ const getAuthorization = async () => {
 	};
 };
 
-const checkAuthorization = async <T extends ApiAccessScope, AT extends ApiAccessType>(
-	scope: T,
-	type: AT
-) => {
-	const { authorization, community } = await getAuthorization();
+const checkAuthorization = async <
+	S extends ApiAccessScope,
+	AT extends ApiAccessType,
+	T extends Target,
+>({
+	token,
+	cookies,
+}: {
+	token: {
+		scope: S;
+		type: AT;
+	};
+	cookies:
+		| {
+				capability: Parameters<typeof userCan>[0];
+				target: T;
+		  }
+		| false;
+}) => {
+	const authorizationTokenWithBearer = headers().get("Authorization");
 
-	const constraints = authorization[scope][type];
-	if (!constraints) {
-		throw new UnauthorizedError(`You are not authorized to ${type} ${scope}`);
+	if (authorizationTokenWithBearer) {
+		const { authorization, community } = await getAuthorization();
+
+		const constraints = authorization[token.scope][token.type];
+		if (!constraints) {
+			throw new ForbiddenError(`You are not authorized to ${token.type} ${token.scope}`);
+		}
+
+		return { authorization: constraints as Exclude<typeof constraints, false>, community };
 	}
 
-	return { authorization: constraints as Exclude<typeof constraints, false>, community };
+	if (!cookies) {
+		throw new UnauthorizedError("This resource is only accessible using an API key");
+	}
+
+	const communitySlug = getCommunitySlug();
+	const [{ user }, community] = await Promise.all([
+		getLoginData(),
+		findCommunityBySlug(communitySlug),
+	]);
+
+	if (!user) {
+		throw new UnauthorizedError(
+			"You must either provide an `Authorization: Bearer ` header or be logged in to access this resource"
+		);
+	}
+
+	if (!community) {
+		throw new NotFoundError(`No community found for slug ${communitySlug}`);
+	}
+
+	const can = await userCan(cookies.capability, cookies.target, user.id);
+
+	if (!can) {
+		throw new ForbiddenError(
+			`You are not authorized to ${cookies.capability} ${cookies.target.type}`
+		);
+	}
+
+	return { authorization: true as const, community };
 };
 
 const shouldReturnRepresentation = () => {
@@ -118,10 +171,13 @@ const handler = createNextHandler(
 	{
 		pubs: {
 			get: async ({ params, query }) => {
-				const { community } = await checkAuthorization(
-					ApiAccessScope.pub,
-					ApiAccessType.read
-				);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					cookies: {
+						capability: Capabilities.viewPub,
+						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+					},
+				});
 
 				const pub = await getPubsWithRelatedValuesAndChildren(
 					{
@@ -137,10 +193,11 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async ({ query }) => {
-				const { community } = await checkAuthorization(
-					ApiAccessScope.pub,
-					ApiAccessType.read
-				);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					// TODO: figure out capability here
+					cookies: false,
+				});
 
 				const { pubTypeId, stageId, ...rest } = query;
 
@@ -159,16 +216,17 @@ const handler = createNextHandler(
 				};
 			},
 			create: async ({ body }) => {
-				const { authorization, community } = await checkAuthorization(
-					ApiAccessScope.pub,
-					ApiAccessType.write
-				);
+				const { authorization, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+					// TODO: figure out capability here
+					cookies: false,
+				});
 
 				if (
 					authorization !== true &&
 					!authorization.stages.includes(body.stageId as StagesId)
 				) {
-					throw new UnauthorizedError(
+					throw new ForbiddenError(
 						`You are not authorized to create a pub in stage ${body.stageId}`
 					);
 				}
@@ -192,10 +250,13 @@ const handler = createNextHandler(
 				};
 			},
 			update: async ({ params, body }) => {
-				const { community } = await checkAuthorization(
-					ApiAccessScope.pub,
-					ApiAccessType.write
-				);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+					cookies: {
+						capability: Capabilities.updatePubValues,
+						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+					},
+				});
 
 				const { exists } = await doesPubExist(
 					params.pubId as PubsId,
@@ -232,7 +293,13 @@ const handler = createNextHandler(
 				};
 			},
 			archive: async ({ params }) => {
-				await checkAuthorization(ApiAccessScope.pub, ApiAccessType.write);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+					cookies: {
+						capability: Capabilities.deletePub,
+						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+					},
+				});
 				const result = await deletePub(params.pubId as PubsId).executeTakeFirst();
 
 				if (result?.numDeletedRows !== BigInt(1)) {
@@ -248,10 +315,13 @@ const handler = createNextHandler(
 			},
 			relations: {
 				remove: async ({ params, body }) => {
-					const { community } = await checkAuthorization(
-						ApiAccessScope.pub,
-						ApiAccessType.write
-					);
+					const { community } = await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+						cookies: {
+							capability: Capabilities.deletePub,
+							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						},
+					});
 
 					const { exists } = await doesPubExist(
 						params.pubId as PubsId,
@@ -330,10 +400,13 @@ const handler = createNextHandler(
 					};
 				},
 				update: async ({ params, body }) => {
-					const { community } = await checkAuthorization(
-						ApiAccessScope.pub,
-						ApiAccessType.write
-					);
+					const { community } = await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+						cookies: {
+							capability: Capabilities.deletePub,
+							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						},
+					});
 
 					const { exists } = await doesPubExist(
 						params.pubId as PubsId,
@@ -373,10 +446,13 @@ const handler = createNextHandler(
 					};
 				},
 				replace: async ({ params, body }) => {
-					const { community } = await checkAuthorization(
-						ApiAccessScope.pub,
-						ApiAccessType.write
-					);
+					const { community } = await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+						cookies: {
+							capability: Capabilities.deletePub,
+							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						},
+					});
 
 					const { exists } = await doesPubExist(
 						params.pubId as PubsId,
@@ -418,14 +494,18 @@ const handler = createNextHandler(
 		},
 		pubTypes: {
 			get: async (req) => {
-				await checkAuthorization(ApiAccessScope.pubType, ApiAccessType.read);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
+					// TODO: figure out capability her
+					cookies: false,
+				});
 
 				const pubType = await getPubType(
 					req.params.pubTypeId as PubTypesId
 				).executeTakeFirst();
 
 				if (!pubType) {
-					throw new NotFoundError("No pub type found");
+					throw new NotFoundError(`No pub type found for id ${req.params.pubTypeId}`);
 				}
 
 				return {
@@ -434,10 +514,11 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async (req, args) => {
-				const { community } = await checkAuthorization(
-					ApiAccessScope.pubType,
-					ApiAccessType.read
-				);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
+					// TODO: figure out capability here
+					cookies: false,
+				});
 
 				const pubTypes = await getPubTypesForCommunity(
 					community.id as CommunitiesId,
@@ -451,7 +532,16 @@ const handler = createNextHandler(
 		},
 		stages: {
 			get: async (req) => {
-				await checkAuthorization(ApiAccessScope.stage, ApiAccessType.read);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
+					cookies: {
+						capability: Capabilities.viewStage,
+						target: {
+							type: MembershipType.stage,
+							stageId: req.params.stageId as StagesId,
+						},
+					},
+				});
 				const stage = await getStage(req.params.stageId as StagesId).executeTakeFirst();
 				if (!stage) {
 					throw new NotFoundError("No stage found");
@@ -463,10 +553,10 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async (req, res) => {
-				const { community, authorization } = await checkAuthorization(
-					ApiAccessScope.stage,
-					ApiAccessType.read
-				);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
+					cookies: false,
+				});
 
 				const stages = await getCommunityStages(community.id).execute();
 				return {
