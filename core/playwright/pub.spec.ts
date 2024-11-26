@@ -6,11 +6,12 @@ import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { FieldsPage } from "./fixtures/fields-page";
+import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
-import { createCommunity, login } from "./helpers";
+import { createCommunity } from "./helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
@@ -22,7 +23,11 @@ let pubId: PubsId;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
-	await login({ page });
+
+	const loginPage = new LoginPage(page);
+	await loginPage.goto();
+	await loginPage.loginAndWaitForNavigation();
+
 	await createCommunity({
 		page,
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
