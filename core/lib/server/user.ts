@@ -6,7 +6,6 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
-	MemberRole,
 	NewUsers,
 	PubsId,
 	StagesId,
@@ -14,6 +13,7 @@ import type {
 	UsersId,
 	UsersUpdate,
 } from "db/public";
+import { MemberRole } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 
@@ -304,8 +304,22 @@ export const createUserWithMembership = async (data: {
 					trx
 				).executeTakeFirstOrThrow(),
 			]);
-
-			await membershipQuery(trx, newUser.id);
+			if (membership.type === MembershipType.community) {
+				await membershipQuery(trx, newUser.id);
+			} else {
+				// Add a community contributor membership for any new stage or pub member
+				await Promise.all([
+					insertCommunityMember(
+						{
+							role: MemberRole.contributor,
+							communityId: community.id,
+							userId: newUser.id,
+						},
+						trx
+					).execute(),
+					membershipQuery(trx, newUser.id),
+				]);
+			}
 			const result = await signupInvite(
 				{
 					user: newUser,
