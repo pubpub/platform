@@ -110,7 +110,7 @@ export async function PubEditor(props: PubEditorProps) {
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
 	const editor = (
 		<ContextEditorContextProvider
-			pubId={pub?.id}
+			pubId={pubId}
 			pubTypeId={pubType.id}
 			pubs={pubs}
 			pubTypes={pubTypes}
