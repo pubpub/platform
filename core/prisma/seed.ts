@@ -66,8 +66,18 @@ async function createUserMembers({
 async function main() {
 	const arcadiaId = crypto.randomUUID() as CommunitiesId;
 	const croccrocId = crypto.randomUUID() as CommunitiesId;
+	// do not seed arcadia if the minimal seed flag is set
+	// this is because it will slow down ci/testing
+	// this flag is set in the `globalSetup.ts` file
+	// and in e2e.yml
+	// eslint-disable-next-line no-restricted-properties
+	const shouldSeedArcadia = Boolean(process.env.SEED_ARCADIA);
 
-	const prismaCommunityIds = [unJournalId, croccrocId, arcadiaId];
+	const prismaCommunityIds = [
+		unJournalId,
+		croccrocId,
+		shouldSeedArcadia ? arcadiaId : null,
+	].filter(Boolean) as CommunitiesId[];
 
 	logger.info("migrate graphile");
 	const workerUtils = await makeWorkerUtils({
@@ -75,11 +85,7 @@ async function main() {
 	});
 	await workerUtils.migrate();
 
-	// do not seed arcadia if the minimal seed flag is set
-	// this is because it will slow down ci/testing
-	// this flag is set in the `globalSetup.ts` file
-	// eslint-disable-next-line no-restricted-properties
-	const arcadiaPromise = process.env.MINIMAL_SEED ? null : seedArcadia(arcadiaId);
+	const arcadiaPromise = shouldSeedArcadia ? seedArcadia(arcadiaId) : null;
 
 	await Promise.all([
 		buildUnjournal(prisma, unJournalId),
