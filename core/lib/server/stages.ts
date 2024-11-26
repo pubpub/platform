@@ -11,6 +11,7 @@ import type {
 } from "db/public";
 
 import type { AutoReturnType } from "../types";
+import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -48,33 +49,27 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-export const getCommunityStages = (communityId: CommunitiesId) =>
+type CommunityStageProps = XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>;
+export const getCommunityStages = ({ communityId, stageId }: CommunityStageProps) =>
 	autoCache(
 		db
 			.selectFrom("stages")
-			.where("communityId", "=", communityId)
+			.$if(Boolean(communityId), (qb) => qb.where("communityId", "=", communityId!))
+			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
 			.select((eb) => [
 				jsonArrayFrom(
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.stageId", "=", "stages.id")
-						.selectAll("move_constraint")
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("stages")
-									.whereRef("stages.id", "=", "move_constraint.destinationId")
-									.selectAll("stages")
-							)
-								.$notNull()
-								.as("destination"),
-						])
+						.innerJoin("stages as s", "s.id", "move_constraint.destinationId")
+						.select(["s.id", "s.name"])
 				).as("moveConstraints"),
 				jsonArrayFrom(
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.destinationId", "=", "stages.id")
-						.selectAll("move_constraint")
+						.innerJoin("stages as s", "stages.id", "move_constraint.stageId")
+						.select(["s.id", "s.name"])
 				).as("moveConstraintSources"),
 				eb
 					.selectFrom("PubsInStages")

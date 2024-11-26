@@ -66,7 +66,7 @@ export default async function Page({ params, searchParams }: Props) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-	const stages = await getCommunityStages(community.id).execute();
+	const stages = await getCommunityStages({ communityId: community.id }).execute();
 
 	const pageContext = {
 		params,

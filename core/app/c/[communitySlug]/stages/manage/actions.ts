@@ -43,20 +43,11 @@ import {
 } from "~/lib/server/stages";
 import { createUserWithMembership } from "~/lib/server/user";
 
-async function deleteMoveConstraints(moveConstraintIds: [StagesId, StagesId][]) {
+async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
 	await autoRevalidate(
 		db
 			.deleteFrom("move_constraint")
-			.where(
-				"move_constraint.stageId",
-				"in",
-				moveConstraintIds.map(([stageId]) => stageId as StagesId)
-			)
-			.where(
-				"move_constraint.destinationId",
-				"in",
-				moveConstraintIds.map(([, destinationId]) => destinationId as StagesId)
-			)
+			.where("move_constraint.destinationId", "in", moveConstraintIds)
 			.returningAll()
 	).execute();
 }
@@ -121,7 +112,7 @@ export const createMoveConstraint = defineServerAction(async function createMove
 export const deleteStagesAndMoveConstraints = defineServerAction(
 	async function deleteStagesAndMoveConstraints(
 		stageIds: StagesId[],
-		moveConstraintIds: [StagesId, StagesId][]
+		moveConstraintIds: StagesId[]
 	) {
 		try {
 			// Delete move constraints prior to deleting stages to prevent foreign

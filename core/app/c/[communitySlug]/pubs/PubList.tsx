@@ -32,19 +32,12 @@ const PubListInner: React.FC<Props> = async (props) => {
 				orderBy: "updatedAt",
 			}
 		);
-	const [allPubs, token] = await Promise.all([pubsPromiseMaybe, props.token]);
+	const allPubs = await pubsPromiseMaybe;
 
 	return (
 		<div className={cn("flex flex-col gap-8")}>
 			{allPubs.map((pub) => {
-				return (
-					<PubRow
-						key={pub.id}
-						pub={pub}
-						token={token}
-						searchParams={props.searchParams}
-					/>
-				);
+				return <PubRow key={pub.id} pub={pub} searchParams={props.searchParams} />;
 			})}
 		</div>
 	);
@@ -79,9 +72,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 	return (
 		<div className={cn("flex flex-col gap-8")}>
 			{pubs.map((pub) => {
-				return (
-					<PubRow token={""} key={pub.id} pub={pub} searchParams={props.searchParams} />
-				);
+				return <PubRow key={pub.id} pub={pub} searchParams={props.searchParams} />;
 			})}
 			<BasicPagination
 				basePath={basePath}

@@ -21,7 +21,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 	}
 
 	const [stages, existingTokens] = await Promise.all([
-		getCommunityStages(community.id).execute(),
+		getCommunityStages({ communityId: community.id }).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 

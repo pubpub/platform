@@ -59,15 +59,15 @@ const makeEdge = (
 
 const makeEdges = (edges: Map<string, Edge>, stage: CommunityStage) => {
 	for (const prevEdge of stage.moveConstraintSources) {
-		const edgeId = `${prevEdge.stageId}:${stage.id}`;
+		const edgeId = `${prevEdge.id}:${stage.id}`;
 		if (!edges.has(edgeId)) {
-			edges.set(edgeId, makeEdge(edgeId, prevEdge.stageId, stage.id, prevEdge));
+			edges.set(edgeId, makeEdge(edgeId, prevEdge.id, stage.id, prevEdge));
 		}
 	}
 	for (const nextEdge of stage.moveConstraints) {
-		const edgeId = `${stage.id}:${nextEdge.destinationId}`;
+		const edgeId = `${stage.id}:${nextEdge.id}`;
 		if (!edges.has(edgeId)) {
-			edges.set(edgeId, makeEdge(edgeId, stage.id, nextEdge.destinationId, nextEdge));
+			edges.set(edgeId, makeEdge(edgeId, stage.id, nextEdge.id, nextEdge));
 		}
 	}
 	return edges;
@@ -173,9 +173,7 @@ export const StageEditorGraph = () => {
 
 	const onEdgesDelete = useCallback(
 		(edges: Edge[]) => {
-			deleteMoveConstraints(
-				edges.map((edge) => [edge.source as StagesId, edge.target as StagesId])
-			);
+			deleteMoveConstraints(edges.map((edge) => edge.target as StagesId));
 		},
 		[deleteMoveConstraints]
 	);

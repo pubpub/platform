@@ -563,7 +563,7 @@ const handler = createNextHandler(
 					cookies: false,
 				});
 
-				const stages = await getCommunityStages(community.id).execute();
+				const stages = await getCommunityStages({ communityId: community.id }).execute();
 				return {
 					status: 200,
 					body: stages,
