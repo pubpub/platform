@@ -2,24 +2,34 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { z } from "zod";
 
-import type { PubWithChildren } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
-import { api } from "contracts";
+import { siteApi } from "contracts";
 import { ApiAccessScope, ApiAccessType } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
+import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
 import {
 	createPubRecursiveNew,
-	getPubCached,
-	getPubs,
+	deletePub,
+	doesPubExist,
+	ForbiddenError,
+	getPubsWithRelatedValuesAndChildren,
 	getPubType,
 	getPubTypesForCommunity,
 	NotFoundError,
+	removeAllPubRelationsBySlugs,
+	removePubRelations,
+	replacePubRelationsBySlug,
 	tsRestHandleErrors,
 	UnauthorizedError,
+	updatePub,
+	upsertPubRelations,
 } from "~/lib/server";
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -50,7 +60,7 @@ const getAuthorization = async () => {
 
 	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
 	if (!apiKeyParse.success) {
-		throw new Error("Invalid token");
+		throw new ForbiddenError("Invalid token");
 	}
 	const apiKey = apiKeyParse.data;
 
@@ -58,7 +68,7 @@ const getAuthorization = async () => {
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
-		throw new Error(`No community found for slug ${communitySlug}`);
+		throw new NotFoundError(`No community found for slug ${communitySlug}`);
 	}
 
 	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
@@ -84,43 +94,121 @@ const getAuthorization = async () => {
 	};
 };
 
-const checkAuthorization = async <T extends ApiAccessScope, AT extends ApiAccessType>(
-	scope: T,
-	type: AT
-) => {
-	const { authorization, community } = await getAuthorization();
+const checkAuthorization = async <
+	S extends ApiAccessScope,
+	AT extends ApiAccessType,
+	T extends CapabilityTarget,
+>({
+	token,
+	cookies,
+}: {
+	token: {
+		scope: S;
+		type: AT;
+	};
+	cookies:
+		| {
+				capability: Parameters<typeof userCan>[0];
+				target: T;
+		  }
+		| false;
+}) => {
+	const authorizationTokenWithBearer = headers().get("Authorization");
 
-	const constraints = authorization[scope][type];
-	if (!constraints) {
-		throw new UnauthorizedError(`You are not authorized to ${type} ${scope}`);
+	if (authorizationTokenWithBearer) {
+		const { authorization, community } = await getAuthorization();
+
+		const constraints = authorization[token.scope][token.type];
+		if (!constraints) {
+			throw new ForbiddenError(`You are not authorized to ${token.type} ${token.scope}`);
+		}
+
+		return { authorization: constraints as Exclude<typeof constraints, false>, community };
 	}
 
-	return { authorization: constraints as Exclude<typeof constraints, false>, community };
+	if (!cookies) {
+		throw new UnauthorizedError("This resource is only accessible using an API key");
+	}
+
+	const communitySlug = getCommunitySlug();
+	const [{ user }, community] = await Promise.all([
+		getLoginData(),
+		findCommunityBySlug(communitySlug),
+	]);
+
+	if (!user) {
+		throw new UnauthorizedError(
+			"You must either provide an `Authorization: Bearer ` header or be logged in to access this resource"
+		);
+	}
+
+	if (!community) {
+		throw new NotFoundError(`No community found for slug ${communitySlug}`);
+	}
+
+	const can = await userCan(cookies.capability, cookies.target, user.id);
+
+	if (!can) {
+		throw new ForbiddenError(
+			`You are not authorized to ${cookies.capability} ${cookies.target.type}`
+		);
+	}
+
+	return { authorization: true as const, community };
+};
+
+const shouldReturnRepresentation = () => {
+	const prefer = headers().get("Prefer");
+
+	if (prefer === "return=representation") {
+		return true;
+	}
+	return false;
 };
 
 const handler = createNextHandler(
-	api.site,
+	siteApi,
 	{
 		pubs: {
-			get: async (req, res) => {
-				await checkAuthorization(ApiAccessScope.pub, ApiAccessType.read);
-				const { pubId } = req.params;
+			get: async ({ params, query }) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					cookies: {
+						capability: Capabilities.viewPub,
+						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+					},
+				});
 
-				const pub = await getPubCached(pubId as PubsId);
+				const pub = await getPubsWithRelatedValuesAndChildren(
+					{
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					},
+					query
+				);
 
-				res.responseHeaders.set("Access-Control-Allow-Origin", "*");
 				return {
 					status: 200,
 					body: pub,
 				};
 			},
-			getMany: async (req, args) => {
-				const { community } = await checkAuthorization(
-					ApiAccessScope.pub,
-					ApiAccessType.read
-				);
+			getMany: async ({ query }) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					// TODO: figure out capability here
+					cookies: false,
+				});
 
-				const pubs = await getPubs({ communityId: community.id }, req.query);
+				const { pubTypeId, stageId, ...rest } = query;
+
+				const pubs = await getPubsWithRelatedValuesAndChildren(
+					{
+						communityId: community.id,
+						pubTypeId,
+						stageId,
+					},
+					rest
+				);
 
 				return {
 					status: 200,
@@ -128,44 +216,296 @@ const handler = createNextHandler(
 				};
 			},
 			create: async ({ body }) => {
-				const { authorization, community } = await checkAuthorization(
-					ApiAccessScope.pub,
-					ApiAccessType.write
-				);
+				const { authorization, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+					// TODO: figure out capability here
+					cookies: false,
+				});
 
 				if (
 					authorization !== true &&
 					!authorization.stages.includes(body.stageId as StagesId)
 				) {
-					throw new UnauthorizedError(
+					throw new ForbiddenError(
 						`You are not authorized to create a pub in stage ${body.stageId}`
 					);
 				}
 
-				const createdPub = (await createPubRecursiveNew({
+				const createdPub = await createPubRecursiveNew({
 					communityId: community?.id,
 					body,
+				});
 
-					// we cannot control the output type based on the input typee
-					// anyway, so it's better to just cast it to { children?: [] }
-				})) as PubWithChildren;
+				const returnRepresentation = shouldReturnRepresentation();
+
+				if (!returnRepresentation) {
+					return {
+						status: 204,
+					};
+				}
 
 				return {
 					status: 201,
 					body: createdPub,
 				};
 			},
+			update: async ({ params, body }) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+					cookies: {
+						capability: Capabilities.updatePubValues,
+						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+					},
+				});
+
+				const { exists } = await doesPubExist(
+					params.pubId as PubsId,
+					community.id as CommunitiesId
+				);
+
+				if (!exists) {
+					throw new NotFoundError(`Pub ${params.pubId} not found`);
+				}
+
+				const updatedPub = await updatePub({
+					pubValues: body,
+					pubId: params.pubId as PubsId,
+					communityId: community.id,
+					continueOnValidationError: false,
+				});
+
+				const returnRepresentation = shouldReturnRepresentation();
+
+				if (!returnRepresentation) {
+					return {
+						status: 204,
+					};
+				}
+
+				const pub = await getPubsWithRelatedValuesAndChildren({
+					pubId: params.pubId as PubsId,
+					communityId: community.id,
+				});
+
+				return {
+					status: 200,
+					body: pub,
+				};
+			},
+			archive: async ({ params }) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+					cookies: {
+						capability: Capabilities.deletePub,
+						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+					},
+				});
+				const result = await deletePub(params.pubId as PubsId).executeTakeFirst();
+
+				if (result?.numDeletedRows !== BigInt(1)) {
+					return {
+						status: 404,
+						body: "Pub not found",
+					};
+				}
+
+				return {
+					status: 200,
+				};
+			},
+			relations: {
+				remove: async ({ params, body }) => {
+					const { community } = await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+						cookies: {
+							capability: Capabilities.deletePub,
+							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						},
+					});
+
+					const { exists } = await doesPubExist(
+						params.pubId as PubsId,
+						community.id as CommunitiesId
+					);
+
+					if (!exists) {
+						throw new NotFoundError(`Pub ${params.pubId} not found`);
+					}
+
+					const { all, some } = Object.entries(body).reduce(
+						(acc, [fieldSlug, pubIds]) => {
+							if (pubIds === "*") {
+								acc.all.push(fieldSlug);
+							} else {
+								acc.some.push(
+									...pubIds.map((relatedPubId) => ({
+										slug: fieldSlug,
+										relatedPubId,
+									}))
+								);
+							}
+							return acc;
+						},
+						{
+							all: [] as string[],
+							some: [] as { slug: string; relatedPubId: PubsId }[],
+						}
+					);
+
+					const [removedAllSettled, removedSomeSettled] = await Promise.allSettled([
+						removeAllPubRelationsBySlugs({
+							pubId: params.pubId as PubsId,
+							slugs: all,
+							communityId: community.id,
+						}),
+						removePubRelations({
+							pubId: params.pubId as PubsId,
+							relations: some,
+							communityId: community.id,
+						}),
+					]);
+
+					if (
+						removedAllSettled.status === "rejected" ||
+						removedSomeSettled.status === "rejected"
+					) {
+						return {
+							status: 400,
+							body: `Failed to remove pub relations: ${
+								removedAllSettled.status === "rejected"
+									? removedAllSettled.reason
+									: removedSomeSettled.status === "rejected"
+										? removedSomeSettled.reason
+										: ""
+							}`,
+						};
+					}
+
+					const returnRepresentation = shouldReturnRepresentation();
+
+					if (!returnRepresentation) {
+						return {
+							status: 204,
+						};
+					}
+
+					const pub = await getPubsWithRelatedValuesAndChildren({
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					});
+
+					return {
+						status: 200,
+						body: pub,
+					};
+				},
+				update: async ({ params, body }) => {
+					const { community } = await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+						cookies: {
+							capability: Capabilities.deletePub,
+							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						},
+					});
+
+					const { exists } = await doesPubExist(
+						params.pubId as PubsId,
+						community.id as CommunitiesId
+					);
+
+					if (!exists) {
+						throw new NotFoundError(`Pub ${params.pubId} not found`);
+					}
+
+					const relations = Object.entries(body).flatMap(([slug, data]) =>
+						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
+					);
+
+					await upsertPubRelations({
+						pubId: params.pubId as PubsId,
+						relations,
+						communityId: community.id,
+					});
+
+					const returnRepresentation = shouldReturnRepresentation();
+
+					if (!returnRepresentation) {
+						return {
+							status: 204,
+						};
+					}
+
+					const pub = await getPubsWithRelatedValuesAndChildren({
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					});
+
+					return {
+						status: 200,
+						body: pub,
+					};
+				},
+				replace: async ({ params, body }) => {
+					const { community } = await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
+						cookies: {
+							capability: Capabilities.deletePub,
+							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						},
+					});
+
+					const { exists } = await doesPubExist(
+						params.pubId as PubsId,
+						community.id as CommunitiesId
+					);
+
+					if (!exists) {
+						throw new NotFoundError(`Pub ${params.pubId} not found`);
+					}
+					const relations = Object.entries(body).flatMap(([slug, data]) =>
+						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
+					);
+
+					await replacePubRelationsBySlug({
+						pubId: params.pubId as PubsId,
+						relations,
+						communityId: community.id,
+					});
+
+					const returnRepresentation = shouldReturnRepresentation();
+
+					if (!returnRepresentation) {
+						return {
+							status: 204,
+						};
+					}
+
+					const pub = await getPubsWithRelatedValuesAndChildren({
+						pubId: params.pubId as PubsId,
+						communityId: community.id,
+					});
+
+					return {
+						status: 200,
+						body: pub,
+					};
+				},
+			},
 		},
 		pubTypes: {
 			get: async (req) => {
-				await checkAuthorization(ApiAccessScope.pubType, ApiAccessType.read);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
+					// TODO: figure out capability her
+					cookies: false,
+				});
 
 				const pubType = await getPubType(
 					req.params.pubTypeId as PubTypesId
 				).executeTakeFirst();
 
 				if (!pubType) {
-					throw new NotFoundError("No pub type found");
+					throw new NotFoundError(`No pub type found for id ${req.params.pubTypeId}`);
 				}
 
 				return {
@@ -174,10 +514,11 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async (req, args) => {
-				const { community } = await checkAuthorization(
-					ApiAccessScope.pubType,
-					ApiAccessType.read
-				);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
+					// TODO: figure out capability here
+					cookies: false,
+				});
 
 				const pubTypes = await getPubTypesForCommunity(
 					community.id as CommunitiesId,
@@ -191,7 +532,16 @@ const handler = createNextHandler(
 		},
 		stages: {
 			get: async (req) => {
-				await checkAuthorization(ApiAccessScope.stage, ApiAccessType.read);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
+					cookies: {
+						capability: Capabilities.viewStage,
+						target: {
+							type: MembershipType.stage,
+							stageId: req.params.stageId as StagesId,
+						},
+					},
+				});
 				const stage = await getStage(req.params.stageId as StagesId).executeTakeFirst();
 				if (!stage) {
 					throw new NotFoundError("No stage found");
@@ -203,10 +553,10 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async (req, res) => {
-				const { community, authorization } = await checkAuthorization(
-					ApiAccessScope.stage,
-					ApiAccessType.read
-				);
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
+					cookies: false,
+				});
 
 				const stages = await getCommunityStages(community.id).execute();
 				return {

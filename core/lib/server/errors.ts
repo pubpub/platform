@@ -109,6 +109,18 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 		return handleDatabaseErrors(error, req);
 	}
 
+	if (error instanceof NotFoundError) {
+		return TsRestResponse.fromJson(
+			{
+				status: 404,
+				body: { message: error.message },
+			},
+			{
+				status: 404,
+			}
+		);
+	}
+
 	if (error instanceof TsRestHttpError) {
 		return TsRestResponse.fromJson(
 			{
