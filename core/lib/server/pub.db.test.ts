@@ -802,9 +802,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ withStage: true }
 		);
 
-		expectTypeOf(pub).toMatchTypeOf<{ stage: Stages }>();
+		expectTypeOf(pub).toMatchTypeOf<{ stage?: Stages }>();
 
-		expect(pub.stage.name).toBe("Stage 1");
+		expect(pub.stage?.name).toBe("Stage 1");
 	});
 
 	it("should be able to fetch members", async () => {
