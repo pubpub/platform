@@ -13,7 +13,15 @@ export const BasicPagination = (props: {
 	searchParams: Record<string, unknown>;
 	page: number;
 	totalPages: number;
+	/**
+	 * @default true
+	 */
+	hideIfSinglePage?: boolean;
 }) => {
+	if (props.hideIfSinglePage !== false && props.totalPages === 1) {
+		return null;
+	}
+
 	return (
 		<Pagination>
 			<PaginationContent>
@@ -21,7 +29,7 @@ export const BasicPagination = (props: {
 					<PaginationItem>
 						<PaginationPrevious
 							href={{
-								// pathname: props.basePath,
+								pathname: props.basePath,
 								query: { ...props.searchParams, page: props.page - 1 },
 							}}
 						/>
@@ -32,7 +40,7 @@ export const BasicPagination = (props: {
 					<PaginationItem>
 						<PaginationLink
 							href={{
-								// pathname: props.basePath,
+								pathname: props.basePath,
 								query: { ...props.searchParams, page: 1 },
 							}}
 						>
@@ -51,7 +59,7 @@ export const BasicPagination = (props: {
 					<PaginationItem>
 						<PaginationLink
 							href={{
-								// pathname: props.basePath,
+								pathname: props.basePath,
 								query: { ...props.searchParams, page: props.page - 1 },
 							}}
 						>
@@ -63,7 +71,7 @@ export const BasicPagination = (props: {
 				<PaginationItem>
 					<PaginationLink
 						href={{
-							// pathname: props.basePath,
+							pathname: props.basePath,
 							query: { ...props.searchParams, page: props.page },
 						}}
 						isActive
@@ -76,7 +84,7 @@ export const BasicPagination = (props: {
 					<PaginationItem>
 						<PaginationLink
 							href={{
-								// pathname: props.basePath,
+								pathname: props.basePath,
 								query: { ...props.searchParams, page: props.page + 1 },
 							}}
 						>
@@ -95,7 +103,7 @@ export const BasicPagination = (props: {
 					<PaginationItem>
 						<PaginationLink
 							href={{
-								// pathname: props.basePath,
+								pathname: props.basePath,
 								query: { ...props.searchParams, page: props.totalPages },
 							}}
 						>
@@ -108,7 +116,7 @@ export const BasicPagination = (props: {
 					<PaginationItem>
 						<PaginationNext
 							href={{
-								// pathname: props.basePath,
+								pathname: props.basePath,
 								query: { ...props.searchParams, page: props.page + 1 },
 							}}
 						/>

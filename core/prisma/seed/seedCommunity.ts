@@ -12,7 +12,6 @@ import type {
 	ActionInstancesId,
 	Communities,
 	CommunitiesId,
-	CommunityMembershipsId,
 	FormAccessType,
 	FormElements,
 	Forms,
@@ -671,6 +670,13 @@ export async function seedCommunity<
 		 * @default true
 		 */
 		randomSlug?: boolean;
+		/**
+		 * Whether or not to create pubs in parallel.
+		 * It's set to `false` by default as it allows you to reference related pubs, so only use this if you aren't creating interlinked references between pubs.
+		 *
+		 * @default false
+		 */
+		parallelPubs?: boolean;
 	},
 	trx = db
 ) {
@@ -689,7 +695,6 @@ export async function seedCommunity<
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
-	logger.info(`Successfully created community ${community.name}`);
 
 	const { id: communityId, slug: communitySlug } = createdCommunity;
 
@@ -956,12 +961,31 @@ export async function seedCommunity<
 			})
 		: [];
 
-	const createdPubs: Awaited<ReturnType<typeof createPubRecursiveNew>>[] = [];
-	// we do this one at a time because we allow pubs to be able to reference each other in the relatedPubs field
-	for (const input of createPubRecursiveInput) {
-		const pub = await createPubRecursiveNew(input);
-		createdPubs.push(pub);
+	// TODO: this can be simplified a lot by first creating the pubs and children
+	// and then creating their related pubs
+
+	let createdPubs: Awaited<ReturnType<typeof createPubRecursiveNew>>[] = [];
+
+	logger.info(
+		`${createdCommunity.name}: ${options?.parallelPubs ? "Parallelly" : "Sequentially"} - Creating ${createPubRecursiveInput.length} pubs`
+	);
+	if (options?.parallelPubs) {
+		const input = createPubRecursiveInput.map((input) => createPubRecursiveNew({ ...input }));
+
+		setInterval(() => {
+			logger.info(`${createdCommunity.name}: Creating Pubs...`);
+		}, 1000);
+
+		createdPubs = await Promise.all(input);
+	} else {
+		// we do this one at a time because we allow pubs to be able to reference each other in the relatedPubs field
+		for (const input of createPubRecursiveInput) {
+			const pub = await createPubRecursiveNew(input);
+			createdPubs.push(pub);
+		}
 	}
+
+	logger.info(`${createdCommunity.name}: Successfully created pubs`);
 
 	const formList = props.forms ? Object.entries(props.forms) : [];
 	const createdForms =
@@ -1045,6 +1069,9 @@ export async function seedCommunity<
 		? await trx.insertInto("action_instances").values(possibleActions).returningAll().execute()
 		: [];
 
+	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
+
+	logger.info(`${createdCommunity.name}: Successfully seeded community`);
 	return {
 		community: createdCommunity,
 		pubFields: pubFieldsByName,

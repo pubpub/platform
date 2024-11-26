@@ -68,6 +68,8 @@ jobs:
             - name: seed db
               run: pnpm --filter core prisma db seed
               env:
+                  # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
+                  MINIMAL_SEED: true
                   SKIP_VALIDATION: true
                   DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
