@@ -102,11 +102,6 @@ const ManageLinks = ({
 					icon={<img src="/icons/form.svg" alt="" />}
 				/>
 			)}
-			<NavLink
-				href={`${communityPrefix}/integrations`}
-				text="Integrations"
-				icon={<img src="/icons/integration.svg" alt="" />}
-			/>
 			{renderCommunityEditorLinks && (
 				<NavLink
 					href={`${communityPrefix}/members`}

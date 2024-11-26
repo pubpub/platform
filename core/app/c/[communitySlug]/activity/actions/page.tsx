@@ -9,7 +9,6 @@ import { MembershipType } from "db/src/public/MembershipType";
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
 import { pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -42,11 +41,6 @@ export default async function Page({
 		))
 	) {
 		redirect(`/c/${communitySlug}/unauthorized`);
-	}
-
-	const isAdmin = isCommunityAdmin(user, community);
-	if (!isAdmin) {
-		return null;
 	}
 
 	const actionRuns = (await autoCache(

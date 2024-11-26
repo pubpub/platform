@@ -1,7 +1,9 @@
 import dynamic from "next/dynamic";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { ClipboardPenLine } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
@@ -10,6 +12,7 @@ import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -43,13 +46,18 @@ export default async function Page({
 		notFound();
 	}
 
-	const communityStages = await getCommunityStages(community.id).execute();
-
-	if (!isCommunityAdmin(user, { slug: communitySlug })) {
-		return null;
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const communityId = community.id as CommunitiesId;
+	const communityStages = await getCommunityStages(communityId).execute();
 
 	const [form, { fields }] = await Promise.all([
 		getForm({
