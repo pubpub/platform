@@ -80,9 +80,7 @@ export class MembersPage {
 
 		await this.page.getByLabel("Role").click();
 		await this.page.getByLabel(role[0].toUpperCase() + role.slice(1)).click();
-		await this.page.getByRole("button", { name: "Add Member" }).click({
-			timeout: 100,
-		});
+		await this.page.getByRole("button", { name: "Add Member" }).click();
 
 		await this.page.getByText("Member added successfully", { exact: true }).waitFor();
 		await addMemberDialog.waitFor({ state: "hidden" });
