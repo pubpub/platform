@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 
 import React from "react";
+import { notFound, redirect } from "next/navigation";
 import partition from "lodash.partition";
 
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { ClipboardPenLine } from "ui/icon";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { userCan } from "~/lib/authorization/capabilities";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContentLayout } from "../ContentLayout";
 import { FormTable } from "./FormTable";
@@ -28,8 +32,19 @@ export default async function Page({
 }) {
 	const { user } = await getPageLoginData();
 
-	if (!isCommunityAdmin(user, { slug: communitySlug })) {
-		return null;
+	const community = await findCommunityBySlug();
+	if (!community) {
+		notFound();
+	}
+
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const forms = await autoCache(

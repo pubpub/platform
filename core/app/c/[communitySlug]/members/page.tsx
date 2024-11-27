@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { CommunitiesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { userCan } from "~/lib/authorization/capabilities";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { addMember, createUserWithCommunityMembership } from "./actions";
@@ -68,15 +71,18 @@ export default async function Page({
 	}
 
 	const { user } = await getPageLoginData();
-	const isAdmin = isCommunityAdmin(user, community);
 
-	// we don't want to show the members page to non-admins
-	if (!isAdmin) {
-		return null;
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const page = parseInt(searchParams.page ?? "1", 10);
-
 	const members = await getCachedMembers(community.id).execute();
 
 	if (!members.length && page !== 1) {
