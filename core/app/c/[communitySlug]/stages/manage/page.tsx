@@ -2,10 +2,15 @@ import "reactflow/dist/style.css";
 
 import type { Metadata } from "next";
 
+import { redirect } from "next/navigation";
+
 import type { StagesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { LocalStorageProvider } from "ui/hooks";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
@@ -49,6 +54,16 @@ export default async function Page({ params, searchParams }: Props) {
 
 	if (!community) {
 		return null;
+	}
+
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ communityId: community.id, type: MembershipType.community },
+			user.id
+		))
+	) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
 	const stages = await getCommunityStages(community.id).execute();

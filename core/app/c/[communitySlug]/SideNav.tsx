@@ -1,10 +1,12 @@
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
 import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
 import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { userCan } from "~/lib/authorization/capabilities";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
@@ -15,19 +17,16 @@ type Props = {
 };
 
 const Links = ({
-	prefix,
-	isAdmin,
+	communityPrefix,
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	prefix: string;
-	/* Whether the user is an admin */
-	isAdmin?: boolean;
+	communityPrefix: string;
 }) => {
 	return (
 		<>
 			<NavLink
-				href={`${prefix}/pubs`}
+				href={`${communityPrefix}/pubs`}
 				text={"All Pubs"}
 				icon={<img src="/icons/pub.svg" alt="" />}
 			/>
@@ -59,63 +58,61 @@ const ViewLinks = ({
 };
 
 const ManageLinks = ({
-	prefix,
-	isAdmin,
-	isSuperAdmin,
+	communityPrefix,
+	showCommunityEditorLinks,
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	prefix: string;
+	communityPrefix: string;
 	/* Whether the user is an admin */
-	isAdmin?: boolean;
-	/**
-	 * Whether the user is a super admin
-	 */
-	isSuperAdmin?: boolean;
+	showCommunityEditorLinks?: boolean;
 }) => {
 	return (
 		<>
 			<NavLink
-				href={`${prefix}/stages`}
+				href={`${communityPrefix}/stages`}
 				text={"Workflows"}
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
-			{isAdmin && (
+			{showCommunityEditorLinks && (
 				<NavLink
-					href={`${prefix}/stages/manage`}
-					text={"Stage editor"}
+					href={`${communityPrefix}/stages/manage`}
+					text="Stage editor"
 					icon={<RefreshCw size={16} />}
 				/>
 			)}
-			{isAdmin && (
-				<NavLink href={`${prefix}/types`} text={"Types"} icon={<ToyBrick size={16} />} />
-			)}
-			{isAdmin && (
-				<NavLink href={`${prefix}/fields`} text={"Fields"} icon={<FormInput size={16} />} />
-			)}
-			{isAdmin && (
+			{showCommunityEditorLinks && (
 				<NavLink
-					href={`${prefix}/forms`}
-					text={"Forms"}
+					href={`${communityPrefix}/types`}
+					text="Types"
+					icon={<ToyBrick size={16} />}
+				/>
+			)}
+			{showCommunityEditorLinks && (
+				<NavLink
+					href={`${communityPrefix}/fields`}
+					text="Fields"
+					icon={<FormInput size={16} />}
+				/>
+			)}
+			{showCommunityEditorLinks && (
+				<NavLink
+					href={`${communityPrefix}/forms`}
+					text="Forms"
 					icon={<img src="/icons/form.svg" alt="" />}
 				/>
 			)}
-			<NavLink
-				href={`${prefix}/integrations`}
-				text={"Integrations"}
-				icon={<img src="/icons/integration.svg" alt="" />}
-			/>
-			{isAdmin && (
+			{showCommunityEditorLinks && (
 				<NavLink
-					href={`${prefix}/members`}
-					text={"Members"}
+					href={`${communityPrefix}/members`}
+					text="Members"
 					icon={<img src="/icons/members.svg" alt="" />}
 				/>
 			)}
-			{isSuperAdmin && (
+			{showCommunityEditorLinks && (
 				<NavLink
-					href={`${prefix}/settings`}
-					text={"Settings"}
+					href={`${communityPrefix}/settings`}
+					text="Settings"
 					icon={<Settings className="h-4 w-4" />}
 				/>
 			)}
@@ -129,9 +126,15 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 
 	const { user } = await getLoginData();
 
-	const isAdmin = isCommunityAdmin(user, community);
+	if (!user) {
+		return null;
+	}
 
-	const isSuperAdmin = user?.isSuperAdmin;
+	const userCanEditCommunity = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		user.id
+	);
 
 	return (
 		<>
@@ -148,7 +151,7 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 						className="mr-4 flex flex-col justify-between bg-gray-50 pb-8"
 					>
 						<nav className="grid gap-2 pr-6 text-lg font-medium">
-							<Links prefix={prefix} isAdmin={isAdmin} />
+							<Links communityPrefix={prefix} />
 						</nav>
 						<div>
 							<LoginSwitcher />
@@ -174,17 +177,16 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 					<div className="flex h-full max-h-screen flex-col gap-2">
 						<div className="flex-1">
 							<nav className="grid items-start pr-2 pt-2 text-sm font-medium">
-								<Links prefix={prefix} isAdmin={isAdmin} />
+								<Links communityPrefix={prefix} />
 								{divider}
 								<span className="font-semibold text-gray-500">VIEWS</span>
-								<ViewLinks prefix={prefix} isAdmin={isAdmin} />
+								<ViewLinks prefix={prefix} isAdmin={userCanEditCommunity} />
 							</nav>
 							<nav className="grid items-start pr-2 pt-4 text-sm font-medium">
 								<span className="font-semibold text-gray-500">MANAGE</span>
 								<ManageLinks
-									prefix={prefix}
-									isAdmin={isAdmin}
-									isSuperAdmin={isSuperAdmin}
+									communityPrefix={prefix}
+									showCommunityEditorLinks={userCanEditCommunity}
 								/>
 							</nav>
 						</div>
