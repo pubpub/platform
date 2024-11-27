@@ -47,13 +47,11 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 
 export const updatePub = defineServerAction(async function updatePub({
 	pubId,
-	pubTypeId,
 	pubValues,
 	stageId,
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
-	pubTypeId?: PubTypesId;
 	pubValues: PubValues;
 	stageId?: StagesId;
 	continueOnValidationError: boolean;

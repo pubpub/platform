@@ -4,7 +4,7 @@ import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId, PubFieldsId, PubTypesId, StagesId } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType } from "db/public";
 
 import { db } from "~/kysely/database";
 import { env } from "../../lib/env/env.mjs";
@@ -18,7 +18,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			id: communityUUID,
 			name: "Unjournal",
 			slug: "unjournal",
-			avatar: "/demo/unjournal.png",
+			avatar: env.PUBPUB_URL + "/demo/unjournal.png",
 		},
 	});
 

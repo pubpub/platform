@@ -243,17 +243,12 @@ describe("seedCommunity", () => {
 						relatedPubId: authorPubId,
 						value: 0,
 					},
-				],
-				valuesBlob: null,
-				stageId: seededCommunity.stages["Stage 1"].id,
-				relatedPubs: [
 					{
 						value: 1,
 						relatedPub: {
 							pubTypeId: seededCommunity.pubTypes["Author"].id,
 						},
 					},
-
 					{
 						value: 2,
 						relatedPub: {
@@ -263,6 +258,8 @@ describe("seedCommunity", () => {
 						},
 					},
 				],
+				valuesBlob: null,
+				stageId: seededCommunity.stages["Stage 1"].id,
 			},
 			{ id: author2PubId },
 		]);

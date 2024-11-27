@@ -66,8 +66,18 @@ async function createUserMembers({
 async function main() {
 	const arcadiaId = crypto.randomUUID() as CommunitiesId;
 	const croccrocId = crypto.randomUUID() as CommunitiesId;
+	// do not seed arcadia if the minimal seed flag is set
+	// this is because it will slow down ci/testing
+	// this flag is set in the `globalSetup.ts` file
+	// and in e2e.yml
+	// eslint-disable-next-line no-restricted-properties
+	const shouldSeedArcadia = !Boolean(process.env.MINIMAL_SEED);
 
-	const prismaCommunityIds = [unJournalId, croccrocId, arcadiaId];
+	const prismaCommunityIds = [
+		unJournalId,
+		croccrocId,
+		shouldSeedArcadia ? arcadiaId : null,
+	].filter(Boolean) as CommunitiesId[];
 
 	logger.info("migrate graphile");
 	const workerUtils = await makeWorkerUtils({
@@ -75,55 +85,54 @@ async function main() {
 	});
 	await workerUtils.migrate();
 
-	logger.info("build unjournal");
+	const arcadiaPromise = shouldSeedArcadia ? seedArcadia(arcadiaId) : null;
+
 	await Promise.all([
 		buildUnjournal(prisma, unJournalId),
 		seedCroccroc(croccrocId),
-		seedArcadia(arcadiaId),
+		arcadiaPromise,
 	]);
 
-	try {
-		await Promise.all([
-			createUserMembers({
-				email: "all@pubpub.org",
-				password: "pubpub-all",
-				slug: "all",
-				firstName: "Jill",
-				lastName: "Admin",
-				isSuperAdmin: true,
-				role: MemberRole.admin,
-				prismaCommunityIds,
-			}),
+	await Promise.all([
+		createUserMembers({
+			email: "all@pubpub.org",
+			password: "pubpub-all",
+			slug: "all",
+			firstName: "Jill",
+			lastName: "Admin",
+			isSuperAdmin: true,
+			role: MemberRole.admin,
+			prismaCommunityIds,
+		}),
 
-			createUserMembers({
-				email: "some@pubpub.org",
-				password: "pubpub-some",
-				slug: "some",
-				firstName: "Jack",
-				lastName: "Editor",
-				isSuperAdmin: false,
-				role: MemberRole.editor,
-				prismaCommunityIds,
-			}),
+		createUserMembers({
+			email: "some@pubpub.org",
+			password: "pubpub-some",
+			slug: "some",
+			firstName: "Jack",
+			lastName: "Editor",
+			isSuperAdmin: false,
+			role: MemberRole.editor,
+			prismaCommunityIds,
+		}),
 
-			createUserMembers({
-				email: "none@pubpub.org",
-				password: "pubpub-none",
-				slug: "none",
-				firstName: "Jenna",
-				lastName: "Contributor",
-				isSuperAdmin: false,
-				role: MemberRole.contributor,
-				prismaCommunityIds,
-			}),
-		]);
-	} catch (error) {
-		logger.error(error);
-	}
+		createUserMembers({
+			email: "none@pubpub.org",
+			password: "pubpub-none",
+			slug: "none",
+			firstName: "Jenna",
+			lastName: "Contributor",
+			isSuperAdmin: false,
+			role: MemberRole.contributor,
+			prismaCommunityIds,
+		}),
+	]);
 }
 main()
 	.then(async () => {
 		await prisma.$disconnect();
+		logger.info("Finished seeding, exiting...");
+		process.exit(0);
 	})
 	.catch(async (e) => {
 		if (!isUniqueConstraintError(e)) {

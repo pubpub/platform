@@ -107,6 +107,7 @@ export const mockServerCode = async () => {
 	vi.mock("react", () => {
 		return {
 			cache: (fn: any) => fn,
+			forwardRef: (fn: any) => fn,
 		};
 	});
 

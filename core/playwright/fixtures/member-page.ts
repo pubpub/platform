@@ -22,6 +22,13 @@ export class MembersPage {
 		await this.page.getByPlaceholder("Search table by email").fill(email);
 	}
 
+	async openAddMemberDialog() {
+		await this.page.getByText(/Add Member/).click();
+		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
+		await addMemberDialog.waitFor();
+		return addMemberDialog;
+	}
+
 	async addNewUser(
 		email = faker.internet.email(),
 		{
@@ -41,9 +48,7 @@ export class MembersPage {
 			role: MemberRole.editor,
 		}
 	) {
-		// await this.page.goto(`/c/${this.communitySlug}/members/add`);
-		await this.page.getByText(/Add Member/).click();
-		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
+		const addMemberDialog = await this.openAddMemberDialog();
 		await addMemberDialog.getByLabel("Email").fill(email);
 
 		await this.page.locator('input[name="firstName"]').fill(firstName);
@@ -70,16 +75,12 @@ export class MembersPage {
 	}
 
 	async addExistingUser(email: string, role = MemberRole.editor) {
-		await this.page.goto(`/c/${this.communitySlug}/members/add`);
-		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
-
+		const addMemberDialog = await this.openAddMemberDialog();
 		await addMemberDialog.getByLabel("Email").fill(email);
 
 		await this.page.getByLabel("Role").click();
 		await this.page.getByLabel(role[0].toUpperCase() + role.slice(1)).click();
-		await this.page.getByRole("button", { name: "Add Member" }).click({
-			timeout: 100,
-		});
+		await this.page.getByRole("button", { name: "Add Member" }).click();
 
 		await this.page.getByText("Member added successfully", { exact: true }).waitFor();
 		await addMemberDialog.waitFor({ state: "hidden" });

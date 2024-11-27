@@ -4,6 +4,7 @@ import { renderAsync } from "@react-email/render";
 import { PasswordReset, RequestLinkToForm, SignupInvite } from "emails";
 
 import type { Communities, MemberRole, Users } from "db/public";
+import type { MembershipType } from "db/src/public/MembershipType";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
@@ -117,14 +118,17 @@ export function signupInvite(
 		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">;
 		community: Pick<Communities, "name" | "avatar" | "slug">;
 		role: MemberRole;
+		membership: { type: MembershipType; name: string };
 	},
 	trx = db
 ) {
+	const expiresAt = new Date();
+	expiresAt.setDate(expiresAt.getDate() + 7);
 	return buildSend(async () => {
 		const magicLink = await createMagicLink(
 			{
 				type: AuthTokenType.signup,
-				expiresAt: new Date(Date.now() + FIFTEEN_MINUTES),
+				expiresAt,
 				path: `/signup?redirectTo=${encodeURIComponent(
 					`/c/${props.community.slug}/stages`
 				)}`,
@@ -138,6 +142,7 @@ export function signupInvite(
 				community: props.community,
 				signupLink: magicLink,
 				role: props.role,
+				membership: props.membership,
 			})
 		);
 
