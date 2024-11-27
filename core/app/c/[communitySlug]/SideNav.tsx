@@ -59,7 +59,7 @@ const ViewLinks = ({
 
 const ManageLinks = ({
 	communityPrefix,
-	showCommunityEditorLinks: renderCommunityEditorLinks,
+	showCommunityEditorLinks,
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
@@ -74,42 +74,42 @@ const ManageLinks = ({
 				text={"Workflows"}
 				icon={<img src="/icons/stages.svg" alt="" />}
 			/>
-			{renderCommunityEditorLinks && (
+			{showCommunityEditorLinks && (
 				<NavLink
 					href={`${communityPrefix}/stages/manage`}
 					text="Stage editor"
 					icon={<RefreshCw size={16} />}
 				/>
 			)}
-			{renderCommunityEditorLinks && (
+			{showCommunityEditorLinks && (
 				<NavLink
 					href={`${communityPrefix}/types`}
 					text="Types"
 					icon={<ToyBrick size={16} />}
 				/>
 			)}
-			{renderCommunityEditorLinks && (
+			{showCommunityEditorLinks && (
 				<NavLink
 					href={`${communityPrefix}/fields`}
 					text="Fields"
 					icon={<FormInput size={16} />}
 				/>
 			)}
-			{renderCommunityEditorLinks && (
+			{showCommunityEditorLinks && (
 				<NavLink
 					href={`${communityPrefix}/forms`}
 					text="Forms"
 					icon={<img src="/icons/form.svg" alt="" />}
 				/>
 			)}
-			{renderCommunityEditorLinks && (
+			{showCommunityEditorLinks && (
 				<NavLink
 					href={`${communityPrefix}/members`}
 					text="Members"
 					icon={<img src="/icons/members.svg" alt="" />}
 				/>
 			)}
-			{renderCommunityEditorLinks && (
+			{showCommunityEditorLinks && (
 				<NavLink
 					href={`${communityPrefix}/settings`}
 					text="Settings"
