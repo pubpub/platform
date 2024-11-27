@@ -73,6 +73,12 @@ module "service_core" {
     ]
   }]
 
+  resources = {
+    cpu = 1024
+    memory = 2048
+    desired_count = 1
+  }
+
   configuration = {
     container_port = 3000
     environment = [
