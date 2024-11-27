@@ -271,12 +271,10 @@ export default async function Page({
 					parentPubId={pub.id}
 				/>
 			</Suspense>
-			{relatedPubs ? (
-				<div>
-					<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
-					<RelatedPubsTable pub={pub} />
-				</div>
-			) : null}
+			<div>
+				<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+				<RelatedPubsTable pub={pub} />
+			</div>
 		</div>
 	);
 }

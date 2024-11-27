@@ -13,7 +13,7 @@ import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-import { DataTable } from "~/app/components/DataTable/v2/DataTable";
+import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubTitle } from "~/lib/pubs";
 import { createdAtDateOptions } from "./getPubChildrenTableColumns";
 
@@ -99,7 +99,7 @@ const getRelatedPubsColumns = () => {
 const Table = ({ pubs }: { pubs: FullProcessedPub[] }) => {
 	const columns = getRelatedPubsColumns();
 
-	return <DataTable columns={columns} data={pubs} />;
+	return <DataTable columns={columns} data={pubs} hidePaginationWhenSinglePage />;
 };
 
 export const RelatedPubsTable = ({ pub }: { pub: FullProcessedPub }) => {
@@ -123,7 +123,11 @@ export const RelatedPubsTable = ({ pub }: { pub: FullProcessedPub }) => {
 		count: value.length,
 	}));
 
-	const [selected, setSelected] = useState(fields[0].slug);
+	const [selected, setSelected] = useState(fields[0]?.slug);
+
+	if (fields.length === 0) {
+		return <Table pubs={[]} />;
+	}
 
 	return (
 		<div>
