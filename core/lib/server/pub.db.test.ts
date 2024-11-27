@@ -802,7 +802,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ withStage: true }
 		);
 
-		expectTypeOf(pub).toMatchTypeOf<{ stage?: Stages }>();
+		expectTypeOf(pub).toMatchTypeOf<{ stage: Stages | null }>();
 
 		expect(pub.stage?.name).toBe("Stage 1");
 	});
@@ -834,10 +834,13 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
-		const pub = await getPubsWithRelatedValuesAndChildren({ pubId }, { withMembers: true });
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId, communityId: community.id },
+			{ withMembers: true }
+		);
 
 		expect(pub).toMatchObject({
-			members: users,
+			members: users.map((u) => ({ ...u, role: MemberRole.admin })),
 		});
 	});
 });
