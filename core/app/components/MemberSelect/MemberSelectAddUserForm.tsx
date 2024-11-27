@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
 
-import { createUserWithMembership } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
+import { createUserWithCommunityMembership } from "~/app/c/[communitySlug]/members/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 type Props = {
@@ -30,7 +30,7 @@ const addUserFormSchema = z.object({
 
 export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 	const [isPending, startTransition] = useTransition();
-	const runCreateUserWithMembership = useServerAction(createUserWithMembership);
+	const runCreateUserWithMembership = useServerAction(createUserWithCommunityMembership);
 
 	const form = useForm<z.infer<typeof addUserFormSchema>>({
 		resolver: zodResolver(addUserFormSchema),

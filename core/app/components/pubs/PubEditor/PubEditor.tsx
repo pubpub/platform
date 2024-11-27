@@ -160,7 +160,7 @@ export async function PubEditor(props: PubEditorProps) {
 
 	const editor = (
 		<ContextEditorContextProvider
-			pubId={pub?.id}
+			pubId={pubId}
 			pubTypeId={pubType.id}
 			pubs={pubs}
 			pubTypes={pubTypes}

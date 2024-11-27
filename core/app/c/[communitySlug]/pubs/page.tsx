@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 
-import type { UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
-
 import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { createToken } from "~/lib/server/token";
 import { PubHeader } from "./PubHeader";
-import PubList from "./PubList";
+import { PaginatedPubList } from "./PubList";
 
 export const metadata: Metadata = {
 	title: "Pubs",
@@ -17,7 +13,7 @@ export const metadata: Metadata = {
 
 type Props = {
 	params: { communitySlug: string };
-	searchParams: Record<string, string | string[] | undefined>;
+	searchParams: Record<string, string | string[] | undefined> & { page?: string };
 };
 
 export default async function Page({ params, searchParams }: Props) {
@@ -29,15 +25,24 @@ export default async function Page({ params, searchParams }: Props) {
 		return null;
 	}
 
-	const tokenPromise = createToken({
-		userId: user.id as UsersId,
-		type: AuthTokenType.generic,
-	});
+	const page = searchParams.page ? parseInt(searchParams.page) : 1;
+
+	// const tokenPromise = createToken({
+	// 	userId: user.id as UsersId,
+	// 	type: AuthTokenType.generic,
+	// });
+
+	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
 		<>
 			<PubHeader />
-			<PubList communityId={community.id} token={tokenPromise} />
+			<PaginatedPubList
+				communityId={community.id}
+				searchParams={searchParams}
+				page={page}
+				basePath={basePath}
+			/>
 			<PubEditorDialog searchParams={searchParams} />
 			<ActionRunDialog pageContext={{ searchParams, params }} />
 		</>

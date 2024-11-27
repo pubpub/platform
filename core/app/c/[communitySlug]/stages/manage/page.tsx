@@ -46,7 +46,7 @@ export async function generateMetadata({
 }
 
 export default async function Page({ params, searchParams }: Props) {
-	await getPageLoginData();
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug();
 
 	if (!community) {
@@ -72,6 +72,7 @@ export default async function Page({ params, searchParams }: Props) {
 									<StagePanel
 										stageId={searchParams.editingStageId as StagesId}
 										pageContext={pageContext}
+										user={user}
 									/>
 								)}
 							</div>

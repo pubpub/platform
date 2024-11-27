@@ -29,7 +29,7 @@ export const ContextEditorClient = ({
 }: {
 	pubs: GetPubsResult;
 	pubTypes: GetPubTypesResult;
-	pubId?: PubsId;
+	pubId: PubsId;
 	pubTypeId: PubTypesId;
 	// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
 } & Pick<ContextEditorProps, "onChange" | "initialDoc" | "className" | "disabled">) => {
@@ -45,7 +45,7 @@ export const ContextEditorClient = ({
 	const memoEditor = useMemo(() => {
 		return (
 			<ContextEditor
-				pubId={pubId ?? ""} // fix?
+				pubId={pubId}
 				pubTypeId={pubTypeId}
 				pubTypes={pubTypes}
 				getPubs={getPubs}

@@ -1,4 +1,4 @@
-import type { IntegrationInstanceState, User } from "@prisma/client";
+import type { IntegrationInstanceState, User as UnsafeUser } from "@prisma/client";
 import type { InputJsonValue } from "@prisma/client/runtime/library";
 
 import { Prisma } from "@prisma/client";
@@ -13,6 +13,8 @@ import { ForbiddenError, NotFoundError } from "./errors";
 
 const InstanceNotFoundError = new NotFoundError("Integration instance not found");
 const PubFieldSlugsNotFoundError = new NotFoundError("Pub fields not found");
+
+export type User = Omit<UnsafeUser, "passwordHash">;
 
 export async function findOrCreateUser(userId: string): Promise<User>;
 export async function findOrCreateUser(

@@ -2,12 +2,12 @@
 
 import type { z } from "zod";
 
-import { useCallback, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { skipToken } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { useDebouncedCallback } from "use-debounce";
 
+import type { NewUsers, UsersId } from "db/public";
 import { MemberRole } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
@@ -27,48 +27,69 @@ import { Input } from "ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
 
-import type { MemberFormState } from "./AddMember";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import { client } from "~/lib/api";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
 export const MemberInviteForm = ({
-	state,
-	email,
+	existingMembers,
 	isSuperAdmin,
+	addMember,
+	addUserMember,
+	closeForm,
 }: {
-	state: MemberFormState;
-	email?: string;
+	existingMembers: UsersId[];
 	isSuperAdmin?: boolean;
+	addMember: ({ userId, role }: { userId: UsersId; role: MemberRole }) => Promise<unknown>;
+	addUserMember: ({
+		email,
+		firstName,
+		lastName,
+		isSuperAdmin,
+		role,
+	}: Omit<NewUsers, "slug"> & { role: MemberRole }) => Promise<unknown>;
+	closeForm: () => void;
 }) => {
 	const community = useCommunity();
 
-	const runCreateUserWithMembership = useServerAction(actions.createUserWithMembership);
-	const runAddMember = useServerAction(actions.addMember);
-	const [isPending, startTransition] = useTransition();
-	const router = useRouter();
+	const runCreateUserWithMembership = useServerAction(addUserMember);
+	const runAddMember = useServerAction(addMember);
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
 		defaultValues: {
-			email: email,
 			role: MemberRole.editor,
 			isSuperAdmin: false,
 		},
+		mode: "onChange",
 	});
+	const email = form.watch("email");
+	const emailState = form.getFieldState("email", form.formState);
+	const query = { email, limit: 1, communityId: community.id };
+	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember");
+	const { data: userSuggestions, status } = client.users.search.useQuery({
+		queryKey: ["searchUsers", query, community.slug],
+		queryData: shouldSearch ? { query, params: { communitySlug: community.slug } } : skipToken,
+	});
+	const user = userSuggestions?.body?.[0];
+	const isPending = email && !emailState.invalid && status === "pending";
 
-	const closeForm = useCallback(
-		() => router.push(window.location.pathname!.replace(/\/add.*/, "")),
-		[]
+	const userIsAlreadyMember = useMemo(
+		() => user && existingMembers.includes(user.id),
+		[user, existingMembers]
 	);
+	useEffect(() => {
+		if (userIsAlreadyMember) {
+			form.setError("email", {
+				type: "alreadyMember",
+				message: "This user is already a member",
+			});
+		}
+	}, [userIsAlreadyMember, form.setError]);
 
 	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
-		if (state.state === "initial") {
-			return;
-		}
-
-		if (state.state === "user-not-found") {
+		if (!user) {
 			// we manually do this check instead of letting zod do it
 			// bc otherwis we need to either dynamically change the schema
 			// or pass the state to the schema/form
@@ -82,8 +103,8 @@ export const MemberInviteForm = ({
 
 			const result = await runCreateUserWithMembership({
 				email: data.email,
-				firstName: data.firstName!,
-				lastName: data.lastName!,
+				firstName: data.firstName,
+				lastName: data.lastName,
 				role: data.role,
 				isSuperAdmin: data.isSuperAdmin,
 			});
@@ -100,7 +121,7 @@ export const MemberInviteForm = ({
 		}
 
 		const result = await runAddMember({
-			user: state.user,
+			userId: user.id,
 			role: data.role,
 		});
 
@@ -110,33 +131,9 @@ export const MemberInviteForm = ({
 				description: "Member added successfully",
 			});
 
-			// navigate away from the add page to the normal member page
 			closeForm();
 		}
 	}
-
-	const debouncedEmailCheck = useDebouncedCallback(async (email: string) => {
-		// this is how we make the higher up server component fetch the user again
-		router.replace(
-			window.location.pathname + "?" + new URLSearchParams({ email }).toString(),
-			{}
-		);
-	}, 500);
-
-	// we only want to update the state when the user or email changes, which
-	// is after the email check has been debounced AND the user has been fetched
-	// from the higher up server component
-	useEffect(() => {
-		if (!state.error) {
-			form.clearErrors("email");
-			return;
-		}
-
-		form.setError("email", {
-			type: "manual",
-			message: state.error,
-		});
-	}, [state.error, state.state]);
 
 	return (
 		<Form {...form}>
@@ -150,29 +147,19 @@ export const MemberInviteForm = ({
 
 							<div className="flex items-center gap-x-2">
 								<FormControl>
-									<Input
-										type="email"
-										{...field}
-										onChange={(e) => {
-											field.onChange(e);
-											// call(e);
-											startTransition(async () => {
-												await debouncedEmailCheck(e.target.value);
-											});
-										}}
-									/>
+									<Input type="email" {...field} />
 								</FormControl>
 								{isPending && <Loader2 className="h-4 w-4 animate-spin" />}
 							</div>
-							{state.state === "initial" ? (
+							{!email || emailState.invalid ? (
 								<FormDescription>
-									Enter the email address of the person you'd like to invite to
-									the {community.name} community
+									Enter the email address of the person you'd like to add as a
+									member.
 								</FormDescription>
-							) : state.state === "user-not-found" ? (
+							) : !user ? (
 								<FormDescription>
 									This email is not yet associated with an account. You can still
-									invite them to join this community.
+									add them as a member.
 								</FormDescription>
 							) : null}
 
@@ -180,7 +167,7 @@ export const MemberInviteForm = ({
 						</FormItem>
 					)}
 				/>
-				{state.state === "user-not-found" && (
+				{!user && emailState.isDirty && (
 					<>
 						<FormField
 							name="firstName"
@@ -227,7 +214,7 @@ export const MemberInviteForm = ({
 						)}
 					</>
 				)}
-				{state.state !== "initial" && (
+				{email && !emailState.invalid && (
 					<FormField
 						control={form.control}
 						name="role"
@@ -251,7 +238,7 @@ export const MemberInviteForm = ({
 								<FormDescription>
 									Select the role for this user.
 									<ul className="list-inside list-disc">
-										<li> Admins can do anything.</li>
+										<li>Admins can do anything.</li>
 										<li>Editors are able to edit most things</li>
 										<li>
 											Contributors are only able to see forms and other public
@@ -264,33 +251,33 @@ export const MemberInviteForm = ({
 						)}
 					/>
 				)}
-				{state.state === "user-found" && (
+				{user && (
 					<Card>
 						<CardContent className="flex items-center gap-x-4 p-4">
 							<Avatar>
 								<AvatarImage
-									src={state.user.avatar ?? undefined}
-									alt={`${state.user.firstName} ${state.user.lastName}`}
+									src={user.avatar ?? undefined}
+									alt={`${user.firstName} ${user.lastName}`}
 								/>
 								<AvatarFallback>
-									{state.user.firstName[0]}
-									{state.user?.lastName?.[0] ?? ""}
+									{user.firstName[0]}
+									{user?.lastName?.[0] ?? ""}
 								</AvatarFallback>
 							</Avatar>
 							<div className="flex flex-col gap-2">
 								<span>
-									{state.user.firstName} {state.user.lastName}
+									{user.firstName} {user.lastName}
 								</span>
-								<span>{form.getValues().email}</span>
+								<span>{email}</span>
 							</div>
 						</CardContent>
 					</Card>
 				)}
-				{state.state !== "initial" && (
+				{email && !emailState.invalid && (
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting ? (
 							<Loader2 className="h-4 w-4 animate-spin" />
-						) : state.state === "user-not-found" ? (
+						) : !user ? (
 							<span className="flex items-center gap-x-2">
 								<Mail size="16" /> Invite
 							</span>

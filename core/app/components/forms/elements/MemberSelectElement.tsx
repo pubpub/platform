@@ -5,8 +5,7 @@ import { memberSelectConfigSchema } from "schemas";
 
 import type { CommunityMembershipsId } from "db/public";
 
-import { db } from "~/kysely/database";
-import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { MemberSelectServer } from "../../MemberSelect/MemberSelectServer";
 
 export const MemberSelectElement = async ({
@@ -24,9 +23,10 @@ export const MemberSelectElement = async ({
 	communitySlug: string;
 	config: any;
 }) => {
-	const community = await autoCache(
-		db.selectFrom("communities").selectAll().where("slug", "=", communitySlug)
-	).executeTakeFirstOrThrow();
+	const community = await findCommunityBySlug(communitySlug);
+	if (!community) {
+		return null;
+	}
 	const queryParamName = `user-${id.split("-").pop()}`;
 	const query = searchParams?.[queryParamName] as string | undefined;
 

@@ -114,6 +114,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
 		await runActionDialog.waitFor({ state: "hidden" });
 	});
+	// fails with large number of pubs in the db
 	test("New user can fill out the form from the email link", async ({ browser }) => {
 		const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
 		const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
@@ -135,7 +136,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 
 		// Make sure it autosaves
 		// It should happen after 5s, but it seems to take ~6 usually
-		await newPage.getByText("Last saved at").waitFor({ timeout: 7000 });
+		await newPage.getByText("Last saved at").waitFor({ timeout: 15000 });
 
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 

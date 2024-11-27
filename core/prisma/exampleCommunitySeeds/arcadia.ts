@@ -1,9 +1,137 @@
+import { faker } from "@faker-js/faker";
+
 import type { CommunitiesId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
 import { seedCommunity } from "../seed/seedCommunity";
 
 export const seedArcadia = (communityId?: CommunitiesId) => {
+	const articleSeed = (number = 1_000, asRelation = false) =>
+		Array.from({ length: number }, (_, idx) => {
+			const pub = {
+				pubType: "Journal Article",
+				stage: "Articles",
+				values: {
+					Title: faker.lorem.sentence(),
+					"Publication Date": new Date(Date.now() - idx * 1000 * 60 * 60 * 24),
+					"Creation Date": new Date(Date.now() - idx * 1000 * 60 * 60 * 24),
+					"Last Edited": new Date(Date.now() - idx * 1000 * 60 * 60 * 24),
+					Avatar: faker.image.url(),
+					Description: faker.lorem.paragraph(),
+					Abstract: faker.lorem.paragraphs(2),
+					License: "CC-BY 4.0",
+					PubContent: "Some content",
+					DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+					"Inline Citation Style": "Author Year",
+					"Citation Style": "APA 7",
+				},
+				// the relevant pubs are implemented as both children
+				// and related pubs for demonstration purposes
+				relatedPubs: {
+					// connections in Legacy
+					// all of the below are also added as children to make it easier to see them in the ui as of OCt 22
+					Contributors: [
+						{
+							value: "Editing & Draft Preparation",
+							alsoAsChild: true,
+							pub: {
+								pubType: "Author",
+								values: {
+									Name: faker.person.fullName(),
+									ORCiD: "https://orcid.org/0000-0000-0000-0000",
+									Affiliation: "University of Somewhere",
+								},
+							},
+						},
+					],
+					Downloads: [
+						{
+							// acting as a description of the download
+							value: "PDF Download",
+							alsoAsChild: true,
+							pub: {
+								pubType: "PDF Download",
+								// can't really add the actual file here
+								values: {},
+							},
+						},
+					],
+					Tables: [
+						{
+							value: null,
+							alsoAsChild: true,
+							pub: {
+								pubType: "Table",
+								values: {
+									Caption: "A beautiful table, about things.",
+									CSV: [],
+								},
+							},
+						},
+						{
+							value: null,
+							alsoAsChild: true,
+							pub: {
+								pubType: "Table",
+								values: {
+									Caption: "A table, about things.",
+									CSV: [],
+								},
+							},
+						},
+					],
+					Images: [
+						{
+							value: null,
+							alsoAsChild: true,
+							pub: {
+								pubType: "Pub Image",
+								values: {
+									Caption: "A beautiful image, about things.",
+								},
+							},
+						},
+					],
+					Citations: [
+						{
+							value: "Chapter 5",
+							alsoAsChild: true,
+							pub: {
+								pubType: "ExternalBook",
+								values: {
+									Title: "A Great Book",
+									DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+									Year: "2022",
+								},
+							},
+						},
+						{
+							value: "pp. 35-53",
+							alsoAsChild: true,
+							pub: {
+								pubType: "ExternalJournalArticle",
+								values: {
+									Title: "A Great Journal Article",
+									DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+									Year: "2022",
+								},
+							},
+						},
+					],
+				},
+			};
+
+			if (!asRelation) {
+				return pub;
+			}
+
+			return {
+				value: null,
+				alsoAsChild: true,
+				pub,
+			};
+		}) as any;
+
 	return seedCommunity(
 		{
 			community: {
@@ -548,6 +676,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																	},
 																},
 															},
+															...articleSeed(100, true),
 														],
 													},
 												},
@@ -564,6 +693,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 		},
 		{
 			randomSlug: false,
+			withApiToken: "xxxxxxxxxxxxxxxx.00000000-0000-0000-0000-000000000000",
+			parallelPubs: true,
 		}
 	);
 };

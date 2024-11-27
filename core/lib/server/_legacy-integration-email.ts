@@ -1,4 +1,4 @@
-import type { Prisma, User } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 import { Eta } from "eta";
 
@@ -6,7 +6,7 @@ import type { SendEmailRequestBody } from "contracts";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
-import type { IntegrationAction } from "./_legacy-integration-queries";
+import type { IntegrationAction, User } from "./_legacy-integration-queries";
 import prisma from "~/prisma/db";
 import { pubValuesInclude } from "./_legacy-integration-queries";
 import { BadRequestError, NotFoundError } from "./errors";

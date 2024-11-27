@@ -4,23 +4,17 @@ import { cache } from "react";
 
 import type { UsersId } from "db/public";
 import { MemberRole } from "db/public";
+import { MembershipType } from "db/src/public/MembershipType";
 
 import type { TableMember } from "./getMemberTableColumns";
-import type { UserWithMember } from "~/lib/types";
-import { db } from "~/kysely/database";
+import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import * as Email from "~/lib/server/email";
-import {
-	inviteMember as dbAddMember,
-	getMember as dbGetMember,
-	removeMember as dbRemoveMember,
-} from "~/lib/server/member";
-import { addUser } from "~/lib/server/user";
-import { generateHash, slugifyString } from "~/lib/string";
-import { memberInviteFormSchema } from "./memberInviteFormSchema";
+import { deleteCommunityMember, insertCommunityMember } from "~/lib/server/member";
+import { createUserWithMembership } from "~/lib/server/user";
 
 const isCommunityAdmin = cache(async () => {
 	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
@@ -59,11 +53,11 @@ const isCommunityAdmin = cache(async () => {
  *   error occurs.
  */
 export const addMember = defineServerAction(async function addMember({
-	user,
+	userId,
 	role,
 }: {
-	user: UserWithMember;
-	role?: MemberRole;
+	userId: UsersId;
+	role: MemberRole;
 }) {
 	const result = await isCommunityAdmin();
 	if (result.error !== null) {
@@ -74,22 +68,10 @@ export const addMember = defineServerAction(async function addMember({
 	}
 
 	try {
-		const existingMember = await dbGetMember({
-			userId: user.id as UsersId,
+		const member = await insertCommunityMember({
+			userId,
 			communityId: result.community.id,
-		}).executeTakeFirst();
-
-		if (existingMember) {
-			return {
-				title: "Failed to add member",
-				error: "User is already a member of this community",
-			};
-		}
-
-		const member = await dbAddMember({
-			userId: user.id as UsersId,
-			communityId: result.community.id,
-			role: role ?? MemberRole.editor,
+			role,
 		}).executeTakeFirst();
 
 		// TODO: send email to user confirming their membership,
@@ -97,6 +79,12 @@ export const addMember = defineServerAction(async function addMember({
 
 		return { member };
 	} catch (error) {
+		if (isUniqueConstraintError(error)) {
+			return {
+				title: "Failed to add member",
+				error: "User is already a member of this community",
+			};
+		}
 		return {
 			title: "Failed to add member",
 			error: "An unexpected error occurred",
@@ -108,95 +96,41 @@ export const addMember = defineServerAction(async function addMember({
 /**
  * Create a new user and add them as a member to a community
  */
-export const createUserWithMembership = defineServerAction(async function createUserWithMembership({
-	...data
-}: {
-	firstName: string;
-	lastName?: string | null;
-	email: string;
-	/**
-	 * @default MemberRole.editor
-	 */
-	role?: MemberRole;
-	isSuperAdmin?: boolean;
-}) {
-	const parsed = memberInviteFormSchema
-		.required({ firstName: true, lastName: true })
-		.safeParse(data);
+export const createUserWithCommunityMembership = defineServerAction(
+	async function createUserWithCommunityMembership({
+		...data
+	}: {
+		firstName: string;
+		lastName?: string | null;
+		email: string;
+		role: MemberRole;
+		isSuperAdmin?: boolean;
+	}) {
+		const parsed = memberInviteFormSchema
+			.required({ firstName: true, lastName: true })
+			.safeParse(data);
 
-	if (!parsed.success) {
-		return {
-			title: "Form values are invalid",
-			error: parsed.error.message,
-		};
-	}
-
-	const { firstName, lastName, email, role: maybeRole, isSuperAdmin } = parsed.data;
-
-	const role = maybeRole ?? MemberRole.editor;
-
-	try {
-		const { error: adminError, user, community } = await isCommunityAdmin();
-		if (!user?.isSuperAdmin && isSuperAdmin) {
+		if (!parsed.success) {
 			return {
-				title: "Failed to add member",
-				error: "You cannot add members as super admins",
+				title: "Form values are invalid",
+				error: parsed.error.message,
 			};
 		}
 
-		if (adminError !== null) {
+		try {
+			return await createUserWithMembership({
+				...parsed.data,
+				membership: { type: MembershipType.community, role: data.role },
+			});
+		} catch (error) {
 			return {
 				title: "Failed to add member",
-				error: "You do not have permission to invite members to this community",
+				error: "An unexpected error occurred",
+				cause: error,
 			};
 		}
-
-		const trx = db.transaction();
-
-		const inviteUserResult = await trx.execute(async (trx) => {
-			const newUser = await addUser(
-				{
-					email,
-					firstName,
-					lastName,
-					slug: `${slugifyString(firstName)}${
-						lastName ? `-${slugifyString(lastName)}` : ""
-					}-${generateHash(4, "0123456789")}`,
-					isSuperAdmin: isSuperAdmin === true,
-				},
-				trx
-			).executeTakeFirstOrThrow();
-
-			const member = await dbAddMember(
-				{
-					userId: newUser.id,
-					communityId: community.id,
-					role: role,
-				},
-				trx
-			).executeTakeFirstOrThrow();
-
-			const result = await Email.signupInvite(
-				{
-					user: newUser,
-					community,
-					role: member.role,
-				},
-				trx
-			).send();
-
-			return result;
-		});
-
-		return inviteUserResult;
-	} catch (error) {
-		return {
-			title: "Failed to add member",
-			error: "An unexpected error occurred",
-			cause: error,
-		};
 	}
-});
+);
 
 export const removeMember = defineServerAction(async function removeMember({
 	member,
@@ -220,7 +154,7 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		const removedMember = await dbRemoveMember(member.id).executeTakeFirst();
+		const removedMember = await deleteCommunityMember(member.id).executeTakeFirst();
 
 		if (!removedMember) {
 			return {
