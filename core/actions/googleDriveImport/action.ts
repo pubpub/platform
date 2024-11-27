@@ -7,10 +7,7 @@ import { defineAction } from "../types";
 
 const sharedSchema = z.object({
 	docUrl: z.string().url().describe("Document URL|The URL of the Google Doc to import"),
-	outputField: z
-		.string()
-		.optional()
-		.describe("Output Field|Where to store the Google Doc's content"),
+	outputField: z.string().describe("Output Field|Where to store the Google Doc's content"),
 });
 
 export const action = defineAction({
