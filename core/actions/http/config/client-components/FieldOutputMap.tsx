@@ -119,47 +119,17 @@ export const FieldOutputMap = defineCustomFormField(
 	action,
 	"config",
 	"outputMap",
-	function FieldOutputMap(
-		props,
-		context: {
-			/**
-			 * Whether to allow multiple fields to be mapped
-			 * @default true
-			 */
-			multiField?: boolean;
-			/**
-			 * The name of the item to display in the accordion
-			 * @default "Output Map"
-			 */
-			title?: string;
-			/**
-			 * The description of the item to display in the accordion
-			 * @default "Maps the response field to the specified pub fields."
-			 */
-			itemDescription?: string;
-			/**
-			 * The name of the field to use for the output map
-			 * @default "outputMap"
-			 */
-			fieldNameOverride?: string;
-		}
-	) {
+	function FieldOutputMap({ form, fieldName }) {
 		const pubFields = Object.values(usePubFieldContext());
-		const { form } = props;
 		const values = form.watch();
-
-		const fieldName = (context.fieldNameOverride ??
-			props.fieldName ??
-			"outputMap") as unknown as "outputMap";
 
 		const { fields, append, remove } = useFieldArray({
 			control: form.control,
 			name: fieldName,
 		});
+		const itemName = "Output Map";
 
-		const title = context.title ?? "Output Map";
-		const description =
-			context.itemDescription ?? "Maps the response field to the specified pub fields.";
+		const [title] = itemName.split("|");
 
 		const alreadySelectedPubFields = values[fieldName] ?? [];
 		const unselectedPubFields = pubFields.filter(
@@ -171,21 +141,23 @@ export const FieldOutputMap = defineCustomFormField(
 			<AccordionItem value={"a"} className="border-none">
 				<AccordionTrigger>{title}</AccordionTrigger>
 				<AccordionContent className="flex flex-col gap-y-4">
-					<p className="text-sm text-zinc-500">{description}</p>
+					<p className="text-sm text-zinc-500">
+						Maps the response field to the specified pub fields.
+					</p>
 					{alreadySelectedPubFields.map((_field, index) => {
 						return (
-							<div className="flex flex-col gap-y-2" key={`${fieldName}.${index}`}>
+							<div className="flex flex-col gap-y-2" key={`outputMap.${index}`}>
 								<FormField
-									name={`${fieldName}.[${index}]`}
+									name={`outputMap.[${index}]`}
 									render={() => {
 										return (
 											<FormItem
 												className="flex flex-col gap-y-2"
-												key={`${fieldName}.${index}`}
+												key={`outputMap.${index}`}
 											>
 												<OutputMapField
 													unselectedPubFields={unselectedPubFields}
-													fieldName={`${fieldName}.[${index}]`}
+													fieldName={`outputMap.[${index}]`}
 												/>
 											</FormItem>
 										);

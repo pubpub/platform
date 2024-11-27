@@ -1,18 +1,17 @@
+import { CoreSchemaType } from "@prisma/client";
+
 import { defineActionFormFieldServerComponent } from "../../_lib/custom-form-field/defineConfigServerComponent";
-import { FieldOutputMap } from "../../http/config/client-components/FieldOutputMap";
 import { action } from "../action";
+import OutputField from "../OutputField";
 
 const component = defineActionFormFieldServerComponent(
 	action,
 	"config",
 	async ({ action, actionInstance, stageId, communityId }) => {
 		return (
-			<FieldOutputMap
+			<OutputField
 				context={{
-					fieldNameOverride: "outputField",
-					multiField: false,
-					itemDescription: "Maps the Google Doc's content to the specified pub field.",
-					title: "Output Field",
+					allowedSchemaTypes: [CoreSchemaType.String],
 				}}
 			/>
 		);

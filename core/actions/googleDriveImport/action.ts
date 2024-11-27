@@ -1,12 +1,12 @@
+import { SiGoogledrive } from "@icons-pack/react-simple-icons";
 import { z } from "zod";
 
 import { Action } from "db/public";
-import { GoogleDrive } from "ui/icon";
 
 import { defineAction } from "../types";
 
 const sharedSchema = z.object({
-	docId: z.string().describe("Document ID|The ID of the Google Doc to import"),
+	docUrl: z.string().url().describe("Document URL|The URL of the Google Doc to import"),
 	outputField: z
 		.string()
 		.optional()
@@ -16,7 +16,7 @@ const sharedSchema = z.object({
 export const action = defineAction({
 	name: Action.googleDriveImport,
 	description: "Import a Google Doc.",
-	icon: GoogleDrive,
+	icon: SiGoogledrive,
 	config: {
 		schema: sharedSchema,
 		fieldConfig: {
