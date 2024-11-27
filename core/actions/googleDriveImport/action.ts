@@ -1,7 +1,7 @@
 import { SiGoogledrive } from "@icons-pack/react-simple-icons";
 import { z } from "zod";
 
-import { Action } from "db/public";
+import { Action, CoreSchemaType } from "db/public";
 
 import { defineAction } from "../types";
 
@@ -17,6 +17,9 @@ export const action = defineAction({
 	config: {
 		schema: sharedSchema,
 		fieldConfig: {
+			docUrl: {
+				allowedSchemas: [CoreSchemaType.URL],
+			},
 			outputField: {
 				fieldType: "custom",
 			},
