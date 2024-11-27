@@ -1,6 +1,3 @@
-import React from "react";
-import { siGoogledrive } from "simple-icons";
-
 export {
 	Activity,
 	AlertCircle,
