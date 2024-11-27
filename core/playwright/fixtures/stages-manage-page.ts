@@ -62,11 +62,15 @@ export class StagesManagePage {
 
 		await this.page.getByTestId("add-action-dialog").getByTestId(`${action}-button`).click();
 
-		const actionInstance = await stagePanel.getByTestId(`action-instance-${action}`);
-
-		const editButton = await actionInstance.getByLabel("Edit action", { exact: true });
+		const editButton = await stagePanel.getByLabel("Edit action", { exact: true }).last();
 		await editButton.click();
 		await stagePanel.getByLabel("Edit action name", { exact: true }).fill(actionName);
+		await this.page.waitForTimeout(5_000);
+		await this.page.pause();
+		await stagePanel.getByRole("heading", { name: "Actions" }).click();
+
 		await editButton.click();
+
+		await stagePanel.getByText(actionName).waitFor();
 	}
 }
