@@ -135,8 +135,6 @@ export default async function Page({
 		return null;
 	}
 
-	const relatedPubs = pub.values.map((value) => value.relatedPub).filter((value) => !!value);
-
 	const { stage, children, ...slimPub } = pub;
 
 	return (
