@@ -31,4 +31,5 @@ export const action = defineAction({
 		},
 	},
 	experimental: true,
+	superAdminOnly: true,
 });
