@@ -1,3 +1,6 @@
+import React from "react";
+import { siGoogledrive } from "simple-icons";
+
 export {
 	Activity,
 	AlertCircle,
@@ -73,7 +76,5 @@ export {
 	X,
 	XCircle,
 } from "lucide-react";
-
-export { siGoogledrive as GoogleDrive } from "simple-icons";
 
 export type { LucideIcon } from "lucide-react";
