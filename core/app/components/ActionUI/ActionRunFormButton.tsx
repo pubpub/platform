@@ -18,7 +18,11 @@ export const ActionRunFormButton = ({
 	});
 
 	return (
-		<PathAwareDialogButton id={runActionFormQueryParam} variant="ghost">
+		<PathAwareDialogButton
+			id={runActionFormQueryParam}
+			variant="ghost"
+			className="w-full justify-start"
+		>
 			<action.icon size="14" className="flex-shrink-0" />
 			<span className="overflow-auto text-ellipsis">
 				{actionInstance.name || actionInstance.action}
