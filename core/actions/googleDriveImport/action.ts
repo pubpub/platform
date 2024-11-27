@@ -10,7 +10,7 @@ const sharedSchema = z.object({
 	outputField: z
 		.string()
 		.optional()
-		.describe("Output map|Where to store the Google Doc's content"),
+		.describe("Output Field|Where to store the Google Doc's content"),
 });
 
 export const action = defineAction({

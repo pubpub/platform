@@ -6,7 +6,16 @@ const component = defineActionFormFieldServerComponent(
 	action,
 	"config",
 	async ({ action, actionInstance, stageId, communityId }) => {
-		return <FieldOutputMap context={{}} />;
+		return (
+			<FieldOutputMap
+				context={{
+					fieldNameOverride: "outputField",
+					multiField: false,
+					itemDescription: "Maps the Google Doc's content to the specified pub field.",
+					title: "Output Field",
+				}}
+			/>
+		);
 	}
 );
 
