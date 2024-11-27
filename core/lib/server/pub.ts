@@ -17,12 +17,14 @@ import type {
 	Json,
 	JsonValue,
 	ProcessedPub,
+	PubTypePubField,
 	PubWithChildren,
 } from "contracts";
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
 	CoreSchemaType,
+	PubFields,
 	PubFieldsId,
 	Pubs,
 	PubsId,
@@ -1013,7 +1015,7 @@ export type UnprocessedPub = {
 	stageId: StagesId | null;
 	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
-	pubType?: PubTypes;
+	pubType?: PubTypes & { fields: PubTypePubField[] };
 	members?: SafeUser & { role: MemberRole };
 	createdAt: Date;
 	isCycle?: boolean;

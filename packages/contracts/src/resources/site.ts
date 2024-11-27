@@ -5,6 +5,7 @@ import type {
 	CommunitiesId,
 	CoreSchemaType,
 	MemberRole,
+	PubFields,
 	PubFieldsId,
 	PubsId,
 	PubTypes,
@@ -109,8 +110,18 @@ type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] exten
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
  */
+export type PubTypePubField = Pick<
+	PubFields,
+	"id" | "name" | "slug" | "schemaName" | "isRelation"
+> & {
+	isTitle: boolean;
+};
 type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] extends true
-	? { pubType: PubTypes }
+	? {
+			pubType: PubTypes & {
+				fields: PubTypePubField[];
+			};
+		}
 	: { pubType?: never };
 
 /**

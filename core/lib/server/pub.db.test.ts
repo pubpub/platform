@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
+import type { PubTypePubField } from "contracts";
 import type { PubsId, PubTypes, Stages } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
@@ -463,7 +464,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10, withPubType: true }
 		);
 
-		expectTypeOf(pubWithRelatedValuesAndChildren.pubType).toEqualTypeOf<PubTypes>();
+		expectTypeOf(pubWithRelatedValuesAndChildren.pubType).toEqualTypeOf<
+			PubTypes & { fields: PubTypePubField[] }
+		>();
 
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
