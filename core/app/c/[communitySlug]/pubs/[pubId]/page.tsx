@@ -37,6 +37,7 @@ import {
 } from "./actions";
 import { renderPubValue } from "./components/jsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
+import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
 export async function generateMetadata({
 	params: { pubId },
@@ -133,6 +134,8 @@ export default async function Page({
 	if (!pub) {
 		return null;
 	}
+
+	const relatedPubs = pub.values.map((value) => value.relatedPub).filter((value) => !!value);
 
 	const { stage, children, ...slimPub } = pub;
 
@@ -268,6 +271,12 @@ export default async function Page({
 					parentPubId={pub.id}
 				/>
 			</Suspense>
+			{relatedPubs ? (
+				<div>
+					<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+					<RelatedPubsTable pub={pub} />
+				</div>
+			) : null}
 		</div>
 	);
 }
