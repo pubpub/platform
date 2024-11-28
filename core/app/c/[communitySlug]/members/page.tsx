@@ -1,56 +1,22 @@
 import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
-import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
-import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { selectCommunityMembers } from "~/lib/server/member";
 import { addMember, createUserWithCommunityMembership } from "./actions";
 import { MemberTable } from "./MemberTable";
 
 export const metadata: Metadata = {
 	title: "Members",
 };
-
-const getCachedMembers = (communityId: CommunitiesId) =>
-	autoCache(
-		db
-			.selectFrom("community_memberships")
-			.select((eb) => [
-				"community_memberships.id as id",
-				"community_memberships.role",
-				"community_memberships.communityId",
-				"community_memberships.createdAt",
-				jsonObjectFrom(
-					eb
-						.selectFrom("users")
-						.select([
-							"users.id as id",
-							"users.firstName as firstName",
-							"users.lastName as lastName",
-							"users.avatar as avatar",
-							"users.email as email",
-							"users.createdAt as createdAt",
-							"users.isSuperAdmin as isSuperAdmin",
-							"users.slug as slug",
-						])
-						.whereRef("users.id", "=", "community_memberships.userId")
-				)
-					.$notNull()
-					.as("user"),
-			])
-			.where("communityId", "=", communityId)
-	);
 
 export default async function Page({
 	params: { communitySlug },
@@ -83,7 +49,7 @@ export default async function Page({
 	}
 
 	const page = parseInt(searchParams.page ?? "1", 10);
-	const members = await getCachedMembers(community.id).execute();
+	const members = await selectCommunityMembers({ communityId: community.id }).execute();
 
 	if (!members.length && page !== 1) {
 		return notFound();
