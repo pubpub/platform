@@ -155,7 +155,7 @@ export async function StagePubs({
 					size="lg"
 					asChild
 				>
-					<Link href={stage.id}>See all pubs in stage {stage.name}</Link>
+					<Link href={`stages/${stage.id}`}>See all pubs in stage {stage.name}</Link>
 				</Button>
 			)}
 		</div>
