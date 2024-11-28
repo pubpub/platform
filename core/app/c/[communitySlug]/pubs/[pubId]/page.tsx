@@ -7,12 +7,10 @@ import type { CommunitiesId, MemberRole, PubsId, StagesId, UsersId } from "db/pu
 import { AuthTokenType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { PubValueWithFieldAndSchema } from "./components/jsonSchemaHelpers";
-import type { CommunityStage } from "~/lib/server/stages";
 import type { SafeUser } from "~/lib/server/user";
-import type { MemberWithUser, PubWithValues } from "~/lib/types";
+import type { PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
@@ -25,10 +23,13 @@ import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
+import { getStage, getStageActions } from "~/lib/db/queries";
 import { pubValuesByVal } from "~/lib/server";
 import { pubInclude } from "~/lib/server/_legacy-integration-queries";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
+import { selectCommunityMembers } from "~/lib/server/member";
+import { getCommunityStages } from "~/lib/server/stages";
 import { createToken } from "~/lib/server/token";
 import prisma from "~/prisma/db";
 import {
@@ -88,6 +89,12 @@ export default async function Page({
 		return null;
 	}
 
+	const community = await findCommunityBySlug(communitySlug);
+
+	if (!community) {
+		notFound();
+	}
+
 	const canAddMember = await userCan(
 		Capabilities.addPubMember,
 		{
@@ -119,11 +126,8 @@ export default async function Page({
 		return null;
 	}
 
-	const community = await getCommunityBySlug(communitySlug);
-
-	if (community === null) {
-		notFound();
-	}
+	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
+	const communityStagesPromise = getCommunityStages({ communityId: community.id }).execute();
 
 	const [actionsPromise, stagePromise] =
 		pub.stages.length > 0
@@ -133,7 +137,12 @@ export default async function Page({
 				]
 			: [null, null];
 
-	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
+	const [actions, stage, communityMembers, communityStages] = await Promise.all([
+		actionsPromise,
+		stagePromise,
+		communityMembersPromise,
+		communityStagesPromise,
+	]);
 
 	const { stages, children, ...slimPub } = pub;
 
@@ -188,9 +197,7 @@ export default async function Page({
 								<Move
 									pubId={pubId}
 									stageId={pub.stages[0].stageId as StagesId}
-									communityStages={
-										community.stages as unknown as CommunityStage[]
-									}
+									communityStages={communityStages}
 								/>
 							) : null}
 						</div>
@@ -256,8 +263,7 @@ export default async function Page({
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
 							<Assign
-								// TODO: Remove this cast
-								members={community.members as unknown as MemberWithUser[]}
+								members={communityMembers}
 								// TODO: Remove this cast
 								pub={slimPub as unknown as PubWithValues}
 							/>
