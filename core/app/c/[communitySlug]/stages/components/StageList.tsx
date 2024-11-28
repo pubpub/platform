@@ -1,11 +1,13 @@
-import { Fragment, Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 
 import type { CommunitiesId } from "db/public";
+import { Button } from "ui/button";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
+import { BasicPagination } from "~/app/components/Pagination";
 import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubs } from "~/lib/server";
@@ -64,9 +66,15 @@ async function StageCard({
 				</Link>
 			</div>
 			<Suspense
-				fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
+				fallback={<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-16" />}
 			>
-				<StagePubs stage={stage} pageContext={pageContext} members={members} />
+				<StagePubs
+					stage={stage}
+					pageContext={pageContext}
+					members={members}
+					totalPubLimit={3}
+					basePath={`/c/${pageContext.params.communitySlug}/stages`}
+				/>
 			</Suspense>
 		</div>
 	);
@@ -76,50 +84,78 @@ export async function StagePubs({
 	stage,
 	pageContext,
 	members,
-	limit,
+	totalPubLimit,
+	basePath,
+	pagination,
 }: {
 	stage: CommunityStage;
 	pageContext: PageContext;
 	members?: MemberWithUser[];
-	limit?: number;
+	totalPubLimit?: number;
+	pagination?: { page: number; pubsPerPage: number };
+	basePath: string;
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
 		getPubs(
 			{ stageId: stage.id },
 			{
 				onlyParents: false,
-				limit,
+				// fetch one extra pub so we know whether or not to render a show more button
+				limit: pagination?.pubsPerPage || (totalPubLimit && totalPubLimit + 1),
+				offset: pagination && (pagination.page - 1) * pagination.pubsPerPage,
+				orderBy: "updatedAt",
 			}
 		),
 		getStageActions(stage.id).execute(),
 	]);
 
+	const totalPages =
+		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0;
+
 	return (
 		<div className="flex flex-col gap-8">
-			{stagePubs.map((pub, index, list) => {
+			{stagePubs.map((pub, index) => {
+				if (totalPubLimit && index > totalPubLimit - 1) {
+					return null;
+				}
 				// this way we don't pass unecessary data to the client
 				const { children, ...basePub } = pub;
 				return (
-					<Fragment key={pub.id}>
-						<PubRow
-							key={pub.id}
-							pub={pub}
-							actions={
-								<StagePubActions
-									key={stage.id}
-									pub={basePub}
-									stage={stage}
-									actionInstances={actionInstances}
-									pageContext={pageContext}
-									members={members}
-								/>
-							}
-							searchParams={pageContext.searchParams}
-						/>
-						{index < list.length - 1 && <hr />}
-					</Fragment>
+					<PubRow
+						key={pub.id}
+						pub={pub}
+						actions={
+							<StagePubActions
+								key={stage.id}
+								pub={basePub}
+								stage={stage}
+								actionInstances={actionInstances}
+								pageContext={pageContext}
+								members={members}
+							/>
+						}
+						searchParams={pageContext.searchParams}
+					/>
 				);
 			})}
+			{pagination && (
+				<BasicPagination
+					basePath={basePath}
+					searchParams={pageContext.searchParams}
+					page={pagination.page}
+					totalPages={totalPages}
+				/>
+			)}
+			{!pagination && totalPubLimit && stagePubs.length > totalPubLimit && (
+				<Button
+					variant="ghost"
+					className="text-md inline-flex text-muted-foreground"
+					size="lg"
+					asChild
+				>
+					<Link href={stage.id}>See all pubs in stage {stage.name}</Link>
+				</Button>
+			)}
 		</div>
 	);
 }
