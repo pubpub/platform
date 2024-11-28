@@ -61,9 +61,11 @@ async function StageCard({
 	return (
 		<div key={stage.id} className="mb-20">
 			<div className="flex flex-row justify-between">
-				<Link href={`/c/${pageContext.params.communitySlug}/stages/${stage.id}`}>
-					<h3 className="mb-2 text-lg font-semibold">{stage.name}</h3>
-				</Link>
+				<h3 className="mb-2 text-lg font-semibold hover:underline">
+					<Link href={`/c/${pageContext.params.communitySlug}/stages/${stage.id}`}>
+						{stage.name} ({stage.pubsCount})
+					</Link>
+				</h3>
 			</div>
 			<Suspense
 				fallback={<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-16" />}
