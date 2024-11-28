@@ -30,7 +30,7 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 				<StageNameInput value={stage.name} onChange={onNameChange} />
 				<Separator />
 				<div className="space-y-2 py-2">
-					<StagePanelOverviewManagement onDelete={onDelete} />
+					<StagePanelOverviewManagement stageId={props.stageId} onDelete={onDelete} />
 				</div>
 			</CardContent>
 		</Card>
