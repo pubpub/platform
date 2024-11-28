@@ -83,8 +83,6 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 		return null;
 	}
 
-	const pubStage = pub.stages[0];
-
 	return (
 		<>
 			<Row>
@@ -101,7 +99,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 				</RowHeader>
 				<RowContent className="flex items-start justify-between">
 					<h3 className="text-md font-medium">
-						<Link href={`pubs/${pub.id}`} className="hover:underline">
+						<Link href={`/pubs/${pub.id}`} className="hover:underline">
 							<PubTitle pub={pub} />
 						</Link>
 					</h3>
