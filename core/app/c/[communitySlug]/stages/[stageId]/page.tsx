@@ -12,7 +12,7 @@ export default async function Page({
 	params,
 	searchParams,
 }: {
-	searchParams: Record<string, string>;
+	searchParams: Record<string, string> & { page?: string };
 
 	params: { communitySlug: string; stageId: StagesId };
 }) {
@@ -35,7 +35,8 @@ export default async function Page({
 						params,
 						searchParams,
 					}}
-					limit={10}
+					pagination={{ page, pubsPerPage: 10 }}
+					basePath={""}
 				/>
 			</Suspense>
 		</>
