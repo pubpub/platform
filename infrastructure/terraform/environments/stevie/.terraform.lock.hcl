@@ -3,8 +3,9 @@
 
 provider "registry.terraform.io/hashicorp/aws" {
   version     = "5.70.0"
-  constraints = ">= 4.0.0, >= 4.40.0, >= 4.66.1, >= 5.0.0, >= 5.70.0"
+  constraints = ">= 4.0.0, >= 4.40.0, >= 4.66.1, >= 5.0.0, >= 5.27.0"
   hashes = [
+    "h1:+QN8de63DAE4QbyODwK14T9ZEKasvRwLMSItMOWoU2Q=",
     "h1:kcKscQCmMLrNMAkaL4XIqGGq4uk8vXthNRvtfersNH0=",
     "zh:09cbec93c324e6f03a866244ecb2bae71fdf1f5d3d981e858b745c90606b6b6d",
     "zh:19685d9f4c9ddcfa476a9a428c6c612be4a1b4e8e1198fbcbb76436b735284ee",
@@ -27,6 +28,7 @@ provider "registry.terraform.io/hashicorp/aws" {
 provider "registry.terraform.io/hashicorp/random" {
   version = "3.6.3"
   hashes = [
+    "h1:f6jXn4MCv67kgcofx9D49qx1ZEBv8oyvwKDMPBr0A24=",
     "h1:zG9uFP8l9u+yGZZvi5Te7PV62j50azpgwPunq2vTm1E=",
     "zh:04ceb65210251339f07cd4611885d242cd4d0c7306e86dda9785396807c00451",
     "zh:448f56199f3e99ff75d5c0afacae867ee795e4dfda6cb5f8e3b2a72ec3583dd8",
@@ -48,6 +50,7 @@ provider "registry.terraform.io/honeycombio/honeycombio" {
   constraints = ">= 0.22.0"
   hashes = [
     "h1:2T/JgeekYNwS4oXjdzduRZBcCR9lpuU/1Wo/kG4YcUA=",
+    "h1:C+6G9/8Ml8HTvduF0oXVSieXu/T3v+TGH1/vVIcwLEo=",
     "zh:09be7a66f926202a976cce5eb5fd4770aaa8202c5f4cd3611fb34288c2a3d0f5",
     "zh:128a522a0a991674b80dbc66e3859b56fd1590ecf63a2cf6323d04d8212175b9",
     "zh:18869e171aeacb7db79ba06d284ce017e4bd5afaf3baa0171a66c279cf6a2b7f",
