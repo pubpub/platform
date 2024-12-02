@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
+import { notFound, redirect } from "next/navigation";
 import partition from "lodash.partition";
 
 import type { CommunitiesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { FormInput } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 import { cn } from "utils";
@@ -10,6 +13,7 @@ import { cn } from "utils";
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
 import { FieldsTable } from "./FieldsTable";
@@ -36,8 +40,23 @@ const EmptyState = ({ className }: { className?: string }) => {
 };
 
 export default async function Page({ params }: Props) {
-	const loginData = await getPageLoginData();
+	const { user } = await getPageLoginData();
+
 	const community = await findCommunityBySlug(params.communitySlug);
+	if (!community) {
+		notFound();
+	}
+
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
+
 	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
 		includeRelations: true,
@@ -48,7 +67,6 @@ export default async function Page({ params }: Props) {
 	}
 
 	const fields = Object.values(pubFields.fields);
-
 	const hasFields = !!Object.keys(fields).length;
 	const [active, archived] = partition(fields, (field) => !field.isArchived);
 
