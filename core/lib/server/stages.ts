@@ -68,7 +68,7 @@ export const getCommunityStages = ({ communityId, stageId }: CommunityStageProps
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.destinationId", "=", "stages.id")
-						.innerJoin("stages as s", "stages.id", "move_constraint.stageId")
+						.innerJoin("stages as s", "s.id", "move_constraint.stageId")
 						.select(["s.id", "s.name"])
 				).as("moveConstraintSources"),
 				eb
