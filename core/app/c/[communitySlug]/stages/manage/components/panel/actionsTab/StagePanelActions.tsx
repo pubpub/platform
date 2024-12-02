@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { StagesId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { PageContext } from "~/lib/types";
 import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getLoginData } from "~/lib/authentication/loginData";

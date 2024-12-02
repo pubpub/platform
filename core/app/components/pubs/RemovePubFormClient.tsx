@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 
 import type { PubsId } from "db/public";
@@ -10,6 +9,7 @@ import { Form } from "ui/form";
 import { Loader2, Trash } from "ui/icon";
 import { toast } from "ui/use-toast";
 
+import { usePathAwareDialogSearchParam } from "~/lib/client/usePathAwareDialogSearchParam";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./PubEditor/actions";
 
@@ -21,24 +21,17 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 
 	const runRemovePub = useServerAction(actions.removePub);
 
-	const path = usePathname();
-	const searchParams = useSearchParams();
-	const router = useRouter();
-
-	const pathWithoutFormParam = useMemo(() => {
-		const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-		urlSearchParams.delete("remove-pub-form");
-		return `${path}?${urlSearchParams.toString()}`;
-	}, [path, searchParams]);
+	const { toggleDialog } = usePathAwareDialogSearchParam({
+		id: `remove-pub-form-${pubId}`,
+	});
 
 	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+		toggleDialog(false);
+	}, [toggleDialog]);
 
 	const onSubmit = async () => {
 		const result = await runRemovePub({
 			pubId,
-			path: pathWithoutFormParam,
 		});
 
 		if (result && "success" in result) {

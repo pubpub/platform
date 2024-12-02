@@ -9,6 +9,8 @@ import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { LocalStorageProvider } from "ui/hooks";
 
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
+import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
@@ -74,23 +76,27 @@ export default async function Page({ params, searchParams }: Props) {
 	};
 
 	return (
-		<StagesProvider stages={stages} communityId={community.id}>
-			<StageEditorProvider communitySlug={params.communitySlug}>
-				<LocalStorageProvider timeout={200}>
-					<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
-						<div className="relative h-full select-none">
-							<StageEditor />
-							{searchParams.editingStageId && (
-								<StagePanel
-									stageId={searchParams.editingStageId as StagesId}
-									pageContext={pageContext}
-									user={user}
-								/>
-							)}
+		<>
+			<StagesProvider stages={stages} communityId={community.id}>
+				<StageEditorProvider communitySlug={params.communitySlug}>
+					<LocalStorageProvider timeout={200}>
+						<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
+							<div className="relative h-full select-none">
+								<StageEditor />
+								{searchParams.editingStageId && (
+									<StagePanel
+										stageId={searchParams.editingStageId as StagesId}
+										pageContext={pageContext}
+										user={user}
+									/>
+								)}
+							</div>
 						</div>
-					</div>
-				</LocalStorageProvider>
-			</StageEditorProvider>
-		</StagesProvider>
+					</LocalStorageProvider>
+				</StageEditorProvider>
+			</StagesProvider>
+			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ searchParams, params }} />
+		</>
 	);
 }

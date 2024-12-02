@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryState } from "nuqs";
 import { useDebouncedCallback } from "use-debounce";
 
 import type { Communities } from "db/public";
@@ -73,9 +73,6 @@ export function MemberSelectClient({
 	allowPubFieldSubstitution,
 	helpText,
 }: Props) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
 	const formElementToggle = useFormElementToggleContext();
@@ -90,23 +87,24 @@ export function MemberSelectClient({
 
 	const [selectedUser, setSelectedUser] = useState(member);
 
-	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
+	const [inputValue, setInputValue] = useQueryState(queryParamName, {
+		shallow: false,
+		defaultValue: selectedUser?.email ?? "",
+	});
 
-	const updateSearchParams = useDebouncedCallback((value: string) => {
-		const newParams = new URLSearchParams(params);
-		const oldParams = newParams.toString();
-		newParams.set(queryParamName, value);
-		// Only change params when they are different, otherwise can cause race conditions
-		// if another component is trying to change the query params as well
-		if (oldParams !== newParams.toString()) {
-			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+	useEffect(() => {
+		// remove the query param on unmount
+		return () => {
+			setInputValue(null);
+		};
+	}, []);
+
+	const onInputValueChange = useDebouncedCallback((value: string) => {
+		if (value === inputValue) {
+			return;
 		}
-	}, 400);
-
-	const onInputValueChange = (value: string) => {
 		setInputValue(value);
-		updateSearchParams(value);
-	};
+	}, 400);
 
 	return (
 		<FormField

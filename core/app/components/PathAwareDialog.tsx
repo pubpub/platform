@@ -1,15 +1,10 @@
 "use client";
 
-import React, { forwardRef, Suspense, useCallback, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { forwardRef } from "react";
 
-import type { ButtonProps } from "ui/button";
-import type { LucideIcon } from "ui/icon";
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog";
-import { cn } from "utils";
+import { Dialog, DialogOverlay } from "ui/dialog";
 
-import { SkeletonCard } from "./skeletons/SkeletonCard";
+import { usePathAwareDialogSearchParam } from "~/lib/client/usePathAwareDialogSearchParam";
 
 export type PathAwareDialogProps = {
 	children: React.ReactNode;
@@ -17,63 +12,31 @@ export type PathAwareDialogProps = {
 	 * String that is necessary to identify this form from other froms,
 	 * otherwise if multiple of the same button are rendered on the page
 	 * multiple forms will	 be opened at the same time.
+	 *
+	 * The null options is used in the case where the searchParam is not there
 	 */
-	id: string;
-	className?: string;
-	title: string;
-	buttonText: string;
-	buttonLabel?: string;
-	buttonIcon?: LucideIcon;
-	buttonVariant?: ButtonProps["variant"];
-	buttonSize?: ButtonProps["size"];
-	icon: React.ReactElement;
-	param: string;
+	id: string | null;
 };
 
 export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => {
-	const searchParams = useSearchParams();
-	const pathname = usePathname();
-	const router = useRouter();
-	const isOpen = searchParams.get(props.param) === props.id;
-
-	const close = useCallback(
-		(open: boolean) => {
-			const nextSearchParams = new URLSearchParams(searchParams);
-
-			if (open) {
-				nextSearchParams.set(props.param, props.id);
-				router.push(`${pathname}?${nextSearchParams.toString()}`);
-				return;
-			}
-
-			nextSearchParams.delete(props.param);
-			router.push(`${pathname}?${nextSearchParams.toString()}`);
-		},
-		[pathname, router, searchParams]
-	);
+	const {
+		isOpen,
+		toggleDialog: toggleDialogue,
+		currentPathAwareDialogSearchParam,
+	} = usePathAwareDialogSearchParam({
+		id: props.id,
+	});
 
 	const [isReallyOpen, setIsReallyOpen] = React.useState(false);
-	useEffect(() => {
+
+	React.useEffect(() => {
 		setIsReallyOpen(isOpen);
 	}, [isOpen]);
 
 	return (
-		<Dialog onOpenChange={close} defaultOpen={false} open={isReallyOpen}>
+		<Dialog onOpenChange={toggleDialogue} defaultOpen={false} open={isReallyOpen}>
 			<DialogOverlay />
-			<DialogTrigger asChild>
-				<Button
-					variant={props.buttonVariant ?? "outline"}
-					size={props.buttonSize ?? "sm"}
-					className={cn("flex items-center gap-x-2 py-4", props.className)}
-				>
-					{props.icon}
-					<span>{props.buttonText}</span>
-				</Button>
-			</DialogTrigger>
-			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
-				<DialogTitle>{props.title}</DialogTitle>
-				{isOpen && <Suspense fallback={<SkeletonCard />}>{props.children}</Suspense>}
-			</DialogContent>
+			{props.children}
 		</Dialog>
 	);
 });

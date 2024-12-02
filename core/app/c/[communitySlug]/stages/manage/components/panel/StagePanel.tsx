@@ -3,7 +3,7 @@ import type { User } from "lucia";
 import type { StagesId } from "db/public";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { PageContext } from "~/lib/types";
 import { getStage } from "~/lib/db/queries";
 import { StagePanelActions } from "./actionsTab/StagePanelActions";
 import { StagePanelRules } from "./actionsTab/StagePanelRules";
@@ -41,10 +41,7 @@ export const StagePanel = async (props: Props) => {
 					<StagePanelOverview stageId={props.stageId} />
 				</TabsContent>
 				<TabsContent value="pubs">
-					<StagePanelPubs
-						stageId={props.stageId as StagesId}
-						pageContext={props.pageContext}
-					/>
+					<StagePanelPubs stageId={props.stageId as StagesId} />
 				</TabsContent>
 				<TabsContent value="actions" className="space-y-2">
 					<StagePanelActions stageId={props.stageId} pageContext={props.pageContext} />

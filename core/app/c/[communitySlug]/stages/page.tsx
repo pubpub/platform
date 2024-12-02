@@ -5,7 +5,9 @@ import { notFound } from "next/navigation";
 import type { UsersId } from "db/public";
 import { AuthTokenType } from "db/public";
 
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { createToken } from "~/lib/server/token";
@@ -15,7 +17,10 @@ export const metadata: Metadata = {
 	title: "Workflows",
 };
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
+type Props = {
+	params: { communitySlug: string };
+	searchParams: Record<string, string | string[] | undefined>;
+};
 
 export default async function Page({ params, searchParams }: Props) {
 	const [{ user }, community] = await Promise.all([
@@ -36,20 +41,11 @@ export default async function Page({ params, searchParams }: Props) {
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Stages</h1>
-				<CreatePubButton
-					communityId={community.id}
-					text="Add Pub"
-					searchParams={searchParams}
-				/>
+				<CreatePubButton />
 			</div>
-			<StageList
-				token={token}
-				communityId={community.id}
-				pageContext={{
-					params,
-					searchParams,
-				}}
-			/>
+			<StageList token={token} communityId={community.id} />
+			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ searchParams, params }} />
 		</>
 	);
 }

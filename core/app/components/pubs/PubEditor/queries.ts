@@ -25,6 +25,8 @@ export const getCommunityById = <EB extends ExpressionBuilder<Database, keyof Da
 						"pub_types.name",
 						"pub_types.description",
 						"pub_types.communityId",
+						"pub_types.createdAt",
+						"pub_types.updatedAt",
 						jsonArrayFrom(
 							eb
 								.selectFrom("pub_fields")
@@ -36,6 +38,7 @@ export const getCommunityById = <EB extends ExpressionBuilder<Database, keyof Da
 									"pub_fields.slug",
 									"pub_fields.name",
 									"pub_fields.schemaName",
+									"pub_fields.isRelation",
 									jsonObjectFrom(
 										eb
 											.selectFrom("PubFieldSchema")

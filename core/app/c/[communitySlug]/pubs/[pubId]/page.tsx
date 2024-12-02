@@ -16,10 +16,12 @@ import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import IntegrationActions from "~/app/components/IntegrationActions";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
@@ -148,145 +150,139 @@ export default async function Page({
 		});
 
 	return (
-		<div className="flex flex-col space-y-4">
-			<div className="mb-8">
-				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
-				<PubTitle pub={pub} />
-			</div>
-			<div className="flex flex-wrap space-x-4">
-				<div className="flex-1">
-					{pub.values
-						.filter((value) => {
-							return value.field.name !== "Title";
-						})
-						.map((value) => {
-							return (
-								<div className="mb-4" key={value.id}>
-									<div>
-										{renderField(
-											value as unknown as PubValueWithFieldAndSchema
-										)}
-									</div>
-								</div>
-							);
-						})}
+		<>
+			<div className="flex flex-col space-y-4">
+				<div className="mb-8">
+					<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
+					<PubTitle pub={pub} />
 				</div>
-				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
-					<div>
-						<div className="mb-1 text-lg font-bold">Current Stage</div>
-						<div className="ml-4 flex items-center gap-2 font-medium">
-							<div>
-								{pub.stages.map(({ stage }) => {
-									return (
-										<div key={stage.id} data-testid="current-stage">
-											{stage.name}
+				<div className="flex flex-wrap space-x-4">
+					<div className="flex-1">
+						{pub.values
+							.filter((value) => {
+								return value.field.name !== "Title";
+							})
+							.map((value) => {
+								return (
+									<div className="mb-4" key={value.id}>
+										<div>
+											{renderField(
+												value as unknown as PubValueWithFieldAndSchema
+											)}
 										</div>
-									);
-								})}
-							</div>
-							{pub.stages[0] ? (
-								<Move
-									pubId={pubId}
-									stageId={pub.stages[0].stageId as StagesId}
-									communityStages={
-										community.stages as unknown as CommunityStage[]
-									}
-								/>
-							) : null}
-						</div>
+									</div>
+								);
+							})}
 					</div>
-					<div>
-						<div className="mb-1 text-lg font-bold">Integrations</div>
+					<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 						<div>
-							<Suspense>
-								{pub.stages[0]?.stageId && (
-									<IntegrationActions
+							<div className="mb-1 text-lg font-bold">Current Stage</div>
+							<div className="ml-4 flex items-center gap-2 font-medium">
+								<div>
+									{pub.stages.map(({ stage }) => {
+										return (
+											<div key={stage.id} data-testid="current-stage">
+												{stage.name}
+											</div>
+										);
+									})}
+								</div>
+								{pub.stages[0] ? (
+									<Move
 										pubId={pubId}
-										token={token}
 										stageId={pub.stages[0].stageId as StagesId}
-										type="pub"
+										communityStages={
+											community.stages as unknown as CommunityStage[]
+										}
 									/>
-								)}
-							</Suspense>
+								) : null}
+							</div>
 						</div>
-					</div>
-					<div>
-						<div className="mb-1 text-lg font-bold">Actions</div>
-						{actions && actions.length > 0 && stage ? (
-							<div className="ml-4">
-								<PubsRunActionDropDownMenu
-									actionInstances={actions}
-									pubId={pubId}
-									stage={stage!}
-									pageContext={{
-										params: params,
-										searchParams,
-									}}
-								/>
+						<div>
+							<div className="mb-1 text-lg font-bold">Integrations</div>
+							<div>
+								<Suspense>
+									{pub.stages[0]?.stageId && (
+										<IntegrationActions
+											pubId={pubId}
+											token={token}
+											stageId={pub.stages[0].stageId as StagesId}
+											type="pub"
+										/>
+									)}
+								</Suspense>
 							</div>
-						) : (
-							<div className="ml-4 font-medium">
-								Configure actions to run for this Pub in the stage management
-								settings
-							</div>
-						)}
-					</div>
-
-					<div className="flex flex-col gap-y-4">
-						<div className="mb-2 flex justify-between">
-							<span className="text-lg font-bold">Members</span>
-							{canAddMember && (
-								<AddMemberDialog
-									addMember={addPubMember.bind(null, pubId)}
-									addUserMember={addUserWithPubMembership.bind(null, pubId)}
-									existingMembers={members.map((member) => member.id)}
-									isSuperAdmin={user.isSuperAdmin}
-								/>
+						</div>
+						<div>
+							<div className="mb-1 text-lg font-bold">Actions</div>
+							{actions && actions.length > 0 && stage ? (
+								<div className="ml-4">
+									<PubsRunActionDropDownMenu
+										actionInstances={actions}
+										pubId={pubId}
+									/>
+								</div>
+							) : (
+								<div className="ml-4 font-medium">
+									Configure actions to run for this Pub in the stage management
+									settings
+								</div>
 							)}
 						</div>
-						<MembersList
-							members={members}
-							setRole={setPubMemberRole}
-							removeMember={removePubMember}
-							targetId={pubId}
-							readOnly={!canRemoveMember}
-						/>
-					</div>
-					<div>
-						<div className="mb-1 text-lg font-bold">Assignee</div>
-						<div className="ml-4">
-							<Assign
-								// TODO: Remove this cast
-								members={community.members as unknown as MemberWithUser[]}
-								// TODO: Remove this cast
-								pub={slimPub as unknown as PubWithValues}
+
+						<div className="flex flex-col gap-y-4">
+							<div className="mb-2 flex justify-between">
+								<span className="text-lg font-bold">Members</span>
+								{canAddMember && (
+									<AddMemberDialog
+										addMember={addPubMember.bind(null, pubId)}
+										addUserMember={addUserWithPubMembership.bind(null, pubId)}
+										existingMembers={members.map((member) => member.id)}
+										isSuperAdmin={user.isSuperAdmin}
+									/>
+								)}
+							</div>
+							<MembersList
+								members={members}
+								setRole={setPubMemberRole}
+								removeMember={removePubMember}
+								targetId={pubId}
+								readOnly={!canRemoveMember}
 							/>
+						</div>
+						<div>
+							<div className="mb-1 text-lg font-bold">Assignee</div>
+							<div className="ml-4">
+								<Assign
+									// TODO: Remove this cast
+									members={community.members as unknown as MemberWithUser[]}
+									// TODO: Remove this cast
+									pub={slimPub as unknown as PubWithValues}
+								/>
+							</div>
 						</div>
 					</div>
 				</div>
+				<div>
+					<h2 className="text-xl font-bold">Pub Contents</h2>
+					<p className="text-muted-foreground">
+						Use the "Add New Pub" button below to create a new pub and add it to this
+						pub's contents.
+					</p>
+				</div>
+				<div className="mb-2">
+					<CreatePubButton text="Add New Pub" parentId={pub.id as PubsId} />
+				</div>
+				<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
+					<PubChildrenTableWrapper
+						communitySlug={params.communitySlug}
+						pageContext={{ params, searchParams }}
+						parentPubId={pub.id as PubsId}
+					/>
+				</Suspense>
 			</div>
-			<div>
-				<h2 className="text-xl font-bold">Pub Contents</h2>
-				<p className="text-muted-foreground">
-					Use the "Add New Pub" button below to create a new pub and add it to this pub's
-					contents.
-				</p>
-			</div>
-			<div className="mb-2">
-				<CreatePubButton
-					text="Add New Pub"
-					communityId={community.id as CommunitiesId}
-					parentId={pub.id as PubsId}
-					searchParams={searchParams}
-				/>
-			</div>
-			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
-				<PubChildrenTableWrapper
-					communitySlug={params.communitySlug}
-					pageContext={{ params, searchParams }}
-					parentPubId={pub.id as PubsId}
-				/>
-			</Suspense>
-		</div>
+			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ searchParams, params }} />
+		</>
 	);
 }

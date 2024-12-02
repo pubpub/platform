@@ -19,9 +19,5 @@ const PubRemoveForm = dynamic(
 );
 
 export async function PubRemove({ pubId }: PubRemoveProps) {
-	return (
-		<Suspense fallback={<div>Loading...</div>}>
-			<PubRemoveForm pubId={pubId} />
-		</Suspense>
-	);
+	return <PubRemoveForm pubId={pubId} />;
 }

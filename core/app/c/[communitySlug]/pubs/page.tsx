@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 
-import type { CommunitiesId, UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
-
+import { ActionRunDialog } from "~/app/components/ActionUI/ActionRunDialog";
+import { PubEditorDialog } from "~/app/components/pubs/PubEditor/PubEditorDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { createToken } from "~/lib/server/token";
-import PubHeader from "./PubHeader";
+import { PubHeader } from "./PubHeader";
 import { PaginatedPubList } from "./PubList";
 
 export const metadata: Metadata = {
@@ -15,7 +13,7 @@ export const metadata: Metadata = {
 
 type Props = {
 	params: { communitySlug: string };
-	searchParams: Record<string, unknown> & { page?: string };
+	searchParams: Record<string, string | string[] | undefined> & { page?: string };
 };
 
 export default async function Page({ params, searchParams }: Props) {
@@ -38,13 +36,15 @@ export default async function Page({ params, searchParams }: Props) {
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
+			<PubHeader />
 			<PaginatedPubList
 				communityId={community.id}
 				searchParams={searchParams}
 				page={page}
 				basePath={basePath}
 			/>
+			<PubEditorDialog searchParams={searchParams} />
+			<ActionRunDialog pageContext={{ searchParams, params }} />
 		</>
 	);
 }

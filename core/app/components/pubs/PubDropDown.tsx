@@ -16,7 +16,6 @@ import { UpdatePubButton } from "./UpdatePubButton";
 
 type Props = {
 	pubId: PubsId;
-	searchParams: Record<string, unknown>;
 };
 
 export const PubDropDown = (props: Props) => {
@@ -35,7 +34,6 @@ export const PubDropDown = (props: Props) => {
 							size="sm"
 							className="w-full justify-start"
 							pubId={props.pubId}
-							searchParams={props.searchParams}
 						/>
 					</Suspense>
 				</DropdownMenuItem>
