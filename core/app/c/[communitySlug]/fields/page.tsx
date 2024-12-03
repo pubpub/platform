@@ -79,7 +79,7 @@ export default async function Page({ params }: Props) {
 						Fields
 					</>
 				}
-				headingAction={<NewFieldButton />}
+				right={<NewFieldButton />}
 			>
 				<div className="m-4">
 					{archived.length ? (
