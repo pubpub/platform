@@ -1,7 +1,8 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
+import type { PubTypePubField } from "contracts";
 import type { PubsId, PubTypes, Stages } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
@@ -463,7 +464,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10, withPubType: true }
 		);
 
-		expectTypeOf(pubWithRelatedValuesAndChildren.pubType).toEqualTypeOf<PubTypes>();
+		expectTypeOf(pubWithRelatedValuesAndChildren.pubType).toEqualTypeOf<
+			PubTypes & { fields: PubTypePubField[] }
+		>();
 
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
@@ -802,9 +805,46 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ withStage: true }
 		);
 
-		expectTypeOf(pub).toMatchTypeOf<{ stage: Stages }>();
+		expectTypeOf(pub).toMatchTypeOf<{ stage: Stages | null }>();
 
-		expect(pub.stage.name).toBe("Stage 1");
+		expect(pub.stage?.name).toBe("Stage 1");
+	});
+
+	it("should be able to fetch members", async () => {
+		const trx = getTrx();
+		const pubId = pubs[0].id as PubsId;
+
+		// Add a user and make it a member of this pub
+		const users = [
+			{
+				email: "test@email.com",
+				slug: "test-user",
+				firstName: "test",
+				lastName: "user",
+			},
+			{
+				email: "test2@email.com",
+				slug: "test-user-2",
+				firstName: "test2",
+				lastName: "user2",
+			},
+		];
+		const userIds = await trx.insertInto("users").values(users).returning(["id"]).execute();
+		await trx
+			.insertInto("pub_memberships")
+			.values(userIds.map(({ id }) => ({ userId: id, pubId, role: MemberRole.admin })))
+			.execute();
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId, communityId: community.id },
+			{ withMembers: true }
+		);
+
+		expect(pub).toMatchObject({
+			members: users.map((u) => ({ ...u, role: MemberRole.admin })),
+		});
 	});
 });
 

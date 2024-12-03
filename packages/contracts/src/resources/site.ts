@@ -4,6 +4,8 @@ import { z } from "zod";
 import type {
 	CommunitiesId,
 	CoreSchemaType,
+	MemberRole,
+	PubFields,
 	PubFieldsId,
 	PubsId,
 	PubTypes,
@@ -11,6 +13,7 @@ import type {
 	PubValuesId,
 	Stages,
 	StagesId,
+	Users,
 } from "db/public";
 import {
 	communitiesIdSchema,
@@ -101,15 +104,32 @@ type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"]
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
-	? { stage: Stages }
+	? { stage: Stages | null }
 	: { stage?: never };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
  */
+export type PubTypePubField = Pick<
+	PubFields,
+	"id" | "name" | "slug" | "schemaName" | "isRelation"
+> & {
+	isTitle: boolean;
+};
 type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] extends true
-	? { pubType: PubTypes }
+	? {
+			pubType: PubTypes & {
+				fields: PubTypePubField[];
+			};
+		}
 	: { pubType?: never };
+
+/**
+ * Only add the `pubType` if the `withPubType` option has not been set to `false
+ */
+type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] extends true
+	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
+	: { members?: never[] };
 
 type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
 	? { relatedPub?: never; relatedPubId: PubsId | null }
@@ -146,6 +166,12 @@ type MaybePubOptions = {
 	 * @default false
 	 */
 	withStage?: boolean;
+	/**
+	 * Whether to include members of the pub.
+	 *
+	 * @default false
+	 */
+	withMembers?: boolean;
 };
 
 type ValueBase = {
@@ -159,6 +185,7 @@ type ValueBase = {
 	 */
 	schemaName: CoreSchemaType;
 	fieldSlug: string;
+	fieldName: string;
 };
 
 type ProcessedPubBase = {
@@ -182,7 +209,8 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
 } & MaybePubChildren<Options> &
 	MaybePubStage<Options> &
-	MaybePubPubType<Options>;
+	MaybePubPubType<Options> &
+	MaybePubMembers<Options>;
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages;
@@ -204,6 +232,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 		pubValuesSchema.extend({
 			value: jsonSchema,
 			fieldSlug: z.string(),
+			fieldName: z.string(),
 			schemaName: coreSchemaTypeSchema,
 			relatedPubId: pubsIdSchema.nullable(),
 			relatedPub: z.lazy(() => processedPubSchema.nullish()),
@@ -247,6 +276,7 @@ const getPubQuerySchema = z
 			.describe("Whether to include related pubs with the values"),
 		withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
 		withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+		withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
 		fieldSlugs: z
 			.array(z.string())
 			// this is necessary bc the query parser doesn't handle single string values as arrays
