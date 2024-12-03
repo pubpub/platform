@@ -11,6 +11,7 @@ import { getPubFields } from "~/lib/server/pubFields";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
+import { StageSelectClient } from "../../StageSelect/StageSelectClient";
 import { PubEditorWrapper } from "./PubEditorWrapper";
 import { getCommunityById, getStage } from "./queries";
 
@@ -114,6 +115,9 @@ export async function PubEditor(props: PubEditorProps) {
 	));
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
+	const currentStage = currentStageId
+		? community.stages.find((s) => s.id === currentStageId)
+		: undefined;
 	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 	const editor = (
 		<ContextEditorContextProvider
@@ -130,8 +134,16 @@ export async function PubEditor(props: PubEditorProps) {
 				withAutoSave={false}
 				withButtonElements={false}
 				formId={props.formId}
+				stageId={currentStageId}
 			>
-				{formElements}
+				<>
+					<StageSelectClient
+						fieldLabel="Stage"
+						fieldName="stageId"
+						stages={community.stages}
+					/>
+					{formElements}
+				</>
 			</PubEditorWrapper>
 		</ContextEditorContextProvider>
 	);
