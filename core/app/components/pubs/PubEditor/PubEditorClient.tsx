@@ -3,23 +3,13 @@
 import type { Static, TObject } from "@sinclair/typebox";
 import type { FieldPath, FieldValues, SubmitHandler, UseFormReturn } from "react-hook-form";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
-import { useDebouncedCallback } from "use-debounce";
 
 import type { JsonValue } from "contracts";
-import type {
-	CommunitiesId,
-	PubFields,
-	PubFieldSchema,
-	PubsId,
-	PubTypes,
-	PubTypesId,
-	Stages,
-	StagesId,
-} from "db/public";
+import type { CommunitiesId, PubsId, PubTypes, PubTypesId, Stages, StagesId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import {
@@ -46,14 +36,7 @@ import {
 	createPubEditorSchemaFromPubFields,
 } from "./helpers";
 
-type AvailablePubType = Pick<PubTypes, "id" | "name" | "description" | "communityId"> & {
-	fields: (Pick<PubFields, "id" | "name" | "pubFieldSchemaId" | "slug" | "schemaName"> & {
-		schema: Pick<PubFieldSchema, "id" | "namespace" | "name" | "schema"> | null;
-	})[];
-};
-
 type Props = {
-	availablePubTypes: AvailablePubType[];
 	availableStages: Pick<Stages, "id" | "name" | "order">[];
 	communityId: CommunitiesId;
 	className?: string;
@@ -104,7 +87,7 @@ type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
 
 export function PubEditorClient(props: Props) {
 	const hasValues = Object.keys(props.pubValues).length > 0;
-	const paramString = hasValues ? "update" : "create";
+	const paramString = props.isUpdating ? "update" : "create";
 	const runCreatePub = useServerAction(actions.createPubRecursive);
 	const runUpdatePub = useServerAction(actions.updatePub);
 	const availableStages = [
@@ -163,18 +146,6 @@ export function PubEditorClient(props: Props) {
 		);
 	}, [form, formElementToggle]);
 
-	const handleSelectPubType = useDebouncedCallback(
-		(value: (typeof props.availablePubTypes)[number]) => {
-			const newParams = new URLSearchParams(searchParams);
-			newParams.set("pubTypeId", value.id);
-			router.replace(`${path}?${newParams.toString()}`, { scroll: false });
-		}
-	);
-
-	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
-
 	const onSubmit: SubmitHandler<Static<typeof pubFieldsSchema>> = async (data) => {
 		const { pubTypeId, stageId, ...pubValues } = data;
 		const enabledPubValues = preparePayload({
@@ -196,7 +167,6 @@ export function PubEditorClient(props: Props) {
 					title: "Success",
 					description: "Pub successfully updated",
 				});
-				closeForm();
 			}
 		} else {
 			if (!pubTypeId) {
@@ -221,7 +191,6 @@ export function PubEditorClient(props: Props) {
 					title: "Success",
 					description: "New pub created",
 				});
-				closeForm();
 			}
 		}
 	};
@@ -233,47 +202,6 @@ export function PubEditorClient(props: Props) {
 				className={cn("relative flex flex-col gap-6", props.className)}
 				onBlur={(e) => e.preventDefault()}
 			>
-				{!props.isUpdating && (
-					<FormField
-						name="pubTypeId"
-						control={form.control}
-						render={({ field }) => (
-							<FormItem
-								aria-label="Select Pub Type"
-								className="flex flex-col items-start gap-2"
-							>
-								<FormLabel>Pub Type</FormLabel>
-								<FormDescription>Assign a pub type to the pub</FormDescription>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button size="sm" variant="outline">
-											{field.value
-												? props.availablePubTypes.find(
-														(type) => type.id === field.value
-													)?.name
-												: "Select Pub Type"}
-											<ChevronDown size="16" />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent>
-										{props.availablePubTypes.map((pubType) => (
-											<DropdownMenuItem
-												key={pubType.id}
-												onSelect={() => {
-													field.onChange(pubType.id);
-													handleSelectPubType(pubType);
-												}}
-											>
-												{pubType.name}
-											</DropdownMenuItem>
-										))}
-									</DropdownMenuContent>
-								</DropdownMenu>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-				)}
 				<FormField
 					name="stageId"
 					control={form.control}

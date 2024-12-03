@@ -294,6 +294,8 @@ export default async function FormPage({
 									pub={pubForForm}
 									elements={form.elements}
 									isUpdating={isUpdating}
+									withAutoSave={isUpdating}
+									withButtonElements
 									className="col-span-2 col-start-2"
 								>
 									{form.elements.map((e) => (
