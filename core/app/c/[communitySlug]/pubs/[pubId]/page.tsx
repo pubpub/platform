@@ -27,7 +27,7 @@ import { getPubsWithRelatedValuesAndChildren, pubValuesByVal } from "~/lib/serve
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { selectCommunityMembers } from "~/lib/server/member";
-import { getCommunityStages } from "~/lib/server/stages";
+import { getStages } from "~/lib/server/stages";
 import { createToken } from "~/lib/server/token";
 import {
 	addPubMember,
@@ -110,7 +110,7 @@ export default async function Page({
 	);
 
 	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
-	const communityStagesPromise = getCommunityStages({ communityId: community.id }).execute();
+	const communityStagesPromise = getStages({ communityId: community.id }).execute();
 
 	const pub = await getPubsWithRelatedValuesAndChildren(
 		{ pubId: params.pubId, communityId: community.id },

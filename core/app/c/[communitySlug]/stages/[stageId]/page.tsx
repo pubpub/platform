@@ -13,16 +13,20 @@ import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getCommunityStages } from "~/lib/server/stages";
+import { getStages } from "~/lib/server/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubs } from "../components/StageList";
 
 export async function generateMetadata({
-	params: { stageId },
+	params: { stageId, communitySlug },
 }: {
 	params: { stageId: StagesId; communitySlug: string };
 }): Promise<Metadata> {
-	const stage = await getCommunityStages({ stageId }).executeTakeFirst();
+	const community = await findCommunityBySlug(communitySlug);
+	if (!community) {
+		notFound();
+	}
+	const stage = await getStages({ communityId: community.id, stageId }).executeTakeFirst();
 	if (!stage) {
 		notFound();
 	}
@@ -50,7 +54,7 @@ export default async function Page({
 
 	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const stagePromise = getCommunityStages({ stageId }).executeTakeFirst();
+	const stagePromise = getStages({ communityId: community.id, stageId }).executeTakeFirst();
 	const capabilityPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },

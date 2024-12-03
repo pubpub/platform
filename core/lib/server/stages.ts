@@ -11,7 +11,6 @@ import type {
 } from "db/public";
 
 import type { AutoReturnType } from "../types";
-import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -49,12 +48,12 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-type CommunityStageProps = XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>;
-export const getCommunityStages = ({ communityId, stageId }: CommunityStageProps) =>
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId };
+export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
 	autoCache(
 		db
 			.selectFrom("stages")
-			.$if(Boolean(communityId), (qb) => qb.where("communityId", "=", communityId!))
+			.where("communityId", "=", communityId)
 			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
 			.select((eb) => [
 				jsonArrayFrom(
@@ -103,7 +102,7 @@ export const getCommunityStages = ({ communityId, stageId }: CommunityStageProps
 			.orderBy("order asc")
 	);
 
-export type CommunityStage = AutoReturnType<typeof getCommunityStages>["executeTakeFirstOrThrow"];
+export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
 
 export const getIntegrationInstanceBase = (trx = db) =>
 	trx

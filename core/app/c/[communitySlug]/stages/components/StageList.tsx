@@ -12,7 +12,7 @@ import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubs } from "~/lib/server";
 import { selectCommunityMembers } from "~/lib/server/member";
-import { getCommunityStages } from "~/lib/server/stages";
+import { getStages } from "~/lib/server/stages";
 import { getStageWorkflows } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubActions } from "./StagePubActions";
@@ -25,7 +25,7 @@ type Props = {
 export async function StageList(props: Props) {
 	const { communityId } = props;
 	const [communityStages, communityMembers] = await Promise.all([
-		getCommunityStages({ communityId }).execute(),
+		getStages({ communityId }).execute(),
 		selectCommunityMembers({ communityId }).execute(),
 	]);
 
