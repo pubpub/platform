@@ -6,9 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { toast } from "ui/use-toast";
 
-import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient2";
+import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import { SAVE_STATUS_QUERY_PARAM } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/constants";
-import { PubEditorClient2 } from "~/app/components/pubs/PubEditor/PubEditorClient2";
+import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
 
 export const PubEditorWrapper = ({
 	children,
@@ -32,8 +32,8 @@ export const PubEditorWrapper = ({
 	};
 
 	return (
-		<PubEditorClient2 {...props} onSuccess={onSuccess}>
+		<PubEditorClient {...props} onSuccess={onSuccess}>
 			{children}
-		</PubEditorClient2>
+		</PubEditorClient>
 	);
 };

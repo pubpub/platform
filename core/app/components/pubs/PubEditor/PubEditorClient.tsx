@@ -1,276 +1,348 @@
 "use client";
 
-import type { Static, TObject } from "@sinclair/typebox";
-import type { FieldPath, FieldValues, SubmitHandler, UseFormReturn } from "react-hook-form";
+import type { Static } from "@sinclair/typebox";
+import type { ReactNode } from "react";
+import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
+import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
+import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { JsonValue } from "contracts";
-import type { CommunitiesId, PubsId, PubTypes, PubTypesId, Stages, StagesId } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { Button } from "ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { ChevronDown, Loader2, Pencil, Plus } from "ui/icon";
-import { toast } from "ui/use-toast";
+import type { GetPubResponseBody, JsonValue } from "contracts";
+import type { PubsId, PubTypesId, StagesId } from "db/public";
+import { CoreSchemaType, ElementType } from "db/public";
+import { Form } from "ui/form";
+import { useUnsavedChangesWarning } from "ui/hooks";
 import { cn } from "utils";
 
-import type { FormElementToggleContext } from "../../forms/FormElementToggleContext";
+import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type { PubValues } from "~/lib/server";
-import type { PubField } from "~/lib/types";
-import { Notice } from "~/app/(user)/login/Notice";
+import type { Form as PubPubForm } from "~/lib/server/form";
+import type { DefinitelyHas } from "~/lib/types";
+import { SubmitButtons } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/SubmitButtons";
+import { isButtonElement } from "~/app/components/FormBuilder/types";
+import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { useFormElementToggleContext } from "../../forms/FormElementToggleContext";
-import * as actions from "./actions";
-import {
-	createPubEditorDefaultValuesFromPubFields,
-	createPubEditorSchemaFromPubFields,
-} from "./helpers";
 
-type Props = {
-	availableStages: Pick<Stages, "id" | "name" | "order">[];
-	communityId: CommunitiesId;
-	className?: string;
-	formElements: React.ReactNode[];
-	parentId?: PubsId;
-	pubFields: Pick<PubField, "slug" | "schemaName">[];
-	pubId: PubsId;
-	pubTypeId: PubTypes["id"];
-	pubValues: PubValues;
-	stageId?: StagesId;
-	/** Is updating or creating? */
-	isUpdating: boolean;
+const SAVE_WAIT_MS = 5000;
+
+const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
+	const element = elements.find((e) => e.slug === slug);
+	return element?.schemaName === CoreSchemaType.MemberId;
 };
 
-const hasNoValidPubFields = (pubFields: Props["pubFields"], schema: TObject<any>) => {
-	return (
-		pubFields.every((field) => field.schemaName == null) &&
-		Object.keys(schema.properties).every(
-			(field) => field === "pubTypeId" || field === "stageId"
+const preparePayload = ({
+	formElements,
+	formValues,
+	formState,
+	toggleContext,
+}: {
+	formElements: PubPubForm["elements"];
+	formValues: FieldValues;
+	formState: FormState<FieldValues>;
+	toggleContext: FormElementToggleContext;
+}) => {
+	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
+	// For example, if a pub has an 'email' field but the form does not,
+	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
+	const payload: Record<string, JsonValue> = {};
+	for (const { slug, schemaName } of formElements) {
+		if (
+			slug &&
+			toggleContext.isEnabled(slug) &&
+			// Only send fields that were changed.
+			formState.dirtyFields[slug]
+		) {
+			payload[slug] =
+				schemaName === CoreSchemaType.RichText
+					? serializeProseMirrorDoc(formValues[slug])
+					: formValues[slug];
+		}
+	}
+	return payload;
+};
+
+/**
+ * Set all default values
+ * Special case: date pubValues need to be transformed to a Date type to pass validation
+ */
+const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
+	const defaultValues: FieldValues = { ...pubValues };
+	for (const element of elements) {
+		if (element.slug && element.schemaName) {
+			const pubValue = pubValues[element.slug];
+			defaultValues[element.slug] =
+				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
+			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
+				defaultValues[element.slug] = new Date(pubValue as string);
+			}
+		}
+	}
+
+	return defaultValues;
+};
+
+const createSchemaFromElements = (
+	elements: PubPubForm["elements"],
+	toggleContext: FormElementToggleContext
+) => {
+	return Type.Object(
+		Object.fromEntries(
+			elements
+				// only add enabled pubfields to the schema
+				.filter(
+					(e) =>
+						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
+				)
+				.map(({ slug, schemaName, config }) => {
+					if (!schemaName) {
+						return [slug, undefined];
+					}
+
+					const schema = getJsonSchemaByCoreSchemaType(schemaName, config);
+					if (!schema) {
+						return [slug, undefined];
+					}
+
+					if (schema.type !== "string") {
+						return [slug, Type.Optional(schema)];
+					}
+
+					// this allows for empty strings, which happens when you enter something
+					// in an input field and then delete it
+					// TODO: reevaluate whether this should be "" or undefined
+					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
+						error: schema.error ?? "Invalid value",
+					});
+					return [slug, schemaWithAllowedEmpty];
+				})
 		)
 	);
 };
 
-/** Only send enabled fields, and transform RichText fields */
-const preparePayload = ({
-	pubValues,
-	toggleContext,
-	pubFields,
-}: {
-	pubValues: FieldValues;
-	toggleContext: FormElementToggleContext;
-	pubFields: Props["pubFields"];
-}) => {
-	const payload: Record<string, JsonValue> = {};
-	for (const { slug, schemaName } of pubFields) {
-		if (toggleContext.isEnabled(slug)) {
-			payload[slug] =
-				schemaName === CoreSchemaType.RichText
-					? serializeProseMirrorDoc(pubValues[slug])
-					: pubValues[slug];
-		}
-	}
-
-	return payload;
+const isSubmitEvent = (
+	e?: React.BaseSyntheticEvent
+): e is React.BaseSyntheticEvent<DefinitelyHas<SubmitEvent, "submitter">> => {
+	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter;
 };
 
-type InferFormValues<T> = T extends UseFormReturn<infer V> ? V : never;
+const getButtonConfig = ({
+	evt,
+	withButtonElements,
+	buttonElements,
+}: {
+	evt: React.BaseSyntheticEvent | undefined;
+	withButtonElements?: boolean;
+	buttonElements: PubPubForm["elements"];
+}) => {
+	if (!withButtonElements) {
+		return { stageId: undefined, submitButtonId: undefined };
+	}
+	const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : undefined;
+	const submitButtonConfig = submitButtonId
+		? buttonElements.find((b) => b.elementId === submitButtonId)
+		: undefined;
+	const stageId = submitButtonConfig?.stageId ?? undefined;
+	return { stageId, submitButtonId: submitButtonId };
+};
 
-export function PubEditorClient(props: Props) {
-	const hasValues = Object.keys(props.pubValues).length > 0;
-	const paramString = props.isUpdating ? "update" : "create";
-	const runCreatePub = useServerAction(actions.createPubRecursive);
-	const runUpdatePub = useServerAction(actions.updatePub);
-	const availableStages = [
-		{ id: undefined, name: "No stage" },
-		...props.availableStages.map((s) => {
-			return { id: s.id, name: s.name };
-		}),
-	];
+export interface PubEditorClientProps {
+	elements: PubPubForm["elements"];
+	children: ReactNode;
+	isUpdating: boolean;
+	pub: Pick<GetPubResponseBody, "id" | "values" | "pubTypeId">;
+	onSuccess: (args: {
+		values: FieldValues;
+		submitButtonId?: string;
+		isAutoSave: boolean;
+	}) => void;
+	stageId?: StagesId;
+	formId?: string;
+	parentId?: PubsId;
+	className?: string;
+	withAutoSave?: boolean;
+	withButtonElements?: boolean;
+}
 
-	const path = usePathname();
+export const PubEditorClient = ({
+	elements,
+	className,
+	children,
+	isUpdating,
+	pub,
+	stageId,
+	formId,
+	parentId,
+	withAutoSave,
+	withButtonElements,
+	onSuccess,
+}: PubEditorClientProps) => {
 	const router = useRouter();
-	const searchParams = useSearchParams();
+	const pathname = usePathname();
+	const community = useCommunity();
+	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
+	const runUpdatePub = useServerAction(actions.updatePub);
+	const runCreatePub = useServerAction(actions.createPubRecursive);
+	// Cache pubId
+	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
 
-	const formElementToggle = useFormElementToggleContext();
+	const [buttonElements, formElements] = useMemo(
+		() => partition(elements, (e) => isButtonElement(e)),
+		[elements]
+	);
+	const toggleContext = useFormElementToggleContext();
 
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-	urlSearchParams.delete(`${paramString}-pub-form`);
-	const pathWithoutFormParam = `${path}?${urlSearchParams.toString()}`;
+	const defaultValues = useMemo(() => {
+		const defaultPubValues = buildDefaultValues(formElements, pub.values);
+		return { ...defaultPubValues, stageId };
+	}, [formElements, pub]);
 
-	// Have the client cache the first pubId it gets so that the pubId isn't changing
-	// on re-render (only relevant on Create)
-	const [pubId, _] = useState(props.pubId);
-
-	const pubFieldsSchema = useMemo(
-		() =>
-			createPubEditorSchemaFromPubFields(
-				props.pubFields.filter((field) => formElementToggle.isEnabled(field.slug))
-			),
-		[props.pubFields, formElementToggle]
+	const resolver = useMemo(
+		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
+		[formElements, toggleContext]
 	);
 
-	const noValidPubFields = useMemo(
-		() => hasNoValidPubFields(props.pubFields, pubFieldsSchema),
-		[pubFieldsSchema, props.pubFields]
-	);
-
-	const resolver = useMemo(() => typeboxResolver(pubFieldsSchema), [pubFieldsSchema]);
-
-	const form = useForm<Static<typeof pubFieldsSchema>>({
-		defaultValues: createPubEditorDefaultValuesFromPubFields(
-			props.pubFields,
-			props.pubValues,
-			props.pubTypeId,
-			props.stageId
-		),
+	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
 		resolver,
+		defaultValues,
+		shouldFocusError: false,
 		reValidateMode: "onBlur",
 	});
 
+	const handleSubmit = useCallback(
+		async (
+			formValues: FieldValues,
+			evt: React.BaseSyntheticEvent | undefined,
+			autoSave = false
+		) => {
+			const { stageId: stageIdFromForm, ...newValues } = formValues;
+
+			const pubValues = preparePayload({
+				formElements,
+				formValues: newValues,
+				formState: formInstance.formState,
+				toggleContext,
+			});
+			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
+				evt,
+				withButtonElements,
+				buttonElements,
+			});
+
+			const stageId = stageIdFromForm ?? stageIdFromButtonConfig;
+			let result;
+			if (isUpdating) {
+				result = await runUpdatePub({
+					pubId: pubId,
+					pubValues,
+					stageId,
+					continueOnValidationError: autoSave,
+				});
+			} else {
+				result = await runCreatePub({
+					body: {
+						id: pubId,
+						pubTypeId: pub.pubTypeId as PubTypesId,
+						values: pubValues as Record<string, any>,
+						stageId: stageId,
+					},
+					communityId: community.id,
+					parent: parentId ? { id: parentId } : undefined,
+				});
+			}
+			if (didSucceed(result)) {
+				// Reset dirty state to prevent the unsaved changes warning from
+				// blocking navigation.
+				// See https://stackoverflow.com/questions/63953501/react-hook-form-resetting-isdirty-without-clearing-form
+				formInstance.reset(
+					{},
+					{
+						keepValues: true,
+					}
+				);
+				onSuccess({ isAutoSave: autoSave, submitButtonId, values: pubValues });
+			}
+		},
+		[
+			formElements,
+			formInstance.formState,
+			router,
+			pathname,
+			runUpdatePub,
+			pub,
+			community.id,
+			toggleContext,
+		]
+	);
+
 	// Re-validate the form when fields are toggled on/off.
 	useEffect(() => {
-		form.trigger(
-			Object.keys(form.formState.touchedFields) as unknown as FieldPath<
-				InferFormValues<typeof form>
-			>
-		);
-	}, [form, formElementToggle]);
+		formInstance.trigger(Object.keys(formInstance.formState.errors));
+	}, [formInstance, toggleContext]);
 
-	const onSubmit: SubmitHandler<Static<typeof pubFieldsSchema>> = async (data) => {
-		const { pubTypeId, stageId, ...pubValues } = data;
-		const enabledPubValues = preparePayload({
-			pubValues,
-			toggleContext: formElementToggle,
-			pubFields: props.pubFields,
-		});
+	useUnsavedChangesWarning(formInstance.formState.isDirty);
 
-		if (props.isUpdating) {
-			const result = await runUpdatePub({
-				pubId,
-				pubValues: enabledPubValues,
-				stageId: stageId as StagesId,
-				continueOnValidationError: false,
-			});
+	const isSubmitting = formInstance.formState.isSubmitting;
 
-			if (didSucceed(result)) {
-				toast({
-					title: "Success",
-					description: "Pub successfully updated",
-				});
-			}
-		} else {
-			if (!pubTypeId) {
-				form.setError("pubTypeId", {
-					message: "Select a pub type",
-				});
+	const handleAutoSave = useCallback(
+		(values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
+			// Don't auto save while editing the user ID field. the query params
+			// will clash and it will be a bad time :(
+			const target = evt?.target as HTMLInputElement;
+			if (target?.name && isUserSelectField(target.name, formElements)) {
 				return;
 			}
-
-			const result = await runCreatePub({
-				body: {
-					id: pubId,
-					pubTypeId: pubTypeId as PubTypesId,
-					stageId: stageId as StagesId,
-					values: enabledPubValues as Record<string, any>,
-				},
-				communityId: props.communityId,
-				parent: props.parentId ? { id: props.parentId } : undefined,
-			});
-			if (didSucceed(result)) {
-				toast({
-					title: "Success",
-					description: "New pub created",
-				});
+			if (saveTimer) {
+				clearTimeout(saveTimer);
 			}
-		}
+			const newTimer = setTimeout(async () => {
+				// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
+				// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
+				handleSubmit(values, evt, true);
+			}, SAVE_WAIT_MS);
+			setSaveTimer(newTimer);
+		},
+		[formElements, saveTimer, handleSubmit]
+	);
+
+	const handleAutoSaveOnError: SubmitErrorHandler<FieldValues> = (errors) => {
+		const validFields = Object.fromEntries(
+			Object.entries(formInstance.getValues()).filter(([name, value]) => !(name in errors))
+		);
+		handleAutoSave(validFields, undefined);
 	};
 
 	return (
-		<Form {...form}>
+		<Form {...formInstance}>
 			<form
-				onSubmit={form.handleSubmit(onSubmit)}
-				className={cn("relative flex flex-col gap-6", props.className)}
-				onBlur={(e) => e.preventDefault()}
+				onChange={
+					withAutoSave
+						? formInstance.handleSubmit(handleAutoSave, handleAutoSaveOnError)
+						: undefined
+				}
+				onSubmit={formInstance.handleSubmit(handleSubmit)}
+				className={cn("relative isolate flex flex-col gap-6", className)}
+				id={formId}
 			>
-				<FormField
-					name="stageId"
-					control={form.control}
-					render={({ field }) => (
-						<FormItem aria-label="Stage" className="flex flex-col items-start gap-2">
-							<FormLabel>Stage</FormLabel>
-							<FormDescription>Select the stage you want the pub in</FormDescription>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										size="sm"
-										variant="outline"
-										data-testid="stage-selector"
-									>
-										{field.value
-											? availableStages.find(
-													(stage) => stage.id === field.value
-												)?.name
-											: "No stage"}
-										<ChevronDown size="16" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent>
-									{availableStages.map((stage) => (
-										<DropdownMenuItem
-											key={stage.id || "no-stage"}
-											onClick={() => {
-												field.onChange(stage.id);
-											}}
-										>
-											{stage.name}
-										</DropdownMenuItem>
-									))}
-								</DropdownMenuContent>
-							</DropdownMenu>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				{props.formElements}
-				{noValidPubFields && (
-					<Notice
-						title={`Trying to ${paramString} a deprecated PubType`}
-						description="You can no longer edit or create Pubs of this PubType."
-						variant="destructive"
-					/>
-				)}
-				<Button
-					type="submit"
-					className="flex items-center gap-x-2"
-					disabled={
-						form.formState.isSubmitting || !form.formState.isValid || noValidPubFields
-					}
-				>
-					{form.formState.isSubmitting ? (
-						<Loader2 className="h-4 w-4 animate-spin" />
-					) : hasValues ? (
-						<>
-							<Pencil size="12" />
-							Update Pub
-						</>
-					) : (
-						<>
-							<Plus size="12" />
-							Create Pub
-						</>
-					)}
-				</Button>
+				{children}
+				{withButtonElements ? (
+					<>
+						<hr />
+						<SubmitButtons
+							buttons={buttonElements}
+							isDisabled={isSubmitting}
+							className="flex justify-end"
+						/>
+					</>
+				) : null}
 			</form>
 		</Form>
 	);
-}
+};
