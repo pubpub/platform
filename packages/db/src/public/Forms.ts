@@ -30,6 +30,8 @@ export interface FormsTable {
 	slug: ColumnType<string, string, string>;
 
 	access: ColumnType<FormAccessType, FormAccessType | undefined, FormAccessType>;
+
+	isDefault: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Forms = Selectable<FormsTable>;
@@ -48,6 +50,7 @@ export const formsSchema = z.object({
 	communityId: communitiesIdSchema,
 	slug: z.string(),
 	access: formAccessTypeSchema,
+	isDefault: z.boolean(),
 });
 
 export const formsInitializerSchema = z.object({
@@ -58,6 +61,7 @@ export const formsInitializerSchema = z.object({
 	communityId: communitiesIdSchema,
 	slug: z.string(),
 	access: formAccessTypeSchema.optional(),
+	isDefault: z.boolean().optional(),
 });
 
 export const formsMutatorSchema = z.object({
@@ -68,4 +72,5 @@ export const formsMutatorSchema = z.object({
 	communityId: communitiesIdSchema.optional(),
 	slug: z.string().optional(),
 	access: formAccessTypeSchema.optional(),
+	isDefault: z.boolean().optional(),
 });
