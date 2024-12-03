@@ -14,6 +14,7 @@ import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { PageTitle } from "./PageTitle";
 
 export async function generateMetadata({
 	params: { pubId, communitySlug },
@@ -99,14 +100,7 @@ export default async function Page({
 					Save
 				</Button>
 			}
-			title={
-				<div className="flex flex-col items-center">
-					Edit pub
-					<span className="text-sm font-normal text-muted-foreground">
-						Form will save when you click save
-					</span>
-				</div>
-			}
+			title={<PageTitle />}
 			right={
 				<Button variant="link">
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
