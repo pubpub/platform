@@ -155,7 +155,9 @@ export async function StagePubs({
 					size="lg"
 					asChild
 				>
-					<Link href={`stages/${stage.id}`}>See all pubs in stage {stage.name}</Link>
+					<Link href={`/c/${pageContext.params.communitySlug}/stages/${stage.id}`}>
+						See all pubs in stage {stage.name}
+					</Link>
 				</Button>
 			)}
 		</div>
