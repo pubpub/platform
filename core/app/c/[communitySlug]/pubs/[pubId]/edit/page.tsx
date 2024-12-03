@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import type { CommunitiesId, PubsId } from "db/public";
@@ -8,6 +9,7 @@ import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
+import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getCommunityBySlug } from "~/lib/db/queries";
@@ -101,9 +103,17 @@ export default async function Page({
 					</span>
 				</div>
 			}
-			right={<Button variant="link">View Pub</Button>}
+			right={
+				<Button variant="link">
+					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
+				</Button>
+			}
 		>
-			<div>todo</div>
+			<div className="flex justify-center py-10">
+				<div className="max-w-prose">
+					<PubEditor searchParams={searchParams} pubId={pub.id} />
+				</div>
+			</div>
 		</ContentLayout>
 	);
 }

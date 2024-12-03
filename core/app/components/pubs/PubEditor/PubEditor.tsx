@@ -6,6 +6,7 @@ import { expect } from "utils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
+import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
@@ -96,14 +97,21 @@ export async function PubEditor(props: PubEditorProps) {
 		);
 	}
 
-	const formElements = makeFormElementDefFromPubFields(pubFields).map((formElementDef) => (
+	// TODO: determine the slug based on default from pub type
+	const form = await getForm({
+		communityId: community.id,
+		slug: "review",
+	}).executeTakeFirstOrThrow();
+
+	// TODO: render markdown content
+	const formElements = form.elements.map((e) => (
 		<FormElement
-			key={formElementDef.elementId}
-			element={formElementDef}
+			key={e.elementId}
+			pubId={pubId}
+			element={e}
 			searchParams={props.searchParams}
 			communitySlug={community.slug}
-			values={pubValues}
-			pubId={pubId}
+			values={pub ? pub.values : {}}
 		/>
 	));
 
@@ -130,10 +138,6 @@ export async function PubEditor(props: PubEditorProps) {
 			/>
 		</ContextEditorContextProvider>
 	);
-
-	if (isUpdating) {
-		return editor;
-	}
 
 	return (
 		<FormElementToggleProvider fieldSlugs={pubFields.map((pubField) => pubField.slug)}>
