@@ -4,9 +4,9 @@ import type { FieldValues } from "react-hook-form";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient2";
+import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import type { Form as PubPubForm } from "~/lib/server/form";
-import { PubEditorClient2 } from "~/app/components/pubs/PubEditor/PubEditorClient2";
+import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 
 const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) => {
@@ -55,8 +55,8 @@ export const ExternalFormWrapper = ({
 	};
 
 	return (
-		<PubEditorClient2 {...props} onSuccess={onSuccess}>
+		<PubEditorClient {...props} onSuccess={onSuccess}>
 			{children}
-		</PubEditorClient2>
+		</PubEditorClient>
 	);
 };
