@@ -37,17 +37,6 @@ import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 const SAVE_WAIT_MS = 5000;
 
-const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) => {
-	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);
-	requiredElements.forEach((element) => {
-		const value = values[element.slug!];
-		if (value == null) {
-			return false;
-		}
-	});
-	return true;
-};
-
 const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
 	const element = elements.find((e) => e.slug === slug);
 	return element?.schemaName === CoreSchemaType.MemberId;
@@ -178,6 +167,7 @@ export interface PubEditorClientProps {
 		submitButtonId?: string;
 		isAutoSave: boolean;
 	}) => void;
+	stageId?: StagesId;
 	formId?: string;
 	parentId?: PubsId;
 	className?: string;
@@ -191,6 +181,7 @@ export const PubEditorClient2 = ({
 	children,
 	isUpdating,
 	pub,
+	stageId,
 	formId,
 	parentId,
 	withAutoSave,
@@ -213,7 +204,8 @@ export const PubEditorClient2 = ({
 	const toggleContext = useFormElementToggleContext();
 
 	const defaultValues = useMemo(() => {
-		return buildDefaultValues(formElements, pub.values);
+		const defaultPubValues = buildDefaultValues(formElements, pub.values);
+		return { ...defaultPubValues, stageId };
 	}, [formElements, pub]);
 
 	const resolver = useMemo(
@@ -234,17 +226,21 @@ export const PubEditorClient2 = ({
 			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
+			const { stageId: stageIdFromForm, ...newValues } = formValues;
+
 			const pubValues = preparePayload({
 				formElements,
-				formValues,
+				formValues: newValues,
 				formState: formInstance.formState,
 				toggleContext,
 			});
-			const { stageId, submitButtonId } = getButtonConfig({
+			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
 				evt,
 				withButtonElements,
 				buttonElements,
 			});
+
+			const stageId = stageIdFromForm ?? stageIdFromButtonConfig;
 			let result;
 			if (isUpdating) {
 				result = await runUpdatePub({
@@ -267,11 +263,6 @@ export const PubEditorClient2 = ({
 			}
 			if (didSucceed(result)) {
 				onSuccess({ isAutoSave: autoSave, submitButtonId, values: pubValues });
-				// const newParams = new URLSearchParams(params);
-				// const currentTime = `${new Date().getTime()}`;
-				// if (!isUpdating) {
-				// 	newParams.set("pubId", pubId);
-				// }
 
 				if (autoSave) {
 					// Reset dirty state to prevent the unsaved changes warning from
@@ -284,16 +275,6 @@ export const PubEditorClient2 = ({
 						}
 					);
 				}
-
-				// if (!autoSave && isComplete(formElements, pubValues)) {
-				// 	if (submitButtonId) {
-				// 		newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
-				// 	}
-				// 	router.push(`${pathname}?${newParams.toString()}`);
-				// 	return;
-				// }
-				// newParams.set(SAVE_STATUS_QUERY_PARAM, currentTime);
-				// router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 			}
 		},
 		[
