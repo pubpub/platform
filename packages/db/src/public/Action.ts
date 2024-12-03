@@ -11,6 +11,7 @@ export enum Action {
 	pushToV6 = "pushToV6",
 	http = "http",
 	move = "move",
+	datacite = "datacite",
 }
 
 /** Zod schema for Action */
