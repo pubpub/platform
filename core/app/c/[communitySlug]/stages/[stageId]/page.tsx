@@ -48,14 +48,19 @@ export default async function Page({
 		notFound();
 	}
 
-	const stage = await getCommunityStages({ stageId }).executeTakeFirstOrThrow();
 	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const showEditButton = await userCan(
+	const stagePromise = getCommunityStages({ stageId }).executeTakeFirst();
+	const capabilityPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
 	);
+	const [stage, showEditButton] = await Promise.all([stagePromise, capabilityPromise]);
+
+	if (!stage) {
+		notFound();
+	}
 
 	return (
 		<>
