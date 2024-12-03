@@ -94,7 +94,11 @@ export default async function Page({
 
 	return (
 		<ContentLayout
-			left={<Button form={formId}>Save</Button>}
+			left={
+				<Button form={formId} type="submit">
+					Save
+				</Button>
+			}
 			title={
 				<div className="flex flex-col items-center">
 					Edit pub
@@ -111,7 +115,7 @@ export default async function Page({
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose">
-					<PubEditor searchParams={searchParams} pubId={pub.id} />
+					<PubEditor searchParams={searchParams} pubId={pub.id} formId={formId} />
 				</div>
 			</div>
 		</ContentLayout>

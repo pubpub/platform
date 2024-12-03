@@ -11,12 +11,12 @@ import { getPubFields } from "~/lib/server/pubFields";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
-import { makeFormElementDefFromPubFields } from "./helpers";
-import { PubEditorClient } from "./PubEditorClient";
+import { PubEditorWrapper } from "./PubEditorWrapper";
 import { getCommunityById, getStage } from "./queries";
 
 export type PubEditorProps = {
 	searchParams: Record<string, unknown>;
+	formId?: string;
 } & (
 	| {
 			pubId: PubsId;
@@ -58,8 +58,6 @@ export async function PubEditor(props: PubEditorProps) {
 		getPubs({ communityId: community.id }),
 		getPubTypesForCommunity(community.id),
 	]);
-
-	const pubValues = pub?.values ?? {};
 
 	let pubType: AutoReturnType<
 		typeof getCommunityById
@@ -116,6 +114,7 @@ export async function PubEditor(props: PubEditorProps) {
 	));
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
+	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 	const editor = (
 		<ContextEditorContextProvider
 			pubId={pubId}
@@ -123,19 +122,17 @@ export async function PubEditor(props: PubEditorProps) {
 			pubs={pubs}
 			pubTypes={pubTypes}
 		>
-			<PubEditorClient
-				availablePubTypes={community.pubTypes}
-				availableStages={community.stages}
-				communityId={community.id}
-				formElements={formElements}
+			<PubEditorWrapper
+				elements={form.elements}
 				parentId={"parentId" in props ? props.parentId : undefined}
-				pubFields={pubFields}
-				pubId={pubId}
-				pubTypeId={pubType?.id}
-				pubValues={pubValues}
-				stageId={currentStageId}
+				pub={pubForForm}
 				isUpdating={isUpdating}
-			/>
+				withAutoSave={false}
+				withButtonElements={false}
+				formId={props.formId}
+			>
+				{formElements}
+			</PubEditorWrapper>
 		</ContextEditorContextProvider>
 	);
 
