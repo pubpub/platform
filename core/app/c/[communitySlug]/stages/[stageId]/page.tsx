@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +16,19 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getCommunityStages } from "~/lib/server/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubs } from "../components/StageList";
+
+export async function generateMetadata({
+	params: { stageId },
+}: {
+	params: { stageId: StagesId; communitySlug: string };
+}): Promise<Metadata> {
+	const stage = await getCommunityStages({ stageId }).executeTakeFirst();
+	if (!stage) {
+		notFound();
+	}
+
+	return { title: `${stage.name} Stage` };
+}
 
 export default async function Page({
 	params,
