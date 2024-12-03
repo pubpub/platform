@@ -377,6 +377,7 @@ Table forms {
   elements form_elements [not null]
   isArchived Boolean [not null, default: false]
   access FormAccessType [not null, default: 'private']
+  isDefault Boolean [not null, default: false]
   members form_memberships [not null]
 
   indexes {
