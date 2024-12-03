@@ -3,7 +3,6 @@ import type { ExpressionBuilder } from "kysely";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { Database } from "db/Database";
 import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
 
 import type { Prettify, XOR } from "../types";
@@ -32,6 +31,7 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 					"pub_fields.slug",
 					"pub_fields.schemaName",
 					"pub_fields.isRelation",
+					"_PubFieldToPubType.isTitle",
 					jsonObjectFrom(
 						eb
 							.selectFrom("PubFieldSchema")

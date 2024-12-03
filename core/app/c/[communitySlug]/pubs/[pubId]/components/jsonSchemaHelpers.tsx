@@ -1,7 +1,11 @@
 import type { AnySchema, JSONSchemaType } from "ajv";
 
+import { Value } from "@sinclair/typebox/value";
+import { getJsonSchemaByCoreSchemaType } from "schemas";
+
 import type { JsonValue } from "contracts";
 import type { PubFieldSchema, PubValues } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { CardContent, CardHeader, CardTitle } from "ui/card";
 import { Separator } from "ui/separator";
 import { cn } from "utils";
@@ -60,21 +64,21 @@ export function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, va
 	return fields;
 }
 
-export function renderField(fieldValue: PubValueWithFieldAndSchema) {
-	const JSONSchema = fieldValue.field.schema
-		? (fieldValue.field.schema.schema as JSONSchemaType<AnySchema>)
-		: null;
-	const fieldTitle = (JSONSchema && JSONSchema.title) || fieldValue.field.name;
-	const renderedField = JSONSchema
-		? recursivelyGetScalarFields(JSONSchema, fieldValue.value)
-		: fieldValue.value && fieldValue.value.toString();
+export const renderPubValue = ({ fieldName, value }: { fieldName: string; value: JsonValue }) => {
+	// Currently, we are only rendering string versions of fields, except for file uploads
+	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
+	if (Value.Check(fileUploadSchema, value)) {
+		return <FileUploadPreview files={value as FileUpload} />;
+	}
+
+	const renderedField = (value as JsonValue)?.toString();
 	return (
 		<>
 			<Separator />
 			<CardHeader>
-				<CardTitle className={cn("text-base")}>{fieldTitle}</CardTitle>
+				<CardTitle className={cn("text-base")}>{fieldName}</CardTitle>
 			</CardHeader>
-			<CardContent data-testid={`${fieldTitle}-value`}>{renderedField}</CardContent>
+			<CardContent data-testid={`${fieldName}-value`}>{renderedField}</CardContent>
 		</>
 	);
-}
+};
