@@ -88,10 +88,19 @@ export default async function Page({
 		return null;
 	}
 
+	const formId = `edit-pub-${pub.id}`;
+
 	return (
 		<ContentLayout
-			left={<Button>Save</Button>}
-			title={<div className="flex grow gap-1 border">Edit pub</div>}
+			left={<Button form={formId}>Save</Button>}
+			title={
+				<div className="flex flex-col items-center">
+					Edit pub
+					<span className="text-sm font-normal text-muted-foreground">
+						Form will save when you click save
+					</span>
+				</div>
+			}
 			right={<Button variant="link">View Pub</Button>}
 		>
 			<div>todo</div>
