@@ -455,6 +455,7 @@ enum Action {
   http
   move
   googleDriveImport
+  datacite
 }
 
 model ActionRun {
