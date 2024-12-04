@@ -15,6 +15,7 @@ import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
 import { hydrateMarkdownElements } from "../../forms/structural";
 import { StageSelectClient } from "../../StageSelect/StageSelectClient";
+import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorWrapper } from "./PubEditorWrapper";
 import { getCommunityById, getStage } from "./queries";
 
@@ -121,6 +122,15 @@ export async function PubEditor(props: PubEditorProps) {
 		/>
 	));
 
+	// These are pub values that are only on the pub, but not on the form. We render them at the end of the form.
+	const pubOnlyElementDefinitions = pub
+		? makeFormElementDefFromPubFields(
+				pubFields.filter((pubField) => {
+					return !form.elements.find((e) => e.slug === pubField.slug);
+				})
+			)
+		: [];
+
 	const member = expect(user?.memberships.find((m) => m.communityId === community?.id));
 
 	const memberWithUser = {
@@ -157,7 +167,7 @@ export async function PubEditor(props: PubEditorProps) {
 				pubTypes={pubTypes}
 			>
 				<PubEditorWrapper
-					elements={form.elements}
+					elements={[...form.elements, ...pubOnlyElementDefinitions]}
 					parentId={"parentId" in props ? props.parentId : undefined}
 					pub={pubForForm}
 					isUpdating={isUpdating}
@@ -173,6 +183,16 @@ export async function PubEditor(props: PubEditorProps) {
 							stages={community.stages}
 						/>
 						{formElements}
+						{pubOnlyElementDefinitions.map((formElementDef) => (
+							<FormElement
+								key={formElementDef.elementId}
+								element={formElementDef}
+								pubId={pubId}
+								searchParams={props.searchParams}
+								communitySlug={community.slug}
+								values={pub ? pub.values : {}}
+							/>
+						))}
 					</>
 				</PubEditorWrapper>
 			</ContextEditorContextProvider>
