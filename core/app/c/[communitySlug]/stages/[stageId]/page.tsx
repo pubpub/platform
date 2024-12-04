@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import type { StagesId } from "db/public";
+import type { CommunitiesId, StagesId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
@@ -17,6 +17,10 @@ import { getStages } from "~/lib/server/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubs } from "../components/StageList";
 
+const getStageCached = cache(async (stageId: StagesId, communityId: CommunitiesId) => {
+	return getStages({ stageId, communityId }).executeTakeFirst();
+});
+
 export async function generateMetadata({
 	params: { stageId, communitySlug },
 }: {
@@ -26,7 +30,7 @@ export async function generateMetadata({
 	if (!community) {
 		notFound();
 	}
-	const stage = await getStages({ communityId: community.id, stageId }).executeTakeFirst();
+	const stage = await getStageCached(stageId, community.id);
 	if (!stage) {
 		notFound();
 	}
@@ -54,7 +58,7 @@ export default async function Page({
 
 	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const stagePromise = getStages({ communityId: community.id, stageId }).executeTakeFirst();
+	const stagePromise = getStageCached(stageId, community.id);
 	const capabilityPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
