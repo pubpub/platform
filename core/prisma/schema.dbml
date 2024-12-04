@@ -497,6 +497,7 @@ Enum Action {
   pushToV6
   http
   move
+  googleDriveImport
 }
 
 Enum ActionRunStatus {

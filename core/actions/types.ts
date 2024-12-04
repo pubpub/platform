@@ -21,7 +21,7 @@ type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, 
 export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
 export type ActionPub<T extends ActionPubType> = {
-	id: string;
+	id: PubsId;
 	parentId?: PubsId | null;
 	values: {
 		[key in T[number]["slug"]]: JTDDataType<T[number]["schema"]["schema"]>;
