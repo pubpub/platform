@@ -4,14 +4,14 @@ import { notFound, redirect } from "next/navigation";
 import type { CommunitiesId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
-import { ClipboardPenLine } from "ui/icon";
+import { ClipboardPenLine, Info } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
@@ -72,11 +72,31 @@ export default async function Page({
 	return (
 		<ContentLayout
 			title={
-				<>
-					<ClipboardPenLine size={24} strokeWidth={1} className="mr-2 text-slate-500" />{" "}
-					{form.name}
-					<EditFormTitleButton formId={form.id} name={form.name} />
-				</>
+				<div className="flex flex-col">
+					<div className="flex flex-row items-center">
+						<ClipboardPenLine
+							size={24}
+							strokeWidth={1}
+							className="mr-2 text-slate-500"
+						/>{" "}
+						{form.name}
+						<EditFormTitleButton formId={form.id} name={form.name} />
+					</div>
+					{form.isDefault && (
+						<div className="flex gap-1 text-sm font-normal">
+							Default editor for this type
+							<Tooltip>
+								<TooltipTrigger>
+									<Info size="16" />
+								</TooltipTrigger>
+								<TooltipContent>
+									This form is used as the default internal editor for all Pubs of
+									this type.
+								</TooltipContent>
+							</Tooltip>
+						</div>
+					)}
+				</div>
 			}
 			headingAction={
 				<div className="flex items-center gap-2">

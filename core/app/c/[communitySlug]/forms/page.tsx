@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import React from "react";
 import { notFound, redirect } from "next/navigation";
 import partition from "lodash.partition";
 
@@ -53,13 +52,14 @@ export default async function Page({
 			.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
 			.innerJoin("communities", "communities.id", "pub_types.communityId")
 			.select([
-				"forms.id as id",
-				"forms.slug as slug",
+				"forms.id",
+				"forms.slug",
 				"forms.name as formName",
 				"pub_types.name as pubType",
 				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
 				"forms.isArchived",
 				"forms.slug",
+				"forms.isDefault",
 			])
 			.where("communities.slug", "=", communitySlug)
 	).execute();
@@ -68,7 +68,7 @@ export default async function Page({
 
 	const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
-			const { id, formName, pubType, updatedAt, isArchived, slug } = form;
+			const { id, formName, pubType, updatedAt, isArchived, slug, isDefault } = form;
 			return {
 				id,
 				slug,
@@ -76,6 +76,7 @@ export default async function Page({
 				pubType,
 				updated: new Date(updatedAt),
 				isArchived,
+				isDefault,
 			};
 		});
 

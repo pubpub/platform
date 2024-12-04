@@ -501,6 +501,7 @@ model Form {
   elements    FormElement[]
   isArchived  Boolean        @default(false)
   access      FormAccessType @default(private)
+  isDefault   Boolean        @default(false)
 
   members FormMembership[]
 
