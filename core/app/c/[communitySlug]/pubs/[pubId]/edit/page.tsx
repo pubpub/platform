@@ -26,13 +26,10 @@ export async function generateMetadata({
 		return { title: "Community Not Found" };
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildren(
-		{ pubId: pubId as PubsId, communityId: community.id as CommunitiesId },
-		{
-			withPubType: true,
-			withStage: true,
-		}
-	);
+	const pub = await getPubsWithRelatedValuesAndChildren({
+		pubId: pubId as PubsId,
+		communityId: community.id as CommunitiesId,
+	});
 
 	if (!pub) {
 		return { title: "Pub Not Found" };
@@ -79,13 +76,10 @@ export default async function Page({
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildren(
-		{ pubId: params.pubId as PubsId, communityId: community.id as CommunitiesId },
-		{
-			withPubType: true,
-			withStage: true,
-		}
-	);
+	const pub = await getPubsWithRelatedValuesAndChildren({
+		pubId: params.pubId as PubsId,
+		communityId: community.id as CommunitiesId,
+	});
 
 	if (!pub) {
 		return null;
