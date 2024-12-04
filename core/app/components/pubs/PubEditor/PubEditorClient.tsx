@@ -23,11 +23,11 @@ import type { FormElementToggleContext } from "~/app/components/forms/FormElemen
 import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
 import type { DefinitelyHas } from "~/lib/types";
-import { SubmitButtons } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/SubmitButtons";
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
+import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
 import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
