@@ -6,6 +6,7 @@ import type { Event } from "db/public";
 
 import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
 import * as email from "../email/action";
+import * as googleDriveImport from "../googleDriveImport/action";
 import * as http from "../http/action";
 import * as log from "../log/action";
 import * as move from "../move/action";
@@ -19,6 +20,7 @@ export const actions = {
 	[pushToV6.action.name]: pushToV6.action,
 	[http.action.name]: http.action,
 	[move.action.name]: move.action,
+	[googleDriveImport.action.name]: googleDriveImport.action,
 } as const;
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {

@@ -52,6 +52,7 @@
 		"@faker-js/faker": "^9.0.0",
 		"@honeycombio/opentelemetry-node": "catalog:",
 		"@hookform/resolvers": "^3.3.1",
+		"@icons-pack/react-simple-icons": "^10.2.0",
 		"@nimpl/getters": "^1.4.1",
 		"@node-rs/argon2": "^1.8.3",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",

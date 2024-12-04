@@ -439,6 +439,7 @@ enum Action {
   pushToV6
   http
   move
+  googleDriveImport
 }
 
 model ActionRun {
