@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import type { PubsId } from "db/public";
 import { Button } from "ui/button";
@@ -8,11 +9,10 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
+import { MoreVertical, Pencil } from "ui/icon";
 
-import { SkeletonButton } from "../skeletons/SkeletonButton";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { RemovePubButton } from "./RemovePubButton";
-import { UpdatePubButton } from "./UpdatePubButton";
 
 type Props = {
 	pubId: PubsId;
@@ -20,6 +20,7 @@ type Props = {
 };
 
 export const PubDropDown = (props: Props) => {
+	const communitySlug = getCommunitySlug();
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -29,15 +30,14 @@ export const PubDropDown = (props: Props) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="width">
 				<DropdownMenuItem asChild>
-					<Suspense fallback={<SkeletonButton />} key={props.pubId}>
-						<UpdatePubButton
-							variant="ghost"
-							size="sm"
-							className="w-full justify-start"
-							pubId={props.pubId}
-							searchParams={props.searchParams}
-						/>
-					</Suspense>
+					<Button variant="ghost" size="sm" className="w-full border-0">
+						<Link
+							href={`/c/${communitySlug}/pubs/${props.pubId}/edit`}
+							className="flex gap-1"
+						>
+							<Pencil size="12" className="mb-0.5" /> Update Pub
+						</Link>
+					</Button>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
 					<RemovePubButton
