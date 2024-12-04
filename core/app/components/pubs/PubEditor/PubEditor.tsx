@@ -96,13 +96,15 @@ export async function PubEditor(props: PubEditorProps) {
 		);
 	}
 
-	// TODO: determine the slug based on default from pub type
 	const form = await getForm({
 		communityId: community.id,
-		slug: "review",
-	}).executeTakeFirstOrThrow();
+		pubTypeId: pubType.id,
+	}).executeTakeFirstOrThrow(
+		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
+	);
 
 	// TODO: render markdown content
+	// TODO: render the pubvalues that are not on the form but might be on the pub
 	const formElements = form.elements.map((e) => (
 		<FormElement
 			key={e.elementId}
