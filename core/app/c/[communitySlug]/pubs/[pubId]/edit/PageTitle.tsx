@@ -1,6 +1,6 @@
 "use client";
 
-import { useSaveStatus } from "~/app/c/(public)/[communitySlug]/public/forms/[formSlug]/fill/SaveStatus";
+import { useSaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 
 export const PageTitle = () => {
 	const status = useSaveStatus({ defaultMessage: "Form will save when you click save" });
