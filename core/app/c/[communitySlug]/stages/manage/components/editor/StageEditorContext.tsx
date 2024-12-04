@@ -98,7 +98,7 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 	const deleteSelection = useCallback(() => {
 		deleteStagesAndMoveConstraints(
 			selectedStages.current.map((s) => s.id),
-			selectedMoveConstraints.current.map((mc) => [mc.stageId, mc.destinationId])
+			selectedMoveConstraints.current.map((mc) => mc.id)
 		);
 		setHasSelection(false);
 	}, []);

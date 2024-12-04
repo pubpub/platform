@@ -4,13 +4,12 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import type { JsonValue } from "contracts";
-import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
+import type { PubsId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 
-import type { CommunityStage } from "~/lib/server/stages";
-import type { MemberWithUser, PubWithValues } from "~/lib/types";
+import type { PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
@@ -23,9 +22,12 @@ import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { getCommunityBySlug, getStageActions } from "~/lib/db/queries";
+import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValuesAndChildren, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
+import { selectCommunityMembers } from "~/lib/server/member";
+import { getStages } from "~/lib/server/stages";
 import { createToken } from "~/lib/server/token";
 import {
 	addPubMember,
@@ -39,7 +41,7 @@ import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 export async function generateMetadata({
 	params: { pubId },
 }: {
-	params: { pubId: string; communitySlug: string };
+	params: { pubId: PubsId; communitySlug: string };
 }): Promise<Metadata> {
 	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
 
@@ -47,8 +49,8 @@ export async function generateMetadata({
 		db
 			.selectFrom("pubs")
 			.selectAll("pubs")
-			.select(pubValuesByVal(pubId as PubsId))
-			.where("id", "=", pubId as PubsId)
+			.select(pubValuesByVal(pubId))
+			.where("id", "=", pubId)
 	).executeTakeFirst();
 
 	if (!pub) {
@@ -76,12 +78,18 @@ export default async function Page({
 	const { user } = await getPageLoginData();
 
 	const token = await createToken({
-		userId: user.id as UsersId,
+		userId: user.id,
 		type: AuthTokenType.generic,
 	});
 
 	if (!pubId || !communitySlug) {
 		return null;
+	}
+
+	const community = await findCommunityBySlug(communitySlug);
+
+	if (!community) {
+		notFound();
 	}
 
 	const canAddMember = await userCan(
@@ -101,14 +109,11 @@ export default async function Page({
 		user.id
 	);
 
-	const community = await getCommunityBySlug(communitySlug);
-
-	if (community === null) {
-		notFound();
-	}
+	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
+	const communityStagesPromise = getStages({ communityId: community.id }).execute();
 
 	const pub = await getPubsWithRelatedValuesAndChildren(
-		{ pubId: params.pubId as PubsId, communityId: community.id as CommunitiesId },
+		{ pubId: params.pubId, communityId: community.id },
 		{
 			withPubType: true,
 			withChildren: true,
@@ -118,11 +123,16 @@ export default async function Page({
 		}
 	);
 
+	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
+
+	const [actions, communityMembers, communityStages] = await Promise.all([
+		actionsPromise,
+		communityMembersPromise,
+		communityStagesPromise,
+	]);
 	if (!pub) {
 		return null;
 	}
-
-	const actions = pub.stage ? await getStageActions(pub.stage.id as StagesId).execute() : null;
 
 	const { stage, children, ...slimPub } = pub;
 
@@ -160,10 +170,8 @@ export default async function Page({
 									<div data-testid="current-stage">{pub.stage.name}</div>
 									<Move
 										pubId={pub.id}
-										stageId={pub.stage.id as StagesId}
-										communityStages={
-											community.stages as unknown as CommunityStage[]
-										}
+										stageId={pub.stage.id}
+										communityStages={communityStages}
 									/>
 								</>
 							) : null}
@@ -177,7 +185,7 @@ export default async function Page({
 									<IntegrationActions
 										pubId={pubId}
 										token={token}
-										stageId={pub.stage.id as StagesId}
+										stageId={pub.stage.id}
 										type="pub"
 									/>
 								)}
@@ -230,8 +238,7 @@ export default async function Page({
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
 							<Assign
-								// TODO: Remove this cast
-								members={community.members as unknown as MemberWithUser[]}
+								members={communityMembers}
 								// TODO: Remove this cast
 								pub={slimPub as unknown as PubWithValues}
 							/>
@@ -249,8 +256,8 @@ export default async function Page({
 			<div className="mb-2">
 				<CreatePubButton
 					text="Add New Pub"
-					communityId={community.id as CommunitiesId}
-					parentId={pub.id as PubsId}
+					communityId={community.id}
+					parentId={pub.id}
 					searchParams={searchParams}
 				/>
 			</div>
@@ -258,7 +265,7 @@ export default async function Page({
 				<PubChildrenTableWrapper
 					communitySlug={params.communitySlug}
 					pageContext={{ params, searchParams }}
-					parentPubId={pub.id as PubsId}
+					parentPubId={pub.id}
 				/>
 			</Suspense>
 		</div>

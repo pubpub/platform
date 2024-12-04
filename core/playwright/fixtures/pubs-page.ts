@@ -84,7 +84,7 @@ export class PubsPage {
 			.getByRole("link", { name: getPubTitle({ values: pubValues, createdAt: new Date() }) })
 			.first()
 			.getAttribute("href");
-		const pubId = path?.replace(/^pubs\//, "");
+		const pubId = path?.match(/\/([0-9a-f-]+)$/)?.[1];
 		if (!pubId) {
 			throw new Error("Unable to get pub id from newly created pub");
 		}

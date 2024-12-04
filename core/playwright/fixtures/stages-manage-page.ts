@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Action } from "db/public";
 
@@ -20,9 +20,9 @@ export class StagesManagePage {
 
 	async addStage(stageName: string) {
 		await this.page.keyboard.press("Control+n");
-		const node = await this.getStageNode("Untitled Stage");
+		const node = this.getStageNode("Untitled Stage");
 		await node.dblclick();
-		const nameInput = await node.getByLabel("Edit stage name");
+		const nameInput = node.getByLabel("Edit stage name");
 		await nameInput.fill(stageName);
 		await nameInput.press("Enter");
 		await this.page.waitForTimeout(1000);
@@ -42,8 +42,8 @@ export class StagesManagePage {
 	}
 
 	async openStagePanel(stageName: string) {
-		const node = await this.getStageNode(stageName);
-		const configureButton = await node.getByLabel("Configure stage");
+		const node = this.getStageNode(stageName);
+		const configureButton = node.getByLabel("Configure stage");
 		await configureButton.click();
 		return;
 	}
@@ -62,9 +62,9 @@ export class StagesManagePage {
 
 		await this.page.getByTestId("add-action-dialog").getByTestId(`${action}-button`).click();
 
-		const actionInstance = await stagePanel.getByTestId(`action-instance-${action}`);
+		const actionInstance = stagePanel.getByTestId(`action-instance-${action}`);
 
-		const editButton = await actionInstance.getByLabel("Edit action", { exact: true });
+		const editButton = actionInstance.getByLabel("Edit action", { exact: true });
 		await editButton.click();
 		await stagePanel.getByLabel("Edit action name", { exact: true }).fill(actionName);
 		await editButton.click();

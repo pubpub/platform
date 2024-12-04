@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { ActionInstances } from "db/public";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { StagewithConstraints } from "~/lib/stages";
+import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
@@ -12,10 +12,8 @@ import Move from "./Move";
 
 type Props = {
 	members?: MemberWithUser[];
-	moveFrom: StagewithConstraints[];
-	moveTo: StagewithConstraints[];
 	pub: PubWithValues;
-	stage: StagewithConstraints;
+	stage: CommunityStage;
 	actionInstances: ActionInstances[];
 	pageContext: PageContext;
 };
@@ -26,8 +24,8 @@ export const StagePubActions = async (props: Props) => {
 			<Move
 				pubId={props.pub.id}
 				stageId={props.stage.id}
-				moveTo={props.moveTo}
-				moveFrom={props.moveFrom}
+				moveFrom={props.stage.moveConstraintSources}
+				moveTo={props.stage.moveConstraints}
 			/>
 			<AssignWrapper pub={props.pub} members={props.members} />
 			<Suspense fallback={<SkeletonButton className="w-20" />}>

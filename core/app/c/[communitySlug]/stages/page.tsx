@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 
-import type { UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
-
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { createToken } from "~/lib/server/token";
 import { StageList } from "./components/StageList";
 
 export const metadata: Metadata = {
@@ -27,11 +23,6 @@ export default async function Page({ params, searchParams }: Props) {
 		notFound();
 	}
 
-	const token = createToken({
-		userId: user.id as UsersId,
-		type: AuthTokenType.generic,
-	});
-
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
@@ -43,7 +34,6 @@ export default async function Page({ params, searchParams }: Props) {
 				/>
 			</div>
 			<StageList
-				token={token}
 				communityId={community.id}
 				pageContext={{
 					params,
