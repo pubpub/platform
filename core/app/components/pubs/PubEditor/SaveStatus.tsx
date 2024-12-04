@@ -6,9 +6,7 @@ import { CircleHelp } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { formatDateAsTime } from "~/lib/dates";
-
-export const SAVE_STATUS_QUERY_PARAM = "saveStatus" as const;
-export const SUBMIT_ID_QUERY_PARAM = "submitId" as const;
+import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 
 export const useSaveStatus = ({ defaultMessage }: { defaultMessage?: string }) => {
 	const searchParams = useSearchParams();
