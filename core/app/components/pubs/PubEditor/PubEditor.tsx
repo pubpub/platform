@@ -115,42 +115,36 @@ export async function PubEditor(props: PubEditorProps) {
 	));
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const currentStage = currentStageId
-		? community.stages.find((s) => s.id === currentStageId)
-		: undefined;
 	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
-	const editor = (
-		<ContextEditorContextProvider
-			pubId={pubId}
-			pubTypeId={pubType.id}
-			pubs={pubs}
-			pubTypes={pubTypes}
-		>
-			<PubEditorWrapper
-				elements={form.elements}
-				parentId={"parentId" in props ? props.parentId : undefined}
-				pub={pubForForm}
-				isUpdating={isUpdating}
-				withAutoSave={false}
-				withButtonElements={false}
-				formId={props.formId}
-				stageId={currentStageId}
-			>
-				<>
-					<StageSelectClient
-						fieldLabel="Stage"
-						fieldName="stageId"
-						stages={community.stages}
-					/>
-					{formElements}
-				</>
-			</PubEditorWrapper>
-		</ContextEditorContextProvider>
-	);
 
 	return (
 		<FormElementToggleProvider fieldSlugs={pubFields.map((pubField) => pubField.slug)}>
-			{editor}
+			<ContextEditorContextProvider
+				pubId={pubId}
+				pubTypeId={pubType.id}
+				pubs={pubs}
+				pubTypes={pubTypes}
+			>
+				<PubEditorWrapper
+					elements={form.elements}
+					parentId={"parentId" in props ? props.parentId : undefined}
+					pub={pubForForm}
+					isUpdating={isUpdating}
+					withAutoSave={false}
+					withButtonElements={false}
+					formId={props.formId}
+					stageId={currentStageId}
+				>
+					<>
+						<StageSelectClient
+							fieldLabel="Stage"
+							fieldName="stageId"
+							stages={community.stages}
+						/>
+						{formElements}
+					</>
+				</PubEditorWrapper>
+			</ContextEditorContextProvider>
 		</FormElementToggleProvider>
 	);
 }
