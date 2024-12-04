@@ -86,8 +86,11 @@ export const createStage = defineServerAction(async function createStage(
 export const deleteStage = defineServerAction(async function deleteStage(stageId: StagesId) {
 	// TODO: add authorization check
 
+	let result: {
+		formName: string;
+	}[] = [];
 	try {
-		await removeStages([stageId]).executeTakeFirstOrThrow();
+		result = await removeStages([stageId]).execute();
 	} catch (error) {
 		return {
 			error: "Failed to delete stage",
@@ -95,6 +98,9 @@ export const deleteStage = defineServerAction(async function deleteStage(stageId
 		};
 	} finally {
 		revalidateTagsForCommunity(["stages", "PubsInStages"]);
+		if (result.length) {
+			return result.map(({ formName }) => formName).join(", ");
+		}
 	}
 });
 
