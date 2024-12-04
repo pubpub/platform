@@ -16,7 +16,8 @@ import { ContextEditorContextProvider } from "~/app/components/ContextEditor/Con
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
-import { SaveStatus, SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/SaveStatus";
+import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
+import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";

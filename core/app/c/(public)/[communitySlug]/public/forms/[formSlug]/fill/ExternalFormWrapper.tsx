@@ -6,11 +6,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import type { Form as PubPubForm } from "~/lib/server/form";
-import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import {
 	SAVE_STATUS_QUERY_PARAM,
 	SUBMIT_ID_QUERY_PARAM,
-} from "~/app/components/pubs/PubEditor/SaveStatus";
+} from "~/app/components/pubs/PubEditor/constants";
+import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
 
 const isComplete = (formElements: PubPubForm["elements"], values: FieldValues) => {
 	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);

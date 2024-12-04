@@ -6,7 +6,7 @@ import { toast } from "ui/use-toast";
 
 import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
-import { SAVE_STATUS_QUERY_PARAM } from "./SaveStatus";
+import { SAVE_STATUS_QUERY_PARAM } from "./constants";
 
 export const PubEditorWrapper = ({
 	children,
