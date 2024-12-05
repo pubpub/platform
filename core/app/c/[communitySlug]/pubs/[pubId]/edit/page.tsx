@@ -9,12 +9,12 @@ import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
+import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
-import { PageTitle } from "./PageTitle";
 
 export async function generateMetadata({
 	params: { pubId, communitySlug },
@@ -94,7 +94,7 @@ export default async function Page({
 					Save
 				</Button>
 			}
-			title={<PageTitle />}
+			title={<PageTitleWithStatus title="Edit pub" />}
 			right={
 				<Button variant="link">
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
