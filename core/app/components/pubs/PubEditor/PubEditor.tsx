@@ -5,7 +5,12 @@ import { expect } from "utils";
 
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
-import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
+import {
+	getPubCached,
+	getPubs,
+	getPubsWithRelatedValuesAndChildren,
+	getPubTypesForCommunity,
+} from "~/lib/server";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
@@ -54,7 +59,15 @@ export async function PubEditor(props: PubEditorProps) {
 	}
 
 	const [pubs, pubTypes] = await Promise.all([
-		getPubs({ communityId: community.id }),
+		getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id },
+			{
+				withLegacyAssignee: true,
+				withPubType: true,
+				withStage: true,
+				limit: 30,
+			}
+		),
 		getPubTypesForCommunity(community.id),
 	]);
 

@@ -36,6 +36,36 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
+	_prisma_migrations: PrismaMigrationsTable;
+
+	users: UsersTable;
+
+	pubs: PubsTable;
+
+	pub_types: PubTypesTable;
+
+	stages: StagesTable;
+
+	member_groups: MemberGroupsTable;
+
+	integrations: IntegrationsTable;
+
+	communities: CommunitiesTable;
+
+	move_constraint: MoveConstraintTable;
+
+	pub_fields: PubFieldsTable;
+
+	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
+
+	integration_instances: IntegrationInstancesTable;
+
+	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
+
+	_MemberGroupToUser: MemberGroupToUserTable;
+
 	auth_tokens: AuthTokensTable;
 
 	PubFieldSchema: PubFieldSchemaTable;
@@ -71,34 +101,4 @@ export interface PublicSchema {
 	form_memberships: FormMembershipsTable;
 
 	membership_capabilities: MembershipCapabilitiesTable;
-
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
-	integration_instances: IntegrationInstancesTable;
-
-	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
-
-	_MemberGroupToUser: MemberGroupToUserTable;
-
-	_prisma_migrations: PrismaMigrationsTable;
-
-	users: UsersTable;
-
-	pubs: PubsTable;
-
-	pub_types: PubTypesTable;
-
-	stages: StagesTable;
-
-	member_groups: MemberGroupsTable;
-
-	integrations: IntegrationsTable;
-
-	communities: CommunitiesTable;
-
-	move_constraint: MoveConstraintTable;
 }
