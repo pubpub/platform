@@ -14,6 +14,7 @@ import type {
 	Stages,
 	StagesId,
 	Users,
+	UsersId,
 } from "db/public";
 import {
 	communitiesIdSchema,
@@ -98,14 +99,18 @@ const upsertPubRelationsSchema = z.record(
  */
 type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"] extends false
 	? { children?: never }
-	: { children: ProcessedPub<Options>[] };
+	: Options["withChildren"] extends undefined
+		? { children?: ProcessedPub<Options>[] }
+		: { children: ProcessedPub<Options>[] };
 
 /**
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
 	? { stage: Stages | null }
-	: { stage?: never };
+	: Options["withStage"] extends false
+		? { stage?: never }
+		: { stage?: Stages | null };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
@@ -122,18 +127,29 @@ type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] e
 				fields: PubTypePubField[];
 			};
 		}
-	: { pubType?: never };
+	: Options["withPubType"] extends false
+		? { pubType?: never }
+		: { pubType?: PubTypes };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
  */
 type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] extends true
 	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
-	: { members?: never[] };
+	: Options["withMembers"] extends false
+		? { members?: never }
+		: { members?: (Omit<Users, "passwordHash"> & { role: MemberRole })[] };
 
 type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
 	? { relatedPub?: never; relatedPubId: PubsId | null }
 	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null };
+
+type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
+	Options["withLegacyAssignee"] extends true
+		? { assignee?: Users | null }
+		: Options["withLegacyAssignee"] extends false
+			? { assignee?: never }
+			: { assignee?: Users | null };
 
 /**
  * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
@@ -141,11 +157,12 @@ type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedP
  * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
  *
  **/
-type MaybePubOptions = {
+export type MaybePubOptions = {
 	/**
 	 * Whether to recursively fetch children up to depth `depth`.
 	 *
 	 * @default true
+	 *
 	 */
 	withChildren?: boolean;
 	/**
@@ -172,6 +189,12 @@ type MaybePubOptions = {
 	 * @default false
 	 */
 	withMembers?: boolean;
+	/**
+	 * Whether to include the legacy assignee.
+	 *
+	 * @default false
+	 */
+	withLegacyAssignee?: boolean;
 };
 
 type ValueBase = {
@@ -211,7 +234,8 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 } & MaybePubChildren<Options> &
 	MaybePubStage<Options> &
 	MaybePubPubType<Options> &
-	MaybePubMembers<Options>;
+	MaybePubMembers<Options> &
+	MaybePubLegacyAssignee<Options>;
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages;

@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 
+import type { ProcessedPub } from "contracts";
 import type { ActionInstances } from "db/public";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { CommunityStage } from "~/lib/server/stages";
-import type { MemberWithUser, PubWithValues } from "~/lib/types";
+import type { MemberWithUser } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import { AssignWrapper } from "./AssignWrapper";
@@ -12,7 +13,13 @@ import Move from "./Move";
 
 type Props = {
 	members?: MemberWithUser[];
-	pub: PubWithValues & { pubType: { name: string } };
+	pub: ProcessedPub<{
+		withStage: true;
+		withPubType: true;
+		withRelatedValues: false;
+		withLegacyAssignee: true;
+		withChildren: undefined;
+	}>;
 	stage: CommunityStage;
 	actionInstances: ActionInstances[];
 	pageContext: PageContext;

@@ -15,6 +15,7 @@ import type {
 	GetPubResponseBody,
 	Json,
 	JsonValue,
+	MaybePubOptions,
 	ProcessedPub,
 	PubTypePubField,
 } from "contracts";
@@ -1016,14 +1017,15 @@ export type UnprocessedPub = {
 	depth: number;
 	parentId: PubsId | null;
 	stageId: StagesId | null;
+	stage?: Stages;
 	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
 	pubType?: PubTypes & { fields: PubTypePubField[] };
 	members?: SafeUser & { role: MemberRole };
 	createdAt: Date;
 	isCycle?: boolean;
-	stage?: Stages;
 	title: string | null;
+	assignee?: SafeUser | null;
 	values: {
 		id: PubValuesId;
 		fieldId: PubFieldsId;
@@ -1038,7 +1040,7 @@ export type UnprocessedPub = {
 	children?: { id: PubsId }[];
 };
 
-type GetPubsWithRelatedValuesAndChildrenOptions = {
+interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, MaybePubOptions {
 	/**
 	 * The maximum depth to recurse to.
 	 * Does not do anything if `includeChildren` and `includeRelatedPubs` is `false`.
@@ -1046,36 +1048,6 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 * @default 2
 	 */
 	depth?: number;
-	/**
-	 * Whether to recursively fetch children up to depth `depth`.
-	 *
-	 * @default true
-	 */
-	withChildren?: boolean;
-	/**
-	 * Whether to recursively fetch related pubs.
-	 *
-	 * @default true
-	 */
-	withRelatedPubs?: boolean;
-	/**
-	 * Whether to include the pub type.
-	 *
-	 * @default false
-	 */
-	withPubType?: boolean;
-	/**
-	 * Whether to include the stage.
-	 *
-	 * @default false
-	 */
-	withStage?: boolean;
-	/**
-	 * Whether to include members of the pub.
-	 *
-	 * @default false
-	 */
-	withMembers?: boolean;
 	search?: string;
 	/**
 	 * Whether to include the first pub that is part of a cycle.
@@ -1094,7 +1066,7 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	_debugDontNest?: boolean;
 	fieldSlugs?: string[];
 	trx?: typeof db;
-} & GetManyParams;
+}
 
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
@@ -1164,6 +1136,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		withStage,
 		withMembers,
 		trx,
+		withLegacyAssignee,
 	} = opts;
 
 	if (depth < 1) {
@@ -1220,6 +1193,8 @@ export async function getPubsWithRelatedValuesAndChildren<
 						sql<boolean>`false`.as("isCycle"),
 						sql<PubsId[]>`array[p.id]`.as("path"),
 					])
+
+					.$if(Boolean(withLegacyAssignee), (qb) => qb.select("p.assigneeId"))
 					// we don't even need to recurse if we don't want children or related pubs
 					.$if(withChildren || withRelatedPubs, (qb) =>
 						qb.union((qb) =>
@@ -1281,6 +1256,9 @@ export async function getPubsWithRelatedValuesAndChildren<
 										"path"
 									),
 								])
+								.$if(Boolean(withLegacyAssignee), (qb) =>
+									qb.select("pubs.assigneeId")
+								)
 								.where("pub_tree.depth", "<", depth)
 								.where("pub_tree.isCycle", "=", false)
 								.$if(cycle === "exclude", (qb) =>
@@ -1345,6 +1323,11 @@ export async function getPubsWithRelatedValuesAndChildren<
 						.orderBy("inner.valueCreatedAt desc")
 				).as("values"),
 			])
+			.$if(Boolean(withLegacyAssignee), (qb) =>
+				qb.select((eb) =>
+					jsonObjectFrom(eb.selectFrom("users").select(SAFE_USER_SELECT)).as("assignee")
+				)
+			)
 			.$if(Boolean(withChildren), (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(

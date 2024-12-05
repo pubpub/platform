@@ -250,15 +250,7 @@ export default async function Page({
 					<div>
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
-							<Assign
-								members={communityMembers}
-								// TODO: Remove this cast
-								pub={
-									slimPub as unknown as PubWithValues & {
-										pubType: { name: string };
-									}
-								}
-							/>
+							<Assign members={communityMembers} pub={slimPub} />
 						</div>
 					</div>
 				</div>

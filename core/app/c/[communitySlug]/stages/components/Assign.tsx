@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo } from "react";
 
+import type { ProcessedPub } from "contracts";
 import { Button } from "ui/button";
 import {
 	Command,
@@ -23,14 +24,19 @@ import { assign } from "./lib/actions";
 
 type Props = {
 	members: MemberWithUser[];
-	pub: PubWithValues & { pubType: { name: string } };
+	pub: ProcessedPub<{
+		withPubType: true;
+		withLegacyAssignee: true;
+		withRelatedValues: false;
+		withChildren: undefined;
+	}>;
 };
 
 export default function Assign(props: Props) {
 	const { toast } = useToast();
 	const [open, setOpen] = React.useState(false);
 	const [selectedUserId, setSelectedUserId] = React.useState<string | undefined>(
-		props.pub.assigneeId ?? undefined
+		props.pub.assignee?.id ?? undefined
 	);
 	const title = useMemo(() => getPubTitle(props.pub), [props.pub]);
 	const users = useMemo(() => props.members.map((member) => member.user), [props.members]);
