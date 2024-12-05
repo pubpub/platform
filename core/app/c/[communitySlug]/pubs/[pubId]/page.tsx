@@ -37,6 +37,7 @@ import {
 } from "./actions";
 import { renderPubValue } from "./components/jsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
+import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
 export async function generateMetadata({
 	params: { pubId },
@@ -268,6 +269,10 @@ export default async function Page({
 					parentPubId={pub.id}
 				/>
 			</Suspense>
+			<div>
+				<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+				<RelatedPubsTable pub={pub} />
+			</div>
 		</div>
 	);
 }
