@@ -1,14 +1,11 @@
 import { Suspense } from "react";
 
-import type { ProcessedPub } from "contracts";
 import type { CommunitiesId } from "db/public";
 import { cn } from "utils";
 
-import type { GetPubResult } from "~/lib/server";
-import type { XOR } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
-import { getPubs, getPubsCount, getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsCount, getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
 const PAGE_SIZE = 10;

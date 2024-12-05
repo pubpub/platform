@@ -7,9 +7,10 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { getForm } from "~/lib/server/form";
+import { getPubCached, getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
+import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
@@ -62,7 +63,15 @@ export async function PubEditor(props: PubEditorProps) {
 	}
 
 	const [pubs, pubTypes] = await Promise.all([
-		getPubs({ communityId: community.id }),
+		getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id },
+			{
+				withLegacyAssignee: true,
+				withPubType: true,
+				withStage: true,
+				limit: 30,
+			}
+		),
 		getPubTypesForCommunity(community.id),
 	]);
 

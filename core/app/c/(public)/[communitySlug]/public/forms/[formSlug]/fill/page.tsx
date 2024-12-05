@@ -24,7 +24,13 @@ import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
-import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
+import {
+	getPub,
+	getPubCached,
+	getPubs,
+	getPubsWithRelatedValuesAndChildren,
+	getPubTypesForCommunity,
+} from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
 import {
@@ -148,7 +154,15 @@ export default async function FormPage({
 			communityId: community.id,
 		}).executeTakeFirst(),
 		searchParams.pubId ? await getPubCached(searchParams.pubId) : undefined,
-		getPubs({ communityId: community.id }),
+		getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id },
+			{
+				limit: 30,
+				withStage: true,
+				withLegacyAssignee: true,
+				withPubType: true,
+			}
+		),
 		getPubTypesForCommunity(community.id),
 	]);
 

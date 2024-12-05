@@ -1325,7 +1325,12 @@ export async function getPubsWithRelatedValuesAndChildren<
 			])
 			.$if(Boolean(withLegacyAssignee), (qb) =>
 				qb.select((eb) =>
-					jsonObjectFrom(eb.selectFrom("users").select(SAFE_USER_SELECT)).as("assignee")
+					jsonObjectFrom(
+						eb
+							.selectFrom("users")
+							.select(SAFE_USER_SELECT)
+							.whereRef("users.id", "=", "pub_tree.assigneeId")
+					).as("assignee")
 				)
 			)
 			.$if(Boolean(withChildren), (qb) =>
@@ -1382,6 +1387,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 				"isCycle",
 				"path",
 			])
+			.$if(Boolean(withLegacyAssignee), (qb) => qb.groupBy("assigneeId"))
 	).execute();
 
 	if (options?._debugDontNest) {
