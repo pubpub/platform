@@ -110,7 +110,7 @@ export const createForm = defineServerAction(async function createForm(
 		).executeTakeFirstOrThrow();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
-			const column = error.constraint === "forms_slug_key" ? "slug" : "name";
+			const column = error.constraint === "forms_slug_communityId_key" ? "slug" : "name";
 			return { error: `A form with this ${column} already exists. Choose a new ${column}` };
 		}
 		logger.error({ msg: "error creating form", error });
