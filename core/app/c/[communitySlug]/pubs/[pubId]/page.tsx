@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import type { JsonValue } from "contracts";
@@ -8,6 +9,7 @@ import type { PubsId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
+import { Button } from "ui/button";
 
 import type { PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
@@ -139,10 +141,16 @@ export default async function Page({
 
 	return (
 		<div className="flex flex-col space-y-4">
-			<div className="mb-8">
-				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
-				<PubTitle pub={pub} />
+			<div className="mb-8 flex items-center justify-between">
+				<div>
+					<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
+					<PubTitle pub={pub} />
+				</div>
+				<Button variant="outline">
+					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>Update</Link>
+				</Button>
 			</div>
+
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
 					{pub.values
