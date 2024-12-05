@@ -14,7 +14,7 @@ import type {
 	PubTypesId,
 	UsersId,
 } from "db/public";
-import { AuthTokenType } from "db/public";
+import { AuthTokenType, ElementType, StructuralFormElement } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -256,7 +256,15 @@ export const insertForm = (
 				})
 				.returning(["slug", "id"])
 		)
-
+		.with("title_element", (db) =>
+			db.insertInto("form_elements").values((eb) => ({
+				formId: eb.selectFrom("form").select("form.id"),
+				type: ElementType.structural,
+				element: StructuralFormElement.p,
+				content: '# :value{field="title"}',
+				order: 0,
+			}))
+		)
 		.insertInto("form_elements")
 		.columns(["fieldId", "formId", "label", "type", "order", "component"])
 		.expression((eb) =>
@@ -268,10 +276,11 @@ export const insertForm = (
 					"form.id as formId",
 					"fields.name as label",
 					eb.val("pubfield").as("type"),
-					eb.fn
-						.agg<number>("ROW_NUMBER")
-						.over((o) => o.partitionBy("id"))
-						.as("order"),
+					eb(
+						eb.fn.agg<number>("ROW_NUMBER").over((o) => o.partitionBy("id")),
+						"+",
+						1 // Offset order by 1 for the title element
+					).as("order"),
 					eb
 						.selectFrom("components")
 						.select("component")
