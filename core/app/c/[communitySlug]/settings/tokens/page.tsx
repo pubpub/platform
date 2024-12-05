@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getCommunityStages } from "~/lib/server/stages";
+import { getStages } from "~/lib/server/stages";
 import { CreateTokenForm } from "./CreateTokenForm";
 import { ExistingToken } from "./ExistingToken";
 
@@ -21,7 +21,7 @@ export default async function Page({ params }: { params: { communitySlug: string
 	}
 
 	const [stages, existingTokens] = await Promise.all([
-		getCommunityStages(community.id).execute(),
+		getStages({ communityId: community.id }).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 

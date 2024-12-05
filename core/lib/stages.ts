@@ -1,12 +1,10 @@
 import * as z from "zod";
 
-import type { MoveConstraint, Stages, StagesId } from "db/public";
+import type { StagesId } from "db/public";
 
-export type StagewithConstraints = Stages & {
-	moveConstraints: MoveConstraint[];
-	moveConstraintSources: MoveConstraint[];
-};
-export type StagesById<T extends StagewithConstraints = StagewithConstraints> = {
+import type { CommunityStage } from "./server/stages";
+
+export type StagesById<T extends CommunityStage = CommunityStage> = {
 	[key: StagesId]: T;
 };
 
@@ -19,7 +17,7 @@ export type StagesById<T extends StagewithConstraints = StagewithConstraints> = 
  * @param visited - (Optional) An array of visited stages, defaults to an empty array
  * @returns A new array of stages that have been visited
  */
-function createStageList<T extends StagewithConstraints>(
+function createStageList<T extends CommunityStage>(
 	stage: T,
 	stages: StagesById,
 	visited: Array<T> = []
@@ -34,7 +32,7 @@ function createStageList<T extends StagewithConstraints>(
 
 	// Recursively process the stages reachable from this stage
 	return stage.moveConstraints.reduce((acc, constraint) => {
-		const nextStage = stages[constraint.destinationId];
+		const nextStage = stages[constraint.id];
 		return createStageList<T>(nextStage as T, stages, acc);
 	}, newVisited);
 }
@@ -53,7 +51,7 @@ export const makeStagesById = <T extends { id: StagesId }>(stages: T[]): { [key:
  * @param stages
  * @returns
  */
-export function getStageWorkflows<T extends StagewithConstraints>(stages: T[]): Array<Array<T>> {
+export function getStageWorkflows<T extends CommunityStage>(stages: T[]): Array<Array<T>> {
 	const stagesById = makeStagesById(stages);
 	// find all stages with edges that only point to them
 	const stageRoots = stages.filter((stage) => stage.moveConstraintSources.length === 0);
@@ -65,11 +63,11 @@ export function getStageWorkflows<T extends StagewithConstraints>(stages: T[]): 
 }
 
 // this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
-export function moveConstraintSourcesForStage<T extends StagewithConstraints>(
+export function moveConstraintSourcesForStage<T extends CommunityStage>(
 	stage: T,
 	stagesById: StagesById<T>
 ) {
-	return stage.moveConstraintSources.map((stage) => stagesById[stage.stageId]);
+	return stage.moveConstraintSources.map((stage) => stagesById[stage.id]);
 }
 
 export const StageFormSchema = z.object({

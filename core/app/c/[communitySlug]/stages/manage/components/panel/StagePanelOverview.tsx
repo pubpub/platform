@@ -6,6 +6,7 @@ import { Separator } from "ui/separator";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage } from "~/lib/db/queries";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { deleteStage, updateStageName } from "../../actions";
 import { StageNameInput } from "./StageNameInput";
 import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
@@ -15,7 +16,10 @@ type PropsInner = {
 };
 
 const StagePanelOverviewInner = async (props: PropsInner) => {
-	const stage = await getStage(props.stageId).executeTakeFirst();
+	const [stage, communitySlug] = await Promise.all([
+		getStage(props.stageId).executeTakeFirst(),
+		getCommunitySlug(),
+	]);
 
 	if (stage === undefined) {
 		return <SkeletonCard />;
@@ -30,7 +34,11 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 				<StageNameInput value={stage.name} onChange={onNameChange} />
 				<Separator />
 				<div className="space-y-2 py-2">
-					<StagePanelOverviewManagement onDelete={onDelete} />
+					<StagePanelOverviewManagement
+						communitySlug={communitySlug}
+						stageId={props.stageId}
+						onDelete={onDelete}
+					/>
 				</div>
 			</CardContent>
 		</Card>

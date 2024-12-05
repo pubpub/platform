@@ -11,13 +11,12 @@ import type { GetPubResult, PubValues } from "~/lib/server";
 import type { XOR } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubCached } from "~/lib/server";
-import IntegrationActions from "./IntegrationActions";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { PubDropDown } from "./pubs/PubDropDown";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 
 type Props = {
-	token: string;
 	actions?: React.ReactNode;
 	searchParams: Record<string, unknown>;
 } & XOR<{ pub: GetPubResult }, { pubId: PubsId }>;
@@ -52,7 +51,13 @@ const groupPubChildrenByPubType = (pubs: MinimalRecursivePubChildren[]) => {
 	return Object.values(pubTypes);
 };
 
-const ChildHierarchy = ({ pub }: { pub: MinimalRecursivePubChildren }) => {
+const ChildHierarchy = ({
+	pub,
+	communitySlug,
+}: {
+	pub: MinimalRecursivePubChildren;
+	communitySlug: string;
+}) => {
 	return (
 		<ul className={cn("ml-4 text-sm")}>
 			{groupPubChildrenByPubType(pub.children).map((group) => (
@@ -64,13 +69,15 @@ const ChildHierarchy = ({ pub }: { pub: MinimalRecursivePubChildren }) => {
 									{group.pubType.name}
 								</span>
 								<Link
-									href={`/pubs/${child.id}`}
+									href={`/c/${communitySlug}/pubs/${child.id}`}
 									className="text-sm hover:underline"
 								>
 									{getPubTitle(child)}
 								</Link>
 							</div>
-							{pub.children?.length > 0 && <ChildHierarchy pub={child} />}
+							{pub.children?.length > 0 && (
+								<ChildHierarchy communitySlug={communitySlug} pub={child} />
+							)}
 						</li>
 					))}
 				</Fragment>
@@ -84,8 +91,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 	if (!pub) {
 		return null;
 	}
-
-	const pubStage = pub.stages[0];
+	const communitySlug = await getCommunitySlug();
 
 	return (
 		<>
@@ -96,16 +102,6 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 							{pub.pubType.name}
 						</div>
 						<div className="flex flex-row gap-x-2">
-							{pubStage && (
-								<Suspense>
-									<IntegrationActions
-										pubId={pub.id}
-										token={props.token}
-										stageId={pubStage.id}
-										type="pub"
-									/>
-								</Suspense>
-							)}
 							<div>{props.actions}</div>
 							<PubDropDown pubId={pub.id} searchParams={props.searchParams} />
 						</div>
@@ -113,7 +109,10 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 				</RowHeader>
 				<RowContent className="flex items-start justify-between">
 					<h3 className="text-md font-medium">
-						<Link href={`pubs/${pub.id}`} className="hover:underline">
+						<Link
+							href={`/c/${communitySlug}/pubs/${pub.id}`}
+							className="hover:underline"
+						>
 							<PubTitle pub={pub} />
 						</Link>
 					</h3>
@@ -132,7 +131,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 								</Button>
 							</CollapsibleTrigger>
 							<CollapsibleContent>
-								<ChildHierarchy pub={pub} />
+								<ChildHierarchy communitySlug={communitySlug} pub={pub} />
 							</CollapsibleContent>
 						</Collapsible>
 					</RowFooter>

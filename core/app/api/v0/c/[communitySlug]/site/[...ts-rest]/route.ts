@@ -34,7 +34,7 @@ import {
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getCommunityStages } from "~/lib/server/stages";
+import { getStages } from "~/lib/server/stages";
 import { getSuggestedUsers } from "~/lib/server/user";
 
 const baseAuthorizationObject = Object.fromEntries(
@@ -563,7 +563,7 @@ const handler = createNextHandler(
 					cookies: false,
 				});
 
-				const stages = await getCommunityStages(community.id).execute();
+				const stages = await getStages({ communityId: community.id }).execute();
 				return {
 					status: 200,
 					body: stages,

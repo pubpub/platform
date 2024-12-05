@@ -13,7 +13,7 @@ import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getCommunityStages } from "~/lib/server/stages";
+import { getStages } from "~/lib/server/stages";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
 import { StagePanel } from "./components/panel/StagePanel";
@@ -66,7 +66,7 @@ export default async function Page({ params, searchParams }: Props) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-	const stages = await getCommunityStages(community.id).execute();
+	const stages = await getStages({ communityId: community.id }).execute();
 
 	const pageContext = {
 		params,

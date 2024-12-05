@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import type { PubsId, Stages, StagesId } from "db/public";
+import type { PubsId, StagesId } from "db/public";
 import { Button } from "ui/button";
 import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
@@ -20,8 +20,8 @@ type Props = {
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
-		moveFrom: Stages[];
-		moveTo: Stages[];
+		moveFrom: CommunityStage["moveConstraintSources"];
+		moveTo: CommunityStage["moveConstraints"];
 	}
 >;
 
@@ -34,12 +34,8 @@ const makeSourcesAndDestinations = (props: Props) => {
 	}
 
 	const stagesById = makeStagesById(props.communityStages);
-	const sources = stagesById[props.stageId].moveConstraintSources.map(
-		(mc) => stagesById[mc.stageId]
-	);
-	const destinations = stagesById[props.stageId].moveConstraints.map(
-		(mc) => stagesById[mc.destinationId]
-	);
+	const sources = stagesById[props.stageId].moveConstraintSources.map((mc) => stagesById[mc.id]);
+	const destinations = stagesById[props.stageId].moveConstraints.map((mc) => stagesById[mc.id]);
 
 	return {
 		sources,

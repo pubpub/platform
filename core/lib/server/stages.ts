@@ -48,33 +48,27 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-export const getCommunityStages = (communityId: CommunitiesId) =>
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId };
+export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
 	autoCache(
 		db
 			.selectFrom("stages")
 			.where("communityId", "=", communityId)
+			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
 			.select((eb) => [
 				jsonArrayFrom(
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.stageId", "=", "stages.id")
-						.selectAll("move_constraint")
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("stages")
-									.whereRef("stages.id", "=", "move_constraint.destinationId")
-									.selectAll("stages")
-							)
-								.$notNull()
-								.as("destination"),
-						])
+						.innerJoin("stages as s", "s.id", "move_constraint.destinationId")
+						.select(["s.id", "s.name"])
 				).as("moveConstraints"),
 				jsonArrayFrom(
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.destinationId", "=", "stages.id")
-						.selectAll("move_constraint")
+						.innerJoin("stages as s", "s.id", "move_constraint.stageId")
+						.select(["s.id", "s.name"])
 				).as("moveConstraintSources"),
 				eb
 					.selectFrom("PubsInStages")
@@ -108,7 +102,7 @@ export const getCommunityStages = (communityId: CommunitiesId) =>
 			.orderBy("order asc")
 	);
 
-export type CommunityStage = AutoReturnType<typeof getCommunityStages>["executeTakeFirstOrThrow"];
+export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
 
 export const getIntegrationInstanceBase = (trx = db) =>
 	trx

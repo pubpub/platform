@@ -2,7 +2,6 @@
 
 import React, { useCallback, useMemo } from "react";
 
-import type { Pubs } from "db/public";
 import { Button } from "ui/button";
 import {
 	Command,
