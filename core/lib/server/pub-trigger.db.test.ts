@@ -148,3 +148,51 @@ describe("updatedAt trigger", () => {
 		await compareUpdatedAt(afterInsertOnConflictUpdatedAt);
 	});
 });
+
+describe("title trigger", () => {
+	it("should update the title on a pub whenever a pubvalue is updated, inserted, or deleted", async () => {
+		const { createPubRecursiveNew, getPubsWithRelatedValuesAndChildren } = await import(
+			"./pub"
+		);
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+			trx: testDb,
+		});
+
+		const pubWithTitle = await getPubsWithRelatedValuesAndChildren(
+			{
+				pubId: pub.id,
+				communityId: community.id,
+			},
+			{
+				trx: testDb,
+			}
+		);
+		expect.soft(pubWithTitle.title).toBe("Test pub");
+
+		const hng = await testDb
+			.updateTable("pub_values")
+			.set({
+				value: JSON.stringify("new title"),
+			})
+			.where("pubId", "=", pub.id)
+			.where("fieldId", "=", pubFields.Title.id)
+			.returningAll()
+			.executeTakeFirst();
+
+		const pubWithTitle2 = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", pub.id)
+			.executeTakeFirstOrThrow();
+
+		expect.soft(pubWithTitle2.title).toBe("new title");
+	});
+});

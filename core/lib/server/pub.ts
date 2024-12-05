@@ -525,6 +525,18 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			};
 		});
 
+		// const newPub = await getPubsWithRelatedValuesAndChildren(
+		// 	{ pubId: newPub.id, communityId },
+		// 	{
+		// 		withChildren: false,
+		// 		withRelatedPubs: false,
+		// 		// fieldSlugs: [],
+		// 		trx,
+		// 	}
+		// );
+
+		// console.log(newPubWithTitle);
+
 		if (!body.children && !body.relatedPubs) {
 			return {
 				...newPub,
@@ -1017,6 +1029,7 @@ export type UnprocessedPub = {
 	createdAt: Date;
 	isCycle?: boolean;
 	stage?: Stages;
+	title: string | null;
 	values: {
 		id: PubValuesId;
 		fieldId: PubFieldsId;
@@ -1086,6 +1099,7 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 */
 	_debugDontNest?: boolean;
 	fieldSlugs?: string[];
+	trx?: typeof db;
 } & GetManyParams;
 
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
@@ -1110,6 +1124,7 @@ const DEFAULT_OPTIONS = {
 	withStage: false,
 	withMembers: false,
 	cycle: "include",
+	trx: db,
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
 export async function getPubsWithRelatedValuesAndChildren<
@@ -1154,6 +1169,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		withPubType,
 		withStage,
 		withMembers,
+		trx,
 	} = opts;
 
 	if (depth < 1) {
@@ -1161,7 +1177,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 	}
 
 	const result = await autoCache(
-		db
+		trx
 			// this pub_tree CTE roughly returns an array like so
 			// [
 			// 	{ pubId: 1, rootId: 1, parentId: null, depth: 1, value: 'Some value', valueId: 1, relatedPubId: null},
@@ -1197,6 +1213,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 						"p.communityId",
 						"p.createdAt",
 						"p.updatedAt",
+						"p.title",
 						"PubsInStages.stageId",
 						"pv.id as valueId",
 						"pv.fieldId",
@@ -1250,6 +1267,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 									"pubs.communityId",
 									"pubs.createdAt",
 									"pubs.updatedAt",
+									"pubs.title",
 									"PubsInStages.stageId",
 									"pub_values.id as valueId",
 									"pub_values.fieldId",
@@ -1311,6 +1329,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 				"pub_tree.path",
 				"pub_tree.createdAt",
 				"pub_tree.updatedAt",
+				"pub_tree.title",
 				jsonArrayFrom(
 					eb
 						.selectFrom("pub_tree as inner")
@@ -1379,6 +1398,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 				"pubTypeId",
 				"updatedAt",
 				"createdAt",
+				"title",
 				"stageId",
 				"communityId",
 				"isCycle",
