@@ -1,28 +1,58 @@
 "use client";
 
+import type { FieldValues } from "react-hook-form";
+
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 
-import type { PubTypes } from "db/public";
+import type { PubsId, PubTypes, StagesId } from "db/public";
 import { Button } from "ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { Loader2 } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-export const PubTypeFormClient = ({ pubTypes }: { pubTypes: PubTypes[] }) => {
+import { useCommunity } from "../providers/CommunityProvider";
+
+export interface PubEditorSpecifiers {
+	parentId?: PubsId;
+	stageId?: StagesId;
+}
+
+export const PubTypeFormClient = ({
+	pubTypes,
+	editorSpecifiers,
+}: {
+	pubTypes: Pick<PubTypes, "id" | "name">[];
+	editorSpecifiers: PubEditorSpecifiers;
+}) => {
+	const schema = Type.Object({
+		pubTypeId: Type.String(),
+	});
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
+		resolver: typeboxResolver(schema),
 	});
 
 	const path = usePathname();
 	const searchParams = useSearchParams();
 	const router = useRouter();
+	const community = useCommunity();
 
 	const pathWithoutFormParam = useMemo(() => {
 		const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-		urlSearchParams.delete("remove-pub-form");
+		urlSearchParams.delete("create-pub-form");
 		return `${path}?${urlSearchParams.toString()}`;
 	}, [path, searchParams]);
 
@@ -30,8 +60,13 @@ export const PubTypeFormClient = ({ pubTypes }: { pubTypes: PubTypes[] }) => {
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const onSubmit = async () => {
-		// TODO: redirect
+	const onSubmit = async (values: FieldValues) => {
+		const pubParams = new URLSearchParams({
+			pubTypeId: values.pubTypeId,
+			...editorSpecifiers,
+		});
+		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
+		router.push(createPubPath);
 	};
 
 	return (
@@ -66,11 +101,13 @@ export const PubTypeFormClient = ({ pubTypes }: { pubTypes: PubTypes[] }) => {
 									))}
 								</SelectContent>
 							</Select>
+							<FormDescription>Choose a pub type to the pub</FormDescription>
+							<FormMessage />
 						</FormItem>
 					)}
 				/>
 				<div className="flex w-full items-center justify-end gap-x-4">
-					<Button type="button" onClick={closeForm}>
+					<Button type="button" onClick={closeForm} variant="outline">
 						Cancel
 					</Button>
 					<Button

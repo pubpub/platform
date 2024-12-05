@@ -251,7 +251,6 @@ export default async function Page({
 					text="Add New Pub"
 					communityId={community.id as CommunitiesId}
 					parentId={pub.id as PubsId}
-					searchParams={searchParams}
 				/>
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
