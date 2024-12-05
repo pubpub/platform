@@ -17,6 +17,7 @@ import { visit } from "unist-util-visit";
 
 import { expect } from "utils";
 
+import { getPubTitle } from "~/lib/pubs";
 import { RenderWithPubToken } from "./renderWithPubTokens";
 import * as utils from "./renderWithPubUtils";
 
@@ -37,12 +38,19 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	const field = expect(attrs.field, "Missing field attribute in value directive");
 
 	let value: unknown;
+	let pub: utils.RenderWithPubPub;
 
 	if (attrs?.rel === "parent") {
 		const parentPub = expect(context.parentPub, "Missing parent pub");
-		value = parentPub.values[field];
+		pub = parentPub;
 	} else {
-		value = context.pub.values[field];
+		pub = context.pub;
+	}
+
+	if (field === "title") {
+		value = getPubTitle(pub);
+	} else {
+		value = pub.values[field];
 	}
 
 	assert(value !== undefined, `Missing value for ${field}`);

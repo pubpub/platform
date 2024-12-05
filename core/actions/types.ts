@@ -1,14 +1,7 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
-import type {
-	Action as ActionName,
-	CommunitiesId,
-	CoreSchemaType,
-	Event,
-	PubsId,
-	StagesId,
-} from "db/public";
+import type { Action as ActionName, CommunitiesId, Event, PubsId, StagesId } from "db/public";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
@@ -33,6 +26,7 @@ export type ActionPub<T extends ActionPubType> = {
 		email: string;
 	};
 	communityId: CommunitiesId;
+	createdAt: Date;
 };
 
 export type RunProps<T extends Action> =

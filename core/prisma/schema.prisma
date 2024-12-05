@@ -216,6 +216,7 @@ model PubType {
   pubs   Pub[]
   Form   Form[]
 
+  @@unique([name, communityId])
   @@map(name: "pub_types")
 }
 
