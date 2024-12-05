@@ -32,6 +32,8 @@ export interface PubsTable {
 	parentId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 
 	assigneeId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
+
+	title: ColumnType<string | null, string | null, string | null>;
 }
 
 export type Pubs = Selectable<PubsTable>;
@@ -51,6 +53,7 @@ export const pubsSchema = z.object({
 	valuesBlob: z.unknown().nullable(),
 	parentId: pubsIdSchema.nullable(),
 	assigneeId: usersIdSchema.nullable(),
+	title: z.string().nullable(),
 });
 
 export const pubsInitializerSchema = z.object({
@@ -62,6 +65,7 @@ export const pubsInitializerSchema = z.object({
 	valuesBlob: z.unknown().optional().nullable(),
 	parentId: pubsIdSchema.optional().nullable(),
 	assigneeId: usersIdSchema.optional().nullable(),
+	title: z.string().optional().nullable(),
 });
 
 export const pubsMutatorSchema = z.object({
@@ -73,4 +77,5 @@ export const pubsMutatorSchema = z.object({
 	valuesBlob: z.unknown().optional().nullable(),
 	parentId: pubsIdSchema.optional().nullable(),
 	assigneeId: usersIdSchema.optional().nullable(),
+	title: z.string().optional().nullable(),
 });

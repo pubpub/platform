@@ -116,7 +116,11 @@ model Pub {
   assigneeId  String?
   assignee    User?     @relation(fields: [assigneeId], references: [id])
   createdAt   DateTime  @default(now())
+  // updatedAt is also updated once a value is updated
   updatedAt   DateTime  @default(now()) @updatedAt
+  // title is updated through trigger functions on the pub_values table
+  // do not attempt to set this manually
+  title       String?
 
   parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id], onDelete: Cascade)
   parentId String?
