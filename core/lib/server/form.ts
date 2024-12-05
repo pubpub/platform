@@ -209,6 +209,7 @@ export const insertForm = (
 	name: string,
 	slug: string,
 	communityId: CommunitiesId,
+	isDefault: boolean,
 	trx = db
 ) => {
 	return trx
@@ -251,6 +252,7 @@ export const insertForm = (
 					pubTypeId,
 					slug,
 					communityId,
+					isDefault,
 				})
 				.returning(["slug", "id"])
 		)

@@ -28,7 +28,7 @@ export const createForm = defineServerAction(async function createForm(
 
 	try {
 		await autoRevalidate(
-			insertForm(pubTypeId, name, slug, communityId)
+			insertForm(pubTypeId, name, slug, communityId, false)
 		).executeTakeFirstOrThrow();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
