@@ -378,6 +378,8 @@ Table forms {
   isArchived Boolean [not null, default: false]
   access FormAccessType [not null, default: 'private']
   isDefault Boolean [not null, default: false]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
 
   indexes {
