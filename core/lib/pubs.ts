@@ -1,3 +1,7 @@
+import type { ProcessedPub } from "contracts";
+
+import type { GetPubsResult } from "./server";
+
 export interface PubTitleProps {
 	values:
 		| { field: { slug: string }; value: unknown }[]
@@ -24,4 +28,30 @@ export const getPubTitle = (pub: PubTitleProps): string => {
 	})?.value as string | undefined;
 
 	return title ?? fallbackTitle;
+};
+
+type InputPub = ProcessedPub<{ withStage: true; withLegacyAssignee: true; withPubType: true }>;
+
+export const processedPubToPubResult = <T extends InputPub>(pub: T): GetPubsResult[number] => {
+	return {
+		...pub,
+		values: pub.values.reduce(
+			(acc, value) => ({
+				...acc,
+				[value.fieldSlug]: Array.isArray(acc[value.fieldSlug])
+					? [...acc[value.fieldSlug], value.value]
+					: value.value,
+			}),
+			{} as GetPubsResult[number]["values"]
+		),
+		stages: pub.stage ? [pub.stage] : [],
+		assigneeId: pub.assignee?.id ?? null,
+		assignee: (pub.assignee ?? null) as GetPubsResult[number]["assignee"],
+		pubType: pub.pubType as GetPubsResult[number]["pubType"],
+		children: pub.children.length ? pub.children.map(processedPubToPubResult) : [],
+	};
+};
+
+export const processedPubsToPubsResult = (pubs: InputPub[]): GetPubsResult => {
+	return pubs.map(processedPubToPubResult);
 };
