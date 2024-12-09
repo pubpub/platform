@@ -143,9 +143,15 @@ test("PubTitle component includes the pub title", async () => {
 	};
 
 	render(<PubTitle pub={pub} />);
-	expect(screen.getByText(`Untitled Submission - ${currentDate.toDateString()}`)).toBeDefined();
-
-	pub.title = `Why Cyclamates were Banned`;
-	render(<PubTitle pub={pub} />);
 	expect(screen.getByText(`Why Cyclamates were Banned`)).toBeDefined();
+
+	pub.title = `Why Cyclamates were not Banned`;
+	render(<PubTitle pub={pub} />);
+	expect(screen.getByText(`Why Cyclamates were not Banned`)).toBeDefined();
+
+	pub.title = null;
+	pub.values = [];
+
+	render(<PubTitle pub={pub} />);
+	expect(screen.getByText(`Untitled Submission - ${currentDate.toDateString()}`)).toBeDefined();
 });

@@ -39,14 +39,13 @@ const mockPub = (
 
 test.each([
 	{
-		name: "pubpub:title is available",
+		name: "pubpub:title is available but title is null",
 		pub: mockPub(),
-		expectedTitle: `Untitled Submission - Wed Jul 03 2024`,
+		expectedTitle: `How to jump really high`,
 	},
 	{
 		name: "only unjournal:title",
 		pub: mockPub({
-			title: "Unjournal title",
 			values: [
 				{
 					value: "Unjournal title",
@@ -59,7 +58,6 @@ test.each([
 	{
 		name: "multiple titles are available",
 		pub: mockPub({
-			title: "Pubpub title",
 			values: [
 				{
 					value: "Pubpub title",
@@ -80,7 +78,7 @@ test.each([
 		}),
 		expectedTitle: "Untitled Submission - Wed Jul 03 2024",
 	},
-])("getPubTitle returns valid title when $name", async ({ pub, expectedTitle }) => {
+])("getPubTitle returns valid fallback title when $name", async ({ pub, expectedTitle }) => {
 	const title = getPubTitle(pub);
 	expect(title).to.eql(expectedTitle);
 });
