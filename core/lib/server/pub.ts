@@ -514,6 +514,9 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						.returningAll()
 				).execute()
 			: [];
+
+		const pub = await getPlainPub(newPub.id, trx).executeTakeFirstOrThrow();
+
 		const hydratedValues = pubValues.map((v) => {
 			const correspondingValue = valuesWithFieldIds.find(
 				({ fieldId }) => fieldId === v.fieldId
@@ -528,7 +531,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 
 		if (!body.children && !body.relatedPubs) {
 			return {
-				...newPub,
+				...pub,
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: [],
@@ -552,7 +555,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 
 		if (!body.relatedPubs) {
 			return {
-				...newPub,
+				...pub,
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: children.length ? children : [],
@@ -574,7 +577,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		});
 
 		return {
-			...newPub,
+			...pub,
 			stageId: createdStageId,
 			values: [...pubValues, ...relatedPubs],
 			children,
@@ -584,12 +587,14 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	return result;
 };
 
-export const deletePub = (pubId: PubsId) =>
-	autoRevalidate(db.deleteFrom("pubs").where("id", "=", pubId));
+export const deletePub = (pubId: PubsId, trx = db) =>
+	autoRevalidate(trx.deleteFrom("pubs").where("id", "=", pubId));
 
-export const getPubStage = (pubId: PubsId) =>
-	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
+export const getPubStage = (pubId: PubsId, trx = db) =>
+	autoCache(trx.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
 
+export const getPlainPub = (pubId: PubsId, trx = db) =>
+	autoCache(trx.selectFrom("pubs").selectAll().where("id", "=", pubId));
 /**
  * Consolidates field slugs with their corresponding field IDs and schema names from the community.
  * Validates that all provided slugs exist in the community.

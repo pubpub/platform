@@ -166,13 +166,7 @@ describe("title trigger", () => {
 			trx: testDb,
 		});
 
-		const pub = await testDb
-			.selectFrom("pubs")
-			.selectAll()
-			.where("id", "=", createdPub.id)
-			.executeTakeFirstOrThrow();
-
-		expect(pub.title).toBe("Test pub");
+		expect(createdPub.title).toBe("Test pub");
 	});
 
 	it("should not set a title on a pub when a pub is created without a title", async () => {
@@ -188,13 +182,7 @@ describe("title trigger", () => {
 			},
 		});
 
-		const pub = await testDb
-			.selectFrom("pubs")
-			.selectAll()
-			.where("id", "=", createdPub.id)
-			.executeTakeFirstOrThrow();
-
-		expect(pub.title).toBe(null);
+		expect(createdPub.title).toBe(null);
 	});
 
 	it("should update a title on a pub when a pubvalue is updated", async () => {
@@ -210,13 +198,7 @@ describe("title trigger", () => {
 			},
 		});
 
-		const pubBeforeUpdate = await testDb
-			.selectFrom("pubs")
-			.selectAll()
-			.where("id", "=", createdPub.id)
-			.executeTakeFirstOrThrow();
-
-		expect(pubBeforeUpdate.title).toBe("Test pub");
+		expect(createdPub.title).toBe("Test pub");
 
 		const updatedPubValue = await testDb
 			.updateTable("pub_values")
@@ -250,13 +232,7 @@ describe("title trigger", () => {
 			},
 		});
 
-		const pub = await testDb
-			.selectFrom("pubs")
-			.selectAll()
-			.where("id", "=", createdPub.id)
-			.executeTakeFirstOrThrow();
-
-		expect(pub.title).toBe("Test pub");
+		expect(createdPub.title).toBe("Test pub");
 
 		const updateResult = await testDb
 			.updateTable("pub_values")
