@@ -88,17 +88,6 @@ describe("updatedAt trigger", () => {
 		};
 
 		// update some pub value
-		const updateResult = await testDb
-			.updateTable("pub_values")
-			.set({
-				value: JSON.stringify("new title"),
-			})
-			.where((eb) =>
-				eb.and([eb("pubId", "=", pub.id), eb("fieldId", "=", pubFields.Title.id)])
-			)
-			.executeTakeFirst();
-
-		const afterUpdateUpdatedAt = await compareUpdatedAt(pub.updatedAt);
 
 		const insertResult = await testDb
 			.insertInto("pub_values")
@@ -111,14 +100,27 @@ describe("updatedAt trigger", () => {
 
 		expect(insertResult.numInsertedOrUpdatedRows).toBe(BigInt(1));
 
-		const afterInsertUpdatedAt = await compareUpdatedAt(afterUpdateUpdatedAt);
+		const afterInsertUpdatedAt = await compareUpdatedAt(pub.updatedAt);
+
+		// making sure it's a non-title field to make sure the trigger is working as expected
+		const updateResult = await testDb
+			.updateTable("pub_values")
+			.set({
+				value: JSON.stringify("new description"),
+			})
+			.where((eb) =>
+				eb.and([eb("pubId", "=", pub.id), eb("fieldId", "=", pubFields.Description.id)])
+			)
+			.executeTakeFirst();
+
+		const afterUpdateUpdatedAt = await compareUpdatedAt(afterInsertUpdatedAt);
 
 		const insertOnConflict = await testDb
 			.insertInto("pub_values")
 			.values({
 				pubId: pub.id,
 				fieldId: pubFields.Description.id,
-				value: JSON.stringify("new description"),
+				value: JSON.stringify("newer description"),
 			})
 			// this is similar to what we do in updatePub
 			.onConflict((oc) =>
@@ -134,7 +136,7 @@ describe("updatedAt trigger", () => {
 
 		expect(insertOnConflict.numInsertedOrUpdatedRows).toBe(BigInt(1));
 
-		const afterInsertOnConflictUpdatedAt = await compareUpdatedAt(afterInsertUpdatedAt);
+		const afterInsertOnConflictUpdatedAt = await compareUpdatedAt(afterUpdateUpdatedAt);
 
 		const deleteResult = await testDb
 			.deleteFrom("pub_values")
@@ -233,6 +235,45 @@ describe("title trigger", () => {
 			.executeTakeFirstOrThrow();
 
 		expect(pub.title).toBe("new title");
+	});
+
+	it("should not update a title on a pub when a non-title pubvalue is updated", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+		});
+
+		const pub = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", createdPub.id)
+			.executeTakeFirstOrThrow();
+
+		expect(pub.title).toBe("Test pub");
+
+		const updateResult = await testDb
+			.updateTable("pub_values")
+			.set({
+				value: JSON.stringify("new description"),
+			})
+			.where("pubId", "=", createdPub.id)
+			.where("fieldId", "=", pubFields.Description.id)
+			.executeTakeFirst();
+
+		const updatedPub = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", createdPub.id)
+			.executeTakeFirstOrThrow();
+
+		expect(updatedPub.title).toBe("Test pub");
 	});
 
 	it("should delete a title on a pub when a pubvalue is deleted", async () => {
