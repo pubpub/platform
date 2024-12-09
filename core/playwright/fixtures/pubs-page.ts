@@ -16,16 +16,7 @@ export class PubsPage {
 		await this.page.goto(`/c/${this.communitySlug}/pubs`);
 	}
 
-	async createPub({
-		pubType,
-		stage,
-		values,
-	}: {
-		pubType?: string;
-		stage?: string;
-		values?: Record<string, string>;
-	}) {
-		await this.page.getByRole("button", { name: "Create", exact: true }).click();
+	async choosePubType(pubType?: string) {
 		const createDialog = this.page.getByRole("dialog", { name: "Create Pub", exact: true });
 		await createDialog.waitFor();
 
@@ -37,9 +28,21 @@ export class PubsPage {
 			// Choose the first pub type
 			await this.page.getByRole("option").first().click();
 		}
-
 		await createDialog.getByRole("button", { name: "Create Pub" }).click();
-		this.page.waitForURL(`/c/${this.communitySlug}/pubs/create**`);
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/create**`);
+	}
+
+	async createPub({
+		pubType,
+		stage,
+		values,
+	}: {
+		pubType?: string;
+		stage?: string;
+		values?: Record<string, string>;
+	}) {
+		await this.page.getByRole("button", { name: "Create", exact: true }).click();
+		await this.choosePubType(pubType);
 
 		// disable all toggles
 		const fieldToggles = this.page.getByRole("button", {
@@ -59,18 +62,18 @@ export class PubsPage {
 				const fullSlug = `${this.communitySlug}:${slug}`;
 				// toggle the field on
 				await this.page.getByTestId(`${fullSlug}-toggle`).click();
-				await this.page.getByLabel(fullSlug).fill(value);
+				await this.page.getByTestId(fullSlug).fill(value);
 			}
 		}
 
 		if (stage) {
 			// open the stage selection popover, then select a stage
-			await this.page.getByLabel("Stage").getByRole("button").click();
-			await this.page.getByRole("menuitem", { name: stage, exact: true }).click();
+			await this.page.getByLabel("Stage").click();
+			await this.page.getByRole("option", { name: stage, exact: true }).click();
 		}
 
 		await this.page.getByRole("button", { name: "Save", exact: true }).click();
-		this.page.waitForURL(`/c/${this.communitySlug}/pubs/*/edit`);
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/*/edit?*`);
 		const pubId = this.page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)\/edit/)?.groups?.pubId;
 
 		if (!pubId) {
