@@ -74,7 +74,7 @@ export const removePubType = defineServerAction(async function removePubType(
 	).execute();
 });
 
-export const createPubType = defineServerAction(async function addPubType(
+export const createPubType = defineServerAction(async function createPubType(
 	name: string,
 	communityId: CommunitiesId,
 	description: string | undefined,
