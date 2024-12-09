@@ -150,12 +150,10 @@ describe("updatedAt trigger", () => {
 });
 
 describe("title trigger", () => {
-	it("should update the title on a pub whenever a pubvalue is updated, inserted, or deleted", async () => {
-		const { createPubRecursiveNew, getPubsWithRelatedValuesAndChildren } = await import(
-			"./pub"
-		);
+	it("should set a title on a pub when a pub is created with a title", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
 
-		const pub = await createPubRecursiveNew({
+		const createdPub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
 				pubTypeId: pubTypes["Basic Pub"].id,
@@ -166,33 +164,101 @@ describe("title trigger", () => {
 			trx: testDb,
 		});
 
-		const pubWithTitle = await getPubsWithRelatedValuesAndChildren(
-			{
-				pubId: pub.id,
-				communityId: community.id,
-			},
-			{
-				trx: testDb,
-			}
-		);
-		expect.soft(pubWithTitle.title).toBe("Test pub");
+		const pub = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", createdPub.id)
+			.executeTakeFirstOrThrow();
 
-		const hng = await testDb
+		expect(pub.title).toBe("Test pub");
+	});
+
+	it("should not set a title on a pub when a pub is created without a title", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {},
+			},
+		});
+
+		const pub = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", createdPub.id)
+			.executeTakeFirstOrThrow();
+
+		expect(pub.title).toBe(null);
+	});
+
+	it("should update a title on a pub when a pubvalue is updated", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+		});
+
+		const pubBeforeUpdate = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", createdPub.id)
+			.executeTakeFirstOrThrow();
+
+		expect(pubBeforeUpdate.title).toBe("Test pub");
+
+		const updatedPubValue = await testDb
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new title"),
 			})
-			.where("pubId", "=", pub.id)
+			.where("pubId", "=", createdPub.id)
 			.where("fieldId", "=", pubFields.Title.id)
 			.returningAll()
-			.executeTakeFirst();
-
-		const pubWithTitle2 = await testDb
-			.selectFrom("pubs")
-			.selectAll()
-			.where("id", "=", pub.id)
 			.executeTakeFirstOrThrow();
 
-		expect.soft(pubWithTitle2.title).toBe("new title");
+		const pub = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", createdPub.id)
+			.executeTakeFirstOrThrow();
+
+		expect(pub.title).toBe("new title");
+	});
+
+	it("should delete a title on a pub when a pubvalue is deleted", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Test pub",
+				},
+			},
+		});
+
+		const deletedPubValue = await testDb
+			.deleteFrom("pub_values")
+			.where("pubId", "=", createdPub.id)
+			.where("fieldId", "=", pubFields.Title.id)
+			.returningAll()
+			.executeTakeFirstOrThrow();
+
+		const pub = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", createdPub.id)
+			.executeTakeFirstOrThrow();
+
+		expect(pub.title).toBe(null);
 	});
 });
