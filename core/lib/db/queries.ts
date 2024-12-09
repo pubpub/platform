@@ -6,7 +6,7 @@ import type { StagesId } from "db/public";
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
-import { pubValuesByRef } from "../server";
+import { pubType, pubValuesByRef } from "../server";
 import { communityMemberInclude, stageInclude } from "../server/_legacy-integration-queries";
 import { autoCache } from "../server/cache/autoCache";
 import { SAFE_USER_SELECT } from "../server/user";
@@ -41,6 +41,7 @@ export const getStagePubs = cache((stageId: StagesId) => {
 			.selectFrom("pubs")
 			.selectAll("pubs")
 			.select(pubValuesByRef("pubs.id"))
+			.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 			.innerJoin("PubsInStages", "PubsInStages.pubId", "pubs.id")
 			.where("PubsInStages.stageId", "=", stageId)
 	);

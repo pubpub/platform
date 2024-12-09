@@ -14,7 +14,7 @@ import { DataTableColumnHeader } from "ui/data-table";
 import type { ChildPubRow, ChildPubRowPubType } from "./types";
 import { UserCard } from "~/app/components/UserCard";
 
-const createdAtDateOptions = {
+export const createdAtDateOptions = {
 	month: "short",
 	day: "numeric",
 	year: "numeric",

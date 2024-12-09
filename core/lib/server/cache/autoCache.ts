@@ -6,6 +6,7 @@ import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { memoize } from "./memoize";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";
+import { getTablesWithLinkedTables } from "./specialTables";
 
 const executeWithCache = <
 	Q extends SQB<any>,
@@ -22,6 +23,8 @@ const executeWithCache = <
 
 		const tables = await cachedFindTables(compiledQuery, "select");
 
+		const allTables = getTablesWithLinkedTables(tables);
+
 		const cachedExecute = memoize(
 			async <M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow">(
 				method: M
@@ -35,7 +38,7 @@ const executeWithCache = <
 			{
 				...options,
 				revalidateTags: [
-					...createCommunityCacheTags(tables, communitySlug),
+					...createCommunityCacheTags(allTables, communitySlug),
 					createCacheTag(`community-all_${communitySlug}`),
 					...(options?.additionalRevalidateTags ?? []),
 				],

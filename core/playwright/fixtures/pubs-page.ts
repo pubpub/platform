@@ -71,23 +71,25 @@ export class PubsPage {
 		await submit.click();
 		await createDialog.waitFor({ state: "hidden" });
 
-		// Format the values the way getPubTitle expects them
-		const pubValues = values
-			? Object.entries(values).map(([slug, value]) => ({
-					field: { slug },
-					value,
-				}))
-			: [];
-
 		// Kind of fragile since it depends on the default pub title and assumes this pub is the first on the page
-		const path = await this.page
-			.getByRole("link", { name: getPubTitle({ values: pubValues, createdAt: new Date() }) })
-			.first()
-			.getAttribute("href");
-		const pubId = path?.match(/\/([0-9a-f-]+)$/)?.[1];
+		const pubLink = await this.page.$(`a[href^="/c/${this.communitySlug}/pubs/"]`);
+
+		if (!pubLink) {
+			throw new Error("Unable to get path from newly created pub");
+		}
+
+		const path = await pubLink.getAttribute("href");
+
+		if (!path) {
+			throw new Error("Unable to get path from newly created pub");
+		}
+
+		const pubId = path.match(/\/([0-9a-f-]+)$/)?.[1];
+
 		if (!pubId) {
 			throw new Error("Unable to get pub id from newly created pub");
 		}
+
 		return pubId as PubsId;
 	}
 }

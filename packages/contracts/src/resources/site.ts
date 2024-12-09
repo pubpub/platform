@@ -218,6 +218,7 @@ type ProcessedPubBase = {
 	pubTypeId: PubTypesId;
 	parentId: PubsId | null;
 	createdAt: Date;
+	title: string | null;
 	/**
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
@@ -252,6 +253,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	communityId: communitiesIdSchema,
 	pubTypeId: pubTypesIdSchema,
 	parentId: pubsIdSchema.nullable(),
+	title: z.string().nullable(),
 	values: z.array(
 		pubValuesSchema.extend({
 			value: jsonSchema,

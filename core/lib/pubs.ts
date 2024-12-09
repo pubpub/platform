@@ -1,17 +1,30 @@
-import type { ProcessedPub } from "contracts";
+import { ValuesNode } from "kysely";
+
+import type { JsonValue, ProcessedPub } from "contracts";
 
 import type { GetPubsResult } from "./server";
 
-export interface PubTitleProps {
+export type PubTitleProps = {
+	title?: string | null;
+	createdAt: Date;
 	values:
 		| { field: { slug: string }; value: unknown }[]
 		| Record<string, unknown>
 		| { fieldSlug: string; value: unknown }[];
-	createdAt: Date;
-}
+} & {
+	pubType: { name: string };
+};
 
 export const getPubTitle = (pub: PubTitleProps): string => {
-	const fallbackTitle = `Untitled Pub - ${new Date(pub.createdAt).toDateString()}`;
+	const pubTitle = pub.title;
+
+	if (pubTitle) {
+		return pubTitle;
+	}
+
+	const fallbackTitle = `Untitled ${pub.pubType.name} - ${new Date(pub.createdAt).toDateString()}`;
+
+	// backup logic for when title is not defined on the pubtype
 	if (!Array.isArray(pub.values)) {
 		return (
 			(Object.entries(pub.values).find(([key]) => key.includes("title"))?.[1] as
@@ -36,12 +49,27 @@ export const processedPubToPubResult = <T extends InputPub>(pub: T): GetPubsResu
 	return {
 		...pub,
 		values: pub.values.reduce(
-			(acc, value) => ({
-				...acc,
-				[value.fieldSlug]: Array.isArray(acc[value.fieldSlug])
-					? [...acc[value.fieldSlug], value.value]
-					: value.value,
-			}),
+			(acc, value) => {
+				const existingValue = acc[value.fieldSlug] as JsonValue | JsonValue[] | undefined;
+
+				if (!value?.relatedPubId) {
+					acc[value.fieldSlug] = value.value as JsonValue;
+					return acc;
+				}
+
+				const existingVal = existingValue
+					? Array.isArray(existingValue)
+						? existingValue
+						: [existingValue]
+					: [];
+
+				acc[value.fieldSlug] = [
+					...existingVal,
+					{ relatedPubId: value.relatedPubId, value: value.value as JsonValue },
+				];
+
+				return acc;
+			},
 			{} as GetPubsResult[number]["values"]
 		),
 		stages: pub.stage ? [pub.stage] : [],
