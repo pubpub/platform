@@ -180,7 +180,9 @@ describe("title trigger", () => {
 			communityId: community.id,
 			body: {
 				pubTypeId: pubTypes["Basic Pub"].id,
-				values: {},
+				values: {
+					[pubFields.Description.slug]: "description",
+				},
 			},
 		});
 
