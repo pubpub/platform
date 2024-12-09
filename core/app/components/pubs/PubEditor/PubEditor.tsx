@@ -110,7 +110,6 @@ export async function PubEditor(props: PubEditorProps) {
 	);
 	const parentPub = pub?.parentId ? await getPubCached(pub.parentId) : undefined;
 
-	// TODO: render the pubvalues that are not on the form but might be on the pub
 	const formElements = form.elements.map((e) => (
 		<FormElement
 			key={e.elementId}
@@ -130,6 +129,11 @@ export async function PubEditor(props: PubEditorProps) {
 				})
 			)
 		: [];
+
+	const allSlugs = [
+		...form.elements.map((e) => e.slug),
+		...pubOnlyElementDefinitions.map((e) => e.slug),
+	].filter((slug) => !!slug) as string[];
 
 	const member = expect(user?.memberships.find((m) => m.communityId === community?.id));
 
@@ -159,7 +163,7 @@ export async function PubEditor(props: PubEditorProps) {
 	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 
 	return (
-		<FormElementToggleProvider fieldSlugs={pubFields.map((pubField) => pubField.slug)}>
+		<FormElementToggleProvider fieldSlugs={allSlugs}>
 			<ContextEditorContextProvider
 				pubId={pubId}
 				pubTypeId={pubType.id}
