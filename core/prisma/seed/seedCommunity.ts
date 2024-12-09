@@ -29,8 +29,6 @@ import type {
 } from "db/public";
 import {
 	Action as ActionName,
-	ApiAccessScope,
-	ApiAccessType,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
@@ -45,6 +43,7 @@ import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createPubRecursiveNew } from "~/lib/server";
 import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
+import { insertForm } from "~/lib/server/form";
 import { slugifyString } from "~/lib/string";
 
 export type PubFieldsInitializer = Record<
@@ -751,6 +750,19 @@ export async function seedCommunity<
 				.returningAll()
 				.execute()
 		: [];
+
+	await Promise.all(
+		createdPubTypes.map((type) =>
+			insertForm(
+				type.id,
+				`${type.name} Editor (Default)`,
+				`${slugifyString(type.name)}-default-editor`,
+				communityId,
+				true,
+				trx
+			).execute()
+		)
+	);
 
 	const createdPubFieldToPubTypes =
 		pubTypesList.length && pubFieldsList.length
