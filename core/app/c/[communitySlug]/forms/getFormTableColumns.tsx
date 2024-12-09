@@ -59,13 +59,6 @@ export const getFormTableColumns = () =>
 		},
 		{
 			header: ({ column }) => (
-				<DataTableColumnHeader className="w-52" column={column} title="Default" />
-			),
-			accessorKey: "isDefault",
-			cell: ({ row }) => (row.original.isDefault ? "Yes" : "No"),
-		},
-		{
-			header: ({ column }) => (
 				<DataTableColumnHeader
 					className="w-52"
 					column={column}
@@ -74,6 +67,16 @@ export const getFormTableColumns = () =>
 				/>
 			),
 			accessorKey: "pubType",
+			cell: ({ row }) => (
+				<div>
+					{row.original.pubType}
+					{!row.original.isDefault && (
+						<span className="ml-4 rounded-full bg-blue-500 px-3 py-2 text-sm font-medium text-slate-50">
+							Default editor
+						</span>
+					)}
+				</div>
+			),
 		},
 		{
 			header: ({ column }) => (
