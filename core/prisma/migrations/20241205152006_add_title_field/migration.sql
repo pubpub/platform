@@ -20,10 +20,10 @@ BEGIN
             JOIN "_PubFieldToPubType" pft ON pft."A" = inserted_deleted_rows."fieldId" AND pft."B" = p."pubTypeId" AND pft."isTitle" = true
     ) 
     INSERT INTO tmp_affected_pubs ("pubId", "value")
+    -- the #>> '{}' transforms the json into text without the quotes
     SELECT DISTINCT "pubId", ("value" #>> '{}') FROM tf
     ON CONFLICT DO NOTHING;
 
-    -- Combined update for both updatedAt and title
     UPDATE "pubs"
     SET 
         "updatedAt" = CURRENT_TIMESTAMP,
@@ -39,6 +39,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- these triggers run once for every batch of pub_values 
+-- we need to create separate triggers for insert, update and delete, as they cannot be combined
+-- this is slightly more efficient than a single trigger that handles all three operations
+-- and runs the same function for each row that has been changed, at the cost
+-- of being slightly more complex
 CREATE TRIGGER trigger_pub_values_insert_pub
     AFTER INSERT ON "pub_values"
     REFERENCING NEW TABLE AS inserted_deleted_rows
@@ -56,3 +61,15 @@ CREATE TRIGGER trigger_pub_values_delete_pub
     REFERENCING OLD TABLE AS inserted_deleted_rows
     FOR EACH STATEMENT
     EXECUTE FUNCTION update_pub_for_value_changes();
+
+
+-- backfill the title for all pubs
+WITH values_titles as (
+    SELECT "pubId", ("value" #>> '{}') as "title" FROM "pub_values"
+    JOIN "pubs" ON "pub_values"."pubId" = "pubs"."id"
+    JOIN "_PubFieldToPubType" pft ON pft."A" = "pub_values"."fieldId" AND pft."B" = "pubs"."pubTypeId" AND pft."isTitle" = true
+)
+UPDATE "pubs"
+SET "title" = values_titles."title"
+FROM values_titles
+WHERE "pubs"."id" = values_titles."pubId";
