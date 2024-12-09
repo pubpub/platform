@@ -90,7 +90,7 @@ export default async function Page({
 					Forms
 				</>
 			}
-			headingAction={<NewFormButton pubTypes={pubTypes} />}
+			right={<NewFormButton pubTypes={pubTypes} />}
 		>
 			{forms.length === 0 ? (
 				<div className="flex h-full items-center justify-center">

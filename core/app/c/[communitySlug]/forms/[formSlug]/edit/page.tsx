@@ -98,7 +98,7 @@ export default async function Page({
 					)}
 				</div>
 			}
-			headingAction={
+			right={
 				<div className="flex items-center gap-2">
 					<FormCopyButton formSlug={formSlug} />
 					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
