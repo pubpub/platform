@@ -14,6 +14,7 @@ test("PubTitle component includes the pub title", async () => {
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		parentId: "6234d4ed-e87e-41ab-9b5b-68bf9fb9a61c",
+		title: null,
 		pubType: {
 			id: "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225",
 			name: "Submission",
