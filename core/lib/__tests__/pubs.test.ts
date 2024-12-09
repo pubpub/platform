@@ -38,10 +38,15 @@ const mockPub = (
 };
 
 test.each([
-	{ name: "pubpub:title is available", pub: mockPub(), expectedTitle: "How to jump really high" },
+	{
+		name: "pubpub:title is available",
+		pub: mockPub(),
+		expectedTitle: `Untitled Submission - Wed Jul 03 2024`,
+	},
 	{
 		name: "only unjournal:title",
 		pub: mockPub({
+			title: "Unjournal title",
 			values: [
 				{
 					value: "Unjournal title",
@@ -54,6 +59,7 @@ test.each([
 	{
 		name: "multiple titles are available",
 		pub: mockPub({
+			title: "Pubpub title",
 			values: [
 				{
 					value: "Pubpub title",
@@ -72,7 +78,7 @@ test.each([
 		pub: mockPub({
 			values: [],
 		}),
-		expectedTitle: "Untitled Pub - Wed Jul 03 2024",
+		expectedTitle: "Untitled Submission - Wed Jul 03 2024",
 	},
 ])("getPubTitle returns valid title when $name", async ({ pub, expectedTitle }) => {
 	const title = getPubTitle(pub);
