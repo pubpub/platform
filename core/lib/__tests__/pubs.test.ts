@@ -1,34 +1,56 @@
 import { expect, test } from "vitest";
 
-import type { PubPayload } from "../server/_legacy-integration-queries";
+import type { ProcessedPub } from "contracts";
+import type { PubsId, PubTypesId } from "db/public";
+
+import type { DeepPartial } from "../types";
 import { getPubTitle } from "../pubs";
 
-const mockPub = (overrides?: Partial<PubPayload>) => {
+const mockPub = (
+	overrides?: DeepPartial<
+		ProcessedPub<{
+			withPubType: true;
+			withChildren: false;
+			withRelatedPubs: false;
+			withMembers: false;
+			withStage: false;
+		}>
+	>
+) => {
 	const base = {
-		id: "123",
-		pubType: { id: "456", name: "Submission" },
+		id: "123" as PubsId,
+		pubType: { id: "456" as PubTypesId, name: "Submission" },
 		createdAt: new Date("2024-07-03T16:03:31.375Z"),
 		values: [
 			{
 				value: "How to jump really high",
-				field: { slug: "pubpub:title" },
+				fieldSlug: "pubpub:title",
 			},
 		],
-	} as PubPayload;
+		title: null,
+	} satisfies typeof overrides;
 
-	return overrides ? { ...base, ...overrides } : base;
+	return (overrides ? { ...base, ...overrides } : base) as ProcessedPub<{
+		withPubType: true;
+		withChildren: false;
+		withRelatedPubs: false;
+	}>;
 };
 
 test.each([
-	{ name: "pubpub:title is available", pub: mockPub(), expectedTitle: "How to jump really high" },
+	{
+		name: "pubpub:title is available but title is null",
+		pub: mockPub(),
+		expectedTitle: `How to jump really high`,
+	},
 	{
 		name: "only unjournal:title",
 		pub: mockPub({
 			values: [
 				{
 					value: "Unjournal title",
-					field: { slug: "unjournal:title" },
-				} as PubPayload["values"][number],
+					fieldSlug: "unjournal:title",
+				},
 			],
 		}),
 		expectedTitle: "Unjournal title",
@@ -39,12 +61,12 @@ test.each([
 			values: [
 				{
 					value: "Pubpub title",
-					field: { slug: "pubpub:title" },
-				} as PubPayload["values"][number],
+					fieldSlug: "pubpub:title",
+				},
 				{
 					value: "Unjournal title",
-					field: { slug: "unjournal:title" },
-				} as PubPayload["values"][number],
+					fieldSlug: "unjournal:title",
+				},
 			],
 		}),
 		expectedTitle: "Pubpub title",
@@ -54,9 +76,9 @@ test.each([
 		pub: mockPub({
 			values: [],
 		}),
-		expectedTitle: "Untitled Pub - Wed Jul 03 2024",
+		expectedTitle: "Untitled Submission - Wed Jul 03 2024",
 	},
-])("getPubTitle returns valid title when $name", async ({ pub, expectedTitle }) => {
+])("getPubTitle returns valid fallback title when $name", async ({ pub, expectedTitle }) => {
 	const title = getPubTitle(pub);
 	expect(title).to.eql(expectedTitle);
 });

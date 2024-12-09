@@ -247,6 +247,53 @@ describe("createPubRecursive", () => {
 			],
 		});
 	});
+
+	it("should return the titles of the created pub, the children, and the related pubs", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+				children: [
+					{
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: {
+							[pubFields.Title.slug]: "test child title",
+						},
+					},
+				],
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "test relation value",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "test relation title",
+								},
+							},
+						},
+					],
+				},
+			},
+			trx,
+		});
+
+		expect(pub).toMatchObject({
+			title: "test title",
+			children: [{ title: "test child title" }],
+		});
+		const relatedPubValue = pub.values.find(
+			(v) => v.fieldSlug === pubFields["Some relation"].slug
+		);
+		expect(relatedPubValue, "No related pub value found").toBeDefined();
+		expect(relatedPubValue?.relatedPub?.title).toEqual("test relation title");
+	});
 });
 
 describe("updatePub", () => {
