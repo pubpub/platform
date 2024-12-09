@@ -526,18 +526,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			};
 		});
 
-		// const newPub = await getPubsWithRelatedValuesAndChildren(
-		// 	{ pubId: newPub.id, communityId },
-		// 	{
-		// 		withChildren: false,
-		// 		withRelatedPubs: false,
-		// 		// fieldSlugs: [],
-		// 		trx,
-		// 	}
-		// );
-
-		// console.log(newPubWithTitle);
-
 		if (!body.children && !body.relatedPubs) {
 			return {
 				...newPub,
