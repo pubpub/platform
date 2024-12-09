@@ -240,7 +240,11 @@ export default async function Page({
 							<Assign
 								members={communityMembers}
 								// TODO: Remove this cast
-								pub={slimPub as unknown as PubWithValues}
+								pub={
+									slimPub as unknown as PubWithValues & {
+										pubType: { name: string };
+									}
+								}
 							/>
 						</div>
 					</div>

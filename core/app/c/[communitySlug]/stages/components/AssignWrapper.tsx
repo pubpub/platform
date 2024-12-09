@@ -13,7 +13,10 @@ const cachedGetMembers = cache((communityId: CommunitiesId) =>
 	selectCommunityMembers({ communityId: communityId }).execute()
 );
 
-export const AssignWrapper = async (props: { pub: PubWithValues; members?: MemberWithUser[] }) => {
+export const AssignWrapper = async (props: {
+	pub: PubWithValues & { pubType: { name: string } };
+	members?: MemberWithUser[];
+}) => {
 	const members = props.members ?? (await cachedGetMembers(props.pub.communityId));
 
 	return <Assign members={members} pub={props.pub} />;

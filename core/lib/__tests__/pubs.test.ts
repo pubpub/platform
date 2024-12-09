@@ -1,22 +1,40 @@
 import { expect, test } from "vitest";
 
-import type { PubPayload } from "../server/_legacy-integration-queries";
+import type { ProcessedPub } from "contracts";
+import type { PubsId, PubTypesId } from "db/public";
+
+import type { DeepPartial } from "../types";
 import { getPubTitle } from "../pubs";
 
-const mockPub = (overrides?: Partial<PubPayload>) => {
+const mockPub = (
+	overrides?: DeepPartial<
+		ProcessedPub<{
+			withPubType: true;
+			withChildren: false;
+			withRelatedPubs: false;
+			withMembers: false;
+			withStage: false;
+		}>
+	>
+) => {
 	const base = {
-		id: "123",
-		pubType: { id: "456", name: "Submission" },
+		id: "123" as PubsId,
+		pubType: { id: "456" as PubTypesId, name: "Submission" },
 		createdAt: new Date("2024-07-03T16:03:31.375Z"),
 		values: [
 			{
 				value: "How to jump really high",
-				field: { slug: "pubpub:title" },
+				fieldSlug: "pubpub:title",
 			},
 		],
-	} as PubPayload;
+		title: null,
+	} satisfies typeof overrides;
 
-	return overrides ? { ...base, ...overrides } : base;
+	return (overrides ? { ...base, ...overrides } : base) as ProcessedPub<{
+		withPubType: true;
+		withChildren: false;
+		withRelatedPubs: false;
+	}>;
 };
 
 test.each([
@@ -27,8 +45,8 @@ test.each([
 			values: [
 				{
 					value: "Unjournal title",
-					field: { slug: "unjournal:title" },
-				} as PubPayload["values"][number],
+					fieldSlug: "unjournal:title",
+				},
 			],
 		}),
 		expectedTitle: "Unjournal title",
@@ -39,12 +57,12 @@ test.each([
 			values: [
 				{
 					value: "Pubpub title",
-					field: { slug: "pubpub:title" },
-				} as PubPayload["values"][number],
+					fieldSlug: "pubpub:title",
+				},
 				{
 					value: "Unjournal title",
-					field: { slug: "unjournal:title" },
-				} as PubPayload["values"][number],
+					fieldSlug: "unjournal:title",
+				},
 			],
 		}),
 		expectedTitle: "Pubpub title",
