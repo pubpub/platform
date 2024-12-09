@@ -27,11 +27,7 @@ export default async function Page({ params, searchParams }: Props) {
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Stages</h1>
-				<CreatePubButton
-					communityId={community.id}
-					text="Add Pub"
-					searchParams={searchParams}
-				/>
+				<CreatePubButton communityId={community.id} text="Add Pub" />
 			</div>
 			<StageList
 				communityId={community.id}

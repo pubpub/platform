@@ -107,7 +107,6 @@ describe("Community membership grants appropriate capabilities", async () => {
 
 	const editorPubCapabilities = [
 		Capabilities.movePub,
-		Capabilities.createPub,
 		Capabilities.viewPub,
 		Capabilities.deletePub,
 		Capabilities.updatePubValues,

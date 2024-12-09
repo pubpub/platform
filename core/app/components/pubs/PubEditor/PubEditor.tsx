@@ -3,15 +3,19 @@ import { randomUUID } from "crypto";
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { expect } from "utils";
 
+import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
+import { hydrateMarkdownElements } from "../../forms/structural";
 import { StageSelectClient } from "../../StageSelect/StageSelectClient";
+import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorWrapper } from "./PubEditorWrapper";
 import { getCommunityById, getStage } from "./queries";
 
@@ -34,6 +38,8 @@ export type PubEditorProps = {
 export async function PubEditor(props: PubEditorProps) {
 	let pub: Awaited<ReturnType<typeof getPubCached>> | undefined;
 	let community: AutoReturnType<typeof getCommunityById>["executeTakeFirstOrThrow"];
+
+	const { user } = await getLoginData();
 
 	if ("pubId" in props) {
 		pub = await getPubCached(props.pubId);
@@ -102,9 +108,8 @@ export async function PubEditor(props: PubEditorProps) {
 	}).executeTakeFirstOrThrow(
 		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
 	);
+	const parentPub = pub?.parentId ? await getPubCached(pub.parentId) : undefined;
 
-	// TODO: render markdown content
-	// TODO: render the pubvalues that are not on the form but might be on the pub
 	const formElements = form.elements.map((e) => (
 		<FormElement
 			key={e.elementId}
@@ -116,11 +121,49 @@ export async function PubEditor(props: PubEditorProps) {
 		/>
 	));
 
+	// These are pub values that are only on the pub, but not on the form. We render them at the end of the form.
+	const pubOnlyElementDefinitions = pub
+		? makeFormElementDefFromPubFields(
+				pubFields.filter((pubField) => {
+					return !form.elements.find((e) => e.slug === pubField.slug);
+				})
+			)
+		: [];
+
+	const allSlugs = [
+		...form.elements.map((e) => e.slug),
+		...pubOnlyElementDefinitions.map((e) => e.slug),
+	].filter((slug) => !!slug) as string[];
+
+	const member = expect(user?.memberships.find((m) => m.communityId === community?.id));
+
+	const memberWithUser = {
+		...member,
+		id: member.id,
+		user: {
+			...user,
+			id: user?.id,
+		},
+	};
+
+	const renderWithPubContext = {
+		communityId: community.id,
+		recipient: memberWithUser,
+		communitySlug: community.slug,
+		pub,
+		parentPub,
+	};
+
+	await hydrateMarkdownElements({
+		elements: form.elements,
+		renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
+	});
+
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
 	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 
 	return (
-		<FormElementToggleProvider fieldSlugs={pubFields.map((pubField) => pubField.slug)}>
+		<FormElementToggleProvider fieldSlugs={allSlugs}>
 			<ContextEditorContextProvider
 				pubId={pubId}
 				pubTypeId={pubType.id}
@@ -128,7 +171,7 @@ export async function PubEditor(props: PubEditorProps) {
 				pubTypes={pubTypes}
 			>
 				<PubEditorWrapper
-					elements={form.elements}
+					elements={[...form.elements, ...pubOnlyElementDefinitions]}
 					parentId={"parentId" in props ? props.parentId : undefined}
 					pub={pubForForm}
 					isUpdating={isUpdating}
@@ -144,6 +187,16 @@ export async function PubEditor(props: PubEditorProps) {
 							stages={community.stages}
 						/>
 						{formElements}
+						{pubOnlyElementDefinitions.map((formElementDef) => (
+							<FormElement
+								key={formElementDef.elementId}
+								element={formElementDef}
+								pubId={pubId}
+								searchParams={props.searchParams}
+								communitySlug={community.slug}
+								values={pub ? pub.values : {}}
+							/>
+						))}
 					</>
 				</PubEditorWrapper>
 			</ContextEditorContextProvider>
