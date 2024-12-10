@@ -18,6 +18,8 @@ export type ActionRun = {
 		id: string;
 		values: { field: { slug: string }; value: unknown }[] | Record<string, unknown>;
 		createdAt: Date;
+		pubType: { name: string };
+		title: string | null;
 	} | null;
 	result: unknown;
 } & (

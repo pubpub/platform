@@ -23,7 +23,7 @@ import { assign } from "./lib/actions";
 
 type Props = {
 	members: MemberWithUser[];
-	pub: PubWithValues;
+	pub: PubWithValues & { pubType: { name: string } };
 };
 
 export default function Assign(props: Props) {
