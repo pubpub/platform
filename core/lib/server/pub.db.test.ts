@@ -413,6 +413,72 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expectTypeOf(pubValues.values[0].relatedPub).not.toEqualTypeOf<undefined>();
 	});
 
+	// to make sure we aren't accidentally returning temporary columns used for the query as the final result
+	it("should return all the correct columns", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				stageId: stages["Stage 1"].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Some title",
+				},
+			},
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: createdPub.id, communityId: community.id },
+			{
+				depth: 10,
+				withPubType: true,
+				withStage: true,
+				withMembers: true,
+				withLegacyAssignee: true,
+			}
+		);
+
+		expect(pub).toMatchObject({
+			id: createdPub.id,
+		});
+
+		expect(pub.pubType).toMatchObject({
+			id: pubTypes["Basic Pub"].id,
+			fields: Object.values(pubTypes["Basic Pub"].pubFields).map((f) => ({
+				id: f.id,
+				slug: f.slug,
+			})),
+		});
+		expect(pub.stage).toMatchObject({
+			id: stages["Stage 1"].id,
+			name: "Stage 1",
+			order: stages["Stage 1"].order,
+		});
+		expect(pub.members).toEqual([]);
+		expect(pub.assignee).toEqual(null);
+		expect(Object.keys(pub).sort()).toEqual(
+			[
+				"id",
+				"pubType",
+				"stage",
+				"members",
+				"assignee",
+				"values",
+				"children",
+				"stageId",
+				"pubTypeId",
+				"createdAt",
+				"updatedAt",
+				"parentId",
+				"title",
+				"communityId",
+			].sort()
+		);
+	});
+
 	it("should be able to fetch pubvalues with children", async () => {
 		const trx = getTrx();
 		const { createPubRecursiveNew } = await import("./pub");

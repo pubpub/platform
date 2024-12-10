@@ -238,7 +238,7 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	MaybePubLegacyAssignee<Options>;
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
-	stage?: Stages;
+	stage?: Stages | null;
 	pubType?: PubTypes;
 	children?: NonGenericProcessedPub[];
 	values: (ValueBase & {
@@ -266,13 +266,14 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	stage: stagesSchema.optional(),
+	stage: stagesSchema.nullish(),
 	pubType: pubTypesSchema
 		.extend({
 			fields: z.array(pubFieldsSchema),
 		})
 		.optional(),
 	children: z.lazy(() => z.array(processedPubSchema)).optional(),
+	assignee: usersSchema.nullish(),
 });
 
 const preferRepresentationHeaderSchema = z.object({

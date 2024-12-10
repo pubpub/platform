@@ -16,6 +16,7 @@ import type {
 	Json,
 	JsonValue,
 	MaybePubOptions,
+	NonGenericProcessedPub,
 	ProcessedPub,
 	PubTypePubField,
 } from "contracts";
@@ -1013,7 +1014,7 @@ export const updatePub = async ({
 	return result;
 };
 export type UnprocessedPub = {
-	pubId: PubsId;
+	id: PubsId;
 	depth: number;
 	parentId: PubsId | null;
 	stageId: StagesId | null;
@@ -1023,9 +1024,11 @@ export type UnprocessedPub = {
 	pubType?: PubTypes & { fields: PubTypePubField[] };
 	members?: SafeUser & { role: MemberRole };
 	createdAt: Date;
+	updatedAt: Date;
 	isCycle?: boolean;
 	title: string | null;
 	assignee?: SafeUser | null;
+	path: PubsId[];
 	values: {
 		id: PubValuesId;
 		fieldId: PubFieldsId;
@@ -1291,7 +1294,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 			)
 			.selectFrom("pub_tree")
 			.select((eb) => [
-				"pub_tree.pubId",
+				"pub_tree.pubId as id",
 				"pub_tree.parentId",
 				"pub_tree.pubTypeId",
 				"pub_tree.depth",
@@ -1421,7 +1424,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 	const depth = opts.depth ?? DEFAULT_OPTIONS.depth;
 
 	// create a map of all pubs by their ID for easy lookup
-	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.pubId, pub]));
+	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.id, pub]));
 
 	const processedPubsById = new Map<PubsId, ProcessedPub<Options>>();
 
@@ -1455,26 +1458,18 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			?.map((child) => processPub(child.id, depth - 1))
 			?.filter((child) => !!child);
 
-		const processedPub = {
-			...unprocessedPub,
-			id: unprocessedPub.pubId,
-			stageId: unprocessedPub.stageId,
-			communityId: unprocessedPub.communityId,
-			parentId: unprocessedPub.parentId,
-			createdAt: unprocessedPub.createdAt,
-			updatedAt: unprocessedPub.values.reduce(
-				(max, value) => (value.updatedAt > max ? value.updatedAt : max),
-				unprocessedPub.createdAt
-			),
-			pubTypeId: unprocessedPub.pubTypeId,
-			pubType: unprocessedPub.pubType ?? undefined,
-			values: processedValues,
-			children: processedChildren,
-			members: unprocessedPub.members ?? [],
-		} as ProcessedPub<Options>;
+		const { depth: _, isCycle, values, path, ...usefulProcessedPubColumns } = unprocessedPub;
 
-		processedPubsById.set(unprocessedPub.pubId, processedPub);
-		return processedPub;
+		const processedPub = {
+			...usefulProcessedPubColumns,
+			values: processedValues,
+			children: processedChildren ?? undefined,
+		} as ProcessedPub;
+
+		const forceCast = processedPub as unknown as ProcessedPub<Options>;
+
+		processedPubsById.set(unprocessedPub.id, forceCast);
+		return forceCast;
 	}
 
 	if (opts.rootPubId) {
@@ -1490,7 +1485,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 	const topLevelPubs = pubs.filter((pub) => pub.depth === 1);
 
 	return topLevelPubs
-		.map((pub) => processPub(pub.pubId, depth - 1))
+		.map((pub) => processPub(pub.id, depth - 1))
 		.filter((processedPub) => !!processedPub);
 }
 
