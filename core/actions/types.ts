@@ -33,6 +33,8 @@ export type ActionPub<T extends ActionPubType> = {
 		email: string;
 	};
 	communityId: CommunitiesId;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type RunProps<T extends Action> =
