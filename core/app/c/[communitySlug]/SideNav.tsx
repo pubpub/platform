@@ -4,7 +4,7 @@ import { Button } from "ui/button";
 import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
 
-import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
+import type { CommunityData } from "~/lib/server/community";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import CommunitySwitcher from "./CommunitySwitcher";
@@ -13,7 +13,7 @@ import NavLink from "./NavLink";
 
 type Props = {
 	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<AvailableCommunitiesData>;
+	availableCommunities: NonNullable<CommunityData>[];
 };
 
 const Links = ({

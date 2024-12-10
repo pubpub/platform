@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -35,12 +35,12 @@ export default async function MainLayout({ children, params }: Props) {
 
 	const role = getCommunityRole(user, community);
 
-	if (role === "contributor") {
-		// TODO: figure something out for this
-		notFound();
+	if (role === "contributor" || !role) {
+		// TODO: allow contributors to view /c/* pages after we implement membership and
+		// role-based authorization checks
+		redirect("/settings");
 	}
 
-	// const availableCommunities = await getAvailableCommunities(user.id as UsersId);
 	const availableCommunities = user?.memberships.map((m) => m.community) ?? [];
 
 	return (
