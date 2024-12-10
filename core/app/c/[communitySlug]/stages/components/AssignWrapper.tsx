@@ -2,9 +2,10 @@ import "server-only";
 
 import { cache } from "react";
 
+import type { ProcessedPub } from "contracts";
 import type { CommunitiesId } from "db/public";
 
-import type { MemberWithUser, PubWithValues } from "~/lib/types";
+import type { MemberWithUser } from "~/lib/types";
 import { selectCommunityMembers } from "~/lib/server/member";
 import Assign from "./Assign";
 
@@ -14,7 +15,12 @@ const cachedGetMembers = cache((communityId: CommunitiesId) =>
 );
 
 export const AssignWrapper = async (props: {
-	pub: PubWithValues & { pubType: { name: string } };
+	pub: ProcessedPub<{
+		withPubType: true;
+		withLegacyAssignee: true;
+		withRelatedValues: false;
+		withChildren: undefined;
+	}>;
 	members?: MemberWithUser[];
 }) => {
 	const members = props.members ?? (await cachedGetMembers(props.pub.communityId));
