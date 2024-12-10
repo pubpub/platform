@@ -5,6 +5,7 @@ import type * as z from "zod";
 import type { Event } from "db/public";
 
 import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
+import * as datacite from "../datacite/action";
 import * as email from "../email/action";
 import * as googleDriveImport from "../googleDriveImport/action";
 import * as http from "../http/action";
@@ -21,6 +22,7 @@ export const actions = {
 	[http.action.name]: http.action,
 	[move.action.name]: move.action,
 	[googleDriveImport.action.name]: googleDriveImport.action,
+	[datacite.action.name]: datacite.action,
 } as const;
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {
