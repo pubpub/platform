@@ -8,12 +8,33 @@ import { defineAction } from "../types";
 export const action = defineAction({
 	name: Action.datacite,
 	config: {
-		schema: z.object({}),
+		schema: z.object({
+			doi: z.string(),
+			publisher: z.string(),
+		}),
+		fieldConfig: {
+			doi: {
+				allowedSchemas: true,
+			},
+			publisher: {
+				allowedSchemas: true,
+			},
+		},
 	},
-	description: "Deposit a pub's metadata to DataCite and grant it a DOI",
 	params: {
-		schema: z.object({}).optional(),
+		schema: z.object({
+			doi: z.string(),
+			publisher: z.string(),
+		}),
+		fieldConfig: {
+			doi: {
+				allowedSchemas: true,
+			},
+			publisher: {
+				allowedSchemas: true,
+			},
+		},
 	},
+	description: "Deposit a pub to DataCite",
 	icon: Globe,
-	superAdminOnly: true,
 });
