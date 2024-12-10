@@ -7,7 +7,9 @@ export const PageTitleWithStatus = ({ title }: { title: string }) => {
 	return (
 		<div className="flex flex-col items-center">
 			{title}
-			<span className="text-sm font-normal text-muted-foreground">{status}</span>
+			<span className="text-sm font-normal text-muted-foreground" data-testid="save-status">
+				{status}
+			</span>
 		</div>
 	);
 };

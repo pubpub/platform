@@ -106,6 +106,6 @@ test.describe("Rendering the external form", () => {
 		const pubPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
 		await pubPage.goTo();
 		await expect(page.getByTestId(`Content-value`)).toHaveText(values.content);
-		await expect(page.getByRole("heading", { name: "New title" })).toHaveCount(1);
+		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1);
 	});
 });

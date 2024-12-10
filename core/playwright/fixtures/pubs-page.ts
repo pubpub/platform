@@ -2,6 +2,30 @@ import type { Page } from "@playwright/test";
 
 import type { PubsId } from "db/public";
 
+export const choosePubType = async ({
+	page,
+	pubType,
+	communitySlug,
+}: {
+	page: Page;
+	pubType?: string;
+	communitySlug: string;
+}) => {
+	const createDialog = page.getByRole("dialog", { name: "Create Pub", exact: true });
+	await createDialog.waitFor();
+
+	// Choose a pub type
+	await createDialog.getByLabel("Pub type").click();
+	if (pubType) {
+		await page.getByRole("option", { name: pubType, exact: true }).click();
+	} else {
+		// Choose the first pub type
+		await page.getByRole("option").first().click();
+	}
+	await createDialog.getByRole("button", { name: "Create Pub" }).click();
+	await page.waitForURL(`/c/${communitySlug}/pubs/create**`);
+};
+
 export class PubsPage {
 	private readonly communitySlug: string;
 
@@ -17,19 +41,7 @@ export class PubsPage {
 	}
 
 	async choosePubType(pubType?: string) {
-		const createDialog = this.page.getByRole("dialog", { name: "Create Pub", exact: true });
-		await createDialog.waitFor();
-
-		// Choose a pub type
-		await createDialog.getByLabel("Pub type").click();
-		if (pubType) {
-			await this.page.getByRole("option", { name: pubType, exact: true }).click();
-		} else {
-			// Choose the first pub type
-			await this.page.getByRole("option").first().click();
-		}
-		await createDialog.getByRole("button", { name: "Create Pub" }).click();
-		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/create**`);
+		await choosePubType({ page: this.page, pubType, communitySlug: this.communitySlug });
 	}
 
 	async createPub({
