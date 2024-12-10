@@ -84,6 +84,9 @@ test.describe("Moving a pub", () => {
 		// Shelved is its own node in stages
 		await page.getByRole("option", { name: "Shelved" }).click();
 		await page.getByRole("button", { name: "Save" }).click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+		).toHaveCount(1);
 
 		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
 		await pubDetailsPage.goTo();
