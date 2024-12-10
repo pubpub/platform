@@ -11,7 +11,7 @@ import { logger } from "logger";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
-import { getPub, getPubCached } from "~/lib/server";
+import { getPubCached } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
@@ -169,6 +169,7 @@ const _runActionInstance = async (
 				assignee: pub.assignee ?? undefined,
 				parentId: pub.parentId,
 				communityId: pub.communityId,
+				createdAt: pub.createdAt,
 			},
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,
