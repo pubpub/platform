@@ -6,16 +6,18 @@ import { expect } from "utils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
+import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
-import { makeFormElementDefFromPubFields } from "./helpers";
-import { PubEditorClient } from "./PubEditorClient";
+import { StageSelectClient } from "../../StageSelect/StageSelectClient";
+import { PubEditorWrapper } from "./PubEditorWrapper";
 import { getCommunityById, getStage } from "./queries";
 
 export type PubEditorProps = {
 	searchParams: Record<string, unknown>;
+	formId?: string;
 } & (
 	| {
 			pubId: PubsId;
@@ -58,8 +60,6 @@ export async function PubEditor(props: PubEditorProps) {
 		getPubTypesForCommunity(community.id),
 	]);
 
-	const pubValues = pub?.values ?? {};
-
 	let pubType: AutoReturnType<
 		typeof getCommunityById
 	>["executeTakeFirstOrThrow"]["pubTypes"][number];
@@ -96,48 +96,57 @@ export async function PubEditor(props: PubEditorProps) {
 		);
 	}
 
-	const formElements = makeFormElementDefFromPubFields(pubFields).map((formElementDef) => (
+	const form = await getForm({
+		communityId: community.id,
+		pubTypeId: pubType.id,
+	}).executeTakeFirstOrThrow(
+		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
+	);
+
+	// TODO: render markdown content
+	// TODO: render the pubvalues that are not on the form but might be on the pub
+	const formElements = form.elements.map((e) => (
 		<FormElement
-			key={formElementDef.elementId}
-			element={formElementDef}
+			key={e.elementId}
+			pubId={pubId}
+			element={e}
 			searchParams={props.searchParams}
 			communitySlug={community.slug}
-			values={pubValues}
-			pubId={pubId}
+			values={pub ? pub.values : {}}
 		/>
 	));
 
 	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const editor = (
-		<ContextEditorContextProvider
-			pubId={pubId}
-			pubTypeId={pubType.id}
-			pubs={pubs}
-			pubTypes={pubTypes}
-		>
-			<PubEditorClient
-				availablePubTypes={community.pubTypes}
-				availableStages={community.stages}
-				communityId={community.id}
-				formElements={formElements}
-				parentId={"parentId" in props ? props.parentId : undefined}
-				pubFields={pubFields}
-				pubId={pubId}
-				pubTypeId={pubType?.id}
-				pubValues={pubValues}
-				stageId={currentStageId}
-				isUpdating={isUpdating}
-			/>
-		</ContextEditorContextProvider>
-	);
-
-	if (isUpdating) {
-		return editor;
-	}
+	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
 
 	return (
 		<FormElementToggleProvider fieldSlugs={pubFields.map((pubField) => pubField.slug)}>
-			{editor}
+			<ContextEditorContextProvider
+				pubId={pubId}
+				pubTypeId={pubType.id}
+				pubs={pubs}
+				pubTypes={pubTypes}
+			>
+				<PubEditorWrapper
+					elements={form.elements}
+					parentId={"parentId" in props ? props.parentId : undefined}
+					pub={pubForForm}
+					isUpdating={isUpdating}
+					withAutoSave={false}
+					withButtonElements={false}
+					formId={props.formId}
+					stageId={currentStageId}
+				>
+					<>
+						<StageSelectClient
+							fieldLabel="Stage"
+							fieldName="stageId"
+							stages={community.stages}
+						/>
+						{formElements}
+					</>
+				</PubEditorWrapper>
+			</ContextEditorContextProvider>
 		</FormElementToggleProvider>
 	);
 }

@@ -26,10 +26,15 @@ import { _getPubFields } from "./pubFields";
 import { getUser } from "./user";
 
 /**
- * Get a form by either slug or id
+ * Get a form by either slug, id, or pubtype ID. If given a pubtype ID, retrieves the
+ * default form for that pubtype.
  */
 export const getForm = (
-	props: XOR<{ slug: string }, { id: FormsId }> & { communityId: CommunitiesId },
+	props: (
+		| { id: FormsId; slug?: never; pubTypeId?: never }
+		| { id?: never; slug: string; pubTypeId?: never }
+		| { id?: never; slug?: never; pubTypeId: PubTypesId }
+	) & { communityId: CommunitiesId },
 	trx: typeof db | QueryCreator<PublicSchema> = db
 ) =>
 	autoCache(
@@ -38,6 +43,11 @@ export const getForm = (
 			.where("forms.communityId", "=", props.communityId)
 			.$if(Boolean(props.slug), (eb) => eb.where("forms.slug", "=", props.slug!))
 			.$if(Boolean(props.id), (eb) => eb.where("forms.id", "=", props.id!))
+			.$if(Boolean(props.pubTypeId), (eb) =>
+				eb.where((eb) =>
+					eb("forms.pubTypeId", "=", props.pubTypeId!).and("forms.isDefault", "=", true)
+				)
+			)
 			.selectAll("forms")
 			.select((eb) =>
 				jsonArrayFrom(
