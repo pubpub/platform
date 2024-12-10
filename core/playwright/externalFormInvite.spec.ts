@@ -141,5 +141,18 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 
 		await newPage.getByText("Form Successfully Submitted").waitFor();
+
+		// Test authorization for new contributor
+		const pubsPage = new PubsPage(newPage, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		// User should be redirected to user settings page when viewing the pubs page in the
+		// community they are a contributor of
+		// This should fail/change we implement pub visibility checks
+		expect(await newPage.url()).toMatch(/\/settings$/);
+
+		// Make sure they can't view the pubs page in other communities
+		const unauthorizedPubsPage = new PubsPage(newPage, "croccroc");
+		await unauthorizedPubsPage.goTo();
+		expect(await newPage.url()).toMatch(/\/settings$/);
 	});
 });
