@@ -4,6 +4,7 @@ import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { defaultFormName, defaultFormSlug } from "~/lib/form";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import {
@@ -11,7 +12,6 @@ import {
 	FORM_SLUG_UNIQUE_CONSTRAINT,
 	insertForm,
 } from "~/lib/server/form";
-import { slugifyString } from "~/lib/string";
 
 export const addPubField = defineServerAction(async function addPubField(
 	pubTypeId: PubTypesId,
@@ -81,8 +81,6 @@ export const createPubType = defineServerAction(async function createPubType(
 	fields: PubFieldsId[],
 	titleField: PubFieldsId
 ) {
-	const defaultFormName = `${name} Editor (Default)`;
-	const defaultFormSlug = `${slugifyString(name)}-default-editor`;
 	try {
 		await db.transaction().execute(async (trx) => {
 			const pubType = await autoRevalidate(
@@ -109,7 +107,14 @@ export const createPubType = defineServerAction(async function createPubType(
 			).executeTakeFirstOrThrow();
 
 			await autoRevalidate(
-				insertForm(pubType.id, defaultFormName, defaultFormSlug, communityId, true, trx)
+				insertForm(
+					pubType.id,
+					defaultFormName(name),
+					defaultFormSlug(name),
+					communityId,
+					true,
+					trx
+				)
 			).executeTakeFirstOrThrow();
 		});
 	} catch (error) {
