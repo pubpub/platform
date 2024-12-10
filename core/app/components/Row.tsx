@@ -5,17 +5,18 @@ import type { PropsWithChildren } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "ui/card";
 import { cn } from "utils";
 
-type Props = PropsWithChildren<{ className?: string }>;
+type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
-export const Row = (props: Props) => {
+export const Row = ({ className, children, ...rest }: Props) => {
 	return (
 		<Card
 			className={cn(
 				"flex flex-col gap-2 border-b border-gray-200 bg-white px-4 py-3",
-				props.className
+				className
 			)}
+			{...rest}
 		>
-			{props.children}
+			{children}
 		</Card>
 	);
 };

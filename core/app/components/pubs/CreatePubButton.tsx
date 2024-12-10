@@ -1,20 +1,31 @@
-import type { CommunitiesId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Plus } from "ui/icon";
 
-import type { PubEditorProps } from "./PubEditor/PubEditor";
+import { getAllPubTypesForCommunity } from "~/lib/server";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { PathAwareDialog } from "../PathAwareDialog";
-import { PubEditor } from "./PubEditor/PubEditor";
+import { PubTypeFormClient } from "./PubTypeFormClient";
 
-export type Props = PubEditorProps & {
+type Props = {
 	variant?: ButtonProps["variant"];
 	size?: ButtonProps["size"];
 	className?: string;
 	text?: string;
-} & ({ stageId: StagesId } | { communityId: CommunitiesId });
+	/** If specified, pubs created via this button will have this parentId */
+	parentId?: PubsId;
+} & (
+	| {
+			/** If specified, the pub editor will default to this stage */
+			stageId: StagesId;
+	  }
+	| { communityId: CommunitiesId }
+);
 
-export const CreatePubButton = (props: Props) => {
+export const CreatePubButton = async (props: Props) => {
 	const id = "stageId" in props ? props.stageId : props.communityId;
+	const communitySlug = getCommunitySlug();
+	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
 	return (
 		<PathAwareDialog
 			buttonSize={props.size}
@@ -26,7 +37,13 @@ export const CreatePubButton = (props: Props) => {
 			param="create-pub-form"
 			title="Create Pub"
 		>
-			<PubEditor {...props} />
+			<PubTypeFormClient
+				pubTypes={pubTypes}
+				editorSpecifiers={{
+					stageId: "stageId" in props ? props.stageId : undefined,
+					parentId: props.parentId,
+				}}
+			/>
 		</PathAwareDialog>
 	);
 };

@@ -86,7 +86,6 @@ export default async function Page({
 						text="Create Pub"
 						stageId={stageId}
 						communityId={community.id}
-						searchParams={searchParams}
 					/>
 				</div>
 			</div>

@@ -6,10 +6,11 @@ import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { FieldsPage } from "./fixtures/fields-page";
+import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
-import { PubsPage } from "./fixtures/pubs-page";
+import { choosePubType, PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
 import { createCommunity } from "./helpers";
 
@@ -78,12 +79,14 @@ test.describe("Moving a pub", () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		await pubsPage.goTo();
 		await page.getByTestId("pub-dropdown-button").first().click();
-		await page.getByRole("button", { name: "Update" }).click();
-		await page.getByTestId("stage-selector").click();
+		await page.getByRole("link", { name: "Update Pub" }).click();
+		await page.getByLabel("Stage").click();
 		// Shelved is its own node in stages
-		await page.getByRole("menuitem", { name: "Shelved" }).click();
-		await page.getByRole("button", { name: "Update Pub" }).click();
-		await page.getByRole("dialog", { name: "Update Pub" }).waitFor({ state: "hidden" });
+		await page.getByRole("option", { name: "Shelved" }).click();
+		await page.getByRole("button", { name: "Save" }).click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+		).toHaveCount(1);
 
 		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
 		await pubDetailsPage.goTo();
@@ -97,9 +100,9 @@ test.describe("Creating a pub", () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		const title = "Pub without a stage";
 		await pubsPage.goTo();
-		await pubsPage.createPub({ values: { title, content: "Some content" } });
-		await page.getByRole("link", { name: title }).click();
-		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
+		const pubId = await pubsPage.createPub({ values: { title, content: "Some content" } });
+		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveCount(0);
 	});
 
@@ -133,45 +136,46 @@ test.describe("Creating a pub", () => {
 		await fieldsPage.goto();
 		await fieldsPage.addField("Animals", CoreSchemaType.StringArray);
 
-		// Add it as a pub type
-		const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
-		await pubTypePage.goto();
-		await pubTypePage.addFieldToPubType("Submission", "animals");
+		// Add it to the default form
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, "submission-default-editor");
+		await formEditPage.goto();
+		await formEditPage.openAddForm();
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:animals`);
+		await formEditPage.saveForm();
 
-		// Now create a pub of this type
+		// Now create a pub using this form
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		await pubsPage.goTo();
 		const title = "pub with multivalue";
 		await page.getByRole("button", { name: "Create" }).click();
+		await pubsPage.choosePubType("Submission");
 		await page.getByLabel("Title").fill(title);
 		await page.getByLabel("Content").fill("Some content");
 		await page.getByLabel("Animals").fill("dogs");
 		await page.keyboard.press("Enter");
 		await page.getByLabel("Animals").fill("cats");
 		await page.keyboard.press("Enter");
-		await page.getByRole("button", { name: "Create Pub" }).click();
-		await page.getByRole("link", { name: title }).click();
-		await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
-		const pubId = page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)/)?.groups?.pubId;
+		await page.getByRole("button", { name: "Save" }).click();
+
+		await page.waitForURL(`/c/${COMMUNITY_SLUG}/pubs/*/edit?*`);
+		await page.getByRole("button", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
 
 		// Edit this same pub
-		await pubsPage.goTo();
-		await page.getByTestId("pub-dropdown-button").first().click();
 		await page.getByRole("button", { name: "Update" }).click();
 		await page.getByLabel("Animals").fill("penguins");
 		await page.keyboard.press("Enter");
 		await page.getByTestId("remove-button").first().click();
-		await page.getByRole("button", { name: "Update Pub" }).click();
+		await page.getByRole("button", { name: "Save" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
-		await page.goto(`/c/${COMMUNITY_SLUG}/pubs/${pubId}`);
+		await page.getByRole("button", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
 
 	test("Can create and edit a rich text field", async () => {
-		// Add a multivalue field
+		// Add a rich text field
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
 		await fieldsPage.addField("Rich text", CoreSchemaType.RichText);
@@ -186,30 +190,97 @@ test.describe("Creating a pub", () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		await pubsPage.goTo();
 		await page.getByRole("button", { name: "Create" }).click();
-		await page.getByRole("button", { name: "Submission" }).click();
-		await page.getByRole("menuitem", { name: "Editor" }).click();
-		// Need to toggle this to enabled because of bug: https://github.com/pubpub/platform/issues/776
-		await page.getByTestId(`${COMMUNITY_SLUG}:rich-text-toggle`).click();
+		await pubsPage.choosePubType("Editor");
 		await page.getByLabel("Title").fill("old title");
 		// It seems for ProseMirror, Keyboard actions trigger things better than using .fill()
 		await page.locator(".ProseMirror").click();
 		await page.keyboard.type("@title");
 		await page.keyboard.press("Enter");
 		await page.keyboard.type(actualTitle);
-		await page.getByRole("button", { name: "Create Pub" }).click();
+		await page.getByRole("button", { name: "Save" }).click();
+		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		);
+		await pubsPage.goTo();
 		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
 
 		// Now update
 		await page.getByTestId("pub-dropdown-button").first().click();
-		await page.getByRole("button", { name: "Update" }).click();
+		await page.getByRole("link", { name: "Update Pub" }).click();
 		await page.locator(".ProseMirror").click();
 		await page.keyboard.type("prefix ");
 
-		await page.getByRole("button", { name: "Update Pub" }).click();
+		await page.getByRole("button", { name: "Save" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
 		await pubsPage.goTo();
 		await expect(page.getByRole("link", { name: `prefix ${actualTitle}` })).toHaveCount(1);
+	});
+
+	test("Can create a child pub", async () => {
+		const pubPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		await pubPage.goTo();
+		await expect(page.getByRole("table").first()).toContainText("No results.");
+		await page.getByRole("button", { name: "Add New Pub" }).click();
+
+		// Choose a pub type
+		await choosePubType({ page, communitySlug: COMMUNITY_SLUG });
+
+		// Fill in title and content
+		const child = { title: "child", content: "I am a child" };
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(child.title);
+		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill(child.content);
+		await page.getByRole("button", { name: "Save" }).click();
+		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		);
+
+		await pubPage.goTo();
+		await expect(
+			page.getByRole("table").first().getByRole("link", { name: child.title })
+		).toHaveCount(1);
+	});
+
+	test("Can create a pub at a stage", async () => {
+		const stage = "Shelved";
+		const stagesPage = new StagesManagePage(page, COMMUNITY_SLUG);
+		await stagesPage.goTo();
+		await stagesPage.openStagePanelTab(stage, "Pubs");
+		await page.getByRole("button", { name: "Create" }).click();
+		await choosePubType({ page, communitySlug: COMMUNITY_SLUG });
+
+		// Stage should be prefilled
+		await expect(page.getByLabel("Stage")).toHaveText(stage);
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill("Stage test");
+		await page.getByRole("button", { name: "Save" }).click();
+		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		);
+		await page.getByRole("button", { name: "View Pub" }).click();
+		await expect(page.getByTestId("current-stage")).toHaveText(stage);
+	});
+});
+
+test.describe("Updating a pub", () => {
+	test("Can update a pub from pubs list page", async () => {
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		pubsPage.goTo();
+		await page.getByTestId(`pub-row-${pubId}`).getByTestId("pub-dropdown-button").click();
+		await page.getByRole("link", { name: "Update Pub" }).click();
+		await expect(page.getByTestId("save-status")).toHaveText(
+			"Form will save when you click save"
+		);
+
+		const newTitle = `New title ${new Date().getTime()}`;
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(newTitle);
+		await page.getByRole("button", { name: "Save" }).click();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+		).toHaveCount(1);
+		await expect(page.getByTestId("save-status")).toContainText("Last saved at");
+
+		await page.getByRole("link", { name: "View Pub" }).click();
+		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1);
 	});
 });

@@ -31,7 +31,7 @@ export default async function Page({ params, searchParams }: Props) {
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
+			<PubHeader communityId={community.id as CommunitiesId} />
 			<PaginatedPubList
 				communityId={community.id}
 				searchParams={searchParams}

@@ -6,7 +6,6 @@ import { db } from "~/kysely/database";
 
 export const pubCapabilities = [
 	Capabilities.movePub,
-	Capabilities.createPub,
 	Capabilities.viewPub,
 	Capabilities.deletePub,
 	Capabilities.updatePubValues,
@@ -18,6 +17,7 @@ export const pubCapabilities = [
 ] as const;
 
 export const communityCapabilities = [
+	Capabilities.createPub,
 	Capabilities.createPubField,
 	Capabilities.archivePubField,
 	Capabilities.editPubField,

@@ -48,14 +48,14 @@ export class StagesManagePage {
 		return;
 	}
 
-	async openStageActions(stageName: string) {
+	async openStagePanelTab(stageName: string, tab: "Overview" | "Pubs" | "Actions" | "Members") {
 		await this.openStagePanel(stageName);
 		const stagePanel = this.page.getByRole("dialog");
-		await stagePanel.getByRole("tablist").getByText("Actions").click();
+		await stagePanel.getByRole("tablist").getByText(tab).click();
 	}
 
 	async addAction(stageName: string, action: Action, actionName: string) {
-		await this.openStageActions(stageName);
+		await this.openStagePanelTab(stageName, "Actions");
 		const stagePanel = this.page.getByRole("dialog");
 
 		await stagePanel.getByRole("button", { name: "Add an action", exact: true }).click();
