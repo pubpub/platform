@@ -6,6 +6,8 @@ import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
+import { PubDetailsPage } from "./fixtures/pub-details-page";
+import { PubTypesPage } from "./fixtures/pub-types-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { createCommunity } from "./helpers";
 
@@ -73,5 +75,37 @@ test.describe("Rendering the external form", () => {
 		await expect(page.locator("p").filter({ hasText: "Invalid email address" })).toHaveCount(1);
 		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
 		await expect(page.locator("p").filter({ hasText: "Invalid email address" })).toHaveCount(0);
+	});
+
+	test("Can save a subset of a pub's values", async () => {
+		// Create a pub with Title and Content
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		const values = { title: "I have a title and content", content: "My content" };
+		const pubId = await pubsPage.createPub({
+			pubType: "Submission",
+			values,
+		});
+
+		// Add a pub type that only has Title. This will create a default form title-default-form
+		const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
+		await pubTypePage.goto();
+		await pubTypePage.addType("Title", "title only", ["title"]);
+		const formSlug = "title-default-editor";
+		await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${formSlug}/fill?pubId=${pubId}`);
+
+		// Update the title
+		const newTitle = "New title";
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(newTitle);
+		// There should not be a Content field
+		await expect(page.getByTestId(`${COMMUNITY_SLUG}:content`)).toHaveCount(0);
+		await page.getByRole("button", { name: "Submit" }).click();
+		await expect(page.getByTestId("completed")).toHaveCount(1);
+
+		// Visit the pub's page
+		const pubPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		await pubPage.goTo();
+		await expect(page.getByTestId(`Content-value`)).toHaveText(values.content);
+		await expect(page.getByRole("heading", { name: "New title" })).toHaveCount(1);
 	});
 });
