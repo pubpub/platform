@@ -195,6 +195,9 @@ test.describe("Creating a pub", () => {
 		await page.keyboard.press("Enter");
 		await page.keyboard.type(actualTitle);
 		await page.getByRole("button", { name: "Save" }).click();
+		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		);
 		await pubsPage.goTo();
 		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
 
