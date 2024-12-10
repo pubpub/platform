@@ -19,7 +19,6 @@ import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { addPubField, updateTitleField } from "./actions";
 import { FieldSelect } from "./FieldSelect";
 import { RemoveFieldButton } from "./RemoveFieldButton";
-import { RemoveTypeButton } from "./RemoveTypeButton";
 import { pubFieldCanBeTitle } from "./utils";
 
 type Props = {
@@ -86,14 +85,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 		<Card>
 			<CardContent className="px-6 py-2">
 				<div className="flex items-center justify-between">
-					<h2 className="flex-grow font-bold">
-						{type.name}
-						{editing && (
-							<div className="ml-1 inline-flex font-normal">
-								<RemoveTypeButton pubTypeId={type.id} />
-							</div>
-						)}
-					</h2>
+					<h2 className="flex-grow font-bold">{type.name}</h2>
 					<Button
 						size="icon"
 						variant={"ghost"}

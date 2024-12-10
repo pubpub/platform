@@ -52,28 +52,6 @@ export const removePubField = defineServerAction(async function removePubField(
 	).execute();
 });
 
-export const removePubType = defineServerAction(async function removePubType(
-	pubTypeId: PubTypesId
-) {
-	const pubs = await db
-		.selectFrom("pubs")
-		.select(({ fn }) => [fn.countAll<string>().as("count")])
-		.where("pubTypeId", "=", pubTypeId)
-		.executeTakeFirstOrThrow();
-	const count = parseInt(pubs.count);
-	if (count) {
-		const fragment = count > 1 ? "pubs still use" : "pub still uses";
-		return {
-			title: "Unable to delete type",
-			error: `${count} ${fragment} this type so it can't be deleted.`,
-		};
-	}
-
-	await autoRevalidate(
-		db.deleteFrom("pub_types").where("pub_types.id", "=", pubTypeId)
-	).execute();
-});
-
 export const createPubType = defineServerAction(async function createPubType(
 	name: string,
 	communityId: CommunitiesId,
