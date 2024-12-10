@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
@@ -65,9 +65,12 @@ export default async function Page({
 		user.id
 	);
 
-	// TODO: something else if user doesn't have permission?
-	if (!pubId || !communitySlug || !canUpdatePub) {
+	if (!pubId || !communitySlug) {
 		return null;
+	}
+
+	if (!canUpdatePub) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const community = await getCommunityBySlug(communitySlug);

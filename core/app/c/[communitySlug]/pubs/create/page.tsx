@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId, PubsId, StagesId } from "db/public";
+import type { CommunitiesId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
@@ -56,7 +56,7 @@ export default async function Page({
 	);
 
 	if (!canCreatePub) {
-		return null;
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const formId = `create-pub`;
