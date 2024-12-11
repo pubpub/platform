@@ -8,13 +8,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { formatDateAsTime } from "~/lib/dates";
 import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
 
-export const SaveStatus = () => {
+export const useSaveStatus = ({ defaultMessage }: { defaultMessage?: string }) => {
 	const searchParams = useSearchParams();
 	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 
 	const submitId = urlSearchParams.get(SUBMIT_ID_QUERY_PARAM);
 	const saveStatus = urlSearchParams.get(SAVE_STATUS_QUERY_PARAM);
-	let status = "Progress will be automatically saved";
+
+	let status = defaultMessage;
+
 	if (submitId) {
 		status = "Completed";
 	} else if (saveStatus) {
@@ -24,6 +26,12 @@ export const SaveStatus = () => {
 			status = `Last saved at ${formatDateAsTime(lastSavedTime)}`;
 		}
 	}
+
+	return status;
+};
+
+export const SaveStatus = () => {
+	const status = useSaveStatus({ defaultMessage: "Progress will be automatically saved" });
 
 	return (
 		<div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">

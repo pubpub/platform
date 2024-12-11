@@ -846,6 +846,36 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			members: users.map((u) => ({ ...u, role: MemberRole.admin })),
 		});
 	});
+
+	it("should fetch a pub that has no pub values", async () => {
+		const trx = getTrx();
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const emptyPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {},
+			},
+			trx,
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{
+				pubId: emptyPub.id,
+				communityId: community.id,
+			},
+			{ withChildren: false }
+		);
+
+		expect(pub).toMatchObject({
+			id: emptyPub.id,
+			values: [],
+		});
+	});
 });
 
 describe("upsertPubRelations", () => {

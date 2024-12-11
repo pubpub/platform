@@ -31,13 +31,17 @@ export class PubTypesPage {
 
 		// If no fields passed, add all fields to pub type
 		if (!fieldSlugs) {
+			await fieldCombobox.click();
 			const options = await this.page
-				.getByRole("listbox", { name: "Available fields", exact: true })
+				.getByLabel("Available fields")
 				.getByRole("option")
 				.all();
-			for (const option of options) {
-				await fieldCombobox.click();
-				await option.click();
+
+			for (const [index] of options.entries()) {
+				if (index !== 0) {
+					await fieldCombobox.click();
+				}
+				this.page.getByLabel("Available fields").getByRole("option").first().click();
 			}
 		} else {
 			for (const slug of fieldSlugs) {
