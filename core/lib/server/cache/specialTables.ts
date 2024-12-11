@@ -15,7 +15,8 @@ type LinkedCacheTags = {
 export const LINKED_CACHE_TAGS = {
 	// updating the title pub_value of a pub triggers an update of pub.title
 	// updating a pub_value in general triggers an update of pub.updatedAt
-	pubs: ["pub_values"],
+	// updating _PubFieldToPubType (eg setting isTitle to true) triggers an update of pub.title
+	pubs: ["pub_values", "_PubFieldToPubType"],
 } as LinkedCacheTags;
 
 export const getTablesWithLinkedTables = (tables: DatabaseTableName[]) => {
