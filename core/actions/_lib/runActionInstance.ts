@@ -1,5 +1,3 @@
-"use server";
-
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -11,7 +9,7 @@ import { logger } from "logger";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
-import { getPubCached } from "~/lib/server";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
@@ -21,6 +19,7 @@ export type ActionInstanceRunResult = ClientException | ClientExceptionOptions |
 
 export type RunActionInstanceArgs = {
 	pubId: PubsId;
+	communityId: CommunitiesId;
 	actionInstanceId: ActionInstancesId;
 	actionInstanceArgs?: Record<string, unknown>;
 } & ({ event: Event } | { userId: UsersId });
@@ -28,7 +27,13 @@ export type RunActionInstanceArgs = {
 const _runActionInstance = async (
 	args: RunActionInstanceArgs
 ): Promise<ActionInstanceRunResult> => {
-	const pubPromise = getPubCached(args.pubId);
+	const pubPromise = getPubsWithRelatedValuesAndChildren(
+		{ pubId: args.pubId, communityId: args.communityId },
+		{
+			withPubType: true,
+			withStage: true,
+		}
+	);
 
 	const actionInstancePromise = db
 		.selectFrom("action_instances")
@@ -243,7 +248,12 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 	return result;
 }
 
-export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {
+export const runInstancesForEvent = async (
+	pubId: PubsId,
+	stageId: StagesId,
+	event: Event,
+	communityId: CommunitiesId
+) => {
 	const instances = await db
 		.selectFrom("action_instances")
 		.where("action_instances.stageId", "=", stageId)
@@ -259,6 +269,7 @@ export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, eve
 				actionInstanceName: instance.name,
 				result: await runActionInstance({
 					pubId,
+					communityId,
 					actionInstanceId: instance.actionInstanceId,
 					event,
 				}),

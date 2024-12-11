@@ -4,7 +4,7 @@ import type { z } from "zod";
 
 import { Suspense, useCallback, useTransition } from "react";
 
-import type { ActionInstances, ActionInstancesId, PubsId } from "db/public";
+import type { ActionInstances, ActionInstancesId, CommunitiesId, PubsId } from "db/public";
 import type { FieldConfig } from "ui/auto-form";
 import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
@@ -17,6 +17,7 @@ import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { useServerAction } from "~/lib/serverActions";
+import { useCommunity } from "../providers/CommunityProvider";
 
 export const ActionRunForm = ({
 	actionInstance,
@@ -27,6 +28,7 @@ export const ActionRunForm = ({
 	pubId: PubsId;
 	fieldConfig: FieldConfig<any>;
 }) => {
+	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
 
 	const [isPending, startTransition] = useTransition();
@@ -45,6 +47,7 @@ export const ActionRunForm = ({
 					actionInstanceId: actionInstance.id as ActionInstancesId,
 					pubId,
 					actionInstanceArgs: values,
+					communityId: community.id as CommunitiesId,
 				});
 
 				if ("success" in result) {
