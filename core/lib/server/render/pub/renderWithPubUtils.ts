@@ -17,6 +17,10 @@ export type RenderWithPubPub = {
 		lastName: string | null;
 		email: string;
 	} | null;
+	title: string | null;
+	pubType: {
+		name: string;
+	};
 };
 
 export type RenderWithPubContext = {
