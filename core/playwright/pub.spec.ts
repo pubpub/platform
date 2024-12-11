@@ -162,7 +162,7 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
 
 		// Edit this same pub
-		await page.getByRole("button", { name: "Update" }).click();
+		await page.getByRole("link", { name: "Update" }).click();
 		await page.getByLabel("Animals").fill("penguins");
 		await page.keyboard.press("Enter");
 		await page.getByTestId("remove-button").first().click();
