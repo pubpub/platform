@@ -95,7 +95,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 
 	return (
 		<>
-			<Row>
+			<Row data-testid={`pub-row-${pub.id}`}>
 				<RowHeader>
 					<div className="flex flex-row items-center justify-between">
 						<div className="text-sm font-semibold text-gray-500">

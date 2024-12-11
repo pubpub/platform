@@ -49,9 +49,6 @@ const preparePayload = ({
 	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
 }) => {
-	// For sending to the server, we only want form elements, not ones that were on the pub but not in the form.
-	// For example, if a pub has an 'email' field but the form does not,
-	// we do not want to pass an empty `email` field to the upsert (it will fail validation)
 	const payload: Record<string, JsonValue> = {};
 	for (const { slug, schemaName } of formElements) {
 		if (

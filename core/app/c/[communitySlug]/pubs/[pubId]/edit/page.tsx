@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
@@ -9,12 +9,12 @@ import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
+import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
-import { PageTitle } from "./PageTitle";
 
 export async function generateMetadata({
 	params: { pubId, communitySlug },
@@ -65,9 +65,12 @@ export default async function Page({
 		user.id
 	);
 
-	// TODO: something else if user doesn't have permission?
-	if (!pubId || !communitySlug || !canUpdatePub) {
+	if (!pubId || !communitySlug) {
 		return null;
+	}
+
+	if (!canUpdatePub) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const community = await getCommunityBySlug(communitySlug);
@@ -94,7 +97,7 @@ export default async function Page({
 					Save
 				</Button>
 			}
-			title={<PageTitle />}
+			title={<PageTitleWithStatus title="Edit pub" />}
 			right={
 				<Button variant="link">
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
