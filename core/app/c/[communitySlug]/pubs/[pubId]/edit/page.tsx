@@ -14,6 +14,7 @@ import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWi
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
@@ -45,8 +46,7 @@ export async function generateMetadata({
 		return { title: "Pub Not Found" };
 	}
 
-	// TODO: replace with proper title https://github.com/pubpub/platform/issues/736
-	const title = pub.values.find((v) => /title/.test(v.fieldSlug))?.value;
+	const title = getPubTitle(pub);
 
 	if (!title) {
 		return { title: `Edit Pub ${pub.id}` };
