@@ -6,7 +6,7 @@ import { CoreSchemaType } from "db/public";
 import { mockServerCode } from "../__tests__/utils";
 
 const { testDb } = await mockServerCode();
-const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+const { seedCommunity, createSeed } = await import("~/prisma/seed/seedCommunity");
 
 const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 	community: {
@@ -21,6 +21,7 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 	pubTypes: {
 		"Basic Pub": {
 			Title: { isTitle: true },
+			Description: { isTitle: false },
 			"Some relation": { isTitle: false },
 		},
 	},
@@ -151,7 +152,7 @@ describe("updatedAt trigger", () => {
 	});
 });
 
-describe("title trigger", () => {
+describe("pub_values title trigger", () => {
 	it("should set a title on a pub when a pub is created with a title", async () => {
 		const { createPubRecursiveNew } = await import("./pub");
 
@@ -279,5 +280,195 @@ describe("title trigger", () => {
 			.executeTakeFirstOrThrow();
 
 		expect(pub.title).toBe(null);
+	});
+});
+
+const getPubTitle = async (pubId: PubsId) => {
+	return (
+		await testDb
+			.selectFrom("pubs")
+			.select("title")
+			.where("id", "=", pubId)
+			.executeTakeFirstOrThrow()
+	).title;
+};
+
+const pubTitleTestSeed = createSeed({
+	community: {
+		name: "test",
+		slug: "test-server-pub",
+	},
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+		Description: { schemaName: CoreSchemaType.String },
+	},
+	pubTypes: {
+		"Basic Pub": {
+			Title: { isTitle: true },
+			Description: { isTitle: false },
+		},
+	},
+	pubs: [
+		{
+			pubType: "Basic Pub",
+			values: {
+				Title: "Some title",
+				Description: "Some description",
+			},
+		},
+	],
+});
+
+// when a pubType is updated, we need to update the title of all pubs in that pubType
+describe("pubType title change trigger", () => {
+	it("should update titles when a field is marked as title", async () => {
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(pubTitleTestSeed);
+
+		expect(pubs[0].title).toBe("Some title");
+		expect(await getPubTitle(pubs[0].id)).toBe("Some title");
+
+		// Change the title field from Title to Description
+		await testDb
+			.updateTable("_PubFieldToPubType")
+			.set({ isTitle: false })
+			.where("A", "=", pubFields.Title.id)
+			.where("B", "=", pubTypes["Basic Pub"].id)
+			.execute();
+
+		expect(await getPubTitle(pubs[0].id)).toBe(null);
+
+		await testDb
+			.updateTable("_PubFieldToPubType")
+			.set({ isTitle: true })
+			.where("A", "=", pubFields.Description.id)
+			.where("B", "=", pubTypes["Basic Pub"].id)
+			.execute();
+
+		expect(await getPubTitle(pubs[0].id)).toBe("Some description");
+	});
+
+	it("should set title to null when no field is marked as title", async () => {
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(pubTitleTestSeed);
+
+		// Remove title designation from the Title field
+		const updateResult = await testDb
+			.updateTable("_PubFieldToPubType")
+			.set({ isTitle: false })
+			.where("A", "=", pubFields.Title.id)
+			.where("B", "=", pubTypes["Basic Pub"].id)
+			.execute();
+
+		const updatedPub = await testDb
+			.selectFrom("pubs")
+			.selectAll()
+			.where("id", "=", pubs[0].id)
+			.executeTakeFirstOrThrow();
+
+		expect(updatedPub.title).toBe(null);
+	});
+
+	it("should update titles for all pubs in the pub type", async () => {
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity({
+			...pubTitleTestSeed,
+			pubs: [
+				{
+					pubType: "Basic Pub",
+					values: {
+						Title: "First title",
+						Description: "First description",
+					},
+				},
+				{
+					pubType: "Basic Pub",
+					values: {
+						Title: "Second title",
+						Description: "Second description",
+					},
+				},
+			],
+		});
+
+		expect(pubs[0].title).toBe("First title");
+		expect(pubs[1].title).toBe("Second title");
+
+		// Change the title field from Title to Description
+		await testDb
+			.updateTable("_PubFieldToPubType")
+			.set({ isTitle: false })
+			.where("A", "=", pubFields.Title.id)
+			.where("B", "=", pubTypes["Basic Pub"].id)
+			.execute();
+
+		expect(await getPubTitle(pubs[0].id)).toBe(null);
+		expect(await getPubTitle(pubs[1].id)).toBe(null);
+
+		await testDb
+			.updateTable("_PubFieldToPubType")
+			.set({ isTitle: true })
+			.where("A", "=", pubFields.Description.id)
+			.where("B", "=", pubTypes["Basic Pub"].id)
+			.execute();
+
+		expect(await getPubTitle(pubs[0].id)).toBe("First description");
+		expect(await getPubTitle(pubs[1].id)).toBe("Second description");
+	});
+
+	it("should set title to null when a pubfield is removed from a pubtype", async () => {
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(pubTitleTestSeed);
+
+		expect(pubs[0].title).toBe("Some title");
+
+		// Remove the Title field from the pubType
+		await testDb
+			.deleteFrom("_PubFieldToPubType")
+			.where("A", "=", pubFields.Title.id)
+			.where("B", "=", pubTypes["Basic Pub"].id)
+			.execute();
+
+		expect(await getPubTitle(pubs[0].id)).toBe(null);
+	});
+
+	it("should update title when a pubfield is added as a title", async () => {
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity({
+			...pubTitleTestSeed,
+			pubTypes: {
+				"Basic Pub": {
+					Description: { isTitle: false },
+				},
+			},
+			pubs: [
+				{
+					pubType: "Basic Pub",
+					values: {
+						Title: "Some title",
+						Description: "Some description",
+					},
+				},
+				{
+					pubType: "Basic Pub",
+					values: {
+						Description: "Some description",
+					},
+				},
+			],
+			forms: {},
+		});
+
+		expect(await getPubTitle(pubs[0].id)).toBe(null);
+
+		await testDb
+			.insertInto("_PubFieldToPubType")
+			.values({
+				A: pubFields.Title.id,
+				B: pubTypes["Basic Pub"].id,
+				isTitle: true,
+			})
+			.execute();
+
+		expect(await getPubTitle(pubs[0].id)).toBe("Some title");
+		expect(
+			await getPubTitle(pubs[1].id),
+			"Inserts should not update titles of pubs without a title"
+		).toBe(null);
 	});
 });

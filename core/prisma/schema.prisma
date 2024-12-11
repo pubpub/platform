@@ -119,6 +119,7 @@ model Pub {
   // updatedAt is also updated once a value is updated
   updatedAt   DateTime  @default(now()) @updatedAt
   // title is updated through trigger functions on the pub_values table
+  // and the _PubFieldToPubType table
   // do not attempt to set this manually
   title       String?
 
@@ -226,6 +227,8 @@ model PubType {
 model PubFieldToPubType {
   A       String
   B       String
+  // when this changes, a trigger is run to update the title of all pubs in that pubType
+  // see migrations/20241210172906_trigger_for_changing_is_title/migration.sql
   isTitle Boolean @default(false)
 
   pubField PubField @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
