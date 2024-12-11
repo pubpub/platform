@@ -14,8 +14,8 @@ import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWi
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { getCommunityBySlug } from "~/lib/db/queries";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 
 const getPubsWithRelatedValuesAndChildrenCached = cache(
 	async ({ pubId, communityId }: { pubId: PubsId; communityId: CommunitiesId }) => {
@@ -31,7 +31,7 @@ export async function generateMetadata({
 }: {
 	params: { pubId: string; communitySlug: string };
 }): Promise<Metadata> {
-	const community = await getCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return { title: "Community Not Found" };
 	}
@@ -83,15 +83,15 @@ export default async function Page({
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const community = await getCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 
-	if (community === null) {
+	if (!community) {
 		notFound();
 	}
 
 	const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: params.pubId as PubsId,
-		communityId: community.id as CommunitiesId,
+		communityId: community.id,
 	});
 
 	if (!pub) {

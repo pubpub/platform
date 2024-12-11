@@ -12,14 +12,14 @@ import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWi
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { getCommunityBySlug } from "~/lib/db/queries";
+import { findCommunityBySlug } from "~/lib/server/community";
 
 export async function generateMetadata({
 	params: { communitySlug },
 }: {
 	params: { pubId: string; communitySlug: string };
 }): Promise<Metadata> {
-	const community = await getCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return { title: "Community Not Found" };
 	}
@@ -38,19 +38,17 @@ export default async function Page({
 
 	const { user } = await getPageLoginData();
 
-	const community = await getCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 
-	if (community === null) {
+	if (!community) {
 		notFound();
 	}
-
-	const communityId = community.id as CommunitiesId;
 
 	const canCreatePub = await userCan(
 		Capabilities.createPub,
 		{
 			type: MembershipType.community,
-			communityId,
+			communityId: community.id,
 		},
 		user.id
 	);
@@ -84,7 +82,7 @@ export default async function Page({
 				<div className="max-w-prose">
 					<PubEditor
 						searchParams={searchParams}
-						communityId={communityId}
+						communityId={community.id}
 						formId={formId}
 						{...pubEditorSpecifiers}
 					/>
