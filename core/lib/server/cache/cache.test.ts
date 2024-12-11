@@ -508,6 +508,6 @@ describe("cachedFindTables", () => {
 
 		const extraTables = getTablesWithLinkedTables(tables);
 
-		expect(extraTables).toEqual(["pubs", "pub_values"]);
+		expect(extraTables).toEqual(["pubs", "pub_values", "_PubFieldToPubType"]);
 	});
 });
