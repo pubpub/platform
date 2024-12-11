@@ -75,7 +75,7 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	const canUpdate = userCan(
+	const canUpdate = await userCan(
 		Capabilities.updatePubValues,
 		{ type: MembershipType.pub, pubId },
 		loginData.user.id
