@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo } from "react";
 
+import type { PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Command,
@@ -42,7 +43,7 @@ export default function Assign(props: Props) {
 	const runAssign = useServerAction(assign);
 
 	const onAssign = useCallback(
-		async (pubId: string, userId?: string) => {
+		async (pubId: PubsId, userId?: UsersId) => {
 			const error = await runAssign(pubId, userId);
 			if (userId) {
 				const user = expect(users.find((user) => user.id === userId));
@@ -74,7 +75,7 @@ export default function Assign(props: Props) {
 		(value: string) => {
 			const userId = value === selectedUserId ? undefined : value;
 			setSelectedUserId(userId);
-			onAssign(props.pub.id, userId);
+			onAssign(props.pub.id, userId as UsersId);
 			setOpen(false);
 		},
 		[selectedUserId, props.pub.id, onAssign]

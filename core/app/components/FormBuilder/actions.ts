@@ -9,10 +9,18 @@ import { logger } from "logger";
 import type { FormBuilderSchema } from "./types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { ApiError } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
 export const saveForm = defineServerAction(async function saveForm(form: FormBuilderSchema) {
+	const loginData = await getLoginData();
+
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
 	const { elements, formId, access } = form;
 	//todo: this logic determines what, if any updates to make. that should be determined on the
 	//frontend so we can disable the save button if there are none
@@ -104,6 +112,12 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 });
 
 export const archiveForm = defineServerAction(async function archiveForm(id: FormsId) {
+	const loginData = await getLoginData();
+
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
 	try {
 		await autoRevalidate(
 			db.updateTable("forms").set({ isArchived: true }).where("forms.id", "=", id)
@@ -114,6 +128,12 @@ export const archiveForm = defineServerAction(async function archiveForm(id: For
 });
 
 export const restoreForm = defineServerAction(async function unarchiveForm(id: FormsId) {
+	const loginData = await getLoginData();
+
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
 	try {
 		await autoRevalidate(
 			db.updateTable("forms").set({ isArchived: false }).where("forms.id", "=", id)
