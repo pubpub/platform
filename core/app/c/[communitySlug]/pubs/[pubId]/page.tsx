@@ -10,6 +10,7 @@ import { AuthTokenType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
+import { Pencil } from "ui/icon";
 
 import type { PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
@@ -146,8 +147,11 @@ export default async function Page({
 					<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
 					<PubTitle pub={pub} />
 				</div>
-				<Button variant="outline">
-					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>Update</Link>
+				<Button variant="outline" asChild className="flex items-center gap-1">
+					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+						<Pencil size="14" />
+						Update
+					</Link>
 				</Button>
 			</div>
 

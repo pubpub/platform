@@ -109,7 +109,7 @@ export default async function Page({
 			}
 			title={<PageTitleWithStatus title="Edit pub" />}
 			right={
-				<Button variant="link">
+				<Button variant="link" asChild>
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
 				</Button>
 			}
