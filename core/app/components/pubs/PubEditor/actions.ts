@@ -2,20 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 
-import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import type { PubsId, StagesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
 
 import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
-import { createPubRecursiveNew } from "~/lib/server";
-import { autoCache } from "~/lib/server/cache/autoCache";
+import { userCan } from "~/lib/authorization/capabilities";
+import { createPubRecursiveNew, UnauthorizedError } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { updatePub as _updatePub } from "~/lib/server/pub";
-import { _deprecated_validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	...[props]: Parameters<typeof createPubRecursiveNew>
@@ -25,10 +26,14 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 		throw new Error("Not logged in");
 	}
 
-	if (!isCommunityAdmin(user, { id: props.communityId })) {
-		return {
-			error: "You need to be an admin",
-		};
+	const authorized = userCan(
+		Capabilities.createPub,
+		{ type: MembershipType.community, communityId: props.communityId },
+		user.id
+	);
+
+	if (!authorized) {
+		throw new UnauthorizedError("You are not authorized to perform this action.");
 	}
 	try {
 		await createPubRecursiveNew(props);
@@ -58,7 +63,7 @@ export const updatePub = defineServerAction(async function updatePub({
 }) {
 	const loginData = await getLoginData();
 
-	if (!loginData) {
+	if (!loginData || !loginData.user) {
 		throw new Error("Not logged in");
 	}
 
@@ -66,6 +71,16 @@ export const updatePub = defineServerAction(async function updatePub({
 
 	if (!community) {
 		throw new Error("Community not found");
+	}
+
+	const canUpdate = userCan(
+		Capabilities.updatePubValues,
+		{ type: MembershipType.pub, pubId },
+		loginData.user.id
+	);
+
+	if (!canUpdate) {
+		throw new UnauthorizedError("You are not authorized to perform this action.");
 	}
 
 	try {
