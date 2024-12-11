@@ -129,7 +129,7 @@ type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] e
 		}
 	: Options["withPubType"] extends false
 		? { pubType?: never }
-		: { pubType?: PubTypes };
+		: { pubType?: PubTypes & { fields: PubTypePubField[] } };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
