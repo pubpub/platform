@@ -158,7 +158,7 @@ test.describe("Creating a pub", () => {
 		await page.getByRole("button", { name: "Save" }).click();
 
 		await page.waitForURL(`/c/${COMMUNITY_SLUG}/pubs/*/edit?*`);
-		await page.getByRole("button", { name: "View Pub" }).click();
+		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
 
 		// Edit this same pub
@@ -170,7 +170,7 @@ test.describe("Creating a pub", () => {
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
-		await page.getByRole("button", { name: "View Pub" }).click();
+		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
 
@@ -257,7 +257,7 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
 			1
 		);
-		await page.getByRole("button", { name: "View Pub" }).click();
+		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId("current-stage")).toHaveText(stage);
 	});
 });
