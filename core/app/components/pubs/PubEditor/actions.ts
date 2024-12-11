@@ -12,7 +12,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
-import { createPubRecursiveNew, UnauthorizedError } from "~/lib/server";
+import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -21,19 +21,21 @@ import { updatePub as _updatePub } from "~/lib/server/pub";
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	...[props]: Parameters<typeof createPubRecursiveNew>
 ) {
-	const { user } = await getLoginData();
-	if (!user) {
-		throw new Error("Not logged in");
-	}
+	const loginData = await getLoginData();
 
-	const authorized = userCan(
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+	const { user } = loginData;
+
+	const authorized = await userCan(
 		Capabilities.createPub,
 		{ type: MembershipType.community, communityId: props.communityId },
 		user.id
 	);
 
 	if (!authorized) {
-		throw new UnauthorizedError("You are not authorized to perform this action.");
+		return ApiError.UNAUTHORIZED;
 	}
 	try {
 		await createPubRecursiveNew(props);
@@ -64,13 +66,13 @@ export const updatePub = defineServerAction(async function updatePub({
 	const loginData = await getLoginData();
 
 	if (!loginData || !loginData.user) {
-		throw new Error("Not logged in");
+		return ApiError.NOT_LOGGED_IN;
 	}
 
 	const community = await findCommunityBySlug();
 
 	if (!community) {
-		throw new Error("Community not found");
+		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
 	const canUpdate = userCan(
@@ -80,7 +82,7 @@ export const updatePub = defineServerAction(async function updatePub({
 	);
 
 	if (!canUpdate) {
-		throw new UnauthorizedError("You are not authorized to perform this action.");
+		return ApiError.UNAUTHORIZED;
 	}
 
 	try {
@@ -109,11 +111,14 @@ export const removePub = defineServerAction(async function removePub({
 	pubId: PubsId;
 	path?: string | null;
 }) {
-	const { user } = await getLoginData();
+	const loginData = await getLoginData();
 
-	if (!user) {
-		throw new Error("Not logged in");
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
 	}
+
+	const { user } = loginData;
+
 	const pub = await db
 		.selectFrom("pubs")
 		.selectAll()
@@ -121,9 +126,7 @@ export const removePub = defineServerAction(async function removePub({
 		.executeTakeFirst();
 
 	if (!pub) {
-		return {
-			error: "Pub not found",
-		};
+		return ApiError.PUB_NOT_FOUND;
 	}
 
 	if (!isCommunityAdmin(user, { id: pub.communityId })) {
