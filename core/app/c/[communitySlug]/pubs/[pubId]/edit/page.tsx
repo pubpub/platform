@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { cache } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -16,6 +17,15 @@ import { userCan } from "~/lib/authorization/capabilities";
 import { getCommunityBySlug } from "~/lib/db/queries";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 
+const getPubsWithRelatedValuesAndChildrenCached = cache(
+	async ({ pubId, communityId }: { pubId: PubsId; communityId: CommunitiesId }) => {
+		return getPubsWithRelatedValuesAndChildren({
+			pubId,
+			communityId,
+		});
+	}
+);
+
 export async function generateMetadata({
 	params: { pubId, communitySlug },
 }: {
@@ -26,7 +36,7 @@ export async function generateMetadata({
 		return { title: "Community Not Found" };
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildren({
+	const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: pubId as PubsId,
 		communityId: community.id as CommunitiesId,
 	});
@@ -79,7 +89,7 @@ export default async function Page({
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildren({
+	const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: params.pubId as PubsId,
 		communityId: community.id as CommunitiesId,
 	});
