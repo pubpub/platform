@@ -9,13 +9,16 @@ import { Check, ChevronDown, ChevronUp, Pencil } from "ui/icon";
 import { Label } from "ui/label";
 import { usePubFieldContext } from "ui/pubFields";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
+import { ToastAction } from "ui/toast";
+import { toast } from "ui/use-toast";
 
 import type { PubTypeWithFieldIds } from "~/lib/types";
-import { useServerAction } from "~/lib/serverActions";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import { defaultFormSlug } from "~/lib/form";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { addPubField, updateTitleField } from "./actions";
 import { FieldSelect } from "./FieldSelect";
 import { RemoveFieldButton } from "./RemoveFieldButton";
-import { RemoveTypeButton } from "./RemoveTypeButton";
 import { pubFieldCanBeTitle } from "./utils";
 
 type Props = {
@@ -49,23 +52,40 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 	const [editing, setEditing] = useState(false);
 	const runAddPubField = useServerAction(addPubField);
 	const runUpdateTitleField = useServerAction(updateTitleField);
+	const community = useCommunity();
 	const fields = usePubFieldContext();
 	const titleField = type.fields.filter((f) => f.isTitle)[0]?.id ?? "";
 	const handleTitleFieldChange = async (newTitleField: string) => {
 		await runUpdateTitleField(type.id, newTitleField as PubFieldsId);
 	};
+	const handleAddPubField = async (fieldId: PubFieldsId) => {
+		const result = await runAddPubField(type.id, fieldId);
+		if (didSucceed(result)) {
+			toast({
+				title: "Field added successfully",
+				duration: 10000,
+				description: (
+					<>
+						This update will not be automatically reflected in the default editor form
+						for <span className="italic">{type.name}</span> unless you manually update
+						it.
+					</>
+				),
+				action: (
+					<ToastAction altText="Manually update the default editor form.">
+						<a href={`/c/${community.slug}/forms/${defaultFormSlug(type.name)}/edit`}>
+							Update form
+						</a>
+					</ToastAction>
+				),
+			});
+		}
+	};
 	return (
 		<Card>
 			<CardContent className="px-6 py-2">
 				<div className="flex items-center justify-between">
-					<h2 className="flex-grow font-bold">
-						{type.name}
-						{editing && (
-							<div className="ml-1 inline-flex font-normal">
-								<RemoveTypeButton pubTypeId={type.id} />
-							</div>
-						)}
-					</h2>
+					<h2 className="flex-grow font-bold">{type.name}</h2>
 					<Button
 						size="icon"
 						variant={"ghost"}
@@ -142,6 +162,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 																<RemoveFieldButton
 																	pubFieldId={field.id}
 																	pubTypeId={type.id}
+																	pubTypeName={type.name}
 																/>
 															</div>
 														)}
@@ -173,7 +194,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 						</Label>
 						<FieldSelect
 							excludedFields={type.fields.map((f) => f.id)}
-							onFieldSelect={(fieldId) => runAddPubField(type.id, fieldId)}
+							onFieldSelect={handleAddPubField}
 						/>
 					</div>
 				)}

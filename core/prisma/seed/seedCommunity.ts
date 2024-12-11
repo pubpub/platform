@@ -751,19 +751,6 @@ export async function seedCommunity<
 				.execute()
 		: [];
 
-	await Promise.all(
-		createdPubTypes.map((type) =>
-			insertForm(
-				type.id,
-				`${type.name} Editor (Default)`,
-				`${slugifyString(type.name)}-default-editor`,
-				communityId,
-				true,
-				trx
-			).execute()
-		)
-	);
-
 	const createdPubFieldToPubTypes =
 		pubTypesList.length && pubFieldsList.length
 			? await trx
@@ -795,6 +782,19 @@ export async function seedCommunity<
 					.returningAll()
 					.execute()
 			: [];
+
+	await Promise.all(
+		createdPubTypes.map((type) =>
+			insertForm(
+				type.id,
+				`${type.name} Editor (Default)`,
+				`${slugifyString(type.name)}-default-editor`,
+				communityId,
+				true,
+				trx
+			).execute()
+		)
+	);
 
 	const pubTypesWithPubFieldsByName = Object.fromEntries(
 		createdPubTypes.map((pubType) => [
