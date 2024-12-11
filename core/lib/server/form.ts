@@ -2,9 +2,19 @@ import type { QueryCreator } from "kysely";
 
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { componentsBySchema } from "schemas";
 
-import type { CommunitiesId, FormsId, PublicSchema, PubsId, UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
+import type {
+	CommunitiesId,
+	CoreSchemaType,
+	FormsId,
+	InputComponent,
+	PublicSchema,
+	PubsId,
+	PubTypesId,
+	UsersId,
+} from "db/public";
+import { AuthTokenType, ElementType, StructuralFormElement } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -12,6 +22,7 @@ import { createMagicLink } from "../authentication/createMagicLink";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
+import { _getPubFields } from "./pubFields";
 import { getUser } from "./user";
 
 /**
@@ -183,3 +194,100 @@ export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 
 	return magicLink;
 };
+
+const componentsBySchemaTable = Object.entries(componentsBySchema)
+	.map(([schema, components]) => {
+		const component = components[0]
+			? `'${components[0]}'::"InputComponent"`
+			: `null::"InputComponent"`;
+		return `('${schema}'::"CoreSchemaType", ${component})`;
+	})
+	.join(", ");
+
+export const insertForm = (
+	pubTypeId: PubTypesId,
+	name: string,
+	slug: string,
+	communityId: CommunitiesId,
+	isDefault: boolean,
+	trx = db
+) => {
+	return trx
+		.with("components", (db) =>
+			// This lets us set an appropriate default component during creation by turning
+			// the js mapping from schemaName to InputComponent into a temporary table which
+			// can be used during the query. Without this, we would need to first query for
+			// the pubtype's fields (and their schemaNames), then determine the input
+			// components in js before inserting
+			db
+				.selectFrom(
+					sql<{
+						schema: CoreSchemaType;
+						component: InputComponent;
+					}>`(values ${sql.raw(componentsBySchemaTable)})`.as<"c">(
+						sql`c(schema, component)`
+					)
+				)
+				.selectAll("c")
+		)
+		.with("fields", () =>
+			_getPubFields({ pubTypeId, communityId })
+				.clearSelect()
+				.select((eb) => [
+					eb.ref("f.id").as("fieldId"),
+					eb.ref("f.json", "->>").key("name").as("name"),
+					eb
+						.cast<CoreSchemaType>(
+							eb.ref("f.json", "->>").key("schemaName"),
+							sql.raw('"CoreSchemaType"')
+						)
+						.as("schemaName"),
+				])
+		)
+		.with("form", (db) =>
+			db
+				.insertInto("forms")
+				.values({
+					name,
+					pubTypeId,
+					slug,
+					communityId,
+					isDefault,
+				})
+				.returning(["slug", "id"])
+		)
+		.with("title_element", (db) =>
+			db.insertInto("form_elements").values((eb) => ({
+				formId: eb.selectFrom("form").select("form.id"),
+				type: ElementType.structural,
+				element: StructuralFormElement.p,
+				content: '# :value{field="title"}',
+				order: 0,
+			}))
+		)
+		.insertInto("form_elements")
+		.columns(["fieldId", "formId", "label", "type", "order", "component"])
+		.expression((eb) =>
+			eb
+				.selectFrom("fields")
+				.innerJoin("form", (join) => join.onTrue())
+				.select((eb) => [
+					"fields.fieldId",
+					"form.id as formId",
+					"fields.name as label",
+					eb.val("pubfield").as("type"),
+					eb(
+						eb.fn.agg<number>("ROW_NUMBER").over((o) => o.partitionBy("id")),
+						"+",
+						1 // Offset order by 1 for the title element
+					).as("order"),
+					eb
+						.selectFrom("components")
+						.select("component")
+						.whereRef("components.schema", "=", "fields.schemaName")
+						.as("component"),
+				])
+		);
+};
+export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
+export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";

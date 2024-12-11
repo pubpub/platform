@@ -147,6 +147,10 @@ Table pub_types {
   fields _PubFieldToPubType [not null]
   pubs pubs [not null]
   Form forms [not null]
+
+  indexes {
+    (name, communityId) [unique]
+  }
 }
 
 Table _PubFieldToPubType {

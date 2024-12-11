@@ -11,6 +11,7 @@ export type RenderWithPubRel = "parent" | "self";
 export type RenderWithPubPub = {
 	id: string;
 	values: Record<string, any>;
+	createdAt: Date;
 	assignee?: {
 		firstName: string;
 		lastName: string | null;
