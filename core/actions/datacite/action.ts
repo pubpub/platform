@@ -10,13 +10,33 @@ export const action = defineAction({
 	config: {
 		schema: z.object({
 			doi: z.string(),
+			url: z.string(),
 			publisher: z.string(),
+			publicationDate: z.date(),
+			author: z.string(),
+			authorFirstName: z.string(),
+			authorLastName: z.string(),
 		}),
 		fieldConfig: {
 			doi: {
 				allowedSchemas: true,
 			},
+			url: {
+				allowedSchemas: true,
+			},
 			publisher: {
+				allowedSchemas: true,
+			},
+			publicationDate: {
+				allowedSchemas: true,
+			},
+			author: {
+				allowedSchemas: true,
+			},
+			authorFirstName: {
+				allowedSchemas: true,
+			},
+			authorLastName: {
 				allowedSchemas: true,
 			},
 		},
@@ -24,13 +44,33 @@ export const action = defineAction({
 	params: {
 		schema: z.object({
 			doi: z.string(),
+			url: z.string(),
 			publisher: z.string(),
+			publicationDate: z.date(),
+			author: z.string(),
+			authorFirstName: z.string(),
+			authorLastName: z.string(),
 		}),
 		fieldConfig: {
 			doi: {
 				allowedSchemas: true,
 			},
+			url: {
+				allowedSchemas: true,
+			},
 			publisher: {
+				allowedSchemas: true,
+			},
+			publicationDate: {
+				allowedSchemas: true,
+			},
+			author: {
+				allowedSchemas: true,
+			},
+			authorFirstName: {
+				allowedSchemas: true,
+			},
+			authorLastName: {
 				allowedSchemas: true,
 			},
 		},
