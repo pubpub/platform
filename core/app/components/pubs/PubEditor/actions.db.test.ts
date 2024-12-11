@@ -92,7 +92,7 @@ describe("createPubRecursive", () => {
 	});
 });
 
-describe.only("updatePub", () => {
+describe("updatePub", () => {
 	test.each([
 		{
 			name: "Needs a logged in user",
