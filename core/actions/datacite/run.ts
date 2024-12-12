@@ -14,39 +14,27 @@ import { getPubsWithRelatedValuesAndChildren, updatePub } from "~/lib/server";
 import { isClientExceptionOptions } from "~/lib/serverActions";
 import { defineRun } from "../types";
 
-type DataciteDoiPayload = components["schemas"]["Doi"];
+type ConfigSchema = z.infer<(typeof action)["config"]["schema"]>;
+type Config = ConfigSchema & { pubFields: { [K in keyof ConfigSchema]?: string[] } };
+type Payload = components["schemas"]["Doi"];
 
-const TEMP_TITLE_FIELD_SLUG = "croccroc:title";
+const encodeDataciteCredentials = (username: string, password: string) =>
+	Buffer.from(`${username}:${password}`).toString("base64");
 
-const makeDataciteCreatorFromAuthorPub = (
-	pub: ProcessedPub,
-	firstNameFieldSlug: string,
-	lastNameFieldSlug: string
-) => {
-	const firstName = expect(
-		pub.values.find((value) => value.fieldSlug === firstNameFieldSlug)?.value
-	);
-	const lastName = expect(
-		pub.values.find((value) => value.fieldSlug === lastNameFieldSlug)?.value
-	);
+const makeDataciteCreatorFromAuthorPub = (pub: ProcessedPub, authorNameFieldSlug: string) => {
+	const name = pub.values.find((value) => value.fieldSlug === authorNameFieldSlug)?.value;
+	assert(typeof name === "string");
 	return {
-		name: `${firstName} ${lastName}`,
+		name,
 		affiliation: [],
 		nameIdentifiers: [],
 	};
 };
 
-const encodeDataciteCredentials = (username: string, password: string) =>
-	Buffer.from(`${username}:${password}`).toString("base64");
-
-// TODO: Use existing types/make this better!
-type Schema = z.infer<(typeof action)["config"]["schema"]>;
-type Config = Schema & { pubFields: { [K in keyof Schema]?: string[] } };
-
-const createDataciteDeposit = async (
+const makeDatacitePayload = async (
 	pub: ActionPub<ActionPubType>,
 	config: Config
-): Promise<DataciteDoiPayload> => {
+): Promise<Payload> => {
 	const { values } = await getPubsWithRelatedValuesAndChildren({
 		pubId: pub.id as PubsId,
 		communityId: pub.communityId,
@@ -55,8 +43,7 @@ const createDataciteDeposit = async (
 	// TODO: error messages
 	const urlFieldSlug = expect(config.pubFields.url?.[0]);
 	const authorFieldSlug = expect(config.pubFields.author?.[0]);
-	const authorFirstNameFieldSlug = expect(config.pubFields.authorFirstName?.[0]);
-	const authorLastNameFieldSlug = expect(config.pubFields.authorLastName?.[0]);
+	const authorNameFieldSlug = expect(config.pubFields.authorName?.[0]);
 	const publicationDateFieldSlug = expect(config.pubFields.publicationDate?.[0]);
 
 	const relatedPubs = values.filter((v) => v.relatedPub != null);
@@ -65,11 +52,8 @@ const createDataciteDeposit = async (
 		.map((v) => v.relatedPub!);
 
 	const creators = relatedAuthorPubs.map((pub) =>
-		makeDataciteCreatorFromAuthorPub(pub, authorFirstNameFieldSlug, authorLastNameFieldSlug)
+		makeDataciteCreatorFromAuthorPub(pub, authorNameFieldSlug)
 	);
-
-	const title = pub.values[TEMP_TITLE_FIELD_SLUG];
-	assert(typeof title === "string");
 
 	const url = pub.values[urlFieldSlug];
 	assert(typeof url === "string");
@@ -79,12 +63,21 @@ const createDataciteDeposit = async (
 
 	const publicationYear = new Date(publicationDate).getFullYear();
 
+	assert(typeof pub.title === "string");
+
 	return {
 		data: {
 			type: "dois",
 			attributes: {
 				doi: config.doi,
-				titles: [{ title }],
+				prefix:
+					config.doi === undefined
+						? undefined
+						: expect(
+								config.doiPrefix,
+								"Unable to create a DOI: the pub does not have a DOI and the action is not configured with a DOI prefix."
+							),
+				titles: [{ title: pub.title }],
 				creators,
 				publisher: config.publisher,
 				publicationYear,
@@ -121,7 +114,7 @@ const checkDoi = async (doi: string) => {
 	return response.ok;
 };
 
-const createPubDeposit = async (payload: DataciteDoiPayload) => {
+const createPubDeposit = async (payload: Payload) => {
 	console.log("CREATE!");
 	const response = await fetch("https://api.test.datacite.org/dois", {
 		method: "POST",
@@ -145,9 +138,11 @@ const createPubDeposit = async (payload: DataciteDoiPayload) => {
 			error: "An error occurred while depositing the pub to DataCite.",
 		};
 	}
+
+	return response.json();
 };
 
-const updatePubDeposit = async (payload: DataciteDoiPayload) => {
+const updatePubDeposit = async (payload: Payload) => {
 	const doi = expect(payload?.data?.attributes?.doi);
 	const response = await fetch(`https://api.test.datacite.org/dois/${doi}`, {
 		method: "PUT",
@@ -170,19 +165,53 @@ const updatePubDeposit = async (payload: DataciteDoiPayload) => {
 			error: "An error occurred while depositing the pub to DataCite.",
 		};
 	}
+
+	return response.json();
 };
 
 export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	const depositConfig = { ...config, ...args };
-	const depositPayload = await createDataciteDeposit(pub, depositConfig);
-	const depositResult = (await checkDoi(depositConfig.doi))
-		? await updatePubDeposit(depositPayload)
-		: await createPubDeposit(depositPayload);
+	const depositPayload = await makeDatacitePayload(pub, depositConfig);
+	const depositResult =
+		// If the pub already has a DOI, and DataCite recognizes it,
+		depositConfig.doi && (await checkDoi(depositConfig.doi))
+			? // Update the pub metadata in DataCite
+				await updatePubDeposit(depositPayload)
+			: // Otherwise, deposit the pub to DataCite
+				await createPubDeposit(depositPayload);
 
-	return isClientExceptionOptions(depositResult)
-		? depositResult
-		: {
-				data: {},
-				success: true,
+	if (isClientExceptionOptions(depositResult)) {
+		return depositResult;
+	}
+
+	console.log(depositConfig.doi);
+
+	// If the pub does not have a DOI, update the pub's DOI with the newly
+	// generated DOI from DataCite
+	// TODO: this should be a more explicit check, e.g. `=== undefined`, but
+	// DOIs in the arcadia community seed are currently being set to "" somehow.
+	if (!depositConfig.doi) {
+		const doiFieldSlug = expect(config.pubFields.doi?.[0]);
+		try {
+			await updatePub({
+				pubId: pub.id,
+				communityId: pub.communityId,
+				pubValues: {
+					[doiFieldSlug]: depositResult.data.attributes.doi,
+				},
+				continueOnValidationError: false,
+			});
+		} catch (error) {
+			return {
+				title: "Failed to save DOI",
+				error: "The pub was deposited to DataCite, but we were unable to update the pub's DOI in PubPub",
+				cause: error,
 			};
+		}
+	}
+
+	return {
+		data: {},
+		success: true,
+	};
 });

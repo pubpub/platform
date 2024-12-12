@@ -51,6 +51,8 @@ export default async function Page({
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
 	]);
 
+	console.log(fields)
+
 	if (!types || !fields) {
 		return null;
 	}

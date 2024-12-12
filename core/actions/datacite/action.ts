@@ -9,13 +9,13 @@ export const action = defineAction({
 	name: Action.datacite,
 	config: {
 		schema: z.object({
-			doi: z.string(),
+			doiPrefix: z.string().optional(),
+			doi: z.string().optional(),
 			url: z.string(),
 			publisher: z.string(),
 			publicationDate: z.date(),
 			author: z.string(),
-			authorFirstName: z.string(),
-			authorLastName: z.string(),
+			authorName: z.string(),
 		}),
 		fieldConfig: {
 			doi: {
@@ -33,23 +33,20 @@ export const action = defineAction({
 			author: {
 				allowedSchemas: true,
 			},
-			authorFirstName: {
-				allowedSchemas: true,
-			},
-			authorLastName: {
+			authorName: {
 				allowedSchemas: true,
 			},
 		},
 	},
 	params: {
 		schema: z.object({
-			doi: z.string(),
+			doi: z.string().optional(),
+			doiPrefix: z.string().optional(),
 			url: z.string(),
 			publisher: z.string(),
 			publicationDate: z.date(),
 			author: z.string(),
-			authorFirstName: z.string(),
-			authorLastName: z.string(),
+			authorName: z.string(),
 		}),
 		fieldConfig: {
 			doi: {
@@ -67,10 +64,7 @@ export const action = defineAction({
 			author: {
 				allowedSchemas: true,
 			},
-			authorFirstName: {
-				allowedSchemas: true,
-			},
-			authorLastName: {
+			authorName: {
 				allowedSchemas: true,
 			},
 		},
