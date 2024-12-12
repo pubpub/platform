@@ -16,6 +16,7 @@ import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { userHasPermissionToForm } from "~/lib/server/form";
 import { updatePub as _updatePub } from "~/lib/server/pub";
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
@@ -56,11 +57,13 @@ export const updatePub = defineServerAction(async function updatePub({
 	pubId,
 	pubValues,
 	stageId,
+	formSlug,
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
 	pubValues: PubValues;
 	stageId?: StagesId;
+	formSlug?: string;
 	continueOnValidationError: boolean;
 }) {
 	const loginData = await getLoginData();
@@ -75,13 +78,16 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	const canUpdate = await userCan(
+	const canUpdateFromForm = formSlug
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
+		: false;
+	const canUpdatePubValues = await userCan(
 		Capabilities.updatePubValues,
 		{ type: MembershipType.pub, pubId },
 		loginData.user.id
 	);
 
-	if (!canUpdate) {
+	if (!canUpdatePubValues && !canUpdateFromForm) {
 		return ApiError.UNAUTHORIZED;
 	}
 
