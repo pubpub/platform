@@ -697,11 +697,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
 				fieldId: fieldIds[0] as PubFieldsId, // title
 				value: '"It Aint Ease Bein Cheese"',
+				lastModifiedBy: "system",
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
 				fieldId: fieldIds[1] as PubFieldsId, // description
 				value: '"# Abstract"',
+				lastModifiedBy: "system",
 			},
 		])
 		.execute();

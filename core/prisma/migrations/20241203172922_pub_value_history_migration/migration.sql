@@ -6,6 +6,8 @@
 */
 -- AlterTable
 ALTER TABLE "pub_values" ADD COLUMN "lastModifiedBy" TEXT NOT NULL;
+ALTER TABLE "pub_values" ALTER COLUMN "lastModifiedBy" TYPE modified_by_type;
+-- ALTER TABLE "pub_values" ADD CONSTRAINT "pub_values_lastModifiedBy_format_check" CHECK ("lastModifiedBy" ~ '^(user|action-run|api-access-token):[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$|^(unknown|system)$');
 
 -- CreateTable
 CREATE TABLE "pub_values_history" (
@@ -18,6 +20,7 @@ CREATE TABLE "pub_values_history" (
     "userId" TEXT,
     "apiAccessTokenId" TEXT,
     "actionRunId" TEXT,
+    "other" TEXT,
 
     CONSTRAINT "pub_values_history_pkey" PRIMARY KEY ("histId")
 );

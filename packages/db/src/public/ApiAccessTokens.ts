@@ -27,7 +27,7 @@ export interface ApiAccessTokensTable {
 
 	expiration: ColumnType<Date, Date | string, Date | string>;
 
-	issuedById: ColumnType<UsersId, UsersId, UsersId>;
+	issuedById: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 
 	issuedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
@@ -47,7 +47,7 @@ export const apiAccessTokensSchema = z.object({
 	description: z.string().nullable(),
 	communityId: communitiesIdSchema,
 	expiration: z.date(),
-	issuedById: usersIdSchema,
+	issuedById: usersIdSchema.nullable(),
 	issuedAt: z.date(),
 });
 
@@ -58,7 +58,7 @@ export const apiAccessTokensInitializerSchema = z.object({
 	description: z.string().optional().nullable(),
 	communityId: communitiesIdSchema,
 	expiration: z.date(),
-	issuedById: usersIdSchema,
+	issuedById: usersIdSchema.optional().nullable(),
 	issuedAt: z.date().optional(),
 });
 
@@ -69,6 +69,6 @@ export const apiAccessTokensMutatorSchema = z.object({
 	description: z.string().optional().nullable(),
 	communityId: communitiesIdSchema.optional(),
 	expiration: z.date().optional(),
-	issuedById: usersIdSchema.optional(),
+	issuedById: usersIdSchema.optional().nullable(),
 	issuedAt: z.date().optional(),
 });

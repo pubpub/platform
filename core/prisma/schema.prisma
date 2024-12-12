@@ -199,7 +199,9 @@ model PubValue {
   relatedPub   Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
   relatedPubId String?
 
-  lastModifiedBy String @default("unknown")
+  // Has a check constraint to ensure that the lastModifiedBy is in the correct format
+  /// @type(LastModifiedBy, '../types', true, false, true)
+  lastModifiedBy String
   // Add userId and integrationId to track who created the value
 
   @@map(name: "pub_values")
@@ -235,8 +237,8 @@ enum OperationType {
 // }
 
 model PubValuesHistory {
-  histId    String   @id @default(dbgenerated("gen_random_uuid()"))
-  createdAt DateTime @default(now())
+  histId        String        @id @default(dbgenerated("gen_random_uuid()"))
+  createdAt     DateTime      @default(now())
   operationType OperationType
 
   // has check constraint to ensure that oldRowData and newRowData are not both null
@@ -254,6 +256,8 @@ model PubValuesHistory {
   apiAccessTokenId String?
   actionRun        ActionRun?      @relation(fields: [actionRunId], references: [id])
   actionRunId      String?
+  // set to `system` if the change was made by the system, eg during seeds
+  other            String?
 
   @@map(name: "pub_values_history")
 }
@@ -509,7 +513,7 @@ model ActionRun {
   params           Json?
   status           ActionRunStatus
   result           Json
-  user             User?              @relation(fields: [userId], references: [id])
+  user             User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId           String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @default(now()) @updatedAt
@@ -626,10 +630,10 @@ model ApiAccessToken {
   name             String
   description      String?
   communityId      String
-  community        Community             @relation(fields: [communityId], references: [id])
+  community        Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
   expiration       DateTime
-  issuedBy         User                  @relation(fields: [issuedById], references: [id])
-  issuedById       String
+  issuedBy         User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
+  issuedById       String?
   issuedAt         DateTime              @default(now())
   accessRules      ApiAccessPermission[]
   logs             ApiAccessLog[]
@@ -640,10 +644,10 @@ model ApiAccessToken {
 }
 
 model ApiAccessLog {
-  id            String         @id @default(dbgenerated("gen_random_uuid()"))
-  accessTokenId String
-  accessToken   ApiAccessToken @relation(fields: [accessTokenId], references: [id])
-  timestamp     DateTime       @default(now())
+  id            String          @id @default(dbgenerated("gen_random_uuid()"))
+  accessTokenId String?
+  accessToken   ApiAccessToken? @relation(fields: [accessTokenId], references: [id], onDelete: SetNull)
+  timestamp     DateTime        @default(now())
   action        String
 
   @@map(name: "api_access_logs")
@@ -660,7 +664,7 @@ enum ApiAccessType {
 model ApiAccessPermission {
   id               String         @id @default(dbgenerated("gen_random_uuid()"))
   apiAccessTokenId String
-  apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id])
+  apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id], onDelete: Cascade)
   scope            ApiAccessScope
   accessType       ApiAccessType
   constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)

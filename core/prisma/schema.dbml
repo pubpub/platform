@@ -134,7 +134,7 @@ Table pub_values {
   updatedAt DateTime [default: `now()`, not null]
   relatedPub pubs
   relatedPubId String
-  lastModifiedBy String [not null, default: 'unknown']
+  lastModifiedBy String [not null, note: '@type(LastModifiedBy, \'../types\', true, false, true)']
 }
 
 Table pub_values_history {
@@ -150,6 +150,7 @@ Table pub_values_history {
   apiAccessTokenId String
   actionRun action_runs
   actionRunId String
+  other String
 }
 
 Table pub_types {
@@ -439,8 +440,8 @@ Table api_access_tokens {
   communityId String [not null]
   community communities [not null]
   expiration DateTime [not null]
-  issuedBy users [not null]
-  issuedById String [not null]
+  issuedBy users
+  issuedById String
   issuedAt DateTime [default: `now()`, not null]
   accessRules api_access_permissions [not null]
   logs api_access_logs [not null]
@@ -449,8 +450,8 @@ Table api_access_tokens {
 
 Table api_access_logs {
   id String [pk]
-  accessTokenId String [not null]
-  accessToken api_access_tokens [not null]
+  accessTokenId String
+  accessToken api_access_tokens
   timestamp DateTime [default: `now()`, not null]
   action String [not null]
 }
@@ -722,7 +723,7 @@ Ref: action_runs.actionInstanceId > action_instances.id [delete: Cascade]
 
 Ref: action_runs.pubId > pubs.id
 
-Ref: action_runs.userId > users.id
+Ref: action_runs.userId > users.id [delete: Set Null]
 
 Ref: rules.actionInstanceId > action_instances.id [delete: Cascade]
 
@@ -736,10 +737,10 @@ Ref: form_elements.formId > forms.id [delete: Cascade]
 
 Ref: form_elements.stageId > stages.id [delete: Set Null]
 
-Ref: api_access_tokens.communityId > communities.id
+Ref: api_access_tokens.communityId > communities.id [delete: Cascade]
 
-Ref: api_access_tokens.issuedById > users.id
+Ref: api_access_tokens.issuedById > users.id [delete: Set Null]
 
-Ref: api_access_logs.accessTokenId > api_access_tokens.id
+Ref: api_access_logs.accessTokenId > api_access_tokens.id [delete: Set Null]
 
-Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id
+Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id [delete: Cascade]

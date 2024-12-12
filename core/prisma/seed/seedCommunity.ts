@@ -395,6 +395,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 				relatedPubs: relatedPubs,
 			},
+			lastModifiedBy: "system",
 		} satisfies CreatePubRecursiveInput;
 
 		return input as CreatePubRecursiveInput;

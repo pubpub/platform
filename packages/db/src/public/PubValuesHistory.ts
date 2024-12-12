@@ -44,6 +44,8 @@ export interface PubValuesHistoryTable {
 	>;
 
 	actionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
+
+	other: ColumnType<string | null, string | null, string | null>;
 }
 
 export type PubValuesHistory = Selectable<PubValuesHistoryTable>;
@@ -66,6 +68,7 @@ export const pubValuesHistorySchema = z.object({
 	userId: usersIdSchema.nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.nullable(),
 	actionRunId: actionRunsIdSchema.nullable(),
+	other: z.string().nullable(),
 });
 
 export const pubValuesHistoryInitializerSchema = z.object({
@@ -78,6 +81,7 @@ export const pubValuesHistoryInitializerSchema = z.object({
 	userId: usersIdSchema.optional().nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	actionRunId: actionRunsIdSchema.optional().nullable(),
+	other: z.string().optional().nullable(),
 });
 
 export const pubValuesHistoryMutatorSchema = z.object({
@@ -90,4 +94,5 @@ export const pubValuesHistoryMutatorSchema = z.object({
 	userId: usersIdSchema.optional().nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	actionRunId: actionRunsIdSchema.optional().nullable(),
+	other: z.string().optional().nullable(),
 });

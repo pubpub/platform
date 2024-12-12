@@ -33,6 +33,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import type { LastModifiedBy } from "db/types";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
@@ -427,6 +428,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	body,
 	communityId,
 	parent,
+	lastModifiedBy,
 	...options
 }:
 	| {
@@ -434,12 +436,14 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx?: Kysely<Database>;
 			communityId: CommunitiesId;
 			parent?: never;
+			lastModifiedBy: LastModifiedBy;
 	  }
 	| {
 			body: MaybeHas<Body, "stageId">;
 			trx?: Kysely<Database>;
 			communityId: CommunitiesId;
 			parent: { id: PubsId };
+			lastModifiedBy: LastModifiedBy;
 	  }): Promise<ProcessedPub> => {
 	const trx = options?.trx ?? db;
 
@@ -508,6 +512,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 								pubId: newPub.id,
 								value: JSON.stringify(value),
 								relatedPubId,
+								lastModifiedBy,
 							}))
 						)
 						.returningAll()
@@ -544,6 +549,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						id: newPub.id,
 					},
 					trx,
+					lastModifiedBy,
 				});
 				return childPub;
 			}) ?? []
@@ -569,6 +575,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				}))
 			),
 			communityId,
+			lastModifiedBy,
 			trx,
 		});
 
@@ -710,11 +717,13 @@ export const upsertPubRelations = async ({
 	pubId,
 	relations,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	relations: AddPubRelationsInput[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }): Promise<ProcessedPub["values"]> => {
 	const normalizedRelationValues = normalizeRelationValues(relations);
@@ -757,6 +766,7 @@ export const upsertPubRelations = async ({
 					trx,
 					communityId,
 					body: pub.relatedPub,
+					lastModifiedBy: lastModifiedBy,
 				})
 			)
 		);
@@ -784,6 +794,7 @@ export const upsertPubRelations = async ({
 						relatedPubId,
 						value: JSON.stringify(value),
 						fieldId,
+						lastModifiedBy,
 					}))
 				)
 				.onConflict((oc) =>
@@ -908,11 +919,13 @@ export const replacePubRelationsBySlug = async ({
 	pubId,
 	relations,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	relations: AddPubRelationsInput[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
 	if (!Object.keys(relations).length) {
@@ -924,7 +937,7 @@ export const replacePubRelationsBySlug = async ({
 
 		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, trx });
 
-		await upsertPubRelations({ pubId, relations, communityId, trx });
+		await upsertPubRelations({ pubId, relations, communityId, lastModifiedBy, trx });
 	});
 };
 
@@ -934,10 +947,12 @@ export const updatePub = async ({
 	communityId,
 	stageId,
 	continueOnValidationError,
+	lastModifiedBy,
 }: {
 	pubId: PubsId;
 	pubValues: Record<string, Json>;
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	stageId?: StagesId;
 	continueOnValidationError: boolean;
 }) => {
@@ -986,6 +1001,7 @@ export const updatePub = async ({
 						pubId,
 						fieldId,
 						value: JSON.stringify(value),
+						lastModifiedBy,
 					}))
 				)
 				.onConflict((oc) =>

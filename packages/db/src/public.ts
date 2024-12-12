@@ -38,6 +38,7 @@ export * from "./public/Pubs";
 export * from "./public/PubsInStages";
 export * from "./public/PubTypes";
 export * from "./public/PubValues";
+export * from "./public/PubValuesHistory";
 export * from "./public/Rules";
 export * from "./public/Sessions";
 export * from "./public/StageMemberships";
