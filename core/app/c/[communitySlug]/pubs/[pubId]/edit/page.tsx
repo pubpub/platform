@@ -20,10 +20,15 @@ import { findCommunityBySlug } from "~/lib/server/community";
 
 const getPubsWithRelatedValuesAndChildrenCached = cache(
 	async ({ pubId, communityId }: { pubId: PubsId; communityId: CommunitiesId }) => {
-		return getPubsWithRelatedValuesAndChildren({
-			pubId,
-			communityId,
-		});
+		return getPubsWithRelatedValuesAndChildren(
+			{
+				pubId,
+				communityId,
+			},
+			{
+				withPubType: true,
+			}
+		);
 	}
 );
 

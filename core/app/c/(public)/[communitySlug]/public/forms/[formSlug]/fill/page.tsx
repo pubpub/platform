@@ -196,7 +196,7 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub?.parentId ? await getPub(pub.parentId) : undefined;
+	const parentPub = pub?.parentId ? await getPubCached(pub.parentId) : undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 

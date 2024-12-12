@@ -238,6 +238,7 @@ const pubColumns = [
 	"updatedAt",
 	"assigneeId",
 	"parentId",
+	"title",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
 export const getPubBase = (
@@ -513,6 +514,9 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						.returningAll()
 				).execute()
 			: [];
+
+		const pub = await getPlainPub(newPub.id, trx).executeTakeFirstOrThrow();
+
 		const hydratedValues = pubValues.map((v) => {
 			const correspondingValue = valuesWithFieldIds.find(
 				({ fieldId }) => fieldId === v.fieldId
@@ -527,7 +531,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 
 		if (!body.children && !body.relatedPubs) {
 			return {
-				...newPub,
+				...pub,
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: [],
@@ -551,7 +555,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 
 		if (!body.relatedPubs) {
 			return {
-				...newPub,
+				...pub,
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: children.length ? children : [],
@@ -573,7 +577,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		});
 
 		return {
-			...newPub,
+			...pub,
 			stageId: createdStageId,
 			values: [...pubValues, ...relatedPubs],
 			children,
@@ -583,12 +587,14 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	return result;
 };
 
-export const deletePub = (pubId: PubsId) =>
-	autoRevalidate(db.deleteFrom("pubs").where("id", "=", pubId));
+export const deletePub = (pubId: PubsId, trx = db) =>
+	autoRevalidate(trx.deleteFrom("pubs").where("id", "=", pubId));
 
-export const getPubStage = (pubId: PubsId) =>
-	autoCache(db.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
+export const getPubStage = (pubId: PubsId, trx = db) =>
+	autoCache(trx.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
 
+export const getPlainPub = (pubId: PubsId, trx = db) =>
+	autoCache(trx.selectFrom("pubs").selectAll().where("id", "=", pubId));
 /**
  * Consolidates field slugs with their corresponding field IDs and schema names from the community.
  * Validates that all provided slugs exist in the community.
@@ -1017,6 +1023,7 @@ export type UnprocessedPub = {
 	createdAt: Date;
 	isCycle?: boolean;
 	stage?: Stages;
+	title: string | null;
 	values: {
 		id: PubValuesId;
 		fieldId: PubFieldsId;
@@ -1086,6 +1093,7 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 */
 	_debugDontNest?: boolean;
 	fieldSlugs?: string[];
+	trx?: typeof db;
 } & GetManyParams;
 
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
@@ -1110,6 +1118,7 @@ const DEFAULT_OPTIONS = {
 	withStage: false,
 	withMembers: false,
 	cycle: "include",
+	trx: db,
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
 export async function getPubsWithRelatedValuesAndChildren<
@@ -1154,6 +1163,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		withPubType,
 		withStage,
 		withMembers,
+		trx,
 	} = opts;
 
 	if (depth < 1) {
@@ -1161,7 +1171,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 	}
 
 	const result = await autoCache(
-		db
+		trx
 			// this pub_tree CTE roughly returns an array like so
 			// [
 			// 	{ pubId: 1, rootId: 1, parentId: null, depth: 1, value: 'Some value', valueId: 1, relatedPubId: null},
@@ -1197,6 +1207,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 						"p.communityId",
 						"p.createdAt",
 						"p.updatedAt",
+						"p.title",
 						"PubsInStages.stageId",
 						"pv.id as valueId",
 						"pv.fieldId",
@@ -1250,6 +1261,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 									"pubs.communityId",
 									"pubs.createdAt",
 									"pubs.updatedAt",
+									"pubs.title",
 									"PubsInStages.stageId",
 									"pub_values.id as valueId",
 									"pub_values.fieldId",
@@ -1311,6 +1323,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 				"pub_tree.path",
 				"pub_tree.createdAt",
 				"pub_tree.updatedAt",
+				"pub_tree.title",
 				jsonArrayFrom(
 					eb
 						.selectFrom("pub_tree as inner")
@@ -1380,6 +1393,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 				"pubTypeId",
 				"updatedAt",
 				"createdAt",
+				"title",
 				"stageId",
 				"communityId",
 				"isCycle",

@@ -13,6 +13,7 @@ import type { Equal, Expect } from "~/lib/types";
 import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
 import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto";
+import { getTablesWithLinkedTables } from "./specialTables";
 
 const mockedDb = new Kysely<Database>({
 	dialect: new PostgresDialect({
@@ -498,5 +499,15 @@ describe("cachedFindTables", () => {
 				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
 			>;
 		};
+	});
+
+	it("should add extra tags for tables that are linked to other tables", async () => {
+		const tables = await compileAndFindTables(mockedDb.selectFrom("pubs"), "select");
+
+		expect(tables).toEqual(["pubs"]);
+
+		const extraTables = getTablesWithLinkedTables(tables);
+
+		expect(extraTables).toEqual(["pubs", "pub_values", "_PubFieldToPubType"]);
 	});
 });
