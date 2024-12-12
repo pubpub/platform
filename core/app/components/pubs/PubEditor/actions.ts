@@ -125,6 +125,22 @@ export const removePub = defineServerAction(async function removePub({
 
 	const { user } = loginData;
 
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.deletePub,
+		{ type: MembershipType.pub, pubId },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	const pub = await db
 		.selectFrom("pubs")
 		.selectAll()
