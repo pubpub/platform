@@ -1192,7 +1192,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					// which is possible only in a with recursive query
 					.selectFrom("root_pubs_limited as p" as unknown as "pubs as p")
 					.leftJoin("pub_values as pv", "p.id", "pv.pubId")
-					.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+					.leftJoin("pub_fields", "pub_fields.id", "pv.fieldId")
 					.$if(Boolean(fieldSlugs), (qb) =>
 						qb.where("pub_fields.slug", "in", fieldSlugs!)
 					)
@@ -1250,7 +1250,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 									)
 								)
 								.leftJoin("pub_values", "pubs.id", "pub_values.pubId")
-								.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+								.leftJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 								.select([
 									"pubs.id as pubId",
@@ -1341,6 +1341,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 						.whereRef("inner.pubId", "=", "pub_tree.pubId")
 						// this prevents us from double fetching values if we have detected a cycle
 						.whereRef("inner.depth", "=", "pub_tree.depth")
+						.where("inner.valueId", "is not", null)
 						.orderBy("inner.valueCreatedAt desc")
 				).as("values"),
 			])

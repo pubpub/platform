@@ -2,7 +2,29 @@ import type { Page } from "@playwright/test";
 
 import type { PubsId } from "db/public";
 
-import { getPubTitle } from "~/lib/pubs";
+export const choosePubType = async ({
+	page,
+	pubType,
+	communitySlug,
+}: {
+	page: Page;
+	pubType?: string;
+	communitySlug: string;
+}) => {
+	const createDialog = page.getByRole("dialog", { name: "Create Pub", exact: true });
+	await createDialog.waitFor();
+
+	// Choose a pub type
+	await createDialog.getByLabel("Pub type").click();
+	if (pubType) {
+		await page.getByRole("option", { name: pubType, exact: true }).click();
+	} else {
+		// Choose the first pub type
+		await page.getByRole("option").first().click();
+	}
+	await createDialog.getByRole("button", { name: "Create Pub" }).click();
+	await page.waitForURL(`/c/${communitySlug}/pubs/create**`);
+};
 
 export class PubsPage {
 	private readonly communitySlug: string;
@@ -18,6 +40,10 @@ export class PubsPage {
 		await this.page.goto(`/c/${this.communitySlug}/pubs`);
 	}
 
+	async choosePubType(pubType?: string) {
+		await choosePubType({ page: this.page, pubType, communitySlug: this.communitySlug });
+	}
+
 	async createPub({
 		pubType,
 		stage,
@@ -28,11 +54,10 @@ export class PubsPage {
 		values?: Record<string, string>;
 	}) {
 		await this.page.getByRole("button", { name: "Create", exact: true }).click();
-		const createDialog = this.page.getByRole("dialog", { name: "Create Pub", exact: true });
-		await createDialog.waitFor();
+		await this.choosePubType(pubType);
 
 		// disable all toggles
-		const fieldToggles = createDialog.getByRole("button", {
+		const fieldToggles = this.page.getByRole("button", {
 			name: "Toggle field",
 			pressed: true,
 			exact: true,
@@ -48,43 +73,20 @@ export class PubsPage {
 			for (const [slug, value] of Object.entries(values)) {
 				const fullSlug = `${this.communitySlug}:${slug}`;
 				// toggle the field on
-				await createDialog.getByTestId(`${fullSlug}-toggle`).click();
-				await createDialog.getByLabel(fullSlug).fill(value);
+				await this.page.getByTestId(`${fullSlug}-toggle`).click();
+				await this.page.getByTestId(fullSlug).fill(value);
 			}
-		}
-
-		if (pubType) {
-			await createDialog.getByLabel("Select Pub Type").getByRole("button").click();
-			await this.page.getByRole("menuitem", { name: pubType, exact: true }).click();
 		}
 
 		if (stage) {
 			// open the stage selection popover, then select a stage
-			await createDialog.getByLabel("Stage").getByRole("button").click();
-			await this.page.getByRole("menuitem", { name: stage, exact: true }).click();
+			await this.page.getByLabel("Stage").click();
+			await this.page.getByRole("option", { name: stage, exact: true }).click();
 		}
 
-		const submit = this.page.getByRole("button", { name: "Create Pub", exact: true });
-		if (await submit.isDisabled()) {
-			throw new Error("Submit button is still disabled");
-		}
-		await submit.click();
-		await createDialog.waitFor({ state: "hidden" });
-
-		// Kind of fragile since it depends on the default pub title and assumes this pub is the first on the page
-		const pubLink = await this.page.$(`a[href^="/c/${this.communitySlug}/pubs/"]`);
-
-		if (!pubLink) {
-			throw new Error("Unable to get path from newly created pub");
-		}
-
-		const path = await pubLink.getAttribute("href");
-
-		if (!path) {
-			throw new Error("Unable to get path from newly created pub");
-		}
-
-		const pubId = path.match(/\/([0-9a-f-]+)$/)?.[1];
+		await this.page.getByRole("button", { name: "Save", exact: true }).click();
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/*/edit?*`);
+		const pubId = this.page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)\/edit/)?.groups?.pubId;
 
 		if (!pubId) {
 			throw new Error("Unable to get pub id from newly created pub");

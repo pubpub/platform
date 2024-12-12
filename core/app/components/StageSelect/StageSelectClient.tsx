@@ -1,14 +1,13 @@
 "use client";
 
 import type { Stages } from "db/public";
-import { FormField, FormItem, FormLabel } from "ui/form";
+import { FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
 type Props = {
 	fieldLabel: string;
 	fieldName: string;
-	stage?: Stages;
-	stages: Stages[];
+	stages: Pick<Stages, "id" | "name">[];
 };
 
 export function StageSelectClient(props: Props) {
@@ -24,16 +23,16 @@ export function StageSelectClient(props: Props) {
 					</div>
 					<Select
 						{...field}
-						value={props.stage?.id}
 						onValueChange={(value) => {
 							field.onChange(value);
 						}}
+						defaultValue={field.value}
 					>
-						<SelectTrigger>
-							<SelectValue placeholder="Select a stage" defaultValue={field.value}>
-								{props.stages.find((stage) => stage.id === field.value)?.name}
-							</SelectValue>
-						</SelectTrigger>
+						<FormControl>
+							<SelectTrigger>
+								<SelectValue placeholder="Select a stage" />
+							</SelectTrigger>
+						</FormControl>
 						<SelectContent>
 							{props.stages.map((stage) => (
 								<SelectItem key={stage.id} value={stage.id}>

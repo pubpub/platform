@@ -1,9 +1,5 @@
-import type { StagesId } from "db/public";
-
 import { defineActionFormFieldServerComponent } from "~/actions/_lib/custom-form-field/defineConfigServerComponent";
 import { StageSelectServer } from "~/app/components/StageSelect/StageSelectServer";
-import { db } from "~/kysely/database";
-import { autoCache } from "~/lib/server/cache/autoCache";
 import { action } from "../action";
 
 const component = defineActionFormFieldServerComponent(
@@ -15,7 +11,6 @@ const component = defineActionFormFieldServerComponent(
 				fieldName="stage"
 				fieldLabel="Destination stage"
 				communityId={communityId}
-				value={actionInstance.config?.stage as StagesId}
 			/>
 		);
 	}

@@ -16,6 +16,12 @@ import { ContextEditorContextProvider } from "~/app/components/ContextEditor/Con
 import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
+import {
+	hydrateMarkdownElements,
+	renderElementMarkdownContent,
+} from "~/app/components/forms/structural";
+import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
+import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
@@ -26,10 +32,8 @@ import {
 	renderMarkdownWithPub,
 } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { capitalize } from "~/lib/string";
-import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
-import { SaveStatus } from "./SaveStatus";
 import { handleFormToken } from "./utils";
 
 const NotFound = ({ children }: { children: ReactNode }) => {
@@ -96,22 +100,6 @@ const ExpiredTokenPage = ({
 			</div>
 		</div>
 	);
-};
-
-const renderElementMarkdownContent = async (
-	element: Form["elements"][number],
-	renderWithPubContext: RenderWithPubContext | undefined
-) => {
-	if (element.content === null) {
-		return "";
-	}
-	if (renderWithPubContext) {
-		// Parses the markdown with the pub and returns as HTML
-		return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
-			() => element.content
-		);
-	}
-	return renderMarkdownAsHtml(element.content);
 };
 
 export async function generateMetadata({
@@ -224,39 +212,27 @@ export default async function FormPage({
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
 	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
 
+	const renderWithPubContext = {
+		communityId: community.id,
+		recipient: memberWithUser,
+		communitySlug: params.communitySlug,
+		pub,
+		parentPub,
+	};
+
 	if (submitId && submitElement) {
 		// The post-submission page will only render once we have a pub
 		if (pub) {
-			const renderWithPubContext = {
-				communityId: community.id,
-				recipient: memberWithUser,
-				communitySlug: params.communitySlug,
-				pub,
-				parentPub,
-			};
 			submitElement.content = await renderElementMarkdownContent(
 				submitElement,
-				renderWithPubContext
+				renderWithPubContext as RenderWithPubContext
 			);
 		}
 	} else {
-		const elementsWithMarkdownContent = form.elements.filter(
-			(element) => element.element === StructuralFormElement.p
-		);
-		const renderWithPubContext = pub
-			? {
-					communityId: community.id,
-					recipient: memberWithUser,
-					communitySlug: params.communitySlug,
-					pub,
-					parentPub,
-				}
-			: undefined;
-		await Promise.all(
-			elementsWithMarkdownContent.map(async (element) => {
-				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
-			})
-		);
+		await hydrateMarkdownElements({
+			elements: form.elements,
+			renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
+		});
 	}
 
 	const isUpdating = !!pub;
@@ -294,6 +270,8 @@ export default async function FormPage({
 									pub={pubForForm}
 									elements={form.elements}
 									isUpdating={isUpdating}
+									withAutoSave={isUpdating}
+									withButtonElements
 									className="col-span-2 col-start-2"
 								>
 									{form.elements.map((e) => (

@@ -8,28 +8,12 @@ type Props = {
 	communityId: CommunitiesId;
 	fieldLabel: string;
 	fieldName: string;
-	value?: StagesId;
 };
 
-export async function StageSelectServer({ communityId, fieldLabel, fieldName, value }: Props) {
-	let stage: Stages | undefined;
-
-	if (value !== undefined) {
-		stage = await autoCache(
-			db.selectFrom("stages").selectAll().where("id", "=", value)
-		).executeTakeFirst();
-	}
-
+export async function StageSelectServer({ communityId, fieldLabel, fieldName }: Props) {
 	const stages = await autoCache(
 		db.selectFrom("stages").selectAll().where("communityId", "=", communityId)
 	).execute();
 
-	return (
-		<StageSelectClient
-			fieldLabel={fieldLabel}
-			fieldName={fieldName}
-			stage={stage}
-			stages={stages}
-		/>
-	);
+	return <StageSelectClient fieldLabel={fieldLabel} fieldName={fieldName} stages={stages} />;
 }
