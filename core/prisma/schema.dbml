@@ -24,6 +24,7 @@ Table users {
   communityMemberships community_memberships [not null]
   pubMemberships pub_memberships [not null]
   stageMemberships stage_memberships [not null]
+  PubValuesHistory pub_values_history [not null]
 }
 
 Table sessions {
@@ -133,6 +134,22 @@ Table pub_values {
   updatedAt DateTime [default: `now()`, not null]
   relatedPub pubs
   relatedPubId String
+  lastModifiedBy String [not null, default: 'unknown']
+}
+
+Table pub_values_history {
+  histId String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  operationType OperationType [not null]
+  oldRowData Json
+  newRowData Json
+  primaryKeyValue String
+  user users
+  userId String
+  apiAccessToken api_access_tokens
+  apiAccessTokenId String
+  actionRun action_runs
+  actionRunId String
 }
 
 Table pub_types {
@@ -356,6 +373,7 @@ Table action_runs {
   userId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+  PubValuesHistory pub_values_history [not null]
 }
 
 Table rules {
@@ -426,6 +444,7 @@ Table api_access_tokens {
   issuedAt DateTime [default: `now()`, not null]
   accessRules api_access_permissions [not null]
   logs api_access_logs [not null]
+  PubValuesHistory pub_values_history [not null]
 }
 
 Table api_access_logs {
@@ -486,6 +505,12 @@ Enum CoreSchemaType {
   StringArray
   URL
   Vector3
+}
+
+Enum OperationType {
+  insert
+  update
+  delete
 }
 
 Enum MemberRole {
@@ -632,6 +657,12 @@ Ref: pub_values.fieldId > pub_fields.id
 Ref: pub_values.pubId > pubs.id [delete: Cascade]
 
 Ref: pub_values.relatedPubId > pubs.id [delete: Cascade]
+
+Ref: pub_values_history.userId > users.id
+
+Ref: pub_values_history.apiAccessTokenId > api_access_tokens.id
+
+Ref: pub_values_history.actionRunId > action_runs.id
 
 Ref: pub_types.communityId > communities.id
 
