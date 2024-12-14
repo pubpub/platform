@@ -287,6 +287,7 @@ describe("createPubRecursive", () => {
 					],
 				},
 			},
+			lastModifiedBy: "system",
 			trx,
 		});
 
@@ -1357,6 +1358,7 @@ describe("removePubRelations", () => {
 					relatedPubId: pubs[0].id,
 				},
 			],
+			lastModifiedBy: "system",
 			trx,
 		});
 
@@ -1418,6 +1420,7 @@ describe("removePubRelations", () => {
 			pubId: pub.id,
 			slugs: [pubFields["Some relation"].slug],
 			communityId: community.id,
+			lastModifiedBy: "system",
 		});
 
 		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort());
@@ -1455,6 +1458,7 @@ describe("removePubRelations", () => {
 				pubId: pub.id,
 				slugs: ["non-existent-field"],
 				communityId: community.id,
+				lastModifiedBy: "system",
 			})
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"

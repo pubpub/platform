@@ -613,7 +613,9 @@ export const deletePub = async ({
 		.selectAll()
 		.execute();
 
-	await autoRevalidate(trx.deleteFrom("pubs").where("id", "=", pubId)).executeTakeFirstOrThrow();
+	const deleteResult = await autoRevalidate(
+		trx.deleteFrom("pubs").where("id", "=", pubId)
+	).executeTakeFirstOrThrow();
 
 	// this might not be necessary if we rarely delete pubs and
 	// give users ample warning that deletion is irreversible
@@ -623,6 +625,8 @@ export const deletePub = async ({
 		pubValues,
 		trx,
 	});
+
+	return deleteResult;
 };
 
 export const getPubStage = (pubId: PubsId, trx = db) =>

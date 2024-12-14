@@ -320,14 +320,18 @@ const handler = createNextHandler(
 				};
 			},
 			archive: async ({ params }) => {
-				const { community } = await checkAuthorization({
+				const { lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.deletePub,
 						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
 					},
 				});
-				const result = await deletePub(params.pubId as PubsId).executeTakeFirst();
+
+				const result = await deletePub({
+					pubId: params.pubId as PubsId,
+					lastModifiedBy,
+				});
 
 				if (result?.numDeletedRows !== BigInt(1)) {
 					return {
@@ -342,7 +346,7 @@ const handler = createNextHandler(
 			},
 			relations: {
 				remove: async ({ params, body }) => {
-					const { community } = await checkAuthorization({
+					const { community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
@@ -384,11 +388,13 @@ const handler = createNextHandler(
 							pubId: params.pubId as PubsId,
 							slugs: all,
 							communityId: community.id,
+							lastModifiedBy,
 						}),
 						removePubRelations({
 							pubId: params.pubId as PubsId,
 							relations: some,
 							communityId: community.id,
+							lastModifiedBy,
 						}),
 					]);
 
