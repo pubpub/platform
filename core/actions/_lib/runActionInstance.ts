@@ -35,11 +35,12 @@ export type RunActionInstanceArgs = {
 } & ({ event: Event } | { userId: UsersId });
 
 const _runActionInstance = async (
-	args: RunActionInstanceArgs & { actionRunId: ActionRunsId }
+	args: RunActionInstanceArgs & { actionRunId: ActionRunsId },
+	trx = db
 ): Promise<ActionInstanceRunResult> => {
 	const pubPromise = getPubCached(args.pubId);
 
-	const actionInstancePromise = db
+	const actionInstancePromise = trx
 		.selectFrom("action_instances")
 		.where("action_instances.id", "=", args.actionInstanceId)
 		.select((eb) => [
@@ -166,6 +167,10 @@ const _runActionInstance = async (
 		configFieldOverrides
 	);
 
+	const lastModifiedBy = createLastModifiedBy({
+		actionRunId: args.actionRunId,
+	});
+
 	try {
 		const result = await actionRun({
 			// FIXME: get rid of any
@@ -187,9 +192,7 @@ const _runActionInstance = async (
 			argsFieldOverrides,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
-			lastModifiedBy: createLastModifiedBy({
-				actionRunId: args.actionRunId,
-			}),
+			lastModifiedBy,
 			actionRunId: args.actionRunId,
 		});
 
@@ -204,14 +207,14 @@ const _runActionInstance = async (
 	}
 };
 
-export async function runActionInstance(args: RunActionInstanceArgs) {
+export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	const isActionUserInitiated = "userId" in args;
 
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
 	// which in this case would be `action-run:<action-run-id>`
 	const actionRuns = await autoRevalidate(
-		db
+		trx
 			.with(
 				"existingScheduledActionRun",
 				(db) =>
@@ -232,6 +235,7 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 				actionInstanceId: args.actionInstanceId,
 				pubId: args.pubId,
 				userId: isActionUserInitiated ? args.userId : null,
+				result: { scheduled: `Action to be run immediately` },
 				// we are setting it to `scheduled` very briefly
 				status: ActionRunStatus.scheduled,
 				// this is a bit hacky, would be better to pass this around methinks
@@ -242,14 +246,13 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 				params: args,
 				event: isActionUserInitiated ? undefined : args.event,
 			}))
-			.returning("id")
+			.returningAll()
 			// conflict should only happen if a scheduled action is excecuted
 			// not on user initiated actions or on other events
 			.onConflict((oc) =>
 				oc.column("id").doUpdateSet({
 					params: args,
 					event: "userId" in args ? undefined : args.event,
-					status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
 				})
 			)
 	).execute();
@@ -262,7 +265,7 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 		};
 
 		await autoRevalidate(
-			db
+			trx
 				.updateTable("action_runs")
 				.set({
 					status: ActionRunStatus.failure,
@@ -288,14 +291,24 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 
 	// update the action run with the result
 	await autoRevalidate(
-		db.updateTable("action_runs").set({ status, result }).where("id", "=", actionRun.id)
-	).execute();
+		trx.updateTable("action_runs").set({ status, result }).where("id", "=", actionRun.id)
+	).executeTakeFirstOrThrow(
+		() =>
+			new Error(
+				`Failed to update action run ${actionRun.id} for pub ${args.pubId} and action instance ${args.actionInstanceId}`
+			)
+	);
 
 	return result;
 }
 
-export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, event: Event) => {
-	const instances = await db
+export const runInstancesForEvent = async (
+	pubId: PubsId,
+	stageId: StagesId,
+	event: Event,
+	trx = db
+) => {
+	const instances = await trx
 		.selectFrom("action_instances")
 		.where("action_instances.stageId", "=", stageId)
 		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
@@ -308,11 +321,14 @@ export const runInstancesForEvent = async (pubId: PubsId, stageId: StagesId, eve
 			return {
 				actionInstanceId: instance.actionInstanceId,
 				actionInstanceName: instance.name,
-				result: await runActionInstance({
-					pubId,
-					actionInstanceId: instance.actionInstanceId,
-					event,
-				}),
+				result: await runActionInstance(
+					{
+						pubId,
+						actionInstanceId: instance.actionInstanceId,
+						event,
+					},
+					trx
+				),
 			};
 		})
 	);
