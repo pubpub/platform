@@ -27,6 +27,7 @@ type MinimalRecursivePubChildren = {
 	values: PubValues;
 	createdAt: Date;
 	children: MinimalRecursivePubChildren[];
+	title: string | null;
 };
 const groupPubChildrenByPubType = (pubs: MinimalRecursivePubChildren[]) => {
 	const pubTypes = pubs.reduce(

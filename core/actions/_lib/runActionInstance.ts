@@ -170,6 +170,8 @@ const _runActionInstance = async (
 				parentId: pub.parentId,
 				communityId: pub.communityId,
 				createdAt: pub.createdAt,
+				title: pub.title,
+				pubType: pub.pubType,
 			},
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,

@@ -12,7 +12,7 @@ import Move from "./Move";
 
 type Props = {
 	members?: MemberWithUser[];
-	pub: PubWithValues;
+	pub: PubWithValues & { pubType: { name: string } };
 	stage: CommunityStage;
 	actionInstances: ActionInstances[];
 	pageContext: PageContext;

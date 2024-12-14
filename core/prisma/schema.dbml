@@ -77,6 +77,7 @@ Table pubs {
   assignee users
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+  title String
   parent pubs
   parentId String
   children pubs [not null]

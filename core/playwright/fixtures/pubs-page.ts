@@ -91,6 +91,7 @@ export class PubsPage {
 		if (!pubId) {
 			throw new Error("Unable to get pub id from newly created pub");
 		}
+
 		return pubId as PubsId;
 	}
 }

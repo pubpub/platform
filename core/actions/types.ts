@@ -27,6 +27,10 @@ export type ActionPub<T extends ActionPubType> = {
 	};
 	communityId: CommunitiesId;
 	createdAt: Date;
+	title: string | null;
+	pubType: {
+		name: string;
+	};
 };
 
 export type RunProps<T extends Action> =
