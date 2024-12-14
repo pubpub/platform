@@ -1,24 +1,21 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
-import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import type { PubsId, StagesId, UsersId } from "db/public";
 import { logger } from "logger";
 
 import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { createPubRecursiveNew } from "~/lib/server";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { updatePub as _updatePub } from "~/lib/server/pub";
+import { updatePub as _updatePub, deletePub } from "~/lib/server/pub";
 import { _deprecated_validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
-	...[props]: Parameters<typeof createPubRecursiveNew>
+	props: Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">
 ) {
 	const { user } = await getLoginData();
 	if (!user) {
@@ -30,8 +27,13 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 			error: "You need to be an admin",
 		};
 	}
+
+	const lastModifiedBy = createLastModifiedBy({
+		userId: user.id as UsersId,
+	});
+
 	try {
-		await createPubRecursiveNew(props);
+		await createPubRecursiveNew({ ...props, lastModifiedBy });
 		return {
 			success: true,
 			report: `Successfully created a new Pub`,
@@ -58,7 +60,7 @@ export const updatePub = defineServerAction(async function updatePub({
 }) {
 	const loginData = await getLoginData();
 
-	if (!loginData) {
+	if (!loginData.user) {
 		throw new Error("Not logged in");
 	}
 
@@ -68,6 +70,10 @@ export const updatePub = defineServerAction(async function updatePub({
 		throw new Error("Community not found");
 	}
 
+	const lastModifiedBy = createLastModifiedBy({
+		userId: loginData.user.id as UsersId,
+	});
+
 	try {
 		const result = await _updatePub({
 			pubId,
@@ -75,6 +81,7 @@ export const updatePub = defineServerAction(async function updatePub({
 			pubValues,
 			stageId,
 			continueOnValidationError,
+			lastModifiedBy,
 		});
 
 		return result;
@@ -87,18 +94,17 @@ export const updatePub = defineServerAction(async function updatePub({
 	}
 });
 
-export const removePub = defineServerAction(async function removePub({
-	pubId,
-	path,
-}: {
-	pubId: PubsId;
-	path?: string | null;
-}) {
+export const removePub = defineServerAction(async function removePub({ pubId }: { pubId: PubsId }) {
 	const { user } = await getLoginData();
 
 	if (!user) {
 		throw new Error("Not logged in");
 	}
+
+	const lastModifiedBy = createLastModifiedBy({
+		userId: user.id as UsersId,
+	});
+
 	const pub = await db
 		.selectFrom("pubs")
 		.selectAll()
@@ -118,11 +124,8 @@ export const removePub = defineServerAction(async function removePub({
 	}
 
 	try {
-		await autoRevalidate(db.deleteFrom("pubs").where("pubs.id", "=", pubId)).executeTakeFirst();
+		await deletePub({ pubId, lastModifiedBy });
 
-		if (path) {
-			revalidatePath(path);
-		}
 		return {
 			success: true,
 			report: `Successfully removed the pub`,
