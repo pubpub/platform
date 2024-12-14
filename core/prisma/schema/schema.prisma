@@ -206,11 +206,6 @@ model PubValue {
   relatedPub   Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
   relatedPubId String?
 
-  // Has a check constraint to ensure that the lastModifiedBy is in the correct format
-  /// @type(LastModifiedBy, '../types', true, false, true)
-  lastModifiedBy String
-  // Add userId and integrationId to track who created the value
-
   @@map(name: "pub_values")
 }
 
