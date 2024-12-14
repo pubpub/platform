@@ -46,7 +46,7 @@ ALTER TABLE "{{historyTableName}}"
   ADD CONSTRAINT "{{historyTableName}}_actionRunId_fkey" FOREIGN KEY ("actionRunId") REFERENCES "action_runs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE {{historyTableName}}
-  ADD CONSTRAINT chk_ {{historyTableName}}_crudtype_rowdata CHECK (("operationType" = 'insert' AND "oldRowData" IS NULL AND "newRowData" IS NOT NULL) OR ("operationType" = 'update' AND "oldRowData" IS NOT NULL AND "newRowData" IS NOT NULL) OR ("operationType" = 'delete' AND "oldRowData" IS NOT NULL AND "newRowData" IS NULL));
+  ADD CONSTRAINT chk_{{historyTableName}}_crudtype_rowdata CHECK (("operationType" = 'insert' AND "oldRowData" IS NULL AND "newRowData" IS NOT NULL) OR ("operationType" = 'update' AND "oldRowData" IS NOT NULL AND "newRowData" IS NOT NULL) OR ("operationType" = 'delete' AND "oldRowData" IS NOT NULL AND "newRowData" IS NULL));
 
 -- backfill {{historyTableName}} with existing data
 -- we just set it to insert the current row data, as we do not know who created it
@@ -66,7 +66,7 @@ SELECT
 FROM
   "{{tableName}}" t;
 
-CREATE TRIGGER trigger_ {{historyTableName}}
+CREATE TRIGGER trigger_{{historyTableName}}
   AFTER INSERT OR UPDATE ON {{tableName}}
   FOR EACH ROW
   EXECUTE FUNCTION f_generic_history();

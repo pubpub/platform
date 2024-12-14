@@ -100,12 +100,12 @@ const baseTableModelLastModifiedByColumn = baseTableModelText.match(
 if (!baseTableModelLastModifiedByColumn) {
 	// this instructs kanel to use a different type for the lastModifiedBy column
 	// defined at `db/src/types/LastModifiedBy.ts`
-	const typeComment =  `/// @type(LastModifiedBy, '../types', true, false, true)`
+	const typeComment = `/// @type(LastModifiedBy, '../types', true, false, true)`;
 	const baseTableModelWithNewLastModifiedByColumn = baseTableModelText.replace(
-		/((\s+)\bid\b(\s+).*?)\n/,
+		/(id\b.*?)\n/,
 		`\$1
-\$2${typeComment}
-\$2lastModifiedBy\$3String\n`
+  ${typeComment}
+  lastModifiedBy String\n`
 	);
 
 	const baseTableSchemaWithNewLastModifiedByColumn = schemaText.replace(
