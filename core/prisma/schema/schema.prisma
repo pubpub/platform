@@ -43,6 +43,7 @@ model User {
   communityMemberships CommunityMembership[]
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
+  PubValueHistory      PubValueHistory[]
 
   @@map(name: "users")
 }
@@ -107,10 +108,7 @@ model Community {
 }
 
 model Pub {
-  id String @id @default(dbgenerated("gen_random_uuid()"))
-
-  lastModifiedBy String
-
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
@@ -195,16 +193,18 @@ model PubFieldSchema {
 }
 
 model PubValue {
-  id           String   @id @default(dbgenerated("gen_random_uuid()"))
-  field        PubField @relation(fields: [fieldId], references: [id])
-  fieldId      String
-  value        Json?
-  pub          Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade, name: "original_pub")
-  pubId        String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
-  relatedPub   Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
-  relatedPubId String?
+  id             String   @id @default(dbgenerated("gen_random_uuid()"))
+  /// @type(LastModifiedBy, '../types', true, false, true)
+  lastModifiedBy String
+  field          PubField @relation(fields: [fieldId], references: [id])
+  fieldId        String
+  value          Json?
+  pub            Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade, name: "original_pub")
+  pubId          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  relatedPub     Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
+  relatedPubId   String?
 
   @@map(name: "pub_values")
 }
@@ -458,20 +458,21 @@ enum Action {
 }
 
 model ActionRun {
-  id               String          @id @default(dbgenerated("gen_random_uuid()"))
-  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  id               String            @id @default(dbgenerated("gen_random_uuid()"))
+  actionInstance   ActionInstance?   @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String?
-  pub              Pub?            @relation(fields: [pubId], references: [id])
+  pub              Pub?              @relation(fields: [pubId], references: [id])
   pubId            String?
   config           Json?
   event            Event?
   params           Json?
   status           ActionRunStatus
   result           Json
-  user             User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId           String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @default(now()) @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @default(now()) @updatedAt
+  PubValueHistory  PubValueHistory[]
 
   @@map(name: "action_runs")
 }
@@ -579,18 +580,19 @@ model FormElement {
 }
 
 model ApiAccessToken {
-  id          String                @id @default(dbgenerated("gen_random_uuid()"))
-  token       String                @unique
-  name        String
-  description String?
-  communityId String
-  community   Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  expiration  DateTime
-  issuedBy    User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
-  issuedById  String?
-  issuedAt    DateTime              @default(now())
-  accessRules ApiAccessPermission[]
-  logs        ApiAccessLog[]
+  id              String                @id @default(dbgenerated("gen_random_uuid()"))
+  token           String                @unique
+  name            String
+  description     String?
+  communityId     String
+  community       Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  expiration      DateTime
+  issuedBy        User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
+  issuedById      String?
+  issuedAt        DateTime              @default(now())
+  accessRules     ApiAccessPermission[]
+  logs            ApiAccessLog[]
+  PubValueHistory PubValueHistory[]
 
   @@index([token], name: "token_idx")
   @@map(name: "api_access_tokens")
