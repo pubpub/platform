@@ -29,11 +29,13 @@ import type {
 	PubTypes,
 	PubTypesId,
 	PubValuesId,
+	PubValues as PubValuesType,
 	Stages,
 	StagesId,
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
+import { OperationType } from "db/public";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
@@ -41,6 +43,7 @@ import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { mergeSlugsWithFields } from "../fields/utils";
+import { parseLastModifiedBy } from "../pubs";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { NotFoundError } from "./errors";
@@ -594,8 +597,33 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	return result;
 };
 
-export const deletePub = (pubId: PubsId, trx = db) =>
-	autoRevalidate(trx.deleteFrom("pubs").where("id", "=", pubId));
+export const deletePub = async ({
+	pubId,
+	lastModifiedBy,
+	trx = db,
+}: {
+	pubId: PubsId;
+	lastModifiedBy: LastModifiedBy;
+	trx?: typeof db;
+}) => {
+	// first get the values before they are deleted
+	const pubValues = await trx
+		.selectFrom("pub_values")
+		.where("pubId", "=", pubId)
+		.selectAll()
+		.execute();
+
+	await autoRevalidate(trx.deleteFrom("pubs").where("id", "=", pubId)).executeTakeFirstOrThrow();
+
+	// this might not be necessary if we rarely delete pubs and
+	// give users ample warning that deletion is irreversible
+	// in that case we should probably also delete the pub values
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues,
+		trx,
+	});
+};
 
 export const getPubStage = (pubId: PubsId, trx = db) =>
 	autoCache(trx.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
@@ -845,11 +873,13 @@ export const removePubRelations = async ({
 	pubId,
 	relations,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	relations: RemovePubRelationsInput[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
 	const consolidatedRelations = await getFieldInfoForSlugs({
@@ -871,8 +901,14 @@ export const removePubRelations = async ({
 					)
 				)
 			)
-			.returning(["pub_values.relatedPubId"])
+			.returningAll()
 	).execute();
+
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues: removed,
+		trx,
+	});
 
 	return removed.map(({ relatedPubId }) => relatedPubId);
 };
@@ -886,11 +922,13 @@ export const removeAllPubRelationsBySlugs = async ({
 	pubId,
 	slugs,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	slugs: string[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
 	const fields = await getFieldInfoForSlugs({
@@ -909,10 +947,39 @@ export const removeAllPubRelationsBySlugs = async ({
 			.where("pubId", "=", pubId)
 			.where("fieldId", "in", fieldIds)
 			.where("relatedPubId", "is not", null)
-			.returning("relatedPubId")
+			.returningAll()
 	).execute();
 
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues: removed,
+		trx,
+	});
+
 	return removed.map(({ relatedPubId }) => relatedPubId);
+};
+
+export const addDeletePubValueHistoryEntries = async ({
+	lastModifiedBy,
+	pubValues,
+	trx = db,
+}: {
+	lastModifiedBy: LastModifiedBy;
+	pubValues: PubValuesType[];
+	trx?: typeof db;
+}) => {
+	const parsedLastModifiedBy = parseLastModifiedBy(lastModifiedBy);
+
+	await autoRevalidate(
+		trx.insertInto("pub_values_history").values(
+			pubValues.map((pubValue) => ({
+				operationType: OperationType.delete,
+				oldRowData: JSON.stringify(pubValue),
+				primaryKeyValue: pubValue.id,
+				...parsedLastModifiedBy,
+			}))
+		)
+	).execute();
 };
 
 /**
@@ -941,7 +1008,7 @@ export const replacePubRelationsBySlug = async ({
 	await maybeWithTrx(trx, async (trx) => {
 		const slugs = relations.map(({ slug }) => slug);
 
-		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, trx });
+		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, lastModifiedBy, trx });
 
 		await upsertPubRelations({ pubId, relations, communityId, lastModifiedBy, trx });
 	});

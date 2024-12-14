@@ -24,7 +24,7 @@ export interface HistoryTableBase {
 
 export interface HistoryTable<T extends Record<string, any>, ID extends string>
 	extends HistoryTableBase {
-	histId: ID;
-	oldRowData: ColumnType<T | null, T | null, T | null>;
-	newRowData: ColumnType<T | null, T | null, T | null>;
+	histId: ColumnType<ID, ID | undefined, ID>;
+	oldRowData: ColumnType<T | null, string | null, string | null>;
+	newRowData: ColumnType<T | null, string | null, string | null>;
 }
