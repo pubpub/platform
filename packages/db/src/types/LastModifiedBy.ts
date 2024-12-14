@@ -1,4 +1,8 @@
+import type { ActionRunsId, ApiAccessTokensId, UsersId } from "../public";
+
 export type LastModifiedBy =
-	| `${"user" | "action-run" | "api-access-token"}:${string}`
+	| `user:${UsersId}`
+	| `action-run:${ActionRunsId}`
+	| `api-access-token:${ApiAccessTokensId}`
 	| "unknown"
 	| "system";

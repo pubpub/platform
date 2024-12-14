@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { z } from "zod";
 
-import type { Communities, CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import type { Communities, CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 import type {
 	ApiAccessPermission,
 	ApiAccessPermissionConstraintsInput,
@@ -18,6 +18,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import {
 	createPubRecursiveNew,
 	deletePub,
@@ -134,7 +135,9 @@ const checkAuthorization = async <
 			throw new ForbiddenError(`You are not authorized to ${token.type} ${token.scope}`);
 		}
 
-		const lastModifiedBy = `api-access-token:${apiAccessTokenId}` as const;
+		const lastModifiedBy = createLastModifiedBy({
+			apiAccessTokenId: apiAccessTokenId,
+		});
 
 		return {
 			authorization: constraints as Exclude<typeof constraints, false>,
@@ -163,7 +166,9 @@ const checkAuthorization = async <
 		throw new NotFoundError(`No community found for slug ${communitySlug}`);
 	}
 
-	const lastModifiedBy = `api-access-token:${user.id}` as const;
+	const lastModifiedBy = createLastModifiedBy({
+		userId: user.id as UsersId,
+	});
 
 	// Handle cases where we only want to check for login but have no specific capability yet
 	if (typeof cookies === "boolean") {

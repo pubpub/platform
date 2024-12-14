@@ -1,7 +1,13 @@
 import { sql } from "kysely";
 import { describe, expect, it } from "vitest";
 
-import type { ActionRunsId, ApiAccessTokensId, PubsId, PubValuesHistoryHistId } from "db/public";
+import type {
+	ActionRunsId,
+	ApiAccessTokensId,
+	PubsId,
+	PubValuesHistoryHistId,
+	UsersId,
+} from "db/public";
 import { Action, ActionRunStatus, CoreSchemaType, MemberRole } from "db/public";
 import { OperationType } from "db/src/public/OperationType";
 
@@ -11,6 +17,7 @@ import {
 	parseForeignKeyConstraintError,
 } from "~/kysely/errors";
 import { mockServerCode } from "../__tests__/utils";
+import { createLastModifiedBy } from "../lastModifiedBy";
 
 const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } =
 	await mockServerCode();
@@ -800,17 +807,23 @@ describe("pub_values_history trigger", () => {
 
 			const perpetrators = [
 				{
-					lastModifiedBy: `user:${users["user-1"].id}`,
+					lastModifiedBy: createLastModifiedBy({
+						userId: users["user-1"].id,
+					}),
 					foreignKey: "userId",
 					value: users["user-1"].id,
 				},
 				{
-					lastModifiedBy: `api-access-token:${tokenId}`,
+					lastModifiedBy: createLastModifiedBy({
+						apiAccessTokenId: tokenId as ApiAccessTokensId,
+					}),
 					foreignKey: "apiAccessTokenId",
 					value: tokenId,
 				},
 				{
-					lastModifiedBy: `action-run:${actionRun.id}`,
+					lastModifiedBy: createLastModifiedBy({
+						actionRunId: actionRun.id,
+					}),
 					foreignKey: "actionRunId",
 					value: actionRun.id,
 				},
@@ -908,7 +921,9 @@ describe("pub_values_history trigger", () => {
 				await trx
 					.updateTable("pub_values")
 					.set({
-						lastModifiedBy: `user:not-a-user`,
+						lastModifiedBy: createLastModifiedBy({
+							userId: "not-a-user" as UsersId,
+						}),
 					})
 					.where("id", "=", titlePubValueId)
 					.executeTakeFirst();
@@ -935,7 +950,9 @@ describe("pub_values_history trigger", () => {
 			try {
 				await trx
 					.updateTable("pub_values")
-					.set({ lastModifiedBy: `user:${randomUserId}` })
+					.set({
+						lastModifiedBy: createLastModifiedBy({ userId: randomUserId as UsersId }),
+					})
 					.where("id", "=", titlePubValueId)
 					.executeTakeFirst();
 			} catch (e) {
