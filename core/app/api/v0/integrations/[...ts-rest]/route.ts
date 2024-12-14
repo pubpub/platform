@@ -63,7 +63,7 @@ const handler = createNextHandler(
 		},
 		deletePub: async ({ headers, params }) => {
 			checkAuthentication(headers.authorization);
-			await deletePub(params.pubId as PubsId);
+			await deletePub({ pubId: params.pubId as PubsId, lastModifiedBy: "unknown" });
 			return {
 				status: 200,
 				body: {

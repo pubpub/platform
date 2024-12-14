@@ -18,6 +18,7 @@ import { logger } from "logger";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getPubCached } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { isClientException } from "~/lib/serverActions";
@@ -186,7 +187,9 @@ const _runActionInstance = async (
 			argsFieldOverrides,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
-			lastModifiedBy: `action-run:${args.actionRunId}`,
+			lastModifiedBy: createLastModifiedBy({
+				actionRunId: args.actionRunId,
+			}),
 			actionRunId: args.actionRunId,
 		});
 
