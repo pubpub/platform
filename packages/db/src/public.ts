@@ -28,6 +28,7 @@ export * from "./public/MemberGroupToUser";
 export * from "./public/MemberRole";
 export * from "./public/MembershipCapabilities";
 export * from "./public/MoveConstraint";
+export * from "./public/OperationType";
 export * from "./public/PrismaMigrations";
 export * from "./public/PubFields";
 export * from "./public/PubFieldSchema";
