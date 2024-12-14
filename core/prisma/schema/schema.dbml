@@ -2,6 +2,38 @@
 //// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 //// ------------------------------------------------------
 
+Table pubs_history {
+  histId String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  operationType OperationType [not null]
+  oldRowData Json
+  newRowData Json
+  primaryKeyValue String
+  user users
+  userId String
+  apiAccessToken api_access_tokens
+  apiAccessTokenId String
+  actionRun action_runs
+  actionRunId String
+  other String
+}
+
+Table pub_values_history {
+  histId String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  operationType OperationType [not null]
+  oldRowData Json
+  newRowData Json
+  primaryKeyValue String
+  user users
+  userId String
+  apiAccessToken api_access_tokens
+  apiAccessTokenId String
+  actionRun action_runs
+  actionRunId String
+  other String
+}
+
 Table users {
   id String [pk]
   slug String [unique, not null]
@@ -25,6 +57,7 @@ Table users {
   pubMemberships pub_memberships [not null]
   stageMemberships stage_memberships [not null]
   PubValuesHistory pub_values_history [not null]
+  PubHistory pubs_history [not null]
 }
 
 Table sessions {
@@ -68,6 +101,7 @@ Table communities {
 
 Table pubs {
   id String [pk]
+  lastModifiedBy String [not null]
   valuesBlob Json
   pubType pub_types [not null]
   pubTypeId String [not null]
@@ -136,22 +170,6 @@ Table pub_values {
   relatedPub pubs
   relatedPubId String
   lastModifiedBy String [not null, note: '@type(LastModifiedBy, \'../types\', true, false, true)']
-}
-
-Table pub_values_history {
-  histId String [pk]
-  createdAt DateTime [default: `now()`, not null]
-  operationType OperationType [not null]
-  oldRowData Json
-  newRowData Json
-  primaryKeyValue String
-  user users
-  userId String
-  apiAccessToken api_access_tokens
-  apiAccessTokenId String
-  actionRun action_runs
-  actionRunId String
-  other String
 }
 
 Table pub_types {
@@ -376,6 +394,7 @@ Table action_runs {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   PubValuesHistory pub_values_history [not null]
+  PubHistory pubs_history [not null]
 }
 
 Table rules {
@@ -447,6 +466,7 @@ Table api_access_tokens {
   accessRules api_access_permissions [not null]
   logs api_access_logs [not null]
   PubValuesHistory pub_values_history [not null]
+  PubHistory pubs_history [not null]
 }
 
 Table api_access_logs {
@@ -636,6 +656,18 @@ Enum MembershipType {
   form
 }
 
+Ref: pubs_history.userId > users.id
+
+Ref: pubs_history.apiAccessTokenId > api_access_tokens.id
+
+Ref: pubs_history.actionRunId > action_runs.id
+
+Ref: pub_values_history.userId > users.id
+
+Ref: pub_values_history.apiAccessTokenId > api_access_tokens.id
+
+Ref: pub_values_history.actionRunId > action_runs.id
+
 Ref: sessions.userId > users.id
 
 Ref: auth_tokens.userId > users.id
@@ -659,12 +691,6 @@ Ref: pub_values.fieldId > pub_fields.id
 Ref: pub_values.pubId > pubs.id [delete: Cascade]
 
 Ref: pub_values.relatedPubId > pubs.id [delete: Cascade]
-
-Ref: pub_values_history.userId > users.id
-
-Ref: pub_values_history.apiAccessTokenId > api_access_tokens.id
-
-Ref: pub_values_history.actionRunId > action_runs.id
 
 Ref: pub_types.communityId > communities.id
 

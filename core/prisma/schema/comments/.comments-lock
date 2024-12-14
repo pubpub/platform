@@ -1,5 +1,13 @@
 -- generator-version: 1.0.0
 
+-- Model pubs_history comments
+
+
+
+-- Model pub_values_history comments
+
+
+
 -- Model users comments
 
 
@@ -33,10 +41,6 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 -- Model pub_values comments
 
 COMMENT ON COLUMN "pub_values"."lastModifiedBy" IS '@type(LastModifiedBy, ''../types'', true, false, true)';
-
-
--- Model pub_values_history comments
-
 
 
 -- Model pub_types comments

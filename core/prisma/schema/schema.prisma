@@ -8,7 +8,7 @@ datasource db {
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "tracing", "omitApi"]
+  previewFeatures = ["fullTextSearch", "tracing", "omitApi", "prismaSchemaFolder"]
 }
 
 generator dbml {
@@ -17,7 +17,7 @@ generator dbml {
 }
 
 generator comments {
-  provider = "pnpm exec tsx prisma/comment-generator.ts"
+  provider = "pnpm exec tsx prisma/scripts/comment-generator.ts"
 }
 
 model User {
@@ -43,7 +43,6 @@ model User {
   communityMemberships CommunityMembership[]
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
-  PubValuesHistory     PubValuesHistory[]
 
   @@map(name: "users")
 }
@@ -108,7 +107,10 @@ model Community {
 }
 
 model Pub {
-  id          String    @id @default(dbgenerated("gen_random_uuid()"))
+  id String @id @default(dbgenerated("gen_random_uuid()"))
+
+  lastModifiedBy String
+
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
@@ -216,55 +218,6 @@ enum OperationType {
   insert
   update
   delete
-}
-
-// base table for all history tables
-// model BaseHistory {
-//   histId    String   @id @default(dbgenerated("gen_random_uuid()"))
-//   createdAt DateTime @default(now())
-//   crudType  CrudType
-
-//   oldRowData Json?
-//   newRowData Json?
-
-//   // primary key of the row that was changed
-//   primaryKeyValue String?
-
-//   // identifying information
-//   user             User?           @relation(fields: [userId], references: [id])
-//   userId           String?
-//   apiAccessToken   ApiAccessToken? @relation(fields: [apiAccessTokenId], references: [id])
-//   apiAccessTokenId String?
-//   actionRun        ActionRun?      @relation(fields: [actionRunId], references: [id])
-//   actionRunId      String?
-
-//   @@map(name: "base_history")
-// }
-
-model PubValuesHistory {
-  histId        String        @id @default(dbgenerated("gen_random_uuid()"))
-  createdAt     DateTime      @default(now())
-  operationType OperationType
-
-  // has check constraint to ensure that oldRowData and newRowData are not both null
-  // see ./migrations/20241203164958_add_history_table/migration.sql
-  oldRowData Json?
-  newRowData Json?
-
-  // primary key of the row that was changed
-  primaryKeyValue String?
-
-  // identifying information
-  user             User?           @relation(fields: [userId], references: [id])
-  userId           String?
-  apiAccessToken   ApiAccessToken? @relation(fields: [apiAccessTokenId], references: [id])
-  apiAccessTokenId String?
-  actionRun        ActionRun?      @relation(fields: [actionRunId], references: [id])
-  actionRunId      String?
-  // set to `system` if the change was made by the system, eg during seeds
-  other            String?
-
-  @@map(name: "pub_values_history")
 }
 
 model PubType {
@@ -510,21 +463,20 @@ enum Action {
 }
 
 model ActionRun {
-  id               String             @id @default(dbgenerated("gen_random_uuid()"))
-  actionInstance   ActionInstance?    @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
+  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String?
-  pub              Pub?               @relation(fields: [pubId], references: [id])
+  pub              Pub?            @relation(fields: [pubId], references: [id])
   pubId            String?
   config           Json?
   event            Event?
   params           Json?
   status           ActionRunStatus
   result           Json
-  user             User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user             User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId           String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @default(now()) @updatedAt
-  PubValuesHistory PubValuesHistory[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
 
   @@map(name: "action_runs")
 }
@@ -632,19 +584,18 @@ model FormElement {
 }
 
 model ApiAccessToken {
-  id               String                @id @default(dbgenerated("gen_random_uuid()"))
-  token            String                @unique
-  name             String
-  description      String?
-  communityId      String
-  community        Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  expiration       DateTime
-  issuedBy         User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
-  issuedById       String?
-  issuedAt         DateTime              @default(now())
-  accessRules      ApiAccessPermission[]
-  logs             ApiAccessLog[]
-  PubValuesHistory PubValuesHistory[]
+  id          String                @id @default(dbgenerated("gen_random_uuid()"))
+  token       String                @unique
+  name        String
+  description String?
+  communityId String
+  community   Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  expiration  DateTime
+  issuedBy    User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
+  issuedById  String?
+  issuedAt    DateTime              @default(now())
+  accessRules ApiAccessPermission[]
+  logs        ApiAccessLog[]
 
   @@index([token], name: "token_idx")
   @@map(name: "api_access_tokens")
