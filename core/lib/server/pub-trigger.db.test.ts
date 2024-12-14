@@ -95,7 +95,7 @@ describe("updatedAt trigger", () => {
 				pubId: pub.id,
 				fieldId: pubFields.Description.id,
 				value: JSON.stringify("description"),
-				lastModifiedBy: "system",
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.executeTakeFirstOrThrow();
 
@@ -111,6 +111,7 @@ describe("updatedAt trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new description"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where((eb) =>
 				eb.and([eb("pubId", "=", pub.id), eb("fieldId", "=", pubFields.Description.id)])
@@ -128,7 +129,7 @@ describe("updatedAt trigger", () => {
 				pubId: pub.id,
 				fieldId: pubFields.Description.id,
 				value: JSON.stringify("newer description"),
-				lastModifiedBy: "system",
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			// this is similar to what we do in updatePub
 			.onConflict((oc) =>
@@ -138,6 +139,7 @@ describe("updatedAt trigger", () => {
 					// upsert
 					.doUpdateSet((eb) => ({
 						value: eb.ref("excluded.value"),
+						lastModifiedBy: createLastModifiedBy("system"),
 					}))
 			)
 			.executeTakeFirstOrThrow();
@@ -219,6 +221,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new title"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
@@ -242,6 +245,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: null,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
@@ -277,7 +281,7 @@ describe("pub_values title trigger", () => {
 				pubId: pubs[0].id,
 				fieldId: pubFields.Title.id,
 				value: JSON.stringify("new title"),
-				lastModifiedBy: "system",
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.executeTakeFirstOrThrow();
 
@@ -289,6 +293,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("newer title"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
@@ -310,6 +315,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new description"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Description.id)
@@ -557,7 +563,7 @@ describe("pub_values_history trigger", () => {
 					pubId: pubs[0].id,
 					fieldId: pubFields.Description.id,
 					value: JSON.stringify("description"),
-					lastModifiedBy: `system`,
+					lastModifiedBy: createLastModifiedBy("system"),
 				})
 				.returning("id")
 				.executeTakeFirstOrThrow();
@@ -600,6 +606,7 @@ describe("pub_values_history trigger", () => {
 				.updateTable("pub_values")
 				.set({
 					value: JSON.stringify("new title"),
+					lastModifiedBy: createLastModifiedBy("system"),
 				})
 				.where("id", "=", titlePubValueId)
 				.executeTakeFirstOrThrow();
@@ -656,7 +663,7 @@ describe("pub_values_history trigger", () => {
 					pubId: pubs[0].id,
 					fieldId: pubFields.Title.id,
 					value: JSON.stringify("new title"),
-					lastModifiedBy: `system`,
+					lastModifiedBy: createLastModifiedBy("system"),
 				})
 				.returning("id")
 				.onConflict((oc) =>
@@ -665,6 +672,7 @@ describe("pub_values_history trigger", () => {
 						.where("relatedPubId", "is", null)
 						.doUpdateSet((eb) => ({
 							value: eb.ref("excluded.value"),
+							lastModifiedBy: createLastModifiedBy("system"),
 						}))
 				)
 				.executeTakeFirstOrThrow();
@@ -703,23 +711,21 @@ describe("pub_values_history trigger", () => {
 				(v) => v.fieldId === pubFields.Title.id
 			)?.id!;
 
-			const basicModifiedsPromise = (["unknown", "system"] as const).map((modifiedBy) => {
-				return trx
-					.updateTable("pub_values")
-					.set({
-						value: JSON.stringify(modifiedBy),
-						lastModifiedBy: modifiedBy,
-					})
-					.where("id", "=", titlePubValueId)
-					.returningAll()
-					.executeTakeFirstOrThrow();
-			});
+			const basicModifiedsPromise = ["unknown", "system"] as const;
 
-			const basicModifieds = await Promise.allSettled(basicModifiedsPromise);
-
-			basicModifieds.forEach((result) => {
-				expect(result.status).toBe("fulfilled");
-			});
+			for (const modifiedBy of basicModifiedsPromise) {
+				await expect(
+					trx
+						.updateTable("pub_values")
+						.set({
+							value: JSON.stringify(modifiedBy),
+							lastModifiedBy: createLastModifiedBy(modifiedBy),
+						})
+						.where("id", "=", titlePubValueId)
+						.returningAll()
+						.executeTakeFirstOrThrow()
+				).resolves.not.toThrow();
+			}
 
 			const history = await trx
 				.selectFrom("pub_values_history")
@@ -807,23 +813,23 @@ describe("pub_values_history trigger", () => {
 
 			const perpetrators = [
 				{
-					lastModifiedBy: createLastModifiedBy({
+					lastModifiedBy: {
 						userId: users["user-1"].id,
-					}),
+					},
 					foreignKey: "userId",
 					value: users["user-1"].id,
 				},
 				{
-					lastModifiedBy: createLastModifiedBy({
+					lastModifiedBy: {
 						apiAccessTokenId: tokenId as ApiAccessTokensId,
-					}),
+					},
 					foreignKey: "apiAccessTokenId",
 					value: tokenId,
 				},
 				{
-					lastModifiedBy: createLastModifiedBy({
+					lastModifiedBy: {
 						actionRunId: actionRun.id,
-					}),
+					},
 					foreignKey: "actionRunId",
 					value: actionRun.id,
 				},
@@ -835,7 +841,7 @@ describe("pub_values_history trigger", () => {
 					.updateTable("pub_values")
 					.set({
 						value: JSON.stringify(perpetrator.value),
-						lastModifiedBy: perpetrator.lastModifiedBy,
+						lastModifiedBy: createLastModifiedBy(perpetrator.lastModifiedBy),
 					})
 					.where("id", "=", titlePubValueId)
 					.executeTakeFirstOrThrow();
@@ -964,6 +970,73 @@ describe("pub_values_history trigger", () => {
 						table: "users",
 					},
 				});
+			}
+		});
+
+		it("should set throw if you are updating a pub_value and the lastModifiedBy is not set", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+
+			try {
+				await trx
+					.updateTable("pub_values")
+					.set({ value: JSON.stringify("new title") })
+					.where("id", "=", titlePubValueId)
+					.executeTakeFirst();
+
+				const history = await trx
+					.selectFrom("pub_values_history")
+					.selectAll()
+					.where("primaryKeyValue", "=", titlePubValueId)
+					.execute();
+
+				expect(true, "Incorrect state, this statement should throw").toBe(false);
+			} catch (e) {
+				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE");
+			}
+		});
+
+		it("should throw if no lastModifiedBy is set during onConflict doUpdate", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			try {
+				await trx
+					.insertInto("pub_values")
+					.values({
+						pubId: pubs[0].id,
+						fieldId: pubFields.Title.id,
+						value: JSON.stringify("test"),
+						lastModifiedBy: createLastModifiedBy("system"),
+					})
+					.onConflict((cb) =>
+						cb
+							.columns(["pubId", "fieldId"])
+							.where("relatedPubId", "is", null)
+							.doUpdateSet((eb) => ({
+								value: eb.ref("excluded.value"),
+								// not set heree!
+							}))
+					)
+					.executeTakeFirstOrThrow();
+			} catch (e) {
+				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE");
 			}
 		});
 	});

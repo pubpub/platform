@@ -6,6 +6,7 @@ import { logger } from "logger";
 
 import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env.mjs";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { deletePub, generateSignedAssetUploadUrl, getPub, tsRestHandleErrors } from "~/lib/server";
 import { emailUser } from "~/lib/server/_legacy-integration-email";
 import {
@@ -63,7 +64,10 @@ const handler = createNextHandler(
 		},
 		deletePub: async ({ headers, params }) => {
 			checkAuthentication(headers.authorization);
-			await deletePub({ pubId: params.pubId as PubsId, lastModifiedBy: "unknown" });
+			await deletePub({
+				pubId: params.pubId as PubsId,
+				lastModifiedBy: createLastModifiedBy("system"),
+			});
 			return {
 				status: 200,
 				body: {

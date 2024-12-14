@@ -41,6 +41,7 @@ import { expect } from "utils";
 import type { actions } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { createPubRecursiveNew } from "~/lib/server";
 import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { insertForm } from "~/lib/server/form";
@@ -395,7 +396,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 				relatedPubs: relatedPubs,
 			},
-			lastModifiedBy: "system",
+			lastModifiedBy: createLastModifiedBy("system"),
 		} satisfies CreatePubRecursiveInput;
 
 		return input as CreatePubRecursiveInput;

@@ -66,3 +66,17 @@ This will turn the `contraints` column of `ApiAccessPermission` into `ApiAccessP
 See `core/kysely/README.md` for slightly more info on this.
 
 TODO: all our database notes should probably be centralized somewhere.
+
+## History Tables
+
+We have a number of tables that exits just to record the history of a table, along with the entity that made the change. It servers both as a way to audit changes, and as a way to reconstruct the value of an entity (usually a Pub) at a point in time.
+
+### How to create one
+
+1. Run `pnpm db:generate-history-table`
+2. Enter the name of the original table (e.g. `pubs`)
+3. Say yes every time
+4. Run `pnpm db:migrate-dev` (probably twice for good measure)
+5. Tadah! You should have a new table called `pubs_history`
+
+This will also add a new column to the original table called `lastModifiedBy` of type `LastModifiedBy`. This will probably mean you need to update some application level code in order to actually use it.

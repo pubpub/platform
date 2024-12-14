@@ -13,11 +13,13 @@ export const parseLastModifiedBy = (
 		other: null,
 	};
 
-	if (lastModifiedBy === "unknown") {
+	const [main, timestamp] = lastModifiedBy.split("|");
+
+	if (main === "unknown") {
 		return base;
 	}
 
-	if (lastModifiedBy === "system") {
+	if (main === "system") {
 		return {
 			actionRunId: null,
 			apiAccessTokenId: null,
@@ -26,7 +28,7 @@ export const parseLastModifiedBy = (
 		};
 	}
 
-	const [type, id] = lastModifiedBy.split(":");
+	const [type, id] = main.split(":");
 
 	switch (type) {
 		case "user":
@@ -60,20 +62,22 @@ export const createLastModifiedBy = (
 		| "unknown"
 		| "system"
 ): LastModifiedBy => {
+	const timestamp = Date.now();
+
 	if (props === "unknown" || props === "system") {
-		return props;
+		return `${props}|${timestamp}`;
 	}
 
 	if (props.userId) {
-		return `user:${props.userId}`;
+		return `user:${props.userId}|${timestamp}`;
 	}
 
 	if (props.actionRunId) {
-		return `action-run:${props.actionRunId}`;
+		return `action-run:${props.actionRunId}|${timestamp}`;
 	}
 
 	if (props.apiAccessTokenId) {
-		return `api-access-token:${props.apiAccessTokenId}`;
+		return `api-access-token:${props.apiAccessTokenId}|${timestamp}`;
 	}
 
 	throw new Error("Invalid lastModifiedBy");
