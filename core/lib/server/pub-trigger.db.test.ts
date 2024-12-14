@@ -1,3 +1,4 @@
+import { sql } from "kysely";
 import { describe, expect, it } from "vitest";
 
 import type { ActionRunsId, ApiAccessTokensId, PubsId, PubValuesHistoryHistId } from "db/public";
@@ -717,20 +718,22 @@ describe("pub_values_history trigger", () => {
 				.selectFrom("pub_values_history")
 				.selectAll()
 				.where("primaryKeyValue", "=", titlePubValueId)
-				.orderBy("createdAt", "desc")
-				.limit(2)
 				.execute();
 
-			expect(history.length).toBe(2);
+			history.sort((a, b) =>
+				(a.newRowData?.value as string).localeCompare(b.newRowData?.value as string)
+			);
 
-			expect(history[0]).toMatchObject({
+			expect(history.length).toBe(3);
+
+			expect(history[1]).toMatchObject({
 				newRowData: {
 					value: "system",
 				},
 				other: "system",
 				operationType: "update",
 			});
-			expect(history[1]).toMatchObject({
+			expect(history[2]).toMatchObject({
 				newRowData: {
 					value: "unknown",
 				},
@@ -828,7 +831,8 @@ describe("pub_values_history trigger", () => {
 					.selectFrom("pub_values_history")
 					.selectAll()
 					.where("primaryKeyValue", "=", titlePubValueId)
-					.orderBy("createdAt", "desc")
+					.where("operationType", "=", OperationType.update)
+					.where(sql`"newRowData"->>'value'`, "=", perpetrator.value)
 					.executeTakeFirstOrThrow();
 
 				historyKeys.push(history.histId);
