@@ -3,6 +3,7 @@
 import { defaultMarkdownParser } from "prosemirror-markdown";
 
 import type { PubsId } from "db/public";
+import type { LastModifiedBy } from "db/types";
 import { logger } from "logger";
 
 import type { action } from "./action";
@@ -158,7 +159,7 @@ const updateV6PubText = async (
 	}
 };
 
-const updateV6PubId = async (pubId: string, v6PubId: string) => {
+const updateV6PubId = async (pubId: PubsId, v6PubId: string, lastModifiedBy: LastModifiedBy) => {
 	await autoRevalidate(
 		db
 			.with("field", (db) =>
@@ -170,13 +171,14 @@ const updateV6PubId = async (pubId: string, v6PubId: string) => {
 			.insertInto("pub_values")
 			.values((eb) => ({
 				fieldId: eb.selectFrom("field").select("field.id"),
-				pubId: pubId as PubsId,
+				pubId: pubId,
 				value: `"${v6PubId}"`,
+				lastModifiedBy,
 			}))
 	).execute();
 };
 
-export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
+export const run = defineRun<typeof action>(async ({ pub, config, args, lastModifiedBy }) => {
 	try {
 		const v6Community = await getV6Community(config.communitySlug, config.authToken);
 
@@ -217,7 +219,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			v6Pub = createV6PubResponse;
 
 			// Update the v6 pub id in the v7 pub
-			await updateV6PubId(pub.id, v6Pub.id);
+			await updateV6PubId(pub.id, v6Pub.id, lastModifiedBy);
 		}
 
 		// Update the v6 pub content

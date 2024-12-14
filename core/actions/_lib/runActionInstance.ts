@@ -4,7 +4,14 @@ import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
+import type {
+	ActionInstancesId,
+	ActionRunsId,
+	CommunitiesId,
+	PubsId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
@@ -13,6 +20,7 @@ import type { ClientException, ClientExceptionOptions } from "~/lib/serverAction
 import { db } from "~/kysely/database";
 import { getPubCached } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { isClientException } from "~/lib/serverActions";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
 import { resolveWithPubfields } from "./resolvePubfields";
@@ -26,7 +34,7 @@ export type RunActionInstanceArgs = {
 } & ({ event: Event } | { userId: UsersId });
 
 const _runActionInstance = async (
-	args: RunActionInstanceArgs
+	args: RunActionInstanceArgs & { actionRunId: ActionRunsId }
 ): Promise<ActionInstanceRunResult> => {
 	const pubPromise = getPubCached(args.pubId);
 
@@ -178,6 +186,8 @@ const _runActionInstance = async (
 			argsFieldOverrides,
 			stageId: actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
+			lastModifiedBy: `action-run:${args.actionRunId}`,
+			actionRunId: args.actionRunId,
 		});
 
 		return result;
@@ -192,11 +202,12 @@ const _runActionInstance = async (
 };
 
 export async function runActionInstance(args: RunActionInstanceArgs) {
-	const result = await _runActionInstance(args);
-
 	const isActionUserInitiated = "userId" in args;
 
-	await autoRevalidate(
+	// we need to first create the action run,
+	// in case the action modifies the pub and needs to pass the lastModifiedBy field
+	// which in this case would be `action-run:<action-run-id>`
+	const actionRuns = await autoRevalidate(
 		db
 			.with(
 				"existingScheduledActionRun",
@@ -218,8 +229,8 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 				actionInstanceId: args.actionInstanceId,
 				pubId: args.pubId,
 				userId: isActionUserInitiated ? args.userId : null,
-				status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
-				result,
+				// we are setting it to `scheduled` very briefly
+				status: ActionRunStatus.scheduled,
 				// this is a bit hacky, would be better to pass this around methinks
 				config: eb
 					.selectFrom("action_instances")
@@ -228,16 +239,53 @@ export async function runActionInstance(args: RunActionInstanceArgs) {
 				params: args,
 				event: isActionUserInitiated ? undefined : args.event,
 			}))
+			.returning("id")
 			// conflict should only happen if a scheduled action is excecuted
 			// not on user initiated actions or on other events
 			.onConflict((oc) =>
 				oc.column("id").doUpdateSet({
-					result,
 					params: args,
 					event: "userId" in args ? undefined : args.event,
 					status: "error" in result ? ActionRunStatus.failure : ActionRunStatus.success,
 				})
 			)
+	).execute();
+
+	if (actionRuns.length > 1) {
+		const errorMessage: ActionInstanceRunResult = {
+			title: "Action run failed",
+			error: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
+			cause: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
+		};
+
+		await autoRevalidate(
+			db
+				.updateTable("action_runs")
+				.set({
+					status: ActionRunStatus.failure,
+					result: errorMessage,
+				})
+				.where(
+					"id",
+					"in",
+					actionRuns.map((ar) => ar.id)
+				)
+		).execute();
+
+		throw new Error(
+			`Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`
+		);
+	}
+
+	const actionRun = actionRuns[0];
+
+	const result = await _runActionInstance({ ...args, actionRunId: actionRun.id });
+
+	const status = isClientException(result) ? ActionRunStatus.failure : ActionRunStatus.success;
+
+	// update the action run with the result
+	await autoRevalidate(
+		db.updateTable("action_runs").set({ status, result }).where("id", "=", actionRun.id)
 	).execute();
 
 	return result;

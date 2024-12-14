@@ -1,12 +1,13 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
-import type { Action as ActionName, CommunitiesId, Event, PubsId, StagesId } from "db/public";
+import type { Action as ActionName, ActionRunsId, CommunitiesId, Event, PubsId, StagesId } from "db/public";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
 import type { CorePubField } from "./corePubFields";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
+import type { LastModifiedBy } from "db/types";
 
 export type ActionPubType = CorePubField[];
 
@@ -47,6 +48,13 @@ export type RunProps<T extends Action> =
 				argsFieldOverrides: Set<string>;
 				stageId: StagesId;
 				communityId: CommunitiesId;
+				/**
+				 * The lastModifiedBy field, to be used when you are 
+				 * creating/modifying pubs
+				 * Will likely look like: `action-run:<action-run-id>
+				 */
+				lastModifiedBy: LastModifiedBy;
+				actionRunId: ActionRunsId;
 			}
 		: never;
 
