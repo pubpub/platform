@@ -842,6 +842,7 @@ export const upsertPubRelations = async ({
 						// upsert
 						.doUpdateSet((eb) => ({
 							value: eb.ref("excluded.value"),
+							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
 						}))
 				)
 				.returningAll()
@@ -1088,6 +1089,7 @@ export const updatePub = async ({
 						.where("relatedPubId", "is", null)
 						.doUpdateSet((eb) => ({
 							value: eb.ref("excluded.value"),
+							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
 						}))
 				)
 				.returningAll()
