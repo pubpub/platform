@@ -36,6 +36,7 @@ export class FieldsPage {
 		await this.nameBox.fill(name);
 		await this.selectFormat(format);
 		await this.page.getByRole("button", { name: "Create" }).click();
+		await this.page.getByText(`Created field ${name}`, { exact: true }).waitFor();
 	}
 
 	async addFieldsOfEachType() {
