@@ -257,7 +257,7 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
 			1
 		);
-		await page.getByRole("button", { name: "View Pub" }).click();
+		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId("current-stage")).toHaveText(stage);
 	});
 });
