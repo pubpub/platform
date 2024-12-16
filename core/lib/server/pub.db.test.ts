@@ -628,9 +628,6 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 	});
 
 	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
-		const trx = getTrx();
-		const { createPubRecursiveNew } = await import("./pub");
-
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const allPubs = await getPubsWithRelatedValuesAndChildren(
@@ -993,6 +990,36 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			id: emptyPub.id,
 			values: [],
 		});
+	});
+
+	it("should not fetch values if withValues is false", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+				children: [
+					{
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: { [pubFields.Title.slug]: "test child title" },
+					},
+				],
+			},
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: createdPub.id, communityId: community.id },
+			{ withValues: false }
+		);
+
+		expect(pub.values.length).toBe(0);
+		expect(pub.children?.[0].values.length).toBe(0);
 	});
 });
 
