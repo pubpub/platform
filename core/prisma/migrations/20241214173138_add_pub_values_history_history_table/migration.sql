@@ -4,11 +4,13 @@
  - Added the required column `lastModifiedBy` to the `pub_values` table without a default value. This is not possible if the table is not empty.
  */
 -- AlterTable
+-- first we add the column with a default value
 ALTER TABLE "pub_values"
-  ADD COLUMN "lastModifiedBy" TEXT NOT NULL;
+  ADD COLUMN "lastModifiedBy" modified_by_type NOT NULL DEFAULT CONCAT('unknown', '|', FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000));
 
+-- then we remove the default value
 ALTER TABLE "pub_values"
-  ALTER COLUMN "lastModifiedBy" TYPE modified_by_type;
+  ALTER COLUMN "lastModifiedBy" DROP DEFAULT;
 
 -- backfill base `lastModifiedBy` column
 UPDATE
@@ -52,12 +54,7 @@ ALTER TABLE pub_values_history
 -- we just set it to insert the current row data, as we do not know who created it
 -- we do not set a perpetrator for the existing data, as it is not possible to know who created it
 -- setting a createAt manually is risky, as the base table might not have a createdAt/updateAt column. therefore we set the base case to the current timestamp
-INSERT INTO "pub_values_history" (
-  "operationType",
-  "oldRowData",
-  "newRowData",
-  "primaryKeyValue"
-)
+INSERT INTO "pub_values_history"("operationType", "oldRowData", "newRowData", "primaryKeyValue")
 SELECT
   'insert'::"OperationType",
   NULL,

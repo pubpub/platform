@@ -4,19 +4,13 @@
  - Added the required column `lastModifiedBy` to the `{{tableName}}` table without a default value. This is not possible if the table is not empty.
  */
 -- AlterTable
+-- first we add the column with a default value
 ALTER TABLE "{{tableName}}"
-  ADD COLUMN "lastModifiedBy" TEXT NOT NULL;
+  ADD COLUMN "lastModifiedBy" modified_by_type NOT NULL DEFAULT CONCAT('unknown', '|', FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000));
 
+-- then we remove the default value
 ALTER TABLE "{{tableName}}"
-  ALTER COLUMN "lastModifiedBy" TYPE modified_by_type;
-
--- backfill base `lastModifiedBy` column
-UPDATE
-  "{{tableName}}"
-SET
-  "lastModifiedBy" = 'unknown'
-WHERE
-  "lastModifiedBy" IS NULL;
+  ALTER COLUMN "lastModifiedBy" DROP DEFAULT;
 
 -- CreateTable
 CREATE TABLE "{{historyTableName}}"(
