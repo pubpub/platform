@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { getLoginData } from "~/lib/authentication/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 
 export default async function Page() {
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 
 	// if user and no commuhnmitiy, redirect to settings
 	if (!user) {
