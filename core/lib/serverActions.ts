@@ -57,5 +57,5 @@ export function useServerAction<T extends unknown[], U>(action: (...args: T) => 
 	return runServerAction;
 }
 
-export const didSucceed = <T>(result: T): result is Exclude<T, ClientException> =>
-	!isClientException(result);
+export const didSucceed = <T extends object>(result: T): result is Exclude<T, ClientException> =>
+	Reflect.get(result, "error") === undefined;
