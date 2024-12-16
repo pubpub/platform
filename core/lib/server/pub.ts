@@ -7,6 +7,7 @@ import type {
 	StringReference,
 } from "kysely";
 
+import { en_BORK } from "@faker-js/faker";
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
@@ -23,7 +24,6 @@ import type {
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
-	CoreSchemaType,
 	MemberRole,
 	PubFieldsId,
 	Pubs,
@@ -35,6 +35,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
@@ -1074,6 +1075,7 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 	 */
 	_debugDontNest?: boolean;
 	fieldSlugs?: string[];
+	onlyTitles?: boolean;
 	trx?: typeof db;
 }
 
@@ -1099,6 +1101,7 @@ const DEFAULT_OPTIONS = {
 	withStage: false,
 	withMembers: false,
 	cycle: "include",
+	withValues: true,
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
@@ -1134,6 +1137,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		depth,
 		withChildren,
 		withRelatedPubs,
+		withValues,
 		cycle,
 		fieldSlugs,
 		orderBy,
@@ -1173,30 +1177,28 @@ export async function getPubsWithRelatedValuesAndChildren<
 					// we need to do this weird cast, because kysely does not support typing the selecting from a later CTE
 					// which is possible only in a with recursive query
 					.selectFrom("root_pubs_limited as p" as unknown as "pubs as p")
-					.leftJoin("pub_values as pv", "p.id", "pv.pubId")
-					.leftJoin("pub_fields", "pub_fields.id", "pv.fieldId")
-					.$if(Boolean(fieldSlugs), (qb) =>
-						qb.where("pub_fields.slug", "in", fieldSlugs!)
-					)
 					// maybe move this to root_pubs to save a join?
 					.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
+					.$if(Boolean(withRelatedPubs), (qb) =>
+						qb
+							.leftJoin("pub_values as pv", (join) =>
+								join.on((eb) =>
+									eb.and([
+										eb("pv.pubId", "=", eb.ref("p.id")),
+										eb("pv.relatedPubId", "is not", null),
+									])
+								)
+							)
+							.select("pv.relatedPubId")
+					)
 					.select([
 						"p.id as pubId",
-						"pub_fields.schemaName as schemaName",
-						"pub_fields.slug as slug",
-						"pub_fields.name as fieldName",
 						"p.pubTypeId",
 						"p.communityId",
 						"p.createdAt",
 						"p.updatedAt",
 						"p.title",
 						"PubsInStages.stageId",
-						"pv.id as valueId",
-						"pv.fieldId",
-						"pv.value",
-						"pv.relatedPubId",
-						"pv.createdAt as valueCreatedAt",
-						"pv.updatedAt as valueUpdatedAt",
 						"p.parentId",
 						sql<number>`1`.as("depth"),
 						sql<boolean>`false`.as("isCycle"),
@@ -1233,26 +1235,27 @@ export async function getPubsWithRelatedValuesAndChildren<
 										])
 									)
 								)
-								.leftJoin("pub_values", "pubs.id", "pub_values.pubId")
-								.leftJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+								.$if(Boolean(withRelatedPubs), (qb) =>
+									qb
+										.leftJoin("pub_values", (join) =>
+											join.on((eb) =>
+												eb.and([
+													eb("pub_values.pubId", "=", eb.ref("pubs.id")),
+													eb("pub_values.relatedPubId", "is not", null),
+												])
+											)
+										)
+										.select("pub_values.relatedPubId")
+								)
 								.select([
 									"pubs.id as pubId",
-									"pub_fields.schemaName as schemaName",
-									"pub_fields.slug as slug",
-									"pub_fields.name as fieldName",
 									"pubs.pubTypeId",
 									"pubs.communityId",
 									"pubs.createdAt",
 									"pubs.updatedAt",
 									"pubs.title",
 									"PubsInStages.stageId",
-									"pub_values.id as valueId",
-									"pub_values.fieldId",
-									"pub_values.value",
-									"pub_values.relatedPubId",
-									"pub_values.createdAt as valueCreatedAt",
-									"pub_values.updatedAt as valueUpdatedAt",
 									"pubs.parentId",
 									// increment the depth
 									sql<number>`pub_tree.depth + 1`.as("depth"),
@@ -1298,47 +1301,52 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))
 			)
-			.selectFrom("pub_tree")
+			.selectFrom("pub_tree as pt")
 			.select((eb) => [
-				"pub_tree.pubId as id",
-				"pub_tree.parentId",
-				"pub_tree.pubTypeId",
-				"pub_tree.depth",
-				"pub_tree.stageId",
-				"pub_tree.communityId",
-				"pub_tree.isCycle",
-				"pub_tree.path",
-				"pub_tree.createdAt",
-				"pub_tree.updatedAt",
-				"pub_tree.title",
-				jsonArrayFrom(
-					eb
-						.selectFrom("pub_tree as inner")
-						.select((eb) => [
-							"inner.valueId as id",
-							"inner.fieldId",
-							"inner.value",
-							"inner.relatedPubId",
-							"inner.valueCreatedAt as createdAt",
-							"inner.valueUpdatedAt as updatedAt",
-							"inner.schemaName",
-							"inner.slug as fieldSlug",
-							"inner.fieldName",
-						])
-						.whereRef("inner.pubId", "=", "pub_tree.pubId")
-						// this prevents us from double fetching values if we have detected a cycle
-						.whereRef("inner.depth", "=", "pub_tree.depth")
-						.where("inner.valueId", "is not", null)
-						.orderBy("inner.valueCreatedAt desc")
-				).as("values"),
+				"pt.pubId as id",
+				"pt.parentId",
+				"pt.pubTypeId",
+				"pt.depth",
+				"pt.stageId",
+				"pt.communityId",
+				"pt.isCycle",
+				"pt.path",
+				"pt.createdAt",
+				"pt.updatedAt",
+				"pt.title",
 			])
+			.$if(Boolean(withValues), (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("pub_values as pv")
+							.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+							.select((eb) => [
+								"pv.id as id",
+								"pv.fieldId",
+								"pv.value",
+								"pv.relatedPubId",
+								"pv.createdAt as createdAt",
+								"pv.updatedAt as updatedAt",
+								"pub_fields.schemaName",
+								"pub_fields.slug as fieldSlug",
+								"pub_fields.name as fieldName",
+							])
+							.whereRef("pv.pubId", "=", "pt.pubId")
+							.$if(!Boolean(withRelatedPubs), (qb) =>
+								qb.where("pv.relatedPubId", "is", null)
+							)
+							.orderBy("pv.createdAt desc")
+					).as("values")
+				)
+			)
 			.$if(Boolean(withLegacyAssignee), (qb) =>
 				qb.select((eb) =>
 					jsonObjectFrom(
 						eb
 							.selectFrom("users")
 							.select(SAFE_USER_SELECT)
-							.whereRef("users.id", "=", "pub_tree.assigneeId")
+							.whereRef("users.id", "=", "pt.assigneeId")
 					).as("assignee")
 				)
 			)
@@ -1349,7 +1357,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 							.selectFrom("pub_tree as children")
 							.select(["children.pubId as id"])
 							.distinctOn(["children.pubId"])
-							.whereRef("children.parentId", "=", "pub_tree.pubId")
+							.whereRef("children.parentId", "=", "pt.pubId")
 					).as("children")
 				)
 			)
@@ -1360,21 +1368,21 @@ export async function getPubsWithRelatedValuesAndChildren<
 						eb
 							.selectFrom("stages")
 							.selectAll("stages")
-							.where("pub_tree.stageId", "is not", null)
-							.whereRef("stages.id", "=", "pub_tree.stageId")
+							.where("pt.stageId", "is not", null)
+							.whereRef("stages.id", "=", "pt.stageId")
 							.limit(1)
 					).as("stage")
 				)
 			)
 			.$if(Boolean(withPubType), (qb) =>
-				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
+				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pt.pubTypeId" }))
 			)
 			.$if(Boolean(withMembers), (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(
 						eb
 							.selectFrom("pub_memberships")
-							.whereRef("pub_memberships.pubId", "=", "pub_tree.pubId")
+							.whereRef("pub_memberships.pubId", "=", "pt.pubId")
 							.innerJoin("users", "users.id", "pub_memberships.userId")
 							.select(["pub_memberships.role", ...SAFE_USER_SELECT])
 					).as("members")
@@ -1384,17 +1392,17 @@ export async function getPubsWithRelatedValuesAndChildren<
 			.orderBy("depth asc")
 			// this is necessary to filter out all the duplicate entries for the values
 			.groupBy([
-				"pubId",
-				"parentId",
-				"depth",
-				"pubTypeId",
-				"updatedAt",
-				"createdAt",
-				"title",
-				"stageId",
-				"communityId",
-				"isCycle",
-				"path",
+				"pt.pubId",
+				"pt.parentId",
+				"pt.depth",
+				"pt.pubTypeId",
+				"pt.updatedAt",
+				"pt.createdAt",
+				"pt.title",
+				"pt.stageId",
+				"pt.communityId",
+				"pt.isCycle",
+				"pt.path",
 			])
 			.$if(Boolean(withLegacyAssignee), (qb) => qb.groupBy("assigneeId"))
 	).execute();
@@ -1449,7 +1457,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			return undefined;
 		}
 
-		const processedValues = unprocessedPub.values.map((value) => {
+		const processedValues = unprocessedPub.values?.map((value) => {
 			const relatedPub = value.relatedPubId
 				? processPub(value.relatedPubId, depth - 1)
 				: null;
@@ -1468,7 +1476,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 
 		const processedPub = {
 			...usefulProcessedPubColumns,
-			values: processedValues,
+			values: processedValues ?? [],
 			children: processedChildren ?? undefined,
 		} as ProcessedPub;
 

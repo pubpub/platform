@@ -102,12 +102,12 @@ export async function StagePubs({
 		getPubsWithRelatedValuesAndChildren(
 			{ stageId: stage.id, communityId: stage.communityId },
 			{
-				onlyParents: false,
 				// fetch one extra pub so we know whether or not to render a show more button
 				limit: pagination?.pubsPerPage || (totalPubLimit && totalPubLimit + 1),
 				offset: pagination && (pagination.page - 1) * pagination.pubsPerPage,
 				orderBy: "updatedAt",
 				withRelatedPubs: false,
+				withValues: false,
 				withStage: true,
 				withPubType: true,
 				withLegacyAssignee: true,

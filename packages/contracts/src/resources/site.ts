@@ -195,6 +195,12 @@ export type MaybePubOptions = {
 	 * @default false
 	 */
 	withLegacyAssignee?: boolean;
+	/**
+	 * Whether to include the values.
+	 *
+	 * @default boolean
+	 */
+	withValues?: boolean;
 };
 
 type ValueBase = {
@@ -230,6 +236,9 @@ type ProcessedPubBase = {
 };
 
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
+	/**
+	 * Is an empty array if `withValues` is false
+	 */
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
 } & MaybePubChildren<Options> &
 	MaybePubStage<Options> &
@@ -241,7 +250,7 @@ export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages | null;
 	pubType?: PubTypes;
 	children?: NonGenericProcessedPub[];
-	values: (ValueBase & {
+	values?: (ValueBase & {
 		relatedPub?: NonGenericProcessedPub | null;
 		relatedPubId: PubsId | null;
 	})[];
