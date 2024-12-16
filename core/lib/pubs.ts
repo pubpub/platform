@@ -1,4 +1,4 @@
-import type { ProcessedPub } from "contracts";
+import type { JsonValue, ProcessedPub } from "contracts";
 
 import type { GetPubsResult } from "./server";
 
@@ -9,6 +9,7 @@ export type PubTitleProps = {
 		| { field: { slug: string }; value: unknown }[]
 		| Record<string, unknown>
 		| { fieldSlug: string; value: unknown }[];
+} & {
 	pubType: { name: string };
 };
 
@@ -46,12 +47,27 @@ export const processedPubToPubResult = <T extends InputPub>(pub: T): GetPubsResu
 	return {
 		...pub,
 		values: pub.values.reduce(
-			(acc, value) => ({
-				...acc,
-				[value.fieldSlug]: Array.isArray(acc[value.fieldSlug])
-					? [...acc[value.fieldSlug], value.value]
-					: value.value,
-			}),
+			(acc, value) => {
+				const existingValue = acc[value.fieldSlug] as JsonValue | JsonValue[] | undefined;
+
+				if (!value?.relatedPubId) {
+					acc[value.fieldSlug] = value.value as JsonValue;
+					return acc;
+				}
+
+				const existingVal = existingValue
+					? Array.isArray(existingValue)
+						? existingValue
+						: [existingValue]
+					: [];
+
+				acc[value.fieldSlug] = [
+					...existingVal,
+					{ relatedPubId: value.relatedPubId, value: value.value as JsonValue },
+				];
+
+				return acc;
+			},
 			{} as GetPubsResult[number]["values"]
 		),
 		stages: pub.stage ? [pub.stage] : [],
