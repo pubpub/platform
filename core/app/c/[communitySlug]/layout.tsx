@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getLoginData } from "~/lib/authentication/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import SideNav from "./SideNav";
@@ -26,7 +26,7 @@ export async function generateMetadata({
 }
 
 export default async function MainLayout({ children, params }: Props) {
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
