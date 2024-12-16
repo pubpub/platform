@@ -395,17 +395,16 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10 }
 		);
 
-		expect(pubValues).toMatchObject({
-			values: [
-				{ value: "Some title" },
-				{
-					value: "test relation value",
-					relatedPub: {
-						values: [{ value: "test relation title" }],
-					},
+		pubValues.values.sort((a, b) => a.fieldSlug.localeCompare(b.fieldSlug));
+		expect(pubValues.values).toMatchObject([
+			{
+				value: "test relation value",
+				relatedPub: {
+					values: [{ value: "test relation title" }],
 				},
-			],
-		});
+			},
+			{ value: "Some title" },
+		]);
 
 		// check that children are defined because `withChildren` is not `false`
 		expectTypeOf(pubValues.children).not.toEqualTypeOf<undefined>();
@@ -581,9 +580,14 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			PubTypes & { fields: PubTypePubField[] }
 		>();
 
+		pubWithRelatedValuesAndChildren.values.sort((a, b) =>
+			a.fieldSlug.localeCompare(b.fieldSlug)
+		);
+		pubWithRelatedValuesAndChildren.children[0].values.sort((a, b) =>
+			a.fieldSlug.localeCompare(b.fieldSlug)
+		);
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
-				{ value: "Some title" },
 				{
 					value: "test relation value",
 					relatedPub: {
@@ -591,11 +595,14 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 						children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
 					},
 				},
+				{ value: "Some title" },
 			],
 			children: [
 				{
 					values: [
-						{ value: "Child of Root Pub" },
+						{
+							value: "Nested Relation 2",
+						},
 						{
 							value: "Nested Relation",
 							relatedPub: {
@@ -612,9 +619,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 								],
 							},
 						},
-						{
-							value: "Nested Relation 2",
-						},
+						{ value: "Child of Root Pub" },
 					],
 					children: [{ values: [{ value: "Grandchild of Root Pub" }] }],
 				},
