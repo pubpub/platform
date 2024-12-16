@@ -48,10 +48,17 @@ export async function PubEditor(props: PubEditorProps) {
 	const { user } = await getLoginData();
 
 	if ("pubId" in props) {
-		pub = await getPubsWithRelatedValuesAndChildren({
-			pubId: props.pubId,
-			communityId: props.communityId,
-		});
+		pub = await getPubsWithRelatedValuesAndChildren(
+			{
+				pubId: props.pubId,
+				communityId: props.communityId,
+			},
+			{
+				withPubType: true,
+				withStage: true,
+				withLegacyAssignee: true,
+			}
+		);
 		community = await getCommunityById(
 			// @ts-expect-error FIXME: I don't know how to fix this,
 			// not sure what the common type between EB and the DB is
