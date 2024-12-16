@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
-import { MemberRole, StructuralFormElement } from "db/public";
+import { MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
@@ -24,17 +24,10 @@ import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
-import {
-	getPubCached,
-	getPubsWithRelatedValuesAndChildren,
-	getPubTypesForCommunity,
-} from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import {
-	renderMarkdownAsHtml,
-	renderMarkdownWithPub,
-} from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
+import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { capitalize } from "~/lib/string";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
@@ -151,7 +144,12 @@ export default async function FormPage({
 			slug: params.formSlug,
 			communityId: community.id,
 		}).executeTakeFirst(),
-		searchParams.pubId ? await getPubCached(searchParams.pubId) : undefined,
+		searchParams.pubId
+			? await getPubsWithRelatedValuesAndChildren(
+					{ pubId: searchParams.pubId, communityId: community.id },
+					{ withStage: true, withLegacyAssignee: true, withPubType: true }
+				)
+			: undefined,
 		getPubsWithRelatedValuesAndChildren(
 			{ communityId: community.id },
 			{
@@ -208,7 +206,12 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub?.parentId ? await getPubCached(pub.parentId) : undefined;
+	const parentPub = pub?.parentId
+		? await getPubsWithRelatedValuesAndChildren(
+				{ pubId: pub.parentId, communityId: community.id },
+				{ withStage: true, withLegacyAssignee: true, withPubType: true }
+			)
+		: undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
@@ -249,7 +252,7 @@ export default async function FormPage({
 
 	const isUpdating = !!pub;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
-	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
 	return (
 		<div className="isolate min-h-screen">
@@ -293,7 +296,7 @@ export default async function FormPage({
 											element={e}
 											searchParams={searchParams}
 											communitySlug={params.communitySlug}
-											values={pub ? pub.values : {}}
+											values={pub ? pub.values : []}
 										/>
 									))}
 								</ExternalFormWrapper>

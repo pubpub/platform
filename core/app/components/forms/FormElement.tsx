@@ -1,6 +1,6 @@
 import { defaultComponent } from "schemas";
 
-import type { GetPubResponseBody } from "contracts";
+import type { GetPubResponseBody, ProcessedPub } from "contracts";
 import type { CommunityMembershipsId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
@@ -27,7 +27,7 @@ export type FormElementProps = {
 	element: Form["elements"][number];
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
-	values: GetPubResponseBody["values"];
+	values: ProcessedPub["values"];
 };
 
 export const FormElement = ({
@@ -78,7 +78,10 @@ export const FormElement = ({
 	} else if (component === InputComponent.datePicker) {
 		input = <DateElement {...elementProps} />;
 	} else if (component === InputComponent.memberSelect) {
-		const userId = values[element.slug!] as CommunityMembershipsId | undefined;
+		const userId = values.find((v) => v.fieldSlug === element.slug)?.value as
+			| CommunityMembershipsId
+			| undefined;
+
 		input = (
 			<MemberSelectElement
 				config={elementProps.config}
