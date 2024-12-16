@@ -53,6 +53,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 							actionInstance={actionInstance}
 							onDelete={onDeleteAction}
 							communityId={stage.communityId}
+							stageId={props.stageId}
 						>
 							<Suspense fallback={<SkeletonCard />}>
 								<ActionConfigFormWrapper

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import type { Action, CommunitiesId, Event, RulesId } from "db/public";
+import type { Action, CommunitiesId, Event, RulesId, StagesId } from "db/public";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 
@@ -13,6 +13,7 @@ import { useServerAction } from "~/lib/serverActions";
 import { deleteRule } from "../../../actions";
 
 type Props = {
+	stageId: StagesId;
 	communityId: CommunitiesId;
 	rule: {
 		id: RulesId;
@@ -32,7 +33,7 @@ export const StagePanelRule = (props: Props) => {
 	const { rule } = props;
 	const runDeleteRule = useServerAction(deleteRule);
 	const onDeleteClick = useCallback(async () => {
-		runDeleteRule(rule.id);
+		runDeleteRule(rule.id, props.stageId);
 	}, [rule.id, props.communityId]);
 
 	return (

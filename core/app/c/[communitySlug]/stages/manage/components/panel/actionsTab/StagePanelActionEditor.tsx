@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-import type { ActionInstances, ActionInstancesId } from "db/public";
+import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
@@ -15,16 +15,17 @@ import * as actions from "../../../actions";
 
 type Props = {
 	actionInstance: ActionInstances;
-	onDelete: (actionInstanceId: ActionInstancesId) => Promise<unknown>;
+	onDelete: (actionInstanceId: ActionInstancesId, stageId: StagesId) => Promise<unknown>;
 	communityId: string;
 	children: React.ReactNode;
+	stageId: StagesId;
 };
 
 export const StagePanelActionEditor = (props: Props) => {
 	const runOnDelete = useServerAction(props.onDelete);
 	const [isOpen, setIsOpen] = useState(false);
 	const onDeleteClick = useCallback(async () => {
-		runOnDelete(props.actionInstance.id);
+		runOnDelete(props.actionInstance.id, props.stageId);
 	}, [props.actionInstance, runOnDelete]);
 	const action = getActionByName(props.actionInstance.action);
 
@@ -51,6 +52,7 @@ export const StagePanelActionEditor = (props: Props) => {
 							onBlur={async (evt) => {
 								await actions.updateAction(
 									props.actionInstance.id as ActionInstancesId,
+									props.stageId,
 									{
 										name: evt.target.value?.trim(),
 									}

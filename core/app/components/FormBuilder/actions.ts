@@ -4,15 +4,43 @@ import type { QueryCreator } from "kysely";
 
 import type { FormElementsId, FormsId, NewFormElements, PublicSchema } from "db/public";
 import { formElementsInitializerSchema } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
 
 import type { FormBuilderSchema } from "./types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
+import { ApiError } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
 export const saveForm = defineServerAction(async function saveForm(form: FormBuilderSchema) {
+	const loginData = await getLoginData();
+
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	const { elements, formId, access } = form;
 	//todo: this logic determines what, if any updates to make. that should be determined on the
 	//frontend so we can disable the save button if there are none
@@ -104,6 +132,28 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 });
 
 export const archiveForm = defineServerAction(async function archiveForm(id: FormsId) {
+	const loginData = await getLoginData();
+
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	try {
 		await autoRevalidate(
 			db.updateTable("forms").set({ isArchived: true }).where("forms.id", "=", id)
@@ -114,6 +164,28 @@ export const archiveForm = defineServerAction(async function archiveForm(id: For
 });
 
 export const restoreForm = defineServerAction(async function unarchiveForm(id: FormsId) {
+	const loginData = await getLoginData();
+
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	try {
 		await autoRevalidate(
 			db.updateTable("forms").set({ isArchived: false }).where("forms.id", "=", id)
