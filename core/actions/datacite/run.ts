@@ -4,7 +4,7 @@ import * as z from "zod";
 
 import type { ProcessedPub } from "contracts";
 import type { PubsId } from "db/public";
-import { assert, expect } from "utils";
+import { assert, AssertionError, expect } from "utils";
 
 import type { ActionPub, ActionPubType } from "../types";
 import type { action } from "./action";
@@ -21,8 +21,8 @@ type Payload = components["schemas"]["Doi"];
 const encodeDataciteCredentials = (username: string, password: string) =>
 	Buffer.from(`${username}:${password}`).toString("base64");
 
-const makeDataciteCreatorFromAuthorPub = (pub: ProcessedPub, authorNameFieldSlug: string) => {
-	const name = pub.values.find((value) => value.fieldSlug === authorNameFieldSlug)?.value;
+const makeDataciteCreatorFromAuthorPub = (pub: ProcessedPub, creatorNameFieldSlug: string) => {
+	const name = pub.values.find((value) => value.fieldSlug === creatorNameFieldSlug)?.value;
 	assert(typeof name === "string");
 	return {
 		name,
@@ -31,28 +31,41 @@ const makeDataciteCreatorFromAuthorPub = (pub: ProcessedPub, authorNameFieldSlug
 	};
 };
 
+type RelatedPubs = Awaited<
+	ReturnType<typeof getPubsWithRelatedValuesAndChildren<{}>>
+>[number]["values"];
+
+const deriveCreatorsFromRelatedPubs = (
+	relatedPubs: RelatedPubs,
+	creatorFieldSlug: string,
+	creatorNameFieldSlug: string
+) =>
+	relatedPubs
+		.filter((v) => v.fieldSlug === creatorFieldSlug)
+		.map((v) => v.relatedPub!)
+		.map((pub) => makeDataciteCreatorFromAuthorPub(pub, creatorNameFieldSlug));
+
 const makeDatacitePayload = async (
 	pub: ActionPub<ActionPubType>,
 	config: Config
 ): Promise<Payload> => {
+	// TODO: error messages
+	const urlFieldSlug = expect(config.pubFields.url?.[0]);
+	const creatorFieldSlug = expect(config.pubFields.creator?.[0]);
+	const creatorNameFieldSlug = expect(config.pubFields.creatorName?.[0]);
+	const publicationDateFieldSlug = expect(config.pubFields.publicationDate?.[0]);
+
 	const { values } = await getPubsWithRelatedValuesAndChildren({
 		pubId: pub.id as PubsId,
 		communityId: pub.communityId,
 	});
 
-	// TODO: error messages
-	const urlFieldSlug = expect(config.pubFields.url?.[0]);
-	const authorFieldSlug = expect(config.pubFields.author?.[0]);
-	const authorNameFieldSlug = expect(config.pubFields.authorName?.[0]);
-	const publicationDateFieldSlug = expect(config.pubFields.publicationDate?.[0]);
-
 	const relatedPubs = values.filter((v) => v.relatedPub != null);
-	const relatedAuthorPubs = relatedPubs
-		.filter((v) => v.fieldSlug === authorFieldSlug)
-		.map((v) => v.relatedPub!);
 
-	const creators = relatedAuthorPubs.map((pub) =>
-		makeDataciteCreatorFromAuthorPub(pub, authorNameFieldSlug)
+	const creators = deriveCreatorsFromRelatedPubs(
+		relatedPubs,
+		creatorFieldSlug,
+		creatorNameFieldSlug
 	);
 
 	const url = pub.values[urlFieldSlug];
@@ -65,18 +78,20 @@ const makeDatacitePayload = async (
 
 	assert(typeof pub.title === "string");
 
+	const prefix =
+		config.doi === undefined
+			? expect(
+					config.doiPrefix,
+					"The pub does not have a DOI and the DataCite action is not configured with a DOI prefix."
+				)
+			: undefined;
+
 	return {
 		data: {
 			type: "dois",
 			attributes: {
 				doi: config.doi,
-				prefix:
-					config.doi === undefined
-						? undefined
-						: expect(
-								config.doiPrefix,
-								"Unable to create a DOI: the pub does not have a DOI and the action is not configured with a DOI prefix."
-							),
+				prefix,
 				titles: [{ title: pub.title }],
 				creators,
 				publisher: config.publisher,
@@ -97,7 +112,7 @@ const makeDatacitePayload = async (
 };
 
 const checkDoi = async (doi: string) => {
-	const response = await fetch(`https://api.test.datacite.org/dois/${doi}`, {
+	const response = await fetch(`${env.DATACITE_API_URL}/dois/${doi}`, {
 		method: "GET",
 		headers: {
 			Accept: "application/vnd.api+json",
@@ -115,8 +130,7 @@ const checkDoi = async (doi: string) => {
 };
 
 const createPubDeposit = async (payload: Payload) => {
-	console.log("CREATE!");
-	const response = await fetch("https://api.test.datacite.org/dois", {
+	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
 		headers: {
 			Accept: "application/vnd.api+json",
@@ -132,7 +146,6 @@ const createPubDeposit = async (payload: Payload) => {
 	});
 
 	if (!response.ok) {
-		console.log(await response.json());
 		return {
 			title: "Failed to create DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
@@ -144,7 +157,7 @@ const createPubDeposit = async (payload: Payload) => {
 
 const updatePubDeposit = async (payload: Payload) => {
 	const doi = expect(payload?.data?.attributes?.doi);
-	const response = await fetch(`https://api.test.datacite.org/dois/${doi}`, {
+	const response = await fetch(`${env.DATACITE_API_URL}/dois/${doi}`, {
 		method: "PUT",
 		headers: {
 			Accept: "application/vnd.api+json",
@@ -171,25 +184,35 @@ const updatePubDeposit = async (payload: Payload) => {
 
 export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	const depositConfig = { ...config, ...args };
-	const depositPayload = await makeDatacitePayload(pub, depositConfig);
+
+	let payload: Payload;
+	try {
+		payload = await makeDatacitePayload(pub, depositConfig);
+	} catch (error) {
+		if (error instanceof AssertionError) {
+			return {
+				title: "Failed to create DataCite deposit",
+				error: error.message,
+				cause: undefined,
+			};
+		}
+		throw error;
+	}
+
 	const depositResult =
 		// If the pub already has a DOI, and DataCite recognizes it,
 		depositConfig.doi && (await checkDoi(depositConfig.doi))
 			? // Update the pub metadata in DataCite
-				await updatePubDeposit(depositPayload)
+				await updatePubDeposit(payload)
 			: // Otherwise, deposit the pub to DataCite
-				await createPubDeposit(depositPayload);
+				await createPubDeposit(payload);
 
 	if (isClientExceptionOptions(depositResult)) {
 		return depositResult;
 	}
 
-	console.log(depositConfig.doi);
-
 	// If the pub does not have a DOI, update the pub's DOI with the newly
 	// generated DOI from DataCite
-	// TODO: this should be a more explicit check, e.g. `=== undefined`, but
-	// DOIs in the arcadia community seed are currently being set to "" somehow.
 	if (!depositConfig.doi) {
 		const doiFieldSlug = expect(config.pubFields.doi?.[0]);
 		try {
