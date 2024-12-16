@@ -33,6 +33,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 								<>
 									{rules.map((rule) => (
 										<StagePanelRule
+											stageId={stage.id}
 											communityId={stage.communityId as CommunitiesId}
 											rule={rule}
 											key={rule.id}
@@ -46,6 +47,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 							)}
 						</div>
 						<StagePanelRuleCreator
+							stageId={stage.id}
 							actionInstances={actionInstances}
 							communityId={stage.communityId}
 							rules={rules}

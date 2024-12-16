@@ -32,6 +32,7 @@ import {
 } from "~/lib/server/actions";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { insertStageMember } from "~/lib/server/member";
 import { createRule, removeRule } from "~/lib/server/rules";
@@ -49,7 +50,22 @@ async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
-	// TODO: add authorization checks for move constraints?
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
 
 	await autoRevalidate(
 		db
@@ -135,7 +151,23 @@ export const createMoveConstraint = defineServerAction(async function createMove
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
-	// TODO: add authorization checks for move constraints?
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	try {
 		await createMoveConstraintDb({
 			stageId: sourceStageId,
@@ -160,7 +192,21 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 		if (!loginData || !loginData.user) {
 			return ApiError.NOT_LOGGED_IN;
 		}
-		// TODO: add authorization checks for move constraints?
+		const community = await findCommunityBySlug();
+
+		if (!community) {
+			return ApiError.COMMUNITY_NOT_FOUND;
+		}
+
+		const authorized = await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			loginData.user.id
+		);
+
+		if (!authorized) {
+			return ApiError.UNAUTHORIZED;
+		}
 
 		try {
 			// Delete move constraints prior to deleting stages to prevent foreign
@@ -261,6 +307,7 @@ export const addAction = defineServerAction(async function addAction(
 
 export const updateAction = defineServerAction(async function updateAction(
 	actionInstanceId: ActionInstancesId,
+	stageId: StagesId,
 	props:
 		| {
 				config: Record<string, any>;
@@ -273,7 +320,15 @@ export const updateAction = defineServerAction(async function updateAction(
 		return ApiError.NOT_LOGGED_IN;
 	}
 
-	// TODO: add authorization check for action
+	const authorized = await userCan(
+		Capabilities.manageStage,
+		{ type: MembershipType.stage, stageId },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
 
 	const result = await updateActionInstance(actionInstanceId, props).executeTakeFirstOrThrow();
 
@@ -284,14 +339,24 @@ export const updateAction = defineServerAction(async function updateAction(
 });
 
 export const deleteAction = defineServerAction(async function deleteAction(
-	actionId: ActionInstancesId
+	actionId: ActionInstancesId,
+	stageId: StagesId
 ) {
 	const loginData = await getLoginData();
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
 
-	// TODO: add authorization check for action
+	const authorized = await userCan(
+		Capabilities.manageStage,
+		{ type: MembershipType.stage, stageId },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	try {
 		await removeActionInstance(actionId).executeTakeFirstOrThrow();
 	} catch (error) {
@@ -305,8 +370,10 @@ export const deleteAction = defineServerAction(async function deleteAction(
 });
 
 export const addRule = defineServerAction(async function addRule({
+	stageId,
 	data,
 }: {
+	stageId: StagesId;
 	data: CreateRuleSchema;
 }) {
 	const loginData = await getLoginData();
@@ -314,7 +381,16 @@ export const addRule = defineServerAction(async function addRule({
 		return ApiError.NOT_LOGGED_IN;
 	}
 
-	// TODO: add authorization check for rule
+	const authorized = await userCan(
+		Capabilities.manageStage,
+		{ type: MembershipType.stage, stageId },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	try {
 		await createRule({
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
@@ -341,13 +417,25 @@ export const addRule = defineServerAction(async function addRule({
 	}
 });
 
-export const deleteRule = defineServerAction(async function deleteRule(ruleId: RulesId) {
+export const deleteRule = defineServerAction(async function deleteRule(
+	ruleId: RulesId,
+	stageId: StagesId
+) {
 	const loginData = await getLoginData();
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
 
-	// TODO: add authorization check for rule
+	const authorized = await userCan(
+		Capabilities.manageStage,
+		{ type: MembershipType.stage, stageId },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	try {
 		const deletedRule = await autoRevalidate(
 			removeRule(ruleId).qb.returningAll()
