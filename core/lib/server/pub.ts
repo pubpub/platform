@@ -313,7 +313,13 @@ export type GetPubResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPub
 export type GetManyParams = {
 	limit?: number;
 	offset?: number;
+	/**
+	 * @default "createdAt"
+	 */
 	orderBy?: "createdAt" | "updatedAt";
+	/**
+	 * @default "desc"
+	 */
 	orderDirection?: "asc" | "desc";
 	/**
 	 * Only fetch "Top level" pubs and their children,
