@@ -1321,6 +1321,9 @@ export async function getPubsWithRelatedValuesAndChildren<
 						eb
 							.selectFrom("pub_values as pv")
 							.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+							.$if(Boolean(fieldSlugs), (qb) =>
+								qb.where("pub_fields.slug", "in", fieldSlugs!)
+							)
 							.select((eb) => [
 								"pv.id as id",
 								"pv.fieldId",
@@ -1333,9 +1336,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 								"pub_fields.name as fieldName",
 							])
 							.whereRef("pv.pubId", "=", "pt.pubId")
-							.$if(!Boolean(withRelatedPubs), (qb) =>
-								qb.where("pv.relatedPubId", "is", null)
-							)
 							.orderBy("pv.createdAt desc")
 					).as("values")
 				)
