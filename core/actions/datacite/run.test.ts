@@ -8,7 +8,7 @@ import type { RunProps } from "../types";
 import type { action } from "./action";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { updatePub } from "~/lib/server";
-import { didSucceed, isClientExceptionOptions } from "~/lib/serverActions";
+import { didSucceed } from "~/lib/serverActions";
 import { run } from "./run";
 
 vitest.mock("~/lib/env/env.mjs", () => {
@@ -32,14 +32,10 @@ vitest.mock("~/lib/server", () => {
 	};
 });
 
-let _fetch = global.fetch;
-const unmockFetch = () => {
-	global.fetch = _fetch;
-};
-
 type Fetch = typeof global.fetch;
 
-function mockFetch(...fns: Fetch[]) {
+let _fetch = global.fetch;
+const mockFetch = (...fns: Fetch[]) => {
 	const mock = vitest.fn<Fetch>((url, init) => {
 		const next = fns.shift();
 		if (next === undefined) {
@@ -49,7 +45,11 @@ function mockFetch(...fns: Fetch[]) {
 	});
 	global.fetch = mock;
 	return mock;
-}
+};
+
+const unmockFetch = () => {
+	global.fetch = _fetch;
+};
 
 const pub = {
 	id: "" as PubsId,
