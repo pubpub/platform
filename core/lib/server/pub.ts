@@ -1374,7 +1374,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					).as("members")
 				)
 			)
-			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
+			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 			.orderBy("depth asc")
 			// this is necessary to filter out all the duplicate entries for the values
 			.groupBy([
