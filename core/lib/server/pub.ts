@@ -286,7 +286,7 @@ export const getPubBase = (
 		.$if(!props.pubId, (eb) => eb.select(pubValuesByRef("pubs.id")))
 		.$narrowType<{ values: PubValues }>();
 
-export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+export const _deprecated_getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	const pub = await getPubBase({ pubId }).where("pubs.id", "=", pubId).executeTakeFirst();
 
 	if (!pub) {
@@ -296,7 +296,7 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	return nestChildren(pub);
 };
 
-export const getPubCached = async (pubId: PubsId) => {
+export const _deprecated_getPubCached = async (pubId: PubsId) => {
 	const pub = await autoCache(
 		getPubBase({ pubId }).where("pubs.id", "=", pubId)
 	).executeTakeFirst();
@@ -308,7 +308,7 @@ export const getPubCached = async (pubId: PubsId) => {
 	return nestChildren(pub);
 };
 
-export type GetPubResult = Prettify<Awaited<ReturnType<typeof getPubCached>>>;
+export type GetPubResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubCached>>>;
 
 export type GetManyParams = {
 	limit?: number;
@@ -342,7 +342,7 @@ const GET_PUBS_DEFAULT = {
  *
  * Either per community, or per stage
  */
-export const getPubs = async (
+export const _deprecated_getPubs = async (
 	props: XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>,
 	params: GetManyParams = GET_PUBS_DEFAULT
 ) => {
@@ -367,7 +367,7 @@ export const getPubs = async (
 	return pubs.map(nestChildren);
 };
 
-export type GetPubsResult = Prettify<Awaited<ReturnType<typeof getPubs>>>;
+export type GetPubsResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubs>>>;
 
 const PubNotFoundError = new NotFoundError("Pub not found");
 
