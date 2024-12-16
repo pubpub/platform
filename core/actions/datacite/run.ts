@@ -111,19 +111,23 @@ const makeDatacitePayload = async (
 	};
 };
 
+const makeRequestHeaders = () => {
+	return {
+		Accept: "application/vnd.api+json",
+		Authorization:
+			"Basic " +
+			encodeDataciteCredentials(
+				String(env.DATACITE_REPOSITORY_ID),
+				String(env.DATACITE_PASSWORD)
+			),
+		"Content-Type": "application/json",
+	};
+};
+
 const checkDoi = async (doi: string) => {
 	const response = await fetch(`${env.DATACITE_API_URL}/dois/${doi}`, {
 		method: "GET",
-		headers: {
-			Accept: "application/vnd.api+json",
-			Authorization:
-				"Basic " +
-				encodeDataciteCredentials(
-					String(env.DATACITE_REPOSITORY_ID),
-					String(env.DATACITE_PASSWORD)
-				),
-			"Content-Type": "application/json",
-		},
+		headers: makeRequestHeaders(),
 	});
 
 	return response.ok;
@@ -132,16 +136,7 @@ const checkDoi = async (doi: string) => {
 const createPubDeposit = async (payload: Payload) => {
 	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
-		headers: {
-			Accept: "application/vnd.api+json",
-			Authorization:
-				"Basic " +
-				encodeDataciteCredentials(
-					String(env.DATACITE_REPOSITORY_ID),
-					String(env.DATACITE_PASSWORD)
-				),
-			"Content-Type": "application/json",
-		},
+		headers: makeRequestHeaders(),
 		body: JSON.stringify(payload),
 	});
 
@@ -159,16 +154,7 @@ const updatePubDeposit = async (payload: Payload) => {
 	const doi = expect(payload?.data?.attributes?.doi);
 	const response = await fetch(`${env.DATACITE_API_URL}/dois/${doi}`, {
 		method: "PUT",
-		headers: {
-			Accept: "application/vnd.api+json",
-			Authorization:
-				"Basic " +
-				encodeDataciteCredentials(
-					String(env.DATACITE_REPOSITORY_ID),
-					String(env.DATACITE_PASSWORD)
-				),
-			"Content-Type": "application/json",
-		},
+		headers: makeRequestHeaders(),
 		body: JSON.stringify(payload),
 	});
 
