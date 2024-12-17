@@ -31,11 +31,14 @@ export class FieldsPage {
 		await this.page.getByTestId(`select-${format}`).click();
 	}
 
-	async addField(name: string, format: CoreSchemaType) {
+	async addField(name: string, format: CoreSchemaType, waitFor: boolean = true) {
 		await this.openNewFieldModal();
 		await this.nameBox.fill(name);
 		await this.selectFormat(format);
 		await this.page.getByRole("button", { name: "Create" }).click();
+		if (waitFor) {
+			await this.page.getByText(`Created field ${name}`, { exact: true }).waitFor();
+		}
 	}
 
 	async addFieldsOfEachType() {
