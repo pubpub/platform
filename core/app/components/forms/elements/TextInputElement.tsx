@@ -13,29 +13,31 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const TextInputElement = ({
-	name,
 	config,
 	schemaName,
+	slug,
+	label,
 	...rest
 }: ElementProps<InputComponent.textInput> & InputProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	if (!Value.Check(textInputConfigSchema, config)) {
 		return null;
 	}
+
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				const { value, ...fieldRest } = field;
 				return (
 					<FormItem>
-						<FormLabel disabled={!isEnabled}>{config.label ?? name}</FormLabel>
+						<FormLabel disabled={!isEnabled}>{label}</FormLabel>
 						<FormControl>
 							<Input
-								data-testid={name}
+								data-testid={slug}
 								value={value ?? ""}
 								placeholder={config.placeholder}
 								{...fieldRest}

@@ -82,10 +82,14 @@ const EditorFormElement = ({
 	);
 };
 
-export const ContextEditorElement = ({ name, config }: ElementProps<InputComponent.richText>) => {
+export const ContextEditorElement = ({
+	slug,
+	label,
+	config,
+}: ElementProps<InputComponent.richText>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 
 	Value.Default(richTextInputConfigSchema, config);
 	if (!Value.Check(richTextInputConfigSchema, config)) {
@@ -95,11 +99,11 @@ export const ContextEditorElement = ({ name, config }: ElementProps<InputCompone
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				return (
 					<EditorFormElement
-						label={config.label ?? name}
+						label={label}
 						help={config.help}
 						onChange={(state) => field.onChange(state.doc)}
 						initialValue={field.value}

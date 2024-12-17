@@ -58,14 +58,17 @@ export const FormElement = ({
 		return null;
 	}
 
-	const name = element.label ?? element.slug;
+	const basicProps = {
+		label: element.config.label || element.label || element.slug,
+		slug: element.slug,
+	};
 
 	let input: JSX.Element | undefined;
 
 	if (element.component === InputComponent.textInput) {
 		input = (
 			<TextInputElement
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 				type={element.schemaName === CoreSchemaType.Number ? "number" : undefined}
@@ -73,17 +76,25 @@ export const FormElement = ({
 		);
 	} else if (element.component === InputComponent.textArea) {
 		input = (
-			<TextAreaElement name={name} config={element.config} schemaName={element.schemaName} />
+			<TextAreaElement
+				{...basicProps}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
 		);
 	} else if (element.component === InputComponent.checkbox) {
 		input = (
-			<CheckboxElement name={name} config={element.config} schemaName={element.schemaName} />
+			<CheckboxElement
+				{...basicProps}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
 		);
 	} else if (element.component === InputComponent.fileUpload) {
 		input = (
 			<FileUploadElement
 				pubId={pubId}
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
@@ -91,20 +102,22 @@ export const FormElement = ({
 	} else if (element.component === InputComponent.confidenceInterval) {
 		input = (
 			<ConfidenceElement
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
 		);
 	} else if (element.component === InputComponent.datePicker) {
-		input = <DateElement name={name} config={element.config} schemaName={element.schemaName} />;
+		input = (
+			<DateElement {...basicProps} config={element.config} schemaName={element.schemaName} />
+		);
 	} else if (element.component === InputComponent.memberSelect) {
 		const userId = values[element.slug!] as CommunityMembershipsId | undefined;
 		input = (
 			<MemberSelectElement
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
-				name={name}
 				id={element.id}
 				searchParams={searchParams}
 				value={userId}
@@ -114,7 +127,7 @@ export const FormElement = ({
 	} else if (element.component === InputComponent.radioGroup) {
 		input = (
 			<RadioGroupElement
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
@@ -122,7 +135,7 @@ export const FormElement = ({
 	} else if (element.component === InputComponent.checkboxGroup) {
 		input = (
 			<CheckboxGroupElement
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
@@ -130,7 +143,7 @@ export const FormElement = ({
 	} else if (element.component === InputComponent.selectDropdown) {
 		input = (
 			<SelectDropdownElement
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
@@ -138,7 +151,7 @@ export const FormElement = ({
 	} else if (element.component === InputComponent.multivalueInput) {
 		input = (
 			<MultivalueInputElement
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
@@ -146,7 +159,7 @@ export const FormElement = ({
 	} else if (element.component === InputComponent.richText) {
 		input = (
 			<ContextEditorElement
-				name={name}
+				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
@@ -157,7 +170,7 @@ export const FormElement = ({
 		return element.required ? (
 			input
 		) : (
-			<FormElementToggle name={name} {...element}>
+			<FormElementToggle {...element} {...basicProps}>
 				{input}
 			</FormElementToggle>
 		);

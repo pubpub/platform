@@ -15,17 +15,18 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const RadioGroupElement = ({
-	name,
+	slug,
+	label,
 	config,
 	schemaName,
 }: ElementProps<InputComponent.radioGroup>) => {
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
 	const initialOther = useMemo(() => {
-		const initialValues: string[] | number[] = getValues()[name];
+		const initialValues: string[] | number[] = getValues()[slug];
 		const other = initialValues.filter((iv) => !config.values.some((cv) => cv === iv));
 		return other[0] ?? "";
 	}, []);
@@ -39,7 +40,7 @@ export const RadioGroupElement = ({
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				const handleRadioChange = (value: string) => {
 					field.onChange([isNumeric ? +value : value]);
@@ -47,7 +48,7 @@ export const RadioGroupElement = ({
 				};
 				return (
 					<FormItem>
-						<FormLabel className="flex">{config.label ?? name}</FormLabel>
+						<FormLabel className="flex">{label}</FormLabel>
 						<FormControl>
 							<RadioGroup
 								onValueChange={handleRadioChange}

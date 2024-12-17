@@ -11,7 +11,8 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { MemberSelectServer } from "../../MemberSelect/MemberSelectServer";
 
 export const MemberSelectElement = async ({
-	name,
+	slug,
+	label,
 	id = crypto.randomUUID(),
 	value,
 	searchParams,
@@ -37,8 +38,8 @@ export const MemberSelectElement = async ({
 	return (
 		<MemberSelectServer
 			community={community}
-			fieldLabel={config.label ?? name}
-			fieldName={name}
+			fieldLabel={label}
+			fieldName={slug}
 			query={query}
 			queryParamName={queryParamName}
 			value={value}

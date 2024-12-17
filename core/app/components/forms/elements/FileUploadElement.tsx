@@ -25,7 +25,8 @@ const FileUpload = dynamic(
 
 export const FileUploadElement = ({
 	pubId: propsPubId,
-	name,
+	slug,
+	label,
 	config,
 }: ElementProps<InputComponent.fileUpload> & { pubId: PubsId }) => {
 	// Cache the pubId which might be coming from a server side generated randomUuid() that changes
@@ -35,8 +36,8 @@ export const FileUploadElement = ({
 	};
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
-	const files = getValues()[name];
+	const isEnabled = formElementToggle.isEnabled(slug);
+	const files = getValues()[slug];
 
 	if (!Value.Check(fileUploadConfigSchema, config)) {
 		return null;
@@ -46,12 +47,12 @@ export const FileUploadElement = ({
 		<div>
 			<FormField
 				control={control}
-				name={name}
+				name={slug}
 				render={({ field }) => {
 					// Need the isolate to keep the FileUpload's huge z-index from covering our own header
 					return (
 						<FormItem className="isolate mb-6">
-							<FormLabel>{config.label ?? name}</FormLabel>
+							<FormLabel>{label}</FormLabel>
 							<FormControl>
 								<FileUpload
 									{...field}

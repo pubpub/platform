@@ -18,18 +18,19 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const CheckboxGroupElement = ({
-	name,
+	label,
+	slug,
 	config,
 	schemaName,
 }: ElementProps<InputComponent.checkboxGroup>) => {
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
 	// Keep track of what was checked via checkboxes so as not to duplicate with Other field
 	const { initialChecked, initialOther } = useMemo(() => {
-		const initialValues: (string | number)[] = getValues()[name];
+		const initialValues: (string | number)[] = getValues()[slug];
 		const [initialChecked, initialOther] = partition(initialValues, (v) => {
 			return config.values.some((cv) => cv === v);
 		});
@@ -46,7 +47,7 @@ export const CheckboxGroupElement = ({
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				const handleOtherField = (e: ChangeEvent<HTMLInputElement>) => {
 					const value = isNumeric ? e.target.valueAsNumber : e.target.value;
@@ -65,13 +66,13 @@ export const CheckboxGroupElement = ({
 				};
 				return (
 					<FormItem>
-						<FormLabel>{config.label ?? name}</FormLabel>
+						<FormLabel>{label}</FormLabel>
 						{config.values.map((v) => {
 							return (
 								<FormField
 									key={v}
 									control={control}
-									name={name}
+									name={slug}
 									render={() => {
 										return (
 											<FormItem

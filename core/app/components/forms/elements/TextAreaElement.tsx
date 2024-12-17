@@ -13,32 +13,33 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const TextAreaElement = ({
-	name,
+	slug,
+	label,
 	config,
 	schemaName,
 	...rest
 }: ElementProps<InputComponent.textArea> & TextareaProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	if (!Value.Check(textAreaConfigSchema, config)) {
 		return null;
 	}
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				const { value, ...fieldRest } = field;
 				return (
 					<FormItem>
-						<FormLabel disabled={!isEnabled}>{config.label ?? name}</FormLabel>{" "}
+						<FormLabel disabled={!isEnabled}>{label}</FormLabel>{" "}
 						<FormControl>
 							<Textarea
 								maxLength={config.maxLength}
 								minLength={config.minLength}
 								placeholder={config.placeholder}
-								data-testid={name}
+								data-testid={slug}
 								value={value ?? ""}
 								{...fieldRest}
 								{...rest}
