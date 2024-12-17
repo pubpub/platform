@@ -4,6 +4,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { textInputConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import type { InputProps } from "ui/input";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
@@ -16,7 +17,7 @@ export const TextInputElement = ({
 	config,
 	schemaName,
 	...rest
-}: ElementProps & InputProps) => {
+}: ElementProps<InputComponent.textInput> & InputProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);

@@ -36,12 +36,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	auth_tokens: AuthTokensTable;
-
-	PubFieldSchema: PubFieldSchemaTable;
-
-	IntegrationInstanceState: IntegrationInstanceStateTable;
-
 	action_instances: ActionInstancesTable;
 
 	PubsInStages: PubsInStagesTable;
@@ -72,18 +66,6 @@ export interface PublicSchema {
 
 	membership_capabilities: MembershipCapabilitiesTable;
 
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
-	integration_instances: IntegrationInstancesTable;
-
-	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
-
-	_MemberGroupToUser: MemberGroupToUserTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -101,4 +83,22 @@ export interface PublicSchema {
 	communities: CommunitiesTable;
 
 	move_constraint: MoveConstraintTable;
+
+	pub_fields: PubFieldsTable;
+
+	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
+
+	integration_instances: IntegrationInstancesTable;
+
+	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
+
+	_MemberGroupToUser: MemberGroupToUserTable;
+
+	auth_tokens: AuthTokensTable;
+
+	PubFieldSchema: PubFieldSchemaTable;
+
+	IntegrationInstanceState: IntegrationInstanceStateTable;
 }

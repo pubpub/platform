@@ -6,14 +6,13 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
-import { MemberRole, StructuralFormElement } from "db/public";
+import { ElementType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext";
-import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
 import {
@@ -24,13 +23,9 @@ import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
-import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
+import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import {
-	renderMarkdownAsHtml,
-	renderMarkdownWithPub,
-} from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { capitalize } from "~/lib/string";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
@@ -210,7 +205,9 @@ export default async function FormPage({
 	};
 
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
-	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
+	const submitElement = form.elements.find(
+		(e) => e.type === ElementType.button && e.id === submitId
+	);
 
 	const renderWithPubContext = {
 		communityId: community.id,
@@ -277,7 +274,7 @@ export default async function FormPage({
 								>
 									{form.elements.map((e) => (
 										<FormElement
-											key={e.elementId}
+											key={e.id}
 											pubId={pubId}
 											element={e}
 											searchParams={searchParams}

@@ -4,6 +4,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { textAreaConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import type { TextareaProps } from "ui/textarea";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Textarea } from "ui/textarea";
@@ -16,7 +17,7 @@ export const TextAreaElement = ({
 	config,
 	schemaName,
 	...rest
-}: ElementProps & TextareaProps) => {
+}: ElementProps<InputComponent.textArea> & TextareaProps) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);

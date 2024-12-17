@@ -5,13 +5,18 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { multivalueInputConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { MultiValueInput } from "ui/multivalue-input";
 
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const MultivalueInputElement = ({ name, config, schemaName }: ElementProps) => {
+export const MultivalueInputElement = ({
+	name,
+	config,
+	schemaName,
+}: ElementProps<InputComponent.multivalueInput>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);

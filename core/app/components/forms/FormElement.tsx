@@ -1,13 +1,13 @@
 import { defaultComponent } from "schemas";
 
 import type { GetPubResponseBody } from "contracts";
-import type { CommunityMembershipsId, PubsId } from "db/public";
+import type { CommunityMembershipsId, FormElementsId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
-import type { ElementProps } from "./types";
-import type { Form } from "~/lib/server/form";
+import type { ElementProps, FormElements } from "./types";
+import type { UnionPick } from "~/lib/types";
 import { CheckboxElement } from "./elements/CheckboxElement";
 import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
 import { ConfidenceElement } from "./elements/ConfidenceElement";
@@ -24,7 +24,7 @@ import { FormElementToggle } from "./FormElementToggle";
 
 export type FormElementProps = {
 	pubId: PubsId;
-	element: Form["elements"][number];
+	element: FormElements;
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
 	values: GetPubResponseBody["values"];
@@ -37,9 +37,11 @@ export const FormElement = ({
 	communitySlug,
 	values,
 }: FormElementProps) => {
-	const { component: componentProp, slug, schemaName, config } = element;
-	const component = componentProp ?? (schemaName && defaultComponent(schemaName));
-	if (!slug) {
+	element.component =
+		element.component ??
+		((element.schemaName && defaultComponent(element.schemaName)) as typeof element.component);
+
+	if (!element.slug) {
 		if (element.type === ElementType.structural) {
 			return (
 				<div
@@ -52,66 +54,118 @@ export const FormElement = ({
 		return null;
 	}
 
-	if (!schemaName || !component) {
+	if (!element.schemaName || !element.component) {
 		return null;
 	}
 
-	const elementProps: ElementProps = { name: slug, schemaName, config };
+	const name = element.label ?? element.slug;
 
 	let input: JSX.Element | undefined;
 
-	if (component === InputComponent.textInput) {
+	if (element.component === InputComponent.textInput) {
 		input = (
 			<TextInputElement
-				{...elementProps}
-				type={schemaName === CoreSchemaType.Number ? "number" : undefined}
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+				type={element.schemaName === CoreSchemaType.Number ? "number" : undefined}
 			/>
 		);
-	} else if (component === InputComponent.textArea) {
-		input = <TextAreaElement {...elementProps} />;
-	} else if (component === InputComponent.checkbox) {
-		input = <CheckboxElement {...elementProps} />;
-	} else if (component === InputComponent.fileUpload) {
-		input = <FileUploadElement pubId={pubId} {...elementProps} />;
-	} else if (component === InputComponent.confidenceInterval) {
-		input = <ConfidenceElement {...elementProps} />;
-	} else if (component === InputComponent.datePicker) {
-		input = <DateElement {...elementProps} />;
-	} else if (component === InputComponent.memberSelect) {
+	} else if (element.component === InputComponent.textArea) {
+		input = (
+			<TextAreaElement name={name} config={element.config} schemaName={element.schemaName} />
+		);
+	} else if (element.component === InputComponent.checkbox) {
+		input = (
+			<CheckboxElement name={name} config={element.config} schemaName={element.schemaName} />
+		);
+	} else if (element.component === InputComponent.fileUpload) {
+		input = (
+			<FileUploadElement
+				pubId={pubId}
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
+	} else if (element.component === InputComponent.confidenceInterval) {
+		input = (
+			<ConfidenceElement
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
+	} else if (element.component === InputComponent.datePicker) {
+		input = <DateElement name={name} config={element.config} schemaName={element.schemaName} />;
+	} else if (element.component === InputComponent.memberSelect) {
 		const userId = values[element.slug!] as CommunityMembershipsId | undefined;
 		input = (
 			<MemberSelectElement
-				config={elementProps.config}
-				name={elementProps.name}
-				id={element.elementId}
+				config={element.config}
+				schemaName={element.schemaName}
+				name={name}
+				id={element.id}
 				searchParams={searchParams}
 				value={userId}
 				communitySlug={communitySlug}
 			/>
 		);
-	} else if (component === InputComponent.radioGroup) {
-		input = <RadioGroupElement {...elementProps} />;
-	} else if (component === InputComponent.checkboxGroup) {
-		input = <CheckboxGroupElement {...elementProps} />;
-	} else if (component === InputComponent.selectDropdown) {
-		input = <SelectDropdownElement {...elementProps} />;
-	} else if (component === InputComponent.multivalueInput) {
-		input = <MultivalueInputElement {...elementProps} />;
-	} else if (component === InputComponent.richText) {
-		input = <ContextEditorElement {...elementProps} />;
+	} else if (element.component === InputComponent.radioGroup) {
+		input = (
+			<RadioGroupElement
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
+	} else if (element.component === InputComponent.checkboxGroup) {
+		input = (
+			<CheckboxGroupElement
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
+	} else if (element.component === InputComponent.selectDropdown) {
+		input = (
+			<SelectDropdownElement
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
+	} else if (element.component === InputComponent.multivalueInput) {
+		input = (
+			<MultivalueInputElement
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
+	} else if (element.component === InputComponent.richText) {
+		input = (
+			<ContextEditorElement
+				name={name}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
 	}
 
 	if (input) {
 		return element.required ? (
 			input
 		) : (
-			<FormElementToggle {...elementProps}>{input}</FormElementToggle>
+			<FormElementToggle name={name} {...element}>
+				{input}
+			</FormElementToggle>
 		);
 	}
 
 	logger.error({
 		msg: `Encountered unknown component when rendering form element`,
-		component,
+		component: element.component,
 		element,
 		pubId,
 	});

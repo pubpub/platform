@@ -5,6 +5,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { datePickerConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
@@ -16,7 +17,7 @@ const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mo
 	loading: () => <div>Loading...</div>,
 });
 
-export const DateElement = ({ name, config }: ElementProps) => {
+export const DateElement = ({ name, config }: ElementProps<InputComponent.datePicker>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
