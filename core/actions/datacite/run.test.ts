@@ -109,10 +109,12 @@ describe("DataCite action", () => {
 	afterEach(() => {
 		unmockFetch();
 	});
+
 	it("creates a deposit if the pub does not have a DOI and a DOI prefix is configured", async () => {
 		const doi = "10.100/a-preprint";
 		const fetch = mockFetch(async () => makeStubDataciteResponse(doi));
 		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doiPrefix: "10.100" } });
+
 		expect(fetch).toHaveBeenCalledOnce();
 		expect(fetch.mock.lastCall![1]!.method).toBe("POST");
 		expect(updatePub).toHaveBeenCalledWith(
@@ -123,6 +125,7 @@ describe("DataCite action", () => {
 			})
 		);
 	});
+
 	it("creates a deposit if the pub has a DOI not recognized by DataCite", async () => {
 		const doi = "10.100/a-preprint";
 		const fetch = mockFetch(
@@ -130,8 +133,10 @@ describe("DataCite action", () => {
 			async () => makeStubDataciteResponse(doi)
 		);
 		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doi } });
+
 		expect(fetch.mock.lastCall![1]!.method).toBe("POST");
 	});
+
 	it("updates a deposit if the pub has a DOI recognized by DataCite", async () => {
 		const doi = "10.100/a-preprint";
 		const fetch = mockFetch(
@@ -139,12 +144,16 @@ describe("DataCite action", () => {
 			async () => makeStubDataciteResponse(doi)
 		);
 		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doi } });
+
 		expect(fetch.mock.lastCall![1]!.method).toBe("PUT");
 	});
+
 	it("reports an error if the pub does not have a DOI and no DOI prefix is configured", async () => {
 		const result = await run(RUN_OPTIONS);
+
 		expect(didSucceed(result)).toBe(false);
 	});
+
 	it("reports an error when the DOI fails to persist", async () => {
 		const error = new Error();
 		vitest.mocked(updatePub).mockImplementationOnce(() => {
@@ -158,5 +167,22 @@ describe("DataCite action", () => {
 
 		expect(didSucceed(result)).toBe(false);
 		expect((result as ClientExceptionOptions).cause).toBe(error);
+	});
+
+	it.todo("transforms related contributor pubs into DataCite creators");
+
+	// unsure about these two one:
+	it.todo("transforms child pubs with DOIs and related pubs into relatedIdentifiers");
+	it.todo("transforms child pubs without DOIs into relatedItems");
+
+	it.todo("deposits explicit and pub-provided metadata fields", () => {
+		// Title
+		// Publisher
+		// Publication year
+		// "Created" date
+		// "Updated" date
+		// Resource type -- probably hardcoded "Preprint" for now
+		// URL
+		// And more! (License etc.)
 	});
 });
