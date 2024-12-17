@@ -288,8 +288,8 @@ Table form_memberships {
   updatedAt DateTime [default: `now()`, not null]
 
   indexes {
-    (formId, userId) [unique]
-    (formId, memberGroupId) [unique]
+    (formId, userId, pubId) [unique]
+    (formId, memberGroupId, pubId) [unique]
   }
 }
 

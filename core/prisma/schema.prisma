@@ -380,8 +380,8 @@ model FormMembership {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
 
-  @@unique([formId, userId])
-  @@unique([formId, memberGroupId])
+  @@unique([formId, userId, pubId])
+  @@unique([formId, memberGroupId, pubId])
   @@map(name: "form_memberships")
 }
 
