@@ -62,7 +62,6 @@
 		"@react-email/render": "^1.0.1",
 		"@sentry/nextjs": "catalog:",
 		"@sinclair/typebox": "catalog:",
-		"@stoplight/elements": "^7.12.2",
 		"@t3-oss/env-nextjs": "^0.11.1",
 		"@tanstack/react-query": "5",
 		"@tanstack/react-table": "^8.13.2",
