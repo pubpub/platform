@@ -4,25 +4,25 @@ import { Value } from "@sinclair/typebox/value";
 import { memberSelectConfigSchema } from "schemas";
 
 import type { CommunityMembershipsId } from "db/public";
+import { InputComponent } from "db/public";
 
+import type { ElementProps } from "../types";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { MemberSelectServer } from "../../MemberSelect/MemberSelectServer";
 
 export const MemberSelectElement = async ({
 	name,
-	id,
+	id = crypto.randomUUID(),
 	value,
 	searchParams,
 	communitySlug,
 	config,
 }: {
-	name: string;
-	id: string;
+	id?: string;
 	value?: CommunityMembershipsId;
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
-	config: any;
-}) => {
+} & ElementProps<InputComponent.memberSelect>) => {
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return null;

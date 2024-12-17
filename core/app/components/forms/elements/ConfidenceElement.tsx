@@ -6,6 +6,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { confidenceIntervalConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
@@ -27,7 +28,10 @@ const ForwardedRefConfidence = forwardRef<
 	React.ComponentPropsWithoutRef<typeof Confidence>
 >((props, ref) => <Confidence {...props} forwardedRef={ref} />);
 
-export const ConfidenceElement = ({ name, config }: ElementProps) => {
+export const ConfidenceElement = ({
+	name,
+	config,
+}: ElementProps<InputComponent.confidenceInterval>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);

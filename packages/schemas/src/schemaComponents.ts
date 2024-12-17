@@ -1,10 +1,11 @@
-import type { TObject } from "@sinclair/typebox";
+import type { Static, TObject } from "@sinclair/typebox";
 
 import { Type } from "@sinclair/typebox";
 
 import { CoreSchemaType, InputComponent } from "db/public";
 
-export const defaultComponent = (schemaName: CoreSchemaType) => componentsBySchema[schemaName][0];
+export const defaultComponent = <T extends CoreSchemaType>(schemaName: T) =>
+	componentsBySchema[schemaName][0];
 
 export const componentsBySchema = {
 	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
@@ -28,9 +29,21 @@ export const componentsBySchema = {
 	[CoreSchemaType.URL]: [InputComponent.textInput],
 	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
-	[CoreSchemaType.Null]: [],
+	[CoreSchemaType.Null]: [InputComponent.textInput],
 	[CoreSchemaType.RichText]: [InputComponent.richText],
 } as const satisfies Record<CoreSchemaType, InputComponent[]>;
+
+export type ComponentsBySchemaType = typeof componentsBySchema;
+
+export type SchemaTypeByInputComponent = {
+	[K in InputComponent]: {
+		[SchemaType in CoreSchemaType as K extends ComponentsBySchemaType[SchemaType][number]
+			? SchemaType
+			: never]: SchemaType;
+	} extends infer T
+		? T[keyof T]
+		: never;
+};
 
 export const checkboxConfigSchema = Type.Object({
 	checkboxLabel: Type.Optional(Type.String()),
@@ -109,3 +122,7 @@ export const componentConfigSchemas = {
 	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
 	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;
+
+export type InputComponentConfigSchema<T extends InputComponent> = Static<
+	(typeof componentConfigSchemas)[T]
+>;

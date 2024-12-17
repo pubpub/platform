@@ -8,6 +8,7 @@ import { docHasChanged } from "context-editor/utils";
 import { useFormContext } from "react-hook-form";
 import { richTextInputConfigSchema } from "schemas";
 
+import { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
@@ -81,7 +82,7 @@ const EditorFormElement = ({
 	);
 };
 
-export const ContextEditorElement = ({ name, config }: ElementProps) => {
+export const ContextEditorElement = ({ name, config }: ElementProps<InputComponent.richText>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);

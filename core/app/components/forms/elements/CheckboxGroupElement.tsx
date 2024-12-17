@@ -9,6 +9,7 @@ import partition from "lodash.partition";
 import { useFormContext } from "react-hook-form";
 import { checkboxGroupConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
@@ -16,7 +17,11 @@ import { Input } from "ui/input";
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps) => {
+export const CheckboxGroupElement = ({
+	name,
+	config,
+	schemaName,
+}: ElementProps<InputComponent.checkboxGroup>) => {
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(name);
@@ -26,7 +31,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 	const { initialChecked, initialOther } = useMemo(() => {
 		const initialValues: (string | number)[] = getValues()[name];
 		const [initialChecked, initialOther] = partition(initialValues, (v) => {
-			return config.values.includes(v);
+			return config.values.some((cv) => cv === v);
 		});
 		return { initialChecked, initialOther: initialOther[0] ?? "" };
 	}, []);

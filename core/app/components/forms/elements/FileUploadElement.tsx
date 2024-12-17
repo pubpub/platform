@@ -6,7 +6,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { fileUploadConfigSchema } from "schemas";
 
-import type { PubsId } from "db/public";
+import type { InputComponent, PubsId } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
@@ -27,7 +27,7 @@ export const FileUploadElement = ({
 	pubId: propsPubId,
 	name,
 	config,
-}: ElementProps & { pubId: PubsId }) => {
+}: ElementProps<InputComponent.fileUpload> & { pubId: PubsId }) => {
 	// Cache the pubId which might be coming from a server side generated randomUuid() that changes
 	const [pubId, _] = useState(propsPubId);
 	const signedUploadUrl = (fileName: string) => {
