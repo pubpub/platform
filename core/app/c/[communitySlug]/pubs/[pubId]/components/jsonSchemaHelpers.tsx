@@ -43,7 +43,7 @@ export const renderPubValue = ({
 	let renderedField: ReactNode = valueAsString;
 	if (schemaName === CoreSchemaType.URL) {
 		renderedField = (
-			<a href={valueAsString} target="_blank" rel="noreferrer">
+			<a className="underline" href={valueAsString} target="_blank" rel="noreferrer">
 				{valueAsString}
 			</a>
 		);
