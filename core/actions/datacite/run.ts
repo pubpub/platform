@@ -79,20 +79,28 @@ const makeDatacitePayload = async (
 
 	assert(typeof pub.title === "string");
 
-	const prefix =
-		config.doi === undefined
-			? expect(
-					config.doiPrefix,
-					"The pub does not have a DOI and the DataCite action is not configured with a DOI prefix."
-				)
-			: undefined;
+	let doi = config.doi;
+
+	if (doi === undefined) {
+		assert(
+			config.doiPrefix !== undefined,
+			"The DataCite action must be configured with a DOI prefix to form a complete DOI."
+		);
+
+		// If a prefix and suffix exist, join the parts to make a DOI. If the
+		// pub does not have a suffix, DataCite will auto-generate a DOI using
+		// the prefix.
+		if (config.doiSuffix) {
+			doi = `${config.doiPrefix}/${config.doiSuffix}`;
+		}
+	}
 
 	return {
 		data: {
 			type: "dois",
 			attributes: {
-				doi: config.doi,
-				prefix,
+				doi,
+				prefix: config.doiPrefix,
 				titles: [{ title: pub.title }],
 				creators,
 				publisher: config.publisher,
@@ -101,6 +109,10 @@ const makeDatacitePayload = async (
 					{
 						date: pub.createdAt.toString(),
 						dateType: "Created",
+					},
+					{
+						date: pub.updatedAt.toString(),
+						dateType: "Updated",
 					},
 				],
 				types: {
@@ -198,8 +210,8 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		return depositResult;
 	}
 
-	// If the pub does not have a DOI, update the pub's DOI with the newly
-	// generated DOI from DataCite
+	// If the pub does not have a DOI, persist the newly generated DOI from
+	// DataCite
 	if (!depositConfig.doi) {
 		const doiFieldSlug = expect(config.pubFields.doi?.[0]);
 		try {
