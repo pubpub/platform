@@ -3,7 +3,12 @@ import * as React from "react";
 import type { AutoFormInputComponentProps } from "../types";
 import { DatePicker } from "../../date-picker";
 import { FormControl, FormItem, FormMessage } from "../../form";
-import { PubFieldSelect, PubFieldSelectProvider, PubFieldSelectToggleButton, PubFieldSelectWrapper } from "../../pubFields/pubFieldSelect";
+import {
+	PubFieldSelect,
+	PubFieldSelectProvider,
+	PubFieldSelectToggleButton,
+	PubFieldSelectWrapper,
+} from "../../pubFields/pubFieldSelect";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
@@ -15,7 +20,7 @@ export default function AutoFormDate({
 	field,
 	fieldConfigItem,
 	fieldProps,
-	zodItem
+	zodItem,
 }: AutoFormInputComponentProps) {
 	const { showLabel = true } = fieldProps;
 
@@ -27,7 +32,7 @@ export default function AutoFormDate({
 		>
 			<div className="flex w-full flex-row items-center space-x-2">
 				<FormItem>
-				{showLabel && (
+					{showLabel && (
 						<>
 							<span className="flex flex-row items-center justify-between space-x-2">
 								<AutoFormLabel label={label} isRequired={isRequired} />
