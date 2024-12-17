@@ -42,7 +42,7 @@ import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { mergeSlugsWithFields } from "../fields/utils";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { NotFoundError } from "./errors";
+import { BadRequestError, NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
 import { SAFE_USER_SELECT } from "./user";
@@ -683,7 +683,7 @@ const validatePubValues = async <T extends { slug: string; value: unknown }>({
 		);
 	}
 
-	throw new Error(validationErrors.map(({ error }) => error).join(" "));
+	throw new BadRequestError(validationErrors.map(({ error }) => error).join(" "));
 };
 
 type AddPubRelationsInput = { value: unknown; slug: string } & XOR<

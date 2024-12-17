@@ -25,7 +25,7 @@ export const validatePubValuesBySchemaName = (
 			if (!result) {
 				errors.push({
 					slug,
-					error: `Field ${slug} failed schema validation. Field of type "${slug}" cannot be assigned to value: ${value} of type ${typeof value}.`,
+					error: `Field "${slug}" of type "${schemaName}" failed schema validation. Field "${slug}" of type "${schemaName}" cannot be assigned to value: ${value} of type ${typeof value}.`,
 				});
 			}
 			continue;
@@ -37,7 +37,7 @@ export const validatePubValuesBySchemaName = (
 		if (!result) {
 			errors.push({
 				slug,
-				error: `Field ${slug} failed schema validation. Field of type "${slug}" cannot be assigned to value: ${value} of type ${typeof value}.`,
+				error: `Field "${slug}" of type "${schemaName}" failed schema validation. Field "${slug}" of type "${schemaName}" cannot be assigned to value: ${value} of type ${typeof value}.`,
 			});
 		}
 	}
