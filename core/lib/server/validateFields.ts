@@ -14,19 +14,23 @@ const validateAgainstContextEditorSchema = (value: unknown) => {
 	}
 };
 
+const createValidationError = (slug: string, schemaName: CoreSchemaType, value: unknown) => {
+	return {
+		slug,
+		error: `Field "${slug}" of type "${schemaName}" failed schema validation. Field "${slug}" of type "${schemaName}" cannot be assigned to value: ${value} of type ${typeof value}.`,
+	};
+};
+
 export const validatePubValuesBySchemaName = (
 	values: { slug: string; value: unknown; schemaName: CoreSchemaType }[]
 ) => {
 	const errors: { slug: string; error: string }[] = [];
-	for (const { slug, value, schemaName } of values) {
+	for (let { slug, value, schemaName } of values) {
 		if (schemaName === CoreSchemaType.RichText) {
 			const result = validateAgainstContextEditorSchema(value);
 
 			if (!result) {
-				errors.push({
-					slug,
-					error: `Field "${slug}" of type "${schemaName}" failed schema validation. Field "${slug}" of type "${schemaName}" cannot be assigned to value: ${value} of type ${typeof value}.`,
-				});
+				errors.push(createValidationError(slug, schemaName, value));
 			}
 			continue;
 		}
@@ -35,10 +39,7 @@ export const validatePubValuesBySchemaName = (
 		const result = Value.Check(jsonSchema, value);
 
 		if (!result) {
-			errors.push({
-				slug,
-				error: `Field "${slug}" of type "${schemaName}" failed schema validation. Field "${slug}" of type "${schemaName}" cannot be assigned to value: ${value} of type ${typeof value}.`,
-			});
+			errors.push(createValidationError(slug, schemaName, value));
 		}
 	}
 
