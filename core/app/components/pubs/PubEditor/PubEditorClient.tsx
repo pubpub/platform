@@ -169,6 +169,7 @@ export interface PubEditorClientProps {
 	className?: string;
 	withAutoSave?: boolean;
 	withButtonElements?: boolean;
+	isExternalForm?: boolean;
 }
 
 export const PubEditorClient = ({
@@ -183,6 +184,7 @@ export const PubEditorClient = ({
 	formSlug,
 	withAutoSave,
 	withButtonElements,
+	isExternalForm,
 	onSuccess,
 }: PubEditorClientProps) => {
 	const router = useRouter();
@@ -249,6 +251,7 @@ export const PubEditorClient = ({
 				});
 			} else {
 				result = await runCreatePub({
+					formSlug,
 					body: {
 						id: pubId,
 						pubTypeId: pub.pubTypeId as PubTypesId,
@@ -257,6 +260,7 @@ export const PubEditorClient = ({
 					},
 					communityId: community.id,
 					parent: parentId ? { id: parentId } : undefined,
+					addUserToForm: isExternalForm,
 				});
 			}
 			if (didSucceed(result)) {

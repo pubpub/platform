@@ -161,7 +161,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		expect(await newPage.url()).toMatch(/\/settings$/);
 
 		// Creating a pub without a pubId should work
-		const createPage = decodedUrl.replace(`pubId=${pubId}`, "");
+		const createPage = decodedUrl.replace(`pubId%3D${pubId}`, "");
 		await newPage.goto(createPage);
 		await newPage.getByLabel(`${COMMUNITY_SLUG}:title`).fill("new pub");
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();

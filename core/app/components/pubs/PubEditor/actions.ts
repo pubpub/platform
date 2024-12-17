@@ -16,12 +16,15 @@ import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { userHasPermissionToForm } from "~/lib/server/form";
+import { addMemberToForm, userHasPermissionToForm } from "~/lib/server/form";
 import { updatePub as _updatePub } from "~/lib/server/pub";
 
+type CreatePubRecursiveProps = Parameters<typeof createPubRecursiveNew>[0];
+
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
-	...[props]: Parameters<typeof createPubRecursiveNew>
+	props: CreatePubRecursiveProps & { formSlug?: string; addUserToForm?: boolean }
 ) {
+	const { formSlug, addUserToForm, ...createPubProps } = props;
 	const loginData = await getLoginData();
 
 	if (!loginData || !loginData.user) {
@@ -29,17 +32,29 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	}
 	const { user } = loginData;
 
-	const authorized = await userCan(
+	const canCreatePub = await userCan(
 		Capabilities.createPub,
 		{ type: MembershipType.community, communityId: props.communityId },
 		user.id
 	);
+	const canCreateFromForm = formSlug
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
+		: false;
 
-	if (!authorized) {
+	if (!canCreatePub && !canCreateFromForm) {
 		return ApiError.UNAUTHORIZED;
 	}
 	try {
-		await createPubRecursiveNew(props);
+		const createdPub = await createPubRecursiveNew(createPubProps);
+
+		if (addUserToForm && formSlug) {
+			await addMemberToForm({
+				communityId: props.communityId,
+				userId: user.id,
+				slug: formSlug,
+				pubId: createdPub.id,
+			});
+		}
 		return {
 			success: true,
 			report: `Successfully created a new Pub`,

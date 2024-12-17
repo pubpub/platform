@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
-import { MemberRole, StructuralFormElement } from "db/public";
+import { MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
@@ -24,13 +24,9 @@ import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
-import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
+import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import {
-	renderMarkdownAsHtml,
-	renderMarkdownWithPub,
-} from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { capitalize } from "~/lib/string";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
@@ -274,6 +270,7 @@ export default async function FormPage({
 									isUpdating={isUpdating}
 									withAutoSave={isUpdating}
 									withButtonElements
+									isExternalForm
 									className="col-span-2 col-start-2"
 								>
 									{form.elements.map((e) => (
