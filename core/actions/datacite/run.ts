@@ -18,6 +18,10 @@ type ConfigSchema = z.infer<(typeof action)["config"]["schema"]>;
 type Config = ConfigSchema & { pubFields: { [K in keyof ConfigSchema]?: string[] } };
 type Payload = components["schemas"]["Doi"];
 
+type RelatedPubs = Awaited<
+	ReturnType<typeof getPubsWithRelatedValuesAndChildren<{}>>
+>[number]["values"];
+
 const encodeDataciteCredentials = (username: string, password: string) =>
 	Buffer.from(`${username}:${password}`).toString("base64");
 
@@ -26,14 +30,11 @@ const makeDataciteCreatorFromAuthorPub = (pub: ProcessedPub, creatorNameFieldSlu
 	assert(typeof name === "string");
 	return {
 		name,
+		// TODO: author/creator affiliations
 		affiliation: [],
 		nameIdentifiers: [],
 	};
 };
-
-type RelatedPubs = Awaited<
-	ReturnType<typeof getPubsWithRelatedValuesAndChildren<{}>>
->[number]["values"];
 
 const deriveCreatorsFromRelatedPubs = (
 	relatedPubs: RelatedPubs,
