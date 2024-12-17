@@ -78,11 +78,8 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	/** TODO: This allows anyone who has permission to the form to update any pub with the form.
-	 * We need a way to restrict someone who is editing via an external form by pub id
-	 */
 	const canUpdateFromForm = formSlug
-		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id, pubId })
 		: false;
 	const canUpdatePubValues = await userCan(
 		Capabilities.updatePubValues,

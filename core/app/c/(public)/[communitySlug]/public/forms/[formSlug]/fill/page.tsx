@@ -188,6 +188,7 @@ export default async function FormPage({
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,
+			pubId: pub?.id,
 		});
 
 		if (!memberHasAccessToForm) {
