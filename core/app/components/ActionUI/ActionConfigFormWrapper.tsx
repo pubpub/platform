@@ -49,6 +49,7 @@ export const ActionConfigFormWrapper = async ({
 					communityId={stage.communityId}
 					actionName={actionInstance.action}
 					fieldConfig={resolvedFieldConfig}
+					stageId={stage.id}
 				/>
 			</TokenProvider>
 		</PubFieldProvider>

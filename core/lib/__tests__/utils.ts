@@ -71,12 +71,13 @@ export class Deferred<T> {
 }
 
 export const mockServerCode = async () => {
-	const { getLoginData, testDb } = await vi.hoisted(async () => {
+	const { getLoginData, findCommunityBySlug, testDb } = await vi.hoisted(async () => {
 		const testDb = await import("./db").then((m) => m.testDb);
 
 		return {
 			testDb,
 			getLoginData: vi.fn(),
+			findCommunityBySlug: vi.fn(),
 		};
 	});
 
@@ -95,6 +96,12 @@ export const mockServerCode = async () => {
 	vi.mock("~/lib/authentication/loginData", () => {
 		return {
 			getLoginData: getLoginData,
+		};
+	});
+
+	vi.mock("~/lib/server/community", () => {
+		return {
+			findCommunityBySlug: findCommunityBySlug,
 		};
 	});
 
@@ -175,6 +182,7 @@ export const mockServerCode = async () => {
 
 	return {
 		getLoginData,
+		findCommunityBySlug,
 		beginTransaction,
 		testDb,
 		createSingleMockedTransaction,

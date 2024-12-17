@@ -1,11 +1,17 @@
 "use server";
 
 import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { defaultFormName, defaultFormSlug } from "~/lib/form";
+import { ApiError } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import {
 	FORM_NAME_UNIQUE_CONSTRAINT,
@@ -17,6 +23,29 @@ export const addPubField = defineServerAction(async function addPubField(
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
+	const loginData = await getLoginData();
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
+	const { user } = loginData;
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editPubType,
+		{ type: MembershipType.community, communityId: community.id },
+		user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	await autoRevalidate(
 		db.insertInto("_PubFieldToPubType").values({
 			A: pubFieldId,
@@ -29,6 +58,29 @@ export const updateTitleField = defineServerAction(async function updateTitleFie
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
+	const loginData = await getLoginData();
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
+	const { user } = loginData;
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editPubType,
+		{ type: MembershipType.community, communityId: community.id },
+		user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	await db.transaction().execute(async (trx) => {
 		await autoRevalidate(
 			trx.updateTable("_PubFieldToPubType").set({ isTitle: false }).where("B", "=", pubTypeId)
@@ -47,6 +99,29 @@ export const removePubField = defineServerAction(async function removePubField(
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
+	const loginData = await getLoginData();
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
+	const { user } = loginData;
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.editPubType,
+		{ type: MembershipType.community, communityId: community.id },
+		user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	await autoRevalidate(
 		db.deleteFrom("_PubFieldToPubType").where("A", "=", pubFieldId).where("B", "=", pubTypeId)
 	).execute();
@@ -59,6 +134,28 @@ export const createPubType = defineServerAction(async function createPubType(
 	fields: PubFieldsId[],
 	titleField: PubFieldsId
 ) {
+	const loginData = await getLoginData();
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+
+	const { user } = loginData;
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.createPubType,
+		{ type: MembershipType.community, communityId: community.id },
+		user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
 	try {
 		await db.transaction().execute(async (trx) => {
 			const pubType = await autoRevalidate(

@@ -269,6 +269,7 @@ export default async function FormPage({
 								<ExternalFormWrapper
 									pub={pubForForm}
 									elements={form.elements}
+									formSlug={form.slug}
 									isUpdating={isUpdating}
 									withAutoSave={isUpdating}
 									withButtonElements
