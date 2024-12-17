@@ -1,4 +1,4 @@
-import type { AnySchema, JSONSchemaType } from "ajv";
+import type { ReactNode } from "react";
 
 import { Value } from "@sinclair/typebox/value";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
@@ -22,56 +22,33 @@ export interface PubValueWithFieldAndSchema extends PubValues {
 	value: JsonValue;
 }
 
-export function recursivelyGetScalarFields(schema: JSONSchemaType<AnySchema>, value: JsonValue) {
-	if (schema.$id === "unjournal:fileUpload") {
-		return <FileUploadPreview files={value as FileUpload} />;
-	}
-	// TODO: get schema IDs and render specific stuff -- e.g. file upload, confidence intervals
-	if (!schema.properties) {
-		switch (schema.type) {
-			case "boolean":
-				return <p>{JSON.stringify(value)}</p>;
-			case "string":
-				return <p>{value as string}</p>;
-			default:
-				return <p>{JSON.stringify(value)}</p>;
-		}
-	}
-
-	const objectSchema = schema.properties as JSONSchemaType<AnySchema>;
-	const fields = Object.entries(objectSchema).map(([fieldKey, fieldSchema]) => {
-		const fieldValue =
-			typeof value === "object" && value !== null && !Array.isArray(value)
-				? value[fieldKey]
-				: null;
-
-		return (
-			<>
-				{fieldSchema.title && (
-					<CardHeader>
-						<CardTitle className={cn("text-sm")}>{fieldSchema.title}</CardTitle>
-					</CardHeader>
-				)}
-				<CardContent>
-					{recursivelyGetScalarFields(
-						fieldSchema as JSONSchemaType<AnySchema>,
-						fieldValue ?? null
-					)}
-				</CardContent>
-			</>
-		);
-	});
-	return fields;
-}
-
-export const renderPubValue = ({ fieldName, value }: { fieldName: string; value: JsonValue }) => {
+export const renderPubValue = ({
+	fieldName,
+	value,
+	schemaName,
+}: {
+	fieldName: string;
+	value: JsonValue;
+	schemaName: CoreSchemaType;
+}) => {
 	// Currently, we are only rendering string versions of fields, except for file uploads
+	// For file uploads, because Unjournal doesn't have schemaNames yet, we check the value structure
 	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
 	if (Value.Check(fileUploadSchema, value)) {
 		return <FileUploadPreview files={value as FileUpload} />;
 	}
 
-	const renderedField = (value as JsonValue)?.toString();
+	const valueAsString = (value as JsonValue)?.toString() || "";
+
+	let renderedField: ReactNode = valueAsString;
+	if (schemaName === CoreSchemaType.URL) {
+		renderedField = (
+			<a href={valueAsString} target="_blank" rel="noreferrer">
+				{valueAsString}
+			</a>
+		);
+	}
+
 	return (
 		<>
 			<Separator />
