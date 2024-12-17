@@ -13,13 +13,14 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const MultivalueInputElement = ({
-	name,
+	slug,
+	label,
 	config,
 	schemaName,
 }: ElementProps<InputComponent.multivalueInput>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
 	Value.Default(multivalueInputConfigSchema, config);
@@ -30,11 +31,11 @@ export const MultivalueInputElement = ({
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				return (
 					<FormItem>
-						<FormLabel>{config.label ?? name}</FormLabel>
+						<FormLabel>{label}</FormLabel>
 						<FormControl>
 							<MultiValueInput
 								disabled={!isEnabled}

@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "auth_session",
+      "value": "gypreicrdhiribgeoojxyfjwtvkafmaq556yhakj",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1769018339.839587,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "pubpub_community_slug",
+      "value": "unjournal",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1734544742.791223,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

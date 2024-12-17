@@ -17,10 +17,10 @@ const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mo
 	loading: () => <div>Loading...</div>,
 });
 
-export const DateElement = ({ name, config }: ElementProps<InputComponent.datePicker>) => {
+export const DateElement = ({ slug, label, config }: ElementProps<InputComponent.datePicker>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 
 	if (!Value.Check(datePickerConfigSchema, config)) {
 		return null;
@@ -28,11 +28,11 @@ export const DateElement = ({ name, config }: ElementProps<InputComponent.datePi
 
 	return (
 		<FormField
-			name={name}
+			name={slug}
 			control={control}
 			render={({ field }) => (
 				<FormItem className="grid gap-2">
-					<FormLabel>{config.label ?? name}</FormLabel>
+					<FormLabel>{label}</FormLabel>
 					<DatePicker
 						disabled={!isEnabled}
 						date={field.value ?? new Date()}

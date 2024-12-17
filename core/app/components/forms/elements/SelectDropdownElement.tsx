@@ -12,13 +12,14 @@ import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const SelectDropdownElement = ({
-	name,
+	slug,
+	label,
 	config,
 	schemaName,
 }: ElementProps<InputComponent.selectDropdown>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
 	Value.Default(selectDropdownConfigSchema, config);
@@ -29,14 +30,14 @@ export const SelectDropdownElement = ({
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				const handleChange = (value: string) => {
 					field.onChange([isNumeric ? +value : value]);
 				};
 				return (
 					<FormItem>
-						<FormLabel className="flex">{config.label ?? name}</FormLabel>
+						<FormLabel className="flex">{label}</FormLabel>
 						<Select
 							onValueChange={handleChange}
 							defaultValue={

@@ -48,6 +48,7 @@ export type SchemaTypeByInputComponent = {
 export const checkboxConfigSchema = Type.Object({
 	checkboxLabel: Type.Optional(Type.String()),
 	groupLabel: Type.Optional(Type.String()),
+	label: Type.Optional(Type.String()),
 	defaultValue: Type.Boolean({ default: false }),
 	help: Type.Optional(Type.String()),
 });

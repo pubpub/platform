@@ -12,7 +12,11 @@ import type {
 
 export type ElementProps<T extends InputComponent> = T extends T
 	? {
-			name: string;
+			/**
+			 * label ?? slug
+			 */
+			label: string;
+			slug: string;
 			config: InputComponentConfigSchema<T>;
 			schemaName: SchemaTypeByInputComponent[T];
 		}
