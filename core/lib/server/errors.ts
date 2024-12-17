@@ -149,3 +149,10 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 		}
 	);
 };
+
+export const ApiError = {
+	UNAUTHORIZED: { title: "Unauthorized", error: "You are not authorized to perform this action" },
+	NOT_LOGGED_IN: { error: "Not logged in" },
+	COMMUNITY_NOT_FOUND: { error: "Community not found" },
+	PUB_NOT_FOUND: { error: "Pub not found" },
+};

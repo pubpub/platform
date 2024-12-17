@@ -2,33 +2,41 @@
 
 import { revalidatePath } from "next/cache";
 
-import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import type { PubsId, StagesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
 
 import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
-import { createPubRecursiveNew } from "~/lib/server";
-import { autoCache } from "~/lib/server/cache/autoCache";
+import { userCan } from "~/lib/authorization/capabilities";
+import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { userHasPermissionToForm } from "~/lib/server/form";
 import { updatePub as _updatePub } from "~/lib/server/pub";
-import { _deprecated_validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	...[props]: Parameters<typeof createPubRecursiveNew>
 ) {
-	const { user } = await getLoginData();
-	if (!user) {
-		throw new Error("Not logged in");
-	}
+	const loginData = await getLoginData();
 
-	if (!isCommunityAdmin(user, { id: props.communityId })) {
-		return {
-			error: "You need to be an admin",
-		};
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+	const { user } = loginData;
+
+	const authorized = await userCan(
+		Capabilities.createPub,
+		{ type: MembershipType.community, communityId: props.communityId },
+		user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
 	}
 	try {
 		await createPubRecursiveNew(props);
@@ -49,23 +57,41 @@ export const updatePub = defineServerAction(async function updatePub({
 	pubId,
 	pubValues,
 	stageId,
+	formSlug,
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
 	pubValues: PubValues;
 	stageId?: StagesId;
+	formSlug?: string;
 	continueOnValidationError: boolean;
 }) {
 	const loginData = await getLoginData();
 
-	if (!loginData) {
-		throw new Error("Not logged in");
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
 	}
 
 	const community = await findCommunityBySlug();
 
 	if (!community) {
-		throw new Error("Community not found");
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	/** TODO: This allows anyone who has permission to the form to update any pub with the form.
+	 * We need a way to restrict someone who is editing via an external form by pub id
+	 */
+	const canUpdateFromForm = formSlug
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
+		: false;
+	const canUpdatePubValues = await userCan(
+		Capabilities.updatePubValues,
+		{ type: MembershipType.pub, pubId },
+		loginData.user.id
+	);
+
+	if (!canUpdatePubValues && !canUpdateFromForm) {
+		return ApiError.UNAUTHORIZED;
 	}
 
 	try {
@@ -94,11 +120,30 @@ export const removePub = defineServerAction(async function removePub({
 	pubId: PubsId;
 	path?: string | null;
 }) {
-	const { user } = await getLoginData();
+	const loginData = await getLoginData();
 
-	if (!user) {
-		throw new Error("Not logged in");
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
 	}
+
+	const { user } = loginData;
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.deletePub,
+		{ type: MembershipType.pub, pubId },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	const pub = await db
 		.selectFrom("pubs")
 		.selectAll()
@@ -106,9 +151,7 @@ export const removePub = defineServerAction(async function removePub({
 		.executeTakeFirst();
 
 	if (!pub) {
-		return {
-			error: "Pub not found",
-		};
+		return ApiError.PUB_NOT_FOUND;
 	}
 
 	if (!isCommunityAdmin(user, { id: pub.communityId })) {

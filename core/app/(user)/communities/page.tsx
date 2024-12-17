@@ -1,17 +1,12 @@
-import React from "react";
-
 import type { TableCommunity } from "./getCommunityTableColumns";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/authentication/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { AddCommunity } from "./AddCommunityDialog";
 import { CommunityTable } from "./CommunityTable";
 
 export default async function Page() {
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 
-	if (!user) {
-		return null;
-	}
 	if (!user.isSuperAdmin) {
 		return null;
 	}

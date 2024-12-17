@@ -5,7 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { Action, ActionInstances, ActionInstancesId, CommunitiesId } from "db/public";
+import type {
+	Action,
+	ActionInstances,
+	ActionInstancesId,
+	CommunitiesId,
+	StagesId,
+} from "db/public";
 import { Event } from "db/public";
 import { AutoFormObject } from "ui/auto-form";
 import { Button } from "ui/button";
@@ -27,7 +33,7 @@ import { useServerAction } from "~/lib/serverActions";
 import { addRule } from "../../../actions";
 
 type Props = {
-	// onAdd: (event: Event, actionInstanceId: ActionInstancesId) => Promise<unknown>;
+	stageId: StagesId;
 	actionInstances: ActionInstances[];
 	communityId: CommunitiesId;
 	rules: {
@@ -67,16 +73,14 @@ const schema = z.discriminatedUnion("event", [
 export type CreateRuleSchema = z.infer<typeof schema>;
 
 export const StagePanelRuleCreator = (props: Props) => {
-	// const runOnAdd = useServerAction(props.onAdd);
 	const runAddRule = useServerAction(addRule);
 	const [isOpen, setIsOpen] = useState(false);
 	const onSubmit = useCallback(
 		async (data: CreateRuleSchema) => {
 			setIsOpen(false);
-			runAddRule({ data });
-			// runOnAdd(event, actionInstanceId as ActionInstancesId);
+			runAddRule({ stageId: props.stageId, data });
 		},
-		[props.communityId] // [props.onAdd, runOnAdd]
+		[props.communityId]
 	);
 
 	const onOpenChange = useCallback((open: boolean) => {

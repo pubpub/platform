@@ -164,7 +164,10 @@ export interface PubEditorClientProps {
 		isAutoSave: boolean;
 	}) => void;
 	stageId?: StagesId;
-	formId?: string;
+	/** Slug of the Form this editor is using */
+	formSlug: string;
+	/** ID for the HTML form */
+	htmlFormId?: string;
 	parentId?: PubsId;
 	className?: string;
 	withAutoSave?: boolean;
@@ -178,8 +181,9 @@ export const PubEditorClient = ({
 	isUpdating,
 	pub,
 	stageId,
-	formId,
+	htmlFormId,
 	parentId,
+	formSlug,
 	withAutoSave,
 	withButtonElements,
 	onSuccess,
@@ -243,6 +247,7 @@ export const PubEditorClient = ({
 					pubId: pubId,
 					pubValues,
 					stageId,
+					formSlug,
 					continueOnValidationError: autoSave,
 				});
 			} else {
@@ -329,7 +334,7 @@ export const PubEditorClient = ({
 				}
 				onSubmit={formInstance.handleSubmit(handleSubmit)}
 				className={cn("relative isolate flex flex-col gap-6", className)}
-				id={formId}
+				id={htmlFormId}
 			>
 				{children}
 				{withButtonElements ? (

@@ -4,7 +4,7 @@ import type { z } from "zod";
 
 import { startTransition, useCallback } from "react";
 
-import type { ActionInstances, ActionInstancesId, Action as ActionName } from "db/public";
+import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public";
 import type { FieldConfig } from "ui/auto-form";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { toast } from "ui/use-toast";
@@ -18,6 +18,7 @@ export type Props = {
 	instance: ActionInstances;
 	communityId: string;
 	fieldConfig: FieldConfig<any>;
+	stageId: StagesId;
 };
 
 export const ActionConfigForm = (props: Props) => {
@@ -28,9 +29,13 @@ export const ActionConfigForm = (props: Props) => {
 	const onSubmit = useCallback(
 		async (values: z.infer<typeof action.config.schema>) => {
 			startTransition(async () => {
-				const result = await runUpdateAction(props.instance.id as ActionInstancesId, {
-					config: values,
-				});
+				const result = await runUpdateAction(
+					props.instance.id as ActionInstancesId,
+					props.stageId,
+					{
+						config: values,
+					}
+				);
 
 				if (result && "success" in result) {
 					toast({

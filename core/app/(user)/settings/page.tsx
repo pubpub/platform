@@ -1,20 +1,16 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 
 import LogoutButton from "~/app/components/LogoutButton";
-import { getLoginData } from "~/lib/authentication/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { UserInfoForm } from "./UserInfoForm";
 
 export default async function Page() {
-	const { user } = await getLoginData();
-	if (!user) {
-		return notFound();
-	}
+	const { user } = await getPageLoginData();
 
 	return (
 		<main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">

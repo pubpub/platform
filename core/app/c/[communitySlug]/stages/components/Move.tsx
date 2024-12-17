@@ -52,7 +52,7 @@ export default function Move(props: Props) {
 	const [isMoving, startTransition] = useTransition();
 	const runMove = useServerAction(move);
 
-	const onMove = async (pubId: string, sourceStageId: string, destStageId: string) => {
+	const onMove = async (pubId: PubsId, sourceStageId: StagesId, destStageId: StagesId) => {
 		const err = await runMove(pubId, sourceStageId, destStageId);
 
 		if (isClientException(err)) {

@@ -203,10 +203,11 @@ export async function PubEditor(props: PubEditorProps) {
 					elements={[...form.elements, ...pubOnlyElementDefinitions]}
 					parentId={"parentId" in props ? props.parentId : undefined}
 					pub={pubForForm}
+					formSlug={form.slug}
 					isUpdating={isUpdating}
 					withAutoSave={false}
 					withButtonElements={false}
-					formId={props.formId}
+					htmlFormId={props.formId}
 					stageId={currentStageId}
 				>
 					<>
