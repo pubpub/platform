@@ -150,7 +150,7 @@ describe("DataCite action", () => {
 		expect(fetch.mock.lastCall![1]!.method).toBe("PUT");
 	});
 
-	it("reports an error if the pub does not have a DOI and no DOI prefix is configured", async () => {
+	it("reports an error if the pub has neither a DOI nor a DOI suffix and no DOI prefix is configured", async () => {
 		const result = await run(RUN_OPTIONS);
 
 		expect(didSucceed(result)).toBe(false);
@@ -169,6 +169,31 @@ describe("DataCite action", () => {
 
 		expect(didSucceed(result)).toBe(false);
 		expect((result as ClientExceptionOptions).cause).toBe(error);
+	});
+
+	it("uses the DOI suffix field if provided", async () => {
+		const doiPrefix = "10.100";
+		const doiSuffix = "100";
+		const doi = `${doiPrefix}/${doiSuffix}`;
+
+		const fetch = mockFetch(
+			async () => new Response("{}"),
+			async () => makeStubDataciteResponse(doi)
+		);
+
+		await run({
+			...RUN_OPTIONS,
+			config: {
+				...RUN_OPTIONS.config,
+				doiPrefix,
+				doiSuffix,
+			},
+		});
+
+		const call = fetch.mock.lastCall![1]!;
+		const body = JSON.parse(call.body as string);
+		expect(body.data.attributes.doi).toBe(doi);
+		expect(call.method).toBe("POST");
 	});
 
 	it.todo("transforms related contributor pubs into DataCite creators");
