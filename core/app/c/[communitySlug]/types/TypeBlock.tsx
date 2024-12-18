@@ -65,7 +65,6 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 	const handleTitleFieldChange = async (newTitleField: string) => {
 		await runUpdateTitleField(type.id, newTitleField as PubFieldsId);
 	};
-	console.log(fields)
 	const handleAddPubField = async (fieldId: PubFieldsId) => {
 		const result = await runAddPubField(type.id, fieldId);
 		if (didSucceed(result)) {
