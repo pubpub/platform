@@ -58,11 +58,13 @@ BEGIN
     SET
         "updatedAt" = CURRENT_TIMESTAMP,
         "title" = CASE 
-            WHEN TG_OP = 'DELETE' OR tmp."value" IS NULL THEN
-                NULL
-            ELSE
-                tmp."value"
-            END
+        WHEN tmp."pubId" IS NULL THEN
+            pubs."title"
+        WHEN TG_OP = 'DELETE' OR tmp."value" IS NULL THEN
+            NULL
+        ELSE
+            tmp."value"
+        END
     FROM ( SELECT DISTINCT
             "pubId"
         FROM
