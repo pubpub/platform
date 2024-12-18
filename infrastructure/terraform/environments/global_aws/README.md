@@ -15,4 +15,3 @@ and not applied or updated by a machine user.
 1. destroy local copies of the state file
 
 This bucket name can now be in your s3.tfbackend files everywhere.
-

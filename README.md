@@ -9,20 +9,22 @@ As noted in [our recent announcement](https://www.knowledgefutures.org/updates/p
 Learn More:
 [Documentation](https://help.knowledgefutures.org) | [PubPub Platform](https://knowledgefutures.org/pubpub) | [Knowledge Futures](https://www.knowledgefutures.org/) | [Newsletter](https://pubpub.us5.list-manage.com/subscribe?u=9b9b78707f3dd62d0d47ec03d&id=be26e45660) | [Roadmap](https://github.com/orgs/pubpub/projects/46/views/1)
 
-**PubPub Platform is currently an alpha release, which means the code is subject to frequent, breaking changes. We do not yet recommend running PubPub Platform for production projects.** 
+**PubPub Platform is currently an alpha release, which means the code is subject to frequent, breaking changes. We do not yet recommend running PubPub Platform for production projects.**
 
 ## Community Guidelines and Code of Conduct
+
 Knowledge Futures intends to foster an open and welcoming environment that aligns with our [core values of ACCESS](https://notes.knowledgefutures.org/pub/cqih29xa#our-values-access) (accessibility, collaboration, curiosity, equity, and systemic outlike). As such, we require that all employees and members of our open-source community adhere to our [Code of Conduct](https://github.com/knowledgefutures/general/blob/master/CODE_OF_CONDUCT.md) in all interactions in this and other Knowledge Futures repositories, including issues, discussions, comments, pull requests, commit messages, code, and all other messages.
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/knowledgefutures/general/blob/master/CODE_OF_CONDUCT.md)
 
 ## Repository Structure
+
 This repo is built as a monorepo that holds first-party components of PubPub. There are four primary sections:
 
 ```
 root
 ├── core/
-├── infrastructure/ 
+├── infrastructure/
 ├── integrations/ (deprecated)
 ├── jobs/
 ├── packages/
@@ -38,6 +40,7 @@ root
 To avoid inconsistencies and difficult-to-track errors, we specify a particular version of node in `/.nvmrc` (currently `v20.17.0`). We recommend using [nvm](https://github.com/nvm-sh/nvm) to ensure you're using the same version.
 
 ## Local Installation
+
 This package runs the version of node specified in `.nvmrc` (currently `v20.17.0`) and uses pnpm for package management. All following commands are run from the root of this package.
 
 To get started, clone the repository and install the version of node specified in `.nvmrc` (we recommend using [nvm](https://github.com/nvm-sh/nvm).
@@ -56,6 +59,7 @@ pnpm build
 Depending on which app or package you are doing work on, you may need to create a .env.local file. See each package's individual README.md file for further details.
 
 ## Development
+
 To run all packages in the monorepo workspace, simply run:
 
 ```
@@ -80,47 +84,56 @@ pnpm --filter core migrate-dev
 ```
 
 ## Self-Hosting and Deployment
+
 Guidance for self-hosting and deployment is coming soon. In the meantime, you can read about how we currently deploy the app in [DEVELOPMENT.md](https://github.com/pubpub/platform/blob/main/DEVELOPMENT.md). With small modifications, most development teams can use the included terraform configuration to run the app on commodity cloud infrastructure of their choice.
 
 ## Bugs, Feature Requests, Help, and Feedback
+
 We use the [Discussion Forum](https://github.com/pubpub/platform/discussions) for feature requests, ideas, and general feedback, and [GitHub Issues](https://github.com/pubpub/platform/issues/) for day-to-day development. Thus, if you're unsure where to post your feedback, start with a discussion. We can always transfer it to an issue later if needed.
 
 ### Bugs
+
 If you have a specific bug to report, feel free to add a [new bug issue](https://github.com/pubpub/platform/issues/new?assignees=&labels=bug&projects=&template=bug-issue.md&title=) to the PubPub Platform Repo. If you submit a bug, we ask that you use the available template and fill it out to the best of your ability, including information about your browser and operating system, detailed, written step-by-step instructions to reproduce the bug and screenshots or a screen recording when relevant. Having all of this information up-front helps us solve any issues faster.
 
 Please search the [issue list](https://github.com/pubpub/platform/issues) first to make sure your bug hasn't already been reported. If it has, add your feedback to the preexisting issue as a comment.
 
 ### Feature Requests, Feedback, and Help
+
 If you have a feature request, idea, general feedback, or need help with PubPub, we'd love you to post a discussion on the [Discussion Forum](https://github.com/pubpub/platform/discussions). As with bug reports, make sure to search the forum first to see if the community has already discussed your idea or solved your issue. If we have, feel free to join in on that ongoing discussion. Remember to be polite and courteous. All activity on this repository is governed by the [Knowledge Futures Code of Conduct](https://github.com/knowledgefutures/general/blob/master/CODE_OF_CONDUCT.md).
 
 ## Contributing
+
 In the coming weeks, we'll be developing more thorough contribution guides, particularly for contributors interested in:
-- Extending PubPub Platform with new Actions and Rules
-- Extending the PubPub Platform API
-- Contributing to self-hosting scripts and guides on common cloud hosting
-- Contributing documentation for developers or users
+
+-   Extending PubPub Platform with new Actions and Rules
+-   Extending the PubPub Platform API
+-   Contributing to self-hosting scripts and guides on common cloud hosting
+-   Contributing documentation for developers or users
 
 For now, you can browse the [issue list](https://github.com/pubpub/platform/issues) and comment on any issues you may want
-to take on. We'll be in touch shortly 
+to take on. We'll be in touch shortly
 
 ### Pull Requests
+
 Our preferred practice is for contributors to create a branch using the format `initials/descriptive-name` and submit it against main.
 
 Request names should be prefixed with one of the following categories:
 
-- fix: for commits focused on specific bug fixes
-- feature: for commits that introduce a new feature
-- update: for commits that improve an existing feature
-- dev: for commits that focus solely on documentation, refactoring code, or developer experience updates
+-   fix: for commits focused on specific bug fixes
+-   feature: for commits that introduce a new feature
+-   update: for commits that improve an existing feature
+-   dev: for commits that focus solely on documentation, refactoring code, or developer experience updates
 
 Request descriptions should use to our Pull Request template, including a clear rationale for the PR, listing any issues resolved, and describing the test plan for the request, including both tests you wrote and step-by-step descriptions of any manual QA that may be needed.
 
 Finally, we request that any complex code, new terminology, potentially decisions you made, or any areas you'd like feedback on be commented on inline in GitHub's files changed interface.
 
 ## User-Facing Documentation
-User-facing documentation is a work in progress, and can be found at https://help.knowledgefutures.org. 
+
+User-facing documentation is a work in progress, and can be found at https://help.knowledgefutures.org.
 
 ## Supporting Services
+
 Thank you to these groups for providing their tools for free to PubPub's open source mission.
 
 [![Browserstack-logo@2x](https://user-images.githubusercontent.com/1000455/64237395-318a4c80-cef4-11e9-8b78-98ed3ec58ce3.png)](https://www.browserstack.com/)
