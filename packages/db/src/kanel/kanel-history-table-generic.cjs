@@ -1,6 +1,8 @@
 // @ts-check
 
 /**
+ * Replaces the `oldRowData` and `newRowData` properties with `ColumnType<${parentTable}, string | null, string | null>`
+ *
  * @type {import("kanel").PreRenderHook}
  */
 function kanelHistoryTableGeneric(outputAcc, instantiatedConfig) {
@@ -22,14 +24,20 @@ function kanelHistoryTableGeneric(outputAcc, instantiatedConfig) {
 				if (declaration.name !== `${parentTable}HistoryTable`) {
 					return declaration;
 				}
-				const idName = `${parentTable}HistoryId`;
+
+				const replacedOldNewRowData = declaration.properties.map((property) => {
+					if (property.name === "oldRowData" || property.name === "newRowData") {
+						return {
+							...property,
+							typeName: `ColumnType<${parentTable}, string | null, string | null>`,
+						};
+					}
+					return property;
+				});
 
 				return {
-					name: `${parentTable}HistoryTable`,
-					declarationType: "typeDeclaration",
-					typeDefinition: [`HistoryTable<${parentTable}, ${idName}>`],
-					exportAs: "named",
-					comment: declaration.comment,
+					...declaration,
+					properties: replacedOldNewRowData,
 					typeImports: [
 						{
 							importAsType: true,
@@ -40,9 +48,9 @@ function kanelHistoryTableGeneric(outputAcc, instantiatedConfig) {
 						},
 						{
 							importAsType: true,
-							name: "HistoryTable",
+							name: "ColumnType",
 							isDefault: false,
-							path: "../types/HistoryTable",
+							path: "kysely",
 							isAbsolute: true,
 						},
 					],

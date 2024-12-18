@@ -7,8 +7,6 @@ export interface HistoryTableBase {
 
 	operationType: ColumnType<OperationType, OperationType, OperationType>;
 
-	primaryKeyValue: ColumnType<string | null, string | null, string | null>;
-
 	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 
 	apiAccessTokenId: ColumnType<
@@ -22,9 +20,21 @@ export interface HistoryTableBase {
 	other: ColumnType<string | null, string | null, string | null>;
 }
 
-export interface HistoryTable<T extends Record<string, any>, ID extends string>
-	extends HistoryTableBase {
-	histId: ColumnType<ID, ID | undefined, ID>;
-	oldRowData: ColumnType<T | null, string | null, string | null>;
-	newRowData: ColumnType<T | null, string | null, string | null>;
-}
+type Prettify<T> = {
+	[K in keyof T]: T[K];
+} & {};
+
+export type HistoryTable<
+	T extends Record<string, any>,
+	ID extends string,
+	ParentTableName extends string,
+> = Prettify<
+	{
+		id: ColumnType<ID, ID | undefined, ID>;
+		oldRowData: ColumnType<T | null, string | null, string | null>;
+		newRowData: ColumnType<T | null, string | null, string | null>;
+	} & {
+		// this is the only way to do it i think
+		[K in `${ParentTableName}Id`]: ColumnType<string | null, string | null, string | null>;
+	} & HistoryTableBase
+>;
