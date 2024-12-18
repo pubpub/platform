@@ -8,7 +8,10 @@ import type {
 	PubsId,
 	StagesId,
 	StagesUpdate,
+	UsersId,
 } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
 import type { AutoReturnType } from "../types";
 import { db } from "~/kysely/database";
@@ -48,9 +51,72 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId };
-export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
-	autoCache(
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
+export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
+	db.with("view_stage_roles", (db) =>
+		db
+			.selectFrom("membership_capabilities")
+			.where("membership_capabilities.capability", "=", Capabilities.viewStage)
+			.select(["role", "type"])
+	)
+		.with("stage_ms", (db) =>
+			db
+				.selectFrom("stage_memberships")
+				// also join on type
+				.innerJoin("view_stage_roles", "view_stage_roles.role", "stage_memberships.role")
+
+				.where("stage_memberships.userId", "=", userId)
+				.select(["stageId"])
+		)
+		.with("community_ms", (db) =>
+			db
+				.selectFrom("community_memberships")
+				.where("community_memberships.userId", "=", userId)
+				.where("communityId", "=", communityId)
+				.select("role")
+		);
+
+	const access = autoCache(
+		db
+			.with("stage_ms", (db) =>
+				db
+					.selectFrom("stage_memberships")
+					.where("stage_memberships.userId", "=", userId)
+					.select(["role", "stageId"])
+			)
+			.with("community_ms", (db) =>
+				db
+					.selectFrom("community_memberships")
+					.where("community_memberships.userId", "=", userId)
+					.where("communityId", "=", communityId)
+					.select("role")
+			)
+			.selectFrom("membership_capabilities")
+			.where((eb) =>
+				eb.or([
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("stage_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.stage),
+					]),
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("community_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.community),
+					]),
+				])
+			)
+			.where("membership_capabilities.capability", "=", Capabilities.viewStage)
+			.select([""])
+	);
+
+	return autoCache(
 		db
 			.selectFrom("stages")
 			.where("communityId", "=", communityId)
@@ -101,6 +167,7 @@ export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
 			.selectAll("stages")
 			.orderBy("order asc")
 	);
+};
 
 export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
 
