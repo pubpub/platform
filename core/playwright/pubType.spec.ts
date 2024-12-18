@@ -77,4 +77,20 @@ test.describe("Pub types", () => {
 
 		await page.getByText(`${COMMUNITY_SLUG}:contributor`, { exact: true }).waitFor();
 	});
+
+	test("Can designate a field as the title", async () => {
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("description", CoreSchemaType.String);
+
+		const pubTypesPage = new PubTypesPage(page, COMMUNITY_SLUG);
+		await pubTypesPage.goto();
+		await pubTypesPage.addType("Article", "article", ["title", "description"], "description");
+
+		await page.getByTestId(`edit-pubtype-Article`).click();
+		const isChecked = await page
+			.getByTestId(`Article:${COMMUNITY_SLUG}:description-titleField`)
+			.isChecked();
+		expect(isChecked).toBe(true);
+	});
 });
