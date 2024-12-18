@@ -54,7 +54,7 @@ export default async function Page({
 		}).executeTakeFirstOrThrow(),
 	]);
 
-	console.log(fields)
+	console.log(fields);
 
 	if (!types || !fields) {
 		return null;

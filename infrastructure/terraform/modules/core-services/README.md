@@ -1,6 +1,8 @@
 # Setup
+
 In a `main.tf` file for a workspace that needs a cluster,
 you can use this module like:
+
 ```
 module "cluster" {
     source = "../path/to/this/directory"
@@ -14,6 +16,7 @@ module "cluster" {
 ```
 
 then
+
 ```
 terraform init
 terraform apply
@@ -22,6 +25,7 @@ terraform apply
 You will see these resources under `module.cluster.xyz`.
 
 ## Managing the ECS Task Definition
+
 Working with ECS task definitions in Terraform
 is kind of awkward.
 
@@ -57,14 +61,16 @@ of managing ECS with Terraform
 can be found in [this Terraform issue.](https://github.com/hashicorp/terraform-provider-aws/issues/632)
 
 ## Rotating the RDS Password
+
 The RDS password is retrieved from AWS Secrets Manager
 but that password is managed manually,
 and rotating it requires downtime.
 
 To rotate it, you'll need to perform the following steps:
-- Update the value of the Secrets Manager entry through the AWS console
-- Update the value in the RDS instance through the AWS console. (At this point, the core container will stop being able to access the database.)
-- Recreate the core container's service with `aws update-service cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment`
+
+-   Update the value of the Secrets Manager entry through the AWS console
+-   Update the value in the RDS instance through the AWS console. (At this point, the core container will stop being able to access the database.)
+-   Recreate the core container's service with `aws update-service cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment`
 
 In the future the RDS should probably [manage its own password](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html)
 which will probably require changing the service's code
