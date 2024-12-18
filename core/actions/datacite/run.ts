@@ -116,6 +116,7 @@ const makeDatacitePayload = async (
 		data: {
 			type: "dois",
 			attributes: {
+				event: "publish",
 				doi,
 				prefix: config.doiPrefix,
 				titles: [{ title: pub.title }],
