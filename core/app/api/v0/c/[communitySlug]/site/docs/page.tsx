@@ -4,6 +4,8 @@ import Script from "next/script";
 
 import "./stoplight.styles.css";
 
+import { env } from "~/lib/env/env.mjs";
+
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
@@ -26,7 +28,9 @@ export default async function IndexPage({
 						__html: `<elements-api
 						apiDescriptionUrl="/api/v0/c/${communitySlug}/site/docs/openapi.json"
 						router="hash"
-						layout="sidebar"
+						logo="/logos/icon.svg"
+						layout="responsive"
+						${env.NODE_ENV === "production" ? 'hideTryItPanel="true"' : ""}
 								  />`,
 					}}
 				/>
