@@ -20,7 +20,7 @@ const findNestedStructure = (json: unknown, path: string) => {
 };
 
 export const run = defineRun<typeof action>(
-	async ({ pub, config, configFieldOverrides, args, argsFieldOverrides }) => {
+	async ({ pub, config, configFieldOverrides, args, argsFieldOverrides, lastModifiedBy }) => {
 		const { url, method, authToken } = {
 			url: args?.url ?? config.url,
 			method: args?.method ?? config.method,
@@ -116,6 +116,7 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 				communityId: pub.communityId,
 				pubValues,
 				continueOnValidationError: false,
+				lastModifiedBy,
 			});
 		} catch (error) {
 			logger.debug(error);

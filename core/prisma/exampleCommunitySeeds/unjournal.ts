@@ -7,6 +7,7 @@ import type { CommunitiesId, PubFieldsId, PubTypesId, StagesId } from "db/public
 import { CoreSchemaType } from "db/public";
 
 import { db } from "~/kysely/database";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { env } from "../../lib/env/env.mjs";
 import { FileUpload } from "../../lib/fields/fileUpload";
 
@@ -697,11 +698,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
 				fieldId: fieldIds[0] as PubFieldsId, // title
 				value: '"It Aint Ease Bein Cheese"',
+				lastModifiedBy: createLastModifiedBy("system"),
 			},
 			{
 				pubId: eb.selectFrom("new_pubs").select("new_pubs.id"),
 				fieldId: fieldIds[1] as PubFieldsId, // description
 				value: '"# Abstract"',
+				lastModifiedBy: createLastModifiedBy("system"),
 			},
 		])
 		.execute();
