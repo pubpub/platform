@@ -29,6 +29,7 @@ import type { PubsTable } from "./Pubs";
 import type { PubsInStagesTable } from "./PubsInStages";
 import type { PubTypesTable } from "./PubTypes";
 import type { PubValuesTable } from "./PubValues";
+import type { PubValuesHistoryTable } from "./PubValuesHistory";
 import type { RulesTable } from "./Rules";
 import type { SessionsTable } from "./Sessions";
 import type { StageMembershipsTable } from "./StageMemberships";
@@ -36,6 +37,36 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
+	_prisma_migrations: PrismaMigrationsTable;
+
+	users: UsersTable;
+
+	pubs: PubsTable;
+
+	pub_types: PubTypesTable;
+
+	stages: StagesTable;
+
+	member_groups: MemberGroupsTable;
+
+	integrations: IntegrationsTable;
+
+	communities: CommunitiesTable;
+
+	move_constraint: MoveConstraintTable;
+
+	pub_fields: PubFieldsTable;
+
+	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
+
+	integration_instances: IntegrationInstancesTable;
+
+	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
+
+	_MemberGroupToUser: MemberGroupToUserTable;
+
 	auth_tokens: AuthTokensTable;
 
 	PubFieldSchema: PubFieldSchemaTable;
@@ -72,33 +103,5 @@ export interface PublicSchema {
 
 	membership_capabilities: MembershipCapabilitiesTable;
 
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
-	integration_instances: IntegrationInstancesTable;
-
-	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
-
-	_MemberGroupToUser: MemberGroupToUserTable;
-
-	_prisma_migrations: PrismaMigrationsTable;
-
-	users: UsersTable;
-
-	pubs: PubsTable;
-
-	pub_types: PubTypesTable;
-
-	stages: StagesTable;
-
-	member_groups: MemberGroupsTable;
-
-	integrations: IntegrationsTable;
-
-	communities: CommunitiesTable;
-
-	move_constraint: MoveConstraintTable;
+	pub_values_history: PubValuesHistoryTable;
 }

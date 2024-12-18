@@ -51,7 +51,7 @@ test.describe("Creating a field", () => {
 		}
 
 		// Try to create a field with the same name, should error
-		await fieldsPage.addField("String", CoreSchemaType.String);
+		await fieldsPage.addField("String", CoreSchemaType.String, false);
 		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
 	});
 
