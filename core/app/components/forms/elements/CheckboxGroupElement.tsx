@@ -72,7 +72,7 @@ export const CheckboxGroupElement = ({
 								<FormField
 									key={v}
 									control={control}
-									name={`${slug}.${v}`}
+									name={`${slug}`}
 									render={() => {
 										return (
 											<FormItem
