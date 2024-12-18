@@ -50,8 +50,8 @@ export const action = defineAction({
 			url: z.string(),
 			publisher: z.string(),
 			publicationDate: z.date(),
-			author: z.string(),
-			authorName: z.string(),
+			creator: z.string(),
+			creatorName: z.string(),
 		}),
 		fieldConfig: {
 			doi: {
@@ -69,10 +69,10 @@ export const action = defineAction({
 			publicationDate: {
 				allowedSchemas: true,
 			},
-			author: {
+			creator: {
 				allowedSchemas: true,
 			},
-			authorName: {
+			creatorName: {
 				allowedSchemas: true,
 			},
 		},
