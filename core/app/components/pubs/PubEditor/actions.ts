@@ -130,7 +130,7 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 	}
 
 	const lastModifiedBy = createLastModifiedBy({
-		userId: loginData.user.id as UsersId,
+		userId: loginData.user.id,
 	});
 	const { user } = loginData;
 
