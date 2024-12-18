@@ -22,7 +22,7 @@ function kanelHistoryTableGeneric(outputAcc, instantiatedConfig) {
 				if (declaration.name !== `${parentTable}HistoryTable`) {
 					return declaration;
 				}
-				const idName = `${parentTable}HistoryHistId`;
+				const idName = `${parentTable}HistoryId`;
 
 				return {
 					name: `${parentTable}HistoryTable`,
