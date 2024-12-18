@@ -92,7 +92,11 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 							const enumName =
 								declaration.comment?.[0].match(/Zod schema for (.*)/)?.[1];
 
-							if (enumName) {
+							const value = Array.isArray(declaration.value)
+								? declaration.value[0]
+								: declaration.value;
+
+							if (enumName && value.startsWith("z.enum")) {
 								declaration.value = [`z.nativeEnum(${enumName})`];
 							}
 						}

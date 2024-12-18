@@ -146,8 +146,6 @@ export type {
 	OptionsDependency,
 } from "./types";
 
-export { DependencyType } from "./types";
-
 export { zodToHtmlInputProps } from "./utils";
 
 export { AutoFormObject };

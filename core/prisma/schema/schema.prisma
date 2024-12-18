@@ -8,7 +8,7 @@ datasource db {
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "tracing", "omitApi"]
+  previewFeatures = ["fullTextSearch", "tracing", "omitApi", "prismaSchemaFolder"]
 }
 
 generator dbml {
@@ -17,7 +17,7 @@ generator dbml {
 }
 
 generator comments {
-  provider = "pnpm exec tsx prisma/comment-generator.ts"
+  provider = "pnpm exec tsx prisma/scripts/comment-generator.ts"
 }
 
 model User {
@@ -43,6 +43,7 @@ model User {
   communityMemberships CommunityMembership[]
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
+  PubValueHistory      PubValueHistory[]
 
   @@map(name: "users")
 }
@@ -193,20 +194,26 @@ model PubFieldSchema {
 }
 
 model PubValue {
-  id           String   @id @default(dbgenerated("gen_random_uuid()"))
-  field        PubField @relation(fields: [fieldId], references: [id])
-  fieldId      String
-  value        Json?
-  pub          Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade, name: "original_pub")
-  pubId        String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
-  relatedPub   Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
-  relatedPubId String?
-
-  // Add userId and integrationId to track who created the value
+  id             String   @id @default(dbgenerated("gen_random_uuid()"))
+  /// @type(LastModifiedBy, '../types', true, false, true)
+  lastModifiedBy String
+  field          PubField @relation(fields: [fieldId], references: [id])
+  fieldId        String
+  value          Json?
+  pub            Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade, name: "original_pub")
+  pubId          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  relatedPub     Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
+  relatedPubId   String?
 
   @@map(name: "pub_values")
+}
+
+enum OperationType {
+  insert
+  update
+  delete
 }
 
 model PubType {
@@ -454,20 +461,21 @@ enum Action {
 }
 
 model ActionRun {
-  id               String          @id @default(dbgenerated("gen_random_uuid()"))
-  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  id               String            @id @default(dbgenerated("gen_random_uuid()"))
+  actionInstance   ActionInstance?   @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String?
-  pub              Pub?            @relation(fields: [pubId], references: [id])
+  pub              Pub?              @relation(fields: [pubId], references: [id])
   pubId            String?
   config           Json?
   event            Event?
   params           Json?
   status           ActionRunStatus
   result           Json
-  user             User?           @relation(fields: [userId], references: [id])
+  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId           String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @default(now()) @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @default(now()) @updatedAt
+  PubValueHistory  PubValueHistory[]
 
   @@map(name: "action_runs")
 }
@@ -575,28 +583,29 @@ model FormElement {
 }
 
 model ApiAccessToken {
-  id          String                @id @default(dbgenerated("gen_random_uuid()"))
-  token       String                @unique
-  name        String
-  description String?
-  communityId String
-  community   Community             @relation(fields: [communityId], references: [id])
-  expiration  DateTime
-  issuedBy    User                  @relation(fields: [issuedById], references: [id])
-  issuedById  String
-  issuedAt    DateTime              @default(now())
-  accessRules ApiAccessPermission[]
-  logs        ApiAccessLog[]
+  id              String                @id @default(dbgenerated("gen_random_uuid()"))
+  token           String                @unique
+  name            String
+  description     String?
+  communityId     String
+  community       Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  expiration      DateTime
+  issuedBy        User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
+  issuedById      String?
+  issuedAt        DateTime              @default(now())
+  accessRules     ApiAccessPermission[]
+  logs            ApiAccessLog[]
+  PubValueHistory PubValueHistory[]
 
   @@index([token], name: "token_idx")
   @@map(name: "api_access_tokens")
 }
 
 model ApiAccessLog {
-  id            String         @id @default(dbgenerated("gen_random_uuid()"))
-  accessTokenId String
-  accessToken   ApiAccessToken @relation(fields: [accessTokenId], references: [id])
-  timestamp     DateTime       @default(now())
+  id            String          @id @default(dbgenerated("gen_random_uuid()"))
+  accessTokenId String?
+  accessToken   ApiAccessToken? @relation(fields: [accessTokenId], references: [id], onDelete: SetNull)
+  timestamp     DateTime        @default(now())
   action        String
 
   @@map(name: "api_access_logs")
@@ -613,7 +622,7 @@ enum ApiAccessType {
 model ApiAccessPermission {
   id               String         @id @default(dbgenerated("gen_random_uuid()"))
   apiAccessTokenId String
-  apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id])
+  apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id], onDelete: Cascade)
   scope            ApiAccessScope
   accessType       ApiAccessType
   constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)

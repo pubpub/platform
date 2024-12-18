@@ -15,7 +15,11 @@ export type ApiAccessLogsId = string & { __brand: "ApiAccessLogsId" };
 export interface ApiAccessLogsTable {
 	id: ColumnType<ApiAccessLogsId, ApiAccessLogsId | undefined, ApiAccessLogsId>;
 
-	accessTokenId: ColumnType<ApiAccessTokensId, ApiAccessTokensId, ApiAccessTokensId>;
+	accessTokenId: ColumnType<
+		ApiAccessTokensId | null,
+		ApiAccessTokensId | null,
+		ApiAccessTokensId | null
+	>;
 
 	timestamp: ColumnType<Date, Date | string | undefined, Date | string>;
 
@@ -32,21 +36,21 @@ export const apiAccessLogsIdSchema = z.string().uuid() as unknown as z.Schema<Ap
 
 export const apiAccessLogsSchema = z.object({
 	id: apiAccessLogsIdSchema,
-	accessTokenId: apiAccessTokensIdSchema,
+	accessTokenId: apiAccessTokensIdSchema.nullable(),
 	timestamp: z.date(),
 	action: z.string(),
 });
 
 export const apiAccessLogsInitializerSchema = z.object({
 	id: apiAccessLogsIdSchema.optional(),
-	accessTokenId: apiAccessTokensIdSchema,
+	accessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	timestamp: z.date().optional(),
 	action: z.string(),
 });
 
 export const apiAccessLogsMutatorSchema = z.object({
 	id: apiAccessLogsIdSchema.optional(),
-	accessTokenId: apiAccessTokensIdSchema.optional(),
+	accessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	timestamp: z.date().optional(),
 	action: z.string().optional(),
 });

@@ -4,6 +4,7 @@ import type * as z from "zod";
 import type { CoreSchemaType } from "db/public";
 
 import type { INPUT_COMPONENTS } from "./config";
+import type { DependencyType } from "./dependencyType";
 
 export type FieldConfigItem = {
 	description?: React.ReactNode;
@@ -21,13 +22,6 @@ export type FieldConfig<SchemaType extends z.infer<z.ZodObject<any, any>>> = {
 		? FieldConfig<z.infer<SchemaType[Key]>>
 		: FieldConfigItem;
 };
-
-export enum DependencyType {
-	DISABLES,
-	REQUIRES,
-	HIDES,
-	SETS_OPTIONS,
-}
 
 type BaseDependency<SchemaType extends z.infer<z.ZodObject<any, any>>> = {
 	sourceField: keyof SchemaType;

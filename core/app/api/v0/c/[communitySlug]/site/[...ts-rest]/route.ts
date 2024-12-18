@@ -2,8 +2,12 @@ import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
 import { z } from "zod";
 
-import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
-import type { ApiAccessPermission, ApiAccessPermissionConstraintsInput } from "db/types";
+import type { Communities, CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import type {
+	ApiAccessPermission,
+	ApiAccessPermissionConstraintsInput,
+	LastModifiedBy,
+} from "db/types";
 import { siteApi } from "contracts";
 import { ApiAccessScope, ApiAccessType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
@@ -14,14 +18,13 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import {
 	createPubRecursiveNew,
 	deletePub,
 	doesPubExist,
 	ForbiddenError,
 	getPubsWithRelatedValuesAndChildren,
-	getPubType,
-	getPubTypesForCommunity,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
 	removePubRelations,
@@ -34,6 +37,7 @@ import {
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
 import { getSuggestedUsers } from "~/lib/server/user";
 
@@ -90,8 +94,15 @@ const getAuthorization = async () => {
 			acc[scope][accessType] = constraints ?? true;
 			return acc;
 		}, baseAuthorizationObject),
+		apiAccessTokenId: validatedAccessToken.id,
 		community,
 	};
+};
+
+type AuthorizationOutput<S extends ApiAccessScope, AT extends ApiAccessType> = {
+	authorization: true | Exclude<(typeof baseAuthorizationObject)[S][AT], false>;
+	community: Communities;
+	lastModifiedBy: LastModifiedBy;
 };
 
 const checkAuthorization = async <
@@ -112,18 +123,26 @@ const checkAuthorization = async <
 				target: T;
 		  }
 		| boolean;
-}) => {
+}): Promise<AuthorizationOutput<S, AT>> => {
 	const authorizationTokenWithBearer = headers().get("Authorization");
 
 	if (authorizationTokenWithBearer) {
-		const { authorization, community } = await getAuthorization();
+		const { authorization, community, apiAccessTokenId } = await getAuthorization();
 
 		const constraints = authorization[token.scope][token.type];
 		if (!constraints) {
 			throw new ForbiddenError(`You are not authorized to ${token.type} ${token.scope}`);
 		}
 
-		return { authorization: constraints as Exclude<typeof constraints, false>, community };
+		const lastModifiedBy = createLastModifiedBy({
+			apiAccessTokenId: apiAccessTokenId,
+		});
+
+		return {
+			authorization: constraints as Exclude<typeof constraints, false>,
+			community,
+			lastModifiedBy,
+		};
 	}
 
 	if (!cookies) {
@@ -146,9 +165,13 @@ const checkAuthorization = async <
 		throw new NotFoundError(`No community found for slug ${communitySlug}`);
 	}
 
+	const lastModifiedBy = createLastModifiedBy({
+		userId: user.id as UsersId,
+	});
+
 	// Handle cases where we only want to check for login but have no specific capability yet
 	if (typeof cookies === "boolean") {
-		return { authorization: true as const, community };
+		return { authorization: true as const, community, lastModifiedBy };
 	}
 
 	const can = await userCan(cookies.capability, cookies.target, user.id);
@@ -159,7 +182,7 @@ const checkAuthorization = async <
 		);
 	}
 
-	return { authorization: true as const, community };
+	return { authorization: true as const, community, lastModifiedBy };
 };
 
 const shouldReturnRepresentation = () => {
@@ -221,13 +244,14 @@ const handler = createNextHandler(
 				};
 			},
 			create: async ({ body }) => {
-				const { authorization, community } = await checkAuthorization({
+				const { authorization, community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					// TODO: figure out capability here
 					cookies: false,
 				});
 
 				if (
+					authorization &&
 					authorization !== true &&
 					!authorization.stages.includes(body.stageId as StagesId)
 				) {
@@ -239,6 +263,7 @@ const handler = createNextHandler(
 				const createdPub = await createPubRecursiveNew({
 					communityId: community?.id,
 					body,
+					lastModifiedBy,
 				});
 
 				const returnRepresentation = shouldReturnRepresentation();
@@ -255,7 +280,7 @@ const handler = createNextHandler(
 				};
 			},
 			update: async ({ params, body }) => {
-				const { community } = await checkAuthorization({
+				const { community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.updatePubValues,
@@ -277,6 +302,7 @@ const handler = createNextHandler(
 					pubId: params.pubId as PubsId,
 					communityId: community.id,
 					continueOnValidationError: false,
+					lastModifiedBy,
 				});
 
 				const returnRepresentation = shouldReturnRepresentation();
@@ -298,14 +324,18 @@ const handler = createNextHandler(
 				};
 			},
 			archive: async ({ params }) => {
-				const { community } = await checkAuthorization({
+				const { lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.deletePub,
 						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
 					},
 				});
-				const result = await deletePub(params.pubId as PubsId).executeTakeFirst();
+
+				const result = await deletePub({
+					pubId: params.pubId as PubsId,
+					lastModifiedBy,
+				});
 
 				if (result?.numDeletedRows !== BigInt(1)) {
 					return {
@@ -320,7 +350,7 @@ const handler = createNextHandler(
 			},
 			relations: {
 				remove: async ({ params, body }) => {
-					const { community } = await checkAuthorization({
+					const { community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
@@ -362,11 +392,13 @@ const handler = createNextHandler(
 							pubId: params.pubId as PubsId,
 							slugs: all,
 							communityId: community.id,
+							lastModifiedBy,
 						}),
 						removePubRelations({
 							pubId: params.pubId as PubsId,
 							relations: some,
 							communityId: community.id,
+							lastModifiedBy,
 						}),
 					]);
 
@@ -405,7 +437,7 @@ const handler = createNextHandler(
 					};
 				},
 				update: async ({ params, body }) => {
-					const { community } = await checkAuthorization({
+					const { community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
@@ -430,6 +462,7 @@ const handler = createNextHandler(
 						pubId: params.pubId as PubsId,
 						relations,
 						communityId: community.id,
+						lastModifiedBy,
 					});
 
 					const returnRepresentation = shouldReturnRepresentation();
@@ -451,7 +484,7 @@ const handler = createNextHandler(
 					};
 				},
 				replace: async ({ params, body }) => {
-					const { community } = await checkAuthorization({
+					const { community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
@@ -475,6 +508,7 @@ const handler = createNextHandler(
 						pubId: params.pubId as PubsId,
 						relations,
 						communityId: community.id,
+						lastModifiedBy,
 					});
 
 					const returnRepresentation = shouldReturnRepresentation();

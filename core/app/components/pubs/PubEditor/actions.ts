@@ -1,8 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
-import type { PubsId, StagesId } from "db/public";
+import type { PubsId, StagesId, UsersId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
@@ -12,14 +10,14 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, createPubRecursiveNew } from "~/lib/server";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { addMemberToForm, userHasPermissionToForm } from "~/lib/server/form";
-import { updatePub as _updatePub } from "~/lib/server/pub";
+import { updatePub as _updatePub, deletePub } from "~/lib/server/pub";
 
-type CreatePubRecursiveProps = Parameters<typeof createPubRecursiveNew>[0];
+type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	props: CreatePubRecursiveProps & { formSlug?: string; addUserToForm?: boolean }
@@ -44,8 +42,13 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	if (!canCreatePub && !canCreateFromForm) {
 		return ApiError.UNAUTHORIZED;
 	}
+
+	const lastModifiedBy = createLastModifiedBy({
+		userId: user.id as UsersId,
+	});
+
 	try {
-		const createdPub = await createPubRecursiveNew(createPubProps);
+		const createdPub = await createPubRecursiveNew({ ...createPubProps, lastModifiedBy });
 
 		if (addUserToForm && formSlug) {
 			await addMemberToForm({
@@ -106,6 +109,10 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.UNAUTHORIZED;
 	}
 
+	const lastModifiedBy = createLastModifiedBy({
+		userId: loginData.user.id as UsersId,
+	});
+
 	try {
 		const result = await _updatePub({
 			pubId,
@@ -113,6 +120,7 @@ export const updatePub = defineServerAction(async function updatePub({
 			pubValues,
 			stageId,
 			continueOnValidationError,
+			lastModifiedBy,
 		});
 
 		return result;
@@ -125,19 +133,16 @@ export const updatePub = defineServerAction(async function updatePub({
 	}
 });
 
-export const removePub = defineServerAction(async function removePub({
-	pubId,
-	path,
-}: {
-	pubId: PubsId;
-	path?: string | null;
-}) {
+export const removePub = defineServerAction(async function removePub({ pubId }: { pubId: PubsId }) {
 	const loginData = await getLoginData();
 
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
 
+	const lastModifiedBy = createLastModifiedBy({
+		userId: loginData.user.id,
+	});
 	const { user } = loginData;
 
 	const community = await findCommunityBySlug();
@@ -173,11 +178,8 @@ export const removePub = defineServerAction(async function removePub({
 	}
 
 	try {
-		await autoRevalidate(db.deleteFrom("pubs").where("pubs.id", "=", pubId)).executeTakeFirst();
+		await deletePub({ pubId, lastModifiedBy });
 
-		if (path) {
-			revalidatePath(path);
-		}
 		return {
 			success: true,
 			report: `Successfully removed the pub`,

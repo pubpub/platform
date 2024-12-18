@@ -1,9 +1,23 @@
+import { sql } from "kysely";
 import { describe, expect, it } from "vitest";
 
-import type { PubsId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import type {
+	ActionRunsId,
+	ApiAccessTokensId,
+	PubsId,
+	PubValuesHistoryId,
+	UsersId,
+} from "db/public";
+import { Action, ActionRunStatus, CoreSchemaType, MemberRole } from "db/public";
+import { OperationType } from "db/src/public/OperationType";
 
+import {
+	isCheckContraintError,
+	isPostgresError,
+	parseForeignKeyConstraintError,
+} from "~/kysely/errors";
 import { mockServerCode } from "../__tests__/utils";
+import { createLastModifiedBy } from "../lastModifiedBy";
 
 const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } =
 	await mockServerCode();
@@ -81,6 +95,7 @@ describe("updatedAt trigger", () => {
 				pubId: pub.id,
 				fieldId: pubFields.Description.id,
 				value: JSON.stringify("description"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.executeTakeFirstOrThrow();
 
@@ -96,6 +111,7 @@ describe("updatedAt trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new description"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where((eb) =>
 				eb.and([eb("pubId", "=", pub.id), eb("fieldId", "=", pubFields.Description.id)])
@@ -113,6 +129,7 @@ describe("updatedAt trigger", () => {
 				pubId: pub.id,
 				fieldId: pubFields.Description.id,
 				value: JSON.stringify("newer description"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			// this is similar to what we do in updatePub
 			.onConflict((oc) =>
@@ -122,6 +139,7 @@ describe("updatedAt trigger", () => {
 					// upsert
 					.doUpdateSet((eb) => ({
 						value: eb.ref("excluded.value"),
+						lastModifiedBy: createLastModifiedBy("system"),
 					}))
 			)
 			.executeTakeFirstOrThrow();
@@ -203,6 +221,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new title"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
@@ -226,6 +245,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: null,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
@@ -261,6 +281,7 @@ describe("pub_values title trigger", () => {
 				pubId: pubs[0].id,
 				fieldId: pubFields.Title.id,
 				value: JSON.stringify("new title"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.executeTakeFirstOrThrow();
 
@@ -272,6 +293,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("newer title"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
@@ -293,6 +315,7 @@ describe("pub_values title trigger", () => {
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new description"),
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Description.id)
@@ -491,5 +514,530 @@ describe("pubType title change trigger", () => {
 			await getPubTitle(pubs[1].id, trx),
 			"Inserts should not update titles of pubs without a title"
 		).toBe(null);
+	});
+});
+
+const pubValuesHistoryTestSeed = createSeed({
+	community: {
+		name: "test",
+		slug: "test-server-pub-2",
+	},
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+		Description: { schemaName: CoreSchemaType.String },
+		Field1: { schemaName: CoreSchemaType.String },
+		Field2: { schemaName: CoreSchemaType.String },
+	},
+	pubTypes: {
+		"Basic Pub": {
+			Title: { isTitle: true },
+			Description: { isTitle: false },
+			Field1: { isTitle: false },
+			Field2: { isTitle: false },
+		},
+	},
+	pubs: [
+		{
+			pubType: "Basic Pub",
+			values: {
+				Title: "Some title",
+			},
+		},
+	],
+});
+describe("pub_values_history trigger", () => {
+	describe("basic functioning", () => {
+		it("should create a pub_values_history row when a pubvalue is inserted", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const insertResult = await trx
+				.insertInto("pub_values")
+				.values({
+					pubId: pubs[0].id,
+					fieldId: pubFields.Description.id,
+					value: JSON.stringify("description"),
+					lastModifiedBy: createLastModifiedBy("system"),
+				})
+				.returning("id")
+				.executeTakeFirstOrThrow();
+
+			const history = await trx
+				.selectFrom("pub_values_history")
+				.selectAll()
+				.where("pubValueId", "=", insertResult.id)
+				.executeTakeFirstOrThrow();
+
+			expect(history).toMatchObject({
+				operationType: "insert",
+				oldRowData: null,
+				newRowData: {
+					value: "description",
+				},
+				pubValueId: insertResult.id,
+				userId: null,
+				apiAccessTokenId: null,
+				actionRunId: null,
+				other: "system",
+			});
+		});
+
+		it("should create a pub_values_history row when a pubvalue is updated", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+
+			const updateResult = await trx
+				.updateTable("pub_values")
+				.set({
+					value: JSON.stringify("new title"),
+					lastModifiedBy: createLastModifiedBy("system"),
+				})
+				.where("id", "=", titlePubValueId)
+				.executeTakeFirstOrThrow();
+
+			const history = await trx
+				.selectFrom("pub_values_history")
+				.selectAll()
+				.where("pubValueId", "=", titlePubValueId)
+				.where("operationType", "=", OperationType.update)
+				.executeTakeFirstOrThrow();
+
+			expect(history).toMatchObject({
+				operationType: "update",
+				oldRowData: {
+					value: "Some title",
+				},
+				newRowData: {
+					value: "new title",
+				},
+			});
+		});
+
+		it("should create an update pub_values_history row when a pubvalue is inserted on conflict", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+			const insertHistory = await trx
+				.selectFrom("pub_values_history")
+				.selectAll()
+				.where("pubValueId", "=", titlePubValueId)
+				.execute();
+
+			expect(insertHistory.length).toBe(1);
+			expect(insertHistory[0]).toMatchObject({
+				operationType: "insert",
+				oldRowData: null,
+				newRowData: {
+					value: "Some title",
+				},
+			});
+
+			const insertResult = await trx
+				.insertInto("pub_values")
+				.values({
+					pubId: pubs[0].id,
+					fieldId: pubFields.Title.id,
+					value: JSON.stringify("new title"),
+					lastModifiedBy: createLastModifiedBy("system"),
+				})
+				.returning("id")
+				.onConflict((oc) =>
+					oc
+						.columns(["pubId", "fieldId"])
+						.where("relatedPubId", "is", null)
+						.doUpdateSet((eb) => ({
+							value: eb.ref("excluded.value"),
+							lastModifiedBy: createLastModifiedBy("system"),
+						}))
+				)
+				.executeTakeFirstOrThrow();
+
+			const history = await trx
+				.selectFrom("pub_values_history")
+				.selectAll()
+				.where("pubValueId", "=", insertResult.id)
+				.execute();
+
+			expect(history.length).toBe(2);
+			expect(history[1]).toMatchObject({
+				operationType: "update",
+				oldRowData: {
+					value: "Some title",
+				},
+				newRowData: {
+					value: "new title",
+				},
+			});
+		});
+	});
+
+	describe("handling different types of lastModifiedBy", () => {
+		it("should allow setting lastModifiedBy to 'unknown' or 'system'", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+
+			const basicModifiedsPromise = ["unknown", "system"] as const;
+
+			for (const modifiedBy of basicModifiedsPromise) {
+				await expect(
+					trx
+						.updateTable("pub_values")
+						.set({
+							value: JSON.stringify(modifiedBy),
+							lastModifiedBy: createLastModifiedBy(modifiedBy),
+						})
+						.where("id", "=", titlePubValueId)
+						.returningAll()
+						.executeTakeFirstOrThrow()
+				).resolves.not.toThrow();
+			}
+
+			const history = await trx
+				.selectFrom("pub_values_history")
+				.selectAll()
+				.where("pubValueId", "=", titlePubValueId)
+				.execute();
+
+			history.sort((a, b) =>
+				(a.newRowData?.value as string).localeCompare(b.newRowData?.value as string)
+			);
+
+			expect(history.length).toBe(3);
+
+			expect(history[1]).toMatchObject({
+				newRowData: {
+					value: "system",
+				},
+				other: "system",
+				operationType: "update",
+			});
+			expect(history[2]).toMatchObject({
+				newRowData: {
+					value: "unknown",
+				},
+				other: null,
+				operationType: "update",
+				actionRunId: null,
+				apiAccessTokenId: null,
+				userId: null,
+			});
+		});
+
+		const tokenId = crypto.randomUUID();
+		const token = `${tokenId}.${crypto.randomUUID()}` as const;
+		const multiCommunityTestSeed = createSeed({
+			...pubValuesHistoryTestSeed,
+			users: {
+				"user-1": {
+					role: MemberRole.admin,
+				},
+			},
+			stages: {
+				"Stage 1": {
+					actions: [
+						{
+							action: Action.log,
+							name: "Log Action",
+							config: {
+								debounce: 1000,
+							},
+						},
+					],
+				},
+			},
+		});
+
+		it("should allow setting lastModifiedBy to a user id, api-token, and actionRunId, and set them to null when removed", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs, users, actions, apiToken } = await seedCommunity(
+				multiCommunityTestSeed,
+				{
+					withApiToken: token,
+				},
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+
+			const actionRun = await trx
+				.insertInto("action_runs")
+				.values({
+					actionInstanceId: actions[0].id,
+					pubId: pubs[0].id,
+					status: ActionRunStatus.success,
+					result: JSON.stringify({
+						message: "test",
+					}),
+				})
+				.returningAll()
+				.executeTakeFirstOrThrow();
+
+			const perpetrators = [
+				{
+					lastModifiedBy: {
+						userId: users["user-1"].id,
+					},
+					foreignKey: "userId",
+					value: users["user-1"].id,
+				},
+				{
+					lastModifiedBy: {
+						apiAccessTokenId: tokenId as ApiAccessTokensId,
+					},
+					foreignKey: "apiAccessTokenId",
+					value: tokenId,
+				},
+				{
+					lastModifiedBy: {
+						actionRunId: actionRun.id,
+					},
+					foreignKey: "actionRunId",
+					value: actionRun.id,
+				},
+			] as const;
+
+			let historyKeys: PubValuesHistoryId[] = [];
+			for (const perpetrator of perpetrators) {
+				const updateResult = await trx
+					.updateTable("pub_values")
+					.set({
+						value: JSON.stringify(perpetrator.value),
+						lastModifiedBy: createLastModifiedBy(perpetrator.lastModifiedBy),
+					})
+					.where("id", "=", titlePubValueId)
+					.executeTakeFirstOrThrow();
+
+				const history = await trx
+					.selectFrom("pub_values_history")
+					.selectAll()
+					.where("pubValueId", "=", titlePubValueId)
+					.where("operationType", "=", OperationType.update)
+					.where(sql`"newRowData"->>'value'`, "=", perpetrator.value)
+					.executeTakeFirstOrThrow();
+
+				historyKeys.push(history.id);
+
+				expect(history).toMatchObject({
+					operationType: "update",
+					newRowData: {
+						value: perpetrator.value,
+					},
+					[perpetrator.foreignKey]: perpetrator.value,
+				});
+			}
+
+			const removeApiToken = await trx
+				.deleteFrom("api_access_tokens")
+				.where("id", "=", tokenId as ApiAccessTokensId)
+				.executeTakeFirst();
+			expect(removeApiToken.numDeletedRows).toBe(BigInt(1));
+
+			const removeActionRun = await trx
+				.deleteFrom("action_runs")
+				.where("id", "=", actionRun.id as ActionRunsId)
+				.executeTakeFirst();
+			expect(removeActionRun.numDeletedRows).toBe(BigInt(1));
+
+			const removeUser = await trx
+				.deleteFrom("users")
+				.where("id", "=", users["user-1"].id)
+				.executeTakeFirst();
+			expect(removeUser.numDeletedRows).toBe(BigInt(1));
+
+			const history = await trx
+				.selectFrom("pub_values_history")
+				.selectAll()
+				.where("pubValueId", "=", titlePubValueId)
+				.where("id", "in", historyKeys)
+				.orderBy("createdAt", "desc")
+				.execute();
+
+			expect(history.length).toBe(3);
+			history.forEach((h) =>
+				expect(
+					h,
+					"history perpetrators should be nulled if they are removed"
+				).toMatchObject({
+					operationType: "update",
+					other: null,
+					userId: null,
+					apiAccessTokenId: null,
+					actionRunId: null,
+				})
+			);
+		});
+
+		const isModifiedByCheckConstraintError = (error: unknown) =>
+			isCheckContraintError(error) && error.constraint === "modified_by_type_check";
+
+		it("should throw a constraint error if lastModifiedBy is not a valid uuid", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+
+			try {
+				await trx
+					.updateTable("pub_values")
+					.set({
+						lastModifiedBy: createLastModifiedBy({
+							userId: "not-a-user" as UsersId,
+						}),
+					})
+					.where("id", "=", titlePubValueId)
+					.executeTakeFirst();
+			} catch (e) {
+				expect(isModifiedByCheckConstraintError(e)).toBe(true);
+			}
+		});
+
+		it("should throw a different error if it is a valid id, but not a valid foreign key", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+
+			const randomUserId = crypto.randomUUID();
+			try {
+				await trx
+					.updateTable("pub_values")
+					.set({
+						lastModifiedBy: createLastModifiedBy({ userId: randomUserId as UsersId }),
+					})
+					.where("id", "=", titlePubValueId)
+					.executeTakeFirst();
+			} catch (e) {
+				expect(isPostgresError(e)).toBe(true);
+				expect(parseForeignKeyConstraintError(e)).toMatchObject({
+					foreignKey: {
+						key: "userId",
+						value: randomUserId,
+						table: "users",
+					},
+				});
+			}
+		});
+
+		it("should set throw if you are updating a pub_value and the lastModifiedBy is not set", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			const titlePubValueId = pubs[0].values.find(
+				(v) => v.fieldId === pubFields.Title.id
+			)?.id!;
+
+			try {
+				await trx
+					.updateTable("pub_values")
+					.set({ value: JSON.stringify("new title") })
+					.where("id", "=", titlePubValueId)
+					.executeTakeFirst();
+
+				const history = await trx
+					.selectFrom("pub_values_history")
+					.selectAll()
+					.where("pubValueId", "=", titlePubValueId)
+					.execute();
+
+				expect(true, "Incorrect state, this statement should throw").toBe(false);
+			} catch (e) {
+				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE");
+			}
+		});
+
+		it("should throw if no lastModifiedBy is set during onConflict doUpdate", async () => {
+			const trx = getTrx();
+
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { pubFields, pubs } = await seedCommunity(
+				pubValuesHistoryTestSeed,
+				undefined,
+				trx
+			);
+
+			try {
+				await trx
+					.insertInto("pub_values")
+					.values({
+						pubId: pubs[0].id,
+						fieldId: pubFields.Title.id,
+						value: JSON.stringify("test"),
+						lastModifiedBy: createLastModifiedBy("system"),
+					})
+					.onConflict((cb) =>
+						cb
+							.columns(["pubId", "fieldId"])
+							.where("relatedPubId", "is", null)
+							.doUpdateSet((eb) => ({
+								value: eb.ref("excluded.value"),
+								// not set heree!
+							}))
+					)
+					.executeTakeFirstOrThrow();
+			} catch (e) {
+				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE");
+			}
+		});
 	});
 });
