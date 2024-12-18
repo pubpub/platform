@@ -58,5 +58,5 @@ FROM
 CREATE TRIGGER trigger_pub_values_history
   AFTER INSERT OR UPDATE ON pub_values
   FOR EACH ROW
-  EXECUTE FUNCTION f_generic_history();
+  EXECUTE FUNCTION f_generic_history('pubValueId');
 

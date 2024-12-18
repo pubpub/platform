@@ -63,5 +63,5 @@ FROM
 CREATE TRIGGER trigger_{{historyTableName}}
   AFTER INSERT OR UPDATE ON {{tableName}}
   FOR EACH ROW
-  EXECUTE FUNCTION f_generic_history();
+  EXECUTE FUNCTION f_generic_history('{{camelCasedTableName}}Id');
 

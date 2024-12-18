@@ -1005,7 +1005,7 @@ export const addDeletePubValueHistoryEntries = async ({
 			pubValues.map((pubValue) => ({
 				operationType: OperationType.delete,
 				oldRowData: JSON.stringify(pubValue),
-				primaryKeyValue: pubValue.id,
+				pubValueId: pubValue.id,
 				...parsedLastModifiedBy,
 			}))
 		)
