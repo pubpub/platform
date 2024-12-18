@@ -43,6 +43,10 @@ export const getPubTitle = (pub: PubTitleProps): string => {
 
 type InputPub = ProcessedPub<{ withStage: true; withLegacyAssignee: true; withPubType: true }>;
 
+/**
+ * this is a bridge function for places where we still use the `{ slug: value }` pubvalues shape, rather than an array
+ * this is eg the case in the contexteditor at the time of writing (2024-12-18)
+ */
 export const processedPubToPubResult = <T extends InputPub>(pub: T): GetPubsResult[number] => {
 	return {
 		...pub,
