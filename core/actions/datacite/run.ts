@@ -50,6 +50,7 @@ const makeDatacitePayload = async (
 	pub: ActionPub<ActionPubType>,
 	config: Config
 ): Promise<Payload> => {
+	const titleFieldSlug = config.pubFields.title?.[0];
 	const urlFieldSlug = expect(
 		config.pubFields.url?.[0],
 		"The DataCite action is missing a URL field override."
@@ -80,6 +81,17 @@ const makeDatacitePayload = async (
 		creatorNameFieldSlug
 	);
 
+	let title: string;
+
+	if (titleFieldSlug !== undefined) {
+		title = expect(
+			pub.values[titleFieldSlug] as string | undefined,
+			"The pub has no corresponding value for the configured title field."
+		);
+	} else {
+		title = expect(pub.title, "The pub has no title.");
+	}
+
 	const url = pub.values[urlFieldSlug];
 	assert(
 		typeof url === "string",
@@ -93,8 +105,6 @@ const makeDatacitePayload = async (
 	);
 
 	const publicationYear = new Date(publicationDate).getFullYear();
-
-	assert(typeof pub.title === "string", "The pub has no title field.");
 
 	let doi = config.doi;
 
@@ -119,7 +129,7 @@ const makeDatacitePayload = async (
 				event: "publish",
 				doi,
 				prefix: config.doiPrefix,
-				titles: [{ title: pub.title }],
+				titles: [{ title }],
 				creators,
 				publisher: config.publisher,
 				publicationYear,
@@ -199,7 +209,7 @@ const updatePubDeposit = async (payload: Payload) => {
 	return response.json();
 };
 
-export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
+export const run = defineRun<typeof action>(async ({ pub, config, args, lastModifiedBy }) => {
 	const depositConfig = { ...config, ...args };
 
 	let payload: Payload;
@@ -232,6 +242,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	// DataCite
 	if (!depositConfig.doi) {
 		const doiFieldSlug = expect(config.pubFields.doi?.[0]);
+
 		try {
 			await updatePub({
 				pubId: pub.id,
@@ -240,6 +251,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 					[doiFieldSlug]: depositResult.data.attributes.doi,
 				},
 				continueOnValidationError: false,
+				lastModifiedBy,
 			});
 		} catch (error) {
 			return {

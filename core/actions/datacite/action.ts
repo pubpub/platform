@@ -12,6 +12,7 @@ export const action = defineAction({
 			doi: z.string().optional(),
 			doiPrefix: z.string().optional(),
 			doiSuffix: z.string().optional(),
+			title: z.string().optional(),
 			url: z.string(),
 			publisher: z.string(),
 			publicationDate: z.date(),
@@ -23,6 +24,9 @@ export const action = defineAction({
 				allowedSchemas: true,
 			},
 			doiSuffix: {
+				allowedSchemas: true,
+			},
+			title: {
 				allowedSchemas: true,
 			},
 			url: {
@@ -47,6 +51,7 @@ export const action = defineAction({
 			doi: z.string().optional(),
 			doiPrefix: z.string().optional(),
 			doiSuffix: z.string().optional(),
+			title: z.string().optional(),
 			url: z.string(),
 			publisher: z.string(),
 			publicationDate: z.date(),
@@ -58,6 +63,9 @@ export const action = defineAction({
 				allowedSchemas: true,
 			},
 			doiSuffix: {
+				allowedSchemas: true,
+			},
+			title: {
 				allowedSchemas: true,
 			},
 			url: {
