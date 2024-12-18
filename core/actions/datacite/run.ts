@@ -94,8 +94,6 @@ const makeDatacitePayload = async (
 
 	const publicationYear = new Date(publicationDate).getFullYear();
 
-	console.log(pub);
-
 	assert(typeof pub.title === "string", "The pub has no title field.");
 
 	let doi = config.doi;
@@ -166,7 +164,6 @@ const checkDoi = async (doi: string) => {
 };
 
 const createPubDeposit = async (payload: Payload) => {
-	console.log(payload);
 	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
 		headers: makeRequestHeaders(),
@@ -174,7 +171,6 @@ const createPubDeposit = async (payload: Payload) => {
 	});
 
 	if (!response.ok) {
-		console.log(await response.json());
 		return {
 			title: "Failed to create DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
