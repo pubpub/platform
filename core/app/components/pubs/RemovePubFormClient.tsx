@@ -38,7 +38,6 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 	const onSubmit = async () => {
 		const result = await runRemovePub({
 			pubId,
-			path: pathWithoutFormParam,
 		});
 
 		if (result && "success" in result) {

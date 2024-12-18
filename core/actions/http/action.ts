@@ -1,8 +1,7 @@
-import dynamic from "next/dynamic";
 import * as z from "zod";
 
 import { Action } from "db/public";
-import { DependencyType } from "ui/auto-form";
+import { DependencyType } from "ui/auto-form/dependencyType";
 import { Globe } from "ui/icon";
 
 import { defineAction } from "../types";

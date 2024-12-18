@@ -48,6 +48,7 @@ test("PubTitle component includes the pub title", async () => {
 					communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
 					isRelation: false,
 				},
+				lastModifiedBy: "unknown",
 			},
 			{
 				id: "d2912025-8d4f-40b1-9bc4-7cbecdf498ba",
@@ -57,6 +58,7 @@ test("PubTitle component includes the pub title", async () => {
 				createdAt: currentDate,
 				updatedAt: currentDate,
 				relatedPubId: null,
+				lastModifiedBy: "unknown",
 				field: {
 					id: "0e4deea4-4866-493d-a408-657b97549dd9",
 					name: "DOI",
@@ -80,6 +82,7 @@ test("PubTitle component includes the pub title", async () => {
 				createdAt: currentDate,
 				updatedAt: currentDate,
 				relatedPubId: null,
+				lastModifiedBy: "unknown",
 				field: {
 					id: "6ad9a55e-8451-448f-9961-2f0887dda882",
 					name: "URL",
