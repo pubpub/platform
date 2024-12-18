@@ -5,10 +5,7 @@ CREATE TYPE "OperationType" AS ENUM(
     'delete'
 );
 
-CREATE DOMAIN modified_by_type AS TEXT
-CHECK (
-    VALUE ~ '^(user|action-run|api-access-token):[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\|\d+$|^(unknown|system)\|\d+$'
-);
+CREATE DOMAIN modified_by_type AS TEXT CHECK (VALUE ~ '^(user|action-run|api-access-token):[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\|\d+$|^(unknown|system)\|\d+$');
 
 CREATE OR REPLACE FUNCTION f_generic_history()
     RETURNS TRIGGER
@@ -53,14 +50,6 @@ BEGIN
             END IF;
     END CASE;
     IF TG_OP = 'INSERT' THEN
-        -- if it's an insert on conflict, we'll treat it as an update,
-        -- and we include the old row data as the new row data
-        -- v_oldRowData := (select * from pub_values where "pubId" = NEW."pubId" and "fieldId" = NEW."fieldId");
-        -- if v_oldRowData is not null then
-        --     v_operationType := 'update'::"OperationType";
-        -- else
-        --     v_operationType := 'insert'::"OperationType";
-        -- end if;
         EXECUTE vc_insert_sql
         USING 'insert'::"OperationType", NULL::json, row_to_json(NEW), NEW."id", v_userId, v_apiAccessTokenId, v_actionRunId, v_other;
     ELSIF (TG_OP = 'UPDATE'
