@@ -129,7 +129,7 @@ describe("runActionInstance", () => {
 			event: Event.pubEnteredStage,
 			actionInstanceArgs: {
 				outputField: `${community.slug}:title`,
-				docUrl: "https://docs.google.com/document/d/1234567890",
+				docUrl: fakeDocURL,
 			},
 		});
 
