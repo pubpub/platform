@@ -5,7 +5,7 @@ import type {
 	ActionRunsId,
 	ApiAccessTokensId,
 	PubsId,
-	PubValuesHistoryHistId,
+	PubValuesHistoryId,
 	UsersId,
 } from "db/public";
 import { Action, ActionRunStatus, CoreSchemaType, MemberRole } from "db/public";
@@ -571,7 +571,7 @@ describe("pub_values_history trigger", () => {
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("primaryKeyValue", "=", insertResult.id)
+				.where("pubValueId", "=", insertResult.id)
 				.executeTakeFirstOrThrow();
 
 			expect(history).toMatchObject({
@@ -580,7 +580,7 @@ describe("pub_values_history trigger", () => {
 				newRowData: {
 					value: "description",
 				},
-				primaryKeyValue: insertResult.id,
+				pubValueId: insertResult.id,
 				userId: null,
 				apiAccessTokenId: null,
 				actionRunId: null,
@@ -614,7 +614,7 @@ describe("pub_values_history trigger", () => {
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("primaryKeyValue", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId)
 				.where("operationType", "=", OperationType.update)
 				.executeTakeFirstOrThrow();
 
@@ -645,7 +645,7 @@ describe("pub_values_history trigger", () => {
 			const insertHistory = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("primaryKeyValue", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId)
 				.execute();
 
 			expect(insertHistory.length).toBe(1);
@@ -680,7 +680,7 @@ describe("pub_values_history trigger", () => {
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("primaryKeyValue", "=", insertResult.id)
+				.where("pubValueId", "=", insertResult.id)
 				.execute();
 
 			expect(history.length).toBe(2);
@@ -730,7 +730,7 @@ describe("pub_values_history trigger", () => {
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("primaryKeyValue", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId)
 				.execute();
 
 			history.sort((a, b) =>
@@ -835,7 +835,7 @@ describe("pub_values_history trigger", () => {
 				},
 			] as const;
 
-			let historyKeys: PubValuesHistoryHistId[] = [];
+			let historyKeys: PubValuesHistoryId[] = [];
 			for (const perpetrator of perpetrators) {
 				const updateResult = await trx
 					.updateTable("pub_values")
@@ -849,12 +849,12 @@ describe("pub_values_history trigger", () => {
 				const history = await trx
 					.selectFrom("pub_values_history")
 					.selectAll()
-					.where("primaryKeyValue", "=", titlePubValueId)
+					.where("pubValueId", "=", titlePubValueId)
 					.where("operationType", "=", OperationType.update)
 					.where(sql`"newRowData"->>'value'`, "=", perpetrator.value)
 					.executeTakeFirstOrThrow();
 
-				historyKeys.push(history.histId);
+				historyKeys.push(history.id);
 
 				expect(history).toMatchObject({
 					operationType: "update",
@@ -886,8 +886,8 @@ describe("pub_values_history trigger", () => {
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("primaryKeyValue", "=", titlePubValueId)
-				.where("histId", "in", historyKeys)
+				.where("pubValueId", "=", titlePubValueId)
+				.where("id", "in", historyKeys)
 				.orderBy("createdAt", "desc")
 				.execute();
 
@@ -997,7 +997,7 @@ describe("pub_values_history trigger", () => {
 				const history = await trx
 					.selectFrom("pub_values_history")
 					.selectAll()
-					.where("primaryKeyValue", "=", titlePubValueId)
+					.where("pubValueId", "=", titlePubValueId)
 					.execute();
 
 				expect(true, "Incorrect state, this statement should throw").toBe(false);
