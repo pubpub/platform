@@ -439,6 +439,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					[pubFields.Title.slug]: "Some title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
@@ -1027,6 +1028,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					},
 				],
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");

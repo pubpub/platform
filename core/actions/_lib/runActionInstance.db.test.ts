@@ -72,7 +72,7 @@ describe("runActionInstance", () => {
 	it("should be able to successfully run the most simple action", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubs, actions } = await seedCommunity(await pubTriggerTestSeed(), {
+		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
 		});
 		const { runActionInstance } = await import("~/actions/_lib/runActionInstance");
@@ -82,6 +82,7 @@ describe("runActionInstance", () => {
 			actionInstanceId: logActionInstance.id,
 			pubId: pubs[0].id,
 			event: Event.pubEnteredStage,
+			communityId: community.id,
 		});
 
 		expect(result).toEqual({
@@ -131,6 +132,7 @@ describe("runActionInstance", () => {
 				outputField: `${community.slug}:title`,
 				docUrl: fakeDocURL,
 			},
+			communityId: community.id,
 		});
 
 		expect(result).toEqual({
