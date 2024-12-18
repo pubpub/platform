@@ -69,7 +69,7 @@ TODO: all our database notes should probably be centralized somewhere.
 
 ## History Tables
 
-We have a number of tables that exits just to record the history of a table, along with the entity that made the change. It servers both as a way to audit changes, and as a way to reconstruct the value of an entity (usually a Pub) at a point in time.
+We have a number of tables that exist just to record the history of a table, along with the entity that made the change. They serve both as a way to audit changes and as a way to reconstruct the value of an entity (usually a Pub) at a point in time.
 
 ### How to create one
 
