@@ -56,7 +56,7 @@ export default async function Page({
 				"forms.slug",
 				"forms.name as formName",
 				"pub_types.name as pubType",
-				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
+				"forms.updatedAt",
 				"forms.isArchived",
 				"forms.slug",
 				"forms.isDefault",
