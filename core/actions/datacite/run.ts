@@ -50,11 +50,22 @@ const makeDatacitePayload = async (
 	pub: ActionPub<ActionPubType>,
 	config: Config
 ): Promise<Payload> => {
-	// TODO: error messages
-	const urlFieldSlug = expect(config.pubFields.url?.[0]);
-	const creatorFieldSlug = expect(config.pubFields.creator?.[0]);
-	const creatorNameFieldSlug = expect(config.pubFields.creatorName?.[0]);
-	const publicationDateFieldSlug = expect(config.pubFields.publicationDate?.[0]);
+	const urlFieldSlug = expect(
+		config.pubFields.url?.[0],
+		"The DataCite action is missing a URL field override."
+	);
+	const creatorFieldSlug = expect(
+		config.pubFields.creator?.[0],
+		"The DataCite action is missing a creator field override."
+	);
+	const creatorNameFieldSlug = expect(
+		config.pubFields.creatorName?.[0],
+		"The DataCite action is missing a creator name field override."
+	);
+	const publicationDateFieldSlug = expect(
+		config.pubFields.publicationDate?.[0],
+		"The DataCite action is missing a publication date field override."
+	);
 
 	const { values } = await getPubsWithRelatedValuesAndChildren({
 		pubId: pub.id as PubsId,
@@ -70,14 +81,22 @@ const makeDatacitePayload = async (
 	);
 
 	const url = pub.values[urlFieldSlug];
-	assert(typeof url === "string");
+	assert(
+		typeof url === "string",
+		"The pub is missing a value corresponding to the configured URL field override."
+	);
 
 	const publicationDate = pub.values[publicationDateFieldSlug];
-	assert(typeof publicationDate === "string");
+	assert(
+		typeof publicationDate === "string",
+		"The pub is missing a value corresponding to the configured publication date field override."
+	);
 
 	const publicationYear = new Date(publicationDate).getFullYear();
 
-	assert(typeof pub.title === "string");
+	console.log(pub);
+
+	assert(typeof pub.title === "string", "The pub has no title field.");
 
 	let doi = config.doi;
 
@@ -147,6 +166,7 @@ const checkDoi = async (doi: string) => {
 };
 
 const createPubDeposit = async (payload: Payload) => {
+	console.log(payload);
 	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
 		headers: makeRequestHeaders(),
@@ -154,6 +174,7 @@ const createPubDeposit = async (payload: Payload) => {
 	});
 
 	if (!response.ok) {
+		console.log(await response.json());
 		return {
 			title: "Failed to create DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
