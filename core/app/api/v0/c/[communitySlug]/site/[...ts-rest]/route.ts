@@ -25,8 +25,6 @@ import {
 	doesPubExist,
 	ForbiddenError,
 	getPubsWithRelatedValuesAndChildren,
-	getPubType,
-	getPubTypesForCommunity,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
 	removePubRelations,
@@ -39,6 +37,7 @@ import {
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
 import { getSuggestedUsers } from "~/lib/server/user";
 

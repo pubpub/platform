@@ -44,6 +44,11 @@ export default async function Page({ params }: { params: { communitySlug: string
 							Tokens
 						</Link>
 					</li>
+					<li>
+						<Link className="underline" href={`/api/v0/c/${communitySlug}/site/docs`}>
+							API Docs
+						</Link>
+					</li>
 				</ul>
 			</div>
 		</main>
