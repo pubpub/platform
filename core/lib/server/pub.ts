@@ -21,7 +21,6 @@ import type {
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
-	CoreSchemaType,
 	MemberRole,
 	PubFieldsId,
 	Pubs,
@@ -33,6 +32,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
@@ -42,7 +42,7 @@ import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { mergeSlugsWithFields } from "../fields/utils";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { NotFoundError } from "./errors";
+import { BadRequestError, NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
 import { SAFE_USER_SELECT } from "./user";
@@ -652,6 +652,30 @@ const getFieldInfoForSlugs = async ({
 	}));
 };
 
+/**
+ * This should maybe go somewhere else
+ */
+const hydratePubValues = <T extends { slug: string; value: unknown; schemaName: CoreSchemaType }>(
+	pubValues: T[]
+) => {
+	return pubValues.map(({ value, schemaName, slug, ...rest }) => {
+		if (schemaName === CoreSchemaType.DateTime) {
+			try {
+				value = new Date(value as string);
+			} catch {
+				throw new BadRequestError(`Invalid date value for field ${slug}`);
+			}
+		}
+
+		return {
+			slug,
+			schemaName,
+			value,
+			...rest,
+		};
+	});
+};
+
 const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
@@ -671,19 +695,21 @@ const validatePubValues = async <T extends { slug: string; value: unknown }>({
 
 	const mergedPubFields = mergeSlugsWithFields(pubValues, relevantPubFields);
 
-	const validationErrors = validatePubValuesBySchemaName(mergedPubFields);
+	const hydratedPubValues = hydratePubValues(mergedPubFields);
+
+	const validationErrors = validatePubValuesBySchemaName(hydratedPubValues);
 
 	if (!validationErrors.length) {
-		return mergedPubFields;
+		return hydratedPubValues;
 	}
 
 	if (continueOnValidationError) {
-		return mergedPubFields.filter(
+		return hydratedPubValues.filter(
 			({ slug }) => !validationErrors.find(({ slug: errorSlug }) => errorSlug === slug)
 		);
 	}
 
-	throw new Error(validationErrors.map(({ error }) => error).join(" "));
+	throw new BadRequestError(validationErrors.map(({ error }) => error).join(" "));
 };
 
 type AddPubRelationsInput = { value: unknown; slug: string } & XOR<
