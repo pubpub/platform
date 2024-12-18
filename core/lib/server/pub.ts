@@ -618,7 +618,7 @@ export const deletePub = async ({
 
 	// this might not be necessary if we rarely delete pubs and
 	// give users ample warning that deletion is irreversible
-	// in that case we should probably also delete the pub values
+	// in that case we should probably also delete the relevant rows in the pub_values_history table
 	await addDeletePubValueHistoryEntries({
 		lastModifiedBy,
 		pubValues,
