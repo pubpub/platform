@@ -6,7 +6,7 @@ import type { PubFields, PubFieldsId } from "db/public";
 
 export type PubField = Pick<
 	PubFields,
-	"id" | "name" | "slug" | "schemaName" | "pubFieldSchemaId" | "isArchived"
+	"id" | "name" | "slug" | "schemaName" | "pubFieldSchemaId" | "isArchived" | "isRelation"
 >;
 export type PubFieldContext = Record<PubFieldsId, PubField>;
 

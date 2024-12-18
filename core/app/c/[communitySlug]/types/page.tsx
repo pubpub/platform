@@ -57,6 +57,7 @@ export default async function Page({
 	if (!types || !fields) {
 		return null;
 	}
+	console.log(fields);
 	return (
 		<PubFieldProvider pubFields={fields}>
 			<div className="mb-16 flex items-center justify-between">
