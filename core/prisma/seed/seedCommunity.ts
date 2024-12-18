@@ -101,7 +101,9 @@ type StagesInitializer<U extends UsersInitializer> = Record<
 	string,
 	{
 		id?: StagesId;
-		members?: (keyof U)[];
+		members?: {
+			[M in keyof U]?: MemberRole;
+		};
 		actions?: ActionInstanceInitializer[];
 	}
 >;
@@ -173,7 +175,9 @@ type PubInitializer<
 		 * The members of the pub.
 		 * Users are referenced by their keys in the users object.
 		 */
-		members?: (keyof U)[];
+		members?: {
+			[M in keyof U]?: MemberRole;
+		};
 		children?: PubInitializer<PF, PT, U, S>[];
 		/**
 		 * Relations can be specified inline
@@ -340,6 +344,12 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 			])
 		);
 
+		const members = Object.fromEntries(
+			Object.entries(pub.members ?? {}).map(
+				([slug, role]) => [users.find((user) => user.slug === slug)?.id!, role!] as const
+			)
+		) as Record<UsersId, MemberRole>;
+
 		const rootPubId = pub.id ?? (crypto.randomUUID() as PubsId);
 
 		const relatedPubs = pub.relatedPubs
@@ -383,6 +393,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 				stageId: stageId,
 				values,
 				parentId: pub.parentId,
+				members,
 				children:
 					pub.children &&
 					makePubInitializerMatchCreatePubRecursiveInput({
@@ -897,14 +908,18 @@ export async function seedCommunity<
 	}));
 
 	const stageMembers = consolidatedStages
-		.flatMap(
-			(stage, idx) =>
-				stage.members?.map((member) => ({
-					stage,
-					user: findBySlug(usersWithMemberShips, member as string)!,
-				})) ?? []
-		)
-		.filter((stageMember) => stageMember.user.member != undefined);
+		.flatMap((stage, idx) => {
+			if (!stage.members) return [];
+
+			return Object.entries(stage.members)?.map(([member, role]) => ({
+				stage,
+				user: findBySlug(usersWithMemberShips, member as string)!,
+				role,
+			}));
+		})
+		.filter(
+			(stageMember) => stageMember.user.member != undefined && stageMember.role != undefined
+		);
 
 	const stageMemberships =
 		stageMembers.length > 0
@@ -912,7 +927,7 @@ export async function seedCommunity<
 					.insertInto("stage_memberships")
 					.values((eb) =>
 						stageMembers.map((stageMember) => ({
-							role: stageMember.user.member?.role ?? MemberRole.editor,
+							role: stageMember.role!,
 							stageId: stageMember.stage.id,
 							userId: stageMember.user.id,
 						}))
