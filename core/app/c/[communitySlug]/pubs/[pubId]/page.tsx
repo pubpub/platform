@@ -168,6 +168,7 @@ export default async function Page({
 										{renderPubValue({
 											fieldName: value.fieldName,
 											value: value.value as JsonValue,
+											schemaName: value.schemaName,
 										})}
 									</div>
 								</div>
