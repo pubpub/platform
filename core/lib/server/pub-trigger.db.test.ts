@@ -340,6 +340,36 @@ describe("pub_values title trigger", () => {
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
 	});
+
+	it("should not update a title on a pub when a non-title pubvalue is updated", async () => {
+		// purposefully not in the transaction, because for some reason it doens't work then
+		const trx = testDb;
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
+
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
+
+		await trx
+			.insertInto("pub_values")
+			.values({
+				pubId: pubs[0].id,
+				fieldId: pubFields.Description.id,
+				value: JSON.stringify("new description"),
+				lastModifiedBy: createLastModifiedBy("system"),
+			})
+			.onConflict((oc) =>
+				oc
+					.columns(["pubId", "fieldId"])
+					.where("relatedPubId", "is", null)
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: createLastModifiedBy("system"),
+					}))
+			)
+			.executeTakeFirstOrThrow();
+
+		expect(await getPubTitle(pubs[0].id, trx)).not.toBe(null);
+	});
 });
 
 // when a pubType is updated, we need to update the title of all pubs in that pubType
