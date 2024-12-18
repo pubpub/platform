@@ -3,12 +3,12 @@
 //// ------------------------------------------------------
 
 Table pub_values_history {
-  histId String [pk]
+  id String [pk]
   createdAt DateTime [default: `now()`, not null]
   operationType OperationType [not null]
   oldRowData Json
   newRowData Json
-  primaryKeyValue String
+  pubValueId String
   user users
   userId String
   apiAccessToken api_access_tokens

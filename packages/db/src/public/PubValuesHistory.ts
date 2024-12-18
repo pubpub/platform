@@ -13,7 +13,7 @@ import { operationTypeSchema } from "./OperationType";
 import { usersIdSchema } from "./Users";
 
 /** Identifier type for public.pub_values_history */
-export type PubValuesHistoryHistId = string & { __brand: "PubValuesHistoryHistId" };
+export type PubValuesHistoryId = string & { __brand: "PubValuesHistoryId" };
 
 /** Represents the table public.pub_values_history */
 export type PubValuesHistoryTable = HistoryTable<PubValues, PubValuesHistoryHistId>;
@@ -24,17 +24,17 @@ export type NewPubValuesHistory = Insertable<PubValuesHistoryTable>;
 
 export type PubValuesHistoryUpdate = Updateable<PubValuesHistoryTable>;
 
-export const pubValuesHistoryHistIdSchema = z
+export const pubValuesHistoryIdSchema = z
 	.string()
-	.uuid() as unknown as z.Schema<PubValuesHistoryHistId>;
+	.uuid() as unknown as z.Schema<PubValuesHistoryId>;
 
 export const pubValuesHistorySchema = z.object({
-	histId: pubValuesHistoryHistIdSchema,
+	id: pubValuesHistoryIdSchema,
 	createdAt: z.date(),
 	operationType: operationTypeSchema,
 	oldRowData: z.unknown().nullable(),
 	newRowData: z.unknown().nullable(),
-	primaryKeyValue: z.string().nullable(),
+	pubValueId: z.string().nullable(),
 	userId: usersIdSchema.nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.nullable(),
 	actionRunId: actionRunsIdSchema.nullable(),
@@ -42,12 +42,12 @@ export const pubValuesHistorySchema = z.object({
 });
 
 export const pubValuesHistoryInitializerSchema = z.object({
-	histId: pubValuesHistoryHistIdSchema.optional(),
+	id: pubValuesHistoryIdSchema.optional(),
 	createdAt: z.date().optional(),
 	operationType: operationTypeSchema,
 	oldRowData: z.unknown().optional().nullable(),
 	newRowData: z.unknown().optional().nullable(),
-	primaryKeyValue: z.string().optional().nullable(),
+	pubValueId: z.string().optional().nullable(),
 	userId: usersIdSchema.optional().nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	actionRunId: actionRunsIdSchema.optional().nullable(),
@@ -55,12 +55,12 @@ export const pubValuesHistoryInitializerSchema = z.object({
 });
 
 export const pubValuesHistoryMutatorSchema = z.object({
-	histId: pubValuesHistoryHistIdSchema.optional(),
+	id: pubValuesHistoryIdSchema.optional(),
 	createdAt: z.date().optional(),
 	operationType: operationTypeSchema.optional(),
 	oldRowData: z.unknown().optional().nullable(),
 	newRowData: z.unknown().optional().nullable(),
-	primaryKeyValue: z.string().optional().nullable(),
+	pubValueId: z.string().optional().nullable(),
 	userId: usersIdSchema.optional().nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	actionRunId: actionRunsIdSchema.optional().nullable(),

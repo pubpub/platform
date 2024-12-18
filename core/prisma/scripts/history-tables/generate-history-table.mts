@@ -157,7 +157,8 @@ const migrationTemplate = fs.readFileSync(
 
 const migrationContent = migrationTemplate
 	.replace(/{{tableName}}/g, tableName)
-	.replace(/{{historyTableName}}/g, historyTableName);
+	.replace(/{{historyTableName}}/g, historyTableName)
+	.replace(/{{camelCasedTableName}}/g, camelCasedTableName);
 
 fs.writeFileSync(newMigrationFile, migrationContent);
 

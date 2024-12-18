@@ -1549,7 +1549,7 @@ export const databaseTables = [
 		schema: "public",
 		columns: [
 			{
-				name: "histId",
+				name: "id",
 				dataType: "text",
 				dataTypeSchema: "pg_catalog",
 				isNullable: false,
@@ -1589,7 +1589,7 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
-				name: "primaryKeyValue",
+				name: "pubValueId",
 				dataType: "text",
 				dataTypeSchema: "pg_catalog",
 				isNullable: true,

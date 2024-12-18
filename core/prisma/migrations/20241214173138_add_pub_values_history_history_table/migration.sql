@@ -12,27 +12,19 @@ ALTER TABLE "pub_values"
 ALTER TABLE "pub_values"
   ALTER COLUMN "lastModifiedBy" DROP DEFAULT;
 
--- backfill base `lastModifiedBy` column
-UPDATE
-  "pub_values"
-SET
-  "lastModifiedBy" = 'unknown'
-WHERE
-  "lastModifiedBy" IS NULL;
-
 -- CreateTable
 CREATE TABLE "pub_values_history"(
-  "histId" text NOT NULL DEFAULT gen_random_uuid(),
+  "id" text NOT NULL DEFAULT gen_random_uuid(),
   "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "operationType" "OperationType" NOT NULL,
   "oldRowData" jsonb,
   "newRowData" jsonb,
-  "primaryKeyValue" text,
+  "pubValueId" text,
   "userId" text,
   "apiAccessTokenId" text,
   "actionRunId" text,
   "other" text,
-  CONSTRAINT "pub_values_history_pkey" PRIMARY KEY ("histId")
+  CONSTRAINT "pub_values_history_pkey" PRIMARY KEY ("id")
 );
 
 -- AddForeignKey
@@ -54,7 +46,7 @@ ALTER TABLE pub_values_history
 -- we just set it to insert the current row data, as we do not know who created it
 -- we do not set a perpetrator for the existing data, as it is not possible to know who created it
 -- setting a createAt manually is risky, as the base table might not have a createdAt/updateAt column. therefore we set the base case to the current timestamp
-INSERT INTO "pub_values_history"("operationType", "oldRowData", "newRowData", "primaryKeyValue")
+INSERT INTO "pub_values_history"("operationType", "oldRowData", "newRowData", "pubValueId")
 SELECT
   'insert'::"OperationType",
   NULL,

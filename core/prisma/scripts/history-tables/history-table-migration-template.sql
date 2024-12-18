@@ -50,7 +50,7 @@ INSERT INTO "{{historyTableName}}" (
   "operationType",
   "oldRowData",
   "newRowData",
-  "primaryKeyValue"
+  "{{camelCasedTableName}}Id"
 )
 SELECT
   'insert'::"OperationType",

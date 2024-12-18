@@ -1,5 +1,5 @@
 model PubValueHistory {
-  histId        String        @id @default(dbgenerated("gen_random_uuid()"))
+  id            String        @id @default(dbgenerated("gen_random_uuid()"))
   createdAt     DateTime      @default(now())
   operationType OperationType
 
@@ -11,7 +11,7 @@ model PubValueHistory {
   newRowData Json?
 
   // primary key of the row that was changed
-  primaryKeyValue String?
+  pubValueId String?
 
   // identifying information
   user             User?           @relation(fields: [userId], references: [id])
