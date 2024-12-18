@@ -1,8 +1,3 @@
-import type { Selectable } from "kysely";
-
-import type { ActionRunsId, ApiAccessTokensId, UsersId } from "db/src/public";
-import type { HistoryTableBase, LastModifiedBy } from "db/types";
-
 export type PubTitleProps = {
 	title?: string | null;
 	createdAt: Date;
