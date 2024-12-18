@@ -514,6 +514,19 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			createdStageId = result.stageId;
 		}
 
+		if (body.members) {
+			await trx
+				.insertInto("pub_memberships")
+				.values(
+					Object.entries(body.members).map(([userId, role]) => ({
+						pubId: newPub.id,
+						userId: userId as UsersId,
+						role,
+					}))
+				)
+				.execute();
+		}
+
 		const pubValues = valuesWithFieldIds.length
 			? await autoRevalidate(
 					trx
