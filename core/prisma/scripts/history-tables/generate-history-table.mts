@@ -1,6 +1,5 @@
 import { spawnSync } from "child_process";
 import fs from "fs";
-import { argv } from "process";
 import readline from "readline/promises";
 
 const rl = readline.createInterface({
@@ -48,9 +47,11 @@ if (historyTableAlreadyExists) {
 	fs.unlinkSync(newHistoryTableFile);
 }
 
+const camelCasedTableName = `${baseModelNameSingular[0].toLowerCase()}${baseModelNameSingular.slice(1)}`;
+
 const historyTableSchema = `
 model ${historyModelName} {
- histId        String        @id @default(dbgenerated("gen_random_uuid()"))
+ id            String        @id @default(dbgenerated("gen_random_uuid()"))
  createdAt     DateTime      @default(now())
  operationType OperationType
 
@@ -62,7 +63,7 @@ model ${historyModelName} {
  newRowData Json?
 
  // primary key of the row that was changed
- primaryKeyValue String?
+ ${camelCasedTableName}Id String?
 
  // identifying information
  user             User?           @relation(fields: [userId], references: [id])

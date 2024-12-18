@@ -14,17 +14,17 @@ ALTER TABLE "{{tableName}}"
 
 -- CreateTable
 CREATE TABLE "{{historyTableName}}"(
-  "histId" text NOT NULL DEFAULT gen_random_uuid(),
+  "id" text NOT NULL DEFAULT gen_random_uuid(),
   "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "operationType" "OperationType" NOT NULL,
   "oldRowData" jsonb,
   "newRowData" jsonb,
-  "primaryKeyValue" text,
+  "{{camelCasedTableName}}Id" text,
   "userId" text,
   "apiAccessTokenId" text,
   "actionRunId" text,
   "other" text,
-  CONSTRAINT "{{historyTableName}}_pkey" PRIMARY KEY ("histId")
+  CONSTRAINT "{{historyTableName}}_pkey" PRIMARY KEY ("id")
 );
 
 -- AddForeignKey
