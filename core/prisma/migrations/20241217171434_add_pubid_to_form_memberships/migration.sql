@@ -6,6 +6,8 @@
 
 */
 
+BEGIN;
+
 -- AlterTable
 ALTER TABLE "form_memberships" ADD COLUMN     "pubId" TEXT;
 
@@ -24,3 +26,24 @@ CREATE UNIQUE INDEX "form_memberships_formId_userId_pubId_key" ON "form_membersh
 -- CreateIndex
 CREATE UNIQUE INDEX "form_memberships_formId_memberGroupId_pubId_key" ON "form_memberships"("formId", "memberGroupId", "pubId");
 
+-- Backfill pubIds for existing form_memberships entries based on action runs
+UPDATE form_memberships SET "pubId" = email_invites."pubId"
+FROM
+(
+    SELECT DISTINCT "pubId", community_memberships."userId", 
+    forms.id as "formId"
+    FROM action_runs 
+    INNER JOIN action_instances ON action_runs."actionInstanceId" = action_instances.id 
+    INNER JOIN community_memberships ON params->'actionInstanceArgs'->>'recipient' = community_memberships.id
+    INNER JOIN pubs ON pubs.id = "pubId"
+    INNER JOIN forms ON forms.slug = regexp_replace(
+        params->'actionInstanceArgs'->>'body',
+        '.*:link\{form="([^"]+)"\}.*',
+        '\1'
+    ) AND forms."communityId" = pubs."communityId"
+    WHERE action='email'
+) AS email_invites
+WHERE form_memberships."formId" = email_invites."formId"
+AND form_memberships."userId" = email_invites."userId";
+
+END;
