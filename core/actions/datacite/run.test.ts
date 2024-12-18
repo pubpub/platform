@@ -2,7 +2,7 @@ import { afterEach } from "node:test";
 
 import { describe, expect, it, vitest } from "vitest";
 
-import type { CommunitiesId, PubsId, StagesId } from "db/public";
+import type { ActionRunsId, CommunitiesId, PubsId, StagesId } from "db/public";
 
 import type { RunProps } from "../types";
 import type { action } from "./action";
@@ -68,6 +68,7 @@ const pub = {
 };
 
 const RUN_OPTIONS: RunProps<typeof action> = {
+	actionRunId: "" as ActionRunsId,
 	stageId: "" as StagesId,
 	communityId: "" as CommunitiesId,
 	config: {
@@ -92,6 +93,7 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 	pub,
 	args: {} as any,
 	argsFieldOverrides: new Set(),
+	lastModifiedBy: "system|0",
 };
 
 const makeStubDatacitePayload = (doi?: string) => {
