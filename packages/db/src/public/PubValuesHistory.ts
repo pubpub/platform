@@ -16,7 +16,7 @@ import { usersIdSchema } from "./Users";
 export type PubValuesHistoryId = string & { __brand: "PubValuesHistoryId" };
 
 /** Represents the table public.pub_values_history */
-export type PubValuesHistoryTable = HistoryTable<PubValues, PubValuesHistoryHistId>;
+export type PubValuesHistoryTable = HistoryTable<PubValues, PubValuesHistoryId>;
 
 export type PubValuesHistory = Selectable<PubValuesHistoryTable>;
 
