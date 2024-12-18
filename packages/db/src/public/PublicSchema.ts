@@ -29,6 +29,7 @@ import type { PubsTable } from "./Pubs";
 import type { PubsInStagesTable } from "./PubsInStages";
 import type { PubTypesTable } from "./PubTypes";
 import type { PubValuesTable } from "./PubValues";
+import type { PubValuesHistoryTable } from "./PubValuesHistory";
 import type { RulesTable } from "./Rules";
 import type { SessionsTable } from "./Sessions";
 import type { StageMembershipsTable } from "./StageMemberships";
@@ -101,4 +102,6 @@ export interface PublicSchema {
 	form_memberships: FormMembershipsTable;
 
 	membership_capabilities: MembershipCapabilitiesTable;
+
+	pub_values_history: PubValuesHistoryTable;
 }

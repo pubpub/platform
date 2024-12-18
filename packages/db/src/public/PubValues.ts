@@ -2,8 +2,10 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 
 import { z } from "zod";
 
+import type { LastModifiedBy } from "../types";
 import type { PubFieldsId } from "./PubFields";
 import type { PubsId } from "./Pubs";
+import { modifiedByTypeSchema } from "./ModifiedByType";
 import { pubFieldsIdSchema } from "./PubFields";
 import { pubsIdSchema } from "./Pubs";
 
@@ -28,6 +30,8 @@ export interface PubValuesTable {
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	relatedPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
+
+	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
 }
 
 export type PubValues = Selectable<PubValuesTable>;
@@ -46,6 +50,7 @@ export const pubValuesSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	relatedPubId: pubsIdSchema.nullable(),
+	lastModifiedBy: modifiedByTypeSchema,
 });
 
 export const pubValuesInitializerSchema = z.object({
@@ -56,6 +61,7 @@ export const pubValuesInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	relatedPubId: pubsIdSchema.optional().nullable(),
+	lastModifiedBy: modifiedByTypeSchema,
 });
 
 export const pubValuesMutatorSchema = z.object({
@@ -66,4 +72,5 @@ export const pubValuesMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	relatedPubId: pubsIdSchema.optional().nullable(),
+	lastModifiedBy: modifiedByTypeSchema.optional(),
 });

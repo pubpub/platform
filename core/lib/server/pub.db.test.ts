@@ -7,6 +7,7 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
+import { createLastModifiedBy } from "../lastModifiedBy";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -85,6 +86,7 @@ describe("createPubRecursive", () => {
 					[`${community.slug}:title`]: "test title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		expect(pub).toMatchObject({
@@ -117,6 +119,7 @@ describe("createPubRecursive", () => {
 				],
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		expect(pub).toMatchObject({
@@ -139,6 +142,7 @@ describe("createPubRecursive", () => {
 				stageId: stages["Stage 1"].id,
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		expect(pub).toMatchObject({
@@ -166,6 +170,7 @@ describe("createPubRecursive", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		expect(pub).toMatchObject({
@@ -202,6 +207,7 @@ describe("createPubRecursive", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		expect(pub).toMatchObject({
@@ -237,6 +243,7 @@ describe("createPubRecursive", () => {
 					],
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		expect(pub).toMatchObject({
@@ -281,6 +288,7 @@ describe("createPubRecursive", () => {
 					],
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -309,6 +317,7 @@ describe("updatePub", () => {
 					[pubFields.Title.slug]: "Original title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		await updatePub({
@@ -318,6 +327,7 @@ describe("updatePub", () => {
 			},
 			communityId: community.id,
 			continueOnValidationError: false,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const updatedPub = await trx
@@ -342,6 +352,7 @@ describe("updatePub", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		await expect(
@@ -352,6 +363,7 @@ describe("updatePub", () => {
 				},
 				communityId: community.id,
 				continueOnValidationError: false,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 		).rejects.toThrow(
 			/Pub values contain fields that do not exist in the community: .*?:some-relation/
@@ -386,6 +398,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
@@ -566,6 +579,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					},
 				],
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -771,6 +785,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 		expect(pub).toBeDefined();
 
@@ -827,6 +842,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
@@ -883,6 +899,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					],
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
@@ -973,6 +990,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1038,6 +1056,7 @@ describe("upsertPubRelations", () => {
 					[pubFields.Title.slug]: "test title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1052,6 +1071,7 @@ describe("upsertPubRelations", () => {
 				},
 			],
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
@@ -1086,6 +1106,7 @@ describe("upsertPubRelations", () => {
 					[pubFields.Title.slug]: "test title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1105,6 +1126,7 @@ describe("upsertPubRelations", () => {
 				},
 			],
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
@@ -1138,6 +1160,7 @@ describe("upsertPubRelations", () => {
 					[pubFields.Title.slug]: "test title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1154,6 +1177,7 @@ describe("upsertPubRelations", () => {
 					},
 				],
 				trx,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 		).rejects.toThrow(pubFields["Some relation"].slug);
 	});
@@ -1173,6 +1197,7 @@ describe("upsertPubRelations", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		await expect(
@@ -1187,6 +1212,7 @@ describe("upsertPubRelations", () => {
 					},
 				],
 				trx,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 		).rejects.toThrow(
 			`Pub values contain fields that do not exist in the community: non-existent-field`
@@ -1207,6 +1233,7 @@ describe("upsertPubRelations", () => {
 					[pubFields.Title.slug]: "test title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1224,6 +1251,7 @@ describe("upsertPubRelations", () => {
 					},
 				],
 				trx,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 		).rejects.toThrow();
 	});
@@ -1242,6 +1270,7 @@ describe("upsertPubRelations", () => {
 					[pubFields.Title.slug]: "test title",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1265,6 +1294,7 @@ describe("upsertPubRelations", () => {
 					},
 				},
 			],
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1294,6 +1324,7 @@ describe("upsertPubRelations", () => {
 				},
 			},
 			trx,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		// Add initial relation
@@ -1307,6 +1338,7 @@ describe("upsertPubRelations", () => {
 					relatedPubId: pubs[0].id,
 				},
 			],
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1333,6 +1365,7 @@ describe("upsertPubRelations", () => {
 					},
 				},
 			],
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1369,6 +1402,7 @@ describe("removePubRelations", () => {
 						[pubFields.Title.slug]: "Related pub 1",
 					},
 				},
+				lastModifiedBy: createLastModifiedBy("system"),
 			}),
 			createPubRecursiveNew({
 				communityId: community.id,
@@ -1378,6 +1412,7 @@ describe("removePubRelations", () => {
 						[pubFields.Title.slug]: "Related pub 2",
 					},
 				},
+				lastModifiedBy: createLastModifiedBy("system"),
 			}),
 		]);
 
@@ -1399,6 +1434,7 @@ describe("removePubRelations", () => {
 					],
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { removePubRelations, getPubsWithRelatedValuesAndChildren } = await import("./pub");
@@ -1421,6 +1457,7 @@ describe("removePubRelations", () => {
 					relatedPubId: pubs[0].id,
 				},
 			],
+			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
@@ -1463,6 +1500,7 @@ describe("removePubRelations", () => {
 					],
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { removeAllPubRelationsBySlugs, getPubsWithRelatedValuesAndChildren } = await import(
@@ -1481,6 +1519,7 @@ describe("removePubRelations", () => {
 			pubId: pub.id,
 			slugs: [pubFields["Some relation"].slug],
 			communityId: community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort());
@@ -1508,6 +1547,7 @@ describe("removePubRelations", () => {
 					[pubFields.Title.slug]: "Test pub",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { removeAllPubRelationsBySlugs } = await import("./pub");
@@ -1517,6 +1557,7 @@ describe("removePubRelations", () => {
 				pubId: pub.id,
 				slugs: ["non-existent-field"],
 				communityId: community.id,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"
@@ -1559,6 +1600,7 @@ describe("replacePubRelationsBySlug", () => {
 					],
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		// Create new pubs to relate
@@ -1583,6 +1625,7 @@ describe("replacePubRelationsBySlug", () => {
 					],
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const newRelatedPub2 = await createPubRecursiveNew({
@@ -1593,6 +1636,7 @@ describe("replacePubRelationsBySlug", () => {
 					[pubFields.Title.slug]: "New related pub 2",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
@@ -1615,6 +1659,7 @@ describe("replacePubRelationsBySlug", () => {
 				},
 			],
 			communityId: community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
@@ -1644,6 +1689,7 @@ describe("replacePubRelationsBySlug", () => {
 					[pubFields.Title.slug]: "Test pub",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
@@ -1654,6 +1700,7 @@ describe("replacePubRelationsBySlug", () => {
 			pubId: pub.id,
 			relations: [],
 			communityId: community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
@@ -1675,6 +1722,7 @@ describe("replacePubRelationsBySlug", () => {
 					[pubFields.Title.slug]: "Test pub",
 				},
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
 		const { replacePubRelationsBySlug } = await import("./pub");
@@ -1690,6 +1738,7 @@ describe("replacePubRelationsBySlug", () => {
 					},
 				],
 				communityId: community.id,
+				lastModifiedBy: createLastModifiedBy("system"),
 			})
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"

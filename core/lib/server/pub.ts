@@ -31,11 +31,13 @@ import type {
 	PubTypes,
 	PubTypesId,
 	PubValuesId,
+	PubValues as PubValuesType,
 	Stages,
 	StagesId,
 	UsersId,
 } from "db/public";
-import { CoreSchemaType } from "db/public";
+import type { LastModifiedBy } from "db/types";
+import { CoreSchemaType, OperationType } from "db/public";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
@@ -43,6 +45,7 @@ import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { mergeSlugsWithFields } from "../fields/utils";
+import { parseLastModifiedBy } from "../lastModifiedBy";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
@@ -437,6 +440,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	body,
 	communityId,
 	parent,
+	lastModifiedBy,
 	...options
 }:
 	| {
@@ -444,12 +448,14 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx?: Kysely<Database>;
 			communityId: CommunitiesId;
 			parent?: never;
+			lastModifiedBy: LastModifiedBy;
 	  }
 	| {
 			body: MaybeHas<Body, "stageId">;
 			trx?: Kysely<Database>;
 			communityId: CommunitiesId;
 			parent: { id: PubsId };
+			lastModifiedBy: LastModifiedBy;
 	  }): Promise<ProcessedPub> => {
 	const trx = options?.trx ?? db;
 
@@ -518,6 +524,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 								pubId: newPub.id,
 								value: JSON.stringify(value),
 								relatedPubId,
+								lastModifiedBy,
 							}))
 						)
 						.returningAll()
@@ -557,6 +564,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						id: newPub.id,
 					},
 					trx,
+					lastModifiedBy,
 				});
 				return childPub;
 			}) ?? []
@@ -582,6 +590,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				}))
 			),
 			communityId,
+			lastModifiedBy,
 			trx,
 		});
 
@@ -596,8 +605,37 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	return result;
 };
 
-export const deletePub = (pubId: PubsId, trx = db) =>
-	autoRevalidate(trx.deleteFrom("pubs").where("id", "=", pubId));
+export const deletePub = async ({
+	pubId,
+	lastModifiedBy,
+	trx = db,
+}: {
+	pubId: PubsId;
+	lastModifiedBy: LastModifiedBy;
+	trx?: typeof db;
+}) => {
+	// first get the values before they are deleted
+	const pubValues = await trx
+		.selectFrom("pub_values")
+		.where("pubId", "=", pubId)
+		.selectAll()
+		.execute();
+
+	const deleteResult = await autoRevalidate(
+		trx.deleteFrom("pubs").where("id", "=", pubId)
+	).executeTakeFirstOrThrow();
+
+	// this might not be necessary if we rarely delete pubs and
+	// give users ample warning that deletion is irreversible
+	// in that case we should probably also delete the relevant rows in the pub_values_history table
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues,
+		trx,
+	});
+
+	return deleteResult;
+};
 
 export const getPubStage = (pubId: PubsId, trx = db) =>
 	autoCache(trx.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
@@ -751,11 +789,13 @@ export const upsertPubRelations = async ({
 	pubId,
 	relations,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	relations: AddPubRelationsInput[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }): Promise<ProcessedPub["values"]> => {
 	const normalizedRelationValues = normalizeRelationValues(relations);
@@ -798,6 +838,7 @@ export const upsertPubRelations = async ({
 					trx,
 					communityId,
 					body: pub.relatedPub,
+					lastModifiedBy: lastModifiedBy,
 				})
 			)
 		);
@@ -825,6 +866,7 @@ export const upsertPubRelations = async ({
 						relatedPubId,
 						value: JSON.stringify(value),
 						fieldId,
+						lastModifiedBy,
 					}))
 				)
 				.onConflict((oc) =>
@@ -834,6 +876,7 @@ export const upsertPubRelations = async ({
 						// upsert
 						.doUpdateSet((eb) => ({
 							value: eb.ref("excluded.value"),
+							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
 						}))
 				)
 				.returningAll()
@@ -869,11 +912,13 @@ export const removePubRelations = async ({
 	pubId,
 	relations,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	relations: RemovePubRelationsInput[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
 	const consolidatedRelations = await getFieldInfoForSlugs({
@@ -895,8 +940,14 @@ export const removePubRelations = async ({
 					)
 				)
 			)
-			.returning(["pub_values.relatedPubId"])
+			.returningAll()
 	).execute();
+
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues: removed,
+		trx,
+	});
 
 	return removed.map(({ relatedPubId }) => relatedPubId);
 };
@@ -910,11 +961,13 @@ export const removeAllPubRelationsBySlugs = async ({
 	pubId,
 	slugs,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	slugs: string[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
 	const fields = await getFieldInfoForSlugs({
@@ -933,10 +986,39 @@ export const removeAllPubRelationsBySlugs = async ({
 			.where("pubId", "=", pubId)
 			.where("fieldId", "in", fieldIds)
 			.where("relatedPubId", "is not", null)
-			.returning("relatedPubId")
+			.returningAll()
 	).execute();
 
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues: removed,
+		trx,
+	});
+
 	return removed.map(({ relatedPubId }) => relatedPubId);
+};
+
+export const addDeletePubValueHistoryEntries = async ({
+	lastModifiedBy,
+	pubValues,
+	trx = db,
+}: {
+	lastModifiedBy: LastModifiedBy;
+	pubValues: PubValuesType[];
+	trx?: typeof db;
+}) => {
+	const parsedLastModifiedBy = parseLastModifiedBy(lastModifiedBy);
+
+	await autoRevalidate(
+		trx.insertInto("pub_values_history").values(
+			pubValues.map((pubValue) => ({
+				operationType: OperationType.delete,
+				oldRowData: JSON.stringify(pubValue),
+				pubValueId: pubValue.id,
+				...parsedLastModifiedBy,
+			}))
+		)
+	).execute();
 };
 
 /**
@@ -949,11 +1031,13 @@ export const replacePubRelationsBySlug = async ({
 	pubId,
 	relations,
 	communityId,
+	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
 	relations: AddPubRelationsInput[];
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
 	if (!Object.keys(relations).length) {
@@ -963,9 +1047,9 @@ export const replacePubRelationsBySlug = async ({
 	await maybeWithTrx(trx, async (trx) => {
 		const slugs = relations.map(({ slug }) => slug);
 
-		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, trx });
+		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, lastModifiedBy, trx });
 
-		await upsertPubRelations({ pubId, relations, communityId, trx });
+		await upsertPubRelations({ pubId, relations, communityId, lastModifiedBy, trx });
 	});
 };
 
@@ -975,10 +1059,12 @@ export const updatePub = async ({
 	communityId,
 	stageId,
 	continueOnValidationError,
+	lastModifiedBy,
 }: {
 	pubId: PubsId;
 	pubValues: Record<string, Json>;
 	communityId: CommunitiesId;
+	lastModifiedBy: LastModifiedBy;
 	stageId?: StagesId;
 	continueOnValidationError: boolean;
 }) => {
@@ -1027,6 +1113,7 @@ export const updatePub = async ({
 						pubId,
 						fieldId,
 						value: JSON.stringify(value),
+						lastModifiedBy,
 					}))
 				)
 				.onConflict((oc) =>
@@ -1036,6 +1123,7 @@ export const updatePub = async ({
 						.where("relatedPubId", "is", null)
 						.doUpdateSet((eb) => ({
 							value: eb.ref("excluded.value"),
+							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
 						}))
 				)
 				.returningAll()

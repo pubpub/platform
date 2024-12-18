@@ -1,5 +1,9 @@
 -- generator-version: 1.0.0
 
+-- Model pub_values_history comments
+
+
+
 -- Model users comments
 
 
@@ -32,6 +36,7 @@ COMMENT ON COLUMN "PubFieldSchema"."schema" IS '@type(JSONSchemaType<any>, ''ajv
 
 -- Model pub_values comments
 
+COMMENT ON COLUMN "pub_values"."lastModifiedBy" IS '@type(LastModifiedBy, ''../types'', true, false, true)';
 
 
 -- Model pub_types comments
@@ -132,6 +137,11 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 
 -- Enum CoreSchemaType comments
+
+
+
+
+-- Enum OperationType comments
 
 
 

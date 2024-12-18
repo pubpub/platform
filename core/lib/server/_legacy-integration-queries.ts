@@ -265,7 +265,10 @@ const makeRecursivePubUpdateInput = async (
 		pubType: { connect: { id: body.pubTypeId } },
 		values: {
 			createMany: {
-				data: await normalizePubValues(body.values),
+				data: (await normalizePubValues(body.values)).map((value) => ({
+					...value,
+					lastModifiedBy: "unknown",
+				})),
 			},
 		},
 		assignee,

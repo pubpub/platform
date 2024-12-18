@@ -6,6 +6,7 @@ import { logger } from "logger";
 
 import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env.mjs";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import {
 	_deprecated_getPub,
 	deletePub,
@@ -68,7 +69,10 @@ const handler = createNextHandler(
 		},
 		deletePub: async ({ headers, params }) => {
 			checkAuthentication(headers.authorization);
-			await deletePub(params.pubId as PubsId);
+			await deletePub({
+				pubId: params.pubId as PubsId,
+				lastModifiedBy: createLastModifiedBy("system"),
+			});
 			return {
 				status: 200,
 				body: {

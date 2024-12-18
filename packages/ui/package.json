@@ -201,6 +201,10 @@
 			"module": "./multivalue-input/dist/ui-multivalue-input.esm.js",
 			"default": "./multivalue-input/dist/ui-multivalue-input.cjs.js"
 		},
+		"./auto-form/dependencyType": {
+			"module": "./auto-form/dependencyType/dist/ui-auto-form-dependencyType.esm.js",
+			"default": "./auto-form/dependencyType/dist/ui-auto-form-dependencyType.cjs.js"
+		},
 		"./customRenderers/confidence/confidence": {
 			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
 			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
@@ -393,6 +397,7 @@
 			"alert.tsx",
 			"alert-dialog.tsx",
 			"auto-form/index.tsx",
+			"auto-form/dependencyType.ts",
 			"autocomplete.tsx",
 			"avatar.tsx",
 			"badge.tsx",
