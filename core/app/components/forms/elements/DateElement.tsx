@@ -5,6 +5,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { datePickerConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
@@ -16,10 +17,10 @@ const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mo
 	loading: () => <div>Loading...</div>,
 });
 
-export const DateElement = ({ name, config }: ElementProps) => {
+export const DateElement = ({ slug, label, config }: ElementProps<InputComponent.datePicker>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 
 	if (!Value.Check(datePickerConfigSchema, config)) {
 		return null;
@@ -27,11 +28,11 @@ export const DateElement = ({ name, config }: ElementProps) => {
 
 	return (
 		<FormField
-			name={name}
+			name={slug}
 			control={control}
 			render={({ field }) => (
 				<FormItem className="grid gap-2">
-					<FormLabel>{config.label ?? name}</FormLabel>
+					<FormLabel>{label}</FormLabel>
 					<DatePicker
 						disabled={!isEnabled}
 						date={field.value ?? new Date()}

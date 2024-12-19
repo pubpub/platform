@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
 import { getPageLoginData } from "~/lib/authentication/loginData";
@@ -30,7 +30,7 @@ export default async function MainLayout({ children, params }: Props) {
 
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
-		return null;
+		return notFound();
 	}
 
 	const role = getCommunityRole(user, community);

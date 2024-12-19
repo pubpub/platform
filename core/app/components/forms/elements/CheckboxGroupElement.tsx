@@ -9,6 +9,7 @@ import partition from "lodash.partition";
 import { useFormContext } from "react-hook-form";
 import { checkboxGroupConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
@@ -16,17 +17,22 @@ import { Input } from "ui/input";
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps) => {
+export const CheckboxGroupElement = ({
+	label,
+	slug,
+	config,
+	schemaName,
+}: ElementProps<InputComponent.checkboxGroup>) => {
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
 	// Keep track of what was checked via checkboxes so as not to duplicate with Other field
 	const { initialChecked, initialOther } = useMemo(() => {
-		const initialValues: (string | number)[] = getValues()[name];
+		const initialValues: (string | number)[] = getValues()[slug];
 		const [initialChecked, initialOther] = partition(initialValues, (v) => {
-			return config.values.includes(v);
+			return config.values.some((cv) => cv === v);
 		});
 		return { initialChecked, initialOther: initialOther[0] ?? "" };
 	}, []);
@@ -41,7 +47,7 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				const handleOtherField = (e: ChangeEvent<HTMLInputElement>) => {
 					const value = isNumeric ? e.target.valueAsNumber : e.target.value;
@@ -60,13 +66,13 @@ export const CheckboxGroupElement = ({ name, config, schemaName }: ElementProps)
 				};
 				return (
 					<FormItem>
-						<FormLabel>{config.label ?? name}</FormLabel>
+						<FormLabel>{label}</FormLabel>
 						{config.values.map((v) => {
 							return (
 								<FormField
 									key={v}
 									control={control}
-									name={name}
+									name={`${slug}`}
 									render={() => {
 										return (
 											<FormItem

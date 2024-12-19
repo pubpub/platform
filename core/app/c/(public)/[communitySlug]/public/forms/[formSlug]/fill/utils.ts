@@ -63,6 +63,7 @@ export const handleFormToken = async ({
 	const userHasAccess = await userHasPermissionToForm({
 		formSlug: params.formSlug,
 		userId: result.user.id,
+		pubId: searchParams.pubId,
 	});
 
 	if (!userHasAccess) {

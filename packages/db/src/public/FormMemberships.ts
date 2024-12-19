@@ -4,9 +4,11 @@ import { z } from "zod";
 
 import type { FormsId } from "./Forms";
 import type { MemberGroupsId } from "./MemberGroups";
+import type { PubsId } from "./Pubs";
 import type { UsersId } from "./Users";
 import { formsIdSchema } from "./Forms";
 import { memberGroupsIdSchema } from "./MemberGroups";
+import { pubsIdSchema } from "./Pubs";
 import { usersIdSchema } from "./Users";
 
 // @generated
@@ -28,6 +30,8 @@ export interface FormMembershipsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 }
 
 export type FormMemberships = Selectable<FormMembershipsTable>;
@@ -45,6 +49,7 @@ export const formMembershipsSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	pubId: pubsIdSchema.nullable(),
 });
 
 export const formMembershipsInitializerSchema = z.object({
@@ -54,6 +59,7 @@ export const formMembershipsInitializerSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	pubId: pubsIdSchema.optional().nullable(),
 });
 
 export const formMembershipsMutatorSchema = z.object({
@@ -63,4 +69,5 @@ export const formMembershipsMutatorSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	pubId: pubsIdSchema.optional().nullable(),
 });
