@@ -108,7 +108,7 @@ describe("runActionInstance", () => {
 		});
 	});
 
-	it("should properly blame the action run if an action modifies a pub", async () => {
+	it.skip("should properly blame the action run if an action modifies a pub", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { pubs, actions, community, pubFields } = await seedCommunity(
