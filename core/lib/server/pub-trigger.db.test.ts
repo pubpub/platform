@@ -305,21 +305,33 @@ describe("pub_values title trigger", () => {
 	});
 
 	it("should not update a title on a pub when a non-title pubvalue is updated", async () => {
-		const trx = getTrx();
+		// we explictly don't want to use the rolled back transaction here
+		// for some, strange strange reason, this doesn't work then
+		// with the transaction rolled back
+		const trx = testDb;
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed);
+		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
 
-		const updateResult = await trx
-			.updateTable("pub_values")
-			.set({
+		await trx
+			.insertInto("pub_values")
+			.values({
+				pubId: pubs[0].id,
+				fieldId: pubFields.Description.id,
 				value: JSON.stringify("new description"),
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
-			.where("pubId", "=", pubs[0].id)
-			.where("fieldId", "=", pubFields.Description.id)
-			.executeTakeFirst();
+			.onConflict((oc) =>
+				oc
+					.columns(["pubId", "fieldId"])
+					.where("relatedPubId", "is", null)
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: createLastModifiedBy("system"),
+					}))
+			)
+			.executeTakeFirstOrThrow();
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
 	});
