@@ -1,5 +1,8 @@
+import type { User } from "lucia";
+
 import { headers } from "next/headers";
 import { createNextHandler } from "@ts-rest/serverless/next";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 import { z } from "zod";
 
 import type { Communities, CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
@@ -39,7 +42,7 @@ import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
-import { getSuggestedUsers } from "~/lib/server/user";
+import { getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(
@@ -77,13 +80,33 @@ const getAuthorization = async () => {
 
 	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
 
-	const rules = (await db
+	const rules = await db
 		.selectFrom("api_access_permissions")
-		.selectAll()
+		.selectAll("api_access_permissions")
+		.innerJoin(
+			"api_access_tokens",
+			"api_access_tokens.id",
+			"api_access_permissions.apiAccessTokenId"
+		)
+		.select((eb) =>
+			jsonObjectFrom(
+				eb
+					.selectFrom("users")
+					.select(SAFE_USER_SELECT)
+					.whereRef("users.id", "=", eb.ref("api_access_tokens.issuedById"))
+			).as("user")
+		)
 		.where("api_access_permissions.apiAccessTokenId", "=", validatedAccessToken.id)
-		.execute()) as ApiAccessPermission[];
+		.$castTo<ApiAccessPermission & { user: User }>()
+		.execute();
+
+	const user = rules[0].user;
+	if (!rules[0].user) {
+		throw new NotFoundError(`Unable to locate user associated with api token`);
+	}
 
 	return {
+		user,
 		authorization: rules.reduce((acc, curr) => {
 			const { scope, constraints, accessType } = curr;
 			if (!constraints) {
@@ -103,6 +126,7 @@ type AuthorizationOutput<S extends ApiAccessScope, AT extends ApiAccessType> = {
 	authorization: true | Exclude<(typeof baseAuthorizationObject)[S][AT], false>;
 	community: Communities;
 	lastModifiedBy: LastModifiedBy;
+	user: User;
 };
 
 const checkAuthorization = async <
@@ -127,7 +151,7 @@ const checkAuthorization = async <
 	const authorizationTokenWithBearer = headers().get("Authorization");
 
 	if (authorizationTokenWithBearer) {
-		const { authorization, community, apiAccessTokenId } = await getAuthorization();
+		const { user, authorization, community, apiAccessTokenId } = await getAuthorization();
 
 		const constraints = authorization[token.scope][token.type];
 		if (!constraints) {
@@ -142,6 +166,7 @@ const checkAuthorization = async <
 			authorization: constraints as Exclude<typeof constraints, false>,
 			community,
 			lastModifiedBy,
+			user,
 		};
 	}
 
@@ -171,7 +196,7 @@ const checkAuthorization = async <
 
 	// Handle cases where we only want to check for login but have no specific capability yet
 	if (typeof cookies === "boolean") {
-		return { authorization: true as const, community, lastModifiedBy };
+		return { user, authorization: true as const, community, lastModifiedBy };
 	}
 
 	const can = await userCan(cookies.capability, cookies.target, user.id);
@@ -182,7 +207,7 @@ const checkAuthorization = async <
 		);
 	}
 
-	return { authorization: true as const, community, lastModifiedBy };
+	return { user, authorization: true as const, community, lastModifiedBy };
 };
 
 const shouldReturnRepresentation = () => {
@@ -199,7 +224,7 @@ const handler = createNextHandler(
 	{
 		pubs: {
 			get: async ({ params, query }) => {
-				const { community } = await checkAuthorization({
+				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: {
 						capability: Capabilities.viewPub,
@@ -211,6 +236,7 @@ const handler = createNextHandler(
 					{
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
+						userId: user.id,
 					},
 					query
 				);
@@ -221,7 +247,7 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async ({ query }) => {
-				const { community } = await checkAuthorization({
+				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					// TODO: figure out capability here
 					cookies: false,
@@ -234,6 +260,7 @@ const handler = createNextHandler(
 						communityId: community.id,
 						pubTypeId,
 						stageId,
+						userId: user.id,
 					},
 					rest
 				);
@@ -280,7 +307,7 @@ const handler = createNextHandler(
 				};
 			},
 			update: async ({ params, body }) => {
-				const { community, lastModifiedBy } = await checkAuthorization({
+				const { user, community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.updatePubValues,
@@ -316,6 +343,7 @@ const handler = createNextHandler(
 				const pub = await getPubsWithRelatedValuesAndChildren({
 					pubId: params.pubId as PubsId,
 					communityId: community.id,
+					userId: user.id,
 				});
 
 				return {
@@ -350,7 +378,7 @@ const handler = createNextHandler(
 			},
 			relations: {
 				remove: async ({ params, body }) => {
-					const { community, lastModifiedBy } = await checkAuthorization({
+					const { user, community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
@@ -429,6 +457,7 @@ const handler = createNextHandler(
 					const pub = await getPubsWithRelatedValuesAndChildren({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
+						userId: user.id,
 					});
 
 					return {
@@ -437,7 +466,7 @@ const handler = createNextHandler(
 					};
 				},
 				update: async ({ params, body }) => {
-					const { community, lastModifiedBy } = await checkAuthorization({
+					const { user, community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
@@ -476,6 +505,7 @@ const handler = createNextHandler(
 					const pub = await getPubsWithRelatedValuesAndChildren({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
+						userId: user.id,
 					});
 
 					return {
@@ -484,7 +514,7 @@ const handler = createNextHandler(
 					};
 				},
 				replace: async ({ params, body }) => {
-					const { community, lastModifiedBy } = await checkAuthorization({
+					const { user, community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
@@ -522,6 +552,7 @@ const handler = createNextHandler(
 					const pub = await getPubsWithRelatedValuesAndChildren({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
+						userId: user.id,
 					});
 
 					return {
