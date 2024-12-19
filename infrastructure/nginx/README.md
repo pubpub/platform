@@ -5,6 +5,7 @@ all traffic to another host (typically 127.0.0.1:<service port>). In ECS, all co
 in the same task are hosted on the same network interface and therefore have the same IP.
 
 The specific reason this container is needed in Pubpub-v7 is that:
+
 1. we have one DNS name that serves the whole application, which is backed by multiple ECS containers.
 2. these containers are routed to based on path prefixes.
 3. the container code, served by Next.js, is not itself aware of these path prefixes, so expect requests at `/`.
