@@ -55,6 +55,7 @@ locals {
   NEXT_PUBLIC_SUPABASE_PUBLIC_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzbGVxanV2enVveWNwZW90ZHdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODIzNTE0MjEsImV4cCI6MTk5NzkyNzQyMX0.3HHC0f7zlFXP77N0U8cS3blr7n6hhjqdYI6_ciQJams"
   ASSETS_BUCKET_NAME              = "assets.blake.pubpub.org"
   HOSTNAME                        = "0.0.0.0"
+  DATACITE_API_URL                = "https://api.datacite.org"
 }
 
 
@@ -80,4 +81,5 @@ module "deployment" {
   NEXT_PUBLIC_SUPABASE_PUBLIC_KEY = local.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
   ASSETS_BUCKET_NAME              = local.ASSETS_BUCKET_NAME
   HOSTNAME                        = local.HOSTNAME
+  DATACITE_API_URL                = local.DATACITE_API_URL
 }
