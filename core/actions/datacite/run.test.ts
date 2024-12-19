@@ -3,7 +3,16 @@ import { isNull } from "util";
 
 import { describe, expect, it, vitest } from "vitest";
 
-import type { ActionRunsId, CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import type {
+	ActionRunsId,
+	CommunitiesId,
+	PubFieldsId,
+	PubsId,
+	PubTypesId,
+	PubValuesId,
+	StagesId,
+} from "db/public";
+import { CoreSchemaType } from "db/public";
 
 import type { ActionPub, RunProps } from "../types";
 import type { action } from "./action";
@@ -62,7 +71,41 @@ const unmockFetch = () => {
 
 const pub = {
 	id: "" as PubsId,
-	values: [],
+	values: [
+		{
+			id: "" as PubValuesId,
+			fieldId: "" as PubFieldsId,
+			fieldName: "",
+			fieldSlug: "pubpub:doi",
+			value: undefined,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			schemaName: CoreSchemaType.String,
+			relatedPubId: null,
+		},
+		{
+			id: "" as PubValuesId,
+			fieldId: "" as PubFieldsId,
+			fieldName: "",
+			fieldSlug: "pubpub:url",
+			value: "https://www.pubpub.org",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			schemaName: CoreSchemaType.URL,
+			relatedPubId: null,
+		},
+		{
+			id: "" as PubValuesId,
+			fieldId: "" as PubFieldsId,
+			fieldName: "",
+			fieldSlug: "pubpub:publication-date",
+			value: new Date("01-01-2024").toString(),
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			schemaName: CoreSchemaType.DateTime,
+			relatedPubId: null,
+		},
+	],
 	children: [],
 	communityId: "" as CommunitiesId,
 	createdAt: new Date(),
