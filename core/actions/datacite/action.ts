@@ -87,4 +87,5 @@ export const action = defineAction({
 	},
 	description: "Deposit a pub to DataCite",
 	icon: Globe,
-});
+	experimental: true,
+	superAdminOnly: true,
