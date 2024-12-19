@@ -1,13 +1,11 @@
-import { beforeAll, describe, expect, expectTypeOf, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { Seed } from "~/prisma/seed/seedCommunity";
 import { mockServerCode } from "../__tests__/utils";
 
-const { createForEachMockedTransaction } = await mockServerCode();
-
-const { getTrx } = createForEachMockedTransaction();
+await mockServerCode();
 
 const seed = {
 	community: {
