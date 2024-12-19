@@ -4,16 +4,17 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { checkboxConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const CheckboxElement = ({ name, config }: ElementProps) => {
+export const CheckboxElement = ({ slug, label, config }: ElementProps<InputComponent.checkbox>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 
 	Value.Default(checkboxConfigSchema, config);
 	if (!Value.Check(checkboxConfigSchema, config)) {
@@ -23,11 +24,11 @@ export const CheckboxElement = ({ name, config }: ElementProps) => {
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				return (
 					<FormItem>
-						<FormLabel className="flex">{config.groupLabel ?? name}</FormLabel>
+						<FormLabel className="flex">{label}</FormLabel>
 						<div className="flex items-end gap-x-2">
 							<FormControl>
 								<Checkbox
