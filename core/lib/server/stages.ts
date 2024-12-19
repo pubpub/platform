@@ -51,71 +51,53 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
-export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
-	db.with("view_stage_roles", (db) =>
-		db
-			.selectFrom("membership_capabilities")
-			.where("membership_capabilities.capability", "=", Capabilities.viewStage)
-			.select(["role", "type"])
-	)
-		.with("stage_ms", (db) =>
-			db
-				.selectFrom("stage_memberships")
-				// also join on type
-				.innerJoin("view_stage_roles", "view_stage_roles.role", "stage_memberships.role")
-
-				.where("stage_memberships.userId", "=", userId)
-				.select(["stageId"])
+export const getStagesUserCanView = ({
+	communityId,
+	userId,
+}: {
+	communityId: CommunitiesId;
+	userId: UsersId;
+}) => {
+	const stageMemberships = db
+		.selectFrom("stage_memberships")
+		.innerJoin("membership_capabilities", (join) =>
+			join
+				.onRef("stage_memberships.role", "=", "membership_capabilities.role")
+				.on("membership_capabilities.type", "=", MembershipType.stage)
 		)
-		.with("community_ms", (db) =>
+		.select("stage_memberships.stageId")
+		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
+		.where("stage_memberships.userId", "=", userId);
+
+	const communityMemberships = db
+		.selectFrom("community_memberships")
+		.innerJoin("membership_capabilities", (join) =>
+			join
+				.onRef("membership_capabilities.role", "=", "community_memberships.role")
+				.on("membership_capabilities.type", "=", MembershipType.community)
+		)
+		.innerJoin("stages", "stages.communityId", "community_memberships.communityId")
+		.where("community_memberships.userId", "=", userId)
+		.where("community_memberships.communityId", "=", communityId)
+		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
+		.select(["stages.id as stageId"]);
+
+	const viewableStages = db
+		.selectFrom(
 			db
-				.selectFrom("community_memberships")
-				.where("community_memberships.userId", "=", userId)
-				.where("communityId", "=", communityId)
-				.select("role")
-		);
+				.selectFrom(stageMemberships.union(communityMemberships).as("all_access"))
+				.select("stageId")
+				.as("stageId")
+		)
+		.distinct()
+		.select("stageId")
+		.execute();
 
-	const access = autoCache(
-		db
-			.with("stage_ms", (db) =>
-				db
-					.selectFrom("stage_memberships")
-					.where("stage_memberships.userId", "=", userId)
-					.select(["role", "stageId"])
-			)
-			.with("community_ms", (db) =>
-				db
-					.selectFrom("community_memberships")
-					.where("community_memberships.userId", "=", userId)
-					.where("communityId", "=", communityId)
-					.select("role")
-			)
-			.selectFrom("membership_capabilities")
-			.where((eb) =>
-				eb.or([
-					eb.and([
-						eb(
-							"membership_capabilities.role",
-							"in",
-							eb.selectFrom("stage_ms").select("role")
-						),
-						eb("membership_capabilities.type", "=", MembershipType.stage),
-					]),
-					eb.and([
-						eb(
-							"membership_capabilities.role",
-							"in",
-							eb.selectFrom("community_ms").select("role")
-						),
-						eb("membership_capabilities.type", "=", MembershipType.community),
-					]),
-				])
-			)
-			.where("membership_capabilities.capability", "=", Capabilities.viewStage)
-			.select([""])
-	);
+	return viewableStages;
+};
 
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId?: UsersId };
+export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
 	return autoCache(
 		db
 			.selectFrom("stages")

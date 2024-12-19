@@ -64,7 +64,7 @@ describe("getStages", () => {
 			},
 		});
 
-		const { getStages } = await import("./stages");
+		const { getStages, getStagesUserCanView } = await import("./stages");
 
 		// Check we can get all stages as admin
 		const result = await getStages({
@@ -74,5 +74,10 @@ describe("getStages", () => {
 		expect(result.map((r) => r.name)).toEqual(Object.keys(stages));
 
 		// Filter to only the stages the user has access to
+		const adminStages = await getStagesUserCanView({
+			communityId: community.id,
+			userId: users.admin.id,
+		});
+		expect(adminStages).toEqual(Object.values(stages).map((s) => s.id));
 	});
 });
