@@ -1210,6 +1210,11 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 	trx?: typeof db;
 }
 
+// TODO: We allow calling getPubsWithRelatedValuesAndChildren with no userId so that event driven
+// actions can select a pub even when no user is present (and some other scenarios where the
+// filtering wouldn't make sense). We probably need to do that, but we should make it more explicit
+// than just leaving out the userId to avoid accidentally letting certain routes select pubs without
+// authorization checks
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
 			pubId: PubsId;
