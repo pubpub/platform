@@ -28,6 +28,9 @@ const seed = {
 		contributor: {
 			role: MemberRole.contributor,
 		},
+		minimalPubMember: {
+			role: MemberRole.contributor,
+		},
 	},
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
@@ -89,6 +92,9 @@ const seed = {
 			values: {
 				Title: "Minimal pub",
 			},
+			members: {
+				minimalPubMember: MemberRole.admin,
+			},
 		},
 	],
 } as Seed;
@@ -134,11 +140,16 @@ describe("getPubsWithRelatedValuesAndChildren capabilities", () => {
 			userId: users.stage2Editor.id,
 		});
 		const stage2 = stages["Stage 2"];
-		expect(
-			pubsVisibleToStage2Editor.sort((a, b) =>
-				a.title ? a.title.localeCompare(b.title || "") : -1
-			)
-		).toMatchObject([{ title: "Another title", stageId: stage2.id }]);
+		expect(pubsVisibleToStage2Editor).toMatchObject([
+			{ title: "Another title", stageId: stage2.id },
+		]);
+
+		// Check a user who is normally a contributor but is admin on one pub
+		const pubsVisibleToPubMember = await getPubsWithRelatedValuesAndChildren({
+			communityId: community.id,
+			userId: users.minimalPubMember.id,
+		});
+		expect(pubsVisibleToPubMember).toMatchObject([{ title: "Minimal pub" }]);
 
 		// Contributor should not see any pubs
 		const pubsVisibleToContributor = await getPubsWithRelatedValuesAndChildren({

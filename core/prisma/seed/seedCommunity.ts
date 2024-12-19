@@ -346,7 +346,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 		const members = Object.fromEntries(
 			Object.entries(pub.members ?? {}).map(
-				([slug, role]) => [users.find((user) => user.slug === slug)?.id!, role!] as const
+				([slug, role]) => [findBySlug(users, slug)?.id!, role!] as const
 			)
 		) as Record<UsersId, MemberRole>;
 
