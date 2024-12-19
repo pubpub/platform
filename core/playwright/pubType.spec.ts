@@ -83,7 +83,7 @@ test.describe("Pub types", () => {
 		await fieldsPage.goto();
 		await fieldsPage.addField("description", CoreSchemaType.String);
 
-		const typename = "Article";
+		const typename = "Not Article";
 		const pubTypesPage = new PubTypesPage(page, COMMUNITY_SLUG);
 		await pubTypesPage.goto();
 		await pubTypesPage.addType(typename, "article", ["title", "description"], "description");
