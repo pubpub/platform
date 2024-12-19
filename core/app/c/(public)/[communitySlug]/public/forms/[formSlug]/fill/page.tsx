@@ -147,7 +147,7 @@ export default async function FormPage({
 		}).executeTakeFirst(),
 		searchParams.pubId
 			? await getPubsWithRelatedValuesAndChildren(
-					{ pubId: searchParams.pubId, communityId: community.id, userId: user?.id },
+					{ pubId: searchParams.pubId, communityId: community.id },
 					{ withStage: true, withLegacyAssignee: true, withPubType: true }
 				)
 			: undefined,
