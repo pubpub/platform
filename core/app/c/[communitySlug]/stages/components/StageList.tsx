@@ -19,15 +19,16 @@ import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = {
+	userId: UsersId;
 	communityId: CommunitiesId;
 	pageContext: PageContext;
 	userId: UsersId;
 };
 
 export async function StageList(props: Props) {
-	const { communityId } = props;
+	const { communityId, userId } = props;
 	const [communityStages, communityMembers] = await Promise.all([
-		getStages({ communityId }).execute(),
+		getStages({ communityId, userId }).execute(),
 		selectCommunityMembers({ communityId }).execute(),
 	]);
 

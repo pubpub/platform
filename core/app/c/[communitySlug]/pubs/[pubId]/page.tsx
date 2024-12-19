@@ -114,7 +114,10 @@ export default async function Page({
 	);
 
 	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
-	const communityStagesPromise = getStages({ communityId: community.id }).execute();
+	const communityStagesPromise = getStages({
+		communityId: community.id,
+		userId: user.id,
+	}).execute();
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub
