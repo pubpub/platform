@@ -1196,3 +1196,5 @@ export const createSeed = <
 	pubs?: PI;
 	forms?: F;
 }) => props;
+
+export type Seed = Parameters<typeof createSeed>[0];
