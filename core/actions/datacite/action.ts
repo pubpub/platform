@@ -89,3 +89,4 @@ export const action = defineAction({
 	icon: Globe,
 	experimental: true,
 	superAdminOnly: true,
+});
