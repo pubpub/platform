@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, UsersId } from "db/public";
 import { Button } from "ui/button";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -21,6 +21,7 @@ import { StagePubActions } from "./StagePubActions";
 type Props = {
 	communityId: CommunitiesId;
 	pageContext: PageContext;
+	userId: UsersId;
 };
 
 export async function StageList(props: Props) {
@@ -38,6 +39,7 @@ export async function StageList(props: Props) {
 				<div key={stages[0].id}>
 					{stages.map((stage) => (
 						<StageCard
+							userId={props.userId}
 							key={stage.id}
 							stage={stage}
 							members={communityMembers}
@@ -54,10 +56,12 @@ async function StageCard({
 	stage,
 	pageContext,
 	members,
+	userId,
 }: {
 	stage: CommunityStage;
 	members?: MemberWithUser[];
 	pageContext: PageContext;
+	userId: UsersId;
 }) {
 	return (
 		<div key={stage.id} className="mb-20">
@@ -72,6 +76,7 @@ async function StageCard({
 				fallback={<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-16" />}
 			>
 				<StagePubs
+					userId={userId}
 					stage={stage}
 					pageContext={pageContext}
 					members={members}
@@ -90,6 +95,7 @@ export async function StagePubs({
 	totalPubLimit,
 	basePath,
 	pagination,
+	userId,
 }: {
 	stage: CommunityStage;
 	pageContext: PageContext;
@@ -97,6 +103,7 @@ export async function StagePubs({
 	totalPubLimit?: number;
 	pagination?: { page: number; pubsPerPage: number };
 	basePath: string;
+	userId: UsersId;
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
 		getPubsWithRelatedValuesAndChildren(
@@ -130,6 +137,7 @@ export async function StagePubs({
 				return (
 					<PubRow
 						key={pub.id}
+						userId={userId}
 						pub={
 							pub as ProcessedPub<{
 								withStage: true;

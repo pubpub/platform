@@ -138,6 +138,7 @@ export default async function FormPage({
 	if (!community) {
 		return notFound();
 	}
+	const { user, session } = await getLoginData();
 
 	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
@@ -151,7 +152,7 @@ export default async function FormPage({
 				)
 			: undefined,
 		getPubsWithRelatedValuesAndChildren(
-			{ communityId: community.id },
+			{ communityId: community.id, userId: user?.id },
 			{
 				limit: 30,
 				withStage: true,
@@ -165,8 +166,6 @@ export default async function FormPage({
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
 	}
-
-	const { user, session } = await getLoginData();
 
 	if (!user && !session) {
 		const result = await handleFormToken({
@@ -208,7 +207,7 @@ export default async function FormPage({
 
 	const parentPub = pub?.parentId
 		? await getPubsWithRelatedValuesAndChildren(
-				{ pubId: pub.parentId, communityId: community.id },
+				{ pubId: pub.parentId, communityId: community.id, userId: user?.id },
 				{ withStage: true, withLegacyAssignee: true, withPubType: true }
 			)
 		: undefined;
