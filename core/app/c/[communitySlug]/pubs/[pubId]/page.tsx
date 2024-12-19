@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { JsonValue } from "contracts";
 import type { PubsId } from "db/public";
@@ -125,6 +125,19 @@ export default async function Page({
 			withMembers: true,
 		}
 	);
+
+	const canView =
+		(await userCan(Capabilities.viewPub, { type: MembershipType.pub, pubId }, user.id)) ||
+		(pub.stageId &&
+			(await userCan(
+				Capabilities.viewStage,
+				{ type: MembershipType.stage, stageId: pub.stageId },
+				user.id
+			)));
+
+	if (!canView) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
 
 	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
 
