@@ -108,7 +108,7 @@ const makeDatacitePayload = async (
 
 	let doi = config.doi;
 
-	if (doi === undefined) {
+	if (!doi) {
 		assert(
 			config.doiPrefix !== undefined,
 			"The DataCite action must be configured with a DOI prefix to form a complete DOI."

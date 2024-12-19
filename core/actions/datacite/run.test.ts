@@ -34,6 +34,8 @@ vitest.mock("~/lib/server", () => {
 
 type Fetch = typeof global.fetch;
 
+// TODO: use vitest.stubGlobal with a little wrapper that lets us pass an array
+// of responses
 let _fetch = global.fetch;
 const mockFetch = (...fns: Fetch[]) => {
 	const mock = vitest.fn<Fetch>((url, init) => {
