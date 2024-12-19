@@ -30,7 +30,7 @@ describe("getStages", () => {
 			},
 			stages: {
 				"Stage 1": {
-					members: ["admin"],
+					members: ["admin", "stage1admin"],
 				},
 				"Stage 2": {
 					members: ["admin"],
@@ -50,34 +50,39 @@ describe("getStages", () => {
 			],
 			users: {
 				admin: {
-					firstName: "admin",
 					role: MemberRole.admin,
-					password: "admin-password",
-					email: "admin@example.com",
 				},
 				contributor: {
-					firstName: "contributor",
 					role: MemberRole.contributor,
-					password: "contributor-password",
-					email: "contributor@example.com",
+				},
+				stage1admin: {
+					role: MemberRole.contributor,
 				},
 			},
 		});
 
-		const { getStages, getStagesUserCanView } = await import("./stages");
+		const { getStages } = await import("./stages");
 
 		// Check we can get all stages as admin
-		const result = await getStages({
+		const adminStages = await getStages({
 			communityId: community.id,
 			userId: users.admin.id,
 		}).execute();
-		expect(result.map((r) => r.name)).toEqual(Object.keys(stages));
+		expect(adminStages.map((r) => r.name)).toEqual(Object.keys(stages));
 
-		// Filter to only the stages the user has access to
-		const adminStages = await getStagesUserCanView({
+		// Contributor
+		const contributorStages = await getStages({
 			communityId: community.id,
-			userId: users.admin.id,
-		});
-		expect(adminStages).toEqual(Object.values(stages).map((s) => s.id));
+			userId: users.contributor.id,
+		}).execute();
+		expect(contributorStages).toEqual([]);
+
+		// Stage 1 admin
+		const stage1AdminStages = await getStages({
+			communityId: community.id,
+			userId: users.stage1admin.id,
+		}).execute();
+		const stage1 = stages["Stage 1"];
+		expect(stage1AdminStages).toMatchObject([{ id: stage1.id, name: stage1.name }]);
 	});
 });

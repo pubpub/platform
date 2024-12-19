@@ -14,14 +14,14 @@ export const metadata: Metadata = {
 };
 
 export default async function Page({ params }: { params: { communitySlug: string } }) {
-	await getPageLoginData();
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
 		return notFound();
 	}
 
 	const [stages, existingTokens] = await Promise.all([
-		getStages({ communityId: community.id }).execute(),
+		getStages({ communityId: community.id, userId: user.id }).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 
