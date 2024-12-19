@@ -52,6 +52,7 @@ export async function PubEditor(props: PubEditorProps) {
 			{
 				pubId: props.pubId,
 				communityId: props.communityId,
+				userId: user?.id,
 			},
 			{
 				withPubType: true,

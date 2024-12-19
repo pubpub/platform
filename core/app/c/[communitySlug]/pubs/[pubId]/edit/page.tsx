@@ -4,7 +4,7 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId, PubsId } from "db/public";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
@@ -19,11 +19,20 @@ import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 const getPubsWithRelatedValuesAndChildrenCached = cache(
-	async ({ pubId, communityId }: { pubId: PubsId; communityId: CommunitiesId }) => {
+	async ({
+		userId,
+		pubId,
+		communityId,
+	}: {
+		userId?: UsersId;
+		pubId: PubsId;
+		communityId: CommunitiesId;
+	}) => {
 		return getPubsWithRelatedValuesAndChildren(
 			{
 				pubId,
 				communityId,
+				userId,
 			},
 			{
 				withPubType: true,
@@ -97,6 +106,7 @@ export default async function Page({
 	const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: params.pubId as PubsId,
 		communityId: community.id,
+		userId: user.id,
 	});
 
 	if (!pub) {

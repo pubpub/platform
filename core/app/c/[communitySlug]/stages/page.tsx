@@ -30,6 +30,7 @@ export default async function Page({ params, searchParams }: Props) {
 				<CreatePubButton communityId={community.id} text="Add Pub" />
 			</div>
 			<StageList
+				userId={user.id}
 				communityId={community.id}
 				pageContext={{
 					params,
