@@ -37,6 +37,7 @@ export default async function Page({ params, searchParams }: Props) {
 				searchParams={searchParams}
 				page={page}
 				basePath={basePath}
+				userId={user.id}
 			/>
 		</>
 	);
