@@ -16,6 +16,7 @@ import { logger } from "logger";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
+import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
@@ -172,6 +173,8 @@ const _runActionInstance = async (
 		configFieldOverrides
 	);
 
+	const hydratedPubValues = hydratePubValues(pub.values);
+
 	const lastModifiedBy = createLastModifiedBy({
 		actionRunId: args.actionRunId,
 	});
@@ -181,7 +184,10 @@ const _runActionInstance = async (
 			// FIXME: get rid of any
 			config: configWithPubfields as any,
 			configFieldOverrides,
-			pub,
+			pub: {
+				...pub,
+				values: hydratedPubValues,
+			},
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,
 			argsFieldOverrides,
