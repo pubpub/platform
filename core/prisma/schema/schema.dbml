@@ -104,6 +104,7 @@ Table pubs {
   actionRuns action_runs [not null]
   relatedValues pub_values [not null]
   members pub_memberships [not null]
+  formMemberships form_memberships [not null]
 }
 
 Table pub_fields {
@@ -299,12 +300,14 @@ Table form_memberships {
   userId String
   memberGroup member_groups
   memberGroupId String
+  pub pubs
+  pubId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 
   indexes {
-    (formId, userId) [unique]
-    (formId, memberGroupId) [unique]
+    (formId, userId, pubId) [unique]
+    (formId, memberGroupId, pubId) [unique]
   }
 }
 
@@ -707,6 +710,8 @@ Ref: form_memberships.formId > forms.id [delete: Cascade]
 Ref: form_memberships.userId > users.id [delete: Cascade]
 
 Ref: form_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: form_memberships.pubId > pubs.id [delete: Cascade]
 
 Ref: integration_instances.integrationId > integrations.id
 
