@@ -181,17 +181,7 @@ const _runActionInstance = async (
 			// FIXME: get rid of any
 			config: configWithPubfields as any,
 			configFieldOverrides,
-			pub: {
-				id: pub.id,
-				// FIXME: get rid of any
-				values: pub.values as any,
-				assignee: pub.assignee ?? undefined,
-				parentId: pub.parentId,
-				communityId: pub.communityId,
-				createdAt: pub.createdAt,
-				title: pub.title,
-				pubType: pub.pubType,
-			},
+			pub,
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,
 			argsFieldOverrides,

@@ -50,7 +50,7 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	if (field === "title") {
 		value = getPubTitle(pub);
 	} else {
-		value = pub.values[field];
+		value = pub.values.find((value) => value.fieldSlug === field)?.value;
 	}
 
 	assert(value !== undefined, `Missing value for ${field}`);

@@ -97,7 +97,7 @@ export const run = defineRun<typeof action>(
 			<p>HTTP request ran successfully</p>
 			<p>The resulting mapping would have been:</p>
 			<div>
-${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pubField]} ➡️ ${resValue}</p>`).join("\n")}
+${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`).join("\n")}
 <span>Data</span>
 				<p>${JSON.stringify(result, null, 2)}</p>
 			</div>`,
@@ -131,7 +131,7 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 			success: true,
 			report: `<p>Successfully updated fields</p>
 			<div>
-${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pubField]} ➡️ ${resValue}</p>`).join("\n")}`,
+${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`).join("\n")}`,
 			data: { result },
 		};
 	}
