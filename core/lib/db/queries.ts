@@ -11,6 +11,7 @@ import { communityMemberInclude, stageInclude } from "../server/_legacy-integrat
 import { autoCache } from "../server/cache/autoCache";
 import { SAFE_USER_SELECT } from "../server/user";
 
+// TODO: limit by permission!
 export const getStage = cache((stageId: StagesId) => {
 	return autoCache(
 		db
