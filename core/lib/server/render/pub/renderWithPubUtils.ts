@@ -15,7 +15,7 @@ export type RenderWithPubPub = {
 		fieldName: string;
 		fieldSlug: string;
 		value: unknown;
-		schemaName: string;
+		schemaName: CoreSchemaType;
 	}[];
 	createdAt: Date;
 	assignee?: {

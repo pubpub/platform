@@ -15,8 +15,10 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
 
+import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
+import { hydratePubValues } from "~/lib/fields/utils";
 import { getPubTitle } from "~/lib/pubs";
 import { RenderWithPubToken } from "./renderWithPubTokens";
 import * as utils from "./renderWithPubUtils";
@@ -47,10 +49,20 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 		pub = context.pub;
 	}
 
+	const hydratedPubValues = hydratePubValues(pub.values);
+
 	if (field === "title") {
 		value = getPubTitle(pub);
 	} else {
-		value = pub.values.find((value) => value.fieldSlug === field)?.value;
+		const val = hydratedPubValues.find((value) => value.fieldSlug === field);
+
+		value = val?.value;
+
+		if (val?.schemaName === CoreSchemaType.DateTime) {
+			// get the date in YYYY-MM-DD format
+			// we should allow the user to specify this
+			value = new Date(value as string).toISOString().split("T")[0];
+		}
 	}
 
 	assert(value !== undefined, `Missing value for ${field}`);
