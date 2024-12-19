@@ -597,6 +597,7 @@ const handler = createNextHandler(
 					cookies: false,
 				});
 
+				// TODO: plop user id in here
 				const stages = await getStages({ communityId: community.id }).execute();
 				return {
 					status: 200,
