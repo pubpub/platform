@@ -8,6 +8,7 @@ import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { createLastModifiedBy } from "../lastModifiedBy";
+import { removeAllPubRelationsBySlugs } from "./pub";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -1564,6 +1565,31 @@ describe("removePubRelations", () => {
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"
 		);
+	});
+
+	it("should not throw an error when there are no relations to remove", async () => {
+		const trx = getTrx();
+		const { removeAllPubRelationsBySlugs, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {},
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		expect(pub.values).toHaveLength(0);
+
+		await expect(
+			removeAllPubRelationsBySlugs({
+				pubId: pub.id,
+				communityId: community.id,
+				slugs: [pubFields["Some relation"].slug],
+				lastModifiedBy: createLastModifiedBy("system"),
+			})
+		).resolves.toEqual([]);
 	});
 });
 
