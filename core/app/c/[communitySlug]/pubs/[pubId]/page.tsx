@@ -6,7 +6,6 @@ import { notFound, redirect } from "next/navigation";
 
 import type { JsonValue } from "contracts";
 import type { PubsId } from "db/public";
-import { AuthTokenType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
@@ -16,7 +15,6 @@ import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import IntegrationActions from "~/app/components/IntegrationActions";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubTitle } from "~/app/components/PubTitle";
@@ -30,7 +28,6 @@ import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
-import { createToken } from "~/lib/server/token";
 import {
 	addPubMember,
 	addUserWithPubMembership,
@@ -79,11 +76,6 @@ export default async function Page({
 	const { pubId, communitySlug } = params;
 
 	const { user } = await getPageLoginData();
-
-	const token = await createToken({
-		userId: user.id,
-		type: AuthTokenType.generic,
-	});
 
 	if (!pubId || !communitySlug) {
 		return null;
@@ -198,21 +190,6 @@ export default async function Page({
 									/>
 								</>
 							) : null}
-						</div>
-					</div>
-					<div>
-						<div className="mb-1 text-lg font-bold">Integrations</div>
-						<div>
-							<Suspense>
-								{pub.stage?.id && (
-									<IntegrationActions
-										pubId={pubId}
-										token={token}
-										stageId={pub.stage.id}
-										type="pub"
-									/>
-								)}
-							</Suspense>
 						</div>
 					</div>
 					<div>
