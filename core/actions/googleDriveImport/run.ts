@@ -1,6 +1,9 @@
+import { logger } from "logger";
+
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
 import { defineRun } from "../types";
 import { action } from "./action";
+import { formatDriveData } from "./formatDriveData";
 import { getContentFromFolder } from "./getGDriveFiles";
 
 export const run = defineRun<typeof action>(
@@ -9,68 +12,47 @@ export const run = defineRun<typeof action>(
 			...config,
 			...args,
 		};
-		console.log('AHHHHH')
-		// set the output field to the result
-		// const result = input.docUrl;
-		// const update = await updatePub({
-		// 	pubId: pub.id,
-		// 	communityId,
-		// 	pubValues: {
-		// 		[args.outputField ?? config.outputField]: result,
-		// 	},
-		// 	continueOnValidationError: false,
-		// 	lastModifiedBy,
-		// });
 
-		/*
-			- Get folder Id from pub
-			- Pull html content and metadata content from folder
-			- Process html content using rehype
-			- Create versions, discussions, and [anything else?] from that
-				- Check if we can upsert, or if we need to do checks
-		
-		*/
+		try {
+			// set the output field to the result
+			// const result = input.docUrl;
+			// const update = await updatePub({
+			// 	pubId: pub.id,
+			// 	communityId,
+			// 	pubValues: {
+			// 		[args.outputField ?? config.outputField]: result,
+			// 	},
+			// 	continueOnValidationError: false,
+			// 	lastModifiedBy,
+			// });
 
-		// const folderId = input.docUrl.getIdFromUrl();
-		// const dataFromDrive = getContentFromFolder(folderId);
-		// const formattedData = formatDriveData(dataFromDrive);
-		// /* NON-MIGRATION */
-		// /* If the main doc is updated, make a new version */
+			/*
+				- Get folder Id from pub
+				- Pull html content and metadata content from folder
+				- Process html content using rehype
+				- Create versions, discussions, and [anything else?] from that
+			*/
 
+			/* Sample URL: https://drive.google.com/drive/folders/1xUHrOjKhqfXrRclJ1cehDSa24alqEgrK */
+			const folderId: string = input.docUrl.split("/").pop() || "";
+			const dataFromDrive = await getContentFromFolder(folderId);
+			if (dataFromDrive === null) {
+				throw new Error("Failed to retrieve data from Google Drive");
+			}
+			formatDriveData(dataFromDrive);
 
-		// /* MIGRATION */
-		// /* Check for existence of legacy ids in Platform */
-		// const legacyIds = [...versions, ...discussions, ...contributors].map((pub) => pub.id);
-		// const { pubs: existingPubs } = await doPubsExist(legacyIds, communityId);
-		// const existingPubIds = existingPubs.map((pub) => pub.id);
+			return {
+				success: true,
+				report: "Successfully imported",
+				data: {},
+			};
+		} catch (err) {
+			logger.error(err);
 
-		// const nonExistingVersionRelations = nonExistingVersions.map((version) => {
-		// 	return { relatedPub: { ...version }, value: null, slug: "arcadia-research:versions" };
-		// });
-		// const pubTypes = getPubTypesForCommunity(communityId)
-		// upsertPubRelations({
-		// 	pubId: pub.id,
-		// 	communityId,
-		// 	lastModifiedBy,
-		// 	relations: [
-		// 		// { relatedPubId: , value: null },
-		// 		{
-		// 			relatedPub: {
-		// 				/* createPubRecursive body */
-		// 				{
-		// 					'arcadia-science:timestamp': 
-		// 				}
-		// 			},
-		// 			value: null,
-		// 		},
-		// 	],
-		// 	// relations: nonExistingVersionRelations
-		// });
-
-		return {
-			success: true,
-			report: "Successfully imported",
-			data: {},
-		};
+			return {
+				title: "Error",
+				error: err.title,
+			};
+		}
 	}
 );
