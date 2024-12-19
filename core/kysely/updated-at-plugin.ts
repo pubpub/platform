@@ -1,5 +1,6 @@
 import type {
 	KyselyPlugin,
+	OnConflictNode,
 	PluginTransformQueryArgs,
 	PluginTransformResultArgs,
 	QueryResult,
@@ -25,6 +26,12 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 		this.#tablesWithUpdatedAt = tablesWithUpdatedAt ?? [];
 	}
 
+	transformOnConflict(node: OnConflictNode): OnConflictNode {
+		node = super.transformOnConflict(node);
+
+		return this.addUpdatedAtColumn(node);
+	}
+
 	transformUpdateQuery(node: UpdateQueryNode): UpdateQueryNode {
 		node = super.transformUpdateQuery(node);
 
@@ -40,7 +47,7 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 		return this.addUpdatedAtColumn(node);
 	}
 
-	private addUpdatedAtColumn(node: UpdateQueryNode): UpdateQueryNode {
+	private addUpdatedAtColumn<T extends UpdateQueryNode | OnConflictNode>(node: T): T {
 		// we don't want to update the updatedAt twice, so we filter it out here.
 		// this is fine, as we shouldn't be manually updating the updatedAt column
 		const nonUpdatedAtColumns = (node.updates ?? []).filter((update) => {
