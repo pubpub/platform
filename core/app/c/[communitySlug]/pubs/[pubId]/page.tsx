@@ -12,7 +12,6 @@ import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 
-import type { PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
@@ -117,7 +116,7 @@ export default async function Page({
 	const communityStagesPromise = getStages({ communityId: community.id }).execute();
 
 	const pub = await getPubsWithRelatedValuesAndChildren(
-		{ pubId: params.pubId, communityId: community.id },
+		{ pubId: params.pubId, communityId: community.id, userId: user.id },
 		{
 			withPubType: true,
 			withChildren: true,
