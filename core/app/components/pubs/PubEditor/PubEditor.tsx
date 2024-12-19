@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 
+import type { ProcessedPub } from "contracts/src/resources/site";
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { expect } from "utils";
 
@@ -7,9 +8,10 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { getForm } from "~/lib/server/form";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
+import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
@@ -25,24 +27,38 @@ export type PubEditorProps = {
 } & (
 	| {
 			pubId: PubsId;
+			communityId: CommunitiesId;
 			parentId?: PubsId;
 	  }
 	| {
 			communityId: CommunitiesId;
 	  }
 	| {
+			communityId: CommunitiesId;
 			stageId: StagesId;
 	  }
 );
 
 export async function PubEditor(props: PubEditorProps) {
-	let pub: Awaited<ReturnType<typeof getPubCached>> | undefined;
+	let pub:
+		| ProcessedPub<{ withStage: true; withLegacyAssignee: true; withPubType: true }>
+		| undefined;
 	let community: AutoReturnType<typeof getCommunityById>["executeTakeFirstOrThrow"];
 
 	const { user } = await getLoginData();
 
 	if ("pubId" in props) {
-		pub = await getPubCached(props.pubId);
+		pub = await getPubsWithRelatedValuesAndChildren(
+			{
+				pubId: props.pubId,
+				communityId: props.communityId,
+			},
+			{
+				withPubType: true,
+				withStage: true,
+				withLegacyAssignee: true,
+			}
+		);
 		community = await getCommunityById(
 			// @ts-expect-error FIXME: I don't know how to fix this,
 			// not sure what the common type between EB and the DB is
@@ -62,7 +78,15 @@ export async function PubEditor(props: PubEditorProps) {
 	}
 
 	const [pubs, pubTypes] = await Promise.all([
-		getPubs({ communityId: community.id }),
+		getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id },
+			{
+				withLegacyAssignee: true,
+				withPubType: true,
+				withStage: true,
+				limit: 30,
+			}
+		),
 		getPubTypesForCommunity(community.id),
 	]);
 
@@ -108,7 +132,12 @@ export async function PubEditor(props: PubEditorProps) {
 	}).executeTakeFirstOrThrow(
 		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
 	);
-	const parentPub = pub?.parentId ? await getPubCached(pub.parentId) : undefined;
+	const parentPub = pub?.parentId
+		? await getPubsWithRelatedValuesAndChildren(
+				{ pubId: pub.parentId, communityId: props.communityId },
+				{ withStage: true, withLegacyAssignee: true, withPubType: true }
+			)
+		: undefined;
 
 	const formElements = form.elements.map((e) => (
 		<FormElement
@@ -117,7 +146,7 @@ export async function PubEditor(props: PubEditorProps) {
 			element={e}
 			searchParams={props.searchParams}
 			communitySlug={community.slug}
-			values={pub ? pub.values : {}}
+			values={pub ? pub.values : []}
 		/>
 	));
 
@@ -159,8 +188,8 @@ export async function PubEditor(props: PubEditorProps) {
 		renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
 	});
 
-	const currentStageId = pub?.stages[0]?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
+	const currentStageId = pub?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
 	return (
 		<FormElementToggleProvider fieldSlugs={allSlugs}>
@@ -195,7 +224,7 @@ export async function PubEditor(props: PubEditorProps) {
 								pubId={pubId}
 								searchParams={props.searchParams}
 								communitySlug={community.slug}
-								values={pub ? pub.values : {}}
+								values={pub ? pub.values : []}
 							/>
 						))}
 					</>

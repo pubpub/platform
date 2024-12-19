@@ -9,7 +9,7 @@ import { expect } from "utils";
 import type { action } from "./action";
 import type { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
 import { db } from "~/kysely/database";
-import { getPubCached } from "~/lib/server";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
@@ -26,7 +26,13 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		// will redundantly load the child pub. Ideally we would lazily fetch and
 		// cache the parent pub while processing the email template.
 		if (parentId) {
-			parentPub = await getPubCached(parentId);
+			parentPub = await getPubsWithRelatedValuesAndChildren(
+				{ pubId: parentId, communityId },
+				{
+					withPubType: true,
+					withStage: true,
+				}
+			);
 		}
 
 		const recipientId = expect(args?.recipient ?? config.recipient) as CommunityMembershipsId;

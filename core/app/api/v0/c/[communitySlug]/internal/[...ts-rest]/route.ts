@@ -1,6 +1,6 @@
 import { createNextHandler } from "@ts-rest/serverless/next";
 
-import type { ActionInstancesId, Event, PubsId, StagesId } from "db/public";
+import type { ActionInstancesId, CommunitiesId, Event, PubsId, StagesId } from "db/public";
 import { api } from "contracts";
 
 import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";
@@ -8,7 +8,8 @@ import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
 import { runActionInstance } from "~/actions/api/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env.mjs";
-import { tsRestHandleErrors } from "~/lib/server";
+import { NotFoundError, tsRestHandleErrors } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 
 const checkAuthentication = (authHeader: string) => {
 	const apiKey = getBearerToken(authHeader);
@@ -23,11 +24,16 @@ const handler = createNextHandler(
 			const { pubId, event } = body;
 
 			const { actionInstanceId } = params;
+			const community = await findCommunityBySlug();
+			if (!community) {
+				throw new NotFoundError("Community not found");
+			}
 
 			const actionRunResults = await runActionInstance({
 				pubId: pubId as PubsId,
 				event: event as Event,
 				actionInstanceId: actionInstanceId as ActionInstancesId,
+				communityId: community.id as CommunitiesId,
 			});
 
 			return {
@@ -41,10 +47,16 @@ const handler = createNextHandler(
 
 			const { stageId } = params;
 
+			const community = await findCommunityBySlug();
+			if (!community) {
+				throw new NotFoundError("Community not found");
+			}
+
 			const actionRunResults = await runInstancesForEvent(
 				pubId as PubsId,
 				stageId as StagesId,
-				event as Event
+				event as Event,
+				community.id as CommunitiesId
 			);
 
 			return {
@@ -56,6 +68,10 @@ const handler = createNextHandler(
 			checkAuthentication(headers.authorization);
 			const { pubId } = body;
 			const { stageId } = params;
+			const community = await findCommunityBySlug();
+			if (!community) {
+				throw new NotFoundError("Community not found");
+			}
 
 			const actionScheduleResults = await scheduleActionInstances({
 				pubId: pubId as PubsId,
