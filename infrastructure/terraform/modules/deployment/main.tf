@@ -112,7 +112,7 @@ module "service_core" {
       { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
       { name = "MAILGUN_SMTP_PASSWORD", valueFrom = module.core_dependency_services.secrets.mailgun_smtp_password },
-      { name = "DATACITE_REPOSITORY_ID", value = module.core_dependency_services.secrets.datacite_repository_id },
+      { name = "DATACITE_REPOSITORY_ID", valueFrom = module.core_dependency_services.secrets.datacite_repository_id },
       { name = "DATACITE_PASSWORD", valueFrom = module.core_dependency_services.secrets.datacite_password },
     ]
   }
