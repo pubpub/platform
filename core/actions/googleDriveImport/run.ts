@@ -15,7 +15,7 @@ export const run = defineRun<typeof action>(
 
 		try {
 			/*
-				- Get folder Id from input
+				- Get folder Id from inputGCLOUD_KEY_FILE
 				- Pull html content and metadata content from folder
 				- Process html content using rehype
 				- Create versions, discussions, and [anything else?] from that
@@ -27,7 +27,70 @@ export const run = defineRun<typeof action>(
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
-			const formattedData = formatDriveData(dataFromDrive);
+			const formattedData = await formatDriveData(dataFromDrive);
+
+			/* NON-MIGRATION */
+			/* If the main doc is updated, make a new version */
+
+			/* MIGRATION */
+			/* Check for existence of legacy ids in Platform */
+			// const legacyIds = [...versions, ...discussions, ...contributors].map((pub) => pub.id);
+
+			// // Don't need to do Tags, on the pub
+			// // Don't need to do Narratives
+			// // Don't need to do contributors
+
+			// const { pubs: existingPubs } = await doPubsExist(legacyIds, communityId);
+			// const existingPubIds = existingPubs.map((pub) => pub.id);
+
+			// const nonExistingVersionRelations = nonExistingVersions.map((version) => {
+			// 	return { relatedPub: { ...version }, value: null, slug: "arcadia-research:versions" };
+			// });
+			const pubTypes = await getPubTypesForCommunity(communityId);
+			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion");
+			const VersionType = pubTypes.find((pubType) => pubType.name === "Version");
+
+			upsertPubRelations({
+				pubId: pub.id,
+				communityId,
+				lastModifiedBy,
+				relations: [
+					...formattedData.discussions.map((discussion) => {
+						return {
+							slug: "arcadia:discussions",
+							value: null,
+							relatedPub: {
+								pubTypeId: DiscussionType?.id || '',
+								...discussion
+							},
+						};
+					}),
+					...formattedData.versions.map((version) => {
+						return {
+							slug: "arcadia:versions",
+							value: null,
+							relatedPub: {
+								pubTypeId: VersionType?.id || "",
+								values: {
+									...version,
+								},
+							},
+						};
+					}),
+					// { relatedPubId: , value: null },
+					// {
+					// 	slug: 'arcadia:discussions',
+					// 	value: null,
+					// 	relatedPub: {
+					// 		/* createPubRecursive body */
+					// 		/* This is my discussion */
+					// 		// {
+					// 		// 	'arcadia-science:timestamp':
+					// 		// }
+					// 	},
+					// },
+				],
+			});
 
 			return {
 				success: true,
