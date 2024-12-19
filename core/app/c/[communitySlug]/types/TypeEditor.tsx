@@ -43,6 +43,7 @@ const schema = z.object({
 				name: z.string(),
 				slug: z.string(),
 				schemaName: z.nativeEnum(CoreSchemaType).nullable(),
+				isRelation: z.boolean().nullish(),
 			})
 		)
 		.min(1, { message: "Add at least one field" }),
@@ -68,9 +69,10 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 		fieldId: PubFieldsId,
 		name: string,
 		slug: string,
-		schemaName: CoreSchemaType | null
+		schemaName: CoreSchemaType | null,
+		isRelation?: boolean | null
 	) => {
-		append({ fieldId, name, slug, schemaName });
+		append({ fieldId, name, slug, schemaName, isRelation });
 	};
 
 	const community = useCommunity();
@@ -169,7 +171,10 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 															</Label>
 														</td>
 														<td>
-															<FormItem className="flex justify-center">
+															<FormItem
+																data-testId={`${pubField.slug}-titleField`}
+																className="flex justify-center"
+															>
 																{pubFieldCanBeTitle(pubField) ? (
 																	<>
 																		<FormControl>

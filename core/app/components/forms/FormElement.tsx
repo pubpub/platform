@@ -1,13 +1,12 @@
 import { defaultComponent } from "schemas";
 
-import type { GetPubResponseBody } from "contracts";
-import type { CommunityMembershipsId, FormElementsId, PubsId } from "db/public";
+import type { ProcessedPub } from "contracts";
+import type { CommunityMembershipsId, PubsId } from "db/public";
 import { CoreSchemaType, ElementType, InputComponent } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
-import type { ElementProps, FormElements } from "./types";
-import type { UnionPick } from "~/lib/types";
+import type { FormElements } from "./types";
 import { CheckboxElement } from "./elements/CheckboxElement";
 import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
 import { ConfidenceElement } from "./elements/ConfidenceElement";
@@ -27,7 +26,7 @@ export type FormElementProps = {
 	element: FormElements;
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
-	values: GetPubResponseBody["values"];
+	values: ProcessedPub["values"];
 };
 
 export const FormElement = ({
@@ -112,7 +111,9 @@ export const FormElement = ({
 			<DateElement {...basicProps} config={element.config} schemaName={element.schemaName} />
 		);
 	} else if (element.component === InputComponent.memberSelect) {
-		const userId = values[element.slug!] as CommunityMembershipsId | undefined;
+		const userId = values.find((v) => v.fieldSlug === element.slug)?.value as
+			| CommunityMembershipsId
+			| undefined;
 		input = (
 			<MemberSelectElement
 				{...basicProps}

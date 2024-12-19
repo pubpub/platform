@@ -12,24 +12,16 @@ import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { GetPubResponseBody, JsonValue } from "contracts";
+import type { JsonValue, ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId, StagesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
 import { cn } from "utils";
 
-import type {
-	BasicFormElements,
-	ButtonElement,
-	FormElements,
-	PubFieldElement,
-	StructuralElement,
-} from "../../forms/types";
+import type { BasicFormElements, FormElements } from "../../forms/types";
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
-import type { PubValues } from "~/lib/server";
-import type { Form as PubPubForm } from "~/lib/server/form";
-import type { DefinitelyHas, UnionOmit } from "~/lib/types";
+import type { DefinitelyHas } from "~/lib/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
@@ -76,11 +68,11 @@ const preparePayload = ({
  * Set all default values
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (elements: BasicFormElements[], pubValues: PubValues) => {
+const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedPub["values"]) => {
 	const defaultValues: FieldValues = { ...pubValues };
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
-			const pubValue = pubValues[element.slug];
+			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
 			defaultValues[element.slug] =
 				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
 			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
@@ -160,7 +152,7 @@ export interface PubEditorClientProps {
 	elements: BasicFormElements[];
 	children: ReactNode;
 	isUpdating: boolean;
-	pub: Pick<GetPubResponseBody, "id" | "values" | "pubTypeId">;
+	pub: Pick<ProcessedPub, "id" | "values" | "pubTypeId">;
 	onSuccess: (args: {
 		values: FieldValues;
 		submitButtonId?: string;

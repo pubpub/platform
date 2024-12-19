@@ -20,7 +20,12 @@ export class PubTypesPage {
 		await this.page.getByRole("option", { name: fieldSlug }).click();
 	}
 
-	async addType(name: string, description: string, fieldSlugs?: string[]) {
+	async addType<T extends string>(
+		name: string,
+		description: string,
+		fieldSlugs?: T[],
+		title?: T
+	) {
 		await this.page.getByRole("button", { name: "Create Type", exact: true }).click();
 		const dialog = this.page.getByRole("dialog", { name: "Create Type", exact: true });
 
@@ -51,8 +56,16 @@ export class PubTypesPage {
 			}
 		}
 
+		const titleField = title ?? fieldSlugs?.find((slug) => /title/.test(slug));
+		if (titleField) {
+			await this.page.getByTestId(`${this.communitySlug}:${titleField}-titleField`).click();
+		}
+
 		await dialog.getByRole("button", { name: "Create type" }).click();
 
 		await dialog.waitFor({ state: "hidden" });
+
+		// check whether the new type is created
+		await this.page.getByRole("heading", { name: name }).waitFor();
 	}
 }
