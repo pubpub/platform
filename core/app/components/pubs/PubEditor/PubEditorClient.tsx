@@ -12,7 +12,7 @@ import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { GetPubResponseBody, JsonValue } from "contracts";
+import type { GetPubResponseBody, JsonValue, ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId, StagesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
@@ -70,11 +70,14 @@ const preparePayload = ({
  * Set all default values
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
+const buildDefaultValues = (
+	elements: PubPubForm["elements"],
+	pubValues: ProcessedPub["values"]
+) => {
 	const defaultValues: FieldValues = { ...pubValues };
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
-			const pubValue = pubValues[element.slug];
+			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
 			defaultValues[element.slug] =
 				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
 			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
@@ -154,7 +157,7 @@ export interface PubEditorClientProps {
 	elements: PubPubForm["elements"];
 	children: ReactNode;
 	isUpdating: boolean;
-	pub: Pick<GetPubResponseBody, "id" | "values" | "pubTypeId">;
+	pub: Pick<ProcessedPub, "id" | "values" | "pubTypeId">;
 	onSuccess: (args: {
 		values: FieldValues;
 		submitButtonId?: string;
