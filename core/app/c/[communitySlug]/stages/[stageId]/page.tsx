@@ -93,6 +93,7 @@ export default async function Page({
 				fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
 			>
 				<StagePubs
+					userId={user.id}
 					stage={stage}
 					pageContext={{
 						params,

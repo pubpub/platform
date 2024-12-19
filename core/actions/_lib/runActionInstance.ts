@@ -37,8 +37,14 @@ const _runActionInstance = async (
 	args: RunActionInstanceArgs & { actionRunId: ActionRunsId },
 	trx = db
 ): Promise<ActionInstanceRunResult> => {
+	const isActionUserInitiated = "userId" in args;
+
 	const pubPromise = getPubsWithRelatedValuesAndChildren(
-		{ pubId: args.pubId, communityId: args.communityId },
+		{
+			pubId: args.pubId,
+			communityId: args.communityId,
+			userId: isActionUserInitiated ? args.userId : undefined,
+		},
 		{
 			withPubType: true,
 			withStage: true,
