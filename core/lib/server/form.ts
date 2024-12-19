@@ -81,7 +81,7 @@ export type Form = Awaited<ReturnType<ReturnType<typeof getForm>["executeTakeFir
 
 export const userHasPermissionToForm = async (
 	props: XOR<{ formId: FormsId }, { formSlug: string }> &
-		XOR<{ userId: UsersId }, { email: string }>
+		XOR<{ userId: UsersId }, { email: string }> & { pubId?: PubsId }
 ) => {
 	const formPermission = await autoCache(
 		db
@@ -105,6 +105,10 @@ export const userHasPermissionToForm = async (
 			.$if(Boolean(props.formId), (eb) =>
 				eb.where("form_memberships.formId", "=", props.formId!)
 			)
+			// pubId check
+			.$if(Boolean(props.pubId), (eb) =>
+				eb.where("form_memberships.pubId", "=", props.pubId!)
+			)
 			.select(["form_memberships.id"])
 	).executeTakeFirst();
 
@@ -115,10 +119,13 @@ export const userHasPermissionToForm = async (
  * Gives a community member permission to a form
  */
 export const addMemberToForm = async (
-	props: { communityId: CommunitiesId; userId: UsersId } & XOR<{ slug: string }, { id: FormsId }>
+	props: { communityId: CommunitiesId; userId: UsersId; pubId: PubsId } & XOR<
+		{ slug: string },
+		{ id: FormsId }
+	>
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
-	const { userId, ...getFormProps } = props;
+	const { userId, pubId, ...getFormProps } = props;
 	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
 
 	const existingPermission = await autoCache(
@@ -127,11 +134,12 @@ export const addMemberToForm = async (
 			.selectAll("form_memberships")
 			.where("form_memberships.formId", "=", form.id)
 			.where("form_memberships.userId", "=", userId)
+			.where("form_memberships.pubId", "=", pubId)
 	).executeTakeFirst();
 
 	if (existingPermission === undefined) {
 		await autoRevalidate(
-			db.insertInto("form_memberships").values({ formId: form.id, userId })
+			db.insertInto("form_memberships").values({ formId: form.id, userId, pubId })
 		).execute();
 	}
 };
