@@ -80,7 +80,8 @@ describe("Select dropdown element", () => {
 		render(
 			<FormWrapper>
 				<SelectDropdownElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.NumericArray}
 				/>
@@ -105,7 +106,8 @@ describe("Select dropdown element", () => {
 		render(
 			<FormWrapper isStringArray>
 				<SelectDropdownElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.StringArray}
 				/>

@@ -131,7 +131,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await newPage.goto(decodedUrl);
 		await newPage.getByText("Progress will be automatically saved").waitFor();
 
-		await newPage.getByLabel(`${COMMUNITY_SLUG}:content`).fill("LGTM");
+		await newPage.getByLabel(`Content`).fill("LGTM");
 
 		// Make sure it autosaves
 		// It should happen after 5s, but it seems to take ~6 usually

@@ -116,3 +116,7 @@ export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> 
 		ReturnType<ReturnType<T>[K]>
 	>;
 };
+
+export type UnionOmit<T, K extends keyof T> = T extends T ? Omit<T, K> : never;
+
+export type UnionPick<T, K extends keyof T> = T extends T ? Pick<T, K> : never;

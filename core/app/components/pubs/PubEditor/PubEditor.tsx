@@ -4,6 +4,7 @@ import type { ProcessedPub } from "contracts/src/resources/site";
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { expect } from "utils";
 
+import type { FormElements } from "../../forms/types";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
@@ -142,7 +143,7 @@ export async function PubEditor(props: PubEditorProps) {
 
 	const formElements = form.elements.map((e) => (
 		<FormElement
-			key={e.elementId}
+			key={e.id}
 			pubId={pubId}
 			element={e}
 			searchParams={props.searchParams}
@@ -178,15 +179,15 @@ export async function PubEditor(props: PubEditorProps) {
 
 	const renderWithPubContext = {
 		communityId: community.id,
-		recipient: memberWithUser,
+		recipient: memberWithUser as RenderWithPubContext["recipient"],
 		communitySlug: community.slug,
-		pub,
+		pub: pub as RenderWithPubContext["pub"],
 		parentPub,
-	};
+	} satisfies RenderWithPubContext;
 
 	await hydrateMarkdownElements({
 		elements: form.elements,
-		renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
+		renderWithPubContext: pub ? renderWithPubContext : undefined,
 	});
 
 	const currentStageId = pub?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
@@ -220,8 +221,8 @@ export async function PubEditor(props: PubEditorProps) {
 						{formElements}
 						{pubOnlyElementDefinitions.map((formElementDef) => (
 							<FormElement
-								key={formElementDef.elementId}
-								element={formElementDef}
+								key={formElementDef.slug}
+								element={formElementDef as FormElements}
 								pubId={pubId}
 								searchParams={props.searchParams}
 								communitySlug={community.slug}
