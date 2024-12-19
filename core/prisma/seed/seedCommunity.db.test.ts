@@ -59,7 +59,7 @@ describe("seedCommunity", () => {
 			},
 			stages: {
 				"Stage 1": {
-					members: ["test"],
+					members: { hih: MemberRole.contributor },
 					actions: [
 						{
 							action: Action.email,
@@ -268,7 +268,7 @@ describe("seedCommunity", () => {
 
 		expect(seededCommunity.stages, "stages").toMatchObject({
 			"Stage 1": {
-				members: ["test"],
+				members: { hih: MemberRole.contributor },
 				name: "Stage 1",
 				order: "aa",
 			},
