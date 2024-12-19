@@ -75,7 +75,8 @@ describe("Radio group element", () => {
 		render(
 			<FormWrapper>
 				<RadioGroupElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.NumericArray}
 				/>
@@ -97,7 +98,8 @@ describe("Radio group element", () => {
 		render(
 			<FormWrapper isStringArray>
 				<RadioGroupElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.StringArray}
 				/>
@@ -117,7 +119,8 @@ describe("Radio group element", () => {
 		render(
 			<FormWrapper defaultValues={[0]}>
 				<RadioGroupElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.NumericArray}
 				/>
@@ -138,7 +141,8 @@ describe("Radio group element", () => {
 			render(
 				<FormWrapper>
 					<RadioGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>
@@ -181,7 +185,8 @@ describe("Radio group element", () => {
 			render(
 				<FormWrapper defaultValues={[123]}>
 					<RadioGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>

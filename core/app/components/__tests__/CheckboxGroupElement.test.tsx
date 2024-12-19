@@ -91,7 +91,8 @@ describe("Checkbox group element", () => {
 		render(
 			<FormWrapper config={config}>
 				<CheckboxGroupElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.NumericArray}
 				/>
@@ -110,7 +111,8 @@ describe("Checkbox group element", () => {
 		render(
 			<FormWrapper config={config} isStringArray>
 				<CheckboxGroupElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.StringArray}
 				/>
@@ -128,7 +130,8 @@ describe("Checkbox group element", () => {
 		render(
 			<FormWrapper config={config} defaultValues={defaultValues}>
 				<CheckboxGroupElement
-					name="example"
+					slug="example"
+					label="Example"
 					config={config}
 					schemaName={CoreSchemaType.NumericArray}
 				/>
@@ -150,7 +153,8 @@ describe("Checkbox group element", () => {
 			render(
 				<FormWrapper config={config}>
 					<CheckboxGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>
@@ -181,7 +185,8 @@ describe("Checkbox group element", () => {
 			render(
 				<FormWrapper config={config}>
 					<CheckboxGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>
@@ -209,7 +214,8 @@ describe("Checkbox group element", () => {
 			render(
 				<FormWrapper config={config}>
 					<CheckboxGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>
@@ -242,7 +248,8 @@ describe("Checkbox group element", () => {
 			render(
 				<FormWrapper config={config}>
 					<CheckboxGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>
@@ -275,7 +282,8 @@ describe("Checkbox group element", () => {
 			render(
 				<FormWrapper config={config}>
 					<CheckboxGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>
@@ -311,7 +319,8 @@ describe("Checkbox group element", () => {
 			render(
 				<FormWrapper config={config} defaultValues={defaultValues}>
 					<CheckboxGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>
@@ -335,7 +344,8 @@ describe("Checkbox group element", () => {
 			render(
 				<FormWrapper config={config}>
 					<CheckboxGroupElement
-						name="example"
+						slug="example"
+						label="Example"
 						config={config}
 						schemaName={CoreSchemaType.NumericArray}
 					/>

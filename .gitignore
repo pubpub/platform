@@ -68,3 +68,5 @@ core/supabase/.temp
 
 *storybook.log
 storybook-static
+
+./playwright

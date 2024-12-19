@@ -6,6 +6,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { confidenceIntervalConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
@@ -27,10 +28,14 @@ const ForwardedRefConfidence = forwardRef<
 	React.ComponentPropsWithoutRef<typeof Confidence>
 >((props, ref) => <Confidence {...props} forwardedRef={ref} />);
 
-export const ConfidenceElement = ({ name, config }: ElementProps) => {
+export const ConfidenceElement = ({
+	slug,
+	label,
+	config,
+}: ElementProps<InputComponent.confidenceInterval>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 
 	if (!Value.Check(confidenceIntervalConfigSchema, config)) {
 		return null;
@@ -40,7 +45,7 @@ export const ConfidenceElement = ({ name, config }: ElementProps) => {
 		<>
 			<FormField
 				control={control}
-				name={name}
+				name={slug}
 				defaultValue={[0, 50, 100]}
 				render={({ field }) => {
 					// Need to pass the field's onChange as onValueChange in Confidence
@@ -48,7 +53,7 @@ export const ConfidenceElement = ({ name, config }: ElementProps) => {
 					const { onChange, ...fieldProps } = field;
 					return (
 						<FormItem className="mb-6">
-							<FormLabel className="text-[0.9em]">{config.label ?? name}</FormLabel>
+							<FormLabel className="text-[0.9em]">{label}</FormLabel>
 							<FormControl>
 								<ForwardedRefConfidence
 									{...fieldProps}

@@ -6,6 +6,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { radioGroupConfigSchema } from "schemas";
 
+import type { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
@@ -13,15 +14,20 @@ import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
-export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) => {
+export const RadioGroupElement = ({
+	slug,
+	label,
+	config,
+	schemaName,
+}: ElementProps<InputComponent.radioGroup>) => {
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const isEnabled = formElementToggle.isEnabled(slug);
 	const isNumeric = schemaName === CoreSchemaType.NumericArray;
 
 	const initialOther = useMemo(() => {
-		const initialValues: (string | number)[] = getValues()[name];
-		const other = initialValues.filter((iv) => !config.values.includes(iv));
+		const initialValues: string[] | number[] = getValues()[slug];
+		const other = initialValues.filter((iv) => !config.values.some((cv) => cv === iv));
 		return other[0] ?? "";
 	}, []);
 	const [other, setOther] = useState<string | number>(initialOther);
@@ -34,7 +40,7 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 	return (
 		<FormField
 			control={control}
-			name={name}
+			name={slug}
 			render={({ field }) => {
 				const handleRadioChange = (value: string) => {
 					field.onChange([isNumeric ? +value : value]);
@@ -42,7 +48,7 @@ export const RadioGroupElement = ({ name, config, schemaName }: ElementProps) =>
 				};
 				return (
 					<FormItem>
-						<FormLabel className="flex">{config.label ?? name}</FormLabel>
+						<FormLabel className="flex">{label}</FormLabel>
 						<FormControl>
 							<RadioGroup
 								onValueChange={handleRadioChange}

@@ -2,5 +2,6 @@
 	"files.associations": {
 		"*.css": "tailwindcss"
 	},
-	"typescript.tsdk": "./core/node_modules/typescript/lib"
+	"typescript.tsdk": "./core/node_modules/typescript/lib",
+	"javascript.preferences.autoImportSpecifierExcludeRegexes": ["@prisma\\/client"]
 }

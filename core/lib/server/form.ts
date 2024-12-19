@@ -17,6 +17,7 @@ import type {
 import { AuthTokenType, ElementType, StructuralFormElement } from "db/public";
 
 import type { XOR } from "../types";
+import type { FormElements } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
 import { autoCache } from "./cache/autoCache";
@@ -56,7 +57,7 @@ export const getForm = (
 						.leftJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
 						.whereRef("form_elements.formId", "=", "forms.id")
 						.select((eb) => [
-							"form_elements.id as elementId",
+							"form_elements.id",
 							"form_elements.type",
 							"form_elements.fieldId",
 							"form_elements.component",
@@ -70,7 +71,7 @@ export const getForm = (
 							"pub_fields.schemaName",
 							"pub_fields.slug",
 						])
-						.$narrowType<{ config?: {} }>()
+						.$narrowType<FormElements>()
 						.orderBy("form_elements.order")
 				).as("elements")
 			)

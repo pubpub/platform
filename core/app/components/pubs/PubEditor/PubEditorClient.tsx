@@ -19,11 +19,17 @@ import { Form } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
 import { cn } from "utils";
 
+import type {
+	BasicFormElements,
+	ButtonElement,
+	FormElements,
+	PubFieldElement,
+	StructuralElement,
+} from "../../forms/types";
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type { PubValues } from "~/lib/server";
 import type { Form as PubPubForm } from "~/lib/server/form";
-import type { DefinitelyHas } from "~/lib/types";
-import { isButtonElement } from "~/app/components/FormBuilder/types";
+import type { DefinitelyHas, UnionOmit } from "~/lib/types";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
@@ -33,7 +39,7 @@ import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 const SAVE_WAIT_MS = 5000;
 
-const isUserSelectField = (slug: string, elements: PubPubForm["elements"]) => {
+const isUserSelectField = (slug: string, elements: BasicFormElements[]) => {
 	const element = elements.find((e) => e.slug === slug);
 	return element?.schemaName === CoreSchemaType.MemberId;
 };
@@ -44,7 +50,7 @@ const preparePayload = ({
 	formState,
 	toggleContext,
 }: {
-	formElements: PubPubForm["elements"];
+	formElements: BasicFormElements[];
 	formValues: FieldValues;
 	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
@@ -70,7 +76,7 @@ const preparePayload = ({
  * Set all default values
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValues) => {
+const buildDefaultValues = (elements: BasicFormElements[], pubValues: PubValues) => {
 	const defaultValues: FieldValues = { ...pubValues };
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
@@ -87,7 +93,7 @@ const buildDefaultValues = (elements: PubPubForm["elements"], pubValues: PubValu
 };
 
 const createSchemaFromElements = (
-	elements: PubPubForm["elements"],
+	elements: BasicFormElements[],
 	toggleContext: FormElementToggleContext
 ) => {
 	return Type.Object(
@@ -137,21 +143,21 @@ const getButtonConfig = ({
 }: {
 	evt: React.BaseSyntheticEvent | undefined;
 	withButtonElements?: boolean;
-	buttonElements: PubPubForm["elements"];
+	buttonElements: FormElements[];
 }) => {
 	if (!withButtonElements) {
 		return { stageId: undefined, submitButtonId: undefined };
 	}
 	const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : undefined;
 	const submitButtonConfig = submitButtonId
-		? buttonElements.find((b) => b.elementId === submitButtonId)
+		? buttonElements.find((b) => b.id === submitButtonId)
 		: undefined;
 	const stageId = submitButtonConfig?.stageId ?? undefined;
 	return { stageId, submitButtonId: submitButtonId };
 };
 
 export interface PubEditorClientProps {
-	elements: PubPubForm["elements"];
+	elements: BasicFormElements[];
 	children: ReactNode;
 	isUpdating: boolean;
 	pub: Pick<GetPubResponseBody, "id" | "values" | "pubTypeId">;
@@ -195,7 +201,7 @@ export const PubEditorClient = ({
 	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
 
 	const [buttonElements, formElements] = useMemo(
-		() => partition(elements, (e) => isButtonElement(e)),
+		() => partition(elements, (e) => e.type === ElementType.button),
 		[elements]
 	);
 	const toggleContext = useFormElementToggleContext();
