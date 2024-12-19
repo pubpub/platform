@@ -1,9 +1,9 @@
 ---
 name: Bug Report
 about: Find something broken or odd? Report it here.
-title: ''
+title: ""
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 <!--

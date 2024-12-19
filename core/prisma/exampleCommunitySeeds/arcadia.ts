@@ -21,7 +21,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					Abstract: faker.lorem.paragraphs(2),
 					License: "CC-BY 4.0",
 					PubContent: "Some content",
-					DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+					URL: "https://www.pubpub.org",
 					"Inline Citation Style": "Author Year",
 					"Citation Style": "APA 7",
 				},
@@ -100,7 +100,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 								pubType: "ExternalBook",
 								values: {
 									Title: "A Great Book",
-									DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+									DOI: "10.82234/arcadia-ad7f-7a6d",
 									Year: "2022",
 								},
 							},
@@ -112,7 +112,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 								pubType: "ExternalJournalArticle",
 								values: {
 									Title: "A Great Journal Article",
-									DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+									DOI: "10.82234/arcadia-ad7f-7a6d",
 									Year: "2022",
 								},
 							},
@@ -152,7 +152,9 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 				Abstract: { schemaName: CoreSchemaType.String },
 				License: { schemaName: CoreSchemaType.String },
 				PubContent: { schemaName: CoreSchemaType.String },
-				DOI: { schemaName: CoreSchemaType.URL },
+				DOI: { schemaName: CoreSchemaType.String },
+				"DOI Suffix": { schemaName: CoreSchemaType.String },
+				URL: { schemaName: CoreSchemaType.URL },
 				"PDF Download Displayname": { schemaName: CoreSchemaType.String },
 				PDF: { schemaName: CoreSchemaType.FileUpload },
 				"Pub Image": { schemaName: CoreSchemaType.FileUpload },
@@ -313,6 +315,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					"Last Edited": { isTitle: false },
 					"Publication Date": { isTitle: false },
 					DOI: { isTitle: false },
+					"DOI Suffix": { isTitle: false },
+					URL: { isTitle: false },
 					PubContent: { isTitle: false },
 					License: { isTitle: false },
 					Description: { isTitle: false },
@@ -501,7 +505,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 									stage: "Journals",
 									values: {
 										Title: "Arcadia Research",
-										DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+										DOI: "10.82234/arcadia-ad7f-7a6d",
 										ISSN: "2998-4084",
 										Slug: "arcadia-research",
 									},
@@ -516,7 +520,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 													values: {
 														Title: "Issue 1",
 														ISSN: "2998-4084",
-														DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+														DOI: "10.82234/arcadia-ad7f-7a6d",
 														Description: "A cool description",
 													},
 													relatedPubs: {
@@ -539,7 +543,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																		Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
 																		License: "CC-BY 4.0",
 																		PubContent: "Some content",
-																		DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+																		DOI: "10.82234/arcadia-14b2-6f27",
+																		URL: "https://www.pubpub.org",
 																		"Inline Citation Style":
 																			"Author Year",
 																		"Citation Style": "APA 7",
@@ -654,7 +659,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						"ExternalBook",
 																					values: {
 																						Title: "A Great Book",
-																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/arcadia-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},
@@ -667,7 +672,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						"ExternalJournalArticle",
 																					values: {
 																						Title: "A Great Journal Article",
-																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/arcadia-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},
