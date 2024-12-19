@@ -46,10 +46,7 @@ const deriveCreatorsFromRelatedPubs = (
 		.map((v) => v.relatedPub!)
 		.map((pub) => makeDataciteCreatorFromAuthorPub(pub, creatorNameFieldSlug));
 
-const makeDatacitePayload = async (
-	pub: ActionPub<ActionPubType>,
-	config: Config
-): Promise<Payload> => {
+const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payload> => {
 	const titleFieldSlug = config.pubFields.title?.[0];
 	const urlFieldSlug = expect(
 		config.pubFields.url?.[0],
@@ -85,20 +82,20 @@ const makeDatacitePayload = async (
 
 	if (titleFieldSlug !== undefined) {
 		title = expect(
-			pub.values[titleFieldSlug] as string | undefined,
+			pub.values.find((v) => v.fieldSlug === titleFieldSlug) as string | undefined,
 			"The pub has no corresponding value for the configured title field."
 		);
 	} else {
 		title = expect(pub.title, "The pub has no title.");
 	}
 
-	const url = pub.values[urlFieldSlug];
+	const url = pub.values.find((v) => v.fieldSlug === urlFieldSlug);
 	assert(
 		typeof url === "string",
 		"The pub is missing a value corresponding to the configured URL field override."
 	);
 
-	const publicationDate = pub.values[publicationDateFieldSlug];
+	const publicationDate = pub.values.find((v) => v.fieldSlug === publicationDateFieldSlug);
 	assert(
 		typeof publicationDate === "string",
 		"The pub is missing a value corresponding to the configured publication date field override."

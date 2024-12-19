@@ -1,10 +1,11 @@
 import { afterEach } from "node:test";
+import { isNull } from "util";
 
 import { describe, expect, it, vitest } from "vitest";
 
-import type { ActionRunsId, CommunitiesId, PubsId, StagesId } from "db/public";
+import type { ActionRunsId, CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 
-import type { RunProps } from "../types";
+import type { ActionPub, RunProps } from "../types";
 import type { action } from "./action";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { updatePub } from "~/lib/server";
@@ -53,21 +54,33 @@ const unmockFetch = () => {
 	global.fetch = _fetch;
 };
 
+// {
+// 	"pubpub:doi": undefined,
+// 	"pubpub:url": "https://www.pubpub.org",
+// 	"pubpub:publication-date": new Date("01-01-2024").toString(),
+// },
+
 const pub = {
 	id: "" as PubsId,
-	values: {
-		"pubpub:doi": undefined,
-		"pubpub:url": "https://www.pubpub.org",
-		"pubpub:publication-date": new Date("01-01-2024").toString(),
-	},
+	values: [],
+	children: [],
 	communityId: "" as CommunitiesId,
 	createdAt: new Date(),
 	updatedAt: new Date(),
 	title: "A Preprint",
 	pubType: {
+		id: "" as PubTypesId,
+		communityId: "" as CommunitiesId,
 		name: "Preprint",
+		description: "",
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		fields: [],
 	},
-};
+	pubTypeId: "" as PubTypesId,
+	stageId: null,
+	parentId: null,
+} as ActionPub;
 
 const RUN_OPTIONS: RunProps<typeof action> = {
 	actionRunId: "" as ActionRunsId,
