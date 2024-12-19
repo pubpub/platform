@@ -15,6 +15,7 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
 
+import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
@@ -287,13 +288,12 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 				if (isDirective(node)) {
 					const attrs = expect(node.attributes);
 					if ("form" in attrs) {
-						props.href = await utils.renderFormInviteLink(
-							expect(attrs.form),
-							context.recipient.id,
-							context.recipient.user.id,
-							context.communityId,
-							context.pub.id
-						);
+						props.href = await utils.renderFormInviteLink({
+							formSlug: expect(attrs.form),
+							userId: context.recipient.user.id,
+							communityId: context.communityId,
+							pubId: context.pub.id as PubsId,
+						});
 					}
 				}
 			})
