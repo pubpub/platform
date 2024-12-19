@@ -99,6 +99,7 @@ module "service_core" {
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
       { name = "HOSTNAME", value = var.HOSTNAME },
+      { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
     ]
 
     secrets = [
@@ -106,13 +107,14 @@ module "service_core" {
       { name = "API_KEY", valueFrom = module.core_dependency_services.secrets.api_key },
       { name = "JWT_SECRET", valueFrom = module.core_dependency_services.secrets.jwt_secret },
       { name = "ASSETS_UPLOAD_SECRET_KEY", valueFrom = module.core_dependency_services.secrets.asset_uploader_secret_key },
-
       { name = "SENTRY_AUTH_TOKEN", valueFrom = module.core_dependency_services.secrets.sentry_auth_token },
       { name = "SUPABASE_WEBHOOKS_API_KEY", valueFrom = module.core_dependency_services.secrets.supabase_webhooks_api_key },
       { name = "SUPABASE_SERVICE_ROLE_KEY", valueFrom = module.core_dependency_services.secrets.supabase_service_role_key },
       { name = "HONEYCOMB_API_KEY", valueFrom = module.core_dependency_services.secrets.honeycomb_api_key },
       { name = "MAILGUN_SMTP_PASSWORD", valueFrom = module.core_dependency_services.secrets.mailgun_smtp_password },
       { name = "GCLOUD_KEY_FILE", valueFrom = module.core_dependency_services.secrets.gcloud_key_file },
+      { name = "DATACITE_REPOSITORY_ID", value = module.core_dependency_services.secrets.datacite_repository_id },
+      { name = "DATACITE_PASSWORD", valueFrom = module.core_dependency_services.secrets.datacite_password },
     ]
   }
 }
