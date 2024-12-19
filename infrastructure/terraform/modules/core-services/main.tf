@@ -30,6 +30,10 @@ resource "aws_secretsmanager_secret" "honeycomb_api_key" {
   name = "honeycombio-apikey-${var.cluster_info.name}-${var.cluster_info.environment}"
 }
 
+resource "aws_secretsmanager_secret" "gcloud_key_file" {
+  name = "gcloud-key-file-${var.cluster_info.name}-${var.cluster_info.environment}"
+}
+
 # generate password and make it accessible through aws secrets manager
 resource "random_password" "rds_db_password" {
   length  = 16
