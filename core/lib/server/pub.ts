@@ -1552,6 +1552,22 @@ export async function getPubsWithRelatedValuesAndChildren<
 						qb
 							.union((qb) => qb.selectFrom("pub_ms").selectAll("pub_ms"))
 							.union((qb) => qb.selectFrom("stage_ms").selectAll("stage_ms"))
+							// Add fake community admin role when user is a superadmin
+							.union((qb) =>
+								qb
+									.selectFrom("users")
+									.where("users.id", "=", props.userId!)
+									.where("users.isSuperAdmin", "=", true)
+									.select((eb) => [
+										sql<MemberRole>`${MemberRole.admin}::"MemberRole"`.as(
+											"role"
+										),
+										eb.val(props.communityId).as("membId"),
+										sql<MembershipType>`'community'::"MembershipType"`.as(
+											"type"
+										),
+									])
+							)
 					)
 			)
 			.with("capabilities", (cte) =>
