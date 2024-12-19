@@ -1,10 +1,11 @@
-import { sql } from "kysely";
+import { Kysely, QueryCreator, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
 	NewMoveConstraint,
 	NewStages,
+	PublicSchema,
 	PubsId,
 	StagesId,
 	StagesUpdate,
@@ -51,11 +52,22 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
-/**
- * Get all stages the given user has access to
+/** To conveniently get a CTE of view stage capabilities. Join this to your query on stageId, i.e.
+ *
+ * db
+ *	.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
+ *	.selectFrom("stages")
+ *	.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
  */
-export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
+export const viewableStagesCte = ({
+	db,
+	userId,
+	communityId,
+}: {
+	db: QueryCreator<PublicSchema>;
+	userId: UsersId;
+	communityId?: CommunitiesId;
+}) => {
 	const stageMemberships = db
 		.selectFrom("stage_memberships")
 		.innerJoin("membership_capabilities", (join) =>
@@ -76,25 +88,31 @@ export const getStages = ({ communityId, stageId, userId }: CommunityStageProps)
 		)
 		.innerJoin("stages", "stages.communityId", "community_memberships.communityId")
 		.where("community_memberships.userId", "=", userId)
-		.where("community_memberships.communityId", "=", communityId)
+		.$if(Boolean(communityId), (qb) =>
+			qb.where("community_memberships.communityId", "=", communityId!)
+		)
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
 		.select(["stages.id as stageId"]);
 
+	return db
+		.selectFrom(
+			db
+				.selectFrom(stageMemberships.union(communityMemberships).as("all_access"))
+				.select("stageId")
+				.as("stageId")
+		)
+		.distinct()
+		.select("stageId");
+};
+
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
+/**
+ * Get all stages the given user has access to
+ */
+export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
 	return autoCache(
 		db
-			.with("viewableStages", (db) =>
-				db
-					.selectFrom(
-						db
-							.selectFrom(
-								stageMemberships.union(communityMemberships).as("all_access")
-							)
-							.select("stageId")
-							.as("stageId")
-					)
-					.distinct()
-					.select("stageId")
-			)
+			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
 			.selectFrom("stages")
 			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
 			.where("communityId", "=", communityId)
