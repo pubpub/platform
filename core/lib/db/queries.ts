@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { StagesId } from "db/public";
+import type { StagesId, UsersId } from "db/public";
 
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
@@ -9,13 +9,15 @@ import prisma from "~/prisma/db";
 import { pubType, pubValuesByRef } from "../server";
 import { communityMemberInclude, stageInclude } from "../server/_legacy-integration-queries";
 import { autoCache } from "../server/cache/autoCache";
+import { viewableStagesCte } from "../server/stages";
 import { SAFE_USER_SELECT } from "../server/user";
 
-// TODO: limit by permission!
-export const getStage = cache((stageId: StagesId) => {
+export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 	return autoCache(
 		db
+			.with("viewableStages", (db) => viewableStagesCte({ db, userId }))
 			.selectFrom("stages")
+			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
 			.select([
 				"stages.id",
 				"communityId",

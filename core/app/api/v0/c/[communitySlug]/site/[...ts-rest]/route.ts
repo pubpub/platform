@@ -612,6 +612,7 @@ const handler = createNextHandler(
 						},
 					},
 				});
+				// TODO: plop user id in here
 				const stage = await getStage(req.params.stageId as StagesId).executeTakeFirst();
 				if (!stage) {
 					throw new NotFoundError("No stage found");
