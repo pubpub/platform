@@ -1000,6 +1000,10 @@ export const addDeletePubValueHistoryEntries = async ({
 }) => {
 	const parsedLastModifiedBy = parseLastModifiedBy(lastModifiedBy);
 
+	if (!pubValues.length) {
+		return;
+	}
+
 	await autoRevalidate(
 		trx.insertInto("pub_values_history").values(
 			pubValues.map((pubValue) => ({
