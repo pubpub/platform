@@ -44,7 +44,7 @@ import type { MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
-import { mergeSlugsWithFields } from "../fields/utils";
+import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -697,30 +697,6 @@ const getFieldInfoForSlugs = async ({
 		schemaName: expect(field.schemaName),
 		fieldName: field.name,
 	}));
-};
-
-/**
- * This should maybe go somewhere else
- */
-const hydratePubValues = <T extends { slug: string; value: unknown; schemaName: CoreSchemaType }>(
-	pubValues: T[]
-) => {
-	return pubValues.map(({ value, schemaName, slug, ...rest }) => {
-		if (schemaName === CoreSchemaType.DateTime) {
-			try {
-				value = new Date(value as string);
-			} catch {
-				throw new BadRequestError(`Invalid date value for field ${slug}`);
-			}
-		}
-
-		return {
-			slug,
-			schemaName,
-			value,
-			...rest,
-		};
-	});
 };
 
 const validatePubValues = async <T extends { slug: string; value: unknown }>({

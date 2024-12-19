@@ -1,6 +1,7 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
+import type { ProcessedPub } from "contracts";
 import type {
 	Action as ActionName,
 	ActionRunsId,
@@ -21,25 +22,29 @@ export type ActionPubType = CorePubField[];
 type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
 export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
-export type ActionPub<T extends ActionPubType> = {
-	id: PubsId;
-	parentId?: PubsId | null;
-	values: {
-		[key in T[number]["slug"]]: JTDDataType<T[number]["schema"]["schema"]>;
-	};
-	assignee?: {
-		id: string;
-		firstName: string;
-		lastName: string | null;
-		email: string;
-	};
-	communityId: CommunitiesId;
-	createdAt: Date;
-	title: string | null;
-	pubType: {
-		name: string;
-	};
-};
+export type ActionPub = ProcessedPub<{
+	withAssignee: true;
+	withPubType: true;
+	withRelatedPubs: undefined;
+}>;
+
+// export type ActionPub<T extends ActionPubType> = {
+// 	id: PubsId;
+// 	parentId?: PubsId | null;
+
+// 	assignee?: {
+// 		id: string;
+// 		firstName: string;
+// 		lastName: string | null;
+// 		email: string;
+// 	};
+// 	communityId: CommunitiesId;
+// 	createdAt: Date;
+// 	title: string | null;
+// 	pubType: {
+// 		name: string;
+// 	};
+// };
 
 export type RunProps<T extends Action> =
 	T extends Action<
@@ -50,7 +55,7 @@ export type RunProps<T extends Action> =
 		? {
 				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
 				configFieldOverrides: Set<string>;
-				pub: ActionPub<P>;
+				pub: ActionPub;
 				args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
 				argsFieldOverrides: Set<string>;
 				stageId: StagesId;
