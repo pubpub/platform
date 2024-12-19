@@ -95,6 +95,16 @@ export default async function Page({
 		notFound();
 	}
 
+	const canView = await userCan(
+		Capabilities.viewPub,
+		{ type: MembershipType.pub, pubId },
+		user.id
+	);
+
+	if (!canView) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
+
 	const canAddMember = await userCan(
 		Capabilities.addPubMember,
 		{
@@ -125,19 +135,6 @@ export default async function Page({
 			withMembers: true,
 		}
 	);
-
-	const canView =
-		(await userCan(Capabilities.viewPub, { type: MembershipType.pub, pubId }, user.id)) ||
-		(pub.stageId &&
-			(await userCan(
-				Capabilities.viewStage,
-				{ type: MembershipType.stage, stageId: pub.stageId },
-				user.id
-			)));
-
-	if (!canView) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
-	}
 
 	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
 
