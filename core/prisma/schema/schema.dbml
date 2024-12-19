@@ -532,6 +532,7 @@ Enum Action {
   http
   move
   googleDriveImport
+  datacite
 }
 
 Enum ActionRunStatus {

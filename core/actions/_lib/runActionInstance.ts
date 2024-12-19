@@ -189,6 +189,7 @@ const _runActionInstance = async (
 				parentId: pub.parentId,
 				communityId: pub.communityId,
 				createdAt: pub.createdAt,
+				updatedAt: pub.updatedAt,
 				title: pub.title,
 				pubType: pub.pubType,
 			},

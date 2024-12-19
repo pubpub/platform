@@ -35,6 +35,7 @@ export type ActionPub<T extends ActionPubType> = {
 	};
 	communityId: CommunitiesId;
 	createdAt: Date;
+	updatedAt: Date;
 	title: string | null;
 	pubType: {
 		name: string;
