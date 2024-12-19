@@ -30,6 +30,7 @@ export const env = createEnv({
 		PUBPUB_URL: z.string().url(),
 		INBUCKET_URL: z.string().url().optional(),
 		CI: z.string().or(z.boolean()).optional(),
+		GCLOUD_KEY_FILE: z.string()
 	},
 	client: {},
 	experimental__runtimeEnv: {
