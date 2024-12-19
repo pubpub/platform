@@ -12,20 +12,18 @@ export const run = defineRun<typeof action>(
 			...config,
 			...args,
 		};
-
+		// set the output field to the result
+		// const result = input.docUrl;
+		// const update = await updatePub({
+		// 	pubId: pub.id,
+		// 	communityId,
+		// 	pubValues: {
+		// 		[args.outputField ?? config.outputField]: result,
+		// 	},
+		// 	continueOnValidationError: false,
+		// 	lastModifiedBy,
+		// });
 		try {
-			// set the output field to the result
-			// const result = input.docUrl;
-			// const update = await updatePub({
-			// 	pubId: pub.id,
-			// 	communityId,
-			// 	pubValues: {
-			// 		[args.outputField ?? config.outputField]: result,
-			// 	},
-			// 	continueOnValidationError: false,
-			// 	lastModifiedBy,
-			// });
-
 			/*
 				- Get folder Id from pub
 				- Pull html content and metadata content from folder
@@ -39,7 +37,47 @@ export const run = defineRun<typeof action>(
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
-			formatDriveData(dataFromDrive);
+			const formattedData = formatDriveData(dataFromDrive);
+
+			/* NON-MIGRATION */
+			/* If the main doc is updated, make a new version */
+
+			/* MIGRATION */
+			/* Check for existence of legacy ids in Platform */
+			// const legacyIds = [...versions, ...discussions, ...contributors].map((pub) => pub.id);
+
+			// // Don't need to do Tags, on the pub
+			// // Don't need to do Narratives
+			// // Don't need to do contributors
+
+			// const { pubs: existingPubs } = await doPubsExist(legacyIds, communityId);
+			// const existingPubIds = existingPubs.map((pub) => pub.id);
+
+			// const nonExistingVersionRelations = nonExistingVersions.map((version) => {
+			// 	return { relatedPub: { ...version }, value: null, slug: "arcadia-research:versions" };
+			// });
+			// const pubTypes = getPubTypesForCommunity(communityId)
+			// upsertPubRelations({
+			// 	pubId: pub.id,
+			// 	communityId,
+			// 	lastModifiedBy,
+			// 	relations: [
+			// 		// { relatedPubId: , value: null },
+			// 		{
+			// 			slug: 'arcadia:discussions',
+			// 			value: null,
+			// 			relatedPub: {
+			// 				/* createPubRecursive body */
+			// 				/* This is my discussion */
+			// 				// {
+			// 				// 	'arcadia-science:timestamp':
+			// 				// }
+			// 			},
+
+			// 		},
+			// 	],
+			// 	// relations: nonExistingVersionRelations
+			// });
 
 			return {
 				success: true,
