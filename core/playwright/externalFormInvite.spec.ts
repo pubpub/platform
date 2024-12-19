@@ -137,7 +137,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await newPage.goto(decodedUrl);
 		await newPage.getByText("Progress will be automatically saved").waitFor();
 
-		await newPage.getByLabel(`Content`).fill("LGTM");
+		await newPage.getByLabel("Content").fill("LGTM");
 
 		// Make sure it autosaves
 		// It should happen after 5s, but it seems to take ~6 usually
@@ -163,7 +163,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		// Creating a pub without a pubId should work
 		const createPage = decodedUrl.replace(`pubId%3D${pubId}`, "");
 		await newPage.goto(createPage);
-		await newPage.getByLabel(`${COMMUNITY_SLUG}:title`).fill("new pub");
+		await newPage.getByLabel("Title").fill("new pub");
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 		await newPage.getByText("Form Successfully Submitted").waitFor();
 
