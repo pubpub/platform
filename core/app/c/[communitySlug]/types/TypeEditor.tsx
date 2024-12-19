@@ -169,7 +169,10 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 															</Label>
 														</td>
 														<td>
-															<FormItem className="flex justify-center">
+															<FormItem
+																data-testId={`${pubField.slug}-titleField`}
+																className="flex justify-center"
+															>
 																{pubFieldCanBeTitle(pubField) ? (
 																	<>
 																		<FormControl>

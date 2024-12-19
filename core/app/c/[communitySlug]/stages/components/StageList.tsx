@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
+import type { ProcessedPub } from "contracts";
 import type { CommunitiesId } from "db/public";
 import { Button } from "ui/button";
 
@@ -10,7 +11,7 @@ import type { MemberWithUser } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
 import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
-import { getPubs } from "~/lib/server";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import { getStageWorkflows } from "~/lib/stages";
@@ -98,14 +99,18 @@ export async function StagePubs({
 	basePath: string;
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
-		getPubs(
-			{ stageId: stage.id },
+		getPubsWithRelatedValuesAndChildren(
+			{ stageId: stage.id, communityId: stage.communityId },
 			{
-				onlyParents: false,
 				// fetch one extra pub so we know whether or not to render a show more button
 				limit: pagination?.pubsPerPage || (totalPubLimit && totalPubLimit + 1),
 				offset: pagination && (pagination.page - 1) * pagination.pubsPerPage,
 				orderBy: "updatedAt",
+				withRelatedPubs: false,
+				withValues: false,
+				withStage: true,
+				withPubType: true,
+				withLegacyAssignee: true,
 			}
 		),
 		getStageActions(stage.id).execute(),
@@ -125,7 +130,13 @@ export async function StagePubs({
 				return (
 					<PubRow
 						key={pub.id}
-						pub={pub}
+						pub={
+							pub as ProcessedPub<{
+								withStage: true;
+								withPubType: true;
+								withRelatedPubs: false;
+							}>
+						}
 						actions={
 							<StagePubActions
 								key={stage.id}

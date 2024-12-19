@@ -1,5 +1,3 @@
-"use server";
-
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -19,7 +17,7 @@ import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { getPubCached } from "~/lib/server";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { isClientException } from "~/lib/serverActions";
 import { getActionByName } from "../api";
@@ -30,6 +28,7 @@ export type ActionInstanceRunResult = ClientException | ClientExceptionOptions |
 
 export type RunActionInstanceArgs = {
 	pubId: PubsId;
+	communityId: CommunitiesId;
 	actionInstanceId: ActionInstancesId;
 	actionInstanceArgs?: Record<string, unknown>;
 } & ({ event: Event } | { userId: UsersId });
@@ -38,7 +37,13 @@ const _runActionInstance = async (
 	args: RunActionInstanceArgs & { actionRunId: ActionRunsId },
 	trx = db
 ): Promise<ActionInstanceRunResult> => {
-	const pubPromise = getPubCached(args.pubId);
+	const pubPromise = getPubsWithRelatedValuesAndChildren(
+		{ pubId: args.pubId, communityId: args.communityId },
+		{
+			withPubType: true,
+			withStage: true,
+		}
+	);
 
 	const actionInstancePromise = trx
 		.selectFrom("action_instances")
@@ -306,6 +311,7 @@ export const runInstancesForEvent = async (
 	pubId: PubsId,
 	stageId: StagesId,
 	event: Event,
+	communityId: CommunitiesId,
 	trx = db
 ) => {
 	const instances = await trx
@@ -324,6 +330,7 @@ export const runInstancesForEvent = async (
 				result: await runActionInstance(
 					{
 						pubId,
+						communityId,
 						actionInstanceId: instance.actionInstanceId,
 						event,
 					},
