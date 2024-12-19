@@ -121,7 +121,12 @@ export default async function Page({
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose">
-					<PubEditor searchParams={searchParams} pubId={pub.id} formId={formId} />
+					<PubEditor
+						searchParams={searchParams}
+						pubId={pub.id}
+						formId={formId}
+						communityId={community.id}
+					/>
 				</div>
 			</div>
 		</ContentLayout>

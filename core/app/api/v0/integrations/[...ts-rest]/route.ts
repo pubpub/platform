@@ -7,7 +7,12 @@ import { logger } from "logger";
 import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env.mjs";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { deletePub, generateSignedAssetUploadUrl, getPub, tsRestHandleErrors } from "~/lib/server";
+import {
+	_deprecated_getPub,
+	deletePub,
+	generateSignedAssetUploadUrl,
+	tsRestHandleErrors,
+} from "~/lib/server";
 import { emailUser } from "~/lib/server/_legacy-integration-email";
 import {
 	_getPubType,
@@ -50,7 +55,7 @@ const handler = createNextHandler(
 		},
 		getPub: async ({ headers, params }) => {
 			checkAuthentication(headers.authorization);
-			const pub = await getPub(params.pubId as PubsId);
+			const pub = await _deprecated_getPub(params.pubId as PubsId);
 			return { status: 200, body: pub };
 		},
 		getAllPubs: async ({ headers }) => {

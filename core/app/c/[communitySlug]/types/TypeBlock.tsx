@@ -30,14 +30,21 @@ const IsTitleCell = ({
 	pubField,
 	isEditing,
 	isTitle,
+	pubTypeName,
 }: {
-	pubField: { id: PubFieldsId; schemaName: CoreSchemaType | null };
+	pubField: { id: PubFieldsId; schemaName: CoreSchemaType | null; slug: string };
 	isEditing: boolean;
+	pubTypeName: string;
 	isTitle: boolean;
 }) => {
 	if (isEditing) {
 		if (pubFieldCanBeTitle(pubField)) {
-			return <RadioGroupItem value={pubField.id} />;
+			return (
+				<RadioGroupItem
+					value={pubField.id}
+					data-testid={`${pubTypeName}:${pubField.slug}-titleField`}
+				/>
+			);
 		}
 		return null;
 	}
@@ -177,6 +184,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 															pubField={field}
 															isTitle={isTitle}
 															isEditing={editing}
+															pubTypeName={type.name}
 														/>
 													</td>
 												</tr>
