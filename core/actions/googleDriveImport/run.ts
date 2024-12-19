@@ -60,8 +60,8 @@ export const run = defineRun<typeof action>(
 							slug: "arcadia:discussions",
 							value: null,
 							relatedPub: {
-								pubTypeId: DiscussionType?.id || '',
-								...discussion
+								pubTypeId: DiscussionType?.id || "",
+								...discussion,
 							},
 						};
 					}),
