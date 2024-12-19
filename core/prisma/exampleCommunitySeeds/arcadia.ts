@@ -376,7 +376,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 			},
 			stages: {
 				Articles: {
-					members: ["arcadia-user-1"],
+					members: { "arcadia-user-1": MemberRole.editor },
 				},
 				// these stages are mostly here to provide slightly easier grouping of the relevant pubs
 				Sites: {},
@@ -385,7 +385,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 				Navigations: {},
 				Tags: {},
 				"Stage 2": {
-					members: ["arcadia-user-1"],
+					members: { "arcadia-user-1": MemberRole.editor },
 				},
 			},
 			stageConnections: {

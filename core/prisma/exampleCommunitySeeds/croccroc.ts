@@ -134,7 +134,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			},
 			stages: {
 				Submitted: {
-					members: ["new"],
+					members: { new: MemberRole.contributor },
 					actions: [
 						{
 							action: Action.email,
@@ -148,10 +148,10 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					],
 				},
 				"Ask Author for Consent": {
-					members: ["new"],
+					members: { new: MemberRole.contributor },
 				},
 				"To Evaluate": {
-					members: ["new"],
+					members: { new: MemberRole.contributor },
 				},
 				"Under Evaluation": {},
 				"In Production": {},
