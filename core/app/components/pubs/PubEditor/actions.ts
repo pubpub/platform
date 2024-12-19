@@ -14,13 +14,15 @@ import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { userHasPermissionToForm } from "~/lib/server/form";
+import { addMemberToForm, userHasPermissionToForm } from "~/lib/server/form";
 import { updatePub as _updatePub, deletePub } from "~/lib/server/pub";
-import { _deprecated_validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+
+type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
-	props: Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">
+	props: CreatePubRecursiveProps & { formSlug?: string; addUserToForm?: boolean }
 ) {
+	const { formSlug, addUserToForm, ...createPubProps } = props;
 	const loginData = await getLoginData();
 
 	if (!loginData || !loginData.user) {
@@ -28,13 +30,16 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	}
 	const { user } = loginData;
 
-	const authorized = await userCan(
+	const canCreatePub = await userCan(
 		Capabilities.createPub,
 		{ type: MembershipType.community, communityId: props.communityId },
 		user.id
 	);
+	const canCreateFromForm = formSlug
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
+		: false;
 
-	if (!authorized) {
+	if (!canCreatePub && !canCreateFromForm) {
 		return ApiError.UNAUTHORIZED;
 	}
 
@@ -43,7 +48,16 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	});
 
 	try {
-		await createPubRecursiveNew({ ...props, lastModifiedBy });
+		const createdPub = await createPubRecursiveNew({ ...createPubProps, lastModifiedBy });
+
+		if (addUserToForm && formSlug) {
+			await addMemberToForm({
+				communityId: props.communityId,
+				userId: user.id,
+				slug: formSlug,
+				pubId: createdPub.id,
+			});
+		}
 		return {
 			success: true,
 			report: `Successfully created a new Pub`,
@@ -82,11 +96,8 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	/** TODO: This allows anyone who has permission to the form to update any pub with the form.
-	 * We need a way to restrict someone who is editing via an external form by pub id
-	 */
 	const canUpdateFromForm = formSlug
-		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id, pubId })
 		: false;
 	const canUpdatePubValues = await userCan(
 		Capabilities.updatePubValues,

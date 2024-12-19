@@ -69,15 +69,19 @@ const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: str
 	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`);
 };
 
-export const renderFormInviteLink = async (
-	formSlug: string,
-	memberId: CommunityMembershipsId,
-	userId: UsersId,
-	communityId: CommunitiesId,
-	pubId?: string
-) => {
-	await addMemberToForm({ userId, communityId, slug: formSlug });
-	return createFormInviteLink({ userId, formSlug, communityId, pubId: pubId as PubsId });
+export const renderFormInviteLink = async ({
+	formSlug,
+	userId,
+	communityId,
+	pubId,
+}: {
+	formSlug: string;
+	userId: UsersId;
+	communityId: CommunitiesId;
+	pubId: PubsId;
+}) => {
+	await addMemberToForm({ userId, communityId, pubId, slug: formSlug });
+	return createFormInviteLink({ userId, formSlug, communityId, pubId });
 };
 
 export const renderMemberFields = async ({

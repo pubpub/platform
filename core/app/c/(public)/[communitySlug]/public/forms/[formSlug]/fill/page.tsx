@@ -196,6 +196,7 @@ export default async function FormPage({
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,
+			pubId: pub?.id,
 		});
 
 		if (!memberHasAccessToForm) {
@@ -288,6 +289,7 @@ export default async function FormPage({
 									isUpdating={isUpdating}
 									withAutoSave={isUpdating}
 									withButtonElements
+									isExternalForm
 									className="col-span-2 col-start-2"
 								>
 									{form.elements.map((e) => (
