@@ -22,7 +22,8 @@ export type FieldSelectProps = {
 		fieldId: PubFieldsId,
 		name: string,
 		slug: string,
-		schemaName: CoreSchemaType | null
+		schemaName: CoreSchemaType | null,
+		isRelation?: boolean | null
 	) => void;
 	modal?: boolean;
 };
@@ -36,7 +37,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 	);
 	const onSelect = (fieldId: PubFieldsId) => {
 		const field = fields[fieldId];
-		onFieldSelect(fieldId, field.name, field.slug, field.schemaName);
+		onFieldSelect(fieldId, field.name, field.slug, field.schemaName, field.isRelation);
 		setOpen(false);
 	};
 

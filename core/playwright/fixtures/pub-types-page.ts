@@ -64,5 +64,8 @@ export class PubTypesPage {
 		await dialog.getByRole("button", { name: "Create type" }).click();
 
 		await dialog.waitFor({ state: "hidden" });
+
+		// check whether the new type is created
+		await this.page.getByRole("heading", { name: name }).waitFor();
 	}
 }

@@ -34,6 +34,7 @@ export class FieldsPage {
 	async addField(
 		name: string,
 		format: CoreSchemaType,
+		relation?: boolean,
 		/**
 		 * Whether to wait for the little pop up that confirms field creation
 		 * set to false for testing this function
@@ -42,8 +43,14 @@ export class FieldsPage {
 	) {
 		await this.openNewFieldModal();
 		await this.nameBox.fill(name);
+		if (relation) {
+			await this.page.getByTestId("isRelation-checkbox").click();
+		}
+
 		await this.selectFormat(format);
+
 		await this.page.getByRole("button", { name: "Create" }).click();
+
 		if (!waitForText) {
 			return;
 		}

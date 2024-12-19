@@ -48,7 +48,10 @@ export default async function Page({
 
 	const [types, { fields }] = await Promise.all([
 		getAllPubTypesForCommunity(communitySlug).execute(),
-		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
+		getPubFields({
+			communityId: community.id,
+			includeRelations: true,
+		}).executeTakeFirstOrThrow(),
 	]);
 
 	if (!types || !fields) {
