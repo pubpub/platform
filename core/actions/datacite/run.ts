@@ -123,7 +123,6 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 		data: {
 			type: "dois",
 			attributes: {
-				event: "publish",
 				doi,
 				prefix: config.doiPrefix,
 				titles: [{ title }],
@@ -175,7 +174,16 @@ const createPubDeposit = async (payload: Payload) => {
 	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
 		headers: makeRequestHeaders(),
-		body: JSON.stringify(payload),
+		body: JSON.stringify({
+			...payload,
+			data: {
+				...payload.data,
+				attributes: {
+					...payload.data?.attributes,
+					event: "publish",
+				},
+			},
+		}),
 	});
 
 	if (!response.ok) {
