@@ -184,6 +184,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 		{
 			// this makes sure that the slug is `croccroc`, not `croccroc-${new Date().toISOString()}
 			randomSlug: false,
+			withApiToken: "11111111-1111-1111-1111-111111111111.yyyyyyyyyyyyyyyy",
 		}
 	);
 }

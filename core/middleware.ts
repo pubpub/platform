@@ -19,23 +19,17 @@ const communitySlugMiddleware = async (request: NextRequest) => {
 	const matched = request.nextUrl.pathname.match(communityRouteRegexp);
 
 	if (!matched) {
-		request.cookies.delete(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
-		// TODO: Handle strange case where no community slug is found.
 		return NextResponse.next();
 	}
 	const communitySlug = matched[1] || matched[2];
 
 	if (!communitySlug) {
-		request.cookies.delete(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
 		// TODO: Handle strange case where no community slug is found.
 		return NextResponse.next();
 	}
 
 	const response = NextResponse.next();
 
-	response.cookies.set(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME, communitySlug, {
-		maxAge: 60 * 60 * 24,
-	});
 	response.headers.set(PUBPUB_COMMUNITY_SLUG_HEADER_NAME, communitySlug);
 
 	return response;

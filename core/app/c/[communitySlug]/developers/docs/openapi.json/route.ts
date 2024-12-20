@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createOpenApiDocument } from "./openApi";
 
-export const revalidate = 60 * 60 * 24;
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export const GET = async function (
 	request: NextRequest,

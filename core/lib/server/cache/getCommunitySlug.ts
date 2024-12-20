@@ -25,26 +25,13 @@ export class NotInCommunityError extends Error {
 }
 
 /**
- * Retrieve the community slug from the cookie or the headers.
+ * Retrieve the community slug from headers.
  *
- * These cookies/headers are set by the middleware, so this function will only work
+ * These headers are set by the middleware, so this function will only work
  * when called from a route that is scoped under a community,
  * i.e. `/c/[communitySlug]` or `/api/v0/c/[communitySlug]`.
  */
 export const getCommunitySlug = cache(() => {
-	const cookie = cookies().get(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME);
-	if (cookie?.value) {
-		return cookie.value;
-	}
-
-	const setCookies = headers().getSetCookie();
-	const communityIdCookie = setCookies?.find((cookie) =>
-		cookie.startsWith(PUBPUB_COMMUNITY_SLUG_COOKIE_NAME)
-	);
-	if (communityIdCookie) {
-		return communityIdCookie.split(";")[0].split("=")[1];
-	}
-
 	const header = headers();
 	const communitySlugHeader = header.get(PUBPUB_COMMUNITY_SLUG_HEADER_NAME);
 	if (!communitySlugHeader) {
