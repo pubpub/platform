@@ -140,6 +140,7 @@ main()
 			await prisma.$disconnect();
 			process.exit(1);
 		}
+		logger.error(e);
 		logger.info("Attempted to add duplicate entries, db is already seeded?");
 		await prisma.$disconnect();
 	});
