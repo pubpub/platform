@@ -75,7 +75,14 @@ export default async function Page({
 						.selectFrom("pubs")
 						.whereRef("pubs.id", "=", "action_runs.pubId")
 						.select(["pubs.id", "pubs.createdAt", "pubs.title"])
-						.select(pubValuesByRef("action_runs.pubId"))
+						.leftJoin("pub_values", "pubs.id", "pub_values.pubId")
+						.leftJoin("pub_fields", "pub_values.fieldId", "pub_fields.id")
+						.select([
+							"pub_values.value",
+							"pub_fields.name as fieldName",
+							"pub_fields.schemaName as schemaName",
+							"pub_fields.slug as fieldSlug",
+						])
 						.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 				).as("pub"),
 				jsonObjectFrom(
