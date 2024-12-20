@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, UsersId } from "db/public";
 import { cn } from "utils";
 
 import { BasicPagination } from "~/app/components/Pagination";
@@ -20,13 +20,14 @@ type PaginatedPubListProps = {
 	 * @default `/c/${communitySlug}/pubs`
 	 */
 	basePath?: string;
+	userId: UsersId;
 };
 
 const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 	const [count, pubs] = await Promise.all([
 		getPubsCount({ communityId: props.communityId }),
 		getPubsWithRelatedValuesAndChildren(
-			{ communityId: props.communityId },
+			{ communityId: props.communityId, userId: props.userId },
 			{
 				limit: PAGE_SIZE,
 				offset: (props.page - 1) * PAGE_SIZE,
@@ -48,7 +49,14 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 	return (
 		<div className={cn("flex flex-col gap-8")}>
 			{pubs.map((pub) => {
-				return <PubRow key={pub.id} pub={pub} searchParams={props.searchParams} />;
+				return (
+					<PubRow
+						key={pub.id}
+						userId={props.userId}
+						pub={pub}
+						searchParams={props.searchParams}
+					/>
+				);
 			})}
 			<BasicPagination
 				basePath={basePath}
