@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
@@ -73,16 +73,22 @@ export default async function Page({
 				jsonObjectFrom(
 					eb
 						.selectFrom("pubs")
-						.whereRef("pubs.id", "=", "action_runs.pubId")
 						.select(["pubs.id", "pubs.createdAt", "pubs.title"])
-						.leftJoin("pub_values", "pubs.id", "pub_values.pubId")
-						.leftJoin("pub_fields", "pub_values.fieldId", "pub_fields.id")
-						.select([
-							"pub_values.value",
-							"pub_fields.name as fieldName",
-							"pub_fields.schemaName as schemaName",
-							"pub_fields.slug as fieldSlug",
-						])
+						.whereRef("pubs.id", "=", "action_runs.pubId")
+						.select((eb) =>
+							jsonArrayFrom(
+								eb
+									.selectFrom("pub_values")
+									.leftJoin("pub_fields", "pub_values.fieldId", "pub_fields.id")
+									.select([
+										"pub_values.value",
+										"pub_fields.name as fieldName",
+										"pub_fields.schemaName as schemaName",
+										"pub_fields.slug as fieldSlug",
+									])
+									.whereRef("pub_values.pubId", "=", "pubs.id")
+							).as("values")
+						)
 						.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 				).as("pub"),
 				jsonObjectFrom(
