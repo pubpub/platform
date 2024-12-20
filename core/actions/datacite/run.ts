@@ -97,7 +97,7 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 
 	const publicationDate = pub.values.find((v) => v.fieldSlug === publicationDateFieldSlug)?.value;
 	assert(
-		typeof publicationDate === "string",
+		typeof publicationDate === "string" || publicationDate instanceof Date,
 		"The pub is missing a value corresponding to the configured publication date field override."
 	);
 
