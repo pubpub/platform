@@ -6,7 +6,7 @@ import "./stoplight.styles.css";
 
 import { env } from "~/lib/env/env.mjs";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
 	title: "API Docs",
