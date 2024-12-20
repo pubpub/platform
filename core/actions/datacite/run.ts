@@ -170,16 +170,16 @@ const checkDoi = async (doi: string) => {
 	return response.ok;
 };
 
-const createPubDeposit = async (payload: Payload) => {
+const createPubDeposit = async (depositPayload: Payload) => {
 	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
 		headers: makeRequestHeaders(),
 		body: JSON.stringify({
-			...payload,
+			...depositPayload,
 			data: {
-				...payload.data,
+				...depositPayload.data,
 				attributes: {
-					...payload.data?.attributes,
+					...depositPayload.data?.attributes,
 					event: "publish",
 				},
 			},
@@ -196,12 +196,12 @@ const createPubDeposit = async (payload: Payload) => {
 	return response.json();
 };
 
-const updatePubDeposit = async (payload: Payload) => {
-	const doi = expect(payload?.data?.attributes?.doi);
+const updatePubDeposit = async (depositPayload: Payload) => {
+	const doi = expect(depositPayload?.data?.attributes?.doi);
 	const response = await fetch(`${env.DATACITE_API_URL}/dois/${doi}`, {
 		method: "PUT",
 		headers: makeRequestHeaders(),
-		body: JSON.stringify(payload),
+		body: JSON.stringify(depositPayload),
 	});
 
 	if (!response.ok) {
@@ -217,9 +217,9 @@ const updatePubDeposit = async (payload: Payload) => {
 export const run = defineRun<typeof action>(async ({ pub, config, args, lastModifiedBy }) => {
 	const depositConfig = { ...config, ...args };
 
-	let payload: Payload;
+	let depositPayload: Payload;
 	try {
-		payload = await makeDatacitePayload(pub, depositConfig);
+		depositPayload = await makeDatacitePayload(pub, depositConfig);
 	} catch (error) {
 		if (error instanceof AssertionError) {
 			return {
@@ -235,9 +235,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 		// If the pub already has a DOI, and DataCite recognizes it,
 		depositConfig.doi && (await checkDoi(depositConfig.doi))
 			? // Update the pub metadata in DataCite
-				await updatePubDeposit(payload)
+				await updatePubDeposit(depositPayload)
 			: // Otherwise, deposit the pub to DataCite
-				await createPubDeposit(payload);
+				await createPubDeposit(depositPayload);
 
 	if (isClientExceptionOptions(depositResult)) {
 		return depositResult;
@@ -268,7 +268,11 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 	}
 
 	return {
-		data: {},
+		data: {
+			depositConfig,
+			depositPayload,
+			depositResult,
+		},
 		success: true,
 	};
 });
