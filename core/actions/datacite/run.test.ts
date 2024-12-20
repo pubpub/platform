@@ -63,15 +63,20 @@ const unmockFetch = () => {
 	global.fetch = _fetch;
 };
 
-// {
-// 	"pubpub:doi": undefined,
-// 	"pubpub:url": "https://www.pubpub.org",
-// 	"pubpub:publication-date": new Date("01-01-2024").toString(),
-// },
-
 const pub = {
 	id: "" as PubsId,
 	values: [
+		{
+			id: "" as PubValuesId,
+			fieldId: "" as PubFieldsId,
+			fieldName: "",
+			fieldSlug: "pubpub:title",
+			value: "It's a title",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			schemaName: CoreSchemaType.String,
+			relatedPubId: null,
+		},
 		{
 			id: "" as PubValuesId,
 			fieldId: "" as PubFieldsId,
@@ -136,8 +141,9 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 		creator: "placeholder",
 		creatorName: "placeholder",
 		doiPrefix: undefined,
-		doi: undefined,
-		doiSuffix: undefined,
+		doi: "",
+		doiSuffix: "placeholder",
+		title: "placeholder",
 		pubFields: {
 			url: ["pubpub:url"],
 			creator: ["pubpub:author"],
@@ -145,6 +151,7 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 			publicationDate: ["pubpub:publication-date"],
 			doi: ["pubpub:doi"],
 			doiSuffix: ["pubpub:doi-suffix"],
+			title: ["pubpub:title"],
 		},
 	},
 	configFieldOverrides: new Set(),
