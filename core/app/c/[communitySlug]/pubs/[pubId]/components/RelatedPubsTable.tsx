@@ -6,24 +6,16 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import type { ProcessedPub } from "contracts";
 import type { PubTypes, Stages } from "db/public";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
+import type { FullProcessedPub } from "~/lib/server/pub";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubTitle } from "~/lib/pubs";
 import { createdAtDateOptions } from "./getPubChildrenTableColumns";
-
-type FullProcessedPub = ProcessedPub<{
-	withRelatedPubs: true;
-	withChildren: true;
-	withMembers: true;
-	withPubType: true;
-	withStage: true;
-}>;
 
 const getRelatedPubsColumns = () => {
 	return [

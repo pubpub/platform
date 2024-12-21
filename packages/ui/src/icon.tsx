@@ -15,6 +15,7 @@ export {
 	CheckCircle,
 	CheckSquare,
 	ChevronDown,
+	ChevronRight,
 	ChevronLeft,
 	ChevronUp,
 	ChevronsUpDown,
