@@ -1556,9 +1556,9 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 	const processedPubsById = new Map<PubsId, ProcessedPub<Options>>();
 
 	function processPub(pubId: PubsId, depth: number): ProcessedPub<Options> | undefined {
-		// if (depth < 0) {
-		// 	return processedPubsById.get(pubId);
-		// }
+		if (depth < 0) {
+			return processedPubsById.get(pubId);
+		}
 
 		const alreadyProcessedPub = processedPubsById.get(pubId);
 		if (alreadyProcessedPub) {
