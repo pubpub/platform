@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import type { JsonValue } from "contracts";
 import type { PubsId } from "db/public";
 import { AuthTokenType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
@@ -38,8 +37,8 @@ import {
 	removePubMember,
 	setPubMemberRole,
 } from "./actions";
-import { renderPubValue } from "./components/jsonSchemaHelpers";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
+import { PubValues } from "./components/PubValues";
 import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
 export async function generateMetadata({
@@ -124,6 +123,7 @@ export default async function Page({
 			withRelatedPubs: true,
 			withStage: true,
 			withMembers: true,
+			depth: 3,
 		}
 	);
 
@@ -139,7 +139,6 @@ export default async function Page({
 	}
 
 	const { stage, children, ...slimPub } = pub;
-
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8 flex items-center justify-between">
@@ -157,23 +156,7 @@ export default async function Page({
 
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
-					{pub.values
-						.filter((value) => {
-							return value.fieldName !== "Title";
-						})
-						.map((value) => {
-							return (
-								<div className="mb-4" key={value.id}>
-									<div>
-										{renderPubValue({
-											fieldName: value.fieldName,
-											value: value.value as JsonValue,
-											schemaName: value.schemaName,
-										})}
-									</div>
-								</div>
-							);
-						})}
+					<PubValues pub={pub} />
 				</div>
 				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 					<div>
