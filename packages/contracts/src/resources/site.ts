@@ -225,7 +225,7 @@ type ProcessedPubBase = {
 	createdAt: Date;
 	title: string | null;
 	depth: number;
-	isCycle: boolean;
+	isCycle?: boolean;
 	/**
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
@@ -263,7 +263,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	communityId: communitiesIdSchema,
 	pubTypeId: pubTypesIdSchema,
 	parentId: pubsIdSchema.nullable(),
-	isCycle: z.boolean(),
+	isCycle: z.boolean().optional(),
 	depth: z.number(),
 	title: z.string().nullable(),
 	values: z.array(
