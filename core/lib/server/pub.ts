@@ -7,7 +7,6 @@ import type {
 	StringReference,
 } from "kysely";
 
-import { en_BORK } from "@faker-js/faker";
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
@@ -17,7 +16,6 @@ import type {
 	Json,
 	JsonValue,
 	MaybePubOptions,
-	NonGenericProcessedPub,
 	ProcessedPub,
 	PubTypePubField,
 } from "contracts";
@@ -1585,7 +1583,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			?.map((child) => processPub(child.id, depth - 1))
 			?.filter((child) => !!child);
 
-		const { isCycle, values, path, ...usefulProcessedPubColumns } = unprocessedPub;
+		const { values, path, ...usefulProcessedPubColumns } = unprocessedPub;
 
 		const processedPub = {
 			...usefulProcessedPubColumns,
@@ -1649,3 +1647,10 @@ export const getPubsCount = async (props: {
 
 	return pubs.count;
 };
+export type FullProcessedPub = ProcessedPub<{
+	withRelatedPubs: true;
+	withChildren: true;
+	withMembers: true;
+	withPubType: true;
+	withStage: true;
+}>;

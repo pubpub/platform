@@ -5,32 +5,28 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import type { PubsId } from "db/public";
-import { AuthTokenType } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 
-import type { PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import IntegrationActions from "~/app/components/IntegrationActions";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
+import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValuesAndChildren, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
-import { createToken } from "~/lib/server/token";
 import {
 	addPubMember,
 	addUserWithPubMembership,
@@ -79,11 +75,6 @@ export default async function Page({
 	const { pubId, communitySlug } = params;
 
 	const { user } = await getPageLoginData();
-
-	const token = await createToken({
-		userId: user.id,
-		type: AuthTokenType.generic,
-	});
 
 	if (!pubId || !communitySlug) {
 		return null;
@@ -143,8 +134,10 @@ export default async function Page({
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8 flex items-center justify-between">
 				<div>
-					<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
-					<PubTitle pub={pub} />
+					<div className="text-lg font-semibold text-muted-foreground">
+						{pub.pubType.name}
+					</div>
+					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
 				<Button variant="outline" asChild className="flex items-center gap-1">
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
@@ -159,36 +152,20 @@ export default async function Page({
 					<PubValues pub={pub} />
 				</div>
 				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
-					<div>
-						<div className="mb-1 text-lg font-bold">Current Stage</div>
-						<div className="ml-4 flex items-center gap-2 font-medium">
-							{pub.stage ? (
-								<>
-									<div data-testid="current-stage">{pub.stage.name}</div>
-									<Move
-										pubId={pub.id}
-										stageId={pub.stage.id}
-										communityStages={communityStages}
-									/>
-								</>
-							) : null}
-						</div>
-					</div>
-					<div>
-						<div className="mb-1 text-lg font-bold">Integrations</div>
+					{pub.stage ? (
 						<div>
-							<Suspense>
-								{pub.stage?.id && (
-									<IntegrationActions
-										pubId={pubId}
-										token={token}
-										stageId={pub.stage.id}
-										type="pub"
-									/>
-								)}
-							</Suspense>
+							<div className="mb-1 text-lg font-bold">Current Stage</div>
+							<div className="ml-4 flex items-center gap-2 font-medium">
+								<div data-testid="current-stage">{pub.stage.name}</div>
+								<Move
+									pubId={pub.id}
+									stageId={pub.stage.id}
+									communityStages={communityStages}
+								/>
+							</div>
 						</div>
-					</div>
+					) : null}
+
 					<div>
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (

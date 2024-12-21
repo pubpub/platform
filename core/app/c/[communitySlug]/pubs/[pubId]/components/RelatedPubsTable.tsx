@@ -12,7 +12,7 @@ import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-import type { FullProcessedPub } from "./types";
+import type { FullProcessedPub } from "~/lib/server/pub";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubTitle } from "~/lib/pubs";
 import { createdAtDateOptions } from "./getPubChildrenTableColumns";

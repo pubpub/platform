@@ -14,7 +14,6 @@ import type {
 	Stages,
 	StagesId,
 	Users,
-	UsersId,
 } from "db/public";
 import {
 	communitiesIdSchema,
@@ -226,6 +225,7 @@ type ProcessedPubBase = {
 	createdAt: Date;
 	title: string | null;
 	depth: number;
+	isCycle: boolean;
 	/**
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
@@ -263,6 +263,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	communityId: communitiesIdSchema,
 	pubTypeId: pubTypesIdSchema,
 	parentId: pubsIdSchema.nullable(),
+	isCycle: z.boolean(),
 	depth: z.number(),
 	title: z.string().nullable(),
 	values: z.array(

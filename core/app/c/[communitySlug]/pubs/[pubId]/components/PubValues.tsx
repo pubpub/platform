@@ -13,87 +13,93 @@ import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ChevronDown, ChevronRight } from "ui/icon";
 
-import type { FullProcessedPub } from "./types";
 import type { FileUpload } from "~/lib/fields/fileUpload";
+import type { FullProcessedPub } from "~/lib/server/pub";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
-import { getPubTitle } from "~/lib/pubs";
+import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
 
 const PubValueHeading = ({
 	depth,
 	children,
 	...props
 }: React.HTMLAttributes<HTMLHeadingElement> & { depth: number }) => {
-	switch (depth) {
+	// Pub depth starts at 1
+	switch (depth - 1) {
 		case 0:
-			return <h3 {...props}>{children}</h3>;
+			return <h2 {...props}>{children}</h2>;
 		case 1:
-			return <h4 {...props}>{children}</h4>;
+			return <h3 {...props}>{children}</h3>;
 		case 2:
-			return <h5 {...props}>{children}</h5>;
+			return <h4 {...props}>{children}</h4>;
 		default:
-			return <h6 {...props}>{children}</h6>;
+			return <h5 {...props}>{children}</h5>;
 	}
 };
 
-export const PubValues = ({ pub: { values, depth } }: { pub: FullProcessedPub }): ReactNode => {
+export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
+	const { values, depth } = pub;
 	if (!values.length) {
 		return null;
 	}
-	if (values.length === 1) {
-		const value = values[0];
-		return <PubValue value={value} />;
-	}
-	if (values.length > 1) {
-		const filteredValues = values.filter((value) => {
-			return value.fieldName !== "Title";
-		});
 
-		const groupedValues: Record<string, FullProcessedPub["values"]> = {};
-		filteredValues.forEach((value) => {
-			if (groupedValues[value.fieldName]) {
-				groupedValues[value.fieldName].push(value);
-			} else {
-				groupedValues[value.fieldName] = [value];
-			}
-		});
-		return Object.entries(groupedValues).map(([name, values]) => {
-			return (
-				<div className="my-2" key={name}>
-					<PubValueHeading depth={depth} className={"mb-2 text-base font-semibold"}>
-						{name}
-					</PubValueHeading>
-					<div className={"ml-2"} data-testid={`${name}-value`}>
-						{values.map((value) => (
-							<PubValue value={value} key={value.id} />
-						))}
-					</div>
+	const filteredValues = valuesWithoutTitle(pub);
+
+	// Group values by field so we only render one heading for relationship values that have multiple entries
+	const groupedValues: Record<string, FullProcessedPub["values"]> = {};
+	filteredValues.forEach((value) => {
+		if (groupedValues[value.fieldName]) {
+			groupedValues[value.fieldName].push(value);
+		} else {
+			groupedValues[value.fieldName] = [value];
+		}
+	});
+	return Object.entries(groupedValues).map(([fieldName, fieldValues]) => {
+		return (
+			<div className="my-2" key={fieldName}>
+				<PubValueHeading depth={depth} className={"mb-2 text-base font-semibold"}>
+					{fieldName}
+				</PubValueHeading>
+				<div className={"ml-2"} data-testid={`${fieldName}-value`}>
+					{fieldValues.map((value) => (
+						<PubValue value={value} key={value.id} />
+					))}
 				</div>
-			);
-		});
-	}
+			</div>
+		);
+	});
 };
 
 const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	if (value.relatedPub) {
 		const { relatedPub, ...justValue } = value;
+		if (relatedPub.isCycle) {
+			return (
+				<>
+					<span className="mr-2 rounded bg-slate-100 p-1 italic">Current pub</span>
+					{getPubTitle(value.relatedPub)}
+				</>
+			);
+		}
+		const renderRelatedValues =
+			value.relatedPub.depth < 3 && valuesWithoutTitle(relatedPub).length > 0;
 		return (
-			<Collapsible
-				open={isOpen}
-				onOpenChange={setIsOpen}
-				// className="w-full"
-			>
-				<div>
-					{justValue.value ? <>{<PubValue value={justValue} />}: </> : null}
-					<Link className="mb-2 inline underline" href={`./${relatedPub.id}`}>
+			<Collapsible open={isOpen} onOpenChange={setIsOpen}>
+				<div className="flex items-center">
+					{justValue.value ? (
+						<span className="mr-2">{<PubValue value={justValue} />}:</span>
+					) : null}
+					<Link className="inline underline" href={`./${relatedPub.id}`}>
 						{getPubTitle(value.relatedPub)}
 					</Link>
-					{value.relatedPub.depth < 3 && relatedPub.values.length && (
+					{renderRelatedValues && (
 						<CollapsibleTrigger asChild>
 							<Button
 								variant={isOpen ? "secondary" : "ghost"}
 								size="sm"
-								aria-label="Expand pub contents"
+								title="Show pub contents"
+								aria-label="Show pub contents"
+								className="ml-2"
 							>
 								{isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
 							</Button>
@@ -101,7 +107,7 @@ const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 					)}
 				</div>
 				<CollapsibleContent>
-					{value.relatedPub.depth < 3 && (
+					{renderRelatedValues && (
 						<div className="ml-4">
 							<PubValues pub={relatedPub} />
 						</div>
@@ -116,6 +122,10 @@ const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
 	if (Value.Check(fileUploadSchema, value.value)) {
 		return <FileUploadPreview files={value.value as FileUpload} />;
+	}
+
+	if (value.schemaName === CoreSchemaType.DateTime) {
+		return new Date(value.value as string).toISOString().split("T")[0];
 	}
 
 	const valueAsString = (value.value as JsonValue)?.toString() || "";

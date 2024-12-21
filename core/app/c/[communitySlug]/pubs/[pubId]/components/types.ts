@@ -1,4 +1,4 @@
-import type { JsonValue, ProcessedPub } from "contracts";
+import type { JsonValue } from "contracts";
 import type {
 	ActionInstances,
 	CommunityMembershipsId,
@@ -39,11 +39,3 @@ export type ChildPubRow = {
 	values: Record<string, JsonValue>;
 	pubTypeId: PubTypesId;
 };
-
-export type FullProcessedPub = ProcessedPub<{
-	withRelatedPubs: true;
-	withChildren: true;
-	withMembers: true;
-	withPubType: true;
-	withStage: true;
-}>;
