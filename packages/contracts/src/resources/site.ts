@@ -231,6 +231,7 @@ type ProcessedPubBase = {
 	parentId: PubsId | null;
 	createdAt: Date;
 	title: string | null;
+	depth: number;
 	/**
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
