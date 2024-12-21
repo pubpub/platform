@@ -116,12 +116,12 @@ export const formatDriveData = async (dataFromDrive: DriveData): Promise<Formatt
 						values: {
 							"arcadia:anchor":
 								index === 0 && discussion.anchors.length
-									? discussion.anchors[0]
+									? JSON.stringify(discussion.anchors[0])
 									: undefined,
 							"arcadia:content": comment.text,
 							"arcadia:publication-date": comment.createdAt,
 							"arcadia:full-name": comment.author.fullName,
-							"arcadia:orcid": comment.author.orcid,
+							"arcadia:orcid": `https://orcid.org/${comment.author.orcid}`,
 							"arcadia:avatar": comment.author.avatar,
 							"arcadia:is-closed": discussion.isClosed,
 							"arcadia:parent-id": index !== 0 ? firstCommentId : undefined,
