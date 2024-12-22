@@ -73,11 +73,15 @@ const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	if (value.relatedPub) {
 		const { relatedPub, ...justValue } = value;
+		const justValueElement = justValue.value ? (
+			<span className="mr-2 italic">{<PubValue value={justValue} />}:</span>
+		) : null;
 		if (relatedPub.isCycle) {
 			return (
 				<>
-					<span className="mr-2 rounded bg-slate-100 p-1 italic">Current pub</span>
+					{justValueElement}
 					{getPubTitle(value.relatedPub)}
+					<span className="ml-2 rounded-full bg-green-100 px-2 py-1">Current pub</span>
 				</>
 			);
 		}
@@ -86,9 +90,7 @@ const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 		return (
 			<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 				<div className="flex items-center">
-					{justValue.value ? (
-						<span className="mr-2">{<PubValue value={justValue} />}:</span>
-					) : null}
+					{justValueElement}
 					<Link className="inline underline" href={`./${relatedPub.id}`}>
 						{getPubTitle(value.relatedPub)}
 					</Link>
