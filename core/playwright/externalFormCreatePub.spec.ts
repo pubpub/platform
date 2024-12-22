@@ -170,7 +170,7 @@ test.describe("Multivalue inputs", () => {
 		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
 		await page.getByRole("link", { name: title }).click();
 		// Make sure pub details page has loaded before making assertions
-		await page.getByText("Actions").waitFor();
+		await page.getByText("Assignee").waitFor();
 		await expect(page.getByText(numberElement.name)).toHaveCount(1);
 		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0");
 		await expect(page.getByText(animalElement.name)).toHaveCount(1);
