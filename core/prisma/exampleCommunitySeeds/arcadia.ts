@@ -1,11 +1,13 @@
 import { faker } from "@faker-js/faker";
 
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
+import { db } from "~/kysely/database";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { seedCommunity } from "../seed/seedCommunity";
 
-export const seedArcadia = (communityId?: CommunitiesId) => {
+export const seedArcadia = async (communityId?: CommunitiesId) => {
 	const articleSeed = (number = 1_000, asRelation = false) =>
 		Array.from({ length: number }, (_, idx) => {
 			const pub = {
@@ -132,7 +134,11 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 			};
 		}) as any;
 
-	return seedCommunity(
+	const articleId2 = crypto.randomUUID();
+	const articleId = crypto.randomUUID();
+	const authorId = crypto.randomUUID();
+
+	const seed = await seedCommunity(
 		{
 			community: {
 				id: communityId,
@@ -347,6 +353,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					ORCiD: { isTitle: false },
 					Affiliation: { isTitle: false },
 					MemberId: { isTitle: false },
+					Articles: { isTitle: false },
 				},
 				Editor: {
 					Name: { isTitle: true },
@@ -529,6 +536,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																value: null,
 																alsoAsChild: true,
 																pub: {
+																	id: articleId,
 																	pubType: "Journal Article",
 																	stage: "Articles",
 																	values: {
@@ -570,6 +578,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																			{
 																				value: "isCommentOn",
 																				pub: {
+																					id: articleId2,
 																					pubType:
 																						"Journal Article",
 																					values: {
@@ -584,6 +593,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																				value: "Editing & Draft Preparation",
 																				alsoAsChild: true,
 																				pub: {
+																					id: authorId,
 																					pubType:
 																						"Author",
 																					values: {
@@ -591,6 +601,20 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						ORCiD: "https://orcid.org/0000-0000-0000-0000",
 																						Affiliation:
 																							"University of Somewhere",
+																						// We can't do this because of foreign key constraints even though we know the IDs in advance
+																						// These values are explicitly added after the seed function runs
+																						// Articles: [
+																						// 	{
+																						// 		relatedPubId:
+																						// 			articleId,
+																						// 		value: "Edited",
+																						// 	},
+																						// 	{
+																						// 		value: "Wrote",
+																						// 		relatedPubId:
+																						// 			articleId2,
+																						// 	},
+																						// ],
 																					},
 																				},
 																			},
@@ -702,4 +726,27 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 			parallelPubs: true,
 		}
 	);
+
+	// Give jimothy a circular reference
+	await db
+		.insertInto("pub_values")
+		.values([
+			{
+				pubId: authorId as PubsId,
+				relatedPubId: articleId as PubsId,
+				value: '"Edited"',
+				fieldId: seed.pubFields.Articles.id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			},
+			{
+				pubId: authorId as PubsId,
+				value: '"Wrote"',
+				relatedPubId: articleId2 as PubsId,
+				fieldId: seed.pubFields.Articles.id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			},
+		])
+		.execute();
+
+	return seed;
 };
