@@ -390,6 +390,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					members: ["arcadia-user-1"],
 				},
 				// these stages are mostly here to provide slightly easier grouping of the relevant pubs
+				Authors: {},
 				Sites: {},
 				Journals: {},
 				Issues: {},
@@ -594,6 +595,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																				alsoAsChild: true,
 																				pub: {
 																					id: authorId,
+																					stage: "Authors",
 																					pubType:
 																						"Author",
 																					values: {
