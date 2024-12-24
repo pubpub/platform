@@ -5,6 +5,8 @@ import rehypeFormat from "rehype-format";
 
 import type { DriveData } from "./getGDriveFiles";
 import {
+	processLocalLinks,
+	removeGoogleLinkForwards,
 	removeVerboseFormatting,
 	structureAnchors,
 	structureAudio,
@@ -65,6 +67,8 @@ export const formatDriveData = async (dataFromDrive: DriveData): Promise<Formatt
 		const processedHtml = await rehype()
 			.use(structureFormatting)
 			.use(removeVerboseFormatting)
+			.use(removeGoogleLinkForwards)
+			.use(processLocalLinks)
 			.use(structureImages)
 			.use(structureVideos)
 			.use(structureAudio)
