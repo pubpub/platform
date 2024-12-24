@@ -1,6 +1,11 @@
+import { ReplicationStatus } from "@aws-sdk/client-s3";
+import { ValuesNode } from "kysely";
+
+import type { StagesId } from "db/public";
 import { logger } from "logger";
 
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { defineRun } from "../types";
 import { action } from "./action";
 import { formatDriveData } from "./formatDriveData";
@@ -14,6 +19,7 @@ export const run = defineRun<typeof action>(
 		};
 
 		try {
+			const communitySlug = getCommunitySlug();
 			/*
 				- Get folder Id from inputGCLOUD_KEY_FILE
 				- Pull html content and metadata content from folder
@@ -27,37 +33,44 @@ export const run = defineRun<typeof action>(
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
-			const formattedData = await formatDriveData(dataFromDrive);
-
-			/* NON-MIGRATION */
-			/* If the main doc is updated, make a new version */
+			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
 
 			/* MIGRATION */
-			/* Check for existence of legacy ids in Platform */
-			// const legacyIds = [...versions, ...discussions, ...contributors].map((pub) => pub.id);
+			// TODO: Check and make sure the relations exist, not just the pubs.
 
-			// // Don't need to do Tags, on the pub
-			// // Don't need to do Narratives
-			// // Don't need to do contributors
+			// Check for legacy discussion IDs on platform
+			const legacyDiscussionIds = formattedData.discussions.map((pub) => pub.id);
+			const { pubs: existingPubs } = await doPubsExist(legacyDiscussionIds, communityId);
+			const existingDiscussionPubIds = existingPubs.map((pub) => pub.id);
 
-			// const { pubs: existingPubs } = await doPubsExist(legacyIds, communityId);
-			// const existingPubIds = existingPubs.map((pub) => pub.id);
+			// Versions don't have IDs so we compare timestamps
+			const existingVersionDates = pub.values
+				.filter(
+					(values) =>
+						values.fieldSlug === `${communitySlug}:versions` &&
+						values.relatedPubId &&
+						values.relatedPub
+				)
+				.map((values) => {
+					const publicationDateField = values.relatedPub!.values.filter(
+						(value) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0];
+					const publicationDate: Date = publicationDateField
+						? (publicationDateField.value as Date)
+						: new Date(values.relatedPub!.createdAt);
+					return publicationDate.toISOString();
+				});
 
-			// const nonExistingVersionRelations = nonExistingVersions.map((version) => {
-			// 	return { relatedPub: { ...version }, value: null, slug: "arcadia-research:versions" };
-			// });
 			const pubTypes = await getPubTypesForCommunity(communityId);
 			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion");
 			const VersionType = pubTypes.find((pubType) => pubType.name === "Version");
 
-			upsertPubRelations({
-				pubId: pub.id,
-				communityId,
-				lastModifiedBy,
-				relations: [
-					...formattedData.discussions.map((discussion) => {
+			const relations = [
+				...formattedData.discussions
+					.filter((discussion) => !existingDiscussionPubIds.includes(discussion.id))
+					.map((discussion) => {
 						return {
-							slug: "arcadia:discussions",
+							slug: `${communitySlug}:discussions`,
 							value: null,
 							relatedPub: {
 								pubTypeId: DiscussionType?.id || "",
@@ -65,9 +78,16 @@ export const run = defineRun<typeof action>(
 							},
 						};
 					}),
-					...formattedData.versions.map((version) => {
+				...formattedData.versions
+					.filter(
+						(version) =>
+							!existingVersionDates.includes(
+								version[`${communitySlug}:publication-date`]
+							)
+					)
+					.map((version) => {
 						return {
-							slug: "arcadia:versions",
+							slug: `${communitySlug}:versions`,
 							value: null,
 							relatedPub: {
 								pubTypeId: VersionType?.id || "",
@@ -77,20 +97,64 @@ export const run = defineRun<typeof action>(
 							},
 						};
 					}),
-					// { relatedPubId: , value: null },
-					// {
-					// 	slug: 'arcadia:discussions',
-					// 	value: null,
-					// 	relatedPub: {
-					// 		/* createPubRecursive body */
-					// 		/* This is my discussion */
-					// 		// {
-					// 		// 	'arcadia-science:timestamp':
-					// 		// }
-					// 	},
-					// },
-				],
-			});
+			];
+
+			/* NON-MIGRATION */
+			/* If the main doc is updated, make a new version */
+			const orderedVersions = pub.values
+				.filter(
+					(values) =>
+						values.fieldSlug === `${communitySlug}:versions` &&
+						values.relatedPubId &&
+						values.relatedPub
+				)
+				// TODO: make this work if there's no publication-date field
+				.sort((foo: any, bar: any) => {
+					const fooDateField = foo.relatedPub!.values.filter(
+						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0];
+					const barDateField = foo.relatedPub!.values.filter(
+						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0];
+
+					const fooDate: Date = fooDateField
+						? fooDateField.value
+						: foo.relatedPub!.createdAt;
+					const barDate: Date = barDateField
+						? barDateField.value
+						: foo.relatedPub!.createdAt;
+					return barDate.getTime() - fooDate.getTime();
+				});
+
+			if (orderedVersions[0]) {
+				const latestVersionContent = orderedVersions[0].relatedPub!.values.filter(
+					(value) => value.fieldSlug === `${communitySlug}:content`
+				)[0].value;
+
+				if (latestVersionContent !== formattedData.pubHtml) {
+					relations.push({
+						slug: `${communitySlug}:versions`,
+						value: null,
+						relatedPub: {
+							pubTypeId: VersionType?.id || "",
+							values: {
+								[`${communitySlug}:description`]: "",
+								//[`${communitySlug}:publication-date`]: new Date().toISOString(),
+								[`${communitySlug}:content`]: formattedData.pubHtml,
+							},
+						},
+					});
+				}
+			}
+
+			if (relations.length > 0) {
+				upsertPubRelations({
+					pubId: pub.id,
+					communityId,
+					lastModifiedBy,
+					relations,
+				});
+			}
 
 			return {
 				success: true,
