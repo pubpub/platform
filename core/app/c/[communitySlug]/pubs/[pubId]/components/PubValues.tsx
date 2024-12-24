@@ -127,7 +127,10 @@ const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 	}
 
 	if (value.schemaName === CoreSchemaType.DateTime) {
-		return new Date(value.value as string).toISOString().split("T")[0];
+		const date = new Date(value.value as string);
+		if (date.toString() !== "Invalid Date") {
+			return date.toISOString().split("T")[0];
+		}
 	}
 
 	const valueAsString = (value.value as JsonValue)?.toString() || "";
